@@ -9,6 +9,7 @@
 | 2026-10-22 | Record source commit and semantic-bound/root regressions. |
 | 2026-10-22 | Record fresh fixture bundle and actual-query validation. |
 | 2026-10-22 | Record completed code/fixture commits and final handoff evidence. |
+| 2026-10-22 | Record read-only D29 workflow follow-up on retained P dummy activity. |
 
 - completed: Read local AGENTS, GLOSSARY, ADR0001 and parent forensic records.
 - completed: Locked native source confirms positive remote count guarded P
@@ -87,3 +88,47 @@ test report, independent-loader fixture receipt and completion archive. Parent
 handoff is the next action, not a claim that parent integration/native/fidelity
 acceptance is complete. D1–D7 CLEAR; S1–S6 no task-local defect. No further tests
 or support-tool changes are justified after the explicit checks passed.
+
+## D29 workflow follow-up: retained P dummy activity
+
+- completed: Parent requested a focused read-only check of the two D q1
+  intervals in `d23_parent_actual06_wall01` and `d23_parent_identity_verify01`.
+  No production changes, refit, new trace, full CLI or overhead campaign.
+- completed: Both retained traces have the same useful P batch0 end at
+  85.51257516799994s, and READ/target-ready/source-release at
+  85.51607516799994s. Request0 D q1 intervals are
+  [85.95974032799978,86.00261039840062] and
+  [86.00261039840062,86.04548046880146]. P scheduler iterations12/13 have
+  zero running/waiting requests, no request IDs and zero useful tokens.
+- completed: Read-only unpickling of the retained exact-q1 state with the old
+  compatible source7e8bea3,60s timeout and30GiB address-space limit finds both P
+  lanes at wave step11, wave running, one dummy in flight per lane, no useful
+  batches in flight, no held output, all request queues empty, no pending
+  transfer or transfer-start, and empty allocation maps. The shared request0
+  remains in D only; it is P-complete with one emitted D output.
+- completed: Current/old `_run_dp_iterations` emits an empty engine's dummy while
+  `_dp_wave_running`; `_end_iteration` stops that wave only at the32-step group
+  finish-sync. `has_unfinished_requests` inspects running/waiting queues, not
+  shared Request completion or source leases. Role labels come from the event's
+  cluster, not EP subroles; the case has PP1, so no useful P pipeline overlap.
+- completed: D26 changes the useful P completion target6144->6128 and transfer
+  width. It does not change DP wave/dummy issuance or finish-sync conditions.
+  It cannot be claimed to remove this early P dummy activity. Locked native
+  `v1/engine/core.py:2405-2415` additionally syncs step1 and uses configured
+  `dp_sync_interval`; `config/parallel.py:162` defaults to16, unlike Frontier32.
+  This is a separate native workflow-contract reconciliation for parent, not
+  permission to change a setting or delete dummy work. Effective native runtime
+  configuration was not established by this read-only check.
+
+Conclusion: the retained early P events are request-free DP wave-drain forwards,
+not useful/in-flight P serving work and not stale shared-request/source-lease
+ownership. Their native fidelity must be decided through the separate finish-sync
+contract alignment. Exact inspection command, state hash and source references
+are appended to the existing test report.
+
+Follow-up checkpoint: original plan1–4 PASS; requested read-only evidence PASS;
+parent native finish-sync reconciliation TODO/outside this slice. D1–D7 CLEAR:
+inspection stops at the decisive state/source evidence, with no new harness,
+performance matrix or production correction. S1–S6 have no task-local defect.
+Branch A: preserve source/fixture, commit these two record updates, and return
+the finding to parent; no further experiments are justified here.

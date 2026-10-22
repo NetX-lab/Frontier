@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Record red/green lifetimes, affected checks, generated fixture identities and limits. |
+| 2026-10-22 | Record read-only retained-state P dummy workflow investigation. |
 
 ## Environment and commands
 
@@ -147,3 +148,155 @@ are fixture evidence only, not measured native fidelity. After parent integratio
 retain workflow -> GPU/opgap -> CPU overhead last ordering. Parent must run the
 fresh-fixture full CLI only once its perf stream is ready, verify actual request,
 transfer and stage ledgers, perform native comparison, and complete strict77.
+
+## D29 read-only workflow follow-up
+
+Parent requested examination of existing complete-q1 evidence only. No simulator
+events were executed, no trace or fixture generated, and no production source or
+fixed snapshot was changed. Observations below are from retained historical
+fixture02 evidence, not D26 or native performance qualification.
+
+### Retained time/request evidence
+
+Both `/data/ycfeng/tmp/d23_parent_actual06_wall01` and
+`/data/ycfeng/tmp/d23_parent_identity_verify01` show:
+
+| Evidence | Simulated time / state |
+| --- | --- |
+| Last useful P batch0, request0, end |85.51257516799994s |
+| READ end, D-ready, source lease release |85.51607516799994s |
+| First retained D q1, request0, width1 |85.95974032799978..86.00261039840062s |
+| Second retained D q1, request0, width1 |86.00261039840062..86.04548046880146s |
+| P scheduling at iteration12 |85.98403594240912s; running0, waiting0, request IDs[], useful tokens0 |
+| P scheduling at iteration13 |86.02689601280996s; running0, waiting0, request IDs[], useful tokens0 |
+
+Both `events.json` files have582 P and586 D events. The receipt attributes291 P
+and293 D events to each complete D q1 interval; this is existing evidence, not a
+new overhead measurement. `event_trace_prefix.json` and
+`stage_ledger_prefix.json` are byte-identical across these two runs, SHA256:
+`51bbd6b18a1d0e9bea42aa8c33a37f2cb3d917273b7af7e8bd3ef6cfb6b9c51d` and
+`f5e5f4e99b486cc9e0594ac77f5a9f408c1302e469c299696a89fb3c3ab5c858`.
+
+The retained `/data/ycfeng/tmp/d23_actual06_exact_q1_state/state.pkl` is
+117392622 bytes, SHA256
+`2482363cf6d2fe65464e499d038e3dd8c438d531d9f8b0bf84fb5f72272ac68c`.
+It was inspected with old compatible source7e8bea3 without running an event or
+calling the load-and-resume script. At85.95974032799978s, both P lanes have:
+
+- `_dp_wave_running=True`, `_dp_wave_steps=11`, `_iteration_open=True`.
+- `_dummy_forwards_in_flight=1`, `_num_running_batches=0`, and no useful
+  `_in_flight_batch_ids` or `_unpopped_outputs`.
+- Empty request/preempted/running/waiting queues, pending-transfer set,
+  pending-transfer-start list, and allocation map.
+- `_waits_at_dp_sync=False`, `_unfinished_at_dp_sync=False`.
+
+Request0 is P-complete, semantic prompt6144, processed6145, not globally complete,
+and owned by D running queue only. The retained case has PP1. There is no useful
+P pipeline overlap or source lease remaining at the q1 boundary.
+
+### Exact read-only state command
+
+Working directory:
+`/data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3`, HEAD
+`7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb`; same Python3.10.6 as above.
+The persistent model/backend references are opaque placeholders because only
+stored scheduler/request state is inspected; no predictor is called or changed.
+
+```bash
+PYTHONPATH="$PWD:/data/ycfeng/Frontier/.worktrees/step5-mrv2-main/frontier/cc_backend/backends/collective-sim/python" \
+PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
+timeout 60s /data/ycfeng/envs/frontier-py310/bin/python -B - <<'PY'
+import resource
+resource.setrlimit(resource.RLIMIT_AS, (30 * 1024**3, 30 * 1024**3))
+import pickle, types
+from pathlib import Path
+path = Path('/data/ycfeng/tmp/d23_actual06_exact_q1_state/state.pkl')
+class Reference:
+    pass
+refs = {}
+with path.open('rb') as stream:
+    blocks = pickle.load(stream)
+    class Unpickler(pickle.Unpickler):
+        def persistent_load(self, identity):
+            if identity[0] == 'block':
+                return blocks[identity[1]][identity[2]]
+            if identity[0] == 'predictor_class':
+                return Reference
+            if identity not in refs:
+                refs[identity] = types.SimpleNamespace(identity=identity)
+            return refs[identity]
+    state = Unpickler(stream).load()
+sim = state['simulator']
+print('STATE KEYS', list(state), 'TIME', sim['_time'])
+for role, scheduler in sim['_global_scheduler']._cluster_schedulers.items():
+    print('ROLE', role)
+    for key, lane in scheduler._replica_schedulers.items():
+        print('LANE', key)
+        names = ('_dp_wave_running', '_dp_wave_steps', '_waits_at_dp_sync',
+                 '_unfinished_at_dp_sync', '_dummy_forwards_in_flight',
+                 '_dummy_pass_due', '_iteration_open', '_num_running_batches',
+                 '_max_concurrent_batches', '_in_flight_batch_ids',
+                 '_pending_kv_transfer_requests', '_pending_kv_transfer_start_events',
+                 '_request_queue', '_running_requests', '_waiting_requests',
+                 '_preempted_requests', '_unpopped_outputs', '_allocation_map')
+        for name in names:
+            value = getattr(lane, name, None)
+            if name in ('_request_queue', '_running_requests', '_waiting_requests',
+                        '_preempted_requests'):
+                value = [x.id for x in value]
+            elif name in ('_unpopped_outputs', '_pending_kv_transfer_start_events') and value is not None:
+                value = len(value)
+            print(name, value)
+print('REQUESTS', [(r.id, {k: getattr(r, k, None) for k in
+      ('_num_prefill_tokens', '_num_processed_tokens', '_is_prefill_complete',
+       '_num_recomputed_tokens', '_completed')}) for r in sim['_all_requests']])
+print('QUEUE', [(time, type(ev).__name__, str(getattr(ev, '_cluster_type', '')),
+                getattr(getattr(ev, '_batch', None), 'id', None),
+                getattr(getattr(ev, '_batch_stage', None), 'batch_id', None))
+                for time, ev in sorted(sim['_event_queue'])[:12]])
+PY
+```
+
+Result: PASS inspection, exit0. Initial inspection lacked the existing
+collective-sim Python path and failed `ModuleNotFoundError: collective_sim_core`;
+adding the existing path resolved it. A reader assumed the newer snapshot's
+`iteration_boundary` key and failed `KeyError`; inspecting the old stored keys
+resolved that reader-only assumption. Neither failure modified source or snapshot.
+
+### Source mechanism and conclusion
+
+At D26 HEADaee2562 (the same mechanism is present in retained source7e8bea3):
+
+- `frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:527-601`
+  runs a dummy if no useful batch is formed while the DP wave is running; wave
+  termination is checked only at the32-step DP group finish-sync.
+- `:608-612` limits that group to lanes of this cluster. D requests cannot keep
+  the P wave running through cross-role membership.
+- `:634-637` checks running/waiting requests only. Shared Request's global
+  completion and retained KV source ownership do not enter that predicate.
+- `:794-808` removes a completed P request from the running queue and separately
+  retains its source lease; `:485-500` frees that lease on READ completion.
+- `frontier/entities/batch.py:1340-1357` defines dummy forwards with no requests
+  and no serving KV/output credits. Role accounting in
+  `tests/performance/step5_actual06_iteration.py:501-504` reads event cluster
+  type, not EP subrole; P sync/MoE events here really belong to P.
+
+D26 changes `Request.on_batch_end`'s P completion target to6128, which reaches
+the existing running-queue removal and transfer trigger earlier; it changes the
+transfer width in `frontier/events/cluster_batch_end_event.py:582-617`. It does
+not alter `_dp_wave_running`, dummy issuance or finish-sync cadence. Changed P
+costs may change overlap timing, but D26 alone does not establish disappearance
+of this early P activity.
+
+**Conclusion:** These retained P events are request-free DP wave-drain forwards,
+not legitimate useful/in-flight P serving work and not stale shared-request or
+source-lease ownership. Do not delete their work/costs based on this evidence.
+
+One separate native-alignment question remains for parent: locked native
+`/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/engine/core.py:2405-2415`
+also syncs step1 and uses configured `dp_sync_interval`; its
+`config/parallel.py:162` defaults to16, whereas Frontier hardcodes32 and checks
+only multiples of32. The deployed native effective interval was not established
+here. Parent must reconcile that workflow contract before deciding a separate
+alignment change; this finding authorizes neither a config change nor an
+optimization. No native/GPU/full CLI or CPU-overhead acceptance is claimed.
