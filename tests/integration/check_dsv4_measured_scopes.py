@@ -11,7 +11,7 @@ import pandas as pd
 from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
 from frontier.config.model_config import BaseModelConfig
 from frontier.entities import Batch, Request
-from frontier.execution_time_predictor.deepseek_v4 import read_isolated_scope
+from frontier.execution_time_predictor.deepseek_v4 import build_isolated_prefill_layouts, read_isolated_scope
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import SklearnMoEExecutionTimePredictor
 from frontier.moe_ep_workload import split_global_expert_tokens_into_lanes
 from frontier.types import ClusterType, MeasurementType
@@ -30,12 +30,75 @@ def source_batch(query=6144, context=0, decoding=False):
                  num_context_tokens=[context], request_is_decoding=[decoding])
 
 
+def check_accepted_prefill(p, acceptance_path, package):
+    from frontier.profiling.attention.dsa_rows import read_records
+    from frontier.profiling.attention.dsv4_attention_main import build_parser, build_plan
+    from frontier.profiling.attention.dsv4_attention_plan import expected_scopes
+    from frontier.profiling.common.runtime_identity import file_sha256
+
+    acceptance = json.loads(acceptance_path.read_text())
+    assert acceptance["status"] == "ACCEPTED_ISOLATED_DATA" and not acceptance["serving_admission"]
+    assert file_sha256(package / "manifest.json") == acceptance["manifest_sha256"]
+    manifest = json.loads((package / "manifest.json").read_text())
+    for name in ("plan.json", "model/config.json", "jobs/PREFILL_WARM_6144_C0_BALANCED.json"):
+        assert file_sha256(package / name) == manifest["files"][name]
+    job = json.loads((package / "jobs/PREFILL_WARM_6144_C0_BALANCED.json").read_text())
+    argv = job["phases"][0]["steps"][1]["commands"][0]["argv"]
+    plan_args = build_parser().parse_args(argv[3:])
+    plan_args.model_config_path = package / "model/config.json"
+    plan = build_plan(plan_args)
+    assert json.loads(json.dumps(plan.to_json())) == json.loads((package / "plan.json").read_text())
+    inputs = {}
+    for name, pin in acceptance["retained_files"].items():
+        if name.endswith((".csv", "dsv4_raw_e0.jsonl", "dsv4_aggregate_summary.json")):
+            path = acceptance_path.parents[3] / name
+            assert file_sha256(path) == pin["sha256"]
+            inputs[path.name] = path, pin["sha256"]
+    identity = json.loads(inputs["dsv4_aggregate_summary.json"][0].read_text())["identity"]
+    assert identity["source_revision"] == acceptance["source_revision"] == manifest["source_revision"]
+    assert identity["model_config_sha256"] == manifest["files"]["model/config.json"]
+    p._replica_config.device = job["gpu_type"].lower()
+    p._replica_config.attn_dp = job["target_per_role"]["dp"]
+    p._replica_config.moe_expert_parallel_size = job["target_per_role"]["ep"]
+    p._replica_config.moe_gating_routing_runtime_path = "balanced_topk"
+    p._replica_config.attn_tensor_parallel_size = plan.shape.target_tensor_parallel_size
+    p._block_size = plan.limits.block_size
+    records = read_records([inputs["dsv4_raw_e0.jsonl"][0]])
+    receipts = []
+    for method, name in ((MeasurementType.CUDA_EVENT, "attention.csv"),
+                         (MeasurementType.KERNEL_ONLY, "attention_kernel_only.csv")):
+        path, digest = inputs[name]
+        p._attention_input_file = str(path)
+        p._active_measurement_type = method
+        layouts = build_isolated_prefill_layouts(plan, records, expected_identity={
+            key: identity[key] for key in ("source_revision", "runtime_fingerprint", "model_config_sha256")},
+            input_file_sha256=digest)
+        rows = pd.read_csv(p._attention_input_file, float_precision="round_trip")
+        for layer in plan.shape.layers:
+            row = rows[rows.global_layer_ids == json.dumps([layer.global_layer_id])].iloc[0]
+            for scope in expected_scopes(layer.attention_variant,
+                    plan.shape.index_scores_executed(plan.cases[0].prompt_len),
+                    annotated_only=method is MeasurementType.KERNEL_ONLY):
+                result = read_isolated_scope(p, source_batch(plan.cases[0].prompt_len),
+                    layer.global_layer_id, scope, attention_layout=layouts[layer.global_layer_id])
+                assert result["time_ms"] == row[f"time_stats.{scope}.median"]
+                assert result["serving_admission"] is False
+                receipts.append(result)
+    return receipts
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--attention-root", type=Path, required=True)
-    parser.add_argument("--compute-root", type=Path, required=True)
+    parser.add_argument("--attention-root", type=Path)
+    parser.add_argument("--compute-root", type=Path)
+    parser.add_argument("--accepted-prefill", type=Path)
+    parser.add_argument("--prefill-package", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    if (args.accepted_prefill is not None) != (args.prefill_package is not None):
+        parser.error("--accepted-prefill and --prefill-package must be supplied together")
+    if args.accepted_prefill is None and (args.attention_root is None or args.compute_root is None):
+        parser.error("legacy checking requires --attention-root and --compute-root")
     p = ScopePredictor.__new__(ScopePredictor)
     p._model_config = BaseModelConfig.create_from_name("deepseek-ai/DeepSeek-V4-Flash")
     p._replica_config = SimpleNamespace(
@@ -46,6 +109,13 @@ def main():
     )
     p._cluster_type = ClusterType.MONOLITHIC
     p._block_size = 256
+    if args.accepted_prefill is not None:
+        receipts = check_accepted_prefill(p, args.accepted_prefill, args.prefill_package)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps({"status": "PASS", "positive_count": len(receipts),
+            "serving_admission": False, "receipts": receipts}, indent=2) + "\n")
+        print(f"PASS {len(receipts)} accepted isolated prefill scopes; no serving admission")
+        return
     layouts = json.loads((Path(__file__).parents[1] /
         "fixtures/deepseek_v4_attention_layouts.json").read_text())["layouts"]
 
