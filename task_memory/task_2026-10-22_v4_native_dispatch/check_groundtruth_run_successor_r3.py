@@ -58,6 +58,7 @@ def verify_dispatch_row(row, engine, manager, native, owner):
     if (ci['num_reqs'] != row['scheduled_num_requests']
             or ci['num_tokens'] != row['scheduled_num_tokens']
             or ci['num_reqs'] > ci['num_tokens'] or ci['max_query_len'] > ci['num_tokens']
+            or ci['num_tokens'] > ci['num_reqs'] * ci['max_query_len']
             or type(inputs['need_eager']) is not bool or inputs['need_eager']
             or type(inputs['num_active_loras']) is not int or inputs['num_active_loras'] != 0
             or type(inputs['dp_size']) is not int or inputs['dp_size'] != engine['data_parallel_size']

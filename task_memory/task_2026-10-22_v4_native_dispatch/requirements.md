@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-22 | Recorded D-V4-NATIVE-DISPATCH-EVIDENCE approval and bounded execution ownership. |
 | 2026-10-22 | Recorded balanced-routing and deferred CPU-overhead steering; dispatch scope unchanged. |
+| 2026-10-22 | Recorded targeted reviewer P2 query-bound correction within existing scope. |
 
 ## [Original Request]
 
@@ -39,3 +40,13 @@ freeze/package/launch before balanced runtime binding is reviewed and incorporat
 Native05 remains historical old-routing evidence. The explicit balanced policy
 change supersedes the earlier same-engine constraint only for routing; it grants
 this agent no routing implementation or platform ownership.
+
+## [Original Request] W128-V4-NATIVE-DISPATCH-R1
+
+Root relayed reviewer `ses_e9e88db47ffekmBSF3eVJvR7Nl` REQUEST_CHANGES/P2:
+reject real classifier operands with num_tokens > num_reqs * max_query_len;
+add RED-old/GREEN-new control in the existing parameter cases, preserve legitimate
+None/zero behavior, frozen R2 and other predicates. Run affected controls and
+non-graph AST equality only; report cumulative bounds including about five later
+builder pin lines. Return for original reviewer recheck. Balanced binding remains
+separate; no freeze/build, overhead analysis, native or platform operation.

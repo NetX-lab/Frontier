@@ -7,6 +7,7 @@
 | 2026-10-22 | Recorded approval and began implementation assignment. |
 | 2026-10-22 | W128 completed host-operand source/CPU slice; review/freeze/build remain root-owned. |
 | 2026-10-22 | Recorded root balanced-routing prerequisite and CPU-overhead deferral after completed dispatch slice. |
+| 2026-10-22 | R1 fixed reviewer P2 classifier query bound with observed RED/GREEN evidence. |
 
 - completed: native05 RCA and bounded proposal; explicit user approval recorded in requirements.
 - completed: W128 source/ownership inspection, collector and successor implementation, CPU controls.
@@ -56,3 +57,23 @@
 - deferred: CPU-overhead analysis/measurement/suites until workflow/GPU alignment,
   including op gap, is complete. Actual overhead remains unknown, not a requested
   current-phase measurement or acceptance blocker for this correctness slice.
+
+## W128-V4-NATIVE-DISPATCH-R1
+
+- completed: reproduced old R3 acceptance of impossible classifier inputs
+  (num_reqs1,num_tokens2,max_query_len1,has_prefillTrue) with matching PIECEWISE2
+  descriptor and DP vector. Existing `query_bound` parameter failed RED with
+  `DID NOT RAISE` (exit1,1.87s). No fixture/framework introduced.
+- completed: added one inequality to R3; source gpu/model_runner1055–1058 derives
+  len/sum/max from the same scheduled map, so sum cannot exceed len*max. Only
+  invalid real operands are rejected; native functions and None/zero DP encoding
+  are unchanged. No clamping or native behavior change.
+- completed: affected controls18 PASS/27 deselected,2.92s, including13 negative
+  operand cases, four positive source-backed dispatch cases and non-graph AST
+  equality. Exact commands and retained raw log/XML paths are in the test report.
+- bounds: cumulative four code/test files +476/-12=488 changed lines. R1 alone
+  changes two files +6/-2=8 lines. About five later builder lines would yield493
+  lines/five files; final builder delta remains root-owned and must be counted.
+- pending: original reviewer recheck. Root's separately reported115 PASS does not
+  close the former query-bound gap. No further tests, routing, freeze/build,
+  CPU-overhead, native or platform operation performed.

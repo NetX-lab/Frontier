@@ -466,10 +466,10 @@ def test_actual_native_classification_and_dp_dispatch(dispatch_oracle, prefill, 
 
 
 @pytest.mark.parametrize('fault', ['missing', 'circular', 'classifier', 'owner', 'dp_local',
-    'dp_shape', 'ambiguous', 'descriptor', 'mode', 'padding', 'failed_forward', 'boolean_token'])
+    'dp_shape', 'ambiguous', 'descriptor', 'mode', 'padding', 'failed_forward', 'boolean_token', 'query_bound'])
 def test_dispatch_successor_rejects_incomplete_or_wrong_operands(dispatch_oracle, fault):
     checker, engine, manager, native = dispatch_oracle
-    row = dispatch_row(dispatch_oracle, False)
+    row = dispatch_row(dispatch_oracle, fault == 'query_bound', peer_tokens=2 if fault == 'query_bound' else 1)
     ev = row['dispatch_evidence']
     if fault == 'missing': del row['dispatch_evidence']
     if fault == 'circular': del ev['classifier']['inputs']['has_prefill']
@@ -483,6 +483,9 @@ def test_dispatch_successor_rejects_incomplete_or_wrong_operands(dispatch_oracle
     if fault == 'padding': ev['dispatch']['num_tokens_across_dp'] = [2, 2]
     if fault == 'failed_forward': row['successful_forwards'] = 0
     if fault == 'boolean_token': ev['dispatch']['inputs']['num_tokens'] = True
+    if fault == 'query_bound':
+        row['scheduled_num_tokens'] = ev['classifier']['inputs']['num_tokens'] = ev['dispatch']['inputs']['num_tokens'] = 2
+        ev['dp_post_all_reduce'][0][0] = 2
     with pytest.raises((ValueError, KeyError)):
         checker.verify_dispatch_row(row, engine, manager, native, 0)
 

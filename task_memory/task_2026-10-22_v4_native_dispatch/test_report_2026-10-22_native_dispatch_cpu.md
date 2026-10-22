@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Recorded W128 CPU observations and verification limits. |
+| 2026-10-22 | Added R1 targeted P2 RED/GREEN evidence without broad suite reruns. |
 
 Environment: Linux CPU; `/data/ycfeng/envs/asyncopd-py312/bin/python`, Python
 3.12.13, Clang22.1.3, PyTorch2.9.1+cu128. No CUDA/native package import is required
@@ -41,3 +42,28 @@ historical operand recovery, all32-rank fresh-run admission or four-metric
 calibration is claimed. Physical row cardinality and observer overhead require the
 authorized fresh run. The existing4096-row bound remains; loss must be reported
 UNVERIFIED, never ignored or used to stop healthy native work.
+
+## R1 query-bound regression
+
+Same Python/environment/workdir as above. Before the one-line fix:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 FRONTIER_VLLM_BS_ROOT=/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69 /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest 'tests/unit/test_native_v2_serving_inventory.py::test_dispatch_successor_rejects_incomplete_or_wrong_operands[query_bound]' -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4-native-dispatch-r1-red --junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4-native-dispatch-r1-red.xml > /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4-native-dispatch-r1-red.log 2>&1
+```
+
+Observed RED: `Failed: DID NOT RAISE any of (ValueError, KeyError)`;1 failed,
+1.87s,exit1. Real classifier inputs1/2/1/prefillTrue were accepted despite a
+source-impossible sum/len/max, while descriptor/vector otherwise matched.
+
+After adding `num_tokens <= num_reqs * max_query_len`:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 FRONTIER_VLLM_BS_ROOT=/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69 /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest tests/unit/test_native_v2_serving_inventory.py -k 'test_actual_native_classification_and_dp_dispatch or test_dispatch_successor_rejects_incomplete_or_wrong_operands or test_frozen_r2_non_graph_predicates_and_reader_guards_remain_identical' -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4-native-dispatch-r1-green --junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4-native-dispatch-r1-green.xml > /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4-native-dispatch-r1-green.log 2>&1
+```
+
+Observed GREEN:18 passed,27 deselected,2.92s,exit0. The new impossible-operand
+control rejects; four valid native dispatch controls still pass, including
+classifier None and DP uniform0 for prefill/peer cases. Non-graph functions remain
+AST-identical to frozen R2. No None/zero branch or native function was changed.
+Root's reported115 PASS is separate earlier evidence, not this regression's proof.
+Only affected tests were run; no overhead measurements or suites were introduced.

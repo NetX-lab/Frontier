@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Recorded W128-V4-NATIVE-DISPATCH ownership before implementation. |
+| 2026-10-22 | R1 added source-required sum <= count*max classifier input constraint. |
 
 ## Ownership and boundary
 
@@ -58,7 +59,9 @@ created until final code acceptance.
 ## Observed CPU results
 
 72 observer/native-body controls and 43 reader controls pass. The collector, V2
-test file and successor are 954, 608 and 135 lines respectively. Physical maintained
+test file and successor are 954, 611 and 136 lines respectively. R1's existing
+negative case observed RED then18 targeted checks PASS; no legitimate None/zero
+encoding changed. Physical maintained
 code/test changes occupy four files and remain below 500 changed lines. R2 is a
 read-only external dependency at its authority path, verified before execution;
 root must preserve and bind it during freeze (not silently relocate or copy code
