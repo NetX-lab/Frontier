@@ -175,3 +175,15 @@ def test_partial_prefill_completes_at_target_and_preemption_retains_target():
     source.on_batch_end(batch)
     assert request.is_prefill_complete and request.num_processed_tokens == 6128
     assert request.num_emitted_decode_tokens == 0
+
+
+def test_prefill_target_does_not_relax_the_client_model_length_bound():
+    source_cluster = _measured_cluster(ClusterType.PREFILL, _FixtureCosts())
+    source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
+    source._max_model_len = 7168
+    request = Request(0, 6145, 1024)
+    with pytest.raises(ValueError, match="do not fit max_model_len=7168"):
+        source.add_request(request)
+    assert request.num_prefill_tokens == request.user_facing_num_prefill_tokens == 6145
+    assert request.prefill_compute_target == 6145
+    assert not source._request_queue and not source._allocation_map
