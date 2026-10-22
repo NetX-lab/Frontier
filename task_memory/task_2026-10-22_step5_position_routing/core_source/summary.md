@@ -26,6 +26,7 @@ Interface contracts and root size-note proposal: [interface_receipt.md](interfac
 - Exact owned paths/per-file ceiling, AST and whitespace:PASS.29/44 paths changed,+1470/-95=**1565/4404 gross**,2839 remaining. No peer paths, root-only size-note, README, platform or unallocated code file changed.
 - Preserved unavailable baseline checks separately: four unmodified request-free tests fail because frontier-py310 lacks torch; asyncopd-py312 lacks fasteners for full simulator imports. No dependency install or behavior/test fallback.
 - Continuation:111 PASS/1 SKIP actual selected/legacy consumers;19 PASS source/timer;12 PASS/18 SKIP minimal legacy source. Peer union40 PASS/5 FAIL (unchanged inventory/fake-family assumptions after7b), recorded separately. See test_report_2026-10-23_selected_consumers.md for exact commands, evidence and corrected legacy invocation failure. Current37/44 paths,+2056/-133=2189/4404 gross,2215 remain; AST/whitespace/path/per-file ceilings PASS. Metadata test reaches85-line allowance.
+- Early selected consumer commitb39fc51, authorized source/native merge4d201c8. Foundation P2 corrected at real adapter constructor using existing full-receipt verifier and a meaningful RED→GREEN fault injection preserving class/public selector/module source identity. Actual bound _select_experts is now verified; source/timer20PASS. Current37/44 paths,+2116/-133=2249/4404 gross,2155 remain. No native semantics or peer files changed.
 
 ## Exact 44-owned-path accounting
 
@@ -53,7 +54,7 @@ Gross is the baseline1aee0af added+deleted code/test/config diff; task records e
 | `frontier/profiling/moe/inputs.py` |123| implemented |
 | `frontier/profiling/moe/load_distribution.py` |1| sentinel fix done |
 | `frontier/profiling/moe/main.py` |49| executor/selected inventory/native facts done; census/row binding pending |
-| `frontier/profiling/moe/moe_impl.py` |52| actual factory/source adapter done; reached prepare connector pending |
+| `frontier/profiling/moe/moe_impl.py` |53| P2 actual bound selector provenance corrected; reached prepare connector pending |
 | `frontier/profiling/moe/moe_wrapper.py` |49| singleton timer/mask/source context done; selected cell/native integration pending |
 | `frontier/profiling/step5/job.py` |49| explicit plan/source interface done; selected package unverified |
 | `frontier/profiling/step5/vllm_wrapper.py` |15| source/declared-image evidence done; actual image unverified |
@@ -75,7 +76,7 @@ Gross is the baseline1aee0af added+deleted code/test/config diff; task records e
 | `tests/unit/test_step5_attention_profiling.py` |0| existing source checks pass; actual selected evidence pending |
 | `tests/unit/test_step5_fixed_probe.py` |150| source/verifier/legacy checks done |
 | `tests/unit/test_step5_measured_ffn.py` |32| selected physical exact-pair runtime checks done |
-| `tests/unit/test_step5_moe_profiling.py` |217| real timer/router/norm/oracle/source-context checks done; prepare/root native integration pending |
+| `tests/unit/test_step5_moe_profiling.py` |276| P2 actual constructor RED→GREEN; prepare/root native integration pending |
 | `tests/unit/test_step5_request_free_profiling.py` |0| existing four torch-unavailable checks preserved |
 
 ## Concrete unresolved prerequisite boundary

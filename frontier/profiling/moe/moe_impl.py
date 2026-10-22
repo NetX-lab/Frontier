@@ -304,7 +304,8 @@ class SigmoidBiasGatingNetwork(nn.Module):
             if self.native_router.routing_method_type.name != "Simulated":
                 raise ValueError("position profiling must execute the native Simulated router")
             native_callables += (create_fused_moe_router, type(self.native_router),
-                                 self.native_router.select_experts, set_forward_context, set_routing_positions)
+                                 self.native_router.select_experts, self.native_router._select_experts,
+                                 set_forward_context, set_routing_positions)
             self.routing_assignment_policy = "position_modulo_experts"
         manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
         if routing_runtime_path == "position_cyclic" and not manifest:

@@ -350,6 +350,8 @@ def test_position_adapter_binds_one_source_tensor_pair_and_real_factory_contract
     class Router:
         routing_method_type = SimpleNamespace(name="Simulated")
         def select_experts(self, x, logits):
+            return self._select_experts(x, logits)
+        def _select_experts(self, x, logits):
             calls["inputs"] = (state.routing_positions, state.is_padding, logits.dtype)
             if calls.get("fail"):
                 raise RuntimeError("native routing failure")
@@ -377,10 +379,67 @@ def test_position_adapter_binds_one_source_tensor_pair_and_real_factory_contract
     assert calls["factory"]["top_k"] == 8 and calls["factory"]["global_num_experts"] == 352
     assert calls["factory"]["scoring_func"] == "sigmoid" and calls["factory"]["routed_scaling_factor"] == 3.
     assert gate.gate.forward in calls["provenance"]["callables"]
+    assert gate.native_router._select_experts in calls["provenance"]["callables"]
     calls["fail"] = True
     with pytest.raises(RuntimeError, match="native routing failure"):
         gate(torch.zeros((3, 4)))
     assert state.routing_positions is None and state.is_padding is None
+
+
+def test_position_adapter_rejects_only_replaced_bound_router_implementation(installed_profile_receipt, tmp_path, monkeypatch):
+    """Fault injection at the real constructor/verifier, not image qualification."""
+    torch = pytest.importorskip("torch")
+    from types import MethodType, ModuleType
+    from frontier.profiling.moe import moe_impl
+    from frontier.profiling.common.runtime_identity import file_sha256
+    path, modules, manifest = installed_profile_receipt
+    router_name = "vllm.model_executor.layers.fused_moe.router.routing_simulator_router"
+    sources = {
+        "vllm.model_executor.layers.fused_moe.router.gate_linear": "import torch\nclass GateLinear(torch.nn.Module):\n    def __init__(self, *args, **kwargs):\n        super().__init__()\n    def forward(self, x):\n        return x, None\n",
+        router_name: "from types import SimpleNamespace\nclass Router:\n    routing_method_type = SimpleNamespace(name='Simulated')\n    def select_experts(self, *args):\n        return self._select_experts(*args)\n    def _select_experts(self, *args):\n        return args\n",
+        "vllm.model_executor.layers.fused_moe.router.router_factory": f"from {router_name} import Router\ndef create_fused_moe_router(**kwargs):\n    return Router()\n",
+        "vllm.forward_context": "from contextlib import contextmanager\n@contextmanager\ndef set_forward_context(*args, **kwargs):\n    yield\n@contextmanager\ndef set_routing_positions(*args):\n    yield\n",
+    }
+    receipt_path = path.parent / manifest["native_binding"]["native_source_receipt"]
+    receipt = json.loads(receipt_path.read_text())
+    for name, source in sources.items():
+        module = modules[name]
+        Path(module.__file__).write_text(source)
+        exec(compile(source, module.__file__, "exec"), module.__dict__)
+        key = name.replace(".", "/") + ".py"
+        receipt["sources"][key] = file_sha256(module.__file__)
+        if key in manifest["native_binding"]["installed_source_hashes"]:
+            manifest["native_binding"]["installed_source_hashes"][key] = receipt["sources"][key]
+    derivation_path = path.parent / manifest["native_binding"]["native_derivation_manifest"]
+    derivation = json.loads(derivation_path.read_text())
+    derivation["derived_source_sha256"] = {key: receipt["sources"][key] for key in derivation["derived_source_sha256"]}
+    derivation_path.write_text(json.dumps(derivation))
+    receipt["derivation_manifest_sha256"] = manifest["sha256"][derivation_path.name] = file_sha256(derivation_path)
+    receipt_path.write_text(json.dumps(receipt))
+    manifest["sha256"][receipt_path.name] = file_sha256(receipt_path)
+    path.write_text(json.dumps(manifest))
+    bias = ModuleType("vllm.model_executor.layers.fused_moe.router.fused_topk_bias_router")
+    bias.fused_topk_bias = lambda **kwargs: pytest.fail("position adapter must not call legacy routing")
+    monkeypatch.setitem(sys.modules, bias.__name__, bias)
+    monkeypatch.setattr(moe_impl, "ensure_vllm_single_rank_parallel_state", lambda: None)
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST", str(path))
+    kwargs = dict(hidden_dim=4, num_experts=352, router_topk=8, router=STEP5_ROUTER, routing_runtime_path="position_cyclic")
+    native = moe_impl.SigmoidBiasGatingNetwork(**kwargs).native_router
+    router_type, original_select = type(native), native.select_experts.__func__
+    original_hash = file_sha256(modules[router_name].__file__)
+    original_origin = (modules[router_name].__file__, modules[router_name].__spec__.origin)
+    foreign = tmp_path / "foreign_router.py"
+    foreign.write_text("def replacement(self, *args):\n    return args\n")
+    namespace = {"__name__": router_name}
+    exec(compile(foreign.read_text(), str(foreign), "exec"), namespace)
+    native._select_experts = MethodType(namespace["replacement"], native)
+    assert type(native) is router_type and native.select_experts.__func__ is original_select
+    assert file_sha256(modules[router_name].__file__) == original_hash
+    assert (modules[router_name].__file__, modules[router_name].__spec__.origin) == original_origin
+    # Preserve the factory callable and router module; only its result is injected.
+    monkeypatch.setattr(modules["vllm.model_executor.layers.fused_moe.router.router_factory"], "Router", lambda: native)
+    with pytest.raises(ValueError, match="bound native callable code/source"):
+        moe_impl.SigmoidBiasGatingNetwork(**kwargs)
 
 
 @pytest.mark.parametrize("failure", [None, "call", "parser"])
