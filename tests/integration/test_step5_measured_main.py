@@ -71,6 +71,9 @@ def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(t
     wrapper._profile_cell_callable = profile
     frames = (MoESourceFrame(0,(),(),16,"prefill_hot"), MoESourceFrame(1,(1,),(6128,),1,"standalone_legacy"))
     cell = MoERoutingProfileCell(MoERoutingProfileInput("cpu_empty_local",frames,17),"source_local",0)
+    for kwargs in ({"num_tokens":16},{"seed":0},{"load_distribution":"balanced"}):
+        with pytest.raises(ValueError,match="requires only one"):
+            wrapper.profile(routing_cell=cell.to_json(),**kwargs)
     row = wrapper.profile(routing_cell=cell.to_json())
     expected={"moe_gating_linear","moe_gating_routing_topk"}
     if quant is not None and not deferred: expected.add("moe_input_quantize")

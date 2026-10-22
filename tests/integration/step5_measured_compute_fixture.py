@@ -158,6 +158,12 @@ def position_compute_tables(directory, model, *, device, measurement):
             expert_parallel_size=16,include_stage_boundaries=True)
     rows, inputs = [], []
     groups = resolve_routed_layer_groups(model)
+    profile = model.get_model_architecture_profile()
+    metadata = ffn._metadata(model)
+    contracts_by_group = {group.layer_range:{op.name:profile.resolve_layer_contract(model,
+        layer_id=group.layer_ids[0],operator_name=op.name,moe_tp_size=1,expert_parallel_size=16).typed_metadata_identity()
+        for op in get_moe_profiling_operators(dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",
+            quant_dtype="float8_e4m3fn" if group.precision.name=="FP8" else None,defer_input_quant=False))} for group in groups}
     for query, context in [(prefix,0) for prefix in (6112,6128)] + [(tail,prefix) for _,prefix,tail,_ in PREFILL_CASES] + [(1,c) for c in range(6143,7167)]:
         request = Request(0,query+context,1024)
         request._num_processed_tokens = context
@@ -187,8 +193,7 @@ def position_compute_tables(directory, model, *, device, measurement):
                         num_tokens_post_padded=0 if counts is None else sum((n+15)//16*16 for n in counts)))
                 specs = [op for op in get_moe_profiling_operators(native) if op.ep_agnostic == (ep_id is None)]
                 value = .01+physical/10000
-                contracts = {op.name:model.get_model_architecture_profile().resolve_layer_contract(model,
-                    layer_id=group.layer_ids[0],operator_name=op.name,moe_tp_size=1,expert_parallel_size=16).typed_metadata_identity() for op in specs}
+                contracts = {op.name:contracts_by_group[group.layer_range][op.name] for op in specs}
                 row = dict(num_tokens=physical,num_tensor_parallel_workers=1,expert_parallel_size=16,
                     num_experts=model.num_experts,router_topk=model.num_experts_per_tok,hidden_dim=model.embedding_dim,
                     expert_hidden_dim=contracts[specs[0].name]["effective_ffn_width"],
@@ -197,7 +202,7 @@ def position_compute_tables(directory, model, *, device, measurement):
                     time_stats={op.name:dict(median=value,kernel_count=3) for op in specs},**group.row_metadata())
                 cell = MoERoutingProfileCell(routing,scope,source_id,ep_id)
                 live = frame.live_rows if ep_id is None else source.live_rows
-                row.update(ffn._metadata(model),device=device,measurement_type=measurement.value,moe_frame_scope=scope,
+                row.update(metadata,device=device,measurement_type=measurement.value,moe_frame_scope=scope,
                     moe_input_id=routing.moe_input_id,moe_source_lane_id=source_id,moe_ep_rank=ep_id,
                     live_routing_token_count=live,masked_routing_token_count=physical-live,
                     routing_input=json.dumps(cell.to_json()["routing_input"]),native_context=json.dumps(native),
@@ -240,7 +245,7 @@ def refresh_compute(output: Path):
     return manifest
 
 
-def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile: str | None = None):
+def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile: str | None = None, position_cyclic=False):
     if gpus_per_role <= 0 or gpus_per_role % 8:
         raise ValueError("Fixture GPUs per role must be divisible by attention TP8")
     output.mkdir(parents=True, exist_ok=False)
@@ -267,8 +272,14 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
     for measurement in (MeasurementType.KERNEL_ONLY, MeasurementType.CUDA_EVENT):
         directory = output / f"fixture_compute_{measurement.value.lower()}"
         directory.mkdir()
-        compute[measurement] = compute_tables(directory, model, device=device,
-                                             expert_parallel_size=ep, measurement=measurement)
+        if position_cyclic:
+            with MonkeyPatch.context() as patch:
+                patch.setattr(global_vars,"DECODE_CUDA_GRAPH_MODE","full_and_piecewise")
+                patch.setattr(global_vars,"CUDAGRAPH_CAPTURE_SIZES",list(CAPTURE_SIZES))
+                compute[measurement], routing_inputs = position_compute_tables(directory,model,device=device,measurement=measurement)
+        else:
+            compute[measurement] = compute_tables(directory, model, device=device,
+                                                 expert_parallel_size=ep, measurement=measurement)
     gap = output / "fixture_kernel_gap.csv"
     pd.DataFrame({"execution_mode": ["eager", "cuda_graph"],
                   "num_tensor_parallel_workers": [8, 8],
@@ -288,7 +299,7 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
     config.nixl_read_profile = nixl_read_profile
     replica = ffn._replica(model)
     replica.device, replica.moe_expert_parallel_size = device, ep
-    replica.moe_routing_distribution_type, replica.moe_routing_seed = "balanced", 42
+    replica.moe_routing_distribution_type, replica.moe_routing_seed = "position_cyclic" if position_cyclic else "balanced", 42
     replica.attn_dp, replica.num_pipeline_stages = gpus_per_role // 8, 1
     replica.kv_cache_dtype = "auto"
     replica.network_device = "cpu_fixture_network"
@@ -329,6 +340,10 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
                         "CPU and communication isolation are explicit",
                         "Unlisted physical shapes remain coverage errors"],
     }
+    if position_cyclic:
+        from dataclasses import asdict
+        manifest.update(schema="step5_position_compute_cpu_fixture.v1",routing_distribution_type="position_cyclic",
+            routing_inputs=[asdict(item) for item in routing_inputs])
     (output / "fixture_manifest.json").write_text(json.dumps(manifest, indent=2, default=str) + "\n")
     return manifest
 
@@ -340,6 +355,7 @@ if __name__ == "__main__":
     parser.add_argument("--gpus-per-role", type=int, choices=(16,))
     parser.add_argument("--refresh-compute", action="store_true")
     parser.add_argument("--nixl-read-profile")
+    parser.add_argument("--position-cyclic",action="store_true")
     args = parser.parse_args()
     if args.refresh_compute:
         result = refresh_compute(args.output_dir.resolve())
@@ -347,6 +363,6 @@ if __name__ == "__main__":
         if args.device is None or args.gpus_per_role is None:
             parser.error("Generation requires --device and --gpus-per-role")
         result = generate(args.output_dir.resolve(), device=args.device, gpus_per_role=args.gpus_per_role,
-                          nixl_read_profile=args.nixl_read_profile)
+                          nixl_read_profile=args.nixl_read_profile,position_cyclic=args.position_cyclic)
     print(json.dumps({"manifest": str(args.output_dir.resolve() / "fixture_manifest.json"),
                       "native_admitted": False, "roles": list(result["bundles"])}))
