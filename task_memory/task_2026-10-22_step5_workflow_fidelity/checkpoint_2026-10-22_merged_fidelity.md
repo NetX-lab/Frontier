@@ -4,9 +4,9 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-22 | 完成 strict clean77 后检查主线；保留记录提交和父任务 full CLI 边界。 |
+| 2026-10-22 | 完成 strict clean77 和 records-only 提交核查；父任务 full CLI 边界不变。 |
 
-**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -14,12 +14,12 @@
 | 核实可复用 baseline | PASS | preflight receipt：7e8bea3，77 个来源记录、451 个 artifact。 |
 | 执行 candidate clean77 | PASS | candidate_run.log：77/77 输出成功。 |
 | 严格比较并核实输出 | PASS | comparison.json：77/77 一致；postrun receipt：902/902 hash 通过。 |
-| scoped records-only 提交与 handoff | TODO | 记录已准备，下一步提交并检查 changed-file list。 |
+| scoped records-only 提交核查 | PASS | 90307f2：19 个新增记录文件，源码不变，status clean。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** preflight checkpoint 至今｜**当前前沿：** scoped records-only 提交
+**检测窗口：** preflight checkpoint 至今｜**当前前沿：** 返回 parent handoff
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -41,9 +41,8 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 完成 records-only commit 并核查仅新 task directory 有改动；完成标志为文件归属与测试 SHA 可独立核对。
-2. 向 parent 返回 77/77、baseline/tested SHA、record commit、report/receipts 路径。
-3. parent 继续已分配的 full Step CLI；本次 legacy fidelity 不关闭 native/calibration 或 CPU-overhead 验收。
+1. 向 parent 返回 77/77、baseline/tested SHA、records-only commit 范围及 report/receipts 路径。
+2. parent 继续已分配的 full Step CLI；本次 legacy fidelity 不关闭 native/calibration 或 CPU-overhead 验收。
 
 ## 4. 最值得关注的 3 点
 

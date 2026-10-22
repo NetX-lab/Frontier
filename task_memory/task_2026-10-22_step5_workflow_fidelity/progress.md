@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-22 | Complete strict clean77 comparison and post-run artifact/provenance audit. |
+| 2026-10-22 | Complete strict clean77, evidence audit and records-only commit/file-ownership verification. |
 
 ## Scope
 
@@ -38,9 +38,11 @@ The tested source is `fa5bae2980366da1d075125d6c26248a737fc419`.
   comparison found no drift; the full Step CLI remains parent-owned/pending.
 - **completed:** installed the final scoped records and selected receipts only
   after the capture/comparison/audit finished. No source/test/fixture changed.
-- **pending handoff action:** commit only this new task directory and inspect
-  the commit's changed-file list. The record commit is separate from the tested
-  SHA and is returned in the final parent handoff; it is not retested code.
+- **completed:** records commit `90307f215a4078dea42a88184f75e283d2db389b`
+  contains exactly 19 additions in this task directory; parent is the tested
+  SHA, source/tests/examples/data are unchanged and worktree status is clean.
+  A records-only closure update records this verified commit outcome. Final
+  record commits are returned separately from the tested SHA, not retested code.
 
 Preflight receipt: `/data/ycfeng/tmp/step5_workflow_fidelity_20261022/preflight_receipt.json`.
 Raw candidate log: `/data/ycfeng/tmp/step5_workflow_fidelity_20261022/candidate_run.log`.
@@ -58,5 +60,8 @@ measurement. Prior parent reviews/check counts receive no test credit here.
 
 Unresolved issues within this verification: none. Parent-only full CLI and
 native/calibration prerequisites remain unchanged. The final records commit
-is discoverable as the tip of `verify/fidelity-candidate-fa5bae2`, immediately
-after tested commit `fa5bae2980366da1d075125d6c26248a737fc419`.
+is discoverable as the tip of `verify/fidelity-candidate-fa5bae2`; its complete
+records-only range starts immediately after tested commit
+`fa5bae2980366da1d075125d6c26248a737fc419`.
+Commit/file-ownership receipt:
+`/data/ycfeng/tmp/step5_workflow_fidelity_20261022/record_commit_receipt.json`.

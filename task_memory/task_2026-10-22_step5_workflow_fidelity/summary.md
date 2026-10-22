@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-22 | Archive strict 77/77 legacy fidelity PASS and verification limitations. |
+| 2026-10-22 | Archive strict 77/77 PASS, records commit verification and limitations. |
 
 ## Overview
 
@@ -46,6 +46,11 @@ records were installed only afterward. No first mismatch exists.
 Comparison SHA-256:
 `e1f4f94047f24889db7109f5de02b364e8ab033df8d36421da6978b496e4d677`.
 Exact commands, environment and PASS conditions are in the test report.
+
+Evidence archive commit: `90307f215a4078dea42a88184f75e283d2db389b`.
+Its 19 additions are confined to the new task directory; its parent is the
+tested SHA. Post-commit ownership/status verification passed. The branch tip
+includes this records-only completion update; the tested source did not change.
 
 ## Open/deferred work
 
