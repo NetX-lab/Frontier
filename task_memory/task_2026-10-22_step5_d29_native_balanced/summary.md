@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Parent accepts and integrates native19, publishes the image and supplies verified installed-source artifacts. |
+| 2026-10-23 | Prepare controlled T2 metadata/cases and bounded execution/resource proposal; static-only, no code change or launch. |
 | 2026-10-23 | Complete approved native19 implementation and CPU verification; retain historical design archive below. |
 | 2026-10-23 | Repair four implementation findings,485 CPU PASS and1269/1582; narrow thin graph qualification. |
 | 2026-10-22 | Close native design findings; update its 19-file estimate and validation limits. |
@@ -93,8 +94,12 @@ source_hashes remains13 including engine.core. Full commands and evidence limits
 are in the parent's `repairs/test_report_2026-10-23_image_publication.md`.
 
 ### Unresolved live evidence
-Root still supplies approved model metadata, explicit per-DP positions/masks and
-   allocation for T2 and full serving/G3. See notes.md for case schema/inputs.
+Controlled T2 metadata and explicit positions/masks are now prepared in the local
+`t2_preparation/` directory. Root independently accepts/seals them and still
+supplies actual resource/run approval and worker/rendezvous/output identities.
+Exact T2 engine max_model_len7168 is not expressible by existing script/helper;
+all input positions are bounded below7168 while original metadata1048576 remains.
+Do not claim full-serving7168 engine binding from these inputs.
 
 Still **UNVERIFIED**: CUDA selected-score arithmetic, NONE/PW/FULL replay,
 actual auto FP8/BF16 dispatch/E8M0/collectives, all-rank imported provenance,
@@ -122,6 +127,42 @@ peer edits/new files/delegation or image/GPU/platform action by this stream.
 Repair code diff:267 additions+23 deletions (290); baseline native19 gross
 increases252 from1017 to1269 because final baseline diff differs from commit
 churn. Code diff command: `git diff 2c4cc9e 74d5c48 -- tests`.
+
+## D29-T2-INPUT-PREPARATION outcome
+
+Authorized clean fast-forward6827507 -> accepted9090407. No source/test edits or
+source/CPU acceptance rerun. Native19 remains1269/1582 gross; no native patch change.
+
+Deliverables under the existing task's `t2_preparation/`:
+- `model_metadata/config.json`: unchanged complete retained78447-byte metadata,
+  SHA256e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63,
+  official revision364b3b03fed2477aa0953fe855a2c4c8c48ee3cc. No fake model data,
+  truncated exclusions, weights or tokenizer are needed by the existing T2 path.
+- `cases.json`: controlled/unobserved graph2×17 rows, live16 then4; three module
+  frames source6128+dummy/tail16+dummy/paddedq1+emptyDP. Physical/live DP counts
+  are[6129/6128,1/0],[1/0,17/16],[4/1,4/0]. Hash7383a897d21ef2201b7f8bfb40bd855aeb89a5da7fecbedec657df96c8ecaef0.
+- `provenance.json`: source/revision/hash/image/script/publication identities,
+  controlled construction, input7168 bound and explicit engine7168 limitation.
+- `execution_proposal.md`, `resource_proposal.json`: exact existing T2/torchrun
+  command, neutral cwd/import/mounts/compatibility recipe, TP8/DP2/EP16/noSP/noMTP/
+  auto/skip-padding settings. Minimum2nodes/16H800 is derived from existing
+  topology validation. Suggested32CPU/128GiB per node,30min/8GPUh, single attempt
+  is a root decision proposal, not an allocation, fit guarantee or launch approval.
+- `static_review_receipt.json`, `hashes.sha256`: static scope/conformance limits
+  and6 artifact checksums. Hash-index SHA256:
+  67f1a13307dc5e19353fea4b0f8a50fddc73f04ecb53a2fa533e5cc78a939a29.
+
+Static schema/types/positive physical rows/position bounds/hash/copy/source
+agreement and existing static-only probe_plan/topology PASS. No torch/vllm imports,
+CUDA initialization or backend/kernel evidence. Exact static commands/results
+are appended to the existing native integration test report. Thin graph plus
+eager modules remains distinct from MRv2 serving/attention/connector/full backend
+graphs, G3/state/transfer and numerical/op-gap/CPU overhead acceptance.
+
+Remaining: root independent accept/seal/readiness and finite-collection resource/
+run authorization, actual paths/rendezvous/output retention, actual engine7168
+seam if required, all GPU/import/library/backend/runtime evidence. No numerical
+state tolerance was selected, and original G3 criteria are preserved.
 
 ## Preserved pre-allocation design archive (historical)
 

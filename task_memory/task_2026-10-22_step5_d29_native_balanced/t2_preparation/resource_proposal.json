@@ -1,0 +1,117 @@
+{
+  "task_id": "D29-T2-INPUT-PREPARATION",
+  "status": "PROPOSAL_ONLY_NOT_APPROVED_NOT_SUBMITTED",
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "topology": {
+    "gpu_type": "H800",
+    "nodes": 2,
+    "gpus_per_node": 8,
+    "total_gpus": 16,
+    "tp": 8,
+    "dp": 2,
+    "ep": 16,
+    "pp": 1,
+    "node0_ranks": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "node1_ranks": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "dp_group_examples": [
+      [
+        0,
+        8
+      ],
+      [
+        7,
+        15
+      ]
+    ],
+    "reason": "T2.main hardcodes8/2/8; expected_topology and validate_launcher require WORLD_SIZE16/LOCAL_WORLD_SIZE8 and node-local TP groups"
+  },
+  "suggested_allocation": {
+    "charged_group": "codesign",
+    "preemptible": false,
+    "cpu_per_node": 32,
+    "mem_gb_per_node": 128,
+    "wallclock_seconds": 1800,
+    "max_gpu_hours": 8,
+    "attempts": 1,
+    "retries": 0,
+    "approved": false,
+    "reason": "Four CPUs and16GiB host RAM per image process are proposed reserves for8 processes/node, native loading and first-use compilation; not measured minima or fit guarantees"
+  },
+  "workload": {
+    "module_layers": [
+      3,
+      88
+    ],
+    "module_frames": 3,
+    "module_calls_per_rank": 6,
+    "module_calls_all_ranks": 96,
+    "graph_rows": 17,
+    "graph_modes": [
+      "NONE",
+      "PIECEWISE",
+      "FULL"
+    ],
+    "graph_live_replays_per_mode": 2,
+    "max_dp_physical": [
+      6129,
+      17
+    ],
+    "max_gathered_physical": 6130,
+    "checkpoint_loaded": false,
+    "full_model_instantiated": false
+  },
+  "raw_allocation_lower_bounds": {
+    "num_local_routed_experts": 22,
+    "hidden": 4096,
+    "moe_intermediate": 1536,
+    "expert_tp": 1,
+    "fp8_routed_weight_bytes": 415236096,
+    "bf16_routed_weight_bytes": 830472192,
+    "fp8_block_scale_fp32_bytes": 101376,
+    "formula": "EP16 owns352/16=22 complete experts;3*hidden*intermediate per expert. FP8=1B, BF16=2B. No extra TP8 division inside routed expert matrices.",
+    "limits": "Raw unrounded weights only; excludes shared/gate, format conversion, both-layer assignment overlap, allocator caching, DeepGEMM/JIT/NCCL/CUDA graph workspace and temporary activations; not runtime fit",
+    "fp8_dp_gather_payload_bytes": 26285440,
+    "bf16_dp_gather_payload_bytes": 50609280,
+    "combine_payload_bytes": 50216960
+  },
+  "mount_proposal": [
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-position-native",
+      "target": "/data/ycfeng/Frontier/.worktrees/step5-position-native",
+      "mode": "read-only",
+      "purpose": "Existing T2 and Frontier component imports plus controlled metadata/cases"
+    },
+    {
+      "source": "ROOT_CHOSEN_FRESH_LOCAL_TEMP_DIRECTORY",
+      "target": "/work/t2",
+      "mode": "read-write",
+      "purpose": "Neutral cwd/output/local JIT and CUDA caches; root stages retained evidence after run"
+    }
+  ],
+  "remaining_prerequisites": [
+    "Root independent acceptance/sealing and implementation readiness",
+    "Root explicit16-H800 resource/run authorization and existing launcher lifecycle/finite-collection coordination",
+    "Root fresh output/rendezvous/node placement and retained-output location",
+    "Resolve actual engine7168 requirement if it is mandatory; existing T2 only supports7168 input bounds",
+    "Actual worker import/backend/CUDA compatibility/rank reports remain UNVERIFIED"
+  ],
+  "no_cloud_access_in_preparation": true
+}

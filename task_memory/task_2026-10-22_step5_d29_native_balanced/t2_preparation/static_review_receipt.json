@@ -1,0 +1,71 @@
+{
+  "task_id": "D29-T2-INPUT-PREPARATION",
+  "status": "PASS_STATIC_INPUT_ONLY_NOT_RUN_NOT_LAUNCH_APPROVAL",
+  "reviewer": "native owner self-check, no extra subagent",
+  "environment": {
+    "python_executable": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "python_version": "3.12.13",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "torch_vllm_imported": false
+  },
+  "model_metadata": {
+    "unchanged_complete_copy": "PASS",
+    "bytes": 78447,
+    "sha256": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+    "revision": "364b3b03fed2477aa0953fe855a2c4c8c48ee3cc",
+    "original_max_position_embeddings": 1048576,
+    "engine_max_model_len_7168": "NOT_BOUND: no existing T2/helper argument or verified environment override",
+    "config_or_metadata_changes": false
+  },
+  "input_schema": {
+    "graph_case_count": 2,
+    "graph_physical_rows": [17, 17],
+    "graph_live_rows": [16, 4],
+    "module_frame_count": 3,
+    "module_physical_rows_dp": [[6129, 1], [1, 17], [4, 4]],
+    "module_live_rows_dp": [[6128, 0], [0, 16], [1, 0]],
+    "integer_positions_and_boolean_masks": "PASS",
+    "positive_physical_rows_even_empty_dp": "PASS",
+    "positions_in_0_to_7168_exclusive": "PASS",
+    "control_origin": "Deterministic controlled construction, not observed native/Frontier traces",
+    "cases_sha256": "7383a897d21ef2201b7f8bfb40bd855aeb89a5da7fecbedec657df96c8ecaef0"
+  },
+  "existing_static_probe_plan": {
+    "status": "PASS executed only existing stdlib source bodies",
+    "tp": 8,
+    "dp": 2,
+    "ep": 16,
+    "nodes": 2,
+    "world_size": 16,
+    "local_world_size": 8,
+    "native_layer_ids": [3, 88],
+    "precision_labels": ["fp8", "bf16"],
+    "timing_rows": 0,
+    "runtime_config_created": false
+  },
+  "provenance_review": {
+    "retained_model_bytes": "PASS",
+    "prepared_cases_hash": "PASS",
+    "script_and_helper_hashes": "PASS",
+    "accepted_publication_artifact_hashes": "PASS",
+    "selected_mechanism_source_hashes": "PASS, not a rerun of accepted full source/CPU suites",
+    "resource_dimension_formulas": "PASS raw dimensions only, not measured allocator/backend/collective data"
+  },
+  "scope": {
+    "production_test_code_edits": 0,
+    "native19_accepted_gross": 1269,
+    "native19_ceiling": 1582,
+    "platform_gpu_cloud_auth_ssh_docker_push": "NOT_PERFORMED",
+    "new_harness_semantics_tolerances": "NONE",
+    "original_g3_state_criteria": "UNCHANGED"
+  },
+  "remaining": [
+    "Root independent acceptance/sealing and implementation readiness",
+    "Root actual resource/run authorization and finite-collection coordination",
+    "Actual worker/mount/rendezvous/output/retention identities",
+    "Exact engine7168 supported seam if root requires it",
+    "Actual GPU/import/library/backend/runtime/G3 evidence"
+  ]
+}

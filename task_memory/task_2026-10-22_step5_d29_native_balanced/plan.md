@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Establish approved implementation milestones. |
 | 2026-10-23 | Add the explicitly requested four-finding repair and affected verification milestone. |
+| 2026-10-23 | Add input-only T2 preparation; actual launch remains root-owned and unapproved. |
 
 1. Native scoped context, outer Step forward and registered factory strategy ->
    actual-source CPU tests, four-file receipt and early interface commit.
@@ -22,6 +23,29 @@
 Acceptance: native19 only; preserve legacy routing, default image and D30 counter
 semantics; no invented image/cost/runtime qualification. Source checks cannot
 substitute for graph replay, modular auto backend, G3 or all-rank serving evidence.
+
+## Current follow-through: D29-T2-INPUT-PREPARATION
+Dependency: P1 -> {P2, P3} -> P4. No implementation work or new tickets.
+- P1: Fast-forward accepted9090407 and read actual T2/helper/native design plus
+  retained metadata/publication provenance. PASS requires actual paths/hashes,
+  not fresh CPU/runtime acceptance of already completed implementation.
+- P2: Prepare unchanged config.json copy and minimal existing-schema cases under
+  t2_preparation/, with controlled/unobserved labels, per-DP physical/live counts
+  and construction provenance. Exactly2 same-shape graph replays and3 module
+  frames (source+dummy, tail+dummy, padded-q1+empty DP). Static conformance only.
+- P3: Record exact existing-script two-node torchrun commands, neutral cwd/import,
+  mounts/env/compatibility, inspected topology and bounded resource proposal.
+  Identify unsupported requirements/missing inputs without modifying code.
+- P4: Static input/hash/path review, check-progress, update existing local
+  report/progress/summary and commit generated inputs. No source/test changes;
+  native19 budget remains1269/1582. Root independently accepts/seals, decides
+  resources and secures actual run approval after implementation readiness.
+
+Acceptance: true retained metadata revision/bytes, published platform identity,
+inputs entirely within7168 positions, no new numeric state tolerance. Graph
+and eager-module evidence limits remain as accepted. Actual GPU/backend/G3 and
+finite-collection coordination are prerequisites for root's later work, not
+claims this input-only task can close.
 
 ## Preserved pre-allocation record (historical)
 

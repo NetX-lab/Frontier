@@ -6,6 +6,36 @@
 | 2026-10-22 | Close all four design findings after c9e9274; correct the proxy path and record parent budget verification. |
 | 2026-10-22 | Record four independent design findings and assign corrections before scope approval. |
 | 2026-10-23 | Record four implementation-review repairs, CPU evidence and unverified live boundaries. |
+| 2026-10-23 | Review controlled T2 input schema/provenance and execution proposal statically; no source/CPU acceptance rerun. |
+
+## Controlled T2 input static review (current follow-through)
+
+TaskID D29-T2-INPUT-PREPARATION; native-owner self-check, no additional agent.
+Artifacts: t2_preparation/model_metadata/config.json, cases.json, provenance.json,
+resource_proposal.json, execution_proposal.md, static_review_receipt.json and
+hashes.sha256. Baseline accepted9090407. Only local records/generated inputs
+changed; native19 remains1269/1582 and the accepted native4 patch is unchanged.
+
+PASS_STATIC: complete retained config bytes/revision/hash; existing-schema
+graph2×17 and3 per-DP frames; bool padding masks, signed integer nonnegative
+positions below7168, physical counts positive even for idle lanes; controlled
+source/tail/q1/43-44 cycle edge/stale padding coverage. Actual helper's stdlib
+probe_plan/topology bodies confirm2nodes/16ranks/TP8/DP2/EP16/layers3,88.
+Two bash command blocks parse with bash -n, without execution. Existing script,
+source/pub/input hashes agree; raw dimension estimates do not claim runtime fit.
+
+Explicit incomplete seam: input bound7168 is not actual engine7168. Both existing
+EngineArgs calls omit max_model_len; metadata max_position_embeddings1048576 is
+preserved. No wrapper, metadata rewriting, new flag or environment workaround is
+authorized by this task. Root must resolve actual-engine binding if required
+before accepting that stronger criterion. Input/resource proposal can be sealed
+independently; actual launch waits for root readiness/resources/run approval.
+
+All cases are controlled probes, not observed native/Frontier traces. No numerical
+state tolerance chosen; original G3/state criteria preserved. No torch/vllm
+imports, CUDA/backend/kernel invocation, image/platform operations or re-run of
+accepted source/CPU suites. Future thin graph/eager module results do not qualify
+MRv2 inputs/attention/connector breaks, actual backend graphs or G3/E2E.
 
 ## Implementation review continuation (current)
 
