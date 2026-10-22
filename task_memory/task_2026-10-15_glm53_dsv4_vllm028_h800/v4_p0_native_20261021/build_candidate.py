@@ -79,7 +79,8 @@ def main(generation='06'):
     engine = config['engine']
     for name in ('attention_backend', 'quantization', 'num_gpu_blocks_override'):
         engine.pop(name, None)
-    engine.update(data_parallel_size=2, tensor_parallel_size=8, pipeline_parallel_size=1,
+    engine.update(model_name='deepseek-ai/DeepSeek-V4-Flash',
+        data_parallel_size=2, tensor_parallel_size=8, pipeline_parallel_size=1,
         seed=prior['llm']['seed'], block_size=None, kv_cache_dtype='fp8',
         worker_extension_cls='native_full_structure.FullModelInventory', moe_gating_routing_runtime_path='balanced_topk')
     # Native compilation/capture defaults are kept unresolved, as in accepted G0B.

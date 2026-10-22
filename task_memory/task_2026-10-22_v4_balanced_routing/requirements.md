@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root recorded missing native model identity correction:23/953, A432/B319/C202, with unchanged GPU bounds. |
 | 2026-10-23 | Resolved primary/B documentation merge; retained exact approvals and historical delegations under current23/952 authority. |
 | 2026-10-23 | Root recorded the delegated23/952 adjustment for the separate replay deadline; resources unchanged. |
 | 2026-10-23 | YC approved23/950 and delegated similar small corrective scope decisions to root. |
@@ -17,7 +18,7 @@
 | 2026-10-23 | Historical B reallocation permitted253; two native P2 repairs were paused pending the later950 decision. |
 | 2026-10-23 | B R1 delivered312 source/CPU lines under950; root subsequently completed invocation and all deadlines in0832200. |
 
-Current authority is the root decision below:23 maintained files/952 routing changed lines, A432/B318/C202, with unchanged32GPUh native budget. Earlier allocations and pauses are historical. B source c491e6a is accepted after root133PASS and independent APPROVE; builder0832200 supplies the immutable revision and3600payload/1800startup/1800replay deadlines. Native06 is not built/submitted; native05 remains historical UNVERIFIED. Execution evidence and the independent prefill result-verification status are maintained in progress.md.
+Current authority is23 maintained files/953 routing changed lines, A432/B319/C202, with unchanged32GPUh native budget. The actual native06 build exposed missing engine.model_name; its partial directory is preserved. The corrected builder passes a complete temporary CPU build. Final package/freeze/submission remain pending; native05 remains historical UNVERIFIED. Current execution evidence is in progress.md; earlier allocations and pauses below are historical.
 
 ## [Original Request]
 
@@ -84,6 +85,10 @@ At approval, the aggregate ceiling was23 maintained files/950 changed lines, all
 Under YC's delegated small-correction authority above, root sets the current ceiling to23files/952changed lines, allocated A432/B318/C202. The delivered B source is312 lines. Binding the existing payload timeout10800→3600 and readiness cost10800/96→3600/32 consumes four changed lines; the separately located replay timeout7200→1800 needs two more. All three existing settings are updated before generation06. Startup remains1800, with a3600s outer payload cap and unchanged32GPUh approved maximum. Supplying the existing immutable commit to the builder's verifier replaces a routing-added line and adds no cumulative lines. This decision funds exactly the missing two-line replay-timeout correction, without new files, mechanisms or GPU resources.
 
 Root completed these settings and the verifier invocation in0832200; this is source readiness, not a native06 package or run acceptance.
+
+## Root correction decision: native model identity, 2026-10-23
+
+The retained native engine template omits model_name. Add the existing model-name case input, independently validated against all four hashes in the retained native metadata manifest. No Frontier-to-native label inference, server argv change or checker change is allowed. The +2/-1 replacement costs three cumulative lines, rather than the initially estimated one. After e9e79d4 removed two redundant host-only entries, actual950 becomes953. Under YC's delegated authority, root raises the ceiling by one from952 to953 and B allocation to319. No new maintained file, interface, routing policy, native/C26 change or GPU allocation follows. Preserve the failed e9e79d4 package and build generation06 in a fresh clean worktree.
 
 ## Prefill delegated implementation contract
 
