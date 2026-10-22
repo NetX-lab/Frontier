@@ -33,7 +33,12 @@ def verify(stage: Path) -> dict:
             assert sha256(workload / name) == digest
     else:
         assert config["role_num_gpu_blocks_override"] == {"prefill": 1024, "decode": 512}
-    assert config["image"].endswith("@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20")
+    from tests.comparison.dp_placement_pp.vllm_replay import adapter_record, runtime_version
+    version = runtime_version(config['engine'])
+    adapter = adapter_record(version)
+    assert version == definition['vllm_version']
+    assert json.loads((stage/'engine.json').read_text()) == config['engine']
+    assert config['image'] == config['engine']['native_reference']['image']
     engine = config["engine"]
     assert (engine["tensor_parallel_size"], engine["data_parallel_size"], engine["pipeline_parallel_size"]) == (8, 2, 1)
     assert engine["enable_expert_parallel"] and engine["enable_prefix_caching"] is False
@@ -52,6 +57,14 @@ def verify(stage: Path) -> dict:
     for name, digest in config["model_hashes"].items():
         assert sha256(Path(config["model_dir"]) / name) == digest, name
     observation = config["pd_state_observation"]
+    if adapter['native_reference'].get('routing_strategy') == 'position_cyclic':
+        from tests.integration.step5_pd.r2_runtime import SOURCE_MODULES
+        assert observation['routing_strategy'] == 'position_cyclic'
+        assert observation['installed_native_root'] == config['installed_package']
+        assert Path(config['installed_package']).is_absolute()
+        for module in SOURCE_MODULES[-4:]:
+            path = module.replace('.', '/')+'.py'
+            assert observation['schema_source_hashes'][module] == config['expected_source_hashes'][path]
     source_root = Path(definition["pd_state_observation"]["source_root"])
     for module, digest in (observation["source_hashes"] | observation["schema_source_hashes"]).items():
         assert sha256(source_root / (module.replace(".", "/") + ".py")) == digest, module
@@ -114,6 +127,9 @@ def verify(stage: Path) -> dict:
                 assert "--api-server-count" not in command
         env = json.loads(plan["server_env_set"]["STEP5_PD_STATE_OBSERVATION"])
         assert env["role"] == plan["role"] and env["output_dir"] == "/worker-local-scratch/pd_state"
+        if observation.get('routing_strategy') == 'position_cyclic':
+            assert plan['server_env_set']['VLLM_MOE_ROUTING_SIMULATION_STRATEGY'] == 'position_cyclic'
+            assert env['installed_native_root'] == observation['installed_native_root']
         assert plan["server_env_set"]["PYTHONPATH"].startswith(str(stage / "r2_bootstrap"))
     for name in ("r2_observation.py", "r2_bootstrap/sitecustomize.py", "r2_verdict.py"):
         compile((stage / name).read_text(), str(stage / name), "exec")

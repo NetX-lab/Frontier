@@ -21,12 +21,16 @@ async def run(args):
     stage = args.trace_dir.parent
     config = json.loads((stage / 'config.json').read_text())
     definition = json.loads((stage / 'r2_run.json').read_text())
+    engine = json.loads(args.engine_config.read_text())
+    version = canonical_replay.runtime_version(engine)
+    if engine != config['engine'] or version != definition['vllm_version']:
+        raise ValueError('R2 client engine/config/definition runtime identity differs')
     settings = config['canonical_g3']
-    model = canonical_replay.local_model_config(args.model_dir, 'step5')
+    model = canonical_replay.local_model_config(args.model_dir, version)
     urls = {'prefill': args.prefill_url, 'decode': args.decode_url}
     args.output_dir.mkdir(parents=True, exist_ok=True)
     report = {'diagnostic_only': True, 'clean_timing_eligible': False, 'waves': {},
-              'errors': [], 'ready_for_formal': False}
+              'errors': [], 'ready_for_formal': False, 'client_runtime_version': version}
 
     def persist():
         (args.output_dir / 'r2_replay_summary.json').write_text(json.dumps(report, indent=1))
@@ -39,7 +43,7 @@ async def run(args):
             return {'verified': False, 'error': repr(error)}
 
     app = canonical_replay.build_app(args.prefill_url, args.decode_url, '', '',
-        args.output_dir / 'proxy_requests.jsonl', vllm_version='step5')
+        args.output_dir / 'proxy_requests.jsonl', vllm_version=version)
     runner = web.AppRunner(app, access_log=None)
     await runner.setup()
     try:
@@ -58,7 +62,7 @@ async def run(args):
                 direct = args.decode_url+'/v1/completions' if wave.get('local_prefill_reference') else None
                 entry['dispatch'] = 'direct_native_D_no_proxy_or_transfer_metadata' if direct else 'native_PD_proxy'
                 entry['summary'], _ = await canonical_replay.replay(rows, args.proxy_port, model['vocab_size'],
-                    args.origin_lead_s, vllm_version='step5', records=records, completion_url=direct)
+                    args.origin_lead_s, vllm_version=version, records=records, completion_url=direct)
                 invalid = {}
                 for record in records:
                     if not record.get('cancel_after_first_content') and not record.get('cancel_after_decode_submit_s'):
