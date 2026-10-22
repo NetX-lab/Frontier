@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | YC approved position_cyclic and native/image implementation; retain independent-statistics prerequisites. |
 | 2026-10-22 | D29 adds immediate routing-policy alignment and supersedes old no-balancing criteria for current calibration. |
 | 2026-10-20 | Changed the native prerequisite to `06.simulation_scope` (decision D2). |
 | 2026-10-18 | Documentation-only audit: reconciled evidence, execution authority, shared ownership and stage-specific prerequisites; no new implementation acceptance. |
@@ -20,16 +21,21 @@ to new08/09/23 native generations. Preserve independent sampling and original
 run identities. A necessary native implementation/reference change requires
 its evidence-backed decision before code or GPU execution.
 
-**Status:** statistics blocked;11.routing_policy in progress under D29.
+**Status:** statistics blocked;11.routing_policy has approved semantics and active implementation design under D29.
 
 **Current routing-policy scope:** compare effective Frontier/native assignment,
 DP aggregation, EP ownership, integer remainders, padding and independent
 reference semantics. Frontier actual06 explicitly uses balanced; locked native
 built-ins uniform_random/normal_routing do not establish equivalent balance.
-Capture03 remains sealed/unsubmitted. Owner step5-d24-stage investigates the
-actual Step FP8/BF16 route and minimum proposal; parent owns user decision and
-fresh-generation acceptance. Policy verification is workflow work, not CPU-gap
-measurement or independent-statistics acceptance.
+Capture03 remains sealed/unsubmitted and not balanced. YC approved
+`position_cyclic`: `(logical_position * top_k + slot) % num_experts`, accepting
+same-position concentration while preserving P/D/chunk/reference invariance.
+Retain selected-weight semantics and native mask; physical rows do not imply
+live expert assignments. Native/Frontier/profile implementation and internal
+derived-image publication are approved. Native and Frontier designs determine
+the minimal numerical code scope before implementation; parent owns integration
+and fresh-generation acceptance. Policy verification is workflow work, not
+CPU-gap measurement or independent-statistics acceptance.
 
 This phase is documentation review only. In the next execution session, routine in-scope implementation, instrumentation, CPU/GPU tests and measurements use the standing authorization in `../requirements.md`; evidence prerequisites still apply.
 

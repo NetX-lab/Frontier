@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Merge D26/D27/identity/D28 atfa5bae2; strict77 and reconciled258 focused cases pass; record approved D29/D30 next work. |
 | 2026-10-22 | D26/D27/identity delivered; D28 parent81PASS/review clear; checkpoint updates D29 routing prerequisite and CPU-gap ordering. |
 | 2026-10-22 | D23 clean9dcd876/32fb934 comparison:77/77 identical, zero cache/provenance/evidence findings; fresh CLI remains active. |
 | 2026-10-22 | After legacy agent cancellation, archive isolated offline result; resume fresh MRv2 CLI and verify fixed-capacity source242PASS. |
@@ -182,7 +183,7 @@
 
 ## Current D21/D23/D24/D25 handoff — 2026-10-22
 
-Authority includes D20–D29 in [requirements.md](requirements.md), owned by the parent. Current normative contract is [spec §0](spec.md); executable dependencies/owners are in [plan.md](plan.md). Earlier chronological evidence below does not override the current table or approved decisions.
+Authority includes D20–D30 in [requirements.md](requirements.md), owned by the parent. Current normative contract is [spec §0](spec.md); executable dependencies/owners are in [plan.md](plan.md). Earlier chronological evidence below does not override the current table or approved decisions.
 
 | Work | Status | Evidence / next action |
 | --- | --- | --- |
@@ -192,18 +193,20 @@ Authority includes D20–D29 in [requirements.md](requirements.md), owned by the
 | P1 H80064 | basic PARTIAL; formal blocked | exp-1021-202325-579469 Succeeded;24/24 requests,64 GPUs, every lane idle; replay/G3/G4 and same-hardware30% release remain open |
 | P2 H20032 | basic PARTIAL; formal blocked | exp-1021-201544-965435 Succeeded;24/24 requests,32 GPUs, every lane idle; post-terminal parent API identity verified13:09UTC |
 | P2 H20064 | retained basic PARTIAL; formal blocked | Old64-GPU startup/capacity/24 exact requests/6128+16 split reusable; retain REFERENCE_UNSTABLE. Future runs wholly preemptible |
-| D20 shared measured implementation | integrated through7e8bea3; full CLI FAILED |Latest legacy77 strictly identical. Actual06 reaches357/362 outputs, then2400s timeout; corrected new-fixture acceptance remains pending |
+| D20 shared measured implementation | integrated throughfa5bae2; full CLI FAILED |Latest legacy77 strictly identical. Actual06 reaches357/362 outputs, then2400s timeout; new-policy/input acceptance remains pending |
 | D22 independent timing reference | completed within approved probe scope | `exp-1021-201658-886733`,one preemptible H200;18/18 strict candidates,22/22 output/cache,18/18 prefix PASS; full-grid/linear-quality/serving admission remains open |
 | Canonical G3/G4 capture01 | completed; G3 NOT QUALIFIED |160/163 complete,1 actual abort,2 HTTP502. Resident identity/content and scoped lifetime PASS; independent state equivalence, pressure and transfer overlap unresolved. [Judgment](../task_2026-10-21_step5_priority_runs/canonical_g3/native_judgment/report.md) |
 | Typed MRv2 profile ingestion | integrated at0c9d1ef; parent verification PASS |Parent467 producer and264 measured checks; merged-tree13/13 observed groups and26 synthetic rows, preserving5 raw-null FULL groups. Independent static review has no findings; comparative review was not completed. [Review](../task_2026-10-22_step5_mrv2_inputs/inputs_review.md) |
 | D23 first-prediction agreement/root | integrated; source/review/legacy PASS |32fb934 agreement and26db654 root/owner repair verified, including242/167 parent checks and clean77. Actual04 KeyError is historical; current blocker is full execution/workflow alignment |
 | Startup census correction | committed e8d2f1a; native validation pending |Actual nested worker startup seam RED02;181 affected and19 final focused checks PASS. Original native gate FAIL unchanged. [Report](../task_2026-10-21_step5_priority_runs/canonical_g3/startup_census/test_report_2026-10-22_startup_census.md) |
 | HTTP502 failure context | integrated d063573; parent196 and merged100 checks PASS |Public connection-selection events and redacted exception frames preserve healthy200, EOF502, oneP/oneD and existing transport policy. Native root cause and socket identity remain unverified. [Parent report](test_report_2026-10-22_d23_parent_integration.md) |
-| D24/D28 native preparation | capture03 sealed; submission BLOCKED |D-only32000, same P/workload/reference pool. Author711/parent81 checks and independent No findings. Balanced policy unresolved; numerical state rule separately pending |
-| D26 P lifecycle | delivered; parent review/integration pending |e8d9c6c/d56f2dd/68ab45c: P6128+D16, semantic6144/1024; fresh v2fixture and2944 exact queries. Combined D27 input/fullCLI not accepted |
-| D27 live SWA payload | parent source checks/review PASS; integration pending |191 checks, No findings;32 live pages/19826 descriptors/139887104B per rank. Allocation capacity unchanged |
-| D23 fixed identity reuse | parent verified; integration pending |96 checks, event/stage/lane/source truth equal. Complete iterations7.983/8.116s still RED; not native CPU-overhead evidence |
-| D29 policy/order | active source investigation |11.routing_policy owns effective balanced semantics and native proposal; workflow→GPU/op gap→CPU gap. No new broad CPU analysis or blind fullCLI retry |
+| D24/D28 native preparation | integrated; capture03 sealed, submission BLOCKED |D-only32000, same P/workload/reference pool; merged native/HTTP81PASS. Position policy approved but not installed; numerical state rule separately pending |
+| D26 P lifecycle | integrated; parent121/review and legacy PASS |P6128+D16, semantic6144/1024; v2fixture and2944 exact queries. New D29/D30 combined input/fullCLI remains open |
+| D27 live SWA payload | integrated; source/review/legacy PASS |32 live pages/19826 descriptors/139887104B per rank. Combined4080-prefix expectation corrected to102203904; allocation unchanged |
+| D23 fixed identity reuse | integrated; source/legacy PASS |96 parent checks, event/stage/lane/source truth equal. Pre-D26 complete iterations7.983/8.116s remain RED; not native CPU-overhead evidence |
+| Merged focused verification | completed |First239PASS/3FAIL/5SKIP retained; D27 expectation corrected, existing HTTP env/native-root binding restored. Reruns95/81PASS; latest per-case union258PASS/0FAIL/0SKIP; strict77 identical |
+| D29 policy/order | semantics/image approval recorded; bounded design active |position_cyclic preserves logical-position routing; short waves may concentrate. Native and Frontier/profile designs run in parallel; count physical/masked rows separately |
+| D30 finish sync | approved; scoped implementation active |19.finish_sync binds Step1/16, preserving legacy32 elsewhere; native boundary observation pending |
 | Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
 
 The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% on every track**.32 release30 requires all four errors<=30% in each of three clean full-population repetitions; equality passes, no average across metrics/hardware/repeats hides a failure. It unlocks only matching64 formal work, not basic runtime, final support or H800-to-H200 execution. Keep128 requests,6144/1024,QPS1,16 warmups,three clean repeats, existing runtime/backend/metrics and frozen68f891b/958d81a bytes. Profiles/native evidence and manifests are hardware/scale-specific, not scaled or substituted.
@@ -216,7 +219,7 @@ The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% 
 
 **Parent verification:** D21 source has204 passing parent checks. Staged `tests` namespace shadowing caused H20032 generation01 to fail before allocation;42dda4c adds package markers, with38 passing checks and actual StepMind-Python dry-run. All old packages remain unchanged; generation02 is separate. D22 has264 focused parent checks and a successful frozen18/4/0.05 native judgment. Detailed records: `../task_2026-10-21_step5_priority_runs/` and `../task_2026-10-21_step5_d22_timing/`. Independent compute/native source reviews hit model limits; no independent PASS is claimed. Parent continues direct checks and real execution.
 
-**Next actions:** (1) integrate reviewed D26/D27/identity and required source regression/new inputs; (2) resolve actual balanced routing and any necessary native/reference decision in parallel, then freeze a new D28-enabled generation; (3) inspect native connection/state/pressure evidence without weakening gates; (4) complete workflow and GPU/operator-gap alignment, then CPU overhead/gap if needed. Complete1024-output CLI still requires2400s and READ/readiness/source release/final metrics. [Checkpoint](checkpoint_2026-10-22_workflow_routing.md) found no execution drift and corrected stale routing/status/dependency records.
+**Next actions:** (1) finish bounded D29 native/Frontier/profile design, confirm any required numerical scope expansion, implement and verify; (2) independently complete D30 source/counter observation; (3) freeze new inputs and D28-enabled native generation, perform approved live checks/diagnostic, then workflow and GPU/operator-gap judgment; (4) complete source-bound1024-output CLI within2400s with READ/readiness/release/final metrics. CPU overhead/gap remains last. [Merged report](test_report_2026-10-22_merged_workflow.md) closes258 focused outcomes and77 strict cases. Frontier routing design's first subagent failed with an API reasoning_text error; a fresh general session resumes that scope, with no source edit lost.
 
 **Actual-main logger repair completed:** commit `b862e57`. Parent reproduced run08's `Batch has no requests` at the actual `BatchStageEndEvent`/`DummyForwardBatch` seam and restricted request-owned AF-state lookup to batches with requests. Reproduction2FAIL/2PASS -> affected logging/lifecycle36PASS. Clean detached5af7638/b862e57 runs at `/data/ycfeng/tmp/step5_event_logging_clean_fidelity_20261021` both exit0;strict comparator exits0 with77/77 identical,zero cache-name differences and no missing evidence. Earlier dirty-source receipts are preserved. Complete measured CLI acceptance remains with its owner. Details: [event-logging test report](test_report_2026-10-21_request_free_event_logging.md).
 

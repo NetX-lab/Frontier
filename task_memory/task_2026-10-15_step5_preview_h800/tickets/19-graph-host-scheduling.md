@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Add approved D30 finish-sync source/observation slice independent of full mixed-arrival acceptance. |
 | 2026-10-22 | Apply D29 workflow/GPU-first order and defer CPU-gap measurement. |
 | 2026-10-18 | Documentation-only audit: reconciled evidence, execution authority, shared ownership and stage-specific prerequisites; no new implementation acceptance. |
 | 2026-10-15 | Created the approved graph and host scheduling ticket. |
@@ -16,7 +17,17 @@ Expose expected versus actual request progress and cost ownership for long-prefi
 **External prerequisites:** Verified external09.full_frontier_path[GLM], complete 07/17 and a D-ASYNC disposition are required. Preserve observed native asynchronous boundaries; do not copy native threads/IPC into Frontier. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
 Record distinguishing native evidence and reuse sufficiency in the existing D-* record. Routine incremental changes proceed under standing execution authority; only a demonstrated material core refactor or materially unresolved semantics/acceptance requires explicit approval.
 
-**Status:** blocked
+**Status:** full mixed-arrival acceptance blocked;19.finish_sync in progress under D30.
+
+**D30 immediate slice:** current pinned Step synchronizes on wave step1 and
+each16 steps; Frontier legacy policy uses32 without the first sync. YC approved
+Step-scoped configuration/scheduling alignment, focused boundaries and native
+counter observation, preserving other-model behavior and legitimate dummies.
+This source correction can proceed from its pinned-source/parsed-args evidence
+before full07/17 and mixed-arrival acceptance; those whole-ticket prerequisites
+remain. Owner `step5-finish-sync`; records in
+`../../task_2026-10-22_step5_finish_sync/`. Keep native calls/returns/exceptions
+and observer error isolation; no new GPU synchronization or CPU-gap campaign.
 
 **D29 order:** workflow and GPU/operator-gap alignment precede CPU overhead/gap
 measurement or correction. Do not start broad CPU-gap analysis, sampling or
