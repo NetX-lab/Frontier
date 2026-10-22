@@ -13,6 +13,7 @@ import threading
 from types import ModuleType, SimpleNamespace
 
 import pytest
+import numpy as np
 
 from tests.unit.test_native_serving_inventory import native, scheduled
 from tests.unit import test_native_serving_inventory as base
@@ -29,6 +30,8 @@ class Descriptor:
     cg_mode: Mode
     num_tokens: int
     num_reqs: int
+    uniform_token_count: int | None = None
+    max_query_len: int | None = None
     num_active_loras: int = 0
 
 
@@ -78,6 +81,11 @@ def v2(native, monkeypatch):
             tokens = scheduler_output.total_num_scheduled_tokens
             if tokens == 0:
                 return state.result
+            reqs = len(getattr(scheduler_output, 'num_scheduled_tokens', {0: tokens}))
+            uniform = runner_module.get_uniform_decode_token_count(reqs, tokens, tokens,
+                getattr(state, 'has_prefill', tokens != 1))
+            runner_module.dispatch_cg_and_sync_dp(self.cudagraph_manager, reqs, tokens,
+                uniform, 2, 0, max_query_len=tokens, need_eager=is_profile)
             if state.mode == 'FULL':
                 return self.cudagraph_manager.run_fullgraph(Descriptor(Mode.FULL, tokens, 1))
             if state.mode == 'PIECEWISE':
@@ -92,6 +100,28 @@ def v2(native, monkeypatch):
     module = ModuleType('vllm.v1.worker.gpu.cudagraph_utils')
     module.ModelCudaGraphManager = ModelCudaGraphManager
     monkeypatch.setitem(sys.modules, module.__name__, module)
+    runner_module = ModuleType('vllm.v1.worker.gpu.model_runner')
+    dp_module = ModuleType('vllm.v1.worker.gpu.dp_utils')
+    dp_module.dist = SimpleNamespace(all_reduce=lambda *args, **kwargs: None)
+
+    def classify(num_reqs, num_tokens, max_query_len, has_prefill):
+        return max_query_len if not has_prefill and num_tokens == num_reqs * max_query_len else None
+
+    def dispatch(cudagraph_manager, num_reqs, num_tokens, uniform_token_count, dp_size,
+                 dp_rank, max_query_len=None, need_eager=False, num_active_loras=0):
+        class CPUVector(np.ndarray):
+            device = SimpleNamespace(type='cpu')
+        vector = np.array([[num_tokens] * dp_size, [Mode[state.mode].value] * dp_size,
+            [uniform_token_count or 0] * dp_size, [max_query_len or -1] * dp_size]).view(CPUVector)
+        dp_module.dist.all_reduce(vector)
+        return Descriptor(Mode[state.mode], num_tokens, 1, uniform_token_count,
+            max_query_len), vector[0]
+
+    runner_module.get_uniform_decode_token_count = classify
+    runner_module.dispatch_cg_and_sync_dp = dispatch
+    GPUModelRunner.__module__ = runner_module.__name__
+    monkeypatch.setitem(sys.modules, runner_module.__name__, runner_module)
+    monkeypatch.setitem(sys.modules, dp_module.__name__, dp_module)
     worker.use_v2_model_runner = True
     worker.model_runner = GPUModelRunner()
     assert worker.load_model() is state.result
@@ -362,7 +392,7 @@ def test_native_warmup_exception_is_original_and_lifecycle_restored(native_kerne
     assert v2.observer.local.context is None
     assert v2.observer.local.startup_warmup is False
     assert not (v2.directory / 'serving/rank7.json').exists()
-    assert not v2.observer.errors
+    assert v2.observer.errors[0]['where'] == 'v2_forward_association'
 
 
 def test_native_warmup_auxiliary_dump_failure_is_soft(native_kernel_warmup, monkeypatch):
@@ -377,3 +407,202 @@ def test_native_warmup_auxiliary_dump_failure_is_soft(native_kernel_warmup, monk
     assert v2.observer.local.startup_warmup is False
     assert v2.observer.errors == [{'where': 'post_warmup_dump',
         'error': 'OSError: Injected post-warmup write failure'}]
+
+
+def dispatch_checker():
+    import importlib.util
+    path = Path(__file__).parents[2] / ('task_memory/task_2026-10-22_v4_native_dispatch/'
+        'check_groundtruth_run_successor_r3.py')
+    spec = importlib.util.spec_from_file_location('dispatch_successor', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture
+def dispatch_oracle():
+    checker = dispatch_checker()
+    root = os.environ.get('FRONTIER_VLLM_BS_ROOT')
+    if not root:
+        pytest.skip('Set FRONTIER_VLLM_BS_ROOT for source-backed dispatch controls')
+    engine = dict(enforce_eager=False, tensor_parallel_size=8, data_parallel_size=2,
+                  max_num_seqs=128, max_num_batched_tokens=8192)
+    manifest = {'groundtruth_checkout_path': root}
+    manager, _ = checker.native_v2_graph_dispatch(manifest, engine)
+    return checker, engine, manager, checker.native_dispatch_oracle(manifest, manager)
+
+
+def dispatch_row(oracle, prefill, peer_uniform=1, peer_tokens=1):
+    import dataclasses
+    import torch
+    checker, engine, manager, native = oracle
+    ci = dict(num_reqs=1, num_tokens=1, max_query_len=1, has_prefill=prefill)
+    uniform = native['get_uniform_decode_token_count'](**ci)
+    inputs = dict(num_reqs=1, num_tokens=1, uniform_token_count=uniform, dp_size=2,
+                  dp_rank=0, max_query_len=1, need_eager=False, num_active_loras=0)
+    desired = manager.dispatch(1, 1, uniform, 0, max_query_len=1)
+    vector = [[1, peer_tokens], [desired.cg_mode.value, 2], [uniform or 0, peer_uniform], [1, 1]]
+    native['dist'] = SimpleNamespace(all_reduce=lambda tensor, **kwargs:
+        tensor.copy_(torch.tensor(vector, dtype=tensor.dtype)))
+    desc, padded = native['dispatch_cg_and_sync_dp'](manager, **inputs)
+    full = desc.cg_mode.name == 'FULL'
+    return dict(scheduled_num_requests=1, scheduled_num_tokens=1, graph_mode=desc.cg_mode.name,
+        successful_forwards=1, successful_replays=1,
+        batch_descriptor=dict(num_tokens=desc.num_tokens, num_reqs=desc.num_reqs if full else None,
+            uniform=None if full else False, has_lora=False, num_active_loras=0),
+        dispatch_evidence=dict(classifier=dict(inputs=ci, uniform_token_count=uniform),
+            dispatch=dict(inputs=inputs, descriptor=dataclasses.asdict(desc) | {'cg_mode': desc.cg_mode.name},
+                num_tokens_across_dp=padded.tolist()), dp_post_all_reduce=vector))
+
+
+@pytest.mark.parametrize('prefill,peer_uniform,peer_tokens,mode,tokens', [
+    (True, 1, 1, 'PIECEWISE', 1), (False, 1, 1, 'FULL', 1),
+    (False, 0, 1, 'PIECEWISE', 1), (False, 1, 2, 'FULL', 2)])
+def test_actual_native_classification_and_dp_dispatch(dispatch_oracle, prefill, peer_uniform, peer_tokens, mode, tokens):
+    checker, engine, manager, native = dispatch_oracle
+    row = dispatch_row(dispatch_oracle, prefill, peer_uniform, peer_tokens)
+    checker.verify_dispatch_row(row, engine, manager, native, 0)
+    assert row['graph_mode'] == mode and row['batch_descriptor']['num_tokens'] == tokens
+
+
+@pytest.mark.parametrize('fault', ['missing', 'circular', 'classifier', 'owner', 'dp_local',
+    'dp_shape', 'ambiguous', 'descriptor', 'mode', 'padding', 'failed_forward', 'boolean_token'])
+def test_dispatch_successor_rejects_incomplete_or_wrong_operands(dispatch_oracle, fault):
+    checker, engine, manager, native = dispatch_oracle
+    row = dispatch_row(dispatch_oracle, False)
+    ev = row['dispatch_evidence']
+    if fault == 'missing': del row['dispatch_evidence']
+    if fault == 'circular': del ev['classifier']['inputs']['has_prefill']
+    if fault == 'classifier': ev['classifier']['uniform_token_count'] = None
+    if fault == 'owner': ev['dispatch']['inputs']['dp_rank'] = 1
+    if fault == 'dp_local': ev['dp_post_all_reduce'][0][0] = 2
+    if fault == 'dp_shape': ev['dp_post_all_reduce'].pop()
+    if fault == 'ambiguous': ev['extra_dispatch'] = ev['dispatch']
+    if fault == 'descriptor': ev['dispatch']['descriptor']['num_tokens'] = 2
+    if fault == 'mode': row['graph_mode'] = 'PIECEWISE'
+    if fault == 'padding': ev['dispatch']['num_tokens_across_dp'] = [2, 2]
+    if fault == 'failed_forward': row['successful_forwards'] = 0
+    if fault == 'boolean_token': ev['dispatch']['inputs']['num_tokens'] = True
+    with pytest.raises((ValueError, KeyError)):
+        checker.verify_dispatch_row(row, engine, manager, native, 0)
+
+
+def test_frozen_r2_non_graph_predicates_and_reader_guards_remain_identical():
+    checker = dispatch_checker()
+    old, new = ast.parse(checker.R2_PATH.read_text()), ast.parse(checker.successor_source())
+    funcs = lambda tree: {n.name: ast.dump(n) for n in tree.body if isinstance(n, ast.FunctionDef)}
+    before, after = funcs(old), funcs(new)
+    assert {n for n in before if before[n] != after[n]} == {'native_rank_graph_evidence'}
+
+
+@pytest.mark.parametrize('fault', ['snapshot', 'ambiguous', 'capacity'])
+def test_dispatch_observer_errors_are_soft_and_counts_reconcile(v2, monkeypatch, fault):
+    module = sys.modules['vllm.v1.worker.gpu.model_runner']
+    v2.state.mode = 'FULL'
+    if fault == 'snapshot': monkeypatch.setattr(v2.module.dataclasses, 'asdict', lambda obj: 1 / 0)
+    if fault == 'capacity': v2.observer.MAX_ROWS = 0
+    if fault == 'ambiguous':
+        original = module.get_uniform_decode_token_count
+        module.get_uniform_decode_token_count = lambda *a, **k: (original(*a, **k), original(*a, **k))[0]
+    assert v2.worker.execute_model(scheduled(tokens=1)) is v2.state.result
+    assert v2.observer.forwards == v2.observer.replays == 1
+    assert v2.observer.errors
+    assert v2.observer.local.dispatch_evidence is None
+    assert sum(r['successful_forwards'] for r in v2.observer.rows.values()) == int(fault != 'capacity')
+    assert sum(r['successful_replays'] for r in v2.observer.rows.values()) == int(fault != 'capacity')
+
+
+def test_dispatch_observer_keeps_prefill_and_decode_separate(v2):
+    v2.state.mode = 'FULL'
+    for prefill in (True, False):
+        v2.state.has_prefill = prefill
+        v2.worker.execute_model(scheduled(tokens=1))
+    rows = list(v2.observer.rows.values())
+    assert len(rows) == 2
+    assert {r['dispatch_evidence']['classifier']['inputs']['has_prefill'] for r in rows} == {True, False}
+    assert sum(r['successful_forwards'] for r in rows) == v2.observer.forwards == 2
+    assert sum(r['successful_replays'] for r in rows) == v2.observer.replays == 2
+
+
+def test_native_cpu_dp_vector_is_copied_before_padding_and_exceptions_pass_unchanged(dispatch_oracle, monkeypatch, tmp_path):
+    import torch
+    _, _, manager, native = dispatch_oracle
+    monkeypatch.delenv('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR', raising=False)
+    observer = base.load_collector().NativeServingInventory(tmp_path, 'cpu-test', 'decode')
+    namespace, dp = ModuleType('native.cpu.runner'), ModuleType('native.cpu.dp')
+    for name in ('get_uniform_decode_token_count', 'dispatch_cg_and_sync_dp'):
+        setattr(namespace, name, native[name])
+    vector = [[1, 2], [2, 2], [1, 1], [1, 1]]
+    returned = object()
+    def reduce(tensor, **kwargs):
+        tensor.copy_(torch.tensor(vector, dtype=tensor.dtype))
+        return returned
+    dp.dist = SimpleNamespace(all_reduce=reduce, untouched=returned)
+    observer.install_v2_dispatch(namespace, dp)
+    native['dist'] = dp.dist
+    observer.local.dispatch_evidence = {'forwards': 0, 'replays': 0}
+    uniform = namespace.get_uniform_decode_token_count(1, 1, 1, False)
+    desc, padded = namespace.dispatch_cg_and_sync_dp(manager, 1, 1, uniform, 2, 0, max_query_len=1)
+    assert desc.num_tokens == 2 and padded.tolist() == [2, 2]
+    assert observer.local.dispatch_evidence['dp_post_all_reduce'] == vector
+    assert dp.dist.untouched is returned and not observer.errors
+    row = dispatch_row(dispatch_oracle, False, peer_tokens=2)
+    row.pop('dispatch_evidence')
+    row.pop('successful_forwards')
+    row.pop('successful_replays')
+    observer.count('replay', row)
+    observer.count('forward', row)
+    observer.finish_v2_dispatch()
+    checker, engine, _, _ = dispatch_oracle
+    checker.verify_dispatch_row(next(iter(observer.rows.values())), engine, manager, native, 0)
+    error = RuntimeError('Native CPU all-reduce failed')
+    def fail(*args, **kwargs):
+        raise error
+    observer.local.dispatch_evidence = {'forwards': 0}
+    # Mutate only the CPU transport stand-in, not the installed observer.
+    native_dist = SimpleNamespace(all_reduce=fail)
+    namespace2, dp2 = ModuleType('native.cpu.runner2'), ModuleType('native.cpu.dp2')
+    for name in ('get_uniform_decode_token_count', 'dispatch_cg_and_sync_dp'):
+        setattr(namespace2, name, native[name])
+    dp2.dist = native_dist
+    observer.install_v2_dispatch(namespace2, dp2)
+    native['dist'] = dp2.dist
+    with pytest.raises(RuntimeError) as caught:
+        namespace2.dispatch_cg_and_sync_dp(manager, 1, 1, 1, 2, 0, max_query_len=1)
+    assert caught.value is error and 'dispatch' not in observer.local.dispatch_evidence
+
+
+@pytest.mark.parametrize('fault', ['classifier', 'dispatch', 'finish'])
+def test_observation_metadata_failure_never_changes_native_call(v2, monkeypatch, fault):
+    v2.state.mode = 'FULL'
+    if fault == 'finish':
+        monkeypatch.setattr(v2.observer, 'finish_v2_dispatch', lambda: 1 / 0)
+    else:
+        import inspect
+        bind = inspect.Signature.bind
+        target = 'has_prefill' if fault == 'classifier' else 'need_eager'
+        def broken(signature, *args, **kwargs):
+            if target in signature.parameters:
+                raise RuntimeError('Injected operand read failure')
+            return bind(signature, *args, **kwargs)
+        monkeypatch.setattr(inspect.Signature, 'bind', broken)
+    assert v2.worker.execute_model(scheduled(tokens=1)) is v2.state.result
+    assert v2.observer.forwards == v2.observer.replays == 1
+    assert v2.observer.errors and v2.observer.local.dispatch_evidence is None
+
+
+def test_frozen_dependency_corruption_is_rejected(tmp_path):
+    checker = dispatch_checker()
+    path = tmp_path / 'not_frozen_r2.py'
+    path.write_text(checker.R2_PATH.read_text() + '\n# Changed dependency.\n')
+    with pytest.raises(ValueError, match='Frozen R2 dependency hash mismatch'):
+        checker.successor_source(path)
+
+
+def test_failed_forward_after_same_key_success_remains_unverified(v2):
+    v2.state.mode = 'FULL'
+    v2.worker.execute_model(scheduled(tokens=1))
+    v2.state.forward_error = RuntimeError('Failed outer forward on an existing aggregate key')
+    with pytest.raises(RuntimeError): v2.worker.execute_model(scheduled(tokens=1))
+    assert v2.observer.forwards == 1 and v2.observer.replays == 2
+    assert v2.observer.errors[0]['where'] == 'v2_forward_association'
