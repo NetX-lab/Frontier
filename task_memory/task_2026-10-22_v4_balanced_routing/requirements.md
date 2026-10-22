@@ -8,6 +8,7 @@
 | 2026-10-22 | Recorded YC's routing/order steering and the active V4 runtime binding obligation. |
 | 2026-10-22 | W128 recorded root's combined-budget integration finding and required complete binding estimate. |
 | 2026-10-22 | Recorded approved23/900 aggregate scope and B6/250 allocation; native-final controls awaiting local reallocation. |
+| 2026-10-23 | Recorded root reallocation permitting B253 and steering to two native P2 repairs; production edits paused pending complete-scope decision. |
 
 ## [Original Request]
 
@@ -50,3 +51,11 @@ YC approved D-V4-BALANCED-SCOPE-23-900. Verbatim question: “boss YC，是否�
 Current allocation: shared A12 files/450 routing lines, native B existing five files plus maintained native builder, six files/250 cumulative routing lines, prefill C five files/200 lines. B alone writes tests/unit/test_native_reader_binding.py, including root-supplied prefill integration negatives. Complete native actual environment/router/factory/simulator/MoERunner origins, real hash-bound Frontier input and builder/source/checker wiring. Root selects absent candidate_h800_p0_06; preserve05 and all old packages. Retain original builder bytes/hash in this worktree and add three dispatch pins separately under existing488-line dispatch budget (must remain<=500), then four routing pins to74. No generated routing code injection, native/C26 edits, GPU/platform/cloud/SSH/Docker, seal/submission or delegation.
 
 Root supplies the actual775-field flat SimulationConfig at root task_memory/task_2026-10-22_v4_balanced_routing/balanced_frontier_input/frontier.json, SHA256747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897 and receipt.json. It reconstructs through existing create_flat_dataclass(SimulationConfig), not a miniature settings object or old calibration runner. Validate source/runtime/workload binding without claiming numerical pricing/graph/memory qualification or introducing H4 fits as an H5 dependency. Root revalidates role materialization on A final source. Observer errors stay soft evidence gates in32GPU workloads. Stop expansion and report exact reallocation before additional local scope.
+
+## [Original Request] W128-V4-BALANCED-INTEGRATION-NEGATIVES / W128-V4-BALANCED-NATIVE-R1
+
+Root permits the retained B253 within approved23/900: actual A432+B253+C189=874. Initial integration scope allowed only tests/unit/test_native_reader_binding.py and at most10 new lines, reserving12 C generation metadata and4 B timeout replacement lines. The proposed10-line missing-row consumer regression was previewed but never applied.
+
+Root steered to native Spec review's two P2 findings before that optional regression: (1) ambient frontier.config/flat_dataclass schema imports change acceptance depending on preloaded worktree and must use actual pinned harness origins/source; (2) replica_config_attn_dp is unchecked and a rehashed DP2->DP1 complete input passes. Verify actual DP and effective P/D materialization through existing reconstruction; preserve complete flat format, all existing hashes, frozen R2 predicates, native05 UNVERIFIED and source/package boundaries.
+
+Root reserves12 C generation metadata+4 B timeouts+1 C runner check, leaving9 total new cumulative routing lines for B repair/tests without legitimate compensating reduction. B's maximum is266 including the4 reserved timeout lines. Only existing B files are permitted, no new helpers/schema/native edits. Propose exact minimal complete net diff before exceeding that maximum; otherwise stop source edits and return evidence/scope for one root decision. CPU only, no builder execution/package/GPU/platform/Docker/delegation. Root owns merged checks/package/freeze.

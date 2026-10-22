@@ -7,6 +7,7 @@
 | 2026-10-22 | W128 archived bounded native delivery and explicit incomplete generation obligations. |
 | 2026-10-22 | Added root integration budget conflict and complete22/843 planning estimate. |
 | 2026-10-22 | Native-final continuation: approved23/900, B253 lines,130CPU PASS; local reallocation/integration/runtime remain pending. |
+| 2026-10-23 | Native R1: B253 permitted, two source/DP admission P2s RED, no code edits; smallest current complete proposal aggregate937. |
 
 Task ID: W128-V4-BALANCED-NATIVE-BINDING.
 Branch: feat/v4-balanced-binding; worktree: `/data/ycfeng/Frontier/.worktrees/v4-balanced-binding`.
@@ -46,3 +47,9 @@ The historical proposal above was superseded by YC's explicit23-file/900-line ap
 Native source and CPU controls now cover actual cached env getter/source, factory alias, simulator, routers and MoERunner code origins/hashes. Real root775-field flat SimulationConfig is hash-bound with existing retained/tool/prelaunch fields and validated for complete format/canonical P/D/model/parallel/device/balanced identity. Frozen R2 original predicates remain unchanged;130CPU checks PASS in71.64s. New builder source was imported/AST-inspected only: dispatch67->70 then routing74 pins, candidate06 absent, flat strategy staged through existing committed harness path, R3/R2 tool dependencies and actual input bytes. Original builder SHA21b5a7232e31df74052856d933c003b5af9caca7ce2fc6362fc1dbca36593560 retained in evidence/build_candidate.baseline.py.
 
 No package was created, frozen, sealed or submitted. Actual native FP8/backend/graph/runtime evidence remains unverified, as do common final review, A role materialization and C integration negatives. Root must also align historical builder10800/7200 timing defaults to the already approved60min formal envelope before submission; this source task grants no new GPU budget.
+
+## Native R1 superseding status
+
+Task W128-V4-BALANCED-NATIVE-R1 steers W128-V4-BALANCED-INTEGRATION-NEGATIVES. Root permitsB253, but two targeted RED controls demonstrate that current R3's complete-input admission is not source/DP complete: preloaded B774/A775 schema changes the verdict for identical declared A harness, and rehashed replica_config_attn_dp2->1 accepts nativeDP2. Source still65743ea; neither P2 repaired, no new GREEN or package/runtime admission.
+
+An isolated actual A186dfef reconstruction yielded exactly P16+D16/TP8DP2EP16PP1/balanced_topk, with77 actual Frontier module byte/origin checks against that commit. This proves the existing substrate is usable, not that R3 is fixed. The smallest current complete production+existing-test proposal is net46 cumulative routing lines; reserved metadata/timeouts/runner17 plus actual874 gives937 (B303). Root scope decision is required before source edits. Optional C10-line regression was previewed but not applied. All old packages/native/C26/frozen R2 remain unchanged.
