@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import json
 import math
+from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
 
 
 @dataclass(frozen=True)
@@ -20,6 +21,8 @@ class CollectiveTensor:
             raise ValueError("Collective tensor requires positive integer geometry")
         if self.row_stride != self.columns:
             raise ValueError("Selected Step collectives require contiguous row layout")
+        if DTYPE_BYTES.get(self.dtype) != self.element_size:
+            raise ValueError("Collective dtype and actual element size disagree")
 
 
 @dataclass(frozen=True)
@@ -72,6 +75,8 @@ class CollectivePlan:
         return json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"))
 
     def endpoint_bytes(self, rank):
+        if type(rank) is not int or not 0 <= rank < 16:
+            raise ValueError("Step endpoint rank must be in the admitted sixteen-rank world")
         own = self.sizes[rank // 8] * sum(t.columns * t.element_size for t in self.tensors)
         total = sum(self.sizes) * sum(t.columns * t.element_size for t in self.tensors)
         return (own, total) if self.phase == "dispatch" else (
@@ -98,5 +103,15 @@ class CollectivePlanCost:
         if not math.isclose(self.duration_ms, self.network_ms + max(self.local_rank_ms)
                             + self.remainder_ms, rel_tol=1e-12, abs_tol=1e-12):
             raise ValueError("Step collective composition must be network+max(local)+remainder")
-        if not json.loads(self.count_receipt_json) or not self.plan_key or not self.model_identity:
+        receipt = json.loads(self.count_receipt_json)
+        if (not receipt or not self.plan_key or not self.model_identity or
+                receipt.get("kernel_counts") != list(self.kernel_counts) or
+                not receipt.get("per_rank_events") or not receipt.get("source_receipt") or
+                receipt.get("evidence_kind") not in ("native_measurement", "cpu_fixture")):
             raise ValueError("Collective cost requires actual count/plan/model identities")
+        if receipt["evidence_kind"] == "native_measurement":
+            calls = receipt["profiled_calls"]
+            events = receipt["per_rank_events"]
+            if type(calls) is not int or calls < 1 or len(events) != 16 or any(
+                    len(e) != n * calls for e,n in zip(events,self.kernel_counts)):
+                raise ValueError("Native counts must pair every device's actual events and replay multiplicity")

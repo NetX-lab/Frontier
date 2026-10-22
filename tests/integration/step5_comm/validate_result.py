@@ -23,7 +23,8 @@ def validate(job: dict, root: Path) -> dict:
     parallel = ServingParallelism.from_engine(config["engine"])
     model = ModelShape.from_hf_config(json.loads(Path(config["model_config"]).read_text()))
     plan = {(s.name, c.name): (s, c) for s in scenarios_from_grid(parallel, config["grid"])
-            for c in forward_collectives(model, parallel, s)}
+            for c in forward_collectives(model, parallel, s,
+                                        native_call_names=config["grid"].get("native_call_names"))}
     records = read_jsonl(root / "collectives/measurements.jsonl")
     kernels = read_jsonl(root / "collectives/kernels.jsonl")
     summaries = list(csv.DictReader((root / "collectives/summary.csv").open()))
@@ -37,11 +38,18 @@ def validate(job: dict, root: Path) -> dict:
               "summary_rows": len(summaries) == len(records),
               "summary_keys": {(int(r["pass"]), r["scenario"], r["call"]) for r in summaries} == expected_keys,
               "known_communicators": all(r["communicator"] != "unknown" for r in kernels)}
+    checks["prepared_counts"] = (job["expected"]["measurements"] == len(expected_keys) and
+                                 job["expected"]["kernel_rows"] == len(plan))
+    checks["kernel_keys"] &= len(kernels) == len(plan)
+    checks["summary_keys"] &= len(summaries) == len(expected_keys)
     identity_errors, queue_failures = [], []
     checks["summary_medians"] = True
     medians = defaultdict(list)
     for record in records:
         key = record["scenario"], record["call"]
+        if key not in plan:
+            identity_errors.append({"scenario":key[0], "call":key[1], "field":"unselected_call"})
+            continue
         scenario, call = plan[key]
         rails = ((0,) if call.op == "cpu_all_reduce" else
                  scenario.active_dp_rails if scenario.active_dp_rails is not None else
@@ -64,8 +72,9 @@ def validate(job: dict, root: Path) -> dict:
                                         "call": key[1], "field": field})
         domain = "host" if call.op == "cpu_all_reduce" else "device"
         timing = queue_held_analysis(record, domain, 0.01)
-        checks["summary_medians"] &= math.isclose(
-            timing["median_us"], summary_medians[(record["pass"], *key)], rel_tol=1e-12)
+        summary_key = record["pass"], *key
+        checks["summary_medians"] &= (summary_key in summary_medians and math.isclose(
+            timing["median_us"], summary_medians[summary_key], rel_tol=1e-12))
         if domain == "device" and timing["queue_gate"] != "PASS":
             queue_failures.append({"pass": record["pass"], "scenario": key[0],
                                    "call": key[1], **timing})

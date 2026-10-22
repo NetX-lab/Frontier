@@ -18,3 +18,9 @@ stripes, joint-eight-rail HTSIM, independently measured copy/add proxies, affine
 effective remainder and no-overlap sum. Full-plan measured lookup is not selected.
 See ../requirements.md, ../pricing_design.md, ../profile_source_design.md and
 ../shared_scope.md. Unprovided coefficients/source evidence remain unprovided.
+
+[Original Request, integration steering] Root authorizes development merges of
+CORE/SOURCE02f061d and Native2c4cc9e after verified owned edits are committed.
+Use source_frame_tensors and verify_step5_profile_runtime without duplicates.
+These imports are not final native/source qualification. CORE owns all other
+shared paths and needs the prepared native and finite model interfaces now.

@@ -291,7 +291,7 @@ def test_inactive_rank_still_joins_instance_barrier_and_gather(op):
     assert runner.measure(types.SimpleNamespace(), call) is None
     assert runner.kernel_names(call) is None
     assert events == [("barrier", "instance_cpu"), ("gather", None),
-                      ("barrier", "instance_cpu"), ("gather", [])]
+                       ("barrier", "instance_cpu"), ("gather", {"kernels":[], "graph_events":[]})]
 
 
 def test_call_record_retains_shapes_active_groups_and_useful_padding():
@@ -327,6 +327,47 @@ def test_fp8_allocation_casts_supported_fill_dtype():
     assert runner._tensors(call, 3, "cuda:0") == ["fp8", "fp32", "int32", "fp32"]
     assert allocations[0] == ((3, 4096), "bf16", "cuda:0")
     assert casts == ["fp8", "fp32", "int32", "fp32"]
+
+
+@pytest.mark.parametrize("op",["reduce_scatterv_into_output","local_copy","local_add"])
+def test_preallocated_issue_keeps_real_buffers_and_has_no_extra_copy(monkeypatch,op):
+    allocations,copies,calls=[],[],[]
+    class Tensor:
+        dtype="bf16"
+        def __init__(self,shape): self.shape=shape;allocations.append(self)
+        def to(self,**kwargs): return self
+        def stride(self): return self.shape[1],1
+        def element_size(self): return 2
+        def data_ptr(self): return id(self)
+        def copy_(self,source): copies.append((self,source));return self
+    runner=_runner(_parallel(tp=8,dp=2))
+    runner.torch=types.SimpleNamespace(bfloat16="bf16",float8_e4m3fn="fp8",
+        ones=lambda shape,**kwargs:Tensor(shape),empty_like=lambda tensor:Tensor(tensor.shape),
+        add=lambda a,b,**kwargs:calls.append((a,b,kwargs["out"])))
+    group=runner.groups["dp"]
+    group.device_communicator=types.SimpleNamespace(pynccl_comm=types.SimpleNamespace(nccl_version=22902))
+    def into_output(output,tensor,**kwargs):
+        calls.append((output,tensor,kwargs));return output
+    group.reduce_scatterv_into_output=into_output
+    vllm=types.ModuleType("vllm");vllm.envs=types.SimpleNamespace(VLLM_USE_NCCL_SYMM_MEM=False,VLLM_BATCH_INVARIANT=False)
+    allocator=types.ModuleType("vllm.distributed.device_communicators.pynccl_allocator")
+    allocator.is_symmetric_memory_tensor=lambda tensor:False
+    monkeypatch.setitem(sys.modules,"vllm",vllm)
+    monkeypatch.setitem(sys.modules,allocator.__name__,allocator)
+    call=replace(_call(runner.parallel,op=op,group="dp"),shard_rows=(16,)*8+(1,)*8)
+    issue=runner._issue(call);count=len(allocations)
+    issue();issue()
+    assert len(allocations) == count
+    if op == "reduce_scatterv_into_output":
+        receipt=issue.buffer_receipt
+        assert receipt["input"]["shape"] == [17,4] and receipt["output"]["shape"] == [16,4]
+        assert receipt["return_output_alias"] and not receipt["input_output_alias"]
+        assert all(c[0] is calls[0][0] and c[1] is calls[0][1] for c in calls)
+        assert not copies
+    elif op == "local_add":
+        assert len(calls) == 2 and not copies
+    else:
+        assert len(copies) == 2
 
 
 def test_host_prepare_and_timing_never_use_cuda(monkeypatch):

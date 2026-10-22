@@ -27,6 +27,7 @@ API_OPERATIONS = {
     "all_gatherv": "allgather",
     "reduce_scatter": "reduce_scatter",
     "reduce_scatterv": "reduce_scatter",
+    "reduce_scatterv_into_output": "reduce_scatter",
     "cpu_all_reduce": None,
 }
 REPEAT_SEMANTICS = (
@@ -279,12 +280,196 @@ def export_costs(directory: Path, output: Path, environment_note: str = "",
     return manifest
 
 
+def fit_affine(cells, *, positive_slope, supported_range, calibration_receipt):
+    """NNLS on equally weighted cell medians; preserve signed observations."""
+    import numpy as np
+    from scipy.optimize import nnls
+    fitted = [cell for cell in cells if cell["split"] == "calibration"]
+    heldout = [cell for cell in cells if cell["split"] == "qualification"]
+    if any(cell["quality"] != "PASS" for cell in cells):
+        raise ValueError("Unqualified cells must be excluded explicitly before fitting")
+    if any(not __import__("math").isfinite(c["duration_ms"]) or
+           not __import__("math").isfinite(c["operand_bytes"]) for c in cells):
+        raise ValueError("Calibration and qualification observations must remain finite")
+    xs = np.asarray([cell["operand_bytes"] for cell in fitted],dtype=float)
+    if len(set(xs)) < 3 or not heldout:
+        raise ValueError("Affine fit requires three distinct anchors and independent qualification")
+    scale = float(max(xs))
+    matrix = np.column_stack((np.ones(len(xs)),xs/scale))
+    rank = int(np.linalg.matrix_rank(matrix))
+    if rank != 2:
+        raise ValueError("Affine design matrix is rank deficient")
+    ys = np.asarray([cell["duration_ms"] for cell in fitted],dtype=float)
+    if not np.all(np.isfinite(ys)) or not np.all(np.isfinite(xs)) or min(xs) <= 0:
+        raise ValueError("Affine observations must be finite with positive operand bytes")
+    coefficients,_ = nnls(matrix,ys)
+    a,b = float(coefficients[0]),float(coefficients[1]/scale)
+    if positive_slope and b <= 0:
+        raise ValueError("Measured copy/add/TP service needs a positive identified slope")
+    if not min(xs) <= supported_range[0] <= supported_range[1] <= max(xs):
+        raise ValueError("Supported range may not extrapolate beyond frozen fit anchors")
+    errors = [dict(cell, predicted_ms=a+b*cell["operand_bytes"],
+        signed_error_ms=a+b*cell["operand_bytes"]-cell["duration_ms"],
+        relative_error=None if cell["duration_ms"] == 0 else
+            (a+b*cell["operand_bytes"]-cell["duration_ms"])/cell["duration_ms"]) for cell in heldout]
+    if any(not supported_range[0] <= c["operand_bytes"] <= supported_range[1] for c in heldout):
+        raise ValueError("Qualification input is outside the frozen supported range")
+    return dict(a_ms=a,b_ms_per_byte=b,range_bytes=list(supported_range),design_matrix_rank=rank,
+        design_matrix_scale_bytes=scale,distinct_sizes=len(set(xs)),time_unit="ms",
+        signed_residuals_ms=(ys-matrix@coefficients).tolist(),raw_cells=cells,
+        calibration_receipt=calibration_receipt,qualification=dict(status="UNVERIFIED",independent=True,
+        observations=errors),candidate_only=True)
+
+
+def export_finite_parameters(directory, output):
+    """Export measured local fits and a fixed-simulator effective remainder candidate."""
+    from dataclasses import replace
+    from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+    import sys
+    sys.path.insert(0,str(Path(__file__).resolve().parents[3]/"frontier/cc_backend/backends/collective-sim/python"))
+    from collective_sim_core.schema import Scenario
+    from collective_sim_core.runner import run_htsim_runner
+    from collective_sim_core.intra_server_model import plan_memory_service_ms
+    directory,output = Path(directory),Path(output)
+    source = json.loads((directory/"collectives/plan.json").read_text())
+    config = source["config"]
+    frozen_path = Path(config["frozen_model_config"])
+    frozen = json.loads(frozen_path.read_text())
+    if config["frozen_model_config_sha256"] != sha256(frozen_path):
+        raise ValueError("Frozen simulator configuration receipt differs from file bytes")
+    scenario = Scenario.from_dict(frozen["scenario"])
+    measurements = list(iter_records(measurement_path(directory)))
+    kernel_rows = list(iter_records(directory/"collectives/kernels.jsonl"))
+    kernels = {(r["scenario"],r["call"]):r for r in kernel_rows}
+    if len(kernels) != len(kernel_rows):
+        raise ValueError("Duplicate native kernel evidence")
+    local = list(iter_records(directory/"collectives/local_work.jsonl"))
+    shared = source["runtime"]["native_facts"]["shared"]
+    evidence_kind = source["evidence_kind"]
+    if evidence_kind not in ("native_measurement","cpu_fixture"):
+        raise ValueError("Finite exporter requires an explicit evidence kind")
+    anchors = config["grid"]["scenario_splits"]
+    models,counts,excluded = [],{},[]
+    local_models = {}
+    layouts = {(r["tensor_name"],r["dtype"],r["columns"],r["cuda_graph"],r["kind"]) for r in local}
+    for name,dtype,columns,captured,kind in layouts:
+        rank_fits = {}
+        for rank in range(16):
+            cells = []
+            for r in local:
+                if (r["tensor_name"],r["dtype"],r["columns"],r["cuda_graph"],r["kind"]) != (name,dtype,columns,captured,kind):
+                    continue
+                if r["row_stride"] != columns or r["scope"] != "independent_preallocated_operand":
+                    raise ValueError("Local probe layout/scope does not match the model")
+                quality = all(r["per_rank_queue_held"][rank])
+                if not quality:
+                    excluded.append(dict(kind="local",name=r["name"],rank=rank,reason="queue_not_held"));continue
+                from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
+                cells.append(dict(operand_bytes=r["rows"]*r["columns"]*DTYPE_BYTES[r["dtype"]],
+                    duration_ms=float(__import__("statistics").median(r["per_rank_call_us"][rank]))/1000,
+                    split=r["split"],quality="PASS",source=dict(name=r["name"],pass_id=r["pass"])))
+            cells = cell_medians(cells)
+            fit = fit_affine(cells,positive_slope=True,supported_range=(min(c["operand_bytes"] for c in cells),
+                max(c["operand_bytes"] for c in cells)),calibration_receipt=str(directory/"collectives/local_work.jsonl"))
+            rank_fits[str(rank)] = fit
+        local_models[name,dtype,columns,captured,kind] = rank_fits
+    grouped = defaultdict(list)
+    for record in measurements:
+        tp_phase = {"shared_expert_down_proj_all_reduce":"shared_tp","routed_expert_all_reduce":"routed_tp"}.get(record["call"])
+        if record["op"] not in ("all_gatherv","reduce_scatterv_into_output") and tp_phase is None:
+            continue
+        if queue_held_analysis(record,"device",.01)["queue_gate"] != "PASS":
+            excluded.append(dict(kind="native",scenario=record["scenario"],call=record["call"],reason="queue_quality"));continue
+        names = ("activation","weights","ids","scales") if record["op"] == "all_gatherv" else ("output",)
+        context = record["native_context"]
+        if context["shared"] != shared or record["evidence_kind"] != evidence_kind:
+            raise ValueError("Measured native context differs from the bound producer source")
+        from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
+        tensors = tuple(CollectiveTensor(n,d,DTYPE_BYTES[d],c,c) for n,d,c in
+                        zip(names,record["dtypes"],record["columns"]))
+        phase = tp_phase or ("dispatch" if record["op"] == "all_gatherv" else "combine")
+        plan = CollectivePlan(phase,tuple(record["tokens_per_dp_rank"]),tensors,
+            tuple(tuple(g) for g in record["group_ranks"]),"full" if record["cuda_graph"] else "none",
+            json.dumps(context,sort_keys=True),json.dumps(record["buffer_receipt"],sort_keys=True))
+        grouped[phase,plan.graph_mode,plan.sizes[0]==plan.sizes[1],tuple(tensors),plan.context_json].append((record,plan))
+        evidence = kernels[record["scenario"],record["call"]]
+        counts[plan.cache_key()] = dict(evidence,plan_key=plan.cache_key(),context=context,
+            kernel_counts=evidence["per_rank_kernel_counts"],source_receipt=source["runtime"]["native_facts"],
+            evidence_kind=evidence_kind)
+    for (phase,mode,uniform,tensors,context_json),rows in grouped.items():
+        context = json.loads(context_json)
+        copy,reduce = {},{}
+        if phase in ("dispatch","combine"):
+            for rank in range(16):
+                copy[str(rank)] = {t.name:local_models[t.name,t.dtype,t.columns,mode=="full","copy"][str(rank)] for t in tensors}
+                if phase == "combine":
+                    t=tensors[0];reduce[str(rank)]=local_models[t.name,t.dtype,t.columns,mode=="full","add"][str(rank)]
+        cells = []
+        for record,plan in rows:
+            parameters=dict(context=context,model_identity=str(frozen_path),evidence_kind=evidence_kind,copy=copy,reduce=reduce)
+            sc=replace(scenario,collective=replace(scenario.collective,plan=plan.to_dict(),local_parameters=parameters))
+            native=float(__import__("statistics").median(queue_held_analysis(record,"device",.01)["critical_path_repeats_us"]))/1000
+            if phase in ("shared_tp","routed_tp"):
+                cells.append(dict(operand_bytes=max(plan.sizes)*tensors[0].columns*tensors[0].element_size,
+                    duration_ms=native,split=anchors[record["scenario"]],quality="PASS",source=record))
+                continue
+            network=run_htsim_runner(repo_root=Path(frozen["collective_sim_root"]),spec=sc.to_runner_spec(),
+                out_dir=str(output/record["scenario"]/record["call"]))
+            local_ms = plan_memory_service_ms(plan.to_dict(),copy,reduce)
+            cells.append(dict(operand_bytes=sum(plan.sizes)*sum(t.columns*t.element_size for t in tensors),
+                duration_ms=native-network["makespan_us"]/1000-max(local_ms),split=anchors[record["scenario"]],
+                quality="PASS",source=dict(scenario=record["scenario"],pass_id=record["pass"],native_ms=native,
+                network_ms=network["makespan_us"]/1000,local_ms=local_ms)))
+        cells=cell_medians(cells)
+        fit=fit_affine(cells,positive_slope=phase in ("shared_tp","routed_tp"),supported_range=(min(c["operand_bytes"] for c in cells),
+            max(c["operand_bytes"] for c in cells)),calibration_receipt=str(directory))
+        parameters=dict(context=context,model_identity=str(frozen_path),evidence_kind=evidence_kind)
+        if phase in ("shared_tp","routed_tp"):
+            nvlink=dict(frozen["scenario"]["intra_server"])
+            nvlink["nvlink_efficiency"]=1.75*1000/(fit["b_ms_per_byte"]*nvlink["nvlink_one_way_bw_GBps"]*1e9)
+            nvlink["nvlink_allreduce_launch_overhead_us"]=fit["a_ms"]*1000/14-nvlink["nvlink_latency_us"]
+            if not 0 < nvlink["nvlink_efficiency"] <= 1 or nvlink["nvlink_allreduce_launch_overhead_us"] < 0:
+                raise ValueError("Measured TP8 fit gives infeasible effective bandwidth/device overhead")
+            parameters["tp_nvlink"]={**nvlink,"fit":fit}
+        else:
+            parameters.update(copy=copy,reduce=reduce,protocol=fit)
+            for error in fit["qualification"]["observations"]:
+                src=error["source"];prediction=error["predicted_ms"]+src["network_ms"]+max(src["local_ms"])
+                error.update(full_plan_predicted_ms=prediction,full_plan_native_ms=src["native_ms"],
+                    full_plan_signed_error_ms=prediction-src["native_ms"],
+                    full_plan_relative_error=(prediction-src["native_ms"])/src["native_ms"])
+        models.append(dict(context=context,phase=phase,graph_mode=mode,uniform=uniform,tensors=[vars(t) for t in tensors],
+            parameters=parameters))
+    artifact=dict(schema_version="step5.collective_local.v1",device_type=frozen["device_type"],
+        evidence_kind=evidence_kind,frozen_scenario=frozen["scenario"],models=models,counts=counts,excluded=excluded,
+        qualification=dict(status="UNVERIFIED",independent=True,observations=[],parent_receipt=None),candidate_only=True)
+    output.mkdir(parents=True,exist_ok=True)
+    (output/"collective_local.json").write_text(json.dumps(artifact,indent=2)+"\n")
+    return artifact
+
+
+def cell_medians(cells):
+    """Equal weight per cell, retaining all passes/raw medians."""
+    import statistics
+    groups=defaultdict(list)
+    for cell in cells: groups[cell["operand_bytes"],cell["split"]].append(cell)
+    return [dict(group[0],duration_ms=statistics.median(c["duration_ms"] for c in group),raw_passes=group)
+            for group in groups.values()]
+
+
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path, help="Local copied run directory; no platform access")
     parser.add_argument("--output-dir", type=Path, help="Defaults to DIRECTORY/costs")
     parser.add_argument("--environment-note", default="", help="Parent-reported context, not a causal attribution")
+    parser.add_argument("--finite-model",action="store_true",help="Export a candidate from frozen native/local model evidence")
     args = parser.parse_args(argv)
+    if args.finite_model:
+        artifact=export_finite_parameters(args.directory,args.output_dir or args.directory/"costs")
+        print(json.dumps({"candidate_only":True,"models":len(artifact["models"])}))
+        return 0
     manifest = export_costs(args.directory, args.output_dir or args.directory / "costs", args.environment_note)
     print(json.dumps({key: manifest[key] for key in ("task_id", "counts", "output_directory", "advisory_only")},
                      sort_keys=True))

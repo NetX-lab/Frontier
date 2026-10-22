@@ -87,6 +87,26 @@ def test_preparation_rejects_uncommitted_source(tmp_path, monkeypatch):
     assert not (tmp_path / "stage").exists()
 
 
+def test_selected_prepare_propagates_frozen_config_and_separate_local_counts(tmp_path,monkeypatch):
+    prepare=load("prepare")
+    definition=json.loads((PACKAGE/"s2_run.json").read_text())
+    model=tmp_path/prepare.MODEL_CONFIG;model.parent.mkdir(parents=True)
+    model.write_bytes((ROOT/prepare.MODEL_CONFIG).read_bytes())
+    frozen=tmp_path/"network.json";frozen.write_text('{"evidence_kind":"cpu_fixture"}')
+    definition["frozen_model_config"]="network.json"
+    names=["moe_dispatch_all_gatherv_fp8","moe_combine_reduce_scatterv"]
+    definition["grid"]["native_call_names"]=names
+    definition["grid"]["local_work"]=[{"evidence_kind":"cpu_fixture"}]
+    monkeypatch.setattr(prepare.subprocess,"check_output",lambda command,**kwargs:
+        {"ls-files":prepare.MODEL_CONFIG+"\n","status":"","rev-parse":"cpu_fixture\n"}[command[1]])
+    job=prepare.prepare(definition,tmp_path/"stage","selected",repository=tmp_path)
+    benchmark=json.loads(Path(job["benchmark"]).read_text())
+    assert job["expected"]["cases"] == 2*job["expected"]["scenarios"]
+    assert job["expected"]["local_work_rows"] == definition["passes"]
+    assert benchmark["grid"]["native_call_names"] == names
+    assert benchmark["frozen_model_config_sha256"] == prepare.sha256(frozen)
+
+
 @pytest.mark.parametrize("stage,scenarios,cases,nodes,dp,minutes", [
     ("s1", 50, 500, 4, 4, 25), ("s2", 46, 460, 2, 2, 12)])
 def test_multinode_preparation_freezes_exact_rows_and_launchers(tmp_path, monkeypatch, stage, scenarios, cases, nodes, dp, minutes):

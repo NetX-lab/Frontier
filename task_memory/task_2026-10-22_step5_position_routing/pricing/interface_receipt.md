@@ -80,3 +80,54 @@ provide replacement source/mask/provenance APIs.
 Thread-capped frontier-py310, no bytecode/cacheprovider: selected pricing,
 comm-family and Step binding-reuse suites: **60 passed** in10.81s. This establishes
 CPU contracts, not measured GPU parameters/native-runtime qualification.
+
+## Native prepared scope (second interface commit)
+
+`NativeRoutedExperts.prepare_source(hidden_states)` calls the original
+`naive_dp_ep._quantize_and_setup_dispatch` and returns `(activation, scales)`.
+`prepared_context(activation, scales)` returns actual per-shape selected class,
+quant_dtype, defer_input_quant, oracle backend and tensor shape/stride/dtype/size.
+It executes the native hybrid selector, whose condition is E8M0 **OR** valid
+DeepGEMM shape; backend labels alone must not infer the selected implementation.
+`apply_prepared(activation, scales, weights, ids, expert_map, *, in_dtype)` calls
+original modular `_fused_experts`, then original NoDPEP finalization into output.
+It never invokes full `kernel.apply` or repeats source prepare/communication.
+Manifest-bound construction passes actual config/oracle/conversion/construction,
+returned kernel/expert/selector/finalizer callables to SOURCE's verifier.
+
+CORE-owned schema/range facts: TritonExperts uses native config BLOCK_SIZE_M at
+gathered physical M and `_prepare_expert_assignment(ignore_invalid_experts=...)`.
+The flag is expert_map present, no LoRA, and no global a2 activation scale. The
+accepted BF16/block-FP8 path drops remote/masked slots; record actual assignment
+output, not all-expert padding. DeepGemmExperts calls
+`compute_aligned_M_and_alignment(M,K,local_experts,actual_alignment,None)` because
+this adapter supplies expert_tokens_meta=None. Capacity is native physical
+`round_up(M*K + min(M*K,local_experts)*(alignment_used-1), alignment_used)`.
+CPU-count rounded local-live M is a different diagnostic and not that capacity.
+Returned alignment_used, actual workspace_shapes, prepared input/scale layouts
+and inclusive physical_scope must bind the feature schema/ranges. No fixed128
+or universal Triton range applies to a native hybrid-selected DeepGEMM row.
+
+## Finite model input and producer
+
+`CollectiveSimCCBackend.predict_collective_plan(plan)` loads ONLY
+`profiling_data_dir/<device>/collective_local.json`, schema
+`step5.collective_local.v1`. It requires frozen scenario matching the configured
+2-server/8-GPU TP8/DP2 attention layout, sum combine, native_measurement evidence,
+independent PASS qualification with parent receipt, context/phase/graph/uniform
+and tensor geometry match, and exact plan-key native count receipt. CPU evidence
+is deliberately rejected by this production importer; CORE's CPU actual-main
+fixture may construct an explicit cpu_fixture CollectivePlanCost, never relabel
+it native_measurement. `tests/unit/test_collective_sim_cc_backend.py:setup_model`
+is the precise fixture payload and negative-import example.
+
+Exporter `export_finite_parameters(run_dir, output_dir, qualification=None)`
+uses the frozen scenario and real HTSIM, fits independent per-rank copy/add then
+nonnegative affine remainder from signed residuals, preserving rank/ranges,
+held-out qualification and exact counts. It writes a candidate; no omitted
+qualification argument becomes production evidence. Selected prepare/benchmark/
+validator/fixture use the same forward_collectives native_call_names planner.
+
+Validation: eight focused suites200 passed/1 skipped (torch unavailable in py310);
+original native modular/finalize/E8M0 selector source methods also executed with
+CPU tensors under asyncopd-py312. Real HTSIM completion was checked, not mocked.

@@ -56,12 +56,18 @@ def prepare(definition: dict, stage: Path, run_id: str, *, repository: Path = RE
         raise ValueError("Step communication stages require a supported hardware/charged-group pair")
     model = ModelShape.from_hf_config(json.loads((repository / MODEL_CONFIG).read_text()))
     scenarios = scenarios_from_grid(parallel, definition["grid"])
-    cases = sum(len(forward_collectives(model, parallel, scenario)) for scenario in scenarios)
+    cases = sum(len(forward_collectives(model, parallel, scenario,
+                native_call_names=definition["grid"].get("native_call_names"))) for scenario in scenarios)
     output = CLOUD_ROOT / run_id
     benchmark = {key: definition[key] for key in (
         "engine", "gpus_per_node", "warmup_calls", "repeats", "calls_per_repeat",
         "passes", "shuffle_seed", "grid")}
     benchmark.update(model_config=str(repository / MODEL_CONFIG), output_dir=str(output / "collectives"))
+    if "frozen_model_config" in definition:
+        frozen = (repository / definition["frozen_model_config"]).resolve()
+        if not frozen.is_relative_to(repository):
+            raise ValueError("Frozen model configuration must use the existing repository mount")
+        benchmark.update(frozen_model_config=str(frozen),frozen_model_config_sha256=sha256(frozen))
     stage.mkdir(parents=True, exist_ok=False)
     benchmark_path = stage / "benchmark.json"
     benchmark_path.write_text(json.dumps(benchmark, indent=2) + "\n")
@@ -95,6 +101,8 @@ def prepare(definition: dict, stage: Path, run_id: str, *, repository: Path = RE
                         "kernel_rows": cases,
                          "wall_minutes": definition["expected_wall_minutes"],
                          "gpu_hours": definition["expected_gpu_hours"]}}
+    if "local_work" in definition["grid"]:
+        job["expected"]["local_work_rows"] = len(definition["grid"]["local_work"]) * definition["passes"]
     launcher = stage / "submit_with_env.sh"
     script = ("#!/usr/bin/env bash\nset -euo pipefail\nset +x\n"
               f"source {shlex.quote(definition['credential_environment'])}\n"

@@ -62,10 +62,13 @@ def test_inventory_records_verbs_devices_and_real_link_state(tmp_path, monkeypat
     assert report["status"] == ("PASS" if active else "UNVERIFIED")
 
 
-def fixture_result(tmp_path, monkeypatch, stage):
+def fixture_result(tmp_path, monkeypatch, stage, native_call_names=None, definition=None):
     monkeypatch.syspath_prepend(str(PACKAGE))
-    definition = json.loads((PACKAGE / f"{stage}_run.json").read_text())
-    definition["grid"] = {"scenarios": definition["grid"]["scenarios"][-3:]}
+    definition = definition or json.loads((PACKAGE / f"{stage}_run.json").read_text())
+    definition["grid"] = {**definition["grid"], "scenarios": definition["grid"]["scenarios"][-3:],
+                          "eager":[],"cuda_graph_batch_sizes":[]}
+    if native_call_names is not None:
+        definition["grid"]["native_call_names"] = native_call_names
     definition["model_config"] = str(ROOT / "data/config/models/stepfun-ai__Step-5-Preview.json")
     benchmark = tmp_path / "benchmark.json"
     benchmark.write_text(json.dumps(definition))
@@ -74,7 +77,8 @@ def fixture_result(tmp_path, monkeypatch, stage):
     runner = SimpleNamespace(parallel=parallel, instance=0, groups={})
     records, kernels, summaries = [], [], []
     for scenario in scenarios_from_grid(parallel, definition["grid"]):
-        for call in forward_collectives(model, parallel, scenario):
+        for call in forward_collectives(model, parallel, scenario,
+                                        native_call_names=definition["grid"].get("native_call_names")):
             runner.groups[call.group] = SimpleNamespace(world_size=len(group_members(parallel, call.group, 0)))
             rails = active_dp_rails(parallel, call, scenario, False)
             gathered = [{"bytes": call_bytes(call, parallel, r)}
@@ -156,3 +160,49 @@ def test_missing_artifacts_cli_returns_advisory_zero(tmp_path):
     config.write_text('{}')
     result = subprocess.run([sys.executable,str(PACKAGE/"validate_result.py"),"--config",str(config),"--root",str(tmp_path)],capture_output=True,text=True,check=True)
     assert json.loads(result.stdout)["status"] == "UNVERIFIED"
+
+
+@pytest.mark.parametrize("defect", [None, "missing", "duplicate", "extra"])
+def test_selected_native_plan_evidence_is_complete_and_exact(tmp_path, monkeypatch, defect):
+    names=["moe_dispatch_all_gatherv_fp8", "moe_combine_reduce_scatterv",
+           "shared_expert_down_proj_all_reduce", "routed_expert_all_reduce"]
+    job,records=fixture_result(tmp_path,monkeypatch,"s2",names)
+    assert len(records) == 3*4*job["passes"]
+    assert any(r["op"] == "reduce_scatterv_into_output" for r in records)
+    if defect == "missing":
+        records.pop()
+    elif defect == "duplicate":
+        records[-1]=dict(records[0])
+    elif defect == "extra":
+        records[-1]={**records[-1],"call":"embedding_all_reduce"}
+    (tmp_path/"collectives/measurements.jsonl").write_text("".join(json.dumps(r)+"\n" for r in records))
+    report=load("validate_result").validate(job,tmp_path)
+    assert report["status"] == ("PASS" if defect is None else "UNVERIFIED"), report
+
+
+def test_selected_missing_call_cannot_pass_with_reduced_superficial_counts(tmp_path,monkeypatch):
+    names=["moe_dispatch_all_gatherv_fp8","moe_combine_reduce_scatterv"]
+    job,records=fixture_result(tmp_path,monkeypatch,"s2",names)
+    records=[r for r in records if r["call"] != names[0]]
+    job["expected"]["measurements"]=len(records)
+    path=tmp_path/"collectives/measurements.jsonl"
+    path.write_text("".join(json.dumps(r)+"\n" for r in records))
+    report=load("validate_result").validate(job,tmp_path)
+    assert report["checks"]["prepared_counts"] is False
+    assert report["checks"]["measurement_keys"] is False
+
+
+@pytest.mark.parametrize("collection",["kernels","summary"])
+def test_selected_duplicate_kernel_or_summary_keys_are_unverified(tmp_path,monkeypatch,collection):
+    job,_=fixture_result(tmp_path,monkeypatch,"s2",["moe_combine_reduce_scatterv"])
+    if collection == "kernels":
+        path=tmp_path/"collectives/kernels.jsonl";lines=path.read_text().splitlines()
+        lines[-1]=lines[0];path.write_text("\n".join(lines)+"\n")
+    else:
+        path=tmp_path/"collectives/summary.csv"
+        rows=list(csv.DictReader(path.open()));rows[-1]=dict(rows[0])
+        with path.open("w") as stream:
+            writer=csv.DictWriter(stream,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
+    report=load("validate_result").validate(job,tmp_path)
+    key="kernel_keys" if collection == "kernels" else "summary_keys"
+    assert report["status"] == "UNVERIFIED" and report["checks"][key] is False

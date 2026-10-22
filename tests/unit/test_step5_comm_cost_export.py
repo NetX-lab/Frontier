@@ -134,6 +134,80 @@ def test_bf16_dispatch_has_router_metadata_but_no_fp8_scales():
     assert row["payload_maxima_match"]
 
 
+def test_into_output_combine_keeps_actual_gathered_input_endpoint():
+    record=fixture_record("reduce_scatterv",tokens=(16,1,4,2))
+    record["op"]="reduce_scatterv_into_output"
+    row=observe(record)
+    assert row["per_rank_input_bytes"][0] == 23*8192
+    assert row["per_rank_output_bytes"][0] == 16*8192
+    assert row["payload_maxima_match"] and not row["scalar_api_representable"]
+
+
+def test_nnls_affine_preserves_negative_remainder_and_independent_errors():
+    cells=[dict(operand_bytes=x,duration_ms=y,split="calibration",quality="PASS")
+           for x,y in ((1,-2.),(16,-1.),(256,1.))]
+    cells += [dict(operand_bytes=64,duration_ms=.5,split="qualification",quality="PASS")]
+    fit=EXPORT.fit_affine(cells,positive_slope=False,supported_range=(1,256),calibration_receipt="cpu_fixture")
+    assert fit["design_matrix_rank"] == 2 and fit["distinct_sizes"] == 3
+    assert fit["signed_residuals_ms"][0] < 0
+    assert fit["raw_cells"][0]["duration_ms"] == -2.
+    assert fit["qualification"]["status"] == "UNVERIFIED" and fit["candidate_only"]
+    assert len(fit["qualification"]["observations"]) == 1
+    with pytest.raises(ValueError,match="anchors"):
+        EXPORT.fit_affine(cells[1:],positive_slope=False,supported_range=(16,256),calibration_receipt="cpu_fixture")
+    with pytest.raises(ValueError,match="extrapolate"):
+        EXPORT.fit_affine(cells,positive_slope=False,supported_range=(1,8192),calibration_receipt="cpu_fixture")
+    corrupted=deepcopy(cells); corrupted[0]["quality"]="FAIL"
+    with pytest.raises(ValueError,match="excluded"):
+        EXPORT.fit_affine(corrupted,positive_slope=False,supported_range=(1,256),calibration_receipt="cpu_fixture")
+
+
+def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,monkeypatch):
+    submodule=Path(__file__).parents[2]/"frontier/cc_backend/backends/collective-sim"
+    if not (submodule/"sim/datacenter/htsim_ndp").exists():
+        pytest.skip("Real HTSIM binary unavailable")
+    monkeypatch.syspath_prepend(str(submodule/"python"))
+    from collective_sim_core.schema import Scenario,ClusterConfig,ParallelismConfig,CollectiveConfig,TopologyConfig
+    from dataclasses import asdict
+    scenario=Scenario(ClusterConfig(2,8),ParallelismConfig(tp=8,dp=2),topology=TopologyConfig(kind="rail",servers_per_tor=1),
+        collective=CollectiveConfig(kind="plan",tensor_bytes=0,domain_dims=("DP",),placement_order=("TP","DP"),intra_server_combine_rule="sum"))
+    frozen=tmp_path/"frozen.json"
+    frozen.write_text(json.dumps(dict(device_type="h800",scenario=asdict(scenario),collective_sim_root=str(submodule))))
+    root=tmp_path/"run/collectives";root.mkdir(parents=True)
+    config=dict(frozen_model_config=str(frozen),frozen_model_config_sha256=EXPORT.sha256(frozen),
+                grid=dict(scenario_splits={f"s{r}":split for r,split in ((1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification"))}))
+    source=dict(config=config,evidence_kind="cpu_fixture",runtime=dict(native_facts=dict(shared="cpu_fixture")))
+    (root/"plan.json").write_text(json.dumps(source))
+    records,kernels,local=[],[],[]
+    for rows,split in ((1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification")):
+        name=f"s{rows}"
+        local.append(dict(tensor_name="activation",dtype="bfloat16",columns=4,cuda_graph=False,kind="copy",
+            name=name,rows=rows,row_stride=4,scope="independent_preallocated_operand",split=split,**{"pass":0},
+            per_rank_queue_held=[[True]*3 for _ in range(16)],per_rank_call_us=[[1+rows*.001]*3 for _ in range(16)]))
+        records.append(dict(scenario=name,call="moe_dispatch_all_gatherv_bf16",op="all_gatherv",
+            native_context=dict(shared="cpu_fixture"),evidence_kind="cpu_fixture",dtypes=["bfloat16"],columns=[4],
+            tokens_per_dp_rank=[rows,rows],group_ranks=[[r,r+8] for r in range(8)],cuda_graph=False,
+            buffer_receipt=dict(ordinary=True),participating_ranks=list(range(16)),**{"pass":0},
+            per_rank_call_us=[[1000+rows]*3 for _ in range(16)],per_rank_launch_call_us=[[1000+rows]*3 for _ in range(16)],
+            per_rank_queue_held=[[True]*3 for _ in range(16)]))
+        kernels.append(dict(scenario=name,call=records[-1]["call"],per_rank_kernel_counts=[7]*16,
+                            per_rank_events=[["cpu_fixture"]*35 for _ in range(16)],profiled_calls=5))
+    for name,values in (("measurements",records),("kernels",kernels),("local_work",local)):
+        (root/f"{name}.jsonl").write_text("".join(json.dumps(r)+"\n" for r in values))
+    artifact=EXPORT.export_finite_parameters(root.parent,tmp_path/"candidate")
+    assert artifact["evidence_kind"] == "cpu_fixture" and artifact["candidate_only"]
+    assert artifact["qualification"]["status"] == "UNVERIFIED"
+    fit=artifact["models"][0]["parameters"]["protocol"]
+    assert fit["design_matrix_rank"] == 2 and fit["qualification"]["status"] == "UNVERIFIED"
+    error=fit["qualification"]["observations"][0]
+    assert error["source"]["network_ms"] > 0 and error["full_plan_native_ms"] == pytest.approx(1.064)
+    assert len(artifact["counts"]) == 4
+    assert all(c["evidence_kind"] == "cpu_fixture" for c in artifact["counts"].values())
+    config["frozen_model_config_sha256"]="changed";(root/"plan.json").write_text(json.dumps(source))
+    with pytest.raises(ValueError,match="receipt"):
+        EXPORT.export_finite_parameters(root.parent,tmp_path/"rejected")
+
+
 def test_critical_rank_batch_average_repeats_are_ms_not_native_calls():
     row = observe(fixture_record())
     assert row["time_unit"] == "ms"

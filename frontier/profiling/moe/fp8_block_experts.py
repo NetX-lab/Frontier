@@ -20,6 +20,7 @@ module was checked against; any other selection fails fast.
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any, Dict, Optional, Sequence, Tuple
@@ -93,6 +94,40 @@ class NativeRoutedExperts:
     w2: torch.Tensor
     activation: Any
     global_num_experts: int
+    provenance: Optional[dict] = None
+
+    def prepare_source(self, hidden_states):
+        """Actual naive source quantization seam; caller times only a reached scope."""
+        from vllm.model_executor.layers.fused_moe.prepare_finalize.naive_dp_ep import _quantize_and_setup_dispatch
+        return _quantize_and_setup_dispatch(hidden_states,self.kernel.fused_experts.quant_config,
+            self.kernel.fused_experts.expects_unquantized_inputs)
+
+    def prepared_context(self, hidden_states, scales):
+        """Inspect the native per-shape selector outside the measured expert scope."""
+        experts = self.kernel.fused_experts
+        selector = getattr(experts, "_select_experts_impl", None)
+        selected = experts if selector is None else selector(hidden_states, self.w13, self.w2)
+        quant = experts.quant_config.quant_dtype
+        def tensor_layout(tensor):
+            return None if tensor is None else dict(shape=list(tensor.shape),
+                stride=list(tensor.stride()), dtype=str(tensor.dtype).removeprefix("torch."),
+                element_size=tensor.element_size())
+        return dict(quant_dtype=None if quant is None else str(quant).removeprefix("torch."),
+            defer_input_quant=bool(experts.expects_unquantized_inputs), backend=self.backend,
+            experts_class=type(selected).__name__, activation_layout=tensor_layout(hidden_states),
+            scale_layout=tensor_layout(scales), physical_scope="native_experts_inclusive")
+
+    def apply_prepared(self, hidden_states, scales, topk_weights, topk_ids, expert_map, *, in_dtype):
+        """Inclusive native experts plus local finalization, excluding source prepare/CC."""
+        output=torch.empty((hidden_states.shape[0],self.w2.shape[1]),dtype=in_dtype,device=hidden_states.device)
+        fused=self.kernel.impl._fused_experts(in_dtype=in_dtype,a1q=hidden_states,a1q_scale=scales,
+            w1=self.w13,w2=self.w2,topk_weights=topk_weights,topk_ids=topk_ids,
+            activation=self.activation,global_num_experts=self.global_num_experts,
+            local_num_experts=self.w13.shape[0],expert_map=expert_map,
+            apply_router_weight_on_input=False,expert_tokens_meta=None,output_alias=output)
+        self.kernel.prepare_finalize.finalize(output,fused,topk_weights,topk_ids,False,
+            self.kernel.fused_experts.finalize_weight_and_reduce_impl())
+        return output
 
     def apply(
         self,
@@ -189,6 +224,9 @@ def _build_native_routed_experts(
         raise ValueError("FP8 routed experts require a weight block shape")
 
     moe_activation = MoEActivation(activation)
+    bound = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST") if model_type == "step5" else None
+    provenance = None
+    native_callables = [FusedMoEConfig,FusedMoEParallelConfig,FusedMoEQuantConfig,MoEActivation]
     model_config = SimpleNamespace(
         dtype=dtype,
         hf_config=SimpleNamespace(model_type=model_type),
@@ -250,6 +288,8 @@ def _build_native_routed_experts(
                 activation_key=kFp8Dynamic128Sym,
                 allow_vllm_cutlass=False,
             )
+            native_callables += [select_fp8_moe_backend,convert_to_fp8_moe_kernel_format,
+                                make_fp8_moe_quant_config,make_fp8_moe_kernel]
             _require_supported_backend(backend.value, quantization_mode, moe_activation)
             layer = SimpleNamespace(
                 moe_config=moe_config,
@@ -288,6 +328,8 @@ def _build_native_routed_experts(
             )
 
             backend, experts_cls = select_unquantized_moe_backend(moe_config)
+            native_callables += [select_unquantized_moe_backend,convert_to_unquantized_kernel_format,
+                                make_unquantized_moe_kernel]
             _require_supported_backend(backend.value, quantization_mode, moe_activation)
             w13, w2 = convert_to_unquantized_kernel_format(
                 unquantized_backend=backend,
@@ -305,6 +347,15 @@ def _build_native_routed_experts(
         triton_tuning_config = _triton_tuning_config(
             experts_cls, w2=w2, quant_config=quant_config, in_dtype=dtype
         )
+        if bound:
+            from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+            from vllm.model_executor.layers.fused_moe.prepare_finalize.naive_dp_ep import _quantize_and_setup_dispatch
+            native_callables += [type(kernel),kernel.apply,type(kernel.impl),kernel.impl._fused_experts,experts_cls,
+                kernel.fused_experts.apply,kernel.prepare_finalize.finalize,_quantize_and_setup_dispatch]
+            selector = getattr(kernel.fused_experts, "_select_experts_impl", None)
+            if selector is not None:
+                native_callables.append(selector)
+            provenance = verify_step5_profile_runtime(bound,callables=native_callables)
     return NativeRoutedExperts(
         backend=backend.value,
         experts_class=experts_cls.__name__,
@@ -314,6 +365,7 @@ def _build_native_routed_experts(
         w2=w2,
         activation=moe_activation,
         global_num_experts=global_num_experts,
+        provenance=provenance,
     )
 
 
@@ -337,7 +389,7 @@ def get_native_routed_experts(**kwargs: Any) -> NativeRoutedExperts:
     if kwargs["block_shape"] is not None:
         kwargs["block_shape"] = tuple(kwargs["block_shape"])
     device = torch.device("cuda", torch.cuda.current_device())
-    key = (device, *sorted(kwargs.items()))
+    key = (device, os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST"), *sorted(kwargs.items()))
     cached = _ROUTED_EXPERTS.get(key)
     if cached is not None:
         return cached
