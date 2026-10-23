@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept actual pricing RED/control and allocate fixed-model group reuse to CORE within105 gross. |
 | 2026-10-23 | main07 times out in both modes at2400s;archive receipts and assign bounded real-path performance diagnosis to CORE. |
 | 2026-10-23 | Accept fresh e41 regression and static T2 receipts;record interrupted main06 and unchanged main07 rerun. |
 | 2026-10-23 | Parent verifies fresh e41 supplement101,metadata196 and catalogue53 receipts;long-running gates remain pending. |
@@ -58,11 +59,17 @@
 - completed: post-timeout integrity check confirms all9 recorded input hashes
   (9,900,444,171 bytes,12.356s),clean e41 source and clean3dac53c submodule.
   This rules out changes to those recorded inputs,not a particular CPU hotspot.
-- in-progress: D29-CLI-TIMEOUT-REPRO,CORE owner ses_e9b3efeebffem2dcbXlVGNr8O2,
-  builds a seconds-scale deterministic real-call-path performance loop using
-  retained inputs and current source. Diagnostic scratch:
-  /data/ycfeng/tmp/d29_cli_timeout_repro/. No production/test edits or full CLI
-  retries assigned yet;old outputs,workload,2400s gate and GPU restrictions remain.
+- completed/diagnostic: D29-CLI-TIMEOUT-REPRO,d8a08722 establishes real P6128
+  pricing RED. Parent two-call times3.424/3.369s and1056 layer descriptions become
+  0.397/0.349s and0 repeats with one-variable actual-group reuse;cost/proof/plan
+  payload SHA256 remains d2c141f088b52063edb539094fe3e0967f35e53303d70ebe2e8fbdbe4c86c952.
+  This diagnoses one actual point,not full CLI duration or initialization.
+- in-progress: D29-MODEL-GROUP-REUSE,CORE owner ses_e9b3efeebffem2dcbXlVGNr8O2,
+  implements local fixed-model group reuse across the two existing consumers,
+  with the real binding regression. Three existing paths,source<=45/test<=60,
+  total<=105 gross under unchanged CORE/global caps. Scope/design:
+  repairs/model_group_reuse_scope_amendment.json and model_group_reuse.md.
+  No full CLI retry assigned;parent checks/review and residual profile come first.
 - completed: D29-E41-FINAL-REGRESSIONS records committed b5a74416/5ceb68c9.
   strict77 final04 is77/77 identical,451 artifact hashes and519 cache filenames per
   side. Full unit:8015PASS/279FAIL/32ERROR/281SKIP,raw exit1. The exact historical

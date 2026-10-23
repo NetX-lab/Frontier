@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent confirms repeated group-resolution hotspot;allocate three-path CORE repair<=105 gross through a zero-sum overlay. |
 | 2026-10-23 | Both main07 modes hit2400s;require a short real-path performance loop before repair or another full run. |
 | 2026-10-23 | Close final e41 regression/static binding checks;replace interrupted main06 with main07 under unchanged bounds. |
 | 2026-10-23 | Resume in current session on frozene41abc07;run fullCLI,requiredregressions and isolated T2 rebinding concurrently. |
@@ -26,7 +27,9 @@ legacy_output_scope_amendment,prepare_metadata_scope_amendment}.json in that ord
 global10000 gross ceilings are unchanged. Apply repairs/final_scope_reconciliation.json
 next,then cli_placement_scope_amendment.json for the two-file CORE repair. No
 path/owner total changes; the latter transfers40 unused CORE allowance and limits
-the new repair to65 gross.
+the new repair to65 gross. Apply model_group_reuse_scope_amendment.json afterward
+for the measured performance correction:three existing CORE paths,total<=105
+gross,100 path-allowance lines moved within CORE;111 paths and aggregate caps stay.
 requirements.md records YC's authority.
 
 Completed handoff boundary: CLI placement repair -> parent real-constructor checks
@@ -46,6 +49,9 @@ tree. Final target staging/seal follows full CLI completion. main06 was interrup
 by the server restart;main07 repeated it without a workload or source change and
 both modes hit2400s. Current dependency adds a faithful short performance loop,
 hotspot diagnosis and owner-scoped repair/review before a new final-source run.
+The parent-confirmed first repair is fixed-model group reuse;its design and
+acceptance are in repairs/model_group_reuse.md. Reassess residual real-point cost
+after this fix before committing to another full CLI run.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
