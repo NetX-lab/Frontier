@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Archive the completed three-path repair and committed-source verification. |
+| 2026-10-23 | Separate shared-suite and parent dual-trainer evidence; records P2 corrected, reviewer confirmation pending. |
 
 ## Outcome
 
@@ -17,7 +18,11 @@ live. No global cache, invalidation, registry/profiler API or numerical change.
 ## Evidence
 
 - Real dual-consumer RED24resolutions instead of1, followed by GREEN.
-- Final affected suites **81PASS,1SKIP,0FAIL**,166.49s; no test excluded.
+- Six-file shared consumer/trainer selection **81PASS,1SKIP,0FAIL**,166.49s;
+  it does not include the independent trainer. Parent repeats81PASS/1SKIP164.431s.
+- Separate parent frozen88fe6c65 trainer/preflight and independent fit/cache
+  selection **2PASS,0FAIL/ERROR/SKIP**,10.327s; not added to81. Both XML hashes
+  were inspected and match; exact command/artifacts are in the test report.
 - Original main07 P6128+idle1 pricing without external reuse: committed candidate
   **0.945/0.369s**,88 descriptions; explicit cold/warm counter **88/0** at
   **0.919/0.369s**. Costs/proofs/full-plan keys match baseline SHA256d2c141f….
@@ -56,8 +61,13 @@ The probe enforces code revision3763e5b8; later records commits do not change co
 
 ## Handoff boundary
 
-No unresolved owned issue. Parent review/freeze and final-source acceptance are
-pending. This short-loop success does not pass the original2400s offline/online
+No unresolved owned source issue. Standards No findings; Spec found no source
+defect but one records P2 coverage overclaim. Wording is corrected and separate
+parent evidence recorded; confirmation remains pending with reviewer
+`ses_e97df4d82ffetkqpyEbPP2iCA1`. This records-only correction changed no
+code/test/script bytes or3dac pin and ran no new tests. Parent review/freeze and
+final-source acceptance remain pending. This short-loop success does not pass
+the original2400s offline/online
 full-workload gate or native/GPU/accuracy qualification. No full CLI, strict77,
 full-unit, platform, network, dependency install or extra agent was invoked.
 Secondary backend/typed-initialization observations stay diagnostic and require

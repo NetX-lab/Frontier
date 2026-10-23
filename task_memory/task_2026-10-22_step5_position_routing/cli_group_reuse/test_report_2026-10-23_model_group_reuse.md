@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Record actual dual-consumer RED/GREEN, committed pricing and exact scope. |
+| 2026-10-23 | Correct the six-file coverage claim and record separate parent trainer evidence; P2 awaits reviewer confirmation. |
 
 Task ID: **D29-MODEL-GROUP-REUSE**.
 Code: **3763e5b87a845eac186cfd481f0b56cffb2dd045**.
@@ -49,8 +50,44 @@ env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPAT
 
 **81PASS,1SKIP,0FAIL**,166.49s. The skip is the existing CPU tensor case because
 this environment has no torch. The affected selection includes formal source/
-constructor behavior, both-trainer/preflight/cache coverage and real shared
-consumer/exact-plan tests. Full-unit/strict77 are not delegated or run.
+constructor behavior, shared trainer/fit/cache coverage and real shared
+consumer/exact-plan tests. This six-file command does not include the independent
+trainer regression and does not establish both-trainer coverage. Full-unit/
+strict77 are not delegated or run.
+
+## Records-only P2 correction and separate parent verification
+
+Reviewer `ses_e97df4d82ffetkqpyEbPP2iCA1`: Standards No findings; Spec found no
+source defect, but P2 identified the unsupported both-trainer claim above.
+Disposition: corrected in records; **pending reviewer confirmation**, not closed
+by this owner. No code/test/script edit or additional test run was performed for
+this correction.
+
+Parent independently reran the six-file selection on frozen88fe6c65:
+**81PASS,1existing Torch SKIP,0FAIL/ERROR**,164.431s. Inspected XML:
+`/data/ycfeng/tmp/d29_group_reuse_parent01.xml`, SHA256
+`a37987c7b72f64a87be43623b3136d93e12c8b103b00856cf525b8918177cb4f`.
+This corroborates the shared coverage above, not independent trainer coverage.
+
+Parent separately ran the following two existing regressions on frozen88fe6c65,
+not the active loader-repair tree:
+
+```bash
+timeout 120s env -u FRONTIER_TEST_CPU_WRITER_FILE -u FRONTIER_TEST_CPU_WRITER_SHA256 PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH="$PWD:$PWD/tests/unit" TMPDIR=/data/ycfeng/tmp FRONTIER_TMP_ROOT=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/unit/test_moe_grouped_gemm_padded_features.py::test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers tests/unit/test_moe_grouped_gemm_padded_features.py::test_independent_selected_actual_fit_cache_binds_native_context --basetemp=/data/ycfeng/tmp/d29_group_reuse_trainers_parent01 --junitxml=/data/ycfeng/tmp/d29_group_reuse_trainers_parent01.xml > /data/ycfeng/tmp/d29_group_reuse_trainers_parent01.log 2>&1
+```
+
+Inspected log and XML: **2PASS,0FAIL/ERROR/SKIP**,10.327s. XML SHA256
+`6b411b2457883e46b96c136ffa5b43f420fcac465c8481bbe2ec798f3186e5d9`.
+This separate selection covers both trainer/preflight ordering and independent
+selected native-context fit/cache. Keep its2PASS distinct; do not add it to81.
+
+Inspected parent pricing receipt
+`/data/ycfeng/tmp/d29_group_reuse_parent_pricing01/result.json`: no
+`--reuse-groups`,0.9243038469/0.3546951241s,88/0descriptions, same original
+`d2c141f088b52063edb539094fe3e0967f35e53303d70ebe2e8fbdbe4c86c952` payload.
+All three repair source/test files remain byte-identical to3763e5b8 and88fe6c65;
+the clean isolated submodule remains3dac53c. Budget and full-workflow/native
+verification boundaries are unchanged.
 
 ## Unchanged actual pricing loop on committed candidate
 

@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Record real RED, minimal local repair and affected-suite validation. |
 | 2026-10-23 | Complete committed-source pricing/profile and final per-path accounting. |
+| 2026-10-23 | Correct records-only P2 coverage wording and inspect separate parent trainer receipts. |
 
 Task ID: **D29-MODEL-GROUP-REUSE**.
 
@@ -67,3 +68,24 @@ Code diff contains exactly three allocated paths,65 additions/6 deletions.
 No other production/test/peer/primary/frozen edit; submodule remains clean3dac.
 Primary owns independent review, final freeze, full2400s workloads/strict77/unit
 and native qualification. No long CLI, GPU/platform/network or extra agent run.
+
+## completed — records-only review correction; confirmation pending
+
+Reviewer `ses_e97df4d82ffetkqpyEbPP2iCA1` reported no Standards/source defect and
+one Spec P2: the six-file81PASS/1SKIP selection did not run the independent
+trainer. Corrected the test report to observed shared trainer/fit/cache coverage.
+Do not infer both-trainer coverage from that selection.
+
+Inspected parent frozen88fe6c65 evidence: six-file81PASS/1existing Torch SKIP,
+164.431s, XML SHA256a37987c7b72f64a87be43623b3136d93e12c8b103b00856cf525b8918177cb4f.
+Separate existing dual-trainer/preflight and independent actual-fit/cache tests:
+2PASS,0FAIL/ERROR/SKIP,10.327s, XML SHA256
+6b411b2457883e46b96c136ffa5b43f420fcac465c8481bbe2ec798f3186e5d9.
+The exact command and artifact paths are in the test report. These2PASS remain
+separate from81; no tests were rerun by this owner.
+
+Parent actual pricing receipt confirms0.9243038469/0.3546951241s,88/0descriptions
+without reuse flag and unchangedd2c141f… payload. Verified all three source/test
+bytes equal3763e5b8 and88fe6c65 and clean3dac submodule. Only this directory's
+maintained records changed; code71/105 budget and runtime limits remain.
+P2 correction is delivered but **pending reviewer confirmation** by primary.
