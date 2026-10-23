@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Complete named-model control:−26.81%,208-event byte parity,23 source bindings and one explicit error-policy difference; allocation waits for YC. |
+| 2026-10-24 | Cancelled design worker has no delivery; primary resumes with a bounded whole-view versus named-model query control and separate contract inspection. |
 | 2026-10-24 | Verify post-key strict77/77 and separate101/197/53 results with27 parent hash checks; retain the approved metadata-ID replacement and pending full-unit. |
 | 2026-10-24 | Accept key16/+14 after both reviews, parent124/1 and full-wave parity; integrate30fb6a30 and verify9491 union on46fe83ac; assign fresh frozen regressions. |
 | 2026-10-24 | Accept independent snapshot114/113-path audit, correct mixed-group event expectation and storage units, and record the unauthorized CSV scan. |
@@ -80,9 +82,22 @@
   new passing ID, not an alias. Full-unit, dependent comparisons, necessary
   supplements and final guards remain pending. Owner records:post_key_regressions/;
   primary:resumed_performance/post_key_regression_acceptance.json.
-- in-progress/read-only: D29-REMAINING-RUNTIME-DESIGN, session
-  ses_e9577903effeYhkEtAPQt7g228, evaluates a materially useful next design from
-  current code and retained evidence. No source allocation or new probe granted.
+- cancelled/no delivery: D29-REMAINING-RUNTIME-DESIGN, session
+  ses_e9577903effeYhkEtAPQt7g228. Primary resumes the design investigation.
+- completed/control, pending/policy: D29-RUNTIME-MODEL-VIEW, primary. One bounded
+  baseline/candidate wave and contract probe ran under60s/30G per command.
+  Warm0.122211→0.089447s(−26.81%);384 contract derivations→0;288 numerical,
+  144 fresh proof,64 collective and16 point calls unchanged. Full208-event
+  output,15 complete JSONLs, ledger and3902B error prefix match. Eleven contract
+  groups contain10 matches and one deliberate difference: another model's
+  native-label collision stops the old GEMM query but not the narrowed query.
+  Current-model failures and live selection remain effective. All23 final
+  source bindings and262 fixture/cache metadata entries match. Independent
+  inspection:ses_e951e411cffenineDsU35LlI6M; source was not edited. Source scratch
+  diff14/+4; proposed100gross(source20/tests80) remains unallocated pending YC.
+  Three archive-checker errors(header clocks twice, then wrong samples field)
+  were corrected without rerunning the wave; original logs retained and final
+  verification PASS. Records:runtime_model_view/{design.md,test_report_2026-10-24_runtime_model_view.md,evidence/}.
 - completed/read-only: D29-DETACHED-EMISSION-OWNERSHIP, session
   ses_e96a5c1c7ffeoPBK7V08CMas7v, inspects existing profiles and private ownership
   after required getter snapshots. Records3020a885/82b0e311 archived as

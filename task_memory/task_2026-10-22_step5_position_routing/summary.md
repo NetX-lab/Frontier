@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Complete the bounded named-model view control; archive−26.81% pricing and its unapproved unrelated-model error-surface change. |
 | 2026-10-24 | Accept fresh46fe strict77/77 and separate101/197/53 checks; full-unit/final guards remain pending. |
 | 2026-10-24 | Integrate accepted key30fb6a30, verify9491 final union, and assign fresh frozen regressions; full workflow remains open. |
 | 2026-10-24 | Accept independent snapshot baseline audit and mixed-group event-count correction; record current storage and performance gaps. |
@@ -36,8 +37,16 @@ plan_key_reuse/parent/ and repairs/evidence/plan_key_scope/.
 Fresh46fe strict77 passes77/77, and short suites separately101/197/53PASS.
 Parent27hash and old/new JUnit checks pass, explicitly preserving the approved
 one-ID metadata-test replacement. Full-unit/dependent comparisons/final guards
-remain pending under post_key_regressions/. Remaining-runtime design is read-only;
-no further source allocation or full CLI acceptance is implied.
+remain pending under post_key_regressions/. The remaining-runtime design worker
+was cancelled without delivery. Primary completed the named-model query control:
+warm0.122211→0.089447s,384 contract derivations→0, full208-event payload/JSONL/
+ledger parity, live288/144/64/16 numerical/proof/collective/point calls preserved.
+The23 final source bindings and262 fixture/cache metadata entries match.
+Ten contract groups match; one proves a real error-policy change for an
+unrelated native-label collision. Current-model failures remain effective.
+Evidence is in runtime_model_view/. A100-gross CORE proposal(source20/tests80)
+is pending YC's policy decision and path allocation. No further production
+source or full CLI acceptance is implied; current accounting stays9491/10000.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
 Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trainerPASS,

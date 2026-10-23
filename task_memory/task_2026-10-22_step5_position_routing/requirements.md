@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Record an unapproved named-model query proposal and its demonstrated unrelated-model error-policy difference. |
 | 2026-10-24 | Complete snapshot component and allocate the17-gross derived-key successor within unchanged PRICING/global limits. |
 | 2026-10-24 | Allocate shared run-input ownership across ten paths,114 effective paths, with unchanged owner/global caps and the new lifetime checks. |
 | 2026-10-24 | YC approves fixed collective profiling input per simulation run; next run reloads changes, superseding per-call hot-update requirements. |
@@ -311,3 +312,24 @@ owner/global limits and114 paths remain. Cache only successful canonical key
 strings; public dictionaries, numerical lookups and actual-layer proofs stay
 fresh. No to_dict/deepcopy/private-encoder/native-backend-key change is allocated.
 See plan_key_reuse/requirements.md and plan.md for verification and dependencies.
+
+## [Open Decision — Not Authorization] D29-RUNTIME-MODEL-VIEW
+
+After the remaining-runtime design worker was cancelled, primary measured a
+named-model query on the accepted key source:0.122211→0.089447s warm pricing,
+with the complete208-event output unchanged. The same existing view can accept
+a private query constraint; no view/estimator/numerical/proof cache is proposed.
+
+The demonstrated behavioral change needs YC's decision: full initialization
+and public unfiltered views keep their checks, but a GEMM point query no longer
+raises a flattened-view error belonging only to another model name. A registered
+`moe_gating_linear` native-label collision proves the difference; the selected
+GEMM collision, corrupted rows and live estimator/row/identity/family checks
+remain effective. Do not equate flattened-view errors with numerical admission
+errors or promise that every removed unrelated-view error reappears later.
+
+Proposed next implementation ceiling is100 gross(source20/tests80), within the
+existing CORE owner/global limits; scratch source is14 gross/+4. No path-cap
+amendment or implementation is authorized by this proposal. The existing
+2400s cap, full output and actual-point checks remain. Evidence and undecided
+options are in runtime_model_view/design.md and its test report.
