@@ -69,8 +69,11 @@
 - completed: apply checkpoint D7/S5 corrections to plan.md and repairs/repair_plan.md;
   the route now requires review closure before final freeze and final-source gates.
   Move superseded status entries below; defer unrelated work through future.md.
-- in-progress: after P2 closure, final code1be91bad runs strict77 final03,full-unit
-  parent03 and full offline/online main05 using fixture03. Integrated-04 must stay
+- completed: final code1be91bad strict77 final03 gives77/77 identical,zero missing
+  evidence/definition/cache-name differences. Parent verifies451 artifact hashes
+  and519 cache files per side; final_parent/fidelity_final03_audit.json.
+- in-progress: final code1be91bad runs full-unit parent03 and full offline/online
+  main05 using fixture03. Integrated-04 must stay
   immutable throughout; T2 record staging follows these runs or uses a separate
   verified staging tree. Final gates retain2400s per CLI mode and original checks.
 - completed: actual111-path accounting independently audited and root remeasured:

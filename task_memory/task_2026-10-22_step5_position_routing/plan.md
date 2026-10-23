@@ -43,7 +43,7 @@ unchanged. Final T2 acceptance must verify the actual final script/helper bytes.
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Source review complete;3879/3956 gross. |
 | Complete integration and final freeze | Final code frozen1be91bad; main-branch code/docs integration awaits final gates. |
-| Legacy strict77 | 60ba has77/77 PASS; final03 running on1be91bad. |
+| Legacy strict77 | Final03 on1be91bad:77/77 identical,902 artifact hashes verified. |
 | Full-unit failure/error-set gate | Parent03 running on1be91bad; compare retained baseline with explicit environment evidence. |
 | Fresh fixture and full CLI | fixture03 complete; final offline and online each require6144/1024,2400s and all retained validation checks. |
 | Independent source review | All recorded source findings closed on1be91bad. |

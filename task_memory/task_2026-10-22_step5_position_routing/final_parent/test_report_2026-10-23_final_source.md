@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Final frozen-source strict77 passes77/77; full902-artifact and cache/provenance audit passes. |
 | 2026-10-23 | Close source re-review; freeze1be91bad, launch final gates and record101PASS environment supplement plus final budget adoption. |
 | 2026-10-23 | Record independent parent verification of the prepare metadata repair before re-review/final freeze. |
 
@@ -55,7 +56,7 @@ timeout 1800s /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/uni
 timeout 5100s /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json --output-root /data/ycfeng/tmp/d29-parent-position-main05 --mode all > /data/ycfeng/tmp/d29-parent-position-main05.log 2>&1
 ```
 
-These three results are pending. The CLI's own timeout remains2400s per mode;
+Strict77 is complete below; full-unit and CLI results remain pending. The CLI's own timeout remains2400s per mode;
 the outer5100s only permits both modes and receipt generation. Fixture03 remains
 explicit CPU/unadmitted evidence. No original gate or baseline was changed.
 
@@ -86,3 +87,22 @@ submodule,8630 superproject gross,333 submodule gross and98 changed Python paths
 
 Artifacts:final_ledger_proposal03.json (raw audit),final_budget_parent_receipt.json
 (root check),repairs/final_scope_reconciliation.json (effective allocation).
+
+## Final frozen-source strict77: PASS
+
+Candidate1be91bad431d3bd886de7f5d80c19bd7e6c54a25 compared with retained baseline
+713e6a81708e87b86cf91fd89f3b1f954bdcbead using the unchanged comparator:
+
+```bash
+env PYTHONPATH="$PWD" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py compare --output-root /data/ycfeng/tmp/d29_workflow_fidelity_20261023_final03 --baseline-label /data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate --candidate-label /data/ycfeng/tmp/d29_workflow_fidelity_20261023_final03/candidate > /data/ycfeng/tmp/d29_workflow_fidelity_20261023_final03/compare.log 2>&1
+```
+
+Observed77/77 identical;zero mismatches,baseline/candidate failures,missing cases,
+missing evidence,changed definitions,uncompared cases or cache filename differences.
+Parent uses the existing file_digest/missing_evidence_for/side_provenance_findings
+functions and build_cases definitions to recheck every returncode,source/harness
+revision,clean capture,case digest,artifact size/hash,cache inventory and clean-cache
+manifest.451 artifact hashes and519 cache filenames match on each side.
+Receipt:fidelity_final03_audit.json; comparison SHA256
+c6dbe754a43ee58f94c15cc043264f19c6bf110d223e2e26a1a705100e4129ef.
+This is the required final-code legacy gate,not a reuse of60ba's earlier result.
