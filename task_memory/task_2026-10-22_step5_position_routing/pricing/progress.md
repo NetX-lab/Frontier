@@ -13,6 +13,7 @@
 | 2026-10-23 | Complete F3-F6 finite review repairs and exact JUnit/budget records. |
 | 2026-10-23 | Verify F4a/F4b frozen grouping/call-time boundaries and3067 budget. |
 | 2026-10-23 | Repair C1 actual routing and C2 point/layout binding after review. |
+| 2026-10-23 | Close observed native point producer and exact count association. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -754,3 +755,68 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Owner code delivery989a883d，预算剩余651。
 2. Actual observed compute_context handoff remains CORE/producer dependency。
 3. Runtime/GPU/global qualification未完成，CPU checks不替代。
+
+## D29-COMPUTE-CONTEXT-PRODUCER
+
+- completed investigation: missing writer is PRICING DispatchObserver, not an
+  unavailable CORE API. Actual published modular/fallback/naive/all2all methods
+  preserve source/gathered/expert tensors. Shared CORE chooser already consumes
+  buffer_json.compute_context and checks count.buffer_receipt. No import/edit.
+- completed implementation: retain original router tuple, completed collective
+  operands and bound actual expert invocation; after execution same-reference
+  checks and existing prepared_context/padding/verifier emit compute_context.
+  Actual output geometry comes from native combine. Diagnostic errors remain soft,
+  original native result/exception passes through unchanged; no timing path changed.
+- completed association: actual validator passes before exporter reads report;
+  physical/live vector, source frame, native shared/policy/group/layout, ordered TP
+  calls and point keys link observations to exact buffer/count. Context/native_points
+  included in cache/count/seal, not frozen affine fit. Captured/unobserved cells
+  cannot fabricate compute binding. Full raw fits and observed policy remain.
+- RED missing writer1 FAIL at d29_point_red; GREEN probe245=166 PASS/79 SKIP;
+  affected non-exporter three suites131=130 PASS/1 SKIP; final exporter54 PASS,
+  including real selected validator->exporter valid_producer positive, no mocked
+  validator there. Distinct affected latest430=350 PASS/80 SKIP. Published native
+  original observer64 PASS with STEP5_NATIVE_SOURCE_ROOT. Detailed exact commands,
+  errors/hypotheses/env limits in test_report_2026-10-23_compute_context_producer.md.
+- corrected iterations: cold architecture entry import, missing fasteners in
+  torch-only transport env, unequal fixture policy cardinality and JSON frame
+  representation. Each narrowed its stated cause; no production fallback or peer
+  patch. Wrong native fixture environment produced64 SKIP, superseded by64 PASS.
+- completed budget/AST/whitespace/full subpatch byte checks:43 rows3606/3956,
+  remaining350, +3510/-96. Six existing path churn308/9=317, no new paths. Isolated
+  sub3dac53c unchanged/clean; root gitlink remains intentionally unstaged.
+- in-progress final scoped source/record commit, then root re-review/integration.
+  Actual GPU compute contexts/parameters and independent parent qualification
+  remain unobserved data, not missing owned producer code.
+
+## 1. 规划完成情况
+**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Actual observed point writer | PASS |RED missing API→same original refs/existing prepared_context GREEN |
+| Exact buffer/count association | PASS |valid producer+stale/source/policy/geometry negatives |
+| Affected verification/quota | PASS |430 distinct350 PASS/80 SKIP; native64 PASS;3606 gross |
+| Scoped archive/commit | TODO |Records ready; commit next |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**Root producer request至今｜**当前前沿：**scoped receipt/commit
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Only actual producer criterion tests, no broad suites |
+| D2 细节反复重试 | CLEAR |Distinct explicit causes; final native64 and producer GREEN |
+| D3 支线问题修补 | CLEAR |Writer belongs to root's required closure |
+| D4 可并行任务停滞 | CLEAR |Env-separated affected/native checks parallel; no agents |
+| D5 超范围镀金 | CLEAR |Six existing paths3606<3956, model/qualification unchanged |
+| D6 分析空转 | CLEAR |Concrete writer/exporter/validator implemented and verified |
+| D7 路线违背 | CLEAR |No candidate context or classname proof; no fit split |
+**文档检查：**S5 earlier generic CORE/producer prerequisite replaced by owned writer facts; S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新原错误依赖记录。
+**文档更新（先执行）：**plan/receipt/summary记录owned writer完成、CORE已有consumer（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**Scoped commit → root复审/集成；仅真实GPU数据未提供，不以此推迟代码。
+## 4. 最值得关注的 3 点
+1. Owned code能emit/validate/threadactual point，CORE不需新API。
+2. 原生单次调用/软诊断与frozen/fullpolicy边界未变，剩余额度350。
+3. GPU实际值/独立资格仍待root，CPU fixture不替代。

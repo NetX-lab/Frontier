@@ -9,6 +9,7 @@
 | 2026-10-23 | Resume only finite-review F3–F6 under the original ownership/quota. |
 | 2026-10-23 | Resume F4a/F4b frozen-policy and lazy-state boundary repairs. |
 | 2026-10-23 | Resume C1 actual-router diagnostics and C2 compute/collective binding. |
+| 2026-10-23 | Complete the owned observed compute-point producer/count handoff. |
 
 TaskID: D29-PRICING-IMPLEMENTATION.
 
@@ -83,3 +84,12 @@ equality. Current bfe6f2ae/sub3dac53c source3067/3956,43/44 leaves889 gross. No
 new paths/peers/imports/platform/GPU/extra agents/approval-criteria changes;
 preserve F4 frozen/full identity, F3/F5/F6 and confirmed native scopes. Root owns
 re-review/integration/global qualification; publish any missing CORE binding seam.
+
+[Original Request] D29-COMPUTE-CONTEXT-PRODUCER: investigate and complete owned
+collector/probe/exporter/validator code emitting, validating and threading verified
+observed native points into exact buffer/count receipts. No candidate prediction,
+classname proof, new classification/schema/builder or fit-identity change. Actual
+valid producer positive and stale/mismatch negatives required. Existing43/44 paths,
+3305/3956 leaves651 gross; no new paths/peers/imports/GPU/platform/agents. If an
+actual shared API/input or quota blocks completion, supply exact writer/source
+evidence and minimal proposal/cost rather than a generic evidence deferral.

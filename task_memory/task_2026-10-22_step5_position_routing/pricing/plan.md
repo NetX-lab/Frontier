@@ -8,6 +8,7 @@
 | 2026-10-23 | Verify F3-F6 review repair and scoped final evidence. |
 | 2026-10-23 | Reopen only F4 frozen grouping and startup/call-time boundaries. |
 | 2026-10-23 | Repair C1 observed routing and C2 exact frame/plan binding. |
+| 2026-10-23 | Close PRICING-owned compute-point writer and count association. |
 
 1. **completed:** Publish selected targets, ROUTED prepare binding, immutable plan/result.
 2. **completed:** Extend isolated collective-sim with strict plan serialization, joint ordered
@@ -74,3 +75,18 @@ validator requires observed match/totals instead of trusting generic match alone
 Affected final682=529 PASS/153 SKIP, cold10 PASS. Exact43 paths/3305 gross and
 records verified; scoped source/record commit989a883d delivered for root re-review.
 Observed compute binding is a CORE/producer prerequisite; no owned substitute.
+
+## Observed compute-point producer closure
+
+Root rejects generic peer deferral: original missing writer is owned. Actual
+observer refs -> existing prepared_context/source verifier -> validated eager
+rank/layer/input point -> exact buffer/count keys -> actual validator/exporter
+positive and stale/source/policy/layout negatives -> scoped budget/receipt/commit.
+Fit grouping remains frozen-policy only. Calibration-only/captured cells never
+acquire inferred compute_context. Existing CORE chooser reads this exact field;
+no new peer API or import needed. Runtime GPU values/independent qualification
+remain future inputs, not missing producer code.
+
+Current: writer+association/validator implemented; actual-seam RED/GREEN and valid
+producer validator->exporter PASS. Final scoped records/commit pending. No broad
+regression, peer edits or submodule change required.

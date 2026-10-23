@@ -232,6 +232,8 @@ class DispatchObserver:
         self.calls = []
         self.expert_calls = []
         self.routing_calls = []
+        self.collective_operands = []
+        self.expert_operands = []
         self.errors = []
 
     @contextmanager
@@ -345,6 +347,7 @@ class DispatchObserver:
                             outputs = output if isinstance(output, list) else [output]
                             call["outputs"] = [tensor_schema(t) for t in outputs if t is not None]
                             call["completed"] = True
+                            self.collective_operands.append(dict(op=_name,inputs=tensors,outputs=outputs))
                             self.emit({"event": "collective_exit", **call})
                     return result
 
@@ -364,7 +367,13 @@ class DispatchObserver:
                         name = type(instance).__name__
                         self.expert_calls.append(name)
                         self.emit({"event": "expert_enter", "experts_class": name})
-                    return original(*args, **kwargs)
+                    result=original(*args, **kwargs)
+                    with diagnostic_scope(self.errors,"expert.operands"):
+                        import inspect
+                        bound=inspect.signature(original).bind(*args,**kwargs)
+                        bound.apply_defaults()
+                        self.expert_operands.append((instance,bound.arguments))
+                    return result
 
                 stack.enter_context(patch.object(instance, "apply", applied))
                 # Native FallbackExperts owns precisely these two children.
@@ -375,6 +384,38 @@ class DispatchObserver:
 
             observe(experts)
             yield
+
+    def compute_context(self, layer, text):
+        """Associate the actual expert invocation with its native dispatch operands."""
+        from frontier.profiling.moe.fp8_block_experts import NativeRoutedExperts
+        from frontier.profiling.common.model_config import get_model_architecture_profile
+        dispatch,=[c for c in self.collective_operands if c["op"] == "all_gatherv"]
+        instance,args=self.expert_operands[0]
+        source=dispatch["inputs"];gathered=dispatch["outputs"]
+        weights,ids=self.routing_calls[0]["result"]
+        if weights is not source[1] or ids is not source[2]:
+            raise ValueError("Observed router outputs differ from actual dispatch operands")
+        if (gathered[0] is not args["hidden_states"] or gathered[1] is not args["topk_weights"] or
+                gathered[2] is not args["topk_ids"] or
+                (gathered[3] if len(gathered) == 4 else None) is not args["a1q_scale"]):
+            raise ValueError("Actual expert operands differ from completed native dispatch")
+        method=layer.experts.routed_experts.quant_method
+        backend=getattr(method,"fp8_backend",getattr(method,"unquantized_backend",None))
+        native=NativeRoutedExperts(backend.value,type(instance).__name__,None,method.moe_kernel,
+            args["w1"],args["w2"],args["activation"],args["global_num_experts"])
+        context=native.prepared_context(gathered[0],args["a1q_scale"],topk_ids=args["topk_ids"],
+            expert_map=args["expert_map"],source_tensors=(source[0],source[3] if len(source) == 4 else None))
+        if context["experts_class"] != type(self.expert_operands[0][0]).__name__:
+            raise ValueError("Observed expert implementation differs from inspected point")
+        def tensor(name,value):
+            return dict(name=name,dtype=str(value.dtype).removeprefix("torch."),
+                element_size=value.element_size(),columns=value.shape[1],row_stride=value.stride(0))
+        combine,=[c for c in self.collective_operands if c["op"] == "reduce_scatterv_into_output"]
+        context.update(model_architecture_profile=get_model_architecture_profile(text).profile_id,
+            routing_runtime_path="position_cyclic",collective_tensors=dict(
+                dispatch=[tensor(n,t) for n,t in zip(("activation","weights","ids","scales"),source)],
+                output=[tensor("output",combine["outputs"][0])]))
+        return context
 
 
 def compare_dispatch(case, calls, *, rows, sizes, dp_ranks, tp_ranks, hidden):
@@ -637,6 +678,8 @@ def run_probe(args, plan):
                     result["routing_comparison"]=observer.compare_routing(source_tensors,config.model_config.hf_text_config)
                     if result["routing_comparison"]["status"] != "match":
                         result["comparison"]["status"]=result["routing_comparison"]["status"]
+                    with diagnostic_scope(observer.errors,"observed_compute_context"):
+                        result["compute_context"]=observer.compute_context(layer,config.model_config.hf_text_config)
                 if observer.errors or len(errors) > error_start:
                     result["comparison"]["status"] = "unverified"
                 emit({"event": "layer_verdict", "layer_id": case["layer_id"], **result["comparison"]})

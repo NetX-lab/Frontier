@@ -12,6 +12,7 @@
 | 2026-10-23 | Repair F3-F6 completed HTSIM, actual policy, exact replay and cold bootstrap evidence. |
 | 2026-10-23 | Separate frozen fit context from complete per-cell policy and startup diagnostics. |
 | 2026-10-23 | Require observed route values and exact per-cell compute/plan binding. |
+| 2026-10-23 | Emit observed native compute points and associate exact buffer/count receipts. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -410,14 +411,37 @@ BF16 activation, actual configured router_topk FP32 weights+INT32 IDs and BF16
 output width. All plans validate before any backend invocation. Phase/size and
 paired positive exact scope evidence remain required, including live0 lanes.
 
-Concrete CORE dependency: `_step5_position_queries` currently reads only shared
-source/complete execution_policy and collective_tensors; existing collector has
-no actual compute_context in buffer_receipt. Producer/CORE owner must associate
-the verified observed point with the exact collective buffer/count receipt and
-carry the field above from evidence, not copy a candidate prediction to fabricate
-proof, infer backend from comm dtype or strip layouts. H04 deliberately rejects
-the old incomplete handoff. Root owns the integration decision; no peer edits or
-imports performed in this repair.
+Producer closure: `DispatchObserver.compute_context(layer,text)` retains actual
+router outputs, completed all_gatherv source/gathered operands and native expert
+apply arguments. It requires the same tensor references and reuses
+NativeRoutedExperts.prepared_context for selector, quant/layout, physical padding,
+workspace and callable source verification, after native execution. Point output
+geometry comes from the actual into-output combine, not a fabricated activation
+dtype. Errors remain in diagnostic_scope and never replace native exceptions.
+
+Rank layer report now emits `compute_context`. Validator requires observed shared
+identity and local/gathered physical widths. `observed_collective_points(record,
+probe,inputs)` associates exact physical/live vector, source frame, layer/input/rank,
+complete call-time policy/group/layout and completed call. Ordered native TP
+reductions retain shared-first/routed-second attribution from published Step5MoE
+forward, not implementation-name inference. Returned native_point retains input/
+output schemas, complete execution_policy and call_index. No new point campaign.
+
+Exporter reads the existing native_dispatch report and routing inputs after its
+actual selected validator passes. Each applicable eager count key contains
+`buffer_receipt.compute_context` and `buffer_receipt.native_points`; both also live
+in the exact plan.buffer_json and count.buffer_receipt. Raw frozen-model fit cells
+remain unchanged. Same compute contexts merge all observed rank/layer associations;
+distinct actual point contexts get distinct count keys, not new affine fits.
+Calibration-only or captured cells without a corresponding eager point retain
+unbound counts and cannot satisfy H04; no guessed GPU fields or graph qualification.
+
+CORE's current `_step5_position_queries` in its development worktree already reads
+buffer_json.compute_context, checks count.buffer_receipt equality and requires a
+unique exact match (moe_routing_workload.py165-170 at inspection). No new shared API
+is needed: carry this measured field unchanged, including source callable facts,
+never synthesize it from the candidate prediction. Root owns integration and
+actual-runtime collection; no peer writes/imports performed here.
 
 Bound eager module observer gains `routing(router)` with the original named
 signature hidden_states,router_logits,topk_indices_dtype=None,*,input_ids=None;

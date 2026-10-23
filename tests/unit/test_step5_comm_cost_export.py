@@ -216,7 +216,8 @@ def test_parent_selection_preserves_frozen_parameters_and_signed_evidence(tmp_pa
         EXPORT.qualify_finite_parameters(candidate,path,tmp_path/"stale_policy.json")
 
 
-@pytest.mark.parametrize("network_defect",[None,"partial","zero","nan","inf","branch_switch","different_policy"])
+@pytest.mark.parametrize("network_defect",[None,"partial","zero","nan","inf","branch_switch","different_policy",
+    "observed_point","stale_point","mismatched_point","point_policy","point_geometry","valid_producer"])
 def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,monkeypatch,network_defect):
     submodule=Path(__file__).parents[2]/"frontier/cc_backend/backends/collective-sim"
     if not (submodule/"sim/datacenter/htsim_ndp").exists():
@@ -229,7 +230,7 @@ def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,
     frozen=tmp_path/"frozen.json"
     frozen.write_text(json.dumps(dict(device_type="h800",scenario=asdict(scenario),collective_sim_root=str(submodule))))
     root=tmp_path/"run/collectives";root.mkdir(parents=True)
-    switches=network_defect in ("branch_switch","different_policy")
+    switches=network_defect in ("branch_switch","different_policy","observed_point","stale_point","mismatched_point","point_policy","point_geometry","valid_producer")
     anchors=((16,"calibration"),(256,"calibration"),(8192,"calibration"),(64,"qualification")) if switches else (
         (1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification"))
     config=dict(frozen_model_config=str(frozen),frozen_model_config_sha256=EXPORT.sha256(frozen),
@@ -266,6 +267,107 @@ def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,
         kernels.append({**kernels[-1],"call":records[-1]["call"]})
     for name,values in (("measurements",records),("kernels",kernels),("local_work",local)):
         (root/f"{name}.jsonl").write_text("".join(json.dumps(r)+"\n" for r in values))
+    if network_defect == "valid_producer":
+        from tests.unit.test_step5_comm_transport import fixture_result,load
+        from tests.unit.test_step5_fixed_probe import installed_profile_receipt
+        from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
+        manifest_path,_,manifest=installed_profile_receipt.__wrapped__(tmp_path,monkeypatch)
+        directory=tmp_path/"complete";directory.mkdir()
+        definition=json.loads((SCRIPT.parent/"s2_run.json").read_text());definition["passes"]=1
+        definition["grid"]=dict(scenarios=[dict(name=f"s{r}",tokens_per_dp_rank=[r,r],logit_rows_per_dp_rank=[1,1],cuda_graph=False) for r,_ in anchors])
+        job,actual=fixture_result(directory,monkeypatch,"s2",["shared_expert_down_proj_all_reduce"],definition)
+        # fixture_result selects its last three scenarios; restore all fit anchors.
+        definition["grid"]["scenarios"].insert(0,dict(name="s16",tokens_per_dp_rank=[16,16],logit_rows_per_dp_rank=[1,1],cuda_graph=False))
+        first=deepcopy(next(r for r in actual if r["scenario"] == "s256"))
+        first.update(scenario="s16",tokens_per_dp_rank=[16,16],useful_tokens_per_dp_rank=[16,16],padded_tokens_per_dp_rank=[16,16],shard_rows=[16]*16,max_input_bytes=131072,max_output_bytes=131072)
+        actual.insert(0,first);job["expected"]=dict(measurements=4,kernel_rows=4)
+        config.update(definition);config["grid"]["scenario_splits"]={f"s{r}":s for r,s in anchors}
+        inp=MoERoutingProfileInput("point64",(MoESourceFrame(0,(64,),(0,),64,"standalone_legacy"),MoESourceFrame(1,(64,),(0,),64,"standalone_legacy")),128)
+        routing=directory/"routing.json";routing.write_text(json.dumps(dict(schema_version="moe.position_cyclic.inputs.v1",routing_runtime_path="position_cyclic",inputs=[asdict(inp)])))
+        config["routing_input_file"]=str(routing);Path(job["benchmark"]).write_text(json.dumps(config))
+        keys=("native_runtime_adapter","native_reference","profile_generation","installed_package","model_config_revision","model_config_sha256","installed_source_hashes")
+        shared={k:manifest["native_binding"][k] for k in keys}
+        runtime=dict(torch="cpu_fixture",vllm="cpu_fixture",pynccl_versions={"tp":22902},enabled_communicators={"tp":{"pynccl_comm":True}},vllm_environment={},nccl_environment={},disable_custom_all_reduce=False,disable_nccl_for_dp_synchronization=True)
+        policy=dict(runtime=runtime,branches=["pynccl_comm.all_reduce"],buffers={"supplied_output":False})
+        evidence=[];summaries=[]
+        for row in actual:
+            r=row["tokens_per_dp_rank"][0];us=14.+1.75*r*8192/200e9*1e6
+            row.update(native_context=dict(shared=shared,execution_policy={str(rank):deepcopy(policy) for rank in range(16)}),evidence_kind="native_measurement",buffer_receipt={"scope":"cpu_fixture"},per_rank_call_us=[[us]*3 for _ in range(16)])
+            evidence.append(dict(scenario=row["scenario"],call=row["call"],communicator="nccl",profiled_calls=5,per_rank_kernel_counts=[7]*16,per_rank_events=[["cpu_fixture"]*35 for _ in range(16)]))
+            summaries.append(dict(pass_id=0,scenario=row["scenario"],call=row["call"],median_us=us))
+        collectives=directory/"collectives"
+        for name,values in (("measurements",actual),("kernels",evidence),("local_work",local)):
+            (collectives/f"{name}.jsonl").write_text("".join(json.dumps(r)+"\n" for r in values))
+        with (collectives/"summary.csv").open("w") as stream:
+            writer=csv.DictWriter(stream,fieldnames=["pass","scenario","call","median_us"]);writer.writeheader()
+            writer.writerows({"pass":v.pop("pass_id"),**v} for v in summaries)
+        source.update(config=config,evidence_kind="native_measurement",runtime=dict(native_facts=dict(shared=shared),per_rank_startup_runtime={str(r):runtime for r in range(16)}))
+        (collectives/"plan.json").write_text(json.dumps(source));(collectives/"native_identity.json").write_text('{"status":"PASS"}')
+        job.update(profile_manifest=str(manifest_path),image=manifest["image"]);job["native_probe"].update(moe_input_ids=[inp.moe_input_id],routing_input_file=str(routing))
+        (directory/"job.json").write_text(json.dumps(job))
+        for rank in range(2): (directory/f"node_{rank}/native_binding.json").write_text('{"status":"PASS"}')
+        native=json.loads((directory/"native_dispatch/dispatch_probe.json").read_text());native.update(verification_scope="eager_native_moe_module",full_model_verified=False,model_runner_verified=False,parallelism=dict(tp=8))
+        for rank in native["ranks"]:
+            for layer in rank["layers"]:
+                call=dict(op="all_reduce",completed=True,group_ranks=rank["group_ranks"]["tp"],execution_policy=policy,inputs=[dict(dtype="bfloat16",shape=[64,4096],stride=[4096,1],element_size=2)])
+                context=dict(native_facts=dict(shared=shared),source_activation_layout=dict(shape=[64,4096]),activation_layout=dict(shape=[128,4096]),collective_tensors=dict(output=[dict(name="output",dtype="bfloat16",columns=4096,row_stride=4096,element_size=2)]))
+                layer.update(moe_input_id=inp.moe_input_id,source_frame=asdict(inp.source_frames[rank["rank"]//8]),native_facts=dict(shared=shared,callables={"cpu_fixture":"explicit_schema"}),compute_context=context,collectives=[call,deepcopy(call)],routing_comparison=dict(status="match",differences=[],observations=[dict(physical_rows=64,live_rows=64,live_assignments=512)]))
+        (directory/"native_dispatch/dispatch_probe.json").write_text(json.dumps(native))
+        report=load("validate_result").validate(job,directory);assert report["status"] == "PASS",report
+        artifact=EXPORT.export_finite_parameters(directory,tmp_path/"complete_candidate")
+        assert len(artifact["models"]) == 1 and len(artifact["counts"]) == 4
+        bound=[c for c in artifact["counts"].values() if "compute_context" in c["buffer_receipt"]]
+        assert len(bound) == 1 and len(bound[0]["buffer_receipt"]["native_points"]) == 32
+        assert artifact["candidate_only"] and artifact["qualification"]["status"] == "UNVERIFIED"
+        return
+    if network_defect in ("observed_point","stale_point","mismatched_point","point_policy","point_geometry"):
+        from dataclasses import asdict
+        from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
+        inp=MoERoutingProfileInput("point64",(MoESourceFrame(0,(64,),(0,),64,"standalone_legacy"),
+            MoESourceFrame(1,(64,),(0,),64,"standalone_legacy")),128)
+        routing=root.parent/"routing.json"
+        routing.write_text(json.dumps(dict(schema_version="moe.position_cyclic.inputs.v1",routing_runtime_path="position_cyclic",inputs=[asdict(inp)])))
+        config["routing_input_file"]=str(routing);source["evidence_kind"]="native_measurement"
+        (root/"plan.json").write_text(json.dumps(source))
+        for record in records:
+            record["evidence_kind"]="native_measurement"
+            policy=record["native_context"]["execution_policy"]["0"]
+            record["native_context"]["execution_policy"]={str(r):deepcopy(policy) for r in range(16)}
+        (root/"measurements.jsonl").write_text("".join(json.dumps(r)+"\n" for r in records))
+        ranks=[]
+        for rank in range(16):
+            layers=[]
+            context=dict(native_facts=dict(shared="cpu_fixture"),source_activation_layout=dict(shape=[64,4]),
+                activation_layout=dict(shape=[128,4]),collective_tensors=dict(dispatch=[dict(name="activation",dtype="bfloat16",
+                    columns=4,element_size=2,row_stride=4)],output=[dict(name="output",dtype="bfloat16",columns=4096,element_size=2,row_stride=4096)]))
+            calls=[dict(op=r["op"],completed=True,group_ranks=next(g for g in r["group_ranks"] if rank in g),
+                execution_policy=r["native_context"]["execution_policy"][str(rank)],inputs=[dict(dtype=d,shape=[64,c],stride=[c,1],element_size=DTYPE_BYTES[d]) for d,c in zip(r["dtypes"],r["columns"])])
+                for r in records if r["scenario"] == "s64"]
+            calls.append(deepcopy(calls[-1]))
+            layers.append(dict(layer_id=3,moe_input_id=inp.moe_input_id,source_frame=asdict(inp.source_frames[rank//8]),
+                comparison=dict(status="match"),routing_comparison=dict(status="match"),compute_context=context,collectives=calls))
+            ranks.append(dict(rank=rank,layers=layers))
+        if network_defect == "stale_point": ranks[0]["layers"][0]["compute_context"]["activation_layout"]["shape"][0]=127
+        if network_defect == "mismatched_point": ranks[0]["layers"][0]["source_frame"]["context_lens"]=[1]
+        if network_defect == "point_policy": ranks[0]["layers"][0]["collectives"][0]["execution_policy"]={"branches":["stale"]}
+        if network_defect == "point_geometry": ranks[0]["layers"][0]["collectives"][0]["inputs"][0]["stride"]=[1,64]
+        (root.parent/"native_dispatch").mkdir()
+        (root.parent/"native_dispatch/dispatch_probe.json").write_text(json.dumps(dict(parallelism=dict(tp=8),ranks=ranks)))
+        (root/"measurements.jsonl").write_text("".join(json.dumps(r)+"\n" for r in records))
+        (root.parent/"job.json").write_text('{}')
+        sys.path.insert(0,str(SCRIPT.parent))
+        import validate_result
+        monkeypatch.setattr(validate_result,"validate",lambda *a:dict(status="PASS"))
+        if network_defect != "observed_point":
+            with pytest.raises(ValueError,match="Observed"): EXPORT.export_finite_parameters(root.parent,tmp_path/"candidate")
+            return
+        artifact=EXPORT.export_finite_parameters(root.parent,tmp_path/"candidate")
+        bound=[row for row in artifact["counts"].values() if "compute_context" in row["buffer_receipt"]]
+        assert len(bound) == 2 and all(len(row["buffer_receipt"]["native_points"]) == 16 for row in bound)
+        assert all(json.loads(row["plan_key"])["buffer_json"] == json.dumps(row["buffer_receipt"],sort_keys=True) for row in bound)
+        assert len(artifact["models"]) == 2 and artifact["candidate_only"]
+        assert next(m for m in artifact["models"] if m["phase"] == "shared_tp")["parameters"]["tp_nvlink"]["fit"]["distinct_sizes"] == 3
+        return
     if network_defect == "different_policy":
         with pytest.raises(ValueError,match="three"):
             EXPORT.export_finite_parameters(root.parent,tmp_path/"candidate")

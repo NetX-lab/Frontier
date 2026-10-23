@@ -232,7 +232,7 @@ def test_local_proxy_evidence_requires_every_rank_and_repeat(tmp_path,monkeypatc
 @pytest.mark.parametrize("defect",[None,"source","generation","count","duplicate_probe","extra_probe",
                                   "op","group","cuda_graph","replay","runtime_policy","branch","missing_policy",
                                    "lazy_fallback","stale_fallback","buffers","frozen_environment",
-                                   "missing_routing","wrong_routing","routing_totals"])
+                                    "missing_routing","wrong_routing","routing_totals","missing_compute","stale_compute"])
 def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tmp_path,monkeypatch,defect):
     from dataclasses import asdict
     from tests.unit.test_step5_fixed_probe import installed_profile_receipt
@@ -288,6 +288,8 @@ def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tm
     for r in probe["ranks"]:
         for layer in r["layers"]:
             layer.update(moe_input_id="tail16",source_frame=asdict(inp.source_frames[r["rank"]//8]),
+                compute_context=dict(native_facts=dict(shared=shared),source_activation_layout=dict(shape=[inp.source_frames[r["rank"]//8].physical_rows,4096]),
+                    activation_layout=dict(shape=[17,4096])),
                 routing_comparison=dict(status="match",differences=[],observations=[dict(
                     physical_rows=inp.source_frames[r["rank"]//8].physical_rows,
                     live_rows=sum(inp.source_frames[r["rank"]//8].query_lens),
@@ -305,6 +307,8 @@ def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tm
     if defect == "missing_routing": probe["ranks"][0]["layers"][0].pop("routing_comparison")
     if defect == "wrong_routing": probe["ranks"][0]["layers"][0]["routing_comparison"]["status"]="discrepancy"
     if defect == "routing_totals": probe["ranks"][0]["layers"][0]["routing_comparison"]["observations"][0]["live_assignments"]=0
+    if defect == "missing_compute": probe["ranks"][0]["layers"][0].pop("compute_context")
+    if defect == "stale_compute": probe["ranks"][0]["layers"][0]["compute_context"]["activation_layout"]["shape"][0]=16
     probe_path.write_text(json.dumps(probe))
     report=load("validate_result").validate(job,tmp_path)
     assert report["status"] == ("PASS" if defect in (None,"lazy_fallback") else "UNVERIFIED"),report

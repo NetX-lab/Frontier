@@ -954,3 +954,91 @@ def test_actual_native_router_observer_checks_values_once_after_execution(monkey
     assert observer.routing_calls[0]["result"] is value and observer.routing_calls[0]["logits"] is logits
     if fault in ("diagnostic","enter_diagnostic"): assert observer.errors
     else: assert verdict["observations"][0]["actual_config"]["top_k"] == (7 if fault == "topk" else 8)
+
+
+def test_observed_compute_point_retains_original_operands(monkeypatch):
+    torch=pytest.importorskip("torch")
+    from frontier.profiling.moe.fp8_block_experts import NativeRoutedExperts
+    class TritonExperts:
+        def apply(self,hidden_states,w1,w2,topk_weights,topk_ids,a1q_scale,expert_map,activation,global_num_experts):
+            return hidden_states
+    expert=TritonExperts();activation=torch.ones(17,4);ids=torch.zeros(17,8,dtype=torch.int32)
+    weights=torch.zeros(17,8);source=[activation[:16],weights[:16],ids[:16]]
+    gathered=[activation,weights,ids];observer=probe.DispatchObserver(lambda e:None)
+    observer.routing_calls=[dict(result=(source[1],source[2]))]
+    observer.collective_operands=[dict(op="all_gatherv",inputs=source,outputs=gathered),
+        dict(op="reduce_scatterv_into_output",outputs=[activation[:16]])]
+    kernel=SimpleNamespace(fused_experts=expert)
+    layer=SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=SimpleNamespace(
+        moe_kernel=kernel,unquantized_backend=SimpleNamespace(value="TRITON")))))
+    seen=[]
+    def context(self,hidden,scales,**kwargs):
+        seen.append((hidden,scales,kwargs));return dict(experts_class="TritonExperts",native_facts=dict(shared="cpu_fixture"))
+    monkeypatch.setattr(NativeRoutedExperts,"prepared_context",context)
+    with observer.experts(expert):
+        assert expert.apply(hidden_states=activation,w1=torch.empty(22,8,4),w2=torch.empty(22,4,4),
+            topk_weights=weights,topk_ids=ids,a1q_scale=None,expert_map=None,activation="swiglustep",global_num_experts=352) is activation
+    value=observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+    assert len(seen) == 1 and seen[0][0] is activation and seen[0][2]["topk_ids"] is ids
+    assert seen[0][2]["source_tensors"][0] is source[0]
+    assert value["collective_tensors"]["dispatch"][2]["dtype"] == "int32"
+    assert value["routing_runtime_path"] == "position_cyclic"
+    observer.collective_operands[0]["outputs"]=[activation.clone(),weights,ids]
+    with pytest.raises(ValueError,match="operands"): observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+
+
+def test_native_point_writer_uses_existing_prepared_context_and_source_verifier(monkeypatch):
+    torch=pytest.importorskip("torch")
+    import types
+    from frontier.profiling.common import runtime_identity
+    class TritonExperts:
+        quant_config=SimpleNamespace(quant_dtype=None,use_int8_w8a16=False,use_int4_w4a16=False,
+            config_name=lambda dtype:"cpu_fixture")
+        expects_unquantized_inputs=False;a2_scale=None;block_shape=None;_lora_context=None
+        per_act_token_quant=False;quantization_emulation=False;quant_dtype=None
+        def workspace_shapes(self,*args): return ((136,4),(136,4),(17,4))
+        def finalize_weight_and_reduce_impl(self): return self
+        def apply(self,hidden_states,w1,w2,topk_weights,topk_ids,a1q_scale,expert_map,activation,global_num_experts): return hidden_states
+    module=types.ModuleType("vllm.model_executor.layers.fused_moe.experts.triton_moe");module.TritonExperts=TritonExperts
+    deep=types.ModuleType("vllm.model_executor.layers.fused_moe.experts.deep_gemm_moe");deep.DeepGemmExperts=type("DeepGemmExperts",(),{})
+    fused=types.ModuleType("vllm.model_executor.layers.fused_moe.fused_moe")
+    fused.try_get_optimal_moe_config=lambda *a:dict(BLOCK_SIZE_M=16)
+    fused._prepare_expert_assignment=lambda *a,**kw:(None,None,torch.tensor(32))
+    for m in (module,deep,fused): monkeypatch.setitem(sys.modules,m.__name__,m)
+    seen=[];monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
+    monkeypatch.setattr(runtime_identity,"verify_step5_profile_runtime",lambda path,**kw:seen.append(kw["callables"]) or dict(shared="cpu_fixture"))
+    a=torch.ones(17,4,dtype=torch.bfloat16);ids=torch.zeros(17,8,dtype=torch.int32);weights=torch.zeros(17,8)
+    expert=TritonExperts();method=SimpleNamespace(moe_kernel=SimpleNamespace(fused_experts=expert),unquantized_backend=SimpleNamespace(value="TRITON"))
+    layer=SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=method)))
+    observer=probe.DispatchObserver(lambda e:None)
+    observer.collective_operands=[dict(op="all_gatherv",inputs=[a[:16],weights[:16],ids[:16]],outputs=[a,weights,ids]),
+        dict(op="reduce_scatterv_into_output",outputs=[a[:16]])]
+    observer.routing_calls=[dict(result=tuple(observer.collective_operands[0]["inputs"][1:3]))]
+    with observer.experts(expert):
+        assert expert.apply(hidden_states=a,w1=torch.empty(22,8,4),w2=torch.empty(22,4,4),topk_weights=weights,
+            topk_ids=ids,a1q_scale=None,expert_map=None,activation="swiglustep",global_num_experts=352) is a
+    context=observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+    assert context["native_padding"] == dict(scheme="triton_expert_assignment",alignment=16,num_tokens_post_padded=32,
+        ignore_invalid_experts=False,config=dict(BLOCK_SIZE_M=16))
+    assert context["source_activation_layout"]["shape"] == [16,4] and context["activation_layout"]["shape"] == [17,4]
+    assert context["native_facts"] == dict(shared="cpu_fixture") and expert.apply in seen[0]
+    from dataclasses import asdict
+    from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
+    from tests.unit.test_step5_comm_cost_export import EXPORT
+    inp=MoERoutingProfileInput("observed16",(MoESourceFrame(0,(16,),(0,),16,"standalone_legacy"),
+        MoESourceFrame(1,(1,),(0,),1,"standalone_legacy")),17)
+    policy=dict(branches=["cpu_fixture"],runtime=dict(pynccl_versions={"dp":"cpu_fixture"}))
+    schemas=[probe.tensor_schema(t) for t in observer.collective_operands[0]["inputs"]]
+    call=dict(op="all_gatherv",group_ranks=[0,8],execution_policy=policy,inputs=schemas,completed=True)
+    record=dict(op="all_gatherv",call="moe_dispatch_all_gatherv_bf16",participating_ranks=[0],group_ranks=[[0,8]],
+        tokens_per_dp_rank=[16,1],dtypes=[t["dtype"] for t in schemas],columns=[t["shape"][1] for t in schemas],
+        native_context=dict(shared="cpu_fixture",execution_policy={"0":policy}))
+    layer=dict(layer_id=88,moe_input_id=inp.moe_input_id,source_frame=json.loads(json.dumps(asdict(inp.source_frames[0]))),
+        compute_context=context,comparison=dict(status="match"),routing_comparison=dict(status="match"),collectives=[call])
+    points=EXPORT.observed_collective_points(record,dict(parallelism=dict(tp=8),ranks=[dict(rank=0,layers=[layer])]),{inp.moe_input_id:inp})
+    assert len(points) == 1 and points[0]["compute_context"] is context
+    assert points[0]["native_point"]["inputs"] is schemas
+    record["useful_tokens_per_dp_rank"]=[16,0]
+    assert EXPORT.observed_collective_points(record,dict(parallelism=dict(tp=8),ranks=[dict(rank=0,layers=[layer])]),{inp.moe_input_id:inp}) == []
+    observer.routing_calls[0]["result"]=(weights[:16],ids[:16])
+    with pytest.raises(ValueError,match="router outputs"): observer.compute_context(SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=method))),SimpleNamespace(model_type="step5"))
