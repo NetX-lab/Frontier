@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root steering freezes accepted production1be91bad; replace final runtime identity60ba, retain prior history and planned post-CPUgate04record staging. |
 | 2026-10-23 | Root directs records-only T2 target-pointer correction to intended integrated-04 staging and exact85/81 gross reconciliation. |
 | 2026-10-23 | Record native19 implementation allocation. |
 | 2026-10-23 | Authorize four reviewer repairs within the unchanged native19/1582 allocation. |
@@ -164,6 +165,18 @@ Regenerate existing hash index/static receipts via existing recipe,verify63all.
 Commit records and return hashes/diff/commands; native stays1350/1582. Root merges
 these11records,performs final26byte check and freeze. No agents/platform/network/
 accepted suite reruns.
+
+### [Original Request] D29-T2-TARGET-POINTERS final revision steering
+P2 independent re-review closed No findings,parent196PASS. Accepted final
+production source is immutable1be91bad431d3bd886de7f5d80c19bd7e6c54a25 in04,
+where strict77/fullunit/main05 run. Do NOT write live03/04. Final1be includes
+production quantization_manager outside26,not records-only. Bind accepted_repo_commit
+and runtime identity to1be,not future docs commit;60ba remains prior binding/history.
+Verify26bytes/full-helper hash as planned,then regenerate index once after all
+pointer/revision edits. Root plans packet staging after04CPUgates finish;do not
+say already staged. Source helper/image/cases unchanged,no code/newqualification/
+budget/allocation change. This steering supersedes60ba-as-final identity in the
+earlier target-pointer request;original words remain historical above.
 
 ## Preserved pre-allocation record (historical)
 

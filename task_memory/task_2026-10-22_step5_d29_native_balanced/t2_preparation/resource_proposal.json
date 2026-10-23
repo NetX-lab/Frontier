@@ -1,9 +1,9 @@
 {
   "task_id": "D29-T2-TARGET-POINTERS",
   "status": "PROPOSAL_ONLY_NOT_APPROVED_NOT_SUBMITTED",
-  "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+  "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
   "intended_checkout_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
-  "records_staging_status": "NOT_YET_STAGED: root will stage delivered native records into04 and verify bound26 before freeze; neither checkout HEAD nor records commit replaces runtime source60ba",
+  "records_staging_status": "NOT_YET_STAGED: root plans staging in04 after activeCPUgates finish and verifies bound26 against immutable final1be. Records delivery commits do not replace runtime1be; prior60ba is history. Final1be includes production P2, not a records-only revision",
   "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
   "topology": {
     "gpu_type": "H800",
@@ -102,7 +102,7 @@
       "source": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
       "target": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
       "mode": "read-only",
-      "purpose": "Intended root staging target at inspected1be91bad:26 bound bytes equal60ba; updated packet NOT PRESENT YET. Mount only after root stages records, repeats26 equivalence and seals; P2 checkout remains under independent review"
+      "purpose": "Intended root staging target at final production1be91bad:26 bound bytes unchanged from prior60ba; updated packet NOT PRESENT YET. Root plans staging afterCPUgates, repeats26/full-helper checks then seals. P2 re-review closed No findings/parent196PASS; no runtime or allocation approval"
     },
     {
       "source": "ROOT_CHOSEN_FRESH_LOCAL_TEMP_DIRECTORY",
@@ -115,7 +115,7 @@
     "Root independent acceptance/sealing and implementation readiness",
     "Root explicit16-H800 resource/run authorization and existing launcher lifecycle/finite-collection coordination",
     "Root fresh output/rendezvous/node placement and retained-output location",
-    "Root stage updated native records into04, repeat bound26 check, accept/seal source60ba binding and finish independent P2 readiness; no CPU-to-GPU qualification",
+    "Root finish running04CPUgates,stage updated records,repeat bound26/full-helper check and seal immutable source1be identity; no CPU-to-GPU qualification",
     "Actual worker import/backend/CUDA compatibility/rank reports remain UNVERIFIED"
   ],
   "no_cloud_access_in_preparation": true,

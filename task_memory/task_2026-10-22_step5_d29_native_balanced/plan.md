@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Apply precise runtime identity steering to final production1be; keep60ba historical,planned04 staging and one final index regeneration. |
 | 2026-10-23 | Add records-only intended04 pointers, read-only26-byte verification and exact incremental/retained budget reconciliation. |
 | 2026-10-23 | Establish approved implementation milestones. |
 | 2026-10-23 | Add the explicitly requested four-finding repair and affected verification milestone. |
@@ -91,12 +92,15 @@ T1 -> {T2,T3} -> T4. All writes restricted to existing11native record paths.
 - T1: read only04 HEAD1be91bad/disk vs runtime60ba bound26files; verify intended
   target lacks updated packet. Read exact6ebb038->a5e5189two-file diff and
   locked-base1aee0afdiff to settle85incremental/81retained difference.
-- T2: retarget mount/REPO/frozen-source pointers04,explicitly pending root staging,
-  separate runtime60ba/checkout1be91bad/docs revisions. No code/P2 qualification.
+- T2: retarget pointers04,explicit pending root staging after activeCPUgates.
+  Latest steering binds immutable runtime1be91bad/checkout1be;docs revision differs.
+  Retain prior60ba history and actual productionP2/full-tree identity,not record-only.
+  Cite root No findings/196PASS as reported CPU acceptance,not GPU qualification.
 - T3: update one existing report with exact gross table,retain native1350/1582;
   refresh existing receipts/index with existing hashing/schema/bash mechanisms.
   Preserve metadata/cases/native4/settings/limits/resources.
-- T4: static63/index coverage/04bound26/shell/ownership -> English records ->
+- T4: finish all pointer/revision docs edits,then regenerate index once;
+  static63/index coverage/04bound26/full-helper/final tree/shell/ownership -> records ->
   isolated commit -> root final staging/recheck/seal dependency. No04/02writes,
   suites or runtime.
 

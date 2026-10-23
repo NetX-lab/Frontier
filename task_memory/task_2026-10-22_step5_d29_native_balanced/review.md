@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root final-revision steering binds production1be,not prior60ba or docs commit; distinguish P2 acceptance from runtime proof. |
 | 2026-10-23 | Review intended04 pointers/pending staging and read-only26source equality; exact incremental/retained quota explanation in existing test report. |
 | 2026-10-22 | Close all four design findings after c9e9274; correct the proxy path and record parent budget verification. |
 | 2026-10-22 | Record four independent design findings and assign corrections before scope approval. |
@@ -17,17 +18,36 @@ Original native owner reviews existing11record paths only,isolated branch at
 04packet differs from delivered native records. Corrected REPO/mount/frozen
 pointers select04as intended root staging target,not a currently staged packet.
 Runtime60ba,checkout1be91bad and records revisions are explicitly distinct.
-Neither04nor02written. P2 changes remain independent-review scope,not approved
-by bound-file equality. Accounting settled via exact original/locked-base diffs
+This sentence records the initial pointer-only stage,now superseded by root's
+final revision steering:runtime and inspected checkout both immutable1be91bad,
+records revision distinct,60ba retained as prior history. Final1be changes production
+quantization_manager outside26;full tree/commit identity is bound,not record-only.
+Neither live03/04nor02written. Root now reports P2 re-review No findings/196PASS;
+no GPU/runtime acceptance follows. Accounting settled via exact original/base diffs
 in test report; scope receipt unchanged/native1350/1582. Existing63-entry hash
 recipe/receipt refreshed,controlled manifest unset/input/native4/resource limits
 unchanged. Root must stage11records,repeat26check and seal; no runtime/launch
 approval or extra agents/suites/network/platform actions.
 
-Final static result:63/63checksums,57unchanged nonpacket hashes,04bound26,
+Initial pointer-only static result at8c57df44:63/63checksums,57unchanged nonpacket hashes,04bound26,
 schema/AST/bash PASS. Index7dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5.
 No additions/deletions to code/native inputs. Deliver existing11record paths;
-root retains final staging/source/P2independent review obligations.
+root retains post-activeCPUgate staging/final-source/runtime obligations.
+
+Final steering source=immutable1be91bad/treea5cb27c3e26943f0dfa638301b3564fb2427d56d.
+Actual production quantization_manager fullSHA44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83
+differs prior60ba. Full tree/commit binding prevents calling1be records-only
+because26native-bound files match. Root P2No findings/196PASS are reported
+CPU/source evidence,not rerun or GPU acceptance. Finish all pointer/revision
+edits before one final index regeneration. Staging04planned after activeCPUgates;
+not already present. Live03/04untouched,no code/budget/runtime approval change.
+
+Final static checks completed after one final index refresh:final1be/tree/actual
+production SHA,26full files/full-helper,63checksums,57nonpacket hashes unchanged,
+inventory2907/12/53/native4,existing schema/AST/bash PASS. Final index
+1e36d25e3fe8c41a4f2e7e04f2df7d352fd9b474d5aa34c3bda6bc92de5c97ca.
+Packet now fixed;subsequent archive edits do not alter its bytes. Native1350/1582,
+11record paths only,no code/live03/04write;staging remains planned afterCPUgates.
 
 ## D29-T2-FINAL-SOURCE-BINDING static review (historical)
 

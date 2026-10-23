@@ -1,15 +1,15 @@
 {
   "task_id": "D29-T2-TARGET-POINTERS",
   "status": "PASS_STATIC_TARGET_POINTERS_NOT_STAGED_NOT_RUN_NOT_LAUNCH_APPROVAL",
-  "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+  "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
   "intended_target_review": {
     "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
     "checkout_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
-    "bound_source_revision": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "bound_source_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
     "records_preparation_base": "2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea",
     "bound26": "PASS04 disk and1be91bad bytes equal60ba/local bound bytes",
     "updated_packet_present": false,
-    "remaining": "Root stage delivered11records and repeat26check before freeze; P2 under independent review; no runtime/allocation approval",
+    "remaining": "Root finish active04CPUgates,plan record staging,repeat26/full-helper check and seal final1be. P2review No findings/parent196PASS reported; no runtime/allocation approval",
     "target_written": false,
     "inspection_log": "/data/ycfeng/tmp/d29-t2-target-inspection.log"
   },
@@ -18,7 +18,18 @@
     "binding": "Read-only04disk/1be91badGit equal60ba/local for all26boundfiles; packet not yet staged",
     "accounting": "Exact original step and locked-baseline diffs reconciled in existing test report;85stepgross and81retained increase",
     "verification_log": "/data/ycfeng/tmp/d29-t2-target-static.log",
-    "status": "PASS26target bytes/63checksums/57unchanged nonpacket hashes/existing schema/bash; no target write or native runtime"
+    "status": "Existing recipe revalidates final1be26/full-helper/tree/63hashes/schema/bash after one final revision-index refresh; no target write or runtime"
+  },
+  "final_revision_review": {
+    "runtime_source": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "prior_binding": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "git_tree": "a5cb27c3e26943f0dfa638301b3564fb2427d56d",
+    "production_quantization_sha256": "44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83",
+    "not_record_only": true,
+    "root_p2_evidence": "No findings/parent196PASS, not rerun here",
+    "active_cpu_gates": "Strict77/fullunit/main05 running, no completion inferred",
+    "runtime_qualification": false,
+    "live03_04_written": false
   },
   "reviewer": "native owner self-check, no extra subagent",
   "environment": {
@@ -112,7 +123,7 @@
   "provenance_review": {
     "retained_model_bytes": "PASS",
     "prepared_cases_hash": "PASS",
-    "script_and_helper_hashes": "PASS full actual integrated files at60ba4c, compared against Git bytes; prior662 retained as history",
+    "script_and_helper_hashes": "PASS full files at final1be, compared with04disk/Git; unchanged vs prior60ba; constructor AST only explanatory",
     "accepted_publication_artifact_hashes": "PASS",
     "selected_mechanism_source_hashes": "PASS full32 relevant native files; actual complete2907 export/backend12/53pins verified, no accepted suite rerun",
     "resource_dimension_formulas": "PASS raw dimensions only, not measured allocator/backend/collective data"
@@ -144,14 +155,14 @@
     "ast_whitespace_owned_paths_budget": "PASS"
   },
   "remaining": [
-    "Root stage delivered records in04, repeat26byte check and seal; P2 under independent review; runtime source remains60ba4c",
+    "Root finish active04CPUgates,stage records,repeat26/full-helper check and seal runtime1be; prior60ba retained as history",
     "Root actual resource/run authorization and finite-collection coordination",
     "Actual worker/mount/rendezvous/output/retention identities",
     "Actual GPU/import/library/backend/runtime/G3 evidence"
   ],
   "final_source_comparison": {
     "old_source": "662849e99223c98b9ea0d47d34783c3977cb3282",
-    "final_source": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "final_source": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
     "t2_native_unit_byte_equal": true,
     "helper_recipe_byte_equal": false,
     "constructor_topology_loader_diagnostic_ast_equal": true,

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root freezes accepted final production1be91bad after P2 re-review; retain60ba as prior binding and planned04 record staging afterCPUgates. |
 | 2026-10-23 | Retarget intended root-staged mount/REPO to integrated-04;26 full bound bytes equal60ba, updated packet not yet staged. |
 | 2026-10-23 | Bind full final integrated source/receipts at60ba4c; preserve inputs and add the required clean controlled-T2 manifest environment. |
 | 2026-10-23 | Root accepts constructor/CPU values and rebinds full integrated files at662849e; run approval remains pending. |
@@ -17,16 +18,23 @@ two-file limit binding is added; no new numerical state tolerance, mode or harne
 
 ## Identity and controlled inputs
 
-- Bound runtime source:60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Intended root
+- Accepted immutable runtime source:1be91bad431d3bd886de7f5d80c19bd7e6c54a25. Intended root
   staging/mount worktree is `/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04`,
   inspected checkout HEAD1be91bad431d3bd886de7f5d80c19bd7e6c54a25. All26 bound
-  full files in that checkout/disk are byte-identical60ba. Additional P2
-  quantization-manager/tests/docs are under independent review, not qualified here.
+  full files in that checkout/disk are byte-identical prior60ba. Final1be includes
+  production quantization_manager changes outside26; it is NOT records-only.
+  Root reports P2 independent re-review closed No findings/parent196PASS. Native
+  owner does not rerun those checks or infer GPU/runtime qualification. Full final
+  Git tree is a5cb27c3e26943f0dfa638301b3564fb2427d56d; bound26 and full helper
+  hashes supplement that final immutable revision, not replace the whole source.
   **Updated native records are NOT currently staged there.** Root will merge the
-  delivered11record paths, repeat26byte equivalence and seal before any mount.
+  delivered11record paths after active04CPUgates finish,repeat26/full-helper
+  equivalence to final1be and seal before any mount. Strict77/fullunit/main05 are
+  currently running; no completion is inferred here.
   Records are prepared from2adbf9f2 in isolated `step5-d29-t2-final`; delivered
-  records commit is distinct from inspected checkout and bound runtime revisions.
-  Neither integrated-04 nor prior integrated-02 is written by this preparation;
+  records commit is distinct from accepted runtime revision; inspected checkout
+  HEAD and accepted runtime revision now both equal1be per root steering.
+  Live integrated-03/04 and prior integrated-02 are never written by this preparation;
   prior02 also holds the old packet and is no longer the intended mount pointer.
   Native T2 was restored by892b6a1; native19 remains1350/1582. Root reports final
   native-position16PASS/native-config2PASS. Accepted662 constructor/image CPU
@@ -38,10 +46,12 @@ two-file limit binding is added; no new numerical state tolerance, mode or harne
   T2/native unit bytes and constructor AST equal accepted662; complete helper/
   recipe bytes differ. AST equality explains constructor continuity only and is
   not a substitute for full-file identity. New runtime obligations are below.
-- Source identity remains60ba4c if later task-doc/test-only commits are sealed.
+- Source identity remains immutable1be91bad if later task records are staged.
   Root must stage these amended records with the selected source and explicitly
-  compare all bound relevant files to60ba before mounting; no mutable unverified
+  compare all bound relevant files to1be before mounting; no mutable unverified
   checkout, record commit or function-only identity replaces this source binding.
+  Prior60ba4c7569b7c9fd4c8f9f43a16f92249fa76181 stays binding history. The fact that
+  bound26 are unchanged does not make1be's productionP2 change documentation-only.
 - Accepted linux/amd64 image:
   `hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee`.
 - Actual source export: `/data/ycfeng/tmp/d29_published_sources01/source`.
@@ -133,13 +143,13 @@ actual memory fit remains UNVERIFIED. See `resource_proposal.json` for formulas.
 
 Use the published image above, not a mutable tag/local index digest. Mount this
 accepted source worktree at its absolute local path, read-only, on both workers.
-Root freezes integrated source at60ba4c; actual allocation mounts must preserve
+Root freezes accepted production source at1be91bad; actual mounts must preserve
 all bound source bytes and the updated packet. T2 sets existing routing_input_file=None to
 preserve its controlled plan, not substitute observed profiling inputs.
 The intended04 checkout currently has the old packet, so these commands are not
 ready to execute until root stages the delivered records and performs its final
-binding/seal check. This mount proposal does not approve the extra P2 source or
-any runtime/resource allocation.
+binding/seal check after active CPU gates finish. Root's P2 source acceptance is
+reported separately; this proposal grants no runtime/resource allocation.
 The repository mount includes existing script/helper and controlled inputs. It
 does not contain a top-level vllm package. Do not put source exports,
 native_source snapshots, extra_site, a local conda or inherited PYTHONPATH first.

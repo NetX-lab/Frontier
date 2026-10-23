@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Bind root final production1be/full tree,retain60ba history and planned post-CPUgate04record staging;no code. |
 | 2026-10-23 | Retarget intended root staging04, verify26 actual full files and reconcile exact85incremental/81retained gross. |
 | 2026-10-23 | Record owned CPU, D30, source/image-context and static graph results. |
 | 2026-10-23 | Record reviewer repair red/green/affected checks, exact quota and narrower graph evidence. |
@@ -399,7 +400,8 @@ path passed final02. No test/production/artifact byte modification for this erro
 
 The source-comparison evidence below is historical. Current intended mount target
 is04 as recorded in D29-T2-TARGET-POINTERS below. The reusable static command reads
-the current provenance pointer rather than hardcoding02; source identity stays60ba.
+the current provenance pointer rather than hardcoding02. Final steering binds1be;
+former60ba runtime identity below is historical only.
 
 Frozen source60ba4c7569b7c9fd4c8f9f43a16f92249fa76181; prior packet662849e99223c98b9ea0d47d34783c3977cb3282.
 All new commands run in isolated `/data/ycfeng/Frontier/.worktrees/step5-d29-t2-final`,
@@ -455,7 +457,7 @@ import ast,base64,hashlib,json,subprocess
 from pathlib import Path
 from types import SimpleNamespace
 repo=Path.cwd();task=repo/'task_memory/task_2026-10-22_step5_d29_native_balanced';packet=task/'t2_preparation';pub=repo/'task_memory/task_2026-10-22_step5_position_routing/image_publication'
-source='60ba4c7569b7c9fd4c8f9f43a16f92249fa76181';old='662849e99223c98b9ea0d47d34783c3977cb3282'
+source='1be91bad431d3bd886de7f5d80c19bd7e6c54a25';old='662849e99223c98b9ea0d47d34783c3977cb3282'
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def gitbytes(commit,path):return subprocess.check_output(['git','show',commit+':'+str(path.relative_to(repo))])
 p=json.loads((packet/'provenance.json').read_text());c=json.loads((packet/'cases.json').read_text());r=json.loads((packet/'resource_proposal.json').read_text());s=json.loads((packet/'static_review_receipt.json').read_text())
@@ -529,7 +531,7 @@ memory/graph/MRv2/G3/state evidence. Root16+2CPU results and historical real-ima
 7168/8192/128 CPU values are cited observations, not reruns/GPU proof. No native
 runtime/accepted suite rerun/network/platform/GPU operation by this records task.
 
-### Postcommit equivalence command and result
+### Historical60ba postcommit equivalence command and result
 Records commit43c2947c6d08b699d5a1efc1602117ba87850772. Exact command:
 ```bash
 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY' > /data/ycfeng/tmp/d29-t2-final-postcommit-equivalence.log 2>&1
@@ -554,7 +556,9 @@ PY
 Expected/observed:26full files byte-identical60ba,63checksums PASS,11native-record
 paths only,production/tests/native4 diff0,clean; runtime source60ba/indexSHAa4bed10c...
 unchanged. Re-execute this exact documented block after final handoff-record commit;
-packet is unchanged and no runtime/suite action is introduced.
+packet was unchanged at that historical handoff;final steering supersedes its
+60ba-runtime assertion. Do not rerun the historical assertion against current1be;
+use the current target/source recipe below instead.
 
 ## D29-T2-TARGET-POINTERS
 
@@ -564,9 +568,11 @@ read-only at1be91bad431d3bd886de7f5d80c19bd7e6c54a25. All26 full bound files
 equal04disk,1be91badGit,local bound files and60baGit. Neither04 nor02 is modified.
 Runtime source identity remains60ba4c7569b7c9fd4c8f9f43a16f92249fa76181;
 checkout1be91bad and eventual delivered docs commit are distinct revisions.
+These initial pointer-stage statements are historical,superseded by root final
+steering below:runtime/checkout immutable1be,prior60ba history,docs distinct.
 Updated11native records are NOT yet in04; root will stage and repeat26byte check
-before final freeze. P2 checkout changes remain independently reviewed,not a
-full-tree/runtime qualification. Native1350/1582 and source/test increment0.
+before mounting after activeCPUgates. Root now reports P2review No findings/
+parent196PASS;not rerun here or GPU/runtime proof. Native1350/1582/source0.
 
 ### Exact85incremental versus81retained accounting
 Inspected full original diff6ebb038->a5e5189 and locked baseline1aee0af diffs:
@@ -604,16 +610,22 @@ env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycf
 import hashlib,json,subprocess
 from pathlib import Path
 repo=Path.cwd();task=Path('task_memory/task_2026-10-22_step5_d29_native_balanced');packet=task/'t2_preparation';p=json.loads((packet/'provenance.json').read_text());r=json.loads((packet/'resource_proposal.json').read_text());s=json.loads((packet/'static_review_receipt.json').read_text())
-target=Path(p['frozen_source_worktree']);revision='1be91bad431d3bd886de7f5d80c19bd7e6c54a25';source='60ba4c7569b7c9fd4c8f9f43a16f92249fa76181'
+target=Path(p['frozen_source_worktree']);revision=source='1be91bad431d3bd886de7f5d80c19bd7e6c54a25';prior='60ba4c7569b7c9fd4c8f9f43a16f92249fa76181'
 assert str(target)=='/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04'
 assert subprocess.check_output(['git','-C',str(target),'rev-parse','HEAD'],text=True).strip()==revision
 assert p['accepted_repo_commit']==r['source_commit']==s['source_commit']==source
+assert p['prior_native_binding']['source_commit']==prior
+assert p['source_identity_rule'].startswith('Final accepted runtime source is immutable1be91bad')
+assert p['final_production_source']['git_tree']==subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()
+q=p['final_production_source']['changed_production_path'];raw=subprocess.check_output(['git','show',source+':'+q]);assert raw==(target/q).read_bytes() and hashlib.sha256(raw).hexdigest()==p['final_production_source']['changed_production_sha256']
+assert raw!=subprocess.check_output(['git','show',prior+':'+q]) and p['final_production_source']['not_record_only_relative_to_60ba']
 assert p['intended_staging_target']['inspected_checkout_revision']==r['intended_checkout_revision']==s['intended_target_review']['checkout_revision']==revision
 assert not p['intended_staging_target']['updated_records_staged'] and not s['intended_target_review']['updated_packet_present']
 assert r['mount_proposal'][0]['source']==r['mount_proposal'][0]['target']==str(target)
 paths=list(p['script_sources'])+list(p['supporting_repository_sources']['sources'])+list(p['publication_artifacts'])+list(p['parent_acceptance_artifacts'])+[str(task/'native_source'/x) for x in json.loads(Path('task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json').read_text())['derived_source_sha256']]+[str(packet/'cases.json'),str(packet/'model_metadata/config.json')]
 assert len(paths)==26
-for path in paths:assert Path(path).read_bytes()==(target/path).read_bytes()==subprocess.check_output(['git','show',revision+':'+path])==subprocess.check_output(['git','show',source+':'+path])
+for path in paths:assert Path(path).read_bytes()==(target/path).read_bytes()==subprocess.check_output(['git','show',source+':'+path])==subprocess.check_output(['git','show',prior+':'+path])
+for name,row in p['script_sources'].items():assert row['source_commit']==source and hashlib.sha256((target/name).read_bytes()).hexdigest()==row['sha256']
 for name in ('provenance.json','execution_proposal.md','hashes.sha256','resource_proposal.json'):assert (target/packet/name).read_bytes()!=(packet/name).read_bytes()
 index=(packet/'hashes.sha256').read_text().splitlines();assert len(index)==63
 for row in index:
@@ -621,7 +633,7 @@ for row in index:
 blocks=(packet/'execution_proposal.md').read_text().split('```bash\n')[1:];assert len(blocks)==2 and 'REPO='+str(target) in blocks[0] and 'unset FRONTIER_STEP5_PROFILE_MANIFEST' in blocks[0]
 for block in blocks:subprocess.run(['bash','-n'],input=block.split('```')[0],text=True,check=True)
 assert not r['suggested_allocation']['approved'] and r['topology']['total_gpus']==16 and r['suggested_allocation']['wallclock_seconds']==1800 and r['suggested_allocation']['max_gpu_hours']==8
-print('PASS04bound26/old-target-packet/distinct-revisions/pointers/63hashes/bash2/resource-unapproved; no target writes/runtime')
+print('PASSfinal1be/full-tree/not-record-only/04bound26/full-helper/prior60ba/old-target-packet/63hashes/bash2/resource-unapproved; no target writes/runtime')
 PY
 ```
 Index regeneration uses the existing recipe: packet6,repo8,pub9,parent3,native32,
@@ -640,8 +652,35 @@ Preparation docs base was resolved with git rev-parse2adbf9f2 rather than inferr
 Current delivery packet hashes/index are recorded in summary;commit is isolated,
 not runtime source identity. Root must stage and repeat final26byte check.
 
-Final index SHA2567dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5.
+Initial8c57df44index SHA2567dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5,superseded by final1be packet.
 Both existing documented blocks rerun after receipt/index refresh PASS. Final63
 checksums plus target26/schema/shell conformance PASS;source/native4/metadata/
 cases/publication/resource triple unchanged. Expected source/code delta0 observed;
 native1350/1582 unchanged. Final checkout/records/source revisions remain distinct.
+
+### Final accepted production revision steering
+Root freezes production1be91bad431d3bd886de7f5d80c19bd7e6c54a25,Git tree
+a5cb27c3e26943f0dfa638301b3564fb2427d56d. Prior60ba remains binding history;
+8c57df44was initial pointer correction,not final source. Runtime/04checkout
+now both1be;records commit differs. Actual quantization_manager.py finalSHA
+44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83 differs
+priorSHA319fae30239499ab421c6ed56057e100059a80ce02925015a658b0a2b33a1bcc.
+It is production change outside26,so final1be is NOT records-only. Immutable
+commit/tree identity is explicit;26/full-helper hashes supplement it,not proof
+the rest of the revision was unchanged. This owner changes no production code.
+
+Root reports P2re-review No findings/parent196PASS,not rerun here. Strict77/
+fullunit/main05 are running in live04,no completion inferred. Live03/04 untouched.
+Packet staging is planned by root AFTER CPUgates finish,not already present.
+Runtime/GPU/backend/G3/resource/allocation approvals unchanged. Finish all packet
+pointer/revision edits then regenerate existing63index once;budget1350/1582.
+
+Observed after final pointer/revision edits and single index refresh:both current
+documented blocks PASS in d29-t2-final-static-final.log/d29-t2-target-static.log.
+Final1be commit/tree/actual production SHA bound;26full files/full helper match
+04disk/finalGit/prior60ba;57nonpacket hashes unchanged,63checksums PASS,full
+inventory2907/backend12/pins53/native4/schema/AST/bash/resources unchanged.
+Index SHA2561e36d25e3fe8c41a4f2e7e04f2df7d352fd9b474d5aa34c3bda6bc92de5c97ca.
+Source/test0/native1350/1582,only11existing record paths. No additional packet
+edit after index refresh. All check commands retained above;no suites/runtime/
+network/live03/04write. Root post-CPUgate staging and final recheck remain planned.

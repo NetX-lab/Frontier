@@ -2,7 +2,7 @@
   "task_id": "D29-T2-TARGET-POINTERS",
   "preparation_task_id": "D29-T2-INPUT-PREPARATION",
   "status": "CONTROLLED_INPUTS_NOT_OBSERVED_NOT_RUN_NOT_LAUNCH_AUTHORIZATION",
-  "accepted_repo_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+  "accepted_repo_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
   "accepted_native_commit": "6827507",
   "native_acceptance_commit": "9495cfb",
   "publication_commit": "67d5b5e",
@@ -26,22 +26,22 @@
   "script_sources": {
     "tests/integration/step5_environment/test_position_cyclic_graph.py": {
       "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
-      "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+      "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
       "root_acceptance": "Root frozen integrated source; byte-identical to accepted662 T2, CPU-only evidence, no GPU qualification"
     },
     "frontier/profiling/collectives/step5_dispatch_probe.py": {
       "sha256": "63baf64781a533a72e31b0e622fd99524b3d40acd4149a8552c6b1808266b2ff",
-      "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+      "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
       "root_acceptance": "Root frozen integrated full file; constructor AST equal to662, full helper changed, no GPU qualification"
     },
     "tests/integration/step5_profiling/run_on_worker.sh": {
       "sha256": "c7ee4de334cd06c777282fd20979c435588456ca734c5188bfe774aa884a8746",
-      "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+      "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
       "root_acceptance": "Full actual recipe file bound; only existing driver-compatibility branch used in proposal, wrapper not invoked"
     }
   },
   "supporting_repository_sources": {
-    "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
     "sources": {
       "tests/unit/test_step5_native_position_cyclic.py": "5afb5cfd80bc9ad848ba1027ded6021cbe840f6e82965cda4f6f7c927d43fafd",
       "tests/unit/test_step5_dispatch_probe.py": "739a9663e3df3fdf87c69446b67c3b7d9e6caca131c860d325b2c0a82aac4790",
@@ -257,17 +257,35 @@
   },
   "frozen_source_worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
   "preparation_worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-t2-final",
-  "source_identity_rule": "60ba4c remains the runtime source identity; subsequent isolated task-record commits do not replace it. Full bound source/publication bytes must remain equivalent",
+  "source_identity_rule": "Final accepted runtime source is immutable1be91bad431d3bd886de7f5d80c19bd7e6c54a25, not subsequent records commits. Prior60ba is history, not final identity. Final1be includes production quantization_manager changes outside bound26; full commit/tree identity plus bound-file hashes must be preserved. Bound26 equality alone never implies the whole revision was records-only",
+  "prior_native_binding": {
+    "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "records_commit": "2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea",
+    "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02",
+    "superseded_runtime_identity": true,
+    "bound26_byte_equal_to_final": true
+  },
+  "final_production_source": {
+    "commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "git_tree": "a5cb27c3e26943f0dfa638301b3564fb2427d56d",
+    "not_record_only_relative_to_60ba": true,
+    "changed_production_path": "frontier/config/quantization_manager.py",
+    "changed_production_sha256": "44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83",
+    "prior_production_sha256": "319fae30239499ab421c6ed56057e100059a80ce02925015a658b0a2b33a1bcc",
+    "root_reported_p2_review": "Independent re-review closed No findings; parent196PASS, not rerun by native records task",
+    "root_final_cpu_gates": "Strict77/fullunit/main05 RUNNING in immutable04, no result inferred here",
+    "gpu_runtime_qualified": false
+  },
   "intended_staging_target": {
     "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
     "inspected_checkout_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
-    "bound_runtime_source_revision": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "bound_runtime_source_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
     "records_preparation_base_revision": "2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea",
     "records_delivery_revision": "This task's isolated records commit, recorded in progress/summary; not the runtime source revision",
     "updated_records_staged": false,
-    "staging_owner": "Root will merge these11 existing native record paths into04, then repeat26 full-file equivalence before final freeze",
+    "staging_owner": "Root plans to stage these11 records into04 after activeCPUgates finish, then repeat26 full-file equivalence to immutable final1be. Packet is not currently staged; live03/04 remain untouched by native owner",
     "inspection_result": "PASS all26 bound files:04 disk and1be91bad Git bytes equal60ba Git and local bound bytes; current04 packet remains old",
-    "p2_qualification": "Quantization-manager P2 and additional checkout files remain under independent review; no full checkout/runtime qualification inferred",
+    "p2_qualification": "Root reports P2 independent re-review No findings/parent196PASS; accepted production source final1be includes this change, but no GPU/runtime qualification follows",
     "target_write_in_this_task": false,
     "prior_mount_pointer": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02"
   },
