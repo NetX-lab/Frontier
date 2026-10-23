@@ -8,6 +8,7 @@
 | 2026-10-23 | Completed candidate02 CPU checks and scope checkpoint; prepared separate code/records commits. |
 | 2026-10-23 | Root integrated, independently sealed and submitted candidate02; recorded Running and actual H800 startup evidence. |
 | 2026-10-23 | Root verified successful terminal/runtime/constructor evidence and unchanged inputs; independent data/trace acceptance is in progress. |
+| 2026-10-23 | Accepted isolated balanced q1 data after no-finding review, complete root reruns and final integrity checks. |
 
 ## Current root execution
 
@@ -17,7 +18,8 @@
 - completed startup observation:13:44:39Z personal cloud status confirms one NVIDIA H800,81559MiB, driver570.124.06, vLLM0.28.0/Torch2.13.0+cu130 and phase running. Receipt `/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_worker_2d2su6cq/receipt.json`.
 - verification-only failure resolved: initial memory string assertion rejected Kubernetes normalization128000Mi→125Gi. Official quantity parsing proves exact equality; `platform_launch_check.json` records RED/GREEN. Healthy measurement continued.
 - completed root run checks: `root_run_check.json` binds actual H800/image, nativeV2/eager/physicalTP1-DP1, constructor and resolved scheduler budget6144/max_num_seqs1, and observed balanced_topk warning. All530 package inputs and originals527/529/530 unchanged. Eight cloud outputs/1,601,865,978bytes downloaded hash-identically, including the1,500,192,771-byte trace.
-- in-progress: independent raw-to-CSV, per-row routing and trace coverage audit by W128-BALANCED-DECODE-DATA. Root run status is `PASS_RUN_EXECUTION_DATA_ACCEPTANCE_PENDING`; no operator-data, physicalTP8, graph or serving qualification.
+- completed: `results/primary_acceptance.json` is `ACCEPTED_ISOLATED_DATA`. Independent audit and root reruns reproduce both6144-row CSVs byte-exactly, all94 scope series and45056 trace annotations; raw/trace non-clock receipts agree completely. Final98305-record duplicate-field check and8 output hashes pass. Review `ses_e96d5b716ffeQ6CIFYA6vtBizn` found no actionable defect. The earlier `root_run_check.json` retains its execution-only pending status as historical evidence.
+- pending: decoder consumer/admission and complete native serving coverage. Of352829 kernels,227901 lack measured-scope ownership; event-handle dependencies remain unverified. PhysicalTP1/eager/six-layer/dummy-weight inputs, with one sample per context/layer/scope, do not qualify physicalTP8, graph, stationarity, constructor-family or serving totals.
 - verification-only transfer failure resolved: scp rejected a source ending in `/.` as `unexpected filename: .`; a fresh download using the real directory basename passed all8 hashes. Failed temporary directory is retained; no cloud/source changes.
 
 ## Historical owner preparation

@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS acceptance: root accepted isolated balanced q1 data after review/fresh reruns; full09 bundle/consumer qualification OPEN, prior audit-pending state historical. |
+| 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS followup: balanced Succeeded/execution PASS but data audit pending; corrected MoE design/independent packaging active, profile02 still queued and full09 OPEN. |
+| 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS: accepted balanced-q1 preparation/merge56e9405d and Running1-H800 snapshot13:40:46Z; profile02 remains Pending and full09 remains OPEN. |
 | 2026-10-23 | W128-PROFILE02-STAGE-DOCS factual delta: job exp-1023-180821-373637 created10:08:21Z, verified SUBMITTED_PENDING/queuing at10:10:16Z with personal creator/resources/image/NFS/RDMA; full09 remains OPEN. |
 | 2026-10-23 | W128-PROFILE02-STAGE-DOCS: profile02 repair/re-reviews and separate final root checks complete, 45 inputs SEALED_READY_DIAGNOSTIC; launch started without evidenced job identity, full09 stays OPEN and profile01 FAIL preserved. |
 | 2026-10-23 | W128-H800-AUTHORITY-DOCS: first32-H800 profiling run and standing task-required H800 resources approved; package/runtime/GPU evidence and full09 criteria remain OPEN, no new submission. |
@@ -42,6 +45,27 @@
 ## Final execution state — current (2026-10-23)
 
 **Bundle/full-path acceptance remains OPEN.** DSV4 alone is active, GLM remains PAUSED_PENDING_USER_APPROVAL and official mean/30%/10% gates are unchanged. Current progress: [Routing milestone — current (2026-10-23)](../progress.md#routing-milestone--current-2026-10-23).
+
+### Balanced q1 isolated-data acceptance — current (2026-10-23)
+
+[Primary root decision](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json): ACCEPTED_ISOLATED_DATA, jobexp-1023-213905-916183/C6143..7166, both6144-row CSVs byte-exact,94 scope series,51200 CUDA_EVENT/45056 KERNEL_ONLY calls and45056 annotations exact. Original samples/methods retained separately.
+[Review](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md) No findings; root [fresh raw/trace reruns](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json) in `/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_root_audit_nss5y_ka` returned0/all non-clock fields matched,17.568s/47.700s; final14:35:05Z98305 records/duplicate fields0/eight hashes unchanged. [Data audit](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json) admissions=false preserves historical auditor authority; primary_acceptance.json records root's isolated-data decision.
+PhysicalTP1/DP1/eager/six-layer/dummy-weight scope only, one sample per context/layer/scope/method;227901/352829 kernels unowned, actual event-handle dependency evidence absent. Consumer/serving/physicalTP8/graph/constructor-family/stationarity/independent expert-histogram admissions remain false; full05/09/19 OPEN.
+Retained2026-10-23T14:18:37Z profile02 snapshot:32-H800/Pending/no replicas/PID3236764 alive, not real-time status. MoE package delivered204/300 lines; both reviews' only P3 tracer-citation finding was corrected at941a4450, with frozen inputs unchanged; root actual image/SDK/seal/run pending; no MoE GPU submitted or source/runtime equivalence. Q1 commitb7c0a953 closes five P0 subitems only, not full17; native06 R4/private input/H/G2 CPU milestones, standing H800 authority/soft gates, GLM pause and CPU-overhead last unchanged. Prior pending/current sections below are dated history; all failures/checkboxes retained.
+
+### Balanced q1 terminal and MoE preparation — historical (2026-10-23)
+
+[Root run check](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json): jobexp-1023-213905-916183 Succeeded/finish13:48:57Z observed14:18:36Z, container Completed/exit0/restart0/569s; submission→terminal592s = conservative0.16445GPUh upper bound, not verified billing. Actual H800/image digest/530 package and527/529/530 original hashes match. Engine proves max_num_batched_tokens6144/max_num_seqs1/physicalTP1/DP1/V2/eager/balanced_topk;8 outputs/1,601,865,978bytes hash-identical. Independent data/trace/raw-to-CSV audit IN PROGRESS; no data/GPU-cost/serving/operator/TP8/graph admission.
+[Corrected MoE design](../../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md) is complete, superseding historical `moe/local_measurement_plan.md`; packaging independently active in `/data/ycfeng/Frontier/.worktrees/v4-moe-local-run`, two non-core files/300-line budget. EP16 rank0/physicalTP1/M16/32/6152/12288, CUDA_EVENT and record_function, all original columns retained;6152 conditional dummy-peer. No source/runtime, rank/time or serving equivalence; no MoE GPU submitted, package/image/SDK/run/data checks pending.
+Same receipt:32-H800 profile02 exp-1023-180821-373637 Pending/no replicas at2026-10-23T14:18:37Z, launcherPID3236764 alive; retain queue → scheduling → I4. Q1 commitb7c0a953 retains five P0 closures only, not full17; full05/09/19 OPEN. Native06 R4/private input/H/G2 CPU milestones, standing H800 authority/soft gates, GLM pause and CPU-overhead last unchanged. Running/pending-terminal/MoE-investigation statements below are historical, superseded here; original failed checks remain retained.
+
+### Balanced q1 and queue-time work — 2026-10-23
+
+Accepted preparation source64133239/records9fb4bd7e merged56e9405dad76d30d4ada9d5bdab124f898bf5065, two maintained files/214 of300 lines. [Root seal](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json) records root530-input/512-Git-file PASS, originals527/529/530 unchanged, two full-changed-file reviews No findings and separate root Git/hash verification. Owner131 and256CPU PASS are records, not root reruns; existing77 binding has no fresh capture. Locked-image60native/520tool/20binary and actual bootstrap-wrapper entry PASS before model execution; SDK preemptible=false.
+
+[Platform snapshot](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json): balanced jobexp-1023-213905-916183 created13:39:05Z, Running at13:40:46Z, launcherPID3647153,1H800/codesign/non-preemptible/16CPU/mem_gb128=125Gi/1800s; profile02 exp-1023-180821-373637 remains Pending, launcherPID3236764 alive. Quota13:35:48Z122/128 is historical, not real-time. [Memory check](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json) retains string-assertion FAIL and exact128000Mi=125Gi PASS without workload change. Earlier submission/quota snapshots below are historical.
+
+Q0 reports: [queue_selection.md](../../task_2026-10-23_v4_remaining_measurements/queue_selection.md). Q1 accepted/committedb7c0a953 closes five P0 subitems only, not17; Q2b exact native MoE population/source plan remains under investigation after provider30008 abort, no accepted grid. Worker nvidia identity, runtime/routing, business outputs and terminal status remain pending; no GPU-cost/serving/operator/TP8/graph admission or old-q1 relabeling. Native06 R4, private input/H/G2 CPU milestones, original failures, full05/09/19 OPEN, standing H800 authority, GLM pause and CPU-overhead last are unchanged. [Detailed checkpoint](../progress.md#balanced-q1-and-queued-profile02--2026-10-23).
 
 ### G2 profile-driver — current (2026-10-23)
 

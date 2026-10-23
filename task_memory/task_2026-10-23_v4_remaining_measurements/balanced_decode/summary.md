@@ -7,6 +7,7 @@
 | 2026-10-23 | Archived the bounded source/package/CPU deliverable for root review and seal. |
 | 2026-10-23 | Added root integration, real prelaunch verification and initial running-worker evidence. |
 | 2026-10-23 | Recorded successful GPU execution, actual constructor values and hash-identical outputs; data admission remains pending. |
+| 2026-10-23 | Accepted isolated measured inputs after independent review and exact root raw/table/trace reruns. |
 
 ## Root execution update
 
@@ -14,7 +15,9 @@ Source64133239/records9fb4bd7e are integrated at56e9405d. Two independent source
 
 The1H800/codesign/non-preemptible run `exp-1023-213905-916183` finished Succeeded at13:48:57Z. Root verified containerCompleted/exit0/restart0,569s container and592s submission-to-terminal (conservative0.16445GPUh upper bound, not billing), exact locked image/H800, unchanged530inputs/originals, and actual nativeV2/eager/physicalTP1-DP1/balanced_topk. Native constructor and resolved scheduler budget6144/max_num_seqs1 now have runtime evidence. Actual memory125Gi equals SDK128000Mi; its initial string-comparison failure remains recorded.
 
-Eight outputs/1,601,865,978bytes were downloaded hash-identically from the exact personal cloud root. Independent per-row/routing/raw-to-CSV/trace validation is active; `root_run_check.json` is `PASS_RUN_EXECUTION_DATA_ACCEPTANCE_PENDING`. No operator-data/physicalTP8/graph/serving admission. At14:18:37Z the32-GPU profile02 job remains Pending/no replicas with launcherPID3236764 alive. See `test_report_2026-10-23_root.md` for commands and observed evidence.
+Eight outputs/1,601,865,978bytes were downloaded hash-identically from the exact personal cloud root. `results/primary_acceptance.json` accepts the isolated measured inputs: both6144-row tables byte-exactly rebuilt, all94 scope series checked and45056 trace annotations reproduced. Independent review found no actionable defect; root separately reran the complete raw/table and trace audits, reproduced every non-clock field, and rechecked98305 raw records and all8 hashes. `root_run_check.json` preserves the earlier execution-only milestone.
+
+Acceptance is physicalTP1/eager/six-layer/dummy-weight measured scopes only. There is one sample per context/layer/scope;227901 of352829 kernels have no measured-scope owner, and actual event-handle dependencies are absent. Decoder consumer/admission, complete attention coverage, physicalTP8/graph/constructor-family and serving qualification remain open. At the latest retained14:18:37Z snapshot,32-GPU profile02 remains Pending/no replicas with launcherPID3236764 alive. See `results/{data_audit,root_verification,primary_acceptance}.json`, `results/review.md` and `test_report_2026-10-23_root.md`.
 
 ## Historical owner-delivery archive
 

@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS acceptance: root ACCEPTED_ISOLATED_DATA after independent review/fresh reruns; prior pending/current checkpoints historical, consumer/native/full05/09/19 remain open. |
+| 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS followup: balanced Succeeded/execution PASS/data audit pending, profile02 Pending14:18:37Z; corrected MoE design complete and independent two-file packaging active, no MoE GPU submission. |
+| 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS: accepted214/300-line preparation integrated56e9405d; balanced-q1 Running1-H800 at13:40:46Z while profile02 stays Pending, preserving auxiliary failure/runtime limits. |
 | 2026-10-23 | Recorded approval and began CPU audit/design; previous native reference evidence verified intact. |
 | 2026-10-23 | E/F/G1 accepted at merged732406aa; H launch increment authorized and implementation resumed. |
 | 2026-10-23 | Closed five H findings, integrated64f3c950, verified merged suites/input/matrix binding, and finalized the G2 handoff. |
@@ -20,6 +23,119 @@
 | 2026-10-23 | Accepted Q1 P0 workload/metric binding after root independently reproduced the owner command; Q2 preparation remains active. |
 
 ## Current execution — G2 resumed
+
+### Latest profile02 runtime receipt (2026-10-23)
+
+- I3 completed: exp-1023-180821-373637 Succeeded14:58:25Z; root personal-client snapshot15:20:38Z verifies4/4 replicas/exit0/restart0, locked image, all45 sealed inputs unchanged and normal launcher exit. Receipt: `/data/ycfeng/tmp/glm53_dsv4/profile02_terminal_ewudq62n/receipt.json`.
+- I4 active: exact cloud-root inventory has226 files/4,549,518,256bytes and32 gzip traces (8 per role/lane). Retained canonical receipt reports432/432 requests and all four profiling RPCs HTTP200. Two headless nodes report missing head-shutdown markers; close-order evidence and all kernel/stream/graph qualification remain unverified. Hash-identical download is active; no automatic rerun or source correction has been performed. This supersedes the older queue snapshots below.
+
+### Balanced q1 isolated-data acceptance — current (2026-10-23)
+
+- completed root decision: [primary acceptance](balanced_decode/results/primary_acceptance.json) is ACCEPTED_ISOLATED_DATA for jobexp-1023-213905-916183/C6143..7166/balanced_topk. Both6144-row CSVs byte-exact;94 scope series,51200 CUDA_EVENT/45056 KERNEL_ONLY calls and45056 annotations exact, with methods/original samples separate.
+- completed evidence: [independent review](balanced_decode/results/review.md) No findings; root [fresh verification](balanced_decode/results/root_verification.json) reran raw/trace in `/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_root_audit_nss5y_ka`, both return0/all non-clock fields match,17.568s/47.700s. Final14:35:05Z:98305 records/duplicate fields0/eight hashes unchanged. [data_audit.json](balanced_decode/results/data_audit.json) SHA447636011af539c2b2e773d9929ca7ea75b5558ab26ac6634aebe39ff7d52c92 remains unchanged; admissions=false is historical auditor authority, primary_acceptance.json is root's isolated-data decision.
+- unchanged boundaries: physicalTP1/DP1/eager/six-layer/dummy-weight inputs, one sample per context/layer/scope/method;227901/352829 kernels unowned, actual event-handle dependency evidence absent. Consumer/serving/physicalTP8/graph/constructor-family/stationarity/independent expert-histogram admissions remain false; full05/09/19 OPEN. Native06 R4/private input/H/G2 CPU milestones, standing H800 authority/soft gates, GLM pause and CPU-overhead last unchanged.
+- next/retained snapshot:32-H800 profile02 exp-1023-180821-373637 Pending/no replicas/PID3236764 alive at2026-10-23T14:18:37Z, not real-time status; I3 scheduling → I4 pending. MoE package delivered204/300 lines; both reviews' only P3 tracer-citation finding was corrected at941a4450, with frozen inputs unchanged. Root actual image/SDK/seal/run pending, no MoE GPU submitted or source/runtime equivalence. Q1 commitb7c0a953 closes five P0 subitems only, not full17. Prior pending/current sections and checkpoints below are dated pre-acceptance history; all original failures/checkboxes retained.
+- Documentation owner wrote the seven acceptance sections before provider40005 interrupted completion; root retained these edits, corrected the MoE citation-closure status and owns final verification/commit. No workload or measurement failed because of the provider error.
+
+### Balanced q1 terminal and MoE preparation — historical (2026-10-23)
+
+- completed execution only: [root_run_check.json](balanced_decode/root_run_check.json) records PASS_RUN_EXECUTION_DATA_ACCEPTANCE_PENDING for jobexp-1023-213905-916183, Succeeded/finish13:48:57Z observed14:18:36Z; container Completed/exit0/restart0/569s, submission→terminal592s = conservative0.16445GPUh upper bound, not verified billing. Actual H800/image digest/530 package and527/529/530 original input hashes match. Engine log proves max_num_batched_tokens6144/max_num_seqs1/physicalTP1/DP1/V2/eager/balanced_topk;8 outputs/1,601,865,978bytes downloaded hash-identically. Independent data/trace/raw-to-CSV audit IN PROGRESS; no data/GPU-cost/serving/operator/TP8/graph admission.
+- completed Q2b corrected source/population design: [moe_grid_design.md](moe_grid_design.md) supersedes [historical plan](moe/local_measurement_plan.md). Independent packaging is active in `/data/ycfeng/Frontier/.worktrees/v4-moe-local-run`, two non-core files/300-line budget; EP16 rank0/physicalTP1/M16/32/6152/12288, CUDA_EVENT and record_function, all original columns retained. Gate/shuffle are not consumed for the grouped-GEMM envelope;6152 conditional dummy-peer, no source/runtime, rank/time or serving equivalence. No MoE GPU submitted; package/image/SDK/seal/run/data checks remain prerequisites.
+- in-progress I3/I4: same receipt retains32-H800 profile02 exp-1023-180821-373637 Pending/no replicas at2026-10-23T14:18:37Z, PID3236764 alive; retain queue → scheduling → I4. Q1 commitb7c0a953 closes five P0 subitems only, not full17; full05/09/19 OPEN. Native06 R4/private input/H/G2 CPU milestones, standing H800 authority/soft gates, GLM pause and CPU-overhead last unchanged. Earlier13:40:46Z Running, pending identity/terminal and provider30008-investigation statements/self-check below are dated history, superseded here; original failed checks remain retained.
+
+### W128-BALANCED-DECODE-STAGE-DOCS followup self-check
+
+## 1. 规划完成情况
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 0（限定文档子任务）
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| 七文件terminal/Q2b/current同步 | PASS | root执行PASS与data audit pending分开，保留队列/Q1/full-ticket边界 |
+| 只读核验与历史保护 | PASS | Python3.10.6 receipt/本地小型证据hash/文本/链接通过，逆向恢复匹配七文件原SHA |
+Commands: `GIT_OPTIONAL_LOCKS=0 python3 -B -` (exact stdin in the execution transcript), `git diff --check --` the seven owned paths; receipt/text/history/whitespace PASS, observed53/90 gross lines before this checkpoint and89/90 after it. The first final check failed only on a shared-HEAD56e9405d assertion after another writer advanced HEAD to9dd0c700; index was empty and owned-content checks passed. Corrected final verification observes shared Git state without requiring an unchanged HEAD. No package-input/output-data rehash, source tests, GPU/cloud/network or Git write by this subagent.
+
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：** 本次terminal followup至七文件交付｜**当前前沿：** root独立data audit ‖ I3队列 ‖ MoE packaging
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | 只做本次验收所需的只读核验 |
+| D2 细节反复重试 | CLEAR | 一次shared-HEAD checker假阴性已定位，无source/workload重跑 |
+| D3 支线问题修补 | CLEAR | 仅指定七文件，无root-owned artifact改动 |
+| D4 可并行任务停滞 | CLEAR | 数据审计、排队与MoE包装由root独立推进 |
+| D5 超范围镀金 | CLEAR | 无source、接口、资源或验收扩展 |
+| D6 分析空转 | CLEAR | receipt读取直接完成文档交付 |
+| D7 路线违背 | CLEAR | Succeeded不等于data/cost admission，standing authority/soft gates保留 |
+**文档检查：** S1–S6在限定七文件范围未发现明显缺陷；旧Running/current-time及MoE-investigation均标为history。
+**归因：** 无。
+
+## 3. 纠正建议
+**分支：** A：本次spec/tickets边界合理，无需改动。
+**需停止的偏离行为：** 无。
+**接下去的路线：**
+1. Root balanced审计：逐行source/routing、raw-to-CSV及trace coverage/attribution验证 → 完成标志：独立data acceptance receipt，缺失范围不准入。
+2. 并行：I3保留32-GPU队列→调度/I4验证 ‖ MoE包装/独立review/actual image/SDK/seal→run/data验证；只有各自真实证据满足原scope才完成。
+## 4. 最值得关注的 3 点
+1. Balanced Succeeded只是execution PASS；0.16445GPUh是保守时间上界，不是billing，data audit未完成。
+2. 14:18:37Z profile02仍Pending/no replicas/PID3236764 alive；MoE设计完成但未提交GPU，6152为conditional dummy-peer。
+3. Q1仅五P0闭合；full05/09/19 OPEN、GLM暂停、CPU-overhead最后及原失败记录保持。
+
+### Balanced q1 and queued profile02 — 2026-10-23
+
+- completed Q0/Q1: both Q0 delivery pointers are in `queue_selection.md`; Q1 P0 binding is accepted/committedb7c0a953 and closes five P0 subitems only, not full17. Q2b exact native MoE population/source plan remains under root investigation after provider30008 abort; provisional grid/dry-run artifacts are not accepted.
+- completed balanced-q1 preparation: source64133239/records9fb4bd7e integrated56e9405dad76d30d4ada9d5bdab124f898bf5065, two maintained source/config files/214 of300 lines. `balanced_decode/root_seal.json` records actual530 package inputs/512 Git-equal snapshot files PASS, originals527/529/530 unchanged and both independent full-changed-file reviews No findings; root owns independent Git/hash verification. Owner131 and256CPU PASS are supplied records, not root reruns; existing77 binding has no fresh capture.
+- completed root launch gates: locked-image60native/520tool/20binary and actual bootstrap-wrapper entry PASS before registration/model execution; SDK preemptible=false. Manifest9714cdb749e8504df32955bb62e080467434e33e20da1d23ae653da2ce8e09cf; seal SHAff0d6daac9e0a0712035b290f91e2283da3b46f53412fecca4bd144e30885f7e. `balanced_decode/root_submission.json` binds launcherPID3647153 to `/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02`, not a package relocated to this root.
+- in-progress balanced-q1: actual jobexp-1023-213905-916183 created2026-10-23T13:39:05Z, Running at13:40:46Z; personal creator i-fengyicheng,1H800/codesign/non-preemptible/16CPU, SDK mem_gb128=125Gi,1800s ceiling. `balanced_decode/platform_launch.json` also retains profile02 exp-1023-180821-373637 Pending, launcherPID3236764 alive, with the balanced launcher alive. Root-seal quota snapshot13:35:48Z122/128 supersedes earlier quota times as a dated observation only, not a real-time census/reservation.
+- retained auxiliary failure: `balanced_decode/platform_launch_check.json` preserves FAIL_HARNESS_STRING_COMPARISON (`128000Mi` versus `125Gi`), then exact quantity PASS/134217728000bytes; no workload/source/platform change.
+- pending root-owned work: worker nvidia identity, runtime constructor/routing origin, business outputs and terminal status. Expected1024 measured steps/6144 rows per method and51200 CUDA_EVENT/45056 KERNEL_ONLY calls are not observed GPU results. No GPU-cost admission, serving/operator/physicalTP8/graph qualification or old-q1 relabeling; native06 R4/private input/H/G2 CPU milestones, historical failures, full05/09/19 OPEN, GLM pause, CPU-overhead last, official mean/30%/10% and standing H800 authority remain intact. Balanced output verification runs alongside I3 scheduling → I4 analysis, with auxiliary soft gates.
+
+### W128-BALANCED-DECODE-STAGE-DOCS self-check
+
+## 1. 规划完成情况
+
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 0（本次限定文档子任务）
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| 指定七文件事实同步 | PASS | preparation、Running/Pending、Q0/Q1/Q2b及验收边界已按receipt同步 |
+| 只读证据/文本/范围核验 | PASS | Python3.10.6 receipt链、本地launcher路径、链接/历史/checkboxes通过；七文件whitespace通过 |
+
+Commands: `GIT_OPTIONAL_LOCKS=0 python3 -B - <<'PY' ... PY` (exact inline receipt and text scripts retained in the execution transcript), and `git diff --check --` the seven owned paths. Observed scope before this checkpoint:81/140 gross lines, seven unstaged owned files, unchanged HEAD/index. Final scope is rechecked after adding this record; no source suites or package/Git-source rehash is claimed. Initial checker failures were an equivalent `not a fresh capture` phrase and concurrent root edits to `balanced_decode/{progress,summary}.md`; the corrected checks recognize that phrase and inspect only owned scope. Root's two files were not edited here; original failed outputs remain in the transcript.
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** 本次docs派发至七文件交付｜**当前前沿：** root balanced结果核验 ‖ I3 scheduling；Q2b源形状调查
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | 仅直接验收所需的只读检查，无新增工具 |
+| D2 细节反复重试 | CLEAR | 两个不同checker假阴性已定位；未重跑workload |
+| D3 支线问题修补 | CLEAR | 仅指定七文件，未修改root-owned文件 |
+| D4 可并行任务停滞 | CLEAR | root运行/排队工作与文档同步独立推进 |
+| D5 超范围镀金 | CLEAR | 无新source、plan、接口或验收条件 |
+| D6 分析空转 | CLEAR | receipt读取直接形成交付 |
+| D7 路线违背 | CLEAR | 不以Running推断成本验收，standing authority/soft gates保持 |
+
+**文档检查：** S1–S6在本次限定文档范围未发现明显缺陷；旧状态有historical标记，full17/05/09/19不被部分验收关闭。
+**归因：** 无。
+
+## 3. 纠正建议
+
+**分支：** A：本次spec/tickets边界合理，无需改动。
+**需停止的偏离行为：** 无。
+**接下去的路线：**
+1. Root balanced核验 ‖ I3 scheduling：取得真实worker nvidia、business outputs和terminal证据；profile02调度后进入I4，缺失覆盖保留UNVERIFIED。
+2. 并行Q2b：绑定准确native MoE population/source计划后再确定grid；provider30008留下的临时结果不作验收。
+
+## 4. 最值得关注的 3 点
+
+1. 最新提供的平台snapshot是13:40:46Z：balanced Running，profile02 Pending；quota13:35:48Z122/128不是实时值。
+2. 原128000Mi/125Gi字符串FAIL保留，exact量值PASS；无workload变更或GPU-cost admission。
+3. Native06 R4、私有输入/H/G2 CPU里程碑及所有历史失败保留；GLM暂停、CPU-overhead最后、full05/09/19开放。
+
+### Earlier preparation and queue snapshots — historical
+
+All earlier quota/platform timestamps and then-pending preparation statements below describe their recorded phase; latest supplied execution is the13:40:46Z snapshot above.
 
 - completed queue-time self-check: W128-V4-QUEUE-CHECKPOINT (`ses_e971eebdbffeMajJFAF116Fe09`) reported15PASS/2BLOCKED/3TODO with D1–D7 CLEAR. Root corrected S5's stale latest-time and parent current-authority pointers. `queue_selection.md` retains both already-delivered Q0 reports and marks selection complete, so the corrected recorded count is16PASS/2BLOCKED/2TODO. At13:13:05Z, exact personal census still shows only profile02 Pending, launcher alive, codesign114/128; evidence `/data/ycfeng/tmp/glm53_dsv4/v4_queue_supplement_quota_kqt1ndkp/{quota,census}.json`. Q2a delivered source64133239/records9fb4bd7e,214/300lines and fresh530-input candidate02; root independent source reviews and actual image checks are next. Q2b's exploration session failed at the provider protocol with code30008 after writing provisional grid/dry-run artifacts; root owns the remaining native-shape verification and does not treat those partial artifacts as an accepted grid.
 - completed Q1: `W128-V4-P0-CASE-BINDING` and root independently verified unchanged native06/R4 inputs,432/432 complete requests, three independent128-formal/16-warmup rounds and all four metric formulas. Owner receipt retains120 input hash/size/mtime pins; existing fixed-workload tests3PASS/1deselected. Root's actual command ran under Python3.10.6 with a60s timeout and empty stderr at13:02Z; all24 non-clock fields match, including the environment and complete input evidence. The first comparison failed only because the owner appended `command_execution` after capturing stdout; root then verified that metadata separately, without changing any data or rerunning a successful workload check. Parent `canonical_case_20261021/p0_binding/root_verification.json` accepts five P0 subitems; ticket17's two remaining P0 and ten all-case criteria stay open. Source-reconstructed prompt IDs are not retained HTTP arrays or a tokenizer-guard execution claim.
@@ -47,7 +163,7 @@ Final verification note: the first matrix-binding helper assertion treated `iden
 Archive verification: staging the two raw review diffs made ordinary whitespace lint flag their required single-space blank context markers. `driver/patch_validation.json` verifies that every flagged line is exactly that marker, checks all other staged files normally, and applies both frozen diffs against baseline313c8167 in separate temporary Git indexes using `git apply --cached --check --whitespace=error`. Both pass; source, review-diff bytes and acceptance hashes remain unchanged. Parent five-document sync also passed owner131/131 and final69/69 checks; root inspected the diff and verified source/receipt integrity, scope and preserved raw requests (`driver/docs_check.json`).
 - scheduling correction: the handoff below is the completed77668066 snapshot. YC explicitly chose to continue in this session; its technical boundaries and unfinished G2 work still apply.
 
-## Current handoff — 2026-10-23
+## Historical handoff — 2026-10-23, before G2 resume
 
 - completed A/B/C/D/E/F/G1/H: H source `f8621a8258ffa445abfb51f5ea73258ad271494e` is integrated on `feat/glm53-dsv4-vllm028` at `64f3c9509b09279f321d237e3a95cbe904c6dd22`. Both independent re-reviews closed all five original issues with no new findings. Scope: five non-core files,880/987changed lines. Root acceptance: `collector_primary/primary_acceptance.json`, status `ACCEPTED_CPU_COLLECTOR_COMPONENT`.
 - completed final-source and merged verification: collector28, inventory28, V2inventory45, R4reader135, nativeworker16, DPharness75, P/Dharness68, manifest14 PASS, each suite separately with zero failures/errors/skips. Merged automatic input94 has full receipt equality with the accepted732406aa result. `collector_primary/test_report_2026-10-23_final.md` records commands and exact evidence.

@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Archived post-integration input/image/SDK checks, independent seal and the initial running-worker evidence. |
 | 2026-10-23 | Verified terminal, constructor, immutable inputs and hash-identical output download; data audit remains separate. |
+| 2026-10-23 | Recorded independent no-finding review and root raw/table/trace reruns; accepted isolated inputs. |
 
 ## Scope and environments
 
@@ -24,7 +25,7 @@ Root worktree: `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`, merged sou
 | Personal Python exact-job snapshot | Creator, requested resources, non-preemptible placement, local NFS | Running13:40:46Z; i-fengyicheng; H800/codesign; GPU1/CPU16/memory125Gi; NFS100.96.128.195 and owned worktree | PASS after auxiliary check correction |
 | SSH read of the exact personal `status.json` | Allocated H800 and healthy measurement startup |13:44:39Z: one H800,81559MiB, driver570.124.06, CUDA available; measurement running | PASS startup only |
 
-Owner131profiler/routing and256related CPU tests were independently inspected as supplied evidence, not rerun by root. No post-run numerical acceptance is claimed.
+Owner131profiler/routing and256related CPU tests were independently inspected as supplied evidence, not rerun by root. Post-run measured-input acceptance is recorded separately below.
 
 Exact Docker/SDK argv, declared environment, timestamps, return codes, stdout and script hashes:
 
@@ -38,9 +39,9 @@ Exact Docker/SDK argv, declared environment, timestamps, return codes, stdout an
 
 The initial snapshot verifier returned1 on `AssertionError: expected memory '128000Mi', actual '125Gi'`. The original snapshot is retained. `kubernetes.utils.quantity.parse_quantity` proved both equal134217728000bytes; creator, resources, non-preemptible label and mount then passed (`platform_launch_check.json`). No resource, code or workload change occurred, and neither launcher was stopped.
 
-## Pending
+## Data acceptance
 
-Independent validation of all6144rows/method,2048measured steps/96256calls, per-row routing/native origins, raw-to-CSV statistics and trace coverage is in progress. No data admission yet. Corrected local-MoE population design is in `../moe_grid_design.md`; package preparation proceeds independently.
+Independent validation and root reruns passed; `results/primary_acceptance.json` is `ACCEPTED_ISOLATED_DATA`. Decoder consumer/admission and native serving qualification remain pending. Corrected local-MoE population design is in `../moe_grid_design.md`; that supplement proceeds independently.
 
 ## Root post-run checks
 
@@ -54,3 +55,26 @@ Receipt: `root_run_check.json`. Expected and actual:
 - Resource duration:569s container,547s measurement/aggregate phase,592s submission→terminal; all below1800s.592/3600=0.1644444444GPUh is a conservative span upper bound, not a platform billing measurement.
 
 The tokenizer/chat-template warning with `skip_tokenizer_init=True` is retained in the original log; the token-ID measurement completed. No warning suppression, source change, sample removal, gate relaxation or table publication was performed.
+
+## Root isolated-data verification
+
+Independent phase review `ses_e96d5b716ffeQ6CIFYA6vtBizn`: No findings, source/artifact inspection only (`results/review.md`). Root then executed the unchanged audit functions with only their output directory redirected to a fresh location. Both commands ran independently in parallel:
+
+```bash
+sudo -n systemd-run --scope --quiet -p MemoryMax=30G timeout 60s runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B -c "import runpy,sys; from pathlib import Path; d=runpy.run_path(sys.argv[1]); f=d[sys.argv[3]+'_audit']; f.__globals__['TEMP']=Path(sys.argv[2]); f()" /data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_balanced_decode_data_audit.py /data/ycfeng/tmp/glm53_dsv4/balanced_decode02_root_audit_nss5y_ka raw
+sudo -n systemd-run --scope --quiet -p MemoryMax=30G timeout 60s runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -B -c "import runpy,sys; from pathlib import Path; d=runpy.run_path(sys.argv[1]); f=d[sys.argv[3]+'_audit']; f.__globals__['TEMP']=Path(sys.argv[2]); f()" /data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_balanced_decode_data_audit.py /data/ycfeng/tmp/glm53_dsv4/balanced_decode02_root_audit_nss5y_ka trace
+```
+
+Script SHA256 `14ca5c195f07866856ff275631fd715fc147133bde8082a4935db2cfdd3cf39a`; full script is retained in `results/command.md`. Both interpreters are Python3.10.6; no conda activation. Exact argv/timestamps/logs are in the run directory's `receipt.json` (SHA256 `a701548e83efd496e578f4f90849c294d058d979da530f34b86cfb3a658962ae`); selected durable evidence is `results/root_verification.json`.
+
+| Check | Expected | Actual | Verdict |
+| --- | --- | --- | --- |
+| Raw/table/routing audit | Every non-clock receipt field equals independent audit | Exact equality;17.568s,931096KiB peakRSS; exit0 | PASS |
+| Complete trace audit | Every non-clock field and every scope time/count equals independent audit | Exact equality;47.700s,6060200KiB peakRSS; exit0 | PASS |
+| Final duplicate-field and streaming-hash check |98305 valid unique-field JSON records;8 unchanged files |98305 records,0 duplicates,8/8 hashes;14:35:05Z | PASS |
+| Isolated measured coverage |1024 contexts ×6 layers/method;94 series |6144 rows/method;51200 CE/45056 KO calls; both CSVs byte-identical | PASS |
+| Full attention/device dependency coverage | Complete ownership and actual event-handle edges |227901/352829 kernels unowned; event-handle edges unverified | NOT QUALIFIED |
+
+The final check used the same30G/60s systemd scope, stdlib Python3.10.6, duplicate-rejecting `json.loads(object_pairs_hook=...)` and streaming SHA256; exact stdin is retained in the execution transcript and values in `final_check.json`. All original samples remain intact. Acceptance grants measured-input validity only, not repeated-sample stationarity, numerical expert-ID balance, decoder consumption, physicalTP8/graph or serving totals.
+
+Final documentation verification: root `python3 -B -` (full stdin in execution transcript) rechecked acceptance evidence and original root-rerun receipt/script hashes, all seven milestone sections and their links, unchanged ticket checkboxes, separate methods and qualification refusals. PASS7/7; `git diff --check` PASS. The documentation owner had written its updates before provider40005 interrupted completion; root verified and completed them without changing measurement data or code.
