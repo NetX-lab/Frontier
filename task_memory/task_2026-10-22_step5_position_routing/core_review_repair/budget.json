@@ -1,0 +1,22 @@
+{
+  "task_id": "D29-CORE-REVIEW-REPAIR",
+  "base": "d96b3279",
+  "original_baseline": "1aee0af",
+  "repair_added": 208,
+  "repair_deleted": 20,
+  "repair_gross": 228,
+  "repair_ceiling": 230,
+  "combined_core_paths": 46,
+  "combined_core_gross": 3786,
+  "core_ceiling": 4404,
+  "paths": [
+    {"path": "frontier/profiling/moe/moe_impl.py", "added": 3, "deleted": 0, "baseline_gross": 56, "effective_cap": 62},
+    {"path": "frontier/profiling/moe/moe_wrapper.py", "added": 2, "deleted": 1, "baseline_gross": 169, "effective_cap": 194},
+    {"path": "frontier/moe_routing_runtime.py", "added": 3, "deleted": 4, "baseline_gross": 103, "effective_cap": 133},
+    {"path": "tests/integration/run_step5_measured_main.py", "added": 16, "deleted": 7, "baseline_gross": 46, "effective_cap": 111},
+    {"path": "tests/unit/test_step5_moe_profiling.py", "added": 75, "deleted": 7, "baseline_gross": 344, "effective_cap": 350},
+    {"path": "tests/unit/test_moe_profiling_output_metadata.py", "added": 40, "deleted": 0, "baseline_gross": 125, "effective_cap": 135},
+    {"path": "tests/integration/test_step5_measured_main.py", "added": 69, "deleted": 1, "baseline_gross": 221, "effective_cap": 243}
+  ],
+  "verification": "PASS grouped effective path caps, owned commit paths, Python AST and whitespace; peer histories imported only, registry paths not edited"
+}

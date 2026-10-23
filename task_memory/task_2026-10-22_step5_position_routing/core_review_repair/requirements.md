@@ -6,6 +6,7 @@
 | 2026-10-23 | Record root-authorized isolated three-finding repair and exact ownership overlay. |
 | 2026-10-23 | Record authorized existing wrapper diagnostics persistence and immutable PRICING development import. |
 | 2026-10-23 | Record authorized immutable registry development integration; fresh actual-main remains root-owned. |
+| 2026-10-23 | Preserve D29-TRAINER-CONSUMER-BOUNDARY; no additional independent public-predictor path. |
 
 TaskID: D29-CORE-REVIEW-REPAIR. Original requirements: [../requirements.md](../requirements.md); implementation decisions: [../core_source/requirements.md](../core_source/requirements.md).
 
@@ -20,3 +21,5 @@ TaskID: D29-CORE-REVIEW-REPAIR. Original requirements: [../requirements.md](../r
 [Original Request] Root adds existing `frontier/profiling/moe/moe_wrapper.py` to this repair assignment, under unchanged194 cap and230 aggregate. After committing three P2 repairs, development merge a7e2a3ca6a12367a6955b905a9e061494766106d is authorized (not root acceptance). Persist provenance union `[self.gating.native_facts, experts.provenance, experts.point_diagnostics]` and independent row point_diagnostics canonical JSON. Verify full ambient point inventory and normal serialization while native_context remains stable, using existing owned profiling test cohort. Do not edit/import registry WIP or launch full CLI.
 
 [Original Request] After committing owned repairs, root permits immutable registry b6714757 (code8f96408cf6fbb19c45a918b2464aea3ddff29f1a) development merge and coherent producer/row/registry tests. Four registry paths remain read-only to this owner; acceptance/review pending. Root owns fresh actual-main/strict77 after joint source freeze. No full long CLI from this repair worktree.
+
+[Explicit Decision] D29-TRAINER-CONSUMER-BOUNDARY: independent public predictor binding is not a D29 prerequisite. Both real independent/shared trainer preflight, per-binding fit/cache and shared P/D runtime consumers remain required. Approved P/D construction always supplies the shared manager; position routing rejects monolithic mode. No new manager, registry mixin, None fallback or independent public mode. Registry view P2 remains assigned to its registry owner. Root decision source: ../repairs/independent_consumer_scope.md in the root worktree.

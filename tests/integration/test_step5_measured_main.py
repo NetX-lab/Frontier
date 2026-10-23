@@ -53,7 +53,7 @@ def _completed_position_validator_inputs(root, quant, deferred=False):
 
 
 @pytest.mark.parametrize("quant,deferred", [(None,False),("float8_e4m3fn",False),("float8_e4m3fn",True)])
-@pytest.mark.parametrize("damage", [None,"gate","router","prepare","all","operator","peer_only","duration","count","norm","inapplicable","mismatch","fractional"])
+@pytest.mark.parametrize("damage", [None,"gate","router","prepare","all","operator","zero_operator","peer_only","duration","count","norm","inapplicable","mismatch","fractional"])
 def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, quant, deferred, damage):
     from tests.integration.run_step5_measured_main import validate
     run,document,lanes=_completed_position_validator_inputs(tmp_path,quant,deferred)
@@ -63,8 +63,8 @@ def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(
     if damage in ("gate","router","prepare"):
         source["compute_proofs"].pop({"gate":"moe_gating_linear","router":"moe_gating_routing_topk","prepare":"moe_input_quantize"}[damage])
     if damage == "all": source.pop("compute_proofs")
-    if damage == "operator":
-        source["operators_ms"].pop("moe_gating_linear");source["compute_proofs"].pop("moe_gating_linear")
+    if damage in ("operator","zero_operator"):
+        source["operators_ms"].pop("moe_gating_linear") if damage=="operator" else source["operators_ms"].update(moe_gating_linear=0.);source["compute_proofs"].pop("moe_gating_linear")
     if damage == "peer_only": lanes=lanes[:1]
     if damage == "duration": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=float("nan")
     if damage == "count": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=0
@@ -123,7 +123,7 @@ def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(t
             activation_layout=dict(shape=[17,4],stride=[4,1],dtype="bfloat16",element_size=2),
             source_activation_layout=dict(shape=[16,4],stride=[4,1],dtype="bfloat16",element_size=2),
             native_padding=dict(scheme="triton_expert_assignment",alignment=16,num_tokens_post_padded=0))
-    native = SimpleNamespace(prepare_source=prepare,prepared_context=context,provenance=facts,
+    native = SimpleNamespace(prepare_source=prepare,prepared_context=context,provenance=facts,point_diagnostics=facts,
                              apply_prepared=lambda *a,**k: pytest.fail("source cell cannot time gathered experts"))
     monkeypatch.setattr(fp8_block_experts,"get_native_routed_experts",lambda **k:native)
     class Timer:

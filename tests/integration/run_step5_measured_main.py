@@ -241,7 +241,7 @@ def validate(root, mode, document):
             empty+=int(owner["live_rows"]==0)
             for phase in row["phases"].values():
                 require("moe_shuffling" not in phase["operators_ms"],"Position path charged legacy shuffle")
-                compute={name for name,duration in phase["operators_ms"].items() if duration>0 and bind_operator_query(name).operator.trace_kind.value=="COMPUTE"}
+                compute={name for name,duration in phase["operators_ms"].items() if (duration>0 or name in applicable) and bind_operator_query(name).operator.trace_kind.value=="COMPUTE"}
                 require(set(phase.get("compute_proofs",{})) == compute,"Missing actual compute source proof correspondence")
                 require(all(bind_operator_query(name).family_id!="moe" or name in applicable for name in compute),"Inapplicable compute source operator")
                 for name,proof in phase.get("compute_proofs",{}).items():
