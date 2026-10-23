@@ -1,0 +1,136 @@
+{
+  "status": "INTERMEDIATE_NOT_GLOBAL_ACCEPTANCE",
+  "full_suite_revision": "9974acdb",
+  "assembled_revision": "d0dfcdb5",
+  "files": [
+    {
+      "path": "/data/ycfeng/tmp/d29_unit_parent02.xml",
+      "bytes": 2121814,
+      "sha256": "8d1684b76ee46d24c7fda512effe602693d28c62b022d632ac57a05f33dca294",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "32",
+          "failures": "285",
+          "skipped": "281",
+          "tests": "8603",
+          "time": "1183.993",
+          "timestamp": "2026-10-23T10:05:57.503860+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_unit_delta02.json",
+      "bytes": 2458,
+      "sha256": "030588b31e9466a213624841d5f1c89d86a10dadd2a7d884af9c961ee3fa4715"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_t2_restored_parent01.xml",
+      "bytes": 2650,
+      "sha256": "c2a2741b969e0f59970d583e2039505b1205dd387272b7498f532a55d945d9b5",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "16",
+          "time": "4.566",
+          "timestamp": "2026-10-23T10:24:01.808995+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_t2_duplicate_parent01.xml",
+      "bytes": 566,
+      "sha256": "460ef8ded9ac0206311d8cc732d0fcd1873cc2ea34785e191a11c17e2b302743",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "2",
+          "time": "1.144",
+          "timestamp": "2026-10-23T10:28:38.189410+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_fullunit_env_parent01.xml",
+      "bytes": 13417,
+      "sha256": "863d45c4eccbd3581e663d8967f4a623c07136fb263d88cf13d4cefe892b6934",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "85",
+          "time": "3.642",
+          "timestamp": "2026-10-23T10:32:12.964168+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023/comparison.json",
+      "bytes": 58139,
+      "sha256": "cbeea420c6baf777d334c40f9a3180aa235844d28a021c2745a6eb8e80e829b3"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023/candidate/manifest.json",
+      "bytes": 25858,
+      "sha256": "c268164732791afc11ec715bccaa3f576172264b06751225c9b13ae5573e56be"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023/candidate/results.jsonl",
+      "bytes": 117454,
+      "sha256": "17f9d5a2155ac001304f614ca34a96724a63a72839690df596c8c2c80d8b76f1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json",
+      "bytes": 17555660,
+      "sha256": "ed0491872ea1b726b3d0aeb5a6dd45d54c5ccab5af53f0f79160bb867c32e9d2"
+    }
+  ],
+  "full_unit_delta": {
+    "failure": {
+      "baseline": 267,
+      "candidate": 285,
+      "new": [
+        "tests.unit.test_dsv4_precision_metadata::test_inventory_uses_canonical_v4_scopes_without_generic_duplicate_owners",
+        "tests.unit.test_moe_share_expert_operator_families::test_moe_family_declares_predictor_tp_and_ep_metadata",
+        "tests.unit.test_moe_share_expert_operator_families::test_moe_family_declares_router_dispatch_and_grouped_gemm_ops",
+        "tests.unit.test_moe_share_expert_operator_families::test_quantization_default_registry_uses_moe_and_share_expert_family_names",
+        "tests.unit.test_moe_share_expert_operator_families::test_sklearn_moe_dataset_contract_filters_gating_context_from_operator_precision",
+        "tests.unit.test_moe_share_expert_operator_families::test_sklearn_moe_training_uses_moe_family_profiling_names",
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-0.10.2]",
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-0.28.0]",
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-step5]",
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-step5_position_cyclic]",
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-0.10.2]",
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-0.28.0]",
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-step5]",
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-step5_position_cyclic]",
+        "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[False-step5]",
+        "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[False-step5_position_cyclic]",
+        "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[True-step5]",
+        "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[True-step5_position_cyclic]"
+      ],
+      "removed": []
+    },
+    "error": {
+      "baseline": 31,
+      "candidate": 32,
+      "new": [
+        "::tests.unit.test_step5_native_position_cyclic"
+      ],
+      "removed": []
+    }
+  },
+  "scope_amendment_zero_sum": true
+}

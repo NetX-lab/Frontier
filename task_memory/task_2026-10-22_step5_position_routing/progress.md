@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Initial gates archived: full-unit six fixture regressions, native dependencies resolved, strict77 RED; two extra test paths proposed pending YC approval. |
+| 2026-10-23 | strict77 comparison RED:77 metadata/empty-proof mismatches despite successful runs; assign PRICING four-path80-gross repair and reconcile final scope/T2 composition. |
 | 2026-10-23 | Parent accepts two-file fixture fix72/80 with28PASS; freeze9974acdb with verifiedgitlink3dac, start full-unit/strict77, and retain separate frozen full-input generation. |
 | 2026-10-23 | Joint CORE/producer and registry-view re-reviews return No findings; parent693PASS/5 known fixture FAIL/19SKIP, including three formerly dependency-blocked wrapper checks. |
 | 2026-10-23 | Freeze CORE e49b26f8, seven-path228/230 and combined3786/4404; assign five affected fixture failures within a separate80-line, two-existing-path allocation. |
@@ -57,6 +59,38 @@
   re-auditing D30's77-case/451-artifact baseline. Source-frozen19a35630 generates
   full position inputs for subsequent offline/online CLI; input preparation is
   not a completed CLI run. Full regression acceptance awaits these results.
+- in-progress: strict77 candidate finishes successfully but strict comparison is
+  RED,77/77 mismatches: legacy precision export adds moe_input_quantize;39 MoE
+  cases additionally gain empty collective_proofs on every phase. Original
+  comparator/provenance/cache checks stay unchanged. Direct writer/ledger RED
+  reproduces both in seconds. PRICING owns the four-path80-gross correction in
+  repairs/legacy_output_repair.md, within its151 remaining lines.
+- in-progress: accounting confirms9974 source8907 because native T2's accepted
+  two-file delta is still only on main; final merge must include892b6a1 and the
+  size note. Native1350 on main is consistent with81 net-baseline growth (the
+  85-gross step deletes two previously-added lines). Build/review patch-hash
+  identity and zero-sum per-path ceiling reconciliation are being verified.
+- completed: parent canonical85PASS resolves the twelve new HTTP cases requiring
+  aiohttp; restored native-position16PASS resolves the Torch-bound new module.
+  Full-unit raw8005PASS/285FAIL/281SKIP/32ERROR remains preserved. Six existing
+  catalogue/stub tests still fail and require two additional test paths.
+- completed: fixture03 generation creates seven CSVs,76 cache models and both
+  P/D bundles. Source remains19a35630; full offline/online CLI will use these
+  inputs on repaired source. This is CPU fixture evidence, not native H800 data.
+- completed: source assembly0f017dff restored main T2 and size note; root removed
+  an AST-identical duplicate test in d0dfcdb5. Resulting dispatch test file is
+  byte-identical9974 and its two parameter cases pass. Source8988/global9002
+  before current pending repairs; the duplicate-containing counts are superseded.
+- completed: root normalized review/build patch headers and verified matching
+  manifest hash plus four base/installed source hashes. See image_publication/
+  patch_identity.md. Fidelity capture audit rehashed451 artifacts per side and
+  verified519 cache filenames per side; strict77 comparison remains RED.
+- pending YC approval: repairs/legacy_output_scope_amendment.json proposes two
+  extra test paths,<=60gross from existing PRICING3956 (effective111 only if
+  approved). Root corrected its premature self-authorization after re-reading
+  the explicit file limit. Owner pauses only these additions and preserves any
+  local work; the four already-approved legacy-output paths<=80 continue.
+  Final parent evidence and exact commands: final_parent/.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
   qualification and fresh GPU/native evidence. Additional collection resources
