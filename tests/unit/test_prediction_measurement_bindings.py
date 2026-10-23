@@ -147,7 +147,7 @@ def test_position_queries_enumerate_group_physical_rows_before_model_selection(b
     predictor = _predictor(replica.model_config, manager)
     predictor._replica_config = replica
     path = fixture.position_collective_costs(tmp_path, paths[1], device="h800")
-    predictor._cc_backend = SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
+    predictor._cc_backend = SimpleNamespace(collective_profile_bytes=lambda raw=path.read_bytes(): raw)
     lane = materialize(source(padding=16)).lane(0)
     for layer in (3, 88):
         with predictor._step5_measured_layer(layer):
@@ -181,7 +181,7 @@ def test_fixed_predictor_groups_reused_by_queries_and_binding_selection(bound, t
     snapshots = {}
     for index, (predictor, config) in enumerate(zip(predictors, (replica, replica, separate))):
         predictor._replica_config = config
-        predictor._cc_backend = SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
+        predictor._cc_backend = SimpleNamespace(collective_profile_bytes=lambda raw=path.read_bytes(): raw)
         for layer in (3, 88, 3, 88):
             with predictor._step5_measured_layer(layer):
                 context, queries, plans = predictor._step5_position_queries(lane)
@@ -233,7 +233,7 @@ def test_prepared_points_follow_actual_model_rows_identity_and_fresh_queries(bou
     manager, replica, _, paths, _ = bound
     path = fixture.position_collective_costs(tmp_path, paths[1], device=replica.device)
     p = _predictor(replica.model_config, manager); p._replica_config = replica
-    p._cc_backend = SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
+    p._cc_backend = SimpleNamespace(collective_profile_bytes=lambda raw=path.read_bytes(): raw)
     lane = materialize(source(padding=16)).lane(0)
     real_loads, reads, source_reads = json.loads, [], []
     def observe(text, *args, **kwargs):

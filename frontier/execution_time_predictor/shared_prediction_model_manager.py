@@ -20,6 +20,7 @@ from frontier.execution_time_predictor.measurement_input_paths import (
 from frontier.execution_time_predictor.kernel_gap import load_kernel_gap_ms
 from frontier.execution_time_predictor.cache_io import dataset_fingerprint
 from frontier.logger import init_logger
+from frontier.cc_backend.collective_profile import CollectiveProfileInputs
 
 
 from frontier.execution_time_predictor.layer_contract_resolution import (
@@ -66,6 +67,7 @@ class ExecutionTimePredictionModelManager(
         self._attention_tp_warning_cache: Set[str] = set()
         self._gdn_predictors: Dict[ClusterType, Any] = {}
         self._step5_model_bundles: Dict[ClusterType, Dict[str, Any]] = {}
+        self._collective_profile_inputs = CollectiveProfileInputs()
 
         # Check if all clusters are in dummy mode
         self._all_dummy_mode = self._check_all_dummy_mode()
@@ -117,6 +119,10 @@ class ExecutionTimePredictionModelManager(
                 self.__dict__.pop("_step5_attention_inputs", None)
 
             logger.info(f"ExecutionTimePredictionModelManager initialized with capabilities: {self._required_capabilities}")
+
+    @property
+    def collective_profile_inputs(self):
+        return self._collective_profile_inputs
 
     def _publish_step5_model_bundles(self) -> None:
         """Bind the models used by each Step role to their existing cache artifacts."""

@@ -105,6 +105,14 @@ class BaseCCBackend(ABC):
         """Get the number of devices."""
         return self._num_devices
 
+    def bind_collective_profile_inputs(self, inputs):
+        """Bind the run's collective input before this backend is used."""
+        raise NotImplementedError(f"{type(self).__name__} does not support collective profiling inputs")
+
+    def collective_profile_bytes(self):
+        """Return this backend's immutable collective profiling input."""
+        raise NotImplementedError(f"{type(self).__name__} does not support collective profiling inputs")
+
     def predict_collective_plan(self, plan):
         """Price a lossless joint plan or reject this backend's capability."""
         raise NotImplementedError(

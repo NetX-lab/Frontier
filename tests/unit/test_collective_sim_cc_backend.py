@@ -97,6 +97,8 @@ def test_importer_groups_frozen_policy_but_keeps_complete_count_and_cache_identi
     with pytest.raises(KeyError): backend.predict_collective_plan(switched)
     artifact["counts"][switched.cache_key()]={**original,"plan_key":switched.cache_key(),"context":context}
     path.write_text(json.dumps(artifact))
+    with pytest.raises(KeyError): backend.predict_collective_plan(switched)
+    backend=CollectiveSimCCBackend(backend.config,backend.cluster_type,"h800","cpu_fixture",16)
     result=backend.predict_collective_plan(switched)
     assert result.duration_ms == expected.duration_ms and result.plan_key == switched.cache_key()
     assert json.loads(result.count_receipt_json)["context"] == context
@@ -197,39 +199,38 @@ def test_cpu_writer_reference_is_explicit_and_sealed(tmp_path,monkeypatch,mode):
     else:
         with pytest.raises((ValueError,FileNotFoundError)): cpu_writer_source()
 
-def test_collective_artifact_reuses_only_identical_current_bytes(tmp_path,monkeypatch):
-    import os,frontier.cc_backend.backends.collective_sim_cc_backend as module
+def test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published(tmp_path,monkeypatch):
+    import os
     backend,artifact,path=cpu_writer_payload(tmp_path,monkeypatch)
     key=next(iter(artifact["counts"]));v=json.loads(key)
     plan=CollectivePlan(v["phase"],v["sizes"],tuple(CollectiveTensor(**t) for t in v["tensors"]),v["groups"],v["graph_mode"],v["context_json"],v["buffer_json"])
-    text=path.read_text();stat=path.stat();reads=[];decodes=[];failure=[]
-    class ArtifactText(str): pass
-    class ArtifactBytes(bytes):
-        def decode(self): return ArtifactText(super().decode())
-    class CurrentPath(type(path)):
-        def read_bytes(self):
-            reads.append(self)
-            if failure: raise failure[0]
-            return ArtifactBytes(super().read_bytes())
-    class Decoder:
-        def __getattr__(self,name): return getattr(json,name)
-        def loads(self,value):
-            if isinstance(value,ArtifactText): decodes.append(value)
-            return json.loads(value)
-    monkeypatch.setattr(module,"Path",CurrentPath);monkeypatch.setattr(module,"json",Decoder())
+    text=path.read_text();stat=path.stat();reads=[];failure=[];original=Path.read_bytes
+    def read(file):
+        reads.append(file)
+        if failure: raise failure[0]
+        return original(file)
+    monkeypatch.setattr(Path,"read_bytes",read)
+    def new_backend():
+        return CollectiveSimCCBackend(backend.config,backend.cluster_type,"h800","cpu_fixture",16)
     first=backend.predict_collective_plan(plan);assert backend.predict_collective_plan(plan)==first
-    assert len(reads)==2 and len(decodes)==1
+    assert len(reads)==1
     with pytest.raises(KeyError): backend.predict_collective_plan(replace(plan,buffer_json='{"evidence_kind":"cpu_fixture"}'))
     artifact["counts"][key]["cost"].update(duration_ms=.04,network_ms=.02)
     changed=json.dumps(artifact);assert len(changed)==len(text)
     path.write_text(changed);os.utime(path,ns=(stat.st_atime_ns,stat.st_mtime_ns));assert path.stat().st_mtime_ns==stat.st_mtime_ns
-    assert backend.predict_collective_plan(plan).duration_ms==.04 and len(decodes)==2
-    path.write_text("{")
-    for _ in range(2):
-        with pytest.raises(json.JSONDecodeError): backend.predict_collective_plan(plan)
-    assert len(decodes)==4
-    path.write_text(changed);assert backend.predict_collective_plan(plan).duration_ms==.04 and len(decodes)==4
+    assert backend.predict_collective_plan(plan)==first and len(reads)==1
+    assert new_backend().predict_collective_plan(plan).duration_ms==.04
+    for raw,error in ((b"{",json.JSONDecodeError),(b"\xff",UnicodeDecodeError)):
+        path.write_bytes(raw);candidate=new_backend()
+        assert backend.predict_collective_plan(plan)==first
+        for _ in range(2):
+            with pytest.raises(error): candidate.predict_collective_plan(plan)
+        path.write_text(changed)
+        assert candidate.predict_collective_plan(plan).duration_ms==.04
     for error in (FileNotFoundError("current artifact"),PermissionError("current artifact")):
-        failure[:]=[error]
-        with pytest.raises(type(error)) as caught: backend.predict_collective_plan(plan)
-        assert caught.value is error
+        failure[:]=[error];candidate=new_backend()
+        for _ in range(2):
+            with pytest.raises(type(error)) as caught: candidate.predict_collective_plan(plan)
+            assert caught.value is error
+        failure.clear()
+        assert candidate.predict_collective_plan(plan).duration_ms==.04

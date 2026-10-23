@@ -598,6 +598,8 @@ class SklearnMoEExecutionTimePredictor(
         policy = resolve_routing_count_policy(self._moe_routing_distribution_type)
         if policy.requires_source:
             validate_position_routing_scope(replica_config, cluster_type)
+            if model_manager is not None and cc_backend is not None:
+                cc_backend.bind_collective_profile_inputs(model_manager.collective_profile_inputs)
         self._moe_routing_seed = getattr(replica_config, "moe_routing_seed", 42)
         if type(self._moe_routing_seed) is not int or self._moe_routing_seed < 0:
             raise ValueError(

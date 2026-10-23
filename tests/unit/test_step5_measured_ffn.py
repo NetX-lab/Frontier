@@ -72,7 +72,7 @@ def test_position_real_estimator_reaches_execution_time_without_shuffle(model,tm
     p._register_additional_profiling_metadata_from_files()
     lane=materialize(source(padding=16)).lane(0)
     path=fixture.position_collective_costs(tmp_path,paths[1],device="h800");artifact=json.loads(path.read_text())
-    p._cc_backend=SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])),
+    p._cc_backend=SimpleNamespace(collective_profile_bytes=lambda raw=path.read_bytes():raw,
         predict_collective_plan=lambda plan:CollectivePlanCost(**artifact["counts"][plan.cache_key()]["cost"]))
     with p._step5_measured_layer(88):
         result=p._predict_step5_position_execution(SimpleNamespace(),lane,layer_id=88,include_attention=False,include_stage_owned=False,pipeline_stage=0)
