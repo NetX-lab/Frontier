@@ -36,6 +36,9 @@ _MOE_FAMILY_READERS = (
 
 
 def _use_moe_family(monkeypatch, family) -> None:
+    family.operators = family.profiling_ops()
+    for operator in family.operators:
+        operator.profiling_target = True
     for module_name in _MOE_FAMILY_READERS:
         monkeypatch.setattr(f"{module_name}.MOE_FAMILY", family)
 
@@ -80,22 +83,26 @@ def test_moe_family_declares_router_dispatch_and_grouped_gemm_ops() -> None:
         "moe_gating_linear",
         "moe_gating_routing_topk",
         "moe_shuffling",
+        "moe_input_quantize",
         "moe_grouped_gemm",
     ]
     assert [operator.execution_time_attr for operator in MOE_FAMILY.operators] == [
         "moe_gating_linear_time",
         "moe_gating_routing_topk_time",
         "moe_shuffling_time",
+        "moe_input_quantize_time",
         "moe_grouped_gemm_time",
     ]
     assert [operator.resource_class for operator in MOE_FAMILY.operators] == [
         ResourceClass.COMP,
         ResourceClass.MEMORY,
         ResourceClass.MEMORY,
+        ResourceClass.MEMORY,
         ResourceClass.COMP,
     ]
     assert [operator.role for operator in MOE_FAMILY.operators] == [
         OperatorRole.PROJECTION,
+        OperatorRole.RESHAPE,
         OperatorRole.RESHAPE,
         OperatorRole.RESHAPE,
         OperatorRole.PROJECTION,
@@ -116,8 +123,10 @@ def test_moe_family_declares_predictor_tp_and_ep_metadata() -> None:
         TensorParallelMode.MOE_TP,
         TensorParallelMode.MOE_TP,
         TensorParallelMode.MOE_TP,
+        TensorParallelMode.MOE_TP,
     ]
     assert [operator.ep_agnostic for operator in MOE_FAMILY.operators] == [
+        True,
         True,
         True,
         True,
@@ -127,6 +136,7 @@ def test_moe_family_declares_predictor_tp_and_ep_metadata() -> None:
         "moe_gating",
         "moe_gating",
         "moe_shuffling",
+        "moe_input_quantize",
         "moe_grouped_gemm",
     ]
 
@@ -662,7 +672,7 @@ def test_quantization_default_registry_uses_moe_and_share_expert_family_names(mo
         quant_module,
         "MOE_FAMILY",
         SimpleNamespace(
-            profiling_ops=lambda: (
+            operators=(
                 _operator("moe_family_gate", "moe_precision_alias"),
                 _operator("moe_family_expert"),
             )
@@ -673,7 +683,7 @@ def test_quantization_default_registry_uses_moe_and_share_expert_family_names(mo
         quant_module,
         "SHARE_EXPERT_FAMILY",
         SimpleNamespace(
-            profiling_ops=lambda: (
+            operators=(
                 _operator("share_family_up"),
                 _operator("share_family_down"),
             )
