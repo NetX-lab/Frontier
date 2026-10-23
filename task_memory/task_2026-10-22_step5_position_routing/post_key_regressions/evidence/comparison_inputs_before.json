@@ -1,0 +1,31 @@
+{
+  "task_id": "D29-POST-KEY-FROZEN-REGRESSIONS",
+  "retained_parent_inputs": [
+    {
+      "path": "/data/ycfeng/tmp/d29_group_reuse_parent01.xml",
+      "sha256": "a37987c7b72f64a87be43623b3136d93e12c8b103b00856cf525b8918177cb4f",
+      "bytes": 13377
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_group_reuse_trainers_parent01.xml",
+      "sha256": "6b411b2457883e46b96c136ffa5b43f420fcac465c8481bbe2ec798f3186e5d9",
+      "bytes": 594
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_artifact_parse_parent01.xml",
+      "sha256": "33ffaf6016ec49a718c099c9f23f10700a5b6007e4edb235e07cca6749cd4fe9",
+      "bytes": 19773
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_loader_family_parent01.xml",
+      "sha256": "d7db803efc54dabf9b22e56e15d59413c5d644947901142c314aae40690fdacf",
+      "bytes": 4774
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_loader_governance_parent01.xml",
+      "sha256": "9a2c72314570ef9be14644c10a809811378471db81e43e5ebcb66e833488fdd1",
+      "bytes": 8366
+    }
+  ],
+  "match_accepted79_receipt": true
+}

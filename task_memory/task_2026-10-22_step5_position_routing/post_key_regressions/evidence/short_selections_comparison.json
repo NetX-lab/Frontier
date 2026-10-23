@@ -1,0 +1,130 @@
+{
+  "task_id": "D29-POST-KEY-FROZEN-REGRESSIONS",
+  "source_revision": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+  "source_tree": "bbbca98802261662e02d32a59c1a4d6ab20a12e5",
+  "suites_separate_not_summed": true,
+  "selections": [
+    {
+      "suite": "supplement101",
+      "raw_counts": {
+        "pass": 101
+      },
+      "junit": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "101",
+          "time": "9.954",
+          "timestamp": "2026-10-24T04:53:09.425726+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ],
+      "raw_exit": 0,
+      "old_xml": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/supplement101/results.xml",
+        "sha256": "c737103625561322677d4f0a2348ac00027ac79dff52650aa2e24f7bcaff092d",
+        "bytes": 15812
+      },
+      "new_xml": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/results.xml",
+        "sha256": "06dcbe7fca4eaa88c6201e314d278c3ef1074f01bd01bbab58198f4859014c59",
+        "bytes": 15812
+      },
+      "retained79_status_changes": [],
+      "id_transitions": {
+        "missing": [],
+        "new_ids": [],
+        "pass_to_skip": [],
+        "pass_to_failure_or_error": []
+      },
+      "new_cases": []
+    },
+    {
+      "suite": "metadata196",
+      "raw_counts": {
+        "pass": 197
+      },
+      "junit": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "197",
+          "time": "7.866",
+          "timestamp": "2026-10-24T04:53:09.361555+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ],
+      "raw_exit": 0,
+      "old_xml": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/results.xml",
+        "sha256": "9dbb37c26673bac22f0f4cae049e241e3683580fc2d46e3b33332171ed566671",
+        "bytes": 31230
+      },
+      "new_xml": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/results.xml",
+        "sha256": "beee87e21f1dd0b45e4116af7b6794208abec0d4b718b03ff88a243eb55a26ca",
+        "bytes": 31247
+      },
+      "retained79_status_changes": [],
+      "id_transitions": {
+        "missing": [
+          "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text"
+        ],
+        "new_ids": [
+          "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published"
+        ],
+        "pass_to_skip": [],
+        "pass_to_failure_or_error": []
+      },
+      "new_cases": [
+        {
+          "id": "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "suite": "catalogue53",
+      "raw_counts": {
+        "pass": 53
+      },
+      "junit": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "53",
+          "time": "2.407",
+          "timestamp": "2026-10-24T04:53:09.361438+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ],
+      "raw_exit": 0,
+      "old_xml": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/catalogue53/results.xml",
+        "sha256": "f49ad274e3f712156ab320407dea1fd02da7fe5b9682d0bf1736347c84e39f5c",
+        "bytes": 8993
+      },
+      "new_xml": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/results.xml",
+        "sha256": "4ecdb970a691edbe6f490c323598dbcbc4d653af1c34a33640a8ae52ed09cb2b",
+        "bytes": 8993
+      },
+      "retained79_status_changes": [],
+      "id_transitions": {
+        "missing": [],
+        "new_ids": [],
+        "pass_to_skip": [],
+        "pass_to_failure_or_error": []
+      },
+      "new_cases": []
+    }
+  ],
+  "all_fresh_cases_pass": true,
+  "raw_id_loss_reported_without_alias": true
+}

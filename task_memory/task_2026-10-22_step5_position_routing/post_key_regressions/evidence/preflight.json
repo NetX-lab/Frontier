@@ -1,0 +1,151 @@
+{
+  "task_id": "D29-POST-KEY-FROZEN-REGRESSIONS",
+  "source_before": {
+    "head": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+    "tree": "bbbca98802261662e02d32a59c1a4d6ab20a12e5",
+    "status": "",
+    "submodule_head": "3dac53c544e546574cb6e8078cd14053d0916113",
+    "submodule_status": ""
+  },
+  "records_start": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+  "tracked_files": 2629,
+  "inputs": [
+    {
+      "path": "/data/ycfeng/tmp/d29_unit_parent05.xml",
+      "bytes": 2109680,
+      "sha256": "cb64bf1bfbba142b5ad7b3fbad90343d1f9134e6a627c35af5017bfc3654a4d8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_unit_baseline01.xml",
+      "bytes": 1978121,
+      "sha256": "4c1629eaf42bde40b033f43e480f77aa5c81cba8ca4dca00398f43cc9eeda25d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_unit_candidate01.xml",
+      "bytes": 1983189,
+      "sha256": "7bcfb335e7488995aafe498d6fb7c11c7280a055fa0e118fc9886eebbcff2802"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_canonical_count_green01.xml",
+      "bytes": 11260,
+      "sha256": "d54490d4f939869a618213df89ad704deed1dd34325d86b189b625ed5d7cdbda"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07/task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/d29_regression_baseline01.json",
+      "bytes": 38478,
+      "sha256": "70a15ffd158e1971aa207e5017f2cf50a84e7b4ceb853f93965312d379d042b0"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/manifest.json",
+      "bytes": 25878,
+      "sha256": "e8e6278666903b793d9f0eafe04871378b14fef3413c9fe58721677295e8a50c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/results.jsonl",
+      "bytes": 117454,
+      "sha256": "ece79d9f5ba9b3262d90e7e12388c86a9d7a12d8e6814765dad1a8a97817299a"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp",
+      "bytes": 21234672,
+      "sha256": "8818d1146c32505707dee41147cfe17de46a0c9f3cf6bb8fc7b1b3fe30e15637"
+    }
+  ],
+  "harness_unchanged": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07/tests/e2e/refactor_fidelity/cases.py",
+      "bytes": 29377,
+      "sha256": "eaf31417d56e4fb8f6223c2972471df51912eb7649c806ff8b0d458b6af94aef"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07/tests/e2e/refactor_fidelity/compare.py",
+      "bytes": 14462,
+      "sha256": "2b955cc309425cbd9e6365e9f146911498c116a43da43d618ef30f6cda0fcb7d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07/tests/e2e/refactor_fidelity/run_matrix.py",
+      "bytes": 36328,
+      "sha256": "88dc98089dd775d8e582998d36def8729818fcebd6e2ced31927564aab1121b7"
+    }
+  ],
+  "examples_unchanged": true,
+  "baseline79_cases": 8610,
+  "changed_source_test_paths": [
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+    "frontier/cc_backend/base_cc_backend.py",
+    "frontier/cc_backend/collective_plan.py",
+    "frontier/cc_backend/collective_profile.py",
+    "frontier/execution_time_predictor/moe_routing_workload.py",
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "frontier/metrics/ep_wave_metrics.py",
+    "frontier/metrics/op_trace_utils.py",
+    "frontier/metrics/trace_store.py",
+    "tests/unit/test_collective_sim_cc_backend.py",
+    "tests/unit/test_moe_routing_runtime.py",
+    "tests/unit/test_prediction_measurement_bindings.py",
+    "tests/unit/test_step5_measured_ffn.py",
+    "tests/unit/test_step5_moe_pricing.py"
+  ],
+  "test_function_deltas": [
+    {
+      "path": "tests/unit/test_collective_sim_cc_backend.py",
+      "added_functions": [
+        "test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published"
+      ],
+      "removed_functions": [
+        "test_collective_artifact_reuses_only_identical_current_text"
+      ]
+    },
+    {
+      "path": "tests/unit/test_moe_routing_runtime.py",
+      "added_functions": [
+        "test_collective_input_binds_both_role_constructors_and_refreshes_next_run"
+      ],
+      "removed_functions": []
+    },
+    {
+      "path": "tests/unit/test_prediction_measurement_bindings.py",
+      "added_functions": [
+        "test_prepared_points_follow_actual_model_rows_identity_and_fresh_queries"
+      ],
+      "removed_functions": []
+    },
+    {
+      "path": "tests/unit/test_step5_measured_ffn.py",
+      "added_functions": [],
+      "removed_functions": []
+    },
+    {
+      "path": "tests/unit/test_step5_moe_pricing.py",
+      "added_functions": [],
+      "removed_functions": []
+    }
+  ],
+  "script_bindings": [
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/run_suite.py",
+      "bytes": 7118,
+      "sha256": "62ce1aa3e4f6229c7e782bcd98eb2048ef35d88e790e607a9e2ae493908d392a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/run_suite.py",
+      "bytes": 8153,
+      "sha256": "1733444c2b65bac2171e4c855484e602bb1c222499c92667f489b3ebe3612f0a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_workflow_fidelity_20261022/audit_evidence.py",
+      "bytes": 7471,
+      "sha256": "8d985f0f964c5ec6b16b4a0c3963490db38de26b9e0ec664927479ca849b4cb9"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/scripts/compare_unit.py",
+      "bytes": 6516,
+      "sha256": "b0d9dd036de52d15b6b7573f99877e8a8ad8450ebd5ee3d289c8bbfedb2744b2"
+    }
+  ],
+  "runtime_user": "brainpp",
+  "MemoryMax_bytes": 32212254720,
+  "retained_binary_projection_only": true,
+  "no_build_or_source_binary_write": true
+}
