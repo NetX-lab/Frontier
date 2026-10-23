@@ -155,6 +155,10 @@ def node_plan(config, peers, host, devices):
         raise ValueError('Role GPU block overrides require positive integer counts')
     if role in block_counts:
         engine['num_gpu_blocks_override'] = block_counts[role]
+    iteration_counts = config.get('role_profiler_max_iterations', {})
+    if (type(iteration_counts) is not dict or set(iteration_counts) - {'prefill', 'decode'}
+            or any(type(value) is not int or value <= 0 for value in iteration_counts.values())):
+        raise ValueError('Role profiler iteration overrides require positive integer counts')
     lane = position % nodes_per_role * local
     profiler = engine.get('profiler_config') or {}
     if (engine.get('worker_extension_cls') == 'native_serve_profile.NativeServeProfile'
@@ -163,6 +167,8 @@ def node_plan(config, peers, host, devices):
             and Path(profiler['torch_profiler_dir']).is_absolute()):
         engine['profiler_config'] = profiler | {
             'torch_profiler_dir': str(Path(profiler['torch_profiler_dir']) / role / f'dp{lane}')}
+        if role in iteration_counts:
+            engine['profiler_config']['max_iterations'] = iteration_counts[role]
     heads = dict(zip(('prefill', 'decode'), (peers[0], peers[nodes_per_role])))
     engine.update(host=peers[position]['ip'], data_parallel_size_local=local,
                   data_parallel_address=heads[role]['ip'],
@@ -196,7 +202,8 @@ def run(config):
     with (node / 'worker.log').open('w', buffering=1) as log:
         os.dup2(log.fileno(), 1)
         os.dup2(log.fileno(), 2)
-    result = dict(host=host, qualification_verified=False, observation_errors=[])
+    result = dict(host=host, qualification_verified=False, observation_errors=[], shutdown_timings={})
+    timings = result['shutdown_timings']
     server = replay = None
     plan = None
     exit_code = 1
@@ -247,6 +254,7 @@ def run(config):
         visible = os.environ.get('CUDA_VISIBLE_DEVICES')
         devices = visible.split(',') if visible else [str(index) for index in range(config['gpu'])]
         plan = node_plan(config, peers, host, devices)
+        drain_paths = [root / 'nodes' / peer['host'] / 'drained.json' for peer in plan['peers']]
         result['plan'] = plan
         if plan['position'] == 0 and 'case_dir' in config:
             try:
@@ -369,8 +377,12 @@ def run(config):
         record('drain_returned')
         write_json(node / 'drained.json', dict(role=role, lane=plan['lane']))
         if plan['lane'] == 0:
-            await_condition(lambda: len(list(root.glob('nodes/*/drained.json'))) == config['replica'],
-                            config['peer_wait_seconds'], native_required=True)
+            timings['drain_quorum_wait'] = dict(start_monotonic=time.monotonic())
+            try:
+                await_condition(lambda: all(path.is_file() for path in drain_paths),
+                                config['peer_wait_seconds'], native_required=True)
+            finally:
+                timings['drain_quorum_wait']['end_monotonic'] = time.monotonic()
     except BaseException:
         exit_code = 1
         result['exception'] = traceback.format_exc()
@@ -381,21 +393,27 @@ def run(config):
             result['replay_stop'] = stop_server(replay, config['stop_timeout_s'])
         if server is not None:
             result['shutdown_order'] = dict(drained_before_stop=(node / 'drained.json').is_file(),
-                all_nodes_drained_before_head_stop=sorted(p.parent.name for p in root.glob('nodes/*/drained.json'))
+                all_nodes_drained_before_head_stop=sorted(p.parent.name for p in drain_paths if p.is_file())
                     if plan is not None and plan['lane'] == 0 else [],
                 native_returned_before_requested_stop=server.poll() is not None)
             if plan['lane'] and not (node / 'failed.json').exists():
                 head_stopped = root / 'nodes' / plan['heads'][plan['role']]['host'] / 'native_stopped.json'
-                deadline = time.monotonic() + config['stop_timeout_s']
+                timings['head_marker_wait'] = dict(start_monotonic=time.monotonic())
+                deadline = timings['head_marker_wait']['start_monotonic'] + config['peer_wait_seconds']
                 while not head_stopped.exists() and time.monotonic() < deadline:
                     if server.poll() not in (None, 0):
                         break
                     time.sleep(1)
+                timings['head_marker_wait']['end_monotonic'] = time.monotonic()
                 result['shutdown_order']['head_stopped_before_headless_stop'] = head_stopped.exists()
                 if not head_stopped.exists():
                     result['observation_errors'].append('Head shutdown marker missing; native stop order unverified')
             result['shutdown_order']['native_returned_before_requested_stop'] = server.poll() is not None
-            result['server_stop'] = stop_server(server, config['stop_timeout_s'])
+            timings['native_stop'] = dict(start_monotonic=time.monotonic())
+            try:
+                result['server_stop'] = stop_server(server, config['stop_timeout_s'])
+            finally:
+                timings['native_stop']['end_monotonic'] = time.monotonic()
             if result['server_stop']['returncode'] != 0:
                 exit_code = 1
             write_json(node / 'native_stopped.json', result['server_stop'] | {'shutdown_order': result['shutdown_order']})
