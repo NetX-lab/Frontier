@@ -1,0 +1,22 @@
+Running scope as unit: run-rc992030367854e06a9d69d5839cc7877.scope
+{
+  "verdict": "PASS",
+  "paired_gain": [
+    {
+      "current": "current-a3",
+      "key": "key-a",
+      "saved_s": 0.03904826636426151,
+      "saved_pct": 23.281269163141115
+    },
+    {
+      "current": "current-b",
+      "key": "key-b",
+      "saved_s": 0.038068378111347556,
+      "saved_pct": 22.716711843164518
+    }
+  ],
+  "numeric_lookups_per_wave": 288,
+  "live_checks_equal": 10,
+  "all_complete_bytes_equal": true,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]"
+}

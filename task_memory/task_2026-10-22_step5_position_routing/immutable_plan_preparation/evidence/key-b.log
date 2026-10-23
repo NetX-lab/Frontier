@@ -1,0 +1,83 @@
+Running scope as unit: run-r6a43f006086f4b4fbb825f25d3f0c3ee.scope
+WARNING 01:41:30 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+WARNING 01:41:30 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+
+{
+  "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+  "label": "key-b",
+  "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+  "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+  "adapter": "ONE SINGLE-ROLE DIAGNOSTIC FIXED-FILE-BYTE ADAPTER, not P/D/run snapshot",
+  "cold_s": 0.9077250147238374,
+  "warm_median_s": 0.12951035588048398,
+  "warm_min_s": 0.12649652222171426,
+  "warm_max_s": 0.23852442624047399,
+  "constructors_warm": {
+    "CollectivePlan": 0,
+    "CollectiveTensor": 0,
+    "CollectivePlanCost": 64
+  },
+  "profile_counts": {
+    "cache_key": 0,
+    "serialized_key_once": 192,
+    "to_dict": 0,
+    "dumps": 800,
+    "loads": 1136,
+    "asdict": 0,
+    "predict": 0,
+    "_predict_step5_ffn_operator": 144,
+    "_step5_position_queries": 16,
+    "_step5_model_points": 16,
+    "_step5_plan_candidates": 64,
+    "_lookup_step5_ffn_operator": 0,
+    "_native_measurement_binding": 176,
+    "_measurement_identity": 240,
+    "predict_collective_plan": 64
+  },
+  "plan_objects": 8,
+  "fresh_operator_proofs": 144,
+  "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+  "events": 208,
+  "event_bytes": 2889655,
+  "event_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+  "ledger_bytes": 2309545,
+  "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+  "mutation_checks": [
+    "public to_dict mutation detached from immutable plan/key",
+    "normal plan field mutation rejected",
+    "dataclasses.replace creates distinct full key, never inherits derived key",
+    "changed full plan preserves exact missing-key error"
+  ],
+  "fixture_unchanged": true,
+  "excluded": "setup/import/model loading; payload/output equality; cProfile/counters; mutation checks; no trace encoding investigation"
+}

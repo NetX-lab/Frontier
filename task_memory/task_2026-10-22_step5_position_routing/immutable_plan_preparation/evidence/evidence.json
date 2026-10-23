@@ -1,0 +1,715 @@
+{
+  "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+  "session_id": "ses_e963098ecffebqCOtdysKGY6Xe",
+  "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+  "code_revision": "2f2d9339d5bce600fbb0a3f78aebbcf6f71be696",
+  "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+  "python_executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+  "conda": "No conda invocation; existing frontier-py310 executable",
+  "adapter": "ONE SINGLE-ROLE DIAGNOSTIC FIXED-FILE-BYTE ADAPTER; 80 requests, zero warm physical reads; not run-wide P/D snapshot",
+  "commands": [
+    {
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_immutable_plan_preparation/probe.py red > /data/ycfeng/tmp/d29_immutable_plan_preparation/red-executed.log 2>&1",
+      "exit_code": 1,
+      "verdict": "EXPECTED_RED_REPEATED_KEY_WORK",
+      "log": "/data/ycfeng/tmp/d29_immutable_plan_preparation/red-executed.log",
+      "log_sha256": "3a22492e67d320af1838949ca25c99e9b8b6292a7899340d9fcc539a43831fdf"
+    },
+    {
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_immutable_plan_preparation/compare.py current-a3 > /data/ycfeng/tmp/d29_immutable_plan_preparation/current-a3.log 2>&1",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "/data/ycfeng/tmp/d29_immutable_plan_preparation/current-a3.log",
+      "log_sha256": "f986f1f1ad96065dd21f49138a34eb6a306b75488609e8b4c065e3cbd4f8d3ac"
+    },
+    {
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_immutable_plan_preparation/compare.py key-a > /data/ycfeng/tmp/d29_immutable_plan_preparation/key-a.log 2>&1",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "/data/ycfeng/tmp/d29_immutable_plan_preparation/key-a.log",
+      "log_sha256": "69f39cdda7251ce7ff1b876036875d93aaf93b4e80864682ad6a614619d1cda0"
+    },
+    {
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_immutable_plan_preparation/compare.py current-b > /data/ycfeng/tmp/d29_immutable_plan_preparation/current-b.log 2>&1",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "/data/ycfeng/tmp/d29_immutable_plan_preparation/current-b.log",
+      "log_sha256": "87b4bc66cfa09734c7257099524ee3199b9f3705d81a6e96c9820eb86091cd47"
+    },
+    {
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_immutable_plan_preparation/compare.py key-b > /data/ycfeng/tmp/d29_immutable_plan_preparation/key-b.log 2>&1",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "/data/ycfeng/tmp/d29_immutable_plan_preparation/key-b.log",
+      "log_sha256": "e455f3d43504ae461d4a1cca6df4eec0e30b470dfabb2ac8bad0db1486819aff"
+    },
+    {
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_immutable_plan_preparation/live_checks.py live-current4 > /data/ycfeng/tmp/d29_immutable_plan_preparation/live-current4.log 2>&1",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "/data/ycfeng/tmp/d29_immutable_plan_preparation/live-current4.log",
+      "log_sha256": "1012898eb942a02a81e1e4deabd2d32f2fce1c9d305951c89ff1243b30ed4934"
+    },
+    {
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_immutable_plan_preparation/live_checks.py live-key > /data/ycfeng/tmp/d29_immutable_plan_preparation/live-key.log 2>&1",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "/data/ycfeng/tmp/d29_immutable_plan_preparation/live-key.log",
+      "log_sha256": "b2727fda4fc0757c83405bc0ef98d9fd53be8c7839b6e492f6db31e4fb535dc4"
+    }
+  ],
+  "red": {
+    "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+    "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+    "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+    "adapter": "ONE SINGLE-ROLE DIAGNOSTIC FIXED-FILE-BYTE ADAPTER, not run-wide P/D snapshot",
+    "fixed_file": "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_collectives/h800/collective_local.json",
+    "fixed_sha256": "447e697340d77c205e7457eb50c7b63c47ab103ba77c7f52e7c5fe844498ca90",
+    "timings": [
+      {
+        "index": 0,
+        "pricing_s": 0.959068697411567,
+        "profiled": false,
+        "key_calls": 200,
+        "distinct_keys": 8,
+        "key_repetitions": 192,
+        "fixed_byte_requests": 80
+      },
+      {
+        "index": 1,
+        "pricing_s": 0.16705512069165707,
+        "profiled": false,
+        "key_calls": 192,
+        "distinct_keys": 8,
+        "key_repetitions": 184,
+        "fixed_byte_requests": 80
+      },
+      {
+        "index": 2,
+        "pricing_s": 0.16900703683495522,
+        "profiled": false,
+        "key_calls": 192,
+        "distinct_keys": 8,
+        "key_repetitions": 184,
+        "fixed_byte_requests": 80
+      },
+      {
+        "index": 3,
+        "pricing_s": 0.43872949481010437,
+        "profiled": true,
+        "key_calls": 192,
+        "distinct_keys": 8,
+        "key_repetitions": 184,
+        "fixed_byte_requests": 80
+      }
+    ],
+    "warm_unprofiled_median_s": 0.16803107876330614,
+    "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "fixture_unchanged": true,
+    "verdict": "RED: repeated identical plan-key preparation"
+  },
+  "verification_command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_immutable_plan_preparation/verify.py > /data/ycfeng/tmp/d29_immutable_plan_preparation/verify.log 2>&1",
+  "controls": {
+    "current-a3": {
+      "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+      "label": "current-a3",
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+      "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+      "adapter": "ONE SINGLE-ROLE DIAGNOSTIC FIXED-FILE-BYTE ADAPTER, not P/D/run snapshot",
+      "timings": [
+        {
+          "index": 0,
+          "pricing_s": 0.9416200309060514,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 1,
+          "pricing_s": 0.16903899889439344,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 2,
+          "pricing_s": 0.16775176720693707,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 3,
+          "pricing_s": 0.16826814878731966,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 4,
+          "pricing_s": 0.16789155825972557,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 5,
+          "pricing_s": 0.1672253431752324,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 6,
+          "pricing_s": 0.16615626076236367,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 7,
+          "pricing_s": 0.16769615095108747,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 8,
+          "pricing_s": 0.27865909272804856,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 9,
+          "pricing_s": 0.1680943127721548,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 10,
+          "pricing_s": 0.1673359922133386,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 11,
+          "pricing_s": 0.16706912871450186,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 12,
+          "pricing_s": 0.16701691318303347,
+          "fixed_byte_requests": 80
+        }
+      ],
+      "cold_s": 0.9416200309060514,
+      "warm_median_s": 0.16772395907901227,
+      "warm_min_s": 0.16615626076236367,
+      "warm_max_s": 0.27865909272804856,
+      "constructors_warm": {
+        "CollectivePlan": 0,
+        "CollectiveTensor": 0,
+        "CollectivePlanCost": 64
+      },
+      "profile_counts": {
+        "cache_key": 192,
+        "serialized_key_once": 0,
+        "to_dict": 192,
+        "dumps": 992,
+        "loads": 1520,
+        "asdict": 192,
+        "predict": 0,
+        "_predict_step5_ffn_operator": 144,
+        "_step5_position_queries": 16,
+        "_step5_model_points": 16,
+        "_step5_plan_candidates": 64,
+        "_lookup_step5_ffn_operator": 0,
+        "_native_measurement_binding": 176,
+        "_measurement_identity": 240,
+        "predict_collective_plan": 64
+      },
+      "plan_objects": 8,
+      "fresh_operator_proofs": 144,
+      "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "events": 208,
+      "event_bytes": 2889655,
+      "event_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+      "ledger_bytes": 2309545,
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "mutation_checks": [
+        "public to_dict mutation detached from immutable plan/key",
+        "normal plan field mutation rejected",
+        "dataclasses.replace creates distinct full key, never inherits derived key",
+        "changed full plan preserves exact missing-key error"
+      ],
+      "fixture_unchanged": true,
+      "excluded": "setup/import/model loading; payload/output equality; cProfile/counters; mutation checks; no trace encoding investigation"
+    },
+    "key-a": {
+      "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+      "label": "key-a",
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+      "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+      "adapter": "ONE SINGLE-ROLE DIAGNOSTIC FIXED-FILE-BYTE ADAPTER, not P/D/run snapshot",
+      "timings": [
+        {
+          "index": 0,
+          "pricing_s": 1.0062037301249802,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 1,
+          "pricing_s": 0.26361070200800896,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 2,
+          "pricing_s": 0.1284304829314351,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 3,
+          "pricing_s": 0.12950834492221475,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 4,
+          "pricing_s": 0.12816707603633404,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 5,
+          "pricing_s": 0.12752616172656417,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 6,
+          "pricing_s": 0.13223190093412995,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 7,
+          "pricing_s": 0.1291191428899765,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 8,
+          "pricing_s": 0.24067056085914373,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 9,
+          "pricing_s": 0.12752662505954504,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 10,
+          "pricing_s": 0.1277366173453629,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 11,
+          "pricing_s": 0.12868213327601552,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 12,
+          "pricing_s": 0.128669252153486,
+          "fixed_byte_requests": 80
+        }
+      ],
+      "cold_s": 1.0062037301249802,
+      "warm_median_s": 0.12867569271475077,
+      "warm_min_s": 0.12752616172656417,
+      "warm_max_s": 0.26361070200800896,
+      "constructors_warm": {
+        "CollectivePlan": 0,
+        "CollectiveTensor": 0,
+        "CollectivePlanCost": 64
+      },
+      "profile_counts": {
+        "cache_key": 0,
+        "serialized_key_once": 192,
+        "to_dict": 0,
+        "dumps": 800,
+        "loads": 1136,
+        "asdict": 0,
+        "predict": 0,
+        "_predict_step5_ffn_operator": 144,
+        "_step5_position_queries": 16,
+        "_step5_model_points": 16,
+        "_step5_plan_candidates": 64,
+        "_lookup_step5_ffn_operator": 0,
+        "_native_measurement_binding": 176,
+        "_measurement_identity": 240,
+        "predict_collective_plan": 64
+      },
+      "plan_objects": 8,
+      "fresh_operator_proofs": 144,
+      "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "events": 208,
+      "event_bytes": 2889655,
+      "event_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+      "ledger_bytes": 2309545,
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "mutation_checks": [
+        "public to_dict mutation detached from immutable plan/key",
+        "normal plan field mutation rejected",
+        "dataclasses.replace creates distinct full key, never inherits derived key",
+        "changed full plan preserves exact missing-key error"
+      ],
+      "fixture_unchanged": true,
+      "excluded": "setup/import/model loading; payload/output equality; cProfile/counters; mutation checks; no trace encoding investigation"
+    },
+    "current-b": {
+      "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+      "label": "current-b",
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+      "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+      "adapter": "ONE SINGLE-ROLE DIAGNOSTIC FIXED-FILE-BYTE ADAPTER, not P/D/run snapshot",
+      "timings": [
+        {
+          "index": 0,
+          "pricing_s": 0.9489947441034019,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 1,
+          "pricing_s": 0.1692331968806684,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 2,
+          "pricing_s": 0.1688882173039019,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 3,
+          "pricing_s": 0.1684187799692154,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 4,
+          "pricing_s": 0.16576874908059835,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 5,
+          "pricing_s": 0.1651442418806255,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 6,
+          "pricing_s": 0.17161920899525285,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 7,
+          "pricing_s": 0.16754673793911934,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 8,
+          "pricing_s": 0.28258691169321537,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 9,
+          "pricing_s": 0.16761073004454374,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 10,
+          "pricing_s": 0.16477397503331304,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 11,
+          "pricing_s": 0.1656931950710714,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 12,
+          "pricing_s": 0.1667736410163343,
+          "fixed_byte_requests": 80
+        }
+      ],
+      "cold_s": 0.9489947441034019,
+      "warm_median_s": 0.16757873399183154,
+      "warm_min_s": 0.16477397503331304,
+      "warm_max_s": 0.28258691169321537,
+      "constructors_warm": {
+        "CollectivePlan": 0,
+        "CollectiveTensor": 0,
+        "CollectivePlanCost": 64
+      },
+      "profile_counts": {
+        "cache_key": 192,
+        "serialized_key_once": 0,
+        "to_dict": 192,
+        "dumps": 992,
+        "loads": 1520,
+        "asdict": 192,
+        "predict": 0,
+        "_predict_step5_ffn_operator": 144,
+        "_step5_position_queries": 16,
+        "_step5_model_points": 16,
+        "_step5_plan_candidates": 64,
+        "_lookup_step5_ffn_operator": 0,
+        "_native_measurement_binding": 176,
+        "_measurement_identity": 240,
+        "predict_collective_plan": 64
+      },
+      "plan_objects": 8,
+      "fresh_operator_proofs": 144,
+      "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "events": 208,
+      "event_bytes": 2889655,
+      "event_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+      "ledger_bytes": 2309545,
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "mutation_checks": [
+        "public to_dict mutation detached from immutable plan/key",
+        "normal plan field mutation rejected",
+        "dataclasses.replace creates distinct full key, never inherits derived key",
+        "changed full plan preserves exact missing-key error"
+      ],
+      "fixture_unchanged": true,
+      "excluded": "setup/import/model loading; payload/output equality; cProfile/counters; mutation checks; no trace encoding investigation"
+    },
+    "key-b": {
+      "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+      "label": "key-b",
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+      "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+      "adapter": "ONE SINGLE-ROLE DIAGNOSTIC FIXED-FILE-BYTE ADAPTER, not P/D/run snapshot",
+      "timings": [
+        {
+          "index": 0,
+          "pricing_s": 0.9077250147238374,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 1,
+          "pricing_s": 0.22897785203531384,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 2,
+          "pricing_s": 0.13139209663495421,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 3,
+          "pricing_s": 0.13264260394498706,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 4,
+          "pricing_s": 0.12722596107050776,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 5,
+          "pricing_s": 0.12846984760835767,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 6,
+          "pricing_s": 0.12649652222171426,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 7,
+          "pricing_s": 0.12709784181788564,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 8,
+          "pricing_s": 0.23852442624047399,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 9,
+          "pricing_s": 0.1305508641526103,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 10,
+          "pricing_s": 0.13118882616981864,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 11,
+          "pricing_s": 0.12760239001363516,
+          "fixed_byte_requests": 80
+        },
+        {
+          "index": 12,
+          "pricing_s": 0.1280787424184382,
+          "fixed_byte_requests": 80
+        }
+      ],
+      "cold_s": 0.9077250147238374,
+      "warm_median_s": 0.12951035588048398,
+      "warm_min_s": 0.12649652222171426,
+      "warm_max_s": 0.23852442624047399,
+      "constructors_warm": {
+        "CollectivePlan": 0,
+        "CollectiveTensor": 0,
+        "CollectivePlanCost": 64
+      },
+      "profile_counts": {
+        "cache_key": 0,
+        "serialized_key_once": 192,
+        "to_dict": 0,
+        "dumps": 800,
+        "loads": 1136,
+        "asdict": 0,
+        "predict": 0,
+        "_predict_step5_ffn_operator": 144,
+        "_step5_position_queries": 16,
+        "_step5_model_points": 16,
+        "_step5_plan_candidates": 64,
+        "_lookup_step5_ffn_operator": 0,
+        "_native_measurement_binding": 176,
+        "_measurement_identity": 240,
+        "predict_collective_plan": 64
+      },
+      "plan_objects": 8,
+      "fresh_operator_proofs": 144,
+      "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "events": 208,
+      "event_bytes": 2889655,
+      "event_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+      "ledger_bytes": 2309545,
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "mutation_checks": [
+        "public to_dict mutation detached from immutable plan/key",
+        "normal plan field mutation rejected",
+        "dataclasses.replace creates distinct full key, never inherits derived key",
+        "changed full plan preserves exact missing-key error"
+      ],
+      "fixture_unchanged": true,
+      "excluded": "setup/import/model loading; payload/output equality; cProfile/counters; mutation checks; no trace encoding investigation"
+    }
+  },
+  "source_or_numeric_call_counts": {
+    "_predict_step5_ffn_operator": 144,
+    "_get_on_demand_prediction": 288,
+    "_native_measurement_binding": 176,
+    "_measurement_identity": 240,
+    "step5_operator_binding": 160,
+    "step5_layer_metadata": 16,
+    "_step5_position_queries": 16,
+    "_step5_model_points": 16,
+    "_step5_plan_candidates": 64,
+    "predict_collective_plan": 64
+  },
+  "pairs": [
+    {
+      "current": "current-a3",
+      "key": "key-a",
+      "saved_s": 0.03904826636426151,
+      "saved_pct": 23.281269163141115
+    },
+    {
+      "current": "current-b",
+      "key": "key-b",
+      "saved_s": 0.038068378111347556,
+      "saved_pct": 22.716711843164518
+    }
+  ],
+  "live_checks": {
+    "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+    "label": "live-key",
+    "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+    "constructors_cold": {
+      "CollectiveTensor": 14,
+      "CollectivePlan": 8,
+      "CollectivePlanCost": 64
+    },
+    "checks": [
+      {
+        "name": "same-content physical-row tuple replacement",
+        "equal": true
+      },
+      {
+        "name": "empty physical-row tuple",
+        "error_type": "ValueError",
+        "error": "Position expert query lacks a unique actual source/native point receipt"
+      },
+      {
+        "name": "duration/count measurement identity replacement",
+        "error_type": "ValueError",
+        "error": "Step duration and kernel-count measurement identities differ"
+      },
+      {
+        "name": "live exact duration point",
+        "before": 0.0102,
+        "after": 0.011220000000000003
+      },
+      {
+        "name": "live exact kernel count point",
+        "before": 3.0,
+        "after": 4.0
+      },
+      {
+        "name": "actual estimator replacement selected",
+        "equal": true
+      },
+      {
+        "name": "complete plan context_json replacement",
+        "error_type": "KeyError",
+        "error": "'{\"buffer_json\":\"{\\\\\"compute_context\\\\\": {\\\\\"activation_layout\\\\\": {\\\\\"dtype\\\\\": \\\\\"float8_e4m3fn\\\\\", \\\\\"element_size\\\\\": 1, \\\\\"shape\\\\\": [2, 4096], \\\\\"stride\\\\\": [4096, 1]}, \\\\\"backend\\\\\": \\\\\"cpu_fixture_TRITON\\\\\", \\\\\"collective_tensors\\\\\": {\\\\\"dispatch\\\\\": [{\\\\\"columns\\\\\": 4096, \\\\\"dtype\\\\\": \\\\\"float8_e4m3fn\\\\\", \\\\\"element_size\\\\\": 1, \\\\\"name\\\\\": \\\\\"activation\\\\\", \\\\\"row_stride\\\\\": 4096}, {\\\\\"columns\\\\\": 8, \\\\\"dtype\\\\\": \\\\\"float32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"name\\\\\": \\\\\"weights\\\\\", \\\\\"row_stride\\\\\": 8}, {\\\\\"columns\\\\\": 8, \\\\\"dtype\\\\\": \\\\\"int32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"name\\\\\": \\\\\"ids\\\\\", \\\\\"row_stride\\\\\": 8}, {\\\\\"columns\\\\\": 32, \\\\\"dtype\\\\\": \\\\\"float32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"name\\\\\": \\\\\"scales\\\\\", \\\\\"row_stride\\\\\": 32}], \\\\\"output\\\\\": [{\\\\\"columns\\\\\": 4096, \\\\\"dtype\\\\\": \\\\\"bfloat16\\\\\", \\\\\"element_size\\\\\": 2, \\\\\"name\\\\\": \\\\\"output\\\\\", \\\\\"row_stride\\\\\": 4096}]}, \\\\\"defer_input_quant\\\\\": false, \\\\\"experts_class\\\\\": \\\\\"TritonExperts\\\\\", \\\\\"model_architecture_profile\\\\\": \\\\\"step5\\\\\", \\\\\"native_facts\\\\\": {\\\\\"shared\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\", \\\\\"source_receipt\\\\\": \\\\\"CPU_CONTRACT_FIXTURE_NOT_NATIVE\\\\\"}}, \\\\\"native_padding\\\\\": {\\\\\"alignment\\\\\": 16, \\\\\"num_tokens_post_padded\\\\\": 0, \\\\\"scheme\\\\\": \\\\\"triton_expert_assignment\\\\\"}, \\\\\"physical_scope\\\\\": \\\\\"native_experts_inclusive\\\\\", \\\\\"quant_dtype\\\\\": \\\\\"float8_e4m3fn\\\\\", \\\\\"routing_runtime_path\\\\\": \\\\\"position_cyclic\\\\\", \\\\\"scale_layout\\\\\": {\\\\\"dtype\\\\\": \\\\\"float32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"shape\\\\\": [2, 32], \\\\\"stride\\\\\": [32, 1]}, \\\\\"source_activation_layout\\\\\": {\\\\\"dtype\\\\\": \\\\\"float8_e4m3fn\\\\\", \\\\\"element_size\\\\\": 1, \\\\\"shape\\\\\": [1, 4096], \\\\\"stride\\\\\": [4096, 1]}, \\\\\"source_scale_layout\\\\\": {\\\\\"dtype\\\\\": \\\\\"float32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"shape\\\\\": [1, 32], \\\\\"stride\\\\\": [32, 1]}}, \\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}\",\"buffers\":{\"compute_context\":{\"activation_layout\":{\"dtype\":\"float8_e4m3fn\",\"element_size\":1,\"shape\":[2,4096],\"stride\":[4096,1]},\"backend\":\"cpu_fixture_TRITON\",\"collective_tensors\":{\"dispatch\":[{\"columns\":4096,\"dtype\":\"float8_e4m3fn\",\"element_size\":1,\"name\":\"activation\",\"row_stride\":4096},{\"columns\":8,\"dtype\":\"float32\",\"element_size\":4,\"name\":\"weights\",\"row_stride\":8},{\"columns\":8,\"dtype\":\"int32\",\"element_size\":4,\"name\":\"ids\",\"row_stride\":8},{\"columns\":32,\"dtype\":\"float32\",\"element_size\":4,\"name\":\"scales\",\"row_stride\":32}],\"output\":[{\"columns\":4096,\"dtype\":\"bfloat16\",\"element_size\":2,\"name\":\"output\",\"row_stride\":4096}]},\"defer_input_quant\":false,\"experts_class\":\"TritonExperts\",\"model_architecture_profile\":\"step5\",\"native_facts\":{\"shared\":{\"evidence_kind\":\"cpu_fixture\",\"source_receipt\":\"CPU_CONTRACT_FIXTURE_NOT_NATIVE\"}},\"native_padding\":{\"alignment\":16,\"num_tokens_post_padded\":0,\"scheme\":\"triton_expert_assignment\"},\"physical_scope\":\"native_experts_inclusive\",\"quant_dtype\":\"float8_e4m3fn\",\"routing_runtime_path\":\"position_cyclic\",\"scale_layout\":{\"dtype\":\"float32\",\"element_size\":4,\"shape\":[2,32],\"stride\":[32,1]},\"source_activation_layout\":{\"dtype\":\"float8_e4m3fn\",\"element_size\":1,\"shape\":[1,4096],\"stride\":[4096,1]},\"source_scale_layout\":{\"dtype\":\"float32\",\"element_size\":4,\"shape\":[1,32],\"stride\":[32,1]}},\"evidence_kind\":\"cpu_fixture\"},\"context\":{\"d29_live_point_probe\":true,\"execution_policy\":{\"0\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"1\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"10\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"11\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"12\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"13\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"14\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"15\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"2\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"3\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"4\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"5\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"6\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"7\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"8\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"9\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}}},\"shared\":{\"evidence_kind\":\"cpu_fixture\",\"source_receipt\":\"CPU_CONTRACT_FIXTURE_NOT_NATIVE\"}},\"context_json\":\"{\\\\\"execution_policy\\\\\": {\\\\\"0\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"1\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"10\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"11\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"12\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"13\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"14\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"15\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"2\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"3\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"4\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"5\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"6\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"7\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"8\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"9\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}}, \\\\\"shared\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\", \\\\\"source_receipt\\\\\": \\\\\"CPU_CONTRACT_FIXTURE_NOT_NATIVE\\\\\"}, \\\\\"d29_live_point_probe\\\\\": true}\",\"graph_mode\":\"full\",\"groups\":[[0,8],[1,9],[2,10],[3,11],[4,12],[5,13],[6,14],[7,15]],\"native_grouping\":\"outer_tensor_group/nested_root_group\",\"phase\":\"dispatch\",\"sizes\":[1,1],\"stages\":[[\"AllGather\",0,null],[\"AllGather\",1,null],[\"AllGather\",2,null],[\"AllGather\",3,null]],\"tensors\":[{\"columns\":4096,\"dtype\":\"float8_e4m3fn\",\"element_size\":1,\"name\":\"activation\",\"row_stride\":4096},{\"columns\":8,\"dtype\":\"float32\",\"element_size\":4,\"name\":\"weights\",\"row_stride\":8},{\"columns\":8,\"dtype\":\"int32\",\"element_size\":4,\"name\":\"ids\",\"row_stride\":8},{\"columns\":32,\"dtype\":\"float32\",\"element_size\":4,\"name\":\"scales\",\"row_stride\":32}]}'"
+      },
+      {
+        "name": "complete plan buffer_json replacement",
+        "error_type": "KeyError",
+        "error": "'{\"buffer_json\":\"{\\\\\"compute_context\\\\\": {\\\\\"activation_layout\\\\\": {\\\\\"dtype\\\\\": \\\\\"float8_e4m3fn\\\\\", \\\\\"element_size\\\\\": 1, \\\\\"shape\\\\\": [2, 4096], \\\\\"stride\\\\\": [4096, 1]}, \\\\\"backend\\\\\": \\\\\"cpu_fixture_TRITON\\\\\", \\\\\"collective_tensors\\\\\": {\\\\\"dispatch\\\\\": [{\\\\\"columns\\\\\": 4096, \\\\\"dtype\\\\\": \\\\\"float8_e4m3fn\\\\\", \\\\\"element_size\\\\\": 1, \\\\\"name\\\\\": \\\\\"activation\\\\\", \\\\\"row_stride\\\\\": 4096}, {\\\\\"columns\\\\\": 8, \\\\\"dtype\\\\\": \\\\\"float32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"name\\\\\": \\\\\"weights\\\\\", \\\\\"row_stride\\\\\": 8}, {\\\\\"columns\\\\\": 8, \\\\\"dtype\\\\\": \\\\\"int32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"name\\\\\": \\\\\"ids\\\\\", \\\\\"row_stride\\\\\": 8}, {\\\\\"columns\\\\\": 32, \\\\\"dtype\\\\\": \\\\\"float32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"name\\\\\": \\\\\"scales\\\\\", \\\\\"row_stride\\\\\": 32}], \\\\\"output\\\\\": [{\\\\\"columns\\\\\": 4096, \\\\\"dtype\\\\\": \\\\\"bfloat16\\\\\", \\\\\"element_size\\\\\": 2, \\\\\"name\\\\\": \\\\\"output\\\\\", \\\\\"row_stride\\\\\": 4096}]}, \\\\\"defer_input_quant\\\\\": false, \\\\\"experts_class\\\\\": \\\\\"TritonExperts\\\\\", \\\\\"model_architecture_profile\\\\\": \\\\\"step5\\\\\", \\\\\"native_facts\\\\\": {\\\\\"shared\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\", \\\\\"source_receipt\\\\\": \\\\\"CPU_CONTRACT_FIXTURE_NOT_NATIVE\\\\\"}}, \\\\\"native_padding\\\\\": {\\\\\"alignment\\\\\": 16, \\\\\"num_tokens_post_padded\\\\\": 0, \\\\\"scheme\\\\\": \\\\\"triton_expert_assignment\\\\\"}, \\\\\"physical_scope\\\\\": \\\\\"native_experts_inclusive\\\\\", \\\\\"quant_dtype\\\\\": \\\\\"float8_e4m3fn\\\\\", \\\\\"routing_runtime_path\\\\\": \\\\\"position_cyclic\\\\\", \\\\\"scale_layout\\\\\": {\\\\\"dtype\\\\\": \\\\\"float32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"shape\\\\\": [2, 32], \\\\\"stride\\\\\": [32, 1]}, \\\\\"source_activation_layout\\\\\": {\\\\\"dtype\\\\\": \\\\\"float8_e4m3fn\\\\\", \\\\\"element_size\\\\\": 1, \\\\\"shape\\\\\": [1, 4096], \\\\\"stride\\\\\": [4096, 1]}, \\\\\"source_scale_layout\\\\\": {\\\\\"dtype\\\\\": \\\\\"float32\\\\\", \\\\\"element_size\\\\\": 4, \\\\\"shape\\\\\": [1, 32], \\\\\"stride\\\\\": [32, 1]}}, \\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\", \\\\\"d29_live_point_probe\\\\\": true}\",\"buffers\":{\"compute_context\":{\"activation_layout\":{\"dtype\":\"float8_e4m3fn\",\"element_size\":1,\"shape\":[2,4096],\"stride\":[4096,1]},\"backend\":\"cpu_fixture_TRITON\",\"collective_tensors\":{\"dispatch\":[{\"columns\":4096,\"dtype\":\"float8_e4m3fn\",\"element_size\":1,\"name\":\"activation\",\"row_stride\":4096},{\"columns\":8,\"dtype\":\"float32\",\"element_size\":4,\"name\":\"weights\",\"row_stride\":8},{\"columns\":8,\"dtype\":\"int32\",\"element_size\":4,\"name\":\"ids\",\"row_stride\":8},{\"columns\":32,\"dtype\":\"float32\",\"element_size\":4,\"name\":\"scales\",\"row_stride\":32}],\"output\":[{\"columns\":4096,\"dtype\":\"bfloat16\",\"element_size\":2,\"name\":\"output\",\"row_stride\":4096}]},\"defer_input_quant\":false,\"experts_class\":\"TritonExperts\",\"model_architecture_profile\":\"step5\",\"native_facts\":{\"shared\":{\"evidence_kind\":\"cpu_fixture\",\"source_receipt\":\"CPU_CONTRACT_FIXTURE_NOT_NATIVE\"}},\"native_padding\":{\"alignment\":16,\"num_tokens_post_padded\":0,\"scheme\":\"triton_expert_assignment\"},\"physical_scope\":\"native_experts_inclusive\",\"quant_dtype\":\"float8_e4m3fn\",\"routing_runtime_path\":\"position_cyclic\",\"scale_layout\":{\"dtype\":\"float32\",\"element_size\":4,\"shape\":[2,32],\"stride\":[32,1]},\"source_activation_layout\":{\"dtype\":\"float8_e4m3fn\",\"element_size\":1,\"shape\":[1,4096],\"stride\":[4096,1]},\"source_scale_layout\":{\"dtype\":\"float32\",\"element_size\":4,\"shape\":[1,32],\"stride\":[32,1]}},\"d29_live_point_probe\":true,\"evidence_kind\":\"cpu_fixture\"},\"context\":{\"execution_policy\":{\"0\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"1\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"10\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"11\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"12\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"13\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"14\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"15\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"2\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"3\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"4\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"5\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"6\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"7\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"8\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}},\"9\":{\"branches\":[\"cpu_fixture\"],\"buffers\":{\"evidence_kind\":\"cpu_fixture\"},\"runtime\":{\"evidence_kind\":\"cpu_fixture\"}}},\"shared\":{\"evidence_kind\":\"cpu_fixture\",\"source_receipt\":\"CPU_CONTRACT_FIXTURE_NOT_NATIVE\"}},\"context_json\":\"{\\\\\"execution_policy\\\\\": {\\\\\"0\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"1\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"10\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"11\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"12\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"13\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"14\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"15\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"2\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"3\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"4\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"5\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"6\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"7\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"8\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}, \\\\\"9\\\\\": {\\\\\"branches\\\\\": [\\\\\"cpu_fixture\\\\\"], \\\\\"buffers\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}, \\\\\"runtime\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\"}}}, \\\\\"shared\\\\\": {\\\\\"evidence_kind\\\\\": \\\\\"cpu_fixture\\\\\", \\\\\"source_receipt\\\\\": \\\\\"CPU_CONTRACT_FIXTURE_NOT_NATIVE\\\\\"}}\",\"graph_mode\":\"full\",\"groups\":[[0,8],[1,9],[2,10],[3,11],[4,12],[5,13],[6,14],[7,15]],\"native_grouping\":\"outer_tensor_group/nested_root_group\",\"phase\":\"dispatch\",\"sizes\":[1,1],\"stages\":[[\"AllGather\",0,null],[\"AllGather\",1,null],[\"AllGather\",2,null],[\"AllGather\",3,null]],\"tensors\":[{\"columns\":4096,\"dtype\":\"float8_e4m3fn\",\"element_size\":1,\"name\":\"activation\",\"row_stride\":4096},{\"columns\":8,\"dtype\":\"float32\",\"element_size\":4,\"name\":\"weights\",\"row_stride\":8},{\"columns\":8,\"dtype\":\"int32\",\"element_size\":4,\"name\":\"ids\",\"row_stride\":8},{\"columns\":32,\"dtype\":\"float32\",\"element_size\":4,\"name\":\"scales\",\"row_stride\":32}]}'"
+      },
+      {
+        "name": "actual layer61 proofs fresh",
+        "proofs": 144
+      },
+      {
+        "name": "different measured source intervals at7000 selected live",
+        "source_start": 7000,
+        "payload_sha256": "15c74de64496c042cc8273345f6277bf91adc3d7c2dd93da2bd90307ee052984"
+      }
+    ],
+    "fixture_unchanged": true,
+    "all_restored_waves_equal": true,
+    "real_retained_plans_immutable_fields": true
+  },
+  "all_complete_bytes_equal": true,
+  "source_clean": true,
+  "fixture_bytes_and_metadata_unchanged": true,
+  "source_hashes": {
+    "frontier/cc_backend/collective_plan.py": "690b20dde386e092cbc549a40569f11e2b1b76f341c9b7eed850ee0ccc581b1d",
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": "e763fb0523c21b947faf5e15749824461cd1b2f4ffec464e76d15d16be312e49",
+    "frontier/execution_time_predictor/moe_routing_workload.py": "9942587be5803af284e1e5b581f3096d87de3f70453c477d793e4fe344701017",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "4b2bea957a37a92705f2da081b39e95c5176376aa9c54c5649b12bb598ea8d54",
+    "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+    "frontier/entities/time_components.py": "b19f7158159d034a5e9dc090811a3026815053c8eb6615a688a72f4be9d897f2"
+  },
+  "input_hashes": {
+    "/data/ycfeng/tmp/d29_artifact_bytes_repair/verified03/candidate_setup.py": "b88526c33caf5f53e5852262ac8701bf0482ff1b49d9af4987aa7f648cd20091",
+    "/data/ycfeng/tmp/d29-parent-position-main08/offline/command.json": "4cb47eb98d3cfee78e087495dc84e79392a0471a5d79803078aeaa79bf15a9bf",
+    "/data/ycfeng/tmp/d29_main08_residual_repro/parent-layer60-source.json": "23486bceac94e23e6bab2dc8c851300ed353bc71000e1ba6aa2e28b393655694",
+    "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_collectives/h800/collective_local.json": "447e697340d77c205e7457eb50c7b63c47ab103ba77c7f52e7c5fe844498ca90"
+  },
+  "artifact_hashes": {
+    "probe.py": "22fa85a44628699f9faae53f8eefaf409db1e2a844bc54b76112bce007084b69",
+    "compare.py": "a2518a1fcc8ed907633353f6db0f0ad9f0b928b40eaba30e07465fa84ea185b7",
+    "live_checks.py": "1088d6bce295253a0549dc068181b5333087acc4ed4a5778868f5fd6762b2c38",
+    "verify.py": "fc3d9a6085c94d76fbecd506cdf6003852562ac1a0cda55c9010d62638d1c0f1",
+    "current-a3/result.json": "d714abf131a23d9cf7b6316cb526d248ed6cb7653eb6202f1c64f505c060c19d",
+    "current-a3/warm.prof": "c1934130ddced88f41ec4499265aa042825422fcde23a5641107b3284405ddb9",
+    "current-a3/pricing_payload.json": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "current-a3/ledger.json": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+    "key-a/result.json": "e88a4d9d9fe5b91c15e5a9455e62a549f43b66c87b81fb610ddf4a9614c12371",
+    "key-a/warm.prof": "a3f7ab08bb7914665ab4eeed54b7b9b379ef3386ee5e2b89b209b1f75ddda0dc",
+    "key-a/pricing_payload.json": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "key-a/ledger.json": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+    "current-b/result.json": "d59761ef36c1834457b20bc696120ce5ccf98901497d6643646be746a5d75beb",
+    "current-b/warm.prof": "f5f141052cc0de95ea84f4471693288ce0a9c7b9bbe6ee8441f156365fbb6b24",
+    "current-b/pricing_payload.json": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "current-b/ledger.json": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+    "key-b/result.json": "c224639312f80cef4854338a1a064b1285f53ae7ce3a926061fff4c0dcfbeb8b",
+    "key-b/warm.prof": "e0fa093ec8a64b22e78a19428cd4d6c596e6d0047bdf0e57607a9c1e90216bd1",
+    "key-b/pricing_payload.json": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "key-b/ledger.json": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf"
+  },
+  "harness_failures_not_correctness_red": [
+    "red.log: user systemd scope unavailable; red-system.log: interactive auth required; sudo -n scope succeeded",
+    "current-a.log: public communication getter deepcopies plans, so public identity assertion was invalid; compare retained plans instead",
+    "current-a2.log: output came from later waves with newly generated IDs; compare identical first-wave IDs",
+    "live-current.log: reconstructed manager still selected last-loaded KERNEL_ONLY family; registry replacement requires explicit CUDA_EVENT family",
+    "live-current2/live-current3:6148 and7000 are measured source points, not missing-point negatives; compare fresh full routing source instead"
+  ],
+  "verification_limits": "CPU fixture collective branch and existing loaded exact tables, not native qualification/network evaluation; no CLI/training/GPU work; no snapshot constructor wiring; no production/test edits; no allocation or full-run scaling assumed"
+}

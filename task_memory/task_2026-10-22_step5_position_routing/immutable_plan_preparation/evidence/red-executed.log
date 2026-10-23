@@ -1,0 +1,88 @@
+Running scope as unit: run-r445f60ba766743afa99bf81e94fc33ef.scope
+WARNING 01:31:47 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+WARNING 01:31:47 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+
+{
+  "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+  "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+  "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+  "adapter": "ONE SINGLE-ROLE DIAGNOSTIC FIXED-FILE-BYTE ADAPTER, not run-wide P/D snapshot",
+  "fixed_file": "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_collectives/h800/collective_local.json",
+  "fixed_sha256": "447e697340d77c205e7457eb50c7b63c47ab103ba77c7f52e7c5fe844498ca90",
+  "timings": [
+    {
+      "index": 0,
+      "pricing_s": 0.959068697411567,
+      "profiled": false,
+      "key_calls": 200,
+      "distinct_keys": 8,
+      "key_repetitions": 192,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 1,
+      "pricing_s": 0.16705512069165707,
+      "profiled": false,
+      "key_calls": 192,
+      "distinct_keys": 8,
+      "key_repetitions": 184,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 2,
+      "pricing_s": 0.16900703683495522,
+      "profiled": false,
+      "key_calls": 192,
+      "distinct_keys": 8,
+      "key_repetitions": 184,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 3,
+      "pricing_s": 0.43872949481010437,
+      "profiled": true,
+      "key_calls": 192,
+      "distinct_keys": 8,
+      "key_repetitions": 184,
+      "fixed_byte_requests": 80
+    }
+  ],
+  "warm_unprofiled_median_s": 0.16803107876330614,
+  "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+  "fixture_unchanged": true,
+  "verdict": "RED: repeated identical plan-key preparation"
+}
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/d29_immutable_plan_preparation/probe.py", line 131, in <module>
+    assert not timings[-1]['key_repetitions'], result['verdict']
+AssertionError: RED: repeated identical plan-key preparation
