@@ -1,0 +1,23 @@
+{
+  "source_revision": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "strict77": {
+    "status": "PASS",
+    "identical_cases": 77,
+    "comparison_differences": 0,
+    "artifacts_rehashed_per_side_by_regression_worker": 451,
+    "cache_filenames_per_side": 519,
+    "owner_receipt": "../performance_regressions/evidence/strict77/final05_receipt.json",
+    "owner_receipt_sha256": "3e7bee2a061b194ed68f6e6f8247e04cc27d461bec5f2a973fc7d9b11f77fd5e",
+    "parent_verification": "Reparse source-bound receipt,77 actual results.jsonl records per side,all-zero comparison counts,matching environment and all5manifest/results/comparison hashes",
+    "parent_checker_correction": "First checker assumed results.json and raised FileNotFoundError;actual harness uses results.jsonl. Filename corrected and checks pass;no evidence or product change"
+  },
+  "short_selections": [
+    {"selection": "supplement101", "pass": 101, "fail": 0, "error": 0, "skip": 0, "junit_s": 9.085, "junit_sha256": "c737103625561322677d4f0a2348ac00027ac79dff52650aa2e24f7bcaff092d"},
+    {"selection": "metadata196", "pass": 197, "fail": 0, "error": 0, "skip": 0, "junit_s": 6.346, "junit_sha256": "9dbb37c26673bac22f0f4cae049e241e3683580fc2d46e3b33332171ed566671", "note": "Historical selection label retained;actual count grows by the new artifact parsing regression"},
+    {"selection": "catalogue53", "pass": 53, "fail": 0, "error": 0, "skip": 0, "junit_s": 3.258, "junit_sha256": "f49ad274e3f712156ab320407dea1fd02da7fe5b9682d0bf1736347c84e39f5c"}
+  ],
+  "parent_verification": "Read exact archived executions,rehash selected evidence manifest,reparse three original JUnit XMLs,check clean79 source before/after and successful exits",
+  "counts_are_not_summed": true,
+  "full_unit_and_full_cli": "PENDING_NOT_INCLUDED",
+  "native_gpu_g3_e2e": "NOT_QUALIFIED"
+}

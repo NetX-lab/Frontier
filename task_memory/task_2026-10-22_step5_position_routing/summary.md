@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Record feature consolidation and accepted fresh79 strict77/short/T2 static receipts;full-unit/main08 unfinished. |
 | 2026-10-23 | Accept all performance components,freeze79f1a3fd and start final-source CLI/regression/T2 checks after exact9254 audit. |
 | 2026-10-23 | Parent verifies group-reuse delivery;loader/parser repairs and corrected startup accounting continue. |
 | 2026-10-23 | Parent verifies group-resolution hotspot;start bounded CORE repair and two independent read-only residual investigations. |
@@ -34,8 +35,11 @@ parser43/50 are also accepted after both reviews and parent29/52/128PASS separat
 All code is merged and frozen at79f1a3fd in integrated06. Integrated actual-point
 payload bytes remain identical with88 descriptions and20reads/1decode acrossfive
 calls. Measured111-path accounting is9240source/9254global,zero violations.
-main08 fullCLI,freshstrict77/full-unit/supplement gates and isolated T2rebinding
-now run against79. Their completion is pending. Early-init attribution remains
+Feature mergecf894fa4 preserves exact79 source bytes. Freshstrict77 is77/77;
+parent short selections101/197/53PASS and T2static63/26PASS are accepted separately.
+T2recordsa886466c bind79/integrated06 and covered H800 authority;target staging
+and seal remain blocked on workflow. main08 fullCLI and full-unit run against79;
+their completion is pending. Early-init attribution remains
 partial;no additional implementation or hash-identity change is authorized.
 Task-required H800 authority is already granted;workflow/package readiness remains.
 Whole workflow and GPU/native/

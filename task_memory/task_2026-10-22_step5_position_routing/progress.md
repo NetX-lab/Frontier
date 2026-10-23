@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent verifies fresh79 strict77/short suites and T2 static63/26;feature mergecf894fa4 matches frozen code. |
 | 2026-10-23 | Accept three performance components,freeze79f1a3fd,verify integrated point/9254 accounting and start main08/fresh regressions/T2 rebinding. |
 | 2026-10-23 | Parent verifies delivered model-group71/105 repair:81PASS/1existingSKIP and actual cold/warm88/0 descriptions;two-axis review in progress. |
 | 2026-10-23 | Verify minimal loader control;allocate loader45/parser50 repairs and retain unexplained startup interval for diagnosis. |
@@ -116,6 +117,21 @@
   is normalized. Freshregressions:ses_e98925887ffecetw6nTB6nD8f0,
   performance_regressions/. T2rebind:ses_e9b3f65b5ffeMAo4OpbcxD9LIV,isolated tree.
   Final-source runtime and native qualification remain unverified until receipts.
+- completed: feature code consolidationcf894fa41b13715312db909cee5d338fca667fac;
+  source/data/tests/Dockerfile/size-note bytes equal frozen79. Parent documentation
+  freeze/archive13ea12d4 and component acceptance5498bdd4 are committed separately.
+- completed/fresh79: strict77 final05 is77/77 identical,451 artifact hashes and
+  519 cache filenames per side. Parent reparses actual77-row JSONL inventories
+  and source-bound receipt,rehashes both manifests/results plus comparison.
+  Three separate parent-verified XML selections:101PASS/9.085s,
+  197PASS/6.346s,53PASS/3.258s;zeroFAIL/ERROR/SKIP. The historical metadata196
+  label now includes one new parser test. Machine receipt:
+  resumed_performance/short_gate_acceptance.json. Full-unit is still pending.
+- completed/static79: T2recordsa886466c,isolatedstep5-d29-t2-performance. Parent
+ 63/63checksum and26fullfile SHA/Git79/frozen06/records-disk comparisons PASS;
+  no source/test change,11records only,clean. Index571fb0c6b33ad0f498e986716568f43c52ab9dfbfd51e246bd7ef3df287a6b62.
+  Recorded16H800/2nodes/1800s authority is covered;readiness/capacity/staging/seal/
+  submission remain false. Receipt:resumed_performance/t2_binding_receipt.json.
 - completed: D29-E41-FINAL-REGRESSIONS records committed b5a74416/5ceb68c9.
   strict77 final04 is77/77 identical,451 artifact hashes and519 cache filenames per
   side. Full unit:8015PASS/279FAIL/32ERROR/281SKIP,raw exit1. The exact historical

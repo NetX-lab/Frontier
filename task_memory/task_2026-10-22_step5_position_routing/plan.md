@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Consolidate feature codecf894fa4;parent accepts fresh77/77 and101/197/53 plus T2 static63/26;full-unit/main08 pending. |
 | 2026-10-23 | Close all three performance reviews/parent checks;freeze79f1a3fd and start main08/fresh regressions/T2 rebinding. |
 | 2026-10-23 | Allocate disjoint loader45/parser50 repairs;diagnose remaining startup time and carry H800 authority forward. |
 | 2026-10-23 | Parent confirms repeated group-resolution hotspot;allocate three-path CORE repair<=105 gross through a zero-sum overlay. |
@@ -73,12 +74,12 @@ and its own faithful short loop. See early_init_repro/report.md.
 | CORE/SOURCE46 | Group/loader repairs closed;3970/4404 measured on79. Parent81/1oldskip,2,29,52 recorded separately. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Exact-current-text parsing repair closed;parent128PASS;3920/3956 measured. |
-| Complete integration and final freeze | Complete:79f1a3fd frozen clean in verify-step5-d29-integrated-06,gitlink3dac53c. Feature-branch consolidation follows parent records. |
-| Legacy strict77 | Fresh final05 on79 in progress. Final04 e41 remains77/77 with451 artifact hashes and519 cache names per side. |
+| Complete integration and final freeze | Complete:79 frozen in integrated06,gitlink3dac53c;feature mergecf894fa4 source bytes identical. |
+| Legacy strict77 | Fresh final05 on79 accepted77/77,451 artifact hashes and519 cache names per side;parent receipt hashes/records match. |
 | Full-unit failure/error-set gate | Fresh parent05 on79 in progress,including environment/metadata/catalogue suites. Accepted e41 historical failure sets remain the comparison reference. |
 | Fresh fixture and full CLI | main08 running on79,original6144/1024 and2400s per mode;all9 launch input hashes match main07. |
 | Independent source review | All three performance components No findings on both axes;group coverage-record P2 corrected37c7832e and re-review closed. |
-| T2 final-source binding | Rebinding79/integrated06 in isolated tree;prior e41 static63/26PASS retained. Physical staging/seal follows CLI completion. |
+| T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
 | Final per-path accounting | 79 remeasured:111 allocated/110 changed,9240 source/9254 global,zero path/owner violations. New steps152gross/138retained. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
