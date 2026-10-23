@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-H800-AUTHORITY-DOCS: recorded YC's approved first32-H800 run and standing task-required H800 resource authority; package/source/image and runtime checks remain prerequisites, CPU implementation unchanged. |
 | 2026-10-23 | Root traced the real P0 replay path and specified the remaining driver boundary before a GPU proposal. |
 | 2026-10-23 | H source/CPU accepted at64f3c950; recorded startup-to-window retention coordination for G2. |
 | 2026-10-23 | Specified the first-formal window, native iteration controls, separate collector retention and direct root ownership after both delegation attempts failed. |
@@ -28,11 +29,13 @@ The profile API fanout to headless DP peers and all TP workers is already traced
 - Align collector retention with the selected profiler window. At f8621a8, the collector begins observing during worker/model startup, retains capture/warmup records, and emits without resetting its buffers; it does not hook Worker.profile. Consequently /start_profile alone does not start a fresh collector budget. G2 must explicitly account for earlier records and prove that the chosen window's step/ownership/synchronization records survive the records/bytes limits.
 - Avoid silently replacing fixed per-rank profiler summary files across windows. Timestamped traces and the window mapping must remain identifiable. CPU restart evidence does not qualify GPU CUPTI restart under graphs.
 
-## Exit conditions for the GPU proposal
+## Current authority and package prerequisites
 
-H's source/CPU review is accepted at64f3c950 (`collector_primary/primary_acceptance.json`); real installed execution and GPU mapping remain runtime gates. G2 source `05952396` passed the required actual-callsite CPU tests, independent re-reviews and fixed-source regression (`driver/primary_acceptance.json`). The proposal specifies source, frozen workload, profiling limits, artifact-volume accounting, runtime unknowns, GPU count and duration. A new GPU decision and fresh package/image checks are still required before launch.
+H's source/CPU review is accepted at64f3c950 (`collector_primary/primary_acceptance.json`); real installed execution and GPU mapping remain runtime gates. G2 source `05952396` passed the required actual-callsite CPU tests, independent re-reviews and explicitly bound existing77-case matrix (`driver/primary_acceptance.json`); no new matrix capture. Accepted CPU source05952396 and recordsb8fe6b2d remain unchanged.
 
-No driver code or GPU run is authorized by this design beyond the existing CPU implementation scope. The exact implementation allocation and new run resources remain recorded at their respective steps.
+YC's D-V4-H800-RJOB-AUTHORITY in [requirements.md](requirements.md) approves the current32-H800/codesign/non-preemptible, maximum60-minute/32GPUh, first-formal64worker-step run in [proposal.md](proposal.md). Task-required H800 RJobs of any necessary scale need no repeated resource approval; subsequent runs retain a concrete purpose/resource/evidence plan and respect actual quota/capacity. The design itself grants no authority, and resource approval does not change source/native/C26 approval, calibration predicates, publication, broad CUPTI investigation, CPU-overhead collection or paused GLM scope.
+
+Next: fresh diagnostic package/source/image checks and quota verification, then seal/submit/monitor and retained-evidence checks. No new package is sealed or run submitted; package/runtime/GPU qualification remains pending. The first window preserves P16+D16/TP8/DP2/EP16/PP1, native V2,MXFP4/MARLIN,balanced_topk and the frozen workload. Actual coverage, event/stream/PDL/graph evidence and observation failures remain runtime gates; missing evidence stays UNVERIFIED and auxiliary gates cannot interrupt healthy workload. Native06 remains ACCEPTED_NATIVE_REFERENCE_R4, not replaced by this diagnostic; old R3 FAIL/native05 UNVERIFIED, GLM pause and official mean/30%/10% gates remain unchanged. The handoff is informational while work continues in this session.
 
 ## G2 implementation decision
 

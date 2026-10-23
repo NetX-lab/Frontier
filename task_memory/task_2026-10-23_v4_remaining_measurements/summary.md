@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-H800-AUTHORITY-DOCS: archived approved first32-H800 profiling plan and standing task-required H800 resource authority; package/runtime/GPU qualification remains pending and no new run is submitted. |
 | 2026-10-23 | Archived the accepted input component and current collector/measurement dependencies. |
 | 2026-10-23 | Archived accepted H collector integration64f3c950 and the final G2 continuation boundary. |
 | 2026-10-23 | Recorded G2 source/CPU implementation and review repairs; independent follow-up and final acceptance remain pending. |
@@ -31,6 +32,8 @@ G2 driver source `05952396` is **ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT**, with 4
 
 Both R1 reviews closed all three distinct defects with no new findings. Final suites separately pass: collector 32, worker 19, streaming 39, inventory 28, V2 inventory 45, reader 135, DP harness 75, P/D harness 68, manifest 14, cold-start 18, client metrics 24 and canonical HTTP 1; all have zero errors/failures/skips. The cold-start repair corrects a baseline-reproduced staged dependency mismatch. `driver/review_initial.md` and `driver/test_report_2026-10-23_driver.md` retain findings and RED/GREEN evidence. The old startup-only retention statement describes H64f3c950 and is superseded by G2.
 
-`proposal.md` is ready for a separate user GPU decision: one 32-H800 job, at most 60 minutes/32 GPUh, using the existing P16+D16 topology and a first-formal 64-worker-step native profiling window. No GPU allocation or package seal exists for this collection. Full runtime/coverage/stream/PDL/graph checks, serving totals and numerical qualification remain open.
+[requirements.md](requirements.md) records YC's exact response: “批准；h800集群的的运行无需向我过问，允许你提交符合任务需求的任意规模的rjob（在h800上）”. D-V4-H800-RJOB-AUTHORITY approves the first32-H800/codesign/non-preemptible run in [proposal.md](proposal.md), at most60minutes/32GPUh, P16+D16/TP8/DP2/EP16/PP1 and first-formal64worker steps. Task-required H800 RJobs of any necessary scale need no repeated resource approval; subsequent runs record their concrete purpose, resources and evidence and respect actual quota/capacity. This approval does not alter calibration predicates, native/C26 source authority, publication, broad CUPTI investigation, CPU-overhead collection or paused GLM scope.
 
-Serving totals, complete kernel attribution, actual stream dependencies, graph/TP8/PD cost equivalence, balanced decode coverage and four-metric calibration are still open. Native06 remains the admitted R4 reference. GLM remains paused, and CPU-overhead work stays last. No new GPU allocation was used or authorized in this phase.
+Next: fresh diagnostic package/source/image and quota verification, then seal/submit/monitor and retained trace/inventory/client/terminal checks. Accepted CPU source05952396 and recordsb8fe6b2d remain unchanged; no new package is sealed, run submitted or allocation used for this collection. Package/runtime/GPU qualification is pending. Full runtime/coverage/stream/PDL/graph checks, serving totals and numerical qualification remain open; auxiliary observation failures stay soft and affected evidence UNVERIFIED.
+
+Serving totals, complete kernel attribution, actual stream dependencies, graph/TP8/PD cost equivalence, balanced decode coverage and four-metric calibration are still open. Native06 remains ACCEPTED_NATIVE_REFERENCE_R4; old R3 FAIL/native05 UNVERIFIED and official mean/30%/10% gates are unchanged. GLM remains paused, CPU-overhead work stays last, and the handoff is informational while work continues in the same session. Historical approval-pending entries in Modification History preserve their original phase, not current authority.

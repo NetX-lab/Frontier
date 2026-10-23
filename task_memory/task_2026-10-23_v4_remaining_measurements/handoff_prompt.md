@@ -4,11 +4,24 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-H800-AUTHORITY-DOCS: added current approved H800 authority and packaging route above the immutable historical H prompt; handoff remains informational during same-session work. |
 | 2026-10-23 | Prepared the next-session prompt; final collector closure is recorded in progress.md and the acceptance receipts. |
 | 2026-10-23 | Bound the prompt to accepted H sourcef8621a8/integration64f3c950 and final merged checks. |
 | 2026-10-23 | Marked the H handoff historical after YC resumed this session and G2 CPU source 05952396 was accepted. |
 
-Historical H close-out prompt. YC requested continuation in the current session; this prompt was not executed. G2 CPU implementation has since been accepted at `05952396`. Read current `progress.md` and `proposal.md` for the pending GPU decision rather than following the old next-step list below.
+## Current informational continuation state — 2026-10-23
+
+YC requested continuation in this same session; this handoff is informational, not a scheduling instruction or a new transfer of execution. Read current [requirements.md](requirements.md), [plan.md](plan.md), [progress.md](progress.md) and [proposal.md](proposal.md) before using any historical prompt. G2 CPU source05952396 is ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT; accepted source05952396 and recordsb8fe6b2d remain unchanged. Its final separate suites and explicit existing77/77 matrix binding are recorded in `driver/primary_acceptance.json`; no new strict77 capture.
+
+YC's exact resource reply is “批准；h800集群的的运行无需向我过问，允许你提交符合任务需求的任意规模的rjob（在h800上）”. D-V4-H800-RJOB-AUTHORITY approves the current32-H800/codesign/non-preemptible profiling run, at most60minutes/32GPUh, P16+D16/TP8/DP2/EP16/PP1 and first-formal64worker steps. Task-required H800 RJobs of any necessary scale need no repeated resource approval; each later run records its concrete purpose, resources and evidence and respects actual quota/capacity, personal StepMind submission, local mounts, storage boundaries and auxiliary soft gates.
+
+Next is fresh diagnostic package/source/image checks and quota verification against the approved proposal, then seal/submit/monitor and retained runtime checks. No new package is sealed or run submitted; package/runtime/GPU qualification remains pending. Require actual32worker receipts, model/layout/routing/source identity, local scheduler state plus DP-synchronized descriptors/modes, real start/stop/drain outcomes and at least three distinct aligned useful logical batches for each claimed phase. The64-step window is not complete decode6143..7166 coverage. Kernel-owner completeness, event/stream mapping, actual per-kernel PDL/GDC, compile/breakable survival and captured-segment replay ownership remain unproven; missing/dropped evidence stays UNVERIFIED without stopping healthy workload.
+
+Native06 remains ACCEPTED_NATIVE_REFERENCE_R4, not replaced by this instrumented run; old R3 FAIL/native05 UNVERIFIED, balanced_topk, layout/source/routing/phase/graph/provenance refusals, official mean/30%/10% gates, GLM pause and CPU-overhead last are unchanged. Resource approval does not authorize native/C26 edits, publication, unrelated broad CUPTI investigation or CPU-overhead collection. Preserve original packages/data/frozen evidence and unrelated user work; do not reuse the spent prefill/native06 allocations as this run's authority.
+
+## Historical H close-out prompt — not executed
+
+The original text below is retained byte-for-byte. Its then-pending G2 implementation, new-GPU-approval requirement and next-session steps are superseded by the accepted G2 component and D-V4-H800-RJOB-AUTHORITY above; its technical refusals and evidence limits remain binding.
 
 ```text
 你接手 Frontier 的 GLM-5.3 / DeepSeek-V4 校准工作。先核对实际 Git 状态和下列记录，再执行下一步。

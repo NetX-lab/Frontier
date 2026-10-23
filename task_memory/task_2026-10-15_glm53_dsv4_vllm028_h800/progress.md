@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-H800-AUTHORITY-DOCS: recorded approved first32-H800 profiling run and standing task-required H800 resource authority; fresh package/source/image checks and runtime qualification remain pending, with no new submission or acceptance. |
 | 2026-10-23 | W128-G2-CLOSURE-DOCS: accepted G2 CPU profile-driver05952396, seven non-core files/433 of750 lines, three distinct findings closed and separate final suites/bound77 retained; next is a new GPU decision, not implementation or an approved run. |
 | 2026-10-23 | W128-H-CLOSURE-DOCS: H CPU collector accepted/merged64f3c950 after five finding closures; G2 replay profiling/sampling controls handed off, with no new GPU authority or full-ticket acceptance. |
 | 2026-10-23 | W128-V4-INPUT-INTEGRATION-RECORDS: isolated private input merged732406aa, real94 automatic/explicit equality and bound strict77; full serving/cost gates remain open, H collector launch wiring in progress. |
@@ -180,7 +181,7 @@
 
 ## Routing milestone — current (2026-10-23)
 
-Latest CPU completion and next action: [G2 profile-driver closure — current](#g2-profile-driver-closure--current-2026-10-23). The dated H launch and H-only handoff snapshots below are historical.
+Latest CPU completion, approved H800 authority and package-preparation action: [G2 profile-driver closure — current](#g2-profile-driver-closure--current-2026-10-23). The dated H launch, H-only handoff and earlier GPU-approval-pending snapshots below are historical.
 
 - completed: A186dfef accepted after218root tests/independent review/strict77 identical, merged292c489. C8c2502c runner-values P2 accepted after real producer/consumer negatives,22affected tests and independent recheck; merged84c806f with26combined A/C testsPASS. Final prefill builder/source selection39b2bf8 gives C5files/202routing lines.
 - completed: YC approved routing23files/950lines and said `批准；类似问题不用再询问，自己决策即可`. The historical deadline ceiling952 and e9e79d4 actual950 are superseded by committed b62c155's existing model-name case-input correction (+2/-1): current actual/ceiling23/953=A432+B319+C202, dispatch491 separate. Root independently recomputed routing `evidence/final_union_b62c155.json`; original delegation/resource semantics unchanged, historical `evidence/native_builder_final.json` not rewritten.
@@ -201,7 +202,59 @@ Latest CPU completion and next action: [G2 profile-driver closure — current](#
 - completed CPU behavior: the actual `tests/comparison/calibration/pd_replay.py` path now brackets first-formal dispatch with both-head start, existing drain and both-head stop. Sampling/`serving_profile_limits` reach the worker. Selected-window retention has independent record/byte allowances and separate startup/window snapshots; a startup archive error does not prevent the new allowance. Unselected replay remains compatible, auxiliary profiling/checkpoint failures stay in profiling receipts, and native workload exceptions remain unchanged. These CPU controls do not prove complete useful-batch GPU coverage.
 - completed frozen-source verification: [final checks](../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json), Python3.12.13, separately pass collector32, worker19, streaming39, inventory28, V2 inventory45, R4 reader135, DP75, P-D68, manifest14, cold18, metrics24 and HTTP1; every suite has zero failures/errors/skips. Do not sum suites or combine them with prior H checks. The [final matrix binding](../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json) explicitly binds existing4a1b53e6 capture77/77 to05952396; NOT a fresh capture.
 - unchanged acceptance limits: runtime/GPU qualification and emitted profile output remain UNVERIFIED. Kernel/owner completeness, GPU stream mapping/dependencies, actual per-kernel PDL/GDC, event/annotation survival through compile/breakable capture and captured-segment replay ownership remain unproven; no CUPTI restart is admitted. Constructor/family admission, serving totals, TP8/DP2/EP16 cost evidence, graph/stream/kernel coverage, balanced decode and complete05/09/19 remain OPEN. Native06 retains ACCEPTED_NATIVE_REFERENCE_R4, old R3 FAIL/native05 UNVERIFIED preserved; GLM PAUSED_PENDING_USER_APPROVAL, official mean/30%/10% gates and CPU-overhead last unchanged.
-- pending next action: obtain an explicit new GPU decision on the [single-window draft](../task_2026-10-23_v4_remaining_measurements/proposal.md), then fresh package/source/image gates and one approved diagnostic run. Proposed32H800/maximum32GPUh is a draft ceiling, not authorization. No new GPU run has been requested, approved or submitted; native06 remains the clean reference, not an instrumented replacement. Any missing/dropped runtime tuples remain UNVERIFIED and auxiliary validators must not stop healthy work.
+- completed resource decision: [requirements.md](../task_2026-10-23_v4_remaining_measurements/requirements.md) records D-V4-H800-RJOB-AUTHORITY and YC's approval of the current32-H800/codesign/non-preemptible run, at most60minutes/32GPUh, first-formal64worker steps. Task-required H800 RJobs of any necessary scale need no repeated resource approval; each subsequent run records its purpose, resources and evidence and respects actual quota/capacity. This does not authorize native/C26 edits, publication, broad CUPTI investigation, CPU-overhead collection or paused GLM work, nor change calibration predicates.
+- pending next action: fresh diagnostic package/source/image checks and quota verification against the [approved single-window plan](../task_2026-10-23_v4_remaining_measurements/proposal.md), then seal, submit and inspect retained runtime evidence. Accepted CPU source05952396 and recordsb8fe6b2d are unchanged; no new package is sealed or run submitted. Runtime/package/GPU qualification remains pending. Native06 remains the clean reference, not an instrumented replacement; missing/dropped tuples stay UNVERIFIED and auxiliary validators must not stop healthy work. The handoff is informational while work continues in this session.
+
+### W128-H800-AUTHORITY-DOCS self-check
+
+## 1. 规划完成情况
+
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| 指定八份文档授权/当前状态同步 | PASS | D-V4-H800-RJOB-AUTHORITY、首轮32H800/60分钟/64worker-step及standing authority已记录；handoff仅供参考 |
+| 文本sanity、历史/验收/Git保护和diff-check | PASS | Python3.10.6只读219/219PASS；八份文档修改，历史tails、checkboxes、验收记录、HEAD/index未变 |
+
+Verification: read-only `GIT_OPTIONAL_LOCKS=0 python3 - <<'PY' ... PY` in `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`, Python3.10.6,219/219PASS/exit0. The full command is retained in this task's execution transcript. Checks cover the exact YC approval, all eight current authority/package pointers and links, unchanged original Modification History rows and checkboxes, seven historical/implementation/prompt tail hashes, CPU acceptance/existing77 matrix binding/native06 R4 bytes, protected parent records and root-owned requirements/plan/progress/proposal, exactly eight changed paths, no staging and unchangedHEAD/index. `git diff --check --` the eight owned paths passed/exit0. No source suites, strict77 capture, package/runtime/GPU/platform action or extra report file; root retains test-report and submission ownership.
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** W128-H800-AUTHORITY-DOCS派发至文档核验｜**当前前沿：** 八份文档交付；root的fresh package/source/image检查
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | 仅授权指针同步和一次focused只读核验，无扩展工具 |
+| D2 细节反复重试 | CLEAR | 文本核验首轮通过，无source/native/matrix重跑 |
+| D3 支线问题修补 | CLEAR | 只改八份指定文档，root-owned记录未动 |
+| D4 可并行任务停滞 | CLEAR | 本代理仅有文档职责；root独立拥有package工作 |
+| D5 超范围镀金 | CLEAR | 无新接口、票据、资源操作或校准条件 |
+| D6 分析空转 | CLEAR | 实际用户资源决定已落入当前记录 |
+| D7 路线违背 | CLEAR | CPU验收/历史/GLM暂停/CPU-overhead顺序和Git保护保留 |
+
+**文档检查：** S5：八份current仍要求GPU资源再次确认，与requirements.md的D-V4-H800-RJOB-AUTHORITY矛盾；已更新当前区并保留历史。S1–S4/S6在本次八份文档范围未发现新增缺陷。
+**归因：** 无执行偏离；旧授权指针滞后为S5。
+
+## 3. 纠正建议
+
+**分支：** B：spec/tickets存在状态缺陷，先更新文档再继续。
+**文档更新（先执行）：**
+1. 指定八份文档current区：写入已批准H800 authority及fresh package/runtime待验证状态；历史和完整criteria不变（可直接执行，已完成）。
+
+**需停止的偏离行为：无**
+**接下去的路线：**
+1. 本次文档交付：sanity/diff-check → 完成标志：八份current一致、历史/验收/Git保护成立；代理交付后停止写入。
+2. Root的I1→I2：fresh diagnostic package及source/image检查；可并行只读quota核验 → 完成标志：明确profile配置、source/workload/output绑定及锁定镜像检查通过，package writer停止写入。
+3. Root的I3→I4：按已批准计划seal/submit/monitor及保留证据核验 → 完成标志：实际worker/trace/client/terminal结果记录；不足证据仍UNVERIFIED，辅助错误不阻断健康workload。
+
+## 4. 最值得关注的 3 点
+
+1. H800资源已批准，无需重复询问task-required规模；后续每次运行仍需具体purpose/resource/evidence计划和quota检查。
+2. Source05952396/recordsb8fe6b2d及existing77 binding不变；未sealed新package或submitted新run，package/runtime/GPU仍待验证。
+3. Native06 R4、旧R3 FAIL/native05 UNVERIFIED、完整05/09/19开放条件及GLM暂停/CPU-overhead最后不变。
+
+The W128-G2-CLOSURE-DOCS self-check below is the retained pre-approval snapshot; its GPU-decision-pending statements are superseded by D-V4-H800-RJOB-AUTHORITY above.
 
 ### W128-G2-CLOSURE-DOCS self-check
 
