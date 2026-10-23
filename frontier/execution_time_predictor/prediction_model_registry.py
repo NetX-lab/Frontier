@@ -375,6 +375,7 @@ class PredictionModelRegistry:
         precision_key: Optional[str] = None,
         requested_identity: Optional[str] = None,
         native_binding: Optional[Mapping[str, Any]] = None,
+        include_native: bool = True,
     ) -> Optional[BaseEstimator]:
         if precision_key is not None:
             precision_key = precision_key.upper()
@@ -388,6 +389,7 @@ class PredictionModelRegistry:
             identity: candidate
             for (candidate_name, identity), candidate in source.items()
             if candidate_name == model_name
+            and (include_native or not isinstance(identity, tuple))
         }
         if requested_identity is not None:
             typed_candidates = {
@@ -540,6 +542,7 @@ class PredictionModelRegistry:
                 family_name,
                 model_name,
                 requested_identity=identity,
+                include_native=False,
             )
             if identity is not None and model is None:
                 raise ValueError(
