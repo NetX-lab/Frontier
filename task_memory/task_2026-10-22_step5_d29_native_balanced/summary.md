@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Retarget intended mount04 pending root staging,verify26bound bytes and settle85/81accounting; zero code changes. |
 | 2026-10-23 | Bind complete final60ba source/receipts in isolated records tree; preserve inputs/native bytes and unapproved resources. |
 | 2026-10-23 | Parent accepts T2 constructor/source binding and merges892b6a1 after177 PASS/15 SKIP, actual-image config values and independent No findings. |
 | 2026-10-23 | Parent accepts and integrates native19, publishes the image and supplies verified installed-source artifacts. |
@@ -16,6 +17,29 @@
 |2026-10-22|Archived actual native route and reference-invariance policy decision; no implementation or launch.|
 
 ## Current implementation outcome
+
+Current task:D29-T2-TARGET-POINTERS. Intended root staging/mount target is
+/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04,inspected HEAD
+1be91bad431d3bd886de7f5d80c19bd7e6c54a25. All26bound files equal60ba/disk/Git;
+additional P2 changes remain independently reviewed. Updated native records are
+NOT currently staged in04. Root will merge11records,repeat26byte check and seal.
+Runtime source remains60ba4c7569b7c9fd4c8f9f43a16f92249fa76181,distinct from
+inspected checkout and isolated docs commit. This owner writes neither04 nor02.
+Proposal REPO/mount/frozen pointer now04. Exact original85incremental/81retained
+accounting is settled in existing test report using actual three diffs; native
+1350/1582,source increment0. Input/image/native4/limits/resources unchanged.
+Existing static index/receipt recipe is refreshed; no final P2/runtime/GPU/
+resource qualification or launch approval is made.
+
+Current delivery hashes:proposal b27067409696ba32f6fb99167c6880fa1e107abf5c6e4a927e0a61d4ee270796;
+provenance5e92fe0f157a28b71bc46a6ddbea1dede00d102ba4d9b0825482ded2ec1c584e;
+resource5eec1231b5966911a3151e2e83a4521bd2bc356b8f99d9b62ae95b6e58591207;
+receipt09ff6b36646161d25d2fdf10de5fea903915f4a4590fae973d32867edc5f378c;
+index7dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5.
+Existing63checksums/schema/AST/bash,target04bound26 PASS;57nonpacket hashes
+unchanged,inputs unchanged. Exact original/locked-base diff and target inspection
+commands/results in test_report;raw logs under/data/ycfeng/tmp. Root stage/seal/
+P2review/resource-run decisions remain;neither target tree written by this owner.
 
 Current final source:60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Records-only
 docs/step5-d29-t2-final is isolated from active verify-step5-d29-integrated-02;

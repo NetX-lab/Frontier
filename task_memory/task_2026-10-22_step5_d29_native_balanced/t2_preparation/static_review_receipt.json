@@ -1,7 +1,25 @@
 {
-  "task_id": "D29-T2-FINAL-SOURCE-BINDING",
-  "status": "PASS_STATIC_FINAL_SOURCE_BINDING_NOT_RUN_NOT_LAUNCH_APPROVAL",
+  "task_id": "D29-T2-TARGET-POINTERS",
+  "status": "PASS_STATIC_TARGET_POINTERS_NOT_STAGED_NOT_RUN_NOT_LAUNCH_APPROVAL",
   "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+  "intended_target_review": {
+    "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
+    "checkout_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "bound_source_revision": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "records_preparation_base": "2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea",
+    "bound26": "PASS04 disk and1be91bad bytes equal60ba/local bound bytes",
+    "updated_packet_present": false,
+    "remaining": "Root stage delivered11records and repeat26check before freeze; P2 under independent review; no runtime/allocation approval",
+    "target_written": false,
+    "inspection_log": "/data/ycfeng/tmp/d29-t2-target-inspection.log"
+  },
+  "target_pointer_checks": {
+    "index_recipe": "Existing63entries:packet6/repo8/pub9/parent3/native32/original5; source and publication hashes unchanged",
+    "binding": "Read-only04disk/1be91badGit equal60ba/local for all26boundfiles; packet not yet staged",
+    "accounting": "Exact original step and locked-baseline diffs reconciled in existing test report;85stepgross and81retained increase",
+    "verification_log": "/data/ycfeng/tmp/d29-t2-target-static.log",
+    "status": "PASS26target bytes/63checksums/57unchanged nonpacket hashes/existing schema/bash; no target write or native runtime"
+  },
   "reviewer": "native owner self-check, no extra subagent",
   "environment": {
     "python_executable": "/data/ycfeng/envs/asyncopd-py312/bin/python",
@@ -126,7 +144,7 @@
     "ast_whitespace_owned_paths_budget": "PASS"
   },
   "remaining": [
-    "Root final packet acceptance/sealing and independent integration readiness; runtime source remains60ba4c",
+    "Root stage delivered records in04, repeat26byte check and seal; P2 under independent review; runtime source remains60ba4c",
     "Root actual resource/run authorization and finite-collection coordination",
     "Actual worker/mount/rendezvous/output/retention identities",
     "Actual GPU/import/library/backend/runtime/G3 evidence"

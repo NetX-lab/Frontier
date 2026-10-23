@@ -1,5 +1,5 @@
 {
-  "task_id": "D29-T2-FINAL-SOURCE-BINDING",
+  "task_id": "D29-T2-TARGET-POINTERS",
   "preparation_task_id": "D29-T2-INPUT-PREPARATION",
   "status": "CONTROLLED_INPUTS_NOT_OBSERVED_NOT_RUN_NOT_LAUNCH_AUTHORIZATION",
   "accepted_repo_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
@@ -255,9 +255,22 @@
       }
     }
   },
-  "frozen_source_worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02",
+  "frozen_source_worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
   "preparation_worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-t2-final",
   "source_identity_rule": "60ba4c remains the runtime source identity; subsequent isolated task-record commits do not replace it. Full bound source/publication bytes must remain equivalent",
+  "intended_staging_target": {
+    "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
+    "inspected_checkout_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "bound_runtime_source_revision": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "records_preparation_base_revision": "2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea",
+    "records_delivery_revision": "This task's isolated records commit, recorded in progress/summary; not the runtime source revision",
+    "updated_records_staged": false,
+    "staging_owner": "Root will merge these11 existing native record paths into04, then repeat26 full-file equivalence before final freeze",
+    "inspection_result": "PASS all26 bound files:04 disk and1be91bad Git bytes equal60ba Git and local bound bytes; current04 packet remains old",
+    "p2_qualification": "Quantization-manager P2 and additional checkout files remain under independent review; no full checkout/runtime qualification inferred",
+    "target_write_in_this_task": false,
+    "prior_mount_pointer": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02"
+  },
   "previous_accepted_binding": {
     "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
     "frozen_worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01",

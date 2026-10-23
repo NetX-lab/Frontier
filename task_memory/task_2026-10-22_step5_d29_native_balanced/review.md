@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Review intended04 pointers/pending staging and read-only26source equality; exact incremental/retained quota explanation in existing test report. |
 | 2026-10-22 | Close all four design findings after c9e9274; correct the proxy path and record parent budget verification. |
 | 2026-10-22 | Record four independent design findings and assign corrections before scope approval. |
 | 2026-10-23 | Record four implementation-review repairs, CPU evidence and unverified live boundaries. |
@@ -10,7 +11,25 @@
 | 2026-10-23 | Review two-file engine-limit flow, host regressions and85 gross delta; actual-image review remains root-owned. |
 | 2026-10-23 | Review records-only final source60ba binding, full-file comparison and controlled helper obligations; no runtime execution. |
 
-## D29-T2-FINAL-SOURCE-BINDING static review
+## D29-T2-TARGET-POINTERS static review
+Original native owner reviews existing11record paths only,isolated branch at
+2adbf9f2. Read-only04HEAD1be91bad/disk/Git matches all26bound60bafiles; current
+04packet differs from delivered native records. Corrected REPO/mount/frozen
+pointers select04as intended root staging target,not a currently staged packet.
+Runtime60ba,checkout1be91bad and records revisions are explicitly distinct.
+Neither04nor02written. P2 changes remain independent-review scope,not approved
+by bound-file equality. Accounting settled via exact original/locked-base diffs
+in test report; scope receipt unchanged/native1350/1582. Existing63-entry hash
+recipe/receipt refreshed,controlled manifest unset/input/native4/resource limits
+unchanged. Root must stage11records,repeat26check and seal; no runtime/launch
+approval or extra agents/suites/network/platform actions.
+
+Final static result:63/63checksums,57unchanged nonpacket hashes,04bound26,
+schema/AST/bash PASS. Index7dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5.
+No additions/deletions to code/native inputs. Deliver existing11record paths;
+root retains final staging/source/P2independent review obligations.
+
+## D29-T2-FINAL-SOURCE-BINDING static review (historical)
 
 Reviewer: original native owner, no delegated reviewer. Scope: existing native
 task records/T2 preparation only, isolated docs/step5-d29-t2-final based on

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Retarget intended root staging04, verify26 actual full files and reconcile exact85incremental/81retained gross. |
 | 2026-10-23 | Record owned CPU, D30, source/image-context and static graph results. |
 | 2026-10-23 | Record reviewer repair red/green/affected checks, exact quota and narrower graph evidence. |
 | 2026-10-23 | Append documentation/input-only T2 static conformance and resource proposal evidence. |
@@ -396,6 +397,10 @@ path passed final02. No test/production/artifact byte modification for this erro
 
 ## D29-T2-FINAL-SOURCE-BINDING
 
+The source-comparison evidence below is historical. Current intended mount target
+is04 as recorded in D29-T2-TARGET-POINTERS below. The reusable static command reads
+the current provenance pointer rather than hardcoding02; source identity stays60ba.
+
 Frozen source60ba4c7569b7c9fd4c8f9f43a16f92249fa76181; prior packet662849e99223c98b9ea0d47d34783c3977cb3282.
 All new commands run in isolated `/data/ycfeng/Frontier/.worktrees/step5-d29-t2-final`,
 branch docs/step5-d29-t2-final. Active integrated-02 CLI/fidelity worktree never
@@ -485,7 +490,7 @@ for t in trees:
 assert plans[0]==plans[1] and plans[1]['topology']['world_size']==16
 for name in files:
     if name.endswith('.py'):ast.parse((repo/name).read_text())
-blocks=(packet/'execution_proposal.md').read_text().split('```bash\n')[1:];assert len(blocks)==2 and 'unset FRONTIER_STEP5_PROFILE_MANIFEST' in blocks[0] and 'REPO=/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02' in blocks[0]
+blocks=(packet/'execution_proposal.md').read_text().split('```bash\n')[1:];assert len(blocks)==2 and 'unset FRONTIER_STEP5_PROFILE_MANIFEST' in blocks[0] and 'REPO='+p['frozen_source_worktree'] in blocks[0]
 for block in blocks:subprocess.run(['bash','-n'],input=block.split('```')[0],text=True,check=True)
 subprocess.run(['bash','-n',str(repo/'tests/integration/step5_profiling/run_on_worker.sh')],check=True)
 assert not r['suggested_allocation']['approved'] and r['topology']['total_gpus']==16 and r['suggested_allocation']['wallclock_seconds']==1800 and r['suggested_allocation']['max_gpu_hours']==8
@@ -550,3 +555,93 @@ Expected/observed:26full files byte-identical60ba,63checksums PASS,11native-reco
 paths only,production/tests/native4 diff0,clean; runtime source60ba/indexSHAa4bed10c...
 unchanged. Re-execute this exact documented block after final handoff-record commit;
 packet is unchanged and no runtime/suite action is introduced.
+
+## D29-T2-TARGET-POINTERS
+
+Records-only follow-through on isolated docs/step5-d29-t2-final,starting docs HEAD
+2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea. Intended staging target04 was inspected
+read-only at1be91bad431d3bd886de7f5d80c19bd7e6c54a25. All26 full bound files
+equal04disk,1be91badGit,local bound files and60baGit. Neither04 nor02 is modified.
+Runtime source identity remains60ba4c7569b7c9fd4c8f9f43a16f92249fa76181;
+checkout1be91bad and eventual delivered docs commit are distinct revisions.
+Updated11native records are NOT yet in04; root will stage and repeat26byte check
+before final freeze. P2 checkout changes remain independently reviewed,not a
+full-tree/runtime qualification. Native1350/1582 and source/test increment0.
+
+### Exact85incremental versus81retained accounting
+Inspected full original diff6ebb038->a5e5189 and locked baseline1aee0af diffs:
+```bash
+git diff --numstat 6ebb038 a5e5189 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+git diff 6ebb038 a5e5189 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+git diff --numstat 1aee0af 6ebb038 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+git diff --numstat 1aee0af a5e5189 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+```
+| Existing owned path | Original step add/delete | Step gross | Locked-base before add/delete | Locked-base after add/delete | Retained gross increase |
+| --- | --- | --- | --- | --- | --- |
+| graph script |15/2|17|293/0|306/0|13|
+| native-position unit |68/0|68|245/0|313/0|68|
+| Total |83/2|85|538/0|619/0|81|
+
+Both files are absent from locked baseline1aee0af. The original step replaces two
+lines previously introduced by this native stream: create_native_config(args)
+and direct external_launcher EngineArgs construction. Its15added lines include
+the two replacement lines; deleting the old2lines reduces previously retained
+native additions. Per-stepgross=83+2=85,locked-base growth=83-2=81. Difference4
+is the two deletions counted positively in step gross but negatively in retained
+growth,not omitted source edits. All other baseline/native4 paths are unchanged
+by a5e5189,so1269+81=1350. Original step reserve<=100 and total<=1582 both hold.
+No scope receipt change; this single report records the reconciliation.
+
+### Read-only target/source and index recipe
+Exact target inspection/accounting log:/data/ycfeng/tmp/d29-t2-target-inspection.log.
+It includes all26file hashes,04packet-before hashes,and complete original diff.
+Current04has old provenanceb91d28d4...,proposale74453d7...,indexb0748012...,
+resourcea52f71fc...,not the accepted2adbf9f2packet. Pointers now select04 only
+as root's intended future staged mount; no claim records are already present.
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY' > /data/ycfeng/tmp/d29-t2-target-static.log 2>&1
+import hashlib,json,subprocess
+from pathlib import Path
+repo=Path.cwd();task=Path('task_memory/task_2026-10-22_step5_d29_native_balanced');packet=task/'t2_preparation';p=json.loads((packet/'provenance.json').read_text());r=json.loads((packet/'resource_proposal.json').read_text());s=json.loads((packet/'static_review_receipt.json').read_text())
+target=Path(p['frozen_source_worktree']);revision='1be91bad431d3bd886de7f5d80c19bd7e6c54a25';source='60ba4c7569b7c9fd4c8f9f43a16f92249fa76181'
+assert str(target)=='/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04'
+assert subprocess.check_output(['git','-C',str(target),'rev-parse','HEAD'],text=True).strip()==revision
+assert p['accepted_repo_commit']==r['source_commit']==s['source_commit']==source
+assert p['intended_staging_target']['inspected_checkout_revision']==r['intended_checkout_revision']==s['intended_target_review']['checkout_revision']==revision
+assert not p['intended_staging_target']['updated_records_staged'] and not s['intended_target_review']['updated_packet_present']
+assert r['mount_proposal'][0]['source']==r['mount_proposal'][0]['target']==str(target)
+paths=list(p['script_sources'])+list(p['supporting_repository_sources']['sources'])+list(p['publication_artifacts'])+list(p['parent_acceptance_artifacts'])+[str(task/'native_source'/x) for x in json.loads(Path('task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json').read_text())['derived_source_sha256']]+[str(packet/'cases.json'),str(packet/'model_metadata/config.json')]
+assert len(paths)==26
+for path in paths:assert Path(path).read_bytes()==(target/path).read_bytes()==subprocess.check_output(['git','show',revision+':'+path])==subprocess.check_output(['git','show',source+':'+path])
+for name in ('provenance.json','execution_proposal.md','hashes.sha256','resource_proposal.json'):assert (target/packet/name).read_bytes()!=(packet/name).read_bytes()
+index=(packet/'hashes.sha256').read_text().splitlines();assert len(index)==63
+for row in index:
+    h,name=row.split(None,1);assert hashlib.sha256((packet/name).read_bytes()).hexdigest()==h
+blocks=(packet/'execution_proposal.md').read_text().split('```bash\n')[1:];assert len(blocks)==2 and 'REPO='+str(target) in blocks[0] and 'unset FRONTIER_STEP5_PROFILE_MANIFEST' in blocks[0]
+for block in blocks:subprocess.run(['bash','-n'],input=block.split('```')[0],text=True,check=True)
+assert not r['suggested_allocation']['approved'] and r['topology']['total_gpus']==16 and r['suggested_allocation']['wallclock_seconds']==1800 and r['suggested_allocation']['max_gpu_hours']==8
+print('PASS04bound26/old-target-packet/distinct-revisions/pointers/63hashes/bash2/resource-unapproved; no target writes/runtime')
+PY
+```
+Index regeneration uses the existing recipe: packet6,repo8,pub9,parent3,native32,
+original provenance5 full-file hashes,63lines. Only packet hashes may change;
+source/publication/original hashes stay unchanged. Reusable final static command
+above also checks existing schema/AST/export2907/backend12/pins53/native4.
+Environment remains stdlib Python3.12.13 with no Torch/vLLM imports,suites,network
+or runtime. Root stage/seal/readiness/P2review and resource/run authorization remain.
+
+Observed: both documented static blocks PASS,existing63checksums and04bound26
+PASS,AST/schema/bash PASS. 57nonpacket hashes unchanged from2adbf9f2;only4packet
+document hashes changed,model_metadata/cases unchanged. Existing11record paths
+only,code0/native1350/1582. No target writes. One records patch failed stale-line
+verification and applied no partial edits; reread exact heading/reapplied.
+Preparation docs base was resolved with git rev-parse2adbf9f2 rather than inferred.
+Current delivery packet hashes/index are recorded in summary;commit is isolated,
+not runtime source identity. Root must stage and repeat final26byte check.
+
+Final index SHA2567dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5.
+Both existing documented blocks rerun after receipt/index refresh PASS. Final63
+checksums plus target26/schema/shell conformance PASS;source/native4/metadata/
+cases/publication/resource triple unchanged. Expected source/code delta0 observed;
+native1350/1582 unchanged. Final checkout/records/source revisions remain distinct.

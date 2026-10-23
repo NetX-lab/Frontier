@@ -3,12 +3,13 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Retarget intended root-staged mount/REPO to integrated-04;26 full bound bytes equal60ba, updated packet not yet staged. |
 | 2026-10-23 | Bind full final integrated source/receipts at60ba4c; preserve inputs and add the required clean controlled-T2 manifest environment. |
 | 2026-10-23 | Root accepts constructor/CPU values and rebinds full integrated files at662849e; run approval remains pending. |
 | 2026-10-23 | Prepare existing-schema inputs and exact commands; no run/resource approval or execution. |
 | 2026-10-23 | Bind retained serving triple through both pre-construction paths; host flow PASS, root integration/image check pending. |
 
-TaskID: D29-T2-FINAL-SOURCE-BINDING, following D29-T2-ENGINE-LIMITS.
+TaskID: D29-T2-TARGET-POINTERS, following D29-T2-FINAL-SOURCE-BINDING.
 Status: **PROPOSAL ONLY / NOT RUN**.
 Root accepts this controlled-input/code bundle and still requires actual run/resource
 authorization after remaining implementation readiness. Only root-directed
@@ -16,10 +17,17 @@ two-file limit binding is added; no new numerical state tolerance, mode or harne
 
 ## Identity and controlled inputs
 
-- Final integrated source:60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Frozen source
-  worktree is `/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02`.
-  CLI/fidelity work is active there; this preparation never writes/checks out/
-  commits in that tree. Records are prepared in isolated `step5-d29-t2-final`.
+- Bound runtime source:60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Intended root
+  staging/mount worktree is `/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04`,
+  inspected checkout HEAD1be91bad431d3bd886de7f5d80c19bd7e6c54a25. All26 bound
+  full files in that checkout/disk are byte-identical60ba. Additional P2
+  quantization-manager/tests/docs are under independent review, not qualified here.
+  **Updated native records are NOT currently staged there.** Root will merge the
+  delivered11record paths, repeat26byte equivalence and seal before any mount.
+  Records are prepared from2adbf9f2 in isolated `step5-d29-t2-final`; delivered
+  records commit is distinct from inspected checkout and bound runtime revisions.
+  Neither integrated-04 nor prior integrated-02 is written by this preparation;
+  prior02 also holds the old packet and is no longer the intended mount pointer.
   Native T2 was restored by892b6a1; native19 remains1350/1582. Root reports final
   native-position16PASS/native-config2PASS. Accepted662 constructor/image CPU
   evidence remains historical and GPU-unqualified, not rerun by this task.
@@ -128,6 +136,10 @@ accepted source worktree at its absolute local path, read-only, on both workers.
 Root freezes integrated source at60ba4c; actual allocation mounts must preserve
 all bound source bytes and the updated packet. T2 sets existing routing_input_file=None to
 preserve its controlled plan, not substitute observed profiling inputs.
+The intended04 checkout currently has the old packet, so these commands are not
+ready to execute until root stages the delivered records and performs its final
+binding/seal check. This mount proposal does not approve the extra P2 source or
+any runtime/resource allocation.
 The repository mount includes existing script/helper and controlled inputs. It
 does not contain a top-level vllm package. Do not put source exports,
 native_source snapshots, extra_site, a local conda or inherited PYTHONPATH first.
@@ -150,7 +162,7 @@ dependencies plus the repository namespace, not profiler pandas/sklearn extras.
 
 ```bash
 set -euo pipefail
-REPO=/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02
+REPO=/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04
 INPUTS="$REPO/task_memory/task_2026-10-22_step5_d29_native_balanced/t2_preparation"
 export PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1

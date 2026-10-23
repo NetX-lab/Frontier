@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Correct intended target04/pending-root-staging pointers and exact85/81accounting,verifybound26without target writes. |
 | 2026-10-23 | Read approved allocation/design and begin interface milestone. |
 | 2026-10-23 | Complete native19 integration, CPU418 PASS, D3048 PASS and static T2; retain root-only prerequisites. |
 | 2026-10-23 | Close four reviewer findings;485 affected CPU PASS and1269/1582 gross. |
@@ -91,40 +92,57 @@
   Final handoff-record update changes no packet/source bytes; explicit equivalence
   is rechecked after its commit. Native1350/1582,source increment0.
 
+## D29-T2-TARGET-POINTERS progress
+- completed T1: read-only04HEAD1be91bad/disk/full26files match60ba/local bound
+  bytes; current04packet remains old. Exact original6ebb038->a5e5189diff and
+  locked-base1aee0afdiffs recorded in test report:85step gross/81retained growth,
+  native1350/1582,not guessed. d29-t2-target-inspection.log retains full evidence.
+- completed T2: REPO/mount/frozen pointers now intended04; explicit root staging
+  NOT YET PRESENT and runtime60ba/checkout1be91bad/docs revisions distinguished.
+  Neither04nor02written; P2 stays independent-review/unqualified.
+- completed T3 records: exact accounting in one existing report; native/input/
+  metadata/image/limits/resources/native4 unchanged,source increment0.
+- completed T3/T4 checks: existing index63PASS/nonpacket57unchanged,04source26
+  PASS,existing schema/AST/bash/ownership PASS. Both documented static blocks
+  execute successfully; logs d29-t2-target-static.log/d29-t2-final-static-final.log.
+  Exact source diffs/accounting verified; only11existing records changed,code0.
+- in-progress T4 handoff: isolated records commit,then root staging/26recheck/seal.
+  Final packet/index hash recorded in summary/report; target04/02never written.
+
 ## 1. 规划完成情况
-**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0（D29-T2-FINAL-SOURCE-BINDING; not GPU acceptance）
+**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1（D29-T2-TARGET-POINTERS; not GPU acceptance）
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
-| F1 isolated source | PASS | records branch from60ba; active worktree untouched |
-| F2 full binding/comparison | PASS | repo8/pub9/parent3/native32/export2907; constructor equal, full helper changed |
-| F3 packet/proposal | PASS | source60ba/clean controlled env; metadata/cases/native4 unchanged |
-| F4 static/index/commit | PASS | records43c2947c; postcommit26equivalence/63checksums/clean PASS |
+| T1 target/accounting evidence | PASS |04bound26equal60ba;original/locked-base diffs inspected |
+| T2 intended pointers | PASS |04target,pending-root-staging and distinct revisions explicit |
+| T3 record/index refresh | PASS | exact accounting recorded,index63PASS/source hashes unchanged |
+| T4 verification/commit | TODO | static63/target26PASS;isolated commit remaining |
 
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
-**检测窗口：** D29-T2-FINAL-SOURCE-BINDING dispatch to43c2947c/postcommit PASS｜**当前前沿：** root accept/seal (outside owner scope)
+**检测窗口：** D29-T2-TARGET-POINTERS dispatch至staticPASS｜**当前前沿：** T4records commit
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | requested static/hash verification only; no new suite/harness |
-| D2 细节反复重试 | CLEAR | old-file absence established; inspection-only correction, no runtime tuning |
-| D3 支线问题修补 | CLEAR | helper obligations are F2 scope; no production repair |
+| D2 细节反复重试 | CLEAR | exact diff settles requested accounting;no runtime tuning |
+| D3 支线问题修补 | CLEAR | two root-requested documentation issues only |
 | D4 可并行任务停滞 | CLEAR | independent reads parallel; explicit no-agent instruction |
 | D5 超范围镀金 | CLEAR | source/test0, existing packet/handoff only; resources unchanged |
-| D6 分析空转 | CLEAR | bindings committed43c2947c; postcommit equivalence PASS |
+| D6 分析空转 | CLEAR | target26/pointers/index verified;proceeding to records commit |
 | D7 路线违背 | CLEAR | active tree untouched, source60ba, CPU/GPU limits separated |
-**文档检查：** S5: old packet/progress referenced662/unintegrated helper, contradicted root60ba instruction and full-file evidence; updated within authorization. S1–S4/S6 clear.
+**文档检查：** S5:proposal/resource/provenance implied updated packet at02but root has not staged it;target is04. Corrected intended pointer/pending state. S1–S4/S6 clear.
 **归因：** 无。
 
 ## 3. 纠正建议
 **分支：** B: stale binding records require update, no scope/criteria change.
-**文档更新（先执行）：** packet provenance/proposal/index and local progress/summary: bind60ba, retain historical CPU evidence, disclose helper clean-env obligation (authorized).
+**文档更新（先执行）：** packet pointers04/pending staging,distinct source/checkout/docs revisions;exact85/81in test report;index/receipt refresh (authorized,no source change).
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. Root accept/seal/readiness -> done: packet with full source60ba binding and unchanged inputs/limits; this stream complete.
-2. Root resource/run decision -> done: explicit finite-unit authorization/paths/receipts;16H8001800s remains unapproved.
+1. T3/T4 -> done:index63PASS,04bound26/shell/ownership PASS,isolated docs commit.
+2. Root stage11records/26recheck/seal/P2review -> done:target packet/source readiness;resource decision remains root-owned.
 
 ## 4. 最值得关注的 3 点
-1. Full helper changed; constructor AST equality is not source identity or GPU proof.
+1. Intended04has old packet;root must stage updated records before seal/mount.
 2. Native1350/1582; runtime source60ba; active CLI/fidelity tree untouched.
 3. Controlled inputs/16H80030min8GPUh are not observed/approved; G3/tolerance unchanged.
 

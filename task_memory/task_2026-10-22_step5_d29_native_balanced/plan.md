@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Add records-only intended04 pointers, read-only26-byte verification and exact incremental/retained budget reconciliation. |
 | 2026-10-23 | Establish approved implementation milestones. |
 | 2026-10-23 | Add the explicitly requested four-finding repair and affected verification milestone. |
 | 2026-10-23 | Add input-only T2 preparation; actual launch remains root-owned and unapproved. |
@@ -84,6 +85,20 @@ F1 -> {F2,F3} -> F4; all writes confined to native task records/T2 metadata.
   summary/progress/checkpoint -> isolated records commit -> explicitly compare
   all bound relevant files to60ba after commit. Source identity stays60ba, not
   the docs commit. No accepted suite reruns or Torch/vLLM/GPU invocation.
+
+## D29-T2-TARGET-POINTERS
+T1 -> {T2,T3} -> T4. All writes restricted to existing11native record paths.
+- T1: read only04 HEAD1be91bad/disk vs runtime60ba bound26files; verify intended
+  target lacks updated packet. Read exact6ebb038->a5e5189two-file diff and
+  locked-base1aee0afdiff to settle85incremental/81retained difference.
+- T2: retarget mount/REPO/frozen-source pointers04,explicitly pending root staging,
+  separate runtime60ba/checkout1be91bad/docs revisions. No code/P2 qualification.
+- T3: update one existing report with exact gross table,retain native1350/1582;
+  refresh existing receipts/index with existing hashing/schema/bash mechanisms.
+  Preserve metadata/cases/native4/settings/limits/resources.
+- T4: static63/index coverage/04bound26/shell/ownership -> English records ->
+  isolated commit -> root final staging/recheck/seal dependency. No04/02writes,
+  suites or runtime.
 
 ## Preserved pre-allocation record (historical)
 
