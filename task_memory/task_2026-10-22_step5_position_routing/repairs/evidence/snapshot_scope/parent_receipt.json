@@ -1,0 +1,28 @@
+{
+  "task_id": "D29-SNAPSHOT-SCOPE-PARENT",
+  "status": "PASS_SNAPSHOT_BASELINE_ONLY",
+  "source_commit": "e200bb780d3b20ec6f5ff0a067ed8b9ddd505662",
+  "root_head": "97dd23aea161765811b289f59a3e9e7687d209d6",
+  "artifact_hashes": 6,
+  "inventory_hash_pass": true,
+  "manifest_bindings": 112,
+  "superproject_numstat_paths": 105,
+  "native_base_and_derived_hashes": 8,
+  "fixed_image_evidence_hashes": 8,
+  "overlay_rows": 15,
+  "allocated_paths": 114,
+  "changed_paths": 113,
+  "owner_actual": {
+    "pricing": 3940,
+    "core_source": 4173,
+    "native": 1350
+  },
+  "source_actual": 9463,
+  "global_actual": 9477,
+  "violations": [],
+  "owner_commit": "d267db2d7d337dc237c85ea63f16cfa0290eb42d",
+  "limits": [
+    "Original scope/overlay replay and in-memory native patch application are independent-owner checks; parent rechecks caps, all bound bytes and105 Git numstats, without rerunning that script.",
+    "Key source/results and final workflow are not included."
+  ]
+}

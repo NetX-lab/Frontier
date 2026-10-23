@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept independent snapshot baseline audit and mixed-group event-count correction; record current storage and performance gaps. |
 | 2026-10-24 | Integrate accepted byte/snapshot component64c83ac4, reconcile9477 global and allocate17-gross derived-key reuse. |
 | 2026-10-24 | YC approves run-fixed collective input; byte repair32/36 delivered, with successor ownership design and combined review pending. |
 | 2026-10-23 | Merge accepted cost-fields75404143, archive parent checks and independent reviews, correct workload clocks and close the unsuccessful identity-cache control. |
@@ -27,9 +28,20 @@ Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trai
 five path checks, both review axes No findings and complete208-event output parity
 pass. One P/D input-binding read, zero cold/warm reads; warm0.340867→0.162715s is
 component timing with288 lookups/144 proofs/64 collective prices unchanged.
-Component reconciliation is9463source/9477global; final114-path audit remains open.
+Snapshot baseline audit confirms114allocated/113changed,9463source/9477global
+and zero violations. Owner d267db2d is archived atae55a5f5; parent hashes/blob/
+numstat checks pass. The subsequent key union remains open.
 The next source step is derived-key reuse17gross within existing PRICING headroom.
 Detailed completion evidence is in run_input_snapshot/.
+
+Source-backed workload is90,200 waves. Expected successful-run EP-wave output
+is18,712,400 events because three BF16 layers omit input quantization; this is
+not a complete-run census. P6128/D16/BF16 emissions remain unmeasured. The
+retained FP8 emission timing exceeds the26.608ms all-costs-zero average wave
+allowance. Rough two-mode output is about520GB against approximately266GB
+currently available on /data; no storage arrangement has been approved here.
+The counter investigation's one unauthorized2.1GB CSV scan is disclosed in
+workload_multiplicity/. Full CLI/native acceptance remains unfinished.
 
 Earlier accepted trace, prepared selection and cost-fields75404143 checkpoint:
 Both independent review axes have No findings. Parent verification preserves

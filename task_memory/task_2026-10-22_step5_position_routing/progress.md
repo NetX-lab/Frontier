@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept independent snapshot114/113-path audit, correct mixed-group event expectation and storage units, and record the unauthorized CSV scan. |
 | 2026-10-24 | Integrate accepted snapshot64c83ac4; archive H3/trace diagnoses and allocate the17-gross key-only successor. |
 | 2026-10-24 | Archive plan-key diagnosis and parent24+6 hash/immutable-interface checks; keep key allocation pending snapshot consumption. |
 | 2026-10-24 | Verify byte receipts24/3 and paired78PASS; select shared run ownership and allocate the114-path snapshot successor. |
@@ -68,12 +69,29 @@
   equal accepted snapshot. Root declines the estimated<=3ms interface control
   and2.5ms scalar-parse follow-up. Raw profile retains one EOF whitespace warning;
   parent disposition is detached_emission_ownership/parent_receipt.md.
-- in-progress/read-only: D29-FULL-WORKFLOW-BUDGET,
+- completed/read-only: D29-FULL-WORKFLOW-BUDGET,
   ses_e95ade762ffe71fWPn1WYHfZnl, checks actual first-token/prefill/decode counters
-  and per-wave allowance from retained evidence; no new measurement.
-- in-progress/audit: D29-SNAPSHOT-SCOPE-AUDIT,
+  and per-wave allowance from retained evidence.90,200 waves is source-backed;
+  expected successful-run EP events are18,712,400, not uniform208's18,761,600:
+  three BF16 layers omit input quantization. P6128/D16/BF16 output remains
+  unmeasured. The investigator violated the no-full-scan/60s/memory restrictions
+  with one2.1GB full CSV read; exact command and limits are recorded in
+  workload_multiplicity/{report.md,evidence.json}. No source/input write.
+- completed/audit: D29-SNAPSHOT-SCOPE-AUDIT,
   ses_e95ac82fdffeSeMEUfR9SxvW03, independently checks the114-path snapshot and
   non-superproject evidence before the separately running key implementation.
+  Owner d267db2d archived ae55a5f5; parent6artifact hashes/112bindings/105Git
+  numstats/8native-file hashes/8image-evidence hashes PASS.114allocated/113changed,
+  source9463/global9477,zero violations; final key union remains pending.
+- unresolved/workflow: the26.608ms average wave allowance is below the retained
+ 39.956ms FP8 emission diagnostic; this is a projection gap, not a universal
+  impossibility proof. Expected two-mode output is about520GB; parent measured
+  about266GB available on /data, not248GB. Other shapes/full output and storage
+  arrangements remain to be settled before a new complete CLI.
+- completed/record check: an initial arithmetic assertion caught a transcribed
+  uniform-rate projection3604.3912s; corrected to90200×0.039956=3604.0312s.
+  Rounded3604s and all workload counts are unchanged; rerun five arithmetic
+  assertions and source whitespace checks PASS.
 - completed/diagnostic: immutable-plan records7d1cdc06 archived as a3525856.
   Warm plan/tensor construction is already0; eight complete plans are retained.
   Key-only control removes192 encodes/wave, with paired warm0.167724->0.128676s
@@ -107,7 +125,8 @@
   Effective114 paths, CORE49/4404,native19/1582,PRICING46/3956. Donor files stay
   untouched; source9942/global10000 caps remain. Committed source db581ff6 is
   212gross(73source/139tests),net86; component totals4173CORE/3940PRICING/1350native,
-  9463source/9477global. Final114-path union audit remains pending.
+  9463source/9477global,now independently audited on the snapshot. Final key
+  union audit remains pending.
 - completed: snapshot parent82PASS, separate2trainerPASS,5path checks, both
   independent reviews No findings and complete208-event/JSONL/ledger parity.
   One shared binding read; zero cold/warm reads;288 lookups/144 fresh proofs/64

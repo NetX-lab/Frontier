@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Close snapshot baseline scope audit and record mixed-group event/storage constraints; final key union and workflow remain pending. |
 | 2026-10-24 | Accept and integrate snapshot db581ff6 at64c83ac4; allocate the17-gross derived-key successor within PRICING headroom. |
 | 2026-10-24 | Close duplicate-plan hypothesis; queue narrow derived-key allocation after snapshot accounting and attribute remaining pricing work separately. |
 | 2026-10-24 | Select manager-owned shared inputs; allocate114-path snapshot replacement within existing caps and schedule constructor/lifetime verification. |
@@ -142,7 +143,7 @@ change is allocated. See early_init_repro/report.md.
 | Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
 | Independent source review | All accepted components including combined bytes/snapshot have No findings on both axes; key review follows its implementation. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
-| Final per-path accounting | Snapshot component9463 source/9477 global;114 allocated. Key allowance adds at most15 retained lines; final union audit pending. |
+| Final per-path accounting | Snapshot independently audited:114allocated/113changed,9463source/9477global,zero violations. Key adds at most15 retained lines; its final union audit remains pending. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments

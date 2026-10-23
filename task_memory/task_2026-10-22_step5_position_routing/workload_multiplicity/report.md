@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Reconfirm90,200 waves; correct uniform208 event extrapolation for BF16 layers, separate expected counts from observations, record capacity units and the investigator's out-of-bound CSV read. |
 | 2026-10-23 | Parent aligns process and scheduler clocks, withdraws the unsupported iteration-4 slowdown, and labels byte-derived row equivalents correctly. |
 | 2026-10-23 | Bounded determination of the decode EP-wave multiplicity, trace volume and projected wall cost for the unchanged main08 workload. |
 | 2026-10-23 | Correction pass for root acceptance: exact phase/operator split of the 208 events; layer-60/61 proof-identity wording; token/prefill-chunk bookkeeping from the production replay target; projection relabelled as a current-implementation estimate with the cost-fields emission value. |
@@ -14,21 +15,74 @@ probe; every other number comes from retained artifacts plus bounded (<= 8 MiB)
 trace windows. No full CLI, trainer, GPU, network, dependency install, source,
 test or runtime-input edit.
 
-## Verdict
+## Current reconciliation: 2026-10-24
+
+Source db581ff6 and retained main08 scheduler records reconfirm one6128-token
+PREFILL, one16-token DECODE replay committing one output, then1023 one-token
+DECODE forwards. Thus90,200 waves is source-backed. The old uniform208-event
+projection was too large: layers3–87 use block-FP8 and select `moe_input_quantize`;
+layers88–90 use BF16 and do not. Applicable prices must be positive
+(`moe_operator_times.py:127–141`); operator projection includes input quantization
+only when selected (`execution_time.py:956–959`). The expected successful-run
+EP-wave count is `(85×208 + 3×192)×1025 = 18,712,400`,49,200 below the old
+18,761,600 estimate. This is not a completed-run census: P6128, D16 and BF16
+emission remain unmeasured. Other, non-wave JSONL events are additional.
+
+The all-costs-zero allowance is `2400/90200 = 26.608ms/wave`. The retained
+key-only39.956ms FP8 emission diagnostic is above that average allowance;
+assigning its rate to every wave projects3604s, not an observed or universal
+lower bound. Even restricting that projection to the86,955 steady FP8 waves
+gives3474s. The accepted snapshot's0.162715s pricing and the old0.026s flush
+are separately revision-bound measurements. The actual key implementation,
+other shape/group timings and post-repair startup are not established here.
+Earlier timing tables below remain historical checkpoint projections.
+
+The old262.1GB/mode figure uses two sampled FP8 DECODE wave sizes. Adjusting
+only event multiplicity suggests about261.4GB, but BF16 metadata sizes are
+unmeasured and non-wave rows add output. Neither number is an upper bound.
+The appropriate storage statement is an approximately520GB two-mode projection.
+Parent `df -B1 --output=source,target,size,used,avail /data/ycfeng/tmp` observed
+265,987,776,512 available bytes (265.99GB,247.72GiB), not248GB. A single-mode
+EP-only projection leaves only a few GB before other output; both modes exceed
+available space by roughly250GB. `/home/brainpp` and `/mnt` resolve to the same
+root filesystem, with59,530,031,104 bytes available. Capacity is a point-in-time
+observation, not reserved space. No cleanup or new storage operation is approved
+by this report; D8's older cleanup authority is limited to its named directories.
+
+The private ownership diagnosis is closed without allocation; see
+`../detached_emission_ownership/parent_receipt.md`. Neither the estimated<=3ms
+interface change nor the2.5ms scalar memo settles this workload's gap.
+
+### Investigation deviation
+
+Despite a read-only assignment forbidding full profiling-table scans, the
+investigator materialized all37,044 rows and42 fields of
+`fixture_compute_kernel_only/moe.csv` (2,114,942,423 bytes) with
+`rows=list(csv.DictReader(open(p)))`. Its shell timeout was120s; no memory cap
+was applied, no wall time or output file was retained, and the command exited0.
+This was an instruction deviation. No input write was performed. The decisive
+operator applicability evidence was already available in source and the small
+`registry_binding/evidence/bundle_receipt.json`; the full read was unnecessary.
+`evidence.json` retains the original command and reported output, not a rerun.
+FP8 has16,464 blank quantize cells and2,058 positive cells; BF16 has18,522 blank
+cells. Blank cells are not zero prices and do not imply missing selected costs.
+
+## Historical verdict, corrected event interpretation
 
 1. One 208-event wave is executed **once per actual MoE layer of a layer set**,
    not once per model group: `88` times per layer set, inside `92` layer steps.
    Layers `0,1,2,91` are dense and execute no EP wave.
 2. Per layer set: `88` pricing plans, `88` emission loops, `88 x 208 = 18,304`
-   trace events, `~255.7 MB` of persisted JSONL (208 = 16 EP lanes x 13
-   operators, see section 2 for the exact phase split).
+   events in the former uniform-FP8 projection. With three BF16 layers the
+   expected EP-wave count is18,256 per layer set. The old~255.7MB size uses
+   sampled FP8 output; see the current reconciliation for its limits.
 3. The workload executes **1,025 layer sets**: one PREFILL set on the 6,128-token
    chunk plus 1,024 DECODE sets, the first of which replays the remaining 16
-   prompt tokens. Total **90,200 waves, 18,761,600 events, 262.1 GB** per mode,
-   ~524 GB for both modes.
+   prompt tokens. Total **90,200 waves** and expected **18,712,400 EP-wave events**
+   per mode. The historical262.1GB/mode figure is a sample-based projection.
 4. Persisted traces are **not sampled, capped, collapsed or rotated**. Every
-   layer set x every MoE layer x 16 EP lanes x 13 operators is written.
-5. With the **current** per-wave implementation, the projected per-mode cost is
+   layer set x every MoE layer x16 EP lanes x12/13 applicable operators is written.
+5. At the original `eece87b2` checkpoint, the projected per-mode cost is
    **86-101 ks (24.0-28.1 h)** including startup, i.e. **36-42x** the 2400 s
    cap. This is a current-implementation estimate, not a bound on any future
    output-preserving serialization repair.
@@ -57,7 +111,7 @@ From `d29-parent-position-main08/offline/command.json`, `requests.csv` and
 | timed out | 2400.175 s offline, 2400.152 s online; 4 recorded emitted decode tokens; iteration 4 scheduled | `execution.json` |
 | trace written | 1,447,809,841 B offline; 1,517,626,194 B online | `execution.json` |
 
-## 2. Exact composition of the 208 events
+## 2. Exact composition of the sampled FP8 wave's208 events
 
 Measured directly from the retained offline trace, one complete layer wave
 (layer 60), 16 lane batches:
@@ -222,7 +276,7 @@ read-only, first 8 MiB and last 8 MiB):
 | complete wave, layer 59 | 16 lane batches x 13 rows, **2,906,520 B** |
 | complete wave, layer 60 | 16 lane batches x 13 rows, **2,905,320 B** |
 | per-wave mean | **2,905,920 B** |
-| events per layer set | 88 x 208 = 18,304 |
+| historical uniform-FP8 events per layer set | 88 x 208 = 18,304; expected mixed-group count18,256 |
 | bytes per layer set | 255,720,960 B (255.7 MB) |
 
 Derived volume:
@@ -231,7 +285,7 @@ Derived volume:
 | --- | --- |
 | layer sets | 1,025 |
 | waves | **90,200** |
-| events | **18,761,600** |
+| expected EP-wave events | **18,712,400**; old uniform208 extrapolation18,761,600 |
 | bytes per mode | **262,113,984,000 B (262.1 GB)** |
 | both modes | ~524.2 GB |
 
@@ -335,11 +389,11 @@ The 208 events have distinct `(lane, operator)` identities; that does not rule
 out equal immutable leaf values inside them. Duplication includes both the
 multiplicity and how each payload is produced:
 
-1. `record_ep_wave` rebuilds full metadata for every event
-   (`compute_op_trace_meta` + `parallel_context.copy()` +
-   `common.update(source_rows)` + `asdict(routing_source)`,
-    `ep_wave_metrics.py:97-111`). Lane-specific operands, padding, proofs and
-    identities must still be preserved.
+1. The old per-operator common-metadata hypothesis is closed by the2026-10-24
+   ownership inspection: the Step path builds `common` once per lane, and each
+   required getter is called once per lane. Legacy-path construction must not
+   be attributed to this Step path. The remaining duplicate plan dictionary
+   proposal is estimated<=3ms and is not allocated. See the current reconciliation.
 2. Across layers, identity is **not** interchangeable. The retained
    layer-60/61 evidence is:
    - the layer-60 replay reproduces its **own** captured payload, 208 of 208
@@ -385,8 +439,8 @@ reproduces the byte stream exactly. That is the seam section 8 quantifies.
 Proven from source and retained bytes:
 
 - One wave per MoE layer; 88 per layer set; dense `0,1,2,91` excluded.
-- 208 events = 16 lanes x 13 operators, split 128/16/16/16/32 by phase and
-  144/64 by type.
+- The sampled FP8 wave has208 events =16 lanes x13 operators, split
+  128/16/16/16/32 by phase and144/64 by type; this is not every layer's count.
 - 1,025 layer sets: one 6,128-token PREFILL set, then 1,024 DECODE sets whose
   first carries the 16-token replay.
 - No sampling/cap in persistence; every layer set and layer is written.
@@ -394,6 +448,8 @@ Proven from source and retained bytes:
 
 Inferred (labelled):
 
+- Expected successful-run EP count18,712,400 from applicable operators and
+  positive-price admission; no P6128/D16/BF16/full-run emission census.
 - Future per-wave cost from the accepted `1.021 + 0.061|0.054 + 0.026 s`.
 - The in-situ `0.855` scaling from the first four tokens.
 - Post-repair startup (~838 s).
@@ -405,15 +461,34 @@ Not established: an iteration-4 slowdown; per-layer attention/sampler cost at
 ~6,148-token context; the exact post-repair model-manager phase duration;
 anything about online mode beyond its recorded timeout and bytes.
 
-## 12. Safe next diagnostic (no allocation)
+## 12. Remaining measurement boundaries (no allocation)
 
-The multiplicity needs no further measurement. If root wants a product-path
-count rather than a source-and-bytes count, the cheapest faithful check is the
-existing `wave_loop.py` seam at **two layers** (dense `0`, MoE `3`) under the
-standing 60 s / 30 GiB cap: expect 0 EP-wave events for layer 0 and exactly 208
-for layer 3, with the phase split in section 2. It writes only to a fresh
-scratch directory and changes no source.
+The wave multiplicity is source-backed. A dense0/MoE3 check alone would not
+settle the remaining P6128/D16/BF16 event and byte questions; their complete
+output remains unmeasured. No new probe is allocated by this report. The
+historical1.1s replay estimate is superseded by later component timings, which
+still do not establish full CLI performance or storage requirements.
 
-A single-wave pricing/emission/flush replay is approximately 1.1 s; a full
-88-wave layer set, approximately 97 s, exceeds the 60 s bound.
-Neither is required for the multiplicity or volume conclusions.
+## 13. Parent arithmetic verification
+
+The first check failed on a transcribed3604.3912s projection. It was corrected
+to3604.0312s; all five assertions and whitespace verification then passed,
+exit0. This checks record arithmetic only, not a new performance measurement.
+Exact command, from the primary worktree:
+
+```sh
+/data/ycfeng/envs/frontier-py310/bin/python -B - <<'PY'
+import json,math,subprocess
+from pathlib import Path
+p=Path('task_memory/task_2026-10-22_step5_position_routing/workload_multiplicity/evidence.json')
+d=json.loads(p.read_text());r=d['current_reconciliation']
+assert r['waves']==(1+1024)*88
+assert r['expected_ep_wave_events']==(85*208+3*192)*1025==d['volume']['events']
+assert math.isclose(r['zero_other_cost_wave_allowance_ms'],2400*1000/r['waves'])
+assert math.isclose(r['uniform_rate_all_wave_projection_s'],r['waves']*.039956)
+assert math.isclose(r['steady_fp8_rate_projection_s'],85*1023*.039956)
+print('arithmetic PASS',r['expected_ep_wave_events'],r['zero_other_cost_wave_allowance_ms'])
+subprocess.run(['git','diff','--check'],check=True)
+print(subprocess.check_output(['git','status','--short'],text=True))
+PY
+```
