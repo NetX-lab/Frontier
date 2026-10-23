@@ -1,5 +1,6 @@
 {
   "status": "PASS_EXPLICIT_EXISTING_SOURCE_BINDING",
+  "source_revision": "bb50186e417f99080d71948b38f6006e954a8c41",
   "base_revision": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
   "inherited_binding_path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/matrix_binding.json",
   "inherited_binding_sha256": "39e2435a25ef718dadafa0a8f0a67c4b91fe559f409aa929e5014338c901a57b",

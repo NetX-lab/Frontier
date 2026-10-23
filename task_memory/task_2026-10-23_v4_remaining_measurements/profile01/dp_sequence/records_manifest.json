@@ -1,0 +1,40 @@
+{
+  "task_id": "W128-DP-SEQUENCE-IMPLEMENTATION",
+  "status": "PASS_SOURCE_CPU_WITH_SKIPS",
+  "source_revision": "bb50186e417f99080d71948b38f6006e954a8c41",
+  "base_revision": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+  "source_set_sha256": "52c2596a8705b2002ad3a2de45360de45592be5fe806fde992f5d4b735ae838a",
+  "source_diff_sha256": "71ca353c76af4f5b392291f7226328c0d6547a7aefca7eff5e3a970656f04a78",
+  "files": {
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline.json": "42fca8e20ae0cdd2e3ae95335bf8b75f28e6bee2dc833e1a28343d00c1583dda",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/context_red.json": "433f5dbc3f35dcd7be7af1477426a387b2c75d7e926f8d9e74f2ae9b83f29d58",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/final.json": "3e2efef24064baf07e002fe87d32ceefb678aaf7fee6f0455beda5625483ff58",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/final2.json": "360eba50db2a8fdaba58349eba16ac80e0ba13a123eeb1f2f2b511592e5608fd",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/final_context.json": "023391ebb8e120238c7879262b502a19b4850d552ce3f8e6251b9785fd46229f",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/frozen_native_binding.json": "a45d5001e9af53451e33d8992683c1a3ea2df5f585fab7de3703a9e3c3154e6a",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/green.json": "3b226e8635bbee7f5cd0b3e730047827424ed1e188ba5c88d29ad63d94d0f1a6",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/green2.json": "f078b068543bac41b817f68a01db582586d65c49c05922dc3398b900c906d50b",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/matrix_binding.json": "a7b4ab2c0e6490f31b60872160d66f95c92bd78278df6334d1db7ecaf81326b3",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/plan.md": "c572917bd4bd489ae04a0987ee65e835919e66bb4a408d3462c5c0455b63d29c",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/progress.md": "359bff93b2da2bb576fafdcd39f45368a2272ebbf8d0671263b1dc8104f844b2",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/red.json": "25d703e246efe9e0639a12efc3041180bece23f002f43f0047cfd1f5fe9d32fd",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/requirements.md": "4da94b84b85fbf943ac19e114bc95826aa1858771dac3dd9ce87039dd58c5816",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/source.diff": "71ca353c76af4f5b392291f7226328c0d6547a7aefca7eff5e3a970656f04a78",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/source_binding.json": "82162d14b76ed701c69673f5d9b660d2897d2ba1782e99c602997823e054c784",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/summary.md": "ea8f9627cca2a4a4c9333b109344741340ccee95b1064c8795621fd8caa72ca0",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/test_report_2026-10-24_dp_sequence.md": "35de09bc7f3a682ce8dd23bcea6dc68c376eb42d744fcfd4b5ab42eb367cf44c"
+  },
+  "records_set_sha256": "dbef4c0e30d67e61e1acbe6afac9a0ca129789e873074251491cadb7bef8989e",
+  "excluded_self": "records_manifest.json",
+  "source_changed_files": 4,
+  "production_gross": 18,
+  "test_gross": 138,
+  "total_gross": 156,
+  "passed": 194,
+  "skipped": 21,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "temporary_verification_scripts": {
+    "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/run_suites.py": "037417dba9e7a3e2390d65d29456498789ee9efae59f268149e207def7fd4c71",
+    "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/verify_bindings.py": "4460f8ab077bbb4b3972a6546ef78c1047e2030983231c6fb2b909012ebdac28"
+  }
+}

@@ -17,7 +17,7 @@
 - completed: final source18 production/138 test gross lines, total156/180; no extra allocation. `final_context.json`:194PASS/21SKIP, no failures/errors across four focused suites and the directly composed native_full_structure suite. Original failed controls and logs remain.
 - completed: `frozen_native_binding.json` binds R2 to its actual external fixed-path frozen hash, R3 to base bytes, native source to pinned Git objects and unchanged inventory count/emit/hook AST. The initial temporary verifier's nonexistent local-R2 assumption produced FileNotFoundError; corrected only the verifier, without writing a R2 copy or modifying frozen bytes.
 - completed: `matrix_binding.json` explicitly binds inherited root77-case evidence and identical five-domain Git trees; no new capture. Final source set SHA25652c2596a8705b2002ad3a2de45360de45592be5fe806fde992f5d4b735ae838a; source.diff71ca353c76af4f5b392291f7226328c0d6547a7aefca7eff5e3a970656f04a78.
-- in-progress: final owner source/records commits and clean-state verification.
+- completed: source and CPU evidence committed at `bb50186e417f99080d71948b38f6006e954a8c41`; four source bytes equal the verified candidate hashes. Completion archive and record hash manifest are delivered in a records-only descendant commit; final clean-state receipt is returned with delivery, without embedding a self-referential commit hash.
 - pending outside owner scope: independent review/final integration/new native collection; no full Worker pairing or calibration acceptance is claimed.
 
 ## 1. 规划完成情况
