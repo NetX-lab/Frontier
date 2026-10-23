@@ -158,6 +158,7 @@ def command(mode, root, fixture, read_cost):
         args.append("--metrics_config_enable_op_level_tracing")
         args.remove("--no-metrics_config_enable_op_level_tracing")
         args.extend(("--collective_sim_cc_backend_config_profiling_data_dir",str(Path(fixture["collective_plan_input_file"]).parents[1])))
+        args.extend(("--collective_sim_cc_backend_config_placement_order","TP,DP"))
     for role in ("prefill", "decode"):
         prefix = f"--cluster_config_{role}_replica_config_"
         for key, value in dict(num_pipeline_stages=1, attn_tensor_parallel_size=8,

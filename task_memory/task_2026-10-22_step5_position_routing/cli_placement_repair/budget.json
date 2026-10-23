@@ -1,0 +1,17 @@
+{
+  "task_id": "D29-CLI-PLACEMENT-REPAIR",
+  "base": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+  "repair_gross": 40,
+  "repair_ceiling": 65,
+  "core_gross": 3873,
+  "core_ceiling": 4404,
+  "global_gross": 9116,
+  "global_ceiling": 10000,
+  "paths": [
+    {"path": "tests/integration/run_step5_measured_main.py", "added": 1, "deleted": 0, "repair_gross": 1, "full_gross": 47, "cap": 66},
+    {"path": "tests/integration/test_step5_measured_main.py", "added": 39, "deleted": 0, "repair_gross": 39, "full_gross": 260, "cap": 283}
+  ],
+  "donor": {"path": "tests/unit/test_moe_routing_runtime.py", "cap": 70, "unchanged": true},
+  "effective_unique_paths": 111,
+  "status": "PASS exact two-path diff/AST/effective caps and root-final-ledger arithmetic"
+}

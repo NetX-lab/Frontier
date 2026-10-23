@@ -276,6 +276,7 @@ def test_actual_main_command_retains_capacity_graph_topology_and_measured_read(t
     positioned=command("online",tmp_path,fixture,path)
     assert positioned[positioned.index("--collective_sim_cc_backend_config_profiling_data_dir")+1]==str(tmp_path/"collectives")
     assert argv[argv.index("--replica_config_moe_routing_distribution_type") + 1] == "balanced"
+    assert "--collective_sim_cc_backend_config_placement_order" not in argv
     assert argv[argv.index("--replica_config_moe_routing_seed") + 1] == "42"
     for role in ("prefill", "decode"):
         for key, value in (("num_pipeline_stages", "1"), ("attn_tensor_parallel_size", "8"),
@@ -285,6 +286,44 @@ def test_actual_main_command_retains_capacity_graph_topology_and_measured_read(t
     assert {(row["num_prefill_tokens"], row["num_computed_tokens"]) for row in document["measurements"]} == {
         (6143, 6112), (6144, 6128), (6145, 6128)}
     assert document["measurements"][0]["transfer_bytes_per_rank"] > 0
+
+
+@pytest.mark.parametrize("role", ["PREFILL", "DECODE"])
+@pytest.mark.parametrize("mode", ["offline", "online"])
+def test_position_command_prices_exact_plan_through_real_cluster(tmp_path, monkeypatch, role, mode):
+    import sys
+    import pandas as pd
+    from frontier.config import SimulationConfig, global_vars
+    from frontier.entities import Cluster
+    from frontier.types import ClusterType
+    from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+    from tests.integration.step5_measured_compute_fixture import position_collective_costs
+    for name, value in vars(global_vars).copy().items():
+        if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+    tensor = dict(name="activation",dtype="bfloat16",element_size=2,columns=4096,row_stride=4096)
+    native = dict(native_facts=dict(shared=dict(evidence_kind="cpu_fixture")),
+        collective_tensors=dict(dispatch=[tensor],output=[{**tensor,"name":"output"}]))
+    table = tmp_path/"compute.csv"
+    pd.DataFrame([dict(moe_frame_scope="dp_gathered",graph_mode="none",native_context=json.dumps(native),
+        routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])))]).to_csv(table,index=False)
+    path = position_collective_costs(tmp_path,table,device="h800")
+    fixture = dict(decode_cuda_graph_mode="full_and_piecewise",cudagraph_capture_sizes=CAPTURE_SIZES,
+        max_model_len=7168,cache_dir=str(tmp_path/"cache"),predictor_config={},
+        routing_distribution_type="position_cyclic",collective_plan_input_file=str(path))
+    monkeypatch.setattr(sys,"argv",command(mode,tmp_path,fixture,tmp_path/"read.json")[3:])
+    config = SimulationConfig.create_from_cli_args()
+    cluster_config = config.get_clusters()[ClusterType[role]]
+    cluster_config.replica_config.cluster_num_replicas = int(cluster_config.num_replicas)
+    backend = Cluster(cluster_config,config.metrics_config,config.request_generator_config).cc_backend
+    counts = json.loads(path.read_text())["counts"]
+    key = next(k for k in counts if json.loads(k)["phase"] == "dispatch")
+    value = json.loads(key)
+    plan = CollectivePlan(value["phase"],tuple(value["sizes"]),tuple(CollectiveTensor(**t) for t in value["tensors"]),
+        tuple(tuple(g) for g in value["groups"]),value["graph_mode"],value["context_json"],value["buffer_json"])
+    assert plan.cache_key() == key and backend._get_attention_parallel_dim_sizes() == dict(TP=8,CP=1,DP=2,EP=1)
+    cost = backend.predict_collective_plan(plan)
+    assert cost.plan_key == key and cost.duration_ms == counts[key]["cost"]["duration_ms"] == .03
+    assert json.loads(cost.count_receipt_json) == {k:v for k,v in counts[key].items() if k != "cost"}
 
 
 def test_context_row_contract_reuse_matches_independent_workload_build():
