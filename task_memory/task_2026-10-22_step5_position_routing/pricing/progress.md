@@ -935,17 +935,17 @@ remain genuine dependencies, not permission to create alternate APIs.
 - corrected detour: extra H04 execution in torch-only env hit fasteners; entire
   py310 package path failed NumPy. Removed unnecessary expansion, no production
   workaround/environment edit. Verified actual exporter handoff + existing separate
-  H04 suite instead. No further test breadth required; scoped commit next.
+  H04 suite instead. No further test breadth required; scoped commit1adfc73e delivered.
 
 ## 1. 规划完成情况
-**汇总：** PASS3｜BLOCKED1｜TODO1
+**汇总：** PASS4｜BLOCKED1｜TODO0
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | Stable producer join/full observer diagnostics | PASS |Real verifier/two-producer+exporter GREEN |
 | Explicit sealed test writer/current repo default | PASS |Reference negatives/four phases/native unchanged |
 | Scoped verification/ownership quota | PASS |395 cases315 PASS/80 SKIP;3805/3956 |
 | Full shared table point diagnostics | BLOCKED |CORE _profile_position_cell3-gross receipt, no peer authority |
-| Scoped source commit | TODO |Final report and exact hunk ready |
+| Scoped source commit | PASS |1adfc73e delivered; exact3-gross peer receipt |
 ## 2. 偏离检测
 **结论：** 已偏离：命中D1，已纠正。
 **检测窗口：**84e66115至今｜**当前前沿：**owned commit与CORE persistence receipt
@@ -964,7 +964,7 @@ remain genuine dependencies, not permission to create alternate APIs.
 **分支：**B：更新新发现的shared persistence boundary（已完成）。
 **文档更新（先执行）：**requirements/plan/receipt/summary/report记录stable/full诊断与CORE3-gross hunk（可直接执行）。
 **需停止的偏离行为：**D1停止可选跨环境H04扩展；使用真实exporter handoff与既有独立H04检查。
-**接下去的路线：**owned source commit→root/CORE明确hunk整合；root负责复审/globalqualification。
+**接下去的路线：**1adfc73e→root/CORE明确hunk整合；root负责复审/globalqualification。
 ## 4. 最值得关注的 3 点
 1. Context join稳定且fullambientverification/diagnostics保留，不能在consumer剥离。
 2. CORE需3-gross hunk完成row持久化，owned剩余151，不改peer。

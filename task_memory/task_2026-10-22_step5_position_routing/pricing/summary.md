@@ -62,6 +62,8 @@ CORE row persistence needs the exact3-gross hunk in interface_receipt, not edite
 here. Full integrated diagnostics persistence remains dependent on that hunk.
 CPU test source defaults to the current repo; external phased reference is
 explicit file+SHA256, no host fallback. CPU consumer behavior stays accepted.
+Owned source/tests/records commit1adfc73e verified; shared persistence hunk and
+independent root re-review remain open.
 Authorized CORE02f061d/Native2c4cc9e and published67d5b5e dependencies imported;
 437b312 records published dependency integration. No peer file edited.
 Isolated collective-sim branch d29-position-pricing commits:

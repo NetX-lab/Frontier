@@ -116,4 +116,4 @@ reference RED/GREEN/default repo resolver -> affected suites/quota -> owned comm
 No consumer stripping or second normalizer. Full ambient verification runs first.
 CORE _profile_position_cell3-gross-line persistence hunk is required, not owned;
 root coordinates it. Current owned seams verified395 cases315 PASS/80 SKIP plus
-native64 PASS,3805/3956. Independent review and full integration remain root.
+native64 PASS,3805/3956,committed1adfc73e. Independent review and full integration remain root.

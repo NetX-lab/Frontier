@@ -81,3 +81,5 @@ native origin/hash/callable and original routing/numerical criteria unchanged.
 Five existing owned source/test paths:+98/-8=106 revision churn. Baseline owned
 43 paths:+3708/-97=3805/3956;remaining151. Isolated sub333 included/unchanged3dac53c;
 root gitlink unstaged; no new paths/peer writes. AST/whitespace/sub clean PASS.
+Verified source/tests/records commit1adfc73e. Shared CORE3-gross persistence hunk
+is a concrete code dependency, not a GPU measurement deferral or owner-completed edit.

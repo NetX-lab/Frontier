@@ -557,3 +557,6 @@ Wrong callable origin/source/ambient bytes reject; changed layout cannot join.
 Affected395 cases315 PASS/80 SKIP; published native64 PASS. Owned5 paths patch
 +98/-8=106; baseline43 paths+3708/-97=3805/3956,remaining151,unchanged sub3dac53c.
 Exact staged commands/identity in test_report_2026-10-23_producer_join.md.
+Verified owned source/tests/records commit1adfc73e. Root/CORE may integrate this
+seam and apply the separate shared3-gross hunk under root direction; no peer edit
+or full integrated persistence/global qualification claim from this owner.
