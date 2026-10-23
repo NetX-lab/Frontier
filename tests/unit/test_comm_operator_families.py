@@ -1126,7 +1126,8 @@ def test_step5_plan_registry_cost_pair_and_phase_accounting():
 
 
 @pytest.mark.parametrize("model_name,admitted", [("meta-llama/Llama-2-7b-hf", False), ("stepfun-ai/Step-5-Preview", True)])
-def test_precision_csv_requires_actual_selected_prepare_inventory(tmp_path, request, model_name, admitted):
+@pytest.mark.parametrize("quant_match", [True, False])
+def test_precision_csv_requires_actual_selected_prepare_inventory(tmp_path, request, model_name, admitted, quant_match):
     import pandas as pd
     from frontier.config import get_quantization_manager
     from frontier.config.precision_type import PrecisionType
@@ -1139,9 +1140,22 @@ def test_precision_csv_requires_actual_selected_prepare_inventory(tmp_path, requ
     if admitted:
         context = dict(model_architecture_profile="step5", routing_runtime_path="position_cyclic", quant_dtype="float8_e4m3fn", defer_input_quant=False)
         prepare = next(op for op in get_moe_profiling_operators(context) if op.name == "moe_input_quantize")
-        manager.register_profiling_metadata([prepare.precision_name()], PrecisionType.FP8, model.get_quant_signature(), model.get_quant_signature(), "selected_moe.csv")
+        signature = model.get_quant_signature() if quant_match else "different_quant_signature"
+        manager.register_profiling_metadata([prepare.precision_name()], PrecisionType.FP8, signature, model.get_quant_signature(), "selected_moe.csv")
+        manager.register_profiling_metadata(["moe_grouped_gemm"], PrecisionType.BF16, signature, model.get_quant_signature(), "approximate_moe.csv")
+    config_hash = manager.get_config_hash()
+    speedups = dict(manager._operation_speedup_factors)
+    manager._warned_approximations.clear()
     MetricsStore._write_op_precision_metadata(SimpleNamespace(_config=SimpleNamespace(output_dir=str(tmp_path))))
+    assert manager.get_config_hash() == config_hash
+    assert manager._operation_speedup_factors == speedups
     frame = pd.read_csv(tmp_path / "op_precision_metadata.csv").set_index("operation")
     assert ("moe_input_quantize" in frame.index) is admitted
     if admitted:
-        assert frame.loc["moe_input_quantize", "precision"] == "FP8"
+        row = frame.loc["moe_input_quantize"].to_dict()
+        if pd.isna(row["approximation_factor"]): row["approximation_factor"] = None
+        expected = dict(precision="FP8", data_source="profiling", approximation_factor=None) if quant_match else dict(precision="BF16", data_source="approximation", approximation_factor=2.)
+        assert row == expected
+        assert frame.loc["moe_grouped_gemm"].to_dict() == dict(precision="FP8", data_source="approximation", approximation_factor=0.5)
+        assert manager.get_precision("moe_input_quantize") is PrecisionType.BF16
+        assert manager.adjust_compute_time("moe_grouped_gemm", 10.) == 5.

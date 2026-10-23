@@ -7,6 +7,7 @@
 | 2026-10-23 | Record root fixture amendment and corrected3805 baseline after duplicate merge repair. |
 | 2026-10-23 | Correct two-path proposal authority; pause those edits/commits pending YC approval. |
 | 2026-10-23 | Record explicit YC two-path approval and resume the preserved fixture-only repair. |
+| 2026-10-23 | Record D29-PREPARE-METADATA-REPAIR, coherent source/factor and bounded zero-sum test allocation. |
 
 TaskID D29-LEGACY-OUTPUT-REPAIR.
 
@@ -65,3 +66,21 @@ existing assertion and actual V4 applicability,commit separately from b60dfddd,
 archive precise receipt/tests/budget. No new production edits without an actual
 in-scope failure;report before crossing caps. Root independently handles strict77,
 full CLI/global gates. No GPU/platform/full CLI/further delegation here.
+
+[Original Request / D29-PREPARE-METADATA-REPAIR] Independent P2 review found the
+actual selected FP8 prepare CSV still labels data_source=approximation,factor2.0
+against generic BF16,although exact position pricing never applies this factor.
+Make selected precision/source/factor coherent using actual registration evidence;
+positive FP8/profiling/empty factor. Preserve genuine approximation including
+precision/quant-signature mismatches;never use warning sets as functional state.
+Do not change get_precision,timing,predictor/cache hash or thresholds. Full-row
+positive and actual registration/writer mismatch negatives required.
+
+[Decision] Only frontier/config/quantization_manager.py and existing
+tests/unit/test_comm_operator_families.py;new delta<=40 inside owner3956,starting
+3856/remaining100. Quant manager cap29,current10. Comm test cap50,current48 may
+rise up to70 through zero-sum step5_cost ceiling120→100;root records overlay
+after exact need. No second production path,peer edit,new code path,full CLI,
+GPU/platform or delegation. Keep047 fixture commit and parent source02CLI60ba
+frozen. Parent reports legacy strict77 on60ba77/77 identical;this is metadata
+faithfulness repair,not permission to rerun or modify that verification worktree.
