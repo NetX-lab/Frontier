@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves two extra test paths and analogous necessary repair-path adjustments within the existing budgets. |
 | 2026-10-23 | Clarify both-trainer coverage and shared-manager P/D consumer scope; withdraw an unrequested independent public-consumer prerequisite. |
 | 2026-10-23 | Root selects the existing constructor seam for explicit T2 engine limits within the approved scope. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; begin phased implementation. |
@@ -96,3 +97,20 @@ retaining the observed latent None-manager/name-projection issue and the explici
 test limits in repairs/independent_consumer_scope.md. Do not weaken the two-trainer
 fit/cache checks or claim independent public-consumer qualification. All approved
 actual-main, source/routing, legacy, G3 and numerical gates remain unchanged.
+
+## [Original Request / Decision] D29-REPAIR-PATH-AUTHORITY
+
+Parent asked whether to add tests/unit/test_moe_share_expert_operator_families.py
+and tests/unit/test_dsv4_precision_metadata.py for the six observed fixture
+failures, with total additions/deletions<=60 inside PRICING3956 and global10000.
+
+YC answered:
+
+> 批准，类似问题都授权
+
+These two paths are approved (effective111). Similar necessary repair/test-path
+adjustments for already-approved D29 behavior may be allocated by root within
+the existing owner/global budgets without repeated approval. Record each path,
+reason, bounded delta and verification. This does not authorize unrelated
+features, budget increases, relaxed gates or new GPU allocations. The specific
+zero-sum allocation is repairs/legacy_output_scope_amendment.json.
