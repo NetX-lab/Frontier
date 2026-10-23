@@ -33,6 +33,10 @@ METHODS = (
     (MODEL_MODULE, 'DeepseekV4MLP', 'forward', 'ownership', 'ffn'),
     (MODEL_MODULE, 'DeepseekV4ForCausalLM', 'compute_logits', 'ownership', 'logits'),
     ('vllm.v1.worker.gpu.model_states.default', 'DefaultModelState', 'prepare_attn', 'metadata', 'attention_metadata'),
+    ('vllm.v1.worker.gpu.model_runner', 'GPUModelRunner', 'prepare_attn', 'metadata', 'slot_mapping_preparation'),
+    ('vllm.v1.worker.gpu.block_table', 'BlockTables', 'compute_slot_mappings', 'metadata', 'slot_mappings'),
+    ('vllm.v1.worker.gpu.cudagraph_utils', 'ModelCudaGraphManager', 'run_fullgraph', 'outer', 'model_dispatch_run_fullgraph'),
+    ('vllm.v1.worker.gpu.cudagraph_utils', 'ModelCudaGraphManager', 'run_pw_graph', 'outer', 'model_dispatch_run_pw_graph'),
 )
 FUNCTIONS = (
     (MODEL_MODULE, 'mhc_pre_tilelang'), (MODEL_MODULE, 'mhc_pre_broadcast_tilelang'),
@@ -40,6 +44,11 @@ FUNCTIONS = (
     (MODEL_MODULE, 'hc_head_fused_kernel_tilelang'), (ATTENTION_MODULE, 'fused_q_kv_rmsnorm'),
     (COMPRESSOR_MODULE, 'save_partial_states'), (COMPRESSOR_MODULE, 'compress_norm_rope_store_triton'),
     (COMPRESSOR_MODULE, 'compress_norm_rope_store_two_stage_triton'),
+    ('vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl', 'compress_norm_rope_store_cutedsl'),
+)
+LAUNCHES = (
+    ('vllm.models.common.ops.fused_qk_rmsnorm', '_fused_q_kv_rmsnorm_kernel'),
+    ('vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant', '_fused_inv_rope_fp8_quant_per_head'),
 )
 
 
@@ -53,6 +62,7 @@ class ServingProfile:
         self.status = 'UNVERIFIED'
         self.used, self.dropped = 0, 0
         self.records = 0
+        self.suppressed_errors = 0
         self.step_index = 0
         self.limits = self.observe('limits', self.read_limits)
 
@@ -64,9 +74,11 @@ class ServingProfile:
 
     def error(self, where):
         try:
+            if len(self.errors) >= 64:
+                self.suppressed_errors += 1
+                return
             row = dict(where=where, traceback=traceback.format_exc())
-            if len(self.errors) < 64:
-                self.errors.append(row)
+            self.errors.append(row)
             print('NATIVE_PROFILE_UNVERIFIED', row, file=sys.stderr, flush=True)
         except BaseException:
             pass
@@ -95,11 +107,10 @@ class ServingProfile:
         step = getattr(self.local, 'step', None)
         if dispatch is None and step is not None:
             dispatch = step.get('dispatch_evidence')
-        if step is not None and dispatch is not None and 'dispatch_evidence' not in step:
-            step['dispatch_evidence'] = dispatch
+        if dispatch is not None:
+            self.local.dispatch = dispatch
         context = getattr(native, 'context', None) or ({} if step is None else step.get('context', {}))
-        if step is not None:
-            step['context'] = dict(context)
+        self.local.step_context = dict(context)
         has_prefill = None if dispatch is None else dispatch.get('classifier', {}).get('inputs', {}).get('has_prefill')
         kind = context.get('kind', 'unattributed')
         capture_active = BreakableCUDAGraphCapture.is_active()
@@ -262,41 +273,78 @@ class ServingProfile:
         namespace = importlib.import_module(path)
         self.wrap(namespace if cls is None else getattr(namespace, cls), name, category, scope)
 
-    def install_model(self, worker):
-        if self.worker is worker:
+    def install_launch(self, path, name):
+        # Intercept the invoked Triton launcher, not a platform capability query.
+        namespace = importlib.import_module(path)
+        original = getattr(namespace, name)
+        if getattr(original, '_native_profile', None) is self:
             return
-        self.worker, self.rank = worker, worker.rank
-        model = worker.model_runner.model
-        for name, module in model.named_modules():
-            match = re.search(r'(?:^|\.)layers\.(\d+)(?:\.|$)', name)
-            if match:
-                self.layers[id(module)] = int(match[1])
-        for path, cls, name, category, scope in METHODS:
-            self.observe('install:' + cls + '.' + name, self.install_target,
-                path, cls, name, category, scope)
-        for path, name in FUNCTIONS:
-            self.observe('install:' + name, self.install_target, path,
-                None, name, 'ownership', name)
-        for module in model.modules():
-            if hasattr(module, '_prepare_and_attn_fn'):
-                module._prepare_and_attn_fn = module._prepare_and_attn
-        core = model.model
-        for name, scope in (('embed_tokens', 'embedding'), ('norm', 'final_norm')):
-            self.observe('install:' + scope, self.wrap, getattr(core, name),
-                'forward', 'ownership', scope)
+        observer = self
+
+        class Launch:
+            _native_profile = observer
+
+            def __getattr__(self, attribute):
+                return getattr(original, attribute)
+
+            def __getitem__(self, grid):
+                native = original[grid]
+
+                def call(*args, **kwargs):
+                    with observer.range('launch', name, arguments=kwargs):
+                        return native(*args, **kwargs)
+
+                return call
+
+        setattr(namespace, name, Launch())
+        self.hooks.append(path + '.' + name)
+
+    def install_parallel_target(self):
         self.install_parallel(importlib.import_module(ATTENTION_MODULE))
-        manager = worker.model_runner.cudagraph_manager
-        for name in ('run_fullgraph', 'run_pw_graph'):
-            self.wrap(type(manager), name, 'outer', 'model_dispatch_' + name)
-        self.install_replay(importlib.import_module('vllm.compilation.breakable_cudagraph').BreakableCUDAGraphCapture)
+
+    def install_replay_target(self):
+        self.install_replay(importlib.import_module(
+            'vllm.compilation.breakable_cudagraph').BreakableCUDAGraphCapture)
+
+    def record_facts(self, worker):
         self.facts = dict(environment={k: v for k, v in os.environ.items() if
             any(word in k for word in ('PDL', 'GDC', 'BREAKABLE_CUDAGRAPH', 'CUPTI'))},
             kernel_config=str(worker.vllm_config.kernel_config),
             compilation_config=str(worker.vllm_config.compilation_config),
             profiler_config=str(worker.vllm_config.profiler_config))
         self.facts['source_modules'] = {path: dict(origin=sys.modules[path].__file__)
-            for path in {row[0] for row in METHODS + FUNCTIONS}
+            for path in {row[0] for row in METHODS + FUNCTIONS + LAUNCHES}
             if getattr(sys.modules.get(path), '__file__', None) is not None}
+
+    def install_instances(self, model):
+        for name, module in model.named_modules():
+            match = re.search(r'(?:^|\.)layers\.(\d+)(?:\.|$)', name)
+            if match:
+                self.layers[id(module)] = int(match[1])
+        for module in model.modules():
+            if hasattr(module, '_prepare_and_attn_fn'):
+                module._prepare_and_attn_fn = module._prepare_and_attn
+        for name, scope in (('embed_tokens', 'embedding'), ('norm', 'final_norm')):
+            self.observe('install:' + scope, self.wrap, getattr(model.model, name),
+                'forward', 'ownership', scope)
+
+    def install_model(self, worker):
+        if self.worker is worker:
+            return
+        self.worker, self.rank = worker, worker.rank
+        model = worker.model_runner.model
+        for path, cls, name, category, scope in METHODS:
+            self.observe('install:' + cls + '.' + name, self.install_target,
+                path, cls, name, category, scope)
+        for path, name in FUNCTIONS:
+            self.observe('install:' + name, self.install_target, path,
+                None, name, 'ownership', name)
+        for path, name in LAUNCHES:
+            self.observe('install:' + name, self.install_launch, path, name)
+        self.observe('instance_installation', self.install_instances, model)
+        self.observe('parallel_installation', self.install_parallel_target)
+        self.observe('replay_installation', self.install_replay_target)
+        self.observe('facts', self.record_facts, worker)
 
     def install_replay(self, cls):
         original = cls.replay
@@ -322,6 +370,7 @@ class ServingProfile:
             rank=self.rank, run_generation=self.inventory.generation, role=self.inventory.role,
             steps=self.steps, annotations=self.annotations, synchronization=self.synchronization,
             streams=self.streams, errors=self.errors, hooks=self.hooks,
+            suppressed_errors=self.suppressed_errors,
             limits=self.limits, retained_bytes=self.used, dropped=self.dropped,
             facts=getattr(self, 'facts', {}), inventory_join='serving/rank' + str(self.rank) + '.json',
             unknowns=['per-kernel PDL attributes not observable here',
@@ -358,15 +407,16 @@ class ServingProfile:
                             if not row['local_num_tokens']:
                                 self.local.last_step = None
                             self.step_index += 1
-                            return self.append(self.steps, row)
+                            self.local.dispatch, self.local.step_context = None, {}
+                            return row
                         self.local.step = self.observe('step', begin)
                     try:
                         result = original(worker, *args, **kwargs)
                     finally:
                         if name == 'execute_model' and getattr(self.local, 'step', None) is not None:
-                            self.observe('step_finalize', self.finish_step, self.local.step)
+                            retained = self.observe('step_finalize', self.finish_step, self.local.step)
                             if self.local.step['local_num_tokens']:
-                                self.local.last_step = self.local.step
+                                self.local.last_step = retained
                         self.local.step = previous
                     if name == 'load_model':
                         self.observe('model_installation', self.install_model, worker)
@@ -379,14 +429,16 @@ class ServingProfile:
             self.hooks.append(cls.__name__ + '.' + name)
 
     def finish_step(self, step):
-        dispatch = step.get('dispatch_evidence')
+        # Admit only the final detached row: enrichment cannot bypass capacity.
+        pending = step | {'context': getattr(self.local, 'step_context', {})}
+        dispatch = getattr(self.local, 'dispatch', None) or step.get('dispatch_evidence')
         if dispatch is not None:
-            step['dispatch_forwards'], step['dispatch_replays'] = dispatch['forwards'], dispatch['replays']
-            step['dispatch_evidence'] = {k: v for k, v in dispatch.items() if k not in ('forwards', 'replays')}
-            step['has_prefill'] = dispatch.get('classifier', {}).get('inputs', {}).get('has_prefill')
-            step['synchronized_descriptor'] = dispatch.get('dispatch', {}).get('descriptor')
-            step['synchronized_mode'] = (step['synchronized_descriptor'] or {}).get('cg_mode')
-            self.used += len(json.dumps(step['dispatch_evidence']).encode())
+            pending['dispatch_forwards'], pending['dispatch_replays'] = dispatch['forwards'], dispatch['replays']
+            pending['dispatch_evidence'] = {k: v for k, v in dispatch.items() if k not in ('forwards', 'replays')}
+            pending['has_prefill'] = dispatch.get('classifier', {}).get('inputs', {}).get('has_prefill')
+            pending['synchronized_descriptor'] = dispatch.get('dispatch', {}).get('descriptor')
+            pending['synchronized_mode'] = (pending['synchronized_descriptor'] or {}).get('cg_mode')
+        return self.append(self.steps, json.loads(json.dumps(pending)))
 
 
 class NativeServeProfile(inventory.FullModelInventory):

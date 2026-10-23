@@ -26,7 +26,7 @@ def load():
 
 
 @pytest.fixture
-def profile(v2, monkeypatch):
+def profile(v2, monkeypatch, request):
     monkeypatch.setitem(sys.modules, 'native_full_structure', v2.module)
     monkeypatch.setenv('FRONTIER_NATIVE_PROFILE_LIMITS', json.dumps(dict(records=10000, bytes=10000000)))
     entered, stack = [], []
@@ -41,8 +41,7 @@ def profile(v2, monkeypatch):
             stack.pop()
 
     torch = sys.modules['torch']
-    profiler = ModuleType('torch.profiler')
-    profiler.record_function = record_function
+    profiler = SimpleNamespace(record_function=record_function)
     monkeypatch.setitem(sys.modules, 'torch.profiler', profiler)
     streams = [SimpleNamespace(cuda_stream=i, device_index=0, stream_id=i + 100) for i in (10, 20, 30)]
     current = [streams[0]]
@@ -73,13 +72,26 @@ def profile(v2, monkeypatch):
     monkeypatch.setattr(collector, 'trace_stream', lambda handle: handle + 1000)
     namespaces = {}
     for path, cls, method, category, scope in module.METHODS:
-        namespace = namespaces.setdefault(path, ModuleType(path))
+        namespace = namespaces.setdefault(path, sys.modules[path] if path in (
+            'vllm.v1.worker.gpu.model_runner', 'vllm.v1.worker.gpu.cudagraph_utils') else ModuleType(path))
+        if cls == 'GPUModelRunner':
+            namespace.GPUModelRunner = type(v2.worker.model_runner)
         if not hasattr(namespace, cls):
             setattr(namespace, cls, type(cls, (), {}))
-        setattr(getattr(namespace, cls), method, lambda self, *args, **kwargs: v2.state.result)
+        if not hasattr(getattr(namespace, cls), method):
+            setattr(getattr(namespace, cls), method, lambda self, *args, **kwargs: v2.state.result)
+        if scope == 'slot_mapping_preparation':
+            setattr(getattr(namespace, cls), method, native_function(
+                'vllm/v1/worker/gpu/model_runner.py', method, {}, cls))
     for path, name in module.FUNCTIONS:
         namespace = namespaces.setdefault(path, ModuleType(path))
         setattr(namespace, name, lambda *args, pdl_kwargs=None, **kwargs: v2.state.result)
+    class Kernel:
+        def __getitem__(self, grid):
+            return lambda *args, **kwargs: v2.state.result
+
+    for path, name in module.LAUNCHES:
+        setattr(namespaces.setdefault(path, ModuleType(path)), name, Kernel())
     attn_module = namespaces[module.ATTENTION_MODULE]
     breakable = ModuleType('vllm.compilation.breakable_cudagraph')
 
@@ -101,8 +113,8 @@ def profile(v2, monkeypatch):
     core = namespaces[module.MODEL_MODULE].DeepseekV4Model()
     decoder = namespaces[module.MODEL_MODULE].DeepseekV4DecoderLayer()
     attention = attn_module.DeepseekV4Attention()
-    norm = SimpleNamespace(forward=lambda: v2.state.result)
-    core.embed_tokens, core.norm = norm, SimpleNamespace(forward=lambda: v2.state.result)
+    core.embed_tokens = SimpleNamespace(forward=lambda: v2.state.result)
+    core.norm = SimpleNamespace(forward=lambda: v2.state.result)
     type(core).forward = lambda self, *args, **kwargs: decoder.forward()
     type(decoder).forward = lambda self: attention.forward()
     type(attention).forward = lambda self: self._prepare_and_attn()
@@ -114,11 +126,97 @@ def profile(v2, monkeypatch):
     attention._prepare_and_attn_fn = attention._prepare_and_attn
     v2.worker.vllm_config.kernel_config = 'native kernel config'
     v2.worker.vllm_config.profiler_config = 'torch profiler'
+    manager = v2.worker.model_runner.cudagraph_manager
+    monkeypatch.setattr(type(v2.worker), 'initialize_kv_cache',
+        lambda worker: setattr(worker.model_runner, 'cudagraph_manager', manager), raising=False)
+    if getattr(request, 'param', None) == 'manager_later':
+        v2.worker.model_runner.cudagraph_manager = None
     assert v2.worker.load_model() is v2.state.result
     assert not collector.errors
     return SimpleNamespace(module=module, collector=collector, native=v2,
         core=core, attention=attention, namespaces=namespaces, entered=entered,
         streams=streams, Event=Event, graph=BreakableCUDAGraphCapture)
+
+
+@pytest.mark.parametrize('profile', ['manager_later'], indirect=True)
+def test_manager_none_at_load_keeps_independent_hooks_and_facts(profile):
+    p = profile
+    assert p.native.worker.model_runner.cudagraph_manager is None
+    assert p.collector.facts['kernel_config'] == 'native kernel config'
+    assert 'BreakableCUDAGraphCapture.replay' in p.collector.hooks
+    p.native.worker.initialize_kv_cache()
+    p.native.state.mode = 'FULL'
+    assert p.native.worker.execute_model(scheduled(tokens=1)) is p.native.state.result
+    assert any(r['scope'] == 'model_dispatch_run_fullgraph' for r in p.collector.annotations)
+
+
+def test_metadata_owns_native_early_slot_mapping_boundary(profile):
+    p = profile
+    tables = p.namespaces['vllm.v1.worker.gpu.block_table'].BlockTables()
+    tables.gather_block_tables = lambda *args, **kwargs: None
+    p.native.worker.model_runner.pcp_manager, p.native.worker.model_runner.block_tables = None, tables
+    batch = SimpleNamespace(idx_mapping=None, query_start_loc=None, positions=None,
+        num_reqs_after_padding=16, num_tokens_after_padding=16)
+    assert p.native.worker.model_runner.prepare_attn(batch)[1] is p.native.state.result
+    p.namespaces['vllm.v1.worker.gpu.model_states.default'].DefaultModelState().prepare_attn()
+    assert [r['scope'] for r in p.collector.annotations] == [
+        'slot_mapping_preparation', 'slot_mappings', 'attention_metadata']
+    assert 'slot_mapping_preparation' in p.entered[1][1][0]
+
+
+@pytest.mark.parametrize('path,flags', [
+    ('vllm.models.common.ops.fused_qk_rmsnorm', {'launch_pdl': True}),
+    ('vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant', {'USE_GDC': True, 'launch_pdl': True}),
+])
+def test_native_launch_arguments_are_observed_at_indexed_call(profile, path, flags):
+    class Tensor:
+        shape, ndim, device = (1, 8), 2, 'cpu'
+
+        def stride(self, dim):
+            return 1
+
+        def is_contiguous(self):
+            return True
+
+        def as_strided(self, shape, strides):
+            return self
+
+    namespace = vars(profile.namespaces[path]) | dict(current_platform=SimpleNamespace(is_arch_support_pdl=lambda: True),
+        torch=SimpleNamespace(empty_like=lambda tensor: Tensor(), empty=lambda *a, **k: Tensor(),
+            float8_e4m3fn=object(), int32=object(), float32=object()), triton=SimpleNamespace(next_power_of_2=lambda n: n))
+    function = 'fused_q_kv_rmsnorm' if 'qk_rmsnorm' in path else '_fused_inv_rope_fp8_quant_kernel_impl'
+    native_call = native_function(path.replace('.', '/') + '.py', function, namespace)
+    result = (native_call(Tensor(), Tensor(), Tensor(), Tensor(), 1e-6) if 'qk_rmsnorm' in path else
+        native_call(Tensor(), Tensor(), Tensor(), *([1] * 12)))
+    assert all(isinstance(tensor, Tensor) for tensor in result)
+    assert profile.collector.annotations[-1]['launch_arguments'] == flags
+
+
+def test_cuda_head512_local_import_target_is_owned(profile):
+    from vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl import compress_norm_rope_store_cutedsl
+    assert compress_norm_rope_store_cutedsl(pdl_kwargs={'launch_pdl': False}) is profile.native.state.result
+    assert profile.collector.annotations[-1]['scope'] == 'compress_norm_rope_store_cutedsl'
+    assert profile.collector.annotations[-1]['launch_arguments'] == {'pdl_kwargs': {'launch_pdl': False}}
+
+
+def test_step_enrichment_cannot_exceed_retention_bytes(profile):
+    c = profile.collector
+    initial = dict(step=0, request_ids=['req'], local_num_requests=1, local_num_tokens=1)
+    c.limits = dict(records=1000, bytes=len(json.dumps(initial).encode()) + 8)
+    initial['dispatch_evidence'] = dict(forwards=1, replays=0,
+        classifier=dict(inputs=dict(has_prefill=False)), dispatch=dict(descriptor=dict(num_tokens=16, cg_mode='FULL')))
+    c.finish_step(initial)
+    assert c.steps == [] and c.dropped == 1
+    assert c.used <= c.limits['bytes']
+    c.local.step = dict(step=1)
+    c.inventory.local.dispatch_evidence = initial['dispatch_evidence']
+    c.context()
+    assert c.local.step == dict(step=1)
+    c.limits['bytes'] = 10000
+    retained = c.finish_step(initial)
+    initial['dispatch_evidence']['dispatch']['descriptor']['num_tokens'] = 999
+    assert retained['synchronized_descriptor']['num_tokens'] == 16
+    assert c.used == len(json.dumps(retained).encode())
 
 
 def test_nesting_uses_separate_parser_prefix_and_keyword_calls(profile, monkeypatch):
@@ -138,24 +236,23 @@ def test_nesting_uses_separate_parser_prefix_and_keyword_calls(profile, monkeypa
 
 
 def test_keyword_only_and_original_exception_passthrough(profile):
-    marker = object()
 
     class Router:
         def select_experts(self, *, hidden_states, router_logits):
-            assert hidden_states is marker
+            assert hidden_states is profile.native.state.result
             raise router_logits
 
     error = RuntimeError('native keyword-only exception')
     profile.collector.wrap(Router, 'select_experts', 'ownership', 'routing')
     assert 'hidden_states' in inspect.signature(Router.select_experts).parameters
     with pytest.raises(RuntimeError) as caught:
-        Router().select_experts(hidden_states=marker, router_logits=error)
+        Router().select_experts(hidden_states=profile.native.state.result, router_logits=error)
     assert caught.value is error
     assert not profile.collector.errors
 
 
 @pytest.mark.parametrize('where', ['enter', 'exit', 'append'])
-def test_annotation_failures_are_soft_with_traceback(profile, monkeypatch, where):
+def test_annotation_failures_are_soft_with_traceback(profile, monkeypatch, where, capsys):
     class Broken:
         def __enter__(self):
             if where == 'enter':
@@ -168,10 +265,13 @@ def test_annotation_failures_are_soft_with_traceback(profile, monkeypatch, where
     monkeypatch.setattr(sys.modules['torch.profiler'], 'record_function', lambda name: Broken())
     if where == 'append':
         monkeypatch.setattr(profile.collector, 'append', lambda *args: (_ for _ in ()).throw(OSError('record failure')))
-    assert profile.core.forward() is profile.native.state.result
+    for _ in range(100):
+        assert profile.core.forward() is profile.native.state.result
+    assert capsys.readouterr().err.count('NATIVE_PROFILE_UNVERIFIED') == 64
     profile.collector.emit('test')
     payload = json.loads((profile.native.directory / 'serving_profile/rank7.json').read_text())
     assert payload['status'] == 'UNVERIFIED'
+    assert payload['suppressed_errors'] == 436
     assert 'Traceback' in payload['errors'][0]['traceback']
 
 

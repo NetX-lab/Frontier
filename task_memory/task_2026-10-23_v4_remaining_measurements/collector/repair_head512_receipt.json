@@ -1,0 +1,31 @@
+[
+  {
+    "source": "d94b821a",
+    "control": "pinned_native_cuda_head512_local_import_body",
+    "scopes": [
+      "save_partial_states"
+    ],
+    "verdict": "RED",
+    "launch_arguments": {
+      "pdl_kwargs": {
+        "launch_pdl": false
+      }
+    },
+    "errors": []
+  },
+  {
+    "source": "fixed_source",
+    "control": "pinned_native_cuda_head512_local_import_body",
+    "scopes": [
+      "save_partial_states",
+      "compress_norm_rope_store_cutedsl"
+    ],
+    "verdict": "PASS",
+    "launch_arguments": {
+      "pdl_kwargs": {
+        "launch_pdl": false
+      }
+    },
+    "errors": []
+  }
+]

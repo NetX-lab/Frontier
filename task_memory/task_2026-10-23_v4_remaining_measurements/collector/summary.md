@@ -6,10 +6,17 @@
 | --- | --- |
 | 2026-10-23 | Archived verified launch-seam blockers and separate baseline-suite results; collector implementation is pending root file allocation. |
 | 2026-10-23 | Completed approved collector/launch integration; archived CPU/image results and runtime gates. |
+| 2026-10-23 | Closed five unique review defects with CPU RED/GREEN evidence and fixed-source hashes; prepared another-session handoff. |
 
 ## Outcome
 
 **CPU collector COMPLETE; GPU qualification UNVERIFIED.** Root approved the two-file increment. No delegation, GPU/platform/SSH/cloud/native/C26 operation, root merge, driver, scaling or CPU-cost inference occurred.
+
+Latest repair supersedes initial source/test counts and validation below. Five-file baseline scope880/987:collector457, single test400, worker11, command builder8, P/D env4. Compared with d94b821a:collector92+/40-, test112+/12-, three launch files unchanged; net152 source lines. Five unique findings repaired:load-time None manager uses class hooks; early slot-mapping metadata has actual owners; internal launch PDL/GDC and local-import CUDA compressor boundaries observed; enriched steps atomically admitted/detached; detailed stderr capped64 with suppressed count. Frozen inventory/checker/native/C26/root files unchanged.
+
+Fresh fixed-source validation:collector28 PASS; inventory28 PASS; V2 inventory45 PASS; R4 reader135 PASS; worker16 PASS; DP75 PASS; P/D68 PASS; manifest14 PASS, individually. Image31/31 installed-source symbols PASS, not native runtime qualification. `repair_receipt.json` contains actual SHA256 digests for all five source files and frozen inventory/checker, commands/evidence; `repair_source.diff` is the two-file repair diff. Earlier completion_receipt remains historical d94b821a evidence, not final source binding.
+
+Handoff for another session:verify repair_receipt hashes and root review disposition before integration; root owns future driver/proposal. No driver/GPU authorization or work occurred. Profiles stay UNVERIFIED and all GPU unknowns below remain open.
 
 Original launch RED probes are GREEN through real local functions. One NATIVE_WORKER_EXTENSIONS mapping is reused by all three launch callers.
 

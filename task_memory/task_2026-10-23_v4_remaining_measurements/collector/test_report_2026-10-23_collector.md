@@ -6,8 +6,42 @@
 | --- | --- |
 | 2026-10-23 | Recorded CPU launch probes, separate requested baseline-suite results, source-integrity check and unapplied scope increment. |
 | 2026-10-23 | Completed approved collector; recorded22 new tests, separate affected suites, GREEN launch and installed-image source/torch CPU controls. |
+| 2026-10-23 | Repaired five review findings; recorded RED/GREEN native-body controls, fixed-source suites, SHA256 binding and handoff. |
 
 Task: `W128-V4-NATIVE-SERVE-PROFILE`. Latest outcome: **CPU collector PASS; GPU qualification UNVERIFIED**. Original pre-approval probes/results below are retained as historical evidence, not current status.
+
+## Final review repair (supersedes initial validation counts)
+
+Source baseline scope880/987 changed lines:collector457<=550, one test400<=400, worker11<=25, builder8<=8, P/D env4<=4. Repair against d94b821a:collector92+/40-, test112+/12-, other source unchanged; net152, edit volume256. No controls removed to fit; existing fixtures now preserve actual manager/runner classes, actual-native prepare_attn and PDL function bodies replace weaker name checks, repeated-error checks extend the existing enter/exit/append fault cases.
+
+| Finding | RED on d94b821a | Fixed source GREEN |
+| --- | --- | --- |
+| Load-time manager=None | load_model installation raises NoneType.run_fullgraph, independent replay/facts skipped | class hooks installed without instance; initialize_kv_cache later creates manager, FULL dispatch observed; independent failure soft gate retains facts/replay |
+| Early metadata ownership | no GPUModelRunner.prepare_attn/BlockTables owners | pinned native prepare_attn body enters outer metadata -> slot owner before DefaultModelState metadata |
+| Source-visible PDL/local import | no internal launch wrappers/CuTeDSL import owner | pinned RMSNorm and inverseRoPE bodies emit launch_pdl/USE_GDC at invoked indexed launcher; native CUDA head512 compressor forward invokes annotated local-import callable |
+| Enrichment bytes | initial87-byte step fits95; retained serialized391/accounted204 exceeds95 | no early admission; whole enriched step dropped, retained/accounted0, dropped1; detached successful row unaffected by later inventory mutation |
+| Persistent error log flood |501 full detailed traceback prints despite64 retained errors |64 detailed prints +437 suppressed;100 results and original keyword exception identity preserved |
+
+Initial RED command used real unmodified d94b821a collector source with new tests: same environment below, `pytest tests/unit/test_native_serve_profile.py -q -p no:cacheprovider -k 'manager_none or metadata_owns or native_launch_arguments or head512 or step_enrichment'`: **5FAIL/1ERROR/22deselected**, retained in repair_red.txt. Source-body head512, retention and repeated-log RED/GREEN receipts are separately retained. RED selection rerun with final fixture via selected-source loader reproduced5FAIL/1ERROR; an initial loader binding mistakenly exercised current source and passed6; excluded from RED evidence after diagnosing pytest module name mismatch. No baseline source overwritten.
+
+Fresh final commands use `/data/ycfeng/envs/asyncopd-py312/bin/python -m pytest <suite> -q -p no:cacheprovider`, `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode`. First four suites use `FRONTIER_VLLM_BS_ROOT=/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69`; reader also uses `NATIVE_READER_BINDING_CHECKER=<owner-worktree>/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py`.
+
+| Suite under tests/unit/ | Result | Seconds | Selected evidence |
+| --- | --- | --- | --- |
+| test_native_serve_profile.py |28 PASS |1.93 |repair_collector_green.txt; all five fixes, inherited RPC, launch controls |
+| test_native_serving_inventory.py |28 PASS |0.88 |repair_inventory_green.txt; frozen baseline regression only |
+| test_native_v2_serving_inventory.py |45 PASS |4.17 |repair_v2_inventory_green.txt; frozen baseline regression only |
+| test_native_reader_binding.py |135 PASS |62.64 |repair_reader_green.txt; bound R4 regression only |
+| test_native_pd_worker.py |16 PASS |2.55 |repair_worker_green.txt |
+| test_dp_placement_harness.py |75 PASS |1.71 |repair_dp_green.txt |
+| test_calibration_pd_harness.py |68 PASS |5.71 |repair_pd_green.txt |
+| test_native_pd_manifest.py |14 PASS |1.39 |repair_manifest_green.txt |
+
+All suites separate, not summed as collector evidence. Python3.12.13/pytest9.0.2 unchanged. Image-only source-symbol command uses locked2286e853 digest, `--pull=never --network=none --entrypoint python3 --memory=4g --read-only`, owner worktree mounted read-only, CUDA_VISIBLE_DEVICES empty, AST parses only,45-second alarm. **31/31 symbols PASS**, includes inherited ModelCudaGraphManager.run_pw_graph, two new metadata methods, CuTeDSL module callable and two Triton kernels. No native imports/JIT/CUPTI retry or CUDA initialization.
+
+`repair_receipt.json` binds all five final source digests plus unchanged inventory/checker hashes and each test evidence hash. Direct controls use CPU shapes; native function bodies loaded from pinned2cf0a691 git objects using existing native_function, not CUDA execution. GPU stream mapping, actual GPU PDL, compile/breakable annotation/event survival, captured-segment ownership and CUPTI restart stay UNKNOWN; driver/GPU work SKIPPED by scope. Root independent acceptance remains pending.
+
+Integrity verification PASS:five source hashes/per-file budgets, two frozen hashes and fourteen evidence hashes. Source diff whitespace check PASS. Full staged whitespace check flags only pytest-generated blank-indentation lines in repair_red.txt; raw RED output retained unchanged with its recorded digest, not rewritten as clean prose.
 
 ## Environment
 

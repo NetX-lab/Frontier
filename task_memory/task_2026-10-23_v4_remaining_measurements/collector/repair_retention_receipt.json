@@ -1,0 +1,22 @@
+[
+  {
+    "source": "d94b821a",
+    "initial_fits": true,
+    "limit_bytes": 95,
+    "accounted_bytes": 204,
+    "serialized_step_bytes": 391,
+    "steps_retained": 1,
+    "dropped": 0,
+    "verdict": "RED"
+  },
+  {
+    "source": "fixed_source",
+    "initial_fits": true,
+    "limit_bytes": 95,
+    "accounted_bytes": 0,
+    "serialized_step_bytes": 0,
+    "steps_retained": 0,
+    "dropped": 1,
+    "verdict": "PASS"
+  }
+]

@@ -1,0 +1,212 @@
+EFFFFF                                                                   [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_manager_none_at_load_keeps_independent_hooks_and_facts[manager_later] _
+
+v2 = namespace(module=<module 'native_serving_fixture' from '/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests...e='NONE'), batch_descriptor=namespace(num_tokens=6144, num_reqs=1, uniform=False, has_lora=False, num_active_loras=0)))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f75dfbc0c50>
+request = <SubRequest 'profile' for <Function test_manager_none_at_load_keeps_independent_hooks_and_facts[manager_later]>>
+
+    @pytest.fixture
+    def profile(v2, monkeypatch, request):
+        monkeypatch.setitem(sys.modules, 'native_full_structure', v2.module)
+        monkeypatch.setenv('FRONTIER_NATIVE_PROFILE_LIMITS', json.dumps(dict(records=10000, bytes=10000000)))
+        entered, stack = [], []
+    
+        @contextmanager
+        def record_function(name):
+            entered.append((name, tuple(stack)))
+            stack.append(name)
+            try:
+                yield
+            finally:
+                stack.pop()
+    
+        torch = sys.modules['torch']
+        profiler = ModuleType('torch.profiler')
+        profiler.record_function = record_function
+        monkeypatch.setitem(sys.modules, 'torch.profiler', profiler)
+        streams = [SimpleNamespace(cuda_stream=i, device_index=0, stream_id=i + 100) for i in (10, 20, 30)]
+        current = [streams[0]]
+    
+        @contextmanager
+        def stream(selected):
+            previous, current[0] = current[0], selected
+            try:
+                yield
+            finally:
+                current[0] = previous
+    
+        class Event:
+            def __init__(self):
+                self.cuda_event = 0
+    
+            def record(self, stream=None):
+                self.cuda_event = id(self)
+    
+            def wait(self, stream=None):
+                pass
+    
+        torch.cuda.Event, torch.cuda.current_stream, torch.cuda.stream = Event, lambda: current[0], stream
+        torch.cuda.is_current_stream_capturing = lambda: False
+        monkeypatch.setattr(type(v2.worker), 'sample_tokens', lambda self: v2.state.result, raising=False)
+        module = load()
+        collector = module._PROFILE
+        monkeypatch.setattr(collector, 'trace_stream', lambda handle: handle + 1000)
+        namespaces = {}
+        for path, cls, method, category, scope in module.METHODS:
+            namespace = namespaces.setdefault(path, ModuleType(path))
+            if not hasattr(namespace, cls):
+                setattr(namespace, cls, type(cls, (), {}))
+            setattr(getattr(namespace, cls), method, lambda self, *args, **kwargs: v2.state.result)
+        for path, name in module.FUNCTIONS:
+            namespace = namespaces.setdefault(path, ModuleType(path))
+            setattr(namespace, name, lambda *args, pdl_kwargs=None, **kwargs: v2.state.result)
+        attn_module = namespaces[module.ATTENTION_MODULE]
+        breakable = ModuleType('vllm.compilation.breakable_cudagraph')
+    
+        class BreakableCUDAGraphCapture:
+            @staticmethod
+            def is_active():
+                return (getattr(v2.observer.local, 'context', None) or {}).get('kind') == 'capture'
+    
+            def replay(self):
+                return attention._prepare_and_attn()
+    
+        breakable.BreakableCUDAGraphCapture = BreakableCUDAGraphCapture
+        monkeypatch.setitem(sys.modules, breakable.__name__, breakable)
+        for name in ('maybe_execute_in_parallel', 'execute_in_parallel'):
+            setattr(attn_module, name, native_function('vllm/utils/multi_stream_utils.py', name,
+                dict(torch=torch, Any=object, Callable=object)))
+        for path, namespace in namespaces.items():
+            monkeypatch.setitem(sys.modules, path, namespace)
+        core = namespaces[module.MODEL_MODULE].DeepseekV4Model()
+        decoder = namespaces[module.MODEL_MODULE].DeepseekV4DecoderLayer()
+        attention = attn_module.DeepseekV4Attention()
+        norm = SimpleNamespace(forward=lambda: v2.state.result)
+        core.embed_tokens, core.norm = norm, SimpleNamespace(forward=lambda: v2.state.result)
+        type(core).forward = lambda self, *args, **kwargs: decoder.forward()
+        type(decoder).forward = lambda self: attention.forward()
+        type(attention).forward = lambda self: self._prepare_and_attn()
+        type(attention)._prepare_and_attn = lambda self: self._run_parallel_input_projections()
+        model = v2.worker.model_runner.model
+        model.model = core
+        model.named_modules = lambda: iter([('model', core), ('model.layers.3', decoder), ('model.layers.3.attn', attention)])
+        model.modules = lambda: iter([core, decoder, attention])
+        attention._prepare_and_attn_fn = attention._prepare_and_attn
+        v2.worker.vllm_config.kernel_config = 'native kernel config'
+        v2.worker.vllm_config.profiler_config = 'torch profiler'
+        manager = v2.worker.model_runner.cudagraph_manager
+        if getattr(request, 'param', None) == 'manager_later':
+            v2.worker.model_runner.cudagraph_manager = None
+        assert v2.worker.load_model() is v2.state.result
+>       assert not collector.errors
+E       assert not [{'traceback': 'Traceback (most recent call last):\n  File "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/t...^^^^^^\nAttributeError: type object \'NoneType\' has no attribute \'run_fullgraph\'\n', 'where': 'model_installation'}]
+E        +  where [{'traceback': 'Traceback (most recent call last):\n  File "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/t...^^^^^^\nAttributeError: type object \'NoneType\' has no attribute \'run_fullgraph\'\n', 'where': 'model_installation'}] = <profile_fixture.ServingProfile object at 0x7f75dfbc3740>.errors
+
+tests/unit/test_native_serve_profile.py:121: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+NATIVE_PROFILE_UNVERIFIED {'where': 'model_installation', 'traceback': 'Traceback (most recent call last):\n  File "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration/native_serve_profile.py", line 76, in observe\n    return operation(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration/native_serve_profile.py", line 290, in install_model\n    self.wrap(type(manager), name, \'outer\', \'model_dispatch_\' + name)\n  File "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration/native_serve_profile.py", line 151, in wrap\n    original = getattr(owner, name)\n               ^^^^^^^^^^^^^^^^^^^^\nAttributeError: type object \'NoneType\' has no attribute \'run_fullgraph\'\n'}
+=================================== FAILURES ===================================
+____________ test_metadata_owns_native_early_slot_mapping_boundary _____________
+
+profile = namespace(module=<module 'profile_fixture' from '/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/compar...re'>, manager=<tests.unit.test_native_v2_serving_inventory.v2.<locals>.ModelCudaGraphManager object at 0x7f75dfbefdd0>)
+
+    def test_metadata_owns_native_early_slot_mapping_boundary(profile):
+        targets = {(path, cls, name) for path, cls, name, category, scope in profile.module.METHODS}
+>       assert ('vllm.v1.worker.gpu.model_runner', 'GPUModelRunner', 'prepare_attn') in targets
+E       AssertionError: assert ('vllm.v1.worker.gpu.model_runner', 'GPUModelRunner', 'prepare_attn') in {('vllm.models.deepseek_v4.attention', 'DeepseekV4Attention', '_fused_qnorm_rope_kv_insert'), ('vllm.models.deepseek_v...ention', 'DeepseekV4Attention', 'forward'), ('vllm.models.deepseek_v4.attention', 'DeepseekV4Indexer', 'forward'), ...}
+
+tests/unit/test_native_serve_profile.py:141: AssertionError
+_ test_native_launch_arguments_are_observed_at_indexed_call[vllm.models.common.ops.fused_qk_rmsnorm-_fused_q_kv_rmsnorm_kernel-flags0] _
+
+profile = namespace(module=<module 'profile_fixture' from '/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/compar...re'>, manager=<tests.unit.test_native_v2_serving_inventory.v2.<locals>.ModelCudaGraphManager object at 0x7f75dfbd07d0>)
+path = 'vllm.models.common.ops.fused_qk_rmsnorm'
+name = '_fused_q_kv_rmsnorm_kernel', flags = {'launch_pdl': True}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f75dfbd2450>
+
+    @pytest.mark.parametrize('path,name,flags', [
+        ('vllm.models.common.ops.fused_qk_rmsnorm', '_fused_q_kv_rmsnorm_kernel', {'launch_pdl': True}),
+        ('vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant', '_fused_inv_rope_fp8_quant_per_head',
+            {'USE_GDC': True, 'launch_pdl': True}),
+    ])
+    def test_native_launch_arguments_are_observed_at_indexed_call(profile, path, name, flags, monkeypatch):
+        marker = object()
+    
+        class Kernel:
+            def __getitem__(self, grid):
+                return lambda *args, **kwargs: marker
+    
+        namespace = ModuleType(path)
+        setattr(namespace, name, Kernel())
+        monkeypatch.setitem(sys.modules, path, namespace)
+>       profile.collector.install_launch(path, name)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'ServingProfile' object has no attribute 'install_launch'. Did you mean: 'install_events'?
+
+tests/unit/test_native_serve_profile.py:160: AttributeError
+_ test_native_launch_arguments_are_observed_at_indexed_call[vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant-_fused_inv_rope_fp8_quant_per_head-flags1] _
+
+profile = namespace(module=<module 'profile_fixture' from '/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/compar...re'>, manager=<tests.unit.test_native_v2_serving_inventory.v2.<locals>.ModelCudaGraphManager object at 0x7f75dfb09b20>)
+path = 'vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant'
+name = '_fused_inv_rope_fp8_quant_per_head'
+flags = {'USE_GDC': True, 'launch_pdl': True}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f75dfb08ef0>
+
+    @pytest.mark.parametrize('path,name,flags', [
+        ('vllm.models.common.ops.fused_qk_rmsnorm', '_fused_q_kv_rmsnorm_kernel', {'launch_pdl': True}),
+        ('vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant', '_fused_inv_rope_fp8_quant_per_head',
+            {'USE_GDC': True, 'launch_pdl': True}),
+    ])
+    def test_native_launch_arguments_are_observed_at_indexed_call(profile, path, name, flags, monkeypatch):
+        marker = object()
+    
+        class Kernel:
+            def __getitem__(self, grid):
+                return lambda *args, **kwargs: marker
+    
+        namespace = ModuleType(path)
+        setattr(namespace, name, Kernel())
+        monkeypatch.setitem(sys.modules, path, namespace)
+>       profile.collector.install_launch(path, name)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'ServingProfile' object has no attribute 'install_launch'. Did you mean: 'install_events'?
+
+tests/unit/test_native_serve_profile.py:160: AttributeError
+________________ test_cuda_head512_local_import_target_is_owned ________________
+
+profile = namespace(module=<module 'profile_fixture' from '/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/compar...re'>, manager=<tests.unit.test_native_v2_serving_inventory.v2.<locals>.ModelCudaGraphManager object at 0x7f75dfbb3200>)
+
+    def test_cuda_head512_local_import_target_is_owned(profile):
+>       assert ('vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl',
+            'compress_norm_rope_store_cutedsl') in profile.module.FUNCTIONS
+E       AssertionError: assert ('vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl', 'compress_norm_rope_store_cutedsl') in (('vllm.models.deepseek_v4.nvidia.model', 'mhc_pre_tilelang'), ('vllm.models.deepseek_v4.nvidia.model', 'mhc_pre_broad...k_v4.nvidia.model', 'hc_head_fused_kernel_tilelang'), ('vllm.models.deepseek_v4.attention', 'fused_q_kv_rmsnorm'), ...)
+E        +  where (('vllm.models.deepseek_v4.nvidia.model', 'mhc_pre_tilelang'), ('vllm.models.deepseek_v4.nvidia.model', 'mhc_pre_broad...k_v4.nvidia.model', 'hc_head_fused_kernel_tilelang'), ('vllm.models.deepseek_v4.attention', 'fused_q_kv_rmsnorm'), ...) = <module 'profile_fixture' from '/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration/native_serve_profile.py'>.FUNCTIONS
+E        +    where <module 'profile_fixture' from '/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration/native_serve_profile.py'> = namespace(module=<module 'profile_fixture' from '/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/compar...re'>, manager=<tests.unit.test_native_v2_serving_inventory.v2.<locals>.ModelCudaGraphManager object at 0x7f75dfbb3200>).module
+
+tests/unit/test_native_serve_profile.py:166: AssertionError
+______________ test_step_enrichment_cannot_exceed_retention_bytes ______________
+
+profile = namespace(module=<module 'profile_fixture' from '/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/compar...re'>, manager=<tests.unit.test_native_v2_serving_inventory.v2.<locals>.ModelCudaGraphManager object at 0x7f75dfb09a00>)
+
+    def test_step_enrichment_cannot_exceed_retention_bytes(profile):
+        c = profile.collector
+        initial = dict(step=0, request_ids=['req'], local_num_requests=1, local_num_tokens=1)
+        c.limits = dict(records=1000, bytes=len(json.dumps(initial).encode()) + 8)
+        initial['dispatch_evidence'] = dict(forwards=1, replays=0,
+            classifier=dict(inputs=dict(has_prefill=False)), dispatch=dict(descriptor=dict(num_tokens=16, cg_mode='FULL')))
+        c.finish_step(initial)
+>       assert c.steps == [] and c.dropped == 1
+E       assert ([] == []
+E         
+E         Use -v to get more diff and 0 == 1)
+E        +  where 0 = <profile_fixture.ServingProfile object at 0x7f75dfb0a450>.dropped
+
+tests/unit/test_native_serve_profile.py:177: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_native_serve_profile.py::test_metadata_owns_native_early_slot_mapping_boundary
+FAILED tests/unit/test_native_serve_profile.py::test_native_launch_arguments_are_observed_at_indexed_call[vllm.models.common.ops.fused_qk_rmsnorm-_fused_q_kv_rmsnorm_kernel-flags0]
+FAILED tests/unit/test_native_serve_profile.py::test_native_launch_arguments_are_observed_at_indexed_call[vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant-_fused_inv_rope_fp8_quant_per_head-flags1]
+FAILED tests/unit/test_native_serve_profile.py::test_cuda_head512_local_import_target_is_owned
+FAILED tests/unit/test_native_serve_profile.py::test_step_enrichment_cannot_exceed_retention_bytes
+ERROR tests/unit/test_native_serve_profile.py::test_manager_none_at_load_keeps_independent_hooks_and_facts[manager_later]
+5 failed, 22 deselected, 1 error in 0.72s
