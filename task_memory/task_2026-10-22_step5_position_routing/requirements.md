@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Record bounded residual CPU repairs and carry forward YC's task-required H800 authority. |
 | 2026-10-23 | YC defers handoff and resumes all remaining work in the current session;existing acceptance/resource limits remain. |
 | 2026-10-23 | YC requests closure of the currently executing work, code/document commits and a prompt for continuation in another session. |
 | 2026-10-23 | YC approves two extra test paths and analogous necessary repair-path adjustments within the existing budgets. |
@@ -146,3 +147,24 @@ Continue from the verified delivery in this session. Freeze e41abc07 for fresh
 full CLI and required regressions;rebind T2 records in parallel without modifying
 the active frozen worktree. The handoff document remains a historical checkpoint.
 This request does not change budgets,workload,gates or GPU approval boundaries.
+
+## [Implementation Decision] D29-RESIDUAL-INPUT-WORK
+
+Under D29-REPAIR-PATH-AUTHORITY, allocate the measured once-per-loader family
+resolution to two existing CORE paths (<=45 gross) and conditional exact-text
+artifact parsing reuse to two existing PRICING paths (<=50 gross). These are
+separate from the active105-gross model-group repair. The two ordered overlays
+and acceptance rules are in repairs/input_validation_and_artifact_parsing.md.
+Owner/global ceilings, per-row/per-plan checks and full-run gates stay unchanged.
+
+## [Original Request / Cross-task Decision] H800 resource authority
+
+YC's2026-10-23 cross-task approval, carried by project memory394:
+
+> 批准；h800集群的的运行无需向我过问，允许你提交符合任务需求的任意规模的rjob（在h800上）
+
+Task-required H800 runs no longer require another resource approval. Actual
+quota/capacity, platform/storage rules, D29 scope and workflow/package readiness
+remain binding. This does not approve H200 resources or qualify a pending run.
+Earlier unapproved-resource statements below historical checkpoints retain only
+their historical meaning; final T2 staging must carry this current authority.

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Append disjoint performance-repair allocations and final-source review/freeze dependency. |
 | 2026-10-23 | Close40/65 CLI repair and deliver reviewed code for session handoff;final workflow qualification remains pending. |
 | 2026-10-23 | Reconcile effective111 and four scope overlays; require final-source gates after review closure. |
 | 2026-10-23 | Close scope investigation: preserve both trainer checks; independent public consumer is not a D29 repair prerequisite. |
@@ -22,6 +23,14 @@ in this directory binds the approval and analysis. Native19 design remains at
 (commit c9e9274); the other three designs are in this task.
 
 ## Sole-writer assignments
+
+Current residual repairs: model_group_reuse_scope_amendment.json (CORE105),
+init_validation_scope_amendment.json (CORE45), then
+collective_artifact_parse_scope_amendment.json (PRICING50) extend the existing
+ordered allowance chain without changing111 paths or aggregate caps. The latter
+two are disjoint from the first and each other. Their design and acceptance are
+in input_validation_and_artifact_parsing.md. Parent verification and independent
+review precede a new source freeze and final actual-main/regression runs.
 
 Use the retained rows of `../scope.json` (138 rows after removing H11,107 unique
 paths). Sum each path's retained allowances once; do not subtract H11 again.

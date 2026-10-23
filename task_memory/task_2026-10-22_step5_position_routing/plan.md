@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Allocate disjoint loader45/parser50 repairs;diagnose remaining startup time and carry H800 authority forward. |
 | 2026-10-23 | Parent confirms repeated group-resolution hotspot;allocate three-path CORE repair<=105 gross through a zero-sum overlay. |
 | 2026-10-23 | Both main07 modes hit2400s;require a short real-path performance loop before repair or another full run. |
 | 2026-10-23 | Close final e41 regression/static binding checks;replace interrupted main06 with main07 under unchanged bounds. |
@@ -30,7 +31,10 @@ path/owner total changes; the latter transfers40 unused CORE allowance and limit
 the new repair to65 gross. Apply model_group_reuse_scope_amendment.json afterward
 for the measured performance correction:three existing CORE paths,total<=105
 gross,100 path-allowance lines moved within CORE;111 paths and aggregate caps stay.
-requirements.md records YC's authority.
+Then apply init_validation_scope_amendment.json and
+collective_artifact_parse_scope_amendment.json:two existing CORE paths<=45 gross
+and two existing PRICING paths<=50 gross, with27/50 zero-sum allowance transfers.
+requirements.md records YC's authority and the later task-required H800 approval.
 
 Completed handoff boundary: CLI placement repair -> parent real-constructor checks
 and independent re-review -> feature-branch code/record consolidation. YC now
@@ -39,7 +43,7 @@ defers handoff and resumes here. Code merge4ed67d78 and T2 records merge
 
 Current dependency: freezee41abc07 (complete) -> {required regression/full
 actual-main checks,final T2 source binding,updated actual per-path accounting}
--> package readiness -> resource/run decision
+-> package readiness -> quota check/run under the existing H800 authority
 -> fresh native/profile evidence -> G3 and independent four-metric E2E acceptance.
 
 The earlier main04 attempt on60ba is diagnostic only. Main05 on1be supplies the
@@ -51,7 +55,9 @@ both modes hit2400s. Current dependency adds a faithful short performance loop,
 hotspot diagnosis and owner-scoped repair/review before a new final-source run.
 The parent-confirmed first repair is fixed-model group reuse;its design and
 acceptance are in repairs/model_group_reuse.md. Reassess residual real-point cost
-after this fix before committing to another full CLI run.
+after these fixes before committing to another full CLI run. The disjoint loader
+and artifact-parser scopes are in repairs/input_validation_and_artifact_parsing.md;
+the unexplained initial21.5-minute interval requires a separate bounded diagnosis.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
@@ -64,11 +70,11 @@ after this fix before committing to another full CLI run.
 | Complete integration and final freeze | Complete:e41abc07 frozen clean in verify-step5-d29-integrated-05,gitlink3dac53c. |
 | Legacy strict77 | Final04 on e41:77/77 identical;451 artifact hashes and519 cache names per side verified. |
 | Full-unit failure/error-set gate | Closed on e41 with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. Raw suite still exits1. |
-| Fresh fixture and full CLI | main07 both modes timed out at2400s. Parent real-point RED/control confirmed;CORE implements bounded fixed-model group reuse. Independent initialization/collective-JSON investigations remain diagnosis-only. |
+| Fresh fixture and full CLI | main07 both modes timed out at2400s. Model-group105,loader45 and conditional parser50 repairs are allocated;parent checks/review and residual diagnosis precede another full run. |
 | Independent source review | Earlier findings closed on1be91bad;CLI40-gross repair closed No findings at75ad26f9. |
 | T2 final-source binding | e41 rebind d7d6ad8c delivered;parent63 checksums/26 full files PASS;physical staging/seal follows CLI completion. |
 | Final per-path accounting | Delivery remeasured:111 allocated/110 changed,9102 source/9116 global,zero per-path violations. |
-| Package/GPU/G3/E2E | Blocked by workflow readiness and separate resource approval; original gates remain. |
+| Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments
 and verification. Native CPU-gap work remains last. Deferred independent-consumer

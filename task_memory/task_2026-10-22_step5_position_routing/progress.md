@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Verify minimal loader control;allocate loader45/parser50 repairs and retain unexplained startup interval for diagnosis. |
 | 2026-10-23 | Accept actual pricing RED/control and allocate fixed-model group reuse to CORE within105 gross. |
 | 2026-10-23 | main07 times out in both modes at2400s;archive receipts and assign bounded real-path performance diagnosis to CORE. |
 | 2026-10-23 | Accept fresh e41 regression and static T2 receipts;record interrupted main06 and unchanged main07 rerun. |
@@ -70,12 +71,20 @@
   total<=105 gross under unchanged CORE/global caps. Scope/design:
   repairs/model_group_reuse_scope_amendment.json and model_group_reuse.md.
   No full CLI retry assigned;parent checks/review and residual profile come first.
-- in-progress/read-only: D29-INIT-VALIDATION-SCOPE,
-  ses_e97f7ad75ffe5o033hPr5NESWp,examines the existing bounded loader/typed-validation
-  evidence and reuse boundaries. D29-COLLECTIVE-JSON-SCOPE,
-  ses_e97f52f46ffepmzBxQWhTSVtnY,isolates repeated backend artifact parsing using
-  the real pricing loop. Neither task may edit production/tests or expand the
-  approved model-group implementation;both return measured scope proposals.
+- completed/diagnostic: D29-INIT-VALIDATION-SCOPE reports repeated constant config
+  derivation. Parent corrected3000-row control:2.837s->0.275s,one derivation,equal
+  payload. Counter correction and unauthorized prior full scans/75s bounds are
+  explicitly retained in init_validation_scope/report.md;parent used60s/30GiB.
+- completed/diagnostic: D29-COLLECTIVE-JSON-SCOPE measures20 large decodes/1.094s
+  across5 real point calls;its stat-keyed control keeps complete payloads equal.
+  That invalidation design is not selected. Existing same-instance file rewrite
+  behavior is retained by the new exact-text proposal.
+- allocated: D29-INIT-FAMILY-RESOLUTION,two existing CORE paths,source6/test39/
+  total45;D29-COLLECTIVE-ARTIFACT-PARSE,two existing PRICING paths,source15/test35/
+  total50,conditional on a measured exact-text control. Both preserve live
+  validation and have disjoint ownership from the model-group repair. Design and
+  overlays:repairs/input_validation_and_artifact_parsing.md. The initial21.5-minute
+  interval remains unassigned causally and needs a bounded real-path diagnosis.
 - completed: D29-E41-FINAL-REGRESSIONS records committed b5a74416/5ceb68c9.
   strict77 final04 is77/77 identical,451 artifact hashes and519 cache filenames per
   side. Full unit:8015PASS/279FAIL/32ERROR/281SKIP,raw exit1. The exact historical
@@ -96,7 +105,8 @@
 - pending: establish the timeout's real hotspot,assign an evidence-backed bounded
   repair to its owner,verify/review/refreeze any source change,then rerun affected
   final gates and full CLI. Final T2 staging and package readiness remain blocked.
-  GPU resources remain unapproved.
+  Task-required H800 resource authority is already granted;workflow/package
+  readiness and actual capacity remain prerequisites for T2 execution.
 
 ### Delivered checkpoint (retained;pending items now execute above)
 
