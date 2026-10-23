@@ -1,0 +1,28 @@
+# CPU implementation and measurement preparation
+
+## Modification History
+
+| Date | Change |
+| --- | --- |
+| 2026-10-23 | Started approved kernel-only route with parallel evidence audit and integration design. |
+| 2026-10-23 | Checkpoint correction: split G into G1 (merge/matrix) and G2 (measurement proposal); added H (native V2 profiling extension) that owns the audit's minimum capture additions. |
+
+## Dependencies and ownership
+
+`A -> {B kernel/dependency audit, C private-input design, D native measurement seam}; C -> E bounded implementation -> F focused verification/review -> G1 merge and matrix gate; {B, D} -> H native profiling extension -> G2 executable measurement proposal`
+
+E and H run in parallel; they own disjoint files.
+
+| Step | Owner | Acceptance |
+| --- | --- | --- |
+| A | Root | Approval recorded; previous freeze/results intact; outstanding reference records committed. |
+| B | Audit agent | Actual trace/source census distinguishes proven coverage/order/dependencies from missing evidence; originals unchanged. Own only audit records and its analysis script. |
+| C | Root | Reuse private sidecar/admission and existing reader/path selection; design integration and typed coverage boundary before core edits. |
+| D | Source explorer | Exact native V2 worker/extension/profile seams for TP8/DP2/EP16, graph attribution limits and minimum changes; no invented shared-TP requirement. |
+| E | Owner assigned after B/C | Complete private input/consumer component; named file allocation and budget; no unproved total or guard relaxation. |
+| F | Root and independent reviewers | Actual accepted-data checks, scoped negatives, source review; fixes owned by implementer. |
+| G1 | Root | Merge verified E source; strict fixed-source77 comparison against the bound pre-change capture. |
+| H | One implementation owner | New non-core `tests/comparison/calibration/native_serve_profile.py` worker extension (seam §11 estimate 350–450 lines) plus its existing-pattern unit tests. Covers every audit minimum addition: nested outer forward/layer/attention ranges with request/repeat/phase/warmup identity; metadata/mHC/FFN/embedding/norm/logits ownership; per-call event record/wait handle, generation and stream records; PDL launch attributes retained. CPU-only verification with stand-ins; no native/C26 edit, no GPU. |
+| G2 | Root | After H: exact collection needs, resources, duration and acceptance gates for a later GPU decision. |
+
+Read requirements.md before closure. Do not sum scope medians into serving time before ownership completeness and GPU dependencies are proven. Preserve family/PD/graph/TP8 refusals where evidence is absent. A collection proposal is not run approval.
