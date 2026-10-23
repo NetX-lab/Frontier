@@ -1,0 +1,22 @@
+
+==================================== ERRORS ====================================
+_____ ERROR collecting tests/unit/test_profiling_governance_minimal_red.py _____
+ImportError while importing test module '/data/ycfeng/Frontier/.worktrees/step5-d29-loader-family/tests/unit/test_profiling_governance_minimal_red.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../../envs/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/unit/test_profiling_governance_minimal_red.py:15: in <module>
+    from frontier.execution_time_predictor.shared_prediction_model_manager import (
+frontier/execution_time_predictor/__init__.py:4: in <module>
+    from frontier.execution_time_predictor.execution_time_predictor_registry import (
+frontier/execution_time_predictor/execution_time_predictor_registry.py:13: in <module>
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+frontier/execution_time_predictor/sklearn_execution_time_predictor.py:28: in <module>
+    from fasteners import InterProcessReaderWriterLock
+E   ModuleNotFoundError: No module named 'fasteners'
+=========================== short test summary info ============================
+ERROR tests/unit/test_profiling_governance_minimal_red.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 1.90s

@@ -717,12 +717,16 @@ class ProfilingDataFrameLoaders:
                 )
             # Parse every row before applying scalar filters so malformed metadata
             # cannot be hidden by an unrelated TP, EP, or width selector.
+            architecture_family_id = resolve_runtime_attention_family(
+                replica_config.model_config
+            ).family_id
             parsed_typed_contracts = cast(
                 pd.Series,
                 df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
                     lambda raw_contracts: validate_typed_operator_contracts(
                         raw_contracts,
                         model_config=replica_config.model_config,
+                        architecture_family_id=architecture_family_id,
                     )
                 ),
             )
