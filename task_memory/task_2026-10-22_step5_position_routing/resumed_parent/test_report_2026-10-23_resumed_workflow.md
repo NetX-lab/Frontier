@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Post-timeout source/submodule freeze and all nine recorded input hashes pass;retain measured scope and command. |
 | 2026-10-23 | Record main07 FAIL:both modes reach the2400s timeout;retain exact evidence and start short-loop diagnosis. |
 | 2026-10-23 | Accept raw-XML regression reconciliation and T2 static binding;preserve main06 interruption and record main07 command. |
 | 2026-10-23 | Verify archived three-suite results without rerunning tests;retain pending long-run verdicts. |
@@ -96,3 +97,38 @@ offline and0.25 online. Neither mode has final request/system metrics or stage,
 lane or transfer ledgers. Logs contain no traceback. This partial progress does
 not identify the CPU hotspot. CORE now owns a faithful,seconds-scale profiling
 loop;no source change,full CLI retry or numerical/GPU qualification is claimed.
+
+### Post-timeout input and source integrity
+
+Parent verification at2026-10-23T08:33:05Z:all9 files named by the run's
+input_hashes.json still match their launch SHA256 values. Total9,900,444,171 bytes;
+streaming verification took12.356094s under a60s bound,using1MiB chunks. Frozen
+e41 source and independent submodule3dac53c remain clean. The source tree is
+5427b8db2c4a7a30a88c88f88a9c30d0c19a8750. PASS;this settles the recorded inputs'
+integrity,not the performance cause. Receipt:main07_timeout_receipt.json,
+postrun_integrity.
+
+Reproduction command (Python3 on the host;timing and JSON report formatting omitted):
+
+```bash
+timeout 60s python3 - <<'PY'
+from pathlib import Path
+import hashlib, json, subprocess
+run = Path('/data/ycfeng/tmp/d29-parent-position-main07')
+for name, expected in json.loads((run / 'input_hashes.json').read_text()).items():
+    digest = hashlib.sha256()
+    with Path(name).open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(block)
+    assert digest.hexdigest() == expected, name
+repo = Path('/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05')
+for path, revision in (
+    (repo, 'e41abc073500d61f224eda4fca1123e74e40544d'),
+    (repo / 'frontier/cc_backend/backends/collective-sim',
+     '3dac53c544e546574cb6e8078cd14053d0916113'),
+):
+    assert subprocess.check_output(['git', '-C', str(path), 'rev-parse', 'HEAD'], text=True).strip() == revision
+    assert not subprocess.check_output(['git', '-C', str(path), 'status', '--porcelain'], text=True).strip()
+print('PASS: nine input hashes and clean source/submodule revisions')
+PY
+```

@@ -26,6 +26,18 @@
     "scheduler_sha256": "a426f3ef1ac6f6efb3ed409ac2e52080dff23b6cf6a1d4fb40f7ce6efbccf764"
   },
   "summary_sha256": "1ba228b86b50437da1c60553a4a2d3770ec897883e35484be0186cfa73753885",
+  "postrun_integrity": {
+    "status": "PASS",
+    "observed_at_utc": "2026-10-23T08:33:05.606777+00:00",
+    "source_tree": "5427b8db2c4a7a30a88c88f88a9c30d0c19a8750",
+    "source_clean": true,
+    "submodule_clean": true,
+    "input_count": 9,
+    "total_input_bytes": 9900444171,
+    "input_hash_receipt_sha256": "b70073bab974bc14f548b893f573a06b6e0175f1067044bb81036b8785ff8f6e",
+    "wall_s": 12.356093783862889,
+    "method": "Stream SHA256 of all nine inputs named by input_hashes.json in 1MiB blocks under a 60s bound;compare each with the launch receipt. Verify frozen Git HEAD, tree, clean status and independent submodule HEAD/status."
+  },
   "observed_partial_progress": {
     "both_modes_scheduler_events": {
       "iteration_start": 2,

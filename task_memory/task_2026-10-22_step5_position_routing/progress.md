@@ -55,6 +55,9 @@
   scheduler progress and lack completed request/system metrics or stage/lane/
   transfer ledgers. No traceback appears in the run logs. Failure and hashes:
   resumed_parent/main07_timeout_receipt.json. No whole-workflow acceptance.
+- completed: post-timeout integrity check confirms all9 recorded input hashes
+  (9,900,444,171 bytes,12.356s),clean e41 source and clean3dac53c submodule.
+  This rules out changes to those recorded inputs,not a particular CPU hotspot.
 - in-progress: D29-CLI-TIMEOUT-REPRO,CORE owner ses_e9b3efeebffem2dcbXlVGNr8O2,
   builds a seconds-scale deterministic real-call-path performance loop using
   retained inputs and current source. Diagnostic scratch:
