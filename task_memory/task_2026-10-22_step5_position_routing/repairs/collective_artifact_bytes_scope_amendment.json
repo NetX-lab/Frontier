@@ -1,0 +1,27 @@
+{
+  "decision_id": "D29-COLLECTIVE-ARTIFACT-BYTES",
+  "authority": "D29-REPAIR-PATH-AUTHORITY",
+  "apply_after": "immutable_cost_fields_scope_amendment.json",
+  "effective_unique_paths": 112,
+  "owners": {"core_source": 4404, "pricing": 3956},
+  "repair_delta_ceiling": 36,
+  "source_delta_ceiling": 26,
+  "test_delta_ceiling": 10,
+  "repair_paths": [
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+    "frontier/execution_time_predictor/moe_routing_workload.py",
+    "tests/unit/test_collective_sim_cc_backend.py"
+  ],
+  "per_path_step_caps": {
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": 12,
+    "frontier/execution_time_predictor/moe_routing_workload.py": 14,
+    "tests/unit/test_collective_sim_cc_backend.py": 10
+  },
+  "path_ceiling_adjustments": [
+    {"path": "frontier/cc_backend/backends/collective_sim_cc_backend.py", "before": 93, "delta": -2, "after": 91},
+    {"path": "tests/unit/test_collective_sim_cc_backend.py", "before": 233, "delta": 2, "after": 235}
+  ],
+  "reason": "The existing exact-text caches still decode the same 8MB file to text on every call. The real-wave control reads on every call but compares raw bytes, decoding explicitly only for JSON parsing; warm pricing falls from0.95-1.33s to0.31-0.39s with unchanged payloads. This replaces representations inside existing caches, not their lifetimes. A two-line test byte marker preserves the existing parser-call instrumentation; its allowance comes from unused backend allowance. Expected retained growth is2, subject to Git measurement.",
+  "acceptance": "Use read_bytes() at both existing read sites, compare exact current bytes and call json.loads(raw.decode()) only on a miss. Retain the previous successful pair/preparation after read/decode/parse failure. Adapt only the existing test read hook, preserving all assertions including2reads/1parse, same-size/restored-mtime updates, repeated invalid JSON and exact read-error identity. Keep current80reads per complete16EP wave; verify208 full costs/proofs/keys, prepared replacement/negative cases and existing affected tests. Measure Git step/retained counts and independently review before integration.",
+  "limits": "Only the three named existing paths. No stat/path/global/wave/load-time cache, shared API, numerical or native cache-key change, new flag, omitted reads/checks, altered source selection or weakened errors. Explicit UTF8 decoding preserves string-based JSON parsing behavior. The previous text representation decisions are amended only here. CORE47/native19/PRICING46, source9942 and global10000 caps remain unchanged. Full CLI6144/1024 and2400s per-mode gate remain pending."
+}

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate three-path36-gross current-byte comparison through a2-line zero-sum PRICING transfer; preserve all current-read gates. |
 | 2026-10-23 | Close cost-fields component after reviews/parent verification; correct workload clock origins and proceed to current-byte comparison and output-path analysis. |
 | 2026-10-23 | Accept prepared159 after parent82/2 and both reviews; allocate cost-fields8; correct startup attribution using measured multiplicity. |
 | 2026-10-23 | Accept and merge trace repair64881373 after both reviews and parent byte/proof/error checks; continue prepared implementation and residual analysis. |
@@ -53,6 +54,9 @@ The concurrent trace20 and prepared250 reservations leave164 CORE lines free.
 Delivered prepared159 and trace14 now leave299 actual CORE headroom.
 Apply immutable_cost_fields_scope_amendment.json next: two existing PRICING
 paths,8-gross step, no allowance changes and verified retained0.
+Apply collective_artifact_bytes_scope_amendment.json afterward: three existing
+CORE/PRICING paths,36gross step. Transfer2unused PRICING lines from backend93->91
+to test233->235; workload323 and all owner/global totals remain unchanged.
 
 Completed handoff boundary: CLI placement repair -> parent real-constructor checks
 and independent re-review -> feature-branch code/record consolidation. YC now
@@ -70,7 +74,7 @@ real execution-path feedback loop -> measured cause -> bounded repair allocation
 regressions and full CLI. A passing isolated point is not the full-workflow gate.
 Parent has now verified the original layer61 loop and all208 operators of the
 complete adjacent layer60 wave at position6147. The active parallel work is:
-current-byte comparison repair preparation + output-preserving encoding analysis.
+current-byte comparison implementation(36gross) + output-preserving encoding analysis.
 The non-I/O identity-cache control is rejected because it did not improve timing.
 Cost-fields75404143 is now parent-verified and independently reviewed,8gross and
 zero retained growth, and merged with trace/prepared on feat/step5-preview.

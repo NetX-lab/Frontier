@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate artifact bytes36 through two unused PRICING allowance lines; retain per-call reads and all existing behavior assertions. |
 | 2026-10-23 | Merge verified cost-fields75404143, archive both reviews and HTSIM-completed checks, correct workload clocks and close negative identity-cache analysis. |
 | 2026-10-23 | Archive prepared acceptance/9389 union; correct historical startup multiplicity; allocate cost-fields8 with unchanged allowances. |
 | 2026-10-23 | Merge accepted trace repair64881373; parent98PASS/1baselineFAIL, exact598-event bytes and208/208 actual proofs; global9268. |
@@ -74,7 +75,10 @@
 - completed/diagnostic: collective investigation supports per-call current-byte
   comparison, about0.31-0.39s warm versus0.95-1.33s baseline, with all80reads and
   matching payloads. No shared lifetime or native cache-key change is allocated.
-  Root prepares a bounded byte-read repair and behavioral test-hook adaptation.
+  Root allocates36gross for byte comparison and only the required existing test
+  hook adaptation. Backend cap93->91 donates2lines to test233->235; workload323
+  is unchanged. Expected retained growth2requires Git confirmation. Controlling
+  record:repairs/collective_artifact_bytes_scope_amendment.json.
 - completed/diagnostic: post-prepared pricing7344627b is archived. The existing
   marker cache is already used; extra identity caching gives no measured gain.
   Parent verified8source and6script hashes plus the fixture manifest. No new

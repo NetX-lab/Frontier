@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate current-byte comparison within existing caches and adapt only the existing read-hook instrumentation, with unchanged live checks and quotas. |
 | 2026-10-23 | Allocate8-gross immutable cost-field conversion in two existing PRICING paths without changing allowances. |
 | 2026-10-23 | Allocate prepared point selection to three existing CORE paths, at most250 gross, after parent differential verification. |
 | 2026-10-23 | Allocate a20-gross single-path trace serialization replacement under existing repair-path authority; other residual proposals remain unallocated. |
@@ -231,3 +232,26 @@ D29-added lines, so root comparison with1aee0af observes no retained growth and
 no allowance transfer is needed. Verify source behavior and Git accounting, then
 independently review. This does not approve borrowing source components, changing
 flush writes or duplicating the plan-key encoder.
+
+## [Implementation Decision] D29-COLLECTIVE-ARTIFACT-BYTES
+
+Under the existing repair authority, replace text comparison in the two existing
+artifact caches with exact current-byte comparison. Read the file on every query
+and prediction, and explicitly decode UTF8 only when parsing changed bytes.
+This amends the earlier text-representation wording, not the current-read or
+invalidation contract. Keep all placement, source, qualification, context,
+buffer/count and numerical checks live; preserve failed-read/parse behavior.
+
+Allocate36gross across the existing backend(12), workload(14) and backend test(10).
+The test may adapt its read hook and byte-to-text marker only; every existing
+behavior assertion stays. Transfer2unused PRICING allowance lines from the
+backend93->91 to the test233->235. CORE workload cap323 and all owner/global
+ceilings stay unchanged;112paths remain. Root expects approximately2retained
+lines, but acceptance uses Git measurements. The controlling overlay is
+repairs/collective_artifact_bytes_scope_amendment.json.
+
+Verify actual80reads/16EP wave, full208event costs/proofs/plan keys, existing
+prepared-input replacement/negative cases and affected unit checks. Preserve
+same-size/restored-mtime updates, repeated invalid JSON and original read-error
+identity. No wave/load-time sharing, new API, native numerical cache-key change,
+read suppression or expanded full-run limit is authorized by this amendment.
