@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves both additions and similar necessary repair-path adjustments within unchanged budgets; resume preserved test edits. |
 | 2026-10-23 | Record strict77 RED and allocate bounded PRICING repair using existing four paths. |
 | 2026-10-23 | Propose two regression-fixture paths within unchanged budgets; correct premature root authorization and request YC approval. Record merge deduplication. |
 
@@ -88,3 +89,8 @@ file limit in requirements.md28/44-47. That authorization was premature. The own
 has been instructed to pause only those additions, preserve any local work and
 continue the original four approved legacy-output paths. No scope expansion is
 effective pending YC approval. Read-only diagnosis and RED tests remain allowed.
+
+YC subsequently answered **批准，类似问题都授权**. Both additions are now approved,
+and the owner has resumed the preserved two-file edits. The temporary pause above
+is historical, not current status. Similar necessary D29 repair-path adjustments
+can be allocated inside the same owner/global budgets with explicit records.

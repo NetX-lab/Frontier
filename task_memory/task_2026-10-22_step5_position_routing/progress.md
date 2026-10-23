@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves repair-path amendment; parent legacy194PASS; strict77 and full offline/online CLI started on frozen60ba4c75. |
 | 2026-10-23 | Initial gates archived: full-unit six fixture regressions, native dependencies resolved, strict77 RED; two extra test paths proposed pending YC approval. |
 | 2026-10-23 | strict77 comparison RED:77 metadata/empty-proof mismatches despite successful runs; assign PRICING four-path80-gross repair and reconcile final scope/T2 composition. |
 | 2026-10-23 | Parent accepts two-file fixture fix72/80 with28PASS; freeze9974acdb with verifiedgitlink3dac, start full-unit/strict77, and retain separate frozen full-input generation. |
@@ -91,6 +92,16 @@
   the explicit file limit. Owner pauses only these additions and preserves any
   local work; the four already-approved legacy-output paths<=80 continue.
   Final parent evidence and exact commands: final_parent/.
+- completed: YC approves both proposed test paths and similar necessary repairs
+  within existing budgets (requirements D29-REPAIR-PATH-AUTHORITY). Effective111;
+  owner resumes preserved test edits. Original four-path repair b60dfddd is37/80
+  gross and retained PRICING3840/3956. Parent independently passes194 affected
+  tests on source60ba4c75, not just the owner-reported result.
+- in-progress: freeze60ba4c75 in verify-step5-d29-integrated-02 for strict77 at
+  /data/ycfeng/tmp/d29_workflow_fidelity_20261023_repair02 and actual offline/online
+  CLI at /data/ycfeng/tmp/d29-parent-position-main04, using fixture03. Keep this
+  tree unchanged while runners enforce source identity. Per-mode timeout2400s;
+  no GPU work launched. Fixture-only delivery and independent review continue.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
   qualification and fresh GPU/native evidence. Additional collection resources

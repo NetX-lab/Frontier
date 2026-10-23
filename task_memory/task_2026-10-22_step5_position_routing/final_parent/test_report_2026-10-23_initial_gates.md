@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Append YC authorization and parent194PASS on the repaired frozen source; strict77/CLI reruns are in progress. |
 | 2026-10-23 | Preserve full-unit and strict77 RED, fixture preparation, restored T2 verification and merge-duplicate correction. |
 
 ## Snapshots and outcome
@@ -103,3 +104,30 @@ effective path ceilings after YC decides the two-file proposal; run unchanged st
 on the repaired source using the already-generated inputs. Before native launch,
 rebind the T2 package's complete source provenance to final integrated files.
 GPU/native, graph, G3 and E2E numerical acceptance remain separate.
+
+## Subsequent repair checkpoint
+
+YC approved both extra paths and similar necessary repair-path adjustments:
+`批准，类似问题都授权` (requirements D29-REPAIR-PATH-AUTHORITY). Earlier pending
+approval statements above describe the initial checkpoint. Effective scope111
+with unchanged owner/global budgets; the original owner resumed both tests.
+
+Four-file fix b60dfddd is37 gross against9974,35 retained-line growth. Root merged
+it with the restored/deduplicated T2 tree as60ba4c7569b7c9fd4c8f9f43a16f92249fa76181
+and initialized the same local detached submodule3dac53c. No network/build.
+Parent independently obtained **194 PASS,0 FAIL/ERROR/SKIP,6.348s**:
+
+```bash
+timeout 180s env -u FRONTIER_TEST_CPU_WRITER_FILE -u FRONTIER_TEST_CPU_WRITER_SHA256 PYTHONPATH="$PWD:$PWD/tests/unit" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_comm_operator_families.py tests/unit/test_ep_wave_trace_context.py tests/unit/test_quantization_manager_registry.py tests/unit/test_quantization_module_precision.py tests/unit/test_op_trace_utils.py tests/unit/test_ep_trace.py tests/unit/test_collective_sim_cc_backend.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29_legacy_parent07 --junitxml=/data/ycfeng/tmp/d29_legacy_parent07.xml > /data/ycfeng/tmp/d29_legacy_parent07.log 2>&1
+```
+
+Workdir verify-step5-d29-integrated-02 stays frozen for active strict77 at
+`/data/ycfeng/tmp/d29_workflow_fidelity_20261023_repair02` and actual CLI at
+`/data/ycfeng/tmp/d29-parent-position-main04`. Exact launch:
+
+```bash
+timeout 5100s env -u FRONTIER_TEST_CPU_WRITER_FILE -u FRONTIER_TEST_CPU_WRITER_SHA256 PYTHONPATH="$PWD:$PWD/tests/unit" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json --output-root /data/ycfeng/tmp/d29-parent-position-main04 --mode all > /data/ycfeng/tmp/d29-parent-position-main04.log 2>&1
+```
+
+The runner retains2400s for each mode. Rerun output is pending, not a pass;
+independent four-file review and T2 full-source resealing run separately.

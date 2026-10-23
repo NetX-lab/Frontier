@@ -1,6 +1,7 @@
 {
   "decision_id": "D29-LEGACY-OUTPUT-REPAIR",
-  "status": "PROPOSED_AWAITING_YC_APPROVAL_NOT_EFFECTIVE",
+  "status": "YC_APPROVED_EFFECTIVE",
+  "user_answer": "批准，类似问题都授权",
   "apply_after": "core_review_scope_amendment.json",
   "owner": "pricing",
   "owner_total_ceiling": 3956,
@@ -17,5 +18,5 @@
   "path_ceiling_adjustments": [
     {"path": "frontier/execution_time_predictor/step5_cost.py", "before": 180, "delta": -60, "after": 120}
   ],
-  "notes": "Proposal only: requires YC approval before the two added paths are edited or committed. Effective scope remains109. Root's initial self-authorization was premature under requirements.md's explicit file limits; the owner was told to pause only these additions and preserve any local work. If approved, add60 and withdraw60 from the same owner; source/global caps stay unchanged. The existing four-path legacy repair<=80 continues. Final per-path reconciliation follows actual completed repairs. Native/core/registry allowances, typed/cache identities and GPU authorization are unchanged."
+  "notes": "YC explicitly approved both paths and analogous necessary repair-path adjustments within existing budgets. Effective111. Add60 and withdraw60 from step5_cost in the same owner; source/global caps stay unchanged. Existing four-path legacy repair<=80 plus these fixtures<=60. Final per-path reconciliation follows completed actual deltas. Root's earlier premature authorization and temporary pause remain recorded history. Native/core/registry allowances, typed/cache identities and GPU authorization unchanged."
 }
