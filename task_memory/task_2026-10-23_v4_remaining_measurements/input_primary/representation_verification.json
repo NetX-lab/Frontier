@@ -1,0 +1,74 @@
+{
+  "status": "REPRESENTATION_VERIFIED_PENDING_ADMITTED_AUTOMATIC_LOOKUP",
+  "timestamp_utc": "2026-10-23T04:55:18.769928+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_representation_check.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-attention-input",
+  "source_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "source_files": {
+    "frontier/execution_time_predictor/dsv4_attention_input.py": "5dfe5a9bff174af19c2bc74836ddbf54811266f678718db1b6a491a7b4d2e04a",
+    "frontier/execution_time_predictor/deepseek_v4.py": "ab11024d018ce6b0bf1a2203518bd0b3ed8027c16afe41ec3176c95556213461",
+    "tests/comparison/calibration/prepare_dsv4_attention_input.py": "fdb91fd3e3845d3e4029545cc4a4e13827c63980f1eabed2b0491a39a848e272",
+    "tests/integration/check_dsv4_measured_scopes.py": "622cf7d368fcffc83106a67d679195e4cc54b1b7449c2e377fabbd4e6b4f6767",
+    "tests/unit/test_dsv4_graph_measured.py": "5ad32dd4eadb294f5f8bea6102e5e4eb533555d945ae97a4fa0dd713d4a5221b"
+  },
+  "candidate": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02",
+  "candidate_files": {
+    "attention.csv": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f",
+    "attention_kernel_only.csv": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43",
+    "dsv4_attention.json": "d688f3a27e972b5ca9903498f841de0fb50311512cb2b98404c5d478208489f7",
+    "evidence/acceptance.json": "616ee98996664c82c03b8d505de64b9cea917529a44c8a94b0068c708d5115e6",
+    "evidence/job.json": "03949241a9885a7741c6c64b5abac6f8df8644447d9b8cb836cbebdc6acd3181",
+    "evidence/manifest.json": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+    "evidence/model.json": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+    "evidence/plan.json": "b8d730cda713cdcf85c3d77648d9f9fa2e0dd95fe8d44cb0b08c826007153a82",
+    "evidence/raw.jsonl": "0330db5625e5d7a8b014ffa804d962b1798ddf05222109896c0f79e4fce61ec4",
+    "evidence/summary.json": "38a62d2b1209caa0e209eedde91789766afb09b507c0aa232646c9c2829648ce"
+  },
+  "non_timing_records": 7,
+  "removed_call_records": 282,
+  "independently_reconstructed_table_layouts": 12,
+  "original_package_files": 529,
+  "originals_unchanged": true,
+  "unadmitted_method_rejections": [
+    "V4 isolated attention input rejected in /data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/dsv4_attention.json: [Errno 2] No such file or directory: '/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/dsv4_attention.admission.json'",
+    "V4 isolated attention input rejected in /data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/dsv4_attention.json: [Errno 2] No such file or directory: '/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/dsv4_attention.admission.json'"
+  ],
+  "explicit_positives": 94,
+  "legacy_positives": 102,
+  "legacy_typed_negatives": 72,
+  "legacy_error_temporary_path_differences": [
+    24,
+    25,
+    29,
+    34,
+    35,
+    60,
+    61,
+    65,
+    70,
+    71
+  ],
+  "isolated_only": true,
+  "serving_admission": false,
+  "matrix_artifacts_rehashed": 451,
+  "reconstructed_sidecar": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_checks/candidate/dsv4_attention.json",
+    "sha256": "36105755a664acfb0fd1d87e4cdbb462097de993c68eaf81d44ff4b5ec12a2a9",
+    "parsed_json_equal": true,
+    "raw_bytes_equal": false,
+    "reason": "Only metadata-column key order differs"
+  },
+  "evidence": {
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_units.json": "7276505ff188a11ec0f3114505011f28578df1ac5d8bbb9267843f6894f27137",
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_checks/explicit.json": "a55b06a3f03cda45cbdab62b17c58bf8a1b86e1c27d530f4f057b40a56253df3",
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_checks/legacy.json": "91b203ddb4e326c70742878e78f8fae0d2a7a5f024dff1c2acc432adb4882a51",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_input_source.md": "6c13f0ea279f31846df7d886db9c3b0136f6d46595c5fca496ffeafd1be04a04",
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_representation_check.py": "bb63b655a18a1829e0016d7b50b1169a0c50ac04d030eea5cac683265f4cfe1d"
+  }
+}
