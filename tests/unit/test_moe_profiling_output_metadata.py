@@ -170,3 +170,43 @@ def test_explicit_source_input_parser_preserves_one_cell_protocol_and_rejects_mi
     path.write_text(json.dumps(payload))
     with pytest.raises(ValueError, match="distinct"):
         read_routing_profile_inputs(path)
+
+
+@pytest.mark.parametrize("trainer", ["shared", "independent"])
+@pytest.mark.parametrize("damage", ["absent", "invalid"])
+def test_automatic_position_training_requires_supplied_source_before_estimators(tmp_path, monkeypatch, trainer, damage):
+    from frontier.config import global_vars
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.types import ClusterType, MeasurementType
+    from frontier.execution_time_predictor.moe_dataset_training import position_moe_operator_facts
+    from tests.integration import step5_measured_compute_fixture as fixture
+    from tests.unit.test_step5_measured_ffn import _config, _replica
+    from tests.unit.test_step5_measured_training import _manager
+    from tests.unit.test_moe_grouped_gemm_padded_features import _ConcreteMoEPredictor
+    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "full_and_piecewise")
+    monkeypatch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", list(fixture.CAPTURE_SIZES))
+    monkeypatch.setattr(fixture, "range", lambda *a: (6144,6145) if a == (6143,7167) else range(*a), raising=False)
+    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    paths, _ = fixture.position_compute_tables(tmp_path, model, device="h800", measurement=MeasurementType.CUDA_EVENT)
+    replica = _replica(model)
+    replica.moe_expert_parallel_size, replica.moe_routing_distribution_type = 16, "position_cyclic"
+    manager = _manager(tmp_path / "cache", MeasurementType.CUDA_EVENT)
+    manager._cluster_configs = {ClusterType.MONOLITHIC: SimpleNamespace(replica_config=replica)}
+    rows = pd.read_csv(paths[1])
+    for facts in position_moe_operator_facts(rows, replica):
+        manager._validate_moe_dataset_contract(str(paths[1]), replica, list(facts), ClusterType.MONOLITHIC, operator_facts=facts)
+    if damage == "absent": rows = rows.drop(columns="routing_input")
+    else: rows["routing_input"] = "{}"
+    rows.to_csv(paths[1], index=False)
+    def forbidden(*args, **kwargs): pytest.fail("Unvalidated source reached estimator or legacy helper")
+    if trainer == "shared":
+        monkeypatch.setattr(manager, "_train_single_model", forbidden)
+        call = lambda: manager._train_ffn_models_for_cluster(ClusterType.MONOLITHIC, replica, _config(), str(paths[0]), str(paths[1]), True, set())
+    else:
+        predictor = object.__new__(_ConcreteMoEPredictor)
+        predictor._model_config, predictor._replica_config, predictor._moe_input_file = model, replica, str(paths[1])
+        predictor._moe_routing_distribution_type, predictor._active_measurement_type = "position_cyclic", MeasurementType.CUDA_EVENT
+        monkeypatch.setattr(predictor, "_get_profiling_metadata", forbidden)
+        call = predictor._train_moe_models
+    with pytest.raises((ValueError, KeyError), match="routing_input|source_frames"):
+        call()

@@ -91,7 +91,7 @@ def filter_moe_operator_rows(df, *, operator_facts, requested_runtime_path, sour
     required = {"model_architecture_profile", "routing_runtime_path", "moe_frame_scope",
                 "typed_operator_contracts", "num_tokens", "live_routing_token_count",
                 "masked_routing_token_count", "num_tensor_parallel_workers", "expert_parallel_size",
-                "gating_runtime_context", "profiling_precision", *metadata}
+                "gating_runtime_context", "profiling_precision", "routing_input", *metadata}
     missing = sorted(required - set(df.columns))
     if missing:
         raise ValueError(f"MoE physical scope metadata missing {missing}. Source: {source_name}")
@@ -126,9 +126,8 @@ def filter_moe_operator_rows(df, *, operator_facts, requested_runtime_path, sour
                or value < 0 for value in (physical, live, masked)) or physical <= 0 or physical != live + masked:
             raise ValueError("MoE physical rows must equal live plus masked rows")
         validate_moe_gating_runtime_context(row["gating_runtime_context"])
-        if "routing_input" in row:
-            from frontier.execution_time_predictor.moe_routing_workload import validate_position_moe_source_row
-            validate_position_moe_source_row(row)
+        from frontier.execution_time_predictor.moe_routing_workload import validate_position_moe_source_row
+        validate_position_moe_source_row(row)
         if row_scope == scope:
             validate_typed_operator_metadata(typed[target], operator_name=target,
                                             expected_metadata=contract.typed_metadata_identity())

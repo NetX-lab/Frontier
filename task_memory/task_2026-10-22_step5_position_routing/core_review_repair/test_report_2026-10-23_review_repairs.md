@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Record R1 actual inheritance/delegation RED/GREEN with scoped quota. |
+| 2026-10-23 | Record R2 automatic preflight/trainer missing-descriptor RED and36PASSGREEN. |
 
 TaskID:D29-CORE-REVIEW-REPAIR. Isolated worktree `/data/ycfeng/Frontier/.worktrees/step5-core-review-fixes`,baseline d96b3279. No full CLI or GPU/native qualification. Root submodule checkout3dac preserved unstaged. Commands use `PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp`;py312 addsVLLM_TARGET_DEVICE=cpu. Python3.12.3 `/data/ycfeng/envs/asyncopd-py312/bin/python`,Python3.10.6 `/data/ycfeng/envs/frontier-py310/bin/python`.
 
@@ -27,3 +28,15 @@ env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VLLM_TARG
 ## Retained earlier CLI terminal, not a new run
 
 Original shell notification already arrived before this repair task. `/data/ycfeng/tmp/d29-core-position-main-seam03/command.json`, `execution.json`, `run.log`:exit1,wall1555.208038s,timed_out=false,internal2400s unchanged. Initialization passes after2a862c25 and reaches actual PREFILL sync/EP wave then missing old `data/profiling/network/h800/collective_local.json`. This vector predates complete CPU payload/path forwarding, so proves neither current complete fixture/main nor native importer rejection. No polling, original worktree edit or CLI rerun in this repair branch.
+
+## R2 automatic supplied source admission
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/unit/test_moe_profiling_output_metadata.py -k 'automatic_position' > /data/ycfeng/tmp/d29-core-review-r2-red01.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/unit/test_moe_profiling_output_metadata.py tests/unit/test_moe_routing_runtime.py tests/integration/test_step5_measured_main.py -k 'not position_source_wrapper' > /data/ycfeng/tmp/d29-core-review-r2-green01.log 2>&1
+```
+
+- Existing actual producer creates canonical252-row FP8/BF16 source/gathered CSV; initial real manager preflight succeeds. Only routing_input removed (or replaced with empty descriptor), then actual automatic shared trainer with its preflight or independent trainer called. Estimator/metadata sentinel proves rejection order, not a shallow filter-only test.
+- RED01:absent column shared/independent reach forbidden estimator/metadata (`Failed: Unvalidated source reached estimator or legacy helper`). Invalid descriptor already rejected;old test regex schema_version mismatched actualsource_frames and was corrected. No production relaxation.
+- GREEN01:36PASS/3deselected68.81s;four new source negatives plus current automatic actual producercold/warmfit/cache,command/defaults/metadata contracts. Hardware wrapper excluded here andcoveredR1py312/currentintegrationseam separately.
+- Production requires routing_input column and always calls existing validate_position_moe_source_row. No new source validator,estimator/default,unownedtrainer orregistryedit. R2delta3added/4deleted+40testadded=47;baseline runtime103/133,test125/135. R1+R2delta91/230.
