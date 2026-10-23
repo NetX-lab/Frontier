@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Verify archived three-suite results without rerunning tests;retain pending long-run verdicts. |
 | 2026-10-23 | Freeze e41abc07 and launch fullCLI;independent regressions/T2 binding run in parallel. |
 
 Status:IN_PROGRESS. No new run verdict is claimed.
@@ -26,3 +27,13 @@ Output paths were absent before launch. The source and submodule stay frozen;
 root status records are written on feat/step5-preview instead. Do not modify
 retained inputs,old runs,workload bounds or the backend placement gate. This
 CPU/synthetic-cost run supplies no native/GPU numerical qualification.
+
+## Completed independent short suites
+
+Parent reparsed the three archived JUnit XMLs under resumed_regressions/evidence,
+asserted exact counts and zero failure/error/skip,and hashed each XML in
+short_suites_receipt.json. Supplement101:101PASS/8.598s;metadata196:196PASS/8.208s;
+catalogue53:53PASS/2.581s. This is verification of delivered results,not another
+test execution. The owner's reports retain exact commands and environments.
+The suites are separate and their counts are not summed. strict77,full-unit and
+fullCLI verdicts remain pending.

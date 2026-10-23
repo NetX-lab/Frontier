@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent verifies fresh e41 supplement101,metadata196 and catalogue53 receipts;long-running gates remain pending. |
 | 2026-10-23 | Resume current session;freeze e41abc07 and launch main06 with independent regressions and isolated T2 source rebinding. |
 | 2026-10-23 | Close CLI repair after parent57PASS/6SKIP and No findings;merge code4ed67d78/T2 records9c77b559 and record next-session execution. |
 | 2026-10-23 | Apply checkpoint route corrections; separate current frontier from historical receipts and restrict main04 to diagnostic evidence. |
@@ -49,6 +50,12 @@
   owns only resumed_regressions/ records and new scratch outputs. strict77,
   full-unit baseline-ID comparison,Python3.12 supplement and retained affected
   checks all use frozene41 source. No exclusion or source modification permitted.
+- completed: parent reads archived JUnit for three independent fresh e41 suites:
+  supplement101PASS,metadata196PASS,catalogue53PASS;each zeroFAIL/ERROR/SKIP.
+  Times8.598/8.208/2.581s respectively. These counts are not summed and do not
+  close the still-running strict77/full-unit/main06 gates. Checksummed receipt:
+  resumed_parent/short_suites_receipt.json. Regression owner will finish its
+  exact comparisons and commit its complete records after tool notifications.
 - in-progress: D29-T2-E41-SOURCE-BINDING,owner ses_e9b3f65b5ffeMAo4OpbcxD9LIV,
   prepares record-only rebind in a separate e41-based worktree. It must not edit
   active integrated05. Root staging/seal occurs after CPU gates finish.
