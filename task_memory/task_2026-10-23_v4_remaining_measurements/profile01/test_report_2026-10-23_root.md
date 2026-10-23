@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Recorded initial profile01 image/hook checks, fresh-entry RED controls and preserved verification-harness errors. |
+| 2026-10-23 | Rechecked repaired profile02 after both reviews and merge cc0227e9; final entry/image/four-position checks and 45-file seal passed. |
 
 ## Scope and environment
 
@@ -60,4 +61,13 @@ The personal cloud parent `/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18` w
 
 ## Open acceptance
 
-Original owner is repairing only generated entry paths through the builder and preparing fresh profile02. Required: independently reviewed repair, fresh launcher and real-bootstrap entry GREEN, updated image/source/package checks, then root seal/submission and actual retained-artifact verification. All runtime unknowns in the proposal remain open.
+Source repair `d87f4c74` was accepted by both delta reviewers and merged at `cc0227e9ea0f7e173e1f37d7e302f943ff86707a`. Root then wrote `profile02_source_binding.json` and ran final checks against those immutable package bytes. Submission and actual retained-artifact verification remain pending; all runtime unknowns in the proposal remain open.
+
+## Final profile02 verification
+
+- Before the final run, both maintained builder/plan files matched the reviewed source commit; all 13 staged runtime modules matched `git show 05952396:<source-path>`, retained source/staged hashes matched, and all 45 package hashes matched delivery. The original profile01's 45 files were independently rehashed unchanged.
+- Final receipt: `/data/ycfeng/tmp/glm53_dsv4/profile02_final_cc0227e9_8hf9_hy7/receipt.json`. Exact commands, timestamps, per-command stdout/stderr and executed image/hook scripts are alongside it. Root ran the actual StepMind Python interpreter, not a substitute environment, for the launcher control (`profile_entry_dv74yxw3/receipt.json`).
+- Results are separate: actual launcher entry **PASS**; real locked-image bootstrap/fresh child **PASS** with exactly 87 source, 23 tool and 20 binary pins; positions 0, 1, 2 and 3 each **PASS** for isolated wrapper/profile hooks and configuration. No actual GPU constructor/model forward/replay was invoked. All 45 package files were unchanged after the checks.
+- The intermediate `profile02_image_entry_hvboefyj` run proved the fresh child import but failed the old verifier's one-directory PYTHONPATH assertion. The template expectation was corrected in memory to require exactly package root plus the staged DP directory, preserving cwd and every source/binary check. Original failure and executed scripts are retained; the accepted final result uses this corrected expectation.
+- Root invoked the unchanged staged `seal.py`, then `launch.py --check-only`, with `/data/ycfeng/tmp/stepmind-env/bin/python -B`. Seal contains exactly the 45 verified inputs; manifest SHA-256 `51e39a42ec863e496f20be8a165230e0dee17c34906ad6bd4fade14bf898ee91`. Check-only printed `INPUT_HASHES_PASS_NO_SUBMISSION`. `profile02_root_readiness.json` records **SEALED_READY_DIAGNOSTIC**, not GPU/reference admission.
+- Fresh personal quota census: `/data/ycfeng/tmp/glm53_dsv4/profile02_quota_4fw5fy06/census.json`, 2026-10-23T10:02:36Z, zero active personal jobs; codesign non-preemptible use 126/128 GPUs. Fresh read-only destination proof: `profile02_destination_rotlq0zx/receipt.json`, personal profile root absent and parent mode 0755. These are snapshots, not capacity reservations.

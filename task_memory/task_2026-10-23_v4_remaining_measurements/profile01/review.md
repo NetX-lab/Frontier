@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Recorded independent initial Standards/Spec reviews and root reproduction of the staged-entry failure. |
+| 2026-10-23 | Both delta reviews closed the entry repair at d87f4c74 with no new findings; merged source at cc0227e9 for final package checks. |
 
 ## Initial review scope
 
@@ -30,3 +31,17 @@ Reviewer: `W128-PROFILE01-SPEC`, session `ses_e97ece46effeX9qSjHRv2ITgd3`.
 - Original delivering owner is correcting generated launcher/bootstrap paths through the builder, within the same two-file/300-line scope. Profile01 remains unchanged, unsealed and unsubmitted. Fresh profile02 requires independent recheck, actual entry/image verification and root acceptance before submission.
 
 Initial summary: **Standards 0 findings; Spec 1 finding, worst P1.** Repair verification and runtime/GPU qualification remain pending.
+
+## Repair re-review
+
+Reviewed source `d87f4c74b9d5c0eec0958ba2b7351e76b04acf14`, records `a90c9dbbee53e2cabbfac73ba8490ffb958ce8eb`, same reviewer sessions as above. Delta `62092da3..d87f4c74` is 21 changed lines; cumulative maintained source/config scope is 152/300 lines in two files.
+
+### Standards
+
+**No findings.** The profile-only builder changes supply the actual staged dependency path in both entry environments (`build_candidate.py:177–181,275–279`; generated bootstrap72–74/launcher30–32). Source/staged hashes remain separately recorded (`source_lock.json:122–133`). Fresh02 rejects directory reuse and preserves profile01. No accepted-runtime edit, second launcher mechanism, scope breach or actionable smell was found. Exact byte preservation, owner CPU checks and matrix binding were supplied evidence; the reviewer did not re-execute them.
+
+### Spec
+
+**Original P1 source defect closed; no new actionable findings.** Both generated paths now resolve the staged dependency before importing the worker. The changes stay in the profile branch and preserve accepted runtime source. The reviewed owner controls use no preloaded `pd_replay` or external dependency-path supplement. Their bootstrap source/binary stand-ins remain explicitly limited. This closes the source issue, not full launcher/GPU qualification.
+
+Root independently observed actual StepMind-interpreter launcher entry PASS (`profile_entry_1od7foss`) and real locked-image bootstrap-child PASS with 87 source/23 tool/20 binary pins (`profile02_image_entry02_vqtcre50`). An earlier root image assertion still required the old one-directory PYTHONPATH; its failure is retained and the corrected assertion requires exactly the generated two-directory path. Root merged at `cc0227e9` and proceeds with final frozen package checks. Final review summary: **Standards 0 findings; Spec 0 open findings (P1 closed).**
