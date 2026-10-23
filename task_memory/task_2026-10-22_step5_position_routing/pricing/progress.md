@@ -12,6 +12,7 @@
 | 2026-10-23 | Close final producer/selection and legacy trace checks; archive scoped budget/dependencies. |
 | 2026-10-23 | Complete F3-F6 finite review repairs and exact JUnit/budget records. |
 | 2026-10-23 | Verify F4a/F4b frozen grouping/call-time boundaries and3067 budget. |
+| 2026-10-23 | Repair C1 actual routing and C2 point/layout binding after review. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -609,3 +610,106 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Full execution_policy remains CORE plan/count/cache contract。
 2. Owned boundary fixes delivered at506b43ac，预算剩余889。
 3. Actual GPU/runtime qualification and global D29 acceptance remain open。
+
+## D29-PRICING-COMPUTE-REPAIR
+
+- in-progress: C1/C2 only from bfe6f2ae/sub3dac53c; source3067/3956 leaves889,
+ 43/44 paths. Reviewer frozen8e61c2d checked against latest F4 identity first.
+- RED C2:21 cases=18 FAIL/3 PASS (wrong/missing compute and activation/scales/
+ top-k/output accepted). C1 real published native-method cases16 FAIL because
+ no selection observer seam existed. Exact commands/JUnit retained in tmp.
+- Cause C1: generic comparison priced only comm schemas/provenance/class labels;
+ now original named selection executes once, references retained, exact position/
+ mask/weights/config compared after execution. Actual _select/_compute/strategy
+ callables are verified before patch. Wrong ID/weight/sentinel/config negatives.
+- Cause C2: collector context has shared/engine/environment/execution_policy only,
+ CORE chooses plan by source/tensors. Same complete actual compute point must be
+ in per-cell buffer receipt, not frozen fit identity; H04 rejects incomplete seam.
+ No peer edit/duplicate materializer/classification or unsupported fallback.
+- Iterations: C2 GREEN21 PASS; moving binding into buffer exposed3 empty-object
+ fixture errors (plan correctly rejects empty receipt). Fixture preserves original
+ supplied_output field, extended actual layout checks GREEN36 PASS. C1 capture
+ mock parent module import failure fixed only in fixture; published32-case final
+ adds native exception+entry/exit soft diagnostic checks. Indentation typo stopped
+ one collection (0 cases); corrected before actual execution. Native topk mismatch
+ was correctly observed as7 but test expected8; fixture assertion corrected.
+- targeted combined GREEN02:196 PASS/100 SKIP; actual native C1 final28 PASS,
+ next32-case rerun includes entry-diagnostic/native-error combination. No broader
+ installed native or GPU proof. Exact C2 integration field in interface_receipt.
+
+## 1. 规划完成情况
+**汇总：** PASS1｜BLOCKED/FAILED/SKIPPED0｜TODO2
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| C2 owned H04 context/layout validation | PASS |36 targeted PASS; actual handoff dependency documented |
+| C1 observed route/validator | TODO |28 actual native PASS; final32-case and source validation pending |
+| Final affected/budget/commit evidence | TODO |Targeted combined GREEN; final affected rerun next |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**bfe6f2ae至今｜**当前前沿：**C1/C2 verified scoped delivery
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Actual observer/H04 negatives required for C1/C2 |
+| D2 细节反复重试 | CLEAR |Different fixture causes narrowed; no varied native behavior |
+| D3 支线问题修补 | CLEAR |No environment/peer side fix |
+| D4 可并行任务停滞 | CLEAR |C1/C2 CPU checks execute parallel; no agents authorized |
+| D5 超范围镀金 | CLEAR |Existing paths/criteria/model only |
+| D6 分析空转 | CLEAR |Actual source methods/owned H04 have GREEN evidence |
+| D7 路线违背 | CLEAR |Per-cell binding avoids new full-plan lookup or fit split |
+**文档检查：**S5 previous owned closure superseded by C1/C2 findings; requirements/plan/receipt corrected. S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：先记录新findings与真实依赖。
+**文档更新（先执行）：**pricing requirements/plan/progress/interface_receipt记录C1/C2与buffer compute binding（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**32-case actual C1/affected final → exact quota/source commit → root复审；CORE/producer绑定由root协调，不作替代。
+## 4. 最值得关注的 3 点
+1. C2 requires observed compute_context in complete per-cell buffer/count identity。
+2. C1 原始selector只执行一次，数值比较在执行后。
+3. 当前owner边界不包含CORE修补或真实GPU/全局qualification。
+
+## C1/C2 final verification
+
+- completed: final14 affected suites682 JUnit=529 PASS/153 SKIP/0 FAIL/ERROR,
+  56.033s. Actual published native methods64 PASS,2.689s; cold backend10 PASS,
+  1.255s without PYTHONPATH. H04 BF16/FP8 current binding66 cases, all mismatch
+  checks assert no compute/backend query; complete validation moved before pricing.
+- completed: source43 paths,+3210/-95=3305/3956 (remaining651), including unchanged
+  sub333 gross. Repair six existing paths,+260/-22=282 against bfe6f2ae; original
+  gross rises238. No peer/import/new source paths. Sub3dac53c clean, full patch
+  unchanged. Source AST/whitespace passes; summary ledger off by1 row detected
+  and corrected against git numstat before commit.
+- pending: verified scoped source/records commit and ID receipt. Real observed
+  compute_context producer/CORE handoff not available; fail explicitly. Root
+  re-review/full integrated acceptance/GPU qualification remains external.
+
+## 1. 规划完成情况
+**汇总：** PASS2｜BLOCKED/FAILED/SKIPPED0｜TODO1
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| C1 native routing+validator | PASS |Actual published native64 PASS and stale routing negatives |
+| C2 H04 canonical point/tensors | PASS |Actual66 cases before pricing; exact dependency receipt |
+| Scoped archive/commit | TODO |682 JUnit/3305 budget verified; commit next |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**Final682 JUnit至今｜**当前前沿：**scoped commit/root receipt
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Only exact records/budget after final checks |
+| D2 细节反复重试 | CLEAR |No unresolved owned failure; single ledger typo corrected |
+| D3 支线问题修补 | CLEAR |No peer/environment side fixes |
+| D4 可并行任务停滞 | CLEAR |Native/affected checks parallel; explicit no agents |
+| D5 超范围镀金 | CLEAR |Six owned paths/3305 gross and no new qualification criteria |
+| D6 分析空转 | CLEAR |64 native/529 affected PASS; scoped commit next |
+| D7 路线违背 | CLEAR |Same native single call, no fit identity split |
+**文档检查：**S5 pending verification facts replaced by final682/64/3305; S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新已验证事实。
+**文档更新（先执行）：**pricing plan/receipt/report/summary/progress记录最终证据与依赖（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**Source/record scoped commit → root复审/CORE observed binding依赖；不扩大平台/GPU任务。
+## 4. 最值得关注的 3 点
+1. Complete compute_context须来自actual evidence，不能复制candidate prediction。
+2. C1/C2已通过owned checks，剩余额度651。
+3. Root负责独立复审/global integration，GPU qualification尚未提供。

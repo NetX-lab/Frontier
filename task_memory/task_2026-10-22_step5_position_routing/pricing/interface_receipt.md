@@ -11,6 +11,7 @@
 | 2026-10-23 | Close selected producer/parent selection; archive model payload and real dependencies. |
 | 2026-10-23 | Repair F3-F6 completed HTSIM, actual policy, exact replay and cold bootstrap evidence. |
 | 2026-10-23 | Separate frozen fit context from complete per-cell policy and startup diagnostics. |
+| 2026-10-23 | Require observed route values and exact per-cell compute/plan binding. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -389,3 +390,62 @@ new sub commit; full patch/sha256 unchanged. Exact commands and RED/GREEN in
 test_report_2026-10-23_f4_boundaries.md. Verified scoped source/record commit506b43ac;
 root re-review/global qualification remains open. CORE should retain the complete
 plan policy contract above and derive no branch/defaults itself.
+
+## C1/C2 compute-review interface
+
+No change to frozen fit grouping or full execution_policy. For H04 the complete
+point context returned for the selected native experts must also be retained as
+`json.loads(plan.buffer_json)["compute_context"]`. H04 compares canonical JSON
+with the current `context` (all fields, including backend/quant/deferral/source and
+gathered layout/padding/workspace/source callable facts/collective_tensors), not
+with the unrelated engine/environment/communicator envelope. Plan context.shared
+must still equal context.native_facts.shared. Full buffer receipt remains part of
+plan.cache_key, count proof and candidate seal; no full-point compute_context in
+frozen model context and no new model grouping dimension or per-size fit.
+
+H04 verifies exact ordered CollectiveTensor operands against
+context.collective_tensors[dispatch/output], source/gathered physical width,
+activation/scale dtype/element-size/contiguous stride, reached/deferred FP8 versus
+BF16 activation, actual configured router_topk FP32 weights+INT32 IDs and BF16
+output width. All plans validate before any backend invocation. Phase/size and
+paired positive exact scope evidence remain required, including live0 lanes.
+
+Concrete CORE dependency: `_step5_position_queries` currently reads only shared
+source/complete execution_policy and collective_tensors; existing collector has
+no actual compute_context in buffer_receipt. Producer/CORE owner must associate
+the verified observed point with the exact collective buffer/count receipt and
+carry the field above from evidence, not copy a candidate prediction to fabricate
+proof, infer backend from comm dtype or strip layouts. H04 deliberately rejects
+the old incomplete handoff. Root owns the integration decision; no peer edits or
+imports performed in this repair.
+
+Bound eager module observer gains `routing(router)` with the original named
+signature hidden_states,router_logits,topk_indices_dtype=None,*,input_ids=None;
+original selection called once, tensor/tuple references and exceptions unchanged.
+The one source_forward_context materialization now yields (positions,is_padding)
+while maintaining the existing native contexts/cleanup. No second source algorithm.
+After native forward+synchronization, `compare_routing(source_tensors,hf_text_config)`
+compares E/K/normalize/scale/EPLB/method/effective strategy+padding policy, selected
+strategy source, actual positions/mask and exact IDs/weights from the same logits.
+Checks use torch.equal, no tolerance. Full original select/_select/_compute and
+actual strategy route/simulate callables verified before patching. There are no
+timing rows/hotpath kernel additions, retries or input mutation. Auxiliary failure
+marks UNVERIFIED while original native exceptions are retained.
+
+Rank layers add `routing_comparison={status,differences,observations}`. Observation
+retains actual_config, strategy/scoring contract, logits schema, explicit positions,
+mask, returned IDs/weights and physical/live row+live assignment totals. Generic
+comparison cannot be match on routing discrepancy. Selected validator requires
+one observed routing match with source physical/live/assignment totals; missing/
+wrong routing cannot be admitted by otherwise matching collective schemas.
+Legacy unbound probe/validator paths unchanged; this is eager module evidence,
+not T2/full serving/backend/GPU qualification.
+
+Final affected682 JUnit=529 PASS/153 SKIP/0 FAIL/ERROR; actual published native
+observer64 PASS; cold backend/importer10 PASS without PYTHONPATH. H0466 cases
+cover BF16/FP8 and source/live0 lanes, all negatives assert no compute/backend
+query. Owned43 paths,+3210/-95=3305/3956 (remaining651), unchanged sub3dac53c/
+333 gross included. Six existing owned source/test paths repaired,+260/-22=282
+against bfe6f2ae; approved original-baseline gross increases238. Exact commands
+and numerical limits in test_report_2026-10-23_compute_repair.md. Scoped commit
+is recorded next; observed compute binding/CORE and global qualification remain open.

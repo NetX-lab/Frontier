@@ -231,7 +231,8 @@ def test_local_proxy_evidence_requires_every_rank_and_repeat(tmp_path,monkeypatc
 
 @pytest.mark.parametrize("defect",[None,"source","generation","count","duplicate_probe","extra_probe",
                                   "op","group","cuda_graph","replay","runtime_policy","branch","missing_policy",
-                                  "lazy_fallback","stale_fallback","buffers","frozen_environment"])
+                                   "lazy_fallback","stale_fallback","buffers","frozen_environment",
+                                   "missing_routing","wrong_routing","routing_totals"])
 def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tmp_path,monkeypatch,defect):
     from dataclasses import asdict
     from tests.unit.test_step5_fixed_probe import installed_profile_receipt
@@ -287,6 +288,10 @@ def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tm
     for r in probe["ranks"]:
         for layer in r["layers"]:
             layer.update(moe_input_id="tail16",source_frame=asdict(inp.source_frames[r["rank"]//8]),
+                routing_comparison=dict(status="match",differences=[],observations=[dict(
+                    physical_rows=inp.source_frames[r["rank"]//8].physical_rows,
+                    live_rows=sum(inp.source_frames[r["rank"]//8].query_lens),
+                    live_assignments=sum(inp.source_frames[r["rank"]//8].query_lens)*8)]),
                 native_facts=dict(shared=shared,callables={"cpu_fixture":"explicit_schema_test"}),
                 collectives=[dict(completed=True,op="all_reduce" if lazy else "reduce_scatterv_into_output",
                     group_ranks=r["group_ranks"]["tp" if lazy else "dp"],
@@ -297,6 +302,9 @@ def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tm
     if defect == "source": probe["ranks"][0]["layers"][0]["source_frame"]["context_lens"]=[0]
     if defect == "duplicate_probe": probe["ranks"][0]["layers"][-1]=deepcopy(probe["ranks"][0]["layers"][0])
     if defect == "extra_probe": probe["ranks"][0]["layers"][0]["moe_input_id"]="extra"
+    if defect == "missing_routing": probe["ranks"][0]["layers"][0].pop("routing_comparison")
+    if defect == "wrong_routing": probe["ranks"][0]["layers"][0]["routing_comparison"]["status"]="discrepancy"
+    if defect == "routing_totals": probe["ranks"][0]["layers"][0]["routing_comparison"]["observations"][0]["live_assignments"]=0
     probe_path.write_text(json.dumps(probe))
     report=load("validate_result").validate(job,tmp_path)
     assert report["status"] == ("PASS" if defect in (None,"lazy_fallback") else "UNVERIFIED"),report

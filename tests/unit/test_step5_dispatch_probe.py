@@ -884,3 +884,73 @@ def test_bound_forward_materializes_core_positions_once_and_preserves_native_exc
         with probe.source_forward_context(object(),17,[17,1],"cpu",dict(source_frames=[frame]),0): raise error
     assert caught.value is error and materialized == [MoESourceFrame(**frame)]
     assert events == ["forward_enter","positions_enter","positions_exit","forward_exit"]
+
+
+@pytest.mark.parametrize("fault",[None,"ids","weights","mask","config","strategy","native_error","diagnostic",
+    "padding_ids","padding_weights","topk","experts","normalization","positions","enter_diagnostic","native_error_diagnostic"])
+@pytest.mark.parametrize("normalize",[False,True])
+@pytest.mark.parametrize("pad_only",[False,True])
+def test_actual_native_router_observer_checks_values_once_after_execution(monkeypatch,fault,normalize,pad_only):
+    torch=pytest.importorskip("torch")
+    import ast,types
+    from tests.unit.test_step5_native_position_cyclic import native
+    native=native.__wrapped__()
+    native.ns["RoutingMethodType"]=SimpleNamespace(Simulated=SimpleNamespace(name="Simulated"))
+    router=native.factory(8,352,scoring_func="sigmoid",renormalize=normalize,routed_scaling_factor=3.)
+    path=native.root/"model_executor/layers/fused_moe/router/fused_moe_router.py"
+    cls=next(n for n in ast.parse(path.read_text()).body if isinstance(n,ast.ClassDef))
+    fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name == "select_experts")
+    exec(compile(ast.Module(body=[fn],type_ignores=[]),str(path),"exec"),native.ns)
+    router._routing_replay_out=None
+    original=types.MethodType(native.ns["select_experts"],router)
+    calls=[];error=RuntimeError("original router failure")
+    def selected(hidden_states,router_logits,topk_indices_dtype=None,*,input_ids=None):
+        calls.append((hidden_states,router_logits,input_ids))
+        if fault in ("native_error","native_error_diagnostic"): raise error
+        value=original(hidden_states=hidden_states,router_logits=router_logits,
+            topk_indices_dtype=topk_indices_dtype,input_ids=input_ids)
+        if fault == "ids": value[1][0,0]=99
+        if fault == "weights": value[0][0,0]=99.
+        if fault == "padding_ids": value[1][-1,0]=0
+        if fault == "padding_weights": value[0][-1,0]=1.
+        return value
+    router.select_experts=selected
+    positions=torch.tensor([6128,6144,0],dtype=torch.int64);mask=torch.tensor([False,False,True])
+    if pad_only: mask[:]=True
+    native.context.is_padding=mask
+    hidden=torch.zeros(3,4);logits=torch.arange(3*352).reshape(3,352).float()%31-15
+    saved=logits.clone()
+    monkeypatch.setitem(sys.modules,"vllm.forward_context",SimpleNamespace(get_forward_context=lambda:native.context))
+    monkeypatch.setitem(sys.modules,"vllm.envs",native.env)
+    monkeypatch.setitem(sys.modules,"vllm",SimpleNamespace(envs=native.env))
+    monkeypatch.setitem(sys.modules,"vllm.model_executor.layers.fused_moe.router.routing_simulator_router",
+        SimpleNamespace(RoutingSimulator=native.ns["RoutingSimulator"]))
+    if fault == "mask": native.env.VLLM_MOE_SKIP_PADDING=False
+    if fault == "config": router.routed_scaling_factor=2.
+    if fault == "topk": router.top_k=7
+    if fault == "experts": router.global_num_experts=351
+    if fault == "normalization": router.renormalize=not normalize
+    if fault == "strategy": native.env.VLLM_MOE_ROUTING_SIMULATION_STRATEGY="uniform_random"
+    observer=probe.DispatchObserver(lambda e:None)
+    if fault == "diagnostic": monkeypatch.setattr(probe,"tensor_schema",lambda t:(_ for _ in ()).throw(OSError("diagnostic failed")))
+    if fault in ("enter_diagnostic","native_error_diagnostic"):
+        sys.modules["vllm.forward_context"].get_forward_context=lambda:(_ for _ in ()).throw(OSError("context diagnostic failed"))
+    with observer.routing(router),native.setter(positions+1 if fault == "positions" else positions):
+        if fault in ("native_error","native_error_diagnostic"):
+            with pytest.raises(RuntimeError) as caught: router.select_experts(hidden_states=hidden,router_logits=logits,input_ids=None)
+            assert caught.value is error
+        else:
+            value=router.select_experts(hidden_states=hidden,router_logits=logits,input_ids=None)
+    assert router.select_experts is selected and len(calls) == 1
+    assert calls[0][0] is hidden and calls[0][1] is logits and not observer.calls
+    assert torch.equal(logits,saved) and torch.equal(hidden,torch.zeros_like(hidden))
+    if fault in ("native_error","native_error_diagnostic"):
+        if fault == "native_error_diagnostic": assert observer.errors
+        return
+    text=SimpleNamespace(moe_num_experts=352,moe_top_k=8,moe_router_activation="sigmoid",
+        norm_expert_weight=normalize,moe_router_scaling_factor=3.)
+    verdict=observer.compare_routing((positions,mask),text)
+    assert verdict["status"] == ("match" if fault is None else "unverified" if fault in ("diagnostic","enter_diagnostic") else "discrepancy"),verdict
+    assert observer.routing_calls[0]["result"] is value and observer.routing_calls[0]["logits"] is logits
+    if fault in ("diagnostic","enter_diagnostic"): assert observer.errors
+    else: assert verdict["observations"][0]["actual_config"]["top_k"] == (7 if fault == "topk" else 8)

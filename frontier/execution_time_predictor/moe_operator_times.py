@@ -76,7 +76,8 @@ class MoeOperatorTimes:
         from frontier.entities.time_components import CommunicationOperatorTimes
         from frontier.operators.families import get_moe_profiling_operators, is_step5_position_context
         from frontier.moe_gating_runtime import get_moe_gating_prediction_model_name
-        import math
+        import math,json
+        from frontier.profiling.common.runtime_identity import canonical_json
         lane = resolve_ep_lane_workload(lane_workload, required=True)
         source = lane.routing_source
         if not is_step5_position_context(context) or source is None:
@@ -85,6 +86,43 @@ class MoeOperatorTimes:
         selected = get_moe_profiling_operators(context)
         if set(operator_features) != {op.name for op in selected}:
             raise ValueError("Physical features must cover exactly the applicable selected MoE scopes")
+        expected = {"step5_moe_dispatch": "dispatch", "step5_moe_combine": "combine",
+            "moe_tensor_parallel_allreduce": "routed_tp"}
+        if self._model_config.supports_share_expert():
+            expected["share_expert_tensor_parallel_allreduce"] = "shared_tp"
+        if set(collective_plans) != set(expected):
+            raise ValueError("Physical collective phases must exactly match the reached branches")
+        for name, phase in expected.items():
+            plan = collective_plans[name]
+            if plan.phase != phase or plan.sizes != tuple(s.physical_rows for s in source.source_lanes):
+                raise ValueError("Collective phase/physical vector differs from the immutable source")
+            measured=json.loads(plan.context_json)
+            if (canonical_json(json.loads(plan.buffer_json).get("compute_context")) != canonical_json(context) or
+                    measured["shared"] != context["native_facts"]["shared"]):
+                raise ValueError("Collective compute context differs from the current physical frame")
+            tensors=context["collective_tensors"]["dispatch" if phase == "dispatch" else "output"]
+            if [vars(t) for t in plan.tensors] != tensors:
+                raise ValueError("Collective tensor layout differs from the actual compute operands")
+        dispatch=collective_plans["step5_moe_dispatch"].tensors
+        layouts=[("activation",context["source_activation_layout"],context["activation_layout"])]
+        if context["source_scale_layout"] is not None:
+            layouts.append(("scales",context["source_scale_layout"],context["scale_layout"]))
+        for name,local,gathered in layouts:
+            tensor=next(t for t in dispatch if t.name == name)
+            if (local["shape"] != [ni.physical_rows,tensor.columns] or
+                    gathered["shape"] != [source.gathered_physical_rows,tensor.columns] or any(
+                    (layout["dtype"],layout["element_size"],layout["stride"]) !=
+                    (tensor.dtype,tensor.element_size,[tensor.row_stride,1]) for layout in (local,gathered))):
+                raise ValueError("Collective activation/scale layout differs from actual source/gathered tensors")
+        if (tuple(t.name for t in dispatch) != tuple(name for name in ("activation","weights","ids","scales")
+                if name != "scales" or context["source_scale_layout"] is not None) or
+                [(t.dtype,t.columns) for t in dispatch[1:3]] != [("float32",self._replica_config.router_topk),("int32",self._replica_config.router_topk)] or
+                dispatch[0].dtype != (context["quant_dtype"] if not context["defer_input_quant"] and context["quant_dtype"] else "bfloat16")):
+            raise ValueError("Collective dispatch layout differs from selected activation/top-k contract")
+        for name,plan in collective_plans.items():
+            if plan.phase != "dispatch" and (plan.tensors[0].name,plan.tensors[0].dtype,plan.tensors[0].columns) != (
+                    "output","bfloat16",dispatch[0].columns):
+                raise ValueError("Collective output layout differs from the native source output")
         times,proofs = {},{}
         for op in selected:
             features = operator_features[op.name]
@@ -102,17 +140,8 @@ class MoeOperatorTimes:
                     count < 1 or count != int(count) or not math.isfinite(times[op.name]) or times[op.name] <= 0):
                 raise ValueError("Applicable physical scope lacks paired positive exact evidence")
             proofs[op.name]=dict(proof)
-        expected = {"step5_moe_dispatch": "dispatch", "step5_moe_combine": "combine",
-            "moe_tensor_parallel_allreduce": "routed_tp"}
-        if self._model_config.supports_share_expert():
-            expected["share_expert_tensor_parallel_allreduce"] = "shared_tp"
-        if set(collective_plans) != set(expected):
-            raise ValueError("Physical collective phases must exactly match the reached branches")
         costs = {}
-        for name, phase in expected.items():
-            plan = collective_plans[name]
-            if plan.phase != phase or plan.sizes != tuple(s.physical_rows for s in source.source_lanes):
-                raise ValueError("Collective phase/physical vector differs from the immutable source")
+        for name,plan in collective_plans.items():
             costs[name] = self._cc_backend.predict_collective_plan(plan)
         frame = dict(routing_source=source, ep_id=lane.ep_id, native_context=context,
                       live_local_assignments=lane.routed_token_count,operator_costs=proofs)
