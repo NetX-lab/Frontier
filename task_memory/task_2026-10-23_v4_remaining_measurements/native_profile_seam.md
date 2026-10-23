@@ -66,8 +66,13 @@ is not serving evidence):
   statement that every serving row uses the 16-token descriptor is wrong. Per-rank serving
   forwards on 0346 are FULL at descriptors 1/2/4/8/16 = 609/956/2202/5409/17723 and PIECEWISE
   8/11/22/44/336; 0399 is similar. Scheduled requests per step span 1..11 (mode 10). The
-  descriptor can exceed the lane's own batch (e.g. one request on a 16-token key), consistent
-  with DP padding across the two lanes; that cause is an inference, not yet checked in source.
+  descriptor can exceed the lane's own batch (e.g. one request on a 16-token key) because of DP
+  padding, confirmed in pinned source: `vllm/v1/worker/gpu/dp_utils.py:34-44` all-reduces token
+  count, graph mode, uniform token count and query-length bound over the DP group; `:52-61` runs
+  every lane eager if any lane wants eager; `:67` and `:84-93` dispatch the local request count at
+  the maximum token count across lanes; `:69-73` drops the uniform token count when lanes disagree.
+  A collector must therefore record each lane's own and synced token counts per step; which lane
+  condition produced each PIECEWISE step is not yet established from data.
 - `_is_compatible` (`cudagraph_utils.py:75-99`) requires `desc.num_tokens >= num_tokens` and
   `desc.num_reqs >= num_reqs`, so a padded descriptor serves a smaller batch.
 - The 19 captured descriptors are all `FULL`, `num_tokens == num_reqs ∈ {1,2,4,8,16,…,128}`,
