@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Archive prepared acceptance/9389 union; correct historical startup multiplicity; allocate cost-fields8 with unchanged allowances. |
 | 2026-10-23 | Merge accepted trace repair64881373; parent98PASS/1baselineFAIL, exact598-event bytes and208/208 actual proofs; global9268. |
 | 2026-10-23 | Parent verifies prepared selection36 positive/24 negative records and unchanged wave payload; allocate250 gross; trace14 has Standards/Spec No findings. |
 | 2026-10-23 | Verify actual complete208-operator wave; allocate one-path trace replacement and investigate prepared selection/collective lifetime independently. |
@@ -61,10 +62,18 @@
   one16464-row/168-key preparation,1968 decodes/80 current reads and unchanged full
   wave payload. Separate matrix36 positive comparisons/24 negative records passes.
   Report:resumed_performance/test_report_2026-10-23_prepared_point_seam.md.
-- allocated: CORE owner ses_e9b3efeebffem2dcbXlVGNr8O2 receives prepared selection
-  implementation in three existing paths,<=250 gross (source180/tests70), via
-  repairs/prepared_point_scope_amendment.json. Common collective lifetime analysis,
-  ses_e975020aeffe7JnGJiqLD2PJ0r, remains read-only and unallocated.
+- completed/component: prepared0be11762/b476907e,159/250 gross (source92,tests45/22),
+  parent82PASS/1oldTorchSKIP plus separate2trainerPASS. Complete layer60
+  208/208 proofs match; warm pricing1.036242s,one16464-row/168-key preparation.
+  Standards ses_e97039e03ffeu3ZRIC116k0GwS and Spec ses_e97039de3ffe8fnhZlDO38w5lY
+  return No findings. Mergeeece87b2 combines trace and prepared; source9375/global9389,
+  CORE4105. Parent acceptance archiveba585c03 is merged under resumed_performance/.
+  Its receipt discloses the comparator's stale layer61 label while the executed
+  filter and all208 checks bind actual layer60.
+- in-progress/diagnostic: common collective lifetime,
+  ses_e975020aeffe7JnGJiqLD2PJ0r, remains read-only/unallocated. CORE owner
+  ses_e9b3efeebffem2dcbXlVGNr8O2 separately profiles remaining non-I/O pricing on
+  the accepted combined source; no new source allocation for that diagnosis.
   The pre-commit overlay check caught a10-line shortfall in the initial donor list;
   two unused profiling allowances supplied it before allocation/delegation.
 - completed/review: trace code390bb5a2/records9ae60ebc,14/20 gross. Standards
@@ -78,11 +87,21 @@
   Original wave replay first failed its pre-edit HEAD guard before config parsing;
   a fresh wrapper bound reviewed9ae while retaining source SHA and every business
   check. Its raw failure log remains. No failure was counted as a passing wave.
-- in-progress/diagnostic: trace residual analysis ses_e9740417cffefKITyYxsnZ6rkJ
-  examines remaining emission/write costs independently of pricing; no new source
-  allocation. Prepared implementation and common collective analysis continue.
+- completed/diagnostic: trace residual012a3df4 supports only immutable cost-field
+  conversion (61.059->54.063ms,128 recursive conversions removed). Joined writes
+  are slower and change later-error disk prefixes; borrowing source components
+  breaks snapshots. Allocate<=8 gross in two existing PRICING paths through
+  immutable_cost_fields_scope_amendment.json. Root proposal comparison preserves
+  cumulative45/45 and22/22: no allowance transfer or retained growth expected.
+  Raw scope probe:/data/ycfeng/tmp/d29_cost_fields_allocation01/receipt.json.
   Active112 paths and CORE4404/source9942/global10000 ceilings remain unchanged.
   No new full CLI starts before combined evidence,review and source freeze.
+- completed/corrected diagnosis: ccd9b728 replaces the old78% unexplained startup
+  estimate. Actual P/D call multiplicity is10+1 MoE reads per measurement family;
+  unit-cost scaling now explains about1035/1288s, with253s remaining. Warning/log,
+  cache mtime and bundle evidence support all cache hits (inference). The existing
+  loader repair's estimated450s saving is not a measured new startup. No new init
+  optimization or hash-identity change is allocated. See early_init_repro/report.md.
 - completed: YC requests continuation here. Frozen sourcee41abc073500d61f224eda4fca1123e74e40544d
   is clean in /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05;
   independent submodule checkout3dac53c matches. Receipt:resumed_parent/source_freeze.json.

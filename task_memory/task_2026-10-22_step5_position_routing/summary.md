@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept and integrate prepared selectioneece87b2;9375 source/9389 global; allocate cost-fields8 and correct historical startup explanation. |
 | 2026-10-23 | Integrate accepted trace14 at64881373; allocate prepared250 after parent differential verification; whole workflow remains open. |
 | 2026-10-23 | Parent confirms complete208-operator decode wave; allocate20-gross trace replacement and continue two unallocated reuse investigations. |
 | 2026-10-23 | Accept final79 unit comparison and record both main08 timeouts; residual execution-path diagnosis remains pending. |
@@ -18,13 +19,16 @@
 
 ## Current-session continuation
 
-Current source `64881373` includes the accepted trace serialization repair.
+Current source `eece87b2` includes accepted trace and prepared-selection repairs.
 Both independent review axes have No findings. Parent verification preserves
-598-event JSONL bytes, all208 actual layer60 operator proofs and exception/buffer
-behavior; focused tests have98PASS and the same one baseline failure. Derived
-consumption is9268/10000. Prepared selection is allocated250 gross in three
-existing CORE paths and is being implemented; common collective and remaining
-trace-cost investigations are read-only. The previous79 regression results remain
+the trace component's598-event JSONL bytes,all208 actual layer60 operator proofs
+and exception/buffer behavior;its focused tests have98PASS and the same baseline
+failure. Derived
+consumption is9389/10000. Prepared selection uses159/250 gross; parent82PASS/
+1oldSKIP and separate2trainerPASS,208/208 actual layer60 pairs and both independent
+reviews pass. Common collective and remaining non-I/O pricing investigations are
+read-only. Immutable cost-field conversion has an8-gross allocation, with no
+expected retained growth or allowance change. The previous79 results remain
 revision-bound. The next complete CLI still requires a reviewed, frozen union.
 
 ### Earlier resumed checkpoints
@@ -66,8 +70,10 @@ Prepared point/plan selection passed parent36 positive comparisons/24 negative
 records and unchanged full-wave payload, then received the250-gross allocation
 atcaffccbb. Collective lifetime remains a separate read-only investigation.
 The active ledger now has112 paths with unchanged owner/global ceilings.
-Early-init attribution remains
-partial;no additional implementation or hash-identity change is authorized.
+Corrected early-init attribution explains about1035/1288s from measured unit costs
+and actual multiplicity,leaving about253s. Cache-hit status and the existing loader
+fix's roughly450s startup saving are inferences,not new whole-run measurements;
+no additional init implementation or hash-identity change is authorized.
 Task-required H800 authority is already granted;workflow/package readiness remains.
 Whole workflow and GPU/native/
 G3/E2E acceptance remain open. See progress.md and resumed_parent/ for evidence.

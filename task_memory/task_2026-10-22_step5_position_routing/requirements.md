@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Allocate8-gross immutable cost-field conversion in two existing PRICING paths without changing allowances. |
 | 2026-10-23 | Allocate prepared point selection to three existing CORE paths, at most250 gross, after parent differential verification. |
 | 2026-10-23 | Allocate a20-gross single-path trace serialization replacement under existing repair-path authority; other residual proposals remain unallocated. |
 | 2026-10-23 | Record bounded residual CPU repairs and carry forward YC's task-required H800 authority. |
@@ -215,3 +216,18 @@ current reads, unchanged full-wave payload,36 positive comparisons and24 negativ
 records. These settle the repeated-selection seam, not the2400s workflow limit.
 Implementation requires focused verification, independent review, final union
 accounting and source freeze before new full CLI/regression acceptance.
+
+## [Implementation Decision] D29-IMMUTABLE-COST-FIELDS
+
+The measured emitter control supports fresh declared-field dictionaries at the
+two existing `CollectivePlanCost` serialization sites. Admitted producers supply
+scalars, strings and normalized numeric tuples; recursive conversion adds no
+detachment for those values. Keep surrounding source snapshots, independently
+owned mutable trace/ledger mappings and all plan/key/evidence/count validation.
+
+Allocate8 gross lines in the two existing PRICING paths named in
+repairs/immutable_cost_fields_scope_amendment.json. The proposal replaces existing
+D29-added lines, so root comparison with1aee0af observes no retained growth and
+no allowance transfer is needed. Verify source behavior and Git accounting, then
+independently review. This does not approve borrowing source components, changing
+flush writes or duplicating the plan-key encoder.
