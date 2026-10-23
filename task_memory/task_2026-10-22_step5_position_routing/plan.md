@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Close duplicate-plan hypothesis; queue narrow derived-key allocation after snapshot accounting and attribute remaining pricing work separately. |
 | 2026-10-24 | Select manager-owned shared inputs; allocate114-path snapshot replacement within existing caps and schedule constructor/lifetime verification. |
 | 2026-10-24 | YC permits run-fixed collective inputs; trace the ownership boundary and allocate one snapshot path before final combined review. |
 | 2026-10-24 | Allocate three-path36-gross current-byte comparison through a2-line zero-sum PRICING transfer; preserve all current-read gates. |
@@ -63,6 +64,11 @@ Apply run_input_snapshot_scope_amendment.json next: manager ownership and the
 stdlib-only collective-profile input module add two CORE paths (114 total).
 The ten-path step is bounded by340 gross, with internal CORE100/PRICING24
 allowance transfers. Its interface and acceptance are in run_input_snapshot/design.md.
+After snapshot accounting, evaluate a narrow derived-key-only step against the
+remaining PRICING allowance. Immutable-plan preparation is already present;
+do not add another plan-object cache. Parent diagnostic evidence is in
+immutable_plan_preparation/test_report_2026-10-24_parent.md. H3 attribution and
+the existing trace-encoding analysis are independent of this allocation.
 
 Completed handoff boundary: CLI placement repair -> parent real-constructor checks
 and independent re-review -> feature-branch code/record consolidation. YC now

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Archive plan-key diagnosis and parent24+6 hash/immutable-interface checks; keep key allocation pending snapshot consumption. |
 | 2026-10-24 | Verify byte receipts24/3 and paired78PASS; select shared run ownership and allocate the114-path snapshot successor. |
 | 2026-10-24 | Record YC's run-fixed input decision, receive byte repair32/36 and inspect the existing ownership/lifetime before its successor allocation. |
 | 2026-10-24 | Allocate artifact bytes36 through two unused PRICING allowance lines; retain per-call reads and all existing behavior assertions. |
@@ -56,6 +57,22 @@
 
 ### Current-session resumption (supersedes handoff next-session timing)
 
+- completed/diagnostic: immutable-plan records7d1cdc06 archived as a3525856.
+  Warm plan/tensor construction is already0; eight complete plans are retained.
+  Key-only control removes192 encodes/wave, with paired warm0.167724->0.128676s
+  and0.167579->0.129510s,208-event/ledger identity and288 lookups unchanged.
+  These are single-role fixed-byte diagnostic controls, not the snapshot implementation.
+- completed/parent-check:24 artifact/input and6 source hashes match; the real
+  plan interface encodes twice on baseline versus once with string retention,
+  with full-key identity, detached dictionaries and six valid replacement
+  cases. See immutable_plan_preparation/test_report_2026-10-24_parent.md.
+- pending/allocation: narrow derived-key repair estimate20 gross, approximately14
+  retained lines. Wait for snapshot final PRICING consumption; do not change
+  active owner caps. No key source/test edit has been authorized or applied.
+- in-progress/diagnostic: same owner ses_e963098ecffebqCOtdysKGY6Xe attributes
+  H3 from existing key-control profiles; at most one justified bounded control,
+  no numerical/proof cache or duplicate trace investigation. Snapshot and trace
+  owners continue independently.
 - completed/receipt-check: root recomputed all24 byte-repair evidence hashes,
   three committed source hashes and both78PASS JUnit sets, allowing only the
   documented current_text/current_bytes test-name change. Records-only commit
