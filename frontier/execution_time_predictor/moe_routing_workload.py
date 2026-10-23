@@ -133,6 +133,57 @@ class MoeRoutingWorkload:
             self._step5_routed_layer_groups = groups
         return next(group for group in groups if layer_id in group.layer_ids)
 
+    def _step5_model_points(self, model):
+        """Index post-training rows; serving replaces tuples/estimators, not row dicts."""
+        from frontier.profiling.moe.inputs import MoESourceFrame
+        rows, identity = model._frontier_moe_physical_rows, model._frontier_measurement_identity
+        retained = getattr(self, "_step5_physical_points", {})
+        previous = retained.get(model)
+        if previous is not None and previous[0] is rows and previous[1] == identity:
+            return previous[2]
+        points, frames = {}, {}
+        for row in rows:
+            text = row["routing_input"]
+            if text not in frames:
+                frames[text] = tuple(MoESourceFrame(**frame) for frame in json.loads(text)["source_frames"])
+            key = (row["moe_ep_rank"], row["total_routed_tokens"], frames[text])
+            points.setdefault(key, {})[row["native_context"]] = None
+        retained[model] = (rows, identity, points)
+        self._step5_physical_points = retained
+        return points
+
+    def _step5_collective_points(self, text):
+        """Prepare structural receipts only; every query supplies current file text."""
+        from frontier.profiling.common.runtime_identity import canonical_json
+        retained = getattr(self, "_step5_collective_receipts", None)
+        if retained is None or retained[0] != text:
+            artifact, shapes = json.loads(text), {}
+            for key in artifact["counts"]:
+                value = json.loads(key)
+                shape = (value["phase"], tuple(value["sizes"]), value["graph_mode"], canonical_json(value["tensors"]))
+                shapes.setdefault(shape, []).append((key, value))
+            retained = (text, artifact, shapes, {}, {})
+        else:
+            retained = (*retained[:3], retained[3].copy(), retained[4].copy())
+        return retained
+
+    def _step5_plan_candidates(self, retained, phase, sizes, mode, tensors, context):
+        from frontier.profiling.common.runtime_identity import canonical_json
+        _, artifact, shapes, domains, plans = retained
+        shape = (phase, sizes, mode, canonical_json(tensors))
+        shared = canonical_json(context["native_facts"]["shared"])
+        domain = (shape, shared)
+        if domain not in domains:
+            points = {}
+            for key, value in shapes.get(shape, ()):
+                measured = artifact["counts"][key]["context"]
+                if measured["shared"] != context["native_facts"]["shared"] or not measured.get("execution_policy"):
+                    continue
+                buffer = json.loads(value["buffer_json"])
+                points.setdefault(canonical_json(buffer.get("compute_context")), []).append((key, value, buffer))
+            domains[domain] = points
+        return artifact, plans, domains[domain].get(canonical_json(context), ())
+
     def _step5_position_queries(self, lane):
         """Recover actual point facts and complete measured plans, never numerical defaults."""
         from frontier.profiling.moe.inputs import MoESourceFrame
@@ -142,30 +193,25 @@ class MoeRoutingWorkload:
         group = self._step5_routed_layer_group(self._step5_layer_metadata.attention_spec.global_layer_id)
         family = self._measurement_family_name(self._active_measurement_type)
         models = self._model_manager._models_view_for_family(family, self._cluster_type)
-        rows = []
+        frames = tuple(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),
+            tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context) for s in source.source_lanes)
+        contexts = {}
         for model in models.values():
             if getattr(model, "_frontier_cache_model_name", None) != "moe_grouped_gemm":
                 continue
             binding = self._model_manager._native_measurement_binding(
                 self._model_manager._measurement_identity(model))
             if binding["selected_native_metadata"]["moe_layer_ids"] == group.row_metadata()["moe_layer_ids"]:
-                rows.extend(model._frontier_moe_physical_rows)
-        frames = tuple(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),
-            tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context) for s in source.source_lanes)
-        contexts = {}
-        for row in rows:
-            if row["moe_ep_rank"] != lane.ep_id or row["total_routed_tokens"] != lane.routed_token_count: continue
-            value = json.loads(row["routing_input"])
-            if tuple(MoESourceFrame(**frame) for frame in value["source_frames"]) == frames:
-                contexts[row["native_context"]] = json.loads(row["native_context"])
+                contexts.update(self._step5_model_points(model).get((lane.ep_id, lane.routed_token_count, frames), {}))
         if len(contexts) != 1: raise ValueError("Position expert query lacks a unique actual source/native point receipt")
-        context = next(iter(contexts.values()))
+        context = json.loads(next(iter(contexts)))
         features = self._build_grouped_gemm_features(lane,native_context=context)
         local = source.source_lanes[lane.ep_id//self._replica_config.attn_tensor_parallel_size]
         from frontier.operators.families import get_moe_profiling_operators
         queries = {op.name:dict(num_tokens=local.physical_rows,live_routing_token_count=local.live_rows)
                    if op.ep_agnostic else features for op in get_moe_profiling_operators(context)}
-        artifact = json.loads((Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_text())
+        text = (Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_text()
+        retained = self._step5_collective_points(text)
         plans = {}
         phases = {"step5_moe_dispatch":"dispatch","step5_moe_combine":"combine",
             "moe_tensor_parallel_allreduce":"routed_tp"}
@@ -174,21 +220,29 @@ class MoeRoutingWorkload:
         for name,phase in phases.items():
             matches = {}
             tensors = context["collective_tensors"]["dispatch" if phase == "dispatch" else "output"]
-            for key,receipt in artifact["counts"].items():
-                value = json.loads(key)
+            artifact, prepared, candidates = self._step5_plan_candidates(retained,phase,
+                tuple(s.physical_rows for s in source.source_lanes),mode,tensors,context)
+            for key,value,buffer in candidates:
+                receipt = artifact["counts"][key]
                 if (value["phase"] != phase or tuple(value["sizes"]) != tuple(s.physical_rows for s in source.source_lanes)
                         or value["graph_mode"] != mode or value["tensors"] != tensors): continue
                 measured = receipt["context"]
                 if measured["shared"] != context["native_facts"]["shared"] or not measured.get("execution_policy"): continue
                 from frontier.profiling.common.runtime_identity import canonical_json
-                if canonical_json(json.loads(value["buffer_json"]).get("compute_context")) != canonical_json(context): continue
-                if receipt["buffer_receipt"] != json.loads(value["buffer_json"]): raise ValueError("Measured collective buffer/count key mismatch")
-                plan = CollectivePlan(phase,tuple(value["sizes"]),tuple(CollectiveTensor(**t) for t in tensors),
-                    tuple(tuple(g) for g in value["groups"]),mode,value["context_json"],value["buffer_json"])
-                if json.loads(plan.context_json) != measured or plan.cache_key() != key: raise ValueError("Measured collective context/count key mismatch")
+                if canonical_json(buffer.get("compute_context")) != canonical_json(context): continue
+                if receipt["buffer_receipt"] != buffer: raise ValueError("Measured collective buffer/count key mismatch")
+                if key not in prepared:
+                    plan = CollectivePlan(phase,tuple(value["sizes"]),tuple(CollectiveTensor(**t) for t in tensors),
+                        tuple(tuple(g) for g in value["groups"]),mode,value["context_json"],value["buffer_json"])
+                    decoded, rebuilt = json.loads(plan.context_json), plan.cache_key()
+                    if decoded != measured or rebuilt != key: raise ValueError("Measured collective context/count key mismatch")
+                    prepared[key] = (plan, decoded, rebuilt)
+                plan, decoded, rebuilt = prepared[key]
+                if decoded != measured or rebuilt != key: raise ValueError("Measured collective context/count key mismatch")
                 matches[key] = plan
             if len(matches) != 1: raise ValueError("Position collective lacks unique measured policy/layout/buffer coverage")
             plans[name] = next(iter(matches.values()))
+        self._step5_collective_receipts = retained
         return context,queries,plans
 
     def _emit_routing_details_snapshot(
