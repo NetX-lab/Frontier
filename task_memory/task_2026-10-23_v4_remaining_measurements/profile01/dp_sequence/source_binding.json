@@ -1,0 +1,43 @@
+{
+  "base_revision": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+  "files": [
+    {
+      "path": "tests/comparison/calibration/native_full_structure.py",
+      "added": 8,
+      "deleted": 0,
+      "gross": 8,
+      "base_sha256": "e6a9025c9af92237cd0d25dd937ecd00177a36a0cddf512bb9aa5d81176378aa",
+      "candidate_sha256": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c"
+    },
+    {
+      "path": "tests/comparison/calibration/native_serve_profile.py",
+      "added": 9,
+      "deleted": 1,
+      "gross": 10,
+      "base_sha256": "17d6dea11d35a2dc9849a11986fe5df46b45adb84d2d2bdeb958642a851b26ef",
+      "candidate_sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58"
+    },
+    {
+      "path": "tests/unit/test_native_serve_profile.py",
+      "added": 71,
+      "deleted": 2,
+      "gross": 73,
+      "base_sha256": "a43f82d524e08250f1aa1b4b3bc3d9f4d9ba01935b6e1b9326c0a62ecf190c84",
+      "candidate_sha256": "e733a174815b3b8ee0d0ca6fbf6a79a3f379c3054711462f20d647fe41c6159d"
+    },
+    {
+      "path": "tests/unit/test_native_v2_serving_inventory.py",
+      "added": 59,
+      "deleted": 6,
+      "gross": 65,
+      "base_sha256": "f3062bda04be9ced06cad0c66c19e9ceb53c1a0059fe620dccc9b319d7f718a7",
+      "candidate_sha256": "26fd11feb1f5eac213590a7dca0b1fd4534b062f4768402cb51e04b0731a12fd"
+    }
+  ],
+  "production_gross": 18,
+  "test_gross": 138,
+  "total_gross": 156,
+  "source_diff_sha256": "71ca353c76af4f5b392291f7226328c0d6547a7aefca7eff5e3a970656f04a78",
+  "source_diff_path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/source.diff",
+  "source_set_sha256": "52c2596a8705b2002ad3a2de45360de45592be5fe806fde992f5d4b735ae838a"
+}

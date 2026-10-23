@@ -11,7 +11,7 @@ from types import ModuleType, SimpleNamespace
 import pytest
 
 from tests.unit.test_native_serving_inventory import native, scheduled
-from tests.unit.test_native_v2_serving_inventory import v2, native_function
+from tests.unit.test_native_v2_serving_inventory import v2, native_function, native_worker_boundary
 from tests.unit.test_dp_placement_harness import native_engine
 
 SOURCE = Path(__file__).parents[1] / 'comparison/calibration/native_serve_profile.py'
@@ -66,7 +66,10 @@ def profile(v2, monkeypatch, request):
 
     torch.cuda.Event, torch.cuda.current_stream, torch.cuda.stream = Event, lambda: current[0], stream
     torch.cuda.is_current_stream_capturing = lambda: False
-    monkeypatch.setattr(type(v2.worker), 'sample_tokens', lambda self: v2.state.result, raising=False)
+    def sample_tokens(worker):
+        v2.state.sample_context = collector.context()
+        return v2.state.result
+    monkeypatch.setattr(type(v2.worker), 'sample_tokens', sample_tokens, raising=False)
     class Profiler:
         is_running = False
         iterations = 0
@@ -228,6 +231,7 @@ def test_cuda_head512_local_import_target_is_owned(profile):
 def test_step_enrichment_cannot_exceed_retention_bytes(profile):
     c = profile.collector
     initial = dict(step=0, request_ids=['req'], local_num_requests=1, local_num_tokens=1)
+    c.inventory.local.dp_sequence = 38
     c.limits = dict(records=1000, bytes=len(json.dumps(initial).encode()) + 8)
     initial['dispatch_evidence'] = dict(forwards=1, replays=0,
         classifier=dict(inputs=dict(has_prefill=False)), dispatch=dict(descriptor=dict(num_tokens=16, cg_mode='FULL')))
@@ -240,9 +244,59 @@ def test_step_enrichment_cannot_exceed_retention_bytes(profile):
     assert c.local.step == dict(step=1)
     c.limits['bytes'] = 10000
     retained = c.finish_step(initial)
+    assert retained['dp_post_all_reduce_sequence'] == 38
+    c.inventory.local.dp_sequence = 999
     initial['dispatch_evidence']['dispatch']['descriptor']['num_tokens'] = 999
     assert retained['synchronized_descriptor']['num_tokens'] == 16
     assert c.used == len(json.dumps(retained).encode())
+
+
+@pytest.mark.parametrize('failure', ['missing', 'throwing'])
+def test_dp_sequence_getter_failure_is_soft_and_does_not_reuse_previous_step(profile, monkeypatch, failure):
+    p, c = profile, profile.collector
+    p.native.state.mode = 'FULL'
+    assert p.native.worker.execute_model(scheduled(tokens=1)) is p.native.state.result
+    assert c.steps[-1]['dp_post_all_reduce_sequence'] == 38
+    group = p.native.state.dp_group
+    if failure == 'missing':
+        monkeypatch.delattr(type(group), '_get_sequence_number_for_group')
+    else:
+        monkeypatch.setattr(group, '_get_sequence_number_for_group', lambda: 1 / 0)
+    assert p.native.worker.execute_model(scheduled(tokens=1)) is p.native.state.result
+    assert 'dp_post_all_reduce_sequence' not in c.steps[-1]
+    assert 'dp_post_all_reduce_sequence' not in c.annotations[-1]
+    assert set(c.steps[-1]['dispatch_evidence']) == {'classifier', 'dispatch', 'dp_post_all_reduce'}
+    assert len(p.native.observer.rows) == 1 and p.native.observer.forwards == 2
+    assert p.native.observer.errors[0]['where'] == 'dp_post_all_reduce_sequence'
+    assert not c.errors and p.native.observer.local.dp_sequence is None
+
+
+def test_dp_sequence_reset_on_native_worker_failure_and_no_forward(native_worker_boundary, profile):
+    p, c, worker = profile, profile.collector, profile.native.worker
+    p.native.state.mode, worker.model_runner.is_pooling_model = 'FULL', False
+    worker.vllm_config.parallel_config = SimpleNamespace(pipeline_parallel_size=1)
+    assert worker.execute_model(scheduled(tokens=1)) is p.native.state.result
+    assert c.steps[-1]['dp_post_all_reduce_sequence'] == 38
+    error = RuntimeError('Pinned Worker pending-send failure before runner entry')
+    worker._pp_send_work = [SimpleNamespace(wait=lambda: (_ for _ in ()).throw(error))]
+    with pytest.raises(RuntimeError) as caught:
+        worker.execute_model(scheduled(tokens=1))
+    assert caught.value is error and 'dp_post_all_reduce_sequence' not in c.steps[-1]
+    worker._pp_send_work = []
+    assert worker.execute_model(scheduled(tokens=0)) is p.native.state.result
+    assert 'dp_post_all_reduce_sequence' not in c.steps[-1]
+    assert p.native.state.dp_group.reads == [38] and p.native.observer.local.dp_sequence is None
+    assert worker.execute_model(scheduled(tokens=1)) is p.native.state.result
+    assert c.steps[-1]['dp_post_all_reduce_sequence'] == 39
+    assert len(p.native.observer.rows) == 1 and p.native.observer.forwards == 2
+    assert not p.native.observer.errors and not c.errors
+    p.native.state.forward_error = error
+    with pytest.raises(RuntimeError) as caught:
+        worker.execute_model(scheduled(tokens=1))
+    assert caught.value is error and c.steps[-1]['dp_post_all_reduce_sequence'] == 40
+    assert worker.execute_model(scheduled(tokens=0)) is p.native.state.result
+    assert 'dp_post_all_reduce_sequence' not in c.steps[-1]
+    assert p.native.observer.local.dp_sequence is None
 
 
 def test_nesting_uses_separate_parser_prefix_and_keyword_calls(profile, monkeypatch):
@@ -361,6 +415,21 @@ def test_synced_descriptor_joins_existing_dispatch_without_collective(profile, t
     inventory_row = next(iter(p.native.observer.rows.values()))
     assert step['dispatch_evidence'] == inventory_row['dispatch_evidence']
     assert 'dp_post_all_reduce' in step['dispatch_evidence']
+    assert step['dp_post_all_reduce_sequence'] == 38
+    assert 'dp_post_all_reduce_sequence' not in inventory_row
+    c = p.collector
+    assert c.annotations[-1]['dp_post_all_reduce_sequence'] == 38
+    dummy = native_function('vllm/v1/worker/gpu_worker.py', 'execute_dummy_batch', {}, 'Worker')
+    assert dummy(p.native.worker) is None
+    annotation = c.annotations[-1]
+    assert annotation['dp_post_all_reduce_sequence'] == 39 and annotation['step'] is None
+    assert c.steps == [step]
+    assert p.native.worker.sample_tokens() is p.native.state.result
+    assert p.native.state.sample_context['dp_post_all_reduce_sequence'] == 38
+    assert p.native.state.sample_context['step'] == step['step']
+    assert 'dp_post_all_reduce_sequence' not in c.context()
+    assert c.used == sum(len(json.dumps(row).encode()) for rows in
+                        (c.steps, c.annotations, c.synchronization) for row in rows)
 
 
 def test_inventory_rpc_and_records_remain_unchanged(profile):

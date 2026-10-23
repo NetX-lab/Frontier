@@ -1,0 +1,67 @@
+{
+  "phase": "red",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "CUDA_VISIBLE_DEVICES": ""
+  },
+  "results": [
+    {
+      "name": "native_v2_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_v2_serving_inventory.py",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/red_native_v2_serving_inventory.xml"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record",
+      "start_utc": "2026-10-23T18:40:21.628170+00:00",
+      "returncode": 1,
+      "counts": {
+        "tests": 46,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/red_native_v2_serving_inventory.log",
+      "xml": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/red_native_v2_serving_inventory.xml",
+      "log_sha256": "7b3dee3bd29b415bd80526ab366040debafea52dbe5b76c5803c3d88d8c8e908",
+      "xml_sha256": "049dbc305a14a31bf0cf757cd0cb25743a213a1b8cb93cde973cb9a4523b3d9f"
+    },
+    {
+      "name": "native_serve_profile",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_serve_profile.py",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/red_native_serve_profile.xml"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record",
+      "start_utc": "2026-10-23T18:40:26.754310+00:00",
+      "returncode": 1,
+      "counts": {
+        "tests": 36,
+        "failures": 14,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/red_native_serve_profile.log",
+      "xml": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/red_native_serve_profile.xml",
+      "log_sha256": "1fd4cab0d06073ac45c9b71dfc556924be0a976c21147fc02f13a6121367455b",
+      "xml_sha256": "c536e9d575e39f3de62084402026c00ccf1ed57b51059d0f13e70f9d77f30545"
+    }
+  ]
+}

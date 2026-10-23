@@ -43,6 +43,15 @@ class Tensor:
         return Tensor(key.stop)
 
 
+class DPGroup:
+    def __init__(self):
+        self.sequence, self.reads = 37, []
+
+    def _get_sequence_number_for_group(self):
+        self.reads.append(self.sequence)
+        return self.sequence
+
+
 @pytest.fixture
 def v2(native, monkeypatch):
     state, worker = native.state, native.worker
@@ -93,7 +102,7 @@ def v2(native, monkeypatch):
                     dict(input_ids=Tensor(tokens), positions=Tensor(tokens)))
             return self.model(input_ids=Tensor(tokens), positions=Tensor(tokens))
 
-        def _dummy_run(self, num_tokens, *, is_profile=False):
+        def _dummy_run(self, num_tokens, *, is_profile=False, uniform_decode=False):
             return self.execute_model(SimpleNamespace(total_num_scheduled_tokens=num_tokens),
                 dummy_run=True, is_profile=is_profile)
 
@@ -102,7 +111,11 @@ def v2(native, monkeypatch):
     monkeypatch.setitem(sys.modules, module.__name__, module)
     runner_module = ModuleType('vllm.v1.worker.gpu.model_runner')
     dp_module = ModuleType('vllm.v1.worker.gpu.dp_utils')
-    dp_module.dist = SimpleNamespace(all_reduce=lambda *args, **kwargs: None)
+    state.dp_group = DPGroup()
+    def reduce(tensor, *, group):
+        assert group is state.dp_group
+        group.sequence += 1
+    dp_module.dist = SimpleNamespace(all_reduce=reduce)
 
     def classify(num_reqs, num_tokens, max_query_len, has_prefill):
         return max_query_len if not has_prefill and num_tokens == num_reqs * max_query_len else None
@@ -113,7 +126,7 @@ def v2(native, monkeypatch):
             device = SimpleNamespace(type='cpu')
         vector = np.array([[num_tokens] * dp_size, [Mode[state.mode].value] * dp_size,
             [uniform_token_count or 0] * dp_size, [max_query_len or -1] * dp_size]).view(CPUVector)
-        dp_module.dist.all_reduce(vector)
+        dp_module.dist.all_reduce(vector, group=state.dp_group)
         return Descriptor(Mode[state.mode], num_tokens, 1, uniform_token_count,
             max_query_len), vector[0]
 
@@ -178,6 +191,8 @@ def test_v2_dummy_profile_capture_and_noop_are_not_serving(v2):
     assert {row['kind'] for row in rows} == {'profile', 'dummy', 'capture'}
     assert v2.observer.forwards == 3
     assert not v2.observer.requests
+    assert v2.observer.local.dp_sequence is None
+    assert v2.state.dp_group.reads == [38, 39]
 
 
 def test_v2_inventory_and_ordered_emission_use_actual_manager(v2):
@@ -237,6 +252,22 @@ def native_function(relative, name, namespace, owner=None):
     exec(compile(ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[])),
         str(path), 'exec', flags=__future__.annotations.compiler_flag), namespace)
     return namespace[name]
+
+
+@pytest.fixture
+def native_worker_boundary(monkeypatch):
+    """Execute the pinned Worker body, including failures before runner entry."""
+    from contextlib import nullcontext
+    original_load = base.load_collector
+    actual = native_function('vllm/v1/worker/gpu_worker.py', 'execute_model',
+        dict(get_pp_group=lambda: SimpleNamespace(is_first_rank=True),
+             ModelRunnerOutput=object, AsyncModelRunnerOutput=object, NoneType=type(None)), 'Worker')
+    def load_at_worker_boundary():
+        cls = sys.modules['vllm.v1.worker.gpu_worker'].Worker
+        cls.execute_model, cls.annotate_profile = actual, lambda *args: nullcontext()
+        cls._pp_send_work = []
+        return original_load()
+    monkeypatch.setattr(base, 'load_collector', load_at_worker_boundary)
 
 
 @pytest.fixture
@@ -429,7 +460,9 @@ def dispatch_oracle():
                   max_num_seqs=128, max_num_batched_tokens=8192)
     manifest = {'groundtruth_checkout_path': root}
     manager, _ = checker.native_v2_graph_dispatch(manifest, engine)
-    return checker, engine, manager, checker.native_dispatch_oracle(manifest, manager)
+    native, group = checker.native_dispatch_oracle(manifest, manager), DPGroup()
+    native['get_dp_group'] = lambda: SimpleNamespace(cpu_group=group)
+    return checker, engine, manager, native
 
 
 def dispatch_row(oracle, prefill, peer_uniform=1, peer_tokens=1):
@@ -466,7 +499,7 @@ def test_actual_native_classification_and_dp_dispatch(dispatch_oracle, prefill, 
 
 
 @pytest.mark.parametrize('fault', ['missing', 'circular', 'classifier', 'owner', 'dp_local',
-    'dp_shape', 'ambiguous', 'descriptor', 'mode', 'padding', 'failed_forward', 'boolean_token', 'query_bound'])
+    'dp_shape', 'ambiguous', 'sequence', 'descriptor', 'mode', 'padding', 'failed_forward', 'boolean_token', 'query_bound'])
 def test_dispatch_successor_rejects_incomplete_or_wrong_operands(dispatch_oracle, fault):
     checker, engine, manager, native = dispatch_oracle
     row = dispatch_row(dispatch_oracle, fault == 'query_bound', peer_tokens=2 if fault == 'query_bound' else 1)
@@ -478,6 +511,7 @@ def test_dispatch_successor_rejects_incomplete_or_wrong_operands(dispatch_oracle
     if fault == 'dp_local': ev['dp_post_all_reduce'][0][0] = 2
     if fault == 'dp_shape': ev['dp_post_all_reduce'].pop()
     if fault == 'ambiguous': ev['extra_dispatch'] = ev['dispatch']
+    if fault == 'sequence': ev['dp_post_all_reduce_sequence'] = 38
     if fault == 'descriptor': ev['dispatch']['descriptor']['num_tokens'] = 2
     if fault == 'mode': row['graph_mode'] = 'PIECEWISE'
     if fault == 'padding': ev['dispatch']['num_tokens_across_dp'] = [2, 2]
@@ -539,9 +573,11 @@ def test_native_cpu_dp_vector_is_copied_before_padding_and_exceptions_pass_uncha
     for name in ('get_uniform_decode_token_count', 'dispatch_cg_and_sync_dp'):
         setattr(namespace, name, native[name])
     vector = [[1, 2], [2, 2], [1, 1], [1, 1]]
-    returned = object()
+    returned, group = object(), native['get_dp_group']().cpu_group
     def reduce(tensor, **kwargs):
+        assert kwargs['group'] is group
         tensor.copy_(torch.tensor(vector, dtype=tensor.dtype))
+        group.sequence += 1
         return returned
     dp.dist = SimpleNamespace(all_reduce=reduce, untouched=returned)
     observer.install_v2_dispatch(namespace, dp)
@@ -551,6 +587,7 @@ def test_native_cpu_dp_vector_is_copied_before_padding_and_exceptions_pass_uncha
     desc, padded = namespace.dispatch_cg_and_sync_dp(manager, 1, 1, uniform, 2, 0, max_query_len=1)
     assert desc.num_tokens == 2 and padded.tolist() == [2, 2]
     assert observer.local.dispatch_evidence['dp_post_all_reduce'] == vector
+    assert observer.local.dp_sequence == 38 and group.reads == [38]
     assert dp.dist.untouched is returned and not observer.errors
     row = dispatch_row(dispatch_oracle, False, peer_tokens=2)
     row.pop('dispatch_evidence')
@@ -561,6 +598,15 @@ def test_native_cpu_dp_vector_is_copied_before_padding_and_exceptions_pass_uncha
     observer.finish_v2_dispatch()
     checker, engine, _, _ = dispatch_oracle
     checker.verify_dispatch_row(next(iter(observer.rows.values())), engine, manager, native, 0)
+    for expected in (39, 40, 41):
+        vector = [[0, 0]] * 4
+        observer.local.dispatch_evidence = {'forwards': 0, 'replays': 0}
+        assert dp.dist.all_reduce(torch.zeros(4, 2, dtype=torch.int32), group=group) is returned
+        assert observer.local.dp_sequence == expected
+        assert observer.local.dispatch_evidence['dp_post_all_reduce'] == vector
+    observer.local.dispatch_evidence = None
+    assert dp.dist.all_reduce(torch.zeros(4, 2), group=group) is returned
+    assert group.reads == [38, 39, 40, 41]
     error = RuntimeError('Native CPU all-reduce failed')
     def fail(*args, **kwargs):
         raise error
@@ -576,6 +622,13 @@ def test_native_cpu_dp_vector_is_copied_before_padding_and_exceptions_pass_uncha
     with pytest.raises(RuntimeError) as caught:
         namespace2.dispatch_cg_and_sync_dp(manager, 1, 1, 1, 2, 0, max_query_len=1)
     assert caught.value is error and 'dispatch' not in observer.local.dispatch_evidence
+    assert group.reads == [38, 39, 40, 41]
+    native_dist.all_reduce = lambda *args, **kwargs: returned
+    observer.local.dispatch_evidence, observer.local.dp_sequence = {}, None
+    assert dp2.dist.all_reduce(torch.zeros(4, 2, dtype=torch.int32)) is returned
+    assert observer.local.dispatch_evidence['dp_post_all_reduce'] == [[0, 0]] * 4
+    assert observer.local.dp_sequence is None
+    assert observer.errors[-1] == {'where': 'dp_post_all_reduce_sequence', 'error': "KeyError: 'group'"}
 
 
 @pytest.mark.parametrize('fault', ['classifier', 'dispatch', 'finish'])

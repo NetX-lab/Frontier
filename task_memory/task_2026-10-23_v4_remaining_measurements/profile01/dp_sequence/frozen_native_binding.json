@@ -1,0 +1,38 @@
+{
+  "status": "PASS_BYTE_AND_AST_BINDING",
+  "base_revision": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+  "frozen": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py",
+      "sha256": "29523700ac8492fa6e192ce272f8ab5a7a48d1528bd4064417e26e811533d10a",
+      "equal_frozen_r3_pin": true
+    },
+    {
+      "path": "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py",
+      "sha256": "ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917",
+      "equal_base": true
+    }
+  ],
+  "root_r2_equals_frozen_pin": true,
+  "native_revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "native_head": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "native": [
+    {
+      "path": "vllm/v1/worker/gpu_worker.py",
+      "sha256": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552",
+      "equal_pinned_git": true
+    },
+    {
+      "path": "vllm/v1/worker/gpu/model_runner.py",
+      "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+      "equal_pinned_git": true
+    },
+    {
+      "path": "vllm/v1/worker/gpu/dp_utils.py",
+      "sha256": "3c882f85109ba47e473953351d166c4377ceb995205e91cbf128ca5075775a5d",
+      "equal_pinned_git": true
+    }
+  ],
+  "base_inventory_count_and_emit_unchanged": true,
+  "inventory_hook_statements_unchanged": true
+}
