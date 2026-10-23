@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | C1/C2 validation passes independent No findings; actual observed compute-context producer code still blocks full integration. |
+| 2026-10-23 | Parent verifies compute repair f41d1ee9:593 unique PASS/89 SKIP; independent re-review and observed compute-context producer remain open. |
 | 2026-10-23 | Accept F4 boundaries after parent463/89+cold10 and No findings; assign compute C1(P1)/C2(P2) to PRICING. |
 | 2026-10-23 | Finite re-review closes F3/F5/F6; send F4 size-branch grouping and lazy-state equality defects back to PRICING. |
 | 2026-10-23 | Parent verifies finite repair27b3499/sub3dac53c:456 PASS/89 SKIP,12 HTSIM,9 cold; independent re-review pending. |
@@ -28,9 +30,10 @@
   files unchanged. T2 parent177 PASS/15 SKIP, real image CPU7168/8192/128 for both
   configs, independent No findings and actual full-file rebinding6/6 PASS.
 - in-progress: CORE/SOURCE final consumers/fixture and F1 repair; PRICING full
-  deliverybfe6f2ae (43 changed paths/3067 gross including333 submodule lines) has
-  passed parent affected/cold checks; all finite-side F3–F6 are closed. Separate
-  compute findings C1(P1)/C2(P2) are assigned for repair. CORE may integrate
+  deliveryf41d1ee9 (43 changed paths/3305 gross including333 submodule lines) has
+  passed parent cross-environment593 unique PASS/89 SKIP plus cold10 subset.
+  All finite-side F3–F6 and owned C1/C2 validation findings are closed. The actual
+  observed compute_context producer/handoff remains open. CORE may integrate
   delivered interfaces for development; final acceptance is not implied.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
@@ -106,6 +109,31 @@ assigned to PRICING against latest bfe within remaining889 gross; CORE is notifi
 of the forthcoming same-context/layout checks. These findings are distinct from
 CORE's F1 callable provenance. Full PRICING remains unmerged pending compute
 repairs/re-review and integrated acceptance; finite repair closure is preserved.
+
+Compute repair989a883d/archivef41d1ee9 is frozen in verify-step5-pricing-04.
+Parent14 suites529 PASS/153 SKIP; published native source observer64 PASS fill
+exactly64 of those skips; cold10 is a passing subset. JUnit identity-set comparison
+therefore yields593 unique PASS/89 SKIP. Source/43-path3305/3956 budget independently
+matches;651 gross remain. Unchangedsub3dac53c/source/binary reuses prior root12-pass
+evidence. Exact diffs/logs/commands/results are in pricing_compute_parent/ there.
+
+Original compute reviewer rechecks frozen six-path C1/C2 delta. Producer closure
+is explicitly incomplete: H04 requires buffer_receipt.compute_context from an
+actual observed point, but the existing collector does not yet emit that proof.
+Root resumes the PRICING owner to complete owned producer code/association within
+651 gross, or return a concrete CORE-owned prerequisite/quota boundary. CORE is
+notified to thread verified evidence, never copy a candidate prediction to create
+measurement proof. Missing future GPU values and missing producer code are kept
+distinct. Full PRICING remains unmerged pending this closure and re-review.
+
+Compute reviewer returns No findings on frozen f41 six-path delta: C1 source/CPU
+router observation and C2 prepricing validation close; F3–F6/native behavior and
+tolerance remain unchanged. Review explicitly confirms missing producer CODE at
+vllm_collective_benchmark.py:424–429,446–453, not merely absent future GPU data:
+actual observed point must reach exact buffer/count receipt and CORE consumer.
+Review and parent acceptance limits are retained in verify-step5-pricing-04's
+pricing_compute_parent/review_2026-10-23_compute_repair.md. Existing PRICING producer
+assignment continues; no full integration/merge acceptance while this path is absent.
 
 ## Active implementation dispatch — 2026-10-23
 
