@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept full-unit exact-ID comparison and supplements; record both main08 timeouts and clean final source. |
 | 2026-10-23 | Verify source79 strict77/short receipts and T2 static binding;preserve pending full gates. |
 
 ## Code consolidation
@@ -55,6 +56,36 @@ T2/helper hashes remain7d8422d4/63baf647 in the exact machine receipt.
 Owner2907/12/53/native4 verification is retained and its indexed receipts are
 checksummed;parent does not claim a new installed inventory or GPU execution.
 
-Main08/full-unit remain unfinished. T2 target staging,sealing,actual capacity and
-runtime qualification follow workflow acceptance. Static binding is not runtime
-admission. Exact fields/limits are in t2_binding_receipt.json.
+## Full-unit completion
+
+The exact original run and comparison commands, environments and baseline paths
+are in performance_regressions/test_report_2026-10-23_unit_parent05.md, archived
+atf3a3147e. The parent independently reads the original XMLs with Python3.10.6
+and xml.etree.ElementTree, builds unique classname/name IDs, checks every e41
+status and the three added IDs, and compares the full failure/error sets.
+It rehashes the execution receipts, logs, XMLs and every archive-manifest entry.
+
+Expected: all8607 prior statuses preserved,three new tests pass,no added code
+failures or missing cases. Observed PASS:8018PASS/279FAIL/32ERROR/281SKIP;
+all8607 prior statuses unchanged and the three added tests pass. Raw exit1 and
+JUnit1203.307s remain visible. Supplement101 covers the12 added missing-aiohttp
+failures and the uncollectable native module;governance52 passes all52 cases,
+including five retained Torch-absence failures. Totals are not summed.
+Exact source/count/hash evidence:unit_gate_acceptance.json.
+
+## Main08 completion
+
+The actual command is preserved in test_report_2026-10-23_integrated_point.md.
+The wrapper exits1. Offline and online both FAIL by the original2400s limit:
+2400.175252s and2400.152131s respectively. Each scheduler records four emitted
+decode tokens and schedules decode iteration4;the request is incomplete.
+Operator traces occupy1,447,809,841 and1,517,626,194 bytes. These sizes are
+observations,not a diagnosis. Source79 and submodule3dac are clean after the run,
+verified with git rev-parse HEAD and git status --porcelain in both checkouts.
+Mode receipts and validation files remain under the original main08 output root;
+compact outcome:main08_execution.json.
+
+Full workflow acceptance still fails. T2 target staging,sealing,actual capacity
+and runtime qualification follow workflow acceptance. CORE is building a new
+seconds-scale execution-path loop from the retained run;no new repair or full
+CLI rerun is assigned. Static binding is not runtime admission.

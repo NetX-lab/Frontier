@@ -30,7 +30,8 @@
     "retained_pair_bytes": 18617675
   },
   "main08": {
-    "state": "RUNNING_UNVERIFIED",
+    "state": "FAIL_BOTH_MODES_TIMED_OUT",
+    "completion_receipt": "main08_execution.json",
     "output_root": "/data/ycfeng/tmp/d29-parent-position-main08",
     "shell_id": "sh_1684dfb4e001YDXmBG29Tpwtul",
     "per_mode_timeout_s": 2400,

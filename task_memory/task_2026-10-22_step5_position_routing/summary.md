@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept final79 unit comparison and record both main08 timeouts; residual execution-path diagnosis remains pending. |
 | 2026-10-23 | Record feature consolidation and accepted fresh79 strict77/short/T2 static receipts;full-unit/main08 unfinished. |
 | 2026-10-23 | Accept all performance components,freeze79f1a3fd and start final-source CLI/regression/T2 checks after exact9254 audit. |
 | 2026-10-23 | Parent verifies group-reuse delivery;loader/parser repairs and corrected startup accounting continue. |
@@ -38,8 +39,14 @@ calls. Measured111-path accounting is9240source/9254global,zero violations.
 Feature mergecf894fa4 preserves exact79 source bytes. Freshstrict77 is77/77;
 parent short selections101/197/53PASS and T2static63/26PASS are accepted separately.
 T2recordsa886466c bind79/integrated06 and covered H800 authority;target staging
-and seal remain blocked on workflow. main08 fullCLI and full-unit run against79;
-their completion is pending. Early-init attribution remains
+and seal remain blocked on workflow. Final79 full-unit comparison is accepted:
+8018PASS,all8607 prior statuses unchanged,three newPASS;raw279FAIL/32ERROR remain
+with explicit101/52 environment supplements. Main08 offline still times out at
+2400s after reaching decode;online also times out at the same recorded four-token
+progress. Post-run frozen source and submodule remain clean. Regression records
+are archived atf3a3147e. The CORE
+owner is establishing a new real execution-path feedback loop from this run.
+Early-init attribution remains
 partial;no additional implementation or hash-identity change is authorized.
 Task-required H800 authority is already granted;workflow/package readiness remains.
 Whole workflow and GPU/native/

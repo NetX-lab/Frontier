@@ -18,6 +18,6 @@
   ],
   "parent_verification": "Read exact archived executions,rehash selected evidence manifest,reparse three original JUnit XMLs,check clean79 source before/after and successful exits",
   "counts_are_not_summed": true,
-  "full_unit_and_full_cli": "PENDING_NOT_INCLUDED",
+  "full_unit_and_full_cli": "NOT_INCLUDED_IN_THIS_SHORT_GATE_RECEIPT",
   "native_gpu_g3_e2e": "NOT_QUALIFIED"
 }

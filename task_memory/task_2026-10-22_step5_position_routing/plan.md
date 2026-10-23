@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept final79 unit comparison and environment supplements; record both main08 timeouts and reopen real execution-path diagnosis. |
 | 2026-10-23 | Consolidate feature codecf894fa4;parent accepts fresh77/77 and101/197/53 plus T2 static63/26;full-unit/main08 pending. |
 | 2026-10-23 | Close all three performance reviews/parent checks;freeze79f1a3fd and start main08/fresh regressions/T2 rebinding. |
 | 2026-10-23 | Allocate disjoint loader45/parser50 repairs;diagnose remaining startup time and carry H800 authority forward. |
@@ -48,6 +49,11 @@ Current dependency: reviewed performance repairs -> freeze79f1a3fd (complete)
 -> package readiness -> quota check/run under the existing H800 authority
 -> fresh native/profile evidence -> G3 and independent four-metric E2E acceptance.
 
+The main08 full-workflow edge failed. Its active return path is now:
+real execution-path feedback loop -> measured cause -> bounded repair allocation
+-> focused verification and independent review -> new source freeze -> required
+regressions and full CLI. A passing isolated point is not the full-workflow gate.
+
 The earlier main04 attempt on60ba is diagnostic only. Main05 on1be supplies the
 current placement failure; its raw command/log/execution receipts stay preserved.
 The e41 T2 rebind is delivered and parent-verified in the isolated preparation
@@ -59,8 +65,12 @@ All three repairs now have independent Standards/Spec No findings and parent
 checks. The integrated actual-point loop on79f1a3fd uses no diagnostic reuse:
 five calls,88 descriptions,20 current reads/one decode;full costs/proofs/plan bytes
 match baseline. Its0.695s cold and0.172s last-three mean settle the required
-residual-point check,not full workflow duration. main08 now runs the unchanged
-6144/1024 workload and2400s per-mode cap. Early-init report remains a partial
+residual-point check,not full workflow duration. main08 offline timed out after
+2400.175s,with four decode tokens emitted and the next decode iteration scheduled.
+Online subsequently timed out after2400.152s at the same recorded decode count.
+The workload stays6144/1024 with2400s per-mode cap. D29-MAIN08-RESIDUAL-REPRO
+now owns a new real execution-path loop beyond the isolated initial-P point;
+main08_residual_repro/ records its scope and evidence. Early-init report remains a partial
 bounded diagnosis:1288s includes the whole predictor construction;one attention
 phase performs three same-frame serializations. It does not justify a cache-key
 change or another implementation. Any further repair requires an observed failure
@@ -76,8 +86,8 @@ and its own faithful short loop. See early_init_repro/report.md.
 | PRICING46 | Exact-current-text parsing repair closed;parent128PASS;3920/3956 measured. |
 | Complete integration and final freeze | Complete:79 frozen in integrated06,gitlink3dac53c;feature mergecf894fa4 source bytes identical. |
 | Legacy strict77 | Fresh final05 on79 accepted77/77,451 artifact hashes and519 cache names per side;parent receipt hashes/records match. |
-| Full-unit failure/error-set gate | Fresh parent05 on79 in progress,including environment/metadata/catalogue suites. Accepted e41 historical failure sets remain the comparison reference. |
-| Fresh fixture and full CLI | main08 running on79,original6144/1024 and2400s per mode;all9 launch input hashes match main07. |
+| Full-unit failure/error-set gate | Accepted on79:8018PASS;all8607 e41 statuses unchanged,three newPASS. Raw279FAIL/32ERROR/281SKIP remain;101 and52 environment supplements pass separately. |
+| Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
 | Independent source review | All three performance components No findings on both axes;group coverage-record P2 corrected37c7832e and re-review closed. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
 | Final per-path accounting | 79 remeasured:111 allocated/110 changed,9240 source/9254 global,zero path/owner violations. New steps152gross/138retained. |
