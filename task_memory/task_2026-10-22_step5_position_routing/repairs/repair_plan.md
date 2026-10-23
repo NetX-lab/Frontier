@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Redistribute230 CORE lines for three review repairs; retain registry exclusive paths and all aggregate caps. |
 | 2026-10-23 | Add effective109-path registry overlay within unchanged CORE4404/global10000; isolate four-path repair. |
 | 2026-10-23 | Reserve120 gross within PRICING's existing quota for explicit CPU composition and accurate trace labels. |
 | 2026-10-23 | Reserve bounded native/PRICING constructor-binding deltas for T2 engine limits. |
@@ -22,6 +23,8 @@ paths). Sum each path's retained allowances once; do not subtract H11 again.
 For current implementation, apply registry_scope_amendment.json to this preserved
 approval ledger:109 effective paths, CORE46 paths/4404, all owner/global totals
 unchanged. Its explicit grouped-path adjustments supersede the original estimates.
+Then apply core_review_scope_amendment.json, a zero-sum230-line redistribution
+for six existing CORE paths. This does not alter registry exclusivity or any total.
 
 | Stream / change marker | Files | Gross quota | Assignment |
 | --- | ---: | ---: | --- |

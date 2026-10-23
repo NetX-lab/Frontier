@@ -1,0 +1,40 @@
+{
+  "decision_id": "D29-CORE-REVIEW-REPAIR",
+  "status": "ROOT_ALLOCATED_EXISTING_OWNER_QUOTA",
+  "apply_after": "registry_scope_amendment.json",
+  "owner": "core_source",
+  "owner_total_ceiling": 4404,
+  "effective_unique_paths": 109,
+  "total_gross_ceiling": 10000,
+  "repair_delta_ceiling": 230,
+  "repair_paths": [
+    "frontier/profiling/moe/moe_impl.py",
+    "frontier/moe_routing_runtime.py",
+    "tests/integration/run_step5_measured_main.py",
+    "tests/unit/test_step5_moe_profiling.py",
+    "tests/unit/test_moe_profiling_output_metadata.py",
+    "tests/integration/test_step5_measured_main.py"
+  ],
+  "path_ceiling_adjustments": [
+    {"path": "tests/unit/test_step5_moe_profiling.py", "before": 290, "delta": 60, "after": 350},
+    {"path": "tests/unit/test_moe_profiling_output_metadata.py", "before": 85, "delta": 50, "after": 135},
+    {"path": "tests/integration/test_step5_measured_main.py", "before": 153, "delta": 90, "after": 243},
+    {"path": "frontier/moe_routing_runtime.py", "before": 123, "delta": 10, "after": 133},
+    {"path": "tests/integration/run_step5_measured_main.py", "before": 91, "delta": 20, "after": 111},
+    {"path": "frontier/execution_time_predictor/prediction_family_trainers.py", "before": 108, "delta": -20, "after": 88},
+    {"path": "frontier/execution_time_predictor/layer_contract_resolution.py", "before": 45, "delta": -20, "after": 25},
+    {"path": "frontier/profiling/common/step5_job.py", "before": 110, "delta": -30, "after": 80},
+    {"path": "frontier/profiling/common/runtime_identity.py", "before": 176, "delta": -30, "after": 146},
+    {"path": "frontier/profiling/moe/main.py", "before": 171, "delta": -35, "after": 136},
+    {"path": "frontier/execution_time_predictor/profiling_dataframe_loaders.py", "before": 27, "delta": -10, "after": 17},
+    {"path": "frontier/execution_time_predictor/step5.py", "before": 81, "delta": -30, "after": 51},
+    {"path": "tests/integration/step5_measured_compute_fixture.py", "before": 230, "delta": -55, "after": 175}
+  ],
+  "exclusive_registry_paths": [
+    "frontier/execution_time_predictor/prediction_model_registry.py",
+    "tests/unit/test_prediction_measurement_bindings.py",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "frontier/execution_time_predictor/moe_routing_workload.py"
+  ],
+  "notes": "No new paths or aggregate budget. Add230 and remove230 from unused grouped path allowance after the registry overlay; all observed d96 source fits. Registry four-path work remains exclusive to its separate worktree. Root reassesses concrete overage instead of permitting implicit borrowing."
+}

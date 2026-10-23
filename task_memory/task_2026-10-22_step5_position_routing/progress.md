@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Record CORE three-P2 review and isolated repair allocation; freeze PRICING84e66115 for producer/CPU re-review. |
 | 2026-10-23 | Allocate registry retention/query correction:109 effective paths, unchanged CORE4404/global10000 via300-line redistribution. |
 | 2026-10-23 | Allocate the existing explicit CPU fixture backend/trace consumer within PRICING's quota; start CORE independent review. |
 | 2026-10-23 | Freeze CORE d96b3279 and verify143 unique PASS/4 SKIP; investigate explicit registry and CPU backend dependencies. |
@@ -176,6 +177,26 @@ Effective scope109 paths, all owner totals/global10000 unchanged; new300 gross
 is exactly reallocated from unused CORE path allowance, with at most60 existing
 caller delta. See repairs/registry_scope_amendment.json and registry_binding_decision.md.
 Do not change global typed identities/cache hashes or add a parallel registry.
+
+CORE44 review returns three P2: actual simulator _compute_routing provenance,
+mandatory position routing_input/source revalidation, and actual-main positive
+proofs for zero-live source owners. Earlier _select_experts replacement fix is
+confirmed but the implementation chain needs the new check. Original owner gets
+six existing paths/at most230 delta in an isolated worktree; grouped path allowances
+are redistributed without changing CORE4404,109 paths or total10000. Registry
+four-path implementation remains exclusive. Review and exact allocation:
+review_2026-10-23_core_delivery.md and repairs/core_review_scope_amendment.json.
+
+PRICING observed producer9dbca5b3 and explicit CPU consumer78a475be are delivered
+at84e66115. Root verifies43 paths,+3617/-96=3713/3956, remaining243, unchanged
+sub3dac/c96 patch and binary. Freeze verify-step5-pricing-05; independent producer/
+CPU closure review runs on10-path delta. Parent cold CPU consumer68 PASS and full
+probe with published source230 PASS/15 SKIP are observed;14-suite result is569 PASS/
+155 SKIP. XML sets give724 unique cases,691 PASS/33 SKIP across the environments;
+the two extra invocations are subsets, not additional cases. Source unchanged,
+existing12 HTSIM checks explicitly rebound to unchanged sub3dac rather than rerun.
+Persistent evidence: verify-step5-pricing-05/.../pricing_closure_parent/.
+No global qualification or full integration is claimed.
 
 ## Active implementation dispatch — 2026-10-23
 
