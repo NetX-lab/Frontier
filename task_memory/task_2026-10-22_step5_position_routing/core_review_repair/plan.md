@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Define three bounded RED/GREEN slices and verification limits. |
+| 2026-10-23 | Append authorized immutable development import and existing wrapper diagnostics seam. |
 
 Dependency: root ownership overlay -> {R1,R2,R3 sequential sole-writer slices} -> affected regression/budget -> committed handoff. No new tickets or interfaces.
 
@@ -11,3 +12,5 @@ Dependency: root ownership overlay -> {R1,R2,R3 sequential sole-writer slices} -
 2. R2: actual automatic trainer/preflight receives otherwise valid producer rows with no routing_input. Record RED, require supplied descriptor and call the existing source validator unconditionally. Acceptance: rejected before estimator/legacy helpers; valid source fit/cache/defaults remain intact.
 3. R3: existing actual-main artifact validator requires operator/proof correspondence and actual-owner source-local live0 evidence, with selected BF16/FP8 reached prepare membership. Record RED on removed dummy gate/router/prepare proof while preserving empty expert proof. Acceptance: wrong-owner/no-proof/invalid positive pairs fail; BF16 no prepare and FP8 reached prepare pass; full existing workflow invariants retained.
 4. Run affected source/consumer tests; verify exactly six changed code/test paths, per-path effective caps and <=230 gross repair delta plus <=4404 CORE total. Commit each verified slice. Native/kernel/full CLI/registry qualification remains root-owned; no standalone CLI run.
+
+Latest root-authorized extension: preserve and commit the three P2 repair slices, then merge immutable PRICING a7e2a3ca with history intact. Update only the already-owned wrapper persistence (3gross) and existing owned profiling cohort test. Acceptance: full point diagnostics retained independently and unioned into row native_facts, including validated ambient modules; constructor provenance and stable point native_context unchanged. Run real joint producer tests and current-repo CPU writer without an external reference. Seven authorized code/test paths after the extension, still230 repair/4404CORE; registry four paths remain exclusive and no full CLI.

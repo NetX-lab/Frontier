@@ -5,8 +5,9 @@
 | --- | --- |
 | 2026-10-23 | Record R1 actual inheritance/delegation RED/GREEN with scoped quota. |
 | 2026-10-23 | Record R2 automatic preflight/trainer missing-descriptor RED and36PASSGREEN. |
+| 2026-10-23 | Complete R3 proof/source-owner RED/GREEN, exact artifact seam, affected regressions and scoped budget. |
 
-TaskID:D29-CORE-REVIEW-REPAIR. Isolated worktree `/data/ycfeng/Frontier/.worktrees/step5-core-review-fixes`,baseline d96b3279. No full CLI or GPU/native qualification. Root submodule checkout3dac preserved unstaged. Commands use `PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp`;py312 addsVLLM_TARGET_DEVICE=cpu. Python3.12.3 `/data/ycfeng/envs/asyncopd-py312/bin/python`,Python3.10.6 `/data/ycfeng/envs/frontier-py310/bin/python`.
+TaskID:D29-CORE-REVIEW-REPAIR. Isolated worktree `/data/ycfeng/Frontier/.worktrees/step5-core-review-fixes`,baseline d96b3279. No full CLI or GPU/native qualification. Root submodule checkout3dac preserved unstaged. Commands use `PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp`;py312 addsVLLM_TARGET_DEVICE=cpu. Python3.12.13 `/data/ycfeng/envs/asyncopd-py312/bin/python`,Python3.10.6 `/data/ycfeng/envs/frontier-py310/bin/python`.
 
 ## R1 actual supported routing callable chain
 
@@ -40,3 +41,49 @@ env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPAT
 - RED01:absent column shared/independent reach forbidden estimator/metadata (`Failed: Unvalidated source reached estimator or legacy helper`). Invalid descriptor already rejected;old test regex schema_version mismatched actualsource_frames and was corrected. No production relaxation.
 - GREEN01:36PASS/3deselected68.81s;four new source negatives plus current automatic actual producercold/warmfit/cache,command/defaults/metadata contracts. Hardware wrapper excluded here andcoveredR1py312/currentintegrationseam separately.
 - Production requires routing_input column and always calls existing validate_position_moe_source_row. No new source validator,estimator/default,unownedtrainer orregistryedit. R2delta3added/4deleted+40testadded=47;baseline runtime103/133,test125/135. R1+R2delta91/230.
+
+## R3 complete actual-owner compute proof admission
+
+Pre-agreed seam: `run_step5_measured_main.validate` called with complete CPU artifact fixtures; these are explicit fault injection, not actual completed CLI measurements. All original validator requirements run first:6144/1024,P6128,D16+1023single-tokenforwards,graphcapacity/topology,3.5msREADbytes,prefixreservation,source release/readiness,positivemetrics. Every damaged input preserves empty-expert proof while removing/changing actualdummy-owner source gate/router/reached prepare orpositivepairedkeys. Peer-only case retains a live-source-owner EP0 row which mentions dummyDP1 butmustnotcountasactualemptyowner.
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/integration/test_step5_measured_main.py -k 'completed_position_validator' > /data/ycfeng/tmp/d29-core-review-r3-red01.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/integration/test_step5_measured_main.py -k 'completed_position_validator' > /data/ycfeng/tmp/d29-core-review-r3-red02.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/integration/test_step5_measured_main.py -k 'completed_position_validator' > /data/ycfeng/tmp/d29-core-review-r3-green01.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/integration/test_step5_measured_main.py -k 'completed_position_validator' > /data/ycfeng/tmp/d29-core-review-r3-green02.log 2>&1
+```
+
+- RED01:25FAIL/2SKIP3.23s. Existing actual validator expects sliced expert counts but position-count registry returns dict;TypeErrorbeforeproofassertion,notmeaningfulmissing-proofRED.
+- RED02: temporary correctdictindexing(ultimatelydeleted)exposes16FAIL/9PASS/2SKIP2.53s;16`DID NOT RAISE` foractualmissingproofs/operators/peer-owner. PreviousNaN/countzeroalreadyrejected.
+- GREEN01:25PASS/2SKIP2.25s. Sourceemptymeansmappedactualowner.live_rows==0,notexpertassignment0oranypeerempty. Applicableoperatorinventorycomesonlyfromselectedregistrywithactualdispatchbuffercomputecontext. Completepositivefiniteexactpairscheckedagainstdurationinphaseoperators.
+- GREEN02:36PASS/3SKIP2.49s. ExpandedpositiveBF16(noFP8prepare),FP8prepareanddeferredFP8;negativeinapplicableprepare,normproofdeletion,mispaireddurationandfractionalcount. AllCOMPUTEoperator/proofkeysnowexactlycorrespondviaexistingregistrybinding,notjustMoEsubset. Boolcountrejected. ThreeexplicitinapplicabilitySKIPs:BF16/deferredmissingprepare,andFP8nondeferredinapplicablepreparecase.
+- No new normalizer/operator registry/source API,peer edits,measurement synthesis,CLI orchangedqualification. Fullcontextreadfromexistingbufferfield,neverconstructedfrompredictedcandidate.
+
+## Final affected regression and environment limits
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/unit/test_moe_profiling_output_metadata.py tests/unit/test_moe_routing_runtime.py tests/integration/test_step5_measured_main.py -k 'not position_source_wrapper' > /data/ycfeng/tmp/d29-core-review-union-green01.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VLLM_TARGET_DEVICE=cpu PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29-core-review-r1-final02 tests/unit/test_step5_moe_profiling.py -k 'only_replaced_bound_router or position_adapter_binds or real_device_timer or masked_expert or oracle_callable or lazy_norm or actual_source_context' > /data/ycfeng/tmp/d29-core-review-r1-final02.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/unit/test_moe_position_routing.py tests/unit/test_moe_routing_conservation.py tests/unit/test_moe_grouped_gemm_padded_features.py tests/unit/test_step5_fixed_probe.py > /data/ycfeng/tmp/d29-core-review-legacy-union01.log 2>&1
+git diff --check
+```
+
+- Affectedunion**72PASS/3SKIP/3deselected70.53s**;R1final**23PASS/11deselected9.50s**. Do not sumoverlappingGREENchecks. Actualnewautomaticproducertrainercold/warmcacheandpairedkeysincluded.
+- Expandedoldfixtureunion**73PASS/1SKIP/3FAIL7.19s**. Threefailures: test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers;test_independent_selected_actual_fit_cache_binds_native_context;test_selected_output_inventory_uses_declared_cells_without_structural_zero_fill. Alluse`tests/unit/test_moe_grouped_gemm_padded_features.py::_position_source_rows`withoutmandatoryrouting_input;nowcorrectlyValueErrorbeforefit. Thisfileisnotinthesixexclusivepaths. Rootmustupdatefixturewithactualsource descriptor/census;donotweakenproductionadmissionorsuppresstests. ValidfreshactualproducercoveragealreadyPASS.
+- Py312union`d29-core-review-r1-final01.log`failscollectiononmissingfasteners,exit2. AST-isolatedexistingwrapperprobe ast01/02 firstfailedonrunneronlyBaseModelConfig/jsonglobals(notproduction);ast03reachesactualgatheredwrapperthenalsomissingfasteners. Noinstall,peeredit,wrappermodificationorfallback. Noadditionalprobingafterconcreteenvironmentblocker. CPU torch warningsTriton0driver/libcudaabsenceexpected,separatefromprovenancechecks.
+- Pythonversionsmeasuredwith `env PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/asyncopd-py312/bin/python -B -c 'import sys; print(sys.version)'` ->3.12.13andcorrespondingfrontier-py310command ->3.10.6. Earlierpy312header3.12.3wasincorrectenvironmentlabel;actualcommandsusedexistingexecutablesandCPUreceiptusesitsownsys.version. Correctedhere,notrelabelingpublishedruntime3.12.3.
+
+## Effective quota and exact diff
+
+Applyrootregistry_scope_amendmentthen core_review_scope_amendmenttoscope.rowsgroupedpathceilings. `d29-core-review-budget01.log` verifiesallcaps,PythonASTandwhitespace. Exclusivechangedcode/testpaths6,totaldelta**+164/-18=182/230**,48remaining. EffectiveCORE46allocatedpaths(currentregistrytwoaddedpathsremainroot-owned),baselinegross**3450/4404**,954remaining;donotsimplyadd182tobaseline3304becausereplacedpriorhunkscancelinbaselinediff. Exactrepairdiffretainedlocallyascore_review_repair.diff.
+
+| Path | Repair gross | Baseline gross/effective cap |
+| --- | --- | --- |
+| frontier/profiling/moe/moe_impl.py |3|56/62|
+| frontier/moe_routing_runtime.py |7|103/133|
+| tests/integration/run_step5_measured_main.py |23|46/111|
+| tests/unit/test_step5_moe_profiling.py |41|303/350|
+| tests/unit/test_moe_profiling_output_metadata.py |40|125/135|
+| tests/integration/test_step5_measured_main.py |68|221/243|
+
+No code outside sixpaths,sixper-filecapsPASS,rootgitlink3dacunchanged/unstaged,recordsseparate,rootcurrentWIPnotimported. CompleteCLI/native/GPU/G3/PW/NONE/FULLacceptanceoutofscopeandunverified.

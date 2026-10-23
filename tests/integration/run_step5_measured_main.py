@@ -229,16 +229,25 @@ def validate(root, mode, document):
         for row in lanes:
             source=row["routing_source"]
             require(sum(s["physical_rows"] for s in source["source_lanes"])==source["gathered_physical_rows"],"Physical source conservation failed")
+            from frontier.moe_routing_policy import source_lane_index_for_ep
+            from frontier.operators.families import get_moe_profiling_operators
+            from frontier.operators.binding import bind_operator_query
+            replica=cluster[row["cluster"].lower()+"_replica_config"]
+            owner=source["source_lanes"][source_lane_index_for_ep(row["ep_id"],attention_tp_size=replica["attn_tensor_parallel_size"],
+                source_lane_count=len(source["source_lanes"]),participant_ep_ids=range(replica["world_size"]))]
+            context=row["phases"]["dispatch"]["collective_proofs"]["step5_moe_dispatch"]["plan"]["buffers"]["compute_context"]
+            applicable={op.name for op in get_moe_profiling_operators(context)}
+            require({name for phase in row["phases"].values() for name in phase["operators_ms"]} >= applicable,"Missing applicable compute source operators")
+            empty+=int(owner["live_rows"]==0)
             for phase in row["phases"].values():
                 require("moe_shuffling" not in phase["operators_ms"],"Position path charged legacy shuffle")
+                compute={name for name,duration in phase["operators_ms"].items() if duration>0 and bind_operator_query(name).operator.trace_kind.value=="COMPUTE"}
+                require(set(phase.get("compute_proofs",{})) == compute,"Missing actual compute source proof correspondence")
+                require(all(bind_operator_query(name).family_id!="moe" or name in applicable for name in compute),"Inapplicable compute source operator")
                 for name,proof in phase.get("compute_proofs",{}).items():
-                    require(proof["exact_lookup"] and proof["duration_ms"]>0 and proof["kernel_count"]>0,"Missing exact positive compute pair")
-                    if name=="moe_grouped_gemm":
-                        from frontier.moe_routing_policy import TokenInterval,position_cyclic_expert_counts
-                        replica=cluster["prefill_replica_config"]
-                        counts=position_cyclic_expert_counts([TokenInterval(**i) for s in source["source_lanes"] for i in s["intervals"]],replica["router_topk"],replica["total_expert_num"])
-                        width=replica["total_expert_num"]//replica["moe_expert_parallel_size"]
-                        empty+=int(not sum(counts[row["ep_id"]*width:(row["ep_id"]+1)*width]))
+                    require(proof["exact_lookup"] and math.isfinite(proof["duration_ms"]) and proof["duration_ms"]>0 and
+                            not isinstance(proof["kernel_count"],bool) and math.isfinite(proof["kernel_count"]) and proof["kernel_count"]>0 and proof["kernel_count"]==int(proof["kernel_count"]) and
+                            proof["duration_ms"]==phase["operators_ms"].get(name),"Missing exact positive compute pair")
                 for proof in phase.get("collective_proofs",{}).values():
                     plan,cost=proof["plan"],proof["cost"]
                     require(plan["sizes"]==[s["physical_rows"] for s in source["source_lanes"]],"Collective physical sizes mismatch")

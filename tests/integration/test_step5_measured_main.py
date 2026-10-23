@@ -13,6 +13,74 @@ from tests.integration.step5_measured_compute_fixture import (
 from tests.integration.run_step5_measured_main import command, write_read_cost
 
 
+def _completed_position_validator_inputs(root, quant, deferred=False):
+    """CPU artifact fault-injection seam, not an actual completed simulation."""
+    from dataclasses import asdict
+    from frontier.moe_routing_policy import SourceLaneRouting, TokenInterval, WaveRoutingSource
+    from tests.integration.run_step5_measured_main import write_json
+    run = root / "metrics" / "run"
+    run.mkdir(parents=True)
+    replica = dict(attn_tensor_parallel_size=8,attn_dp=2,moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=16,world_size=16,moe_routing_distribution_type="position_cyclic",router_topk=8,total_expert_num=352)
+    write_json(run/"config.json",dict(simulation_mode="offline",decode_cuda_graph_mode="full_and_piecewise",
+        use_cuda_graph=False,cudagraph_capture_sizes=CAPTURE_SIZES,cluster_config=dict(prefill_replica_config=replica,
+        decode_replica_config=replica,replica_scheduler_config=dict(max_model_len=7168,batch_size_cap=128,
+        enable_prefix_caching=False,enable_chunked_prefill=False))))
+    write_json(run/"system_metrics.json",dict(simulation_metadata=dict(total_requests=1,completed_requests=1)))
+    (run/"request_metrics.csv").write_text("request_num_prefill_tokens,request_num_decode_tokens,request_e2e_time,client_ttft,tpot\n6144,1024,2,1,0.001\n")
+    document = write_read_cost(root/"read.json")
+    transfer=dict(status="completed",target_bound=True,bytes=document["measurements"][0]["transfer_bytes_per_rank"],duration_ms=3.5)
+    (run/"frontier_transfer_ledger.jsonl").write_text(json.dumps(transfer)+"\n")
+    write_json(run/"event_trace.json",[dict(event_type="KV_CACHE_TRANSFER_END",payload_kind="prefix_pages_per_worker_lane",
+        target_ready_time=1,source_release_time=1,time=1,target_reserved_common_blocks=4*(6128//16),source_prompt_common_blocks=6128//16)])
+    stages=[dict(request_ids=[0],cluster_type="PREFILL",request_num_tokens=[6128],stage_start_ts=0,execution_time=dict(total_time_ms=1))]
+    stages += [dict(request_ids=[0],cluster_type="DECODE",request_num_tokens=[16 if i==0 else 1],stage_start_ts=1+i,
+        execution_time=dict(total_time_ms=1)) for i in range(1024)]
+    (run/"frontier_stage_batch_ledger.jsonl").write_text("".join(json.dumps(row)+"\n" for row in stages))
+    source=WaveRoutingSource("position_cyclic",(SourceLaneRouting(0,1,1,0,"NONE","standalone_legacy",16,16,(TokenInterval(6128,16),)),
+        SourceLaneRouting(1,2,2,0,"NONE","standalone_legacy",1,0,())),17)
+    context=dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",quant_dtype=quant,defer_input_quant=deferred)
+    names=["post_attention_layernorm","moe_gating_linear","moe_gating_routing_topk"]+(["moe_input_quantize"] if quant and not deferred else [])
+    proof=dict(exact_lookup=True,duration_ms=1.,kernel_count=3)
+    phases={"pre_dispatch":dict(operators_ms={n:1. for n in names},compute_proofs={n:dict(proof) for n in names}),
+        "routed_compute":dict(operators_ms=dict(moe_grouped_gemm=1.),compute_proofs=dict(moe_grouped_gemm=dict(proof))),
+        "dispatch":dict(operators_ms=dict(step5_moe_dispatch=1.),collective_proofs=dict(step5_moe_dispatch=dict(
+            plan=dict(sizes=[16,1],buffers=dict(compute_context=context)),cost=dict(kernel_counts=[3]*16,
+            count_receipt_json=json.dumps(dict(evidence_kind="cpu_fixture")),duration_ms=1.,network_ms=0.,local_rank_ms=[1.]*16,remainder_ms=0.))))}
+    lanes=[dict(ep_id=0,cluster="DECODE",routing_source=asdict(source),phases=json.loads(json.dumps(phases))),
+           dict(ep_id=8,cluster="DECODE",routing_source=asdict(source),phases=phases)]
+    return run,document,lanes
+
+
+@pytest.mark.parametrize("quant,deferred", [(None,False),("float8_e4m3fn",False),("float8_e4m3fn",True)])
+@pytest.mark.parametrize("damage", [None,"gate","router","prepare","all","operator","peer_only","duration","count","norm","inapplicable","mismatch","fractional"])
+def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, quant, deferred, damage):
+    from tests.integration.run_step5_measured_main import validate
+    run,document,lanes=_completed_position_validator_inputs(tmp_path,quant,deferred)
+    source=lanes[1]["phases"]["pre_dispatch"]
+    if damage == "prepare" and (not quant or deferred): pytest.skip("No source prepare is reached by this binding")
+    if damage == "inapplicable" and quant and not deferred: pytest.skip("Source prepare is applicable to this binding")
+    if damage in ("gate","router","prepare"):
+        source["compute_proofs"].pop({"gate":"moe_gating_linear","router":"moe_gating_routing_topk","prepare":"moe_input_quantize"}[damage])
+    if damage == "all": source.pop("compute_proofs")
+    if damage == "operator":
+        source["operators_ms"].pop("moe_gating_linear");source["compute_proofs"].pop("moe_gating_linear")
+    if damage == "peer_only": lanes=lanes[:1]
+    if damage == "duration": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=float("nan")
+    if damage == "count": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=0
+    if damage == "norm": source["compute_proofs"].pop("post_attention_layernorm")
+    if damage == "inapplicable":
+        source["operators_ms"]["moe_input_quantize"]=1.;source["compute_proofs"]["moe_input_quantize"]=dict(exact_lookup=True,duration_ms=1.,kernel_count=3)
+    if damage == "mismatch": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=2.
+    if damage == "fractional": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=1.5
+    (run/"frontier_ep_wave_lane_ledger.jsonl").write_text("".join(json.dumps(row)+"\n" for row in lanes))
+    if damage:
+        with pytest.raises(AssertionError,match="compute|source"):
+            validate(tmp_path,"offline",document)
+    else:
+        assert validate(tmp_path,"offline",document)["status"] == "PASS"
+
+
 @pytest.mark.parametrize("quant,deferred", [(None, False), ("float8_e4m3fn", False), ("float8_e4m3fn", True)])
 def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(tmp_path, monkeypatch, quant, deferred):
     torch = pytest.importorskip("torch")
