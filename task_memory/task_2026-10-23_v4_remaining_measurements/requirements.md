@@ -12,6 +12,7 @@
 | 2026-10-23 | Recorded the seven-file G2 CPU allocation and independently reviewed failure-isolation repairs within the unchanged750-line budget. |
 | 2026-10-23 | Accepted G2 CPU source 05952396 after both re-reviews, final separate-suite verification and explicit matrix binding; new GPU authority remains pending. |
 | 2026-10-23 | YC approved the native profile run and granted standing authority for task-required H800 RJobs of any necessary scale. |
+| 2026-10-23 | Recorded the owner-scoped staged-entry repair and fresh profile02 generation after the independently reproduced profile01 import failure. |
 
 ## Original requests and decision
 
@@ -63,3 +64,7 @@ Session-close outcome: the private input component is accepted at732406aa; H sou
 Under the existing CPU implementation/design approval, root owns the actual replay driver, window retention and CPU verification after the two initial design delegation attempts failed. The final allocation is seven existing non-core files/750changed lines (production350,tests400), with current owner-checked change433lines. Paths and lifecycle are in `driver_design.md`; `driver/cold_start_scope.md` records the additional existing test path and its reproduced baseline mismatch. No core/native/C26 interface or calibration rule is changed.
 
 Both initial independent reviews reported three distinct failure-isolation defects. The delivering root owner reproduced and repaired all three; both R1 reviews closed them with no new findings. Source `05952396` is now `ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT`, bound by `driver/primary_acceptance.json`, final separate-suite results and an explicit existing 77-case matrix binding. The first-formal 64-step/32-H800 resource sheet in `proposal.md` is approved under D-V4-H800-RJOB-AUTHORITY. Package/source/image checks and runtime qualification remain required.
+
+## Staged-entry correction — execution decision
+
+Independent profile-package review found that flattening `native_pd_worker.py` to the package root invalidates its repository-relative `vllm_replay` import. Root reproduced the exact `ModuleNotFoundError` in a fresh process. Under the existing repair authority, the original package owner corrects only the generated launcher/bootstrap import paths through the existing builder and profile plan, within the same two-file/300-line allocation. Accepted runtime bytes remain pinned to `05952396`. Preserve the unsealed profile01 package and failed evidence; generate fresh `candidate_h800_p0_profile_02` with tag `dsv4-h800-p0-profile-20261023-02` and the same approved resources/window. Both entry paths require fresh-process verification without preloading `pd_replay` or supplementing the dependency path outside the generated entry.
