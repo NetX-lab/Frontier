@@ -197,18 +197,20 @@ def test_cpu_writer_reference_is_explicit_and_sealed(tmp_path,monkeypatch,mode):
     else:
         with pytest.raises((ValueError,FileNotFoundError)): cpu_writer_source()
 
-def test_collective_artifact_reuses_only_identical_current_text(tmp_path,monkeypatch):
+def test_collective_artifact_reuses_only_identical_current_bytes(tmp_path,monkeypatch):
     import os,frontier.cc_backend.backends.collective_sim_cc_backend as module
     backend,artifact,path=cpu_writer_payload(tmp_path,monkeypatch)
     key=next(iter(artifact["counts"]));v=json.loads(key)
     plan=CollectivePlan(v["phase"],v["sizes"],tuple(CollectiveTensor(**t) for t in v["tensors"]),v["groups"],v["graph_mode"],v["context_json"],v["buffer_json"])
     text=path.read_text();stat=path.stat();reads=[];decodes=[];failure=[]
     class ArtifactText(str): pass
+    class ArtifactBytes(bytes):
+        def decode(self): return ArtifactText(super().decode())
     class CurrentPath(type(path)):
-        def read_text(self):
+        def read_bytes(self):
             reads.append(self)
             if failure: raise failure[0]
-            return ArtifactText(super().read_text())
+            return ArtifactBytes(super().read_bytes())
     class Decoder:
         def __getattr__(self,name): return getattr(json,name)
         def loads(self,value):

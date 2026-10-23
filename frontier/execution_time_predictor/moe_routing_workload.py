@@ -152,17 +152,17 @@ class MoeRoutingWorkload:
         self._step5_physical_points = retained
         return points
 
-    def _step5_collective_points(self, text):
-        """Prepare structural receipts only; every query supplies current file text."""
+    def _step5_collective_points(self, raw):
+        """Prepare structural receipts only; every query supplies current file bytes."""
         from frontier.profiling.common.runtime_identity import canonical_json
         retained = getattr(self, "_step5_collective_receipts", None)
-        if retained is None or retained[0] != text:
-            artifact, shapes = json.loads(text), {}
+        if retained is None or retained[0] != raw:
+            artifact, shapes = json.loads(raw.decode()), {}
             for key in artifact["counts"]:
                 value = json.loads(key)
                 shape = (value["phase"], tuple(value["sizes"]), value["graph_mode"], canonical_json(value["tensors"]))
                 shapes.setdefault(shape, []).append((key, value))
-            retained = (text, artifact, shapes, {}, {})
+            retained = (raw, artifact, shapes, {}, {})
         else:
             retained = (*retained[:3], retained[3].copy(), retained[4].copy())
         return retained
@@ -210,8 +210,8 @@ class MoeRoutingWorkload:
         from frontier.operators.families import get_moe_profiling_operators
         queries = {op.name:dict(num_tokens=local.physical_rows,live_routing_token_count=local.live_rows)
                    if op.ep_agnostic else features for op in get_moe_profiling_operators(context)}
-        text = (Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_text()
-        retained = self._step5_collective_points(text)
+        raw = (Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_bytes()
+        retained = self._step5_collective_points(raw)
         plans = {}
         phases = {"step5_moe_dispatch":"dispatch","step5_moe_combine":"combine",
             "moe_tensor_parallel_allreduce":"routed_tp"}
