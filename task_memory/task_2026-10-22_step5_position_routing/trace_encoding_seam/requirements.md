@@ -65,3 +65,15 @@ headroom current; PRICING36; allocation not granted. Full CLI 2400 and proof
 contracts unchanged. If encoding is `NO_SAFE_SEAM`, identify only the source-backed
 largest remaining emission duplication, without implementation and without
 speculative cross-layer numeric reuse.
+
+## [Original Request] Parent correction before emission continuation
+
+2026-10-24: derive the trace patch count from `git apply --numstat` (14 additions,
+1 deletion, 15 gross); describe 8 supported cases equal for P1 and the deliberate
+ninth lying-str RED case. Describe 5000 events consistently as a real-sized
+buffer of freshly parsed repetitions of one wave, cross-layer equality unproven.
+Replace timestamp-only recursive cleanup advice with an exact read-only manifest
+of the 284 files and 33 directories (path/owner/size/timestamp/SHA), explicitly
+record incomplete attribution. No deletion/chown. Distinguish tracked-source
+cleanliness from filesystem writes. Commit corrections separately before new
+`D29-EMISSION-IMMUTABLE-WORK` records. The trace candidate stays unallocated.

@@ -1,0 +1,50 @@
+"""Read-only inventory of source-worktree root-owned bytecode, not a cleanup list."""
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import pwd
+import sys
+
+assert sys.dont_write_bytecode and os.environ['PYTHONDONTWRITEBYTECODE'] == '1'
+root = Path('/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields')
+
+
+def attributes(path):
+    stat = path.lstat()
+    return {'path': str(path), 'relative_path': str(path.relative_to(root)),
+            'owner': pwd.getpwuid(stat.st_uid).pw_name, 'uid': stat.st_uid,
+            'gid': stat.st_gid, 'size_bytes': stat.st_size,
+            'mode': oct(stat.st_mode & 0o777), 'mtime_ns': stat.st_mtime_ns,
+            'mtime_utc': datetime.datetime.fromtimestamp(stat.st_mtime, datetime.timezone.utc).isoformat(),
+            'ctime_ns': stat.st_ctime_ns,
+            'ctime_utc': datetime.datetime.fromtimestamp(stat.st_ctime, datetime.timezone.utc).isoformat()}
+
+
+files = []
+for base, directories, names in os.walk(root, followlinks=False):
+    directories[:] = [name for name in directories if name != '.git']
+    for name in names:
+        path = Path(base) / name
+        if path.suffix == '.pyc' and path.lstat().st_uid == 0 and not path.is_symlink():
+            entry = attributes(path)
+            content = path.read_bytes()
+            entry['sha256'] = hashlib.sha256(content).hexdigest()
+            entry['attribution'] = 'Consistent with earlier recorded 284/33 root-bytecode side effect; no pre-run manifest proves exclusive provenance.'
+            files.append(entry)
+files.sort(key=lambda entry: entry['path'])
+directories = []
+for path in sorted({Path(entry['path']).parent for entry in files}):
+    entry = attributes(path)
+    listing = sorted(child.name for child in path.iterdir())
+    entry['sha256'] = hashlib.sha256(json.dumps(listing, ensure_ascii=True).encode()).hexdigest()
+    entry['sha256_definition'] = 'SHA256 of JSON-encoded sorted immediate entry names; directories have no file-content SHA.'
+    entry['entries'] = listing
+    directories.append(entry)
+print(json.dumps({'task_id': 'D29-TRACE-ENCODING-SEAM-CORRECTION',
+                  'source_root': str(root), 'inventory_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                  'selection': 'All non-symlink root-owned .pyc files currently beneath this exact source worktree, excluding .git; not a timestamp-only selection.',
+                  'files_count': len(files), 'directories_count': len(directories),
+                  'attribution_limit': 'Original runs recorded 284 files and 33 directories, but did not capture a pre-run pathname/hash inventory. Matching counts and timestamps support attribution, not certainty. No deletion/chown recommended or executed.',
+                  'files': files, 'directories': directories}, indent=2))

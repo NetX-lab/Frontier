@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-24 | Commands, environments, expectations and observed results for all scratch controls. |
+| 2026-10-24 | Correct Git-derived artifact count and buffer/case descriptions; add read-only filesystem inventory with explicit provenance limit. |
 
 ## Environment
 
@@ -39,7 +40,7 @@
 | `validate_proposal.py` | `272fa37e...` | proposal module on real waves + failures |
 | `run_probe_proposal.py` | `db5ea160...` | unchanged accepted probe body, TraceStore swapped |
 | `proposal/trace_store_proposed.py` | `1a297cc5...` | scratch proposal module |
-| `proposal/proposal.diff` | `856bbf70...` | 11+ / 1- |
+| `proposal/proposal.diff` | `856bbf70...` | Git-derived 14+ / 1-, 15 gross/net +13 |
 | derived P1 flush text | `043eef82...` (fixed escaper factory), `f3b649e5...` (actual_wave) | derived from the actual `flush` source (`4517528e...`) |
 
 `scripts.sha256` also keeps the superseded pre-fix hashes: `control.py`
@@ -52,13 +53,15 @@
 | --- | --- | --- | --- | --- |
 | 1 | `python composition.py composition.json` | parsed rows re-encode to the retained body | identical; string values 74.4 % of bytes, long strings 67.4 % | PASS |
 | 2 | `python phases.py phases-py310` | actual flush output equals body on all 15 runs | equal; flush 23.52 ms, dumps 22.19 ms, write 2.95 ms, row dicts 0.79 ms | PASS |
-| 3 | `python control.py control-py310 11 3` | A bytes equal on wave and 5000-event buffer (buffer SHA `1b4f9ee2...`, 69,414,347 B); escaper global restored | equal; wave 23.46 -> 18.14 ms; buffer 535.72 -> 375.32 ms; tracemalloc peak 382,366 -> 620,077 B | PASS |
-| 4 | `python contracts.py contracts-py310-r2 11 3` | negatives equal to actual except where a variant is expected to go RED; wrong identity cache RED; counts differ | 8/9 equal for A/P1, lying subclass RED; guards equal; mutation equal; identity cache RED; escapes 57,248 -> 597 | PASS (RED-capable) |
+| 3 | `python control.py control-py310 11 3` | A bytes equal on wave and a real-sized 5000-event buffer of freshly parsed repetitions of one wave (SHA `1b4f9ee2...`, 69,414,347 B); cross-layer equality unproven; escaper global restored | equal; wave 23.46 -> 18.14 ms; buffer 535.72 -> 375.32 ms; tracemalloc peak 382,366 -> 620,077 B | PASS |
+| 4 | `python contracts.py contracts-py310-r2 11 3` | eight supported cases equal to actual for P1; ninth lying-str case deliberately RED; wrong identity cache RED; counts differ | 8 supported equal for A/P1 and ninth lying subclass RED; guards equal; mutation equal; identity cache RED; escapes 57,248 -> 597 | PASS (RED-capable) |
 | 5 | (source cwd) `python actual_wave.py actual-wave-py310-r2 11` | every real-wave whole JSONL equals the first actual flush | equal (whole SHA `d784f7a7...`); 26.60 -> 17.70 ms; only exact `str` leaves | PASS |
 | 6 | `python stdlib_contract.py stdlib-py312 11` (py3.12.13) and `stdlib-py310-rerun{1,2} 21` | replica bytes equal to `json.dumps`; same negatives | equal; py312 23.25 -> 16.46 ms; py310 -6.09 / -5.71 ms; lying subclass RED | PASS |
 | 7 | (source cwd) `python validate_proposal.py validate-proposal-py310 11` | proposal module byte-identical; late-JSON and circular failures equal, 3902 B, buffer restored | equal; 28.97 -> 19.57 ms | PASS |
 | 8 | (source cwd) `python run_probe_proposal.py probe-proposal` | the unchanged accepted body passes with the proposal TraceStore; whole JSONL `1850a9b6...` and ledger `006dc7e8...` equal to the parent | all assertions pass; the values match `d29_cost_fields_parent01/run.log` | PASS |
 | 9 | `git status --short` in source after 5, 7 and 8; `find . -newermt '2026-10-24 02:00'` | empty; no file content change | empty; HEAD `75404143`; only 284 new git-ignored root-owned `.pyc` files (33 `__pycache__` dirs) from the sudo Python runs | PASS for tracked source; bytecode side effect recorded |
+| 10 | `git apply --numstat evidence/proposal.diff` | derive actual additions/deletions including blank lines | 14 additions, 1 deletion, 15 gross/net +13 | PASS; earlier 12-gross claim corrected |
+| 11 | `sudo -n systemd-run --scope -q -p MemoryMax=30G timeout 60s env PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_emission_immutable_work/pyc_manifest.py` | read-only exact paths/owners/sizes/timestamps/SHA inventory, no cleanup | 284 files, 33 directories; manifest SHA `20aff723a7007f3c408228503ce32b4709aa887e16b189d12a730a2f59fb0772` | PASS for inventory; exclusive attribution unproven |
 
 Additional observations, not acceptance checks:
 
@@ -83,3 +86,8 @@ These are sequential CPU timings on a shared host. They are not full-CLI, GPU or
 native evidence, and the py312 result comes from a stdlib replica only. The
 private-API compatibility of `c_make_encoder` is verified for 3.10.6 and 3.12.13
 only.
+The new manifest records current files, not an exclusive attribution proof: no
+pre-run pathname/hash manifest was captured. File SHA is content-based;
+directory SHA hashes the sorted immediate entry-name listing. The source is
+tracked-file clean but did have filesystem writes. Timestamp-only recursive
+cleanup advice is withdrawn; no deletion or ownership change occurs.

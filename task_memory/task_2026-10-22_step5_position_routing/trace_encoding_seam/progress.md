@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-24 | All plan steps completed; verdict recorded. |
+| 2026-10-24 | Parent-directed correction: Git-derived 15 gross/net +13, 8 supported + 1 deliberate RED, repeated-wave buffer qualification and read-only bytecode manifest; no cleanup. |
 
 ## Status
 
@@ -35,14 +36,22 @@
   stayed clean.
 - Five hash-identical 69 MB buffer copies are root-owned (written under sudo)
   and were not removed (`sudo rm` not authorized).
-- The sudo Python runs wrote 284 git-ignored root-owned `.pyc` files (33
-  `__pycache__` dirs) into the source worktree. Tracked source is unchanged.
-  Removal is left to the parent (exact command in `report.md` Limits); future
-  runs should use `python -B`.
+- The read-only inventory matches the previously recorded 284 root-owned `.pyc`
+  files and 33 directories; exclusive attribution remains uncertain without a
+  pre-run manifest. Tracked source is unchanged; filesystem writes are separately
+  recorded. `evidence/pyc_manifest_2026-10-24.json` records exact paths, owners,
+  sizes, timestamps and SHA. Timestamp-only cleanup advice is withdrawn. No
+  deletion/chown. Future runs use both `python -B` and `PYTHONDONTWRITEBYTECODE=1`.
+- Correct artifact count: `git apply --numstat evidence/proposal.diff` returns
+  14 additions and 1 deletion, 15 gross/net +13 (not 12).
+- The 5000-event comparison uses a real-sized buffer of freshly parsed
+  repetitions of one wave; cross-layer equality is unproven. Eight supported
+  cases equal P1; the ninth lying-str case is deliberately RED.
 
 ## Handoff / next actions for the parent
 
-1. Decide whether a 12-gross `trace_store.py` allocation using the private
+1. Trace candidate remains unallocated pending larger emission gains; any future
+   allocation is 15-gross `trace_store.py` using the private
    `c_make_encoder` API is acceptable, given the preconditions in `report.md`.
 2. Whatever that decision is, the 12-17 ms per-wave budget needs emission work
    (~50 ms per wave, mandated deep snapshots). This task did not study it.

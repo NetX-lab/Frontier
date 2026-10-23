@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-24 | Hypothesis ranking, one-variable controls, contract negatives, actual-wave and 5000-event comparisons, scratch proposal and verdict. |
+| 2026-10-24 | Correct Git-derived 15-gross accounting, supported/RED case wording and repeated-wave buffer qualification; replace cleanup advice with read-only exact inventory and attribution limits. |
 
 Task ID **D29-TRACE-ENCODING-SEAM**. Read-only analysis. Source frozen at
 `7540414341d5b81a86b18b9562d1506c0ba74285`
@@ -21,15 +22,18 @@ each exact string value within one flush through the existing CPython
 `json.encoder.c_make_encoder` string-encoder argument. Every container, number,
 separator, key-order, `None`, error and circular-reference decision stays in the
 unchanged C encoder, which still runs once per row with the `json.dumps` defaults.
-The output is byte-identical on every timed run, including the real full
-5000-event buffer. Error text, the 3902-byte late-failure prefix and buffer
+The output is byte-identical on every timed run, including a real-sized
+5000-event buffer of freshly parsed repetitions of one wave. Cross-layer equality
+was not established. Error text, the 3902-byte late-failure prefix and buffer
 restoration are identical.
 
 - Gain: the flush of one wave falls by **5.3-6.1 ms** on freshly parsed events
   (about 23-25 %) and by **8.9-9.4 ms** on real `record_ep_wave` events (about
-  33 %). A real 5000-event buffer falls from **535.7 ms to 375.3 ms** (-30 %), or
-  22.3 -> 15.6 ms per 208-event wave.
-- Cost: one file, `frontier/metrics/trace_store.py`, **12 gross lines** (11+, 1-),
+  33 %). The real-sized 5000-event repeated-wave buffer falls from **535.7 ms to
+  375.3 ms** (-30 %), or 22.3 -> 15.6 ms per 208-event wave; cross-layer equality
+  is unproven.
+- Cost: one file, `frontier/metrics/trace_store.py`, **15 gross lines** (14+, 1-,
+  net +13), measured by `git apply --numstat` on the actual artifact,
   `evidence/proposal.diff`. No flag, no cache outside one `flush()` call, no
   format change, and no change to writes or to the emission path.
 - Preconditions that the reviewer must accept:
@@ -113,8 +117,8 @@ production-shaped variant derived textually from the actual `flush` source
 | P1 (proposal shape) | 17.96 | **-6.07** | combined |
 | real emitted wave, actual vs P1 (11 reps) | 26.60 -> 17.70 | **-8.91** | holds on actual events |
 | real emitted wave, actual vs proposal module | 28.97 -> 19.57 | **-9.41** | proposal file itself |
-| 5000-event buffer, A (3 reps) | 535.72 -> 375.32 | **-160.41 (-29.9 %)** | full buffer |
-| 5000-event buffer, P1 (3 reps) | 532.85 -> 370.99 | **-161.86** | full buffer |
+| Real-sized 5000-event buffer of freshly parsed repetitions of one wave, A (3 reps) | 535.72 -> 375.32 | **-160.41 (-29.9 %)** | cross-layer equality unproven |
+| Same real-sized repeated-wave buffer, P1 (3 reps) | 532.85 -> 370.99 | **-161.86** | cross-layer equality unproven |
 | stdlib replica, py3.12.13 (11 reps) | 23.25 -> 16.46 | -6.79 | contract holds on 3.12 |
 | stdlib replica, py3.10.6 reruns (21 reps) | 26.3/27.2 -> 20.2/21.5 | -6.09 / -5.71 | replica only |
 
@@ -148,8 +152,9 @@ Conditions on the timings:
 
 ## 3. Correctness, error and snapshot negatives
 
-Nine contract cases (`contracts-py310.json`) were compared with the actual flush
-on bytes written, exception text and restored buffer identity/order:
+Eight supported contract cases (`contracts-py310.json`) are equal to the actual
+flush for P1 on bytes written, exception text and restored buffer identity/order.
+The ninth case is a deliberately lying str subclass and goes RED for P1:
 
 | Case | Actual outcome | A | A_guard | P1 | P1_c | P1_guard |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -197,7 +202,9 @@ What stays unchanged: one encoder with a fresh `markers` dict per row, as in
 restoration. The map lives for exactly one `flush()`, so the existing
 5000-event limit bounds it without a new cap.
 
-Gross: 12 lines. **No allocation is granted by this report**; CORE299 headroom and
+`git apply --numstat evidence/proposal.diff`: 14 additions, 1 deletion, **15 gross,
+net +13**. The earlier 12-gross count incorrectly omitted blank added lines.
+**No allocation is granted by this report**; CORE299 headroom and
 PRICING36 are unchanged.
 
 ## 5. Remaining gap (no implementation)
@@ -220,11 +227,16 @@ conditional emission-duplication study was not performed here.
   root-owned, hash-identical 69 MB buffer copies remain in scratch (see
   `evidence/buffer-body-hashes.txt`); removing them needs `sudo rm`, which was not
   authorized.
-- Side effect in the source worktree: the root Python processes started by
-  `sudo systemd-run` wrote **284 git-ignored `.pyc` files in 33 `__pycache__`
-  directories** (first at 02:06:20 on 2026-10-24; none existed before 02:00).
-  Tracked files are unchanged and `git status --short` is empty. A later source
-  change only makes Python skip writing these root-owned caches; behaviour does
-  not change. Removal needs `sudo` and is left to the parent:
-  `sudo -n find /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields -name __pycache__ -user root -newermt '2026-10-24 02:00' -prune -exec rm -rf {} +`.
-  Future runs should pass `python -B` (or `PYTHONDONTWRITEBYTECODE=1`).
+- Filesystem side effect differs from tracked source changes: the earlier runs
+  reported 284 root-owned git-ignored `.pyc` files and 33 `__pycache__` directories
+  in the source worktree. Tracked source stayed unchanged. The read-only manifest
+  `evidence/pyc_manifest_2026-10-24.json` now lists exactly 284 files and their 33
+  parent directories with absolute path, owner/uid, size, mode, mtime, ctime and
+  SHA256. Directory SHA256 is explicitly the digest of sorted immediate entry
+  names, not file content. File mtimes range from 2026-10-23 18:06:20.662846 UTC to
+  18:13:08.374932 UTC (2026-10-24 local time).
+  The matching counts/timestamps are consistent with attribution to these runs,
+  but no pre-run pathname/hash manifest exists, so exclusive provenance cannot
+  be proven. The unsafe timestamp-only recursive cleanup advice is withdrawn.
+  No deletion or ownership change is performed or recommended. New runs use
+  both `python -B` and `PYTHONDONTWRITEBYTECODE=1`.
