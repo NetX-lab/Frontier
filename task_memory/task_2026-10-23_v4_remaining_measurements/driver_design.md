@@ -6,18 +6,21 @@
 | --- | --- |
 | 2026-10-23 | Root traced the real P0 replay path and specified the remaining driver boundary before a GPU proposal. |
 | 2026-10-23 | H source/CPU accepted at64f3c950; recorded startup-to-window retention coordination for G2. |
+| 2026-10-23 | Specified the first-formal window, native iteration controls, separate collector retention and direct root ownership after both delegation attempts failed. |
+| 2026-10-23 | Added the bounded cold-start test correction and clarified three independently reviewed failure-isolation repairs. |
+| 2026-10-23 | Recorded accepted CPU implementation 05952396 and replaced stale line/status pointers with the implemented callsites. |
 
 ## Existing execution path
 
-`native_pd_worker.py:329–348` starts the replay subprocess only on node position0 after both role heads report ready. Its actual entry is `pd_replay.py`, with the existing engine, trace, observer, model, P/D head URLs, startup/drain and idle settings. An unused standalone driver would not activate profiling in this path.
+`native_pd_worker.run()` starts the replay subprocess only on node position 0 after both role heads report ready. Its actual entry is `pd_replay.py`, with the existing engine, trace, observer, model, P/D head URLs, startup/drain and idle settings.
 
-`pd_replay.py:458–489` owns the seven idle boundaries and the warmup/formal phases of the three repetitions. Per-phase streaming replay is at lines467–468, followed by request completion accounting and an idle boundary at line479. Profiling must begin before the selected formal phase dispatches its first request; stop after its drain is observed. Warmups, repetitions and request membership remain unchanged.
+`pd_replay.replay_repetitions()` owns the seven idle boundaries and the warmup/formal phases of the three repetitions. The profiling context begins before the selected formal phase dispatches its first request and stops after its drain is observed. Warmups, repetitions and request membership remain unchanged.
 
 The profile API fanout to headless DP peers and all TP workers is already traced in `native_profile_seam.md` §6. Requests target the two role-head URLs, not 32 individual ranks.
 
 ## Required driver behavior
 
-- Use the existing worker-extension selection and profiler configuration. The H owner owns the launch registration and environment paths; any final driver callsite change returns to that owner to avoid competing file ownership.
+- Use the existing worker-extension selection and profiler configuration. Root implemented G2 after both initial design delegations failed on API quota. Both independent reviews subsequently completed and closed all findings; source `05952396` is CPU-accepted.
 - Preserve the current clean/default replay byte-for-byte where profiling is unselected. A profiled replay is diagnostic and cannot replace native06's clean reference.
 - Record the selected repeat/phase, head URLs, start/stop attempts and outcomes, actual profile output locations, and join to the existing request IDs and worker step evidence.
 - Keep auxiliary RPC, trace-export and receipt errors separate from native replay exceptions. A profile failure marks its evidence UNVERIFIED while the native workload continues. Original business exceptions and terminal behavior remain intact.
@@ -27,6 +30,20 @@ The profile API fanout to headless DP peers and all TP workers is already traced
 
 ## Exit conditions for the GPU proposal
 
-H's source/CPU review is accepted at64f3c950 (`collector_primary/primary_acceptance.json`); real installed execution and GPU mapping remain runtime gates. The driver must next pass stand-in API tests through the actual replay callsite: both heads activated before dispatch, drain before stop, unselected compatibility, instrumentation-failure isolation and native-error preservation. The final proposal pins source, input trace, profiling window limits, expected artifact volume, runtime unknowns, GPU count and duration. Source feasibility alone is not launch readiness.
+H's source/CPU review is accepted at64f3c950 (`collector_primary/primary_acceptance.json`); real installed execution and GPU mapping remain runtime gates. G2 source `05952396` passed the required actual-callsite CPU tests, independent re-reviews and fixed-source regression (`driver/primary_acceptance.json`). The proposal specifies source, frozen workload, profiling limits, artifact-volume accounting, runtime unknowns, GPU count and duration. A new GPU decision and fresh package/image checks are still required before launch.
 
 No driver code or GPU run is authorized by this design beyond the existing CPU implementation scope. The exact implementation allocation and new run resources remain recorded at their respective steps.
+
+## G2 implementation decision
+
+The selected extension activates one diagnostic window around the first formal repetition. Both role heads receive concurrent start requests before dispatch and stop requests after the existing idle boundary. On a native replay exception, attempt an independent idle observation and stop cleanup, then propagate the original exception. Profiling outcomes live in a separate `profiling` receipt and never enter the client-workload error list. Invalid profiling configuration disables this auxiliary window with a recorded error while replay continues.
+
+Use pinned native `ProfilerConfig` fields: `profiler=torch`, positive `max_iterations`, zero delay/warmup/wait, and `ignore_frontend=true`. This records the first formal worker step, avoids an unbounded frontend trace and uses native automatic stop. `Worker.annotate_profile` calls `step()` before model execution (`gpu_worker.py:931–940,1112`); `WorkerProfiler.step` stops when recorded iterations exceed the limit (`wrapper.py:97–128`). No collector timer or iteration scheduler duplicates that mechanism. Reaching the limit may retain fewer than three useful logical batches on a lane; actual coverage remains a later runtime gate.
+
+The collector wraps the existing `Worker.profile` RPC. Before start it archives the startup snapshot, then gives the selected window a fresh row/byte allowance. It preserves global annotation/step identities, stream/event generations, installation facts and errors. During the window it retains records only while native `profiler.is_running` is true; stop freezes a window snapshot. Startup drops stay in the archive, selected-window drops stay explicit, and neither is a completeness verdict. Auxiliary archive/receipt failures cannot replace native return values or exceptions.
+
+Each native node derives its trace directory from the configured root plus role and local DP start rank, preventing the two roles/nodes from overwriting fixed-rank summaries. Rank receipts retain the actual effective profiler configuration. Exactly one window avoids claiming GPU CUPTI restart support.
+
+Allocation from baseline313c8167: seven existing non-core files, at most750 changed lines (production350, tests400): `pd_replay.py`, `native_serve_profile.py`, `native_pd_worker.py`, `test_native_streaming_replay.py`, `test_native_serve_profile.py`, `test_native_pd_worker.py`, and the16-line cold-start fixture correction in `test_native_cold_start.py` (`driver/cold_start_scope.md`, at most25lines). No Frontier/native/C26 edits. Acceptance requires actual replay/HTTP ordering and failure controls, native-shaped worker lifecycle/capacity controls, separate affected-suite results, independent Spec/Standards review and an explicitly bound default matrix.
+
+Review repair details: startup archive emission has its own soft observation boundary, so its failure cannot prevent resetting the selected window. Only torch configurations with absolute local trace paths are transformed; native CUDA/URI configurations remain unchanged and do not activate this local-torch diagnostic window. Once a profiling receipt is attached, checkpoint failures are recorded in that receipt, including active-window and later persistent write errors; unselected replay retains its original checkpoint-error behavior. Native request, idle-boundary and metrics failures retain their existing validation paths.

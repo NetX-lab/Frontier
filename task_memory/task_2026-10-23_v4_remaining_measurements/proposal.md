@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Completed the single-window full-native resource proposal after G2 source 05952396 acceptance; GPU approval remains pending. |
 | 2026-10-23 | Checkpoint correction: CUDA_EVENT component sums now exclude the outer scope (audit receipt); J3 premise rewritten for active breakable capture in native V4. |
 | 2026-10-23 | YC approved the recommended KERNEL_ONLY CPU implementation/design route; requirements.md now owns the decision. GPU figures below remain historical preliminary estimates. |
 | 2026-10-23 | Created. Read-only design legwork for a user GPU/modelling decision: existing producer APIs, exact capture limits, two options for the serving attention total, minimum jobs and per-job closure. No source, test, config, GPU, platform or cloud change. |
@@ -115,3 +116,36 @@ plan. No shared-field decision or new job budget is implied by the preliminary t
 - No CPU-overhead measurement is proposed; it stays last.
 - The GPUh figures are planning ceilings for feasible pieces only, derived from native06's observed
   ~12 GPUh as an order-of-magnitude reference. They are not a measured cost or an approved budget.
+
+## G2 single-window collection — ready for a GPU decision
+
+The next diagnostic collection uses the existing full native P/D path. G2 source `05952396` is CPU-accepted after both independent re-reviews and final verification (`driver/primary_acceptance.json`). The earlier J1–J5 table remains a historical list of coverage needs, not an executable campaign or approval.
+
+| Item | Proposed value and evidence |
+| --- | --- |
+| Resource ceiling | One job with four nodes, each with 8 H800 GPUs, 64 CPUs and 512 GiB RAM; 32 GPUs total, `codesign`, non-preemptible. Payload limit 3600 s, startup limit 1800 s, replay limit 1800 s; at most 32 GPUh. Native06 used 12.002222 GPUh; profiling duration is unmeasured. |
+| Topology | P16+D16; each role TP8/DP2/EP16/PP1, one local DP lane per node. Preserve native V2,MXFP4/MARLIN,balanced_topk and native06's graph configuration. |
+| Native/image | Source2cf0a6915ce544dc493a0990f2ea38d81601128a; image`hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635`. Re-verify source and binary pins in the new package before launch. |
+| Frozen workload | Existing canonical6144/1024,128formal requests plus16warmups per round,three rounds,QPS1. No request/arrival changes. This instrumented run cannot replace native06's clean reference. |
+| Input provenance | `driver/proposal_inputs.json` rehashes the five workload files against `FINAL_FREEZE_R4.json`; trace CSV SHA-256 is `2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2`. The three native06 configuration files are reference inputs only; the new package must explicitly generate its profile configuration and source/output bindings. |
+| Engine limits | Preserve max_model_len7168,max_num_batched_tokens8192,max_num_seqs128. These are configured capacities, not runtime batches. |
+| Window | Both role-head APIs bracket first-formal replay and its existing drain. Native `max_iterations=64`, zero delay/warmup/wait and `ignore_frontend=true`. One native torch/CUPTI collection window; this request includes no retry allocation. |
+| Trace options | Torch CPU+CUDA activities from native Worker.profile; gzip enabled, stack/shapes/FLOPs/memory profiling disabled. Raw traces remain necessary for kernel correlation and coverage checks. |
+| Collector limits | Per rank: at most 250000 retained rows and 268435456 serialized row bytes, separately for startup and the selected window. Retain the startup archive, window snapshot and final inventory. These are capacity limits, not guaranteed coverage; drops and archive failures remain explicit. |
+| Storage | Planned new tag `dsv4-h800-p0-profile-20261023-01`, under `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023`. Each node writes traces under its role/DP subdirectory. Verify the new destination is unused; mount the current local workspace and personal cloud volume through StepMind Python. |
+
+The 64-step choice is a finite initial observation window, not proof of three aligned useful batches. Native iteration limits also count zero-token lane steps; retain those records and validate coverage using the matched distributed execution. Native06's actual shapes were 6144/NONE for prefill and 1/2/4/8/16 under FULL/PIECEWISE for decode, with at most 11 scheduled requests/tokens per lane (`driver/native06_window_basis.json`). Report the tuples actually captured. This window does not cover the complete decode context 6143..7166 range.
+
+### Artifact-volume accounting and remaining uncertainty
+
+At the proposed row-byte limit, one32-rank snapshot has at most8GiB of serialized row payload. Startup archive, stopped-window snapshot and final snapshot could together retain at most24GiB of row payload. This excludes metadata, Python object overhead, formatting and torch trace files; it is not a host-memory or total-storage bound. Gzip trace size remains unmeasured for full-model V4 and must be reported separately rather than inferred from the isolated six-layer trace. No trace-size validator may interrupt healthy native work.
+
+### Runtime acceptance and source prerequisites
+
+1. CPU source gate complete at `05952396`: both reviews, the cold-start correction, 433/750-line accounting, separate final suites and explicit matrix binding passed. Pin this source and the frozen workload hashes in a fresh package.
+2. Verify the new staged extension, real native hook resolution, per-node trace paths and all image/source/binary pins. A valid CPU package is not GPU approval; request the above resources explicitly after the source gate is complete.
+3. At runtime retain all32worker receipts, actual model/layout/routing/source identity, local scheduler requests/tokens, DP-synchronized descriptor/mode, first-formal IDs and actual start/stop/drain outcomes. At least three distinct aligned useful logical batches are required for each claimed phase; absent or dropped tuples remain unverified.
+4. For a usable KERNEL_ONLY slice, prove kernel-to-launch/owner completeness, event handles/generations and stream mapping, and preserve actual PDL/GDC evidence. Missing captured-segment ownership or stream dependencies prevents additive totals; no scaling or CPU-gap attribution fills the difference.
+5. Archive raw traces, inventories, client rows, terminal receipts and every observation failure. Auxiliary profiling/validation errors stay soft; healthy workload completion continues, affected evidence remains UNVERIFIED, and any later collection requires its own resource decision.
+
+Current status: **READY_FOR_USER_GPU_DECISION**. No package has been sealed for this collection and no GPU allocation is approved or submitted. After approval, complete fresh package/source/image checks and quota verification before submitting the single bounded run.

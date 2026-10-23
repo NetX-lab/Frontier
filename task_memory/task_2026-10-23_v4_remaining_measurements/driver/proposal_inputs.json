@@ -1,0 +1,69 @@
+{
+  "status": "PROPOSAL_INPUTS_VERIFIED_AGAINST_NATIVE06_R4_FREEZE",
+  "source_commit": "05952396b0b8e5a794c53e10f9a21213beb5193d",
+  "files": {
+    "engine.json": {
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/engine.json",
+      "bytes": 1199,
+      "sha256": "a837932efbab6b46a24c2c432690845e6d9159ef6089e2d3815fd4b2e15622ae",
+      "usage": "native06_configuration_reference_only"
+    },
+    "frontier.json": {
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/frontier.json",
+      "bytes": 55620,
+      "sha256": "747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
+      "usage": "native06_configuration_reference_only"
+    },
+    "native_config.json": {
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/native_config.json",
+      "bytes": 20543,
+      "sha256": "d133579c3dd03287ffa659c6d1114a366d2ac5d1e8e4611abd6f83acb714dcd4",
+      "usage": "native06_configuration_reference_only"
+    },
+    "trace/SHA256SUMS": {
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/SHA256SUMS",
+      "bytes": 321,
+      "sha256": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+      "usage": "unchanged_workload"
+    },
+    "trace/manifest.json": {
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/manifest.json",
+      "bytes": 4208,
+      "sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+      "usage": "unchanged_workload"
+    },
+    "trace/request_ids.json": {
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/request_ids.json",
+      "bytes": 32630,
+      "sha256": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+      "usage": "unchanged_workload"
+    },
+    "trace/trace.csv": {
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/trace.csv",
+      "bytes": 1986,
+      "sha256": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+      "usage": "unchanged_workload"
+    },
+    "trace/warmup_pool.csv": {
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/warmup_pool.csv",
+      "bytes": 929,
+      "sha256": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e",
+      "usage": "unchanged_workload"
+    }
+  },
+  "freeze_path": "task_memory/task_2026-10-22_v4_native_dispatch/FINAL_FREEZE_R4.json",
+  "freeze_sha256": "f87a68688bc4f6c4474e7eab640e049cb2dd2ca3eaf2cfb2e11f531be904727a",
+  "native_image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "preserved_resource_template": {
+    "gpu": 8,
+    "replica": 4,
+    "cpu": 64,
+    "mem_gb": 512,
+    "gpu_type": "H800",
+    "charged_group": "codesign",
+    "timeout_seconds": 3600,
+    "startup_timeout_s": 1800,
+    "replay_timeout_s": 1800
+  },
+  "limitations": "These pins bind the proposed workload and reference configuration, not a new package or GPU approval. The profile extension, source revision, profiler limits and new output paths must be explicitly generated in fresh configuration."
+}

@@ -1,0 +1,153 @@
+{
+  "status": "ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT",
+  "accepted_at_utc": "2026-10-23T08:30:21.983044+00:00",
+  "source_commit": "05952396b0b8e5a794c53e10f9a21213beb5193d",
+  "baseline_commit": "313c8167af0289d058b625bda19282e851b950cf",
+  "changed_files": 7,
+  "changed_lines": 433,
+  "changed_line_limit": 750,
+  "source_files": {
+    "tests/comparison/calibration/native_pd_worker.py": "9ec701ec12f7a5da0f442f994a353f98c5ae1d2880b9feca38106ea536fd5cab",
+    "tests/comparison/calibration/native_serve_profile.py": "ea810b91665ca9a804e1b0309ad03f0d50772a96585c66602945a7125cfc1ea5",
+    "tests/comparison/calibration/pd_replay.py": "65ec81721ebe1d02a4028388521bc25d57888bb39a721bc59c21dc6f0a3ed0ae",
+    "tests/unit/test_native_cold_start.py": "f4112a16ae089bf63b4a5bd28588743e74e95152ad57556a424f26c48df8ad06",
+    "tests/unit/test_native_pd_worker.py": "ed20f690b6d5515ac21bd1a238b14fbcf94a00f8f1d3c91ea21ef52d433161dc",
+    "tests/unit/test_native_serve_profile.py": "559dcf7bb63c48344cbffc542e580d29ff33196813f58e49786155cb923a9037",
+    "tests/unit/test_native_streaming_replay.py": "f4b552eafe50deb84def6cabb077f7f1a696306c22aed42fcfbd505a2455961e"
+  },
+  "suites": [
+    {
+      "suite": "test_native_serve_profile",
+      "counts": {
+        "tests": 32,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_pd_worker",
+      "counts": {
+        "tests": 19,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_streaming_replay",
+      "counts": {
+        "tests": 39,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_serving_inventory",
+      "counts": {
+        "tests": 28,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_v2_serving_inventory",
+      "counts": {
+        "tests": 45,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_reader_binding",
+      "counts": {
+        "tests": 135,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_dp_placement_harness",
+      "counts": {
+        "tests": 75,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_calibration_pd_harness",
+      "counts": {
+        "tests": 68,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_pd_manifest",
+      "counts": {
+        "tests": 14,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_cold_start",
+      "counts": {
+        "tests": 18,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_canonical_client_metrics",
+      "counts": {
+        "tests": 24,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_pd_canonical_http",
+      "counts": {
+        "tests": 1,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "independent_reviews": {
+    "spec": "ses_e984289acffe3o6TiR1NxOFgNA",
+    "standards": "ses_e9841fef9ffePvnX6RHfChfqKD",
+    "all_initial_findings_closed": true,
+    "new_findings": 0
+  },
+  "artifact_sha256": {
+    "final_checks.json": "c92ca14081be27ef7e41db435f323bd408c1e804108a7ff57958c39a491ae8e2",
+    "matrix_binding_final.json": "e6d1b99ac31cd0c943c34f7ea4906aa1d73cc4abb0be7188309cca149b94346d",
+    "review_final.md": "e0907fb4e5c5737a34d0cbfbd9d08cc29bc488b257bd5b42feaed9c4dc7fb6bb",
+    "source_manifest_r1.json": "065554e99dcdd7bfced7219804e3b987945d3f788ff406e97e3c79a2fefb9476",
+    "change_r1.diff": "5b3adaa3aecd99684e913af521e7d1207b809fe0f5543aa79905b551df363af0",
+    "review_red.json": "d80d2d4cec1fca79de7132bf4e3fccea0a97b55b3042cf8279a593b36b50c1f5",
+    "review_green.json": "17fa85d055be20645670cec06c893de89dedffd0c8121304a260b4e2db517377"
+  },
+  "matrix_identical_cases": 77,
+  "new_matrix_capture": false,
+  "new_gpu_run": false,
+  "gpu_qualification": false,
+  "native_reference_admission": false,
+  "limits": [
+    "CPU driver/collector integration only; no useful-batch GPU coverage proof.",
+    "No new GPU approval or package seal; runtime source/trace/stream/PDL/graph checks remain.",
+    "Native06 remains the existing R4 reference; no cost or four-metric qualification."
+  ]
+}

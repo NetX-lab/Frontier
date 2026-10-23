@@ -10,20 +10,23 @@
 | 2026-10-23 | Session-close scope: finish H review repairs (five files/987), integrate verified CPU work and hand off G2. |
 | 2026-10-23 | A–H CPU prerequisites complete; H accepted at64f3c950 and G2 handed off. |
 | 2026-10-23 | Resumed G2 locally: source-backed window design, one-owner driver/collector implementation, verification/review, then GPU proposal. |
+| 2026-10-23 | Assigned G2 implementation to root after two API-quota failures; six non-core files/750 lines, with independent review still required. |
+| 2026-10-23 | G2b repaired at433/750lines across seven non-core files; initial reviews complete and follow-up/final verification remain G2c. |
+| 2026-10-23 | G2c complete at accepted source 05952396; G2d proposal is ready for a separate GPU decision. |
 
 ## Dependencies and ownership
 
-Current status: A/B/C/D/E/F/G1/H **completed**. H acceptance is `collector_primary/primary_acceptance.json`: five findings closed,880/987lines, final-source and merged separate-suite checks passed, joint automatic94 unchanged, existing77/77matrix explicitly bound. G2 is **in-progress in this session** at YC's request. The initial and repair allocations below remain the historical scope record.
+Current status: A/B/C/D/E/F/G1/H and G2a–d **completed for CPU preparation**. H acceptance is `collector_primary/primary_acceptance.json`; G2 acceptance is `driver/primary_acceptance.json` at source `05952396`. The measurement campaign is waiting for a separate GPU decision. The initial and repair allocations below remain the historical scope record.
 
-G2 dependencies: `{G2a native window/API evidence, driver callsite design} -> G2b one-owner implementation and CPU controls -> G2c independent Spec/Standards review and root merged verification -> G2d concrete resource/window proposal -> YC GPU decision`. G2a's native-profiler inspection runs independently of root's replay/design inspection. Root records the bounded source allocation after those seams are established. No GPU run is part of this CPU phase.
+G2 dependencies: `{G2a native window/API evidence, driver callsite design} -> G2b one-owner implementation and CPU controls -> G2c independent Spec/Standards review and root final-source verification -> G2d concrete resource/window proposal -> YC GPU decision`. G2a/b/c are complete for source `05952396`, with seven existing non-core files and 433/750 changed lines. Both R1 reviews closed all findings; final separate suites and repaired-source matrix binding passed (`driver/primary_acceptance.json`). G2d's concrete single-window proposal is ready. GPU approval, fresh package/source/image checks, collection and runtime qualification remain pending.
 
 `A -> {B kernel/dependency audit, C private-input design, D native measurement seam}; C -> E bounded implementation -> F focused verification/review -> G1 merge and matrix gate; {B, D} -> H native profiling extension -> G2 executable measurement proposal`
 
-E and H run in parallel; they own disjoint files.
+Historical execution: E and H ran in parallel with disjoint file ownership.
 
 H allocation: `native_serve_profile.py` 450, `native_pd_worker.py` 25, one unit-test file 300, `dp_placement_pp/vllm_replay.py` 8, and `calibration/pd_replay.py` 4 changed lines. The last two additions repair the reproduced extension-registration, PYTHONPATH and profiler-config forwarding blockers (`collector/launch_seam_receipt.json`, owner commit `9366b6e4`). Root owns driver preparation under G2; H owns implementation and source/CPU validation.
 
-Current H repair allocation supersedes the preceding initial limits: collector550, existing test400, worker25, command builder8, P/D environment4; total987, same owner and five paths. Five initial review findings must close through owner fixes, targeted source re-review and root verification before integration. E/F/G1 are accepted at732406aa. Under YC's session-close request, G2 is handed off after H closure rather than started in this session.
+Historical H repair allocation superseded the initial limits: collector550, existing test400, worker25, command builder8, P/D environment4; total987, same owner and five paths. All five findings closed before integration. E/F/G1 are accepted at732406aa. The original session-close schedule handed G2 off after H; YC's later resume request superseded that schedule, and G2 has now completed in this session.
 
 | Step | Owner | Acceptance |
 | --- | --- | --- |

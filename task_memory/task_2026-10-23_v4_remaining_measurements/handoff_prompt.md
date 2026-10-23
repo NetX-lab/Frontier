@@ -6,6 +6,9 @@
 | --- | --- |
 | 2026-10-23 | Prepared the next-session prompt; final collector closure is recorded in progress.md and the acceptance receipts. |
 | 2026-10-23 | Bound the prompt to accepted H sourcef8621a8/integration64f3c950 and final merged checks. |
+| 2026-10-23 | Marked the H handoff historical after YC resumed this session and G2 CPU source 05952396 was accepted. |
+
+Historical H close-out prompt. YC requested continuation in the current session; this prompt was not executed. G2 CPU implementation has since been accepted at `05952396`. Read current `progress.md` and `proposal.md` for the pending GPU decision rather than following the old next-step list below.
 
 ```text
 你接手 Frontier 的 GLM-5.3 / DeepSeek-V4 校准工作。先核对实际 Git 状态和下列记录，再执行下一步。

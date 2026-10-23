@@ -6,6 +6,8 @@
 | --- | --- |
 | 2026-10-23 | Archived the accepted input component and current collector/measurement dependencies. |
 | 2026-10-23 | Archived accepted H collector integration64f3c950 and the final G2 continuation boundary. |
+| 2026-10-23 | Recorded G2 source/CPU implementation and review repairs; independent follow-up and final acceptance remain pending. |
+| 2026-10-23 | Accepted G2 CPU source 05952396 and completed its proposal; GPU decision and runtime work remain open. |
 
 ## Completed
 
@@ -25,8 +27,10 @@ Acceptance and exact artifact paths: `input_primary/primary_acceptance.json`, `i
 
 H source/CPU closure is complete. Its emitted profiles remain UNVERIFIED: real GPU stream mapping, per-kernel PDL, compile/breakable survival, captured-segment ownership and GPU CUPTI restart require runtime evidence. Installed-image31/31source symbols are static evidence, not successful native executable hook resolution.
 
-G2 driver requirements are recorded in `driver_design.md`. The real replay callsite must activate profiling on both role heads before selected formal dispatch and stop after drain, preserving native behavior and auxiliary soft failures. Implementation and bounded resource/window planning precede any new GPU request.
+G2 driver source `05952396` is **ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT**, with 433 changed lines in seven existing non-core files. `driver/primary_acceptance.json` binds the source, two independent re-reviews, final separate-suite checks and explicit 77/77 matrix reuse. The real replay activates both role heads around the first formal window, uses native iteration limits and separates selected-window capacity from startup records.
 
-The collector currently records from startup and emits without resetting its buffers; `/start_profile` does not reset its retention budget. G2 must align records/bytes capacity with the actual selected profiling windows and preserve their required evidence.
+Both R1 reviews closed all three distinct defects with no new findings. Final suites separately pass: collector 32, worker 19, streaming 39, inventory 28, V2 inventory 45, reader 135, DP harness 75, P/D harness 68, manifest 14, cold-start 18, client metrics 24 and canonical HTTP 1; all have zero errors/failures/skips. The cold-start repair corrects a baseline-reproduced staged dependency mismatch. `driver/review_initial.md` and `driver/test_report_2026-10-23_driver.md` retain findings and RED/GREEN evidence. The old startup-only retention statement describes H64f3c950 and is superseded by G2.
+
+`proposal.md` is ready for a separate user GPU decision: one 32-H800 job, at most 60 minutes/32 GPUh, using the existing P16+D16 topology and a first-formal 64-worker-step native profiling window. No GPU allocation or package seal exists for this collection. Full runtime/coverage/stream/PDL/graph checks, serving totals and numerical qualification remain open.
 
 Serving totals, complete kernel attribution, actual stream dependencies, graph/TP8/PD cost equivalence, balanced decode coverage and four-metric calibration are still open. Native06 remains the admitted R4 reference. GLM remains paused, and CPU-overhead work stays last. No new GPU allocation was used or authorized in this phase.

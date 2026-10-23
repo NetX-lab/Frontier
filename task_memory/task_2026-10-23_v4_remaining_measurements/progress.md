@@ -8,12 +8,21 @@
 | 2026-10-23 | E/F/G1 accepted at merged732406aa; H launch increment authorized and implementation resumed. |
 | 2026-10-23 | Closed five H findings, integrated64f3c950, verified merged suites/input/matrix binding, and finalized the G2 handoff. |
 | 2026-10-23 | YC resumed work locally from77668066; G2 window/API design and real replay integration are active. |
+| 2026-10-23 | Both G2 delegation attempts failed with API quota code40005; root completed source inspection and assumed sole implementation ownership. |
+| 2026-10-23 | Implemented G2, repaired the baseline cold-start fixture and three independent-review issues; repaired source433/750lines has four separately passing suites and awaits follow-up review. |
+| 2026-10-23 | Accepted G2 source 05952396 after two no-finding re-reviews and final checks; prepared the separate 32-H800 single-window decision. |
 
 ## Current execution — G2 resumed
 
 - completed: H closure archived at77668066; main tracked worktree clean on restart, unrelated `.pi/` and `.cortexkit/` retained.
-- in-progress G2a: root inspects the real replay path while W128-G2-WINDOW-DESIGN independently inspects pinned native profile API/iteration/window behavior. The H implementation owner retains ownership of driver/collector edits after root records the design and allocation.
-- pending G2b/c/d: implement and verify the selected window/retention mechanism, independent reviews plus merged checks, then a concrete GPU request. No new GPU approval or runtime qualification is inferred.
+- completed G2a: root inspected the real replay, native profile RPC, iteration controls and collector retention. The design and six-file/750-line allocation are in `driver_design.md`; no GPU runtime claim follows from source inspection.
+- completed G2b source/CPU implementation: root is the sole owner after both initial design delegations failed (sessions `ses_e986cf2afffe8uakCUenZqno7f` and `ses_e9916feb6ffeDDJENvata6ugYg`, API quota code40005). Seven existing non-core files433/750lines, including the baseline-reproduced cold-start test fixture dependency correction; no worker/GPU quota failure occurred.
+- completed G2c: both R1 reviews (Spec `ses_e984289acffe3o6TiR1NxOFgNA`, Standards `ses_e9841fef9ffePvnX6RHfChfqKD`) closed all three distinct defects and found no new issues. Frozen source `05952396` passed every required suite separately: collector 32, worker 19, streaming 39, inventory 28, V2 inventory 45, reader 135, DP harness 75, P/D harness 68, manifest 14, cold-start 18, client metrics 24, canonical HTTP 1; all have zero errors/failures/skips. Existing 77/77 evidence is explicitly bound to this source, with no new capture. Acceptance: `driver/primary_acceptance.json`; commands, hashes and timings: `driver/final_checks.json`; raw logs/XML: `/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396`.
+- completed G2d proposal: `proposal.md` specifies one 32-H800 job, at most 60 minutes/32 GPUh, a first-formal 64-worker-step window, independent collector limits and explicit trace-volume uncertainty. Pending: user GPU decision, then a fresh source/image-verified package and runtime collection. No new GPU run is authorized or submitted.
+
+Final verification note: the first matrix-binding helper assertion treated `identical_cases` and failure lists as scalar counts. It failed before writing a binding; the retained comparison schema has a 77-element list and empty failure lists. The corrected helper verifies exact list/cardinality semantics, the unchanged comparison digest and all unchanged simulator/input domains; `driver/matrix_binding_final.json` records PASS. No comparison evidence or source was changed to satisfy the helper.
+
+Archive verification: staging the two raw review diffs made ordinary whitespace lint flag their required single-space blank context markers. `driver/patch_validation.json` verifies that every flagged line is exactly that marker, checks all other staged files normally, and applies both frozen diffs against baseline313c8167 in separate temporary Git indexes using `git apply --cached --check --whitespace=error`. Both pass; source, review-diff bytes and acceptance hashes remain unchanged. Parent five-document sync also passed owner131/131 and final69/69 checks; root inspected the diff and verified source/receipt integrity, scope and preserved raw requests (`driver/docs_check.json`).
 - scheduling correction: the handoff below is the completed77668066 snapshot. YC explicitly chose to continue in this session; its technical boundaries and unfinished G2 work still apply.
 
 ## Current handoff — 2026-10-23

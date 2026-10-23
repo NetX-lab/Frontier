@@ -9,6 +9,8 @@
 | 2026-10-23 | YC requested completion/commit/handoff of current work; root allocated bounded repairs for five unique collector review findings. |
 | 2026-10-23 | Recorded completed H source/CPU integration64f3c950 and preserved G2 as the next-session scope. |
 | 2026-10-23 | YC resumed G2 in the current session; existing CPU implementation/design authority and separate GPU approval remain in force. |
+| 2026-10-23 | Recorded the seven-file G2 CPU allocation and independently reviewed failure-isolation repairs within the unchanged750-line budget. |
+| 2026-10-23 | Accepted G2 CPU source 05952396 after both re-reviews, final separate-suite verification and explicit matrix binding; new GPU authority remains pending. |
 
 ## Original requests and decision
 
@@ -48,3 +50,9 @@ The preceding787-line allocation is superseded for necessary review corrections 
 Native06 is ACCEPTED_NATIVE_REFERENCE_R4: originalb62c155, reader integrationd278659, bound by parent `native06_acceptance_20261023/{primary_acceptance_r4.json,frozen_r4_result.json}`. Isolated consumer integratede89b45d:144unit/94exact/legacy102-72, fixed576d278 strict77. Original R3 FAIL/native05 UNVERIFIED remain historical. GLM remains paused; four-metric calibration is unfinished.
 
 Session-close outcome: the private input component is accepted at732406aa; H sourcef8621a8 is accepted and integrated64f3c950 within880/987lines, with five findings closed and merged verification complete (`collector_primary/primary_acceptance.json`). G2 driver/window implementation and a concrete future GPU request remain in `progress.md` and `handoff_prompt.md`; this outcome grants no additional run authority.
+
+### G2 implementation allocation and current authority
+
+Under the existing CPU implementation/design approval, root owns the actual replay driver, window retention and CPU verification after the two initial design delegation attempts failed. The final allocation is seven existing non-core files/750changed lines (production350,tests400), with current owner-checked change433lines. Paths and lifecycle are in `driver_design.md`; `driver/cold_start_scope.md` records the additional existing test path and its reproduced baseline mismatch. No core/native/C26 interface or calibration rule is changed.
+
+Both initial independent reviews reported three distinct failure-isolation defects. The delivering root owner reproduced and repaired all three; both R1 reviews closed them with no new findings. Source `05952396` is now `ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT`, bound by `driver/primary_acceptance.json`, final separate-suite results and an explicit existing 77-case matrix binding. The first-formal 64-step/32-H800 resource sheet in `proposal.md` is ready for a user decision, not an approved GPU allocation. Existing native06 and prefill runs remain historical completed allocations and cannot be reused as spending authority.
