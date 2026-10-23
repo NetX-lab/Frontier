@@ -1,0 +1,26 @@
+{
+  "Modification History": [
+    {
+      "date": "2026-10-23",
+      "change": "Recomputed exported layouts with all282 call/timing records removed."
+    }
+  ],
+  "task_id": "W128-V4-ATTENTION-INPUT",
+  "raw_records": 289,
+  "non_timing_engine_step_records": 7,
+  "excluded_call_records": 282,
+  "results": [
+    {
+      "table": "attention.csv",
+      "layers": 6,
+      "sidecar_equality": true,
+      "call_timing_records_used": 0
+    },
+    {
+      "table": "attention_kernel_only.csv",
+      "layers": 6,
+      "sidecar_equality": true,
+      "call_timing_records_used": 0
+    }
+  ]
+}

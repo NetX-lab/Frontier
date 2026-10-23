@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Defined component steps and verification gates. |
+| 2026-10-23 | All localA–E completed; actual admission/source review/strict comparison handed to root. |
 
 `A inspect design/code/source receipts -> B reader + preparation -> C focused verification -> D fixed-source candidate matrix -> E archive/commit`
 
@@ -15,3 +16,5 @@
 5. E: Re-read requirements, checkpoint progress, write English archive/test report, commit records and return a clean branch. Root actual admission/review/strict comparison remain separate.
 
 Acceptance: both methods retain exact isolated medians and serving_admission=false; originals unchanged; no production admission emitted; negative controls reject with typed coverage errors; scope and fixed-source evidence explicit.
+
+Final local outcome: code4a1b53e6;194unit PASS;94exact for each API path;legacy102/72;sole77candidate/451artifact rehashes/519cache filenames/1287clean source-file checks. Root actual admission, independent review and strict baseline comparison remain open and are not included in local completion.
