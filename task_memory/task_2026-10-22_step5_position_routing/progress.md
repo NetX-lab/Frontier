@@ -58,6 +58,13 @@
 
 ### Current-session resumption (supersedes handoff next-session timing)
 
+- in-progress/implementation: D29-PLAN-KEY-REUSE, session
+  ses_e963098ecffebqCOtdysKGY6Xe, owns the two allocated paths in the isolated
+  step5-d29-plan-key worktree from087db1bf. Snapshot worktree remains its baseline.
+- in-progress/read-only: D29-DETACHED-EMISSION-OWNERSHIP, session
+  ses_e96a5c1c7ffeoPBK7V08CMas7v, inspects existing profiles and private ownership
+  after required getter snapshots. No new probe campaign or source allocation;
+  public conversion/borrowed-source shortcuts remain rejected.
 - completed/diagnostic: immutable-plan records7d1cdc06 archived as a3525856.
   Warm plan/tensor construction is already0; eight complete plans are retained.
   Key-only control removes192 encodes/wave, with paired warm0.167724->0.128676s
