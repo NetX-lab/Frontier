@@ -243,6 +243,13 @@ def _position_source_rows(model, *, quant_dtype="float8_e4m3fn", context="standa
     from frontier.config.precision_type import PrecisionType
     from frontier.operators.binding import bind_operator_query
     from frontier.operators.families import get_moe_profiling_operators
+    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput, MoERoutingProfileCell
+    from frontier.entities import Batch, Request
+    from frontier.entities.batch import DummyForwardBatch
+    from frontier.config import global_vars
+    from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
+    from frontier.moe_routing_policy import build_wave_routing_source
+    from tests.unit.test_moe_position_routing import materialize
     native = dict(model_architecture_profile="step5", routing_runtime_path="position_cyclic",
                   quant_dtype=quant_dtype, defer_input_quant=False)
     contracts, facts = {}, {}
@@ -259,7 +266,24 @@ def _position_source_rows(model, *, quant_dtype="float8_e4m3fn", context="standa
                 feature_columns=("num_tokens", "live_routing_token_count"), row_metadata={"moe_layer_ids": "3-87"})
     rows = []
     for live in (0, 4):
-        row = dict(num_tokens=8, live_routing_token_count=live, masked_routing_token_count=8-live,
+        batch = Batch(0, [Request(0, 6144, 1024)], [live], is_moe=True, num_context_tokens=[6128]) if live else DummyForwardBatch(0, 0, 0)
+        batches = {0: batch, 1: DummyForwardBatch(0, 0, 0)}
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "full_and_piecewise")
+            patch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", [8])
+            bind_forward_start(list(batches.values()), group_id=0, request_capacity=128)
+            source = build_wave_routing_source(batches, policy_id="position_cyclic", cluster_type=ClusterType.DECODE,
+                gathered_physical_rows=16, model_config=model)
+        lane = source.source_lanes[0]
+        frame = MoESourceFrame(0, tuple(i.length for i in lane.intervals), tuple(i.start for i in lane.intervals), lane.physical_rows, context)
+        assert materialize(source).live_routing_token_count == live
+        routing = MoERoutingProfileInput("live" if live else "empty",
+            (frame, MoESourceFrame(1, (), (), source.source_lanes[1].physical_rows, context)), source.gathered_physical_rows)
+        cell = MoERoutingProfileCell(routing, "source_local", 0)
+        row = dict(num_tokens=frame.physical_rows, live_routing_token_count=frame.live_rows,
+            masked_routing_token_count=frame.physical_rows-frame.live_rows, moe_input_id=routing.moe_input_id,
+            moe_source_lane_id=cell.source_lane_id, moe_ep_rank=cell.ep_id,
+            routing_input=json.dumps(cell.to_json()["routing_input"]),
             num_tensor_parallel_workers=1, expert_parallel_size=16, moe_frame_scope="source_local",
             gating_runtime_context=context, moe_layer_ids="3-87", model_architecture_profile="step5",
             routing_runtime_path="position_cyclic", profiling_precision="BF16", measurement_type="CUDA_EVENT",

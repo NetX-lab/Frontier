@@ -7,6 +7,7 @@ from frontier.moe_routing_runtime import (
     UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
     resolve_moe_gating_routing_runtime_path,
 )
+from tests.unit.test_prediction_measurement_bindings import bound
 
 
 @pytest.mark.parametrize("distribution_type", ["balanced", "skewed", "zipf"])
@@ -51,37 +52,30 @@ def test_position_policy_resolves_before_parent_initialization(monkeypatch):
 
 
 @pytest.mark.parametrize("foreign", [None, {"quant_dtype":"float8_e4m3fn"}])
-def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path, foreign):
+def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path, foreign, bound):
     import json
     from types import SimpleNamespace
-    from dataclasses import asdict
-    from frontier.execution_time_predictor.moe_routing_workload import MoeRoutingWorkload
-    from frontier.cc_backend.collective_plan import CollectivePlan,CollectiveTensor
+    from tests.integration.step5_measured_compute_fixture import position_collective_costs
+    from tests.unit.test_step5_measured_ffn_replay import _predictor
     from tests.unit.test_moe_position_routing import source,materialize
-    from frontier.profiling.moe.inputs import MoESourceFrame
-    lane=materialize(source()).lane(0)
-    tensors=[vars(CollectiveTensor("output","bfloat16",2,4,4))]
-    context=dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",quant_dtype=None,defer_input_quant=False,
-        native_facts=dict(shared={"image":"cpu_fixture"}),collective_tensors=dict(dispatch=tensors,output=tensors))
-    frames=[asdict(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context)) for s in lane.routing_source.source_lanes]
-    receipt=dict(moe_ep_rank=0,total_routed_tokens=0,routing_input=json.dumps(dict(source_frames=frames)),native_context=json.dumps(context))
-    model=SimpleNamespace(_frontier_moe_physical_rows=(receipt,))
-    class Predictor(MoeRoutingWorkload):
-        _step5_ffn_model=lambda self,*a:(model,None)
-        _build_grouped_gemm_features=lambda self,*a,**k:dict(num_tokens=17,total_routed_tokens=0)
-    p=Predictor();p._replica_config=SimpleNamespace(device="h800",attn_tensor_parallel_size=8)
-    p._model_config=SimpleNamespace(supports_share_expert=lambda:True)
-    p._cc_backend=SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(tmp_path)))
-    measured=dict(shared=context["native_facts"]["shared"],execution_policy={"0":{"branches":["cpu_fixture"]}})
-    counts={}
-    for phase in ("dispatch","combine","routed_tp","shared_tp"):
-        groups=tuple((i,8+i) for i in range(8)) if phase in ("dispatch","combine") else (tuple(range(8)),tuple(range(8,16)))
-        plan=CollectivePlan(phase,(16,1),tuple(CollectiveTensor(**t) for t in tensors),groups,"none",json.dumps(measured),json.dumps(dict(actual_buffer="cpu_fixture",compute_context=context)))
-        counts[plan.cache_key()]=dict(context=measured,buffer_receipt=json.loads(plan.buffer_json))
-    path=tmp_path/"h800/collective_local.json";path.parent.mkdir();path.write_text(json.dumps(dict(counts=counts)))
+    from frontier.execution_time_predictor.step5_cost import step5_layer_metadata
+    from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+    manager, replica, rows, paths, _ = bound
+    p=_predictor(replica.model_config,manager);p._replica_config=replica
+    lane=materialize(source(padding=16)).lane(0)
+    path=position_collective_costs(tmp_path,paths[1],device=replica.device)
+    p._cc_backend=SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
+    p._step5_layer_metadata=step5_layer_metadata(p,88)
+    group=next(g for g in resolve_routed_layer_groups(replica.model_config) if 88 in g.layer_ids)
+    retained=rows.loc[rows.moe_layer_ids.eq(group.row_metadata()["moe_layer_ids"]) & rows.moe_ep_rank.eq(0) & rows.moe_input_id.eq("cpu_fixture_q16_c6128")]
+    context=json.loads(retained.native_context.iloc[0])
     native,features,plans=p._step5_position_queries(lane)
     assert native==context and features["moe_gating_linear"]==dict(num_tokens=16,live_routing_token_count=16)
-    assert all(json.loads(plan.context_json)==measured for plan in plans.values())
+    counts=json.loads(path.read_text())["counts"]
+    assert all(json.loads(plan.context_json)==counts[plan.cache_key()]["context"] for plan in plans.values())
+    assert all(json.loads(plan.buffer_json)["compute_context"]==context for plan in plans.values())
+    model,_=p._step5_ffn_model("moe_grouped_gemm",context=context)
+    assert model._frontier_cache_model_name=="moe_grouped_gemm" and model._frontier_moe_physical_rows
     for key,receipt in list(counts.items()):
         value=json.loads(key);value["buffer_json"]=json.dumps(dict(actual_buffer="foreign",compute_context=foreign));counts[json.dumps(value,sort_keys=True,separators=(",",":"))]=counts.pop(key)
     path.write_text(json.dumps(dict(counts=counts)))
