@@ -130,6 +130,10 @@ V028_IMAGE = ("hub.i.basemind.com/vllm-openai/vllm-openai@sha256:"
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
 V028_NODE_FIELDS = ("data_parallel_size_local", "data_parallel_address", "data_parallel_rpc_port",
                     "data_parallel_start_rank", "headless")
+NATIVE_WORKER_EXTENSIONS = {
+    "native_full_structure.FullModelInventory": "native_full_structure.py",
+    "native_serve_profile.NativeServeProfile": "native_serve_profile.py",
+}
 
 
 def runtime_version(engine: dict) -> str:
@@ -243,7 +247,7 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
         mode_env = {}
         if engine.get("moe_gating_routing_runtime_path") is not None:
             if (engine["moe_gating_routing_runtime_path"] != "balanced_topk"
-                    or engine.get("worker_extension_cls") != "native_full_structure.FullModelInventory"):
+                    or engine.get("worker_extension_cls") not in NATIVE_WORKER_EXTENSIONS):
                 raise ValueError("Native balanced routing requires the registered worker extension")
             mode_env["VLLM_MOE_ROUTING_SIMULATION_STRATEGY"] = "balanced_topk"
         if observer is not None:
@@ -345,6 +349,8 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
                       "num_gpu_blocks_override", "worker_extension_cls", "kv_cache_dtype"):
             if name in engine:
                 command += ["--" + name.replace("_", "-"), str(engine[name])]
+        if "profiler_config" in engine:
+            command += ["--profiler-config", json.dumps(engine["profiler_config"])]
         if "async_scheduling" in engine:
             if type(engine["async_scheduling"]) is not bool:
                 raise ValueError("async_scheduling must be boolean")

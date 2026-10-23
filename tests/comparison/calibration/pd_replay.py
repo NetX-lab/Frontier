@@ -77,7 +77,7 @@ from vllm_replay import (  # noqa: E402
     MODES, REPO_ROOT, kv_cache_tokens, replay, server_command, server_env, stop_server,
     wait_until_ready, write_model_dir, runtime_version, local_model_config, observer_evidence,
     SERVED_MODEL_NAME,
-    request_records,
+    request_records, NATIVE_WORKER_EXTENSIONS,
 )
 
 ROLES = ("prefill", "decode")
@@ -188,7 +188,7 @@ def instance_env(mode: str, engine: dict, role_dir: Path, inherited: dict,
         role_env = {"CUDA_VISIBLE_DEVICES": device,
                     "VLLM_NIXL_SIDE_CHANNEL_HOST": kv["side_channel_host"],
                     "VLLM_NIXL_SIDE_CHANNEL_PORT": str(kv[f"{role}_side_channel_port"])}
-        if engine.get("worker_extension_cls") == "native_full_structure.FullModelInventory":
+        if engine.get("worker_extension_cls") in NATIVE_WORKER_EXTENSIONS:
             # The server and its spawned workers do not inherit this process's sys.path.
             role_env["PYTHONPATH"] = os.pathsep.join(
                 filter(None, (str(HARNESS_DIR), env.get("PYTHONPATH"))))

@@ -1,0 +1,23 @@
+{
+  "control": "launch_native_result_exception_and_independent_install_soft_gates",
+  "result_identity": true,
+  "exception_identity": true,
+  "facts_retained": true,
+  "replay_installed": true,
+  "status": "UNVERIFIED",
+  "errors": [
+    {
+      "where": "annotation_enter:_fused_q_kv_rmsnorm_kernel",
+      "traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration/native_serve_profile.py\", line 135, in range\n    row = self.context() | dict(category=category, scope=scope, id=self.sequence)\n          ^^^^^^^^^^^^^^\n  File \"<stdin>\", line 15, in <lambda>\n  File \"<stdin>\", line 15, in <genexpr>\nOSError: injected launch instrumentation\n"
+    },
+    {
+      "where": "annotation_enter:fault_kernel",
+      "traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration/native_serve_profile.py\", line 135, in range\n    row = self.context() | dict(category=category, scope=scope, id=self.sequence)\n          ^^^^^^^^^^^^^^\n  File \"<stdin>\", line 15, in <lambda>\n  File \"<stdin>\", line 15, in <genexpr>\nOSError: injected launch instrumentation\n"
+    },
+    {
+      "where": "instance_installation",
+      "traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration/native_serve_profile.py\", line 85, in observe\n    return operation(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<stdin>\", line 29, in <lambda>\n  File \"<stdin>\", line 29, in <genexpr>\nOSError: injected independent instance installation\n"
+    }
+  ],
+  "verdict": "PASS"
+}

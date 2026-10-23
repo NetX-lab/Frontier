@@ -1,0 +1,26 @@
+[
+  {
+    "source": "d94b821a",
+    "control": "persistent_annotation_failure_bounded_stderr",
+    "native_returns": 100,
+    "exception_identity": true,
+    "total_failures": 501,
+    "retained_errors": 64,
+    "detail_logs": 501,
+    "tracebacks": 501,
+    "suppressed_errors": null,
+    "verdict": "RED"
+  },
+  {
+    "source": "fixed_source",
+    "control": "persistent_annotation_failure_bounded_stderr",
+    "native_returns": 100,
+    "exception_identity": true,
+    "total_failures": 501,
+    "retained_errors": 64,
+    "detail_logs": 64,
+    "tracebacks": 64,
+    "suppressed_errors": 437,
+    "verdict": "PASS"
+  }
+]
