@@ -5,12 +5,14 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Began CPU-only package preparation using the existing builder and accepted runtime05952396. |
+| 2026-10-23 | Committed bounded source69f92c55, generated profile01 once and completed actual CPU/hash/preservation controls. |
 
 ## Status
 
 - completed: Read local instructions, root requirements/plan/proposal/driver design and acceptance/input pins. Confirmed clean baseline1dc93c6f and all13 selected runtime modules equal git05952396.
-- in-progress: Add one optional profile-plan input to the existing builder. Preserve the unselected06 branch, frozen checkers, original packages and all five workload files. Stage a diagnostic-only profile01 package after committing source.
-- pending: Actual generation; CPU config/manifest/source/tool/model/workload verification; both-role/DP/environment/command checks; final delivery and writer stop.
+- completed: Optional plan/source commit69f92c55,139gross lines/300; generation01 succeeded once from a clean tree,87native pins.
+- completed: Actual package45files/6,980,280bytes; runtime13/13 equals05952396; tools23/23,retained10/10,model4/4,workload5/5; native ProfilerConfig validation and all4role/DP command/environment paths pass. Frozen originals123/123 and checker hashes3/3 unchanged. Default06 AST equivalence and explicit77/77 matrix binding pass.
+- completed: Final delivery records prepared and validated against all45 actual package hashes; source.diff is byte-exact git diff1dc93c6f..69f92c55. The final record-only commit closes the task; no further owner writes after that commit. Root acceptance/image/destination/seal/launch remain outside this owner's scope.
 
 ## Scope and implementation reason
 
@@ -62,3 +64,25 @@ Branch A: no spec/plan change. Stop deviations: none. Next route: commit only al
 1. Build only after the source commit leaves a clean worktree.
 2. Verify runtime bytes against05952396 and all5 workload pins, not a historical package's admission verdict.
 3. Root still owns independent image/destination/runtime verification and sealing; CPU checks make no GPU/native/reference claim.
+
+## Final phase checkpoint
+
+### 1. Planning completion
+
+PASS4/TODO0 at delivery: preflight, scoped committed source, actual package/CPU verification and validated records complete. Source commit69f92c553ff4058be613641bce0a42a9150a115b and test_report_2026-10-23_package.md provide evidence; final record-only commit marks writer stop.
+
+### 2. Drift detection
+
+Window: prior checkpoint through package verification. Current frontier: final records and writer stop. D1-D7 all CLEAR: actual controls directly settled the package criteria; one inline verifier omitted PydanticField and was corrected without changing staged output; no retry loop, new test machinery, external operation, unrelated change or package admission claim. S1-S6: no active allocation defect; attribution none.
+
+### 3. Route correction
+
+Branch A; no spec/plan updates and no deviation to stop. Commit only the four allocated delivery records, leave package ignored/unsealed and untouched, report record/source commits plus counts/hashes, then stop all writes. Root independently verifies and seals the unchanged package.
+
+### 4. Three points to watch
+
+1. Actual package remains45files, all bytes locked in delivery.json; no manifest.json or pycache.
+2. Source runtime05952396 is unchanged; source commit69f92c55 is packaging only, and final records introduce no runtime path.
+3. Root still owns image/binary/destination checks and runtime coverage; no GPU/reference/calibration qualification exists.
+
+Final exact package confirmation passed after the delivery/report writes: all45 package hashes unchanged;13runtime modules equal accepted05952396; originals123/checkers3 preserved; all4role/DP paths and128/16/3workload templates pass. source.diff SHA2567c5af287170d69c3bf7ca97f60d259f7ad9cf57d833c7832c1a6f690b330156d. No source or package writes occurred after successful generation; only the allocated records were added/updated. Commit these records with git add -f exact paths, then cease writes so root can independently inspect and seal.
