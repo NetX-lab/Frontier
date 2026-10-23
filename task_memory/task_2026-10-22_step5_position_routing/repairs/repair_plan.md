@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Allocate registry mixed-view P2 inside remaining58; move20 unused caller allowance to its test and investigate independent public binding separately. |
+| 2026-10-23 | Add the existing CORE wrapper's diagnostics persistence to the current repair allocation; authorize immutable development dependency merges. |
 | 2026-10-23 | Redistribute230 CORE lines for three review repairs; retain registry exclusive paths and all aggregate caps. |
 | 2026-10-23 | Add effective109-path registry overlay within unchanged CORE4404/global10000; isolate four-path repair. |
 | 2026-10-23 | Reserve120 gross within PRICING's existing quota for explicit CPU composition and accurate trace labels. |
@@ -24,7 +26,13 @@ For current implementation, apply registry_scope_amendment.json to this preserve
 approval ledger:109 effective paths, CORE46 paths/4404, all owner/global totals
 unchanged. Its explicit grouped-path adjustments supersede the original estimates.
 Then apply core_review_scope_amendment.json, a zero-sum230-line redistribution
-for six existing CORE paths. This does not alter registry exclusivity or any total.
+for existing CORE repair paths. The existing wrapper is also assigned its three-gross
+point-diagnostics persistence change inside the same230 repair total and unchanged
+194 path allowance. This does not alter registry exclusivity or any total.
+The review overlay also transfers20 unused registry-caller allowance to the
+existing binding test for the mixed legacy/native view correction. Its total
+registry delta stays360, with58 remaining after8f96408c. The independent public
+consumer gap is under bounded scope investigation before implementation assignment.
 
 | Stream / change marker | Files | Gross quota | Assignment |
 | --- | ---: | ---: | --- |
@@ -55,6 +63,12 @@ unadmitted CPU composition; no new CLI/backend and no native full-duration looku
 Both artifact and plan/receipt must retain CPU identity; trace labels distinguish
 synthetic CPU terms from measured native service. See cpu_plan_consumer.md for
 the source evidence, precise checks and joint remaining-budget constraint.
+
+After committing its isolated review fixes, CORE may merge immutable PRICING
+a7e2a3ca and registryb6714757 for development verification of the actual joined
+interfaces. This does not accept those changes or authorize edits to peer-owned
+files. Root independently verifies/reviews and freezes the combined source before
+fresh full actual-main and final regression gates.
 
 Native-image paths denote edits against the locked native source, not new full
 files charged as zero. Use a fresh derived-source candidate, preserve the old

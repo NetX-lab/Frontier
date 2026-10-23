@@ -3,6 +3,9 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Registry review finds mixed legacy/native view P2; assign repair within58 remaining and investigate independent public-consumer gap. |
+| 2026-10-23 | Parent verifies join fix379 PASS/16 SKIP; registry8f96408c delivered302/360 and begins independent review/parent tests. |
+| 2026-10-23 | Receive PRICING join repair a7e2a3ca/3805 gross; assign existing CORE wrapper's3-gross diagnostics persistence inside current quota. |
 | 2026-10-23 | Accept CPU behavior; return deterministic compute-provenance join and portable writer tests to PRICING within remaining243. |
 | 2026-10-23 | Record CORE three-P2 review and isolated repair allocation; freeze PRICING84e66115 for producer/CPU re-review. |
 | 2026-10-23 | Allocate registry retention/query correction:109 effective paths, unchanged CORE4404/global10000 via300-line redistribution. |
@@ -42,7 +45,17 @@
   PASS/33 SKIP. Finite F3–F6 and owned C1/C2 validation are closed; CPU consumer
   behavior is accepted. Observed writer code exists, but deterministic cross-producer
   compute-provenance matching and portable writer tests remain P1/P2 blockers.
-  Original PRICING owner repairs them within remaining243; full merge is pending.
+  PRICING returns owned join/portable-writer fix a7e2a3ca at3805/3956,151 remaining.
+  CORE must persist point_diagnostics in its existing wrapper; root assigns that
+  three-gross source change and existing test verification inside current230 repair
+  delta/4404 quota. Full merge and joint re-review remain pending.
+  Registry code8f96408c (four paths,302/360) and recordsb6714757 are frozen for
+  review; parent independently verifies213 PASS, both real gate bindings and30
+  bundle artifacts. Review finds a mixed legacy/native enumeration P2, assigned
+  to its original owner within remaining58 repair lines. The independent public
+  retention/binding gap is separately under bounded investigation. CORE may merge
+  delivered interfaces and PRICINGa7 for development
+  after its isolated repair commit, without changing peer-owned files.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
   qualification and fresh GPU/native evidence. Additional collection resources
@@ -208,6 +221,38 @@ diagnostics outside join identity. The CPU test's fixed temporary-worktree reade
 must default to the current repository, with explicit identity-checked external
 reference only for the isolated stage. Root assigns P1/P2 to PRICING within243;
 review_2026-10-23_producer_cpu_closure.md records the evidence and boundary.
+
+PRICING join repair a7e2a3ca is frozen in verify-step5-pricing-06. Parent independent
+consumer/H04 checks144 PASS/1 SKIP and published-source full probe235 PASS/15 SKIP
+have disjoint IDs:379 PASS/16 SKIP. Source is unchanged, five-path AST/whitespace
+checks pass, budget43 paths/3805 gross leaves151. Tests explicitly pin the staged
+external CPU writer file/hash; default current-repo execution and full diagnostics
+CSV persistence await CORE's three-gross wrapper change. Evidence is retained in
+that worktree's pricing_join_parent/. No native or full-chain acceptance implied.
+
+Registry owner delivers8f96408c, four-path302-gross delta with real dual-group
+RED/GREEN and213 reported PASS. Root archives ignored records asb6714757, freezes
+verify-step5-registry-01 and runs the same213 checks independently. Original CORE
+reviewer examines the registry delta, including all-binding views/bundles and the
+disclosed independent public-predictor boundary. CORE has development merge
+permission for this immutable dependency; root still owns final acceptance and
+fresh actual-main/strict77 on an integrated frozen tree.
+
+Parent registry checks complete:213 PASS, no failures/errors/skips,170.03s. Exact
+four-path diff matches the owner's retained patch;302/360 and caller35/60, AST,
+whitespace and all path caps pass. Parent bundle has30 model artifacts and retains
+both FP32 gate labels for layers3/88, with the same CPU fixture bundle ID as the
+owner run. Exact source/budget/log/XML/bundle receipts live in frozen
+verify-step5-registry-01/.../registry_parent/. Independent review remains open.
+
+Registry review completes with one P2: lossless family/cluster enumeration uses
+ambiguous single-model lookup for a same-name legacy/native pair. Root returns
+this to the registry owner, preserving the360 repair ceiling;20 unused predictor
+allowance moves to the test, with aggregate budgets unchanged. The reviewer also
+confirms pre-existing independent `models.update()` binding loss and absent public
+manager. D29-INDEPENDENT-CONSUMER-SCOPE now traces the agreed capability and exact
+minimal correction, independently of the two-path view fix. Full dual-path
+acceptance remains open. See review_2026-10-23_registry_implementation.md.
 
 ## Active implementation dispatch — 2026-10-23
 
