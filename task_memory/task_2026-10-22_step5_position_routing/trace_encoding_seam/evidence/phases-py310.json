@@ -1,0 +1,31 @@
+{
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "repetitions": 15,
+  "fresh_parse_per_phase": true,
+  "counts": {
+    "keys": 39136,
+    "value_strings": 18112,
+    "value_strings_ge_256": 256
+  },
+  "median_ms": {
+    "actual_flush": 23.516,
+    "row_dicts": 0.79,
+    "json_dumps_all_rows": 22.194,
+    "write_preencoded_rows_text_mode": 2.949,
+    "escape_all_value_strings": 8.059,
+    "escape_value_strings_ge_256": 6.742,
+    "escape_all_keys": 5.741,
+    "hash_fresh_value_strings_ge_256": 2.5
+  },
+  "min_ms": {
+    "actual_flush": 22.71,
+    "row_dicts": 0.718,
+    "json_dumps_all_rows": 21.021,
+    "write_preencoded_rows_text_mode": 1.767,
+    "escape_all_value_strings": 7.451,
+    "escape_value_strings_ge_256": 6.52,
+    "escape_all_keys": 4.135,
+    "hash_fresh_value_strings_ge_256": 2.254
+  },
+  "note": "Escape/hash rows time stdlib C calls from a Python list comprehension; loop overhead is included, so they over-state the in-encoder escape cost."
+}

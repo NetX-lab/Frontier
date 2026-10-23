@@ -1,0 +1,279 @@
+{
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "source_trace_store_sha256": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+  "derived_flush_sha256": "043eef82680814b5c06dcaaba98769b913a8d7047964f8436d698867242950c4",
+  "original_flush_sha256": "4517528ea35bdd78160c542f9a21a3c72649721cb1012d4e31cc4407c7c0c6d4",
+  "negatives": {
+    "late_json_failure": {
+      "actual_error": "TypeError: Object of type object is not JSON serializable",
+      "actual_bytes": 3902,
+      "actual_restored_buffer_is_original_order": true,
+      "equal_to_actual": {
+        "A": true,
+        "A_guard": true,
+        "P1": true,
+        "P1_c": true,
+        "P1_guard": true
+      }
+    },
+    "circular_reference": {
+      "actual_error": "ValueError: Circular reference detected",
+      "actual_bytes": 3902,
+      "actual_restored_buffer_is_original_order": true,
+      "equal_to_actual": {
+        "A": true,
+        "A_guard": true,
+        "P1": true,
+        "P1_c": true,
+        "P1_guard": true
+      }
+    },
+    "unsupported_key": {
+      "actual_error": "TypeError: keys must be str, int, float, bool or None, not tuple",
+      "actual_bytes": 3902,
+      "actual_restored_buffer_is_original_order": true,
+      "equal_to_actual": {
+        "A": true,
+        "A_guard": true,
+        "P1": true,
+        "P1_c": true,
+        "P1_guard": true
+      }
+    },
+    "unicode_escapes": {
+      "actual_error": null,
+      "actual_bytes": 705,
+      "actual_restored_buffer_is_original_order": true,
+      "equal_to_actual": {
+        "A": true,
+        "A_guard": true,
+        "P1": true,
+        "P1_c": true,
+        "P1_guard": true
+      }
+    },
+    "floats_and_nan": {
+      "actual_error": null,
+      "actual_bytes": 174,
+      "actual_restored_buffer_is_original_order": true,
+      "equal_to_actual": {
+        "A": true,
+        "A_guard": true,
+        "P1": true,
+        "P1_c": true,
+        "P1_guard": true
+      }
+    },
+    "non_str_keys_and_order": {
+      "actual_error": null,
+      "actual_bytes": 173,
+      "actual_restored_buffer_is_original_order": true,
+      "equal_to_actual": {
+        "A": true,
+        "A_guard": true,
+        "P1": true,
+        "P1_c": true,
+        "P1_guard": true
+      }
+    },
+    "none_fields_omitted": {
+      "actual_error": null,
+      "actual_bytes": 86,
+      "actual_restored_buffer_is_original_order": true,
+      "equal_to_actual": {
+        "A": true,
+        "A_guard": true,
+        "P1": true,
+        "P1_c": true,
+        "P1_guard": true
+      }
+    },
+    "str_enum_values_and_keys": {
+      "actual_error": null,
+      "actual_bytes": 298,
+      "actual_restored_buffer_is_original_order": true,
+      "equal_to_actual": {
+        "A": true,
+        "A_guard": true,
+        "P1": true,
+        "P1_c": true,
+        "P1_guard": true
+      }
+    },
+    "lying_str_subclass": {
+      "actual_error": null,
+      "actual_bytes": 247,
+      "actual_restored_buffer_is_original_order": true,
+      "equal_to_actual": {
+        "A": false,
+        "A_guard": true,
+        "P1": false,
+        "P1_c": true,
+        "P1_guard": true
+      }
+    }
+  },
+  "pending_mutation_equal_to_actual": {
+    "A": true,
+    "A_guard": true,
+    "P1": true,
+    "P1_c": true,
+    "P1_guard": true,
+    "wrong_identity_cache_detected_red": true
+  },
+  "call_counts_one_wave": {
+    "actual_escaper": {
+      "escaper_calls": 57248,
+      "escapes_performed": 57248,
+      "escaped_input_chars": 2175524,
+      "map_entries": 0
+    },
+    "reuse_map": {
+      "escaper_calls": 57248,
+      "escapes_performed": 597,
+      "escaped_input_chars": 179538,
+      "map_entries": 597
+    }
+  },
+  "wave_timing": {
+    "actual": {
+      "median_ms": 24.033,
+      "min_ms": 23.695,
+      "delta_vs_actual_median_ms": 0.0
+    },
+    "A": {
+      "median_ms": 18.313,
+      "min_ms": 18.034,
+      "delta_vs_actual_median_ms": -5.721
+    },
+    "A_guard": {
+      "median_ms": 23.633,
+      "min_ms": 23.293,
+      "delta_vs_actual_median_ms": -0.401
+    },
+    "P1": {
+      "median_ms": 17.963,
+      "min_ms": 17.656,
+      "delta_vs_actual_median_ms": -6.07
+    },
+    "P1_c": {
+      "median_ms": 23.591,
+      "min_ms": 23.183,
+      "delta_vs_actual_median_ms": -0.443
+    },
+    "P1_guard": {
+      "median_ms": 23.439,
+      "min_ms": 23.2,
+      "delta_vs_actual_median_ms": -0.594
+    }
+  },
+  "buffer_timing_5000_events": {
+    "actual": {
+      "median_ms": 532.848,
+      "min_ms": 529.589,
+      "delta_vs_actual_median_ms": 0.0
+    },
+    "P1": {
+      "median_ms": 370.99,
+      "min_ms": 366.405,
+      "delta_vs_actual_median_ms": -161.858
+    }
+  },
+  "buffer_sha256": "1b4f9ee2cb3c2333b2f9c87118b963482613078739aa588482e03f4dfe7bf156",
+  "wave_reps": 11,
+  "buffer_reps": 3,
+  "raw_seconds": {
+    "wave": {
+      "actual": [
+        0.023754639085382223,
+        0.023861952126026154,
+        0.024033270310610533,
+        0.023694612085819244,
+        0.02413803618401289,
+        0.024150223936885595,
+        0.024238036945462227,
+        0.024165784940123558,
+        0.023959307000041008,
+        0.02446235716342926,
+        0.023852344136685133
+      ],
+      "A": [
+        0.01846833899617195,
+        0.018033921718597412,
+        0.018312525004148483,
+        0.01820451207458973,
+        0.018249587155878544,
+        0.019586998969316483,
+        0.018477173056453466,
+        0.018308843951672316,
+        0.018131005112081766,
+        0.01898364769294858,
+        0.019363045692443848
+      ],
+      "A_guard": [
+        0.02329340483993292,
+        0.02332053380087018,
+        0.023672391194850206,
+        0.02354072593152523,
+        0.023742211051285267,
+        0.023479753639549017,
+        0.02363276109099388,
+        0.023613035678863525,
+        0.02403780212625861,
+        0.023681780323386192,
+        0.023674876894801855
+      ],
+      "P1": [
+        0.017655957024544477,
+        0.017861234955489635,
+        0.01791561720892787,
+        0.018006764817982912,
+        0.018143036868423223,
+        0.01792014017701149,
+        0.018009572755545378,
+        0.017728460021317005,
+        0.018331812229007483,
+        0.01796291721984744,
+        0.018092148005962372
+      ],
+      "P1_c": [
+        0.023266500793397427,
+        0.02359073469415307,
+        0.023346792440861464,
+        0.023529660888016224,
+        0.02378250565379858,
+        0.024029575753957033,
+        0.023986464831978083,
+        0.02383871516212821,
+        0.0236660223454237,
+        0.023182631004601717,
+        0.023246508091688156
+      ],
+      "P1_guard": [
+        0.023407580330967903,
+        0.02329037105664611,
+        0.023368426132947206,
+        0.023367885034531355,
+        0.023612975608557463,
+        0.023617336060851812,
+        0.023555858992040157,
+        0.023771141190081835,
+        0.023439154028892517,
+        0.023199819028377533,
+        0.023698446340858936
+      ]
+    },
+    "buffer": {
+      "actual": [
+        0.5295890020206571,
+        0.5359861953184009,
+        0.5328483497723937
+      ],
+      "P1": [
+        0.3994853110052645,
+        0.37099049892276525,
+        0.3664048337377608
+      ]
+    }
+  }
+}

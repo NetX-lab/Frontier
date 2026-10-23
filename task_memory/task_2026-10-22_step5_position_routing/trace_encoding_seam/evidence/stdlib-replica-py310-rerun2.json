@@ -1,0 +1,37 @@
+{
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "kind": "stdlib replica of the per-row flush loop",
+  "make_encoder_return_type": "list",
+  "negatives": {
+    "late_json_failure": {
+      "dumps_error": "TypeError: Object of type object is not JSON serializable",
+      "dumps_bytes": 3902,
+      "reuse_equal": true
+    },
+    "circular_reference": {
+      "dumps_error": "ValueError: Circular reference detected",
+      "dumps_bytes": 3902,
+      "reuse_equal": true
+    },
+    "unicode_floats_keys": {
+      "dumps_error": null,
+      "dumps_bytes": 108,
+      "reuse_equal": true
+    },
+    "lying_str_subclass": {
+      "dumps_error": null,
+      "dumps_bytes": 45,
+      "reuse_equal": false
+    }
+  },
+  "reps": 21,
+  "median_ms": {
+    "dumps": 27.18,
+    "reuse": 21.466
+  },
+  "min_ms": {
+    "dumps": 23.995,
+    "reuse": 18.713
+  },
+  "median_delta_ms": -5.714
+}
