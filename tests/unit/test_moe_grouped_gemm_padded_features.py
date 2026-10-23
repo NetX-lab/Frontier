@@ -297,6 +297,40 @@ def _position_source_rows(model, *, quant_dtype="float8_e4m3fn", context="standa
     return pd.DataFrame(rows), facts
 
 
+def test_moe_loader_derives_family_once_without_skipping_unselected_rows(tmp_path):
+    from unittest.mock import patch
+    from frontier.attention import step5
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.execution_time_predictor.profiling_dataframe_loaders import ProfilingDataFrameLoaders
+
+    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    rows, facts = _position_source_rows(model)
+    rows = pd.concat([rows, rows.iloc[:1].assign(moe_layer_ids="3")], ignore_index=True)
+    path = tmp_path / "moe.csv"
+    rows.to_csv(path, index=False)
+    fact = facts["moe_input_quantize"]
+    replica = SimpleNamespace(model_config=model)
+    loader = ProfilingDataFrameLoaders()
+    expected = pd.read_csv(path, float_precision="round_trip")
+    with patch.object(step5, "validate_step5_config", wraps=step5.validate_step5_config) as derive:
+        for _ in range(2):
+            derive.reset_mock()
+            loaded = loader._load_moe_df(str(path), replica, tensor_parallel_size=1,
+                layer_contract=fact["layer_contract"], operator_name="moe_input_quantize", operator_facts=fact)
+            pd.testing.assert_frame_equal(loaded, expected.iloc[:2].assign(
+                source_profiling_precision="BF16", profiling_precision="FP8"))
+            assert derive.call_count == 1
+        typed = json.loads(rows.loc[2, "typed_operator_contracts"])
+        typed["moe_gating_linear"]["tensor_parallel_mode"] = "invalid"
+        rows.loc[2, "typed_operator_contracts"] = json.dumps(typed)
+        rows.to_csv(path, index=False)
+        derive.reset_mock()
+        with pytest.raises(ValueError, match="tensor_parallel_mode"):
+            loader._load_moe_df(str(path), replica, tensor_parallel_size=1,
+                layer_contract=fact["layer_contract"], operator_name="moe_input_quantize", operator_facts=fact)
+        assert derive.call_count == 1
+
+
 def test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers(tmp_path, monkeypatch):
     from frontier.config.model_config import BaseModelConfig
     from frontier.execution_time_predictor.moe_dataset_training import MoeDatasetTraining
