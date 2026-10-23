@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Closed the bounded CPU stream-loader repair at0d745706 and moved its actual GPU validation into the targeted probe. |
 | 2026-10-24 | W128-OCT24-DATA-DOCS: I4 accepted diagnostic audit/Q2b accepted isolated kernel data; next is bounded collection-gap design/CPU repairs and fresh H800 package/run, not pending monitoring. |
 | 2026-10-23 | Started approved kernel-only route with parallel evidence audit and integration design. |
 | 2026-10-23 | Checkpoint correction: split G into G1 (merge/matrix) and G2 (measurement proposal); added H (native V2 profiling extension) that owns the audit's minimum capture additions. |
@@ -35,6 +36,8 @@ Q0 is complete; both delivered source reports and selection decisions are retain
 Current status: A/B/C/D/E/F/G1/H, G2a–d and I1–I3 complete. I4 ACCEPTED_DIAGNOSTIC_AUDIT_WITH_GAPS ([receipt](profile01/results/primary_acceptance.json)): full32-trace/non-clock/decompressed-index root equality, useful P0/P1/D0/D1=23/2/61/61; stream mapping/captured ownership/shared cross-DP identity remain gaps. Only decodeDP1 has the shutdown error; prefillDP1 true/errors empty, cross-host wall clocks unaligned. Q2a ACCEPTED_ISOLATED_DATA/901ef960 remains; Q2b ACCEPTED_ISOLATED_KERNEL_DATA_WITH_LIMITS ([receipt](moe/results/primary_acceptance.json)), mergedbe067bb5 and actual image/SDK/run/root-rerun complete. Decoder and native-tuple cost consumption remain pending; earlier allocations/snapshots below are historical.
 
 Next dependency: `source-backed collection-gap design -> bounded CPU repairs/review -> fresh package/image/SDK checks -> H800 collection under D-V4-H800-RJOB-AUTHORITY -> scoped data verification`. Preserve existing runtime/native/C26 boundaries, soft gates and immutable runs; record concrete purpose/resources/evidence before each run. Proper native tuple/rank/dependency admission precedes any cost consumer; native06 R4 is unchanged, full05/09/19 OPEN, GLM paused and CPU-overhead last. Exact audit/MoE gaps, archive and evidence are in [progress.md](progress.md).
+
+Immediate slice: the two-file/80-line CUPTI SONAME repair is CPU-accepted at0d745706 (34gross lines). A separately owned250-line targeted probe now reuses the native profiler on1H800 to verify actual stream IDs and examine capture/formal trace correspondence. Existing H200 probe results are inputs, not rerun authority: source/exec node namespaces differ; `get_graph_data` needs driver/compat13.1; custom callback attempt2 exited139. No callback/ID-remap/runtime upgrade is part of this slice. Coverage/lifecycle changes follow the corrected source design;512 prefill iterations is a candidate, not a future-coverage guarantee.
 
 G2 dependencies: `{G2a native window/API evidence, driver callsite design} -> G2b one-owner implementation and CPU controls -> G2c independent Spec/Standards review and root final-source verification -> G2d concrete resource/window proposal -> YC GPU decision`. G2a/b/c are complete for source `05952396`, with seven existing non-core files and 433/750 changed lines. Both R1 reviews closed all findings; final separate suites and repaired-source matrix binding passed (`driver/primary_acceptance.json`). G2d, resource authority, fresh package/source/image checks and the diagnostic collection/audit are complete; native/operator/serving qualification remains open.
 

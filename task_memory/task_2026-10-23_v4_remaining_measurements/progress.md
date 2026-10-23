@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accepted34-line CUPTI SONAME CPU repair0d745706; targeted native stream/capture probe preparation is active, with historical graph failures preserved. |
 | 2026-10-24 | W128-OCT24-DATA-DOCS: synchronized accepted profile02 diagnostic audit and isolated MoE data; corrected shutdown/terminal claims without closing full05/09/19. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS acceptance: root ACCEPTED_ISOLATED_DATA after independent review/fresh reruns; prior pending/current checkpoints historical, consumer/native/full05/09/19 remain open. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS followup: balanced Succeeded/execution PASS/data audit pending, profile02 Pending14:18:37Z; corrected MoE design complete and independent two-file packaging active, no MoE GPU submission. |
@@ -24,6 +25,11 @@
 | 2026-10-23 | Accepted Q1 P0 workload/metric binding after root independently reproduced the owner command; Q2 preparation remains active. |
 
 ## Current execution — accepted data and remaining collection gaps
+
+### CUPTI stream loader — CPU component accepted (2026-10-24)
+
+- completed source0d745706:34/80gross lines, actual stream-recorder RED `None==7` then four separately passing suites33/19/28/45. Independent review No findings; locked-image old/repaired method control reaches the expected no-CUDA-context boundary only after the fix. [Acceptance](profile01/stream_identity/primary_acceptance.json) binds source/receipts and the existing77-case matrix, not a new capture.
+- in-progress: one250-line targeted probe of real collector stream IDs and native profiler capture/restart behavior. The old H200 tools-ID/namespace/callback failures were recovered first and are preserved in [collection-gap diagnosis](profile01/collection_gaps.md). No new GPU submission yet; native/C26/serving-cost boundaries are unchanged. Earlier source-unchanged statements below refer to the data-audit closure2f1bca52.
 
 ### Profile02 diagnostic-audit acceptance — current (2026-10-24)
 

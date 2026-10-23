@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Root allocated the reproduced collector CUPTI-loader repair and a targeted single-H800 stream/capture probe under the existing CPU/H800 authority. |
 | 2026-10-23 | Recorded YC's approval of the recommended kernel-only route and CPU implementation/measurement-design scope. |
 | 2026-10-23 | Root allocated the two reproduced native collector launch seams under existing repair-scope delegation; GPU authority is unchanged. |
 | 2026-10-23 | YC requested completion/commit/handoff of current work; root allocated bounded repairs for five unique collector review findings. |
@@ -80,3 +81,9 @@ Independent profile-package review found that flattening `native_pd_worker.py` t
 Under D-V4-QUEUE-PARALLEL-WORK and D-V4-H800-RJOB-AUTHORITY, root selects EP16 rank0 gathered populations16/32/6152/12288 from corrected `moe_grid_design.md`. The6152 case includes a dummy peer and is conditional evidence. Reuse the existing producer with physicalTP1, balanced distribution, `routing_runtime_path=balanced_topk`, and separate CUDA_EVENT/record_function invocations. Retain all columns; only the grouped-GEMM envelope is the candidate cost scope. Gate rows are not native-local rows, and shuffle overlaps that envelope. No rank/time/weight/graph/serving equivalence follows from this design.
 
 One package owner may add at most `moe/build_package.py` and `moe/profile_plan.json`, total300 gross changed lines outside core; generated immutable inputs and records are separately counted. Worktree `/data/ycfeng/Frontier/.worktrees/v4-moe-local-run`, base56e9405d. Reuse existing worker/launcher/seal mechanisms without editing their retained originals. Target1H800/codesign/non-preemptible,16CPU,mem_gb128,1800s ceiling, all durable outputs under `/mnt/codesign-exp/ycfeng`. Root owns actual image/SDK gates, sealing, quota and submission. No core/native/C26/consumer/admission edits are allocated.
+
+## Post-profile02 stream identity allocation
+
+Profile02's accepted audit reproduced192 missing stream mappings. Root reproduced the exact unversioned-library failure in the locked image and verified that Torch already loads `libcupti.so.13`; its versioned SONAME exposes `cuptiGetStreamIdEx` without a path override or GPU initialization. The bounded repair may change only `tests/comparison/calibration/native_serve_profile.py` and its existing unit tests, at most80gross lines, deriving the ABI major from the running Torch CUDA build. Preserve the existing soft-error/raw-handle behavior; add no loader fallback, new environment flag or symlink.
+
+After CPU verification/source review, prepare a targeted1H800/codesign/non-preemptible probe,16CPU/mem_gb64/600s ceiling, through the existing StepMind launcher/package mechanisms. Its purpose is actual collector stream-ID versus trace correlation and, independently, whether native profiler startup/formal cycles expose usable captured-node ownership. A new `tests/comparison/calibration/native_profile_probe.py` may use at most250lines; immutable inputs and task records are separate. Keep all small outputs and failure evidence, with exact image/source/library hashes. No model/serving cost claim, native/C26 edit, custom CUPTI callback subscription, numeric graph-ID remapping or revival of the paused GLM probe is authorized by this allocation. The old H200 graph probe's source/exec namespace mismatch and CUDA13.1-only tools-ID API must inform the new probe design.

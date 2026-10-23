@@ -1,0 +1,37 @@
+{
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--pull=never",
+    "--network=none",
+    "--memory=6g",
+    "--cpus=1",
+    "--pids-limit=64",
+    "--entrypoint",
+    "/bin/bash",
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "-c",
+    "export LD_LIBRARY_PATH=\"$1${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"; exec python3 -I -B -c \"$2\"",
+    "probe",
+    "/usr/local/cuda-13.0/compat",
+    "import ctypes,json,torch\nresult={\"torch\":torch.__version__,\"cuda_version\":torch.version.cuda,\"cuda_initialized\":torch.cuda.is_initialized(),\"loaded_cupti_paths\":sorted({line.split()[-1] for line in open(\"/proc/self/maps\") if \"/libcupti.so\" in line})}\nfor key,name in ((\"global_symbol\",None),(\"loaded_soname\",\"libcupti.so.13\")):\n try:\n  lib=ctypes.CDLL(name); fn=lib.cuptiGetStreamIdEx;result[key]={\"status\":\"PASS\",\"symbol\":bool(fn)}\n except (OSError,AttributeError) as e:result[key]={\"status\":\"FAIL\",\"error\":str(e)}\nprint(json.dumps(result,indent=2))"
+  ],
+  "returncode": 0,
+  "results": {
+    "torch": "2.13.0+cu130",
+    "cuda_version": "13.0",
+    "cuda_initialized": false,
+    "loaded_cupti_paths": [
+      "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13"
+    ],
+    "global_symbol": {
+      "status": "FAIL",
+      "error": "python3: undefined symbol: cuptiGetStreamIdEx"
+    },
+    "loaded_soname": {
+      "status": "PASS",
+      "symbol": true
+    }
+  }
+}

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Added accepted CPU stream-loader repair0d745706 and the pending targeted single-H800 runtime probe. |
 | 2026-10-24 | W128-OCT24-DATA-DOCS: archived diagnostic-only profile02 acceptance, isolated MoE acceptance and the bounded next collection route; historical/full-ticket limits preserved. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS acceptance: archived root ACCEPTED_ISOLATED_DATA and exact non-clock raw/trace checks; prior pending states historical, full-ticket/consumer/native qualifications remain open. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS followup: archived balanced Succeeded/execution PASS without data admission, profile02 Pending14:18:37Z and corrected MoE design/independent packaging; all full tickets remain OPEN. |
@@ -17,6 +18,8 @@
 | 2026-10-23 | Accepted G2 CPU source 05952396 and completed its proposal; GPU decision and runtime work remain open. |
 
 ## Profile02 and local-MoE acceptance — current (2026-10-24)
+
+The post-audit CUPTI loader repair is accepted at source `0d745706` (34/80 gross lines): actual stream-recorder RED/GREEN, separate33/19/28/45 suites, real locked-image reduced-method check and independent No findings. Exact artifacts: [stream identity acceptance](profile01/stream_identity/primary_acceptance.json) and [test report](profile01/stream_identity/test_report_2026-10-24_stream_loader.md). A one-H800 probe is being prepared to verify actual stream IDs and native profiler restart/capture behavior; no GPU result follows from the CPU acceptance. [Collection gaps](profile01/collection_gaps.md) preserves the prior graph-probe failure/API boundaries and remaining coverage/lifecycle questions.
 
 Profile02 [primary acceptance](profile01/results/primary_acceptance.json) is ACCEPTED_DIAGNOSTIC_AUDIT_WITH_GAPS, not native-reference or cost admission. [Full32-trace root reproduction](profile01/results/root_verification.json) matches all non-clock fields and decompressed kernel indices:326328annotations/7600008kernels; useful P0/P1/D0/D1=23/2/61/61.192 null stream mappings (`libcupti.so`),6802600 graph kernels' UNKNOWN ownership and UNKNOWN shared cross-DP identity/dependencies remain gaps. Only decodeDP1 has the shutdown error; prefillDP1 has true stop-order/empty errors, and cross-host wall timestamps do not prove order.
 [Archive receipt](profile01/results/archive_receipt.json) pins46files/86211102bytes, including the53441663-byte audit and32indices, under `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/analysis/profile02_cpu_audit_20261024`; original run artifacts are unchanged and Git retains compact receipts.

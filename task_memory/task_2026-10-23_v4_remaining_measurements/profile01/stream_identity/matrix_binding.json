@@ -1,0 +1,21 @@
+{
+  "status": "PASS_EXPLICIT_EXISTING_SOURCE_BINDING",
+  "source_revision": "0d745706d899b5e005d364d28ecdcbd355a4f1c4",
+  "comparison_source": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "inherited_source_binding": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "identical_cases": 77,
+  "new_capture": false,
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "changed_files": [
+    "tests/comparison/calibration/native_serve_profile.py",
+    "tests/unit/test_native_serve_profile.py"
+  ]
+}

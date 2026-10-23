@@ -1,0 +1,32 @@
+{
+  "status": "PASS_INVENTORY",
+  "observed_at_utc": "2026-10-23T16:50:58.775926+00:00",
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--pull=never",
+    "--network=none",
+    "--memory=2g",
+    "--cpus=1",
+    "--pids-limit=64",
+    "--entrypoint",
+    "/bin/bash",
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "-c",
+    "export LD_LIBRARY_PATH=\"$1${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"; exec python3 -I -B -c \"$2\"",
+    "probe",
+    "/usr/local/cuda-13.0/compat",
+    "import hashlib,json,os,pathlib\nroots=[pathlib.Path(p) for p in (\"/usr/local/cuda-13.0\",\"/usr/local/lib/python3.12/dist-packages/nvidia\",\"/usr/local/lib/python3.12/dist-packages/torch/lib\")]\nfiles=[]\nfor root in roots:\n for p in root.rglob(\"libcupti*\"):\n  if p.is_file():files.append({\"path\":str(p),\"resolved\":str(p.resolve()),\"bytes\":p.stat().st_size,\"sha256\":hashlib.sha256(p.read_bytes()).hexdigest()})\nprint(json.dumps({\"LD_LIBRARY_PATH\":os.environ.get(\"LD_LIBRARY_PATH\"),\"files\":files},indent=2))"
+  ],
+  "returncode": 0,
+  "LD_LIBRARY_PATH": "/usr/local/cuda-13.0/compat:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64",
+  "files": [
+    {
+      "path": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13",
+      "resolved": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13",
+      "bytes": 4152208,
+      "sha256": "e2f9ed861fe27c492b8bb52b5e3220ef5120f3edcda36312e96b7fd8a186be3e"
+    }
+  ]
+}

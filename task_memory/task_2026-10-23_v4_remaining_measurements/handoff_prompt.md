@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Bound the continuation to CPU stream-loader repair0d745706 and the pending targeted probe; retained the historical G2/run references. |
 | 2026-10-24 | W128-OCT24-DATA-DOCS: continuation starts from diagnostic-only profile02 and isolated MoE acceptance; bounded gap design/CPU repairs precede fresh H800 collection and tuple-gated cost consumption. |
 | 2026-10-23 | W128-PROFILE02-STAGE-DOCS factual delta: job exp-1023-180821-373637 created10:08:21Z, verified SUBMITTED_PENDING/queuing at10:10:16Z; I3 monitoring then I4 verification, auxiliary watch403 not a job failure or stop. |
 | 2026-10-23 | W128-PROFILE02-STAGE-DOCS: synchronized preserved profile01 entry FAIL and repaired/re-reviewed sealed diagnostic profile02; actual final tests PASS separately, root launch started without evidenced platform job identity. |
@@ -13,6 +14,8 @@
 | 2026-10-23 | Marked the H handoff historical after YC resumed this session and G2 CPU source 05952396 was accepted. |
 
 ## Current informational continuation state — 2026-10-24
+
+Post-audit delta: `0d745706` is ACCEPTED_CPU_STREAM_LOADER_REPAIR,34/80gross lines, separate33/19/28/45PASS, real locked-image reduced-method control and independent No findings. Read `profile01/stream_identity/primary_acceptance.json` and `profile01/collection_gaps.md`. The active source owner `W128-NATIVE-STREAM-PROBE` owns only the new250-line probe and its `profile01/stream_probe/` records; root owns package/image/SDK checks and the planned1H800/600s run. Actual stream-ID joins, restart stability and capture ownership remain unverified. No custom callback, tools-ID API requiring CUDA13.1, numeric graph-ID conversion or paused GLM work is included.
 
 YC requested continuation in this same session; this handoff is informational, not a scheduling instruction or a new transfer of execution. Read current [requirements.md](requirements.md), [plan.md](plan.md), [progress.md](progress.md) and [proposal.md](proposal.md) before using any historical prompt. G2 CPU source05952396 is ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT; accepted source05952396 and recordsb8fe6b2d remain unchanged. Its final separate suites and explicit existing77/77 matrix binding are recorded in `driver/primary_acceptance.json`; no new strict77 capture.
 

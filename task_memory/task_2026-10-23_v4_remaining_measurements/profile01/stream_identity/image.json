@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--pull=never",
+    "--network=none",
+    "--memory=6g",
+    "--cpus=1",
+    "--pids-limit=64",
+    "-v",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_serve_profile.py:/source.py:ro",
+    "-v",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_cupti_image_verified_wimn2r5r/baseline.py:/baseline.py:ro",
+    "-e",
+    "LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat",
+    "--entrypoint",
+    "python3",
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "-I",
+    "-B",
+    "-c",
+    "import ast,ctypes,hashlib,json,sys,torch\nresults=[]\nfor path in sys.argv[1:]:\n source=open(path).read();tree=ast.parse(source);cls=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name==\"ServingProfile\");method=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name==\"trace_stream\");namespace={\"ctypes\":ctypes};exec(compile(ast.Module(body=[method],type_ignores=[]),path,\"exec\"),namespace)\n try:namespace[\"trace_stream\"](None,0)\n except (OSError,RuntimeError) as e:results.append({\"path\":path,\"source_sha256\":hashlib.sha256(source.encode()).hexdigest(),\"exception\":type(e).__name__,\"message\":str(e)})\nassert len(results)==2 and results[0][\"exception\"]==\"OSError\" and \"libcupti.so: cannot open shared object file\" in results[0][\"message\"]\nassert results[1][\"exception\"]==\"RuntimeError\" and results[1][\"message\"]==\"No existing CUDA context for stream identity\"\nassert not torch.cuda.is_initialized()\nprint(json.dumps({\"status\":\"PASS_REDUCED_METHOD_LOADER\",\"torch\":torch.__version__,\"cuda\":torch.version.cuda,\"cuda_initialized\":torch.cuda.is_initialized(),\"results\":results},indent=2))",
+    "/baseline.py",
+    "/source.py"
+  ],
+  "returncode": 0,
+  "results": {
+    "status": "PASS_REDUCED_METHOD_LOADER",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "cuda_initialized": false,
+    "results": [
+      {
+        "path": "/baseline.py",
+        "source_sha256": "ea810b91665ca9a804e1b0309ad03f0d50772a96585c66602945a7125cfc1ea5",
+        "exception": "OSError",
+        "message": "libcupti.so: cannot open shared object file: No such file or directory"
+      },
+      {
+        "path": "/source.py",
+        "source_sha256": "17d6dea11d35a2dc9849a11986fe5df46b45adb84d2d2bdeb958642a851b26ef",
+        "exception": "RuntimeError",
+        "message": "No existing CUDA context for stream identity"
+      }
+    ]
+  },
+  "qualification": "Exact method body and real locked-image dependencies; CUDA-context boundary expected. Full module/worker entry and GPU stream-ID join are not tested here.",
+  "previous_control_failure": "Inspector selected image by an incorrect argv index and failed its assertion before Docker. Corrected by selecting the unique pinned-image argument."
+}
