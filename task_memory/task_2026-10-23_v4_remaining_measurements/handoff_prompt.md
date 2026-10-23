@@ -30,6 +30,7 @@
 先根据最终 collector 状态实现真实 pd_replay 调用链上的 profiling driver，选择 serving_profile_limits 与原生 profiler 的有界采样窗口，做 CPU API/错误隔离验证；然后形成具体 GPU 请求，等待 YC 批准。
 native_pd_worker.py 实际启动 pd_replay.py。在选定 formal 阶段首个请求前，对两个 role head 调 /start_profile；完成并 drain 后调 /stop_profile。沿原有 RPC fanout 覆盖 headless DP 和 TP workers；不能只新增一个从未被调用的脚本。driver_design.md 记录完整边界。
 保留原 workload、warmup、三轮规则、request IDs、返回值和原生错误处理。所有辅助失败只使诊断 UNVERIFIED，不阻断健康 workload。
+注意 collector 与 profiler 的窗口不同：f8621a8 的 collector 从启动起记录，emit 不清空，未 hook Worker.profile；/start_profile 不会自动重置其 records/bytes 预算。G2 必须明确预算和窗口对应关系，保证实际采样时所需记录没有被启动/预热阶段耗尽。
 
 持续约束：
 - Frontier/vLLM routing 都用已绑定 balanced_topk。先 workflow/GPU/operator-gap，CPU overhead 最后。
