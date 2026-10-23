@@ -13,6 +13,9 @@
 | 2026-10-23 | Complete F3-F6 finite review repairs and exact JUnit/budget records. |
 | 2026-10-23 | Verify F4a/F4b frozen grouping/call-time boundaries and3067 budget. |
 | 2026-10-23 | Repair C1 actual routing and C2 point/layout binding after review. |
+| 2026-10-23 | Close observed native point producer and exact count association. |
+| 2026-10-23 | Deliver explicitly unadmitted CPU composition/trace within remaining quota. |
+| 2026-10-23 | Repair deterministic point join and retain full diagnostics with shared writer receipt. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -754,3 +757,215 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Owner code delivery989a883d，预算剩余651。
 2. Actual observed compute_context handoff remains CORE/producer dependency。
 3. Runtime/GPU/global qualification未完成，CPU checks不替代。
+
+## D29-COMPUTE-CONTEXT-PRODUCER
+
+- completed investigation: missing writer is PRICING DispatchObserver, not an
+  unavailable CORE API. Actual published modular/fallback/naive/all2all methods
+  preserve source/gathered/expert tensors. Shared CORE chooser already consumes
+  buffer_json.compute_context and checks count.buffer_receipt. No import/edit.
+- completed implementation: retain original router tuple, completed collective
+  operands and bound actual expert invocation; after execution same-reference
+  checks and existing prepared_context/padding/verifier emit compute_context.
+  Actual output geometry comes from native combine. Diagnostic errors remain soft,
+  original native result/exception passes through unchanged; no timing path changed.
+- completed association: actual validator passes before exporter reads report;
+  physical/live vector, source frame, native shared/policy/group/layout, ordered TP
+  calls and point keys link observations to exact buffer/count. Context/native_points
+  included in cache/count/seal, not frozen affine fit. Captured/unobserved cells
+  cannot fabricate compute binding. Full raw fits and observed policy remain.
+- RED missing writer1 FAIL at d29_point_red; GREEN probe245=166 PASS/79 SKIP;
+  affected non-exporter three suites131=130 PASS/1 SKIP; final exporter54 PASS,
+  including real selected validator->exporter valid_producer positive, no mocked
+  validator there. Distinct affected latest430=350 PASS/80 SKIP. Published native
+  original observer64 PASS with STEP5_NATIVE_SOURCE_ROOT. Detailed exact commands,
+  errors/hypotheses/env limits in test_report_2026-10-23_compute_context_producer.md.
+- corrected iterations: cold architecture entry import, missing fasteners in
+  torch-only transport env, unequal fixture policy cardinality and JSON frame
+  representation. Each narrowed its stated cause; no production fallback or peer
+  patch. Wrong native fixture environment produced64 SKIP, superseded by64 PASS.
+- completed budget/AST/whitespace/full subpatch byte checks:43 rows3606/3956,
+  remaining350, +3510/-96. Six existing path churn308/9=317, no new paths. Isolated
+  sub3dac53c unchanged/clean; root gitlink remains intentionally unstaged.
+- in-progress final scoped source/record commit, then root re-review/integration.
+  Actual GPU compute contexts/parameters and independent parent qualification
+  remain unobserved data, not missing owned producer code.
+
+## 1. 规划完成情况
+**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Actual observed point writer | PASS |RED missing API→same original refs/existing prepared_context GREEN |
+| Exact buffer/count association | PASS |valid producer+stale/source/policy/geometry negatives |
+| Affected verification/quota | PASS |430 distinct350 PASS/80 SKIP; native64 PASS;3606 gross |
+| Scoped archive/commit | TODO |Records ready; commit next |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**Root producer request至今｜**当前前沿：**scoped receipt/commit
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Only actual producer criterion tests, no broad suites |
+| D2 细节反复重试 | CLEAR |Distinct explicit causes; final native64 and producer GREEN |
+| D3 支线问题修补 | CLEAR |Writer belongs to root's required closure |
+| D4 可并行任务停滞 | CLEAR |Env-separated affected/native checks parallel; no agents |
+| D5 超范围镀金 | CLEAR |Six existing paths3606<3956, model/qualification unchanged |
+| D6 分析空转 | CLEAR |Concrete writer/exporter/validator implemented and verified |
+| D7 路线违背 | CLEAR |No candidate context or classname proof; no fit split |
+**文档检查：**S5 earlier generic CORE/producer prerequisite replaced by owned writer facts; S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新原错误依赖记录。
+**文档更新（先执行）：**plan/receipt/summary记录owned writer完成、CORE已有consumer（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**Scoped commit → root复审/集成；仅真实GPU数据未提供，不以此推迟代码。
+## 4. 最值得关注的 3 点
+1. Owned code能emit/validate/threadactual point，CORE不需新API。
+2. 原生单次调用/软诊断与frozen/fullpolicy边界未变，剩余额度350。
+3. GPU实际值/独立资格仍待root，CPU fixture不替代。
+
+## Producer scoped delivery checkpoint
+
+- completed:9dbca5b3 source/tests/records commit, six existing code paths, no peer
+  imports/edits/new paths/agents/platform operations. Exact baseline3606/3956;
+  full subpatch unchanged and isolated3dac53c clean. Requirements reread; original
+  missing producer writer is resolved rather than deferred to CORE. No new tests
+  after final430/64 checks; root review/integration/runtime data remain separate.
+
+## 1. 规划完成情况
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Observed point writer | PASS |9dbca5b3 original-ref chain/existing prepared_context |
+| Exact collective/count association | PASS |9dbca5b3 valid/stale source/policy/geometry evidence |
+| Scoped verification | PASS |430 distinct350 PASS/80 SKIP;native64 PASS;3606 quota |
+| Scoped commit/receipt | PASS |9dbca5b3 delivered; CORE existing field consumer |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**9dbca5b3至今｜**当前前沿：**root re-review/integration
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Commit-ID archive only |
+| D2 细节反复重试 | CLEAR |No active failure or further fixes |
+| D3 支线问题修补 | CLEAR |Owned producer finished; no peer substitutes |
+| D4 可并行任务停滞 | CLEAR |Owned work done, root acceptance independent |
+| D5 超范围镀金 | CLEAR |43 paths3606; no model/qualification expansion |
+| D6 分析空转 | CLEAR |Concrete9dbca5b3 handed off |
+| D7 路线违背 | CLEAR |Original calls and frozen/fullpolicy boundaries retained |
+**文档检查：**S5 pending commit facts updated to9dbca5b3; S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新完成提交事实。
+**文档更新（先执行）：**plan/receipt/summary/report记录9dbca5b3（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**root复审/集成已有CORE字段；不启动未授权GPU采集。
+## 4. 最值得关注的 3 点
+1. Required observed native point writer/code handoff已交付9dbca5b3。
+2. 剩余额度350，sub3dac53c未修改，gitlink由root处理。
+3. 实际GPU值/独立qualification/globalacceptance不由CPUfixture证明。
+
+## D29-CPU-PLAN-CONSUMER
+
+- completed: read actual CORE writer read-only and execute its function on CPU
+  input table. Four phases RED at missing native qualification; explicit artifact
+  and plan.shared CPU/unadmitted gate GREEN. Exact entry/buffer/embedded receipt/
+  plan keys checked; native injected cost999 ignored, original fit result retained.
+- completed: trace labels explicit CPU composition, native label unchanged. CPU
+  trace RED1 FAIL/native PASS; restored expression GREEN with actual cost object.
+- completed checks: final68 JUnit=68 PASS/0 SKIP/FAIL/ERROR,4.235s, real constructor
+  without PYTHONPATH. Three affected suites only; no broad rerun. Exact commands
+  and limitations in test_report_2026-10-23_cpu_plan.md. Whitespace/substatus PASS.
+- completed quota: four existing paths revision delta+109/-2=111<=120. Baseline
+  owned43 rows,+3617/-96=3713/3956,remaining243. Unchanged333-gross sub3dac53c
+  included; only root-owned gitlink remains unstaged. No peer/new path/extra agent.
+- completed: scoped source/tests/records commit78a475be. Observed native point producer already
+  completed9dbca5b3/d24a2fe2, untouched. Global/root review and actual GPU values
+  are pending runtime acceptance, not deferred producer code.
+
+## 1. 规划完成情况
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Actual CPU writer/import gate | PASS |Four real-constructor phases and25 receipt/admission negatives |
+| Truthful trace/native unchanged | PASS |CPU trace RED/GREEN; native cost injection ignored |
+| Affected verification/ownership quota | PASS |68 PASS,3713/3956,111/120 delta |
+| Scoped commit/receipt | PASS |78a475be delivered; CORE needs no new API |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**d24a2fe2至今｜**当前前沿：**CPU consumer scoped commit
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Required actual writer/trace/negative seams only, three affected suites |
+| D2 细节反复重试 | CLEAR |Four qualification failures reproduced once; cause-specific gate passes |
+| D3 支线问题修补 | CLEAR |Explicit root CPU decision; no environment/peer changes |
+| D4 可并行任务停滞 | CLEAR |Producer already delivered; no extra agents allowed |
+| D5 超范围镀金 | CLEAR |Four owned paths111<=120, no new CLI/config/backend |
+| D6 分析空转 | CLEAR |Actual constructor/writer GREEN; source commit next |
+| D7 路线违背 | CLEAR |CPU admission explicit, native full-plan cost ignored |
+**文档检查：**S5 prior unconditional CPU rejection superseded by root decision; requirements/plan/receipt updated. S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：记录新CPU授权与已完成生产事实。
+**文档更新（先执行）：**requirements/plan/interface_receipt/report/summary记录CPU gate/trace、111 delta与3713总额（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**78a475be→root/CORE开发整合；不启动额外GPU或广泛suites。
+## 4. 最值得关注的 3 点
+1. CPU writer payload现在能由真实backend读取，必须双重CPU与未admitted证明。
+2. Observed producer已交付；剩余额度243，submodule不变。
+3. CPU composition不证明GPU/nativequalification，globalacceptance由root完成。
+
+## D29-PRODUCER-JOIN-REPAIR
+
+- completed: prepared_context still validates every loaded native Python module
+  and reached callable; join imports restricted to verified reached-source modules,
+  selector included. Full results remain native.point_diagnostics/probe per-layer
+  compute_diagnostics; constructor/oracle provenance untouched. No consumer strip.
+- completed: real sealed-package verifier/two-producer RED1 FAIL→GREEN5 PASS and
+  actual exporter association; different valid ambient modules no longer split
+  identity, invalid bytes/origin/callables reject and changed layout cannot join.
+- completed: test CPU writer defaults to current repo; external stage file requires
+  exact supplied SHA256. Default/missing/wrong/exact reference RED5 FAIL→GREEN.
+  Native/CPU behavior unchanged, four phases/25 negatives/injection/trace retained.
+- verified final disjoint suites395=315 PASS/80 SKIP/0 FAIL/ERROR; original published
+  router64 PASS separately. Exact env/source hash/JUnit/errors in producer_join
+  test report. Quota43 paths+3708/-97=3805/3956,remaining151; five-path patch106.
+- required CORE-owned hunk: MoEWrapper._profile_position_cell uses
+  experts.point_diagnostics in its existing full row provenance union and serializes
+  it separately. Exact one-line replacement+one-line addition=3 gross, receipt
+  delivered; no peer edit/import. Full shared table persistence awaits root/CORE.
+- corrected detour: extra H04 execution in torch-only env hit fasteners; entire
+  py310 package path failed NumPy. Removed unnecessary expansion, no production
+  workaround/environment edit. Verified actual exporter handoff + existing separate
+  H04 suite instead. No further test breadth required; scoped commit1adfc73e delivered.
+
+## 1. 规划完成情况
+**汇总：** PASS4｜BLOCKED1｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Stable producer join/full observer diagnostics | PASS |Real verifier/two-producer+exporter GREEN |
+| Explicit sealed test writer/current repo default | PASS |Reference negatives/four phases/native unchanged |
+| Scoped verification/ownership quota | PASS |395 cases315 PASS/80 SKIP;3805/3956 |
+| Full shared table point diagnostics | BLOCKED |CORE _profile_position_cell3-gross receipt, no peer authority |
+| Scoped source commit | PASS |1adfc73e delivered; exact3-gross peer receipt |
+## 2. 偏离检测
+**结论：** 已偏离：命中D1，已纠正。
+**检测窗口：**84e66115至今｜**当前前沿：**owned commit与CORE persistence receipt
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | HIT |Optional H04-in-torch-env expansion caused dependency detour; removed |
+| D2 细节反复重试 | CLEAR |Join and reference RED/GREEN settle distinct stated causes |
+| D3 支线问题修补 | CLEAR |No shipped env/peer fixes; explicit join scope only |
+| D4 可并行任务停滞 | CLEAR |Consumer/probe/native checks parallel, no agents |
+| D5 超范围镀金 | CLEAR |Five owned paths106 delta; stable criteria/model retained |
+| D6 分析空转 | CLEAR |Real join/ref code verified; exact shared hunk supplied |
+| D7 路线违背 | CLEAR |Full validation retained; no consumer strip or constructor overwrite |
+**文档检查：**S5 earlier unconditional handoff closure superseded by review; records now name actual shared persistence hunk. S1-S4/S6无明显缺陷。
+**归因：**D1执行偏离。
+## 3. 纠正建议
+**分支：**B：更新新发现的shared persistence boundary（已完成）。
+**文档更新（先执行）：**requirements/plan/receipt/summary/report记录stable/full诊断与CORE3-gross hunk（可直接执行）。
+**需停止的偏离行为：**D1停止可选跨环境H04扩展；使用真实exporter handoff与既有独立H04检查。
+**接下去的路线：**1adfc73e→root/CORE明确hunk整合；root负责复审/globalqualification。
+## 4. 最值得关注的 3 点
+1. Context join稳定且fullambientverification/diagnostics保留，不能在consumer剥离。
+2. CORE需3-gross hunk完成row持久化，owned剩余151，不改peer。
+3. CPU reference显式sealed；真实GPU/global资格仍由root完成。

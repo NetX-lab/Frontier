@@ -8,6 +8,9 @@
 | 2026-10-23 | Verify F3-F6 review repair and scoped final evidence. |
 | 2026-10-23 | Reopen only F4 frozen grouping and startup/call-time boundaries. |
 | 2026-10-23 | Repair C1 observed routing and C2 exact frame/plan binding. |
+| 2026-10-23 | Close PRICING-owned compute-point writer and count association. |
+| 2026-10-23 | Complete explicit CPU plan composition and truthful numerical trace source. |
+| 2026-10-23 | Repair stable point join/diagnostic persistence and portable sealed test source. |
 
 1. **completed:** Publish selected targets, ROUTED prepare binding, immutable plan/result.
 2. **completed:** Extend isolated collective-sim with strict plan serialization, joint ordered
@@ -74,3 +77,43 @@ validator requires observed match/totals instead of trusting generic match alone
 Affected final682=529 PASS/153 SKIP, cold10 PASS. Exact43 paths/3305 gross and
 records verified; scoped source/record commit989a883d delivered for root re-review.
 Observed compute binding is a CORE/producer prerequisite; no owned substitute.
+
+## Observed compute-point producer closure
+
+Root rejects generic peer deferral: original missing writer is owned. Actual
+observer refs -> existing prepared_context/source verifier -> validated eager
+rank/layer/input point -> exact buffer/count keys -> actual validator/exporter
+positive and stale/source/policy/layout negatives -> scoped budget/receipt/commit.
+Fit grouping remains frozen-policy only. Calibration-only/captured cells never
+acquire inferred compute_context. Existing CORE chooser reads this exact field;
+no new peer API or import needed. Runtime GPU values/independent qualification
+remain future inputs, not missing producer code.
+
+Current: writer+association/validator implemented; actual-seam RED/GREEN and valid
+producer validator->exporter PASS. Scoped source/record commit9dbca5b3 delivered. No broad
+regression, peer edits or submodule change required.
+
+## D29-CPU-PLAN-CONSUMER
+
+Actual retained CORE writer -> four-phase real-constructor RED -> explicit dual
+CPU/unadmitted identity gate before native qualification -> exact count/cost/
+context/buffer validation -> trace provenance RED/GREEN and native cost-injection
+negative -> affected three suites/JUnit -> precise111/120 patch and3713/3956 budget
+-> scoped interface commit/root integration. No new builder, CLI or model path.
+Observed producer9dbca5b3 is already complete and unaffected. Native finite
+fit/HTSIM/count semantics remain; counts.cost is consumed only by this explicit
+unadmitted CPU fixture branch. Current:68 PASS, cold process without PYTHONPATH;
+scoped source/tests/records committed78a475be. Root re-review/integrated actual-main remain
+external acceptance, not CPU admission or a missing producer implementation.
+
+## D29-PRODUCER-JOIN-REPAIR
+
+Read both actual writer boundaries -> prepared_context stable reached provenance
+plus separate full verifier diagnostics -> probe report retention and exact shared
+CORE row persistence receipt -> real two-producer RED/GREEN/exporter association
+and wrong callable/source/layout/ambient negatives -> sealed explicit CPU test
+reference RED/GREEN/default repo resolver -> affected suites/quota -> owned commit.
+No consumer stripping or second normalizer. Full ambient verification runs first.
+CORE _profile_position_cell3-gross-line persistence hunk is required, not owned;
+root coordinates it. Current owned seams verified395 cases315 PASS/80 SKIP plus
+native64 PASS,3805/3956,committed1adfc73e. Independent review and full integration remain root.

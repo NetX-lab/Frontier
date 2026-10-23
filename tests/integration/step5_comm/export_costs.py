@@ -352,6 +352,11 @@ def export_finite_parameters(directory, output):
     local = list(iter_records(directory/"collectives/local_work.jsonl"))
     shared = source["runtime"]["native_facts"]["shared"]
     evidence_kind = source["evidence_kind"]
+    probe,inputs=None,{}
+    if evidence_kind == "native_measurement":
+        from frontier.profiling.moe.inputs import read_routing_profile_inputs
+        probe=json.loads((directory/"native_dispatch/dispatch_probe.json").read_text())
+        inputs={i.moe_input_id:i for i in read_routing_profile_inputs(config["routing_input_file"])}
     if evidence_kind not in ("native_measurement","cpu_fixture"):
         raise ValueError("Finite exporter requires an explicit evidence kind")
     anchors = config["grid"]["scenario_splits"]
@@ -403,11 +408,19 @@ def export_finite_parameters(directory, output):
         model_context=collective_model_context(context)
         grouped[phase,plan.graph_mode,plan.sizes[0]==plan.sizes[1],tuple(tensors),json.dumps(model_context,sort_keys=True)].append((record,plan))
         evidence = kernels[record["scenario"],record["call"]]
-        if plan.cache_key() in counts and counts[plan.cache_key()]["kernel_counts"] != evidence["per_rank_kernel_counts"]:
-            raise ValueError("Identical native plan has inconsistent paired kernel counts")
-        counts[plan.cache_key()] = dict(evidence,plan_key=plan.cache_key(),context=context,
-            kernel_counts=evidence["per_rank_kernel_counts"],source_receipt=source["runtime"]["native_facts"],
-            evidence_kind=evidence_kind)
+        point_groups=defaultdict(list)
+        if probe is not None and not record["cuda_graph"]:
+            for point in observed_collective_points(record,probe,inputs):
+                point_groups[json.dumps(point["compute_context"],sort_keys=True)].append(point["native_point"])
+        buffers=[dict(record["buffer_receipt"],compute_context=json.loads(key),native_points=value)
+                 for key,value in point_groups.items()] or [record["buffer_receipt"]]
+        for buffer in buffers:
+            bound_plan=replace(plan,buffer_json=json.dumps(buffer,sort_keys=True))
+            if bound_plan.cache_key() in counts and counts[bound_plan.cache_key()]["kernel_counts"] != evidence["per_rank_kernel_counts"]:
+                raise ValueError("Identical native plan has inconsistent paired kernel counts")
+            counts[bound_plan.cache_key()] = dict(evidence,plan_key=bound_plan.cache_key(),context=context,
+                buffer_receipt=buffer,kernel_counts=evidence["per_rank_kernel_counts"],
+                source_receipt=source["runtime"]["native_facts"],evidence_kind=evidence_kind)
     for (phase,mode,uniform,tensors,context_json),rows in grouped.items():
         context = json.loads(context_json)
         copy,reduce = {},{}
@@ -464,6 +477,51 @@ def export_finite_parameters(directory, output):
     output.mkdir(parents=True,exist_ok=True)
     (output/"collective_local.json").write_text(json.dumps(artifact,indent=2)+"\n")
     return artifact
+
+
+def observed_collective_points(record, probe, inputs):
+    """Bind measured collectives to verified native points, never candidate contexts."""
+    from dataclasses import asdict
+    points=[]
+    for rank in probe["ranks"]:
+        rank_id=rank["rank"]
+        if rank_id not in record["participating_ranks"]: continue
+        for layer in rank["layers"]:
+            inp=inputs[layer["moe_input_id"]]
+            frames=json.loads(json.dumps(asdict(inp)))["source_frames"]
+            if [f["physical_rows"] for f in frames] != record["tokens_per_dp_rank"]: continue
+            if [sum(f["query_lens"]) for f in frames] != record.get("useful_tokens_per_dp_rank",record["tokens_per_dp_rank"]): continue
+            tp=probe["parallelism"]["tp"]
+            context=layer.get("compute_context")
+            if not context: raise ValueError("Verified native point lacks observed compute context")
+            if (layer["comparison"]["status"] != "match" or layer["routing_comparison"]["status"] != "match" or
+                    layer["source_frame"] != frames[rank_id//tp] or
+                    context["native_facts"]["shared"] != record["native_context"]["shared"]):
+                raise ValueError("Observed compute point source/runtime association differs")
+            tensors=context["collective_tensors"]["dispatch" if record["op"] == "all_gatherv" else "output"]
+            if tuple((t["dtype"],t["columns"]) for t in tensors) != tuple(zip(record["dtypes"],record["columns"])): continue
+            matched=[(i,c) for i,c in enumerate(layer["collectives"]) if c["op"] == record["op"] and
+                c["group_ranks"] in record["group_ranks"] and
+                tuple((t["dtype"],t["shape"][1]) for t in c["inputs"]) == tuple(zip(record["dtypes"],record["columns"]))]
+            if record["op"] == "all_reduce":
+                matched=[matched[0 if record["call"] == "shared_expert_down_proj_all_reduce" else 1]] if len(matched) == 2 else []
+            if (len(matched) != 1 or not matched[0][1]["completed"] or
+                    matched[0][1]["execution_policy"] != record["native_context"]["execution_policy"][str(rank_id)]):
+                raise ValueError("Observed native point lacks exact call/policy association")
+            call_index,call=matched[0]
+            input_rows=sum(record["tokens_per_dp_rank"]) if record["op"] == "reduce_scatterv_into_output" else frames[rank_id//tp]["physical_rows"]
+            if ([(t["shape"],t["stride"],t["dtype"],t["element_size"]) for t in call["inputs"]] !=
+                    [([input_rows,t["columns"]],[t["row_stride"],1],t["dtype"],t["element_size"]) for t in tensors]):
+                raise ValueError("Observed collective operands differ from measured point geometry")
+            local=context["source_activation_layout"];gathered=context["activation_layout"]
+            if (local["shape"][0] != frames[rank_id//tp]["physical_rows"] or
+                    gathered["shape"][0] != sum(record["tokens_per_dp_rank"]) or
+                    any(t["row_stride"] != t["columns"] for t in tensors)):
+                raise ValueError("Observed compute point physical layout differs")
+            points.append(dict(compute_context=context,native_point=dict(rank=rank_id,layer_id=layer["layer_id"],
+                moe_input_id=layer["moe_input_id"],source_frame=layer["source_frame"],call_index=call_index,
+                execution_policy=call["execution_policy"],inputs=call["inputs"],outputs=call.get("outputs"))))
+    return points
 
 
 def cell_medians(cells):

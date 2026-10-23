@@ -12,6 +12,9 @@
 | 2026-10-23 | Repair F3-F6 completed HTSIM, actual policy, exact replay and cold bootstrap evidence. |
 | 2026-10-23 | Separate frozen fit context from complete per-cell policy and startup diagnostics. |
 | 2026-10-23 | Require observed route values and exact per-cell compute/plan binding. |
+| 2026-10-23 | Emit observed native compute points and associate exact buffer/count receipts. |
+| 2026-10-23 | Deliver explicit unadmitted CPU plan consumer and numerical trace source. |
+| 2026-10-23 | Separate full point diagnostics from stable producer join and seal test references. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -410,14 +413,39 @@ BF16 activation, actual configured router_topk FP32 weights+INT32 IDs and BF16
 output width. All plans validate before any backend invocation. Phase/size and
 paired positive exact scope evidence remain required, including live0 lanes.
 
-Concrete CORE dependency: `_step5_position_queries` currently reads only shared
-source/complete execution_policy and collective_tensors; existing collector has
-no actual compute_context in buffer_receipt. Producer/CORE owner must associate
-the verified observed point with the exact collective buffer/count receipt and
-carry the field above from evidence, not copy a candidate prediction to fabricate
-proof, infer backend from comm dtype or strip layouts. H04 deliberately rejects
-the old incomplete handoff. Root owns the integration decision; no peer edits or
-imports performed in this repair.
+Producer closure: `DispatchObserver.compute_context(layer,text)` retains actual
+router outputs, completed all_gatherv source/gathered operands and native expert
+apply arguments. It requires the same tensor references and reuses
+NativeRoutedExperts.prepared_context for selector, quant/layout, physical padding,
+workspace and callable source verification, after native execution. Point output
+geometry comes from the actual into-output combine, not a fabricated activation
+dtype. Errors remain in diagnostic_scope and never replace native exceptions.
+
+Rank layer report now emits `compute_context`. Validator requires observed shared
+identity and local/gathered physical widths. `observed_collective_points(record,
+probe,inputs)` associates exact physical/live vector, source frame, layer/input/rank,
+complete call-time policy/group/layout and completed call. Ordered native TP
+reductions retain shared-first/routed-second attribution from published Step5MoE
+forward, not implementation-name inference. Returned native_point retains input/
+output schemas, complete execution_policy and call_index. No new point campaign.
+
+Exporter reads the existing native_dispatch report and routing inputs after its
+actual selected validator passes. Each applicable eager count key contains
+`buffer_receipt.compute_context` and `buffer_receipt.native_points`; both also live
+in the exact plan.buffer_json and count.buffer_receipt. Raw frozen-model fit cells
+remain unchanged. Same compute contexts merge all observed rank/layer associations;
+distinct actual point contexts get distinct count keys, not new affine fits.
+Calibration-only or captured cells without a corresponding eager point retain
+unbound counts and cannot satisfy H04; no guessed GPU fields or graph qualification.
+
+CORE's current `_step5_position_queries` in its development worktree already reads
+buffer_json.compute_context, checks count.buffer_receipt equality and requires a
+unique exact match (moe_routing_workload.py165-170 at inspection). No new shared API
+is needed: carry this measured field unchanged, including source callable facts,
+never synthesize it from the candidate prediction. Root owns integration and
+actual-runtime collection; no peer writes/imports performed here.
+Source/tests/records commit9dbca5b3 is ready for root-authorized CORE integration;
+430 distinct affected cases350 PASS/80 SKIP, published native64 PASS,3606/3956.
 
 Bound eager module observer gains `routing(router)` with the original named
 signature hidden_states,router_logits,topk_indices_dtype=None,*,input_ids=None;
@@ -449,3 +477,86 @@ query. Owned43 paths,+3210/-95=3305/3956 (remaining651), unchanged sub3dac53c/
 against bfe6f2ae; approved original-baseline gross increases238. Exact commands
 and numerical limits in test_report_2026-10-23_compute_repair.md. Scoped commit
 989a883d delivered; observed compute binding/CORE and global qualification remain open.
+
+## D29-CPU-PLAN-CONSUMER: explicit actual-main composition
+
+Existing manifest.collective_plan_input_file -> profiling_data_dir/<device>/
+collective_local.json selects the existing CPU fixture; no CLI/backend/config or
+CORE runner API change. predict_collective_plan retains TP8/DP2 placement checks,
+then routes artifacts OR plan.shared marked cpu_fixture through a gate that requires
+BOTH to be cpu_fixture. Schema must be step5.collective_local.v1, device_type must
+match, native_admitted is explicitly False, candidate_only explicitly True.
+
+Exact plan.cache_key selects counts[key]. Its plan_key/context/buffer_receipt must
+match the plan, buffer evidence_kind must be cpu_fixture, entry and embedded
+count_receipt_json must declare cpu_fixture, and the embedded receipt must equal
+the count entry excluding cost. CollectivePlanCost validates finite no-overlap
+composition/count proof and its plan_key must also match. Return this cost ONLY
+for unadmitted CPU composition; native count-entry cost remains ignored while the
+existing qualified fit/HTSIM path predicts. Dual-direction CPU/native labels,
+missing identity/admission and stale receipt/key/layout data fail.
+
+Trace numerical_source is cpu_fixture_composition_not_native for explicit CPU
+cost receipts; native receipts retain joint_htsim+measured_local+
+effective_remainder_no_overlap. Tests execute CORE's actual
+position_collective_costs function from read-only verify-step5-core-delivery-01,
+with CPU synthetic input table, and use the normal backend constructor in a cold
+process. All dispatch/combine/shared_tp/routed_tp costs preserve writer identities.
+No numerical production defaults, fit per plan or native qualification introduced.
+
+Affected JUnit68 PASS/0 SKIP/FAIL/ERROR; four-path patch+109/-2=111<=120,
+original owned total43 paths,+3617/-96=3713/3956, remaining243. Producer9dbca5b3
+remains completed. Submodule unchanged3dac53c; root owns final gitlink and full
+integration/qualification. Exact commands in test_report_2026-10-23_cpu_plan.md.
+Verified scoped source/tests/records commit78a475be is ready for root-authorized
+CORE development integration. No new API, peer import or qualification claim.
+
+## D29-PRODUCER-JOIN-REPAIR
+
+NativeRoutedExperts.prepared_context still runs the original full installed-module
+and actual-callable verifier. `native_facts.shared` and complete actual callee
+facts stay in compute identity; `native_facts.imports` contains only those verified
+modules whose actual paths supply these callees (including the reached selector).
+No consumer normalizer or reduced numeric/layout/padding context is introduced.
+Every full verifier result, including all validated ambient Python imports, is
+retained separately as `native.point_diagnostics` (init=False/non-comparison field).
+It is cleared before verification; constructor/oracle `native.provenance` remains
+untouched. DispatchObserver retains this result as compute_diagnostics and writes
+it alongside compute_context in each layer report, not inside the join key.
+
+CORE-owned necessary persistence: `frontier/profiling/moe/moe_wrapper.py`,
+`MoEWrapper._profile_position_cell`, inspected lines998 and1009:
+
+```python
+provenance = [self.gating.native_facts, experts.provenance, experts.point_diagnostics]
+# Within the existing row.update:
+point_diagnostics=canonical_json(experts.point_diagnostics),
+```
+
+This replaces one line and adds one line:3 gross in that shared owner, no new
+API/builder/classification. Full point ambient validation then joins existing full
+row native_facts without losing per-point evidence; native_context remains stable
+for exact join. Root/CORE must apply this hunk; PRICING may not edit/import it.
+MoE main's existing per-row native_facts handling already persists the full maps.
+Owned probe diagnostics persistence is complete. Full integrated producer/table
+persistence is NOT claimed complete before this shared writer hunk is applied.
+
+CPU test writer now defaults to current-repo tests/integration/
+step5_measured_compute_fixture.py. Phased external reference requires BOTH
+FRONTIER_TEST_CPU_WRITER_FILE and its exact FRONTIER_TEST_CPU_WRITER_SHA256;
+no hardcoded path, host fallback or skip. This branch needs the explicit stage
+reference until CORE's actual function is integrated. The known file at CORE
+d96b3279 has SHA25687752f5816cc59baa8eb63733bfe9a4be7dde9b32d890ad5a0afbf3336f0d86b.
+Ordinary default resolver, missing file/hash, wrong hash and exact reference are
+tested. No production flag/config or native numerical behavior changed.
+
+Real prepared_context/full-verifier two-producer proof uses different VALIDATED
+extra imports, untouched constructor provenance, equal stable compute identity,
+different retained diagnostics and actual exporter observation association.
+Wrong callable origin/source/ambient bytes reject; changed layout cannot join.
+Affected395 cases315 PASS/80 SKIP; published native64 PASS. Owned5 paths patch
++98/-8=106; baseline43 paths+3708/-97=3805/3956,remaining151,unchanged sub3dac53c.
+Exact staged commands/identity in test_report_2026-10-23_producer_join.md.
+Verified owned source/tests/records commit1adfc73e. Root/CORE may integrate this
+seam and apply the separate shared3-gross hunk under root direction; no peer edit
+or full integrated persistence/global qualification claim from this owner.

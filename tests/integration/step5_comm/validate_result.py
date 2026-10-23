@@ -122,6 +122,10 @@ def validate(job: dict, root: Path) -> dict:
         checks["native_source_frames"] = all(layer["moe_input_id"] in inputs and layer["source_frame"] ==
             json.loads(json.dumps(asdict(inputs[layer["moe_input_id"]].source_frames[r["rank"]//parallel.tensor_parallel_size])))
             for r in ranks for layer in r["layers"])
+        checks["native_compute_points"] = all(layer["moe_input_id"] in inputs and layer.get("compute_context",{}).get("native_facts",{}).get("shared") == shared and
+            layer["compute_context"]["source_activation_layout"]["shape"][0] == layer["source_frame"]["physical_rows"] and
+            layer["compute_context"]["activation_layout"]["shape"][0] == inputs[layer["moe_input_id"]].gathered_physical_rows
+            for r in ranks for layer in r["layers"])
         checks["native_actual_counts"] = all(type(k["profiled_calls"]) is int and
             k["profiled_calls"] == config["calls_per_repeat"] and
             len(k["per_rank_kernel_counts"]) == parallel.world_size and all(type(n) is int and n > 0 and

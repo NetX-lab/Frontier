@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import math
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import SimpleNamespace
 from typing import Any, Dict, Optional, Sequence, Tuple
 
@@ -95,6 +95,7 @@ class NativeRoutedExperts:
     activation: Any
     global_num_experts: int
     provenance: Optional[dict] = None
+    point_diagnostics: Optional[dict] = field(default=None,init=False,compare=False)
 
     def prepare_source(self, hidden_states):
         """Actual naive source quantization seam; caller times only a reached scope."""
@@ -120,7 +121,7 @@ class NativeRoutedExperts:
         if source_tensors is not None:
             context.update(source_activation_layout=tensor_layout(source_tensors[0]),
                            source_scale_layout=tensor_layout(source_tensors[1]))
-        callables = []
+        callables = [] if selector is None else [selector]
         if topk_ids is not None:
             callables += [selected.apply, selected.workspace_shapes,selected.finalize_weight_and_reduce_impl]
             M, topk, local = topk_ids.shape[0], topk_ids.shape[1], self.w13.shape[0]
@@ -159,7 +160,11 @@ class NativeRoutedExperts:
         if bound:
             callables.append(selected.apply)
             from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
-            context["native_facts"] = verify_step5_profile_runtime(bound,callables=callables)
+            object.__setattr__(self,"point_diagnostics",None)
+            facts=verify_step5_profile_runtime(bound,callables=callables)
+            object.__setattr__(self,"point_diagnostics",facts)
+            reached={fact["path"] for fact in facts["callables"].values()}
+            context["native_facts"]={**facts,"imports":{name:fact for name,fact in facts["imports"].items() if fact["path"] in reached}}
         return context
 
     def apply_prepared(self, hidden_states, scales, topk_weights, topk_ids, expert_map, *, in_dtype):
