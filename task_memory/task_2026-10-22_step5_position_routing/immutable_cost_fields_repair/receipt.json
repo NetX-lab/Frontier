@@ -1,0 +1,73 @@
+{
+  "task_id": "D29-IMMUTABLE-COST-FIELDS",
+  "baseline": "48d34106c026b824097f9910a0bbf89b253a8669",
+  "retained_origin": "1aee0af",
+  "path_accounting": {
+    "frontier/metrics/op_trace_utils.py": {
+      "step_added": 2,
+      "step_deleted": 2,
+      "step_gross": 4,
+      "path_step_cap": 4,
+      "retained_before": 45,
+      "retained_after": 45,
+      "retained_delta": 0,
+      "cumulative_cap": 45,
+      "baseline_sha256": "c5c888935cf98790903f7498b1ef67b91c85de7b0862512fcfcfa0ad310f5003",
+      "candidate_sha256": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+      "exact_literal_and_ast_substitution": true
+    },
+    "frontier/metrics/ep_wave_metrics.py": {
+      "step_added": 2,
+      "step_deleted": 2,
+      "step_gross": 4,
+      "path_step_cap": 4,
+      "retained_before": 22,
+      "retained_after": 22,
+      "retained_delta": 0,
+      "cumulative_cap": 22,
+      "baseline_sha256": "ef0d74058650d1508a0acbd84003912a1d6431c1b2d2a739d6672525de3e895d",
+      "candidate_sha256": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+      "exact_literal_and_ast_substitution": true
+    }
+  },
+  "step_gross": 8,
+  "retained_growth": 0,
+  "inherited_totals_after_zero_delta": {
+    "pricing": 3920,
+    "pricing_cap": 3956,
+    "core": 4105,
+    "core_cap": 4404,
+    "source": 9375,
+    "global": 9389,
+    "global_cap": 10000,
+    "allocated_paths": 112
+  },
+  "unchanged_guard_snapshot_trace_prepared_sources": true,
+  "gitlink_3dac_unchanged": true,
+  "whole_jsonl_equal": true,
+  "full_ledger_equal": true,
+  "events_and_full_proofs_equal": 208,
+  "payload_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+  "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+  "pytest": {
+    "same_id_status_set": true,
+    "status_changes": 0,
+    "tests": 99,
+    "counts": {
+      "PASS": 98,
+      "FAIL": 1,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    "known_failure_id": "tests/unit/test_mla_core_native_op_tracing.py::test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper",
+    "failure_message_identical": true,
+    "failure_message": "TypeError: test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper.<locals>._fake_get_attention_trace_op_times() got an unexpected keyword argument 'allow_structural'"
+  },
+  "emission_median_baseline_s": 0.05806773900985718,
+  "emission_median_candidate_s": 0.05118102999404073,
+  "emission_reduction_s": 0.00688670901581645,
+  "emission_reduction_percent": 11.859785025636027,
+  "source_diff_path": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/code.diff",
+  "source_diff_sha256": "8cd14cba76ade2f209ea4e8c232f5175e6be1e75c5e9c142c9791425756dd633",
+  "limits": "Exact two-path step and retained delta audit; inherited root owner/global totals, not a new full-union audit. Sequential process emission medians only. Independent review/finalfreeze/regressions/full CLI remain parent-owned."
+}

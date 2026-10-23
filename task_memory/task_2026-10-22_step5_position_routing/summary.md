@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Merge accepted cost-fields75404143, archive parent checks and independent reviews, correct workload clocks and close the unsuccessful identity-cache control. |
 | 2026-10-23 | Accept and integrate prepared selectioneece87b2;9375 source/9389 global; allocate cost-fields8 and correct historical startup explanation. |
 | 2026-10-23 | Integrate accepted trace14 at64881373; allocate prepared250 after parent differential verification; whole workflow remains open. |
 | 2026-10-23 | Parent confirms complete208-operator decode wave; allocate20-gross trace replacement and continue two unallocated reuse investigations. |
@@ -19,16 +20,26 @@
 
 ## Current-session continuation
 
-Current source `eece87b2` includes accepted trace and prepared-selection repairs.
+Current feature source includes accepted trace, prepared selection and cost-fields75404143.
 Both independent review axes have No findings. Parent verification preserves
 the trace component's598-event JSONL bytes,all208 actual layer60 operator proofs
 and exception/buffer behavior;its focused tests have98PASS and the same baseline
 failure. Derived
 consumption is9389/10000. Prepared selection uses159/250 gross; parent82PASS/
 1oldSKIP and separate2trainerPASS,208/208 actual layer60 pairs and both independent
-reviews pass. Common collective and remaining non-I/O pricing investigations are
-read-only. Immutable cost-field conversion has an8-gross allocation, with no
-expected retained growth or allowance change. The previous79 results remain
+reviews pass. Cost-fields uses8gross with verified zero retained growth and
+both independent reviews closed No findings. Parent208-event/fullledger bytes,
+64wrong-key negatives and snapshots/error recovery pass. Initial131PASS/14SKIP
+is supplemented by54PASS on the affected file after building missing HTSIM;
+145latest unique IDs resolve to144PASS/1existingTorchSKIP. These are not summed
+suites. Evidence is under immutable_cost_fields_repair/.
+
+Current-byte comparison has a positive read-only control; extra identity caching
+does not improve timing. Parent corrected workload_multiplicity/: iteration4
+had about203s remaining, not1315s, because initialization preceded the first
+scheduler event by about1112s. No anomalous slowdown is established. Output
+volume still projects approximately262GB/mode; output-preserving encoding
+analysis and a bounded byte-read repair are the next work. The previous79 results remain
 revision-bound. The next complete CLI still requires a reviewed, frozen union.
 
 ### Earlier resumed checkpoints

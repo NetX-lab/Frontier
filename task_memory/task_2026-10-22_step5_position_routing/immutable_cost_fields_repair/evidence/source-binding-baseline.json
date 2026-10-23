@@ -1,0 +1,57 @@
+{
+  "task_id": "D29-IMMUTABLE-COST-FIELDS",
+  "source_revision": "48d34106c026b824097f9910a0bbf89b253a8669",
+  "baseline_sources": {
+    "frontier/metrics/op_trace_utils.py": "c5c888935cf98790903f7498b1ef67b91c85de7b0862512fcfcfa0ad310f5003",
+    "frontier/metrics/ep_wave_metrics.py": "ef0d74058650d1508a0acbd84003912a1d6431c1b2d2a739d6672525de3e895d",
+    "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+    "frontier/execution_time_predictor/moe_routing_workload.py": "d9423f3f318cd355f2773ea6a65a9bf9d297cdc3ec7c8c46230b38456ccacbfc",
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py": "d18bde6f67c28b14353b2da4ea8cf9deaa3927a23b727f62607007e9b16a7198",
+    "frontier/cc_backend/collective_plan.py": "690b20dde386e092cbc549a40569f11e2b1b76f341c9b7eed850ee0ccc581b1d"
+  },
+  "setup": {
+    "original_path": "/data/ycfeng/tmp/d29_trace_residual_seam/current_wave_setup.py",
+    "original_sha256": "a163cff548c60cd0b90f39576ddb884093baec292afe8d27ba14df9fb79e70f5",
+    "derived_path": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/current_setup_baseline.py",
+    "derived_sha256": "c93b9d286342fc9b854ccb6692630542bf306a856ab4254cd84feddfaf7eb0d7",
+    "transformations": [
+      {
+        "before": "/data/ycfeng/Frontier/.worktrees/step5-d29-trace-serialization",
+        "after": "/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields"
+      },
+      {
+        "before": "9ae60ebc04b3cea2517350e65a89863808f65c3c",
+        "after": "48d34106c026b824097f9910a0bbf89b253a8669"
+      },
+      {
+        "before": "/data/ycfeng/Frontier/.worktrees/step5-d29-trace-serialization",
+        "after": "/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields"
+      }
+    ]
+  },
+  "probe_body": {
+    "original_probes": [
+      {
+        "path": "/data/ycfeng/tmp/d29_trace_residual_seam/emission_controls02.py",
+        "sha256": "777ba7ae6683fbd35fcc2ded47b663f3a4979600554b35a6f77ba0a59d05e67e"
+      },
+      {
+        "path": "/data/ycfeng/tmp/d29_trace_residual_seam/verify_emission_semantics.py",
+        "sha256": "a7d8ad6f06352e4ec9c19a1192a967f4c4887f9306f3e31c40aadb5598de79a5"
+      }
+    ],
+    "derived_path": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/probe_body.py",
+    "derived_sha256": "1cabc04f024e6e1c8ee8d9902e74fee6e5dff4d95faeeaab0f8902e67d6d8555",
+    "transformations": [
+      "Retain real208-event emit/ledger/byte checks and pure-emission profile",
+      "Retain public getter/internal snapshot and trace/ledger mapping mutation checks",
+      "Retain real captured contexts and exact invalid-plan-key exception; extend to all64",
+      "Use actual imported record_ep_wave and compute_op_trace_meta only; omit synthetic/unallocated borrowed and plan-encoder controls",
+      "Retain current late-JSON prefix/buffer behavior; pricing performed once by current setup"
+    ]
+  },
+  "baseline_wrapper": {
+    "path": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/baseline_probe.py",
+    "sha256": "b4e5e1d39582ebbfc787b85e4e39d7ff9ea8a705d0fae75012fbb488cf657bab"
+  }
+}

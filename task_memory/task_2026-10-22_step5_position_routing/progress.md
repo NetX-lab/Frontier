@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Merge verified cost-fields75404143, archive both reviews and HTSIM-completed checks, correct workload clocks and close negative identity-cache analysis. |
 | 2026-10-23 | Archive prepared acceptance/9389 union; correct historical startup multiplicity; allocate cost-fields8 with unchanged allowances. |
 | 2026-10-23 | Merge accepted trace repair64881373; parent98PASS/1baselineFAIL, exact598-event bytes and208/208 actual proofs; global9268. |
 | 2026-10-23 | Parent verifies prepared selection36 positive/24 negative records and unchanged wave payload; allocate250 gross; trace14 has Standards/Spec No findings. |
@@ -70,12 +71,14 @@
   CORE4105. Parent acceptance archiveba585c03 is merged under resumed_performance/.
   Its receipt discloses the comparator's stale layer61 label while the executed
   filter and all208 checks bind actual layer60.
-- in-progress/diagnostic: common collective lifetime,
-  ses_e975020aeffe7JnGJiqLD2PJ0r, remains read-only/unallocated. CORE owner
-  ses_e9b3efeebffem2dcbXlVGNr8O2 separately profiles remaining non-I/O pricing on
-  the accepted combined source; no new source allocation for that diagnosis.
-  The pre-commit overlay check caught a10-line shortfall in the initial donor list;
-  two unused profiling allowances supplied it before allocation/delegation.
+- completed/diagnostic: collective investigation supports per-call current-byte
+  comparison, about0.31-0.39s warm versus0.95-1.33s baseline, with all80reads and
+  matching payloads. No shared lifetime or native cache-key change is allocated.
+  Root prepares a bounded byte-read repair and behavioral test-hook adaptation.
+- completed/diagnostic: post-prepared pricing7344627b is archived. The existing
+  marker cache is already used; extra identity caching gives no measured gain.
+  Parent verified8source and6script hashes plus the fixture manifest. No new
+  identity cache is allocated.
 - completed/review: trace code390bb5a2/records9ae60ebc,14/20 gross. Standards
   reviewer ses_e972c468cffeZKEx6278S1oCde and Spec reviewer
   ses_e972c45a3ffenZuSi1vyddEDKM independently return No findings. Parent98PASS
@@ -96,6 +99,22 @@
   Raw scope probe:/data/ycfeng/tmp/d29_cost_fields_allocation01/receipt.json.
   Active112 paths and CORE4404/source9942/global10000 ceilings remain unchanged.
   No new full CLI starts before combined evidence,review and source freeze.
+- completed/component: cost-fields75404143 merged after Standards/Spec No findings
+  and parent208full-event/fullledger byte identity,64wrong-key negatives, detached
+  snapshots and3902Berror-prefix checks. Step8, retained0; global9389unchanged.
+  Initial131PASS/14SKIP revealed13missingHTSIM cases; a local3dac build and54PASS
+  affected-file rerun close those gaps.145latest unique IDs are144PASS/1existing
+  TorchSKIP, not summed suites. Owner98PASS/1baselineFAIL remains separate.
+  Records:immutable_cost_fields_repair/. Source was committed before the owner's
+  API budget error; parent recovered and archived its unfinished record delivery.
+- completed/corrected diagnosis: workload_multiplicity/ confirms92layer steps,
+  88MoE waves per set and90200waves for P6128 plus1024D batches (first replays16).
+  Representative trace volume projects about262GB/mode. The old iteration4
+  slowdown is withdrawn: scheduler-relative1085s starts about1112.345s after
+  launch, leaving only202.789s before timeout. Byte-derived counts are estimates.
+- in-progress/diagnostic: D29-TRACE-ENCODING-SEAM,
+  ses_e96a5c1c7ffeoPBK7V08CMas7v, investigates equal immutable JSON string leaves
+  with full output/error/snapshot preservation. Source edits are not allocated.
 - completed/corrected diagnosis: ccd9b728 replaces the old78% unexplained startup
   estimate. Actual P/D call multiplicity is10+1 MoE reads per measurement family;
   unit-cost scaling now explains about1035/1288s, with253s remaining. Warning/log,

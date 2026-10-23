@@ -1,0 +1,38 @@
+{
+  "task_id": "D29-IMMUTABLE-COST-FIELDS",
+  "source_revision": "48d34106c026b824097f9910a0bbf89b253a8669",
+  "candidate_sources": {
+    "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+    "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+    "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+    "frontier/execution_time_predictor/moe_routing_workload.py": "d9423f3f318cd355f2773ea6a65a9bf9d297cdc3ec7c8c46230b38456ccacbfc",
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py": "d18bde6f67c28b14353b2da4ea8cf9deaa3927a23b727f62607007e9b16a7198",
+    "frontier/cc_backend/collective_plan.py": "690b20dde386e092cbc549a40569f11e2b1b76f341c9b7eed850ee0ccc581b1d"
+  },
+  "wrapper": {
+    "original_path": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/baseline_probe.py",
+    "original_sha256": "b4e5e1d39582ebbfc787b85e4e39d7ff9ea8a705d0fae75012fbb488cf657bab",
+    "derived_path": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/candidate_probe.py",
+    "derived_sha256": "3e8d964b3ddfb5589a4787ba9f560571ec51773cff5ad99eeffffba05a4220a3",
+    "transformations": [
+      {
+        "before": "LABEL='baseline'",
+        "after": "LABEL='candidate'"
+      },
+      {
+        "before": "ROOT/'baseline-setup'",
+        "after": "ROOT/'candidate-setup'"
+      },
+      {
+        "before": "c5c888935cf98790903f7498b1ef67b91c85de7b0862512fcfcfa0ad310f5003",
+        "after": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5"
+      },
+      {
+        "before": "ef0d74058650d1508a0acbd84003912a1d6431c1b2d2a739d6672525de3e895d",
+        "after": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e"
+      }
+    ]
+  },
+  "setup": "current_setup_baseline.py unchanged source-path/HEAD binding; actual modules imported after candidate hash guards",
+  "probe_body_sha256": "1cabc04f024e6e1c8ee8d9902e74fee6e5dff4d95faeeaab0f8902e67d6d8555"
+}

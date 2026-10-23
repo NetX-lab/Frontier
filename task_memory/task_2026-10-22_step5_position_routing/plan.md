@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Close cost-fields component after reviews/parent verification; correct workload clock origins and proceed to current-byte comparison and output-path analysis. |
 | 2026-10-23 | Accept prepared159 after parent82/2 and both reviews; allocate cost-fields8; correct startup attribution using measured multiplicity. |
 | 2026-10-23 | Accept and merge trace repair64881373 after both reviews and parent byte/proof/error checks; continue prepared implementation and residual analysis. |
 | 2026-10-23 | Parent verifies prepared selection and allocates three-path250-gross repair; trace14 passes both independent review axes. |
@@ -51,7 +52,7 @@ Apply prepared_point_scope_amendment.json afterward: three existing CORE paths,
 The concurrent trace20 and prepared250 reservations leave164 CORE lines free.
 Delivered prepared159 and trace14 now leave299 actual CORE headroom.
 Apply immutable_cost_fields_scope_amendment.json next: two existing PRICING
-paths,8-gross step, no allowance changes and expected retained0.
+paths,8-gross step, no allowance changes and verified retained0.
 
 Completed handoff boundary: CLI placement repair -> parent real-constructor checks
 and independent re-review -> feature-branch code/record consolidation. YC now
@@ -69,9 +70,10 @@ real execution-path feedback loop -> measured cause -> bounded repair allocation
 regressions and full CLI. A passing isolated point is not the full-workflow gate.
 Parent has now verified the original layer61 loop and all208 operators of the
 complete adjacent layer60 wave at position6147. The active parallel work is:
-common collective lifetime analysis + post-prepared non-I/O pricing diagnosis +
-immutable cost-field conversion (8-gross allocation). Trace14/20 and prepared
-159/250 are parent-verified, independently reviewed and integrated at eece87b2.
+current-byte comparison repair preparation + output-preserving encoding analysis.
+The non-I/O identity-cache control is rejected because it did not improve timing.
+Cost-fields75404143 is now parent-verified and independently reviewed,8gross and
+zero retained growth, and merged with trace/prepared on feat/step5-preview.
 Joined-write and borrowed-component controls are rejected by measured cost or
 snapshot/error semantics. Combine measured effects
 and evaluate full-wave multiplicity before another full CLI. Whole proof objects
@@ -110,12 +112,12 @@ change is allocated. See early_init_repro/report.md.
 | Derived image and source receipts | Published and verified; runtime remains separate. |
 | CORE/SOURCE47 allocated | Group/loader/trace/prepared closed;4105/4404 measured,299 free. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
-| PRICING46 | Exact-text parsing closed;3920/3956 measured. Cost-fields8 allocated, expected retained0. |
+| PRICING46 | Exact-text parsing and cost-fields8 closed;3920/3956 measured, zero retained growth from cost-fields. |
 | Complete integration and final freeze | Trace and prepared integratedeece87b2; parent acceptance archived. Next freeze waits for residual repair/review. Gitlink3dac53c unchanged. |
 | Legacy strict77 | Fresh final05 on79 accepted77/77,451 artifact hashes and519 cache names per side;parent receipt hashes/records match. |
 | Full-unit failure/error-set gate | Accepted on79:8018PASS;all8607 e41 statuses unchanged,three newPASS. Raw279FAIL/32ERROR/281SKIP remain;101 and52 environment supplements pass separately. |
 | Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
-| Independent source review | Original three performance components,trace,prepared all No findings on both axes. New cost-field review pending. |
+| Independent source review | Original performance components,trace,prepared and cost-fields all No findings on both axes. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
 | Final per-path accounting | Verified79 audit plus four cumulative deltas gives9375 source/9389 global at eece87b2.112 allocated; final union audit pending. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
