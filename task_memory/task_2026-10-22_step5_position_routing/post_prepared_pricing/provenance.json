@@ -1,0 +1,26 @@
+{
+  "task_id": "D29-POST-PREPARED-PRICING-PROFILE",
+  "source_revision": "eece87b2378bf86c6673b74f1a769f566bc5792a",
+  "submodule": "3dac53c544e546574cb6e8078cd14053d0916113 frontier/cc_backend/backends/collective-sim (heads/d29-position-pricing)",
+  "production_test_diff": "",
+  "source_sha256": {
+    "frontier/execution_time_predictor/prediction_model_registry.py": "6689aa89aabc2c10521a62488295adb68e6e0d0d17c576cafb777003b2cfcc54",
+    "frontier/execution_time_predictor/moe_routing_workload.py": "d9423f3f318cd355f2773ea6a65a9bf9d297cdc3ec7c8c46230b38456ccacbfc",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "4b2bea957a37a92705f2da081b39e95c5176376aa9c54c5649b12bb598ea8d54",
+    "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+    "frontier/moe_load_imbalance.py": "40e0d788e405fccff07cc8fc066605eea0d742b79adcf120cb0822ab86b8e720",
+    "frontier/cc_backend/collective_plan.py": "690b20dde386e092cbc549a40569f11e2b1b76f341c9b7eed850ee0ccc581b1d",
+    "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+    "tests/unit/test_step5_measured_ffn.py": "cb79e4a85a6aabb6f7474a53aaf27a4b26335d2d9cf79d86e72ed2c3b717ff2e"
+  },
+  "scripts_sha256": {
+    "/data/ycfeng/tmp/d29_main08_residual_repro/wave_loop.py": "06fff29b0b6b6df435153786266b81a212cc414484ac2f08753c58784d86e332",
+    "/data/ycfeng/tmp/d29_post_prepared_pricing/pricing-final01/rebound_wave.py": "de5a95faa66718f158ef7a0466dc57020e1065f2345f02175a7a5d254304718d",
+    "/data/ycfeng/tmp/d29_post_prepared_pricing/binding_control.py": "85bec7242eaa010011884803a85dbf876be77b1baf49d65f1ea15b7b9cb81a98",
+    "/data/ycfeng/tmp/d29_post_prepared_pricing/compare_actual.py": "808ff5456cec2911c96df11ee87f26036cc9bdddeac9233217880e14f16132e9",
+    "/data/ycfeng/tmp/d29_post_prepared_pricing/identity_contracts.py": "fc856b0611caa96267ef7dc6c9731b15cd49c6d68c20495b25bf1084b19b6f21",
+    "/data/ycfeng/tmp/d29_post_prepared_pricing/pricing_probe.py": "6badc7dfe560310d45fd7505f2689b911b4ad6544f0e6d5740af3f6b4435a259"
+  },
+  "fixture_manifest_sha256": "ed0491872ea1b726b3d0aeb5a6dd45d54c5ccab5af53f0f79160bb867c32e9d2",
+  "scope": "records only, zero source/test lines"
+}
