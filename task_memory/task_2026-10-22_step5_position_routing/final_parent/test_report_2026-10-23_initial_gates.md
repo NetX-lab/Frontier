@@ -131,3 +131,24 @@ timeout 5100s env -u FRONTIER_TEST_CPU_WRITER_FILE -u FRONTIER_TEST_CPU_WRITER_S
 
 The runner retains2400s for each mode. Rerun output is pending, not a pass;
 independent four-file review and T2 full-source resealing run separately.
+
+## Strict result and approved fixture follow-up
+
+The unchanged comparator subsequently reports77/77 identical for60ba4c75 against
+713e6a8. Parent verifies451 artifact hashes and519 cache filenames on each side;
+receipt:fidelity_repair02_audit.json. The independent reviewer nevertheless finds
+a Step-specific metadata precision/source/factor inconsistency outside this legacy
+matrix. Its P2 remains open in review_2026-10-23_legacy_output.md.
+
+Two-file test repair047f7313 is16/60gross. Parent runs both whole files in the
+separate verify-step5-d29-integrated-03 tree and obtains53PASS,zero
+FAIL/ERROR/SKIP,3.026s;all six original full-suite regression IDs occur in this XML:
+
+```bash
+timeout 120s env PYTHONPATH="$PWD:$PWD/tests/unit" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_moe_share_expert_operator_families.py tests/unit/test_dsv4_precision_metadata.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29_catalogue_parent08 --junitxml=/data/ycfeng/tmp/d29_catalogue_parent08.xml > /data/ycfeng/tmp/d29_catalogue_parent08.log 2>&1
+```
+
+Receipt:catalogue_fixture_receipt.json. Production source remains unchanged from
+the active60ba CLI;the two tests and task records alone differ. Do not replace
+the original full-suite results or claim another full run. Numerical-source P2,
+actual CLI outcomes and remaining native gates still require acceptance.

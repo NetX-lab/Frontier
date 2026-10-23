@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | strict77 passes77/77 with902 artifact hashes;review finds one Step prepare metadata P2,returned to owner inside existing quota. |
 | 2026-10-23 | YC approves repair-path amendment; parent legacy194PASS; strict77 and full offline/online CLI started on frozen60ba4c75. |
 | 2026-10-23 | Initial gates archived: full-unit six fixture regressions, native dependencies resolved, strict77 RED; two extra test paths proposed pending YC approval. |
 | 2026-10-23 | strict77 comparison RED:77 metadata/empty-proof mismatches despite successful runs; assign PRICING four-path80-gross repair and reconcile final scope/T2 composition. |
@@ -102,6 +103,21 @@
   CLI at /data/ycfeng/tmp/d29-parent-position-main04, using fixture03. Keep this
   tree unchanged while runners enforce source identity. Per-mode timeout2400s;
   no GPU work launched. Fixture-only delivery and independent review continue.
+- completed: strict77 repair02 compares77/77 identical to713e6a8 with no execution,
+  missing evidence,definition or cache-name differences. Parent rehashes451 artifacts
+  and verifies519 cache files on each side;final_parent/fidelity_repair02_audit.json.
+- completed: owner delivers approved two-file fixture commit047f7313,16/60gross,
+  full files53PASS;integrated into separate verify-step5-d29-integrated-03 so
+  activeCLI60ba remains unchanged. PRICING3856/3956,remaining100.
+- in-progress: independent review P2 finds FP8 prepare metadata still reports
+  BF16-derived approximation2.0 although the actual query uses exact FP8 data.
+  Original owner repairs within40gross/two existing paths;zero-sum test allowance
+  recorded in repairs/prepare_metadata_scope_amendment.json. Root persists full
+  finding/disposition in final_parent/review_2026-10-23_legacy_output.md.
+- completed: parent independently runs both approved fixture files:53PASS,
+  0FAIL/ERROR/SKIP,3.026s. XML membership covers all six pre-existing test IDs
+  newly failing in the full suite. Receipt:final_parent/catalogue_fixture_receipt.json.
+  This resolves the six fixture regressions; Step-specific metadata P2 remains open.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
   qualification and fresh GPU/native evidence. Additional collection resources

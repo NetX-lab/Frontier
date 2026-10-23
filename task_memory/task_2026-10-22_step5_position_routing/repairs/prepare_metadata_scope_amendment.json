@@ -1,0 +1,17 @@
+{
+  "decision_id": "D29-PREPARE-METADATA-REPAIR",
+  "status": "ALLOCATED_UNDER_YC_REPAIR_PATH_AUTHORITY",
+  "apply_after": "legacy_output_scope_amendment.json",
+  "owner": "pricing",
+  "owner_total_ceiling": 3956,
+  "effective_unique_paths": 111,
+  "source_gross_ceiling": 9942,
+  "total_gross_ceiling": 10000,
+  "repair_delta_ceiling": 40,
+  "repair_paths": ["frontier/config/quantization_manager.py", "tests/unit/test_comm_operator_families.py"],
+  "path_ceiling_adjustments": [
+    {"path": "tests/unit/test_comm_operator_families.py", "before": 50, "delta": 20, "after": 70},
+    {"path": "frontier/execution_time_predictor/step5_cost.py", "before": 120, "delta": -20, "after": 100}
+  ],
+  "notes": "Correct selected Step prepare metadata precision/source/factor consistency without changing precision lookup,timing,cache identity or genuine approximation. Within the100 remaining PRICING lines at047f7313;independent re-review required. No new paths or GPU authorization."
+}
