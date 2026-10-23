@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Recorded package, fresh entry, source/routing, existing test and immutable-input checks; distinguished root-only runtime gates. |
+| 2026-10-23 | Closed both reviews' P3 by correcting the Chrome-trace export source citation; frozen code/package unchanged. |
 
 ## Outcome and environment
 
@@ -69,7 +70,7 @@ PASS: shell syntax only; two maintained files153+51=204/300 gross lines; no chan
 | Existing77matrix | Explicit source binding; simulator unchanged | PASS77 identical cases; comparison SHA7a8728ec…; no new capture. Details in matrix_binding.json. |
 | SDK source units | mem_gb128/non-preemptible/codesign/H800 | Source says128000 decimal MB/default preemptible=False. CPU stand-in matches; actual SDK/platform root-owned. |
 
-The existing record_function tracer exports Chrome traces from gating/shuffling/grouped-GEMM scopes (`frontier/profiling/common/record_function_tracer.py:143-160`); the existing Q1 worker archives them without pruning. CUDA_EVENT only measures statistics and does not itself generate traces. The historic W4 worker skips traces and was not used. Root must verify actual trace presence and finite statistics after the run.
+The existing record_function tracer exports Chrome traces from gating/shuffling/grouped-GEMM scopes (`frontier/profiling/utils/record_function_tracer.py:49-54`); the existing Q1 worker archives them without pruning. CUDA_EVENT only measures statistics and does not itself generate traces. The historic W4 worker skips traces and was not used. Root must verify actual trace presence and finite statistics after the run.
 
 ## Preserved failures and limitations
 
