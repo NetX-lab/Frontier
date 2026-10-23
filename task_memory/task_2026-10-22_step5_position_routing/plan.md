@@ -44,7 +44,7 @@ unchanged. Final T2 acceptance must verify the actual final script/helper bytes.
 | PRICING46 | Source review complete;3879/3956 gross. |
 | Complete integration and final freeze | Final code frozen1be91bad; main-branch code/docs integration awaits final gates. |
 | Legacy strict77 | Final03 on1be91bad:77/77 identical,902 artifact hashes verified. |
-| Full-unit failure/error-set gate | Parent03 running on1be91bad; compare retained baseline with explicit environment evidence. |
+| Full-unit failure/error-set gate | Closed on1be91bad with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. |
 | Fresh fixture and full CLI | fixture03 complete; final offline and online each require6144/1024,2400s and all retained validation checks. |
 | Independent source review | All recorded source findings closed on1be91bad. |
 | T2 final-source binding | Verify final script/helper, input hashes and unchanged engine limits. |

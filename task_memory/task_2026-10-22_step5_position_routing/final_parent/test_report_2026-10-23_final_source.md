@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Reconcile final full-unit IDs with baseline and explicit final-source dependency supplement; no new code failures. |
 | 2026-10-23 | Final frozen-source strict77 passes77/77; full902-artifact and cache/provenance audit passes. |
 | 2026-10-23 | Close source re-review; freeze1be91bad, launch final gates and record101PASS environment supplement plus final budget adoption. |
 | 2026-10-23 | Record independent parent verification of the prepare metadata repair before re-review/final freeze. |
@@ -56,7 +57,7 @@ timeout 1800s /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/uni
 timeout 5100s /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json --output-root /data/ycfeng/tmp/d29-parent-position-main05 --mode all > /data/ycfeng/tmp/d29-parent-position-main05.log 2>&1
 ```
 
-Strict77 is complete below; full-unit and CLI results remain pending. The CLI's own timeout remains2400s per mode;
+Strict77 and full-unit reconciliation are complete below; CLI results remain pending. The CLI's own timeout remains2400s per mode;
 the outer5100s only permits both modes and receipt generation. Fixture03 remains
 explicit CPU/unadmitted evidence. No original gate or baseline was changed.
 
@@ -106,3 +107,28 @@ manifest.451 artifact hashes and519 cache filenames match on each side.
 Receipt:fidelity_final03_audit.json; comparison SHA256
 c6dbe754a43ee58f94c15cc043264f19c6bf110d223e2e26a1a705100e4129ef.
 This is the required final-code legacy gate,not a reuse of60ba's earlier result.
+
+## Final full-unit baseline reconciliation
+
+The recorded full command completed with exit1,not timeout,in1238.567s.
+Raw candidate XML:8607 cases,8015PASS/279FAIL/32ERROR/281SKIP. Retained baseline
+XML has267 failure IDs and31 error IDs; both sets remain exactly present and none
+disappear. The only additions are12 cases whose tracebacks say
+`No module named 'aiohttp'` and one native-position module collection error with
+`No module named 'torch'`.
+
+The final-source Python3.12 supplement above is101PASS. Root verifies all12 exact
+HTTP case IDs pass there, and all16 cases in the formerly uncollectable native
+module pass. These are explicit environment-specific results; the raw Python3.10
+suite remains unsuccessful. No failure is hidden or accepted merely by its name.
+After accounting for these observed dependency additions, there is no new code
+failure/error relative to baseline. This is the cross-environment regression
+acceptance,not a claim that every unit test passes.
+
+Root also verifies zero missing baseline IDs,zero baseline PASS→SKIP transitions,
+and all53 catalogue and196 affected case IDs passing in the new full run. These
+subsets are not added to8015. Exact added IDs,raw totals,source commit and all three
+XML hashes are retained in unit_final03_comparison.json. Raw log/XML stay at
+`/data/ycfeng/tmp/d29_unit_parent03.{log,xml}`; comparison scratch is
+`/data/ycfeng/tmp/d29_unit_delta03.json`. No additional tests were needed after
+these checks settled the recorded regressions.

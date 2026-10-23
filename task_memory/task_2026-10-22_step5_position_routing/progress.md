@@ -72,8 +72,14 @@
 - completed: final code1be91bad strict77 final03 gives77/77 identical,zero missing
   evidence/definition/cache-name differences. Parent verifies451 artifact hashes
   and519 cache files per side; final_parent/fidelity_final03_audit.json.
-- in-progress: final code1be91bad runs full-unit parent03 and full offline/online
-  main05 using fixture03. Integrated-04 must stay
+- completed: final full-unit parent03:8015PASS/279FAIL/32ERROR/281SKIP,1238.567s.
+  Exact267-failure/31-error baseline sets retained; only12 missing-aiohttp cases
+  and1 missing-Torch collection addition,all covered by final-source101PASS
+  supplement. No baseline cases disappear or change PASS→SKIP;all53 catalogue
+  and196 affected suite IDs pass in the full run. This is an explicit cross-environment
+  regression reconciliation,not an all-green raw suite. Receipt:unit_final03_comparison.json.
+- in-progress: final code1be91bad runs full offline/online main05 using fixture03.
+  Integrated-04 must stay
   immutable throughout; T2 record staging follows these runs or uses a separate
   verified staging tree. Final gates retain2400s per CLI mode and original checks.
 - completed: actual111-path accounting independently audited and root remeasured:
