@@ -6,6 +6,7 @@
 | 2026-10-23 | Record R1 actual inheritance/delegation RED/GREEN with scoped quota. |
 | 2026-10-23 | Record R2 automatic preflight/trainer missing-descriptor RED and36PASSGREEN. |
 | 2026-10-23 | Complete R3 proof/source-owner RED/GREEN, exact artifact seam, affected regressions and scoped budget. |
+| 2026-10-23 | Record authorized wrapper diagnostics RED/GREEN and real joint producer/current-repo CPU consumers. |
 
 TaskID:D29-CORE-REVIEW-REPAIR. Isolated worktree `/data/ycfeng/Frontier/.worktrees/step5-core-review-fixes`,baseline d96b3279. No full CLI or GPU/native qualification. Root submodule checkout3dac preserved unstaged. Commands use `PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp`;py312 addsVLLM_TARGET_DEVICE=cpu. Python3.12.13 `/data/ycfeng/envs/asyncopd-py312/bin/python`,Python3.10.6 `/data/ycfeng/envs/frontier-py310/bin/python`.
 
@@ -87,3 +88,25 @@ Applyrootregistry_scope_amendmentthen core_review_scope_amendmenttoscope.rowsgro
 | tests/integration/test_step5_measured_main.py |68|221/243|
 
 No code outside sixpaths,sixper-filecapsPASS,rootgitlink3dacunchanged/unstaged,recordsseparate,rootcurrentWIPnotimported. CompleteCLI/native/GPU/G3/PW/NONE/FULLacceptanceoutofscopeandunverified.
+
+## Authorized wrapper point-diagnostics persistence
+
+Three P2 slices committed before immutable PRICINGa7e2a3ca development merge55a4df3c. No conflicts, peer edits or root acceptance assumed. User then permits immutable registryb6714757 only after this owned wrapper commit; registry integration is not included in the following evidence.
+
+Existing source-local wrapper seam calls `_profile_position_cell` for actual dummy-source-owner width1/live0. A real full-source verifier runs before each row: second call includes one additional valid sealed native module. CPU expert object isolates numerical/hardware execution only. Stable native_context remains equal, constructor provenance object unchanged; complete point_diagnostics must retain ambient inventory and row native_facts union. Normal CSV serialization/deserialization must retain the independent diagnostic JSON. This verifies persistence, not actual native numerical work. PRICING's separate real prepared_context/observer/full-verifier join test runs below, so persistence is not claimed as a replacement for actual producer validation.
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VLLM_TARGET_DEVICE=cpu PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29-core-review-point-red01 tests/unit/test_step5_moe_profiling.py -k 'position_row_preserves' > /data/ycfeng/tmp/d29-core-review-point-red01.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VLLM_TARGET_DEVICE=cpu PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29-core-review-point-red02 tests/unit/test_step5_moe_profiling.py -k 'position_row_preserves' > /data/ycfeng/tmp/d29-core-review-point-red02.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VLLM_TARGET_DEVICE=cpu PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29-core-review-point-red03 tests/unit/test_step5_moe_profiling.py -k 'position_row_preserves' > /data/ycfeng/tmp/d29-core-review-point-red03.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VLLM_TARGET_DEVICE=cpu PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29-core-review-point-green01 tests/unit/test_step5_moe_profiling.py -k 'position_row_preserves or only_replaced_bound_router or position_adapter_binds or real_device_timer or masked_expert or oracle_callable or lazy_norm or actual_source_context' > /data/ycfeng/tmp/d29-core-review-point-green01.log 2>&1
+env -u FRONTIER_TEST_CPU_WRITER_FILE -u FRONTIER_TEST_CPU_WRITER_SHA256 PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/unit/test_collective_sim_cc_backend.py tests/unit/test_op_trace_utils.py tests/unit/test_ep_wave_trace_context.py tests/unit/test_step5_moe_pricing.py > /data/ycfeng/tmp/d29-core-review-joint-consumer01.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VLLM_TARGET_DEVICE=cpu PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29-core-review-joint-producer01 tests/unit/test_step5_dispatch_probe.py -k 'two_native_point_producers_join or native_point_writer or observed_compute_point' > /data/ycfeng/tmp/d29-core-review-joint-producer01.log 2>&1
+```
+
+- RED01/02: one error each before row seam because fixture vllm lacks __version__. Model-config replacement did not address eager import, not a valid RED. Test-only CPU version label restores required import shape; sealed file/spec/hash unchanged, no production or peer changes.
+- RED03: one actual row assertionFAIL2.91s; new ambient module absent from row imports while context stable. This is the genuine persistence reproduction.
+- GREEN:24PASS/11deselected9.35s. Exactly3sourcegross: provenance replaces context.native_facts with full experts.point_diagnostics; independent row point_diagnostics canonical JSON added. Existing verifier/source/context semantics unchanged.
+- Actual joint producers:7PASS/243deselected2.91s, includes real prepared_context/observer full verifier wrong-origin/hash/ambient/layout negatives and stable-context/complete diagnostics join.
+- Existing current-repo CPUwriter/H04consumer:144PASS/1SKIP4.81s, both FRONTIER_TEST_CPU_WRITER reference variables unset. No external writer/fallback/dependency install. Not full main/native acceptance.
+- Seven owned repair paths now, delta**+207/-19=226/230** (4remaining), baseline test344/350, wrapper171/194. Other six totals unchanged. Final combined effective CORE accounting follows immutable registry integration, counting registry owner's existing paths separately.

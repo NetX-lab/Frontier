@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Define three bounded RED/GREEN slices and verification limits. |
 | 2026-10-23 | Append authorized immutable development import and existing wrapper diagnostics seam. |
+| 2026-10-23 | Record completed three P2 slices and immutable registry test integration after wrapper commit. |
 
 Dependency: root ownership overlay -> {R1,R2,R3 sequential sole-writer slices} -> affected regression/budget -> committed handoff. No new tickets or interfaces.
 
@@ -14,3 +15,5 @@ Dependency: root ownership overlay -> {R1,R2,R3 sequential sole-writer slices} -
 4. Run affected source/consumer tests; verify exactly six changed code/test paths, per-path effective caps and <=230 gross repair delta plus <=4404 CORE total. Commit each verified slice. Native/kernel/full CLI/registry qualification remains root-owned; no standalone CLI run.
 
 Latest root-authorized extension: preserve and commit the three P2 repair slices, then merge immutable PRICING a7e2a3ca with history intact. Update only the already-owned wrapper persistence (3gross) and existing owned profiling cohort test. Acceptance: full point diagnostics retained independently and unioned into row native_facts, including validated ambient modules; constructor provenance and stable point native_context unchanged. Run real joint producer tests and current-repo CPU writer without an external reference. Seven authorized code/test paths after the extension, still230 repair/4404CORE; registry four paths remain exclusive and no full CLI.
+
+Current frontier: R1e67a9e65, R2abc981de, R3ade2d4b9 committed. PRICINGa7 merge55a4df3c has no conflicts. Wrapper3gross plus existing profiling test verified24PASS, actual producerjoin7PASS and current-repo CPUconsumer144PASS/1SKIP. Commit wrapper slice, then root-authorized immutable registryb6714757 development integration; coherent focused tests and final seven-path source/accounting receipt. Root owns fresh actual-main/strict77 and independent acceptance; missing legacy descriptor fixture remains explicitly reported, not weakened.

@@ -562,6 +562,47 @@ def test_actual_source_context_is_explicit_and_does_not_mutate_wrapper_context()
     assert wrapper.gating_runtime_context == "prefill_hot"
 
 
+def test_position_row_preserves_full_point_diagnostics_outside_stable_context(installed_profile_receipt, monkeypatch):
+    torch = pytest.importorskip("torch")
+    from types import SimpleNamespace
+    import csv, io
+    monkeypatch.setattr(sys.modules["vllm"],"__version__","0.0.0-cpu-fixture",raising=False)
+    from frontier.profiling.moe import moe_wrapper, fp8_block_experts
+    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput, MoERoutingProfileCell
+    from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+    path, modules, _ = installed_profile_receipt
+    extra = "vllm.model_executor.layers.fused_moe.oracle.unquantized"
+    monkeypatch.delitem(sys.modules, extra)
+    full = verify_step5_profile_runtime(path)
+    stable = dict(shared=full["shared"], imports={}, callables={})
+    context = dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",quant_dtype=None,
+                   defer_input_quant=False,native_facts=stable)
+    experts = SimpleNamespace(provenance=stable,point_diagnostics=full,prepare_source=lambda x:(x,None),
+        prepared_context=lambda *args,**kwargs:dict(context))
+    monkeypatch.setattr(fp8_block_experts,"get_native_routed_experts",lambda **kwargs:experts)
+    wrapper = object.__new__(moe_wrapper.MoEWrapper)
+    for name,value in dict(quantization_mode="bf16",activation="swiglustep",num_experts_per_device=22,num_experts=352,
+        hidden_dim=4,expert_hidden_dim=4,router_topk=8,block_shape=None,expert_parallel_size=16,_dtype=torch.bfloat16,
+        routing_runtime_path="position_cyclic",model_config=SimpleNamespace(model_type="step5",
+            get_model_architecture_profile=lambda:SimpleNamespace(profile_id="step5"))).items(): setattr(wrapper,name,value)
+    wrapper.gating=SimpleNamespace(native_facts=stable,linear_backend="cpu_fixture",bind_source_frame=lambda *a,**kw:None)
+    wrapper._materialize_gating_hidden_states=lambda rows:torch.zeros(rows,4,dtype=torch.bfloat16)
+    wrapper._run_gating_with_runtime_context=lambda x,**kw:(torch.zeros(len(x),8),torch.zeros(len(x),8,dtype=torch.int32))
+    wrapper._build_local_expert_map=lambda device:None
+    wrapper._profile_cell_callable=lambda run,names:{name:dict(median=1.,kernel_count=3) for name in names}
+    wrapper._build_profile_result=lambda stats,**kwargs:dict(time_stats=stats)
+    cell=MoERoutingProfileCell(MoERoutingProfileInput("point",(MoESourceFrame(0,(16,),(6128,),16,"standalone_legacy"),
+        MoESourceFrame(1,(),(),1,"standalone_legacy")),17),"source_local",1)
+    first=wrapper._profile_position_cell(cell)
+    monkeypatch.setitem(sys.modules,extra,modules[extra]);experts.point_diagnostics=verify_step5_profile_runtime(path)
+    second=wrapper._profile_position_cell(cell)
+    assert first["native_context"]==second["native_context"] and experts.provenance is stable
+    assert extra not in json.loads(first["native_facts"])["imports"] and extra in json.loads(second["native_facts"])["imports"]
+    stream=io.StringIO();writer=csv.DictWriter(stream,fieldnames=second);writer.writeheader();writer.writerow(second)
+    restored=next(csv.DictReader(io.StringIO(stream.getvalue())))
+    assert json.loads(restored["point_diagnostics"])==experts.point_diagnostics and restored["native_context"]==second["native_context"]
+
+
 def test_masked_expert_sentinel_is_filtered_before_local_map_and_bincount():
     torch = pytest.importorskip("torch")
     from frontier.profiling.moe.load_distribution import compute_expert_token_counts

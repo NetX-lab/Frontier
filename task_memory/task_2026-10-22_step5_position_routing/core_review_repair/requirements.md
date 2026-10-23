@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Record root-authorized isolated three-finding repair and exact ownership overlay. |
 | 2026-10-23 | Record authorized existing wrapper diagnostics persistence and immutable PRICING development import. |
+| 2026-10-23 | Record authorized immutable registry development integration; fresh actual-main remains root-owned. |
 
 TaskID: D29-CORE-REVIEW-REPAIR. Original requirements: [../requirements.md](../requirements.md); implementation decisions: [../core_source/requirements.md](../core_source/requirements.md).
 
@@ -17,3 +18,5 @@ TaskID: D29-CORE-REVIEW-REPAIR. Original requirements: [../requirements.md](../r
 [Explicit Decision] CLI seam03 already completed in the original session:exit1,1555.208038s,not timedout,2400s unchanged,missing old `data/profiling/network/h800/collective_local.json` after successful initialization. Preserve this terminal separately; do not edit original worktree, poll or run another CLI.
 
 [Original Request] Root adds existing `frontier/profiling/moe/moe_wrapper.py` to this repair assignment, under unchanged194 cap and230 aggregate. After committing three P2 repairs, development merge a7e2a3ca6a12367a6955b905a9e061494766106d is authorized (not root acceptance). Persist provenance union `[self.gating.native_facts, experts.provenance, experts.point_diagnostics]` and independent row point_diagnostics canonical JSON. Verify full ambient point inventory and normal serialization while native_context remains stable, using existing owned profiling test cohort. Do not edit/import registry WIP or launch full CLI.
+
+[Original Request] After committing owned repairs, root permits immutable registry b6714757 (code8f96408cf6fbb19c45a918b2464aea3ddff29f1a) development merge and coherent producer/row/registry tests. Four registry paths remain read-only to this owner; acceptance/review pending. Root owns fresh actual-main/strict77 after joint source freeze. No full long CLI from this repair worktree.
