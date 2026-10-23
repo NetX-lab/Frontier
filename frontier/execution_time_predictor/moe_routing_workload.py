@@ -124,15 +124,22 @@ def _normalize_routing_details_for_trace(
 class MoeRoutingWorkload:
     """Expert-load distribution and per-lane routed workload."""
 
+    def _step5_routed_layer_group(self, layer_id):
+        """Select from complete group facts for this predictor's fixed model."""
+        groups = getattr(self, "_step5_routed_layer_groups", None)
+        if groups is None:
+            from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+            groups = resolve_routed_layer_groups(self._model_config)
+            self._step5_routed_layer_groups = groups
+        return next(group for group in groups if layer_id in group.layer_ids)
+
     def _step5_position_queries(self, lane):
         """Recover actual point facts and complete measured plans, never numerical defaults."""
         from frontier.profiling.moe.inputs import MoESourceFrame
         from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
         from pathlib import Path
         source = lane.routing_source
-        from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
-        group = next(group for group in resolve_routed_layer_groups(self._model_config)
-                     if self._step5_layer_metadata.attention_spec.global_layer_id in group.layer_ids)
+        group = self._step5_routed_layer_group(self._step5_layer_metadata.attention_spec.global_layer_id)
         family = self._measurement_family_name(self._active_measurement_type)
         models = self._model_manager._models_view_for_family(family, self._cluster_type)
         rows = []

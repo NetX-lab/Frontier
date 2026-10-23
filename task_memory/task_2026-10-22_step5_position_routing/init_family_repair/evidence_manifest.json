@@ -1,0 +1,58 @@
+{
+  "red.log": {
+    "source": "/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/red.log",
+    "sha256": "412d3c10de00cb19feddc21fa9e794012f27047350faca4b83c6f5bcd850543d",
+    "bytes": 3492
+  },
+  "green.log": {
+    "source": "/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/green.log",
+    "sha256": "a8c0d8b7ea8e8781cdb422fc2a854a5fafa13b12f19a660a3a7deaf29963bd69",
+    "bytes": 98
+  },
+  "affected.log": {
+    "source": "/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/affected.log",
+    "sha256": "7501e5ab1f4e67cd9c6c59b07732612826e0f2ddf42e0d4d07e5c2741a80276b",
+    "bytes": 6400
+  },
+  "moe310.log": {
+    "source": "/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/moe310.log",
+    "sha256": "2d90adf23ca2dc82f6831592975d8e3f6d2155a6a2c838b4e5b4c9d556fb4209",
+    "bytes": 100
+  },
+  "governance312.log": {
+    "source": "/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/governance312.log",
+    "sha256": "926c158fec24c1ba02c919b4b6820705e74b2a941053bf92fa75c77730482236",
+    "bytes": 1529
+  },
+  "governance-baseline.log": {
+    "source": "/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/governance-baseline.log",
+    "sha256": "b9a765537a36f31474b5ae7faec27afe9129cdc5960f731af3b423c8f2f51037",
+    "bytes": 6352
+  },
+  "governance-torch.log": {
+    "source": "/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/governance-torch.log",
+    "sha256": "2c05aa7c36512d40db8b2f1d4080f56333ea3cee69ffd9d9486fb21720f2969a",
+    "bytes": 709
+  },
+  "code.diff": {
+    "command": [
+      "git",
+      "diff",
+      "24f970cb",
+      "ee7e66ee",
+      "--",
+      "frontier/execution_time_predictor/profiling_dataframe_loaders.py",
+      "tests/unit/test_moe_grouped_gemm_padded_features.py"
+    ],
+    "sha256": "e1b1060e798c5378a0b778283d6cede736bdd491f49105a7e8f2dc2158215773",
+    "bytes": 3776
+  },
+  "baseline_dependency_failure_set_equal": true,
+  "baseline_dependency_failure_ids": [
+    "tests/unit/test_profiling_governance_minimal_red.py::test_linear_wrapper_result_carries_plan_typed_operator_contracts",
+    "tests/unit/test_profiling_governance_minimal_red.py::test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts",
+    "tests/unit/test_profiling_governance_minimal_red.py::test_moe_wrapper_initializes_runtime_with_routed_width",
+    "tests/unit/test_profiling_governance_minimal_red.py::test_moe_wrapper_typed_result_round_trips_through_manager",
+    "tests/unit/test_profiling_governance_minimal_red.py::test_real_linear_producer_csv_round_trip_reaches_manager_loader"
+  ]
+}

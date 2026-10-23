@@ -70,6 +70,8 @@ class CollectiveSimCCBackend(BaseCCBackend):
         self._prediction_cache_hits = 0
         self._prediction_cache_instance_hits = 0
         self._prediction_cache_misses = 0
+        self._collective_artifact_text = None
+        self._collective_artifact = None
 
         self._repo_root = self._resolve_collective_sim_repo_root()
         self._python_root = self._repo_root / "python"
@@ -808,7 +810,11 @@ class CollectiveSimCCBackend(BaseCCBackend):
         if dims != {"TP":8, "CP":1, "DP":2, "EP":1} or self._placement_order != ("TP","DP"):
             raise ValueError("Step plans require explicitly configured TP8/DP2 placement")
         path = Path(self._config.profiling_data_dir) / self._device_type / "collective_local.json"
-        artifact = json.loads(path.read_text())
+        text = path.read_text()
+        if text != self._collective_artifact_text:
+            artifact = json.loads(text)
+            self._collective_artifact_text, self._collective_artifact = text, artifact
+        artifact = self._collective_artifact
         context=json.loads(plan.context_json)
         if artifact.get("evidence_kind") == "cpu_fixture" or context.get("shared",{}).get("evidence_kind") == "cpu_fixture":
             if (artifact.get("evidence_kind") != "cpu_fixture" or context.get("shared",{}).get("evidence_kind") != "cpu_fixture" or

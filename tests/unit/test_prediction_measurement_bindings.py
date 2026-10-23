@@ -163,6 +163,60 @@ def test_position_queries_enumerate_group_physical_rows_before_model_selection(b
         assert moe_native_binding_context(changed) == moe_native_binding_context(context)
 
 
+def test_fixed_predictor_groups_reused_by_queries_and_binding_selection(bound, tmp_path, monkeypatch):
+    from frontier.profiling.moe import routed_layer_groups
+    from tests.unit.test_moe_position_routing import materialize, source
+    manager, replica, _, paths, _ = bound
+    path = fixture.position_collective_costs(tmp_path, paths[1], device="h800")
+    separate = deepcopy(replica)
+    assert separate.model_config is not replica.model_config
+    resolved = []
+    def observe(model):
+        groups = resolve_routed_layer_groups(model)
+        resolved.append((model, groups))
+        return groups
+    monkeypatch.setattr(routed_layer_groups, "resolve_routed_layer_groups", observe)
+    predictors = [_predictor(config.model_config, manager) for config in (replica, replica, separate)]
+    lane = materialize(source(padding=16)).lane(0)
+    snapshots = {}
+    for index, (predictor, config) in enumerate(zip(predictors, (replica, replica, separate))):
+        predictor._replica_config = config
+        predictor._cc_backend = SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
+        for layer in (3, 88, 3, 88):
+            with predictor._step5_measured_layer(layer):
+                context, queries, plans = predictor._step5_position_queries(lane)
+                selected, precision = predictor._step5_ffn_model("moe_gating_linear", context=context)
+                binding = manager._native_measurement_binding(manager._measurement_identity(selected))
+                assert binding["native_context"] == moe_native_binding_context(context)
+                assert binding["selected_native_metadata"]["moe_layer_ids"] == ("3-87" if layer == 3 else "88-90")
+                assert precision.name == "FP32"
+                value = predictor._predict_step5_ffn_operator("moe_gating_linear", queries["moe_gating_linear"], context=context)
+                proof = deepcopy(predictor._step5_ffn_costs["moe_gating_linear"])
+                assert value > 0 and proof["kernel_count"] > 0 and proof["exact_lookup"]
+                snapshot = (selected, context, queries, {name: plan.cache_key() for name, plan in plans.items()}, proof)
+                if layer in snapshots:
+                    assert snapshot == snapshots[layer]
+                snapshots[layer] = snapshot
+                foreign = deepcopy(context)
+                foreign["native_facts"]["shared"] = {"source_receipt": "FOREIGN"}
+                with pytest.raises(ValueError, match="coverage is unavailable"):
+                    predictor._step5_ffn_model("moe_gating_linear", context=foreign)
+                predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+                with pytest.raises(ValueError, match="coverage is unavailable"):
+                    predictor._step5_ffn_model("moe_gating_linear", context=context)
+                predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
+                with pytest.raises(ValueError, match="source/native point receipt"):
+                    predictor._step5_position_queries(materialize(source(start=7000, padding=16)).lane(0))
+                with monkeypatch.context() as fault:
+                    fault.setattr(selected._frontier_kernel_count_model, "_frontier_exact_lookup", {})
+                    with pytest.raises(ValueError, match="duration/count exact feature keys differ"):
+                        predictor._predict_step5_ffn_operator("moe_gating_linear", queries["moe_gating_linear"], context=context)
+        assert len(resolved) == index + 1, "both actual consumers must reuse one fixed-model resolution"
+        assert resolved[-1][0] is config.model_config
+    assert resolved[0][1] == resolved[1][1] == resolved[2][1]
+    assert resolved[0][1] is not resolved[1][1] and resolved[1][1] is not resolved[2][1]
+
+
 def test_unique_legacy_registry_default_and_precision_labels_unchanged(tmp_path):
     manager = _manager(tmp_path / "cache")
     first, second = SimpleNamespace(), SimpleNamespace()
