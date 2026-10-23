@@ -4,8 +4,11 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Archive two-file test-only repair, actual source/registry mechanisms, complete test evidence and ownership budget. |
+| 2026-10-23 | Record immutable scoped source/tests/records commit f03a1157. |
 
 TaskID: **D29-CORE-AFFECTED-FIXTURES**. Worktree `/data/ycfeng/Frontier/.worktrees/step5-core-review-fixes`,branch feat/step5-core-review-fixes,basee49b26f8. Root-authorized registry a5189e199208022a341b377b0fb8c542030907f3 merged with immutable history asacea99e4; no peer edits or independent acceptance implied.
+
+Immutable verified source/tests/records commit: **f03a1157**. This archive-only receipt update introduces no source changes.
 
 ## Deliverables
 

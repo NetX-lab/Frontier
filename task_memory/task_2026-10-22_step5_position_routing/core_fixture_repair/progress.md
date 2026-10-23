@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Record current RED, fixture corrections, final full union, budget checkpoint and handoff. |
+| 2026-10-23 | Record immutable scoped source/tests/records commit f03a1157 and completed handoff. |
 
 TaskID: D29-CORE-AFFECTED-FIXTURES. No prior delivery artifacts modified.
 
@@ -15,11 +16,11 @@ TaskID: D29-CORE-AFFECTED-FIXTURES. No prior delivery artifacts modified.
 - initial complete files28PASS32.20s and union221PASS/7SKIP196.13s, then source generation was completed through existing Batch/forward/materializer seam as explicitly requested. Not a qualification claim.
 - final verification: full two affected files **28PASS32.13s**; full coherent seven-file selection **221PASS/7SKIP186.10s**,noFAIL/ERROR or test-selection exclusions. Both original trainer/cache paths and exact runtime positive/negative assertions remain.
 - final accounting: two paths+45/-27=72/80;runtimebaseline53/110,padded197/210;combinedCORE3833/4404,46allocatedCOREpaths. Originalseven-pathreview228/230unchanged; source/testAST,allgroupedcaps,whitespacePASS. Root-owned gitlink excluded. Exactcommands/failures in dated report, exactdiff/budget archived.
-- pending final action: scoped commit/handoff only. No unresolved owned failures, no dependencies or fullCLI/GPU/newmode work.
+- completed scoped source/tests/records commit:f03a1157. Only the two assigned tests and task-local records changed. No unresolved owned failures, no dependencies or fullCLI/GPU/newmode work. Root-owned submodule gitlink remains the only unrelated unstaged change.
 
 ## 1. Plan completion
 
-**Summary:** PASS 5 | BLOCKED/FAILED/SKIPPED 0 | TODO 1
+**Summary:** PASS 6 | BLOCKED/FAILED/SKIPPED 0 | TODO 0
 
 | Subtask | Status | Evidence |
 | --- | --- | --- |
@@ -28,7 +29,7 @@ TaskID: D29-CORE-AFFECTED-FIXTURES. No prior delivery artifacts modified.
 | Canonical source/materializer fixture | PASS | complete padded20PASS |
 | Formal model/group/registry fixture | PASS | full affected28PASS |
 | Full union and accounting | PASS | 221PASS/7SKIP;72/80,3833/4404 |
-| Immutable final handoff | TODO | Evidence ready; scoped commit follows |
+| Immutable final handoff | PASS | Scoped source/tests/records commitf03a1157 |
 
 ## 2. Drift detection
 

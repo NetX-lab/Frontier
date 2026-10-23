@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Archive five-test RED, complete corrected fixtures, full coherent union, exact commands and ownership accounting. |
+| 2026-10-23 | Seal scoped verified test commit f03a1157 without additional checks or code changes. |
 
 TaskID: **D29-CORE-AFFECTED-FIXTURES**. Worktree `/data/ycfeng/Frontier/.worktrees/step5-core-review-fixes`; branch feat/step5-core-review-fixes; basee49b26f8. Environment `/data/ycfeng/envs/frontier-py310/bin/python`,Python3.10.6. Every test command uses bytecode disabled,OMP/OPENBLAS threads1,TMPDIR/data/ycfeng/tmp,PYTHONPATH repo and existing tests/unit. No package/dependency installations or GPU/platform/network/CLI operations.
 
@@ -82,3 +83,5 @@ Final outputs: `28 passed in 32.13s`; `221 passed, 7 skipped in 186.10s`. No unr
 Final exact diff:affected_fixtures.diff. Budget:budget.json. Apply root's live registry_scope_amendment then updated core_review_scope_amendment; no root file copied or rewritten. Current two-test patch+45/-27=72/80,8remaining. Original seven-path review228/230 unchanged. Runtime53/110 andpadded197/210 relative1aee0af;allothergroupedcaps andASTPASS. Combined effectiveCORE3833/4404,571remaining;46allocatedCOREpaths within109path union and10000globalceiling. Root-owned collective-sim checkout3dac remains modified/unstaged and excluded from owned commit.
 
 Current source/test gates pass for this scoped fixture repair. Root independently reviews/integrates immutable result, manages gitlink and executes full-unit/strict77/freshactual-main/native/GPU/global acceptance. No new independent public mode, registry API or production behavior is supported by this repair.
+
+Immutable source/tests/records commit:f03a1157. Code/tests exactly match the final full-file and full-union commands above. Post-commit status preserves only root-owned collective-sim gitlink; source path check and whitespace remain PASS.
