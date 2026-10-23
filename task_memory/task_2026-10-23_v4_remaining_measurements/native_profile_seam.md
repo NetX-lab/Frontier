@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Traced the existing native worker-extension seam, profiler lifecycle, phase/graph semantics and hook set; established that no shared profiler TP parameter is needed. Source-only, no implementation. |
+| 2026-10-23 | Root correction to §3 from all 32 rank files: decode descriptors are 1/2/4/8/16 FULL plus PIECEWISE, not 16 only; batch 1..11 per lane. |
 | 2026-10-23 | Root recheck corrections: actual serving descriptors (P NONE/6144 single request; D ≤11 requests at the padded 16-token key, FULL+PIECEWISE), breakable CG actually enabled in native06, profiler restart proven by a CPU control, RPC fanout traced, aggregate kernel table demoted to diagnostic, V2 capture-event compatibility kept as a runtime gate. |
 
 Task `W128-V4-NATIVE-PROFILE-SEAM`. Pinned native source
@@ -59,11 +60,16 @@ is not serving evidence):
 | 0399 | decode | 255 | `FULL` + `PIECEWISE` | 11 | 11 |
 
 - Prefill is eager `NONE` at 6144 tokens (one 6144-token request per step).
-- Decode runs at most **11 concurrent requests / 11 scheduled tokens**, and every serving row
-  carries padded `input_shapes {'input_ids': [16], 'positions': [16]}` with batch descriptor
-  `num_tokens: 16` (`num_reqs: 16` for FULL, `None` for PIECEWISE, `uniform: False`).
+- Decode runs at most **11 concurrent requests / 11 scheduled tokens** per DP lane (one node =
+  one TP8 lane).
+- Root correction (all 8 ranks per node, every serving row, `dropped_rows` 0): the earlier
+  statement that every serving row uses the 16-token descriptor is wrong. Per-rank serving
+  forwards on 0346 are FULL at descriptors 1/2/4/8/16 = 609/956/2202/5409/17723 and PIECEWISE
+  8/11/22/44/336; 0399 is similar. Scheduled requests per step span 1..11 (mode 10). The
+  descriptor can exceed the lane's own batch (e.g. one request on a 16-token key), consistent
+  with DP padding across the two lanes; that cause is an inference, not yet checked in source.
 - `_is_compatible` (`cudagraph_utils.py:75-99`) requires `desc.num_tokens >= num_tokens` and
-  `desc.num_reqs >= num_reqs`, so the **16-token descriptor serves the ≤11-request batch**.
+  `desc.num_reqs >= num_reqs`, so a padded descriptor serves a smaller batch.
 - The 19 captured descriptors are all `FULL`, `num_tokens == num_reqs ∈ {1,2,4,8,16,…,128}`,
   `uniform_token_count: 1`. The 128-token descriptor exists as **capture capacity** and is
   never used by native06 serving; it must not be quoted as real decode coverage.

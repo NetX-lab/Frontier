@@ -73,8 +73,9 @@ VLLM_USE_BREAKABLE_CUDAGRAPH=1` (`vllm/config/vllm.py:1313-1336`), `@eager_break
 Python annotations therefore run during decode replay for eager segments; captured-segment kernels
 still have no Python scope (`native_profile_seam.md` §4–§5). Whether capture-time event pairs survive
 torch.compile and breakable capture unchanged stays a runtime gate (§8). Native06 decode used FULL and
-PIECEWISE with at most11 scheduled requests on the16-token descriptor; per-step `has_prefill`
-classification is required and shape-key reuse does not qualify context6143..7166 timing.
+PIECEWISE descriptors 1/2/4/8/16 with 1..11 scheduled requests per DP lane (all 32 rank files,
+`native_profile_seam.md` §3); per-step `has_prefill` classification is required and shape-key reuse
+does not qualify context6143..7166 timing.
 
 **Exact refusals retained.** Absent rows, absent layout contract or absent provenance still raise
 `DeepSeekV4CoverageError`; nothing here relaxes a guard.
@@ -98,8 +99,8 @@ classification is required and shape-key reuse does not qualify context6143..716
 Option A CPU implementation/measurement design is approved. Input wiring uses the private
 sidecar pattern; full-layout instrumentation can reuse native_pd_worker/runtime extensions.
 `native_profile_seam.md` records the source route and its unresolved runtime proofs. Root's
-actual native06 rank0 checks find prefillNONE (one request/6144tokens) and decodeFULL plus
-PIECEWISE (maximum11scheduled requests/tokens). A128-request captured descriptor is capacity,
+actual native06 checks of all 32 rank files find prefill NONE (one request/6144 tokens) and decode
+FULL plus PIECEWISE at descriptors 1/2/4/8/16 (1..11 scheduled requests per lane). A128-request captured descriptor is capacity,
 not an observed serving batch; shape-key reuse is not context/phase timing qualification.
 
 New GPU resources will be requested only with a concrete validated implementation and run
