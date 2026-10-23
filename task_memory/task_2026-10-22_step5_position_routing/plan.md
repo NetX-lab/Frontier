@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept and merge trace repair64881373 after both reviews and parent byte/proof/error checks; continue prepared implementation and residual analysis. |
 | 2026-10-23 | Parent verifies prepared selection and allocates three-path250-gross repair; trace14 passes both independent review axes. |
 | 2026-10-23 | Parent verifies complete208-operator wave; investigate prepared selection/common collectives and allocate trace's single serialization path within20 gross. |
 | 2026-10-23 | Accept final79 unit comparison and environment supplements; record both main08 timeouts and reopen real execution-path diagnosis. |
@@ -65,8 +66,9 @@ regressions and full CLI. A passing isolated point is not the full-workflow gate
 Parent has now verified the original layer61 loop and all208 operators of the
 complete adjacent layer60 wave at position6147. The active parallel work is:
 prepared row/plan selection implementation (250-gross allocation) + common
-collective lifetime analysis + trace component parent verification (14/20 gross,
-both independent review axes No findings). Combine measured effects
+collective lifetime analysis + remaining emission/write-cost diagnosis. Trace
+component14/20 is parent-verified and merged at64881373; both independent axes
+have No findings. Combine measured effects
 and evaluate full-wave multiplicity before another full CLI. Whole proof objects
 remain layer-specific even when timings/plans match. Root receipts are under
 resumed_performance/main08_wave_verification.json.
@@ -98,16 +100,16 @@ and its own faithful short loop. See early_init_repro/report.md.
 | Approval, ownership and baseline | Complete; effective112 under existing budgets, including trace20 and prepared250 allocations. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
-| CORE/SOURCE47 allocated | Group/loader closed;3970 measured on79. Trace14/20 reviewed, parent check pending; prepared250 allocated. Conservative combined bound4240/4404. |
+| CORE/SOURCE47 allocated | Group/loader and trace closed;3984 measured after trace14. Prepared250 allocated. Conservative reservation bound4240/4404. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Exact-current-text parsing repair closed;parent128PASS;3920/3956 measured. |
-| Complete integration and final freeze | Complete:79 frozen in integrated06,gitlink3dac53c;feature mergecf894fa4 source bytes identical. |
+| Complete integration and final freeze | Previous79 freeze/regressions accepted. Trace64881373 is integrated; next union freeze waits for remaining repair/review. Gitlink3dac53c unchanged. |
 | Legacy strict77 | Fresh final05 on79 accepted77/77,451 artifact hashes and519 cache names per side;parent receipt hashes/records match. |
 | Full-unit failure/error-set gate | Accepted on79:8018PASS;all8607 e41 statuses unchanged,three newPASS. Raw279FAIL/32ERROR/281SKIP remain;101 and52 environment supplements pass separately. |
 | Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
-| Independent source review | All three performance components No findings on both axes;group coverage-record P2 corrected37c7832e and re-review closed. |
+| Independent source review | Original three performance components and trace No findings on both axes; prepared implementation review pending. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
-| Final per-path accounting | 79 remeasured:111 allocated/110 changed,9240 source/9254 global,zero path/owner violations. New steps152gross/138retained. |
+| Final per-path accounting | Verified79 audit plus sole trace14 delta gives9254 source/9268 global at64881373. Active112 allocations; prepared allowance is not consumption. Final union audit remains pending. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments

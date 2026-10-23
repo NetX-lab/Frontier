@@ -3,10 +3,12 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Add independent trace Standards/Spec closure and parent component acceptance at64881373. |
 | 2026-10-23 | Archive separate Standards/Spec closure,group records P2 disposition and explicit primary component acceptance. |
 
 Task ID: D29-PERFORMANCE-COMPONENT-ARCHIVE.
-Component acceptance is complete for all three CPU repairs. This file archives
+Component acceptance is complete for the original three CPU repairs and the
+later trace repair described below. This file archives
 the primary's supplied independent review results; it is not a fresh review.
 
 ## Reviewed artifacts
@@ -89,3 +91,38 @@ See `test_report_2026-10-23_components.md` for provenance and exact receipt fiel
 Integration,final freeze,actual merged accounting,full CLI,fresh strict77/
 full-unit,T2/native/GPU/G3/E2E remain pending. No extra early-init fix is approved;
 partial startup diagnosis cannot justify changing existing cache hashes.
+
+## Trace serialization component
+
+Fixed point `767da543`, code `390bb5a2`, reviewed records/tree `9ae60ebc`.
+Diff: `git diff 767da543...9ae60ebc -- frontier/metrics/trace_store.py`.
+Spec sources: parent requirements/plan, trace scope amendment and
+`trace_serialization_repair/` requirements, plan and evidence. The independent
+reviewers read the complete source and bounded producer/test evidence; neither
+reran tests or hashes.
+
+### Standards
+
+Reviewer `ses_e972c468cffeZKEx6278S1oCde`: **No findings; 0, worst none**.
+The declared-field serializer stays at the existing flush boundary without a
+second helper or public alias-return interface. Naming, boundary reuse and
+behavior preservation follow `AGENTS.md:791–800,838`; no actionable heuristic
+smell was found. Error propagation and pending-before-concurrent restoration
+remain unchanged in the reviewed `trace_store.py:122–126`.
+
+### Spec
+
+Reviewer `ses_e972c45a3ffenZuSi1vyddEDKM`: **No findings; 0, worst none**.
+The one-path14-gross change preserves declared order, top-level None omission,
+complete metadata and failure behavior. Unsupported nested dataclass metadata
+is the explicit producer-domain boundary. The report preserves the raw98PASS/
+1baselineFAIL result and does not present local timing as a complete CLI result.
+
+### Parent acceptance
+
+Parent independently reran the six-file status comparison,598-event byte replay,
+real-disk outputs, field/error/AST checks and two complete layer60 waves. All208
+actual operator duration/proof pairs match in each wave, with baseline event bytes
+unchanged. Source was merged at `64881373`, byte-identical to reviewed `9ae60ebc`.
+`trace_parent_acceptance.json` records commands' artifacts, hashes, source binding
+and Git-derived14/20 scope. Final union regression/CLI/native gates remain open.

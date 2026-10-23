@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Integrate accepted trace14 at64881373; allocate prepared250 after parent differential verification; whole workflow remains open. |
 | 2026-10-23 | Parent confirms complete208-operator decode wave; allocate20-gross trace replacement and continue two unallocated reuse investigations. |
 | 2026-10-23 | Accept final79 unit comparison and record both main08 timeouts; residual execution-path diagnosis remains pending. |
 | 2026-10-23 | Record feature consolidation and accepted fresh79 strict77/short/T2 static receipts;full-unit/main08 unfinished. |
@@ -16,6 +17,17 @@
 | 2026-10-22 | Archive the first design delivery with its unclosed review and pricing scope. |
 
 ## Current-session continuation
+
+Current source `64881373` includes the accepted trace serialization repair.
+Both independent review axes have No findings. Parent verification preserves
+598-event JSONL bytes, all208 actual layer60 operator proofs and exception/buffer
+behavior; focused tests have98PASS and the same one baseline failure. Derived
+consumption is9268/10000. Prepared selection is allocated250 gross in three
+existing CORE paths and is being implemented; common collective and remaining
+trace-cost investigations are read-only. The previous79 regression results remain
+revision-bound. The next complete CLI still requires a reviewed, frozen union.
+
+### Earlier resumed checkpoints
 
 YC deferred the handoff. Frozen production source e41abc07 now has fresh strict77
 77/77 and a closed full-unit regression-delta gate:8015PASS;the exact historical
@@ -49,8 +61,10 @@ are archived atf3a3147e. The CORE
 owner established a real layer61/16-EP feedback loop;parent reproduced it and
 verified the complete adjacent layer60 wave against all208 captured operators.
 Both remain count-based RED (28003 warm decodes/80 reads),not a workflow pass.
-Only a20-gross trace serialization replacement is allocated;prepared point/plan
-selection and collective lifetime remain separate read-only investigations.
+The trace allocation subsequently delivered14/20 gross and was accepted as above.
+Prepared point/plan selection passed parent36 positive comparisons/24 negative
+records and unchanged full-wave payload, then received the250-gross allocation
+atcaffccbb. Collective lifetime remains a separate read-only investigation.
 The active ledger now has112 paths with unchanged owner/global ceilings.
 Early-init attribution remains
 partial;no additional implementation or hash-identity change is authorized.

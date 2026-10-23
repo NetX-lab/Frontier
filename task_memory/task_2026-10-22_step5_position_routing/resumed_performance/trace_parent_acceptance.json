@@ -1,0 +1,219 @@
+{
+  "task_id": "D29-TRACE-SERIALIZATION-PARENT",
+  "status": "ACCEPTED_CPU_TRACE_COMPONENT",
+  "source_commit": "390bb5a24166ef68bc67a79c9c0d3e99508391e9",
+  "owner_records": "9ae60ebc04b3cea2517350e65a89863808f65c3c",
+  "integration_commit": "64881373939093d4d0f10f3f5b8267a52aedfe63",
+  "source_path": "frontier/metrics/trace_store.py",
+  "source_sha256": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+  "integration_source_matches_reviewed_tree": true,
+  "review": {
+    "standards": {
+      "session_id": "ses_e972c468cffeZKEx6278S1oCde",
+      "findings": []
+    },
+    "spec": {
+      "session_id": "ses_e972c45a3ffenZuSi1vyddEDKM",
+      "findings": []
+    },
+    "mode": "Independent static review; parent executed the verification separately."
+  },
+  "raw_pytest_status": "FAIL",
+  "baseline_comparison": {
+    "source": "9ae60ebc04b3cea2517350e65a89863808f65c3c",
+    "cases": 99,
+    "passed": 98,
+    "failure_set": [
+      "tests.unit.test_mla_core_native_op_tracing::test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper"
+    ],
+    "all_baseline_statuses_equal": true,
+    "disk_payloads": [
+      {
+        "path": "test_schedule_publishes_root_o0/op_traces.jsonl",
+        "events": 2,
+        "sha256": "173e6767559108f44eccb95db1818ed51cf62100a0f26a308cc7f62f85d6baac"
+      },
+      {
+        "path": "test_schedule_publishes_root_o1/op_traces.jsonl",
+        "events": 2,
+        "sha256": "efe266d0fb56402d5f54ad2ac318722508e6b7588160f09370644260ea8dd321"
+      },
+      {
+        "path": "test_schedule_publishes_root_o2/op_traces.jsonl",
+        "events": 2,
+        "sha256": "bfe406afa6233c3b1e0ead6dfd0da91d31a99ab9e14a1a4c5a7effc35bd4be60"
+      },
+      {
+        "path": "test_schedule_publishes_root_o3/op_traces.jsonl",
+        "events": 2,
+        "sha256": "7ce880e65586dff889f9e9bfd6fa5ae9316feec71344141abee0df5bab7cbc48"
+      }
+    ],
+    "layer": 60,
+    "logical_position": 6147,
+    "actual_pairs": 208,
+    "checked_repetitions": 2,
+    "events": 416,
+    "proof_fields": [
+      "collective_plan",
+      "collective_cost",
+      "operator_cost",
+      "native_context",
+      "routing_source"
+    ],
+    "mismatches": [],
+    "event_bytes_match_baseline_prefix": true,
+    "body_bytes": 5780831,
+    "body_sha256": "a9c36f5ad944f6d3bf27afa4db9b874e4c8c7fb6a184c7707bd1bff113bb2c5d",
+    "full_pricing_payload_sha256": [
+      "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+    ],
+    "timings": [
+      {
+        "pricing_s": 3.3249001866206527,
+        "emit_s": 0.06484140222892165,
+        "flush_s": 0.023867284879088402,
+        "wall_s": 3.4136088737286627,
+        "events": 208
+      },
+      {
+        "pricing_s": 2.7033950006589293,
+        "emit_s": 0.05949365021660924,
+        "flush_s": 0.023546073120087385,
+        "wall_s": 2.786434723995626,
+        "events": 208
+      }
+    ],
+    "script_sha256": "c437defbb455de56014a2cb8afd7d1ebba07f67b02ed8331d6bf66720573c0a6",
+    "limits": "Only bounded trace tails and the two parent waves; no complete CLI or native qualification."
+  },
+  "captured_serialization": {
+    "events": 598,
+    "payload_bytes": 8353308,
+    "payload_sha256": "3ea6239cea9295e5d532722200c78238c9e01ecb58b32383fe8c8aaa20b7e004",
+    "whole_jsonl_equal_including_fixed_header": true,
+    "wall_s": {
+      "baseline": [
+        0.37035155622288585,
+        0.3675776128657162,
+        0.37836113292723894,
+        0.37482599122449756,
+        0.3708676667883992,
+        0.36750809475779533,
+        0.3725402830168605
+      ],
+      "candidate": [
+        0.06669393228366971,
+        0.0670187589712441,
+        0.07241613697260618,
+        0.07116238586604595,
+        0.06540620606392622,
+        0.06398519780486822,
+        0.06455577304586768
+      ]
+    },
+    "median_s": {
+      "baseline": 0.3708676667883992,
+      "candidate": 0.06669393228366971
+    },
+    "measurement": "unprofiled actual source log_event/flush, alternating order, seven iterations",
+    "trace_read_bytes": 8353308,
+    "input_path": "/data/ycfeng/tmp/d29-parent-position-main08/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/op_traces.jsonl"
+  },
+  "contracts": {
+    "bytes_equal": true,
+    "declared_order": true,
+    "top_level_none_only": true,
+    "dynamic_attributes_excluded": true,
+    "to_dict_removed": true,
+    "baseline_failures": {
+      "oserror_identity": true,
+      "restored_order": true,
+      "typeerror_propagates_and_restores": true
+    },
+    "candidate_failures": {
+      "oserror_identity": true,
+      "restored_order": true,
+      "typeerror_propagates_and_restores": true
+    }
+  },
+  "source_ast": {
+    "exact_allowed_ast_delta": true,
+    "unchanged_error_handlers": true,
+    "unchanged_base_event": true,
+    "numstat": "7\t7\tfrontier/metrics/trace_store.py",
+    "added": 7,
+    "deleted": 7,
+    "gross": 14,
+    "old_lines": 132,
+    "new_lines": 132,
+    "whitespace_check": "PASS"
+  },
+  "parent_trace_harness": {
+    "driver": "/data/ycfeng/tmp/d29_trace_serialization_parent01/verify_trace.py",
+    "driver_sha256": "c2974afd7dd6105e0dee6697f95dca248bd96a2203d2bb4f61bdd78b82da3872",
+    "executed_source_sha256": "80c937e15683f027cb706b346880a6a97f3a65ab20b6d971a1f553205609c63c",
+    "transformation": "Scope git diff --check to the source file because committed raw logs retain their original whitespace.",
+    "business_checks_changed": false
+  },
+  "parent_wave_binding": {
+    "original_script": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-candidate.py",
+    "original_script_sha256": "874399aa073336429a488d806ed9575f71c16914f94b50e86d0dde394f3e098e",
+    "driver": "/data/ycfeng/tmp/d29_trace_serialization_parent01/verify_wave.py",
+    "driver_sha256": "300799b592da31fdb7082fc6c3c8ae4982e8ae71d1969c3507a99ec45a4cbde7",
+    "executed_source_sha256": "2bdbc72a50ba3aee7edb880b60ba85c992cc1baac05709c3eabcef06631b6321",
+    "source_revision_before": "767da5437609301a6183dbfdcfd87b2402a32007",
+    "source_revision_after": "9ae60ebc04b3cea2517350e65a89863808f65c3c",
+    "transformations": [
+      "Rebind exact HEAD assertion and result source revision to the committed reviewed tree."
+    ],
+    "business_checks_changed": false,
+    "retained_trace_source_sha256": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d"
+  },
+  "scope": {
+    "added": 7,
+    "deleted": 7,
+    "gross": 14,
+    "step_cap": 20,
+    "derivation": "git diff --numstat 79f1a3fd HEAD -- frontier tests data Dockerfile",
+    "owners_measured": {
+      "native": 1350,
+      "core_source": 3984,
+      "pricing": 3920
+    },
+    "source_measured": 9254,
+    "retained_doc_and_gitlink_gross": 14,
+    "global_measured": 9268,
+    "scope_basis": "Verified audit06 plus the sole new source delta; prepared-point allocation is not consumption."
+  },
+  "artifacts": {
+    "pytest.xml": {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_parent01/pytest.xml",
+      "sha256": "61ae2aa0ef2c53ac11c93420afa707d05be944fd37204d75fc639b338653eb43"
+    },
+    "pytest.log": {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_parent01/pytest.log",
+      "sha256": "aa6e7b5aacd1cfc85fde6517b45f23b848d68747b5ee7916c510a5cfdad39d08"
+    },
+    "verification/trace-verification.json": {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_parent01/verification/trace-verification.json",
+      "sha256": "e9a9044f09588c745ebfed32ca7d78af3aa234c168d054dc40e158eea0693bf8"
+    },
+    "wave02/result.json": {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_parent01/wave02/result.json",
+      "sha256": "fa337151d48771492511ed301adf5f972e5245fdc89e8076528c36e353cd3e51"
+    },
+    "comparison.json": {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_parent01/comparison.json",
+      "sha256": "c28108faa0cf9dbae3d328d02569c6e6fcdd0e3d6b70c04535ec40dba921d7c1"
+    },
+    "wave.log": {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_parent01/wave.log",
+      "sha256": "b723ceedef2d4540e630b9998bb7ee74c5e2549107a004d6216ff71322407a0f"
+    }
+  },
+  "resolved_harness_failure": "The original wave guard required pre-edit HEAD767. It failed before config parsing. A fresh wrapper rebinds the HEAD assertion/result revision to reviewed9ae, retaining the exact source SHA and all business assertions.",
+  "limits": "Component acceptance only. Prepared selection and other residual analysis continue. Final-union regression, complete CLI, T2 seal, native/G3/E2E acceptance remain pending.",
+  "generator_sha256": "c8f16ff8399f7461823e78ba2c1e4d9589be9fb0e8f94fbdc244b9bef8ac1003"
+}
