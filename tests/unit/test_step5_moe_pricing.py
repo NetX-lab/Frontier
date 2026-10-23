@@ -223,10 +223,13 @@ def test_native_inclusive_scope_calls_real_source_methods_with_prepare_excluded(
 
 
 @pytest.mark.parametrize("ep_id",[0,8,15])
-def test_h04_calls_all_physical_scopes_including_empty_lanes(ep_id):
+@pytest.mark.parametrize("quant,defect",[(q,d) for q in (None,"float8_e4m3fn") for d in (
+    None,"context","missing_context","activation","scales","topk","output","local_layout","gathered_layout",
+    "scale_dtype","corrupt_topk_receipt","corrupt_output_receipt") if q is not None or d not in ("scales","scale_dtype")])
+def test_h04_calls_all_physical_scopes_including_empty_lanes(ep_id,quant,defect):
     from tests.unit.test_moe_position_routing import source,materialize
     from frontier.execution_time_predictor.moe_operator_times import MoeOperatorTimes
-    lane=materialize(source()).lane(ep_id);ctx=context("float8_e4m3fn")
+    lane=materialize(source()).lane(ep_id);ctx=context(quant)
     class Predictor(MoeOperatorTimes):
         _replica_config=SimpleNamespace(attn_tensor_parallel_size=8)
         _model_config=SimpleNamespace(supports_share_expert=lambda:True)
@@ -235,19 +238,63 @@ def test_h04_calls_all_physical_scopes_including_empty_lanes(ep_id):
             self._step5_ffn_costs[name]=dict(kernel_count=3,exact_lookup=True,evidence_kind="cpu_fixture")
             return 1.
     predictor=Predictor()
+    predictor._step5_ffn_costs={}
     def price(p):
         return CollectivePlanCost(3.,1.,(1.,)*16,1.,(2,)*16,json.dumps(dict(kernel_counts=[2]*16,
             per_rank_events=[["cpu_fixture"]]*16,source_receipt="cpu_fixture",evidence_kind="cpu_fixture")),p.cache_key(),"cpu_fixture")
-    predictor._cc_backend=SimpleNamespace(predict_collective_plan=price)
+    priced=[]
+    predictor._cc_backend=SimpleNamespace(predict_collective_plan=lambda p:priced.append(p) or price(p))
     ni=lane.routing_source.source_lanes[ep_id//8].physical_rows
     features={op.name:dict(num_tokens=17 if op.name == "moe_grouped_gemm" else ni,
         total_routed_tokens=lane.routed_token_count) for op in get_moe_profiling_operators(ctx)}
-    plans={"step5_moe_dispatch":plan(),"step5_moe_combine":plan(phase="combine")}
-    plans.update({name:replace(plan(),phase=phase,groups=(tuple(range(8)),tuple(range(8,16)))) for name,phase in (
+    def layout(rows,columns,dtype,size): return dict(shape=[rows,columns],stride=[columns,1],dtype=dtype,element_size=size)
+    ctx.update(activation_layout=layout(17,4096,"float8_e4m3fn",1),scale_layout=layout(17,32,"float32",4),
+        source_activation_layout=layout(ni,4096,"float8_e4m3fn",1),source_scale_layout=layout(ni,32,"float32",4),
+        native_facts=dict(shared="cpu_fixture"))
+    dispatch=tuple(CollectiveTensor(n,d,s,c,c) for n,d,s,c in (("activation","float8_e4m3fn",1,4096),
+        ("weights","float32",4,8),("ids","int32",4,8),("scales","float32",4,32)))
+    if quant is None:
+        ctx.update(activation_layout=layout(17,4096,"bfloat16",2),source_activation_layout=layout(ni,4096,"bfloat16",2),
+            scale_layout=None,source_scale_layout=None)
+        dispatch=(replace(dispatch[0],dtype="bfloat16",element_size=2),*dispatch[1:3])
+    output=(CollectiveTensor("output","bfloat16",2,4096,4096),)
+    ctx["collective_tensors"]=dict(dispatch=[vars(t) for t in dispatch],output=[vars(t) for t in output])
+    predictor._replica_config.router_topk=8
+    plans={"step5_moe_dispatch":replace(plan(),tensors=dispatch),"step5_moe_combine":replace(plan(phase="combine"),tensors=output)}
+    plans.update({name:replace(plan(),tensors=output,phase=phase,groups=(tuple(range(8)),tuple(range(8,16)))) for name,phase in (
         ("moe_tensor_parallel_allreduce","routed_tp"),("share_expert_tensor_parallel_allreduce","shared_tp"))})
+    plans={n:replace(p,context_json=json.dumps(dict(shared="cpu_fixture",
+        execution_policy={"0":dict(branches=["cpu_fixture"])})),buffer_json=json.dumps(dict(supplied_output=True,compute_context=ctx))) for n,p in plans.items()}
+    if defect in ("local_layout","gathered_layout","scale_dtype","corrupt_topk_receipt","corrupt_output_receipt"):
+        if defect in ("local_layout","gathered_layout"): ctx["source_activation_layout" if defect == "local_layout" else "activation_layout"]["stride"]=[1,17]
+        elif defect == "scale_dtype": ctx["scale_layout"]["dtype"]="bfloat16"
+        else:
+            name="step5_moe_dispatch" if defect == "corrupt_topk_receipt" else "step5_moe_combine"
+            p=plans[name];tensors=list(p.tensors);j=1 if defect == "corrupt_topk_receipt" else 0
+            tensors[j]=replace(tensors[j],columns=16,row_stride=16);plans[name]=replace(p,tensors=tensors)
+            ctx["collective_tensors"]["dispatch" if j == 1 else "output"]=[vars(t) for t in tensors]
+        plans={n:replace(p,buffer_json=json.dumps(dict(supplied_output=True,compute_context=ctx))) for n,p in plans.items()}
+        with pytest.raises(ValueError,match="layout"):
+            predictor._predict_step5_position_operator_times(lane,context=ctx,operator_features=features,collective_plans=plans)
+        assert not priced and not predictor._step5_ffn_costs
+        return
+    if defect:
+        p=plans["step5_moe_dispatch" if defect != "output" else "step5_moe_combine"]
+        envelope=json.loads(p.buffer_json)
+        if defect == "context": envelope["compute_context"]["quant_dtype"]="float8_e4m3fn" if quant is None else None
+        elif defect == "missing_context": envelope.pop("compute_context")
+        else:
+            j={"activation":0,"topk":1,"scales":3,"output":0}[defect]
+            tensors=list(p.tensors);tensors[j]=replace(tensors[j],columns=16,row_stride=16)
+            p=replace(p,tensors=tensors)
+        plans["step5_moe_dispatch" if defect != "output" else "step5_moe_combine"]=replace(p,buffer_json=json.dumps(envelope))
+        with pytest.raises(ValueError,match="compute|layout"):
+            predictor._predict_step5_position_operator_times(lane,context=ctx,operator_features=features,collective_plans=plans)
+        assert not priced and not predictor._step5_ffn_costs
+        return
     times,comm=predictor._predict_step5_position_operator_times(lane,context=ctx,operator_features=features,collective_plans=plans)
     assert set(times.op_times) == set(features) and "moe_shuffling" not in times.op_times
-    assert len(times.physical_frame["operator_costs"]) == 4 and len(comm.costs) == 4
+    assert len(times.physical_frame["operator_costs"]) == len(features) and len(comm.costs) == 4
     predictor._predict_step5_ffn_operator=lambda *a,**kw:0.
     with pytest.raises(ValueError,match="positive exact"):
         predictor._predict_step5_position_operator_times(lane,context=ctx,operator_features=features,collective_plans=plans)

@@ -109,7 +109,13 @@ def validate(job: dict, root: Path) -> dict:
             not probe["full_model_verified"] and not probe["model_runner_verified"] and all(
             layer["source_frame"]["source_lane_id"] == r["rank"] // parallel.tensor_parallel_size and
             layer["native_facts"]["shared"] == shared and
-            layer["native_facts"]["callables"] for r in ranks for layer in r["layers"]))
+             layer["native_facts"]["callables"] for r in ranks for layer in r["layers"]))
+        checks["native_actual_routing"]=all(layer.get("routing_comparison",{}).get("status") == "match" and
+            not layer["routing_comparison"]["differences"] and len(layer["routing_comparison"]["observations"]) == 1 and
+            layer["routing_comparison"]["observations"][0]["physical_rows"] == layer["source_frame"]["physical_rows"] and
+            layer["routing_comparison"]["observations"][0]["live_rows"] == sum(layer["source_frame"]["query_lens"]) and
+            layer["routing_comparison"]["observations"][0]["live_assignments"] == sum(layer["source_frame"]["query_lens"])*model.num_experts_per_tok
+            for r in ranks for layer in r["layers"])
         from dataclasses import asdict
         from frontier.profiling.moe.inputs import read_routing_profile_inputs
         inputs={i.moe_input_id:i for i in read_routing_profile_inputs(job["native_probe"]["routing_input_file"])}

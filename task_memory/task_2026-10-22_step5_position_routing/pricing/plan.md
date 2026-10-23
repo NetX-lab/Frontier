@@ -7,6 +7,7 @@
 | 2026-10-23 | Close owned delivery and distinguish peer/runtime acceptance boundaries. |
 | 2026-10-23 | Verify F3-F6 review repair and scoped final evidence. |
 | 2026-10-23 | Reopen only F4 frozen grouping and startup/call-time boundaries. |
+| 2026-10-23 | Repair C1 observed routing and C2 exact frame/plan binding. |
 
 1. **completed:** Publish selected targets, ROUTED prepare binding, immutable plan/result.
 2. **completed:** Extend isolated collective-sim with strict plan serialization, joint ordered
@@ -55,3 +56,21 @@ Current: actual exporter/observer/validator and cold importer GREEN; final552 ca
 463 PASS/89 SKIP, submodule12 PASS, cold10 PASS. Exact43-path3067/3956 budget and
 records verified; scoped source/record commit506b43ac delivered. Root re-review
 remains external acceptance, not owner work or GPU qualification.
+
+## Compute review repair (D29-PRICING-COMPUTE-REPAIR)
+
+Read approved design/published native bytes -> {C1 original selection observer and
+post-execution numerical comparison; C2 canonical compute+tensor plan validation}
+-> real-seam RED/GREEN negatives and exact receipt -> affected suites/JUnit and
+budget -> scoped commits/root re-review. C1 and C2 are disjoint; CPU checks run
+in parallel, no agents. Owner may not import/edit CORE's point/plan chooser.
+
+Current: C1 actual published methods64 PASS; C2 actual H04 physical/live0 point/
+layout66 cases PASS, all validation precedes pricing. Full point compute_context
+belongs to per-cell buffer receipt (count/cache key), not frozen model context.
+Missing producer/CORE field is a recorded dependent prerequisite, no inference.
+Native eager probe must reject routing mismatch even when comm schemas match;
+validator requires observed match/totals instead of trusting generic match alone.
+Affected final682=529 PASS/153 SKIP, cold10 PASS. Exact43 paths/3305 gross and
+records verified; scoped source/record commit989a883d delivered for root re-review.
+Observed compute binding is a CORE/producer prerequisite; no owned substitute.

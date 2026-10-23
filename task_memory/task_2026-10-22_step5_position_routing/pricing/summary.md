@@ -6,6 +6,7 @@
 | 2026-10-23 | Archive scoped delivery, exact interfaces/budget and acceptance limits. |
 | 2026-10-23 | Archive finite review F3-F6, new submodule tip and2944-line budget. |
 | 2026-10-23 | Archive F4a/F4b frozen identity/call-time repairs and3067-line budget. |
+| 2026-10-23 | Archive C1 observed routing/C2 compute binding and3305-line budget. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Branch: feat/step5-position-pricing.
 Baseline:1aee0af. Working directory:
@@ -30,6 +31,14 @@ frozen runtime for fit grouping and full call-time policy for raw/count/cache/pr
 equality. Same frozen policy can choose different implementations by size. Native
 lazy-disable/fallback changes startup enabled-state without changing frozen policy.
 F4a/F4b scoped source/record commit506b43ac; root independent re-review remains open.
+C1/C2 owned repairs observe original native routing once and validate exact IDs,
+weights, padding and actual policy after execution; H04 validates all point/plan
+contexts and tensor layouts before compute or collective pricing. Complete observed
+compute_context belongs to the per-cell buffer/count key, not frozen affine fit
+identity. The collector/CORE handoff for that observed field is still a prerequisite;
+missing binding fails instead of guessing or inventing evidence.
+Verified C1/C2 source/record commit989a883d. Root independent re-review and actual
+compute-context producer/CORE binding remain open, not owner-approved runtime proof.
 Authorized CORE02f061d/Native2c4cc9e and published67d5b5e dependencies imported;
 437b312 records published dependency integration. No peer file edited.
 Isolated collective-sim branch d29-position-pricing commits:
@@ -49,14 +58,16 @@ Isolated checkout is clean; no gitlink or peer changes were staged.
    F3-F6 exact RED/GREEN commands, JUnit counts and invocation limits.
 - `task_memory/task_2026-10-22_step5_position_routing/pricing/test_report_2026-10-23_f4_boundaries.md`:
   F4a/F4b exact RED/GREEN,552-case JUnit, failed iterations and3067-line budget.
-- Final affected CPU checks:463 PASS/89 SKIP; real HTSIM12 PASS; independent
-  cold constructor/importer without PYTHONPATH10 PASS. Published native original-method
-  CPU execution remains the earlier recorded PASS, not a GPU qualification.
+- `task_memory/task_2026-10-22_step5_position_routing/pricing/test_report_2026-10-23_compute_repair.md`:
+  C1/C2 RED/GREEN,682-case JUnit, exact commands, native64 PASS and3305-line budget.
+- Final affected CPU checks:529 PASS/153 SKIP; unchanged real HTSIM12 PASS; independent
+   cold constructor/importer without PYTHONPATH10 PASS. Published native original-method
+   observer64 PASS (mixed/pad-only rows and both normalization modes), not a GPU qualification.
 - AST/JSON parse and whitespace:PASS. No GPU/calibration claim.
 
 ## Exact owned code/test/config diff
 
-43 changed paths; +2972/-95=3067 gross versus3956, remaining889. The five
+43 changed paths; +3210/-95=3305 gross versus3956, remaining651. The five
 submodule files total333 gross and are included. Peer imports/task records/root
 gitlink are excluded. The sole unchanged approved path is
 `tests/unit/test_step5_contract_reuse.py`; its existing tests pass unchanged.
@@ -75,7 +86,7 @@ gitlink are excluded. The sole unchanged approved path is
 | frontier/config/quantization_manager.py |1|1|2|
 | frontier/entities/execution_time.py |40|10|50|
 | frontier/entities/time_components.py |14|0|14|
-| frontier/execution_time_predictor/moe_operator_times.py |50|0|50|
+| frontier/execution_time_predictor/moe_operator_times.py |79|0|79|
 | frontier/execution_time_predictor/sklearn_execution_time_predictor.py |6|0|6|
 | frontier/execution_time_predictor/step5_cost.py |37|2|39|
 | frontier/metrics/constants.py |3|0|3|
@@ -83,7 +94,7 @@ gitlink are excluded. The sole unchanged approved path is
 | frontier/metrics/op_trace_utils.py |44|0|44|
 | frontier/operators/families.py |41|1|42|
 | frontier/operators/spec.py |15|5|20|
-| frontier/profiling/collectives/step5_dispatch_probe.py |101|9|110|
+| frontier/profiling/collectives/step5_dispatch_probe.py |179|9|188|
 | frontier/profiling/collectives/vllm_collective_benchmark.py |277|39|316|
 | frontier/profiling/collectives/vllm_forward_collectives.py |18|7|25|
 | frontier/profiling/moe/fp8_block_experts.py |98|1|99|
@@ -94,7 +105,7 @@ gitlink are excluded. The sole unchanged approved path is
 | tests/integration/step5_comm/export_costs.py |239|0|239|
 | tests/integration/step5_comm/prepare.py |68|2|70|
 | tests/integration/step5_comm/step5_position_model_run.json |68|0|68|
-| tests/integration/step5_comm/validate_result.py |78|5|83|
+| tests/integration/step5_comm/validate_result.py |84|5|89|
 | tests/integration/step5_comm/worker.py |34|4|38|
 | tests/unit/test_collective_benchmark_helpers.py |151|1|152|
 | tests/unit/test_collective_sim_cc_backend.py |102|0|102|
@@ -103,9 +114,9 @@ gitlink are excluded. The sole unchanged approved path is
 | tests/unit/test_op_trace_utils.py |25|0|25|
 | tests/unit/test_step5_comm_cost_export.py |169|0|169|
 | tests/unit/test_step5_comm_package.py |84|0|84|
-| tests/unit/test_step5_comm_transport.py |188|4|192|
-| tests/unit/test_step5_dispatch_probe.py |113|1|114|
-| tests/unit/test_step5_moe_pricing.py |253|0|253|
+| tests/unit/test_step5_comm_transport.py |196|4|200|
+| tests/unit/test_step5_dispatch_probe.py |183|1|184|
+| tests/unit/test_step5_moe_pricing.py |300|0|300|
 
 ## Remaining acceptance dependencies
 
@@ -116,7 +127,11 @@ gitlink are excluded. The sole unchanged approved path is
    CORE also retains actual full per-rank execution_policy in plan context; guessed
    communicator defaults/version/buffer branch cannot satisfy the importer. The
    exporter/importer derive collective_model_context only for frozen fit selection;
-   complete observed branches/buffers/runtime remain in raw cells and exact counts.
+    complete observed branches/buffers/runtime remain in raw cells and exact counts.
+    C2 additionally requires observed complete native compute_context in each
+    exact plan's buffer_json/count receipt. Existing shared/tensor-only chooser
+    is insufficient. Producer/CORE must bind actual verified observations; this
+    owner did not alter peers or substitute inferred context. See interface_receipt.
 2. Root prepares actual bound input vectors/layers/frozen device/network inputs
    and independently measured local/protocol/TP/count evidence, then separate
    parent qualification. The bounded template is

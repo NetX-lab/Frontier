@@ -231,7 +231,73 @@ class DispatchObserver:
         self.emit = emit
         self.calls = []
         self.expert_calls = []
+        self.routing_calls = []
         self.errors = []
+
+    @contextmanager
+    def routing(self, router):
+        """Retain native selection references only; numerical checks run afterwards."""
+        original=router.select_experts
+        @wraps(original)
+        def selected(hidden_states,router_logits,topk_indices_dtype=None,*,input_ids=None):
+            record=dict(hidden=hidden_states,logits=router_logits,indices_dtype=topk_indices_dtype,
+                input_ids=input_ids)
+            with diagnostic_scope(self.errors,"routing.enter"):
+                from vllm.forward_context import get_forward_context
+                from vllm import envs
+                from vllm.model_executor.layers.fused_moe.router.routing_simulator_router import RoutingSimulator
+                context=get_forward_context()
+                record.update(positions=context.routing_positions,is_padding=context.is_padding,
+                    actual_config=dict(top_k=router.top_k,global_num_experts=router.global_num_experts,
+                        renormalize=router.renormalize,routed_scaling_factor=router.routed_scaling_factor,
+                        eplb_enabled=router.eplb_state is not None,routing_method_type=router.routing_method_type.name,
+                        strategy=envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY,skip_padding=envs.VLLM_MOE_SKIP_PADDING),
+                    strategy=RoutingSimulator._routing_strategies[envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY])
+            value=original(hidden_states=hidden_states,router_logits=router_logits,
+                topk_indices_dtype=topk_indices_dtype,input_ids=input_ids)
+            with diagnostic_scope(self.errors,"routing.exit"):
+                record["result"]=value
+                self.routing_calls.append(record)
+            return value
+        with patch.object(router,"select_experts",selected): yield
+
+    def compare_routing(self, source_tensors, text):
+        """Verify observed outputs against explicit positions and those same logits."""
+        import torch
+        observations=[];differences=[]
+        def check(field,actual,expected):
+            if actual != expected: differences.append(dict(field=field,actual=actual,expected=expected))
+        with diagnostic_scope(self.errors,"routing.compare"):
+            positions,mask=source_tensors
+            check("routing_count",len(self.routing_calls),1)
+            for record in self.routing_calls:
+                config=record["actual_config"];logits=record["logits"];weights,ids=record["result"]
+                expected_config=dict(top_k=text.moe_top_k,global_num_experts=text.moe_num_experts,
+                    renormalize=text.norm_expert_weight,routed_scaling_factor=text.moe_router_scaling_factor,
+                    eplb_enabled=False,routing_method_type="Simulated",strategy="position_cyclic",skip_padding=True)
+                check("router_config",config,expected_config)
+                check("scoring_func",getattr(text,"moe_router_activation","sigmoid"),"sigmoid")
+                check("strategy_class",type(record["strategy"]).__name__,"PositionCyclicRouting")
+                check("logits_shape",list(logits.shape),[len(positions),text.moe_num_experts])
+                check("positions",torch.equal(record["positions"],positions),True)
+                check("is_padding",torch.equal(record["is_padding"],mask),True)
+                wanted_ids=(positions.to(torch.int64)[:,None]*text.moe_top_k+
+                    torch.arange(text.moe_top_k,device=positions.device))%text.moe_num_experts
+                wanted_weights=logits.float().gather(1,wanted_ids).sigmoid()
+                if text.norm_expert_weight: wanted_weights=wanted_weights/wanted_weights.sum(-1,keepdim=True)
+                wanted_weights=wanted_weights*text.moe_router_scaling_factor
+                wanted_ids=wanted_ids.masked_fill(mask[:,None],-1)
+                wanted_weights=wanted_weights.masked_fill(mask[:,None],0)
+                check("ids",torch.equal(ids,wanted_ids),True)
+                check("weights",torch.equal(weights,wanted_weights),True)
+                check("ids_dtype",str(ids.dtype),str(record["indices_dtype"] or torch.int32))
+                check("weights_dtype",str(weights.dtype),str(torch.float32))
+                observations.append(dict(actual_config=config,scoring_contract="selected_unbiased_sigmoid",
+                    strategy_class=type(record["strategy"]).__name__,logits=tensor_schema(logits),
+                    positions=positions.tolist(),is_padding=mask.tolist(),ids=ids.tolist(),weights=weights.tolist(),
+                    physical_rows=len(positions),live_rows=int((~mask).sum()),live_assignments=int((ids>=0).sum())))
+        return dict(status="unverified" if self.errors else "discrepancy" if differences else "match",
+            differences=differences,observations=observations)
 
     @contextmanager
     def collectives(self, coordinator):
@@ -432,7 +498,7 @@ def source_forward_context(config, rows, sizes, device, routing_input, dp_rank):
         positions,is_padding=source_frame_tensors(frame,device=device)
         with set_forward_context(None,config,num_tokens=rows,num_tokens_across_dp=sizes,is_padding=is_padding):
             with set_routing_positions(positions):
-                yield
+                yield positions,is_padding
 
 
 def run_probe(args, plan):
@@ -514,9 +580,14 @@ def run_probe(args, plan):
                     with diagnostic_scope(observer.errors,"bound_native_source"):
                         from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
                         from vllm.forward_context import set_routing_positions
+                        from vllm.model_executor.layers.fused_moe.router.routing_simulator_router import RoutingSimulator
+                        from vllm import envs
                         result["native_facts"]=verify_step5_profile_runtime(plan["profile_manifest"],
                             callables=[type(layer),layer.forward,set_forward_context,set_routing_positions,
-                                layer.experts.router.select_experts,
+                                 layer.experts.router.select_experts,
+                                 layer.experts.router._select_experts,layer.experts.router._compute_routing,
+                                 RoutingSimulator.simulate_routing,RoutingSimulator._routing_strategies[
+                                     envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY].route_tokens,
                                 layer.experts.routed_experts.quant_method.moe_kernel.apply])
                 with diagnostic_scope(observer.errors, "native_backend"):
                     result.update(native_backend(layer))
@@ -528,8 +599,11 @@ def run_probe(args, plan):
                 with diagnostic_scope(observer.errors, "observe_experts"):
                     observation.enter_context(observer.experts(
                         layer.experts.routed_experts.quant_method.moe_kernel.fused_experts))
+                if routing_input is not None:
+                    with diagnostic_scope(observer.errors,"observe_routing"):
+                        observation.enter_context(observer.routing(layer.experts.router))
                 try:
-                    with torch.inference_mode(), source_forward_context(config,rows,sizes,device,routing_input,dp_rank):
+                    with torch.inference_mode(), source_forward_context(config,rows,sizes,device,routing_input,dp_rank) as source_tensors:
                         shared, routed = layer(inputs)
                         torch.cuda.synchronize(device)
                 finally:
@@ -559,6 +633,10 @@ def run_probe(args, plan):
                     result["comparison"] = compare_dispatch(
                         expected_case, observer.calls, rows=rows, sizes=vector,
                         dp_ranks=expected_dp, tp_ranks=expected_tp, hidden=hidden)
+                if routing_input is not None:
+                    result["routing_comparison"]=observer.compare_routing(source_tensors,config.model_config.hf_text_config)
+                    if result["routing_comparison"]["status"] != "match":
+                        result["comparison"]["status"]=result["routing_comparison"]["status"]
                 if observer.errors or len(errors) > error_start:
                     result["comparison"]["status"] = "unverified"
                 emit({"event": "layer_verdict", "layer_id": case["layer_id"], **result["comparison"]})

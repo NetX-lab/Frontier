@@ -8,6 +8,7 @@
 | 2026-10-23 | Record root's existing-seam T2 serving-limit decision. |
 | 2026-10-23 | Resume only finite-review F3–F6 under the original ownership/quota. |
 | 2026-10-23 | Resume F4a/F4b frozen-policy and lazy-state boundary repairs. |
+| 2026-10-23 | Resume C1 actual-router diagnostics and C2 compute/collective binding. |
 
 TaskID: D29-PRICING-IMPLEMENTATION.
 
@@ -67,3 +68,18 @@ existing owned paths; source2944/3956 leaves1012 gross. No peer edits/imports,
 new paths/agents/platform/GPU or qualification design changes. Preserve the
 completed-flow gate, real cold constructor, selected scope/replay and isolated
 submodule3dac53c. Root owns re-review, gitlink and global acceptance.
+
+[Original Request] D29-PRICING-COMPUTE-REPAIR: reviewer
+ses_e9afdb7c4ffejb3hbkjZCeHFKS (D29-PRICING-COMPUTE-REVIEW) found C1 actual
+bound native router config/logits/returned IDs/weights/mask unchecked, and C2 H04
+accepting compute/plan context and dispatch layout mismatch. Observe original
+selection once with its explicit keyword signature, retain input/output references,
+compare after execution same logits under configured selected unbiased sigmoid/
+normalize/scale and position formula/padding sentinel. Native exceptions/soft
+diagnostics/input identity unchanged, no arbitrary tolerance or rerouting. H04
+requires canonical same native compute point and actual activation/scales/top-k
+layouts before backend pricing; no stripping quant/layout or unrelated-envelope
+equality. Current bfe6f2ae/sub3dac53c source3067/3956,43/44 leaves889 gross. No
+new paths/peers/imports/platform/GPU/extra agents/approval-criteria changes;
+preserve F4 frozen/full identity, F3/F5/F6 and confirmed native scopes. Root owns
+re-review/integration/global qualification; publish any missing CORE binding seam.
