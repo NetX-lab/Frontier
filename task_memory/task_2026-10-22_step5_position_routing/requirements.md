@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | YC approves fixed collective profiling input per simulation run; next run reloads changes, superseding per-call hot-update requirements. |
 | 2026-10-24 | Allocate current-byte comparison within existing caches and adapt only the existing read-hook instrumentation, with unchanged live checks and quotas. |
 | 2026-10-23 | Allocate8-gross immutable cost-field conversion in two existing PRICING paths without changing allowances. |
 | 2026-10-23 | Allocate prepared point selection to three existing CORE paths, at most250 gross, after parent differential verification. |
@@ -255,3 +256,28 @@ prepared-input replacement/negative cases and affected unit checks. Preserve
 same-size/restored-mtime updates, repeated invalid JSON and original read-error
 identity. No wave/load-time sharing, new API, native numerical cache-key change,
 read suppression or expanded full-run limit is authorized by this amendment.
+
+## [Original Request] Run-fixed collective profiling input (2026-10-24)
+
+Primary asked: "是否允许一次仿真运行固定 collective_local.json 的已校验内容，
+下一次运行再加载文件更新？这项决定允许继续做输入复用，但本身不代表已达到
+2400秒目标；已授权的修复与输出分析仍在继续。"
+
+YC selected: "单次运行固定 (Recommended)". The selected option states that the
+current run uses its bound input version, preserves per-point checks and full
+output, and allows hot-update tests to adopt the new lifetime.
+
+Decision: collective profiling input contents are fixed for one simulator run;
+the next run observes file changes. This supersedes prior per-query file-read,
+same-backend hot-update and corresponding invalidation-test requirements only.
+It does not permit stale input reuse across runs, mixed CORE/backend/role input
+versions within a run, numerical/whole-proof caching, weaker per-plan admission,
+lost layer identity, changed model-cache identities, reduced output or a longer
+CLI timeout. Existing estimator/physical-row/measurement-identity replacement
+checks outside the collective file lifetime remain.
+
+Determine ownership from the actual run/Cluster/predictor lifecycle before
+allocating the implementation. Prefer one existing owner and one snapshot path;
+no new live-versus-fixed mode or flag is requested. The delivered byte repair
+remains a verified intermediate, with final independent review on the resulting
+snapshot change. Owner/global limits and6144/1024/2400s acceptance remain.

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Record YC's run-fixed input decision, receive byte repair32/36 and inspect the existing ownership/lifetime before its successor allocation. |
 | 2026-10-24 | Allocate artifact bytes36 through two unused PRICING allowance lines; retain per-call reads and all existing behavior assertions. |
 | 2026-10-23 | Merge verified cost-fields75404143, archive both reviews and HTSIM-completed checks, correct workload clocks and close negative identity-cache analysis. |
 | 2026-10-23 | Archive prepared acceptance/9389 union; correct historical startup multiplicity; allocate cost-fields8 with unchanged allowances. |
@@ -119,6 +120,18 @@
 - in-progress/diagnostic: D29-TRACE-ENCODING-SEAM,
   ses_e96a5c1c7ffeoPBK7V08CMas7v, investigates equal immutable JSON string leaves
   with full output/error/snapshot preservation. Source edits are not allocated.
+- completed/owner delivery, parent acceptance pending: byte repair2f2d9339,
+  records56529fcd, session ses_e9669de64ffeH614F6iNYIqgeb. Three allocated paths,
+  32/36gross(source24/test8),net+2; retained84/197/235. Owner baseline/candidate
+  each78PASS; full208event/ledger byte equality,80reads per wave and warm median
+  1.037333->0.325204s. Primary has not merged or independently accepted it.
+- completed/user decision: YC approves fixing collective_local.json for one
+  simulator run and loading changes in the next. Current per-call hot updates
+  and their tests may adopt that lifetime. Per-point validation/output stay.
+- in-progress/design: D29-RUN-INPUT-LIFETIME, session
+  ses_e965227e0ffewRlo7k5AqiDNsQ, traces the actual run/Cluster/predictor boundary
+  and shared ownership. No successor source allocation yet. Review the final
+  combined snapshot diff rather than separately approving a superseded read loop.
 - completed/corrected diagnosis: ccd9b728 replaces the old78% unexplained startup
   estimate. Actual P/D call multiplicity is10+1 MoE reads per measurement family;
   unit-cost scaling now explains about1035/1288s, with253s remaining. Warning/log,

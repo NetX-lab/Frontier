@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | YC approves run-fixed collective input; byte repair32/36 delivered, with successor ownership design and combined review pending. |
 | 2026-10-23 | Merge accepted cost-fields75404143, archive parent checks and independent reviews, correct workload clocks and close the unsuccessful identity-cache control. |
 | 2026-10-23 | Accept and integrate prepared selectioneece87b2;9375 source/9389 global; allocate cost-fields8 and correct historical startup explanation. |
 | 2026-10-23 | Integrate accepted trace14 at64881373; allocate prepared250 after parent differential verification; whole workflow remains open. |
@@ -41,6 +42,13 @@ scheduler event by about1112s. No anomalous slowdown is established. Output
 volume still projects approximately262GB/mode; output-preserving encoding
 analysis and a bounded byte-read repair are the next work. The previous79 results remain
 revision-bound. The next complete CLI still requires a reviewed, frozen union.
+
+YC now explicitly allows collective_local.json to be fixed for one run and
+reloaded on the next. The per-call hot-update contract is superseded; actual
+point/proof validation and output remain. Byte code2f2d9339/records56529fcd is an
+unmerged intermediate: owner78PASS in both versions,208event/fullledger equality,
+32/36gross and measured1.037333->0.325204s warm. Root first resolves the run-wide
+input owner, then allocates and independently reviews the final snapshot change.
 
 ### Earlier resumed checkpoints
 
