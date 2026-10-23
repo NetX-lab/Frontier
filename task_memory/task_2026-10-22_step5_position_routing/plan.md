@@ -20,33 +20,35 @@ Apply repairs/{registry_scope_amendment,core_review_scope_amendment,
 legacy_output_scope_amendment,prepare_metadata_scope_amendment}.json in that order:
 111 effective paths, CORE46/4404, native19/1582, PRICING46/3956; source9942 and
 global10000 gross ceilings are unchanged. Apply repairs/final_scope_reconciliation.json
-last for the adopted actual per-path allowances; no path/owner total changes.
+next,then cli_placement_scope_amendment.json for the two-file CORE repair. No
+path/owner total changes; the latter transfers40 unused CORE allowance and limits
+the new repair to65 gross.
 requirements.md records YC's authority.
 
-Dependency: prepare metadata repair -> affected checks and independent re-review
--> final source freeze -> {strict77, full-unit failure/error-set comparison,
-full offline/online actual-main, final T2 source binding, actual per-path accounting}
+Current dependency: CLI placement repair -> real-constructor checks and independent
+re-review -> new candidate freeze -> {required regression/full actual-main checks,
+final T2 source binding, updated actual per-path accounting}
 -> integration into feat/step5-preview -> package readiness -> resource/run decision
 -> fresh native/profile evidence -> G3 and independent four-metric E2E acceptance.
 
-In parallel now: finish the already-running main04 diagnostic on frozen60ba4c75;
-prepare T2 bindings and reconcile task records. main04 began before review closed
-and cannot substitute for final CLI acceptance. Its source and artifacts stay
-unchanged. Final T2 acceptance must verify the actual final script/helper bytes.
+The earlier main04 attempt on60ba is diagnostic only. Main05 on1be supplies the
+current placement failure; its raw command/log/execution receipts stay preserved.
+T2 has a verified1be binding,but final staging/seal and code integration await
+the actual-main repair. Rebind to any later accepted candidate explicitly.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
 | Approval, ownership and baseline | Complete; effective111 under existing budgets. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
-| CORE/SOURCE46 | Source review and affected fixture repairs complete. |
+| CORE/SOURCE46 | Earlier source review complete; current two-file CLI configuration repair in progress. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Source review complete;3879/3956 gross. |
-| Complete integration and final freeze | Final code frozen1be91bad; main-branch code/docs integration awaits final gates. |
+| Complete integration and final freeze | 1be91bad retained as failed-workflow candidate; new freeze follows CLI repair/review. |
 | Legacy strict77 | Final03 on1be91bad:77/77 identical,902 artifact hashes verified. |
 | Full-unit failure/error-set gate | Closed on1be91bad with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. |
-| Fresh fixture and full CLI | main05 fails both modes at actual backend placement check; repairs/cli_placement_repair.md owns short-feedback diagnosis. |
-| Independent source review | All recorded source findings closed on1be91bad. |
+| Fresh fixture and full CLI | main05 fails both modes; real-config1.6s RED and1.7s placement-only GREEN identify the omitted runner argument. |
+| Independent source review | Earlier findings closed on1be91bad; CLI repair requires its own exact-delta review. |
 | T2 final-source binding | Parent verifies final1be tree,26 files and63 checksums; physical staging/seal follows CLI completion. |
 | Final per-path accounting | Complete:111 allocated/110 changed,9062 source/9076 global; adopted same-owner zero-sum reconciliation. |
 | Package/GPU/G3/E2E | Blocked by workflow readiness and separate resource approval; original gates remain. |

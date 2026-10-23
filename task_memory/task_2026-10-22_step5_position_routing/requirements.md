@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC requests closure of the currently executing work, code/document commits and a prompt for continuation in another session. |
 | 2026-10-23 | YC approves two extra test paths and analogous necessary repair-path adjustments within the existing budgets. |
 | 2026-10-23 | Clarify both-trainer coverage and shared-manager P/D consumer scope; withdraw an unrequested independent public-consumer prerequisite. |
 | 2026-10-23 | Root selects the existing constructor seam for explicit T2 engine limits within the approved scope. |
@@ -114,3 +115,22 @@ the existing owner/global budgets without repeated approval. Record each path,
 reason, bounded delta and verification. This does not authorize unrelated
 features, budget increases, relaxed gates or new GPU allocations. The specific
 zero-sum allocation is repairs/legacy_output_scope_amendment.json.
+
+## [Original Request] D29-SESSION-HANDOFF
+
+YC requests:
+
+> 请你完整当前正在执行任务的收尾，然后完提交更新docs和codes，生成一段handoff prompts，我将在其他session中继续执行
+
+Finish the active work at a verified boundary,commit the delivered code and
+documents,and provide a self-contained continuation prompt. Preserve observed
+failure evidence and explicitly identify any remaining acceptance work. This
+handoff request does not turn pending CLI/native/GPU checks into passed gates or
+authorize additional GPU allocations. Record unfinished work and next commands
+in progress.md as well as the handoff prompt.
+
+The verified handoff boundary is the active two-file CLI placement repair:
+parent57PASS/6unchangedSKIP and independent No findings. Consolidate reviewed
+implementation and records on feat/step5-preview for the next session,while
+keeping full CLI replay,final-source qualification and GPU work explicitly open.
+This delivery merge is not the final D29 workflow admission described earlier.
