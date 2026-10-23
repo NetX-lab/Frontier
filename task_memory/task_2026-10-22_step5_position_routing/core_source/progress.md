@@ -15,6 +15,7 @@
 - completed: baseline clean, branch feat/step5-position-core at 1aee0af; scope.json grouped by exact path yields 44 paths/4404 gross lines.
 - latest completed: records committed before authorized f41d1ee9 merge591894f1. Real caller now consumes actual CPU plan/count binder and formal ReplicaConfig TP8/DP2/EP16. C2 caller37PASS/3SKIP; no H04 peer edits or default guards.
 - latest observed actual CLI: seam02 exit1,1295.815292s,not timedout,internal2400s unchanged. Trace stops in owned metadata hook, not registry/backend. Hypothesis recorded before persistent RED: trainer auto-enumerates but hook does not. RED real hook raises same selected operator_facts error; GREEN reuses position_moe_operator_facts and37PASS/3SKIP. Metadata162/164,test105/108;44-path3304/4404,AST/whitespacePASS. Report:test_report_2026-10-23_actual_main_metadata.md.
+- latest completed commit2a862c25. Same-cache actual CLI03 pending,internal2400s unchanged; no polling. Current expanded source/count/selected consumer union86PASS/1SKIP12.02s; F1/P2/current timer/source20PASS9.11s. Existing submodule development checkout3dac53c remains unstaged/root-owned; no other code WIP.
 - completed: first count/source/tensor/provenance interfaces, 53 PASS/1 SKIP in frontier-py310; actual source tensors/counts in asyncopd-py312 4 PASS/1 deselected. AST and whitespace PASS. Current 7 code/test paths, 713 gross/4404.
 - completed: first interface commit `c995fdc`, 713 gross code/test lines, receipt delivered to root.
 - completed: runtime/source threading: constructors resolve registry before parent initialization, shared scheduler passes actual bound DP sources, immutable full-source cache separates lane reorder/padding/position/context, ratio tables are not synthesized for the new policy. Source/load/conservation consumer tests pass.
@@ -151,3 +152,50 @@
 1. F1/P2 fixed795a583; exact source396a3806 and strict C2 CORE26946b85 verified without native semantics/peer edits。
 2. Main fixture/runner not complete: actual terminal pending and unowned registry/backend/native association block acceptance。
 3.44/3305 within quota; integration test153/153 and source metadata85/85 exhausted; root-only size note needs scheduler1993->2002 delta。
+
+## Current checkpoint after2a862c25 (supersedes previous checkpoint)
+
+## 1. 规划完成情况
+
+**汇总：** PASS 3｜BLOCKED/FAILED/SKIPPED 1｜TODO 1
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| count/source/tensor/verifier interfaces | PASS | c995fdc;795a583;current20PASS plus86PASS/1SKIP |
+| source threading/admission/cache/legacy defaults | PASS | ac48363,e255ede;actual source consumers |
+| selected trainer/preflight/wrapper/runtime consumers | TODO | delivered41bbf035,26946b85,2a862c25;full registry/native association pending |
+| source package/launcher/provenance identities | PASS | actual2907-source static binding;548-file package;root runtime acceptance separate |
+| fresh actual-main fixture/runner complete offline+online | BLOCKED | owned inputs/command delivered;unowned registry/backend/native association;03 pending |
+
+## 2. 偏离检测
+
+**结论：**未偏移，正常推进。
+**检测窗口：**26946b85后checkpoint至今｜**当前前沿：**precise C2 actual caller,automatic metadata hook,actual CLI boundary。
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | real caller test removes stale plan stub to exercise required C2 seam;stops after37PASS/3SKIP |
+| D2 细节反复重试 | CLEAR | initial empty plan and missing test ReplicaConfig hypotheses narrowed failures;formal config correction andmetadata RED/GREEN settle them |
+| D3 支线问题修补 | CLEAR | actual CLI metadata traceback directly blocks step5;owned fix2a862c25 |
+| D4 可并行任务停滞 | CLEAR | CLI03 runs whileF1/source checks complete;extra agents prohibited |
+| D5 超范围镀金 | CLEAR |44paths/3304,allceilingsPASS;no registry/backend/source relabeling |
+| D6 分析空转 | CLEAR | verified scoped code commit2a862c25,not another design round |
+| D7 路线违背 | CLEAR | authorized f41d import;complete observed context retained;no CPU/native acceptance |
+
+**文档检查：**S1–S6均未发现新的明显缺陷；latest authoritative plan/summary/receipt now name C2import,CLI terminal andunownedrootblockers。
+**归因：**无。
+
+## 3. 纠正建议
+
+**分支：**A：当前spec/plan合理，无需改动范围。
+**需停止的偏离行为：**无。
+**接下去的路线：**
+1. Archive CLI03 terminal when notified → 完成标志：actual exit/error/log/time,2400s unchanged,no pending converted toPASS。
+2. Root coordinates existing registry binding lookup,explicit existing backend CPU costs andnative observed buffer association → 完成标志：supplied real interfaces/artifacts;no duplicate registry/normalizer/backend。
+3. After prerequisites,affected existing fixture/main rerun → 完成标志：6144/1024 offline+online,READ/readiness/release/metrics/proofs verified;root native qualification separate。
+
+## 4. 最值得关注的 3 点
+
+1. Actual CLI exposed ownedmetadata defect,now2a862c25 RED/GREEN37PASS/3SKIP;not hidden behindpeer blockers。
+2. Complete actual-main stillBLOCKED byunowned interfaces/native observation;CLI03pending isnot acceptance。
+3. Current44/3304;metadata162/164,test105/108;F1current20PASS andsource86PASS/1SKIP;root size note unchanged。

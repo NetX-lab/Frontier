@@ -36,6 +36,24 @@ TaskID: D29-CORE-SOURCE-IMPLEMENTATION. Worktree `/data/ycfeng/Frontier/.worktre
 
 Full CLI rerun still uses preserved complete CSV/cache inputs; they predate complete C2 producer fields. Native qualification and existing registry multi-binding/production CPU backend remain separate prerequisites. No offline/online metrics acceptance yet. Do not count overlapping tests twice.
 
+Scoped fix committed `2a862c25`. Same vector/table/cache rerun launched03, only output directory changed; no outer timeout, original internal2400s. Artifacts `/data/ycfeng/tmp/d29-core-position-main-seam03/{command.json,requests.csv,run.log,execution.json}`; shell `sh_16622944f001i58klpf304zIhR` is pending, not polled. No other unit/backend is changed during this observed attempt.
+
+Latest F1/P2/current timer/source command:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VLLM_TARGET_DEVICE=cpu PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29-core-f1-current01 tests/unit/test_step5_moe_profiling.py -k 'only_replaced_bound_router or position_adapter_binds or real_device_timer or masked_expert or oracle_callable or lazy_norm or actual_source_context' > /data/ycfeng/tmp/d29-core-f1-current01.log 2>&1
+```
+
+**20PASS/11deselected,9.11s**, two SWIG deprecation warnings. Actual `_select_experts` negative, unchanged singleton event durations/count replay/restore/clear and full callable receipts remain verified; CPU evidence only, not native/GPU qualification.
+
+Expanded count/source/selected actual consumers:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -p no:cacheprovider tests/unit/test_moe_position_routing.py tests/unit/test_moe_routing_conservation.py tests/unit/test_moe_grouped_gemm_padded_features.py tests/unit/test_moe_profiling_output_metadata.py tests/unit/test_step5_fixed_probe.py > /data/ycfeng/tmp/d29-core-c2-source-consumer-union01.log 2>&1
+```
+
+**86PASS/1SKIP,12.02s**. Single skip requires torch in py310; no baseline failures suppressed or environment altered. This settles affected count/source/legacy defaults, selected trainer/preflight/loader schema/count/identity paths and existing receipt negatives, not integrated GPU/strict77 acceptance.
+
 ## Accounting and limits
 
 Grouped retained scope rows yield44 owned paths/4404 total. Current baseline gross **+3149/-155=3304**,1100 remaining; every per-file ceiling, Python AST and whitespace PASS. Metadata file162/164; updated real caller test105/108. No peer edits, extra agent, new backend/registry, invented source/image identity or CPU-to-native relabeling.
