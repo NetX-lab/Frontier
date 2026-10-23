@@ -108,6 +108,7 @@ class QuantizationManager:
             self._operation_data_sources: Dict[str, str] = {}
             self._operation_approximation_factors: Dict[str, float] = {}
             self._operation_profiling_precision: Dict[str, PrecisionType] = {}
+            self._operation_profiling_quant_matches: Dict[str, bool] = {}
             self._cluster_overrides: Dict[ClusterType, Dict[str, PrecisionType]] = {}
             self._supported_operations: Dict[str, Any] = {}
             self._warned_mismatches: Set[tuple] = set()
@@ -181,6 +182,7 @@ class QuantizationManager:
             self._operation_data_sources = {}
             self._operation_approximation_factors = {}
             self._operation_profiling_precision = {}
+            self._operation_profiling_quant_matches = {}
             self._cluster_overrides = {}
             self._precision_mismatches = set()
             self._active_gdn_operations = False
@@ -221,6 +223,7 @@ class QuantizationManager:
             self._operation_data_sources = {}
             self._operation_approximation_factors = {}
             self._operation_profiling_precision = {}
+            self._operation_profiling_quant_matches = {}
             self._operation_source_inventory = {}
             self._cluster_overrides = {}
             self._precision_mismatches = set()
@@ -755,6 +758,7 @@ class QuantizationManager:
             quant_match = profiling_quant_signature == expected_quant_signature
             with self._lock:
                 self._operation_profiling_precision[op_name] = profiling_precision
+                self._operation_profiling_quant_matches[op_name] = quant_match
                 if precision_match:
                     self._operation_data_sources[op_name] = "profiling"
                     self._operation_approximation_factors.pop(op_name, None)
@@ -834,12 +838,17 @@ class QuantizationManager:
                 continue
             source_inventory = self._operation_source_inventory.get(op_name, {})
             precision_name = source_inventory.get("precision")
-            if precision_name is None and op_name in context_moe_ops and op_name in self._operation_profiling_precision:
+            exact_context_profile = (precision_name is None and op_name in context_moe_ops
+                                     and self._operation_profiling_quant_matches.get(op_name, False)
+                                     and not self.has_explicit_precision(op_name))
+            if exact_context_profile:
                 precision_name = self._operation_profiling_precision[op_name].name
             if precision_name is None:
                 precision_name = self.get_precision(op_name).name
             data_source = self._operation_data_sources.get(op_name, "profiling")
             approx_factor = self._operation_approximation_factors.get(op_name)
+            if exact_context_profile:
+                data_source, approx_factor = "profiling", None
             metadata.append(
                 {
                     "operation": op_name,
