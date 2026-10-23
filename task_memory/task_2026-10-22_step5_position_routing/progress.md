@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Apply checkpoint route corrections; separate current frontier from historical receipts and restrict main04 to diagnostic evidence. |
 | 2026-10-23 | strict77 passes77/77 with902 artifact hashes;review finds one Step prepare metadata P2,returned to owner inside existing quota. |
 | 2026-10-23 | YC approves repair-path amendment; parent legacy194PASS; strict77 and full offline/online CLI started on frozen60ba4c75. |
 | 2026-10-23 | Initial gates archived: full-unit six fixture regressions, native dependencies resolved, strict77 RED; two extra test paths proposed pending YC approval. |
@@ -33,6 +34,46 @@
 | 2026-10-22 | Receive the first design and request independent scope/correctness review. |
 
 ## Current frontier
+
+- completed: approved scope is111 effective code/test/config paths under four
+  repairs/*scope_amendment.json overlays. CORE46/4404, native19/1582,
+  PRICING46/3956; source9942/global10000 remain unchanged. YC's repair-path
+  authority is retained in requirements.md.
+- completed: native source/CPU and image/source receipts; CORE/registry and joint
+  producer source reviews; five older fixture failures repaired in f03a1157.
+  These acceptances do not establish native/GPU numerical qualification.
+- completed: b60dfddd legacy output repair gives parent194PASS and strict77
+  77/77 identical on frozen60ba4c75. Receipt: final_parent/fidelity_repair02_audit.json.
+  Approved test repair047f7313 gives parent53PASS and covers all six newer fixture
+  regression IDs. Environment-specific checks give canonical85PASS and native16PASS;
+  suites remain separate and the original full-unit results are preserved.
+- received: PRICING delivers prepare metadata repair3d51b9b2 and recordsbbd39fe3,
+  31/40 gross across two existing paths. Owner reports196 affected PASS and real
+  approximation retained; PRICING3879/3956,remaining77,paths19/29 and62/70.
+  Parent verifies and independent reviewer rechecks the immutable integrated-04
+  snapshot before acceptance. No final source freeze yet.
+- in-progress: main04 remains an immutable diagnostic run at60ba4c75 using
+  fixture03, with2400s per mode. Its launch preceded review closure, so its results
+  cannot count as final CLI acceptance. Preserve artifacts and inspect its result
+  when it completes. Final offline/online runs follow the reviewed source freeze.
+- received: T2 source binding43c2947c/2adbf9f2 binds60ba, reports63/63 checksums and
+  unchanged26 source files. Root acceptance and explicit final-revision byte binding
+  remain pending. Engine limits7168/8192/128, imagef037 and native1350/1582 unchanged.
+- completed: apply checkpoint D7/S5 corrections to plan.md and repairs/repair_plan.md;
+  the route now requires review closure before final freeze and final-source gates.
+  Move superseded status entries below; defer unrelated work through future.md.
+- pending: after P2 closure, freeze the complete integrated source and run required
+  strict77, full-unit failure/error-set comparison, affected tests, and full
+  offline/online CLI on that source. Verify final T2 bindings and actual per-path
+  allowances; then merge accepted code and records into feat/step5-preview.
+- blocked: GPU/native collection, G3 and clean E2E await workflow readiness and
+  explicit resources/run approval. T2's16 H800/two-node/30-minute proposal remains
+  unapproved. D30 remains integrated4ec5b23; CPU-gap work remains last.
+
+## Historical integration receipts
+
+The entries below retain earlier decisions, commands and outcomes. Their original
+in-progress/pending labels describe those earlier snapshots, not today's frontier.
 
 - completed: native19/source16/core33/pricing60 design reviews, including both
   final producer seams and the shared source-frame materializer.
