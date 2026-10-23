@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Single-H800 probe execution passed; independent raw-trace audit runs alongside exact-image two-rank DP-counter CPU verification. |
 | 2026-10-24 | Closed the bounded CPU stream-loader repair at0d745706 and moved its actual GPU validation into the targeted probe. |
 | 2026-10-24 | W128-OCT24-DATA-DOCS: I4 accepted diagnostic audit/Q2b accepted isolated kernel data; next is bounded collection-gap design/CPU repairs and fresh H800 package/run, not pending monitoring. |
 | 2026-10-23 | Started approved kernel-only route with parallel evidence audit and integration design. |
@@ -37,7 +38,7 @@ Current status: A/B/C/D/E/F/G1/H, G2a–d and I1–I3 complete. I4 ACCEPTED_DIAG
 
 Next dependency: `source-backed collection-gap design -> bounded CPU repairs/review -> fresh package/image/SDK checks -> H800 collection under D-V4-H800-RJOB-AUTHORITY -> scoped data verification`. Preserve existing runtime/native/C26 boundaries, soft gates and immutable runs; record concrete purpose/resources/evidence before each run. Proper native tuple/rank/dependency admission precedes any cost consumer; native06 R4 is unchanged, full05/09/19 OPEN, GLM paused and CPU-overhead last. Exact audit/MoE gaps, archive and evidence are in [progress.md](progress.md).
 
-Immediate slice: the two-file/80-line CUPTI SONAME repair is CPU-accepted at0d745706 (34gross lines). A separately owned250-line targeted probe now reuses the native profiler on1H800 to verify actual stream IDs and examine capture/formal trace correspondence. Existing H200 probe results are inputs, not rerun authority: source/exec node namespaces differ; `get_graph_data` needs driver/compat13.1; custom callback attempt2 exited139. No callback/ID-remap/runtime upgrade is part of this slice. Coverage/lifecycle changes follow the corrected source design;512 prefill iterations is a candidate, not a future-coverage guarantee.
+Immediate slice: the CUPTI SONAME repair is CPU-accepted at0d745706 (34/80gross lines). The262/275-line probe at5f7d0950 passed source/package re-review and root final-image/SDK checks, then ran successfully on1H800 as exp-1024-020317-012085. Next: independent raw-trace audit -> root acceptance, alongside exact-image two-rank gloo sequence-counter CPU verification. Existing H200 results constrain the design: source/exec node namespaces differ, `get_graph_data` needs driver/compat13.1, custom callback attempt2 exited139. No callback/ID-remap/runtime upgrade is part of this slice. Coverage/lifecycle changes follow the corrected source design;512 prefill iterations is a candidate, not a future-coverage guarantee.
 
 G2 dependencies: `{G2a native window/API evidence, driver callsite design} -> G2b one-owner implementation and CPU controls -> G2c independent Spec/Standards review and root final-source verification -> G2d concrete resource/window proposal -> YC GPU decision`. G2a/b/c are complete for source `05952396`, with seven existing non-core files and 433/750 changed lines. Both R1 reviews closed all findings; final separate suites and repaired-source matrix binding passed (`driver/primary_acceptance.json`). G2d, resource authority, fresh package/source/image checks and the diagnostic collection/audit are complete; native/operator/serving qualification remains open.
 

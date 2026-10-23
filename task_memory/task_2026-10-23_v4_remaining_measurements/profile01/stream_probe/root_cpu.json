@@ -1,0 +1,173 @@
+{
+  "status": "PASS_FINAL_FROZEN_PACKAGE_CPU",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01",
+  "manifest_sha256": "0725941c3b433b2bd300c10a48c3d6f6d5316e1036e1e8efb5294b8c2845431d",
+  "source_revision": "5f7d0950b78276a77a66b7330cf0041a9f380f12",
+  "results": {
+    "entry": {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--pull=never",
+        "--network=none",
+        "--memory=6g",
+        "--cpus=1",
+        "--pids-limit=96",
+        "-v",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01:/probe:ro",
+        "-v",
+        "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe_final_50cbed_f:/evidence",
+        "-e",
+        "LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat",
+        "-e",
+        "FRONTIER_NATIVE_PROFILE_LIMITS={\"records\": 250000, \"bytes\": 268435456}",
+        "-e",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "-e",
+        "OPENBLAS_NUM_THREADS=1",
+        "-e",
+        "OMP_NUM_THREADS=1",
+        "--entrypoint",
+        "python3",
+        "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+        "-B",
+        "/probe/native_profile_probe.py",
+        "--output-dir",
+        "/evidence/entry"
+      ],
+      "returncode": 2,
+      "start_utc": "2026-10-23T17:56:05.541295+00:00"
+    },
+    "constructor": {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--pull=never",
+        "--network=none",
+        "--memory=6g",
+        "--cpus=1",
+        "--pids-limit=96",
+        "-v",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01:/probe:ro",
+        "-v",
+        "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe_final_50cbed_f:/evidence",
+        "-e",
+        "LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat",
+        "-e",
+        "FRONTIER_NATIVE_PROFILE_LIMITS={\"records\": 250000, \"bytes\": 268435456}",
+        "-e",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "-e",
+        "OPENBLAS_NUM_THREADS=1",
+        "-e",
+        "OMP_NUM_THREADS=1",
+        "--entrypoint",
+        "python3",
+        "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+        "-B",
+        "-c",
+        "import ast,hashlib,inspect,json,sys,torch\nfrom pathlib import Path\nsys.path.insert(0,\"/probe\")\nimport native_profile_probe,native_serve_profile,forward_device_timeline\nfrom vllm.config import ProfilerConfig\nfrom vllm.profiler.wrapper import TorchProfilerWrapper\nnamespace={\"ProfilerConfig\":ProfilerConfig,\"trace_dir\":Path(\"/evidence/unused_constructor_trace\")}\ntree=ast.parse(Path(\"/probe/native_profile_probe.py\").read_bytes());call=next(n for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id==\"ProfilerConfig\")\nconfig=eval(compile(ast.Expression(call),\"/probe/native_profile_probe.py\",\"eval\"),namespace)\nwrapper=TorchProfilerWrapper(config,\"native_stream_probe\",0,[\"CPU\",\"CUDA\"])\nassert not torch.cuda.is_initialized() and not wrapper.is_running\npins={inspect.getfile(x):hashlib.sha256(Path(inspect.getfile(x)).read_bytes()).hexdigest() for x in (ProfilerConfig,TorchProfilerWrapper)}\nprint(\"W128_IMAGE_PROBE:\"+json.dumps({\"status\":\"PASS_ACTUAL_CONSTRUCTOR\",\"python\":sys.version,\"torch\":torch.__version__,\"cuda\":torch.version.cuda,\"vllm\":sys.modules[\"vllm.version\"].__version__,\"native_pins\":pins,\"cuda_initialized\":torch.cuda.is_initialized(),\"gpu_uuid_descriptor\":hasattr(torch._C._CudaDeviceProperties,\"uuid\")}))"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T17:56:05.543238+00:00"
+    },
+    "help": {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--pull=never",
+        "--network=none",
+        "--memory=6g",
+        "--cpus=1",
+        "--pids-limit=96",
+        "-v",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01:/probe:ro",
+        "-v",
+        "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe_final_50cbed_f:/evidence",
+        "-e",
+        "LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat",
+        "-e",
+        "FRONTIER_NATIVE_PROFILE_LIMITS={\"records\": 250000, \"bytes\": 268435456}",
+        "-e",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "-e",
+        "OPENBLAS_NUM_THREADS=1",
+        "-e",
+        "OMP_NUM_THREADS=1",
+        "--entrypoint",
+        "python3",
+        "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+        "-B",
+        "/probe/native_profile_probe.py",
+        "--help"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T17:56:32.136789+00:00"
+    },
+    "launcher": {
+      "command": [
+        "/data/ycfeng/tmp/stepmind-env/bin/python",
+        "-B",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01/launch.py"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T17:56:32.730050+00:00"
+    },
+    "sdk": {
+      "command": [
+        "/data/ycfeng/tmp/stepmind-env/bin/python",
+        "-B",
+        "-c",
+        "import ast,json,sys\nfrom pathlib import Path\nfrom steptron.exp.base_exp import ResourceConfig\np=Path(sys.argv[1]);config=json.loads((p/\"config.json\").read_text());tree=ast.parse((p/\"launch.py\").read_bytes());node=next(n for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id==\"ResourceConfig\")\nr=eval(compile(ast.Expression(node),str(p/\"launch.py\"),\"eval\"),{\"ResourceConfig\":ResourceConfig,\"config\":config})\nvalues={k:getattr(r,k) for k in (\"gpu\",\"replica\",\"cpu\",\"mem_gb\",\"preemptible\",\"positive_tags\",\"image\",\"mounts\",\"custom_resources\")}\nassert values[\"gpu\"]==1 and values[\"replica\"]==1 and values[\"cpu\"]==16 and values[\"mem_gb\"]==64 and values[\"preemptible\"] is False and values[\"positive_tags\"]==[\"H800\"]\nassert r.envs[\"FRONTIER_NATIVE_PROFILE_LIMITS\"]==config[\"envs\"][\"FRONTIER_NATIVE_PROFILE_LIMITS\"]\nassert not any(r.envs.get(k) for k in (\"FRONTIER_NATIVE_SERVING_EVIDENCE_DIR\",\"VLLM_MOE_ROUTING_SIMULATION_STRATEGY\"))\nprint(json.dumps({\"status\":\"PASS_ACTUAL_SDK_RESOURCE_CONSTRUCTOR\",\"python\":sys.version,\"resources\":values},indent=2))",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T17:56:32.770209+00:00"
+    }
+  },
+  "constructor": {
+    "status": "PASS_ACTUAL_CONSTRUCTOR",
+    "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "vllm": "0.28.0",
+    "native_pins": {
+      "/usr/local/lib/python3.12/dist-packages/vllm/config/profiler.py": "78af917ec2ea2ba3bacda15f58fda9782b8ff82c0b810fd5c9563f4203aa5ba8",
+      "/usr/local/lib/python3.12/dist-packages/vllm/profiler/wrapper.py": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15"
+    },
+    "cuda_initialized": false,
+    "gpu_uuid_descriptor": true
+  },
+  "sdk": {
+    "status": "PASS_ACTUAL_SDK_RESOURCE_CONSTRUCTOR",
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "resources": {
+      "gpu": 1,
+      "replica": 1,
+      "cpu": 16,
+      "mem_gb": 64,
+      "preemptible": false,
+      "positive_tags": [
+        "H800"
+      ],
+      "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+      "mounts": [
+        "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+      ],
+      "custom_resources": [
+        "mellanox.com/mlnx_rdma:1",
+        "rdma/mlnx_shared:8"
+      ]
+    }
+  },
+  "entry_expected_hardware_error": "Traceback (most recent call last):\n  File \"/probe/native_profile_probe.py\", line 247, in main\n    run(output, report, save)\n  File \"/probe/native_profile_probe.py\", line 124, in run\n    device = torch.cuda.get_device_properties(0)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py\", line 737, in get_device_properties\n    _lazy_init()  # will define _get_device_properties\n    ^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py\", line 529, in _lazy_init\n    torch._C._cuda_init()\nRuntimeError: No CUDA GPUs are available\n",
+  "cupti": {
+    "path": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13",
+    "sha256": "e2f9ed861fe27c492b8bb52b5e3220ef5120f3edcda36312e96b7fd8a186be3e"
+  },
+  "package_unchanged": true,
+  "gpu_validated": false
+}

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Completed reviewed single-H800 stream probe execution; raw-data audit and exact-image two-rank DP-counter CPU verification proceed independently. |
 | 2026-10-24 | Accepted34-line CUPTI SONAME CPU repair0d745706; targeted native stream/capture probe preparation is active, with historical graph failures preserved. |
 | 2026-10-24 | W128-OCT24-DATA-DOCS: synchronized accepted profile02 diagnostic audit and isolated MoE data; corrected shutdown/terminal claims without closing full05/09/19. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS acceptance: root ACCEPTED_ISOLATED_DATA after independent review/fresh reruns; prior pending/current checkpoints historical, consumer/native/full05/09/19 remain open. |
@@ -29,7 +30,8 @@
 ### CUPTI stream loader — CPU component accepted (2026-10-24)
 
 - completed source0d745706:34/80gross lines, actual stream-recorder RED `None==7` then four separately passing suites33/19/28/45. Independent review No findings; locked-image old/repaired method control reaches the expected no-CUDA-context boundary only after the fix. [Acceptance](profile01/stream_identity/primary_acceptance.json) binds source/receipts and the existing77-case matrix, not a new capture.
-- in-progress: one250-line targeted probe of real collector stream IDs and native profiler capture/restart behavior. The old H200 tools-ID/namespace/callback failures were recovered first and are preserved in [collection-gap diagnosis](profile01/collection_gaps.md). No new GPU submission yet; native/C26/serving-cost boundaries are unchanged. Earlier source-unchanged statements below refer to the data-audit closure2f1bca52.
+- completed probe execution: source5f7d0950 repairs both P2 verdict defects within262/275lines; source/package re-review No findings, root controls RED2/6 then GREEN8/0, final locked-image/SDK/Git-byte/seven-input checks PASS. [Run check](profile01/stream_probe/root_run_check.json) binds exp-1024-020317-012085 Succeeded18:06:33Z on1H800,23s/exit0/restart0, personal creator/image/local NFS. Five outputs/228175bytes are hash-identical. Producer eager PASS/graph UNKNOWN await independent raw-trace audit and root acceptance; the inspector's UUID-prefix false negative is retained and corrected.
+- in-progress independent CPU verification: source lookup found the existing post-all-reduce DP process-group sequence getter at `native_full_structure.install_v2_dispatch`; no second hook is needed. `W128-DP-SEQUENCE-CPU`/`ses_e9608d758ffecPRCgzzrLzoj37` checks actual-image getter availability and two-rank gloo symmetry without CUDA. The counter is a pairing key, not a step number; full native runtime correspondence remains unverified. Historical H200 graph failures stay in [collection-gap diagnosis](profile01/collection_gaps.md). Earlier source-unchanged statements below refer to closure2f1bca52.
 
 ### Profile02 diagnostic-audit acceptance — current (2026-10-24)
 
