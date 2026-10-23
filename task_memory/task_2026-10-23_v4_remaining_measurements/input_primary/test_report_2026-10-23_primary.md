@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Recorded fixed-source verification and actual isolated representation admission. |
+| 2026-10-23 | Verified merged732406aa:194 unit tests and automatic94 full receipt equality; bound prior candidate capture. |
 
 ## Environment and source
 
@@ -54,3 +55,11 @@ Independent representation command:
 Three root assertion errors were diagnosed before correction: (1) requiring the fresh sidecar's serialization to match despite unordered metadata-column keys; parsed JSON and all original files were exactly equal; (2) comparing complete legacy error strings despite fresh temporary directory names; every other field was equal; (3) comparing `identical_cases` (a list of 77 IDs) to integer77 instead of taking its length. These errors were in the ad hoc root checks, not the source or CLI execution. No measurement, source, old output or test control was altered to pass.
 
 This admits a private isolated-input component only. Complete kernel ownership, GPU dependency accounting, native graph/TP8 profiling, serving totals and four-metric calibration remain unfinished. The collector is a separate workstream.
+
+## Merged verification
+
+Merged revision: `732406aa235ff63c97e7b9bbd6d5836fe1881de7`. The same affected unit command was rerun from the main worktree with JUnit `/data/ycfeng/tmp/glm53_dsv4/root_attention_input_merged_732406aa.xml`:194 PASS, zero failures/errors/skips. Command, environment, source pins and timestamps are in the adjacent `.json` receipt.
+
+The actual admitted automatic CLI ran again from the main worktree, output `/data/ycfeng/tmp/glm53_dsv4/root_attention_input_merged_732406aa_scopes.json`; all94 results and the complete receipt equal the pre-merge admitted output. No source changes occurred during either check.
+
+`merged_matrix_binding.json` confirms that simulator, data, example and fidelity-driver domains are identical to the clean4a1b53e6 capture. The only non-record delta is the standalone read-only kernel audit. This explicitly reuses the existing77/77 comparison; it is not a new capture. Final component acceptance: `primary_acceptance.json`.
