@@ -1,0 +1,33 @@
+{
+  "baseline": {
+    "ddsketch": "3.0.1",
+    "fasteners": "0.20",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "plotly": "7.1.0",
+    "python": "3.10.6",
+    "scipy": "1.15.3",
+    "sklearn": "1.7.2"
+  },
+  "candidate": {
+    "ddsketch": "3.0.1",
+    "fasteners": "0.20",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "plotly": "7.1.0",
+    "python": "3.10.6",
+    "scipy": "1.15.3",
+    "sklearn": "1.7.2"
+  },
+  "actual": {
+    "python": "3.10.6",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "sklearn": "1.7.2",
+    "scipy": "1.15.3",
+    "plotly": "7.1.0",
+    "fasteners": "0.20",
+    "ddsketch": "3.0.1"
+  },
+  "equal": true
+}
