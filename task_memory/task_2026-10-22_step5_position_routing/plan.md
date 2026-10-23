@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept key component and final9491 union on46fe83ac; assign frozen regressions and remaining-runtime design investigation. |
 | 2026-10-24 | Close snapshot baseline scope audit and record mixed-group event/storage constraints; final key union and workflow remain pending. |
 | 2026-10-24 | Accept and integrate snapshot db581ff6 at64c83ac4; allocate the17-gross derived-key successor within PRICING headroom. |
 | 2026-10-24 | Close duplicate-plan hypothesis; queue narrow derived-key allocation after snapshot accounting and attribute remaining pricing work separately. |
@@ -92,7 +93,11 @@ complete adjacent layer60 wave at position6147. Snapshot db581ff6 is accepted an
 integrated at64c83ac4 with the byte intermediate:82PASS, separate2trainerPASS,
 five path checks, both reviews No findings and complete208-event output parity.
 One binding read and zero cold/warm reads; warm0.340867→0.162715s is component
-evidence. The next source step is the allocated key-only reuse. Config-scan work
+evidence. Key-only reuse is accepted and integrated30fb6a30:16gross/+14, parent
+124PASS/1existingTorchSKIP, both reviews No findings and complete208-event parity.
+Final union source46fe83ac matches the verified owner source; its122 non-key
+bindings and9491 global total pass the composed snapshot/delta audit. Fresh
+frozen regressions are assigned under post_key_regressions/. Config-scan work
 remains UNQUALIFIED, public fields conversion is rejected, and private encoding
 remains unallocated. All actual-point validation and full output stay required.
 The non-I/O identity-cache control is rejected because it did not improve timing.
@@ -134,16 +139,16 @@ change is allocated. See early_init_repro/report.md.
 | Approval, ownership and baseline | Complete; effective114 after snapshot allocation276e6520, with unchanged owner/global budgets. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
-| CORE/SOURCE49 allocated | Snapshot included:4173/4404 by component reconciliation; unchanged cap. |
+| CORE/SOURCE49 allocated | Final union:4173/4404; unchanged cap. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
-| PRICING46 | Snapshot included:3940/3956; key successor17gross allocated within remaining allowance. |
-| Complete integration and final freeze | Byte/snapshot integrated64c83ac4; source/test/config bytes match db581ff6. Next freeze waits for residual repair/review. Gitlink3dac53c unchanged. |
-| Legacy strict77 | Fresh final05 on79 accepted77/77,451 artifact hashes and519 cache names per side;parent receipt hashes/records match. |
+| PRICING46 | Final union:3954/3956; key uses16/17gross and14/15retained. |
+| Complete integration and final freeze | Key integrated30fb6a30; source46fe83ac exactly matches verified c4e06a61 outside records. Fresh regressions assigned on46fe;gitlink3dac53c unchanged. |
+| Legacy strict77 | Fresh46fe checks assigned. Prior79 accepted77/77,451 artifact hashes and519 cache names per side. |
 | Full-unit failure/error-set gate | Accepted on79:8018PASS;all8607 e41 statuses unchanged,three newPASS. Raw279FAIL/32ERROR/281SKIP remain;101 and52 environment supplements pass separately. |
 | Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
-| Independent source review | All accepted components including combined bytes/snapshot have No findings on both axes; key review follows its implementation. |
+| Independent source review | All accepted components including key have No findings on both axes. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
-| Final per-path accounting | Snapshot independently audited:114allocated/113changed,9463source/9477global,zero violations. Key adds at most15 retained lines; its final union audit remains pending. |
+| Final per-path accounting | Accepted on46fe:114allocated/113changed,9477source/9491global,zero violations; snapshot audit + two-path delta +122 unchanged binding guard. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments

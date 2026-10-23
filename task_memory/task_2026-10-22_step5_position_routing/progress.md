@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept key16/+14 after both reviews, parent124/1 and full-wave parity; integrate30fb6a30 and verify9491 union on46fe83ac; assign fresh frozen regressions. |
 | 2026-10-24 | Accept independent snapshot114/113-path audit, correct mixed-group event expectation and storage units, and record the unauthorized CSV scan. |
 | 2026-10-24 | Integrate accepted snapshot64c83ac4; archive H3/trace diagnoses and allocate the17-gross key-only successor. |
 | 2026-10-24 | Archive plan-key diagnosis and parent24+6 hash/immutable-interface checks; keep key allocation pending snapshot consumption. |
@@ -59,9 +60,23 @@
 
 ### Current-session resumption (supersedes handoff next-session timing)
 
-- in-progress/implementation: D29-PLAN-KEY-REUSE, session
-  ses_e963098ecffebqCOtdysKGY6Xe, owns the two allocated paths in the isolated
-  step5-d29-plan-key worktree from087db1bf. Snapshot worktree remains its baseline.
+- completed/component: D29-PLAN-KEY-REUSE, session
+  ses_e963098ecffebqCOtdysKGY6Xe, delivered c4e06a61/d1e2fb8c, integrated as
+  30fb6a30/6c52a4d6. Both independent review axes have No findings. Parent124PASS/
+  1existingTorchSKIP and complete208-event/pricing/JSONL/ledger parity pass;
+  64wrong-key negatives,3902B error prefix and mutable snapshot isolation remain.
+  Only canonical encodings change: cold200→8, warm192→0, emission64→0. Live
+  numerical/point/proof work remains unchanged. Evidence:plan_key_reuse/parent/.
+- completed/union: owner6a980a51 is archived46fe83ac. Parent reruns the existing
+  guard on46fe, reproducing all122 non-key bindings and the two approved blobs.
+  Snapshot audit plus delta plus final binding guard accepts114allocated/
+  113changed,CORE4173/PRICING3954/native1350,9477source/9491global,zero violations.
+- in-progress/regressions: D29-POST-KEY-FROZEN-REGRESSIONS, session
+  ses_e98925887ffecetw6nTB6nD8f0, is assigned fresh strict77/full-unit/environment
+  checks on source46fe83ac; records belong in post_key_regressions/.
+- in-progress/read-only: D29-REMAINING-RUNTIME-DESIGN, session
+  ses_e9577903effeYhkEtAPQt7g228, evaluates a materially useful next design from
+  current code and retained evidence. No source allocation or new probe granted.
 - completed/read-only: D29-DETACHED-EMISSION-OWNERSHIP, session
   ses_e96a5c1c7ffeoPBK7V08CMas7v, inspects existing profiles and private ownership
   after required getter snapshots. Records3020a885/82b0e311 archived as
@@ -82,9 +97,9 @@
   non-superproject evidence before the separately running key implementation.
   Owner d267db2d archived ae55a5f5; parent6artifact hashes/112bindings/105Git
   numstats/8native-file hashes/8image-evidence hashes PASS.114allocated/113changed,
-  source9463/global9477,zero violations; final key union remains pending.
-- unresolved/workflow: the26.608ms average wave allowance is below the retained
- 39.956ms FP8 emission diagnostic; this is a projection gap, not a universal
+   source9463/global9477,zero violations; subsequent key union is accepted above.
+- unresolved/workflow: the26.608ms average wave allowance is below the committed
+  key candidate's38.156ms FP8 emission measurement; this is a projection gap, not a universal
   impossibility proof. Expected two-mode output is about520GB; parent measured
   about266GB available on /data, not248GB. Other shapes/full output and storage
   arrangements remain to be settled before a new complete CLI.
@@ -96,7 +111,7 @@
   session ses_e9593d566ffewode6CXodumj9I. Inspect the old26-file T2 binding and
   actual package import root for coverage of collective_profile.py/manager
   additions. No rebind, package write, seal, platform access or source allocation;
-  final source still waits for the key repair. The26 bindings supplement a full
+  final package readiness still waits for CPU workflow. The26 bindings supplement a full
   pinned checkout, not a staged import closure. Owner static43-module closure
   does not reach snapshot modules; parent26disk hashes/Git bindings match79.
   No inventory expansion/helper change needed. Actual primary proposal still
@@ -114,7 +129,7 @@
 - completed/allocation: plan_key_reuse_scope_amendment.json grants17 gross,
   source6/tests11 and at most15 retained lines after snapshot completion.
   PRICING donor caps backend99→93/base16→14/backendtest243→236 fund plan136→140
-  and test300→311. Owner/global limits stay unchanged; no key edit yet.
+   and test300→311. Owner/global limits stay unchanged; actual key use is16gross/+14.
 - completed/diagnostic: H3 exclusive accounting is archived at81a5a876.
   Its6.24% config-control gain remains UNQUALIFIED because the appended
   replacement harness exceeded60s. No config/identity-cache implementation.
@@ -135,8 +150,7 @@
   Effective114 paths, CORE49/4404,native19/1582,PRICING46/3956. Donor files stay
   untouched; source9942/global10000 caps remain. Committed source db581ff6 is
   212gross(73source/139tests),net86; component totals4173CORE/3940PRICING/1350native,
-  9463source/9477global,now independently audited on the snapshot. Final key
-  union audit remains pending.
+   9463source/9477global,independently audited as the snapshot checkpoint.
 - completed: snapshot parent82PASS, separate2trainerPASS,5path checks, both
   independent reviews No findings and complete208-event/JSONL/ledger parity.
   One shared binding read; zero cold/warm reads;288 lookups/144 fresh proofs/64
@@ -144,8 +158,8 @@
   Parent verifies28 manifest/41 source/6 script/6 raw hashes plus exact output
   equality. Source db581ff6 and acceptance6c7121d8 merged at64c83ac4; source/test/
   config diff versus db581ff6 is empty. Detailed records:run_input_snapshot/.
-- pending: key-only implementation/review, final integration/freeze/regressions/
-  full workflow and T2/native gates. Existing root pyc/cache files are unchanged.
+- pending: fresh frozen regressions, full workflow and T2/native gates.
+  Existing root pyc/cache files are unchanged.
 - completed/diagnostic: main08 residual records1f42fb00 are archived at3164ad84.
   Parent layer61 warm2.653s reproduces28003 decodes/80 reads,165 captured pairs
   match. The complete adjacent layer60 warm2.837s has208/208 matching pairs and

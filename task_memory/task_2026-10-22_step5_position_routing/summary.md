@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Integrate accepted key30fb6a30, verify9491 final union, and assign fresh frozen regressions; full workflow remains open. |
 | 2026-10-24 | Accept independent snapshot baseline audit and mixed-group event-count correction; record current storage and performance gaps. |
 | 2026-10-24 | Integrate accepted byte/snapshot component64c83ac4, reconcile9477 global and allocate17-gross derived-key reuse. |
 | 2026-10-24 | YC approves run-fixed collective input; byte repair32/36 delivered, with successor ownership design and combined review pending. |
@@ -23,15 +24,26 @@
 
 ## Current-session continuation
 
-Current feature source includes accepted byte/snapshot db581ff6 at64c83ac4.
+Current feature source includes accepted key c4e06a61 at30fb6a30. Both review
+axes have No findings. Parent124PASS/1existingTorchSKIP and full208-event costs,
+proofs, keys, JSONL/ledger bytes, negative and snapshot checks pass. Source16/17
+gross and14/15retained yields9477source/9491global. Independent two-path audit
+6a980a51 is integrated46fe83ac; the primary final-head guard reproduces122
+unchanged bindings. Together with the complete snapshot audit, this accepts
+the114allocated/113changed union with zero violations. Evidence is in
+plan_key_reuse/parent/ and repairs/evidence/plan_key_scope/.
+Fresh strict77/full-unit/environment regressions are assigned on46fe83ac under
+post_key_regressions/. Remaining-runtime design investigation is read-only;
+no further source allocation or full CLI acceptance is implied.
+
+Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
 Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trainerPASS,
 five path checks, both review axes No findings and complete208-event output parity
 pass. One P/D input-binding read, zero cold/warm reads; warm0.340867→0.162715s is
 component timing with288 lookups/144 proofs/64 collective prices unchanged.
 Snapshot baseline audit confirms114allocated/113changed,9463source/9477global
 and zero violations. Owner d267db2d is archived atae55a5f5; parent hashes/blob/
-numstat checks pass. The subsequent key union remains open.
-The next source step is derived-key reuse17gross within existing PRICING headroom.
+numstat checks pass. The subsequent key union is accepted above.
 Detailed completion evidence is in run_input_snapshot/.
 
 Source-backed workload is90,200 waves. Expected successful-run EP-wave output
