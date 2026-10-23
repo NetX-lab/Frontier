@@ -4,9 +4,16 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Archived root image/SDK gates, successful1-H800 run and independently accepted isolated kernel data with explicit limits. |
 | 2026-10-23 | Archived the frozen CPU preparation and explicit root-only runtime gates. |
 
 ## Outcome
+
+Root accepted `ACCEPTED_ISOLATED_KERNEL_DATA_WITH_LIMITS` in `results/primary_acceptance.json`. Source737b6311 and documentation correction941a4450 were merged asbe067bb5. Actual-image440/20source/binary pins and1003inputs, fresh worker/SDK entries and both four-point dry runs passed. The sealed single-H800/codesign/non-preemptible job `exp-1023-235250-540507` succeeded2026-10-23T15:54:35Z; container exit0/restart0,92seconds. `root_run_check.json` binds platform/resources/mount/image and input integrity.
+
+All19 outputs/3,261,347bytes were downloaded hash-identically. Two tables have four rows each;12traces exactly reproduce112statistics. Independent review found no issues; root reran the full audit with exact non-clock equality. At M16/32/6152/12288, grouped-GEMM KERNEL_ONLY means are0.1017937/0.1022997/0.7557434/1.29869045ms, each from20calls with7kernels/call. CUDA_EVENT remains finite aggregate diagnostics because individual durations and grouped-count are not retained. See `results/{review.md,root_verification.json,test_report_2026-10-24_data.md}`.
+
+The following records describe the original owner preparation before root execution.
 
 Task W128-V4-MOE-PACKAGE prepared a new, unsealed/unsubmitted local-MoE package. Two maintained non-core files were frozen at737b631191542202c42b32c0c4a225058021ff92: `moe/build_package.py`153 gross lines and `moe/profile_plan.json`51, total204/300. Runtime snapshot56e9405dad76d30d4ada9d5bdab124f898bf5065 and all original sources/packages remain unchanged. No further delegation or core/native/C26/consumer/admission edit.
 
@@ -28,10 +35,12 @@ Existing tests:172 PASS/1 baseline-environment FAIL/2 SKIP; the pinned56e9405d b
 
 The checkpoint corrected repeated CPU assertion guesses and one faulty stop signal that triggered a permission-refused local /mnt mkdir attempt. No successful cloud write occurred; final CPU control uses BaseException and an audit prohibition. No GPU/platform/network/Docker/seal operation or actual image/backend gate was executed.
 
-## Root-owned next actions and boundaries
+## Original root handoff (completed; retained for history)
 
 1. Independently review204-line source and generated inputs; check actual locked-image native source440/binary20 pins, the MARLIN selector/backend, actual producer entry and runtime capabilities. CPU backend labels/AST are not GPU execution.
 2. Verify actual SDK non-preemptible/cpu16/gpu1/mem_gb128 (source maps to128000 decimal MB), personal auth/quota/local mount/new cloud destination; perform existing external root-seal procedure and submit only afterward.
 3. Collect only the two planned four-row invocations on1H800/codesign/non-preemptible,1800s/≤0.5GPUh; inspect actual columns, finite measured-scope statistics, traces and terminal status.
 
 Scope remains physicalTP1/EP16/rank0/local16/global256, M12288/6152/32/16, balanced_topk. M6152 is conditional mixed-prefill/dummy evidence. Candidate cost scope is only existing grouped-GEMM; gating uses M rather than native L_d and standalone shuffle overlaps. No rank/time/weight/graph/serving equivalence, simulator consumption or admission follows.
+
+Current next action: establish native tuple/rank population and GPU dependency comparability before consumption. Do not add standalone shuffle/gating timings to the grouped-GEMM envelope or infer CPU overhead from the difference between measurement methods.

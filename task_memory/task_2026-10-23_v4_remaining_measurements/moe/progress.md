@@ -4,10 +4,16 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Root mergedbe067bb5, verified the actual image/SDK, sealed/submitted the single-H800 run and accepted isolated kernel data after independent review and exact rerun. |
 | 2026-10-23 | Inspected corrected root/native sources and existing package mechanisms. |
 | 2026-10-23 | Clarified the permission-refused CPU-control mkdir attempt in the boundary summary. |
 
 ## Status
+
+- completed root execution: source737b6311/P3 citation correction941a4450 mergedbe067bb5; measured maintenance204/300lines. Actual locked-image440source/20binary/1003input checks, actual worker entry, two four-row dry runs and native API imports passed; actual GPU backend selection was subsequently observed in retained MARLIN logs/kernels. SDK resource/entry, fresh destination and personal auth passed. See `root_seal.json`.
+- completed root runtime: exp-1023-235250-540507 Succeeded2026-10-23T15:54:35Z; one container Completed/exit0/restart0,92seconds, expected local NFS/image and128000Mi memory. First inspector incorrectly expected quota/preemptible strings; actual API values are codesign/no, as documented. `platform_launch.json` preserves that snapshot; `root_run_check.json` records corrected terminal validation. Launcher exited normally after success; all1003 input hashes remain unchanged.
+- completed data:19 outputs/3,261,347bytes hash-identical; two four-row CSVs,12traces and112statistics exact. Independent review No findings and root1.42-second full rerun matched every field except elapsed/RSS. `results/primary_acceptance.json` accepts isolated rank0 KERNEL_ONLY data with limits; CUDA_EVENT raw samples/grouped-count, native tuple/rank equivalence and serving consumption remain unverified.
+- pending: native population/rank and dependency comparability before any cost consumption. Earlier owner-only preparation statements below are historical, not current execution status.
 
 - completed: Read actual root corrected requirements/plan/moe_grid_design; clean owner base56e9405d and native2cf0a69 confirmed.
 - completed: Found the actual balanced-decode builder `balanced_decode/prepare_package.py`, not build_package.py. Its hash/original-verification utilities and existing W4 launch helpers can be reused.
@@ -16,9 +22,9 @@
 - completed: CPU fresh-entry/hash/trace-copy controls, exact routing/backend selectors, existing tests and matrix binding; see cpu_checks.json/routing_checks.json/test_report_2026-10-23_cpu_preparation.md.
 - completed: Source frozen at737b631191542202c42b32c0c4a225058021ff92;153+51=204/300 gross lines in exactly two maintained non-core files.
 - completed: Generated package (1004 files including manifest/23680569 bytes), machine receipts, selected XML, source-scope receipt and final records; included in the separate records/package commit.
-- pending (root-owned): Actual locked-image/native-symbol/binary checks, SDK/platform resources/mount, quota/auth, seal/submission, GPU outputs/traces and independent data acceptance.
+- historical handoff: actual image/SDK/platform/run/data checks were root-owned and pending at the owner delivery; their completion is recorded above.
 
-## Boundaries
+## Preparation-only boundaries (historical)
 
 No GPU, Docker, platform, auth, network or seal calls were performed, and no successful cloud read/write occurred. One faulty CPU control attempted a local /mnt mkdir and received PermissionError; details and corrected controls are below. Existing source domains frontier/data/examples/fidelity/canonical_case are byte-identical to97803f0, enabling explicit existing77matrix binding after checking its original comparison bytes. Preparation never grants rank/time/weight/graph/serving admission.
 

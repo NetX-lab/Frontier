@@ -1,0 +1,4108 @@
+{
+  "audit_environment": {
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "elapsed_seconds": 1.1817206754349172,
+    "executable": "/usr/bin/python3",
+    "numpy": "1.24.3",
+    "peak_rss_kib": 40724,
+    "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "torch_imported": false,
+    "vllm_imported": false
+  },
+  "binding_records": [
+    {
+      "bytes": 2001,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/receipt.json",
+      "sha256": "b6000e126edf70a4ad981b39da74fd652174d1e80da4ec175cb95c1aed1a1c7b"
+    },
+    {
+      "bytes": 3573,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/remote_inventory.json",
+      "sha256": "267a4fa777d25983684b6968c6e74050b0e0e0a1e55f85ca847ab42bbc5b88e0"
+    },
+    {
+      "bytes": 8483,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/root_seal.json",
+      "sha256": "b552a3a05aef5fbe92dedeb1974e851f83e9b158d874de2875f52bdb1bd01d07"
+    },
+    {
+      "bytes": 196159,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/manifest.json",
+      "sha256": "2ce8333148675cbec721c7f0f9710f70c1b031032be971ffcf7b1e754a1377f4"
+    },
+    {
+      "bytes": 157292,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/runtime_lock.json",
+      "sha256": "d7492ba9f2022d399c9aec8916cbb61ce8772523518869de416e7ba8edf17317"
+    },
+    {
+      "bytes": 4892,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/jobs/moe.json",
+      "sha256": "6d6d847177227301632edf20e1476d9bd14cf0544837cbdce6d04e664f88d4c4"
+    },
+    {
+      "bytes": 16470,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/W128-MOE01-DATA/audit.py",
+      "sha256": "9f15d8dc4d2397ade5d6e3efa181100cee76ea1ae1e03f6a252ca49e5fdfaf28"
+    }
+  ],
+  "checks": [
+    {
+      "check": "19-file/3261347-byte inventory hashes and exact file set",
+      "result": "PASS"
+    },
+    {
+      "check": "sealed manifest, 12 producer/config sources, four native API source byte bindings",
+      "result": "PASS"
+    },
+    {
+      "check": "four rows per method and explicit metadata identities",
+      "result": "PASS"
+    },
+    {
+      "check": "all finite nonnegative time statistics with mean/median bounds",
+      "result": "PASS"
+    },
+    {
+      "check": "rank0 routing features reconstructed with unchanged feature class",
+      "result": "PASS"
+    },
+    {
+      "check": "12 traces uniquely reproduce 112 CSV statistic/count fields",
+      "result": "PASS"
+    },
+    {
+      "check": "92 retained scopes: 80 grouped-GEMM scopes/560 kernels, 12 diagnostic scopes; no missing launches or duplicate ownership",
+      "result": "PASS"
+    },
+    {
+      "check": "retained status and logs show actual H800/runtime/MARLIN execution",
+      "result": "PASS"
+    }
+  ],
+  "cost_admission": false,
+  "inputs": [
+    {
+      "bytes": 13134,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_CUDA_EVENT/compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+      "sha256": "ad661c7cbedc7c857185eafc861785d0f449e3de1abb055d22aaaa9abb899447"
+    },
+    {
+      "bytes": 831,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_CUDA_EVENT/compute/h800/moe_config.yaml",
+      "sha256": "11a9305da6fe98facd637f2b4403d798e19083e92702572890a250f87862d407"
+    },
+    {
+      "bytes": 5711,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_CUDA_EVENT/logs/cuda_event.log",
+      "sha256": "9d3fa522facc9e0dbc94271c3422e73ad0fd63edea68384354e54ab3c2ce620c"
+    },
+    {
+      "bytes": 12799,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+      "sha256": "3ede04c6fee2efd4a15acfc489633e68f45f7616caeb963e8c72e39da6f17f46"
+    },
+    {
+      "bytes": 841,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/compute/h800/moe_config.yaml",
+      "sha256": "95b18a6f3a4696f04d8fc0986378a8a012eba3e25ec37ecccc51bd8b995cbb85"
+    },
+    {
+      "bytes": 7926,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/logs/record_function.log",
+      "sha256": "163c75bcc509ecedd2ddb39734f249c385fdb295dbc273e1e98e099bb476abcb"
+    },
+    {
+      "bytes": 707157,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_0c4d4e65.json",
+      "sha256": "9ab3ec935c5eb477255f952e62f287e68e8a593bb6a08a45522c7cc354caf8a4"
+    },
+    {
+      "bytes": 706484,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_24f37cba.json",
+      "sha256": "1b76532868946d3890032bea94490dc327e18364447cb0875c9c32214a0f5600"
+    },
+    {
+      "bytes": 58379,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_334d2f50.json",
+      "sha256": "2e0825cfa75856973ec7fecf27f5c1352d84bdd68337b4323304dd390831e543"
+    },
+    {
+      "bytes": 58374,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_4687a04a.json",
+      "sha256": "84f5d3f7bb8bddae332ba0f17eb01a8ba0fe325afd395b8dd748f47ce7e6b5b0"
+    },
+    {
+      "bytes": 707629,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_87536bfa.json",
+      "sha256": "43a7578a31dea620ae98476cdad5a51faf0618f1a79f93a97f2131a23122c0ed"
+    },
+    {
+      "bytes": 62787,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_8e6282a6.json",
+      "sha256": "af41f3fa6a23672d9506df317fafa2796c466ebe9fb3f974a298b1a83a2ab9d9"
+    },
+    {
+      "bytes": 35913,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_a3d9161f.json",
+      "sha256": "172243c3b6239345be826b646ed4ab28f026dd31d84386b2766c6c9f9727ffd9"
+    },
+    {
+      "bytes": 37874,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_d20cc751.json",
+      "sha256": "fbb8632fb3cc8f12de1f3c708ea91f3e50906f27841ba12aa17718058deb64ea"
+    },
+    {
+      "bytes": 37878,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_ef6c36d4.json",
+      "sha256": "2890d9be76132cb779aeff80d6b1b9d7fccc3e9399f0298164e925ab4c655db1"
+    },
+    {
+      "bytes": 707203,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_f2cbcb61.json",
+      "sha256": "aebf0994bacaaf215b93bc20c7002a0af3e31f79af6711591012051875e1bc30"
+    },
+    {
+      "bytes": 35913,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_f6942362.json",
+      "sha256": "338a78f378eafeb8b16a5c347916928123541376d1b6ed2a089958bc798ec247"
+    },
+    {
+      "bytes": 62501,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_fec80bd5.json",
+      "sha256": "3b454fb55a9843b2fd5219df1c6be00eba02cf8499d457c60656e494275a754a"
+    },
+    {
+      "bytes": 2013,
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/status.json",
+      "sha256": "54ab9c82944a1d0345a5920e558f823aa9eb5bcf46dba330b90ca26161e4f726"
+    }
+  ],
+  "limitations": [
+    "CUDA_EVENT grouped-GEMM count is absent in CSV; 20 is source-configured, not retained raw-sample proof.",
+    "CUDA_EVENT individual elapsed samples are not retained; aggregate recomputation and outlier-retention verification are unavailable.",
+    "RecordFunctionTracer is reused unchanged through AST-only CPU methods; no Torch/vLLM/GPU calls.",
+    "Trace-to-M mapping uses unique statistics and source row order, not trace tensor-shape labels; routing arrays and weights are not retained.",
+    "CSV source/model labels plus sealed inputs are provenance evidence; worker does not rehash imported source/binaries during execution.",
+    "MXFP4/MARLIN are operator identities; BF16 is activation/profiling precision, FP8 quant_signature is model-level metadata.",
+    "Only rank0 grouped-GEMM envelope is a candidate; gating M differs from native L and standalone shuffle overlaps.",
+    "M6152 corresponds to mixed-prefill/dummy source population; no steady-state-serving equivalence.",
+    "No other EP rank, TP8, EP communication, graph, serving, random-weight parity, additive layer total, or blanket cost admission."
+  ],
+  "retained_runtime": {
+    "cuda_available": true,
+    "device_count": 1,
+    "device_name": "NVIDIA H800",
+    "flashinfer": "0.6.16.post3",
+    "nvidia_smi": [
+      "0, NVIDIA H800, 81559 MiB, 570.124.06"
+    ],
+    "pandas": "2.3.3",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130",
+    "vllm": "0.28.0"
+  },
+  "source_references": [
+    {
+      "bytes": 6748,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/utils/record_function_tracer.py",
+      "sha256": "c176903a390a102bb15b1e6495a6a988abb19b8cb39a5403e2ee0af9a555da51"
+    },
+    {
+      "bytes": 1753,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/common/timer_stats_store.py",
+      "sha256": "16da3caf23dac6a4035aa174f26deb98f53110fc1c93ab24bbaac989eef5886f"
+    },
+    {
+      "bytes": 35840,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/moe/moe_wrapper.py",
+      "sha256": "cd7f391371bc0285aca99c64cb20892f704b71a38cd26dccc4eeef03fe62b66b"
+    },
+    {
+      "bytes": 46602,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/moe/moe_vllm_kernel.py",
+      "sha256": "2ec15d8d4f7feb7be63d7a980d4b514ee6be9fbf31399370435c83f33066487c"
+    },
+    {
+      "bytes": 9217,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/moe/mxfp4_marlin_experts.py",
+      "sha256": "e85579a990b32e0fe76cc6d9e046227796d1bfa1f2e2608a64ef68cc4be6f4c0"
+    },
+    {
+      "bytes": 24689,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/moe/moe_impl.py",
+      "sha256": "333cc4e8505bf583712d8cc7a9eda6ea6d223b02379183ed8f100d70ad620b9c"
+    },
+    {
+      "bytes": 10673,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/moe/load_distribution.py",
+      "sha256": "0cc28ad6d408c3cdb557b7f1bb56d8de80b33285d40940f28d2ac1475c159ee2"
+    },
+    {
+      "bytes": 2985,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/moe/balanced_routing.py",
+      "sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea"
+    },
+    {
+      "bytes": 7632,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/moe_load_imbalance.py",
+      "sha256": "af0e69fdb1c698fbe296bb01c10d52896b0b183e26eab7bf4e6f38004a20860b"
+    },
+    {
+      "bytes": 43655,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/moe/main.py",
+      "sha256": "84292b653c8fd103977949686081c0aa49aa37b7e3f574f517bec538778e14e6"
+    },
+    {
+      "bytes": 7702,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/common/runtime_identity.py",
+      "sha256": "142609da12648816ec5cdc90f16289804bc745284c2abe5086aba3b688b7a629"
+    },
+    {
+      "bytes": 1749,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/data/config/models/deepseek-ai__DeepSeek-V4-Flash.json",
+      "sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818"
+    },
+    {
+      "bytes": 37283,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/native_source/2cf0a6915ce544dc493a0990f2ea38d81601128a/vllm/model_executor/layers/fused_moe/experts/marlin_moe.py",
+      "sha256": "f00460310b033bcb84644677e16af83773464f026c0dad15bcfe25bd28b39745"
+    },
+    {
+      "bytes": 67185,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/native_source/2cf0a6915ce544dc493a0990f2ea38d81601128a/vllm/model_executor/layers/fused_moe/oracle/mxfp4.py",
+      "sha256": "4746cae6054f890cb82df89b4bfa952c36e8c7865d9f4a94390bbfb1d4b3332f"
+    },
+    {
+      "bytes": 8339,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/native_source/2cf0a6915ce544dc493a0990f2ea38d81601128a/vllm/model_executor/layers/fused_moe/moe_align_block_size.py",
+      "sha256": "c3f7fc2087836f0160a32ab99ceb1d8f6e87c793679da34dd672e225cb7fa31b"
+    },
+    {
+      "bytes": 123133,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/native_source/2cf0a6915ce544dc493a0990f2ea38d81601128a/vllm/_custom_ops.py",
+      "sha256": "35ccad773473d0f8041090ad2a5ab01abb351bf6108b8580331041f9d0b7bdc8"
+    }
+  ],
+  "status": "PASS_LOCAL_DATA_AUDIT_WITH_LIMITS",
+  "tables": {
+    "CUDA_EVENT": {
+      "columns": [
+        "time_stats.moe_gating_linear.min",
+        "time_stats.moe_gating_linear.max",
+        "time_stats.moe_gating_linear.mean",
+        "time_stats.moe_gating_linear.median",
+        "time_stats.moe_gating_linear.std",
+        "time_stats.moe_gating_linear.count",
+        "time_stats.moe_gating_routing_topk.min",
+        "time_stats.moe_gating_routing_topk.max",
+        "time_stats.moe_gating_routing_topk.mean",
+        "time_stats.moe_gating_routing_topk.median",
+        "time_stats.moe_gating_routing_topk.std",
+        "time_stats.moe_gating_routing_topk.count",
+        "time_stats.moe_shuffling.min",
+        "time_stats.moe_shuffling.max",
+        "time_stats.moe_shuffling.mean",
+        "time_stats.moe_shuffling.median",
+        "time_stats.moe_shuffling.std",
+        "time_stats.moe_shuffling.count",
+        "time_stats.moe_grouped_gemm.min",
+        "time_stats.moe_grouped_gemm.max",
+        "time_stats.moe_grouped_gemm.mean",
+        "time_stats.moe_grouped_gemm.median",
+        "time_stats.moe_grouped_gemm.std",
+        "num_tokens",
+        "num_experts",
+        "num_experts_per_device",
+        "expert_parallel_size",
+        "routing_runtime_path",
+        "routing_assignment_policy",
+        "routing_weight_policy",
+        "routing_uses_router_logits",
+        "gating_runtime_context",
+        "gating_runtime_context_impl",
+        "router_topk",
+        "hidden_dim",
+        "expert_hidden_dim",
+        "use_gated",
+        "num_tensor_parallel_workers",
+        "typed_operator_contracts",
+        "moe_gating_linear_backend",
+        "total_routed_tokens",
+        "model_expansion_ratio",
+        "tokens_per_expert_avg",
+        "tokens_to_experts_ratio",
+        "expert_utilization",
+        "min_load_ratio",
+        "load_imbalance_cv",
+        "max_load_ratio",
+        "load_entropy",
+        "load_gini_coefficient",
+        "load_distribution",
+        "seed",
+        "moe_grouped_gemm_backend",
+        "moe_quantization_mode",
+        "moe_native_backend",
+        "measurement_type",
+        "profiling_precision",
+        "model_arch",
+        "model_architecture_profile",
+        "quant_signature",
+        "runtime_fingerprint",
+        "runtime_versions",
+        "source_revision",
+        "model_config_revision",
+        "model_config_sha256",
+        "weight_source",
+        "device_name",
+        "device_capability",
+        "schema_version",
+        "parallel_groups",
+        "graph_mode"
+      ],
+      "raw": {
+        "bytes": 13134,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_CUDA_EVENT/compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+        "sha256": "ad661c7cbedc7c857185eafc861785d0f449e3de1abb055d22aaaa9abb899447"
+      },
+      "rows": [
+        {
+          "M": 12288,
+          "csv_data_row_1based": 1,
+          "metadata": {
+            "device_capability": "sm90",
+            "device_name": "NVIDIA H800",
+            "expert_hidden_dim": "2048",
+            "expert_parallel_size": "16",
+            "expert_utilization": "1.0",
+            "gating_runtime_context": "standalone_legacy",
+            "gating_runtime_context_impl": "none",
+            "graph_mode": "eager",
+            "hidden_dim": "4096",
+            "load_distribution": "balanced",
+            "load_entropy": "4.000000000017834",
+            "load_gini_coefficient": "0.0",
+            "load_imbalance_cv": "0.0",
+            "max_load_ratio": "1.0",
+            "measurement_type": "CUDA_EVENT",
+            "min_load_ratio": "1.0",
+            "model_arch": "generic",
+            "model_architecture_profile": "deepseek_v4",
+            "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+            "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+            "model_expansion_ratio": "0.5",
+            "moe_gating_linear_backend": "vllm_replicated_linear",
+            "moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
+            "moe_native_backend": "MARLIN",
+            "moe_quantization_mode": "mxfp4",
+            "num_experts": "256",
+            "num_experts_per_device": "16",
+            "num_tensor_parallel_workers": "1",
+            "num_tokens": "12288",
+            "parallel_groups": "{\"engine_tensor_parallel\":1}",
+            "profiling_precision": "BF16",
+            "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|scale_fmt=ue8m0",
+            "router_topk": "6",
+            "routing_assignment_policy": "global_round_robin_balanced",
+            "routing_runtime_path": "balanced_topk",
+            "routing_uses_router_logits": "False",
+            "routing_weight_policy": "uniform_1_over_topk",
+            "runtime_fingerprint": "1ef9d0c19c7ef69f",
+            "runtime_versions": "{\"deep_gemm\":null,\"flashinfer\":\"0.6.16.post3\",\"torch\":\"2.13.0+cu130\",\"torch_cuda\":\"13.0\",\"triton\":\"3.7.1\",\"vllm\":\"0.28.0\"}",
+            "schema_version": "moe.v1",
+            "seed": "0",
+            "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+            "tokens_per_expert_avg": "288.0",
+            "tokens_to_experts_ratio": "288.0",
+            "total_routed_tokens": "4608",
+            "use_gated": "True",
+            "weight_source": "dummy"
+          },
+          "routing_source_reconstruction": {
+            "block_size_m": 64,
+            "global_assignments": 73728,
+            "rank0_assignments": 4608,
+            "rank0_counts": [
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288
+            ],
+            "rank0_padded_rows": 5120,
+            "rank_assignment_sums": [
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608
+            ]
+          },
+          "stats_ms": {
+            "time_stats.moe_gating_linear.count": 20.0,
+            "time_stats.moe_gating_linear.max": 0.2338559925556183,
+            "time_stats.moe_gating_linear.mean": 0.07802879996597767,
+            "time_stats.moe_gating_linear.median": 0.0687360018491745,
+            "time_stats.moe_gating_linear.min": 0.0655359998345375,
+            "time_stats.moe_gating_linear.std": 0.03608715385954379,
+            "time_stats.moe_gating_routing_topk.count": 20.0,
+            "time_stats.moe_gating_routing_topk.max": 0.04732799902558327,
+            "time_stats.moe_gating_routing_topk.mean": 0.0270687997341156,
+            "time_stats.moe_gating_routing_topk.median": 0.02232000045478344,
+            "time_stats.moe_gating_routing_topk.min": 0.01945599913597107,
+            "time_stats.moe_gating_routing_topk.std": 0.009320155183439675,
+            "time_stats.moe_grouped_gemm.max": 1.419551968574524,
+            "time_stats.moe_grouped_gemm.mean": 1.3851887941360475,
+            "time_stats.moe_grouped_gemm.median": 1.380128026008606,
+            "time_stats.moe_grouped_gemm.min": 1.3683840036392212,
+            "time_stats.moe_grouped_gemm.std": 0.014395258489534268,
+            "time_stats.moe_shuffling.count": 20.0,
+            "time_stats.moe_shuffling.max": 0.08396799862384796,
+            "time_stats.moe_shuffling.mean": 0.052020800113677976,
+            "time_stats.moe_shuffling.median": 0.050303999334573746,
+            "time_stats.moe_shuffling.min": 0.04992000013589859,
+            "time_stats.moe_shuffling.std": 0.007338627921180724
+          }
+        },
+        {
+          "M": 6152,
+          "csv_data_row_1based": 2,
+          "metadata": {
+            "device_capability": "sm90",
+            "device_name": "NVIDIA H800",
+            "expert_hidden_dim": "2048",
+            "expert_parallel_size": "16",
+            "expert_utilization": "1.0",
+            "gating_runtime_context": "standalone_legacy",
+            "gating_runtime_context_impl": "none",
+            "graph_mode": "eager",
+            "hidden_dim": "4096",
+            "load_distribution": "balanced",
+            "load_entropy": "4.000000000017834",
+            "load_gini_coefficient": "0.0",
+            "load_imbalance_cv": "0.0",
+            "max_load_ratio": "1.0",
+            "measurement_type": "CUDA_EVENT",
+            "min_load_ratio": "1.0",
+            "model_arch": "generic",
+            "model_architecture_profile": "deepseek_v4",
+            "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+            "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+            "model_expansion_ratio": "0.5",
+            "moe_gating_linear_backend": "vllm_replicated_linear",
+            "moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
+            "moe_native_backend": "MARLIN",
+            "moe_quantization_mode": "mxfp4",
+            "num_experts": "256",
+            "num_experts_per_device": "16",
+            "num_tensor_parallel_workers": "1",
+            "num_tokens": "6152",
+            "parallel_groups": "{\"engine_tensor_parallel\":1}",
+            "profiling_precision": "BF16",
+            "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|scale_fmt=ue8m0",
+            "router_topk": "6",
+            "routing_assignment_policy": "global_round_robin_balanced",
+            "routing_runtime_path": "balanced_topk",
+            "routing_uses_router_logits": "False",
+            "routing_weight_policy": "uniform_1_over_topk",
+            "runtime_fingerprint": "1ef9d0c19c7ef69f",
+            "runtime_versions": "{\"deep_gemm\":null,\"flashinfer\":\"0.6.16.post3\",\"torch\":\"2.13.0+cu130\",\"torch_cuda\":\"13.0\",\"triton\":\"3.7.1\",\"vllm\":\"0.28.0\"}",
+            "schema_version": "moe.v1",
+            "seed": "0",
+            "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+            "tokens_per_expert_avg": "145.0",
+            "tokens_to_experts_ratio": "145.0",
+            "total_routed_tokens": "2320",
+            "use_gated": "True",
+            "weight_source": "dummy"
+          },
+          "routing_source_reconstruction": {
+            "block_size_m": 64,
+            "global_assignments": 36912,
+            "rank0_assignments": 2320,
+            "rank0_counts": [
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145
+            ],
+            "rank0_padded_rows": 3072,
+            "rank_assignment_sums": [
+              2320,
+              2320,
+              2320,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304
+            ]
+          },
+          "stats_ms": {
+            "time_stats.moe_gating_linear.count": 20.0,
+            "time_stats.moe_gating_linear.max": 0.0650240033864975,
+            "time_stats.moe_gating_linear.mean": 0.05255680065602064,
+            "time_stats.moe_gating_linear.median": 0.05153600126504898,
+            "time_stats.moe_gating_linear.min": 0.05027199909090996,
+            "time_stats.moe_gating_linear.std": 0.0032053465079080598,
+            "time_stats.moe_gating_routing_topk.count": 20.0,
+            "time_stats.moe_gating_routing_topk.max": 0.049375999718904495,
+            "time_stats.moe_gating_routing_topk.mean": 0.03759839981794357,
+            "time_stats.moe_gating_routing_topk.median": 0.036319999024271965,
+            "time_stats.moe_gating_routing_topk.min": 0.03376000002026558,
+            "time_stats.moe_gating_routing_topk.std": 0.0037451959988498785,
+            "time_stats.moe_grouped_gemm.max": 0.866815984249115,
+            "time_stats.moe_grouped_gemm.mean": 0.8496015995740891,
+            "time_stats.moe_grouped_gemm.median": 0.8464480042457581,
+            "time_stats.moe_grouped_gemm.min": 0.8395199775695801,
+            "time_stats.moe_grouped_gemm.std": 0.007721762620483644,
+            "time_stats.moe_shuffling.count": 20.0,
+            "time_stats.moe_shuffling.max": 0.06454399973154068,
+            "time_stats.moe_shuffling.mean": 0.041268800385296345,
+            "time_stats.moe_shuffling.median": 0.040031999349594116,
+            "time_stats.moe_shuffling.min": 0.03747199848294258,
+            "time_stats.moe_shuffling.std": 0.00563436557803499
+          }
+        },
+        {
+          "M": 32,
+          "csv_data_row_1based": 3,
+          "metadata": {
+            "device_capability": "sm90",
+            "device_name": "NVIDIA H800",
+            "expert_hidden_dim": "2048",
+            "expert_parallel_size": "16",
+            "expert_utilization": "1.0",
+            "gating_runtime_context": "standalone_legacy",
+            "gating_runtime_context_impl": "none",
+            "graph_mode": "eager",
+            "hidden_dim": "4096",
+            "load_distribution": "balanced",
+            "load_entropy": "4.000000000017834",
+            "load_gini_coefficient": "0.0",
+            "load_imbalance_cv": "0.0",
+            "max_load_ratio": "1.0",
+            "measurement_type": "CUDA_EVENT",
+            "min_load_ratio": "1.0",
+            "model_arch": "generic",
+            "model_architecture_profile": "deepseek_v4",
+            "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+            "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+            "model_expansion_ratio": "0.5",
+            "moe_gating_linear_backend": "vllm_replicated_linear",
+            "moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
+            "moe_native_backend": "MARLIN",
+            "moe_quantization_mode": "mxfp4",
+            "num_experts": "256",
+            "num_experts_per_device": "16",
+            "num_tensor_parallel_workers": "1",
+            "num_tokens": "32",
+            "parallel_groups": "{\"engine_tensor_parallel\":1}",
+            "profiling_precision": "BF16",
+            "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|scale_fmt=ue8m0",
+            "router_topk": "6",
+            "routing_assignment_policy": "global_round_robin_balanced",
+            "routing_runtime_path": "balanced_topk",
+            "routing_uses_router_logits": "False",
+            "routing_weight_policy": "uniform_1_over_topk",
+            "runtime_fingerprint": "1ef9d0c19c7ef69f",
+            "runtime_versions": "{\"deep_gemm\":null,\"flashinfer\":\"0.6.16.post3\",\"torch\":\"2.13.0+cu130\",\"torch_cuda\":\"13.0\",\"triton\":\"3.7.1\",\"vllm\":\"0.28.0\"}",
+            "schema_version": "moe.v1",
+            "seed": "0",
+            "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+            "tokens_per_expert_avg": "1.0",
+            "tokens_to_experts_ratio": "1.0",
+            "total_routed_tokens": "16",
+            "use_gated": "True",
+            "weight_source": "dummy"
+          },
+          "routing_source_reconstruction": {
+            "block_size_m": 8,
+            "global_assignments": 192,
+            "rank0_assignments": 16,
+            "rank0_counts": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "rank0_padded_rows": 128,
+            "rank_assignment_sums": [
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "stats_ms": {
+            "time_stats.moe_gating_linear.count": 20.0,
+            "time_stats.moe_gating_linear.max": 0.0628800019621849,
+            "time_stats.moe_gating_linear.mean": 0.03893600013107061,
+            "time_stats.moe_gating_linear.median": 0.03686399944126606,
+            "time_stats.moe_gating_linear.min": 0.03526400029659271,
+            "time_stats.moe_gating_linear.std": 0.005875708174805411,
+            "time_stats.moe_gating_routing_topk.count": 20.0,
+            "time_stats.moe_gating_routing_topk.max": 0.05398400127887726,
+            "time_stats.moe_gating_routing_topk.mean": 0.04527200032025576,
+            "time_stats.moe_gating_routing_topk.median": 0.04422399960458279,
+            "time_stats.moe_gating_routing_topk.min": 0.04294399917125702,
+            "time_stats.moe_gating_routing_topk.std": 0.0026965556401275905,
+            "time_stats.moe_grouped_gemm.max": 0.2516160011291504,
+            "time_stats.moe_grouped_gemm.mean": 0.21217759996652602,
+            "time_stats.moe_grouped_gemm.median": 0.20817600190639496,
+            "time_stats.moe_grouped_gemm.min": 0.20582400262355804,
+            "time_stats.moe_grouped_gemm.std": 0.010374923298670779,
+            "time_stats.moe_shuffling.count": 20.0,
+            "time_stats.moe_shuffling.max": 0.06128000095486641,
+            "time_stats.moe_shuffling.mean": 0.05613280069082975,
+            "time_stats.moe_shuffling.median": 0.0554720014333725,
+            "time_stats.moe_shuffling.min": 0.05375999957323074,
+            "time_stats.moe_shuffling.std": 0.002138219378964623
+          }
+        },
+        {
+          "M": 16,
+          "csv_data_row_1based": 4,
+          "metadata": {
+            "device_capability": "sm90",
+            "device_name": "NVIDIA H800",
+            "expert_hidden_dim": "2048",
+            "expert_parallel_size": "16",
+            "expert_utilization": "1.0",
+            "gating_runtime_context": "standalone_legacy",
+            "gating_runtime_context_impl": "none",
+            "graph_mode": "eager",
+            "hidden_dim": "4096",
+            "load_distribution": "balanced",
+            "load_entropy": "4.000000000017834",
+            "load_gini_coefficient": "0.0",
+            "load_imbalance_cv": "0.0",
+            "max_load_ratio": "1.0",
+            "measurement_type": "CUDA_EVENT",
+            "min_load_ratio": "1.0",
+            "model_arch": "generic",
+            "model_architecture_profile": "deepseek_v4",
+            "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+            "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+            "model_expansion_ratio": "0.5",
+            "moe_gating_linear_backend": "vllm_replicated_linear",
+            "moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
+            "moe_native_backend": "MARLIN",
+            "moe_quantization_mode": "mxfp4",
+            "num_experts": "256",
+            "num_experts_per_device": "16",
+            "num_tensor_parallel_workers": "1",
+            "num_tokens": "16",
+            "parallel_groups": "{\"engine_tensor_parallel\":1}",
+            "profiling_precision": "BF16",
+            "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|scale_fmt=ue8m0",
+            "router_topk": "6",
+            "routing_assignment_policy": "global_round_robin_balanced",
+            "routing_runtime_path": "balanced_topk",
+            "routing_uses_router_logits": "False",
+            "routing_weight_policy": "uniform_1_over_topk",
+            "runtime_fingerprint": "1ef9d0c19c7ef69f",
+            "runtime_versions": "{\"deep_gemm\":null,\"flashinfer\":\"0.6.16.post3\",\"torch\":\"2.13.0+cu130\",\"torch_cuda\":\"13.0\",\"triton\":\"3.7.1\",\"vllm\":\"0.28.0\"}",
+            "schema_version": "moe.v1",
+            "seed": "0",
+            "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+            "tokens_per_expert_avg": "1.0",
+            "tokens_to_experts_ratio": "1.0",
+            "total_routed_tokens": "16",
+            "use_gated": "True",
+            "weight_source": "dummy"
+          },
+          "routing_source_reconstruction": {
+            "block_size_m": 8,
+            "global_assignments": 96,
+            "rank0_assignments": 16,
+            "rank0_counts": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "rank0_padded_rows": 128,
+            "rank_assignment_sums": [
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "stats_ms": {
+            "time_stats.moe_gating_linear.count": 20.0,
+            "time_stats.moe_gating_linear.max": 0.05382400006055832,
+            "time_stats.moe_gating_linear.mean": 0.03886720035225153,
+            "time_stats.moe_gating_linear.median": 0.03699199855327606,
+            "time_stats.moe_gating_linear.min": 0.03564799949526787,
+            "time_stats.moe_gating_linear.std": 0.004270056858184957,
+            "time_stats.moe_gating_routing_topk.count": 20.0,
+            "time_stats.moe_gating_routing_topk.max": 0.05379199981689453,
+            "time_stats.moe_gating_routing_topk.mean": 0.04554239995777607,
+            "time_stats.moe_gating_routing_topk.median": 0.0448479987680912,
+            "time_stats.moe_gating_routing_topk.min": 0.04307200014591217,
+            "time_stats.moe_gating_routing_topk.std": 0.002554285594916144,
+            "time_stats.moe_grouped_gemm.max": 0.25203201174736023,
+            "time_stats.moe_grouped_gemm.mean": 0.21155840009450913,
+            "time_stats.moe_grouped_gemm.median": 0.2059679999947548,
+            "time_stats.moe_grouped_gemm.min": 0.20371200144290924,
+            "time_stats.moe_grouped_gemm.std": 0.012457358605091338,
+            "time_stats.moe_shuffling.count": 20.0,
+            "time_stats.moe_shuffling.max": 0.06588800251483917,
+            "time_stats.moe_shuffling.mean": 0.0556944003328681,
+            "time_stats.moe_shuffling.median": 0.0549440011382103,
+            "time_stats.moe_shuffling.min": 0.052799999713897705,
+            "time_stats.moe_shuffling.std": 0.0027457883027602725
+          }
+        }
+      ]
+    },
+    "KERNEL_ONLY": {
+      "columns": [
+        "time_stats.moe_gating_linear.min",
+        "time_stats.moe_gating_linear.max",
+        "time_stats.moe_gating_linear.mean",
+        "time_stats.moe_gating_linear.median",
+        "time_stats.moe_gating_linear.std",
+        "time_stats.moe_gating_linear.count",
+        "time_stats.moe_gating_linear.kernel_count",
+        "time_stats.moe_gating_routing_topk.min",
+        "time_stats.moe_gating_routing_topk.max",
+        "time_stats.moe_gating_routing_topk.mean",
+        "time_stats.moe_gating_routing_topk.median",
+        "time_stats.moe_gating_routing_topk.std",
+        "time_stats.moe_gating_routing_topk.count",
+        "time_stats.moe_gating_routing_topk.kernel_count",
+        "time_stats.moe_shuffling.min",
+        "time_stats.moe_shuffling.max",
+        "time_stats.moe_shuffling.mean",
+        "time_stats.moe_shuffling.median",
+        "time_stats.moe_shuffling.std",
+        "time_stats.moe_shuffling.count",
+        "time_stats.moe_shuffling.kernel_count",
+        "time_stats.moe_grouped_gemm.min",
+        "time_stats.moe_grouped_gemm.max",
+        "time_stats.moe_grouped_gemm.mean",
+        "time_stats.moe_grouped_gemm.median",
+        "time_stats.moe_grouped_gemm.std",
+        "time_stats.moe_grouped_gemm.count",
+        "time_stats.moe_grouped_gemm.kernel_count",
+        "num_tokens",
+        "num_experts",
+        "num_experts_per_device",
+        "expert_parallel_size",
+        "routing_runtime_path",
+        "routing_assignment_policy",
+        "routing_weight_policy",
+        "routing_uses_router_logits",
+        "gating_runtime_context",
+        "gating_runtime_context_impl",
+        "router_topk",
+        "hidden_dim",
+        "expert_hidden_dim",
+        "use_gated",
+        "num_tensor_parallel_workers",
+        "typed_operator_contracts",
+        "moe_gating_linear_backend",
+        "total_routed_tokens",
+        "model_expansion_ratio",
+        "tokens_per_expert_avg",
+        "tokens_to_experts_ratio",
+        "expert_utilization",
+        "min_load_ratio",
+        "load_imbalance_cv",
+        "max_load_ratio",
+        "load_entropy",
+        "load_gini_coefficient",
+        "load_distribution",
+        "seed",
+        "moe_grouped_gemm_backend",
+        "moe_quantization_mode",
+        "moe_native_backend",
+        "measurement_type",
+        "profiling_precision",
+        "model_arch",
+        "model_architecture_profile",
+        "quant_signature",
+        "runtime_fingerprint",
+        "runtime_versions",
+        "source_revision",
+        "model_config_revision",
+        "model_config_sha256",
+        "weight_source",
+        "device_name",
+        "device_capability",
+        "schema_version",
+        "parallel_groups",
+        "graph_mode"
+      ],
+      "raw": {
+        "bytes": 12799,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+        "sha256": "3ede04c6fee2efd4a15acfc489633e68f45f7616caeb963e8c72e39da6f17f46"
+      },
+      "rows": [
+        {
+          "M": 12288,
+          "csv_data_row_1based": 1,
+          "metadata": {
+            "device_capability": "sm90",
+            "device_name": "NVIDIA H800",
+            "expert_hidden_dim": "2048",
+            "expert_parallel_size": "16",
+            "expert_utilization": "1.0",
+            "gating_runtime_context": "standalone_legacy",
+            "gating_runtime_context_impl": "none",
+            "graph_mode": "eager",
+            "hidden_dim": "4096",
+            "load_distribution": "balanced",
+            "load_entropy": "4.000000000017834",
+            "load_gini_coefficient": "0.0",
+            "load_imbalance_cv": "0.0",
+            "max_load_ratio": "1.0",
+            "measurement_type": "KERNEL_ONLY",
+            "min_load_ratio": "1.0",
+            "model_arch": "generic",
+            "model_architecture_profile": "deepseek_v4",
+            "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+            "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+            "model_expansion_ratio": "0.5",
+            "moe_gating_linear_backend": "vllm_replicated_linear",
+            "moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
+            "moe_native_backend": "MARLIN",
+            "moe_quantization_mode": "mxfp4",
+            "num_experts": "256",
+            "num_experts_per_device": "16",
+            "num_tensor_parallel_workers": "1",
+            "num_tokens": "12288",
+            "parallel_groups": "{\"engine_tensor_parallel\":1}",
+            "profiling_precision": "BF16",
+            "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|scale_fmt=ue8m0",
+            "router_topk": "6",
+            "routing_assignment_policy": "global_round_robin_balanced",
+            "routing_runtime_path": "balanced_topk",
+            "routing_uses_router_logits": "False",
+            "routing_weight_policy": "uniform_1_over_topk",
+            "runtime_fingerprint": "1ef9d0c19c7ef69f",
+            "runtime_versions": "{\"deep_gemm\":null,\"flashinfer\":\"0.6.16.post3\",\"torch\":\"2.13.0+cu130\",\"torch_cuda\":\"13.0\",\"triton\":\"3.7.1\",\"vllm\":\"0.28.0\"}",
+            "schema_version": "moe.v1",
+            "seed": "0",
+            "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+            "tokens_per_expert_avg": "288.0",
+            "tokens_to_experts_ratio": "288.0",
+            "total_routed_tokens": "4608",
+            "use_gated": "True",
+            "weight_source": "dummy"
+          },
+          "routing_source_reconstruction": {
+            "block_size_m": 64,
+            "global_assignments": 73728,
+            "rank0_assignments": 4608,
+            "rank0_counts": [
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288,
+              288
+            ],
+            "rank0_padded_rows": 5120,
+            "rank_assignment_sums": [
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608,
+              4608
+            ]
+          },
+          "stats_ms": {
+            "time_stats.moe_gating_linear.count": 1.0,
+            "time_stats.moe_gating_linear.kernel_count": 1.0,
+            "time_stats.moe_gating_linear.max": 0.0432,
+            "time_stats.moe_gating_linear.mean": 0.0432,
+            "time_stats.moe_gating_linear.median": 0.0432,
+            "time_stats.moe_gating_linear.min": 0.0432,
+            "time_stats.moe_gating_linear.std": 0.0,
+            "time_stats.moe_gating_routing_topk.count": 1.0,
+            "time_stats.moe_gating_routing_topk.kernel_count": 4.0,
+            "time_stats.moe_gating_routing_topk.max": 0.006496,
+            "time_stats.moe_gating_routing_topk.mean": 0.006496,
+            "time_stats.moe_gating_routing_topk.median": 0.006496,
+            "time_stats.moe_gating_routing_topk.min": 0.006496,
+            "time_stats.moe_gating_routing_topk.std": 0.0,
+            "time_stats.moe_grouped_gemm.count": 20.0,
+            "time_stats.moe_grouped_gemm.kernel_count": 7.0,
+            "time_stats.moe_grouped_gemm.max": 1.3032820000000003,
+            "time_stats.moe_grouped_gemm.mean": 1.29869045,
+            "time_stats.moe_grouped_gemm.median": 1.298337,
+            "time_stats.moe_grouped_gemm.min": 1.293871,
+            "time_stats.moe_grouped_gemm.std": 0.0027360298696286495,
+            "time_stats.moe_shuffling.count": 1.0,
+            "time_stats.moe_shuffling.kernel_count": 4.0,
+            "time_stats.moe_shuffling.max": 0.042046,
+            "time_stats.moe_shuffling.mean": 0.042046,
+            "time_stats.moe_shuffling.median": 0.042046,
+            "time_stats.moe_shuffling.min": 0.042046,
+            "time_stats.moe_shuffling.std": 0.0
+          }
+        },
+        {
+          "M": 6152,
+          "csv_data_row_1based": 2,
+          "metadata": {
+            "device_capability": "sm90",
+            "device_name": "NVIDIA H800",
+            "expert_hidden_dim": "2048",
+            "expert_parallel_size": "16",
+            "expert_utilization": "1.0",
+            "gating_runtime_context": "standalone_legacy",
+            "gating_runtime_context_impl": "none",
+            "graph_mode": "eager",
+            "hidden_dim": "4096",
+            "load_distribution": "balanced",
+            "load_entropy": "4.000000000017834",
+            "load_gini_coefficient": "0.0",
+            "load_imbalance_cv": "0.0",
+            "max_load_ratio": "1.0",
+            "measurement_type": "KERNEL_ONLY",
+            "min_load_ratio": "1.0",
+            "model_arch": "generic",
+            "model_architecture_profile": "deepseek_v4",
+            "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+            "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+            "model_expansion_ratio": "0.5",
+            "moe_gating_linear_backend": "vllm_replicated_linear",
+            "moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
+            "moe_native_backend": "MARLIN",
+            "moe_quantization_mode": "mxfp4",
+            "num_experts": "256",
+            "num_experts_per_device": "16",
+            "num_tensor_parallel_workers": "1",
+            "num_tokens": "6152",
+            "parallel_groups": "{\"engine_tensor_parallel\":1}",
+            "profiling_precision": "BF16",
+            "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|scale_fmt=ue8m0",
+            "router_topk": "6",
+            "routing_assignment_policy": "global_round_robin_balanced",
+            "routing_runtime_path": "balanced_topk",
+            "routing_uses_router_logits": "False",
+            "routing_weight_policy": "uniform_1_over_topk",
+            "runtime_fingerprint": "1ef9d0c19c7ef69f",
+            "runtime_versions": "{\"deep_gemm\":null,\"flashinfer\":\"0.6.16.post3\",\"torch\":\"2.13.0+cu130\",\"torch_cuda\":\"13.0\",\"triton\":\"3.7.1\",\"vllm\":\"0.28.0\"}",
+            "schema_version": "moe.v1",
+            "seed": "0",
+            "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+            "tokens_per_expert_avg": "145.0",
+            "tokens_to_experts_ratio": "145.0",
+            "total_routed_tokens": "2320",
+            "use_gated": "True",
+            "weight_source": "dummy"
+          },
+          "routing_source_reconstruction": {
+            "block_size_m": 64,
+            "global_assignments": 36912,
+            "rank0_assignments": 2320,
+            "rank0_counts": [
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145,
+              145
+            ],
+            "rank0_padded_rows": 3072,
+            "rank_assignment_sums": [
+              2320,
+              2320,
+              2320,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304,
+              2304
+            ]
+          },
+          "stats_ms": {
+            "time_stats.moe_gating_linear.count": 1.0,
+            "time_stats.moe_gating_linear.kernel_count": 1.0,
+            "time_stats.moe_gating_linear.max": 0.026335,
+            "time_stats.moe_gating_linear.mean": 0.026335,
+            "time_stats.moe_gating_linear.median": 0.026335,
+            "time_stats.moe_gating_linear.min": 0.026335,
+            "time_stats.moe_gating_linear.std": 0.0,
+            "time_stats.moe_gating_routing_topk.count": 1.0,
+            "time_stats.moe_gating_routing_topk.kernel_count": 4.0,
+            "time_stats.moe_gating_routing_topk.max": 0.006016000000000001,
+            "time_stats.moe_gating_routing_topk.mean": 0.006016000000000001,
+            "time_stats.moe_gating_routing_topk.median": 0.006016000000000001,
+            "time_stats.moe_gating_routing_topk.min": 0.006016000000000001,
+            "time_stats.moe_gating_routing_topk.std": 0.0,
+            "time_stats.moe_grouped_gemm.count": 20.0,
+            "time_stats.moe_grouped_gemm.kernel_count": 7.0,
+            "time_stats.moe_grouped_gemm.max": 0.758712,
+            "time_stats.moe_grouped_gemm.mean": 0.7557434,
+            "time_stats.moe_grouped_gemm.median": 0.7555445000000001,
+            "time_stats.moe_grouped_gemm.min": 0.7534299999999999,
+            "time_stats.moe_grouped_gemm.std": 0.0015007808434278464,
+            "time_stats.moe_shuffling.count": 1.0,
+            "time_stats.moe_shuffling.kernel_count": 4.0,
+            "time_stats.moe_shuffling.max": 0.026815000000000002,
+            "time_stats.moe_shuffling.mean": 0.026815000000000002,
+            "time_stats.moe_shuffling.median": 0.026815000000000002,
+            "time_stats.moe_shuffling.min": 0.026815000000000002,
+            "time_stats.moe_shuffling.std": 0.0
+          }
+        },
+        {
+          "M": 32,
+          "csv_data_row_1based": 3,
+          "metadata": {
+            "device_capability": "sm90",
+            "device_name": "NVIDIA H800",
+            "expert_hidden_dim": "2048",
+            "expert_parallel_size": "16",
+            "expert_utilization": "1.0",
+            "gating_runtime_context": "standalone_legacy",
+            "gating_runtime_context_impl": "none",
+            "graph_mode": "eager",
+            "hidden_dim": "4096",
+            "load_distribution": "balanced",
+            "load_entropy": "4.000000000017834",
+            "load_gini_coefficient": "0.0",
+            "load_imbalance_cv": "0.0",
+            "max_load_ratio": "1.0",
+            "measurement_type": "KERNEL_ONLY",
+            "min_load_ratio": "1.0",
+            "model_arch": "generic",
+            "model_architecture_profile": "deepseek_v4",
+            "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+            "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+            "model_expansion_ratio": "0.5",
+            "moe_gating_linear_backend": "vllm_replicated_linear",
+            "moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
+            "moe_native_backend": "MARLIN",
+            "moe_quantization_mode": "mxfp4",
+            "num_experts": "256",
+            "num_experts_per_device": "16",
+            "num_tensor_parallel_workers": "1",
+            "num_tokens": "32",
+            "parallel_groups": "{\"engine_tensor_parallel\":1}",
+            "profiling_precision": "BF16",
+            "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|scale_fmt=ue8m0",
+            "router_topk": "6",
+            "routing_assignment_policy": "global_round_robin_balanced",
+            "routing_runtime_path": "balanced_topk",
+            "routing_uses_router_logits": "False",
+            "routing_weight_policy": "uniform_1_over_topk",
+            "runtime_fingerprint": "1ef9d0c19c7ef69f",
+            "runtime_versions": "{\"deep_gemm\":null,\"flashinfer\":\"0.6.16.post3\",\"torch\":\"2.13.0+cu130\",\"torch_cuda\":\"13.0\",\"triton\":\"3.7.1\",\"vllm\":\"0.28.0\"}",
+            "schema_version": "moe.v1",
+            "seed": "0",
+            "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+            "tokens_per_expert_avg": "1.0",
+            "tokens_to_experts_ratio": "1.0",
+            "total_routed_tokens": "16",
+            "use_gated": "True",
+            "weight_source": "dummy"
+          },
+          "routing_source_reconstruction": {
+            "block_size_m": 8,
+            "global_assignments": 192,
+            "rank0_assignments": 16,
+            "rank0_counts": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "rank0_padded_rows": 128,
+            "rank_assignment_sums": [
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "stats_ms": {
+            "time_stats.moe_gating_linear.count": 1.0,
+            "time_stats.moe_gating_linear.kernel_count": 2.0,
+            "time_stats.moe_gating_linear.max": 0.006209,
+            "time_stats.moe_gating_linear.mean": 0.006209,
+            "time_stats.moe_gating_linear.median": 0.006209,
+            "time_stats.moe_gating_linear.min": 0.006209,
+            "time_stats.moe_gating_linear.std": 0.0,
+            "time_stats.moe_gating_routing_topk.count": 1.0,
+            "time_stats.moe_gating_routing_topk.kernel_count": 4.0,
+            "time_stats.moe_gating_routing_topk.max": 0.0047669999999999995,
+            "time_stats.moe_gating_routing_topk.mean": 0.0047669999999999995,
+            "time_stats.moe_gating_routing_topk.median": 0.0047669999999999995,
+            "time_stats.moe_gating_routing_topk.min": 0.0047669999999999995,
+            "time_stats.moe_gating_routing_topk.std": 0.0,
+            "time_stats.moe_grouped_gemm.count": 20.0,
+            "time_stats.moe_grouped_gemm.kernel_count": 7.0,
+            "time_stats.moe_grouped_gemm.max": 0.10361500000000001,
+            "time_stats.moe_grouped_gemm.mean": 0.1022997,
+            "time_stats.moe_grouped_gemm.median": 0.1021745,
+            "time_stats.moe_grouped_gemm.min": 0.100992,
+            "time_stats.moe_grouped_gemm.std": 0.0006883900856345932,
+            "time_stats.moe_shuffling.count": 1.0,
+            "time_stats.moe_shuffling.kernel_count": 4.0,
+            "time_stats.moe_shuffling.max": 0.008384,
+            "time_stats.moe_shuffling.mean": 0.008384,
+            "time_stats.moe_shuffling.median": 0.008384,
+            "time_stats.moe_shuffling.min": 0.008384,
+            "time_stats.moe_shuffling.std": 0.0
+          }
+        },
+        {
+          "M": 16,
+          "csv_data_row_1based": 4,
+          "metadata": {
+            "device_capability": "sm90",
+            "device_name": "NVIDIA H800",
+            "expert_hidden_dim": "2048",
+            "expert_parallel_size": "16",
+            "expert_utilization": "1.0",
+            "gating_runtime_context": "standalone_legacy",
+            "gating_runtime_context_impl": "none",
+            "graph_mode": "eager",
+            "hidden_dim": "4096",
+            "load_distribution": "balanced",
+            "load_entropy": "4.000000000017834",
+            "load_gini_coefficient": "0.0",
+            "load_imbalance_cv": "0.0",
+            "max_load_ratio": "1.0",
+            "measurement_type": "KERNEL_ONLY",
+            "min_load_ratio": "1.0",
+            "model_arch": "generic",
+            "model_architecture_profile": "deepseek_v4",
+            "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+            "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+            "model_expansion_ratio": "0.5",
+            "moe_gating_linear_backend": "vllm_replicated_linear",
+            "moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
+            "moe_native_backend": "MARLIN",
+            "moe_quantization_mode": "mxfp4",
+            "num_experts": "256",
+            "num_experts_per_device": "16",
+            "num_tensor_parallel_workers": "1",
+            "num_tokens": "16",
+            "parallel_groups": "{\"engine_tensor_parallel\":1}",
+            "profiling_precision": "BF16",
+            "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|scale_fmt=ue8m0",
+            "router_topk": "6",
+            "routing_assignment_policy": "global_round_robin_balanced",
+            "routing_runtime_path": "balanced_topk",
+            "routing_uses_router_logits": "False",
+            "routing_weight_policy": "uniform_1_over_topk",
+            "runtime_fingerprint": "1ef9d0c19c7ef69f",
+            "runtime_versions": "{\"deep_gemm\":null,\"flashinfer\":\"0.6.16.post3\",\"torch\":\"2.13.0+cu130\",\"torch_cuda\":\"13.0\",\"triton\":\"3.7.1\",\"vllm\":\"0.28.0\"}",
+            "schema_version": "moe.v1",
+            "seed": "0",
+            "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+            "tokens_per_expert_avg": "1.0",
+            "tokens_to_experts_ratio": "1.0",
+            "total_routed_tokens": "16",
+            "use_gated": "True",
+            "weight_source": "dummy"
+          },
+          "routing_source_reconstruction": {
+            "block_size_m": 8,
+            "global_assignments": 96,
+            "rank0_assignments": 16,
+            "rank0_counts": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "rank0_padded_rows": 128,
+            "rank_assignment_sums": [
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "stats_ms": {
+            "time_stats.moe_gating_linear.count": 1.0,
+            "time_stats.moe_gating_linear.kernel_count": 2.0,
+            "time_stats.moe_gating_linear.max": 0.005984,
+            "time_stats.moe_gating_linear.mean": 0.005984,
+            "time_stats.moe_gating_linear.median": 0.005984,
+            "time_stats.moe_gating_linear.min": 0.005984,
+            "time_stats.moe_gating_linear.std": 0.0,
+            "time_stats.moe_gating_routing_topk.count": 1.0,
+            "time_stats.moe_gating_routing_topk.kernel_count": 4.0,
+            "time_stats.moe_gating_routing_topk.max": 0.004608000000000001,
+            "time_stats.moe_gating_routing_topk.mean": 0.004608000000000001,
+            "time_stats.moe_gating_routing_topk.median": 0.004608000000000001,
+            "time_stats.moe_gating_routing_topk.min": 0.004608000000000001,
+            "time_stats.moe_gating_routing_topk.std": 0.0,
+            "time_stats.moe_grouped_gemm.count": 20.0,
+            "time_stats.moe_grouped_gemm.kernel_count": 7.0,
+            "time_stats.moe_grouped_gemm.max": 0.10249500000000002,
+            "time_stats.moe_grouped_gemm.mean": 0.10179370000000001,
+            "time_stats.moe_grouped_gemm.median": 0.101855,
+            "time_stats.moe_grouped_gemm.min": 0.10086200000000001,
+            "time_stats.moe_grouped_gemm.std": 0.00042505859596060207,
+            "time_stats.moe_shuffling.count": 1.0,
+            "time_stats.moe_shuffling.kernel_count": 4.0,
+            "time_stats.moe_shuffling.max": 0.007201000000000001,
+            "time_stats.moe_shuffling.mean": 0.007201000000000001,
+            "time_stats.moe_shuffling.median": 0.007201000000000001,
+            "time_stats.moe_shuffling.min": 0.007201000000000001,
+            "time_stats.moe_shuffling.std": 0.0
+          }
+        }
+      ]
+    }
+  },
+  "task_id": "W128-MOE01-DATA",
+  "traces": [
+    {
+      "all_trace_kernels": 144,
+      "annotation_event_indices_0based": [
+        62,
+        127,
+        192,
+        257,
+        322,
+        387,
+        452,
+        517,
+        582,
+        647,
+        712,
+        777,
+        842,
+        907,
+        972,
+        1037,
+        1102,
+        1167,
+        1232,
+        1297
+      ],
+      "attributed_kernels": 140,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913844080271.221,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [1024, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [528, 1, 1], \"name\": \"void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 1, 8, 4, true, 4, 2, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int const*, int const*, int const*, float const*, int, bool, int, int, int, int, int*, bool, bool, bool)\"}": 40,
+        "{\"block\": [128, 1, 1], \"grid\": [96, 2, 1], \"name\": \"_swiglu_limit_pad_aware_kernel\"}": 20,
+        "{\"block\": [256, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)\"}": 20,
+        "{\"block\": [256, 1, 1], \"grid\": [32, 1, 1], \"name\": \"void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, int, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, int const*, int const*, long, long)\"}": 20
+      },
+      "kernel_names_and_attributed_counts": {
+        "_swiglu_limit_pad_aware_kernel": 20,
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)": 20,
+        "void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 1, 8, 4, true, 4, 2, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int const*, int const*, int const*, float const*, int, bool, int, int, int, int, int*, bool, bool, bool)": 40,
+        "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)": 20,
+        "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)": 20,
+        "void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, int, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, int const*, int const*, long, long)": 20
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 16,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "bd82d9894df4585d516e53c22189cc114f0b89747d844982049be0ae2acaa2da",
+      "outside_scope_kernels": 4,
+      "raw": {
+        "bytes": 707157,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_0c4d4e65.json",
+        "sha256": "9ab3ec935c5eb477255f952e62f287e68e8a593bb6a08a45522c7cc354caf8a4"
+      },
+      "scopes_retained": 20,
+      "stats_ms": {
+        "moe_grouped_gemm": {
+          "count": 20,
+          "kernel_count": 7,
+          "max": 0.10249500000000002,
+          "mean": 0.10179370000000001,
+          "median": 0.101855,
+          "min": 0.10086200000000001,
+          "std": 0.00042505859596060207
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 144,
+      "annotation_event_indices_0based": [
+        62,
+        127,
+        192,
+        257,
+        322,
+        387,
+        452,
+        517,
+        582,
+        647,
+        712,
+        777,
+        842,
+        907,
+        972,
+        1037,
+        1102,
+        1167,
+        1232,
+        1297
+      ],
+      "attributed_kernels": 140,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913843708571.505,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [1024, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [256, 2, 1], \"name\": \"_swiglu_limit_pad_aware_kernel\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [264, 1, 1], \"name\": \"void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 4, 8, 4, false, 4, 2, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int const*, int const*, int const*, float const*, int, bool, int, int, int, int, int*, bool, bool, bool)\"}": 40,
+        "{\"block\": [256, 1, 1], \"grid\": [1, 288, 1], \"name\": \"void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)\"}": 20,
+        "{\"block\": [256, 1, 1], \"grid\": [24576, 1, 1], \"name\": \"void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, int, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, int const*, int const*, long, long)\"}": 20
+      },
+      "kernel_names_and_attributed_counts": {
+        "_swiglu_limit_pad_aware_kernel": 20,
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)": 20,
+        "void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 4, 8, 4, false, 4, 2, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int const*, int const*, int const*, float const*, int, bool, int, int, int, int, int*, bool, bool, bool)": 40,
+        "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)": 20,
+        "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)": 20,
+        "void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, int, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, int const*, int const*, long, long)": 20
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 12288,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "81197c96ae9d3f86084b6aad1cbfad591e7ae51f0231d0c85ea150f741d63bd6",
+      "outside_scope_kernels": 4,
+      "raw": {
+        "bytes": 706484,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_24f37cba.json",
+        "sha256": "1b76532868946d3890032bea94490dc327e18364447cb0875c9c32214a0f5600"
+      },
+      "scopes_retained": 20,
+      "stats_ms": {
+        "moe_grouped_gemm": {
+          "count": 20,
+          "kernel_count": 7,
+          "max": 1.3032820000000003,
+          "mean": 1.29869045,
+          "median": 1.298337,
+          "min": 1.293871,
+          "std": 0.0027360298696286495
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 15,
+      "annotation_event_indices_0based": [
+        63
+      ],
+      "attributed_kernels": 4,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913843964931.399,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [1024, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)\"}": 1,
+        "{\"block\": [256, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)\"}": 1
+      },
+      "kernel_names_and_attributed_counts": {
+        "void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})": 1,
+        "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)": 1,
+        "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)": 1,
+        "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)": 1
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 32,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "cfd3ab58e68acdf7576a9586d4136d4a9201919ae07908ab6ac41cea4ebe7afe",
+      "outside_scope_kernels": 11,
+      "raw": {
+        "bytes": 58379,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_334d2f50.json",
+        "sha256": "2e0825cfa75856973ec7fecf27f5c1352d84bdd68337b4323304dd390831e543"
+      },
+      "scopes_retained": 1,
+      "stats_ms": {
+        "moe_shuffling": {
+          "count": 1,
+          "kernel_count": 4,
+          "max": 0.008384,
+          "mean": 0.008384,
+          "median": 0.008384,
+          "min": 0.008384,
+          "std": 0.0
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 15,
+      "annotation_event_indices_0based": [
+        63
+      ],
+      "attributed_kernels": 4,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913844073822.366,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [1024, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)\"}": 1,
+        "{\"block\": [256, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)\"}": 1
+      },
+      "kernel_names_and_attributed_counts": {
+        "void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})": 1,
+        "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)": 1,
+        "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)": 1,
+        "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)": 1
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 16,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "8e506bd6de4953e6c5e09d669f70597584520d9ead4188499af54154307f3da2",
+      "outside_scope_kernels": 11,
+      "raw": {
+        "bytes": 58374,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_4687a04a.json",
+        "sha256": "84f5d3f7bb8bddae332ba0f17eb01a8ba0fe325afd395b8dd748f47ce7e6b5b0"
+      },
+      "scopes_retained": 1,
+      "stats_ms": {
+        "moe_shuffling": {
+          "count": 1,
+          "kernel_count": 4,
+          "max": 0.007201000000000001,
+          "mean": 0.007201000000000001,
+          "median": 0.007201000000000001,
+          "min": 0.007201000000000001,
+          "std": 0.0
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 144,
+      "annotation_event_indices_0based": [
+        62,
+        127,
+        192,
+        257,
+        322,
+        387,
+        452,
+        517,
+        582,
+        647,
+        712,
+        777,
+        842,
+        907,
+        972,
+        1037,
+        1102,
+        1167,
+        1232,
+        1297
+      ],
+      "attributed_kernels": 140,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913843842530.066,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [1024, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [256, 2, 1], \"name\": \"_swiglu_limit_pad_aware_kernel\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [264, 1, 1], \"name\": \"void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 4, 8, 4, false, 4, 2, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int const*, int const*, int const*, float const*, int, bool, int, int, int, int, int*, bool, bool, bool)\"}": 40,
+        "{\"block\": [256, 1, 1], \"grid\": [1, 145, 1], \"name\": \"void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)\"}": 20,
+        "{\"block\": [256, 1, 1], \"grid\": [12304, 1, 1], \"name\": \"void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, int, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, int const*, int const*, long, long)\"}": 20
+      },
+      "kernel_names_and_attributed_counts": {
+        "_swiglu_limit_pad_aware_kernel": 20,
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)": 20,
+        "void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 4, 8, 4, false, 4, 2, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int const*, int const*, int const*, float const*, int, bool, int, int, int, int, int*, bool, bool, bool)": 40,
+        "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)": 20,
+        "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)": 20,
+        "void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, int, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, int const*, int const*, long, long)": 20
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 6152,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "cc453ca08a5213464009063dd60699bbd68983ad4280141bac8da76ddbd44d28",
+      "outside_scope_kernels": 4,
+      "raw": {
+        "bytes": 707629,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_87536bfa.json",
+        "sha256": "43a7578a31dea620ae98476cdad5a51faf0618f1a79f93a97f2131a23122c0ed"
+      },
+      "scopes_retained": 20,
+      "stats_ms": {
+        "moe_grouped_gemm": {
+          "count": 20,
+          "kernel_count": 7,
+          "max": 0.758712,
+          "mean": 0.7557434,
+          "median": 0.7555445000000001,
+          "min": 0.7534299999999999,
+          "std": 0.0015007808434278464
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 16,
+      "annotation_event_indices_0based": [
+        63
+      ],
+      "attributed_kernels": 4,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913843834198.458,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [1024, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)\"}": 1,
+        "{\"block\": [256, 1, 1], \"grid\": [1, 145, 1], \"name\": \"void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)\"}": 1
+      },
+      "kernel_names_and_attributed_counts": {
+        "void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})": 1,
+        "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)": 1,
+        "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)": 1,
+        "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)": 1
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 6152,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "da95e994657f68217f046d73449e4a2389d6f8a8bee57c17ae250d74d38e9669",
+      "outside_scope_kernels": 12,
+      "raw": {
+        "bytes": 62787,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_8e6282a6.json",
+        "sha256": "af41f3fa6a23672d9506df317fafa2796c466ebe9fb3f974a298b1a83a2ab9d9"
+      },
+      "scopes_retained": 1,
+      "stats_ms": {
+        "moe_shuffling": {
+          "count": 1,
+          "kernel_count": 4,
+          "max": 0.026815000000000002,
+          "mean": 0.026815000000000002,
+          "median": 0.026815000000000002,
+          "min": 0.026815000000000002,
+          "std": 0.0
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 9,
+      "annotation_event_indices_0based": [
+        62,
+        69
+      ],
+      "attributed_kernels": 5,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913843828655.577,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [128, 1, 1], \"grid\": [37, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [37, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul>)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [37, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::array<char*, 1ul>)\"}": 1,
+        "{\"block\": [384, 1, 1], \"grid\": [2, 66, 1], \"name\": \"nvjet_sm90_tst_128x96_64x7_1x2_h_bz_TNT\"}": 1,
+        "{\"block\": [64, 1, 1], \"grid\": [577, 1, 1], \"name\": \"void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)\"}": 1
+      },
+      "kernel_names_and_attributed_counts": {
+        "nvjet_sm90_tst_128x96_64x7_1x2_h_bz_TNT": 1,
+        "void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)": 1,
+        "void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)": 1,
+        "void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul>)": 1,
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::array<char*, 1ul>)": 1
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 6152,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "e4e07429059413b23daa1202f935fd1da65b31de39d760a0910adafcb523f9b5",
+      "outside_scope_kernels": 4,
+      "raw": {
+        "bytes": 35913,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_a3d9161f.json",
+        "sha256": "172243c3b6239345be826b646ed4ab28f026dd31d84386b2766c6c9f9727ffd9"
+      },
+      "scopes_retained": 2,
+      "stats_ms": {
+        "moe_gating_linear": {
+          "count": 1,
+          "kernel_count": 1,
+          "max": 0.026335,
+          "mean": 0.026335,
+          "median": 0.026335,
+          "min": 0.026335,
+          "std": 0.0
+        },
+        "moe_gating_routing_topk": {
+          "count": 1,
+          "kernel_count": 4,
+          "max": 0.006016000000000001,
+          "mean": 0.006016000000000001,
+          "median": 0.006016000000000001,
+          "min": 0.006016000000000001,
+          "std": 0.0
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 10,
+      "annotation_event_indices_0based": [
+        62,
+        69
+      ],
+      "attributed_kernels": 6,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913844070146.528,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul>)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::array<char*, 1ul>)\"}": 1,
+        "{\"block\": [32, 16, 1], \"grid\": [8, 1, 1], \"name\": \"void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16, float, __nv_bfloat16, false, float, __nv_bfloat16, __nv_bfloat16, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, float const*, __nv_bfloat16*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)\"}": 1,
+        "{\"block\": [384, 1, 1], \"grid\": [4, 3, 1], \"name\": \"nvjet_sm90_tst_64x16_64x16_4x1_v_bz_splitK_TNT\"}": 1,
+        "{\"block\": [64, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)\"}": 1
+      },
+      "kernel_names_and_attributed_counts": {
+        "nvjet_sm90_tst_64x16_64x16_4x1_v_bz_splitK_TNT": 1,
+        "void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)": 1,
+        "void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)": 1,
+        "void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul>)": 1,
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::array<char*, 1ul>)": 1,
+        "void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16, float, __nv_bfloat16, false, float, __nv_bfloat16, __nv_bfloat16, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, float const*, __nv_bfloat16*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)": 1
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 16,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "dd5ae33b200aefd607c94662b4cc460664cfba3f49901e00928c8af4ea37a088",
+      "outside_scope_kernels": 4,
+      "raw": {
+        "bytes": 37874,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_d20cc751.json",
+        "sha256": "fbb8632fb3cc8f12de1f3c708ea91f3e50906f27841ba12aa17718058deb64ea"
+      },
+      "scopes_retained": 2,
+      "stats_ms": {
+        "moe_gating_linear": {
+          "count": 1,
+          "kernel_count": 2,
+          "max": 0.005984,
+          "mean": 0.005984,
+          "median": 0.005984,
+          "min": 0.005984,
+          "std": 0.0
+        },
+        "moe_gating_routing_topk": {
+          "count": 1,
+          "kernel_count": 4,
+          "max": 0.004608000000000001,
+          "mean": 0.004608000000000001,
+          "median": 0.004608000000000001,
+          "min": 0.004608000000000001,
+          "std": 0.0
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 10,
+      "annotation_event_indices_0based": [
+        62,
+        69
+      ],
+      "attributed_kernels": 6,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913843959424.265,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul>)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::array<char*, 1ul>)\"}": 1,
+        "{\"block\": [32, 16, 1], \"grid\": [8, 2, 1], \"name\": \"void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16, float, __nv_bfloat16, false, float, __nv_bfloat16, __nv_bfloat16, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, float const*, __nv_bfloat16*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)\"}": 1,
+        "{\"block\": [384, 1, 1], \"grid\": [4, 3, 1], \"name\": \"nvjet_sm90_tst_64x32_64x16_4x1_v_bz_splitK_TNT\"}": 1,
+        "{\"block\": [64, 1, 1], \"grid\": [3, 1, 1], \"name\": \"void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)\"}": 1
+      },
+      "kernel_names_and_attributed_counts": {
+        "nvjet_sm90_tst_64x32_64x16_4x1_v_bz_splitK_TNT": 1,
+        "void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)": 1,
+        "void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)": 1,
+        "void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul>)": 1,
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::array<char*, 1ul>)": 1,
+        "void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16, float, __nv_bfloat16, false, float, __nv_bfloat16, __nv_bfloat16, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, float const*, __nv_bfloat16*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)": 1
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 32,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "763b745440a792ba2f460058297e1c5d96622e0cb91707cf4a21501939ef807f",
+      "outside_scope_kernels": 4,
+      "raw": {
+        "bytes": 37878,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_ef6c36d4.json",
+        "sha256": "2890d9be76132cb779aeff80d6b1b9d7fccc3e9399f0298164e925ab4c655db1"
+      },
+      "scopes_retained": 2,
+      "stats_ms": {
+        "moe_gating_linear": {
+          "count": 1,
+          "kernel_count": 2,
+          "max": 0.006209,
+          "mean": 0.006209,
+          "median": 0.006209,
+          "min": 0.006209,
+          "std": 0.0
+        },
+        "moe_gating_routing_topk": {
+          "count": 1,
+          "kernel_count": 4,
+          "max": 0.0047669999999999995,
+          "mean": 0.0047669999999999995,
+          "median": 0.0047669999999999995,
+          "min": 0.0047669999999999995,
+          "std": 0.0
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 144,
+      "annotation_event_indices_0based": [
+        62,
+        127,
+        192,
+        257,
+        322,
+        387,
+        452,
+        517,
+        582,
+        647,
+        712,
+        777,
+        842,
+        907,
+        972,
+        1037,
+        1102,
+        1167,
+        1232,
+        1297
+      ],
+      "attributed_kernels": 140,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913843972317.901,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [1024, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [192, 2, 1], \"name\": \"_swiglu_limit_pad_aware_kernel\"}": 20,
+        "{\"block\": [128, 1, 1], \"grid\": [528, 1, 1], \"name\": \"void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 1, 8, 4, true, 4, 2, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int const*, int const*, int const*, float const*, int, bool, int, int, int, int, int*, bool, bool, bool)\"}": 40,
+        "{\"block\": [256, 1, 1], \"grid\": [1, 1, 1], \"name\": \"void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)\"}": 20,
+        "{\"block\": [256, 1, 1], \"grid\": [64, 1, 1], \"name\": \"void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, int, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, int const*, int const*, long, long)\"}": 20
+      },
+      "kernel_names_and_attributed_counts": {
+        "_swiglu_limit_pad_aware_kernel": 20,
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)": 20,
+        "void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 1, 8, 4, true, 4, 2, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int const*, int const*, int const*, float const*, int, bool, int, int, int, int, int*, bool, bool, bool)": 40,
+        "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)": 20,
+        "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)": 20,
+        "void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, int, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, int const*, int const*, long, long)": 20
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 32,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "d14a6bdfc30ff9ed280f37e6ee84088577a04ee17d48f9f142261a66c8dd9218",
+      "outside_scope_kernels": 4,
+      "raw": {
+        "bytes": 707203,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_f2cbcb61.json",
+        "sha256": "aebf0994bacaaf215b93bc20c7002a0af3e31f79af6711591012051875e1bc30"
+      },
+      "scopes_retained": 20,
+      "stats_ms": {
+        "moe_grouped_gemm": {
+          "count": 20,
+          "kernel_count": 7,
+          "max": 0.10361500000000001,
+          "mean": 0.1022997,
+          "median": 0.1021745,
+          "min": 0.100992,
+          "std": 0.0006883900856345932
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 9,
+      "annotation_event_indices_0based": [
+        62,
+        69
+      ],
+      "attributed_kernels": 5,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913843155424.318,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [128, 1, 1], \"grid\": [72, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [72, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul>)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [72, 1, 1], \"name\": \"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::array<char*, 1ul>)\"}": 1,
+        "{\"block\": [384, 1, 1], \"grid\": [2, 64, 1], \"name\": \"nvjet_sm90_tst_128x192_64x5_2x1_v_bz_coopB_TNN\"}": 1,
+        "{\"block\": [64, 1, 1], \"grid\": [1152, 1, 1], \"name\": \"void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)\"}": 1
+      },
+      "kernel_names_and_attributed_counts": {
+        "nvjet_sm90_tst_128x192_64x5_2x1_v_bz_coopB_TNN": 1,
+        "void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)": 1,
+        "void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)": 1,
+        "void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul>)": 1,
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::array<char*, 1ul>)": 1
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 12288,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "0160091b68aa4c0f9b8d886edae526f7e94b9f1b9fb5158d5ba69ff80c9f70ce",
+      "outside_scope_kernels": 4,
+      "raw": {
+        "bytes": 35913,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_f6942362.json",
+        "sha256": "338a78f378eafeb8b16a5c347916928123541376d1b6ed2a089958bc798ec247"
+      },
+      "scopes_retained": 2,
+      "stats_ms": {
+        "moe_gating_linear": {
+          "count": 1,
+          "kernel_count": 1,
+          "max": 0.0432,
+          "mean": 0.0432,
+          "median": 0.0432,
+          "min": 0.0432,
+          "std": 0.0
+        },
+        "moe_gating_routing_topk": {
+          "count": 1,
+          "kernel_count": 4,
+          "max": 0.006496,
+          "mean": 0.006496,
+          "median": 0.006496,
+          "min": 0.006496,
+          "std": 0.0
+        }
+      },
+      "streams": [
+        7
+      ]
+    },
+    {
+      "all_trace_kernels": 16,
+      "annotation_event_indices_0based": [
+        63
+      ],
+      "attributed_kernels": 4,
+      "device_properties": [
+        {
+          "computeMajor": 9,
+          "computeMinor": 0,
+          "id": 0,
+          "maxThreadsPerBlock": 1024,
+          "maxThreadsPerMultiprocessor": 2048,
+          "name": "NVIDIA H800",
+          "numSms": 132,
+          "regsPerBlock": 65536,
+          "regsPerMultiprocessor": 65536,
+          "sharedMemPerBlock": 49152,
+          "sharedMemPerBlockOptin": 232448,
+          "sharedMemPerMultiprocessor": 233472,
+          "totalGlobalMem": 85029158912,
+          "warpSize": 32
+        }
+      ],
+      "distributed_info": {
+        "backend": "nccl",
+        "nccl_version": "2.29.7",
+        "pg_config": [
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "default_pg",
+            "pg_name": "0",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "1",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "2",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "3",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "4",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "5",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "6",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "7",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "8",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "9",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "10",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "11",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "12",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cuda:nccl",
+            "pg_desc": "undefined",
+            "pg_name": "13",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          },
+          {
+            "backend_config": "cpu:gloo,cuda:gloo",
+            "pg_desc": "undefined",
+            "pg_name": "14",
+            "pg_size": 1,
+            "ranks": [
+              0
+            ]
+          }
+        ],
+        "pg_count": 15,
+        "rank": 0,
+        "world_size": 1
+      },
+      "first_scope_ts_us": 1913843168595.181,
+      "graph_ids": [
+        0
+      ],
+      "grid_and_block_counts": {
+        "{\"block\": [1024, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})\"}": 1,
+        "{\"block\": [128, 1, 1], \"grid\": [2, 1, 1], \"name\": \"void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)\"}": 1,
+        "{\"block\": [256, 1, 1], \"grid\": [1, 288, 1], \"name\": \"void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)\"}": 1
+      },
+      "kernel_names_and_attributed_counts": {
+        "void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})": 1,
+        "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)": 1,
+        "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(int const*, int*, int*, int*, unsigned long, int, int, int, bool)": 1,
+        "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)": 1
+      },
+      "match": "unique full-statistics match; not an independent tensor-shape label",
+      "matched_M": 12288,
+      "max_csv_abs_delta": 0.0,
+      "ordered_sample_summary_sha256": "5a52c7a112425a121c9e569e2ecd81d829c8fb8e4b960810b803f05c6c286ef9",
+      "outside_scope_kernels": 12,
+      "raw": {
+        "bytes": 62501,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/artifacts/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/profiler_traces/profiler_trace_fec80bd5.json",
+        "sha256": "3b454fb55a9843b2fd5219df1c6be00eba02cf8499d457c60656e494275a754a"
+      },
+      "scopes_retained": 1,
+      "stats_ms": {
+        "moe_shuffling": {
+          "count": 1,
+          "kernel_count": 4,
+          "max": 0.042046,
+          "mean": 0.042046,
+          "median": 0.042046,
+          "min": 0.042046,
+          "std": 0.0
+        }
+      },
+      "streams": [
+        7
+      ]
+    }
+  ]
+}

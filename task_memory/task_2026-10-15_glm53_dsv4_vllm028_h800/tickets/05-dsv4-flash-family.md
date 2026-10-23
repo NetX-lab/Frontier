@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | W128-OCT24-DATA-DOCS: diagnostic-only profile02 and isolated MoE data accepted; full05 measured-family/predictor scope stays OPEN. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS acceptance: root accepted isolated balanced q1 data after review/fresh reruns; full05 cost/family qualification OPEN, prior audit-pending state historical. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS followup: balanced Succeeded/execution PASS but data audit pending; corrected MoE design/independent packaging active, profile02 still queued and full05 OPEN. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS: accepted balanced-q1 preparation/merge56e9405d and Running1-H800 snapshot13:40:46Z; profile02 remains Pending and full05 remains OPEN. |
@@ -69,12 +70,19 @@
 
 **Status: PARTIAL measured family; native06 P0 reference acceptedR4, full05 cost/predictor qualification OPEN.** DSV4-only, GLM PAUSED_PENDING_USER_APPROVAL and official mean/30%/10% gates unchanged. Use [Routing milestone — current (2026-10-23)](../progress.md#routing-milestone--current-2026-10-23).
 
+### Profile02 and local-MoE acceptance — current (2026-10-24)
+
+Profile02 [primary acceptance](../../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json) is ACCEPTED_DIAGNOSTIC_AUDIT_WITH_GAPS: root32-trace non-clock/decompressed-index equality,326328annotations/7600008kernels/useful P0/P1/D0/D1=23/2/61/61;192 null stream maps (`libcupti.so`),6802600 graph kernels' UNKNOWN ownership and UNKNOWN shared cross-DP identity/dependencies remain. ONLY decodeDP1 shutdown error, prefillDP1 true/errors empty; cross-host wall timestamps cannot prove order. Full audit/32indices archived46files/86211102bytes outside immutable run; Git keeps compact receipts, native06 R4 is not replaced.
+MoE [primary acceptance](../../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json) ACCEPTED_ISOLATED_KERNEL_DATA_WITH_LIMITS after No findings/root exact rerun; source737b6311/docfix941a4450 mergedbe067bb5,204/300lines/image440/20/1003+SDK PASS. Jobexp-1023-235250-540507 Succeeded15:54:35Z,1H800/16CPU/mem_gb128/non-preemptible/1800s,92container seconds/exit0/restart0; first guessed-label false negative preserved, actual codesign/no and normal launcher finish verified.
+MoE19outputs/3261347bytes/two four-row tables/12traces/112statistics/delta0/20record_function grouped calls per M/7kernels per call; rank0 KERNEL_ONLY means(ms) M16/32/6152/12288=0.1017937/0.1022997/0.7557434/1.29869045. CUDA_EVENT raw samples/grouped count absent; no other EP ranks/TP8/communication/graph/serving/weights equivalence or native-tuple cost consumption; M6152 conditional dummy-peer only.
+Next bounded source-backed collection-gap design/CPU repairs -> fresh package/run under standing H800 authority; proper tuple admission precedes cost consumers. Q2a ACCEPTED_ISOLATED_DATA/901ef960 remains; full05/09/19 OPEN, GLM paused/CPU-overhead last. [Current evidence](../progress.md#profile02-and-local-moe-acceptance--current-2026-10-24); dated pending/current snapshots below are history, all checklists unchanged.
+
 ### Balanced q1 isolated-data acceptance — current (2026-10-23)
 
 [Primary root decision](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json): ACCEPTED_ISOLATED_DATA, jobexp-1023-213905-916183/C6143..7166, both6144-row CSVs byte-exact,94 scope series,51200 CUDA_EVENT/45056 KERNEL_ONLY calls and45056 annotations exact. Original samples/methods retained separately.
 [Review](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md) No findings; root [fresh raw/trace reruns](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json) in `/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_root_audit_nss5y_ka` returned0/all non-clock fields matched,17.568s/47.700s; final14:35:05Z98305 records/duplicate fields0/eight hashes unchanged. [Data audit](../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json) admissions=false preserves historical auditor authority; primary_acceptance.json records root's isolated-data decision.
 PhysicalTP1/DP1/eager/six-layer/dummy-weight scope only, one sample per context/layer/scope/method;227901/352829 kernels unowned, actual event-handle dependency evidence absent. Consumer/serving/physicalTP8/graph/constructor-family/stationarity/independent expert-histogram admissions remain false; full05/09/19 OPEN.
-Retained2026-10-23T14:18:37Z profile02 snapshot:32-H800/Pending/no replicas/PID3236764 alive, not real-time status. MoE package delivered204/300 lines; both reviews' only P3 tracer-citation finding was corrected at941a4450, with frozen inputs unchanged; root actual image/SDK/seal/run pending; no MoE GPU submitted or source/runtime equivalence. Q1 commitb7c0a953 closes five P0 subitems only, not full17; native06 R4/private input/H/G2 CPU milestones, standing H800 authority/soft gates, GLM pause and CPU-overhead last unchanged. Prior pending/current sections below are dated history; all failures/checkboxes retained.
+Historical14:18:37Z profile02 queue/MoE preparation snapshot is superseded by the2026-10-24 acceptance above; Q1 commitb7c0a953 still closes five P0 subitems only, not full17. All failures/checkboxes remain retained.
 
 ### Balanced q1 terminal and MoE preparation — historical (2026-10-23)
 

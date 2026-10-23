@@ -1,0 +1,54 @@
+{
+  "job": "exp-1023-235250-540507",
+  "observed_at_utc": "2026-10-23T15:54:53.162094+00:00",
+  "created_at": "2026-10-23T15:52:50Z",
+  "labels": {
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-codesign",
+    "quotagroup.brainpp.cn/preemptible": "no",
+    "quotagroup.brainpp.cn/quotagroup": "codesign"
+  },
+  "status": {
+    "phase": "Succeeded",
+    "reason": "RJobSucceeded",
+    "message": "RJob succeeded",
+    "taskStatuses": {
+      "default": {
+        "succeeded": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "finishTime": "2026-10-23T15:54:35Z",
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "tasks": {
+    "default": {
+      "replicas": 1,
+      "nfs": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-moe-local-run:/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+      "containers": [
+        {
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "resources": {
+            "limits": {
+              "cpu": "16",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1",
+              "rdma/mlnx_shared": "8"
+            },
+            "requests": {
+              "cpu": "16",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "launcher_pid": 4152584,
+  "launcher_alive": false,
+  "manifest_sha256": "2ce8333148675cbec721c7f0f9710f70c1b031032be971ffcf7b1e754a1377f4"
+}

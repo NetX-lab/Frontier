@@ -4,12 +4,13 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Corrected the observed filename/collector local-rank versus distributed/EP-rank distinction after the full32-trace audit and independent review. Actual outcomes are in results/primary_acceptance.json. |
 | 2026-10-23 | W128-V4-PROFILE01-ANALYSIS-PLAN: mapped expected artifacts to collector IDs, chose the smallest existing parser path, separated directly verifiable checks from UNKNOWN gaps. No run, no source edit. |
 | 2026-10-23 | Root factual correction applied: unsuffixed `post_warmup`/`pre_shutdown` snapshots; per-step batch identity instead of equal request sets (DP alignment UNKNOWN); `(role,lane,rank)` binding; hierarchy vs disjoint leaf accounting; `graph id` does not prove captured ownership. |
 | 2026-10-23 | Removed the deliberate incompatible-CLI step 8 in favour of source evidence plus `trace_header`/`load_trace` reuse; marked `…` items as analysis steps; useful-batch candidate wording admits no zero-token step. |
 | 2026-10-23 | W128-PROFILE02-ANALYSIS-BINDING: bound the sealed profile02 run root and trace directories, corrected the annotation-name and request-ID joins from source, replaced the stale "package unsealed" unknowns with the actual bindings, and separated trace-presence UNKNOWN from known source schema. No run, no cloud read, no source edit. |
 
-Task `W128-V4-PROFILE01-ANALYSIS-PLAN`. Sealed package `candidate_h800_p0_profile_02` (packaging `d87f4c74`, merged `cc0227e9`, runtime `05952396`), RJob `exp-1023-180821-373637`, first-formal 64 worker steps, P16D16, TP8/DP2/EP16/PP1, 32×H800, `run_tag` `dsv4-h800-p0-profile-20261023-02`. Nothing here is a runtime result; artifact presence is still UNKNOWN until I4.
+Task `W128-V4-PROFILE01-ANALYSIS-PLAN`. Sealed package `candidate_h800_p0_profile_02` (packaging `d87f4c74`, merged `cc0227e9`, runtime `05952396`), RJob `exp-1023-180821-373637`, first-formal 64 worker steps, P16D16, TP8/DP2/EP16/PP1, 32×H800, `run_tag` `dsv4-h800-p0-profile-20261023-02`. This is the retained collection/analysis plan; actual I4 outcomes and unresolved gaps are recorded in [primary acceptance](results/primary_acceptance.json).
 
 ## 1. Expected artifact paths (bound to sealed config)
 
@@ -28,12 +29,12 @@ Process status is outside `R`: `launcher_started.json`/`launcher_exit.json` besi
 `profile01/profile02_platform_launch.json` is only the queued submission snapshot, not completion evidence — root must retain a new personal-client terminal snapshot incl. replica/container results at I3 completion.
 
 Traces: base `torch_profiler_dir` = `R/torch_traces` (sealed `config.json`), rewritten per node to `<base>/<role>/dp<lane>` (`native_pd_worker.py:159-165`, `lane = position % nodes_per_role * local`), so exactly 4 directories `prefill|decode/dp0|dp1`, 8 traces each (`tensor_parallel_size=8`, `data_parallel_size_local=1`, `replica=4`).
-Filename `dp{dp}_pp0_tp{tp}_dcp0_ep{ep}_rank{global_rank}.{time_ns}.pt.trace.json.gz`: `worker_name` is `get_worker_rank_suffix(global_rank=worker.rank)` with no prefix (`vllm/v1/worker/gpu_worker.py:1156-1174`, `vllm/distributed/utils.py:696-740`), gzip on (`config.json`, `profiler/wrapper.py:205-212`).
+Observed filename `dp{dp}_pp0_tp{tp}_dcp0_ep{ep}_rank{local_rank}.{time_ns}.pt.trace.json.gz`: filename and collector rank are0–7 in every lane; `ep` and `distributedInfo.rank` are0–15 per role. Although the source calls `get_worker_rank_suffix(global_rank=worker.rank)`, that argument is the observed local worker rank here (`vllm/v1/worker/gpu_worker.py:1156-1174`, `vllm/distributed/utils.py:696-740`). Gzip is enabled.
 Also `profiler_out_<local_rank>.txt` per worker in the same directory (`profiler/wrapper.py:271-275`; `torch_profiler_dump_cuda_time_total` defaults true) — one window only.
 
-Mapping: a trace `rank{N}` is **not** globally unique — prefill and decode are separate instances that both number from 0, so every join carries
+Mapping: a trace `rank{N}` is **local to its lane**, so every join carries
 `(role, lane, rank)` taken from `nodes/<host>/result.json → plan{role,lane,position}` (`native_pd_worker.py:135-179`) plus the trace's own directory
-`<role>/dp<lane>`:  trace `(role,lane,rank)` ↔ collector `rank` on that same node ↔ `serving/rank{N}.json` ↔ `serving_profile/rank{N}.json|profile.json`.
+`<role>/dp<lane>`: trace `(role,lane,local_rank)` ↔ collector `rank` on that same node ↔ `serving/rank{N}.json` ↔ `serving_profile/rank{N}.json|profile.json`. For example decodeDP1 has `ep8_rank0` through `ep15_rank7`, never collector ranks8–15.
 Joins are identity-based, never timestamp-based across hosts.
 Collector annotation name `frontier_native_<category>|<id>|<scope>` (`native_serve_profile.py:180-182`) ↔ trace `user_annotation` event by the whole name;
 per-step context (`step,kind,repeat,request_phase,has_prefill,token_phase,execution,graph_mode,startup_warmup,layer,category,scope`) from the row with that `<id>` (`:160-167,180-188,478-488`);
@@ -106,7 +107,9 @@ PDL launch attributes are retained only at the two wrapped Triton launchers (`na
 6. Analysis step: over `serving_profile/rank*.json` + `.profile.json`, bind `(role,lane,rank)` from `result.json → plan`, then per lane report first-formal step count, candidate step count admitted by check 4, and descriptor/mode/`has_prefill` per step (checks 3-9).
 7. Analysis step: over `run/canonical_repetitions.json`, report `profiling.status`, per-role HTTP attempts, `drain.verified`, `receipt_errors`, `client_workload_verified`.
 
-## 6. Directly verifiable vs UNKNOWN
+## 6. Planning-time verifiable vs UNKNOWN
+
+The following were the pre-run evidence questions. Their actual outcomes are in `results/primary_acceptance.json`; they are not a current missing-artifact census.
 
 Verifiable from artifacts: artifact presence and naming (`rank<N>.json`, `.before_profile.json`, `.profile.json` only), `(role,lane,rank)` binding, window bounds and drops,
 sources/images/inputs, step membership, per-step descriptor/mode/`has_prefill`, client completion and drain, annotation↔collector id join, kernel→launch→annotation id via correlation,
