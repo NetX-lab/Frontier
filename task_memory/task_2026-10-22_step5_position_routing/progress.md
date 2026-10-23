@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent accepts two-file fixture fix72/80 with28PASS; freeze9974acdb with verifiedgitlink3dac, start full-unit/strict77, and retain separate frozen full-input generation. |
 | 2026-10-23 | Joint CORE/producer and registry-view re-reviews return No findings; parent693PASS/5 known fixture FAIL/19SKIP, including three formerly dependency-blocked wrapper checks. |
 | 2026-10-23 | Freeze CORE e49b26f8, seven-path228/230 and combined3786/4404; assign five affected fixture failures within a separate80-line, two-existing-path allocation. |
 | 2026-10-23 | Confirm approved P/D always supplies manager; withdraw independent-public-consumer prerequisite while retaining both trainer checks. |
@@ -46,12 +47,16 @@
   and registry mixed-view P2 are closed at source level. CORE repair228/230,
   PRICING3805/3956 and registry331/360 receipts are retained. Diagnostics persist
   independently of stable compute context; current-repo CPU writer is used.
-- in-progress: parent combined tests observe693PASS/5FAIL/19SKIP across717 unique
-  cases. All failures are assigned to CORE's two existing fixture files within a
-  separate80-gross allocation. Three prior wrapper environment blockers are now
-  independently3PASS using an isolated extra-site. No full regression acceptance
-  yet. Both actual trainer fit/cache/preflight paths remain required; independent
-  public consumer binding is outside the approved P/D product path.
+- completed: parent independently accepts f03a1157 fixture repair (72/80 gross,
+  two files) with28PASS/0FAIL, closing all five previously identified fixture
+  failures. Three wrapper environment blockers are independently3PASS using an
+  isolated extra-site. Both real trainer fit/cache/preflight paths remain required;
+  independent public consumer binding is outside the approved P/D product path.
+- in-progress: integrated9974acdb pins verified collective-sim3dac53c and runs
+  full-unit baseline comparison. A separate clean checkout runs strict77 after
+  re-auditing D30's77-case/451-artifact baseline. Source-frozen19a35630 generates
+  full position inputs for subsequent offline/online CLI; input preparation is
+  not a completed CLI run. Full regression acceptance awaits these results.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
   qualification and fresh GPU/native evidence. Additional collection resources
@@ -84,6 +89,14 @@ complete the three previously blocked wrapper checks without editing either
 existing Python environment. Exact parent evidence is in the frozen worktree's
 core_parent/; review_2026-10-23_core_producer_joint.md records acceptance limits.
 The seven-path source repair is review-closed; full regression awaits the fixtures.
+
+The two-file fixture correction is now parent-accepted: f03a1157,72/80 gross,
+28PASS/33.33s. Parent integration9974acdb includes the corrected tests and verified
+3dac53c gitlink; production Python remains identical to the reviewed snapshot.
+Exact command/review and running-check paths are in
+repairs/test_report_2026-10-23_affected_fixture_parent.md. Module-size note3b78f625
+documents five remaining exceptions and inspected split boundaries without code
+cleanup or new scope. Independent final109-path/owner accounting audit is running.
 
 ### T2 closure and PRICING parent checkpoint
 
