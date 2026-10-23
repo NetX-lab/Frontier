@@ -1,0 +1,44 @@
+{
+  "status": "PASS_ROOT_CPU_EVIDENCE_VERIFICATION",
+  "fresh_docker_rerun": false,
+  "scope": "Read/hash/recompute of the supplied exact-image two-rank CPU control; not full native worker execution.",
+  "post_collective_counters": [
+    [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ]
+  ],
+  "recomputed_matrices": 12,
+  "native_checkout_equals_actual_image": true,
+  "native_dp_utils_sha256": "3c882f85109ba47e473953351d166c4377ceb995205e91cbf128ca5075775a5d",
+  "references": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence_cpu/result.json",
+      "sha256": "75b6600f727751a2000299a2b18c1fda2c25bba29737bfc2f1253246d24ae53f"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence_cpu/run_receipt.json",
+      "sha256": "33e9e161d4319cbcda64f2a9351bba5845d9682845a582ea8f4d1943de8f43fe"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence_cpu/source_locations_binding.json",
+      "sha256": "b4791e085eab6ebd05c1f6bdc329a177a1ef9968685a889312b53fcd696fcbde"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence_cpu/delivery_verification.json",
+      "sha256": "1fa327400f4551850e5a52e29a6a0bb1d20e2238646475f21497c36f44f56149"
+    }
+  ]
+}

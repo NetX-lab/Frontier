@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accepted scoped stream/restart evidence, preserving UNKNOWN captured ownership and recorded metadata/runtime-version limits. |
 | 2026-10-24 | Root completed final-source checks, sealing and successful single-H800 execution; retained-data acceptance is in progress. |
 | 2026-10-24 | Archived262-line reviewed-P2 repairs and identical original-byte RED/repaired-source GREEN controls. |
 | 2026-10-24 | Archived the scoped source/CPU delivery and root-owned remaining checks. |
@@ -37,4 +38,6 @@ No GPU mapping/capture correspondence was measured; both remain unverified. No G
 
 The final source and package passed independent re-review, root RED/GREEN reproduction and actual locked-image/SDK checks. Root sealed seven inputs at source5f7d0950 and completed `exp-1024-020317-012085`:1H800/codesign/non-preemptible,16CPU/mem_gb64/600s ceiling; Succeeded2026-10-23T18:06:33Z,23container seconds,exit0,restart0. Receipts are `root_cpu.json`, `root_verdict_controls.json`, `matrix_binding.json`, `root_seal.json`, `root_submission.json`, `platform_terminal.json` and `root_run_check.json` in this directory.
 
-All five outputs/228175bytes were downloaded hash-identically (`download.json`). Producer-reported eager PASS and graph UNKNOWN await independent raw-trace audit/review and root acceptance; execution success establishes no serving cost. The root inspector's initial GPU UUID prefix mismatch is retained with its exact-UUID correction in `root_run_check.json`.
+All five outputs/228175bytes were downloaded hash-identically (`download.json`). Root accepted targeted stream/restart evidence after independent No-findings review and a byte-identical complete audit rerun:162checks,8eager/16priming joins,16stable snapshot rows and28uniquely assigned kernels. `results/primary_acceptance.json` records the decision; `results/root_verification.json` and `results/review.md` provide independent evidence. The root inspector's initial GPU UUID prefix mismatch is retained with its exact-UUID correction in `root_run_check.json`.
+
+Captured per-op ownership remains UNKNOWN: capture rows have no graph/node identity, although both replays complete and retain the same two node pairs. Cycle2 loses two vLLM version metadata fields; cuda.bindings runtime13030 differs from trace13000. This run does not establish serving/operator costs, GPU event dependencies, numerical output correctness, cross-rank/hardware equivalence or native-reference admission. Increasing startup capture coverage alone is unsupported as a solution to missing graph ownership.

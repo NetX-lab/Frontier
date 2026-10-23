@@ -1,0 +1,670 @@
+{
+  "status": "PASS",
+  "startup_sequences": [
+    0,
+    0
+  ],
+  "per_rank_after_sequences": [
+    [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ]
+  ],
+  "blocking_all_reduces": 6,
+  "zero_valued_collective_ordinals": [
+    0,
+    2,
+    5
+  ],
+  "same_after_sequence_at_each_collective": true,
+  "strictly_increasing_per_rank": true,
+  "cuda_initialized_anywhere": false,
+  "ranks": [
+    {
+      "rank": 0,
+      "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+      "torch": "2.13.0+cu130",
+      "cuda_initialized_before": false,
+      "cuda_lazy_init_calls": [],
+      "group_type": "torch.distributed.distributed_c10d.ProcessGroup",
+      "group_name": "0",
+      "group_ranks": [
+        0,
+        1
+      ],
+      "backend": "gloo",
+      "world_size": 2,
+      "getter_name": "_get_sequence_number_for_group",
+      "getter_callable": true,
+      "startup_sequence": 0,
+      "rows": [
+        {
+          "ordinal": 0,
+          "before": 0,
+          "after": 1,
+          "local_operand": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "post_all_reduce": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "expected": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 1,
+          "before": 1,
+          "after": 2,
+          "local_operand": [
+            1,
+            2,
+            1,
+            1
+          ],
+          "post_all_reduce": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "expected": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 2,
+          "before": 2,
+          "after": 3,
+          "local_operand": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "post_all_reduce": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "expected": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 3,
+          "before": 3,
+          "after": 4,
+          "local_operand": [
+            8,
+            16,
+            1,
+            0
+          ],
+          "post_all_reduce": [
+            [
+              8,
+              0
+            ],
+            [
+              16,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "expected": [
+            [
+              8,
+              0
+            ],
+            [
+              16,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 4,
+          "before": 4,
+          "after": 5,
+          "local_operand": [
+            3,
+            4,
+            0,
+            0
+          ],
+          "post_all_reduce": [
+            [
+              3,
+              5
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "expected": [
+            [
+              3,
+              5
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 5,
+          "before": 5,
+          "after": 6,
+          "local_operand": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "post_all_reduce": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "expected": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        }
+      ],
+      "terminal_sequence": 6,
+      "cuda_initialized_after": false,
+      "status": "PASS"
+    },
+    {
+      "rank": 1,
+      "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+      "torch": "2.13.0+cu130",
+      "cuda_initialized_before": false,
+      "cuda_lazy_init_calls": [],
+      "group_type": "torch.distributed.distributed_c10d.ProcessGroup",
+      "group_name": "0",
+      "group_ranks": [
+        0,
+        1
+      ],
+      "backend": "gloo",
+      "world_size": 2,
+      "getter_name": "_get_sequence_number_for_group",
+      "getter_callable": true,
+      "startup_sequence": 0,
+      "rows": [
+        {
+          "ordinal": 0,
+          "before": 0,
+          "after": 1,
+          "local_operand": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "post_all_reduce": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "expected": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 1,
+          "before": 1,
+          "after": 2,
+          "local_operand": [
+            2,
+            2,
+            1,
+            1
+          ],
+          "post_all_reduce": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "expected": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 2,
+          "before": 2,
+          "after": 3,
+          "local_operand": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "post_all_reduce": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "expected": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 3,
+          "before": 3,
+          "after": 4,
+          "local_operand": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "post_all_reduce": [
+            [
+              8,
+              0
+            ],
+            [
+              16,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "expected": [
+            [
+              8,
+              0
+            ],
+            [
+              16,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 4,
+          "before": 4,
+          "after": 5,
+          "local_operand": [
+            5,
+            8,
+            0,
+            1
+          ],
+          "post_all_reduce": [
+            [
+              3,
+              5
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "expected": [
+            [
+              3,
+              5
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        },
+        {
+          "ordinal": 5,
+          "before": 5,
+          "after": 6,
+          "local_operand": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "post_all_reduce": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "expected": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "native_result_is_none": true,
+          "cuda_initialized": false
+        }
+      ],
+      "terminal_sequence": 6,
+      "cuda_initialized_after": false,
+      "status": "PASS"
+    }
+  ]
+}

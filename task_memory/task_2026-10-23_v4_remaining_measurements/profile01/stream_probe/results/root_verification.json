@@ -1,0 +1,23 @@
+{
+  "status": "PASS_BYTE_IDENTICAL_ROOT_RERUN",
+  "start_utc": "2026-10-23T18:21:41.892134+00:00",
+  "end_utc": "2026-10-23T18:21:41.982342+00:00",
+  "command": [
+    "/usr/bin/python3",
+    "-B",
+    "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_native_stream_probe_data_audit_20261024.py",
+    "--worktree",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "--download",
+    "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_results_sxh2vn9h",
+    "--output",
+    "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_root_audit_02f4imwm/data_audit.json"
+  ],
+  "returncode": 0,
+  "script_sha256": "0d399e59f0f6da42a9e300a2686789c40e97e2b50933b6372d81bd9e60a5809d",
+  "audit_sha256": "601cb737fd5f25d76feddd483225090f291dc6bb1f9b9acfb83647a5852f1310",
+  "original_audit": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/data_audit.json",
+  "root_output": "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_root_audit_02f4imwm",
+  "excluded_fields": [],
+  "scope": "Complete deterministic CPU audit of retained raw artifacts; graph ownership remains UNKNOWN."
+}

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Advanced to accepted GPU stream/restart evidence and bounded diagnostic DP sequence implementation. |
 | 2026-10-24 | Advanced the stream probe to completed execution and pending independent data acceptance; added parallel DP-counter CPU verification. |
 | 2026-10-24 | Bound the continuation to CPU stream-loader repair0d745706 and the pending targeted probe; retained the historical G2/run references. |
 | 2026-10-24 | W128-OCT24-DATA-DOCS: continuation starts from diagnostic-only profile02 and isolated MoE acceptance; bounded gap design/CPU repairs precede fresh H800 collection and tuple-gated cost consumption. |
@@ -16,7 +17,7 @@
 
 ## Current informational continuation state — 2026-10-24
 
-Post-audit delta: `0d745706` is ACCEPTED_CPU_STREAM_LOADER_REPAIR,34/80gross lines, separate33/19/28/45PASS and independent No findings. Probe source5f7d0950 is262/275lines after two reviewed verdict repairs; root final-image/SDK/Git/hash checks and single-H800 execution are complete. Jobexp-1024-020317-012085 Succeeded18:06:33Z,23container seconds/exit0/restart0; five outputs/228175bytes are hash-identical. Read `profile01/stream_probe/{progress.md,root_run_check.json,download.json}`. Producer eager PASS/graph UNKNOWN await independent raw-trace acceptance; source/package owner has stopped. In parallel, W128-DP-SEQUENCE-CPU checks the existing DP group getter in a CPU-only two-rank gloo group on the locked image. No custom callback, tools-ID API requiring CUDA13.1, numeric graph-ID conversion or paused GLM work is included.
+Post-audit delta: CUPTI repair0d745706 and probe5f7d0950 have accepted targeted GPU stream/restart evidence from exp-1024-020317-012085, after independent No findings and byte-identical root162-check audit. Read `profile01/stream_probe/results/primary_acceptance.json`:8eager/16priming joins,16stable snapshots; captured per-op graph ownership remains UNKNOWN. Exact-image WS2 gloo control passed (`profile01/dp_sequence_cpu.md`). Next is four-file/180-line optional diagnostic DP sequence recording under the current requirements allocation, preserving frozen base dispatch/hook schemas. No custom callback, CUDA13.1 tools-ID API, numeric graph-ID conversion or paused GLM work is included.
 
 YC requested continuation in this same session; this handoff is informational, not a scheduling instruction or a new transfer of execution. Read current [requirements.md](requirements.md), [plan.md](plan.md), [progress.md](progress.md) and [proposal.md](proposal.md) before using any historical prompt. G2 CPU source05952396 is ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT; accepted source05952396 and recordsb8fe6b2d remain unchanged. Its final separate suites and explicit existing77/77 matrix binding are recorded in `driver/primary_acceptance.json`; no new strict77 capture.
 

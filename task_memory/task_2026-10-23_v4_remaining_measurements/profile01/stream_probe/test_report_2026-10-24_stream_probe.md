@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Root accepted targeted stream/restart evidence after a byte-identical complete audit and independent review; graph ownership remains UNKNOWN. |
 | 2026-10-24 | Added root final-source CPU/image/SDK checks and verified single-H800 execution, with data acceptance pending. |
 | 2026-10-24 | Appended original-byte RED and repaired-source GREEN evidence for both P2 findings; original CPU errors retained. |
 | 2026-10-24 | Recorded final source checks, exact CPU commands and unmodified local compatibility failures. |
@@ -238,8 +239,8 @@ Root CPU commands and exact arguments are retained in `root_cpu.json` and `root_
 | Platform/container | Correct identity/image/NFS; success without restart | Succeeded,23s,exit0,restart0 | PASS |
 | Worker GPU identity | nvidia-smi and Torch identify the same H800 | UUID c459bcfe-2bea-e452-274c-beb947928449 | PASS after correcting the inspector's prefix-sensitive comparison |
 | Sealed inputs/download | Seven inputs unchanged; every output hash matches |7/7 inputs;5 outputs/228175bytes | PASS |
-| Raw stream/graph evidence | Independent reconstruction determines qualification | Producer eager PASS/graph UNKNOWN; independent audit active | PENDING |
+| Raw stream/graph evidence | Independent reconstruction determines qualification | Root162-check rerun byte-identical; independent review No findings | PASS for targeted stream/restart; graph UNKNOWN |
 
 Executed local launcher: `/data/ycfeng/tmp/stepmind-env/bin/python -u -B <package>/launch.py --launch`, with package `h800_stream_probe_01` under this directory, `STEPMIND_BACKEND=rjob`, personal credentials and the runbook proxy environment. `root_submission.json` records exact argv/cwd/PID/resources/log; `h800_stream_probe_01/launcher_result.json` records creation-to-completion. The worker uses the generated launcher's exact command (see `generated_launcher.diff`) and the sealed config. Read-only platform query and SSH-tar inventory/extraction commands are recorded by `platform_terminal.json`, `download.json` and the session transcript. No cloud bytes or permissions were modified during retrieval.
 
-Raw launcher log: `/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_launch_20261024.log`; redacted worker log and terminal receipt: `/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_terminal_z176kwmi/`. `root_run_check.json` retains the original `AssertionError` from comparing `GPU-<uuid>` with `<uuid>` and the corrected `uuid.UUID` equality. This was an inspector-format error, not a worker failure. Source/package reviews are static evidence; these root executions provide the independent CPU/platform checks. Raw trace acceptance is a separate result.
+Raw launcher log: `/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_launch_20261024.log`; redacted worker log and terminal receipt: `/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_terminal_z176kwmi/`. `root_run_check.json` retains the original `AssertionError` from comparing `GPU-<uuid>` with `<uuid>` and the corrected `uuid.UUID` equality. This was an inspector-format error, not a worker failure. Source/package reviews are static evidence; root executions provide independent CPU/platform checks. Final raw-data commands/results are in `results/{command.md,test_report_2026-10-24_data.md,root_verification.json}`; `results/primary_acceptance.json` accepts only targeted stream identity and observed two-cycle reuse.

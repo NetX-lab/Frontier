@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accepted limited GPU stream/restart evidence after independent review and byte-identical root audit; captured ownership stays UNKNOWN. |
 | 2026-10-24 | Root closed source/package reviews, verified final image/SDK/CPU controls, sealed and completed the single-H800 run; independent raw-data audit is active. |
 | 2026-10-24 | Repaired both reviewed P2s at262/275lines; retained original bytes and identical CPU RED/GREEN controls. |
 | 2026-10-24 | Completed249-line source/CPU delivery, recorded local environment limits and root-owned GPU gates. |
@@ -44,3 +45,10 @@ Retained temporary control root: `/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128
 - in-progress: `W128-NATIVE-STREAM-PROBE-DATA`, owner `ses_e96091ab7ffe7n9IpDlbsmI0S8`, independently reconstructs the two raw traces. The producer reports eager PASS/graph UNKNOWN; root data acceptance and subsequent review remain pending. No serving-cost admission follows from platform success.
 - completed record verification: `python3 -B -` (exact inline command in the session transcript), Python3.10.6,77 record-binding/hash/Git-byte/local-link/history/whitespace checks PASS. This count is document verification, separate from the inherited77-case simulator matrix. `frontier/` and `tests/` have no uncommitted source changes.
 - record-check correction: after the previously untracked records were staged, `git diff --cached --check` flagged three required blank-context prefixes inside retained unified-diff artifacts. Their bytes are preserved. Ordinary whitespace checking applies to Markdown/JSON; the two raw `.diff` files additionally allow blank-at-end-of-line context prefixes. This changes no source, input or verification predicate.
+
+## Root data acceptance
+
+- completed: [primary_acceptance.json](results/primary_acceptance.json) accepts only targeted GPU stream identity and observed two-cycle native-profiler reuse. [Independent review](results/review.md) has no findings; [root verification](results/root_verification.json) reruns the full frozen CPU audit and matches every byte,162/162 checks, no excluded fields.
+- observed:8eager and16priming joins,16stable snapshot rows, all28kernels uniquely partitioned. Default/aux Torch IDs0/3 differ from CUPTI/trace IDs7/13. One wrapper and outer profiler object were reused across two complete retained traces.
+- unresolved: captured per-op records have no graph/node identities and no correlated kernels; two successful replays retain matching node pairs but cannot establish captured ownership. Graph correspondence remains UNKNOWN. Cycle2 loses two vLLM version metadata keys; cuda.bindings runtime13030 differs from trace13000. Exact raw fields and worker-only binary telemetry remain retained.
+- next: use this verified stream repair in a fresh source-bound diagnostic package once its remaining collection changes are ready. Do not add a startup capture window merely expecting it to solve captured ownership. Full serving/operator/dependency/native-reference acceptance remains open.
