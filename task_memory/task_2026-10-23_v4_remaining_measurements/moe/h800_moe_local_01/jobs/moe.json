@@ -1,0 +1,142 @@
+{
+  "charged_group": "codesign",
+  "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+  "cpu": 16,
+  "cuda_compat_path": "/usr/local/cuda-13.0/compat",
+  "expert_parallel_size": 16,
+  "formal_coverage": false,
+  "gpu": 1,
+  "gpu_type": "H800",
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "job_tag": "v4-h800-moe-ep16-rank0-balanced-20261023-01",
+  "local_EP_rank": 0,
+  "mem_gb": 128,
+  "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+  "name": "EP16_RANK0_LOCAL_MOE",
+  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/56e9405d_ep16_rank0_balanced_20261023_01",
+  "phases": [
+    {
+      "expected_tables": [
+        {
+          "path": "compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+          "rows": 4
+        }
+      ],
+      "name": "EP16_RANK0_LOCAL_MOE_CUDA_EVENT",
+      "steps": [
+        {
+          "commands": [
+            {
+              "argv": [
+                "{python}",
+                "-m",
+                "frontier.profiling.moe.main",
+                "--models",
+                "deepseek-ai/DeepSeek-V4-Flash",
+                "--device",
+                "h800",
+                "--num_gpus",
+                "1",
+                "--disable_ray",
+                "--num_tensor_parallel_workers",
+                "1",
+                "--expert_parallel_sizes",
+                "16",
+                "--num_tokens_list",
+                "12288",
+                "6152",
+                "32",
+                "16",
+                "--max_tokens",
+                "16384",
+                "--load_distributions",
+                "balanced",
+                "--num_samples_per_distribution",
+                "1",
+                "--routing_runtime_path",
+                "balanced_topk",
+                "--yes",
+                "--profile_method",
+                "cuda_event",
+                "--source_revision",
+                "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+                "--model_config_revision",
+                "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+                "--output_dir",
+                "/tmp/glm_producers/out/EP16_RANK0_LOCAL_MOE_CUDA_EVENT"
+              ],
+              "name": "cuda_event"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "expected_tables": [
+        {
+          "path": "compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+          "rows": 4
+        }
+      ],
+      "name": "EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION",
+      "steps": [
+        {
+          "commands": [
+            {
+              "argv": [
+                "{python}",
+                "-m",
+                "frontier.profiling.moe.main",
+                "--models",
+                "deepseek-ai/DeepSeek-V4-Flash",
+                "--device",
+                "h800",
+                "--num_gpus",
+                "1",
+                "--disable_ray",
+                "--num_tensor_parallel_workers",
+                "1",
+                "--expert_parallel_sizes",
+                "16",
+                "--num_tokens_list",
+                "12288",
+                "6152",
+                "32",
+                "16",
+                "--max_tokens",
+                "16384",
+                "--load_distributions",
+                "balanced",
+                "--num_samples_per_distribution",
+                "1",
+                "--routing_runtime_path",
+                "balanced_topk",
+                "--yes",
+                "--profile_method",
+                "record_function",
+                "--source_revision",
+                "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+                "--model_config_revision",
+                "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+                "--output_dir",
+                "/tmp/glm_producers/out/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION"
+              ],
+              "name": "record_function"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "physical_TP": 1,
+  "planning_gpu_hours_cap": 0.5,
+  "preemptible": false,
+  "producer": "moe",
+  "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+  "source_snapshot": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065",
+  "status": "CPU_PREPARATION_ONLY_ROOT_IMAGE_SDK_SEAL_SUBMISSION_REQUIRED",
+  "task_id": "W128-V4-MOE-PACKAGE",
+  "timeout_seconds": 1800,
+  "wheelhouse": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/launch/wheelhouse",
+  "worker": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/launch/glm_producer_worker.py"
+}

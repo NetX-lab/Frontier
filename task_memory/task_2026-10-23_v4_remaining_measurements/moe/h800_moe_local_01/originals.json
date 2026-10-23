@@ -1,0 +1,25 @@
+{
+  "copied_runtime": {
+    "glm_producer_jobs.py": {
+      "copied_sha256": "c52980712bdcc4e9b77a00051aad813500b4a63070b327f1c48cfd2278f869cd",
+      "original_sha256": "40dfdf536ab639ca3cf7183afc505d450780123cd8ac3f116d7a62d31b7f92bc",
+      "workspace_locator_only": true
+    },
+    "glm_producer_worker.py": {
+      "copied_sha256": "9f36cd2eacc5d764a8c84e4f9012e2d195fdcad6ce52902e395491262c1ee421",
+      "original_sha256": "9f36cd2eacc5d764a8c84e4f9012e2d195fdcad6ce52902e395491262c1ee421"
+    },
+    "launch_glm_producers.sh": {
+      "copied_sha256": "4b8f635f8e092ae3b0d633e995600d205df5b65c5f2ff6efe40279a1804c05d1",
+      "original_sha256": "4b8f635f8e092ae3b0d633e995600d205df5b65c5f2ff6efe40279a1804c05d1"
+    }
+  },
+  "input_count": 527,
+  "manifest_sha256": "7929afaef9deced67543262ad9a3eec398048b68914fd0322b00c97416cbe360",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-q1-warm-remeasure/task_memory/task_2026-10-21_v4_q1_warm_remeasure/h800_decode",
+  "root_inputs": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe_grid_design.md": "958659c7428bc4c14624af1acfef560c65ae7b2fd68b0ae76fd6e164f6d0d8f5",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/plan.md": "ee9331b41058c4870ec16cccb1091c6f7139ef0ca3e3babdf684d2fea1d22a6f",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md": "7fd4debb33b180e575183681fa2e851ba554b969d0be533e61d41647ff9dab4f"
+  }
+}

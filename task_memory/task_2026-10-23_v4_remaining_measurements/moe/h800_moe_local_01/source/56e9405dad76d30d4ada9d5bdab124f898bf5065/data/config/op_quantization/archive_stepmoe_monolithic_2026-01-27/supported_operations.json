@@ -1,0 +1,35 @@
+{
+  "compute_operations": [
+    "attn_pre_proj",
+    "attn_post_proj",
+    "attn_rope",
+    "attn_kv_cache_save",
+    "attn_prefill",
+    "attn_decode",
+    "mlp_up_proj",
+    "mlp_down_proj",
+    "mlp_act",
+    "moe_gating",
+    "moe_shuffling",
+    "moe_grouped_gemm",
+    "input_layernorm",
+    "post_attention_layernorm",
+    "add"
+  ],
+  "communication_operations": [
+    "allreduce",
+    "allgather",
+    "broadcast",
+    "send_recv",
+    "reduce_scatter",
+    "all_to_all",
+    "kv_cache_transfer",
+    "m2n_transfer",
+    "expert_parallel_communication"
+  ],
+  "moe_precision_recommendations": {
+    "moe_gating": "FP16",
+    "moe_shuffling": "FP8",
+    "moe_grouped_gemm": "FP8"
+  }
+}
