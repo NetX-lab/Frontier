@@ -70,6 +70,12 @@
   total<=105 gross under unchanged CORE/global caps. Scope/design:
   repairs/model_group_reuse_scope_amendment.json and model_group_reuse.md.
   No full CLI retry assigned;parent checks/review and residual profile come first.
+- in-progress/read-only: D29-INIT-VALIDATION-SCOPE,
+  ses_e97f7ad75ffe5o033hPr5NESWp,examines the existing bounded loader/typed-validation
+  evidence and reuse boundaries. D29-COLLECTIVE-JSON-SCOPE,
+  ses_e97f52f46ffepmzBxQWhTSVtnY,isolates repeated backend artifact parsing using
+  the real pricing loop. Neither task may edit production/tests or expand the
+  approved model-group implementation;both return measured scope proposals.
 - completed: D29-E41-FINAL-REGRESSIONS records committed b5a74416/5ceb68c9.
   strict77 final04 is77/77 identical,451 artifact hashes and519 cache filenames per
   side. Full unit:8015PASS/279FAIL/32ERROR/281SKIP,raw exit1. The exact historical
