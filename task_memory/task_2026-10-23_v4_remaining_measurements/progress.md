@@ -7,6 +7,14 @@
 | 2026-10-23 | Recorded approval and began CPU audit/design; previous native reference evidence verified intact. |
 | 2026-10-23 | E/F/G1 accepted at merged732406aa; H launch increment authorized and implementation resumed. |
 | 2026-10-23 | Closed five H findings, integrated64f3c950, verified merged suites/input/matrix binding, and finalized the G2 handoff. |
+| 2026-10-23 | YC resumed work locally from77668066; G2 window/API design and real replay integration are active. |
+
+## Current execution — G2 resumed
+
+- completed: H closure archived at77668066; main tracked worktree clean on restart, unrelated `.pi/` and `.cortexkit/` retained.
+- in-progress G2a: root inspects the real replay path while W128-G2-WINDOW-DESIGN independently inspects pinned native profile API/iteration/window behavior. The H implementation owner retains ownership of driver/collector edits after root records the design and allocation.
+- pending G2b/c/d: implement and verify the selected window/retention mechanism, independent reviews plus merged checks, then a concrete GPU request. No new GPU approval or runtime qualification is inferred.
+- scheduling correction: the handoff below is the completed77668066 snapshot. YC explicitly chose to continue in this session; its technical boundaries and unfinished G2 work still apply.
 
 ## Current handoff — 2026-10-23
 

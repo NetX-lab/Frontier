@@ -9,10 +9,13 @@
 | 2026-10-23 | H now owns the two reproduced launch seams, five non-core files / 787 changed lines; E entered independent acceptance in parallel. |
 | 2026-10-23 | Session-close scope: finish H review repairs (five files/987), integrate verified CPU work and hand off G2. |
 | 2026-10-23 | A–H CPU prerequisites complete; H accepted at64f3c950 and G2 handed off. |
+| 2026-10-23 | Resumed G2 locally: source-backed window design, one-owner driver/collector implementation, verification/review, then GPU proposal. |
 
 ## Dependencies and ownership
 
-Current status: A/B/C/D/E/F/G1/H **completed**. H acceptance is `collector_primary/primary_acceptance.json`: five findings closed,880/987lines, final-source and merged separate-suite checks passed, joint automatic94 unchanged, existing77/77matrix explicitly bound. G2 is **pending** for the next session; `progress.md` contains its numbered actions. The initial and repair allocations below remain the historical scope record.
+Current status: A/B/C/D/E/F/G1/H **completed**. H acceptance is `collector_primary/primary_acceptance.json`: five findings closed,880/987lines, final-source and merged separate-suite checks passed, joint automatic94 unchanged, existing77/77matrix explicitly bound. G2 is **in-progress in this session** at YC's request. The initial and repair allocations below remain the historical scope record.
+
+G2 dependencies: `{G2a native window/API evidence, driver callsite design} -> G2b one-owner implementation and CPU controls -> G2c independent Spec/Standards review and root merged verification -> G2d concrete resource/window proposal -> YC GPU decision`. G2a's native-profiler inspection runs independently of root's replay/design inspection. Root records the bounded source allocation after those seams are established. No GPU run is part of this CPU phase.
 
 `A -> {B kernel/dependency audit, C private-input design, D native measurement seam}; C -> E bounded implementation -> F focused verification/review -> G1 merge and matrix gate; {B, D} -> H native profiling extension -> G2 executable measurement proposal`
 
