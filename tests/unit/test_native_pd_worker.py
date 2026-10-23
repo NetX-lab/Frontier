@@ -381,3 +381,29 @@ def test_missing_serving_provenance_is_soft_and_does_not_enable_stale_emission(t
     assert result['worker_returncode'] == result['native_server_returncode'] == 0
     assert not result['failed_sentinel']
     assert 'FRONTIER_NATIVE_SERVING_EVIDENCE_DIR' not in result['server_environments'][0]
+
+
+def test_profile_nodes_have_distinct_trace_directories_without_changing_input():
+    config = dict(data_parallel_size_local=1, http_ports=dict(prefill=8100, decode=8200),
+        dp_rpc_ports=dict(prefill=3100, decode=3200), engine=dict(data_parallel_size=2,
+            tensor_parallel_size=8, kv_transfer={},
+            worker_extension_cls='native_serve_profile.NativeServeProfile',
+            profiler_config=dict(profiler='torch', torch_profiler_dir='/trace', max_iterations=3)))
+    original = json.dumps(config, sort_keys=True)
+    peers = [dict(host=f'cpu{i}', ip=f'192.0.2.{i + 1}') for i in range(4)]
+    plans = [native_pd_worker.node_plan(config, peers, peer['host'], list(range(8))) for peer in peers]
+    assert [p['engine']['profiler_config']['torch_profiler_dir'] for p in plans] == [
+        '/trace/prefill/dp0', '/trace/prefill/dp1', '/trace/decode/dp0', '/trace/decode/dp1']
+    assert json.dumps(config, sort_keys=True) == original
+
+
+@pytest.mark.parametrize('profiler', [dict(profiler='cuda'),
+    dict(profiler='torch', torch_profiler_dir='s3://example/traces')])
+def test_native_profile_config_outside_local_torch_window_is_preserved(profiler):
+    config = dict(data_parallel_size_local=1, http_ports=dict(prefill=8100, decode=8200),
+        dp_rpc_ports=dict(prefill=3100, decode=3200), engine=dict(data_parallel_size=2,
+            tensor_parallel_size=8, kv_transfer={},
+            worker_extension_cls='native_serve_profile.NativeServeProfile', profiler_config=profiler))
+    peers = [dict(host=f'cpu{i}', ip=f'192.0.2.{i + 1}') for i in range(4)]
+    plan = native_pd_worker.node_plan(config, peers, 'cpu0', list(range(8)))
+    assert plan['engine']['profiler_config'] == profiler

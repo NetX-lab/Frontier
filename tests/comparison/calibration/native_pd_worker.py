@@ -156,6 +156,13 @@ def node_plan(config, peers, host, devices):
     if role in block_counts:
         engine['num_gpu_blocks_override'] = block_counts[role]
     lane = position % nodes_per_role * local
+    profiler = engine.get('profiler_config') or {}
+    if (engine.get('worker_extension_cls') == 'native_serve_profile.NativeServeProfile'
+            and profiler.get('profiler') == 'torch'
+            and isinstance(profiler.get('torch_profiler_dir'), str)
+            and Path(profiler['torch_profiler_dir']).is_absolute()):
+        engine['profiler_config'] = profiler | {
+            'torch_profiler_dir': str(Path(profiler['torch_profiler_dir']) / role / f'dp{lane}')}
     heads = dict(zip(('prefill', 'decode'), (peers[0], peers[nodes_per_role])))
     engine.update(host=peers[position]['ip'], data_parallel_size_local=local,
                   data_parallel_address=heads[role]['ip'],

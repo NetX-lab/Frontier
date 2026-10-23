@@ -67,6 +67,32 @@ def profile(v2, monkeypatch, request):
     torch.cuda.Event, torch.cuda.current_stream, torch.cuda.stream = Event, lambda: current[0], stream
     torch.cuda.is_current_stream_capturing = lambda: False
     monkeypatch.setattr(type(v2.worker), 'sample_tokens', lambda self: v2.state.result, raising=False)
+    class Profiler:
+        is_running = False
+        iterations = 0
+
+        def step(self):
+            self.iterations += 1
+            if self.iterations > v2.worker.profiler_config.max_iterations:
+                self.is_running = False
+
+    def worker_profile(worker, is_start=True, profile_prefix=None):
+        if worker.profiler is None:
+            worker.profiler = Profiler()
+        worker.profiler.is_running = is_start
+        return v2.state.result
+
+    native_execute = type(v2.worker).execute_model
+
+    def execute(worker, *args, **kwargs):
+        if worker.profiler is not None:
+            worker.profiler.step()
+        return native_execute(worker, *args, **kwargs)
+
+    monkeypatch.setattr(type(v2.worker), 'profile', worker_profile, raising=False)
+    monkeypatch.setattr(type(v2.worker), 'execute_model', execute)
+    v2.worker.profiler = None
+    v2.worker.profiler_config = SimpleNamespace(profiler='torch', max_iterations=3)
     module = load()
     collector = module._PROFILE
     monkeypatch.setattr(collector, 'trace_stream', lambda handle: handle + 1000)
@@ -366,6 +392,91 @@ def test_missing_stream_mapping_retains_raw_handles_and_no_invented_edges(profil
     assert c.stream(profile.streams[0]) == '0:10'
     assert c.streams['0:10']['cuda_stream'] == 10 and c.streams['0:10']['trace_stream_id'] is None
     assert c.errors and not c.synchronization
+
+
+def test_window_budget_survives_startup_and_tracks_native_iteration_stop(profile, monkeypatch):
+    p, c, worker = profile, profile.collector, profile.native.worker
+    monkeypatch.setattr(type(worker.model_runner.model), '__call__', lambda model, **kw: p.core.forward(**kw))
+    c.limits = dict(records=1, bytes=100000)
+    worker.execute_model(scheduled(tokens=4))
+    assert c.dropped > 0
+    start_step, start_annotation = c.step_index, c.sequence
+    c.limits = dict(records=10000, bytes=10000000)
+    assert worker.profile(profile_prefix='CPU-only-window') is p.native.state.result
+    directory = p.native.directory / 'serving_profile'
+    startup_path = directory / 'rank7.before_profile.json'
+    startup_bytes = startup_path.read_bytes()
+    startup = json.loads(startup_bytes)
+    assert startup['dropped'] > 0 and c.dropped == c.used == c.records == 0
+    assert c.step_index == start_step and c.sequence == start_annotation
+    for _ in range(5):
+        assert worker.execute_model(scheduled(tokens=4)) is p.native.state.result
+    assert [step['step'] for step in c.steps] == list(range(start_step, start_step + 3))
+    assert len(c.annotations) == 15 and c.dropped == 0
+    assert all(row['id'] >= start_annotation for row in c.annotations)
+    assert c.used == sum(len(json.dumps(row).encode()) for rows in
+                        (c.steps, c.annotations, c.synchronization) for row in rows)
+    assert worker.profile(is_start=False) is p.native.state.result
+    frozen = (directory / 'rank7.profile.json').read_bytes()
+    p.core.forward()
+    worker.shutdown()
+    assert (directory / 'rank7.profile.json').read_bytes() == frozen
+    assert startup_path.read_bytes() == startup_bytes
+    payload = json.loads(frozen)
+    assert payload['window']['start_step'] == start_step and payload['window']['open'] is False
+    assert payload['status'] == 'UNVERIFIED' and payload['limits'] == c.limits
+
+
+@pytest.mark.parametrize('stage', ['before_profile', 'profile_stopped'])
+def test_window_archive_failures_preserve_native_rpc_and_workload(profile, monkeypatch, stage):
+    p, c = profile, profile.collector
+    c.limits = dict(records=64, bytes=1000000)
+    for _ in range(20):
+        p.core.forward()
+    assert c.dropped > 0
+    emit = c.emit
+
+    def broken(current, **kwargs):
+        if current == stage:
+            raise OSError('Injected window archive failure')
+        return emit(current, **kwargs)
+
+    monkeypatch.setattr(c, 'emit', broken)
+    assert p.native.worker.profile() is p.native.state.result
+    assert c.window['open'] and c.records == c.used == c.dropped == 0
+    for _ in range(5):
+        assert p.native.worker.execute_model(scheduled()) is p.native.state.result
+    assert len(c.steps) == 3 and c.dropped == 0
+    assert p.native.worker.profile(False) is p.native.state.result
+    assert not c.window['open']
+    if stage == 'before_profile':
+        snapshot = json.loads((p.native.directory / 'serving_profile/rank7.profile.json').read_text())
+        assert len(snapshot['steps']) == 3 and snapshot['dropped'] == 0
+    assert any('Injected window archive failure' in row['traceback'] for row in c.errors)
+    assert not p.native.observer.errors
+
+
+def test_profile_rpc_preserves_original_exception_and_running_state_failure(profile, monkeypatch):
+    p, c = profile, profile.collector
+    error = RuntimeError('native profiler start failure')
+
+    def fail(worker, is_start=True, profile_prefix=None):
+        raise error
+
+    cls = type('NativeProfileFailure', (), {'profile': fail})
+    c.install_profile(cls)
+    with pytest.raises(RuntimeError) as caught:
+        cls.profile(p.native.worker)
+    assert caught.value is error
+
+    class Broken:
+        @property
+        def is_running(self):
+            raise OSError('Injected profiler-state observer failure')
+
+    p.native.worker.profiler = Broken()
+    assert p.core.forward() is p.native.state.result
+    assert c.errors[-1]['where'] == 'profile_running_state'
 
 
 def test_saved_attention_alias_and_warmup_profile_dummy_capture(profile):

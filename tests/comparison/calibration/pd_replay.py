@@ -404,7 +404,8 @@ def formal_metrics(records):
 
 
 async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, dp_size,
-                             idle_timeout_s, idle_poll_s, *, checkpoint=None, records=None, fresh_services=None):
+                             idle_timeout_s, idle_poll_s, *, checkpoint=None, records=None, fresh_services=None,
+                             profiler_config=None):
     """Run canonical warmup/formal phases in one existing proxy/client lifetime."""
     manifest, formal, warmup = workload
     result = {"repetitions": [], "idle_boundaries": [], "observation_errors": [],
@@ -427,8 +428,66 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, dp
             try:
                 checkpoint(result, records)
             except Exception as error:
-                result["observation_errors"].append(f"{type(error).__name__}: {error}")
-                print("NATIVE_PD_AUXILIARY_UNVERIFIED", result["observation_errors"][-1], flush=True)
+                profile_window = result.get('profiling')
+                errors = (result['observation_errors'] if profile_window is None else
+                          profile_window.setdefault('receipt_errors', []))
+                errors.append(f"{type(error).__name__}: {error}")
+                print("NATIVE_PD_AUXILIARY_UNVERIFIED", errors[-1], flush=True)
+
+    async def profile_rpc(window, operation):
+        async def request(role):
+            receipt = dict(role=role, operation=operation,
+                           url=urls[role].rstrip('/') + '/' + operation + '_profile',
+                           started_monotonic=time.monotonic())
+            try:
+                import aiohttp
+                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=idle_timeout_s)) as session:
+                    async with session.post(receipt['url']) as response:
+                        receipt['http_status'] = response.status
+                        response.raise_for_status()
+            except Exception as error:
+                receipt['error'] = f'{type(error).__name__}: {error}'
+                print('NATIVE_PROFILE_UNVERIFIED', receipt, flush=True)
+            receipt['finished_monotonic'] = time.monotonic()
+            return receipt
+        window['attempts'].extend(await asyncio.gather(*(request(role) for role in ROLES)))
+
+    @contextlib.asynccontextmanager
+    async def profile_phase(repeat, phase, rows):
+        if (profiler_config is None or phase != 'formal'
+                or repeat != manifest['repetitions']['repeat_indices'][0]):
+            yield None
+            return
+        window = result['profiling'] = dict(status='UNVERIFIED', repeat=repeat, phase=phase,
+            request_ids=[row['request_id'] for row in rows], profiler_config=profiler_config,
+            attempts=[], qualification='diagnostic_only')
+        try:
+            if (profiler_config.get('profiler') != 'torch'
+                    or type(profiler_config.get('max_iterations')) is not int
+                    or profiler_config['max_iterations'] <= 0
+                    or any(profiler_config.get(key, 0) != 0 for key in
+                           ('delay_iterations', 'warmup_iterations', 'wait_iterations'))
+                    or profiler_config.get('ignore_frontend') is not True
+                    or not isinstance(profiler_config.get('torch_profiler_dir'), str)
+                    or not Path(profiler_config['torch_profiler_dir']).is_absolute()):
+                raise ValueError('First-formal profiling requires bounded torch iterations, '
+                                 'zero delay/warmup/wait, ignore_frontend=true and an absolute trace directory')
+        except Exception as error:
+            window['configuration_error'] = f'{type(error).__name__}: {error}'
+            print('NATIVE_PROFILE_UNVERIFIED', window['configuration_error'], flush=True)
+            yield None
+            return
+        try:
+            await profile_rpc(window, 'start')
+            yield window
+        finally:
+            if 'drain' not in window:
+                try:
+                    window['drain'] = await observe_idle(urls, dp_size, idle_timeout_s, idle_poll_s)
+                except Exception as error:
+                    window['drain'] = dict(verified=False, error=f'{type(error).__name__}: {error}')
+            await profile_rpc(window, 'stop')
+            persist()
 
     async def boundary(name, completed_after=None, *, first=False):
         try:
@@ -463,21 +522,24 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, dp
         result["repetitions"].append(current)
         for phase in ("warmup", "formal"):
             rows = phases[repeat, phase]
-            try:
-                clock, phase_records = await replay(rows, port, vocab_size, origin_lead_s,
-                                                    vllm_version="0.28.0", records=rows)
-            finally:
+            async with profile_phase(repeat, phase, rows) as window:
+                try:
+                    clock, phase_records = await replay(rows, port, vocab_size, origin_lead_s,
+                                                        vllm_version="0.28.0", records=rows)
+                finally:
+                    persist()
+                failed = [record["request_id"] for record in phase_records if record["status"] != "completed"]
+                current["phases"][phase] = clock | {"planned_requests": len(rows),
+                                                   "recorded_requests": len(phase_records),
+                                                   "failed_request_ids": failed}
+                current["client_workload_verified"] &= not failed and len(phase_records) == len(rows)
                 persist()
-            failed = [record["request_id"] for record in phase_records if record["status"] != "completed"]
-            current["phases"][phase] = clock | {"planned_requests": len(rows),
-                                               "recorded_requests": len(phase_records),
-                                               "failed_request_ids": failed}
-            current["client_workload_verified"] &= not failed and len(phase_records) == len(rows)
-            persist()
-            if completed is not None:
-                completed = {role: count + len(rows) for role, count in completed.items()}
-            idle = await boundary(f"after_repeat{repeat:02d}_{phase}", completed)
-            current["client_workload_verified"] &= idle["verified"]
+                if completed is not None:
+                    completed = {role: count + len(rows) for role, count in completed.items()}
+                idle = await boundary(f"after_repeat{repeat:02d}_{phase}", completed)
+                current["client_workload_verified"] &= idle["verified"]
+                if window is not None:
+                    window['drain'] = idle
             if phase == "formal":
                 try:
                     current["metrics"] = formal_metrics(phase_records) if len(phase_records) == len(rows) else None
@@ -691,6 +753,8 @@ def main(argv: list[str] | None = None) -> int:
                     workload, args.proxy_port, int(model_config["vocab_size"]), args.origin_lead_s,
                     urls, engine["data_parallel_size"], args.idle_timeout_s, args.idle_poll_s,
                     checkpoint=checkpoint, records=records,
+                    **({'profiler_config': engine.get('profiler_config') or {}}
+                       if engine.get('worker_extension_cls') == 'native_serve_profile.NativeServeProfile' else {}),
                     **({"fresh_services": fresh_services} if fresh_services else {})))
                 summary["canonical_repetitions"] = repetitions
             else:

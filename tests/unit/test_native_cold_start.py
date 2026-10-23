@@ -227,18 +227,22 @@ def test_successor_full_checker_rebinds_pinned_launch_receipts(native_case, monk
     monkeypatch.setattr(checker, 'git', previous.git)
     harness = Path(manifest['harness_worktree'])
     original = __import__('subprocess').run
-    module = 'tests/comparison/calibration/pd_replay.py'
-    content = (TRACE.parents[2] / module).read_bytes()
-    (harness / module).write_bytes(content)
-    manifest['harness_sha256'][module] = hashlib.sha256(content).hexdigest()
+    contents = {module: (TRACE.parents[2] / module).read_bytes() for module in (
+        'tests/comparison/calibration/pd_replay.py',
+        'tests/comparison/dp_placement_pp/vllm_replay.py')}
+    for module, content in contents.items():
+        (harness / module).write_bytes(content)
+        manifest['harness_sha256'][module] = hashlib.sha256(content).hexdigest()
     stamp = (run / 'run_manifest.json').stat()
     (run / 'run_manifest.json').write_text(json.dumps(manifest))
     os.utime(run / 'run_manifest.json', ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
     digest = hashlib.sha256((run / 'run_manifest.json').read_bytes()).hexdigest()
 
     def git_run(args, **kwargs):
-        if args[:3] == ['git', '-C', str(harness)] and args[-1].endswith(':' + module):
-            return __import__('subprocess').CompletedProcess(args, 0, stdout=content)
+        if args[:3] == ['git', '-C', str(harness)]:
+            for module, content in contents.items():
+                if args[-1].endswith(':' + module):
+                    return __import__('subprocess').CompletedProcess(args, 0, stdout=content)
         return original(args, **kwargs)
 
     monkeypatch.setattr(checker.subprocess, 'run', git_run)

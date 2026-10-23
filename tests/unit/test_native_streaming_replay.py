@@ -18,7 +18,9 @@ from tests.comparison.dp_placement_pp import vllm_replay
 TRACE = Path(__file__).resolve().parents[2] / "data/processed_traces/canonical_fixed_6144_1024_req128_qps1"
 PARAMS = {"do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
           "remote_engine_id": "mock-p", "remote_request_id": "mock-request",
-          "remote_host": "192.0.2.1", "remote_port": 5557, "remote_block_ids": [[1]]}
+           "remote_host": "192.0.2.1", "remote_port": 5557, "remote_block_ids": [[1]]}
+PROFILE_CONFIG = dict(profiler='torch', torch_profiler_dir='/trace', max_iterations=3,
+                      delay_iterations=0, ignore_frontend=True)
 
 
 def event(payload):
@@ -177,10 +179,14 @@ def test_canonical_loader_preserves_frozen_rows_and_manifest():
     assert len({entry["request_id"] for entry in formal + warmup}) == 144
 
 
-def test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership(tmp_path, monkeypatch):
+@pytest.mark.parametrize('profile_selected', [False, True])
+def test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership(tmp_path, monkeypatch, profile_selected):
     from tests.unit.test_calibration_pd_harness import native_replay_inputs, nixl_engine
 
-    argv, output = native_replay_inputs(tmp_path, nixl_engine())
+    engine = nixl_engine()
+    if profile_selected:
+        engine.update(worker_extension_cls='native_serve_profile.NativeServeProfile', profiler_config=PROFILE_CONFIG)
+    argv, output = native_replay_inputs(tmp_path, engine)
     argv[argv.index("--trace-dir") + 1] = str(TRACE)
     argv += ["--prefill-url", "http://192.0.2.1:8100", "--decode-url", "http://192.0.2.2:8200"]
     calls = []
@@ -190,7 +196,8 @@ def test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownersh
         calls.append(command)
         return object()
 
-    async def repetitions(workload, port, vocab, lead, urls, dp, timeout, poll, *, checkpoint, records):
+    async def repetitions(workload, port, vocab, lead, urls, dp, timeout, poll, *, checkpoint, records, **options):
+        assert options == ({'profiler_config': PROFILE_CONFIG} if profile_selected else {})
         assert len(workload[1]) == 128 and len(workload[2]) == 16
         assert workload[0]["repetitions"]["repeat_indices"] == [1, 2, 3]
         assert urls == {"prefill": "http://192.0.2.1:8100", "decode": "http://192.0.2.2:8200"}
@@ -213,8 +220,11 @@ def test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownersh
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("fault", [None, "idle", "validator", "checkpoint", "request"])
+@pytest.mark.parametrize("fault", [None, "idle", "validator", "checkpoint", "request",
+    'profile', 'profile_start', 'profile_stop', 'profile_timeout', 'profile_receipt',
+    'profile_receipt_active', 'profile_receipt_persistent', 'profile_invalid', 'profile_uri'])
 def test_three_repetitions_use_existing_replay_and_observed_idle(tmp_path, monkeypatch, fault):
+    profiling = bool(fault and fault.startswith('profile'))
     async def exercise():
         # Explicit CPU fixture: immutable canonical rows copied in memory with
         # 1/10000 arrival spacing. Token lengths/counts and identities stay exact.
@@ -225,11 +235,15 @@ def test_three_repetitions_use_existing_replay_and_observed_idle(tmp_path, monke
         seen = []
         boundaries = []
         metrics_reads = []
+        profile_events = []
+        receipt_failed = False
 
         def endpoint(role):
             async def complete(request):
                 body = await request.json()
                 identity = request.headers["X-Request-Id"]
+                if profiling and fault not in ('profile_invalid', 'profile_uri') and identity.endswith('formal-r000-repeat01'):
+                    assert {entry[:2] for entry in profile_events} == {('start', role) for role in ('prefill', 'decode')}
                 seen.append((role, identity, body))
                 completed[role] += 1
                 if role == "prefill":
@@ -250,10 +264,20 @@ def test_three_repetitions_use_existing_replay_and_observed_idle(tmp_path, monke
                 return web.Response(text=metrics(completed[role]))
             return get
 
+        def profile_endpoint(role):
+            async def profile_request(request):
+                operation = request.match_info['operation']
+                profile_events.append((operation, role, dict(completed), len(metrics_reads)))
+                if fault == 'profile_timeout' and operation == 'start':
+                    await asyncio.sleep(.1)
+                return web.Response(status=500 if fault == 'profile_' + operation and role == 'decode' else 200)
+            return profile_request
+
         p, d = web.Application(), web.Application()
         for role, app in (("prefill", p), ("decode", d)):
             app.router.add_post("/v1/completions", endpoint(role))
             app.router.add_get("/metrics", scrape(role))
+            app.router.add_post('/{operation}_profile', profile_endpoint(role))
         async with TestServer(p) as ps, TestServer(d) as ds:
             urls = {"prefill": str(ps.make_url("")).rstrip("/"),
                     "decode": str(ds.make_url("")).rstrip("/")}
@@ -261,6 +285,15 @@ def test_three_repetitions_use_existing_replay_and_observed_idle(tmp_path, monke
                               vllm_version="0.28.0")
             async with TestServer(proxy) as front:
                 def checkpoint(result, records):
+                    nonlocal receipt_failed
+                    if (fault == 'profile_receipt_persistent' and 'profiling' in result or
+                            fault == 'profile_receipt_active' and
+                            len(result.get('profiling', {}).get('attempts', [])) == 2):
+                        raise OSError('Injected active/persistent profile receipt failure')
+                    if (fault == 'profile_receipt' and not receipt_failed
+                            and len(result.get('profiling', {}).get('attempts', [])) == 4):
+                        receipt_failed = True
+                        raise OSError('Injected profile receipt failure')
                     if fault == "checkpoint":
                         raise OSError("Injected auxiliary report error")
                     boundaries[:] = result["idle_boundaries"]
@@ -270,11 +303,14 @@ def test_three_repetitions_use_existing_replay_and_observed_idle(tmp_path, monke
                         raise ValueError("Injected auxiliary aggregation error")
                     monkeypatch.setattr(pd_replay, "formal_metrics", reject)
                 result, records = await pd_replay.replay_repetitions(
-                    workload, front.port, 154880, 0., urls, 1, .05 if fault == "idle" else 5.,
-                    .001, checkpoint=checkpoint)
-        return result, records, seen, completed, boundaries, metrics_reads
+                    workload, front.port, 154880, 0., urls, 1, .05 if fault in ('idle', 'profile_timeout') else 5.,
+                    .001, checkpoint=checkpoint,
+                    **({'profiler_config': PROFILE_CONFIG | ({'max_iterations': 0} if fault == 'profile_invalid' else
+                        {'torch_profiler_dir': 's3://example/traces'} if fault == 'profile_uri' else {})}
+                       if profiling else {}))
+        return result, records, seen, completed, boundaries, metrics_reads, profile_events
 
-    result, records, seen, completed, boundaries, metrics_reads = asyncio.run(exercise())
+    result, records, seen, completed, boundaries, metrics_reads, profile_events = asyncio.run(exercise())
     assert len(records) == 3 * (16 + 128)
     assert completed == {"prefill": 432, "decode": 432}
     assert len({record["request_id"] for record in records}) == 432
@@ -301,8 +337,32 @@ def test_three_repetitions_use_existing_replay_and_observed_idle(tmp_path, monke
             assert metric["tpot_ms"]["mean"] == 0  # One mock delta containing all 1024 tokens.
     assert len(result["idle_boundaries"]) == 7
     assert result["reference_admission"] == "UNVERIFIED"
-    assert result["client_workload_verified"] is (fault is None)
-    assert result["status"] == ("CLIENT_WORKLOAD_VERIFIED" if fault is None else "REFERENCE_UNSTABLE")
+    assert result["client_workload_verified"] is (fault is None or profiling)
+    assert result["status"] == ("CLIENT_WORKLOAD_VERIFIED" if fault is None or profiling else "REFERENCE_UNSTABLE")
+    if profiling:
+        receipt = result['profiling']
+        assert receipt['status'] == 'UNVERIFIED' and receipt['qualification'] == 'diagnostic_only'
+        assert receipt['repeat'] == 1 and receipt['phase'] == 'formal'
+        assert receipt['request_ids'] == [record['request_id'] for record in records
+                                        if record['repeat'] == 1 and record['role'] == 'formal']
+        assert not result['observation_errors']
+        if fault in ('profile_invalid', 'profile_uri'):
+            assert receipt['configuration_error'] and not profile_events
+        else:
+            assert len(profile_events) == len(receipt['attempts']) == 4
+            assert all(event[2] == {'prefill': 16, 'decode': 16} for event in profile_events[:2])
+            assert all(event[2:] == ({'prefill': 144, 'decode': 144}, 6) for event in profile_events[2:])
+            assert receipt['drain']['verified']
+        if fault in ('profile_start', 'profile_stop'):
+            assert sum('error' in attempt for attempt in receipt['attempts']) == 1
+        if fault == 'profile_timeout':
+            assert sum('error' in attempt for attempt in receipt['attempts']) == 2
+        if fault == 'profile_receipt':
+            assert 'Injected profile receipt failure' in receipt['receipt_errors'][0]
+        if fault in ('profile_receipt_active', 'profile_receipt_persistent'):
+            assert 'Injected active/persistent profile receipt failure' in receipt['receipt_errors'][0]
+    else:
+        assert 'profiling' not in result and not profile_events
     if fault is None:
         assert all(boundary["verified"] for boundary in boundaries)
         assert len(metrics_reads) == 14
@@ -314,6 +374,46 @@ def test_three_repetitions_use_existing_replay_and_observed_idle(tmp_path, monke
         assert result["repetitions"][0]["metrics"] is None
     if fault in ("validator", "checkpoint"):
         assert result["observation_errors"]
+
+
+def test_profile_cleanup_keeps_native_replay_exception_with_failed_stop(monkeypatch):
+    failure = RuntimeError('Original native replay failure')
+    events, receipts = [], []
+
+    async def replay(rows, *args, **kwargs):
+        if rows[0]['role'] == 'formal':
+            events.append('native_failure')
+            raise failure
+        for row in rows:
+            row['status'] = 'completed'
+        return {}, rows
+
+    async def idle(*args, **kwargs):
+        events.append('idle')
+        return dict(verified=True, observations=[dict(roles={role: dict(completed_requests=0)
+                                                            for role in pd_replay.ROLES})])
+
+    async def exercise():
+        async def profile(request):
+            events.append(request.match_info['operation'])
+            return web.Response(status=500 if request.match_info['operation'] == 'stop' else 200)
+
+        app = web.Application()
+        app.router.add_post('/{operation}_profile', profile)
+        async with TestServer(app) as server:
+            with pytest.raises(RuntimeError) as caught:
+                await pd_replay.replay_repetitions(pd_replay.canonical_workload(TRACE), 0, 154880, 0.,
+                    {role: str(server.make_url('')).rstrip('/') for role in pd_replay.ROLES}, 1, 1., .001,
+                    profiler_config=PROFILE_CONFIG,
+                    checkpoint=lambda result, rows: receipts.append(json.loads(json.dumps(result))))
+            assert caught.value is failure
+
+    monkeypatch.setattr(pd_replay, 'replay', replay)
+    monkeypatch.setattr(pd_replay, 'observe_idle', idle)
+    asyncio.run(exercise())
+    assert events[events.index('native_failure'):] == ['native_failure', 'idle', 'stop', 'stop']
+    assert len(receipts[-1]['profiling']['attempts']) == 4
+    assert not receipts[-1]['observation_errors']
 
 
 def test_idle_metrics_requires_all_lanes_and_zero_kv():

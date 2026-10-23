@@ -64,6 +64,7 @@ class ServingProfile:
         self.records = 0
         self.suppressed_errors = 0
         self.step_index = 0
+        self.window = None
         self.limits = self.observe('limits', self.read_limits)
 
     def read_limits(self):
@@ -90,6 +91,8 @@ class ServingProfile:
             self.error(where)
 
     def append(self, collection, row):
+        if not self.recording():
+            return None
         size = len(json.dumps(row).encode())
         if self.limits is None or self.records >= self.limits['records'] or self.used + size > self.limits['bytes']:
             self.dropped += 1
@@ -98,6 +101,42 @@ class ServingProfile:
         self.records += 1
         collection.append(row)
         return row
+
+    def recording(self):
+        try:
+            return self.window is None or (self.window['open'] and self.worker.profiler is not None
+                                           and self.worker.profiler.is_running)
+        except BaseException:
+            self.error('profile_running_state')
+            return False
+
+    def begin_window(self, worker):
+        self.observe('startup_archive', self.emit, 'before_profile', suffix='before_profile')
+        self.steps, self.annotations, self.synchronization = [], [], []
+        self.used, self.records, self.dropped = 0, 0, 0
+        self.window = dict(open=True, start_step=self.step_index,
+            start_annotation=self.sequence, profiler_config=str(worker.profiler_config))
+
+    def end_window(self):
+        if self.window is not None:
+            self.window.update(open=False, stop_step=self.step_index, stop_annotation=self.sequence)
+            self.emit('profile_stopped', suffix='profile')
+
+    def install_profile(self, cls):
+        original = cls.profile
+
+        @functools.wraps(original)
+        def profile(worker, is_start=True, profile_prefix=None):
+            if is_start:
+                self.observe('profile_window_begin', self.begin_window, worker)
+            try:
+                return original(worker, is_start=is_start, profile_prefix=profile_prefix)
+            finally:
+                if not is_start:
+                    self.observe('profile_window_end', self.end_window)
+
+        cls.profile = profile
+        self.hooks.append(cls.__name__ + '.profile')
 
     def context(self):
         from torch import cuda
@@ -129,6 +168,9 @@ class ServingProfile:
 
     @contextmanager
     def range(self, category, scope, owner=None, arguments=None):
+        if not self.recording():
+            yield
+            return
         previous = getattr(self.local, 'layer', None)
         previous_scope = getattr(self.local, 'scope', None)
         annotation = None
@@ -205,6 +247,8 @@ class ServingProfile:
         return identifier.value
 
     def event(self, operation, event, stream):
+        if not self.recording():
+            return
         from torch import cuda
         actual = cuda.current_stream() if stream is None else stream
         key = self.stream(actual)
@@ -362,10 +406,10 @@ class ServingProfile:
         cls.replay = replay
         self.hooks.append(cls.__name__ + '.replay')
 
-    def emit(self, stage):
+    def emit(self, stage, *, suffix=None):
         directory = self.inventory.directory / 'serving_profile'
         directory.mkdir(parents=True, exist_ok=True)
-        target = directory / f'rank{self.rank}.json'
+        target = directory / (f'rank{self.rank}.json' if suffix is None else f'rank{self.rank}.{suffix}.json')
         payload = dict(schema='native_serving_profile_v1', status=self.status, stage=stage,
             rank=self.rank, run_generation=self.inventory.generation, role=self.inventory.role,
             steps=self.steps, annotations=self.annotations, synchronization=self.synchronization,
@@ -380,11 +424,14 @@ class ServingProfile:
             coverage='Observed Python calls only; no timing, completeness or GPU verification verdict')
         if self.worker is not None:
             payload['inventory_observation_errors'] = list(self.inventory.errors)
+        if self.window is not None:
+            payload['window'] = self.window
         temporary = target.with_suffix(f'.json.{os.getpid()}.tmp')
         temporary.write_text(json.dumps(payload, sort_keys=True) + '\n')
         os.replace(temporary, target)
 
     def install_worker(self, cls):
+        self.observe('profile_installation', self.install_profile, cls)
         for name in ('load_model', 'execute_model', 'sample_tokens', 'compile_or_warm_up_model', 'shutdown'):
             original = getattr(cls, name)
 
