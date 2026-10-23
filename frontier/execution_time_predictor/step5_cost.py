@@ -22,6 +22,7 @@ from frontier.execution_time_predictor.step5 import (
 from frontier.execution_time_predictor.prediction_model_identity import _serialize_selected_layer_cache_identity
 from frontier.operators.binding import bind_operator_query
 from frontier.types import ClusterType, MeasurementType
+from frontier.config.precision_type import PrecisionType
 
 
 def step5_layer_metadata(predictor, layer_id):
@@ -40,16 +41,50 @@ def step5_layer_metadata(predictor, layer_id):
     return metadata_by_layer[layer_id]
 
 
-def step5_operator_binding(predictor, metadata, model_name):
+STEP5_NATIVE_EXPERT_SCHEMAS = {
+    "TritonExperts": ("num_tokens", "total_routed_tokens", "num_tokens_post_padded"),
+    "DeepGemmExperts": ("num_tokens", "total_routed_tokens", "native_capacity_rows", "native_alignment"),
+}
+
+
+def step5_native_expert_features(context, *, physical_rows, live_assignments):
+    """Actual adapter padding/capacity receipt, never a universal padding formula."""
+    schema = STEP5_NATIVE_EXPERT_SCHEMAS[context["experts_class"]]
+    padding = context["native_padding"]
+    if context["activation_layout"]["shape"][0] != physical_rows:
+        raise ValueError("Selected expert layout differs from the gathered physical frame")
+    values = dict(num_tokens=physical_rows, total_routed_tokens=live_assignments,
+        native_alignment=padding["alignment"])
+    if context["experts_class"] == "TritonExperts":
+        if padding["scheme"] != "triton_expert_assignment":
+            raise ValueError("Triton schema requires its actual assignment receipt")
+        values["num_tokens_post_padded"] = padding["num_tokens_post_padded"]
+    else:
+        if padding["scheme"] != "deepgemm_physical_capacity":
+            raise ValueError("DeepGEMM schema requires its actual physical capacity receipt")
+        values["native_capacity_rows"] = padding["capacity_rows"]
+    return {name: values[name] for name in schema}
+
+
+def step5_operator_binding(predictor, metadata, model_name, *, context=None):
     """Reuse fixed precision and contract identity, never a selected estimator."""
     bindings = getattr(predictor, "_step5_operator_bindings", None)
     if bindings is None:
         bindings = predictor._step5_operator_bindings = {}
-    key = (metadata.attention_spec.global_layer_id, model_name)
+    key = (metadata.attention_spec.global_layer_id, model_name,
+           json.dumps(context, sort_keys=True) if context is not None else None)
     if key not in bindings:
         binding = bind_operator_query(model_name)
         projections = [p for p in metadata.projections if p.operator_name == model_name]
         precision = metadata.model_precision
+        if context is not None:
+            from frontier.operators.families import get_moe_profiling_operators, is_step5_position_context
+            if is_step5_position_context(context) and binding.family_id == "moe":
+                if binding.operator not in get_moe_profiling_operators(context):
+                    raise ValueError(f"Step {model_name} is not an applicable physical scope")
+                precision = (PrecisionType.FP8 if model_name == "moe_input_quantize" else
+                             PrecisionType.FP32 if binding.operator.precision_name() == "moe_gating"
+                             else precision)
         if projections:
             precisions = {p.weight_precision for p in projections}
             if len(precisions) != 1:

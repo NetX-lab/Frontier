@@ -237,3 +237,200 @@ def test_each_ep_rank_pads_every_expert_of_the_domain() -> None:
         assert predictor._get_grouped_gemm_time(lane, batch=_batch(10)) == 0.5
 
     assert model.seen == [[20.0, 192.0], [5.0, 192.0]]
+
+
+def _position_source_rows(model, *, quant_dtype="float8_e4m3fn", context="standalone_legacy"):
+    from frontier.config.precision_type import PrecisionType
+    from frontier.operators.binding import bind_operator_query
+    from frontier.operators.families import get_moe_profiling_operators
+    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput, MoERoutingProfileCell
+    from frontier.entities import Batch, Request
+    from frontier.entities.batch import DummyForwardBatch
+    from frontier.config import global_vars
+    from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
+    from frontier.moe_routing_policy import build_wave_routing_source
+    from tests.unit.test_moe_position_routing import materialize
+    native = dict(model_architecture_profile="step5", routing_runtime_path="position_cyclic",
+                  quant_dtype=quant_dtype, defer_input_quant=False)
+    contracts, facts = {}, {}
+    for spec in get_moe_profiling_operators(native):
+        contract = model.get_model_architecture_profile().resolve_layer_contract(
+            model, layer_id=3, operator_name=spec.name, attention_tp_size=8,
+            ffn_tp_size=8, moe_tp_size=1, expert_parallel_size=16)
+        contracts[spec.name] = contract.typed_metadata_identity()
+        if spec.ep_agnostic:
+            name = spec.name + ("__prefill_hot" if spec.precision_name() == "moe_gating" and context == "prefill_hot" else "")
+            facts[name] = dict(spec=spec, binding=bind_operator_query(spec.name), layer_contract=contract,
+                model_name=name, native_context=native, frame_scope="source_local", gating_runtime_context=context,
+                precision=PrecisionType.FP32 if spec.precision_name() == "moe_gating" else PrecisionType.FP8,
+                feature_columns=("num_tokens", "live_routing_token_count"), row_metadata={"moe_layer_ids": "3-87"})
+    rows = []
+    for live in (0, 4):
+        batch = Batch(0, [Request(0, 6144, 1024)], [live], is_moe=True, num_context_tokens=[6128]) if live else DummyForwardBatch(0, 0, 0)
+        batches = {0: batch, 1: DummyForwardBatch(0, 0, 0)}
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "full_and_piecewise")
+            patch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", [8])
+            bind_forward_start(list(batches.values()), group_id=0, request_capacity=128)
+            source = build_wave_routing_source(batches, policy_id="position_cyclic", cluster_type=ClusterType.DECODE,
+                gathered_physical_rows=16, model_config=model)
+        lane = source.source_lanes[0]
+        frame = MoESourceFrame(0, tuple(i.length for i in lane.intervals), tuple(i.start for i in lane.intervals), lane.physical_rows, context)
+        assert materialize(source).live_routing_token_count == live
+        routing = MoERoutingProfileInput("live" if live else "empty",
+            (frame, MoESourceFrame(1, (), (), source.source_lanes[1].physical_rows, context)), source.gathered_physical_rows)
+        cell = MoERoutingProfileCell(routing, "source_local", 0)
+        row = dict(num_tokens=frame.physical_rows, live_routing_token_count=frame.live_rows,
+            masked_routing_token_count=frame.physical_rows-frame.live_rows, moe_input_id=routing.moe_input_id,
+            moe_source_lane_id=cell.source_lane_id, moe_ep_rank=cell.ep_id,
+            routing_input=json.dumps(cell.to_json()["routing_input"]),
+            num_tensor_parallel_workers=1, expert_parallel_size=16, moe_frame_scope="source_local",
+            gating_runtime_context=context, moe_layer_ids="3-87", model_architecture_profile="step5",
+            routing_runtime_path="position_cyclic", profiling_precision="BF16", measurement_type="CUDA_EVENT",
+            runtime_stack_signature="cpu_fixture_unadmitted", evidence_kind="cpu_fixture",
+            quant_signature=model.get_quant_signature(),
+            typed_operator_contracts=json.dumps({name: value for name, value in contracts.items() if name != "moe_grouped_gemm"}))
+        for fact in facts.values():
+            name = fact["spec"].name
+            row.update({f"time_stats.{name}.median": 1. + live, f"time_stats.{name}.kernel_count": 3})
+        rows.append(row)
+    return pd.DataFrame(rows), facts
+
+
+def test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers(tmp_path, monkeypatch):
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.execution_time_predictor.moe_dataset_training import MoeDatasetTraining
+    from frontier.execution_time_predictor.step5 import step5_operator_training_rows
+    from tests.unit.test_step5_measured_training import _manager
+    from tests.unit.test_step5_measured_ffn import _config, _tables
+    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    replica = SimpleNamespace(model_config=model, model_name="stepfun-ai/Step-5-Preview", device="h800",
+        attn_tensor_parallel_size=8, moe_tensor_parallel_size=1, moe_expert_parallel_size=16,
+        moe_routing_distribution_type="position_cyclic", speculative_decoding_config=None)
+    linear, moe = _tables(tmp_path, model, expert_parallel_size=16)
+    linear_rows = pd.read_csv(linear)
+    linear_rows["measurement_type"] = "CUDA_EVENT"
+    linear_rows.to_csv(linear, index=False)
+    rows, facts = _position_source_rows(model)
+    rows.to_csv(moe, index=False)
+    manager = _manager(tmp_path / "selected", MeasurementType.CUDA_EVENT)
+    manager._cluster_configs = {ClusterType.MONOLITHIC: SimpleNamespace(replica_config=replica)}
+    def forbidden(*args, **kwargs):
+        pytest.fail("unbound legacy MoE helper reached")
+    monkeypatch.setattr(manager, "_get_moe_op_tp_key", forbidden)
+    monkeypatch.setattr(manager, "_is_moe_op_ep_agnostic", forbidden)
+    manager._validate_moe_dataset_contract(str(moe), replica, list(facts), ClusterType.MONOLITHIC, operator_facts=facts)
+    prepare = facts["moe_input_quantize"]
+    loaded = manager._load_moe_df(str(moe), replica, tensor_parallel_size=1, expert_parallel_size=None,
+        layer_contract=prepare["layer_contract"], operator_name="moe_input_quantize", operator_facts=prepare)
+    assert loaded["profiling_precision"].tolist() == ["FP8", "FP8"]
+    assert loaded["source_profiling_precision"].tolist() == ["BF16", "BF16"]
+    models = manager._train_ffn_models_for_cluster(ClusterType.MONOLITHIC, replica, _config(),
+        str(linear), str(moe), True, set(), operator_facts=facts)
+    for name in facts:
+        fitted = models[name]
+        assert fitted._frontier_exact_lookup[(8., 0.)] == 1.
+        assert fitted._frontier_kernel_count_model._frontier_exact_lookup[(8., 0.)] == 3
+        assert set(fitted._frontier_exact_lookup) == set(fitted._frontier_kernel_count_model._frontier_exact_lookup)
+    warm = _manager(tmp_path / "selected", MeasurementType.CUDA_EVENT)
+    warm._cluster_configs = manager._cluster_configs
+    monkeypatch.setattr(warm, "_get_moe_op_tp_key", forbidden)
+    monkeypatch.setattr(warm, "_is_moe_op_ep_agnostic", forbidden)
+    monkeypatch.setattr(warm, "_create_estimator_and_params", forbidden)
+    reloaded = warm._train_ffn_models_for_cluster(ClusterType.MONOLITHIC, replica, _config(),
+        str(linear), str(moe), True, set(), operator_facts=facts)
+    for name in facts:
+        assert reloaded[name]._frontier_model_hash == models[name]._frontier_model_hash
+        assert reloaded[name]._frontier_kernel_count_model._frontier_measurement_identity == reloaded[name]._frontier_measurement_identity
+    rebound_facts = {name: {**item, "native_context": {**item["native_context"], "backend": "cpu_fixture_other"}} for name, item in facts.items()}
+    rebound = manager._train_ffn_models_for_cluster(ClusterType.MONOLITHIC, replica, _config(), str(linear), str(moe), True, set(), operator_facts=rebound_facts)
+    assert rebound["moe_gating_linear"]._frontier_model_hash != models["moe_gating_linear"]._frontier_model_hash
+    independent = object.__new__(_ConcreteMoEPredictor)
+    independent._model_config, independent._replica_config = model, replica
+    independent._moe_input_file = str(moe)
+    independent._active_measurement_type = MeasurementType.CUDA_EVENT
+    for method in ("_get_moe_op_tp_key", "_is_moe_op_ep_agnostic"):
+        monkeypatch.setattr(independent, method, forbidden)
+    from frontier.config.precision_type import PrecisionType
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import ProfilingMetadata
+    monkeypatch.setattr(independent, "_get_profiling_metadata", lambda *args: ProfilingMetadata(
+        profiling_precision=PrecisionType.BF16, model_arch="generic", model_architecture_profile="step5",
+        quant_signature=model.get_quant_signature(), measurement_type=MeasurementType.CUDA_EVENT))
+    monkeypatch.setattr(independent, "_validate_active_measurement_type", lambda *args: None)
+    monkeypatch.setattr(independent, "_register_profiling_metadata_for_ops", lambda *args: None)
+    monkeypatch.setattr(independent, "_store_model_in_cache", lambda *args: None)
+    calls = []
+    def fit(name, frame, columns, target):
+        from frontier.execution_time_predictor.prediction_model_identity import _build_exact_feature_lookup
+        calls.append((name, tuple(columns), frame["profiling_precision"].unique().tolist()))
+        return SimpleNamespace(_frontier_model_hash=name, _frontier_exact_lookup=_build_exact_feature_lookup(frame, columns, target))
+    monkeypatch.setattr(independent, "_train_model", fit)
+    MoeDatasetTraining._train_moe_models(independent, operator_facts=facts)
+    assert ("moe_input_quantize", ("num_tokens", "live_routing_token_count"), ["FP8"]) in calls
+    assert ("moe_input_quantize_kernel_count", ("num_tokens", "live_routing_token_count"), ["FP8"]) in calls
+    hot, hot_facts = _position_source_rows(model, context="prefill_hot")
+    _, bound = step5_operator_training_rows("moe_gating_linear__prefill_hot", hot,
+        dict(operator_facts=hot_facts["moe_gating_linear__prefill_hot"], input_file=str(moe)), MeasurementType.CUDA_EVENT)[0]
+    assert bound["measurement_identity"]["gating_runtime_context"] == "prefill_hot"
+    bf16, bf16_facts = _position_source_rows(model, quant_dtype=None)
+    assert "moe_input_quantize" not in bf16_facts
+
+
+@pytest.mark.parametrize("damage", ["zero", "opposite", "typed", "missing", "physical", "context"])
+def test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows(damage):
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.moe_routing_runtime import filter_moe_operator_rows
+    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    rows, facts = _position_source_rows(model)
+    if damage == "zero": rows.loc[0, "time_stats.moe_input_quantize.median"] = 0
+    if damage == "opposite": rows["time_stats.moe_grouped_gemm.median"] = 0
+    if damage == "typed": rows["typed_operator_contracts"] = "{}"
+    if damage == "missing": rows = rows.drop(columns="time_stats.moe_input_quantize.kernel_count")
+    if damage == "physical": rows.loc[0, "masked_routing_token_count"] = 7
+    if damage == "context": rows["gating_runtime_context"] = "prefill_hot"
+    with pytest.raises(ValueError):
+        filter_moe_operator_rows(rows, operator_facts=facts["moe_gating_linear"],
+            requested_runtime_path="position_cyclic", source_name="explicit_cpu_source_fixture")
+
+
+def test_independent_selected_actual_fit_cache_binds_native_context(tmp_path, monkeypatch):
+    from frontier.config.model_config import BaseModelConfig
+    from sklearn.ensemble import RandomForestRegressor
+    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    rows, facts = _position_source_rows(model)
+    rows["model_arch"] = model.model_arch
+    path = tmp_path / "moe.csv"
+    rows.to_csv(path, index=False)
+    predictor = object.__new__(_ConcreteMoEPredictor)
+    predictor._model_config, predictor._moe_input_file = model, str(path)
+    predictor._replica_config = SimpleNamespace(model_config=model, moe_tensor_parallel_size=1, moe_expert_parallel_size=16)
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._config = SimpleNamespace(no_cache=False, k_fold_cv_splits=2, num_training_job_threads=1)
+    predictor._cache_dir, predictor._kernel_gap_ms = str(tmp_path), None
+    monkeypatch.setattr(predictor, "to_dict", lambda: {})
+    monkeypatch.setattr(predictor, "_get_estimator", lambda: RandomForestRegressor(n_estimators=2, random_state=0))
+    monkeypatch.setattr(predictor, "_get_grid_search_params", lambda: {})
+    first = predictor._train_moe_models(operator_facts=facts)
+    monkeypatch.setattr(predictor, "_get_estimator", lambda: pytest.fail("expected actual cache hit"))
+    cached = predictor._train_moe_models(operator_facts=facts)
+    for name in facts:
+        assert cached[name]._frontier_model_hash == first[name]._frontier_model_hash
+        assert cached[name]._frontier_kernel_count_model._frontier_exact_lookup[(8., 0.)] == 3.
+    first_hash = first["moe_gating_linear"]._frontier_model_hash
+    for item in facts.values():
+        item["native_context"] = {**item["native_context"], "backend": "cpu_fixture_changed_binding"}
+    monkeypatch.setattr(predictor, "_get_estimator", lambda: RandomForestRegressor(n_estimators=2, random_state=0))
+    rebound = predictor._train_moe_models(operator_facts=facts)
+    assert rebound["moe_gating_linear"]._frontier_model_hash != first_hash
+
+
+def test_selected_output_inventory_uses_declared_cells_without_structural_zero_fill():
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.profiling.moe.main import _validate_canonical_moe_result_df
+    rows, facts = _position_source_rows(BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview"))
+    rows["moe_input_id"], rows["moe_source_lane_id"], rows["moe_ep_rank"] = ["empty", "live"], 0, None
+    expected = {(name, "3-87", "source_local", 0, None) for name in ("empty", "live")}
+    _validate_canonical_moe_result_df(rows, model="cpu_fixture", operator_facts=facts, expected_cells=expected)
+    for broken in (rows.iloc[:1], pd.concat([rows, rows.iloc[:1]])):
+        with pytest.raises(ValueError, match="physical cells"):
+            _validate_canonical_moe_result_df(broken, model="cpu_fixture", operator_facts=facts, expected_cells=expected)

@@ -660,6 +660,7 @@ def test_native_initialization_keeps_config_until_group_cleanup(config, tmp_path
         layer_name="cpu_fixture.attn", attn_backend=SimpleNamespace(get_builder_cls=lambda: build_metadata)))
     layer.eval = lambda: layer
     layer.requires_grad_ = lambda _: layer
+    layer.forward = lambda: None
 
     def construct_layer(self):
         require_config("construct_layer")
@@ -682,13 +683,27 @@ def test_native_initialization_keeps_config_until_group_cleanup(config, tmp_path
         with pytest.raises(RuntimeError, match="CPU-injected workspace"):
             VllmStep5AttentionWrapper(**kwargs)
     else:
+        from frontier.profiling.common import runtime_identity
+        model=tmp_path/"model";model.mkdir();(model/"config.json").write_text('{}')
+        kwargs["model_path"]=str(model)
+        facts=dict(shared=dict(model_config_sha256=runtime_identity.file_sha256(model/"config.json"),
+            native_reference=dict(image="cpu_fixture_declared_source_image")),imports={},callables={})
+        verified=[]
+        monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST",str(tmp_path/"manifest.json"))
+        def verify(path,*,callables):
+            assert path==str(tmp_path/"manifest.json") and callables==(type(layer),layer.forward)
+            verified.append(callables)
+            return facts
+        monkeypatch.setattr(runtime_identity,"verify_step5_profile_runtime",verify)
         # The real grid creates sequential layer/graph-policy wrappers. Native
         # WORLD state must be reset, not just its torch process group destroyed.
         for _ in range(2):
             wrapper = VllmStep5AttentionWrapper(**kwargs)
+            assert wrapper.native_facts is facts and "declared_image=cpu_fixture_declared_source_image" in wrapper.runtime_signature
             require_config("wrapper_alive")
             assert not wrapper.layer.o_proj.reduce_results
             wrapper.close()
+        assert len(verified)==2
     assert not current and not groups and not world
     assert calls[0] == "enter_config"
     assert ("configure_quant", True) in calls and ("init_distributed", True) in calls

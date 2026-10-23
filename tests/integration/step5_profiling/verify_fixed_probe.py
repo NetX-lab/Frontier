@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -42,11 +43,49 @@ def verify(stage):
     assert manifest["cloud_output"].startswith("/mnt/codesign-exp/ycfeng/")
     assert manifest["source_mount"] == str(stage)
     assert shlex.split(manifest["submission_command"])[-1] == manifest["worker_command"]
+    binding = manifest.get("native_binding")
+    if binding is not None:
+        plan = json.loads((stage / "profile_artifacts/profile_plan.json").read_text())
+        if plan != manifest["measurement_plan"]:
+            raise ValueError("sealed profile plan differs from measurement plan")
+        sys.path.insert(0, str(stage / "tests/comparison/stage_admission_pp"))
+        spec = importlib.util.spec_from_file_location("profile_stage_registry", stage / "tests/comparison/dp_placement_pp/vllm_replay.py")
+        registry = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(registry)
+        registry.check_native_reference(binding["native_reference"], registry.adapter_record(binding["native_runtime_adapter"])["native_reference"])
+        receipt = json.loads((stage / binding["native_source_receipt"]).read_text())
+        derivation_path = stage / binding["native_derivation_manifest"]
+        derivation = json.loads(derivation_path.read_text())
+        pins = binding["installed_source_hashes"]
+        if (len(pins) != 53 or binding["serving_pin_count"] != 53
+                or any(receipt["sources"].get(key) != value for key, value in pins.items())
+                or any(pins.get(key) != value for key, value in derivation["derived_source_sha256"].items())
+                or receipt["derivation_manifest_sha256"] != hashlib.sha256(derivation_path.read_bytes()).hexdigest()
+                or receipt["installed_package"] != binding["installed_package"]
+                or receipt["image"] != binding["native_reference"]["image"]
+                or receipt["base_image"] != binding["native_reference"]["base_image"]
+                or derivation["base_image"] != binding["native_reference"]["base_image"]):
+            raise ValueError("profile installed-source/derivation/serving-pin identity mismatch")
+        relative = "data/config/models/stepfun-ai__Step-5-Preview.json"
+        committed = subprocess.check_output(["git", "show", f"{binding['model_config_revision']}:{relative}"], cwd=manifest["source"]["repository"])
+        if ((stage / relative).read_bytes() != committed or hashlib.sha256(committed).hexdigest() != binding["model_config_sha256"]
+                or plan["source"] != manifest["source"] or plan["generation"] != binding["profile_generation"]
+                or plan["model_config_revision"] != binding["model_config_revision"]):
+            raise ValueError("profile source/config revision differs from committed bytes")
+        if manifest["image"] != binding["native_reference"]["image"]:
+            raise ValueError("profile ResourceConfig image differs from native binding")
+        submission = shlex.split(manifest["submission_command"])
+        if submission[submission.index("--image") + 1] != manifest["image"]:
+            raise ValueError("profile launcher image differs from manifest")
     for name in ("submit.sh", "submit_with_env.sh"):
         subprocess.run(["bash", "-n", str(stage / name)], check=True)
     subprocess.run(["bash", "-n"], input=manifest["worker_command"], text=True, check=True)
     env = {**os.environ, "PYTHONPATH": f"{stage}:{stage / 'offline_site'}",
-           "PYTHONDONTWRITEBYTECODE": "1", "VLLM_TARGET_DEVICE": "cpu"}
+            "PYTHONDONTWRITEBYTECODE": "1", "VLLM_TARGET_DEVICE": "cpu"}
+    if binding is not None:
+        env.update(FRONTIER_STEP5_PROFILE_MANIFEST=str(stage / "manifest.json"),
+                   VLLM_MOE_ROUTING_SIMULATION_STRATEGY=binding["native_reference"]["routing_strategy"],
+                   VLLM_MOE_SKIP_PADDING="1")
     command = [sys.executable, "-B", "-m", "frontier.profiling.step5.main",
                *manifest["attention_arguments"], "--dry-run"]
     attention, attention_logs = dry_run(command, stage=stage, env=env)

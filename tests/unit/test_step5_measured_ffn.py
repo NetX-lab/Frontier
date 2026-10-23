@@ -20,6 +20,111 @@ from frontier.types import ClusterType, MeasurementType
 from tests.unit.test_step5_measured_training import _manager
 
 
+def test_position_runtime_requires_actual_empty_physical_exact_pair(model, monkeypatch):
+    from tests.unit.test_moe_grouped_gemm_padded_features import _ConcreteMoEPredictor
+    from frontier.execution_time_predictor import sklearn_moe_execution_time_predictor as runtime
+    predictor = object.__new__(_ConcreteMoEPredictor)
+    predictor._step5_layer_metadata = SimpleNamespace(attention_spec=SimpleNamespace(global_layer_id=3))
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._predictions, predictor._step5_ffn_costs = {}, {}
+    native = dict(model_architecture_profile="step5", routing_runtime_path="position_cyclic",
+                  quant_dtype=None, defer_input_quant=False)
+    count = SimpleNamespace(_frontier_feature_names=["num_tokens", "live_routing_token_count"],
+        _frontier_exact_lookup={(8., 0.): 3., (8., 4.): 3.}, _frontier_measurement_identity=json.dumps(dict(evidence_kind="cpu_fixture", native_context=json.dumps(native))),
+        _frontier_model_hash="count", _frontier_target_col="time_stats.moe_gating_linear.kernel_count")
+    fitted = SimpleNamespace(_frontier_feature_names=count._frontier_feature_names,
+        _frontier_exact_lookup={(8., 0.): 1., (8., 4.): 2.}, _frontier_kernel_count_model=count,
+        _frontier_measurement_identity=count._frontier_measurement_identity, _frontier_model_hash="duration",
+        _frontier_target_col="time_stats.moe_gating_linear.median")
+    predictor._model_manager = SimpleNamespace(_get_family_model=lambda *args, **kwargs: fitted)
+    monkeypatch.setattr(runtime, "step5_operator_binding", lambda *args, **kwargs: (PrecisionType.FP32, None))
+    assert predictor._get_on_demand_prediction("moe_gating_linear", dict(num_tokens=8, live_routing_token_count=0), context=native) == 1.
+    assert predictor._step5_ffn_costs["moe_gating_linear"]["kernel_count"] == 3.
+    count._frontier_exact_lookup.pop((8., 0.))
+    with pytest.raises(ValueError, match="exact feature keys differ"):
+        predictor._predict_step5_ffn_operator("moe_gating_linear", dict(num_tokens=8, live_routing_token_count=0), context=native)
+    fitted._frontier_exact_lookup.pop((8., 0.))
+    with pytest.raises(ValueError, match="requires an exact measured"):
+        predictor._predict_step5_ffn_operator("moe_gating_linear", dict(num_tokens=8, live_routing_token_count=0), context=native)
+    with pytest.raises(ValueError, match="requires an exact measured"):
+        predictor._get_prediction_for_features("moe_gating_linear", dict(num_tokens=8, live_routing_token_count=2), context=native)
+    with pytest.raises(ValueError, match="not an applicable"):
+        predictor._get_on_demand_prediction("moe_shuffling", dict(num_tokens=8), context=native)
+
+
+def test_position_real_estimator_reaches_execution_time_without_shuffle(model,tmp_path,monkeypatch):
+    from frontier.config import global_vars
+    from tests.integration import step5_measured_compute_fixture as fixture
+    from tests.unit.test_step5_measured_ffn_replay import _predictor
+    from tests.unit.test_moe_position_routing import source,materialize
+    from frontier.execution_time_predictor.moe_dataset_training import position_moe_operator_facts
+    from frontier.cc_backend.collective_plan import CollectivePlanCost
+    from frontier.config.replica_config import ReplicaConfig
+    monkeypatch.setattr(global_vars,"CUDAGRAPH_CAPTURE_SIZES",list(fixture.CAPTURE_SIZES))
+    monkeypatch.setattr(global_vars,"DECODE_CUDA_GRAPH_MODE","full_and_piecewise")
+    monkeypatch.setattr(fixture,"range",lambda *a:(6144,) if a==(6143,7167) else range(*a),raising=False)
+    paths,_=fixture.position_compute_tables(tmp_path,model,device="h800",measurement=MeasurementType.KERNEL_ONLY)
+    replica=ReplicaConfig(model_name=model._model_name,device="h800",attn_tensor_parallel_size=8,attn_dp=2,moe_expert_parallel_size=16,moe_routing_distribution_type="position_cyclic")
+    manager=_manager(tmp_path/"cache");facts=position_moe_operator_facts(pd.read_csv(paths[1]),replica)[1]
+    manager._train_ffn_models_for_cluster(ClusterType.MONOLITHIC,replica,_config(),str(paths[0]),str(paths[1]),True,set(),operator_facts=facts)
+    p=_predictor(model,manager);p._replica_config=replica;p._moe_ep_size=16;p._moe_gating_routing_runtime_path="position_cyclic"
+    p._moe_input_file,p._moe_routing_distribution_type=str(paths[1]),"position_cyclic"
+    p._register_additional_profiling_metadata_from_files()
+    lane=materialize(source(padding=16)).lane(0)
+    path=fixture.position_collective_costs(tmp_path,paths[1],device="h800");artifact=json.loads(path.read_text())
+    p._cc_backend=SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])),
+        predict_collective_plan=lambda plan:CollectivePlanCost(**artifact["counts"][plan.cache_key()]["cost"]))
+    with p._step5_measured_layer(88):
+        result=p._predict_step5_position_execution(SimpleNamespace(),lane,layer_id=88,include_attention=False,include_stage_owned=False,pipeline_stage=0)
+        assert result.moe_or_mlp_time_component.operator_times.physical_frame["live_local_assignments"]==0
+        assert result.op_times["moe_grouped_gemm"]>0 and "moe_shuffling" not in result.op_times and result.get_single_layer_post_attention_time()>.12
+        p._step5_ffn_model("post_attention_layernorm")[0]._frontier_kernel_count_model._frontier_exact_lookup.pop((16.,))
+        with pytest.raises(ValueError,match="exact feature keys differ"):
+            p._predict_step5_position_execution(SimpleNamespace(),lane,layer_id=88,include_attention=False,include_stage_owned=False,pipeline_stage=0)
+
+
+def test_native_feature_schema_keeps_exact_order_backend_and_legacy_ranges():
+    from frontier.moe_load_imbalance import moe_grouped_gemm_schema, MOE_GROUPED_GEMM_PADDED_FEATURES
+    legacy = moe_grouped_gemm_schema(MOE_GROUPED_GEMM_PADDED_FEATURES)
+    assert legacy.uses_block_size_m_ranges and legacy.experts_class is None
+    from frontier.execution_time_predictor import step5_cost
+    if not hasattr(step5_cost, "STEP5_NATIVE_EXPERT_SCHEMAS"):
+        pytest.skip("PRICING06bae09 selected schema registry is not yet import-authorized")
+    for experts, features in (("TritonExperts", ("num_tokens", "total_routed_tokens", "num_tokens_post_padded")),
+            ("DeepGemmExperts", ("num_tokens", "total_routed_tokens", "native_capacity_rows", "native_alignment"))):
+        context = dict(experts_class=experts, physical_scope="native_experts_inclusive")
+        selected = moe_grouped_gemm_schema(features, native_context=context)
+        assert selected.features == features and not selected.uses_block_size_m_ranges
+        for invalid in (features[::-1], features + ("other",), MOE_GROUPED_GEMM_PADDED_FEATURES):
+            with pytest.raises(ValueError, match="actual selected native expert"):
+                moe_grouped_gemm_schema(invalid, native_context=context)
+        with pytest.raises(ValueError, match="actual selected native expert"):
+            moe_grouped_gemm_schema(features, native_context={**context, "experts_class": "unselected"})
+    assert moe_grouped_gemm_schema(("num_tokens",)) is None
+
+
+def test_step_selected_model_uses_real_precision_registry_not_generic_prediction(tmp_path, monkeypatch):
+    from tests.unit.test_moe_grouped_gemm_padded_features import _ConcreteMoEPredictor
+    from frontier.execution_time_predictor import sklearn_moe_execution_time_predictor as runtime
+    from frontier.execution_time_predictor.prediction_model_identity import _serialize_selected_layer_cache_identity
+    from tests.unit.test_step5_measured_training import _manager
+    config = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    manager = _manager(tmp_path / "cache", MeasurementType.CUDA_EVENT)
+    contract = config.get_model_architecture_profile().resolve_layer_contract(config,
+        layer_id=3, operator_name="moe_grouped_gemm", moe_tp_size=1, expert_parallel_size=16)
+    identity = _serialize_selected_layer_cache_identity(contract)
+    fitted = {precision: SimpleNamespace(_frontier_layer_cache_identity=identity) for precision in (PrecisionType.FP8, PrecisionType.BF16)}
+    for precision, model in fitted.items():
+        manager._store_model_precision("moe_grouped_gemm", precision.name, model, layer_contract=contract)
+    predictor = object.__new__(_ConcreteMoEPredictor)
+    predictor._model_manager, predictor._active_measurement_type = manager, MeasurementType.CUDA_EVENT
+    predictor._predictions = {"moe_grouped_gemm": pytest.fail}
+    predictor._step5_layer_metadata = SimpleNamespace(attention_spec=SimpleNamespace(global_layer_id=3))
+    monkeypatch.setattr(runtime, "step5_operator_binding", lambda *a, context, **k: (context["precision"], identity))
+    for precision in fitted:
+        assert predictor._step5_ffn_model("moe_grouped_gemm", context={"precision": precision}) == (fitted[precision], precision)
+
+
 @pytest.fixture(scope="module")
 def model():
     return BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")

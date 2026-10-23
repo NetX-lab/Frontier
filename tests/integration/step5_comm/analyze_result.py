@@ -115,7 +115,7 @@ def payload_bytes(record: dict) -> dict:
     for rank in record["participating_ranks"]:
         local = rows[rank] * row_bytes
         grouped = sum(rows[peer] for peer in groups[rank]) * row_bytes
-        inputs[rank] = grouped if record["op"] == "reduce_scatterv" else local
+        inputs[rank] = grouped if record["op"] in ("reduce_scatterv", "reduce_scatterv_into_output") else local
         outputs[rank] = grouped if record["op"] in ("all_gather", "all_gatherv") else local
     return {
         "row_bytes": row_bytes,

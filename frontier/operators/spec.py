@@ -90,6 +90,7 @@ class OperatorSpec:
     tp_mode: TensorParallelMode | None = None
     ep_agnostic: bool = False
     projection_ownership: ProjectionOwnership = ProjectionOwnership.NOT_PROJECTION
+    applicability: Callable[[Any], bool] | None = None
 
     _operator_label: ClassVar[str] = "Operator"
 
@@ -129,6 +130,9 @@ class OperatorSpec:
 
         return self.profiling_key or self.name
 
+    def is_applicable(self, context: Any = None) -> bool:
+        return self.applicability is None or self.applicability(context)
+
     def precision_name(self) -> str:
         """Return the quantization/precision-facing key for this physical operator."""
 
@@ -162,6 +166,7 @@ class CommPayloadContext:
     # Physical EP-lane workload, when the collective is evaluated for one
     # materialized lane rather than the source batch.
     lane_workload: Any | None = None
+    collective_plan: Any | None = None
 
 
 CommPayloadBuilder = Callable[[CommPayloadContext], int]
@@ -184,6 +189,7 @@ class CommOperatorSpec(OperatorSpec):
     zero_payload_policy: ZeroPayloadPolicy = ZeroPayloadPolicy.PREDICT
     # Kernels one call launches; a kernel-only step pays the kernel gap before each.
     kernel_count: int = 1
+    plan_builder: Callable[[CommPayloadContext], Any] | None = None
 
     _operator_label: ClassVar[str] = "CommOperator"
 
@@ -192,14 +198,17 @@ class CommOperatorSpec(OperatorSpec):
         valid_collectives = {
             "allreduce", "allgather", "reduce_scatter", "alltoall", "send_recv",
         }
-        if self.collective_alias not in valid_collectives:
+        if self.plan_builder is not None:
+            if self.payload_builder is not None or self.collective_alias:
+                raise ValueError(f"CommOperator {self.name} must declare scalar or plan, not both")
+        elif self.collective_alias not in valid_collectives:
             raise ValueError(
                 f"CommOperator {self.name} collective_alias must be one of "
                 f"{sorted(valid_collectives)}, got {self.collective_alias!r}"
             )
         if not self.comm_group:
             raise ValueError(f"CommOperator {self.name} comm_group must be non-empty")
-        if self.payload_builder is None:
+        if self.payload_builder is None and self.plan_builder is None:
             raise ValueError(f"CommOperator {self.name} must declare payload_builder")
         if self.trace_kind is not TraceKind.COMM:
             raise ValueError(f"CommOperator {self.name} trace_kind must be COMM")
@@ -345,14 +354,15 @@ class OperatorFamilySpec:
                 f"{self.disabled_reason}"
             )
 
-    def profiling_ops(self) -> tuple[OperatorSpec, ...]:
-        operators = tuple(operator for operator in self.operators if operator.profiling_target)
+    def profiling_ops(self, context: Any = None) -> tuple[OperatorSpec, ...]:
+        operators = tuple(operator for operator in self.operators
+                          if operator.profiling_target and operator.is_applicable(context))
         if not self.profiling_order:
             return operators
 
         by_name = {operator.name: operator for operator in operators}
         ordered_names = set(self.profiling_order)
-        ordered = tuple(by_name[name] for name in self.profiling_order)
+        ordered = tuple(by_name[name] for name in self.profiling_order if name in by_name)
         remaining = tuple(operator for operator in operators if operator.name not in ordered_names)
         return ordered + remaining
 

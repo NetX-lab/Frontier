@@ -27,6 +27,7 @@ API_OPERATIONS = {
     "all_gatherv": "allgather",
     "reduce_scatter": "reduce_scatter",
     "reduce_scatterv": "reduce_scatter",
+    "reduce_scatterv_into_output": "reduce_scatter",
     "cpu_all_reduce": None,
 }
 REPEAT_SEMANTICS = (
@@ -279,12 +280,308 @@ def export_costs(directory: Path, output: Path, environment_note: str = "",
     return manifest
 
 
+def fit_affine(cells, *, positive_slope, supported_range, calibration_receipt):
+    """NNLS on equally weighted cell medians; preserve signed observations."""
+    import numpy as np
+    from scipy.optimize import nnls
+    fitted = [cell for cell in cells if cell["split"] == "calibration"]
+    heldout = [cell for cell in cells if cell["split"] == "qualification"]
+    if any(cell["quality"] != "PASS" for cell in cells):
+        raise ValueError("Unqualified cells must be excluded explicitly before fitting")
+    if any(not __import__("math").isfinite(c["duration_ms"]) or
+           not __import__("math").isfinite(c["operand_bytes"]) for c in cells):
+        raise ValueError("Calibration and qualification observations must remain finite")
+    xs = np.asarray([cell["operand_bytes"] for cell in fitted],dtype=float)
+    if len(set(xs)) < 3 or not heldout:
+        raise ValueError("Affine fit requires three distinct anchors and independent qualification")
+    scale = float(max(xs))
+    matrix = np.column_stack((np.ones(len(xs)),xs/scale))
+    rank = int(np.linalg.matrix_rank(matrix))
+    if rank != 2:
+        raise ValueError("Affine design matrix is rank deficient")
+    ys = np.asarray([cell["duration_ms"] for cell in fitted],dtype=float)
+    if not np.all(np.isfinite(ys)) or not np.all(np.isfinite(xs)) or min(xs) <= 0:
+        raise ValueError("Affine observations must be finite with positive operand bytes")
+    coefficients,_ = nnls(matrix,ys)
+    a,b = float(coefficients[0]),float(coefficients[1]/scale)
+    if positive_slope and b <= 0:
+        raise ValueError("Measured copy/add/TP service needs a positive identified slope")
+    if not min(xs) <= supported_range[0] <= supported_range[1] <= max(xs):
+        raise ValueError("Supported range may not extrapolate beyond frozen fit anchors")
+    errors = [dict(cell, predicted_ms=a+b*cell["operand_bytes"],
+        signed_error_ms=a+b*cell["operand_bytes"]-cell["duration_ms"],
+        relative_error=None if cell["duration_ms"] == 0 else
+            (a+b*cell["operand_bytes"]-cell["duration_ms"])/cell["duration_ms"]) for cell in heldout]
+    if any(not supported_range[0] <= c["operand_bytes"] <= supported_range[1] for c in heldout):
+        raise ValueError("Qualification input is outside the frozen supported range")
+    return dict(a_ms=a,b_ms_per_byte=b,range_bytes=list(supported_range),design_matrix_rank=rank,
+        design_matrix_scale_bytes=scale,distinct_sizes=len(set(xs)),time_unit="ms",
+        signed_residuals_ms=(ys-matrix@coefficients).tolist(),raw_cells=cells,
+        calibration_receipt=calibration_receipt,qualification=dict(status="UNVERIFIED",independent=True,
+        observations=errors),candidate_only=True)
+
+
+def export_finite_parameters(directory, output):
+    """Export measured local fits and a fixed-simulator effective remainder candidate."""
+    from dataclasses import replace
+    from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+    import sys
+    sys.path.insert(0,str(Path(__file__).resolve().parents[3]/"frontier/cc_backend/backends/collective-sim/python"))
+    from collective_sim_core.schema import Scenario
+    from collective_sim_core.runner import run_htsim_runner
+    from collective_sim_core.predictor import completed_plan_network_ms
+    from collective_sim_core.intra_server_model import plan_memory_service_ms
+    directory,output = Path(directory),Path(output)
+    source = json.loads((directory/"collectives/plan.json").read_text())
+    config = source["config"]
+    if source["evidence_kind"] == "native_measurement":
+        from validate_result import validate
+        report=validate(json.loads((directory/"job.json").read_text()),directory)
+        if report["status"] != "PASS":
+            raise ValueError("Finite export requires complete selected producer evidence")
+    frozen_path = Path(config["frozen_model_config"])
+    frozen = json.loads(frozen_path.read_text())
+    if config["frozen_model_config_sha256"] != sha256(frozen_path):
+        raise ValueError("Frozen simulator configuration receipt differs from file bytes")
+    scenario = Scenario.from_dict(frozen["scenario"])
+    measurements = list(iter_records(measurement_path(directory)))
+    kernel_rows = list(iter_records(directory/"collectives/kernels.jsonl"))
+    kernels = {(r["scenario"],r["call"]):r for r in kernel_rows}
+    if len(kernels) != len(kernel_rows):
+        raise ValueError("Duplicate native kernel evidence")
+    local = list(iter_records(directory/"collectives/local_work.jsonl"))
+    shared = source["runtime"]["native_facts"]["shared"]
+    evidence_kind = source["evidence_kind"]
+    probe,inputs=None,{}
+    if evidence_kind == "native_measurement":
+        from frontier.profiling.moe.inputs import read_routing_profile_inputs
+        probe=json.loads((directory/"native_dispatch/dispatch_probe.json").read_text())
+        inputs={i.moe_input_id:i for i in read_routing_profile_inputs(config["routing_input_file"])}
+    if evidence_kind not in ("native_measurement","cpu_fixture"):
+        raise ValueError("Finite exporter requires an explicit evidence kind")
+    anchors = config["grid"]["scenario_splits"]
+    models,counts,excluded = [],{},[]
+    local_models = {}
+    layouts = {(r["dtype"],r["columns"],r["cuda_graph"],r["kind"]) for r in local}
+    for dtype,columns,captured,kind in layouts:
+        rank_fits = {}
+        for rank in range(16):
+            cells = []
+            for r in local:
+                if (r["dtype"],r["columns"],r["cuda_graph"],r["kind"]) != (dtype,columns,captured,kind):
+                    continue
+                if r["row_stride"] != columns or r["scope"] != "independent_preallocated_operand":
+                    raise ValueError("Local probe layout/scope does not match the model")
+                quality = all(r["per_rank_queue_held"][rank])
+                if not quality:
+                    excluded.append(dict(kind="local",name=r["name"],rank=rank,reason="queue_not_held"));continue
+                from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
+                cells.append(dict(operand_bytes=r["rows"]*r["columns"]*DTYPE_BYTES[r["dtype"]],
+                    duration_ms=float(__import__("statistics").median(r["per_rank_call_us"][rank]))/1000,
+                    split=r["split"],quality="PASS",cell_id=r["name"],source=dict(name=r["name"],pass_id=r["pass"])))
+            cells = cell_medians(cells)
+            fit = fit_affine(cells,positive_slope=True,supported_range=(min(c["operand_bytes"] for c in cells),
+                max(c["operand_bytes"] for c in cells)),calibration_receipt=str(directory/"collectives/local_work.jsonl"))
+            rank_fits[str(rank)] = fit
+        local_models[dtype,columns,captured,kind] = rank_fits
+    grouped = defaultdict(list)
+    for record in measurements:
+        tp_phase = {"shared_expert_down_proj_all_reduce":"shared_tp","routed_expert_all_reduce":"routed_tp"}.get(record["call"])
+        if record["op"] not in ("all_gatherv","reduce_scatterv_into_output") and tp_phase is None:
+            continue
+        if queue_held_analysis(record,"device",.01)["queue_gate"] != "PASS":
+            excluded.append(dict(kind="native",scenario=record["scenario"],call=record["call"],reason="queue_quality"));continue
+        names = ("activation","weights","ids","scales") if record["op"] == "all_gatherv" else ("output",)
+        context = record["native_context"]
+        if context["shared"] != shared or record["evidence_kind"] != evidence_kind:
+            raise ValueError("Measured native context differs from the bound producer source")
+        if evidence_kind == "native_measurement" and not context.get("execution_policy"):
+            raise ValueError("Measured model context requires actual execution policy receipts")
+        from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
+        tensors = tuple(CollectiveTensor(n,d,DTYPE_BYTES[d],c,c) for n,d,c in
+                        zip(names,record["dtypes"],record["columns"]))
+        phase = tp_phase or ("dispatch" if record["op"] == "all_gatherv" else "combine")
+        plan = CollectivePlan(phase,tuple(record["tokens_per_dp_rank"]),tensors,
+            tuple(tuple(g) for g in record["group_ranks"]),"full" if record["cuda_graph"] else "none",
+            json.dumps(context,sort_keys=True),json.dumps(record["buffer_receipt"],sort_keys=True))
+        from frontier.cc_backend.collective_plan import collective_model_context
+        model_context=collective_model_context(context)
+        grouped[phase,plan.graph_mode,plan.sizes[0]==plan.sizes[1],tuple(tensors),json.dumps(model_context,sort_keys=True)].append((record,plan))
+        evidence = kernels[record["scenario"],record["call"]]
+        point_groups=defaultdict(list)
+        if probe is not None and not record["cuda_graph"]:
+            for point in observed_collective_points(record,probe,inputs):
+                point_groups[json.dumps(point["compute_context"],sort_keys=True)].append(point["native_point"])
+        buffers=[dict(record["buffer_receipt"],compute_context=json.loads(key),native_points=value)
+                 for key,value in point_groups.items()] or [record["buffer_receipt"]]
+        for buffer in buffers:
+            bound_plan=replace(plan,buffer_json=json.dumps(buffer,sort_keys=True))
+            if bound_plan.cache_key() in counts and counts[bound_plan.cache_key()]["kernel_counts"] != evidence["per_rank_kernel_counts"]:
+                raise ValueError("Identical native plan has inconsistent paired kernel counts")
+            counts[bound_plan.cache_key()] = dict(evidence,plan_key=bound_plan.cache_key(),context=context,
+                buffer_receipt=buffer,kernel_counts=evidence["per_rank_kernel_counts"],
+                source_receipt=source["runtime"]["native_facts"],evidence_kind=evidence_kind)
+    for (phase,mode,uniform,tensors,context_json),rows in grouped.items():
+        context = json.loads(context_json)
+        copy,reduce = {},{}
+        if phase in ("dispatch","combine"):
+            for rank in range(16):
+                copy[str(rank)] = {t.name:local_models[t.dtype,t.columns,mode=="full","copy"][str(rank)] for t in tensors}
+                if phase == "combine":
+                    t=tensors[0];reduce[str(rank)]=local_models[t.dtype,t.columns,mode=="full","add"][str(rank)]
+        cells = []
+        for record,plan in rows:
+            parameters=dict(context=record["native_context"],model_identity=str(frozen_path),evidence_kind=evidence_kind,copy=copy,reduce=reduce)
+            sc=replace(scenario,collective=replace(scenario.collective,plan=plan.to_dict(),local_parameters=parameters))
+            native=float(__import__("statistics").median(queue_held_analysis(record,"device",.01)["critical_path_repeats_us"]))/1000
+            if phase in ("shared_tp","routed_tp"):
+                import statistics
+                for node,node_rows in enumerate(plan.sizes):
+                    samples = record["per_rank_call_us"][node*8:(node+1)*8]
+                    node_ms=statistics.median(max(values) for values in zip(*samples))/1000
+                    cells.append(dict(operand_bytes=node_rows*tensors[0].columns*tensors[0].element_size,
+                        duration_ms=node_ms,split=anchors[record["scenario"]],quality="PASS",
+                        cell_id=(record["scenario"],node),source=dict(record,node=node)))
+                continue
+            network=run_htsim_runner(repo_root=Path(frozen["collective_sim_root"]),spec=sc.to_runner_spec(),
+                out_dir=str(output/record["scenario"]/record["call"]))
+            network_ms=completed_plan_network_ms(network)
+            local_ms = plan_memory_service_ms(plan.to_dict(),copy,reduce)
+            cells.append(dict(operand_bytes=sum(plan.sizes)*sum(t.columns*t.element_size for t in tensors),
+                duration_ms=native-network_ms-max(local_ms),split=anchors[record["scenario"]],
+                quality="PASS",cell_id=record["scenario"],source=dict(scenario=record["scenario"],pass_id=record["pass"],native_ms=native,
+                network_ms=network_ms,local_ms=local_ms,native_record=record)))
+        cells=cell_medians(cells)
+        fit=fit_affine(cells,positive_slope=phase in ("shared_tp","routed_tp"),supported_range=(min(c["operand_bytes"] for c in cells),
+            max(c["operand_bytes"] for c in cells)),calibration_receipt=str(directory))
+        parameters=dict(context=context,model_identity=str(frozen_path),evidence_kind=evidence_kind)
+        if phase in ("shared_tp","routed_tp"):
+            nvlink=dict(frozen["scenario"]["intra_server"])
+            nvlink["nvlink_efficiency"]=1.75*1000/(fit["b_ms_per_byte"]*nvlink["nvlink_one_way_bw_GBps"]*1e9)
+            nvlink["nvlink_allreduce_launch_overhead_us"]=fit["a_ms"]*1000/14-nvlink["nvlink_latency_us"]
+            if not 0 < nvlink["nvlink_efficiency"] <= 1 or nvlink["nvlink_allreduce_launch_overhead_us"] < 0:
+                raise ValueError("Measured TP8 fit gives infeasible effective bandwidth/device overhead")
+            parameters["tp_nvlink"]={**nvlink,"fit":fit}
+        else:
+            parameters.update(copy=copy,reduce=reduce,protocol=fit)
+            for error in fit["qualification"]["observations"]:
+                src=error["source"];prediction=error["predicted_ms"]+src["network_ms"]+max(src["local_ms"])
+                native=error["duration_ms"]+src["network_ms"]+max(src["local_ms"])
+                error.update(full_plan_predicted_ms=prediction,full_plan_native_ms=native,
+                    full_plan_signed_error_ms=prediction-native,full_plan_relative_error=(prediction-native)/native)
+        models.append(dict(context=context,phase=phase,graph_mode=mode,uniform=uniform,tensors=[vars(t) for t in tensors],
+            parameters=parameters))
+    artifact=dict(schema_version="step5.collective_local.v1",device_type=frozen["device_type"],
+        evidence_kind=evidence_kind,frozen_scenario=frozen["scenario"],models=models,counts=counts,excluded=excluded,
+        qualification=dict(status="UNVERIFIED",independent=True,observations=[],parent_receipt=None),candidate_only=True)
+    output.mkdir(parents=True,exist_ok=True)
+    (output/"collective_local.json").write_text(json.dumps(artifact,indent=2)+"\n")
+    return artifact
+
+
+def observed_collective_points(record, probe, inputs):
+    """Bind measured collectives to verified native points, never candidate contexts."""
+    from dataclasses import asdict
+    points=[]
+    for rank in probe["ranks"]:
+        rank_id=rank["rank"]
+        if rank_id not in record["participating_ranks"]: continue
+        for layer in rank["layers"]:
+            inp=inputs[layer["moe_input_id"]]
+            frames=json.loads(json.dumps(asdict(inp)))["source_frames"]
+            if [f["physical_rows"] for f in frames] != record["tokens_per_dp_rank"]: continue
+            if [sum(f["query_lens"]) for f in frames] != record.get("useful_tokens_per_dp_rank",record["tokens_per_dp_rank"]): continue
+            tp=probe["parallelism"]["tp"]
+            context=layer.get("compute_context")
+            if not context: raise ValueError("Verified native point lacks observed compute context")
+            if (layer["comparison"]["status"] != "match" or layer["routing_comparison"]["status"] != "match" or
+                    layer["source_frame"] != frames[rank_id//tp] or
+                    context["native_facts"]["shared"] != record["native_context"]["shared"]):
+                raise ValueError("Observed compute point source/runtime association differs")
+            tensors=context["collective_tensors"]["dispatch" if record["op"] == "all_gatherv" else "output"]
+            if tuple((t["dtype"],t["columns"]) for t in tensors) != tuple(zip(record["dtypes"],record["columns"])): continue
+            matched=[(i,c) for i,c in enumerate(layer["collectives"]) if c["op"] == record["op"] and
+                c["group_ranks"] in record["group_ranks"] and
+                tuple((t["dtype"],t["shape"][1]) for t in c["inputs"]) == tuple(zip(record["dtypes"],record["columns"]))]
+            if record["op"] == "all_reduce":
+                matched=[matched[0 if record["call"] == "shared_expert_down_proj_all_reduce" else 1]] if len(matched) == 2 else []
+            if (len(matched) != 1 or not matched[0][1]["completed"] or
+                    matched[0][1]["execution_policy"] != record["native_context"]["execution_policy"][str(rank_id)]):
+                raise ValueError("Observed native point lacks exact call/policy association")
+            call_index,call=matched[0]
+            input_rows=sum(record["tokens_per_dp_rank"]) if record["op"] == "reduce_scatterv_into_output" else frames[rank_id//tp]["physical_rows"]
+            if ([(t["shape"],t["stride"],t["dtype"],t["element_size"]) for t in call["inputs"]] !=
+                    [([input_rows,t["columns"]],[t["row_stride"],1],t["dtype"],t["element_size"]) for t in tensors]):
+                raise ValueError("Observed collective operands differ from measured point geometry")
+            local=context["source_activation_layout"];gathered=context["activation_layout"]
+            if (local["shape"][0] != frames[rank_id//tp]["physical_rows"] or
+                    gathered["shape"][0] != sum(record["tokens_per_dp_rank"]) or
+                    any(t["row_stride"] != t["columns"] for t in tensors)):
+                raise ValueError("Observed compute point physical layout differs")
+            points.append(dict(compute_context=context,native_point=dict(rank=rank_id,layer_id=layer["layer_id"],
+                moe_input_id=layer["moe_input_id"],source_frame=layer["source_frame"],call_index=call_index,
+                execution_policy=call["execution_policy"],inputs=call["inputs"],outputs=call.get("outputs"))))
+    return points
+
+
+def cell_medians(cells):
+    """Equal weight per cell, retaining all passes/raw medians."""
+    import statistics
+    groups=defaultdict(list)
+    for cell in cells: groups[cell.get("cell_id",cell["operand_bytes"]),cell["split"]].append(cell)
+    return [dict(group[0],duration_ms=statistics.median(c["duration_ms"] for c in group),raw_passes=group)
+             for group in groups.values()]
+
+
+def qualify_finite_parameters(candidate_path, receipt_path, output_path):
+    """Select frozen measured parameters only through a separate parent receipt."""
+    candidate_path,receipt_path,output_path=map(Path,(candidate_path,receipt_path,output_path))
+    artifact=json.loads(candidate_path.read_text());receipt=json.loads(receipt_path.read_text())
+    if (artifact["evidence_kind"] != "native_measurement" or not artifact["candidate_only"] or
+            receipt["schema_version"] != "step5.collective_qualification.v1" or
+            receipt["candidate_sha256"] != sha256(candidate_path) or receipt["status"] != "PASS" or
+            not receipt["independent"] or not receipt["observations"]):
+        raise ValueError("Candidate selection needs independent native parent qualification")
+    checks=receipt["model_checks"]
+    if (len(checks) != len(artifact["models"]) or {row["model_index"] for row in checks} != set(range(len(artifact["models"]))) or
+            any(row["status"] != "PASS" or not row["independent"] or not row["observations"] for row in checks)):
+        raise ValueError("Parent qualification must cover every frozen model exactly once")
+    def select(value):
+        if isinstance(value,dict):
+            if "a_ms" in value and "b_ms_per_byte" in value:
+                if not value["qualification"]["observations"] or value["design_matrix_rank"] != 2:
+                    raise ValueError("Every selected fit needs held-out evidence and identified parameters")
+                value["qualification"].update(status="PASS",parent_receipt=str(receipt_path))
+                value["candidate_only"]=False
+            for nested in value.values(): select(nested)
+        elif isinstance(value,list):
+            for nested in value: select(nested)
+    select(artifact)
+    artifact.update(candidate_only=False,qualification={**receipt,"parent_receipt":str(receipt_path)})
+    output_path.parent.mkdir(parents=True,exist_ok=True)
+    output_path.write_text(json.dumps(artifact,indent=2)+"\n")
+    return artifact
+
+
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path, help="Local copied run directory; no platform access")
     parser.add_argument("--output-dir", type=Path, help="Defaults to DIRECTORY/costs")
     parser.add_argument("--environment-note", default="", help="Parent-reported context, not a causal attribution")
+    parser.add_argument("--finite-model",action="store_true",help="Export a candidate from frozen native/local model evidence")
+    parser.add_argument("--qualification-receipt",type=Path,help="Separate parent receipt selecting DIRECTORY/collective_local.json")
     args = parser.parse_args(argv)
+    if args.finite_model:
+        if args.qualification_receipt:
+            artifact=qualify_finite_parameters(args.directory/"collective_local.json",args.qualification_receipt,
+                (args.output_dir or args.directory/"qualified")/"collective_local.json")
+            print(json.dumps({"candidate_only":artifact["candidate_only"],"models":len(artifact["models"])}))
+            return 0
+        artifact=export_finite_parameters(args.directory,args.output_dir or args.directory/"costs")
+        print(json.dumps({"candidate_only":True,"models":len(artifact["models"])}))
+        return 0
     manifest = export_costs(args.directory, args.output_dir or args.directory / "costs", args.environment_note)
     print(json.dumps({key: manifest[key] for key in ("task_id", "counts", "output_directory", "advisory_only")},
                      sort_keys=True))

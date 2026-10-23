@@ -26,6 +26,27 @@ else
 fi
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 export PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+if [ -n "${FRONTIER_STEP5_PROFILE_MANIFEST-}" ]; then
+  neutral="${TMPDIR:?bound profiling requires TMPDIR}/native_source_preflight"
+  mkdir -p "$neutral"
+  (
+    cd "$neutral"
+    python3 -I -B - "$REPO_ROOT" <<'PY'
+import json
+import os
+from pathlib import Path
+import sys
+
+sys.path.insert(0, sys.argv[1])
+from frontier.profiling.common.runtime_identity import file_sha256, verify_step5_profile_runtime
+manifest = Path(os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"])
+facts = verify_step5_profile_runtime(manifest)
+if file_sha256(Path(os.environ["TMPDIR"]) / "model/config.json") != facts["shared"]["model_config_sha256"]:
+    raise ValueError("worker effective model config copy differs from sealed source")
+print("NATIVE_SOURCE_PREFLIGHT", json.dumps(facts, sort_keys=True))
+PY
+  )
+fi
 export PYTHONPATH="$REPO_ROOT:$EXTRA_SITE${PYTHONPATH:+:$PYTHONPATH}"
 
 # Import name -> distribution name.

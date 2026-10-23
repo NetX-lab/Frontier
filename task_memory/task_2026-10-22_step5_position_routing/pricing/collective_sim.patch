@@ -1,0 +1,461 @@
+diff --git a/htsim_runner.py b/htsim_runner.py
+index 241a3ce..e4561cb 100644
+--- a/htsim_runner.py
++++ b/htsim_runner.py
+@@ -42,6 +42,7 @@ class CollectiveSpec:
+     domain_dims: Tuple[str, ...]
+     placement_order: Tuple[str, ...]
+     exclude_intra_server: bool
++    plan: Optional[dict] = None
+     # For collective_type == "allreduce":
+     # If true, generate step-by-step ring allreduce using triggers (barriers)
+     # instead of starting all steps at time 0.
+@@ -529,6 +530,45 @@ def _emit_server_ring_steps(
+                 ))
+ 
+ 
++def lower_collective_plan(spec: CollectiveSpec, groups):
++    """Ordered group-local stages in one matrix, exact element channel stripes."""
++    sys.path.insert(0, str(REPO_ROOT / "python"))
++    from collective_sim_core.schema import validate_collective_plan
++    plan = spec.plan
++    validate_collective_plan(plan)
++    if [list(g) for g in plan["groups"]] != [list(g) for g in groups]:
++        raise ValueError("Explicit Step groups disagree with existing placement")
++    if not spec.use_triggers or plan["phase"] not in ("dispatch", "combine"):
++        raise ValueError("Network lowering requires triggered DP dispatch/combine")
++    selector = spec.allgather_model if plan["phase"] == "dispatch" else spec.reducescatter_model
++    if selector not in ("ring_steps", "nccl_ring") or spec.nchannels <= 0:
++        raise ValueError("Unsupported frozen Step channel model")
++    channels = 1 if selector == "ring_steps" else spec.nchannels
++    flows, triggers = [], []
++    for group in groups:
++        release = None
++        for index, (primitive, tensor_index, root) in enumerate(plan["stages"]):
++            tensor = plan["tensors"][tensor_index]
++            directions = ((0, 1), (1, 0)) if root is None else (
++                ((root, 1-root),) if primitive == "Broadcast" else ((1-root, root),))
++            stage = []
++            for src, dst in directions:
++                owner = src if primitive in ("Broadcast", "AllGather") else dst
++                elements = plan["sizes"][owner] * tensor["columns"]
++                quotient, remainder = divmod(elements, channels)
++                for channel in range(channels):
++                    count = quotient + (channel < remainder)
++                    if count:
++                        stage.append((group[src], group[dst], count * tensor["element_size"]))
++            done = len(triggers) + 1 if index + 1 < len(plan["stages"]) else None
++            if done is not None:
++                triggers.append(TriggerDef(done, "barrier", len(stage)))
++            flows.extend(FlowDef(src, dst, size, start=0 if release is None else None,
++                         trigger=release, send_done_trigger=done) for src, dst, size in stage)
++            release = done
++    return flows, triggers
++
++
+ def generate_tm_from_spec(
+     out_dir: Path,
+     *,
+@@ -575,6 +615,14 @@ def generate_tm_from_spec(
+ 
+     flows: list[FlowDef] = []
+     triggers: list[TriggerDef] = []
++    if spec.plan is not None:
++        if spec.collective_type != "plan" or tensor_bytes != 0 or spec.participant_ranks:
++            raise ValueError("Plan cannot use scalar payload/participant override")
++        if (nodes, servers, gpus_per_server, tp, cp, dp, ep) != (16, 2, 8, 8, 1, 2, 1):
++            raise ValueError("Step plan requires two-node TP8/DP2")
++        flows, triggers = lower_collective_plan(spec, groups)
++        _write_tm(cm_path, nodes=nodes, flows=flows, triggers=triggers)
++        return cm_path, len(flows)
+     if spec.collective_type == "alltoall":
+         for g in groups:
+             n = len(g)
+@@ -1445,6 +1493,7 @@ def _merge_spec_into_args(args: argparse.Namespace, spec: Dict[str, Any]) -> Non
+     set_if_none("p2p_src_index", _spec_get(spec, "collective.src_index", _spec_get(spec, "p2p_src_index", None)))
+     set_if_none("p2p_dst_index", _spec_get(spec, "collective.dst_index", _spec_get(spec, "p2p_dst_index", None)))
+     set_if_none("p2p_direction", _spec_get(spec, "collective.direction", _spec_get(spec, "p2p_direction", None)))
++    args.plan = _spec_get(spec, "collective.plan", None)
+     participant_ranks = _spec_get(spec, "collective.participant_ranks", _spec_get(spec, "participant_ranks", None))
+     if isinstance(participant_ranks, (list, tuple)):
+         participant_ranks = ",".join(str(rank) for rank in participant_ranks)
+@@ -2073,7 +2122,7 @@ def run_htsim(
+ def main(argv: list[str]) -> int:
+     ap = argparse.ArgumentParser(description="Run htsim_ndp with a simple Python interface.")
+     ap.add_argument("--spec", type=str, default="", help="Spec file (JSON/YAML). CLI args override spec fields.")
+-    ap.add_argument("--collective-type", choices=["alltoall", "allreduce", "allgather", "reducescatter", "p2p", "t2g"], default=None)
++    ap.add_argument("--collective-type", choices=["alltoall", "allreduce", "allgather", "reducescatter", "p2p", "t2g", "plan"], default=None)
+     ap.add_argument("--domain-dims", type=str, default=None)
+     ap.add_argument("--placement-order", type=str, default=None)
+     ap.add_argument("--exclude-intra-server", default=None, action=argparse.BooleanOptionalAction)
+@@ -2380,7 +2429,7 @@ def main(argv: list[str]) -> int:
+     # Only an all-to-all defines an empty payload: every pair still exchanges one
+     # byte. The other kinds size their cross-server flows from the payload, and
+     # htsim never finishes a zero-size flow.
+-    if args.tensor_bytes == 0 and args.collective_type != "alltoall":
++    if args.tensor_bytes == 0 and args.collective_type not in ("alltoall", "plan"):
+         print(f"Error: tensor_bytes=0 is defined only for alltoall, not {args.collective_type}.", file=sys.stderr)
+         return 2
+ 
+@@ -2440,6 +2489,7 @@ def main(argv: list[str]) -> int:
+ 
+     collective_spec = CollectiveSpec(
+         collective_type=str(args.collective_type),
++        plan=getattr(args, "plan", None),
+         domain_dims=_parse_dim_list(args.domain_dims),
+         placement_order=_parse_dim_list(args.placement_order),
+         exclude_intra_server=bool(args.exclude_intra_server),
+diff --git a/python/collective_sim_core/intra_server_model.py b/python/collective_sim_core/intra_server_model.py
+index aa1031c..28349d7 100644
+--- a/python/collective_sim_core/intra_server_model.py
++++ b/python/collective_sim_core/intra_server_model.py
+@@ -126,6 +126,83 @@ def estimate_intra_server_ms(scenario: Scenario) -> Tuple[float, Dict[str, Any]]
+     }
+ 
+ 
++def _affine_service(record, operand_bytes, *, positive_slope=True):
++    a, b = record["a_ms"], record["b_ms_per_byte"]
++    lower, upper = record["range_bytes"]
++    if (any(not math.isfinite(v) for v in (a, b, lower, upper)) or a < 0 or b < 0
++            or (positive_slope and b == 0) or not 0 < lower <= operand_bytes <= upper):
++        raise ValueError("Invalid affine coefficients or unsupported physical byte range")
++    if record["design_matrix_rank"] != 2 or record["distinct_sizes"] < 3:
++        raise ValueError("Affine service requires identified slope/intercept and three sizes")
++    qualification = record["qualification"]
++    if (qualification["status"] != "PASS" or not qualification["independent"]
++            or not qualification["observations"] or not record["calibration_receipt"]):
++        raise ValueError("Affine service requires independent qualification and raw receipts")
++    if not all(math.isfinite(v) for v in record["signed_residuals_ms"]):
++        raise ValueError("Signed calibration residuals must remain finite and preserved")
++    return a + b * operand_bytes
++
++
++def estimate_plan_local_ms(scenario: Scenario):
++    """Measured HBM proxies, or calibrated full-device TP8 ring approximation."""
++    plan, params = scenario.collective.plan, scenario.collective.local_parameters
++    if params["context"] != plan["context"] or not params["model_identity"]:
++        raise ValueError("Local model/native context identity mismatch")
++    if params["evidence_kind"] not in ("native_measurement", "cpu_fixture"):
++        raise ValueError("Local service requires explicit measured or CPU-fixture evidence")
++    phase, tensors, sizes = plan["phase"], plan["tensors"], plan["sizes"]
++    if phase in ("shared_tp", "routed_tp"):
++        cfg = params["tp_nvlink"]
++        bw, efficiency = cfg["nvlink_one_way_bw_GBps"], cfg["nvlink_efficiency"]
++        latency, overhead = cfg["nvlink_latency_us"], cfg["nvlink_allreduce_launch_overhead_us"]
++        if (not all(math.isfinite(v) for v in (bw, efficiency, latency, overhead))
++                or bw <= 0 or not 0 < efficiency <= 1 or min(latency, overhead) < 0):
++            raise ValueError("Invalid calibrated TP8 effective NVLink parameters")
++        bytes_per_row = tensors[0]["columns"] * tensors[0]["element_size"]
++        values = []
++        for rows in sizes:
++            operand = rows * bytes_per_row
++            fitted = _affine_service(cfg["fit"], operand)
++            modeled = (2 * (8-1) / 8 * operand / (bw * efficiency * 1e9) * 1000
++                       + 2 * (8-1) * (latency + overhead) / 1000)
++            if not math.isclose(fitted, modeled, rel_tol=1e-10, abs_tol=1e-12):
++                raise ValueError("TP8 effective fields disagree with their measured affine fit")
++            values.append(modeled)
++        return tuple(values[rank // 8] for rank in range(16)), 0.0
++    for rank in range(16):
++        own_rows, total_rows = sizes[rank // 8], sum(sizes)
++        copies = params["copy"][str(rank)]
++        for tensor in tensors:
++            row_bytes = tensor["columns"] * tensor["element_size"]
++            copy = copies[tensor["name"]]
++            own, total = own_rows * row_bytes, total_rows * row_bytes
++            _affine_service(copy, total / 2)
++            if phase == "dispatch":
++                _affine_service(copy, own)
++            else:
++                _affine_service(copy, own)
++                _affine_service(params["reduce"][str(rank)], own)
++    feature = sum(sizes) * sum(t["columns"] * t["element_size"] for t in tensors)
++    remainder = _affine_service(params["protocol"], feature, positive_slope=False)
++    return plan_memory_service_ms(plan,params["copy"],params["reduce"]), remainder
++
++
++def plan_memory_service_ms(plan, copies, reductions):
++    """One frozen HBM proxy equation, also used before candidate remainder fitting."""
++    per_rank=[]
++    for rank in range(16):
++        value=0.
++        for tensor in plan["tensors"]:
++            row_bytes=tensor["columns"]*tensor["element_size"]
++            own=plan["sizes"][rank//8]*row_bytes
++            copy=copies[str(rank)][tensor["name"]]
++            local=copy if plan["phase"] == "dispatch" else reductions[str(rank)]
++            value+=local["a_ms"]+local["b_ms_per_byte"]*own
++            value+=copy["b_ms_per_byte"]*sum(plan["sizes"])*row_bytes/2
++        per_rank.append(value)
++    return tuple(per_rank)
++
++
+ def _estimate_intra_bytes_per_rank(scenario: Scenario) -> float:
+     # g: GPUs per server in the domain group (1 = fully cross-server, no NVLink needed)
+     # n: total ranks in the domain group
+diff --git a/python/collective_sim_core/predictor.py b/python/collective_sim_core/predictor.py
+index 78a262c..bd1f7ad 100644
+--- a/python/collective_sim_core/predictor.py
++++ b/python/collective_sim_core/predictor.py
+@@ -1,17 +1,29 @@
+ from __future__ import annotations
+ 
+ from pathlib import Path
++import math
+ from typing import Any, Dict, Union
+ 
+ from .intra_server_model import (
+     _compute_g_in_group,
+     _compute_n_group,
+     estimate_intra_server_ms,
++    estimate_plan_local_ms,
+ )
+ from .runner import run_htsim_runner
+ from .schema import Scenario
+ 
+ 
++def completed_plan_network_ms(payload):
++    """Require the nonempty joint workload to finish before using its makespan."""
++    expected,finished=payload.get("expected_flows"),payload.get("finished_flows")
++    makespan=float(payload.get("makespan_us",float("nan")))
++    if (type(expected) is not int or expected <= 0 or type(finished) is not int or
++            finished != expected or not math.isfinite(makespan) or makespan <= 0):
++        raise ValueError("Joint Step HTSIM requires all flows and a positive finite completed makespan")
++    return makespan/1000
++
++
+ def predict_collective_time(
+     scenario: Union[Scenario, Dict[str, Any]],
+     *,
+@@ -21,6 +33,24 @@ def predict_collective_time(
+     sc.validate()
+ 
+     root = Path(repo_root) if repo_root else Path(__file__).resolve().parents[2]
++    if sc.collective.plan is not None:
++        local_rank_ms, remainder_ms = estimate_plan_local_ms(sc)
++        tp_only = sc.collective.plan["phase"] in ("shared_tp", "routed_tp")
++        payload = {} if tp_only else run_htsim_runner(
++            repo_root=root, spec=sc.to_runner_spec(), out_dir=sc.runner.out_dir)
++        network_ms = 0.0 if tp_only else completed_plan_network_ms(payload)
++        total = network_ms + max(local_rank_ms) + remainder_ms
++        return {
++            "predicted_time_ms": total,
++            "breakdown": {"network_ms": network_ms, "local_rank_ms": local_rank_ms,
++                          "intra_server_ms": max(local_rank_ms), "remainder_ms": remainder_ms,
++                          "combined_ms": total, "combine_rule": "sum"},
++            "assumptions": {"network": "joint8rails_ordered_tensor_root_element_stripes",
++                            "local": "calibrated_full_device_tp8" if tp_only else "measured_copy_add_hbm_proxy",
++                            "remainder": "fitted_effective_remainder_not_isolated_protocol",
++                            "overlap": "none", "evidence_kind": sc.collective.local_parameters["evidence_kind"]},
++            "raw_runner_payload": payload,
++        }
+     payload = run_htsim_runner(repo_root=root, spec=sc.to_runner_spec(), out_dir=sc.runner.out_dir)
+ 
+     raw_network_ms = float(payload.get("makespan_us", 0.0)) / 1000.0
+diff --git a/python/collective_sim_core/schema.py b/python/collective_sim_core/schema.py
+index 2417680..89d0ca5 100644
+--- a/python/collective_sim_core/schema.py
++++ b/python/collective_sim_core/schema.py
+@@ -85,6 +85,8 @@ class CollectiveConfig:
+     # When set, runner will simulate this specific communication group instead of
+     # enumerating all domain groups.
+     participant_ranks: Optional[Tuple[int, ...]] = None
++    plan: Optional[Dict[str, Any]] = None
++    local_parameters: Optional[Dict[str, Any]] = None
+ 
+ 
+ @dataclass(frozen=True)
+@@ -143,6 +145,24 @@ class Scenario:
+             raise ValueError(
+                 f"nodes mismatch: tp*cp*dp*ep={nodes} but servers*gpus_per_server={expected_nodes}"
+             )
++        if self.collective.plan is not None:
++            validate_collective_plan(self.collective.plan)
++            if (self.collective.kind != "plan" or self.collective.tensor_bytes != 0
++                    or self.collective.participant_ranks is not None):
++                raise ValueError("Plan must not contain scalar payload or participant override")
++            if (self.cluster != ClusterConfig(2, 8) or self.parallelism != ParallelismConfig(tp=8, dp=2)
++                    or tuple(self.collective.placement_order or ()) != ("TP", "DP")):
++                raise ValueError("Step plan requires the frozen two-node TP8/DP2 layout")
++            if self.collective.intra_server_combine_rule != "sum" or not self.collective.use_triggers:
++                raise ValueError("Step plan requires sum/no-overlap and group-local triggers")
++            if self.collective.local_parameters is None:
++                raise ValueError("Step plan requires measured local/remainder parameters")
++            for selector in (self.collective.allreduce_model, self.collective.allgather_model,
++                             self.collective.reducescatter_model):
++                if selector not in ("ring_steps", "nccl_ring"):
++                    raise ValueError("Unsupported frozen Step collective algorithm")
++            if type(self.collective.nchannels) is not int or self.collective.nchannels <= 0:
++                raise ValueError("Step channels must be positive")
+         if self.cluster.gpus_per_server % self.parallelism.tp != 0:
+             raise ValueError("gpus_per_server must be divisible by tp")
+         if self.topology.kind not in SUPPORTED_TOPOLOGY_KINDS:
+@@ -271,6 +291,7 @@ class Scenario:
+             },
+             # htsim_runner reads collective params from collective.* (primary path).
+             "collective": {
++                **({"plan": self.collective.plan} if self.collective.plan is not None else {}),
+                 "type": self.collective.kind,
+                 "tensor_bytes": self.collective.tensor_bytes,
+                 "domain_dims": list(self.collective.domain_dims or ()),
+@@ -327,3 +348,35 @@ class Scenario:
+             runner=runner,
+             intra_server=intra_server,
+         )
++
++
++def validate_collective_plan(plan: Dict[str, Any]) -> None:
++    """Validate serialized workload facts, not another native operator registry."""
++    phase, sizes, tensors = plan["phase"], plan["sizes"], plan["tensors"]
++    if phase not in ("dispatch", "combine", "shared_tp", "routed_tp"):
++        raise ValueError("Unsupported Step plan phase")
++    if len(sizes) != 2 or any(type(n) is not int or n <= 0 for n in sizes):
++        raise ValueError("Step plan needs exact positive DP2 sizes")
++    expected = ([[t, 8+t] for t in range(8)] if phase in ("dispatch", "combine") else
++                [list(range(8)), list(range(8, 16))])
++    if [list(g) for g in plan["groups"]] != expected:
++        raise ValueError("Step plan groups disagree with TP8/DP2 rank order")
++    if not tensors or len({t["name"] for t in tensors}) != len(tensors):
++        raise ValueError("Step requires distinct ordered tensors")
++    if phase != "dispatch" and len(tensors) != 1:
++        raise ValueError("Step combine/TP requires one output tensor")
++    for t in tensors:
++        if not t["name"] or not t["dtype"] or any(type(t[k]) is not int or t[k] <= 0
++                for k in ("columns", "row_stride", "element_size")) or t["columns"] != t["row_stride"]:
++            raise ValueError("Step tensor geometry must be positive and contiguous")
++    if plan["graph_mode"] not in ("none", "full") or (plan["graph_mode"] == "full" and sizes[0] != sizes[1]):
++        raise ValueError("Invalid actual Step graph modality/physical sizes")
++    if not plan["context"] or not plan["buffers"]:
++        raise ValueError("Step requires native context and buffer receipts")
++    uniform = sizes[0] == sizes[1]
++    primitive = ("AllGather" if phase == "dispatch" else "ReduceScatter") if uniform else (
++        "Broadcast" if phase == "dispatch" else "Reduce")
++    stages = ([['AllReduce', 0, None]] if phase in ("shared_tp", "routed_tp") else
++              [[primitive, j, root] for j in range(len(tensors)) for root in ((None,) if uniform else (0, 1))])
++    if [list(s) for s in plan["stages"]] != stages:
++        raise ValueError("Step plan has missing/duplicate/out-of-order tensor/root stages")
+diff --git a/tests/test_grouped_plan_input.py b/tests/test_grouped_plan_input.py
+new file mode 100644
+index 0000000..a0a7596
+--- /dev/null
++++ b/tests/test_grouped_plan_input.py
+@@ -0,0 +1,119 @@
++"""Real serialized lowering and independent numerical proxy checks (CPU only)."""
++from dataclasses import replace
++from pathlib import Path
++import sys
++
++import pytest
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "python"))
++sys.path.insert(0, str(ROOT))
++from collective_sim_core.schema import (Scenario, ClusterConfig, ParallelismConfig,
++    CollectiveConfig, validate_collective_plan)
++from collective_sim_core.intra_server_model import estimate_plan_local_ms
++from htsim_runner import CollectiveSpec, generate_tm_from_spec, lower_collective_plan
++
++
++def workload(sizes=(16, 1), phase="dispatch"):
++    tensors = [{"name":n, "dtype":d, "columns":c, "element_size":b, "row_stride":c}
++        for n,d,c,b in (("activation","float8_e4m3fn",4096,1),
++        ("weights","float32",8,4),("ids","int32",8,4),("scales","float32",32,4))]
++    if phase != "dispatch":
++        tensors = [{"name":"output", "dtype":"bfloat16", "columns":4096,
++                    "element_size":2, "row_stride":4096}]
++    uniform = sizes[0] == sizes[1]
++    primitive = ("AllGather" if phase == "dispatch" else "ReduceScatter") if uniform else (
++                 "Broadcast" if phase == "dispatch" else "Reduce")
++    return dict(phase=phase, sizes=sizes, tensors=tensors, groups=[[t,8+t] for t in range(8)],
++        graph_mode="none", context={"evidence_kind":"cpu_fixture"}, buffers={"ordinary":True},
++        stages=[[primitive,j,r] for j in range(len(tensors)) for r in ((None,) if uniform else (0,1))])
++
++
++def affine(a=1., b=.001):
++    return dict(a_ms=a, b_ms_per_byte=b, range_bytes=[1,100000000], design_matrix_rank=2,
++        distinct_sizes=3, calibration_receipt="cpu_fixture", signed_residuals_ms=[-.1,.2,0.],
++        qualification={"status":"PASS", "independent":True,"observations":["cpu_fixture"]})
++
++
++def scenario(plan):
++    params = dict(context=plan["context"], model_identity="cpu_fixture", evidence_kind="cpu_fixture",
++        copy={str(r):{d:affine() for d in ("activation","weights","ids","scales","output")}
++              for r in range(16)}, reduce={str(r):affine(2.) for r in range(16)}, protocol=affine(3.,0.))
++    return Scenario(ClusterConfig(2,8), ParallelismConfig(tp=8,dp=2), collective=CollectiveConfig(
++        kind="plan", tensor_bytes=0, domain_dims=("DP",), placement_order=("TP","DP"),
++        intra_server_combine_rule="sum", plan=plan, local_parameters=params))
++
++
++@pytest.mark.parametrize("sizes,phase", [((16,1),"dispatch"),((1,16),"combine"),
++                                        ((1,1),"dispatch"),((1,1),"combine")])
++def test_serialized_lowering_conservation_dependencies_and_joint_rails(tmp_path,sizes,phase):
++    plan = workload(sizes,phase)
++    sc = scenario(plan)
++    serial = sc.to_runner_spec()
++    assert serial["collective"]["plan"] == plan
++    spec = CollectiveSpec("plan", ("DP",), ("TP","DP"), True, plan=plan,
++                          use_triggers=True,nchannels=11,allgather_model="nccl_ring",reducescatter_model="nccl_ring")
++    flows, barriers = lower_collective_plan(spec,plan["groups"])
++    assert all(f.size > 0 for f in flows)
++    assert sum(f.size for f in flows) == 8*sum(sizes)*sum(t["columns"]*t["element_size"] for t in plan["tensors"])
++    assert {f.src % 8 for f in flows if f.start == 0} == set(range(8))
++    for barrier in barriers:
++        producers = [f for f in flows if f.send_done_trigger == barrier.id]
++        consumers = [f for f in flows if f.trigger == barrier.id]
++        assert len(producers) == barrier.count and consumers
++        assert len({f.src % 8 for f in producers+consumers}) == 1
++    path,count = generate_tm_from_spec(tmp_path,spec=spec,nodes=16,servers=2,gpus_per_server=8,
++        tp=8,cp=1,dp=2,ep=1,tensor_bytes=0,seed=1)
++    assert count == len(flows) and "size 0" not in path.read_text()
++    assert len(barriers) == 8*(len(plan["stages"])-1)
++
++
++def test_local_proxy_and_signed_fit_evidence_are_not_zero_or_clipped():
++    sc=scenario(workload())
++    ranks,remainder=estimate_plan_local_ms(sc)
++    rowbytes=4288
++    assert ranks[0] == pytest.approx(4+.001*16*rowbytes+.001*17*rowbytes/2)
++    assert ranks[8] == pytest.approx(4+.001*rowbytes+.001*17*rowbytes/2)
++    assert remainder == 3. and sc.collective.local_parameters["protocol"]["signed_residuals_ms"][0] < 0
++    sc.collective.local_parameters["copy"]["0"]["weights"]["b_ms_per_byte"]=0
++    with pytest.raises(ValueError,match="coefficients"):
++        estimate_plan_local_ms(sc)
++
++
++def test_plan_rejects_scalar_override_missing_stages_and_wrong_placement():
++    sc=scenario(workload())
++    with pytest.raises(ValueError,match="scalar"):
++        replace(sc,collective=replace(sc.collective,tensor_bytes=1)).validate()
++    plan=workload(); plan["stages"].pop()
++    with pytest.raises(ValueError,match="stages"):
++        validate_collective_plan(plan)
++    with pytest.raises(ValueError,match="layout"):
++        replace(sc,parallelism=ParallelismConfig(tp=4,dp=4)).validate()
++
++
++def test_actual_htsim_completes_all_joint_flows_and_composes_the_result(tmp_path):
++    if not (ROOT / "sim/datacenter/htsim_ndp").exists():
++        pytest.skip("HTSIM binary is unavailable; lowering tests still execute")
++    from collective_sim_core import predict_collective_time
++    from collective_sim_core.schema import RunnerConfig, TopologyConfig
++    sc=replace(scenario(workload()), runner=RunnerConfig(out_dir=str(tmp_path),stop_on_finished=True),
++               topology=TopologyConfig(kind="rail",servers_per_tor=1))
++    result=predict_collective_time(sc,repo_root=ROOT)
++    raw=result["raw_runner_payload"]; breakdown=result["breakdown"]
++    assert raw["finished_flows"] == raw["expected_flows"] > 0
++    assert raw["tm_total_bytes"] == 8*17*4288 and breakdown["network_ms"] > 0
++    assert result["predicted_time_ms"] == pytest.approx(breakdown["network_ms"]+109.056+3.)
++
++
++@pytest.mark.parametrize("payload", [
++    {"expected_flows":8,"finished_flows":7,"makespan_us":1.},
++    {"expected_flows":8,"finished_flows":0,"makespan_us":0.},
++    {"expected_flows":8,"finished_flows":8,"makespan_us":0.},
++    {"expected_flows":8,"finished_flows":8,"makespan_us":float("nan")},
++    {"expected_flows":8,"finished_flows":8,"makespan_us":float("inf")},
++])
++def test_joint_plan_rejects_incomplete_or_invalid_runner_results(monkeypatch,payload):
++    from collective_sim_core import predictor
++    monkeypatch.setattr(predictor,"run_htsim_runner",lambda **kw:payload)
++    with pytest.raises(ValueError,match="completed"):
++        predictor.predict_collective_time(scenario(workload()),repo_root=ROOT)

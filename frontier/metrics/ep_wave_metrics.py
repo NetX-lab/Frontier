@@ -26,6 +26,9 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
     for record in phases.lane_records:
         batch = record.batch
         layer = record.execution_time.layer_execution_times[0]
+        moe=layer.moe_or_mlp_time_component.operator_times
+        step5_frame=moe.physical_frame if moe is not None and moe.physical_frame else None
+        communication=layer.communication_time_component.operator_times
         destination_request_ids = [str(request.id) for request in batch.requests]
         source_rows = getattr(layer, "_dsv4_source_rows", None)
         request_ids = (source_rows["source_request_ids"] if source_rows is not None
@@ -43,6 +46,9 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
         if source_rows is not None:
             common.update(source_rows)
             common["synthetic_destination_request_ids"] = destination_request_ids
+        if step5_frame is not None:
+            from dataclasses import asdict
+            common["routing_source"]=asdict(step5_frame["routing_source"])
         layer_metadata = None
         if trace_enabled:
             total_tokens = sum(batch.num_tokens)
@@ -68,11 +74,18 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                           else batch.get_effective_total_tokens_for_compute(cluster_type))
                 if source_rows is not None and not routed:
                     tokens = source_rows["physical_local_rows"]
+                if step5_frame is not None:
+                    source=step5_frame["routing_source"]
+                    source_lane=source.source_lanes[record.ep_id//replica.attn_tensor_parallel_size]
+                    tokens=source.gathered_physical_rows if routed else source_lane.physical_rows
                 context = OpTraceContext(
                     cluster_type, replica.model_config, replica,
                     total_tokens, tokens, tokens, tokens, routed,
                     global_layer_id=layer.global_layer_id, layer_metadata=layer_metadata,
                     pre_routing_tokens=batch.get_effective_total_tokens_for_compute(cluster_type),
+                    step5_moe_frame=step5_frame,
+                    collective_plans=communication.plans if communication is not None else None,
+                    collective_costs=communication.costs if communication is not None else None,
                 )
                 parallel_context = build_parallel_context(context)
             for kind, name, duration in operators:
@@ -103,6 +116,13 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                         meta=meta,
                     ))
                 cursor += duration * 1e-3
+            if ledger_enabled and communication is not None:
+                from dataclasses import asdict
+                ledger_phases[phase]["collective_proofs"]={name:dict(plan=communication.plans[name].to_dict(),
+                    cost=asdict(communication.costs[name])) for _,name,_ in operators if name in communication.plans}
+            if ledger_enabled and step5_frame is not None:
+                ledger_phases[phase]["compute_proofs"]={name:step5_frame["operator_costs"][name]
+                    for kind,name,_ in operators if kind == "COMPUTE" and name in step5_frame["operator_costs"]}
         if ledger_enabled:
             store._frontier_ep_wave_lane_ledger_rows.append({
                 **common, "record_type": "ep_wave_lane", "cluster": cluster_type.name,

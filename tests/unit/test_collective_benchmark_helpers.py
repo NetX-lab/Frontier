@@ -291,7 +291,7 @@ def test_inactive_rank_still_joins_instance_barrier_and_gather(op):
     assert runner.measure(types.SimpleNamespace(), call) is None
     assert runner.kernel_names(call) is None
     assert events == [("barrier", "instance_cpu"), ("gather", None),
-                      ("barrier", "instance_cpu"), ("gather", [])]
+                       ("barrier", "instance_cpu"), ("gather", {"kernels":[], "graph_events":[]})]
 
 
 def test_call_record_retains_shapes_active_groups_and_useful_padding():
@@ -327,6 +327,54 @@ def test_fp8_allocation_casts_supported_fill_dtype():
     assert runner._tensors(call, 3, "cuda:0") == ["fp8", "fp32", "int32", "fp32"]
     assert allocations[0] == ((3, 4096), "bf16", "cuda:0")
     assert casts == ["fp8", "fp32", "int32", "fp32"]
+
+
+@pytest.mark.parametrize("op",["reduce_scatterv_into_output","local_copy","local_add"])
+def test_preallocated_issue_keeps_real_buffers_and_has_no_extra_copy(monkeypatch,op):
+    allocations,copies,calls=[],[],[]
+    class Tensor:
+        dtype="bf16"
+        def __init__(self,shape): self.shape=shape;allocations.append(self)
+        def to(self,**kwargs): return self
+        def stride(self): return self.shape[1],1
+        def element_size(self): return 2
+        def data_ptr(self): return id(self)
+        def copy_(self,source): copies.append((self,source));return self
+    runner=_runner(_parallel(tp=8,dp=2))
+    runner.torch=types.SimpleNamespace(bfloat16="bf16",float8_e4m3fn="fp8",
+        ones=lambda shape,**kwargs:Tensor(shape),empty_like=lambda tensor:Tensor(tensor.shape),
+        add=lambda a,b,**kwargs:calls.append((a,b,kwargs["out"])))
+    group=runner.groups["dp"]
+    group.device_communicator=types.SimpleNamespace(pynccl_comm=types.SimpleNamespace(nccl_version=22902))
+    def into_output(tensor,output,**kwargs):
+        calls.append((output,tensor,kwargs));return output
+    group.reduce_scatterv_into_output=into_output
+    vllm=types.ModuleType("vllm");vllm.envs=types.SimpleNamespace(VLLM_USE_NCCL_SYMM_MEM=False,VLLM_BATCH_INVARIANT=False)
+    allocator=types.ModuleType("vllm.distributed.device_communicators.pynccl_allocator")
+    allocator.is_symmetric_memory_tensor=lambda tensor:False
+    utils=types.ModuleType("vllm.distributed.device_communicators.all_reduce_utils")
+    utils.should_nccl_symm_mem_ag_rs=lambda:False
+    cuda=types.ModuleType("vllm.distributed.device_communicators.cuda_communicator")
+    cuda.NCCL_DIRECT_SYMM_RS_OUTPUT_MIN_VERSION=22902
+    monkeypatch.setitem(sys.modules,"vllm",vllm)
+    monkeypatch.setitem(sys.modules,allocator.__name__,allocator)
+    monkeypatch.setitem(sys.modules,utils.__name__,utils)
+    monkeypatch.setitem(sys.modules,cuda.__name__,cuda)
+    call=replace(_call(runner.parallel,op=op,group="dp"),shard_rows=(16,)*8+(1,)*8)
+    issue=runner._issue(call);count=len(allocations)
+    issue();issue()
+    assert len(allocations) == count
+    if op == "reduce_scatterv_into_output":
+        receipt=issue.buffer_receipt
+        assert receipt["input"]["shape"] == [17,4] and receipt["output"]["shape"] == [16,4]
+        assert receipt["return_output_alias"] and not receipt["input_output_alias"]
+        assert receipt["staging_copy_count"] == receipt["staging_copy_bytes"] == 0
+        assert all(c[0] is calls[0][0] and c[1] is calls[0][1] for c in calls)
+        assert not copies
+    elif op == "local_add":
+        assert len(calls) == 2 and not copies
+    else:
+        assert len(copies) == 2
 
 
 def test_host_prepare_and_timing_never_use_cuda(monkeypatch):
@@ -430,6 +478,64 @@ def test_native_launch_flag_and_manifest_preserve_platform_nccl(monkeypatch, eng
     assert runtime["enabled_communicators"]["tp"]["fi_ar_comm"] is True
     assert runtime["pynccl_versions"] == {"tp": 23007, "ep": 23007, "dp": 23007}
     assert runtime["nccl_log_destination"] == os.environ.get("NCCL_DEBUG_FILE", "stderr (stage wrapper log)")
+    from frontier.profiling.collectives.vllm_collective_benchmark import collective_runtime_policy
+    policy=collective_runtime_policy(runtime)
+    assert policy["nccl_environment"] == {"NCCL_IB_HCA":"platform_hca"}
+    assert policy["vllm_environment"]["VLLM_USE_NCCL_SYMM_MEM"]["source"] == "image_default"
+    assert policy["pynccl_versions"] == runtime["pynccl_versions"]
+
+
+@pytest.mark.parametrize("captured",[False,True])
+def test_selected_policy_observation_is_outside_timed_eager_and_inside_capture(monkeypatch,captured):
+    from frontier.profiling.collectives import vllm_collective_benchmark as benchmark
+    runner=_runner(_parallel());runner.identity_errors=[];events=[]
+    issue=lambda:events.append("native")
+    issue.inputs=[]
+    runner._issue=lambda call:issue
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
+    def observe(group,inputs,operation,**kwargs):
+        events.append("policy");return operation(),dict(diagnostic_errors=[],branches=["cpu_fixture"])
+    monkeypatch.setattr(benchmark,"observe_collective_execution",observe)
+    runner.communicators=lambda:dict.fromkeys(("torch","vllm","enabled_communicators","pynccl_versions",
+        "disable_custom_all_reduce","disable_nccl_for_dp_synchronization","vllm_environment"),"cpu_fixture") | {"nccl_environment":{}}
+    runner.torch=types.SimpleNamespace(cuda=types.SimpleNamespace(synchronize=lambda:None,
+        CUDAGraph=lambda:types.SimpleNamespace(replay=lambda:events.append("replay")),
+        graph=lambda *a,**kw:nullcontext()))
+    runner.groups["dp"].graph_capture=lambda:nullcontext(types.SimpleNamespace(stream="cpu_fixture"))
+    prepared,run=runner.prepare(_call(runner.parallel,captured=captured))
+    assert events.count("policy") == (3 if captured else 1)
+    events.clear();run()
+    assert events == (["replay"] if captured else ["native","native"])
+    assert prepared.execution_policy["runtime"]["torch"] == "cpu_fixture"
+
+
+@pytest.mark.parametrize("diagnostic_error",[False,True])
+def test_observed_policy_uses_actual_native_branch_and_preserves_errors(monkeypatch,diagnostic_error):
+    from frontier.profiling.collectives import vllm_collective_benchmark as benchmark
+    tensor=types.SimpleNamespace(data_ptr=lambda:1)
+    calls=[]
+    pynccl=types.SimpleNamespace(reduce_scatterv=lambda *a,**kw:calls.append("native") or tensor)
+    original=pynccl.reduce_scatterv
+    group=types.SimpleNamespace(device_communicator=types.SimpleNamespace(pynccl_comm=pynccl))
+    allocator=types.ModuleType("vllm.distributed.device_communicators.pynccl_allocator")
+    def registered(value):
+        if diagnostic_error: raise ValueError("policy_diagnostic_failed")
+        return False
+    allocator.is_symmetric_memory_tensor=registered
+    monkeypatch.setitem(sys.modules,allocator.__name__,allocator)
+    monkeypatch.setitem(sys.modules,"torch",types.SimpleNamespace(distributed=types.SimpleNamespace(),
+        ops=types.SimpleNamespace(vllm=types.SimpleNamespace())))
+    result,policy=benchmark.observe_collective_execution(group,[tensor],lambda:pynccl.reduce_scatterv(tensor),output=tensor)
+    assert result is tensor and calls == ["native"]
+    if diagnostic_error: assert "policy_diagnostic_failed" in policy["diagnostic_errors"][0]
+    else:
+        assert policy["branches"] == ["pynccl_comm.reduce_scatterv"]
+        assert policy["buffers"]["supplied_output"] and policy["buffers"]["return_output_alias"]
+    error=RuntimeError("native_error")
+    with pytest.raises(RuntimeError) as caught:
+        benchmark.observe_collective_execution(group,[tensor],lambda:(_ for _ in ()).throw(error))
+    assert caught.value is error
+    assert pynccl.reduce_scatterv is original
 
 
 @pytest.mark.parametrize("isolated", [False, True])
@@ -468,6 +574,50 @@ def test_pass_order_is_a_seeded_permutation():
     assert first == pass_order(items, 7, 0) and sorted(first) == items
     assert first != pass_order(items, 7, 1) and first != items
     assert pass_order(items, 6, 1) == pass_order(items, 7, 0)
+
+
+@pytest.mark.parametrize("native_error",[False,True,None])
+def test_collector_identity_fault_is_soft_and_native_failure_is_original(tmp_path,monkeypatch,native_error):
+    from frontier.profiling.collectives import vllm_collective_benchmark as benchmark
+    from frontier.profiling.common import runtime_identity
+    definition=json.loads((Path(__file__).parents[1]/"integration/step5_comm/step5_position_model_run.json").read_text())
+    definition.update(model_config=str(Path(__file__).parents[2]/"data/config/models/stepfun-ai__Step-5-Preview.json"),
+        output_dir=str(tmp_path/"output"),profile_manifest="cpu_fixture",passes=1)
+    definition["grid"]=dict(scenarios=definition["grid"]["scenarios"][:1],native_call_names=["moe_combine_reduce_scatterv"])
+    if native_error is None: definition.pop("profile_manifest")
+    config=tmp_path/"config.json";config.write_text(json.dumps(definition))
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
+    for k,v in definition["native_environment"].items(): monkeypatch.setenv(k,v)
+    monkeypatch.setattr(runtime_identity,"verify_step5_profile_runtime",lambda *a,**kw:(_ for _ in ()).throw(ValueError("bad_source")))
+    error=RuntimeError("native_collective_failed");calls=[]
+    class Runner:
+        rank=0;instance_cpu=None
+        groups={"dp":types.SimpleNamespace(all_gatherv=lambda:None,reduce_scatterv_into_output=lambda:None,all_reduce=lambda:None)}
+        torch=types.SimpleNamespace(distributed=types.SimpleNamespace(barrier=lambda **kw:None))
+        def __init__(self,*a,**kw): pass
+        def communicators(self): return {"evidence_kind":"cpu_fixture"}
+        def gather(self,value): return [value,["rank8_bad_source"]]
+        def measure(self,s,c):
+            calls.append(c.name)
+            if native_error: raise error
+            return None
+        def kernel_names(self,*a):
+            self._last_kernel_evidence={};return []
+    monkeypatch.setattr(benchmark,"CollectiveRunner",Runner)
+    monkeypatch.setattr(sys,"argv",["benchmark","--config",str(config)])
+    if native_error:
+        with pytest.raises(RuntimeError) as caught: benchmark.main()
+        assert caught.value is error
+    else:
+        benchmark.main()
+        if native_error is None:
+            assert set(json.loads((tmp_path/"output/plan.json").read_text())) == {"config","cases","runtime"}
+            assert not (tmp_path/"output/native_identity.json").exists()
+        else:
+            result=json.loads((tmp_path/"output/native_identity.json").read_text())
+            assert result["status"] == "UNVERIFIED" and "bad_source" in result["errors"][0]
+            assert "rank8_bad_source" in result["errors"]
+    assert calls == ["moe_combine_reduce_scatterv"]
 
 
 def test_network_rows_keep_eager_single_node_tp_all_reduce():

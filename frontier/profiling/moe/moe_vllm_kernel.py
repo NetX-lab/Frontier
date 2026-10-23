@@ -74,6 +74,18 @@ def validate_moe_quantization_mode(*, use_fp8: bool, use_mxfp4: bool) -> str:
     return "bf16"
 
 
+def prepared_moe_profile_scopes(native, source_hidden, gathered_hidden, scales, weights, ids, expert_map):
+    """Disjoint original-native callables consumed by the selected cell timer."""
+    from frontier.operators.families import get_moe_profiling_operators
+    context = native.prepared_context(gathered_hidden, scales, topk_ids=ids, expert_map=expert_map)
+    context.update(model_architecture_profile="step5", routing_runtime_path="position_cyclic")
+    scopes = {"moe_grouped_gemm": lambda: native.apply_prepared(
+        gathered_hidden, scales, weights, ids, expert_map, in_dtype=source_hidden.dtype)}
+    if any(op.name == "moe_input_quantize" for op in get_moe_profiling_operators(context)):
+        scopes["moe_input_quantize"] = lambda: native.prepare_source(source_hidden)
+    return scopes, context
+
+
 def plan_mxfp4_weight_layout(
     *,
     num_experts: int,
