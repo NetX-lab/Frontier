@@ -1,0 +1,65 @@
+{
+  "task_id": "D29-CLI-TIMEOUT-REPRO",
+  "source_commit": "3763e5b87a845eac186cfd481f0b56cffb2dd045",
+  "bundle_path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/bundle_3e46232621a39c1c5f598921435bd41da1a4c1915b424bc53f3eba09a5bb3e37.json",
+  "loaded": [
+    {
+      "label": "moe_grouped_gemm:82e252d5",
+      "sha256": "725a481f616e307b28753fb05563f7460cfd42c370e2948d2412bdcc2f82e925",
+      "physical_rows": 16464,
+      "model_hash": "82e252d5"
+    }
+  ],
+  "actual_source": {
+    "moe_input_id": "cpu_fixture_q6128_c0",
+    "source_frames": [
+      {
+        "source_lane_id": 0,
+        "query_lens": [
+          6128
+        ],
+        "context_lens": [
+          0
+        ],
+        "physical_rows": 6128,
+        "gating_runtime_context": "standalone_legacy"
+      },
+      {
+        "source_lane_id": 1,
+        "query_lens": [],
+        "context_lens": [],
+        "physical_rows": 1,
+        "gating_runtime_context": "standalone_legacy"
+      }
+    ],
+    "gathered_physical_rows": 6129
+  },
+  "layer": 3,
+  "ep_id": 0,
+  "iterations": 2,
+  "wall_s": [
+    0.9194535780698061,
+    0.3690149621106684
+  ],
+  "json_load_calls": 0,
+  "result_sha256": "d2c141f088b52063edb539094fe3e0967f35e53303d70ebe2e8fbdbe4c86c952",
+  "group_resolutions": 0,
+  "layer_descriptions": 88,
+  "profile_layer_descriptions": 0,
+  "reuse_groups": false,
+  "profiled": false,
+  "execution": true,
+  "iteration_layer_descriptions": [
+    88,
+    0
+  ],
+  "verdict": "GREEN",
+  "red_condition": "More than one all-layer description pass across repeated identical actual source/point queries; call-count diagnostic, not 2400s acceptance",
+  "peak_rss_kib": 1199440,
+  "limits": "One actual prefill lane at layer3, same source/models/plans; verified paired-cache setup excluded from timing; test construction seam skips Simulator initialization, but production query/pricing/Cluster/backend calls are unchanged; no whole-workflow admission",
+  "setup_source": "tests.unit.test_step5_measured_ffn_replay._predictor; inherited production methods, explicit actual CLI replica/role/model/measurement/backend override",
+  "production_methods": {
+    "query": "frontier.execution_time_predictor.moe_routing_workload",
+    "pricing": "frontier.execution_time_predictor.sklearn_moe_execution_time_predictor"
+  }
+}
