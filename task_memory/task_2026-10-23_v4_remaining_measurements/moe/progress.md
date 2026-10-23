@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Inspected corrected root/native sources and existing package mechanisms. |
+| 2026-10-23 | Clarified the permission-refused CPU-control mkdir attempt in the boundary summary. |
 
 ## Status
 
@@ -19,7 +20,7 @@
 
 ## Boundaries
 
-No GPU, Docker, platform, auth, cloud, network or seal calls were performed. Existing source domains frontier/data/examples/fidelity/canonical_case are byte-identical to97803f0, enabling explicit existing77matrix binding after checking its original comparison bytes. Preparation never grants rank/time/weight/graph/serving admission.
+No GPU, Docker, platform, auth, network or seal calls were performed, and no successful cloud read/write occurred. One faulty CPU control attempted a local /mnt mkdir and received PermissionError; details and corrected controls are below. Existing source domains frontier/data/examples/fidelity/canonical_case are byte-identical to97803f0, enabling explicit existing77matrix binding after checking its original comparison bytes. Preparation never grants rank/time/weight/graph/serving admission.
 
 ## CPU test setup observations
 
