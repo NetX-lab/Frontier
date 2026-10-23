@@ -1,0 +1,23 @@
+{
+  "_comment": "Example: FP8 quantization for MLP operations.",
+  "version": "1.0",
+  "default_precision": "FP16",
+  "profiling_precision": "FP16",
+  "operations": {
+    "mlp_up_proj": {
+      "precision": "FP8",
+      "compute_speedup_factor": 2.0,
+      "description": "FP8 MLP up projection with assumed 2x speedup."
+    },
+    "mlp_down_proj": {
+      "precision": "FP8",
+      "compute_speedup_factor": 2.0,
+      "description": "FP8 MLP down projection with assumed 2x speedup."
+    },
+    "mlp_act": {
+      "precision": "FP8",
+      "compute_speedup_factor": 1.5,
+      "description": "FP8 activation with moderate speedup."
+    }
+  }
+}

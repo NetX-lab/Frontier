@@ -1,0 +1,428 @@
+{
+  "task_id": "W128-V4-MOE-PACKAGE",
+  "status": "CPU_CONTROLS_PASS_ACTUAL_IMAGE_GPU_PENDING",
+  "checks": {
+    "source": {
+      "status": "PASS_COMMITTED_BYTES",
+      "revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+      "files": 512
+    },
+    "native_source": {
+      "status": "PASS_COMMITTED_BYTES",
+      "revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+      "files": 474
+    },
+    "original": {
+      "status": "PASS_UNCHANGED",
+      "inputs": 527,
+      "manifest_sha256": "7929afaef9deced67543262ad9a3eec398048b68914fd0322b00c97416cbe360"
+    },
+    "immutable_inputs": {
+      "status": "PASS",
+      "inputs": 1003,
+      "manifest_sha256": "2ce8333148675cbec721c7f0f9710f70c1b031032be971ffcf7b1e754a1377f4",
+      "sealed": false,
+      "submitted": false
+    },
+    "entry_controls": {
+      "status": "PASS_FRESH_PATHS_CPU_ONLY",
+      "launcher_interpreters": 2,
+      "worker_runtime_and_cloud_entry_not_executed": true,
+      "resource_default_actual_SDK_gate": "ROOT_OWNS"
+    },
+    "worker_trace_copy": {
+      "status": "PASS_EXISTING_COPY_CPU_FIXTURE_NOT_GPU_TRACE",
+      "scratch": "/data/ycfeng/tmp/w128_v4_moe_copy_f81itl1t",
+      "report": {
+        "copied_files": [
+          "compute/moe.csv",
+          "profiler_traces/profiler_trace_sample.json",
+          "raw/original.bin"
+        ],
+        "trace_bytes_archived": 18,
+        "trace_bytes_left_on_worker": 0
+      },
+      "original_worker_sha256": "9f36cd2eacc5d764a8c84e4f9012e2d195fdcad6ce52902e395491262c1ee421",
+      "copied_worker_sha256": "9f36cd2eacc5d764a8c84e4f9012e2d195fdcad6ce52902e395491262c1ee421"
+    },
+    "EP16_RANK0_LOCAL_MOE_CUDA_EVENT": {
+      "status": "PASS_EXACT_4_ROWS",
+      "plan": {
+        "profile_method": "cuda_event",
+        "load_distributions": [
+          "balanced"
+        ],
+        "cases_per_parallel_point": 1,
+        "num_tokens": [
+          12288,
+          6152,
+          32,
+          16
+        ],
+        "models": {
+          "deepseek-ai/DeepSeek-V4-Flash": {
+            "num_experts": 256,
+            "num_experts_per_tok": 6,
+            "hidden_dim": 4096,
+            "use_fp8": true,
+            "block_shape": [
+              128,
+              128
+            ],
+            "local_experts_by_expert_parallel_size": {
+              "16": 16
+            },
+            "tensor_parallel_sizes": [
+              1
+            ],
+            "profiled_steps": 4
+          }
+        }
+      },
+      "output_dir": "/tmp/glm_producers/out/EP16_RANK0_LOCAL_MOE_CUDA_EVENT"
+    },
+    "EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION": {
+      "status": "PASS_EXACT_4_ROWS",
+      "plan": {
+        "profile_method": "record_function",
+        "load_distributions": [
+          "balanced"
+        ],
+        "cases_per_parallel_point": 1,
+        "num_tokens": [
+          12288,
+          6152,
+          32,
+          16
+        ],
+        "models": {
+          "deepseek-ai/DeepSeek-V4-Flash": {
+            "num_experts": 256,
+            "num_experts_per_tok": 6,
+            "hidden_dim": 4096,
+            "use_fp8": true,
+            "block_shape": [
+              128,
+              128
+            ],
+            "local_experts_by_expert_parallel_size": {
+              "16": 16
+            },
+            "tensor_parallel_sizes": [
+              1
+            ],
+            "profiled_steps": 4
+          }
+        }
+      },
+      "output_dir": "/tmp/glm_producers/out/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION"
+    },
+    "fresh_destination_refusal": {
+      "status": "PASS_INPUTS_UNCHANGED"
+    },
+    "matrix_binding": {
+      "status": "PASS_EXPLICIT_EXISTING_SOURCE_BINDING",
+      "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+      "comparison_source": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+      "inherited_source_binding": "97803f07f72454030a4d3fe538d7cdf473906b8a",
+      "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+      "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+      "identical_cases": 77,
+      "new_capture": false,
+      "unchanged_domains": [
+        "frontier",
+        "data",
+        "examples",
+        "tests/e2e/refactor_fidelity",
+        "tests/integration/canonical_case"
+      ]
+    },
+    "SDK_source_semantics": {
+      "status": "PASS_SOURCE_ONLY_ACTUAL_SDK_ROOT_OWNS",
+      "mem_gb": 128,
+      "memory_in_mb": 128000,
+      "preemptible_default": false,
+      "SDK_path": "/data/ycfeng/steptron/steptron/utils/stepmind.py",
+      "SDK_sha256": "bb691868e93b85748af02e5255204f3706ec56382457beb9612e66189574f647",
+      "ResourceConfig_path": "/data/ycfeng/steptron/steptron/exp/base_exp.py",
+      "ResourceConfig_sha256": "0fc88ea9fd70ad08f69d76637f4e05c65309f80ce81b4ff933c3b0d0320d4d37"
+    },
+    "native_pins": {
+      "status": "PASS_REFERENCE_SOURCE_AND_INHERITED_BINARY_PINS_ONLY",
+      "native_files": 474,
+      "installed_source_pins": 440,
+      "binary_pins": 20,
+      "actual_image_checks": false
+    },
+    "limits": {
+      "GPU": 0,
+      "platform": 0,
+      "successful_cloud_reads_or_writes": 0,
+      "network": 0,
+      "Docker": 0,
+      "seal": 0,
+      "admission": 0,
+      "earlier_cpu_control_attempted_local_cloud_path_mkdir": true,
+      "earlier_attempt_result": "PermissionError; no write; control now BaseException with audit prohibition"
+    }
+  },
+  "commands": [
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-I",
+        "-B",
+        "-c",
+        "import json,runpy,sys\nfrom pathlib import Path\nlauncher,config,root=sys.argv[1:]\nclass Boundary(BaseException):pass\ndef trace(frame,event,arg):\n if event=='call' and frame.f_code.co_filename==launcher and frame.f_code.co_name=='submit':\n  assert frame.f_globals['WORKSPACE']==Path(root)\n  assert frame.f_locals['config_path']==Path(config)\n  assert not any(n.startswith(('steptron','torch','vllm','pd_replay')) for n in sys.modules)\n  print(json.dumps({'status':'PASS_FRESH_ACTUAL_LAUNCHER_ENTRY','platform_calls':0,'dependency_preloads':0}));raise Boundary\n return trace\nsys.argv=[launcher,'submit','--config',config];sys.settrace(trace)\ntry:runpy.run_path(launcher,run_name='__main__')\nexcept Boundary:pass\nelse:raise AssertionError('Missing actual submit boundary')\n",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/launch/glm_producer_jobs.py",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/jobs/moe.json",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+      "environment": {
+        "PYTHONPATH": null,
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": null,
+        "STEPMIND_BACKEND": null,
+        "TMPDIR": "/data/ycfeng/tmp"
+      },
+      "start_utc": "2026-10-23T14:22:03.641450+00:00",
+      "end_utc": "2026-10-23T14:22:03.730832+00:00",
+      "returncode": 0,
+      "stdout": "{\"status\": \"PASS_FRESH_ACTUAL_LAUNCHER_ENTRY\", \"platform_calls\": 0, \"dependency_preloads\": 0}\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "/data/ycfeng/tmp/stepmind-env/bin/python",
+        "-I",
+        "-B",
+        "-c",
+        "import json,runpy,sys\nfrom pathlib import Path\nlauncher,config,root=sys.argv[1:]\nclass Boundary(BaseException):pass\ndef trace(frame,event,arg):\n if event=='call' and frame.f_code.co_filename==launcher and frame.f_code.co_name=='submit':\n  assert frame.f_globals['WORKSPACE']==Path(root)\n  assert frame.f_locals['config_path']==Path(config)\n  assert not any(n.startswith(('steptron','torch','vllm','pd_replay')) for n in sys.modules)\n  print(json.dumps({'status':'PASS_FRESH_ACTUAL_LAUNCHER_ENTRY','platform_calls':0,'dependency_preloads':0}));raise Boundary\n return trace\nsys.argv=[launcher,'submit','--config',config];sys.settrace(trace)\ntry:runpy.run_path(launcher,run_name='__main__')\nexcept Boundary:pass\nelse:raise AssertionError('Missing actual submit boundary')\n",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/launch/glm_producer_jobs.py",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/jobs/moe.json",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+      "environment": {
+        "PYTHONPATH": null,
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": null,
+        "STEPMIND_BACKEND": null,
+        "TMPDIR": "/data/ycfeng/tmp"
+      },
+      "start_utc": "2026-10-23T14:22:03.730861+00:00",
+      "end_utc": "2026-10-23T14:22:03.820626+00:00",
+      "returncode": 0,
+      "stdout": "{\"status\": \"PASS_FRESH_ACTUAL_LAUNCHER_ENTRY\", \"platform_calls\": 0, \"dependency_preloads\": 0}\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-I",
+        "-B",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/launch/glm_producer_worker.py",
+        "--help"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+      "environment": {
+        "PYTHONPATH": null,
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": null,
+        "STEPMIND_BACKEND": null,
+        "TMPDIR": "/data/ycfeng/tmp"
+      },
+      "start_utc": "2026-10-23T14:22:03.820657+00:00",
+      "end_utc": "2026-10-23T14:22:03.862083+00:00",
+      "returncode": 0,
+      "stdout": "usage: glm_producer_worker.py [-h] --config CONFIG\n\nRun one sealed DeepSeek-V4 profiling unit on an H200 worker. The job config\nlists phases (smoke, then full); each phase is a list of steps, and a step is\none command or a group of commands that run concurrently on separate GPUs.\nCommands run from the committed source snapshot named in the config. Producers\nwrite to worker-local disk; after each phase the tables, raw records, logs,\nand completed profiler traces are copied to the cloud output directory,\ntogether with ``status.json``. A failed phase stops the job. Only the standard\nlibrary is used, so the image's ``python3`` runs it as is.\n\noptions:\n  -h, --help       show this help message and exit\n  --config CONFIG\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-I",
+        "-B",
+        "-c",
+        "import json,runpy,sys\nfrom pathlib import Path\nworker,config=sys.argv[1:]; expected=json.loads(Path(config).read_text()); accesses=[]\nclass Boundary(BaseException):pass\ndef audit(event,args):\n if event in ('os.mkdir','open') and str(args[0]).startswith('/mnt/'):\n  accesses.append((event,str(args[0])));raise AssertionError('CPU control attempted a cloud-path operation')\nsys.addaudithook(audit)\ndef trace(frame,event,arg):\n if event=='call' and frame.f_code.co_filename==worker and frame.f_code.co_name=='_python_path_with_wheels':\n  assert frame.f_locals['env']['PYTHONPATH']==expected['source_snapshot']\n  assert str(frame.f_locals['wheelhouse'])==expected['wheelhouse']\n  assert not any(n.startswith(('torch','vllm','steptron')) for n in sys.modules)\n  print(json.dumps({'status':'PASS_WORKER_ENTRY_BEFORE_RUNTIME_AND_CLOUD','dependency_preloads':0,'GPU_platform_cloud_calls':0}));raise Boundary\n return trace\nsys.argv=[worker,'--config',config];sys.settrace(trace)\ntry:runpy.run_path(worker,run_name='__main__')\nexcept Boundary:pass\nelse:raise AssertionError('Missing worker boundary')\nassert not accesses\n",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/launch/glm_producer_worker.py",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/jobs/moe.json"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+      "environment": {
+        "PYTHONPATH": null,
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": null,
+        "STEPMIND_BACKEND": null,
+        "TMPDIR": "/data/ycfeng/tmp"
+      },
+      "start_utc": "2026-10-23T14:22:03.862108+00:00",
+      "end_utc": "2026-10-23T14:22:03.948088+00:00",
+      "returncode": 0,
+      "stdout": "{\"status\": \"PASS_WORKER_ENTRY_BEFORE_RUNTIME_AND_CLOUD\", \"dependency_preloads\": 0, \"GPU_platform_cloud_calls\": 0}\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-I",
+        "-B",
+        "-c",
+        "import json,runpy,sys,types,os\nfrom pathlib import Path\nlauncher,config,root=sys.argv[1:]; expected=json.loads(Path(config).read_text())\nclass Boundary(BaseException):pass\nclass ResourceConfig:\n preemptible=False\n def __init__(self,**kwargs):self.__dict__.update(kwargs)\ndef spawn(resource,**kwargs):\n assert (resource.cpu,resource.gpu,resource.mem_gb,resource.preemptible)==(16,1,128,False)\n assert resource.image==expected['image'] and resource.mounts==[expected['cloud_mount']]\n assert kwargs['charged_group']=='codesign' and kwargs['code_mount_point']==root\n assert expected['worker'] in kwargs['command'] and 'timeout 1800 python3' in kwargs['command']\n print(json.dumps({'status':'PASS_LAUNCHER_RESOURCE_CPU_STANDIN_NOT_SDK_GATE','cpu':resource.cpu,'gpu':resource.gpu,'mem_gb':resource.mem_gb,'preemptible':resource.preemptible,'platform_calls':0,'launcher_default_omits_explicit_preemptible':True}));raise Boundary\ndef trace(frame,event,arg):\n if event=='call' and frame.f_code.co_filename==launcher and frame.f_code.co_name=='submit':\n  assert not any(n.startswith(('torch','vllm','steptron')) for n in sys.modules)\n  for name,attrs in {'steptron.exp.base_exp':{'ResourceConfig':ResourceConfig},'steptron.utils.stepmind':{'spawn_tasks':spawn}}.items():\n   module=types.ModuleType(name);module.__dict__.update(attrs);sys.modules[name]=module\n return trace\nos.environ['STEPMIND_BACKEND']='rjob';sys.argv=[launcher,'submit','--config',config];sys.settrace(trace)\ntry:runpy.run_path(launcher,run_name='__main__')\nexcept Boundary:pass\nelse:raise AssertionError('Missing resource boundary')\n",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/launch/glm_producer_jobs.py",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/jobs/moe.json",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+      "environment": {
+        "PYTHONPATH": null,
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": null,
+        "STEPMIND_BACKEND": null,
+        "TMPDIR": "/data/ycfeng/tmp"
+      },
+      "start_utc": "2026-10-23T14:22:03.948120+00:00",
+      "end_utc": "2026-10-23T14:22:04.040692+00:00",
+      "returncode": 0,
+      "stdout": "{\"status\": \"PASS_LAUNCHER_RESOURCE_CPU_STANDIN_NOT_SDK_GATE\", \"cpu\": 16, \"gpu\": 1, \"mem_gb\": 128, \"preemptible\": false, \"platform_calls\": 0, \"launcher_default_omits_explicit_preemptible\": true}\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.moe.main",
+        "--models",
+        "deepseek-ai/DeepSeek-V4-Flash",
+        "--device",
+        "h800",
+        "--num_gpus",
+        "1",
+        "--disable_ray",
+        "--num_tensor_parallel_workers",
+        "1",
+        "--expert_parallel_sizes",
+        "16",
+        "--num_tokens_list",
+        "12288",
+        "6152",
+        "32",
+        "16",
+        "--max_tokens",
+        "16384",
+        "--load_distributions",
+        "balanced",
+        "--num_samples_per_distribution",
+        "1",
+        "--routing_runtime_path",
+        "balanced_topk",
+        "--yes",
+        "--profile_method",
+        "cuda_event",
+        "--source_revision",
+        "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+        "--model_config_revision",
+        "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+        "--output_dir",
+        "/tmp/glm_producers/out/EP16_RANK0_LOCAL_MOE_CUDA_EVENT",
+        "--dry_run"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": null,
+        "STEPMIND_BACKEND": null,
+        "TMPDIR": "/data/ycfeng/tmp"
+      },
+      "start_utc": "2026-10-23T14:22:04.048564+00:00",
+      "end_utc": "2026-10-23T14:22:04.741414+00:00",
+      "returncode": 0,
+      "stdout": "WARNING 22:22:04 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported\n{\n  \"profile_method\": \"cuda_event\",\n  \"load_distributions\": [\n    \"balanced\"\n  ],\n  \"cases_per_parallel_point\": 1,\n  \"num_tokens\": [\n    12288,\n    6152,\n    32,\n    16\n  ],\n  \"models\": {\n    \"deepseek-ai/DeepSeek-V4-Flash\": {\n      \"num_experts\": 256,\n      \"num_experts_per_tok\": 6,\n      \"hidden_dim\": 4096,\n      \"use_fp8\": true,\n      \"block_shape\": [\n        128,\n        128\n      ],\n      \"local_experts_by_expert_parallel_size\": {\n        \"16\": 16\n      },\n      \"tensor_parallel_sizes\": [\n        1\n      ],\n      \"profiled_steps\": 4\n    }\n  }\n}\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.moe.main",
+        "--models",
+        "deepseek-ai/DeepSeek-V4-Flash",
+        "--device",
+        "h800",
+        "--num_gpus",
+        "1",
+        "--disable_ray",
+        "--num_tensor_parallel_workers",
+        "1",
+        "--expert_parallel_sizes",
+        "16",
+        "--num_tokens_list",
+        "12288",
+        "6152",
+        "32",
+        "16",
+        "--max_tokens",
+        "16384",
+        "--load_distributions",
+        "balanced",
+        "--num_samples_per_distribution",
+        "1",
+        "--routing_runtime_path",
+        "balanced_topk",
+        "--yes",
+        "--profile_method",
+        "record_function",
+        "--source_revision",
+        "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+        "--model_config_revision",
+        "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+        "--output_dir",
+        "/tmp/glm_producers/out/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION",
+        "--dry_run"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": null,
+        "STEPMIND_BACKEND": null,
+        "TMPDIR": "/data/ycfeng/tmp"
+      },
+      "start_utc": "2026-10-23T14:22:04.741699+00:00",
+      "end_utc": "2026-10-23T14:22:05.540500+00:00",
+      "returncode": 0,
+      "stdout": "WARNING 22:22:05 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported\n{\n  \"profile_method\": \"record_function\",\n  \"load_distributions\": [\n    \"balanced\"\n  ],\n  \"cases_per_parallel_point\": 1,\n  \"num_tokens\": [\n    12288,\n    6152,\n    32,\n    16\n  ],\n  \"models\": {\n    \"deepseek-ai/DeepSeek-V4-Flash\": {\n      \"num_experts\": 256,\n      \"num_experts_per_tok\": 6,\n      \"hidden_dim\": 4096,\n      \"use_fp8\": true,\n      \"block_shape\": [\n        128,\n        128\n      ],\n      \"local_experts_by_expert_parallel_size\": {\n        \"16\": 16\n      },\n      \"tensor_parallel_sizes\": [\n        1\n      ],\n      \"profiled_steps\": 4\n    }\n  }\n}\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-B",
+        "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/build_package.py"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+      "environment": {
+        "PYTHONPATH": null,
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": null,
+        "STEPMIND_BACKEND": null,
+        "TMPDIR": "/data/ycfeng/tmp"
+      },
+      "start_utc": "2026-10-23T14:22:05.540633+00:00",
+      "end_utc": "2026-10-23T14:22:05.651079+00:00",
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/build_package.py\", line 153, in <module>\n    main()\n  File \"/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/build_package.py\", line 41, in main\n    raise RuntimeError(\"Fresh generation only; never alter an existing package\")\nRuntimeError: Fresh generation only; never alter an existing package\n",
+      "expected_exit": 1
+    }
+  ]
+}
