@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Close all three performance reviews/parent checks;freeze79f1a3fd and start main08/fresh regressions/T2 rebinding. |
 | 2026-10-23 | Allocate disjoint loader45/parser50 repairs;diagnose remaining startup time and carry H800 authority forward. |
 | 2026-10-23 | Parent confirms repeated group-resolution hotspot;allocate three-path CORE repair<=105 gross through a zero-sum overlay. |
 | 2026-10-23 | Both main07 modes hit2400s;require a short real-path performance loop before repair or another full run. |
@@ -41,8 +42,8 @@ and independent re-review -> feature-branch code/record consolidation. YC now
 defers handoff and resumes here. Code merge4ed67d78 and T2 records merge
 9c77b559 are delivery checkpoints,not full workflow admission.
 
-Current dependency: freezee41abc07 (complete) -> {required regression/full
-actual-main checks,final T2 source binding,updated actual per-path accounting}
+Current dependency: reviewed performance repairs -> freeze79f1a3fd (complete)
+-> {fresh regression/full actual-main checks,final T2 source binding}
 -> package readiness -> quota check/run under the existing H800 authority
 -> fresh native/profile evidence -> G3 and independent four-metric E2E acceptance.
 
@@ -53,27 +54,32 @@ tree. Final target staging/seal follows full CLI completion. main06 was interrup
 by the server restart;main07 repeated it without a workload or source change and
 both modes hit2400s. Current dependency adds a faithful short performance loop,
 hotspot diagnosis and owner-scoped repair/review before a new final-source run.
-The parent-confirmed first repair is fixed-model group reuse;its design and
-acceptance are in repairs/model_group_reuse.md. Reassess residual real-point cost
-after these fixes before committing to another full CLI run. The disjoint loader
-and artifact-parser scopes are in repairs/input_validation_and_artifact_parsing.md;
-the unexplained initial21.5-minute interval requires a separate bounded diagnosis.
+All three repairs now have independent Standards/Spec No findings and parent
+checks. The integrated actual-point loop on79f1a3fd uses no diagnostic reuse:
+five calls,88 descriptions,20 current reads/one decode;full costs/proofs/plan bytes
+match baseline. Its0.695s cold and0.172s last-three mean settle the required
+residual-point check,not full workflow duration. main08 now runs the unchanged
+6144/1024 workload and2400s per-mode cap. Early-init report remains a partial
+bounded diagnosis:1288s includes the whole predictor construction;one attention
+phase performs three same-frame serializations. It does not justify a cache-key
+change or another implementation. Any further repair requires an observed failure
+and its own faithful short loop. See early_init_repro/report.md.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
 | Approval, ownership and baseline | Complete; effective111 under existing budgets. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
-| CORE/SOURCE46 | Source review and CLI repair closed;parent57PASS/6unchangedSKIP,No findings;3873/4404 gross. |
+| CORE/SOURCE46 | Group/loader repairs closed;3970/4404 measured on79. Parent81/1oldskip,2,29,52 recorded separately. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
-| PRICING46 | Source review complete;3879/3956 gross. |
-| Complete integration and final freeze | Complete:e41abc07 frozen clean in verify-step5-d29-integrated-05,gitlink3dac53c. |
-| Legacy strict77 | Final04 on e41:77/77 identical;451 artifact hashes and519 cache names per side verified. |
-| Full-unit failure/error-set gate | Closed on e41 with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. Raw suite still exits1. |
-| Fresh fixture and full CLI | main07 both modes timed out at2400s. Model-group105,loader45 and conditional parser50 repairs are allocated;parent checks/review and residual diagnosis precede another full run. |
-| Independent source review | Earlier findings closed on1be91bad;CLI40-gross repair closed No findings at75ad26f9. |
-| T2 final-source binding | e41 rebind d7d6ad8c delivered;parent63 checksums/26 full files PASS;physical staging/seal follows CLI completion. |
-| Final per-path accounting | Delivery remeasured:111 allocated/110 changed,9102 source/9116 global,zero per-path violations. |
+| PRICING46 | Exact-current-text parsing repair closed;parent128PASS;3920/3956 measured. |
+| Complete integration and final freeze | Complete:79f1a3fd frozen clean in verify-step5-d29-integrated-06,gitlink3dac53c. Feature-branch consolidation follows parent records. |
+| Legacy strict77 | Fresh final05 on79 in progress. Final04 e41 remains77/77 with451 artifact hashes and519 cache names per side. |
+| Full-unit failure/error-set gate | Fresh parent05 on79 in progress,including environment/metadata/catalogue suites. Accepted e41 historical failure sets remain the comparison reference. |
+| Fresh fixture and full CLI | main08 running on79,original6144/1024 and2400s per mode;all9 launch input hashes match main07. |
+| Independent source review | All three performance components No findings on both axes;group coverage-record P2 corrected37c7832e and re-review closed. |
+| T2 final-source binding | Rebinding79/integrated06 in isolated tree;prior e41 static63/26PASS retained. Physical staging/seal follows CLI completion. |
+| Final per-path accounting | 79 remeasured:111 allocated/110 changed,9240 source/9254 global,zero path/owner violations. New steps152gross/138retained. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments

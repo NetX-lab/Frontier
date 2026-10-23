@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept all performance components,freeze79f1a3fd and start final-source CLI/regression/T2 checks after exact9254 audit. |
+| 2026-10-23 | Parent verifies group-reuse delivery;loader/parser repairs and corrected startup accounting continue. |
 | 2026-10-23 | Parent verifies group-resolution hotspot;start bounded CORE repair and two independent read-only residual investigations. |
 | 2026-10-23 | main07 fails both2400s limits;record new performance diagnosis and keep full workflow unaccepted. |
 | 2026-10-23 | Resume current session;archive e41 regression/static T2 acceptance and interrupted main06 with main07 pending. |
@@ -24,8 +26,18 @@ full-file comparisons pass. Physical target staging/sealing remains pending.
 main06 was interrupted by the server restart and is unverified;the unchanged
 main07 full offline/online rerun hit both2400s limits. Parent verified a real-point
 loop with1056 repeated layer descriptions;actual group reuse removes those calls
-and preserves all cost/proof/plan payloads. CORE now implements the bounded105-gross
-repair;initialization and collective-JSON investigations remain read-only.
+and preserves all cost/proof/plan payloads. CORE delivered group-reuse3763e5b8,
+71/105 gross;parent81PASS/1existingSKIP and actual cold/warm0.924/0.355s with88/0
+descriptions pass. Both review axes are No findings,including corrected coverage
+receipt37c7832e with separately verified2PASS trainer checks. Loader38/45 and
+parser43/50 are also accepted after both reviews and parent29/52/128PASS separately.
+All code is merged and frozen at79f1a3fd in integrated06. Integrated actual-point
+payload bytes remain identical with88 descriptions and20reads/1decode acrossfive
+calls. Measured111-path accounting is9240source/9254global,zero violations.
+main08 fullCLI,freshstrict77/full-unit/supplement gates and isolated T2rebinding
+now run against79. Their completion is pending. Early-init attribution remains
+partial;no additional implementation or hash-identity change is authorized.
+Task-required H800 authority is already granted;workflow/package readiness remains.
 Whole workflow and GPU/native/
 G3/E2E acceptance remain open. See progress.md and resumed_parent/ for evidence.
 

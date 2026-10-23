@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept three performance components,freeze79f1a3fd,verify integrated point/9254 accounting and start main08/fresh regressions/T2 rebinding. |
+| 2026-10-23 | Parent verifies delivered model-group71/105 repair:81PASS/1existingSKIP and actual cold/warm88/0 descriptions;two-axis review in progress. |
 | 2026-10-23 | Verify minimal loader control;allocate loader45/parser50 repairs and retain unexplained startup interval for diagnosis. |
 | 2026-10-23 | Accept actual pricing RED/control and allocate fixed-model group reuse to CORE within105 gross. |
 | 2026-10-23 | main07 times out in both modes at2400s;archive receipts and assign bounded real-path performance diagnosis to CORE. |
@@ -65,12 +67,17 @@
   0.397/0.349s and0 repeats with one-variable actual-group reuse;cost/proof/plan
   payload SHA256 remains d2c141f088b52063edb539094fe3e0967f35e53303d70ebe2e8fbdbe4c86c952.
   This diagnoses one actual point,not full CLI duration or initialization.
-- in-progress: D29-MODEL-GROUP-REUSE,CORE owner ses_e9b3efeebffem2dcbXlVGNr8O2,
-  implements local fixed-model group reuse across the two existing consumers,
-  with the real binding regression. Three existing paths,source<=45/test<=60,
-  total<=105 gross under unchanged CORE/global caps. Scope/design:
-  repairs/model_group_reuse_scope_amendment.json and model_group_reuse.md.
-  No full CLI retry assigned;parent checks/review and residual profile come first.
+- completed/component: D29-MODEL-GROUP-REUSE,CORE owner
+  ses_e9b3efeebffem2dcbXlVGNr8O2,code3763e5b8/records88fe6c65/37c7832e. Three paths,
+  source17/test54,total71/105;candidate CORE3932/4404,global9175/10000.
+  Parent81PASS/1existingTorchSKIP;actual pricing0.924/0.355s,88/0 descriptions,
+  no diagnostic reuse flag and baseline payload unchanged. Report:
+  resumed_parent/test_report_2026-10-23_group_reuse.md. Standards reviewer
+  ses_e97df8ed7ffe6u75S4UBsS75hI andSpec reviewer
+  ses_e97df4d82ffetkqpyEbPP2iCA1 return No findings. Original SpecP2 concerned
+  overclaimed both-trainer coverage;37c corrects81 toshared-only,and parent
+  separately runs the two existing trainer/independent-fit-cache tests:2PASS.
+  Original reviewer closes that records-only P2.
 - completed/diagnostic: D29-INIT-VALIDATION-SCOPE reports repeated constant config
   derivation. Parent corrected3000-row control:2.837s->0.275s,one derivation,equal
   payload. Counter correction and unauthorized prior full scans/75s bounds are
@@ -79,12 +86,36 @@
   across5 real point calls;its stat-keyed control keeps complete payloads equal.
   That invalidation design is not selected. Existing same-instance file rewrite
   behavior is retained by the new exact-text proposal.
-- allocated: D29-INIT-FAMILY-RESOLUTION,two existing CORE paths,source6/test39/
-  total45;D29-COLLECTIVE-ARTIFACT-PARSE,two existing PRICING paths,source15/test35/
-  total50,conditional on a measured exact-text control. Both preserve live
-  validation and have disjoint ownership from the model-group repair. Design and
-  overlays:repairs/input_validation_and_artifact_parsing.md. The initial21.5-minute
-  interval remains unassigned causally and needs a bounded real-path diagnosis.
+- completed/component: loader ee7e66ee/35d2f74e,owner
+  ses_e97e53380ffeRm2wFkaYlNbELh,4source+34test=38/45;parent29PASS plus
+  separate52PASS governance in existing Python3.12 supplement. Parser51e1f720/
+  0fa22e49,owner ses_e9b3e99a6ffe3r2973GDLkFpEm,8source+35test=43/50;
+  parent128PASS. Both Standards/Spec No findings. All parent suites remain
+  separate,with overlap explicit. Acceptance archive5498bdd4 in resumed_performance/.
+- completed/partial diagnosis: early_init_repro/report.md corrects the window
+  to1288s for whole predictor construction,ending at bundle publication. Actual
+  attention phase has one operator,two fitted models,three same-frame hashes;
+  scratch paths affect absolute hashes. Head-slice scaling is not a measured
+  explanation of the whole window or a full-run RED loop. Original column-wise
+  hash proposal is withdrawn;no further early-init source change is assigned.
+- completed/frozen: three reviewed source steps merged without conflict at
+  79f1a3fd35d42b751cd1520c764ddac717b923d9,tree8c6db078e852d3b885a6f14bdf5e8007d9ecddb7,
+  verify-step5-d29-integrated-06;independent local submodule3dac53c clean. Parent
+  verifies all7changed files against owner commits. Actual integrated point with
+  both diagnostic switches OFF:0.695/0.129/0.255/0.129/0.132s,88descriptions,
+  20reads/1decode;full payload bytes equal original baseline,c2aa250d2103db50140e3f19c3579e9221dcfaf6251df1b44ed5f580982c5582.
+  Receipt:resumed_performance/source_freeze.json and integrated-point test report.
+- completed/accounting: independent111-row audit on79 confirms native1350,
+  CORE3970,PRICING3920,source9240/global9254;zero path/owner violations. Step
+  subcolumns corrected togroup17/54 andparser8/35 gross before acceptance.
+  Registry331/360 andfixtures72/80 remain historical checkpoint scopes.
+  Evidence:repairs/evidence/performance_scope/;no reallocation needed.
+- in-progress: main08 fulloffline/online on79,unchanged6144/1024 and2400s/mode,
+  shellsh_1684dfb4e001YDXmBG29Tpwtul;output/data/ycfeng/tmp/d29-parent-position-main08.
+  All9 launch input hashes matchmain07;only relocated synthetic-read profile path
+  is normalized. Freshregressions:ses_e98925887ffecetw6nTB6nD8f0,
+  performance_regressions/. T2rebind:ses_e9b3f65b5ffeMAo4OpbcxD9LIV,isolated tree.
+  Final-source runtime and native qualification remain unverified until receipts.
 - completed: D29-E41-FINAL-REGRESSIONS records committed b5a74416/5ceb68c9.
   strict77 final04 is77/77 identical,451 artifact hashes and519 cache filenames per
   side. Full unit:8015PASS/279FAIL/32ERROR/281SKIP,raw exit1. The exact historical
@@ -102,9 +133,9 @@
   match. Index d3eff42d8026d30df48907479420ec1a2d1eacaf826593b9afe5bf10885e1b89.
   Receipt:resumed_parent/t2_e41_binding_receipt.json. Active integrated05 is
   unchanged;physical staging/final sealing follows full CLI completion.
-- pending: establish the timeout's real hotspot,assign an evidence-backed bounded
-  repair to its owner,verify/review/refreeze any source change,then rerun affected
-  final gates and full CLI. Final T2 staging and package readiness remain blocked.
+- pending: inspect main08 and fresh79 regression receipts;fix any evidenced
+  remaining failure through the same short-loop/review/freeze order. Final T2
+  staging and package readiness remain blocked until workflow acceptance.
   Task-required H800 resource authority is already granted;workflow/package
   readiness and actual capacity remain prerequisites for T2 execution.
 

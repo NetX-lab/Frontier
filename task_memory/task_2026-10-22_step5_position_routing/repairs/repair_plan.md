@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Close three performance steps after parent checks/No findings;freeze79 and run final gates with9254 measured gross. |
 | 2026-10-23 | Append disjoint performance-repair allocations and final-source review/freeze dependency. |
 | 2026-10-23 | Close40/65 CLI repair and deliver reviewed code for session handoff;final workflow qualification remains pending. |
 | 2026-10-23 | Reconcile effective111 and four scope overlays; require final-source gates after review closure. |
@@ -31,6 +32,12 @@ ordered allowance chain without changing111 paths or aggregate caps. The latter
 two are disjoint from the first and each other. Their design and acceptance are
 in input_validation_and_artifact_parsing.md. Parent verification and independent
 review precede a new source freeze and final actual-main/regression runs.
+Those steps are now closed:group71/105,loader38/45,parser43/50. The records-only
+group coverage P2 was corrected37c7832e and re-reviewed No findings. Root freezes
+79f1a3fd after both review axes and parent checks,then verifies the integrated
+actual-point payload before starting main08/fresh regressions. Actual accounting
+is9240source/9254global,zero per-path or owner violations. Earlier registry/fixture
+step caps are checkpoint-scoped;later authorized changes have their own receipts.
 
 Use the retained rows of `../scope.json` (138 rows after removing H11,107 unique
 paths). Sum each path's retained allowances once; do not subtract H11 again.
