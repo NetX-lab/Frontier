@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-23 | Began CPU-only package preparation using the existing builder and accepted runtime05952396. |
 | 2026-10-23 | Committed bounded source69f92c55, generated profile01 once and completed actual CPU/hash/preservation controls. |
+| 2026-10-23 | Reopened for reproduced P1 fresh-entry failure; archived initial delivery/diff bytes and bounded packaging-only profile02 repair. |
 
 ## Status
 
@@ -86,3 +87,33 @@ Branch A; no spec/plan updates and no deviation to stop. Commit only the four al
 3. Root still owns image/binary/destination checks and runtime coverage; no GPU/reference/calibration qualification exists.
 
 Final exact package confirmation passed after the delivery/report writes: all45 package hashes unchanged;13runtime modules equal accepted05952396; originals123/checkers3 preserved; all4role/DP paths and128/16/3workload templates pass. source.diff SHA2567c5af287170d69c3bf7ca97f60d259f7ad9cf57d833c7832c1a6f690b330156d. No source or package writes occurred after successful generation; only the allocated records were added/updated. Commit these records with git add -f exact paths, then cease writes so root can independently inspect and seal.
+
+## Reopened P1 packaging repair: RED and route
+
+[Original Request — root repair] Resume the delivering owner for P1: fresh package-root-only native_pd_worker import fails because its flattened repo-relative lookup does not reach staged tests/comparison/dp_placement_pp/vllm_replay.py. Repair only builder/profile_plan within300gross lines; accepted13runtime05952396/native/C26/frozen sources immutable. Root selects candidate_h800_p0_profile_02/tag dsv4-h800-p0-profile-20261023-02 with unchanged cloud root/resources/window. Preserve profile01; actual fresh launcher and bootstrap-child entry proofs cannot use manual preload/external PYTHONPATH. No platform/image/seal/launch operations on actual candidates. Commit source before one fresh generation; stop writes after delivery.
+
+- completed: Reproduced root's exact RED command twice: /data/ycfeng/envs/frontier-py310/bin/python -I -B -c 'import sys; sys.path.insert(0,sys.argv[1]); import native_pd_worker' <absolute profile01 package>. Exit1: ModuleNotFoundError: No module named 'vllm_replay', native_pd_worker.py:19. Root receipt/stderr remain at /data/ycfeng/tmp/glm53_dsv4/profile01_entry_red_acbrv5ib; owner copy at /data/ycfeng/tmp/glm53_dsv4/profile02_owner_entry_nUFzTw/initial_import_red.{receipt.json,stderr.log}.
+- completed: Archived delivery.json bytes to initial_delivery.json (SHA2562898b22d3386943704b3bd0221c835ef2520c9d98ac550a3c4141fa1804a2490), source.diff to initial_source.diff (SHA2567c5af287170d69c3bf7ca97f60d259f7ad9cf57d833c7832c1a6f690b330156d); all45 original package hashes match. Prior final verification was source/command proof, not actual-entry proof; pd_replay/manual sys.path masked the defect.
+- in-progress: Builder adds the actual staged dependency directory before generated launcher import and to generated bootstrap PYTHONPATH, profile-only. The retained bootstrap locks original source_sha256 and staged_sha256 separately; config/tool hashes cover staged bytes. Source diff from62092da3: builder14add/3del plus plan2add/2del=21gross; cumulative from1dc93c6f builder102add/6del plus plan44add/0del=152/300gross. Only generation02 is admitted for the profile plan; historical unselected06 remains unchanged.
+- pending: Commit repair source, generate02 once from clean tree; inspect all hashes and fresh actual entry with disposable CPU-only manifest and traced sentinel before write_run_manifest body. Exercise actual bootstrap env/exec with explicitly labelled native-source-verification stand-ins; root repeats locked-image checks for new retained tool bytes.
+- pending: Append final RED/GREEN report, new delivery/diff; record-only commit and writer stop.
+
+## Repair checkpoint
+
+### 1. 规划完成情况
+
+PASS1｜FAILED1｜TODO3: preservation/preflight complete; historical01 entry FAILED; repair commit, fresh02 generation/entry proof and final delivery TODO. Mainline is root plan I1 -> I2; root owns I3/I4.
+
+### 2. 偏离检测
+
+Window62092da3 delivery through reproduced P1 and bounded repair; frontier repair commit -> generation -> actual-entry controls. D1-D7 CLEAR: shortest CPU controls settle the reproduced mainline blocker; no repeated fix, unrelated source, new persistent machinery, platform operation or resource change. S1-S4/S6 clear; S5: historical completion wording above predates the reviewer finding and is superseded by this explicitly reopened section. Attribution none.
+
+### 3. 纠正建议
+
+Branch B for stale owned delivery state only: preserve initial bytes, append historical01 FAILED/new02 state in this progress/report and replace current delivery/diff after GREEN. Root requirements/plan unchanged. No deviations to stop. Commit scoped source plus allocated archives/progress, stage02 once, verify actual generated entry without path/preload assistance, then deliver and stop writes.
+
+### 4. 最值得关注的3点
+
+1. Historical01 remains unsealed/unsubmitted and all45bytes pinned; runtime13modules remain05952396.
+2. Fresh launcher stops before write_run_manifest body and credentials/run-file/submission access; bootstrap fixtures prove wiring only, not locked-image validity.
+3. Root must repeat87sources/23tools/20binaries checks for new retained tool hashes, then independent review/seal/runtime acceptance.

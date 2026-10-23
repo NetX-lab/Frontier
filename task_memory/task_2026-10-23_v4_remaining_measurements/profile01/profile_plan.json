@@ -1,11 +1,11 @@
 {
-  "generation": "01",
+  "generation": "02",
   "diagnostic_only": true,
   "e2e_reference_admission": false,
   "accepted_runtime_commit": "05952396b0b8e5a794c53e10f9a21213beb5193d",
   "primary_acceptance": "task_memory/task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json",
   "proposal_inputs": "task_memory/task_2026-10-23_v4_remaining_measurements/driver/proposal_inputs.json",
-  "run_tag": "dsv4-h800-p0-profile-20261023-01",
+  "run_tag": "dsv4-h800-p0-profile-20261023-02",
   "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023",
   "worker_extension_cls": "native_serve_profile.NativeServeProfile",
   "window": "First formal repetition through its existing drain; one window only",

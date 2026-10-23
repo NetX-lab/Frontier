@@ -47,7 +47,7 @@ def main(generation='06', profile_plan=None):
     if plan is None:
         assert generation == '06', 'Only the root-selected fresh native06 generation is authorized'
     else:
-        assert generation == '01' and plan['generation'] == generation
+        assert generation == '02' and plan['generation'] == generation
         assert plan['diagnostic_only'] and not plan['e2e_reference_admission']
         assert profile_plan.resolve().is_relative_to(REPO / 'task_memory')
     PACKAGE = HERE / f'candidate_h800_p0_{"profile_" if plan else ""}{generation}'
@@ -172,8 +172,13 @@ def main(generation='06', profile_plan=None):
     checker.verify_balanced_frontier(config | {'harness_commit': commit}, engine)
     lock['retained_files']['case/inputs/frontier.json'] = dict(source=str(FRONTIER), sha256=sha(content))
     for name in ('probe_runtime_inventory.py', 'probe_nixl_read.py',
-                 'native_dummy_bootstrap.py', 'overlay_model.py', 'submit_native_diagnostic.py'):
+                  'native_dummy_bootstrap.py', 'overlay_model.py', 'submit_native_diagnostic.py'):
         content = original = (V4 / name).read_bytes()
+        if plan and name == 'native_dummy_bootstrap.py':
+            marker = 'PYTHONPATH=str(staged)'
+            assert content.decode().count(marker) == 1
+            content = content.decode().replace(marker,
+                "PYTHONPATH=os.pathsep.join((str(staged), str(staged / 'tests/comparison/dp_placement_pp')))").encode()
         if name == 'submit_native_diagnostic.py':
             text = content.decode().replace('"VLLM_LOGGING_LEVEL": "DEBUG"', '"VLLM_LOGGING_LEVEL": "INFO"')
             marker = '    print("RJOB_NAME", workers.rjob.meta.name, flush=True)'
@@ -191,6 +196,8 @@ def main(generation='06', profile_plan=None):
         config['tool_hashes'][str(PACKAGE / name)] = sha(content)
         lock['retained_files'][name] = dict(source=str(V4 / name), source_sha256=sha(original),
             sha256=sha(content), changed=content != original)
+        if plan and name == 'native_dummy_bootstrap.py':
+            lock['retained_files'][name]['staged_sha256'] = sha(content)
     overlay = json.loads((V4 / 'overlay.json').read_text())
     overlay['staged_dir'] = str(PACKAGE)
     leaf = overlay['files']['models/deepseek_v4/nvidia/model.py']
@@ -265,6 +272,9 @@ def main(generation='06', profile_plan=None):
     after = before + "\nfrom native_pd_worker import write_run_manifest\n" \
         "run_manifest = write_run_manifest(config, os.environ['AUTHORIZATION'])\n" \
         "print('PRELAUNCH_MANIFEST', str(run_manifest), flush=True)"
+    if plan:
+        after = after.replace('\nfrom native_pd_worker',
+            "\nsys.path[:0] = [str(HERE), str(HERE / 'tests/comparison/dp_placement_pp')]\nfrom native_pd_worker")
     assert launch.count(before) == 1
     stage('launch.py', launch.replace(before, after).encode())
     seal = (TEMPLATE / 'seal.py').read_text()
@@ -277,7 +287,8 @@ def main(generation='06', profile_plan=None):
             config['retained_files'][name] = sha(content)
             config['tool_hashes'][str(PACKAGE / name)] = sha(content)
             lock['retained_files'][name] = dict(source=str(TEMPLATE / name),
-                source_sha256=sha((TEMPLATE / name).read_bytes()), sha256=sha(content))
+                source_sha256=sha((TEMPLATE / name).read_bytes()), sha256=sha(content),
+                staged_sha256=sha(content))
         write_json(PACKAGE / 'config.json', config)
         write_json(PACKAGE / 'case/inputs/native_config.json', config)
     write_json(PACKAGE / 'source_lock.json', lock)
