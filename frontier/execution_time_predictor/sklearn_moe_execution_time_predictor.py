@@ -118,10 +118,8 @@ class SklearnMoEExecutionTimePredictor(
                 and context.get("routing_runtime_path") == "position_cyclic"):
             selector = dict(native_context=context)
             if "native_facts" in context:
-                from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
                 from frontier.moe_load_imbalance import moe_native_binding_context
-                group = next(group for group in resolve_routed_layer_groups(self._model_config)
-                             if metadata.attention_spec.global_layer_id in group.layer_ids)
+                group = self._step5_routed_layer_group(metadata.attention_spec.global_layer_id)
                 selector.update(native_source=context["native_facts"]["shared"],
                     selected_native_metadata=dict(moe_layer_ids=group.row_metadata()["moe_layer_ids"],
                         native_binding=moe_native_binding_context(context)))
