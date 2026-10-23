@@ -3,6 +3,9 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Allocate registry retention/query correction:109 effective paths, unchanged CORE4404/global10000 via300-line redistribution. |
+| 2026-10-23 | Allocate the existing explicit CPU fixture backend/trace consumer within PRICING's quota; start CORE independent review. |
+| 2026-10-23 | Freeze CORE d96b3279 and verify143 unique PASS/4 SKIP; investigate explicit registry and CPU backend dependencies. |
 | 2026-10-23 | C1/C2 validation passes independent No findings; actual observed compute-context producer code still blocks full integration. |
 | 2026-10-23 | Parent verifies compute repair f41d1ee9:593 unique PASS/89 SKIP; independent re-review and observed compute-context producer remain open. |
 | 2026-10-23 | Accept F4 boundaries after parent463/89+cold10 and No findings; assign compute C1(P1)/C2(P2) to PRICING. |
@@ -29,7 +32,9 @@
   and T2 limits/controlled-input binding merged892b6a1. Native1350/1582; four image
   files unchanged. T2 parent177 PASS/15 SKIP, real image CPU7168/8192/128 for both
   configs, independent No findings and actual full-file rebinding6/6 PASS.
-- in-progress: CORE/SOURCE final consumers/fixture and F1 repair; PRICING full
+- in-progress: CORE/SOURCE d96b3279 has parent143 unique PASS/4 SKIP and44-path
+  3304/4404 accounting; independent review and registry/backend/producer integration
+  remain open. PRICING full
   deliveryf41d1ee9 (43 changed paths/3305 gross including333 submodule lines) has
   passed parent cross-environment593 unique PASS/89 SKIP plus cold10 subset.
   All finite-side F3–F6 and owned C1/C2 validation findings are closed. The actual
@@ -134,6 +139,43 @@ actual observed point must reach exact buffer/count receipt and CORE consumer.
 Review and parent acceptance limits are retained in verify-step5-pricing-04's
 pricing_compute_parent/review_2026-10-23_compute_repair.md. Existing PRICING producer
 assignment continues; no full integration/merge acceptance while this path is absent.
+
+CORE delivers metadata repair2a862c25, authorized C2 import591894f1 and record
+d96b3279. Root freezes verify-step5-core-delivery-01, verifies all44 owned paths
+(+3149/-155=3304/4404;1100 remain), and runs metadata/binder37 PASS/3 SKIP,
+source/selected86 PASS/1 SKIP and F1/timer20 PASS. JUnit sets are disjoint:
+143 unique PASS/4 SKIP. Exact44-path diff and receipts are in core_parent/ there;
+CORE independent review remains pending.
+
+Root assigns two focused investigations: D29-REGISTRY-SEAM
+(ses_e99d7657effeDfIQ5QCsxfqJJt) must reproduce same-contract native binding loss
+and bound the existing registry/identity/caller repair; D29-CPU-PLAN-CONSUMER
+(ses_e99d764e3ffei6w2gP6rN3XrxY) must bound an explicit CPU composition consumer
+in the existing backend/config while preserving production native qualification.
+No new source scope/implementation is allocated until these concrete boundaries
+are returned. The ongoing PRICING observed-point producer assignment is separate.
+Actual CLI seam03 remains pending as reported at handoff; no polling or PASS claim.
+
+CPU consumer investigation resolves the interface choice: existing explicit
+profiling_data_dir is sufficient; real CPU payload currently fails at the native
+qualification read. Root authorizes the existing backend's explicitly unadmitted
+CPU composition branch and accurate CPU trace label, with dual provenance/exact
+key/buffer checks and unchanged native fit/qualification. Four existing PRICING
+paths, at most120 additional gross within3956; no new CLI flag or source path.
+The native observed-point producer remains assigned separately to the same owner.
+Decision/checks/allocation: repairs/cpu_plan_consumer.md. Registry investigation
+remains pending. CORE44 independent review starts with the exact frozen diff and
+parent143/4 evidence; known external seams remain declared integration limits.
+
+Registry investigation reproduces actual same-precision binding loss before any
+caller runs: second (name,typed identity) assignment replaces the first; real FP32
+gate under Step FP8/BF16 groups collides. Fitting/cache identities are intact.
+Root applies the standing small-correctness-scope authorization: add registry and
+one test path, plus two existing CORE caller edits, in an isolated d96 worktree.
+Effective scope109 paths, all owner totals/global10000 unchanged; new300 gross
+is exactly reallocated from unused CORE path allowance, with at most60 existing
+caller delta. See repairs/registry_scope_amendment.json and registry_binding_decision.md.
+Do not change global typed identities/cache hashes or add a parallel registry.
 
 ## Active implementation dispatch — 2026-10-23
 

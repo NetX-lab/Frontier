@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Add effective109-path registry overlay within unchanged CORE4404/global10000; isolate four-path repair. |
+| 2026-10-23 | Reserve120 gross within PRICING's existing quota for explicit CPU composition and accurate trace labels. |
 | 2026-10-23 | Reserve bounded native/PRICING constructor-binding deltas for T2 engine limits. |
 | 2026-10-23 | Separate native image/source publication from full Frontier integration; retain qualification gates. |
 | 2026-10-23 | Allocate the approved complete scope to three disjoint streams. |
@@ -17,11 +19,15 @@ in this directory binds the approval and analysis. Native19 design remains at
 
 Use the retained rows of `../scope.json` (138 rows after removing H11,107 unique
 paths). Sum each path's retained allowances once; do not subtract H11 again.
+For current implementation, apply registry_scope_amendment.json to this preserved
+approval ledger:109 effective paths, CORE46 paths/4404, all owner/global totals
+unchanged. Its explicit grouped-path adjustments supersede the original estimates.
 
 | Stream / change marker | Files | Gross quota | Assignment |
 | --- | ---: | ---: | --- |
 | D29-NATIVE-IMPLEMENTATION | 19 | 1582 | All native-owner rows, including four native-image paths. |
 | D29-CORE-SOURCE-IMPLEMENTATION | 44 | 4404 | Any path with a core/source row, except H04/H17. |
+| D29-REGISTRY-SEAM (CORE allocation) | +2 new;2 existing | Within CORE4404 | Four-path isolated repair; at most360 delta per registry_scope_amendment.json. |
 | D29-PRICING-IMPLEMENTATION | 44 | 3956 | Remaining pricing paths, plus H04/H17 with their contributor allowances. |
 
 H04=`frontier/execution_time_predictor/moe_operator_times.py`;
@@ -38,6 +44,14 @@ not increases to the stream totals. PRICING delivers the existing constructor's
 optional engine_limits seam; native consumes it and binds the same supplied
 limits to its graph constructor, then root validates both final configs. Source
 review and actual image/native four-file patch remain unchanged by this binding.
+
+D29-CPU-PLAN-CONSUMER reserves at most120 gross within PRICING3956, across existing
+collective_sim_cc_backend.py/test_collective_sim_cc_backend.py and
+op_trace_utils.py/test_op_trace_utils.py. Existing explicit fixture input selects
+unadmitted CPU composition; no new CLI/backend and no native full-duration lookup.
+Both artifact and plan/receipt must retain CPU identity; trace labels distinguish
+synthetic CPU terms from measured native service. See cpu_plan_consumer.md for
+the source evidence, precise checks and joint remaining-budget constraint.
 
 Native-image paths denote edits against the locked native source, not new full
 files charged as zero. Use a fresh derived-source candidate, preserve the old
