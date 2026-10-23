@@ -1,0 +1,147 @@
+Running scope as unit: run-r4cad91f7dd584069ae7528c60e33ae8f.scope
+WARNING 02:19:55 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+{
+  "verdict": "PASS",
+  "checks": [
+    {
+      "name": "official config",
+      "observation": {
+        "value": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90
+        ]
+      }
+    },
+    {
+      "name": "duplicate IDs",
+      "observation": {
+        "error_type": "ValueError",
+        "error": "get_moe_layer_ids() returned duplicate layer IDs"
+      }
+    },
+    {
+      "name": "out-of-range ID",
+      "observation": {
+        "error_type": "ValueError",
+        "error": "get_moe_layer_ids() returned an out-of-range layer ID for [0, 92)"
+      }
+    },
+    {
+      "name": "noninteger ID",
+      "observation": {
+        "error_type": "ValueError",
+        "error": "get_moe_layer_ids() must return integer layer IDs"
+      }
+    },
+    {
+      "name": "valid changed IDs",
+      "observation": {
+        "value": [
+          3
+        ]
+      }
+    },
+    {
+      "name": "replaced predicate mismatch",
+      "observation": {
+        "error_type": "ValueError",
+        "error": "custom MoE layer getter and predicate disagree: get_moe_layer_ids=[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90], is_moe_layer=[]"
+      }
+    },
+    {
+      "name": "custom getter/predicate mismatch",
+      "observation": {
+        "error_type": "ValueError",
+        "error": "custom MoE layer getter and predicate disagree: get_moe_layer_ids=[1], is_moe_layer=[2]"
+      }
+    }
+  ],
+  "custom_predicate_calls": 184,
+  "limits": "Config-only guard verification; does not substitute for unfinished estimator/row/identity wave checks"
+}

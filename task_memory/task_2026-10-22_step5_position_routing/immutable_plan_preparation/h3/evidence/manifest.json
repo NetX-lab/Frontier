@@ -1,0 +1,30 @@
+{
+  "task_id": "D29-IMMUTABLE-PLAN-PREPARATION-H3",
+  "phase": "pre-commit evidence snapshot",
+  "sha256": {
+    "test_report_2026-10-24_h3_attribution.md": "adb3cd541d990c964a31c85425475587df50df9ed198f14748f48cd8022d55b1",
+    "evidence/checkpoint.md": "0f19a13fc5f7375da9960ee50c5974d24b32bcfd5e58daa775de7404d3924e19",
+    "evidence/analyze.py": "c1a693de592c27e1d17173582a169dd0be01fbdb3563cd0c91c2696968593f75",
+    "evidence/collect.py": "e0bf304f45d2557628ad11a7b8d85ae614bc69fd71985d2598b441b6fbb37665",
+    "evidence/verify_guards.py": "b8f0bb2f5c6d2d8bc96b477457c47128e200f9f98e7e7e6cb04e785b6f21edb4",
+    "evidence/evidence.json": "faa07c8a60f3f600d87c44af44f35fbc9907490439723cc89b9f23e26907a953",
+    "evidence/analyze-final.log": "1a832051ea57bef2ceada4b0e32b50ae1db3c95f819b2fc9bbf2109994b95fb5",
+    "evidence/collect.log": "5fd44d04afdef0e53608b32d41e808d04b2594dee16da7b344efd818041d37ca",
+    "evidence/guard_verification.json": "40a88771002b0c7edaf6a95f7427db3ad3ed3943194d1031797daba993324c51",
+    "evidence/verify_guards.log": "64d6f0c530b5695a3a39cea63dbf95e952e6b0bc1d035c6df8c652ecd6aafc09",
+    "evidence/run.py": "6a88b55d8cfa740ab61506e32621b9d6fbb13d080d437fb4c2a7d4ebc8add737",
+    "evidence/run_bounded.py": "9e50abedc7324ab615825e98b06cc671aa8fbd8ca42f698fbc23c581f3166dce",
+    "evidence/baseline.log": "692177c705811d35ff5fe852017f943c8e2c0486fdbe76ba8bc4d18ff6a06d45",
+    "evidence/default-contract.log": "a4d97e739294e0abf8bdd9c073396bedc412f3f1a7ef174fdb169693070bf160",
+    "evidence/baseline-result.json": "e627633289ef93ac5f5c6c4ac2c87c609d367de1411efeb02b34aed8888d2ff4",
+    "evidence/default-contract-result.json": "836f83df22a445799421f7f40e7e5b4cb2cb5b08b128aa2a9646f2ac7b5365c6",
+    "evidence/contract_control.py": "5b30cba853aa78d5e8f430a61a1abcb4eab986e425a7014cdc1f1aa2727996ce",
+    "evidence/baseline-warm.prof": "41d8f19c3d4c019807b321fd6a25e75fa974c0178dc5377e3affd6b2baa1fab7",
+    "evidence/default-contract-warm.prof": "a79c96063ee3fc2b876e93fe00405b961a7861904711fe7f0dc203bee1b22d6c",
+    "evidence/key-a-warm.prof": "a3f7ab08bb7914665ab4eeed54b7b9b379ef3386ee5e2b89b209b1f75ddda0dc",
+    "evidence/key-b-warm.prof": "e0fa093ec8a64b22e78a19428cd4d6c596e6d0047bdf0e57607a9c1e90216bd1"
+  },
+  "source_or_fixture_inputs_copied": false,
+  "only_new_h3_records": true,
+  "control_allocation": false
+}
