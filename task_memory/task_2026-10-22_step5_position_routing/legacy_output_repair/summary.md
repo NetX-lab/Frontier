@@ -44,6 +44,8 @@ returns0(byte-identical). Full strict77/global unit review remains parent-owned.
 ## Exact scope and budget
 
 Approved source commit b60dfddd changes only the original four paths.
+English task records archive b32ad29d;both immutable commits are ready for parent
+integration. Proposed test files remain outside commits and awaiting approval.
 
 | Path | Step added | Step deleted | Delta gross | Retained gross | Ceiling |
 | --- | ---: | ---: | ---: | ---: | ---: |

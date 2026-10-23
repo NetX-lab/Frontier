@@ -37,18 +37,18 @@ added only for constructor tests; clean and gitlink unchanged, no binary build.
   staged names checked before commit,two proposed files not staged/committed.
 - blocked: further proposed file edits/commits await root's YC confirmation;
   preserve uncommitted work as requested, no alternate scope/fallback.
-- pending: English records archive only;
+- completed: English requirements/plan/progress/summary/report archived in b32ad29d;
   full strict77,global-unit integration and independent acceptance remain parent-owned.
 
 ## 1. Plan completion
-**Summary:** PASS3 | BLOCKED1 | TODO1
+**Summary:** PASS4 | BLOCKED1 | TODO0
 | Subtask | Status | Evidence |
 | --- | --- | --- |
 | Frozen isolation and actual-seam RED | PASS |Base9974,original writer/ledger symptoms reproduced |
 | Applicability/inventory and nonempty proof repair | PASS |11 focused and194 affected PASS |
 | Proposed fixture-only amendment | BLOCKED |YC scope approval pending;two files preserved uncommitted |
 | Exact approved ownership/budget verification | PASS |Four paths37 churn;3840/3956 retained |
-| Approved source commit/records archive | TODO |Source b60dfddd complete;archive next |
+| Approved source commit/records archive | PASS |Source b60dfddd,records b32ad29d |
 
 ## 2. Drift detection
 **Verdict:** No drift; work remains on the agreed route.
@@ -69,7 +69,7 @@ now explicitly mark pending YC scope approval. Latest approved accounting3840.
 ## 3. Route correction
 **Branch:** B;record root authority correction before archive (applied).
 **Behavior to stop:** None.
-**Next route:** Archive approved b60dfddd and3840 budget;parent integrates/reruns
+**Next route:** Parent integrates approved b60dfddd and records b32ad29d/reruns
 strict77 and independently seeks YC two-path approval. No further proposal edits.
 
 ## 4. Three priorities
