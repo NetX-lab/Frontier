@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept fresh46fe strict77/77 and separate101/197/53 checks; full-unit/final guards remain pending. |
 | 2026-10-24 | Integrate accepted key30fb6a30, verify9491 final union, and assign fresh frozen regressions; full workflow remains open. |
 | 2026-10-24 | Accept independent snapshot baseline audit and mixed-group event-count correction; record current storage and performance gaps. |
 | 2026-10-24 | Integrate accepted byte/snapshot component64c83ac4, reconcile9477 global and allocate17-gross derived-key reuse. |
@@ -32,8 +33,10 @@ gross and14/15retained yields9477source/9491global. Independent two-path audit
 unchanged bindings. Together with the complete snapshot audit, this accepts
 the114allocated/113changed union with zero violations. Evidence is in
 plan_key_reuse/parent/ and repairs/evidence/plan_key_scope/.
-Fresh strict77/full-unit/environment regressions are assigned on46fe83ac under
-post_key_regressions/. Remaining-runtime design investigation is read-only;
+Fresh46fe strict77 passes77/77, and short suites separately101/197/53PASS.
+Parent27hash and old/new JUnit checks pass, explicitly preserving the approved
+one-ID metadata-test replacement. Full-unit/dependent comparisons/final guards
+remain pending under post_key_regressions/. Remaining-runtime design is read-only;
 no further source allocation or full CLI acceptance is implied.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.

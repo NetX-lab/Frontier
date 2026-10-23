@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Verify post-key strict77/77 and separate101/197/53 results with27 parent hash checks; retain the approved metadata-ID replacement and pending full-unit. |
 | 2026-10-24 | Accept key16/+14 after both reviews, parent124/1 and full-wave parity; integrate30fb6a30 and verify9491 union on46fe83ac; assign fresh frozen regressions. |
 | 2026-10-24 | Accept independent snapshot114/113-path audit, correct mixed-group event expectation and storage units, and record the unauthorized CSV scan. |
 | 2026-10-24 | Integrate accepted snapshot64c83ac4; archive H3/trace diagnoses and allocate the17-gross key-only successor. |
@@ -72,8 +73,13 @@
   Snapshot audit plus delta plus final binding guard accepts114allocated/
   113changed,CORE4173/PRICING3954/native1350,9477source/9491global,zero violations.
 - in-progress/regressions: D29-POST-KEY-FROZEN-REGRESSIONS, session
-  ses_e98925887ffecetw6nTB6nD8f0, is assigned fresh strict77/full-unit/environment
-  checks on source46fe83ac; records belong in post_key_regressions/.
+  ses_e98925887ffecetw6nTB6nD8f0, runs on source46fe83ac in integrated07.
+  Strict77 passes77/77, with owner451artifact hashes/519cache names per side;
+  short suites separately101/197/53PASS. Parent27hash checks and old/new JUnit
+  ID/status parsing pass. The approved metadata lifetime test is one removed/
+  new passing ID, not an alias. Full-unit, dependent comparisons, necessary
+  supplements and final guards remain pending. Owner records:post_key_regressions/;
+  primary:resumed_performance/post_key_regression_acceptance.json.
 - in-progress/read-only: D29-REMAINING-RUNTIME-DESIGN, session
   ses_e9577903effeYhkEtAPQt7g228, evaluates a materially useful next design from
   current code and retained evidence. No source allocation or new probe granted.

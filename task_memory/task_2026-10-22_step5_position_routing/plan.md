@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept fresh46fe strict77/77 and separate101/197/53 checks; full-unit and its closing guards remain pending. |
 | 2026-10-24 | Accept key component and final9491 union on46fe83ac; assign frozen regressions and remaining-runtime design investigation. |
 | 2026-10-24 | Close snapshot baseline scope audit and record mixed-group event/storage constraints; final key union and workflow remain pending. |
 | 2026-10-24 | Accept and integrate snapshot db581ff6 at64c83ac4; allocate the17-gross derived-key successor within PRICING headroom. |
@@ -143,7 +144,7 @@ change is allocated. See early_init_repro/report.md.
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Final union:3954/3956; key uses16/17gross and14/15retained. |
 | Complete integration and final freeze | Key integrated30fb6a30; source46fe83ac exactly matches verified c4e06a61 outside records. Fresh regressions assigned on46fe;gitlink3dac53c unchanged. |
-| Legacy strict77 | Fresh46fe checks assigned. Prior79 accepted77/77,451 artifact hashes and519 cache names per side. |
+| Legacy strict77 | Fresh46fe passes77/77;owner451 artifact hashes/519 cache names per side;parent receipt/raw-output hash checks pass. |
 | Full-unit failure/error-set gate | Accepted on79:8018PASS;all8607 e41 statuses unchanged,three newPASS. Raw279FAIL/32ERROR/281SKIP remain;101 and52 environment supplements pass separately. |
 | Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
 | Independent source review | All accepted components including key have No findings on both axes. |
