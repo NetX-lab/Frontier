@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent verifies prepared selection and allocates three-path250-gross repair; trace14 passes both independent review axes. |
 | 2026-10-23 | Parent verifies complete208-operator wave; investigate prepared selection/common collectives and allocate trace's single serialization path within20 gross. |
 | 2026-10-23 | Accept final79 unit comparison and environment supplements; record both main08 timeouts and reopen real execution-path diagnosis. |
 | 2026-10-23 | Consolidate feature codecf894fa4;parent accepts fresh77/77 and101/197/53 plus T2 static63/26;full-unit/main08 pending. |
@@ -43,6 +44,9 @@ Apply trace_serialization_scope_amendment.json next:one new CORE path under the
 standing repair authority,20 gross reserved through a20-line internal transfer.
 The active ledger is112 paths (CORE47/native19/PRICING46), with unchanged owner
 and total ceilings. The accepted79 audit remains111 paths/9254 measured lines.
+Apply prepared_point_scope_amendment.json afterward: three existing CORE paths,
+250-gross step cap (source180/tests70),212 allowance lines transferred internally.
+The concurrent trace20 and prepared250 reservations leave164 CORE lines free.
 
 Completed handoff boundary: CLI placement repair -> parent real-constructor checks
 and independent re-review -> feature-branch code/record consolidation. YC now
@@ -60,8 +64,9 @@ real execution-path feedback loop -> measured cause -> bounded repair allocation
 regressions and full CLI. A passing isolated point is not the full-workflow gate.
 Parent has now verified the original layer61 loop and all208 operators of the
 complete adjacent layer60 wave at position6147. The active parallel work is:
-prepared row/plan selection analysis + common collective lifetime analysis +
-trace serialization replacement (20-gross allocation). Combine measured effects
+prepared row/plan selection implementation (250-gross allocation) + common
+collective lifetime analysis + trace component parent verification (14/20 gross,
+both independent review axes No findings). Combine measured effects
 and evaluate full-wave multiplicity before another full CLI. Whole proof objects
 remain layer-specific even when timings/plans match. Root receipts are under
 resumed_performance/main08_wave_verification.json.
@@ -90,10 +95,10 @@ and its own faithful short loop. See early_init_repro/report.md.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
-| Approval, ownership and baseline | Complete; effective112 under existing budgets, including the trace20 allocation. |
+| Approval, ownership and baseline | Complete; effective112 under existing budgets, including trace20 and prepared250 allocations. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
-| CORE/SOURCE47 allocated | Group/loader repairs closed;46 paths/3970 measured on79. Trace20 pending in the new path;total cap4404. Parent81/1oldskip,2,29,52 recorded separately. |
+| CORE/SOURCE47 allocated | Group/loader closed;3970 measured on79. Trace14/20 reviewed, parent check pending; prepared250 allocated. Conservative combined bound4240/4404. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Exact-current-text parsing repair closed;parent128PASS;3920/3956 measured. |
 | Complete integration and final freeze | Complete:79 frozen in integrated06,gitlink3dac53c;feature mergecf894fa4 source bytes identical. |

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent verifies prepared selection36 positive/24 negative records and unchanged wave payload; allocate250 gross; trace14 has Standards/Spec No findings. |
 | 2026-10-23 | Verify actual complete208-operator wave; allocate one-path trace replacement and investigate prepared selection/collective lifetime independently. |
 | 2026-10-23 | Parent accepts final79 regression comparison; both main08 modes time out after reaching decode. Start a new execution-path diagnostic loop. |
 | 2026-10-23 | Parent verifies fresh79 strict77/short suites and T2 static63/26;feature mergecf894fa4 matches frozen code. |
@@ -55,13 +56,21 @@
   the same repeated-work counts. Full proofs retain the current global_layer_id;
   timing equality does not permit caching a different layer's proof. Receipts:
   resumed_performance/{main08_wave_verification.json,test_report_2026-10-23_main08_wave.md}.
-- in-progress: CORE prepared-point selection analysis,
-  ses_e9b3efeebffem2dcbXlVGNr8O2; common collective lifetime analysis,
-  ses_e975020aeffe7JnGJiqLD2PJ0r. Both are source-read-only and unallocated.
-- allocated: trace serialization's single write path,<=20 gross in one new CORE
-  path. Sole-reader evidence confirms the internal to_dict helper can be removed;
-  its replacement must preserve full JSON bytes and flush failure restoration.
-  Active scope112 paths,unchanged CORE4404/source9942/global10000 ceilings.
+- completed/diagnostic: prepared point prototype9456d133; parent warm1.237s,
+  one16464-row/168-key preparation,1968 decodes/80 current reads and unchanged full
+  wave payload. Separate matrix36 positive comparisons/24 negative records passes.
+  Report:resumed_performance/test_report_2026-10-23_prepared_point_seam.md.
+- allocated: CORE owner ses_e9b3efeebffem2dcbXlVGNr8O2 receives prepared selection
+  implementation in three existing paths,<=250 gross (source180/tests70), via
+  repairs/prepared_point_scope_amendment.json. Common collective lifetime analysis,
+  ses_e975020aeffe7JnGJiqLD2PJ0r, remains read-only and unallocated.
+  The pre-commit overlay check caught a10-line shortfall in the initial donor list;
+  two unused profiling allowances supplied it before allocation/delegation.
+- completed/review: trace code390bb5a2/records9ae60ebc,14/20 gross. Standards
+  reviewer ses_e972c468cffeZKEx6278S1oCde and Spec reviewer
+  ses_e972c45a3ffenZuSi1vyddEDKM independently return No findings. Parent source
+  verification is pending; source is not yet merged into the next validation union.
+  Active112 paths and CORE4404/source9942/global10000 ceilings remain unchanged.
   No new full CLI starts before combined evidence,review and source freeze.
 - completed: YC requests continuation here. Frozen sourcee41abc073500d61f224eda4fca1123e74e40544d
   is clean in /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05;

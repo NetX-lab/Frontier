@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Allocate prepared point selection to three existing CORE paths, at most250 gross, after parent differential verification. |
 | 2026-10-23 | Allocate a20-gross single-path trace serialization replacement under existing repair-path authority; other residual proposals remain unallocated. |
 | 2026-10-23 | Record bounded residual CPU repairs and carry forward YC's task-required H800 authority. |
 | 2026-10-23 | YC defers handoff and resumes all remaining work in the current session;existing acceptance/resource limits remain. |
@@ -186,5 +187,31 @@ The zero-sum overlay transfers20 unused lines from the existing CORE fixed-probe
 path, making112 allocated paths and CORE47/4404, while native19/1582,
 PRICING46/3956, source9942 and global10000 remain unchanged. Existing real-disk
 tests and retained actual-wave replay settle the focused verification; the final
-regression set follows the review/freeze route. Prepared-point and collective
-lifetime changes are still analysis-only and receive no allocation here.
+regression set follows the review/freeze route. Prepared-point allocation is
+recorded below; collective-lifetime changes remain analysis-only.
+
+## [Implementation Decision] D29-PREPARED-POINT-REUSE
+
+Parent verifies the real prepared-selection prototype and allocates at most250
+gross lines across the existing workload module and its two existing test paths:
+source180, binding test45 and runtime test25. The zero-sum overlay is
+repairs/prepared_point_scope_amendment.json, applied after the trace amendment.
+It transfers212 unused CORE allowance lines without changing112 allocated paths,
+CORE4404, native1582, PRICING3956, source9942 or global10000. With trace20 also
+reserved, the conservative CORE bound is4240/4404 rather than4220.
+
+Keep the existing query interface. Prepare only fixed row/plan facts within a
+predictor, tracking the actual estimator, attached physical-row tuple and its
+measurement identity. Read current artifact text on every query and rebuild
+preparation when that text or a supported estimator/tuple/identity changes.
+Current layer/family/registry/source/point selection, native context, exact
+duration/count lookup and source proofs remain live. Preserve all error and
+ambiguity checks, full plan keys and layer-specific proofs. Do not cache numerical
+predictions or whole proof objects. The prototype's internal adapter and counters
+are diagnostic machinery, not required production abstractions.
+
+The parent observes one16464-row/168-key preparation,1968 warm decodes with80
+current reads, unchanged full-wave payload,36 positive comparisons and24 negative
+records. These settle the repeated-selection seam, not the2400s workflow limit.
+Implementation requires focused verification, independent review, final union
+accounting and source freeze before new full CLI/regression acceptance.
