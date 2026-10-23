@@ -117,3 +117,31 @@ Branch B for stale owned delivery state only: preserve initial bytes, append his
 1. Historical01 remains unsealed/unsubmitted and all45bytes pinned; runtime13modules remain05952396.
 2. Fresh launcher stops before write_run_manifest body and credentials/run-file/submission access; bootstrap fixtures prove wiring only, not locked-image validity.
 3. Root must repeat87sources/23tools/20binaries checks for new retained tool hashes, then independent review/seal/runtime acceptance.
+
+## Repair completion and delivery checkpoint
+
+- completed: Repair/source commitd87f4c74b9d5c0eec0958ba2b7351e76b04acf14; clean-tree first generation02 succeeded once. Exact builder command/environment and152/300cumulative,21incremental gross-line accounting are appended in test_report_2026-10-23_package.md. Source diff SHA25631dff85b909c226fe7db17a32065b6f1ac2bf247571778b4bb503b015307620d.
+- completed: Actual disposable generated01 launcher RED at worker19; generated02 launcher GREEN in fresh-I/-B subprocess, no manual paths or pd_replay preload, trace stops before write_run_manifest body. Actual generated bootstrap verifies CPU-labelled installed source/binary stand-ins and produces root:root/tests/comparison/dp_placement_pp; a fresh child imports worker GREEN from that generated environment only. Real worker.run imports also execute through generated entry until a traced stop before output-path access. No real candidate manifest/run files/pycache or platform operation.
+- completed: All4role/DP node_plan/instance_env/server_command paths passed, balanced_topk,NativeServeProfile,64/0/0/0 profiler,ignore_frontend/gzip,4derived trace directories and records250000/bytes268435456. Native config AST positive and3negative controls passed; auxiliary verifier omissions ConfigT then os are preserved verbatim in the report/raw evidence, no source/package changes. Actual frozen balanced_frontier84sources and roleworld_size16 each PASS.
+- completed: Fresh02actual45files/6,980,696bytes;13runtime05952396,87native,23tools,10retained,4model,5workload hashes PASS. Config/lock source_sha256 vs staged_sha256 bind generated bootstrap/launcher. Original01all45files unchanged; R4original123/checkers3 rehashed unchanged; existing77/77matrix binding unchanged. Native2cf/C26/layout/resources3600/1800/1800 remain identical. Full hashes/counts/commands and remaining root gates in delivery.json/report.
+- completed: Original delivery/diff/progress/report bytes retained in initial_delivery.json,initial_source.diff,initial_progress.md,initial_test_report_2026-10-23_package.md. New delivery explicitly marks historical01FAILED and fresh02CPU_ENTRY_GREEN_UNSEALED. Final record-only commit closes writer ownership; no further writes after that commit.
+
+### 1. 规划完成情况
+
+PASS4｜FAILED1historical01｜TODO0owner: preservation/preflight, bounded source/clean generation, actual-entry/affected CPU proof, validated delivery all complete. Historical01 remains FAILED rather than retroactively relabelled; root I2locked-image and I3/I4outside this slice remain pending.
+
+### 2. 偏离检测
+
+Window repair checkpoint through d87f4c74 generation02/entry/hash controls and delivery; frontier record-only commit/writer stop. D1-D7 CLEAR: actual entry and proportional disposable controls directly satisfy reopened P1; optional repeat config checks ended after actual names were restored; no persistent machinery, third fix attempt, unrelated runtime edit or platform operations. S1-S6 now clear: stale own completion state is preserved as history and superseded by explicit historical01FAIL/fresh02GREEN. Attribution none.
+
+### 3. 纠正建议
+
+Branch A: root spec/plan unchanged; no drift to stop. Validate new delivery hashes/archives/diff and git diff checks, commit only allocated records, report source/record commits, then stop all writes. Root repeats independent reviewer and locked-image/source/binary/bootstrap checks before any seal/submission.
+
+### 4. 最值得关注的3点
+
+1. Fresh02package map7768ddd67c024b7c08942d1cecc2dce8e2c620eefae8d631e9703171e1411dee; old01package map5b6fc997102102f2f4ec300ec52c1edc91ffecd7324f93587af119c14b4fadcf; both unsealed/unsubmitted.
+2. Bootstrap stand-ins prove generated environment/import wiring only; root repeats actual locked-image bootstrap with new tools23and existing binaries20.
+3. No GPU/native/reference/E2E acceptance or hook-installation claim; all runtime32rank/trace/coverage/stream/event/PDL/graph gates remain unverified.
+
+Final artifact checks PASS: both45file maps/bytes/counts, initial archives4byte-exact to62092da3, all local evidence hashes and exact diff, original123/checkers3 unchanged. Plain git diff --check exit2 identifies only source.diff:7/8 one-space blank git context lines; retained verbatim as evidence. Actual two-source diff1dc93c6f..d87f4c74 --check and record diff excluding source.diff both PASS. No source/package rerun or mutation; no unresolved owner blocker. Commit final records then cease all writes.

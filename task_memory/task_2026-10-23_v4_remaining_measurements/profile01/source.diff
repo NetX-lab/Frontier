@@ -1,22 +1,26 @@
 diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py
-index d1f63911..cf57a877 100644
+index d1f63911..46720f56 100644
 --- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py
 +++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py
-@@ -44 +44 @@ def write_json(path, value):
+@@ -41,12 +41,33 @@ def write_json(path, value):
+     path.write_text(json.dumps(value, sort_keys=True, indent=2) + '\n')
+ 
+ 
 -def main(generation='06'):
 +def main(generation='06', profile_plan=None):
-@@ -46,2 +46,8 @@ def main(generation='06'):
+     global PACKAGE
 -    PACKAGE = HERE / f'candidate_h800_p0_{generation}'
 -    assert generation == '06', 'Only the root-selected fresh native06 generation is authorized'
 +    plan = None if profile_plan is None else json.loads(profile_plan.read_text())
 +    if plan is None:
 +        assert generation == '06', 'Only the root-selected fresh native06 generation is authorized'
 +    else:
-+        assert generation == '01' and plan['generation'] == generation
++        assert generation == '02' and plan['generation'] == generation
 +        assert plan['diagnostic_only'] and not plan['e2e_reference_admission']
 +        assert profile_plan.resolve().is_relative_to(REPO / 'task_memory')
 +    PACKAGE = HERE / f'candidate_h800_p0_{"profile_" if plan else ""}{generation}'
-@@ -49,0 +56,15 @@ def main(generation='06'):
+     commit = git(REPO, 'rev-parse', 'HEAD').decode()
+     assert not git(REPO, 'status', '--short'), 'Commit verified source before staging'
 +    modules = MODULES + (['tests/comparison/calibration/native_serve_profile.py'] if plan else [])
 +    if plan:
 +        accepted = plan['accepted_runtime_commit']
@@ -32,7 +36,13 @@ index d1f63911..cf57a877 100644
 +        acceptance = json.loads((REPO / plan['primary_acceptance']).read_text())
 +        assert acceptance['status'] == 'ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT'
 +        assert acceptance['source_commit'] == accepted
-@@ -85,0 +107,20 @@ def main(generation='06'):
+     native_commit = git(NATIVE, 'rev-parse', 'HEAD').decode()
+     assert native_commit == '2cf0a6915ce544dc493a0990f2ea38d81601128a'
+     assert not git(NATIVE, 'status', '--short'), 'The original native snapshot must remain clean'
+@@ -83,6 +104,26 @@ def main(generation='06'):
+         data_parallel_size=2, tensor_parallel_size=8, pipeline_parallel_size=1,
+         seed=prior['llm']['seed'], block_size=None, kv_cache_dtype='fp8',
+         worker_extension_cls='native_full_structure.FullModelInventory', moe_gating_routing_runtime_path='balanced_topk')
 +    if plan:
 +        output = Path(plan['cloud_root']) / 'case/runs/groundtruth_clean' / plan['run_tag']
 +        config.update(run_tag=plan['run_tag'], job_tag=plan['run_tag'], output_dir=str(output),
@@ -53,7 +63,13 @@ index d1f63911..cf57a877 100644
 +        lock['profile_inputs'] = {name: dict(path=path, sha256=sha((REPO / path).read_bytes()))
 +            for name, path in dict(primary_acceptance=plan['primary_acceptance'],
 +                proposal_inputs=plan['proposal_inputs'], final_freeze=inputs['freeze_path']).items()}
-@@ -111 +152,6 @@ def main(generation='06'):
+     # Native compilation/capture defaults are kept unresolved, as in accepted G0B.
+     engine.pop('compilation_config', None)
+     accepted_model_sha = prior['expected_source_hashes'][
+@@ -108,11 +149,18 @@ def main(generation='06'):
+     for name in checker.ROUTING_PINS:
+         config['expected_source_hashes'][name] = sha((NATIVE / name).read_bytes())
+     assert len(config['expected_source_hashes']) == 74, 'Routing source binding must have74 pins'
 -    for name in MODULES:
 +    if plan:
 +        for name in plan['native_profile_source_pins']:
@@ -61,17 +77,62 @@ index d1f63911..cf57a877 100644
 +        lock['native_profile_source_hashes'] = {name: config['expected_source_hashes'][name]
 +            for name in plan['native_profile_source_pins']}
 +    for name in modules:
-@@ -115,0 +162,2 @@ def main(generation='06'):
+         target = 'native_pd_worker.py' if name.endswith('/native_pd_worker.py') else name
+         if name == checker.BALANCED_MODULE:
+             target = 'tests/comparison/calibration/balanced_routing.py'
+         content = subprocess.check_output(['git', '-C', str(REPO), 'show', f'{commit}:{name}'])
 +        if plan:
 +            assert content == subprocess.check_output(['git', '-C', str(REPO), 'show', f'{accepted}:{name}']), name
-@@ -153,0 +202,2 @@ def main(generation='06'):
+         stage(target, content)
+         config['harness_files'][name] = target
+         lock['committed_files'][target] = dict(path=name, commit=commit, sha256=sha(content))
+@@ -124,8 +172,13 @@ def main(generation='06'):
+     checker.verify_balanced_frontier(config | {'harness_commit': commit}, engine)
+     lock['retained_files']['case/inputs/frontier.json'] = dict(source=str(FRONTIER), sha256=sha(content))
+     for name in ('probe_runtime_inventory.py', 'probe_nixl_read.py',
+-                 'native_dummy_bootstrap.py', 'overlay_model.py', 'submit_native_diagnostic.py'):
++                  'native_dummy_bootstrap.py', 'overlay_model.py', 'submit_native_diagnostic.py'):
+         content = original = (V4 / name).read_bytes()
++        if plan and name == 'native_dummy_bootstrap.py':
++            marker = 'PYTHONPATH=str(staged)'
++            assert content.decode().count(marker) == 1
++            content = content.decode().replace(marker,
++                "PYTHONPATH=os.pathsep.join((str(staged), str(staged / 'tests/comparison/dp_placement_pp')))").encode()
+         if name == 'submit_native_diagnostic.py':
+             text = content.decode().replace('"VLLM_LOGGING_LEVEL": "DEBUG"', '"VLLM_LOGGING_LEVEL": "INFO"')
+             marker = '    print("RJOB_NAME", workers.rjob.meta.name, flush=True)'
+@@ -143,6 +196,8 @@ def main(generation='06'):
+         config['tool_hashes'][str(PACKAGE / name)] = sha(content)
+         lock['retained_files'][name] = dict(source=str(V4 / name), source_sha256=sha(original),
+             sha256=sha(content), changed=content != original)
++        if plan and name == 'native_dummy_bootstrap.py':
++            lock['retained_files'][name]['staged_sha256'] = sha(content)
+     overlay = json.loads((V4 / 'overlay.json').read_text())
+     overlay['staged_dir'] = str(PACKAGE)
+     leaf = overlay['files']['models/deepseek_v4/nvidia/model.py']
+@@ -151,6 +206,8 @@ def main(generation='06'):
+     assert sha((NATIVE / 'vllm/models/deepseek_v4/nvidia/model.py').read_bytes()) == leaf['base_sha256']
+     write_json(PACKAGE / 'overlay.json', overlay)
+     config['retained_files']['overlay.json'] = sha((PACKAGE / 'overlay.json').read_bytes())
 +    if plan:
 +        config['tool_hashes'][str(PACKAGE / 'overlay.json')] = config['retained_files']['overlay.json']
-@@ -162,0 +213,3 @@ def main(generation='06'):
+     lock['runtime_overlay'] = overlay
+     original_model = Path(prior['llm']['model'])
+     for name, expected in config['model_hashes'].items():
+@@ -160,6 +217,9 @@ def main(generation='06'):
+     hashes = {}
+     for name in ('trace.csv', 'request_ids.json', 'warmup_pool.csv', 'manifest.json', 'SHA256SUMS'):
+         content = subprocess.check_output(['git', '-C', str(REPO), 'show', f'68f891b:{WORKLOAD}/{name}'])
 +        if plan:
 +            source = inputs['files']['trace/' + name]
 +            assert sha(content) == source['sha256'] == freeze['original_files'][source['source_path']], name
-@@ -193,0 +247,10 @@ def main(generation='06'):
+         stage('trace/' + name, content)
+         stage('case/inputs/trace/' + name, content)
+         hashes[name] = sha(content)
+@@ -191,6 +251,16 @@ def main(generation='06'):
+             root_cap_check_required=True, root_package_acceptance_required=True,
+             auxiliary_validators_soft=True, H200_nonpreemptible_running_plus_queued_limit=32,
+             formal64_requires_same_model_same_hardware32_all_four_errors_at_most=0.30))
 +    if plan:
 +        case.update(case_id='dsv4-h800-p0-profile-fixed128-qps1',
 +            run_generation=f'v4-native-v028-h800-p0-profile-20261023-{generation}',
@@ -82,17 +143,39 @@ index d1f63911..cf57a877 100644
 +            policy=dict(priority='P0', gpu_type='H800', charged_group='codesign', preemptible=False,
 +                diagnostic_only=True, e2e_reference_admission=False, auxiliary_validators_soft=True,
 +                root_cap_check_required=True, root_package_acceptance_required=True))
-@@ -210,0 +274,9 @@ def main(generation='06'):
+     stage('case/manifest.yaml', yaml.safe_dump(case, sort_keys=False).encode())
+     launch = (TEMPLATE / 'launch.py').read_text()
+     launch = launch.replace("('H200', 'step_main', 8, 8)", "('H800', 'codesign', 8, 4)")
+@@ -202,12 +272,25 @@ def main(generation='06'):
+     after = before + "\nfrom native_pd_worker import write_run_manifest\n" \
+         "run_manifest = write_run_manifest(config, os.environ['AUTHORIZATION'])\n" \
+         "print('PRELAUNCH_MANIFEST', str(run_manifest), flush=True)"
++    if plan:
++        after = after.replace('\nfrom native_pd_worker',
++            "\nsys.path[:0] = [str(HERE), str(HERE / 'tests/comparison/dp_placement_pp')]\nfrom native_pd_worker")
+     assert launch.count(before) == 1
+     stage('launch.py', launch.replace(before, after).encode())
+     seal = (TEMPLATE / 'seal.py').read_text()
+     seal = seal.replace("('model', 'tests', 'trace')", "('model', 'tests', 'trace', 'case/inputs')")
+     seal = seal.replace('files = sorted([path', "files = sorted([HERE / 'case/manifest.yaml'] + [path")
+     stage('seal.py', seal.encode())
 +    if plan:
 +        for name in ('launch.py', 'seal.py'):
 +            content = (PACKAGE / name).read_bytes()
 +            config['retained_files'][name] = sha(content)
 +            config['tool_hashes'][str(PACKAGE / name)] = sha(content)
 +            lock['retained_files'][name] = dict(source=str(TEMPLATE / name),
-+                source_sha256=sha((TEMPLATE / name).read_bytes()), sha256=sha(content))
++                source_sha256=sha((TEMPLATE / name).read_bytes()), sha256=sha(content),
++                staged_sha256=sha(content))
 +        write_json(PACKAGE / 'config.json', config)
 +        write_json(PACKAGE / 'case/inputs/native_config.json', config)
-@@ -224,0 +297,12 @@ def main(generation='06'):
+     write_json(PACKAGE / 'source_lock.json', lock)
+     write_json(PACKAGE / 'evidence_readiness.json', dict(
+         status='UNSEALED_REVIEW_CANDIDATE', submitted=False, runtime_qualified=False,
+@@ -222,6 +305,18 @@ def main(generation='06'):
+             scheduled_arrival_span_seconds=426, minimum_schedule_gpu_hours=32*426/3600,
+             h800_measured_startup_or_timing=False),
+         reused_h200_evidence='Source/bootstrap/native dtype and geometry functions only; no H800 memory/timing claim'))
 +    if plan:
 +        readiness = json.loads((PACKAGE / 'evidence_readiness.json').read_text())
 +        readiness.update(diagnostic_only=True, e2e_reference_admission=False,
@@ -105,25 +188,33 @@ index d1f63911..cf57a877 100644
 +            primary_review=['Unsealed diagnostic package; root source/image checks pending',
 +                'Ineligible for E2E or native/reference admission'])
 +        write_json(PACKAGE / 'evidence_readiness.json', readiness)
-@@ -233,0 +318 @@ if __name__ == '__main__':
+     print(json.dumps(dict(package=str(PACKAGE), source_commit=commit,
+         native_source_pins=len(config['expected_source_hashes']), unsealed=True,
+         actual_submission_or_native_admission=False)))
+@@ -231,7 +326,8 @@ if __name__ == '__main__':
+     import argparse
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument('--generation', required=True, type=int)
 +    parser.add_argument('--profile-plan', type=Path)
-@@ -237 +322 @@ if __name__ == '__main__':
+     args = parser.parse_args()
+     if args.generation < 1:
+         parser.error('generation must be positive')
 -    main(f'{args.generation:02d}')
 +    main(f'{args.generation:02d}', None if args.profile_plan is None else args.profile_plan.resolve())
 diff --git a/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile_plan.json b/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile_plan.json
 new file mode 100644
-index 00000000..25e2c4a7
+index 00000000..9ffb9058
 --- /dev/null
 +++ b/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile_plan.json
 @@ -0,0 +1,44 @@
 +{
-+  "generation": "01",
++  "generation": "02",
 +  "diagnostic_only": true,
 +  "e2e_reference_admission": false,
 +  "accepted_runtime_commit": "05952396b0b8e5a794c53e10f9a21213beb5193d",
 +  "primary_acceptance": "task_memory/task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json",
 +  "proposal_inputs": "task_memory/task_2026-10-23_v4_remaining_measurements/driver/proposal_inputs.json",
-+  "run_tag": "dsv4-h800-p0-profile-20261023-01",
++  "run_tag": "dsv4-h800-p0-profile-20261023-02",
 +  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023",
 +  "worker_extension_cls": "native_serve_profile.NativeServeProfile",
 +  "window": "First formal repetition through its existing drain; one window only",
