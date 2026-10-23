@@ -820,3 +820,43 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Owned code能emit/validate/threadactual point，CORE不需新API。
 2. 原生单次调用/软诊断与frozen/fullpolicy边界未变，剩余额度350。
 3. GPU实际值/独立资格仍待root，CPU fixture不替代。
+
+## Producer scoped delivery checkpoint
+
+- completed:9dbca5b3 source/tests/records commit, six existing code paths, no peer
+  imports/edits/new paths/agents/platform operations. Exact baseline3606/3956;
+  full subpatch unchanged and isolated3dac53c clean. Requirements reread; original
+  missing producer writer is resolved rather than deferred to CORE. No new tests
+  after final430/64 checks; root review/integration/runtime data remain separate.
+
+## 1. 规划完成情况
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Observed point writer | PASS |9dbca5b3 original-ref chain/existing prepared_context |
+| Exact collective/count association | PASS |9dbca5b3 valid/stale source/policy/geometry evidence |
+| Scoped verification | PASS |430 distinct350 PASS/80 SKIP;native64 PASS;3606 quota |
+| Scoped commit/receipt | PASS |9dbca5b3 delivered; CORE existing field consumer |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**9dbca5b3至今｜**当前前沿：**root re-review/integration
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Commit-ID archive only |
+| D2 细节反复重试 | CLEAR |No active failure or further fixes |
+| D3 支线问题修补 | CLEAR |Owned producer finished; no peer substitutes |
+| D4 可并行任务停滞 | CLEAR |Owned work done, root acceptance independent |
+| D5 超范围镀金 | CLEAR |43 paths3606; no model/qualification expansion |
+| D6 分析空转 | CLEAR |Concrete9dbca5b3 handed off |
+| D7 路线违背 | CLEAR |Original calls and frozen/fullpolicy boundaries retained |
+**文档检查：**S5 pending commit facts updated to9dbca5b3; S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新完成提交事实。
+**文档更新（先执行）：**plan/receipt/summary/report记录9dbca5b3（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**root复审/集成已有CORE字段；不启动未授权GPU采集。
+## 4. 最值得关注的 3 点
+1. Required observed native point writer/code handoff已交付9dbca5b3。
+2. 剩余额度350，sub3dac53c未修改，gitlink由root处理。
+3. 实际GPU值/独立qualification/globalacceptance不由CPUfixture证明。

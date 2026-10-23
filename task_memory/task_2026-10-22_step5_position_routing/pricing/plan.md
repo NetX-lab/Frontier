@@ -88,5 +88,5 @@ no new peer API or import needed. Runtime GPU values/independent qualification
 remain future inputs, not missing producer code.
 
 Current: writer+association/validator implemented; actual-seam RED/GREEN and valid
-producer validator->exporter PASS. Final scoped records/commit pending. No broad
+producer validator->exporter PASS. Scoped source/record commit9dbca5b3 delivered. No broad
 regression, peer edits or submodule change required.

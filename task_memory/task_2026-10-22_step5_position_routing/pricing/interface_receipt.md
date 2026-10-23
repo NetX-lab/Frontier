@@ -442,6 +442,8 @@ unique exact match (moe_routing_workload.py165-170 at inspection). No new shared
 is needed: carry this measured field unchanged, including source callable facts,
 never synthesize it from the candidate prediction. Root owns integration and
 actual-runtime collection; no peer writes/imports performed here.
+Source/tests/records commit9dbca5b3 is ready for root-authorized CORE integration;
+430 distinct affected cases350 PASS/80 SKIP, published native64 PASS,3606/3956.
 
 Bound eager module observer gains `routing(router)` with the original named
 signature hidden_states,router_logits,topk_indices_dtype=None,*,input_ids=None;
