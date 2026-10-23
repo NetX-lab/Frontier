@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Integrate accepted byte/snapshot component64c83ac4, reconcile9477 global and allocate17-gross derived-key reuse. |
 | 2026-10-24 | YC approves run-fixed collective input; byte repair32/36 delivered, with successor ownership design and combined review pending. |
 | 2026-10-23 | Merge accepted cost-fields75404143, archive parent checks and independent reviews, correct workload clocks and close the unsuccessful identity-cache control. |
 | 2026-10-23 | Accept and integrate prepared selectioneece87b2;9375 source/9389 global; allocate cost-fields8 and correct historical startup explanation. |
@@ -21,7 +22,16 @@
 
 ## Current-session continuation
 
-Current feature source includes accepted trace, prepared selection and cost-fields75404143.
+Current feature source includes accepted byte/snapshot db581ff6 at64c83ac4.
+Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trainerPASS,
+five path checks, both review axes No findings and complete208-event output parity
+pass. One P/D input-binding read, zero cold/warm reads; warm0.340867→0.162715s is
+component timing with288 lookups/144 proofs/64 collective prices unchanged.
+Component reconciliation is9463source/9477global; final114-path audit remains open.
+The next source step is derived-key reuse17gross within existing PRICING headroom.
+Detailed completion evidence is in run_input_snapshot/.
+
+Earlier accepted trace, prepared selection and cost-fields75404143 checkpoint:
 Both independent review axes have No findings. Parent verification preserves
 the trace component's598-event JSONL bytes,all208 actual layer60 operator proofs
 and exception/buffer behavior;its focused tests have98PASS and the same baseline
@@ -40,15 +50,17 @@ does not improve timing. Parent corrected workload_multiplicity/: iteration4
 had about203s remaining, not1315s, because initialization preceded the first
 scheduler event by about1112s. No anomalous slowdown is established. Output
 volume still projects approximately262GB/mode; output-preserving encoding
-analysis and a bounded byte-read repair are the next work. The previous79 results remain
+diagnoses are archived under trace_encoding_seam/ and emission_immutable_work/.
+The public fields conversion is rejected; private encoding remains unallocated.
+The previous79 results remain
 revision-bound. The next complete CLI still requires a reviewed, frozen union.
 
 YC now explicitly allows collective_local.json to be fixed for one run and
 reloaded on the next. The per-call hot-update contract is superseded; actual
-point/proof validation and output remain. Byte code2f2d9339/records56529fcd is an
-unmerged intermediate: owner78PASS in both versions,208event/fullledger equality,
-32/36gross and measured1.037333->0.325204s warm. Root first resolves the run-wide
-input owner, then allocates and independently reviews the final snapshot change.
+point/proof validation and output remain. The byte intermediate32/36 and its
+paired78PASS evidence are integrated with the manager-owned snapshot. A new
+Simulator reloads the input; actual P/D constructors share one validated version.
+The H3 config-control gain remains UNQUALIFIED; no implementation was allocated.
 
 ### Earlier resumed checkpoints
 

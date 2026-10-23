@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept and integrate snapshot db581ff6 at64c83ac4; allocate the17-gross derived-key successor within PRICING headroom. |
 | 2026-10-24 | Close duplicate-plan hypothesis; queue narrow derived-key allocation after snapshot accounting and attribute remaining pricing work separately. |
 | 2026-10-24 | Select manager-owned shared inputs; allocate114-path snapshot replacement within existing caps and schedule constructor/lifetime verification. |
 | 2026-10-24 | YC permits run-fixed collective inputs; trace the ownership boundary and allocate one snapshot path before final combined review. |
@@ -64,8 +65,9 @@ Apply run_input_snapshot_scope_amendment.json next: manager ownership and the
 stdlib-only collective-profile input module add two CORE paths (114 total).
 The ten-path step is bounded by340 gross, with internal CORE100/PRICING24
 allowance transfers. Its interface and acceptance are in run_input_snapshot/design.md.
-After snapshot accounting, evaluate a narrow derived-key-only step against the
-remaining PRICING allowance. Immutable-plan preparation is already present;
+Apply plan_key_reuse_scope_amendment.json next: two existing PRICING paths,
+17gross(source6/tests11),15 unused allowance lines transferred after snapshot
+completion; owner/global caps and114 paths stay unchanged. Immutable-plan preparation is already present;
 do not add another plan-object cache. Parent diagnostic evidence is in
 immutable_plan_preparation/test_report_2026-10-24_parent.md. H3 attribution and
 the existing trace-encoding analysis are independent of this allocation.
@@ -85,12 +87,13 @@ real execution-path feedback loop -> measured cause -> bounded repair allocation
 -> focused verification and independent review -> new source freeze -> required
 regressions and full CLI. A passing isolated point is not the full-workflow gate.
 Parent has now verified the original layer61 loop and all208 operators of the
-complete adjacent layer60 wave at position6147. The active parallel work is:
-run-input snapshot implementation under YC's fixed-input decision + output-preserving
-encoding analysis. Byte repair32/36 is delivered but not primary-merged; final
-review will cover the combined snapshot implementation and its changed lifetime
-tests. Bind one input version consistently across the run and refresh next run;
-all actual-point validation and full output remain required.
+complete adjacent layer60 wave at position6147. Snapshot db581ff6 is accepted and
+integrated at64c83ac4 with the byte intermediate:82PASS, separate2trainerPASS,
+five path checks, both reviews No findings and complete208-event output parity.
+One binding read and zero cold/warm reads; warm0.340867→0.162715s is component
+evidence. The next source step is the allocated key-only reuse. Config-scan work
+remains UNQUALIFIED, public fields conversion is rejected, and private encoding
+remains unallocated. All actual-point validation and full output stay required.
 The non-I/O identity-cache control is rejected because it did not improve timing.
 Cost-fields75404143 is now parent-verified and independently reviewed,8gross and
 zero retained growth, and merged with trace/prepared on feat/step5-preview.
@@ -130,16 +133,16 @@ change is allocated. See early_init_repro/report.md.
 | Approval, ownership and baseline | Complete; effective114 after snapshot allocation276e6520, with unchanged owner/global budgets. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
-| CORE/SOURCE49 allocated | Group/loader/trace/prepared closed;4105/4404 before snapshot work. Two new input-lifetime paths share the unchanged cap. |
+| CORE/SOURCE49 allocated | Snapshot included:4173/4404 by component reconciliation; unchanged cap. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
-| PRICING46 | Exact-text parsing and cost-fields8 closed;3920/3956 measured, zero retained growth from cost-fields. |
-| Complete integration and final freeze | Trace and prepared integratedeece87b2; parent acceptance archived. Next freeze waits for residual repair/review. Gitlink3dac53c unchanged. |
+| PRICING46 | Snapshot included:3940/3956; key successor17gross allocated within remaining allowance. |
+| Complete integration and final freeze | Byte/snapshot integrated64c83ac4; source/test/config bytes match db581ff6. Next freeze waits for residual repair/review. Gitlink3dac53c unchanged. |
 | Legacy strict77 | Fresh final05 on79 accepted77/77,451 artifact hashes and519 cache names per side;parent receipt hashes/records match. |
 | Full-unit failure/error-set gate | Accepted on79:8018PASS;all8607 e41 statuses unchanged,three newPASS. Raw279FAIL/32ERROR/281SKIP remain;101 and52 environment supplements pass separately. |
 | Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
-| Independent source review | Original performance components,trace,prepared and cost-fields all No findings on both axes. Combined bytes/snapshot review follows implementation. |
+| Independent source review | All accepted components including combined bytes/snapshot have No findings on both axes; key review follows its implementation. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
-| Final per-path accounting | Delivered bytes planning baseline9377 source/9391 global;114 allocated after snapshot overlay. Final union audit pending. |
+| Final per-path accounting | Snapshot component9463 source/9477 global;114 allocated. Key allowance adds at most15 retained lines; final union audit pending. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments

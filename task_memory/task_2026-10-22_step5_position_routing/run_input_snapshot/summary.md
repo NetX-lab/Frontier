@@ -26,4 +26,4 @@ Component reconciliation: CORE4173/4404, PRICING3940/3956, native1350/1582;9463 
 
 ## Open work and limits
 
-Integrate accepted code/records, then perform final source-union accounting and frozen regressions. Complete6144/1024 CLI under2400s/mode, T2 sealing, native/GPU/G3/E2E qualification remain unfinished. Cached-manager wave reconstruction is not full Simulator execution. Config-scan and private-encoder candidates remain unallocated; the public `to_dict` conversion candidate is rejected. Existing root-owned cache/pyc files remain untouched.
+Accepted code/records are integrated at64c83ac4 with source/test/config bytes identical to db581ff6. Perform final source-union accounting and frozen regressions after the separately allocated key successor. Complete6144/1024 CLI under2400s/mode, T2 sealing, native/GPU/G3/E2E qualification remain unfinished. Cached-manager wave reconstruction is not full Simulator execution. Config-scan and private-encoder candidates remain unallocated; the public `to_dict` conversion candidate is rejected. Existing root-owned cache/pyc files remain untouched.

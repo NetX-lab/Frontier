@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Complete snapshot component and allocate the17-gross derived-key successor within unchanged PRICING/global limits. |
 | 2026-10-24 | Allocate shared run-input ownership across ten paths,114 effective paths, with unchanged owner/global caps and the new lifetime checks. |
 | 2026-10-24 | YC approves fixed collective profiling input per simulation run; next run reloads changes, superseding per-call hot-update requirements. |
 | 2026-10-24 | Allocate current-byte comparison within existing caches and adapt only the existing read-hook instrumentation, with unchanged live checks and quotas. |
@@ -299,3 +300,14 @@ Two additional paths make114; CORE4404/PRICING3956/native1582/source9942/global1
 remain unchanged. Final review covers the combined bytes and snapshot change.
 Keep the existing standalone backend call shape and one loading implementation.
 New-run failure checks replace hot-update checks; actual-point checks remain.
+
+## [Implementation Decision] D29-PLAN-KEY-REUSE
+
+After snapshot db581ff6 passes component checks, both reviews and full-wave parity,
+allocate17 gross(source6/test11), at most15 retained lines, for the existing
+CollectivePlan.cache_key method and existing pricing test. The authoritative
+plan_key_reuse_scope_amendment.json transfers15 unused PRICING allowance lines;
+owner/global limits and114 paths remain. Cache only successful canonical key
+strings; public dictionaries, numerical lookups and actual-layer proofs stay
+fresh. No to_dict/deepcopy/private-encoder/native-backend-key change is allocated.
+See plan_key_reuse/requirements.md and plan.md for verification and dependencies.

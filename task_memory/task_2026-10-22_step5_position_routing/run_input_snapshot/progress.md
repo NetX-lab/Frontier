@@ -19,13 +19,11 @@
 - `D29-RUN-SNAPSHOT-WAVE` completed at records7c73fdd1:208 complete event values/order, whole JSONL/ledger, snapshot isolation,64 wrong-key negatives and3902-byte error prefix PASS. One shared binding read; zero cold/warm reads;288 numerical lookups/144 fresh proofs/64 collective prices remain per wave. Warm medians0.340867→0.162715s are executor measurements, not full-CLI timings.
 - Parent independently checked28 manifest hashes,41 source hashes,6 script hashes and6 raw artifact hashes, plus complete JSONL and ledger byte equality. Candidate source hashes match the reviewed overlay. Source-only commit `db581ff6ad43e1ce57361ed00fc4be0256e85a45` contains exactly the ten allocated paths:149 additions/63 deletions,212 gross/net86.
 
-## In progress
-
-- Archive component acceptance and integrate code/records onto the primary branch.
+- Source db581ff6 and acceptance6c7121d8 are integrated at64c83ac4. Parent `git diff --exit-code db581ff6 HEAD -- frontier tests data/config` passed. Existing byte records were already present;10/10 Git blobs matched before skipping an empty redundant cherry-pick.
 
 ## Pending
 
-- Integrate code and records; perform final union accounting and freeze the resulting source.
+- Perform final union accounting and freeze after the separately allocated key-only successor.
 - Fresh regression/strict77/full-workflow qualification, T2 final seal and native/GPU/G3/E2E gates remain separate and incomplete. No new full CLI is justified by this component result alone.
 
 ## Operational corrections

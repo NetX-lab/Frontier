@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Integrate accepted snapshot64c83ac4; archive H3/trace diagnoses and allocate the17-gross key-only successor. |
 | 2026-10-24 | Archive plan-key diagnosis and parent24+6 hash/immutable-interface checks; keep key allocation pending snapshot consumption. |
 | 2026-10-24 | Verify byte receipts24/3 and paired78PASS; select shared run ownership and allocate the114-path snapshot successor. |
 | 2026-10-24 | Record YC's run-fixed input decision, receive byte repair32/36 and inspect the existing ownership/lifetime before its successor allocation. |
@@ -66,29 +67,40 @@
   plan interface encodes twice on baseline versus once with string retention,
   with full-key identity, detached dictionaries and six valid replacement
   cases. See immutable_plan_preparation/test_report_2026-10-24_parent.md.
-- pending/allocation: narrow derived-key repair estimate20 gross, approximately14
-  retained lines. Wait for snapshot final PRICING consumption; do not change
-  active owner caps. No key source/test edit has been authorized or applied.
-- in-progress/diagnostic: same owner ses_e963098ecffebqCOtdysKGY6Xe attributes
-  H3 from existing key-control profiles; at most one justified bounded control,
-  no numerical/proof cache or duplicate trace investigation. Snapshot and trace
-  owners continue independently.
+- completed/allocation: plan_key_reuse_scope_amendment.json grants17 gross,
+  source6/tests11 and at most15 retained lines after snapshot completion.
+  PRICING donor caps backend99→93/base16→14/backendtest243→236 fund plan136→140
+  and test300→311. Owner/global limits stay unchanged; no key edit yet.
+- completed/diagnostic: H3 exclusive accounting is archived at81a5a876.
+  Its6.24% config-control gain remains UNQUALIFIED because the appended
+  replacement harness exceeded60s. No config/identity-cache implementation.
+- completed/diagnostic: trace records fca26aae/f99889ad and emission8afa938f
+  are archived with parent receipt0f720d8e. Key-only emission49.601→39.956ms is
+  owner evidence; public fields conversion is rejected by the bytearray alias
+  negative. Private encoder and checked deepcopy protocol remain unallocated.
 - completed/receipt-check: root recomputed all24 byte-repair evidence hashes,
   three committed source hashes and both78PASS JUnit sets, allowing only the
   documented current_text/current_bytes test-name change. Records-only commit
-  56529fcd is archived as e4cb7a59; byte code2f2d9339 remains unmerged.
+  56529fcd is archived as e4cb7a59; byte code is now integrated with snapshot64c83ac4.
 - completed/design: D29-RUN-INPUT-LIFETIME (ses_e965227e0ffewRlo7k5AqiDNsQ)
   traced one manager per Simulator and distinct per-role backends. Root selects
   one manager-owned input collection; backend-only prefetch can mix versions.
   Constructor binding uses existing arguments before super, not unset self fields.
-- in-progress: D29-RUN-INPUT-SNAPSHOT; design and340-gross allocation are in
+- completed/component: D29-RUN-INPUT-SNAPSHOT; design and340-gross allocation are in
   run_input_snapshot/design.md and repairs/run_input_snapshot_scope_amendment.json.
   Effective114 paths, CORE49/4404,native19/1582,PRICING46/3956. Donor files stay
-  untouched; source9942/global10000 caps remain. Planning baseline on delivered
-  bytes is9377 source/9391 global, not a final union acceptance.
-- pending: snapshot behavior RED/GREEN, actual P/D and next-run constructor
-  checks, full-wave equality, independent combined review and parent checks.
-  Then integration/freeze/regressions/full workflow and T2/native gates.
+  untouched; source9942/global10000 caps remain. Committed source db581ff6 is
+  212gross(73source/139tests),net86; component totals4173CORE/3940PRICING/1350native,
+  9463source/9477global. Final114-path union audit remains pending.
+- completed: snapshot parent82PASS, separate2trainerPASS,5path checks, both
+  independent reviews No findings and complete208-event/JSONL/ledger parity.
+  One shared binding read; zero cold/warm reads;288 lookups/144 fresh proofs/64
+  collective prices unchanged. Warm0.340867→0.162715s is executor measurement.
+  Parent verifies28 manifest/41 source/6 script/6 raw hashes plus exact output
+  equality. Source db581ff6 and acceptance6c7121d8 merged at64c83ac4; source/test/
+  config diff versus db581ff6 is empty. Detailed records:run_input_snapshot/.
+- pending: key-only implementation/review, final integration/freeze/regressions/
+  full workflow and T2/native gates. Existing root pyc/cache files are unchanged.
 - completed/diagnostic: main08 residual records1f42fb00 are archived at3164ad84.
   Parent layer61 warm2.653s reproduces28003 decodes/80 reads,165 captured pairs
   match. The complete adjacent layer60 warm2.837s has208/208 matching pairs and
@@ -154,24 +166,24 @@
 - in-progress/diagnostic: D29-TRACE-ENCODING-SEAM,
   ses_e96a5c1c7ffeoPBK7V08CMas7v, investigates equal immutable JSON string leaves
   with full output/error/snapshot preservation. Source edits are not allocated.
-- completed/owner delivery, parent acceptance pending: byte repair2f2d9339,
+- completed/historical owner delivery, now accepted with snapshot: byte repair2f2d9339,
   records56529fcd, session ses_e9669de64ffeH614F6iNYIqgeb. Three allocated paths,
   32/36gross(source24/test8),net+2; retained84/197/235. Owner baseline/candidate
   each78PASS; full208event/ledger byte equality,80reads per wave and warm median
-  1.037333->0.325204s. Primary has not merged or independently accepted it.
+  1.037333->0.325204s. Subsequent combined review and merge64c83ac4 close this component.
 - completed/user decision: YC approves fixing collective_local.json for one
   simulator run and loading changes in the next. Current per-call hot updates
   and their tests may adopt that lifetime. Per-point validation/output stay.
 - completed/design: D29-RUN-INPUT-LIFETIME, session
   ses_e965227e0ffewRlo7k5AqiDNsQ, traces the actual run/Cluster/predictor lifetime.
   Root allocation276e6520 selects shared manager ownership; implementation is
-  assigned to ses_e9669de64ffeH614F6iNYIqgeb in step5-d29-input-snapshot.
-  Review the final combined snapshot diff rather than a superseded read loop.
-- in-progress/independent diagnosis: D29-IMMUTABLE-PLAN-PREPARATION, session
+  originally assigned to ses_e9669de64ffeH614F6iNYIqgeb in step5-d29-input-snapshot.
+  After cancellation, primary verified its clean byte-only state and completed
+  the allocated source; combined review passed without findings.
+- completed/independent diagnosis: D29-IMMUTABLE-PLAN-PREPARATION, session
   ses_e963098ecffebqCOtdysKGY6Xe, uses frozen byte source2f2d9339 to distinguish
   repeated immutable plan construction, derived-key serialization and necessary
-  live work. No implementation or numerical/proof cache is allocated. It does
-  not inspect the concurrent input-snapshot or output-encoding implementation.
+  live work. Key-only17gross is now allocated; numerical/proof caching is not.
 - completed/corrected diagnosis: ccd9b728 replaces the old78% unexplained startup
   estimate. Actual P/D call multiplicity is10+1 MoE reads per measurement family;
   unit-cost scaling now explains about1035/1288s, with253s remaining. Warning/log,
