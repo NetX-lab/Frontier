@@ -1,0 +1,72 @@
+{
+  "task_id": "D29-PERFORMANCE-FINAL-REGRESSIONS",
+  "changed_paths": [
+    {
+      "changed_path": "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "required_coverage": "fresh full tests/unit; exact selected IDs compared to component parent XML",
+      "affected_modules": [
+        "tests/unit/test_collective_sim_cc_backend.py"
+      ]
+    },
+    {
+      "changed_path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "required_coverage": "fresh full tests/unit; exact selected IDs compared to component parent XML",
+      "affected_modules": [
+        "tests/unit/test_prediction_measurement_bindings.py",
+        "tests/unit/test_moe_position_routing.py"
+      ]
+    },
+    {
+      "changed_path": "frontier/execution_time_predictor/profiling_dataframe_loaders.py",
+      "required_coverage": "fresh full tests/unit; exact selected IDs compared to component parent XML",
+      "affected_modules": [
+        "tests/unit/test_moe_grouped_gemm_padded_features.py",
+        "tests/unit/test_moe_routing_runtime.py",
+        "tests/unit/test_profiling_governance_minimal_red.py"
+      ]
+    },
+    {
+      "changed_path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "required_coverage": "fresh full tests/unit; exact selected IDs compared to component parent XML",
+      "affected_modules": [
+        "tests/unit/test_prediction_measurement_bindings.py",
+        "tests/unit/test_moe_grouped_gemm_padded_features.py"
+      ]
+    },
+    {
+      "changed_path": "tests/unit/test_collective_sim_cc_backend.py",
+      "required_coverage": "fresh full tests/unit; exact selected IDs compared to component parent XML",
+      "affected_modules": [
+        "tests/unit/test_collective_sim_cc_backend.py"
+      ],
+      "added_test_functions": [
+        "test_collective_artifact_reuses_only_identical_current_text"
+      ],
+      "removed_test_functions": []
+    },
+    {
+      "changed_path": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+      "required_coverage": "fresh full tests/unit; exact selected IDs compared to component parent XML",
+      "affected_modules": [
+        "tests/unit/test_moe_grouped_gemm_padded_features.py"
+      ],
+      "added_test_functions": [
+        "test_moe_loader_derives_family_once_without_skipping_unselected_rows"
+      ],
+      "removed_test_functions": []
+    },
+    {
+      "changed_path": "tests/unit/test_prediction_measurement_bindings.py",
+      "required_coverage": "fresh full tests/unit; exact selected IDs compared to component parent XML",
+      "affected_modules": [
+        "tests/unit/test_prediction_measurement_bindings.py"
+      ],
+      "added_test_functions": [
+        "test_fixed_predictor_groups_reused_by_queries_and_binding_selection"
+      ],
+      "removed_test_functions": []
+    }
+  ],
+  "coverage_is_pending_actual_results": true,
+  "duplicate_union_will_not_run": true
+}

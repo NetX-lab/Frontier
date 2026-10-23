@@ -1,0 +1,44 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/preflight.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/preflight.json",
+    "sha256": "d447e57ed4a8f5e43adbd847599dd8f4eb41edb2b4a1c2ddec6ccfdbc7171ec7",
+    "bytes": 1587
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/baseline_id_preflight.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/baseline_id_preflight.json",
+    "sha256": "faca739aca6976b809559dfac1fff7c251704e158dd7e5346f944736f3a10ea1",
+    "bytes": 1123
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata_business_receipt.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/metadata_business_receipt.json",
+    "sha256": "69c0fb9fa20405a2693fb5d13c62c3ea5f529e9f4ea6f77eeb904ef088233388",
+    "bytes": 2702
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/governance_environment_preflight.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/governance_environment_preflight.json",
+    "sha256": "1a351cd32053c24259d609889a664669bfa37dbd3544f93e284e5b22f9e3e827",
+    "bytes": 1630
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/supplement101/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/supplement101/execution.json",
+    "sha256": "c818aeee73c72426de065e70ed1765148879df3bb60e9f393e9ce66940325d5e",
+    "bytes": 6694
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/metadata196/execution.json",
+    "sha256": "8f9b32d79f220b7bef74257af782d35bf41ba84f6b5f9f30011bba84045b80ca",
+    "bytes": 6818
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/catalogue53/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/catalogue53/execution.json",
+    "sha256": "17b3333b2f16d3fe40c91cb70e7b0b656b5011976ff21cf950f1a6f81ff2eece",
+    "bytes": 6572
+  }
+]

@@ -1,0 +1,55 @@
+{
+  "task_id": "D29-PERFORMANCE-FINAL-REGRESSIONS",
+  "raw_junit": [
+    {
+      "name": "pytest",
+      "errors": "32",
+      "failures": "279",
+      "skipped": "281",
+      "tests": "8610",
+      "time": "1203.307",
+      "timestamp": "2026-10-23T18:25:10.266898+08:00",
+      "hostname": "kun-workspace-vgen2"
+    }
+  ],
+  "governance_cases": [
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_carries_plan_typed_operator_contracts",
+      "status": "failure",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "traceback": "def test_linear_wrapper_result_carries_plan_typed_operator_contracts() -> None:\n        \"\"\"The real producer row keeps profile-owned metadata beside timings.\"\"\"\n    \n        from frontier.profiling.common.model_config import ModelConfig\n>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper\n\ntests/unit/test_profiling_governance_minimal_red.py:589: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    import copy\n    import os\n    from collections.abc import Mapping\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError",
+      "same_as_retained_e41_failure": true
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts",
+      "status": "failure",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "traceback": "def test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts() -> None:\n        \"\"\"A result row declares typed contracts only for measured operators.\"\"\"\n    \n        from frontier.profiling.common.model_config import ModelConfig\n>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper\n\ntests/unit/test_profiling_governance_minimal_red.py:630: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    import copy\n    import os\n    from collections.abc import Mapping\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError",
+      "same_as_retained_e41_failure": true
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_initializes_runtime_with_routed_width",
+      "status": "failure",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "traceback": "monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa5968b63b0>\ntmp_path = PosixPath('/data/ycfeng/tmp/d29_unit_parent05/test_moe_wrapper_initializes_r0')\n\n    def test_moe_wrapper_initializes_runtime_with_routed_width(monkeypatch, tmp_path) -> None:\n        \"\"\"The existing MoE producer uses the profile-owned routed width end to end.\"\"\"\n    \n>       moe_module = importlib.import_module(\"frontier.profiling.moe.moe_wrapper\")\n\ntests/unit/test_profiling_governance_minimal_red.py:1896: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n/usr/lib/python3.10/importlib/__init__.py:126: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n<frozen importlib._bootstrap>:1050: in _gcd_import\n    ???\n<frozen importlib._bootstrap>:1027: in _find_and_load\n    ???\n<frozen importlib._bootstrap>:1006: in _find_and_load_unlocked\n    ???\n<frozen importlib._bootstrap>:688: in _load_unlocked\n    ???\n<frozen importlib._bootstrap_external>:883: in exec_module\n    ???\n<frozen importlib._bootstrap>:241: in _call_with_frames_removed\n    ???\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    \"\"\"\n    MoE profiling wrapper.\n    \n    This module wraps MoE operations for profiling, following the same pattern as the linear-op wrapper.\n    \"\"\"\n    \n    import operator\n    import os\n    import math\n    import json\n    from collections.abc import Mapping\n    from typing import List, Optional\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/moe/moe_wrapper.py:14: ModuleNotFoundError",
+      "same_as_retained_e41_failure": true
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_typed_result_round_trips_through_manager",
+      "status": "failure",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "traceback": "tmp_path = PosixPath('/data/ycfeng/tmp/d29_unit_parent05/test_moe_wrapper_typed_result_0')\n\n    def test_moe_wrapper_typed_result_round_trips_through_manager(tmp_path) -> None:\n        \"\"\"The existing MoE producer emits a routed contract that the manager admits.\"\"\"\n    \n        from frontier.operators.typed_contracts import (\n            serialize_typed_operator_contract_column,\n        )\n        from frontier.profiling.common.model_config import ModelConfig\n>       from frontier.profiling.moe.moe_wrapper import MoEWrapper\n\ntests/unit/test_profiling_governance_minimal_red.py:993: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    \"\"\"\n    MoE profiling wrapper.\n    \n    This module wraps MoE operations for profiling, following the same pattern as the linear-op wrapper.\n    \"\"\"\n    \n    import operator\n    import os\n    import math\n    import json\n    from collections.abc import Mapping\n    from typing import List, Optional\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/moe/moe_wrapper.py:14: ModuleNotFoundError",
+      "same_as_retained_e41_failure": true
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_real_linear_producer_csv_round_trip_reaches_manager_loader",
+      "status": "failure",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "traceback": "tmp_path = PosixPath('/data/ycfeng/tmp/d29_unit_parent05/test_real_linear_producer_csv_0')\n\n    def test_real_linear_producer_csv_round_trip_reaches_manager_loader(tmp_path) -> None:\n        \"\"\"A plan-built producer row survives CSV serialization and typed admission.\"\"\"\n    \n        from frontier.profiling.common.model_config import ModelConfig\n        from frontier.profiling.linear_op import main as linear_op_main\n>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper\n\ntests/unit/test_profiling_governance_minimal_red.py:733: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    import copy\n    import os\n    from collections.abc import Mapping\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError",
+      "same_as_retained_e41_failure": true
+    }
+  ],
+  "http12_and_native16_supplement_all_covered": true,
+  "observed_diagnosis": "Five existing governance failure IDs require Torch absent from frontier-py310; fresh approved py312 extras module run needed.",
+  "code_fix_needed": false
+}

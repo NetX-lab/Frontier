@@ -1,0 +1,22 @@
+{
+  "task_id": "D29-PERFORMANCE-FINAL-REGRESSIONS",
+  "source_revision": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "new_tests": [
+    {
+      "test_id": "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text",
+      "existed_in_e41": false,
+      "required_fresh_result": "pass"
+    },
+    {
+      "test_id": "tests.unit.test_moe_grouped_gemm_padded_features::test_moe_loader_derives_family_once_without_skipping_unselected_rows",
+      "existed_in_e41": false,
+      "required_fresh_result": "pass"
+    },
+    {
+      "test_id": "tests.unit.test_prediction_measurement_bindings::test_fixed_predictor_groups_reused_by_queries_and_binding_selection",
+      "existed_in_e41": false,
+      "required_fresh_result": "pass"
+    }
+  ],
+  "actual_results_pending": true
+}
