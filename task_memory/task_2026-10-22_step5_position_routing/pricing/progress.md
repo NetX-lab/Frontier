@@ -876,18 +876,18 @@ remain genuine dependencies, not permission to create alternate APIs.
 - completed quota: four existing paths revision delta+109/-2=111<=120. Baseline
   owned43 rows,+3617/-96=3713/3956,remaining243. Unchanged333-gross sub3dac53c
   included; only root-owned gitlink remains unstaged. No peer/new path/extra agent.
-- in-progress: scoped source/records commit. Observed native point producer already
+- completed: scoped source/tests/records commit78a475be. Observed native point producer already
   completed9dbca5b3/d24a2fe2, untouched. Global/root review and actual GPU values
   are pending runtime acceptance, not deferred producer code.
 
 ## 1. 规划完成情况
-**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | Actual CPU writer/import gate | PASS |Four real-constructor phases and25 receipt/admission negatives |
 | Truthful trace/native unchanged | PASS |CPU trace RED/GREEN; native cost injection ignored |
 | Affected verification/ownership quota | PASS |68 PASS,3713/3956,111/120 delta |
-| Scoped commit/receipt | TODO |Records updated; commit next |
+| Scoped commit/receipt | PASS |78a475be delivered; CORE needs no new API |
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
 **检测窗口：**d24a2fe2至今｜**当前前沿：**CPU consumer scoped commit
@@ -906,7 +906,7 @@ remain genuine dependencies, not permission to create alternate APIs.
 **分支：**B：记录新CPU授权与已完成生产事实。
 **文档更新（先执行）：**requirements/plan/interface_receipt/report/summary记录CPU gate/trace、111 delta与3713总额（可直接执行，已完成）。
 **需停止的偏离行为：**无
-**接下去的路线：**scoped commit→root/CORE开发整合；不启动额外GPU或广泛suites。
+**接下去的路线：**78a475be→root/CORE开发整合；不启动额外GPU或广泛suites。
 ## 4. 最值得关注的 3 点
 1. CPU writer payload现在能由真实backend读取，必须双重CPU与未admitted证明。
 2. Observed producer已交付；剩余额度243，submodule不变。

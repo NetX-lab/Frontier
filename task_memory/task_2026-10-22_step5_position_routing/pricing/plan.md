@@ -102,5 +102,5 @@ negative -> affected three suites/JUnit -> precise111/120 patch and3713/3956 bud
 Observed producer9dbca5b3 is already complete and unaffected. Native finite
 fit/HTSIM/count semantics remain; counts.cost is consumed only by this explicit
 unadmitted CPU fixture branch. Current:68 PASS, cold process without PYTHONPATH;
-code and records ready for commit. Root re-review/integrated actual-main remain
+scoped source/tests/records committed78a475be. Root re-review/integrated actual-main remain
 external acceptance, not CPU admission or a missing producer implementation.

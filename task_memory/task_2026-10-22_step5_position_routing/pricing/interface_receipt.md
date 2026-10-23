@@ -507,3 +507,5 @@ Affected JUnit68 PASS/0 SKIP/FAIL/ERROR; four-path patch+109/-2=111<=120,
 original owned total43 paths,+3617/-96=3713/3956, remaining243. Producer9dbca5b3
 remains completed. Submodule unchanged3dac53c; root owns final gitlink and full
 integration/qualification. Exact commands in test_report_2026-10-23_cpu_plan.md.
+Verified scoped source/tests/records commit78a475be is ready for root-authorized
+CORE development integration. No new API, peer import or qualification claim.

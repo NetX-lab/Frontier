@@ -52,6 +52,8 @@ and plan.shared identity gate, exact cost/count/context/buffer proofs before nat
 qualification, with native counts.cost still ignored. Trace labels CPU fixture
 composition without claiming joint HTSIM/native measured input. Actual CORE writer
 four-phase costs pass the real constructor; stale and native-label negatives fail.
+Verified source/tests/records commit78a475be delivered; root integration/review
+pending. No producer closure is reopened or deferred by the CPU consumer fix.
 Authorized CORE02f061d/Native2c4cc9e and published67d5b5e dependencies imported;
 437b312 records published dependency integration. No peer file edited.
 Isolated collective-sim branch d29-position-pricing commits:

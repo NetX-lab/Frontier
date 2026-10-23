@@ -74,3 +74,5 @@ unchanged3dac53c. Full retained patch SHA256c96cace541b72f7627b5f429d55615a17be4
 Root still owns gitlink/integrated actual-main, external review and native/GPU
 qualification. Existing observed producer9dbca5b3 is complete; this isolated fix
 does not introduce source observations, numerical calibration or native admission.
+Verified source/tests/records commit78a475be; final root-owned gitlink unstaged,
+isolated submodule clean. Source branch unchanged by peer imports or acceptance edits.
