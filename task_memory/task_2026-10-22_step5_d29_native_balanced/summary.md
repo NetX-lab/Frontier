@@ -48,6 +48,13 @@ Both existing documented static commands PASS after that single index refresh:
 prior60ba comparison,2907/12/53/native4,schema/AST/bash and resource-unapproved.
 Nonpacket57hashes unchanged;native1350/1582/code0. Only existing11record paths.
 
+Final delivery commits:8c57df44(pointer/accounting),174e58e0(final1beproduction
+identity steering). Post174e58e0 both documented static blocks/26helper/tree/
+63checksums/clean PASS. Source runtime1be and records174e58e0 are distinct.
+Complete correction diff `git diff 2adbf9f2 174e58e0 -- task_memory/task_2026-10-22_step5_d29_native_balanced`;
+only11record paths/code0. Final ID archive changes only task handoff,not packet.
+Root planned staging afterCPUgates and final26/full-helper check/seal remain.
+
 Historical8c57df44delivery hashes (superseded by final-revision packet):proposal b27067409696ba32f6fb99167c6880fa1e107abf5c6e4a927e0a61d4ee270796;
 provenance5e92fe0f157a28b71bc46a6ddbea1dede00d102ba4d9b0825482ded2ec1c584e;
 resource5eec1231b5966911a3151e2e83a4521bd2bc356b8f99d9b62ae95b6e58591207;

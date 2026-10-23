@@ -119,19 +119,23 @@
   documented existing static blocks PASS:26/full-helper/finaltree/schema/AST/
   shell/63hashes;nonpacket57unchanged. Final index1e36d25e3fe8c41a4f2e7e04f2df7d352fd9b474d5aa34c3bda6bc92de5c97ca.
   No further packet changes;only handoff commit remaining. Live03/04untouched.
+- completed final handoff:records174e58e0(after pointer correction8c57df44),
+  runtime final1be immutable. Postcommit both documented static blocks PASS,
+  26/full-helper/tree/63hashes/clean PASS;only11record paths/source0. Final
+  commit-ID archive modifies no packet/index bytes;postarchive recheck repeated.
 
 ## 1. 规划完成情况
-**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1（D29-T2-TARGET-POINTERS final steering;not GPU acceptance）
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0（D29-T2-TARGET-POINTERS final steering;not GPU acceptance）
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | T1 target/accounting evidence | PASS |04bound26equal60ba;original/locked-base diffs inspected |
 | T2 intended pointers/final identity | PASS |04target/final runtime1be,prior60ba/history,planned staging afterCPUgates |
 | T3 final-revision record/index refresh | PASS | final1bepacket,index63PASS/57source hashes unchanged |
-| T4 final verification/commit | TODO |26/helper/tree/schema/shellPASS;final records commit remaining |
+| T4 final verification/commit | PASS | records174e58e0;postcommit26/helper/tree/63hashes/cleanPASS |
 
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
-**检测窗口：** final1be steering至staticPASS｜**当前前沿：** T4records commit
+**检测窗口：** final1be steering至174e58e0/postcommitPASS｜**当前前沿：** root post-CPUgate staging/seal(outside slice)
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | requested static/hash verification only; no new suite/harness |
@@ -139,7 +143,7 @@
 | D3 支线问题修补 | CLEAR | precise root final-revision steering only,no production repair |
 | D4 可并行任务停滞 | CLEAR | independent reads parallel; explicit no-agent instruction |
 | D5 超范围镀金 | CLEAR | source/test0, existing packet/handoff only; resources unchanged |
-| D6 分析空转 | CLEAR | final tree/pointers/index verified;only records commit |
+| D6 分析空转 | CLEAR | final tree/pointers/index verified,records174e58e0delivered |
 | D7 路线违背 | CLEAR | live03/04untouched,runtime final1be,CPU/GPU separated |
 **文档检查：** S5:old60ba-runtime rule contradicted root final production1be steering,corrected with prior history and non-record-only tree. S1–S4/S6 clear.
 **归因：** 无。
@@ -149,8 +153,8 @@
 **文档更新（先执行）：** runtime1be/finaltree,60baprior history,P2reported CPUacceptance,planned post-CPUgate staging;finish all revisions then index once (authorized,no code).
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. T3/T4final -> done:one index63PASS,final1be26/full-helper/tree/pointers checks,isolated records commit.
-2. Root finishCPUgates/stage11records/finalcheck/seal -> done:packet/source ready;run/resource decision unapproved.
+1. Root finishCPUgates/stage11records/finalcheck/seal -> done:packet/source ready;owner records complete.
+2. Root resource/run decision -> done:explicit finite-unit approval/paths;currently unapproved.
 
 ## 4. 最值得关注的 3 点
 1. Intended04has old packet;root must stage updated records before seal/mount.
