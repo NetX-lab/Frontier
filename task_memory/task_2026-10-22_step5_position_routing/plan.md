@@ -45,7 +45,7 @@ unchanged. Final T2 acceptance must verify the actual final script/helper bytes.
 | Complete integration and final freeze | Final code frozen1be91bad; main-branch code/docs integration awaits final gates. |
 | Legacy strict77 | Final03 on1be91bad:77/77 identical,902 artifact hashes verified. |
 | Full-unit failure/error-set gate | Closed on1be91bad with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. |
-| Fresh fixture and full CLI | fixture03 complete; final offline and online each require6144/1024,2400s and all retained validation checks. |
+| Fresh fixture and full CLI | main05 fails both modes at actual backend placement check; repairs/cli_placement_repair.md owns short-feedback diagnosis. |
 | Independent source review | All recorded source findings closed on1be91bad. |
 | T2 final-source binding | Parent verifies final1be tree,26 files and63 checksums; physical staging/seal follows CLI completion. |
 | Final per-path accounting | Complete:111 allocated/110 changed,9062 source/9076 global; adopted same-owner zero-sum reconciliation. |

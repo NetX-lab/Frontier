@@ -136,6 +136,16 @@ robin site assumptions. No further agent delegation from these streams.
 
 ## Verification and acceptance
 
+Current actual-main blocker: both final1be main05 modes fail at the existing
+TP8/DP2 backend placement guard,not timeout. cli_placement_repair.md owns the
+evidence,short-feedback reproduction and subsequent sole-writer allocation.
+Final integration/seal cannot treat this as closed because other gates pass.
+Root's real-config reproduction identifies a missing explicit placement argument
+in the position-fixture command. CORE owns only the runner and its existing
+integration test,delta<=65; apply cli_placement_scope_amendment.json after the
+final reconciliation (40 transferred inside CORE,111 paths unchanged). Test the
+actual command/config/Cluster/backend chain and exact CPU cost before review.
+
 - Each stream: actual source/consumer tests, exact commands/environment and
   before/after results; diff/path/budget/AST/whitespace and existing size analysis.
   Preserve D30 source coverage and finish synchronization in native fixtures.

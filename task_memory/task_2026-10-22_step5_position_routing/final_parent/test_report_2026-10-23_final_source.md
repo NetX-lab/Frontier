@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Record both actual-main placement failures without timeout; begin focused real-constructor reproduction. |
 | 2026-10-23 | Reconcile final full-unit IDs with baseline and explicit final-source dependency supplement; no new code failures. |
 | 2026-10-23 | Final frozen-source strict77 passes77/77; full902-artifact and cache/provenance audit passes. |
 | 2026-10-23 | Close source re-review; freeze1be91bad, launch final gates and record101PASS environment supplement plus final budget adoption. |
@@ -57,7 +58,7 @@ timeout 1800s /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/uni
 timeout 5100s /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json --output-root /data/ycfeng/tmp/d29-parent-position-main05 --mode all > /data/ycfeng/tmp/d29-parent-position-main05.log 2>&1
 ```
 
-Strict77 and full-unit reconciliation are complete below; CLI results remain pending. The CLI's own timeout remains2400s per mode;
+Strict77 and full-unit reconciliation are complete below; CLI failed as recorded below. The CLI's own timeout remains2400s per mode;
 the outer5100s only permits both modes and receipt generation. Fixture03 remains
 explicit CPU/unadmitted evidence. No original gate or baseline was changed.
 
@@ -132,3 +133,21 @@ XML hashes are retained in unit_final03_comparison.json. Raw log/XML stay at
 `/data/ycfeng/tmp/d29_unit_parent03.{log,xml}`; comparison scratch is
 `/data/ycfeng/tmp/d29_unit_delta03.json`. No additional tests were needed after
 these checks settled the recorded regressions.
+
+## Final-code actual-main: FAIL
+
+The full mode-all command exits1 after both modes fail. Offline takes
+1580.9479549312964s; online1560.1816781787202s. Each execution.json says
+returncode1,timed_out=false and source1be91bad. Runner SHA256
+6fc438ca44761b168e8c87ea629758e7c44b4082ab576424a140d1cc2e26d76f;
+fixture-writer SHA25687752f5816cc59baa8eb63733bfe9a4be7dde9b32d890ad5a0afbf3336f0d86b.
+
+Both actual subprocesses fail atcollective_sim_cc_backend.py809 with
+`Step plans require explicitly configured TP8/DP2 placement`,called by the real
+position operator consumer atmoe_operator_times.py145. The wrapper subsequently
+reports `Actual main failed; inspect .../summary.json`; no final request metrics
+are accepted. The existing2400s per-mode and5100s overall bounds did not fire.
+
+Raw artifacts:/data/ycfeng/tmp/d29-parent-position-main05. Further work is recorded
+in repairs/cli_placement_repair.md. Next is a short real-configuration reproduction,
+not another immediate long CLI run.

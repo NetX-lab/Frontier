@@ -82,10 +82,20 @@
   supplement. No baseline cases disappear or change PASS→SKIP;all53 catalogue
   and196 affected suite IDs pass in the full run. This is an explicit cross-environment
   regression reconciliation,not an all-green raw suite. Receipt:unit_final03_comparison.json.
-- in-progress: final code1be91bad runs full offline/online main05 using fixture03.
-  Integrated-04 must stay
-  immutable throughout; T2 record staging follows these runs or uses a separate
-  verified staging tree. Final gates retain2400s per CLI mode and original checks.
+- failed: final code1be91bad main05 fails offline/online in1580.9479549/1560.1816782s,
+  returncode1,neither timed out. Both reach the position collective consumer and
+  fail the existing explicitly-configured TP8/DP2 placement guard. Logs and
+  execution receipts are preserved; this is not a completed workflow gate.
+- completed: parent real-config/Cluster/backend repro is RED in1.609s; changing
+  only the existing global placement option toTP,DP prices exact CPU plans for
+  both roles at0.03ms in1.749s. All dimensions already match; the runner omitted
+  the selected model's placement. Receipt:cli_placement_parent_repro.json.
+- in-progress: CORE repairs the position-only command branch and real-constructor
+  integration test,2 existing paths/<=65gross. cli_placement_scope_amendment.json
+  transfers40 inside CORE;111 paths/owner/global totals unchanged. Preserve gate,
+  defaults and2400s bound; no role-override or numerical changes. Root records the
+  scout's one overwritten metrics config as invalid original evidence. Final T2
+  staging/main code integration wait for this blocker and full workflow acceptance.
 - completed: actual111-path accounting independently audited and root remeasured:
   native1350/1582,CORE3833/4404,PRICING3879/3956;source9062/global9076. Root adopts
   final_scope_reconciliation.json (+1258/-1258 within owners),zero remaining
