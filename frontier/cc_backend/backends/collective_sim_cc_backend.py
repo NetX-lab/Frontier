@@ -14,6 +14,7 @@ from typing import Any, Dict, Optional, Tuple
 from frontier.cc_backend.base_cc_backend import BaseCCBackend
 from frontier.cc_backend.cc_backend_config import CollectiveSimCCBackendConfig
 from frontier.cc_backend.cc_backend_factory import CCBackendFactory
+from frontier.cc_backend.collective_profile import CollectiveProfileInputs
 from frontier.logger import init_logger
 from frontier.types import CCBackendType, ClusterType
 
@@ -70,8 +71,9 @@ class CollectiveSimCCBackend(BaseCCBackend):
         self._prediction_cache_hits = 0
         self._prediction_cache_instance_hits = 0
         self._prediction_cache_misses = 0
-        self._collective_artifact_text = None
+        self._collective_artifact_bytes = None
         self._collective_artifact = None
+        self._collective_profile_inputs = CollectiveProfileInputs()
 
         self._repo_root = self._resolve_collective_sim_repo_root()
         self._python_root = self._repo_root / "python"
@@ -800,6 +802,16 @@ class CollectiveSimCCBackend(BaseCCBackend):
             "collective-sim backend does not support broadcast prediction"
         )
 
+    def bind_collective_profile_inputs(self, inputs):
+        self._collective_profile_inputs = inputs
+        self.collective_profile_bytes()
+
+    def collective_profile_bytes(self):
+        if self._collective_artifact_bytes is None:
+            self._collective_artifact_bytes = self._collective_profile_inputs.read(
+                self._config.profiling_data_dir, self._device_type)
+        return self._collective_artifact_bytes
+
     def predict_collective_plan(self, plan):
         """Price one qualified joint workload, never native full-duration lookup."""
         from frontier.cc_backend.collective_plan import CollectivePlan, CollectivePlanCost, collective_model_context
@@ -809,11 +821,8 @@ class CollectiveSimCCBackend(BaseCCBackend):
             self._get_attention_parallel_dim_sizes(), context="Step plan")
         if dims != {"TP":8, "CP":1, "DP":2, "EP":1} or self._placement_order != ("TP","DP"):
             raise ValueError("Step plans require explicitly configured TP8/DP2 placement")
-        path = Path(self._config.profiling_data_dir) / self._device_type / "collective_local.json"
-        text = path.read_text()
-        if text != self._collective_artifact_text:
-            artifact = json.loads(text)
-            self._collective_artifact_text, self._collective_artifact = text, artifact
+        if self._collective_artifact is None:
+            self._collective_artifact = json.loads(self.collective_profile_bytes().decode("utf-8"))
         artifact = self._collective_artifact
         context=json.loads(plan.context_json)
         if artifact.get("evidence_kind") == "cpu_fixture" or context.get("shared",{}).get("evidence_kind") == "cpu_fixture":

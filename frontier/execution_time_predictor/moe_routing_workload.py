@@ -152,24 +152,24 @@ class MoeRoutingWorkload:
         self._step5_physical_points = retained
         return points
 
-    def _step5_collective_points(self, text):
-        """Prepare structural receipts only; every query supplies current file text."""
+    def _step5_collective_points(self):
+        """Prepare structural receipts from this run's fixed collective input."""
         from frontier.profiling.common.runtime_identity import canonical_json
         retained = getattr(self, "_step5_collective_receipts", None)
-        if retained is None or retained[0] != text:
-            artifact, shapes = json.loads(text), {}
+        if retained is None:
+            artifact, shapes = json.loads(self._cc_backend.collective_profile_bytes().decode("utf-8")), {}
             for key in artifact["counts"]:
                 value = json.loads(key)
                 shape = (value["phase"], tuple(value["sizes"]), value["graph_mode"], canonical_json(value["tensors"]))
                 shapes.setdefault(shape, []).append((key, value))
-            retained = (text, artifact, shapes, {}, {})
+            retained = (artifact, shapes, {}, {})
         else:
-            retained = (*retained[:3], retained[3].copy(), retained[4].copy())
+            retained = (*retained[:2], retained[2].copy(), retained[3].copy())
         return retained
 
     def _step5_plan_candidates(self, retained, phase, sizes, mode, tensors, context):
         from frontier.profiling.common.runtime_identity import canonical_json
-        _, artifact, shapes, domains, plans = retained
+        artifact, shapes, domains, plans = retained
         shape = (phase, sizes, mode, canonical_json(tensors))
         shared = canonical_json(context["native_facts"]["shared"])
         domain = (shape, shared)
@@ -188,7 +188,6 @@ class MoeRoutingWorkload:
         """Recover actual point facts and complete measured plans, never numerical defaults."""
         from frontier.profiling.moe.inputs import MoESourceFrame
         from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
-        from pathlib import Path
         source = lane.routing_source
         group = self._step5_routed_layer_group(self._step5_layer_metadata.attention_spec.global_layer_id)
         family = self._measurement_family_name(self._active_measurement_type)
@@ -210,8 +209,7 @@ class MoeRoutingWorkload:
         from frontier.operators.families import get_moe_profiling_operators
         queries = {op.name:dict(num_tokens=local.physical_rows,live_routing_token_count=local.live_rows)
                    if op.ep_agnostic else features for op in get_moe_profiling_operators(context)}
-        text = (Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_text()
-        retained = self._step5_collective_points(text)
+        retained = self._step5_collective_points()
         plans = {}
         phases = {"step5_moe_dispatch":"dispatch","step5_moe_combine":"combine",
             "moe_tensor_parallel_allreduce":"routed_tp"}

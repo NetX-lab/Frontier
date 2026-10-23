@@ -1,0 +1,234 @@
+{
+  "source_parent": "ecccf83fa6f2c24a14fa5397ef567fbb32b06bef",
+  "status": "SOURCE_COMPONENT_ACCEPTED_FULL_WORKFLOW_PENDING",
+  "code_commit": "db581ff6ad43e1ce57361ed00fc4be0256e85a45",
+  "code_tree": "5e80068a829648db0a7c453391f066ecb08ce8e8",
+  "independent_review": {"standards": "No findings", "spec": "No findings", "record": "../review.md"},
+  "wave": {
+    "records_commit": "7c73fdd1",
+    "evidence": "../wave/evidence/evidence.json",
+    "parent_manifest_hash_checks": 28,
+    "parent_source_hash_checks": 41,
+    "parent_script_hash_checks": 6,
+    "parent_raw_artifact_hash_checks": 6,
+    "parent_whole_jsonl_and_ledger_bytes_equal": true,
+    "events": 208,
+    "binding_reads": 1,
+    "cold_warm_reads": 0,
+    "numeric_lookups_per_wave": 288,
+    "fresh_operator_proofs_per_wave": 144,
+    "collective_prices_per_wave": 64,
+    "owner_warm_median_baseline_s": 0.340867,
+    "owner_warm_median_candidate_s": 0.162715,
+    "timing_status": "independent executor measurement, parent receipt/hash verification"
+  },
+  "scope_basis": "Delivered-byte planning receipt plus isolated ten-path delta; final114-path union audit remains pending.",
+  "review_fixed_point": "2cfbb34474c1d4d31f6daf8f9c626d03ad972f58",
+  "review_source": "Supplied unified diff includes uncommitted overlay and new input module; not HEAD-only.",
+  "step_gross": 212,
+  "source_gross": 73,
+  "test_gross": 139,
+  "net_delta": 86,
+  "owners": {
+    "core_source": {
+      "cap": 4404,
+      "actual": 4105,
+      "component_after": 4173
+    },
+    "native": {
+      "cap": 1582,
+      "actual": 1350,
+      "component_after": 1350
+    },
+    "pricing": {
+      "cap": 3956,
+      "actual": 3922,
+      "component_after": 3940
+    }
+  },
+  "source_component_after": 9463,
+  "global_component_after": 9477,
+  "paths": [
+    {
+      "path": "frontier/cc_backend/collective_profile.py",
+      "owner": "core_source",
+      "step_add": 20,
+      "step_delete": 0,
+      "step_gross": 20,
+      "step_cap": 24,
+      "retained_gross": 20,
+      "retained_cap": 24,
+      "sha256": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+      "ast": "PASS"
+    },
+    {
+      "path": "frontier/execution_time_predictor/shared_prediction_model_manager.py",
+      "owner": "core_source",
+      "step_add": 6,
+      "step_delete": 0,
+      "step_gross": 6,
+      "step_cap": 12,
+      "retained_gross": 6,
+      "retained_cap": 12,
+      "sha256": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+      "ast": "PASS"
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "owner": "core_source",
+      "step_add": 2,
+      "step_delete": 0,
+      "step_gross": 2,
+      "step_cap": 8,
+      "retained_gross": 113,
+      "retained_cap": 128,
+      "sha256": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+      "ast": "PASS"
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "owner": "core_source",
+      "step_add": 8,
+      "step_delete": 10,
+      "step_gross": 18,
+      "step_cap": 30,
+      "retained_gross": 195,
+      "retained_cap": 223,
+      "sha256": "d1561f20e0a0f045af8ddeabe88bd36b017cc554e9fcc44dd2d6ba4c0adb3d46",
+      "ast": "PASS"
+    },
+    {
+      "path": "frontier/cc_backend/base_cc_backend.py",
+      "owner": "pricing",
+      "step_add": 8,
+      "step_delete": 0,
+      "step_gross": 8,
+      "step_cap": 10,
+      "retained_gross": 14,
+      "retained_cap": 16,
+      "sha256": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+      "ast": "PASS"
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "owner": "pricing",
+      "step_add": 14,
+      "step_delete": 5,
+      "step_gross": 19,
+      "step_cap": 36,
+      "retained_gross": 93,
+      "retained_cap": 99,
+      "sha256": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+      "ast": "PASS"
+    },
+    {
+      "path": "tests/unit/test_collective_sim_cc_backend.py",
+      "owner": "pricing",
+      "step_add": 28,
+      "step_delete": 27,
+      "step_gross": 55,
+      "step_cap": 100,
+      "retained_gross": 236,
+      "retained_cap": 243,
+      "sha256": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+      "ast": "PASS"
+    },
+    {
+      "path": "tests/unit/test_moe_routing_runtime.py",
+      "owner": "core_source",
+      "step_add": 59,
+      "step_delete": 17,
+      "step_gross": 76,
+      "step_cap": 100,
+      "retained_gross": 117,
+      "retained_cap": 128,
+      "sha256": "e52190ec893dfc431ac96b37b9cdb7de92649ecd21bb7adb9fb273b67f739262",
+      "ast": "PASS"
+    },
+    {
+      "path": "tests/unit/test_prediction_measurement_bindings.py",
+      "owner": "core_source",
+      "step_add": 3,
+      "step_delete": 3,
+      "step_gross": 6,
+      "step_cap": 14,
+      "retained_gross": 299,
+      "retained_cap": 311,
+      "sha256": "18c1c2b6741441db5f2f98dcd3fecf92d43d22fa8659988a94102b2a47bd3f27",
+      "ast": "PASS"
+    },
+    {
+      "path": "tests/unit/test_step5_measured_ffn.py",
+      "owner": "core_source",
+      "step_add": 1,
+      "step_delete": 1,
+      "step_gross": 2,
+      "step_cap": 6,
+      "retained_gross": 105,
+      "retained_cap": 110,
+      "sha256": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+      "ast": "PASS"
+    }
+  ],
+  "tests": {
+    "red01": {
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.897
+    },
+    "red02": {
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 2.054
+    },
+    "red03": {
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.869
+    },
+    "green01": {
+      "tests": 82,
+      "passed": 82,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 154.228
+    },
+    "trainers01": {
+      "tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 7.788
+    }
+  },
+  "artifacts": {
+    "/data/ycfeng/tmp/d29_snapshot_red01.xml": "5e378aa4450a969380a1ef5c2ba7b732903f2db483411d75b5d5844e1f63556b",
+    "/data/ycfeng/tmp/d29_snapshot_red01.log": "0b3d0b139285af71ff3ce268e116f42a2d67a4d98de138bfaafaaad4a049c6e8",
+    "/data/ycfeng/tmp/d29_snapshot_red02.xml": "688079a1595e0b0b0b59df2da32997fbc8a44d4b1f20f1e4abe387334cd97350",
+    "/data/ycfeng/tmp/d29_snapshot_red02.log": "08c23e4d108dccbf9bc320c1fdd4e3f3d419a96d8d4bbe3674ed037bd6336ee2",
+    "/data/ycfeng/tmp/d29_snapshot_red03.xml": "2be0e21ccaca1be9cdb34860ccc81a695bfa6605e7ce62210cf224d6c698ec17",
+    "/data/ycfeng/tmp/d29_snapshot_red03.log": "99598c6fe45eeb2c502c28d2eec0807bf74487652a3264df342942ca4b09c3b6",
+    "/data/ycfeng/tmp/d29_snapshot_green01.xml": "ed42396c56a9e559186d29d539fd18e15afb8dc72b92da98e3f001e4464e10b2",
+    "/data/ycfeng/tmp/d29_snapshot_green01.log": "d6a1629d6edc88d0a6956a0ad600c8118680559bbbdc54c94c049c2cc9f4d592",
+    "/data/ycfeng/tmp/d29_snapshot_trainers01.xml": "3309f4e6c62333b309dfec440b5c90e6749b3c97a993425328f1354de69e1ff6",
+    "/data/ycfeng/tmp/d29_snapshot_trainers01.log": "9bce63c51d00bab659d6f5ccdc50cb395d90c122b097b046a119d9692ea46b91",
+    "/data/ycfeng/tmp/d29_snapshot_input_lifetime_probe.py": "cac79f6f245fe4f8ce49f5440a97643ac836fde12313961b251c8a0c2374924c",
+    "/data/ycfeng/tmp/d29_snapshot_input_lifetime01/result.json": "94cf48e99e183622b90b026a3b15728616ebb3da19ff9326dd175e428c62f939",
+    "/data/ycfeng/Frontier/.worktrees/step5-d29-input-snapshot/task_memory/task_2026-10-22_step5_position_routing/run_input_snapshot/evidence/bytes_and_snapshot.diff": "7ddcdd6228b83ba3505d053740df99fe4a6fa9747763d961139cbb87f2767a6d"
+  },
+  "inherited_writer_environment": {
+    "FRONTIER_TEST_CPU_WRITER_FILE": null,
+    "FRONTIER_TEST_CPU_WRITER_SHA256": null
+  }
+}
