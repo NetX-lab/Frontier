@@ -7,6 +7,7 @@
 | 2026-10-23 | Add independent fixture-only six-contract repair, separate commits and corrected quota. |
 | 2026-10-23 | Suspend proposed fixture slice pending explicit YC scope approval. |
 | 2026-10-23 | Resume explicitly approved two-path fixture slice; preserve independent source commit. |
+| 2026-10-23 | Add bounded prepare metadata row repair with unchanged registration scaling/hash behavior. |
 
 Frozen9974 checkout -> real writer and EP ledger RED -> existing applicability/
 registered profiling precision gate + nonempty proof write -> {whole affected
@@ -48,3 +49,20 @@ Original b60dfddd remains unchanged;fixture16<=60,combined legacy37+16=53<=140.
 Authorized retained owner3840+16=3856/3956,remaining100;45 changed/46 authorized
 owner paths,effective111 global paths. No need to broaden tests after53 whole-file
 PASS;root owns integration,strict77/full CLI/global gates and qualification.
+
+## D29-PREPARE-METADATA-REPAIR
+
+Actual selected prepare registration→MetricsStore CSV full-row RED→retain actual
+registration quant-signature match alongside profiling precision→metadata-only
+coherent selected row→{focused full-row/mismatch GREEN,whole affected196 checks}
+→exact31/40 churn and retained quota→source commit/English evidence→parent review.
+
+Acceptance:matching selected prepare FP8/profiling/empty factor;genuine mismatched
+prepare and grouped GEMM rows retain their target precision/source/factor,including
+precision-only and precision+quant mismatches. Export must preserve speedup state,
+get_precision and config hash;clearing warning set must not alter output. Existing
+source inventory takes precedence;configured explicit target is not overridden.
+No timing/lookup/predictor/hash changes. Whole original suites pass without skips;
+no repeated broadening after required PASS. Two paths only<=40,quant manager<=29,
+comm test within authorized up-to70,owner<=3956. Root records actual zero-sum
+overlay (required comm cap>=62,12 above former50;offered70 fits).
