@@ -394,6 +394,35 @@ def test_missing_stream_mapping_retains_raw_handles_and_no_invented_edges(profil
     assert c.errors and not c.synchronization
 
 
+def test_stream_mapping_uses_torch_loaded_cupti_soname(profile, monkeypatch):
+    p, c = profile, profile.collector
+    monkeypatch.setattr(sys.modules['torch'], 'version', SimpleNamespace(cuda='13.0'), raising=False)
+
+    def current_context(pointer):
+        pointer._obj.value = 123
+        return 0
+
+    def stream_id(context, stream, per_thread, pointer):
+        assert context.value == 123 and stream.value == 10 and per_thread == 0
+        pointer._obj.value = 7
+        return 0
+
+    libraries = {'libcuda.so.1': SimpleNamespace(cuCtxGetCurrent=current_context),
+        'libcupti.so.13': SimpleNamespace(cuptiGetStreamIdEx=stream_id)}
+
+    def loaded_library(name):
+        if name not in libraries:
+            raise OSError(f'{name}: cannot open shared object file')
+        return libraries[name]
+
+    monkeypatch.setattr(p.module.ctypes, 'CDLL', loaded_library)
+    monkeypatch.setattr(c, 'trace_stream', p.module.ServingProfile.trace_stream.__get__(c))
+    assert c.stream(p.streams[0]) == '0:10'
+    assert c.streams['0:10']['trace_stream_id'] == 7
+    assert c.streams['0:10']['torch_stream_id'] == 110
+    assert not c.errors
+
+
 def test_window_budget_survives_startup_and_tracks_native_iteration_stop(profile, monkeypatch):
     p, c, worker = profile, profile.collector, profile.native.worker
     monkeypatch.setattr(type(worker.model_runner.model), '__call__', lambda model, **kw: p.core.forward(**kw))

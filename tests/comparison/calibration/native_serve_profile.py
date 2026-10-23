@@ -233,8 +233,11 @@ class ServingProfile:
         return key
 
     def trace_stream(self, handle):
+        from torch import version
         # CUPTI's ID, unlike torch's stream_id, is the profiler trace stream ID.
-        driver, cupti = ctypes.CDLL('libcuda.so.1'), ctypes.CDLL('libcupti.so')
+        driver = ctypes.CDLL('libcuda.so.1')
+        # Torch has already loaded this SONAME; the unversioned alias may not exist.
+        cupti = ctypes.CDLL('libcupti.so.' + version.cuda.split('.')[0])
         context, identifier = ctypes.c_void_p(), ctypes.c_uint32()
         driver.cuCtxGetCurrent.argtypes = [ctypes.POINTER(ctypes.c_void_p)]
         cupti.cuptiGetStreamIdEx.argtypes = [ctypes.c_void_p, ctypes.c_void_p,
