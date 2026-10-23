@@ -6,6 +6,21 @@
 | --- | --- |
 | 2026-10-23 | Inspected accepted builders and original package inputs; began bounded preparation. |
 | 2026-10-23 | Completed candidate02 CPU checks and scope checkpoint; prepared separate code/records commits. |
+| 2026-10-23 | Root integrated, independently sealed and submitted candidate02; recorded Running and actual H800 startup evidence. |
+| 2026-10-23 | Root verified successful terminal/runtime/constructor evidence and unchanged inputs; independent data/trace acceptance is in progress. |
+
+## Current root execution
+
+- completed: source64133239/records9fb4bd7e integrated56e9405d. Independent specification/standards reviews found no actionable source issue. Root checked the complete214-line two-file diff and all530 package inputs,512 Git snapshot files and preserved originals. `review.md` and `root_seal.json` bind the evidence.
+- completed: actual locked-image60native/520tool/20binary checks, fresh bootstrap-wrapper entry and real SDK ResourceConfig all passed. Existing77 comparison remains bound without a fresh capture. Owner131+256 test results remain supplied evidence, not root reruns.
+- completed execution: job `exp-1023-213905-916183` finished Succeeded at13:48:57Z; containerCompleted/exit0/restart0,569s. Submission-to-terminal592s gives a conservative0.16445GPUh upper bound, not billing. Earlier13:40:46Z Running was the launch snapshot. Latest14:18:37Z profile02 remains Pending/no replicas, PID3236764 alive.
+- completed startup observation:13:44:39Z personal cloud status confirms one NVIDIA H800,81559MiB, driver570.124.06, vLLM0.28.0/Torch2.13.0+cu130 and phase running. Receipt `/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_worker_2d2su6cq/receipt.json`.
+- verification-only failure resolved: initial memory string assertion rejected Kubernetes normalization128000Mi→125Gi. Official quantity parsing proves exact equality; `platform_launch_check.json` records RED/GREEN. Healthy measurement continued.
+- completed root run checks: `root_run_check.json` binds actual H800/image, nativeV2/eager/physicalTP1-DP1, constructor and resolved scheduler budget6144/max_num_seqs1, and observed balanced_topk warning. All530 package inputs and originals527/529/530 unchanged. Eight cloud outputs/1,601,865,978bytes downloaded hash-identically, including the1,500,192,771-byte trace.
+- in-progress: independent raw-to-CSV, per-row routing and trace coverage audit by W128-BALANCED-DECODE-DATA. Root run status is `PASS_RUN_EXECUTION_DATA_ACCEPTANCE_PENDING`; no operator-data, physicalTP8, graph or serving qualification.
+- verification-only transfer failure resolved: scp rejected a source ending in `/.` as `unexpected filename: .`; a fresh download using the real directory basename passed all8 hashes. Failed temporary directory is retained; no cloud/source changes.
+
+## Historical owner preparation
 
 - completed: initial Git state clean on `feat/v4-balanced-decode-run` at `97803f07f72454030a4d3fe538d7cdf473906b8a`; all changes stay in this worktree.
 - completed: rehashed all 527 accepted q1 manifest inputs (528 files including manifest) and all 529 balanced-prefill inputs (530 including manifest). Manifest digests are recorded in `package_plan.json`; zero mismatches.
@@ -22,4 +37,4 @@
 - completed: check-progress checkpoint found no route drift and keeps root image/seal/runtime acceptance separate. Maintained scope is214/300 gross added lines in exactly2 files; no core/native/C26/collector edit.
 - completed: maintained builder/config commit `64133239c4f4c7fdc50b1b0b85d57d2d72fe3097`, exactly2 files/214 additions. All530 candidate02 inputs rehashed unchanged after commit; runtime source remains97803f07, simulator/matrix domains unchanged. Full local package hash map in `package_binding.json`; generated package is intentionally local/untracked and not relocated. Actual submit workspace is the owned worktree root.
 - completed: CPU preparation and archive deliverables. Separate records commit and compact handoff are the final actions; after that the package owner stops writing. Root actual-image/prelaunch/seal/quota/platform/runtime verification remains pending, and the JSON non-preemptible request is not substituted for observing the unchanged SDK default.
-- pending root-owned work: independent final review, actual locked-image source/binary/bootstrap checks, external seal, fresh personal quota/output-destination check,1-H800 run and measured output acceptance. No GPU, Docker, cloud, StepMind, original-package seal or external publication operation has occurred.
+- historical owner handoff: independent final review, actual locked-image source/binary/bootstrap checks, external seal, fresh personal quota/output-destination check,1-H800 run and measured output acceptance remained root-owned. The delivering owner performed no GPU, Docker, cloud, StepMind, original-package seal or external publication operation.

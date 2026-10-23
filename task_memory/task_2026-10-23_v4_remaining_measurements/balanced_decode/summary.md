@@ -5,8 +5,22 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Archived the bounded source/package/CPU deliverable for root review and seal. |
+| 2026-10-23 | Added root integration, real prelaunch verification and initial running-worker evidence. |
+| 2026-10-23 | Recorded successful GPU execution, actual constructor values and hash-identical outputs; data admission remains pending. |
 
-## Outcome
+## Root execution update
+
+Source64133239/records9fb4bd7e are integrated at56e9405d. Two independent source reviews found no actionable issue. Root checked530 package inputs,512 Git snapshot files and preserved originals; actual locked-image60native/520tool/20binary checks and real SDK resource entry passed. `root_seal.json` records the independent seal; the original package location and bytes are unchanged.
+
+The1H800/codesign/non-preemptible run `exp-1023-213905-916183` finished Succeeded at13:48:57Z. Root verified containerCompleted/exit0/restart0,569s container and592s submission-to-terminal (conservative0.16445GPUh upper bound, not billing), exact locked image/H800, unchanged530inputs/originals, and actual nativeV2/eager/physicalTP1-DP1/balanced_topk. Native constructor and resolved scheduler budget6144/max_num_seqs1 now have runtime evidence. Actual memory125Gi equals SDK128000Mi; its initial string-comparison failure remains recorded.
+
+Eight outputs/1,601,865,978bytes were downloaded hash-identically from the exact personal cloud root. Independent per-row/routing/raw-to-CSV/trace validation is active; `root_run_check.json` is `PASS_RUN_EXECUTION_DATA_ACCEPTANCE_PENDING`. No operator-data/physicalTP8/graph/serving admission. At14:18:37Z the32-GPU profile02 job remains Pending/no replicas with launcherPID3236764 alive. See `test_report_2026-10-23_root.md` for commands and observed evidence.
+
+## Historical owner-delivery archive
+
+The following sections preserve the owner-delivery state before root sealing/submission. Their pending launch/runtime checks are superseded by the root update above; they do not describe the current run status.
+
+### Outcome
 
 Task W128-V4-BALANCED-DECODE-PACKAGE completed CPU preparation. Branch `feat/v4-balanced-decode-run`; builder/config commit `64133239c4f4c7fdc50b1b0b85d57d2d72fe3097`. Exactly two maintained non-core files /214 gross added lines against `97803f07`. No core/native/C26/collector modification. Generated immutable package and records are excluded from that budget. No external publish, cloud, StepMind, Docker, GPU or seal operation occurred.
 

@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "checked_at_utc": "2026-10-23T13:42:55.586449+00:00",
+  "snapshot_sha256": "c87970725695ff73d02d09b0f216318e4c6babdbf42d2565cc7e130e0311d3bf",
+  "job_name": "exp-1023-213905-916183",
+  "phase_at_snapshot": "Running",
+  "creator": "i-fengyicheng",
+  "preemptible": false,
+  "charged_group": "codesign",
+  "gpu": 1,
+  "cpu": 16,
+  "memory_platform": "125Gi",
+  "memory_bytes": "134217728000",
+  "memory_requested_Mi": 128000,
+  "filestore": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run:/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run",
+  "original_check": {
+    "status": "FAIL_HARNESS_STRING_COMPARISON",
+    "error": "AssertionError: expected memory '128000Mi', actual '125Gi'",
+    "resolution": "Kubernetes quantity parse proves exact byte equality; no workload/source/platform change."
+  }
+}

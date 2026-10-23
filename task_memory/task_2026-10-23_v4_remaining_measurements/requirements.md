@@ -14,6 +14,7 @@
 | 2026-10-23 | YC approved the native profile run and granted standing authority for task-required H800 RJobs of any necessary scale. |
 | 2026-10-23 | Recorded the owner-scoped staged-entry repair and fresh profile02 generation after the independently reproduced profile01 import failure. |
 | 2026-10-23 | YC retained the queued32-GPU run and prioritized independent tickets, including useful8-GPU or smaller pending work. |
+| 2026-10-23 | Root selected the source-backed four-point local-MoE supplement and allocated a two-file non-core package under the existing queue-time/H800 authority. |
 
 ## Original requests and decision
 
@@ -73,3 +74,9 @@ Both initial independent reviews reported three distinct failure-isolation defec
 ## Staged-entry correction — execution decision
 
 Independent profile-package review found that flattening `native_pd_worker.py` to the package root invalidates its repository-relative `vllm_replay` import. Root reproduced the exact `ModuleNotFoundError` in a fresh process. Under the existing repair authority, the original package owner corrects only the generated launcher/bootstrap import paths through the existing builder and profile plan, within the same two-file/300-line allocation. Accepted runtime bytes remain pinned to `05952396`. Preserve the unsealed profile01 package and failed evidence; generate fresh `candidate_h800_p0_profile_02` with tag `dsv4-h800-p0-profile-20261023-02` and the same approved resources/window. Both entry paths require fresh-process verification without preloading `pd_replay` or supplementing the dependency path outside the generated entry.
+
+## Q2b local-MoE package allocation
+
+Under D-V4-QUEUE-PARALLEL-WORK and D-V4-H800-RJOB-AUTHORITY, root selects EP16 rank0 gathered populations16/32/6152/12288 from corrected `moe_grid_design.md`. The6152 case includes a dummy peer and is conditional evidence. Reuse the existing producer with physicalTP1, balanced distribution, `routing_runtime_path=balanced_topk`, and separate CUDA_EVENT/record_function invocations. Retain all columns; only the grouped-GEMM envelope is the candidate cost scope. Gate rows are not native-local rows, and shuffle overlaps that envelope. No rank/time/weight/graph/serving equivalence follows from this design.
+
+One package owner may add at most `moe/build_package.py` and `moe/profile_plan.json`, total300 gross changed lines outside core; generated immutable inputs and records are separately counted. Worktree `/data/ycfeng/Frontier/.worktrees/v4-moe-local-run`, base56e9405d. Reuse existing worker/launcher/seal mechanisms without editing their retained originals. Target1H800/codesign/non-preemptible,16CPU,mem_gb128,1800s ceiling, all durable outputs under `/mnt/codesign-exp/ycfeng`. Root owns actual image/SDK gates, sealing, quota and submission. No core/native/C26/consumer/admission edits are allocated.
