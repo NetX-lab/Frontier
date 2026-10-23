@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate shared run-input ownership across ten paths,114 effective paths, with unchanged owner/global caps and the new lifetime checks. |
 | 2026-10-24 | YC approves fixed collective profiling input per simulation run; next run reloads changes, superseding per-call hot-update requirements. |
 | 2026-10-24 | Allocate current-byte comparison within existing caches and adapt only the existing read-hook instrumentation, with unchanged live checks and quotas. |
 | 2026-10-23 | Allocate8-gross immutable cost-field conversion in two existing PRICING paths without changing allowances. |
@@ -281,3 +282,20 @@ allocating the implementation. Prefer one existing owner and one snapshot path;
 no new live-versus-fixed mode or flag is requested. The delivered byte repair
 remains a verified intermediate, with final independent review on the resulting
 snapshot change. Owner/global limits and6144/1024/2400s acceptance remain.
+
+## [Implementation Decision] D29-RUN-INPUT-SNAPSHOT
+
+Use the existing per-Simulator prediction manager as the shared input owner;
+backend-local prefetch alone does not prevent mixed P/D versions. The detailed
+interface, failure semantics and constructor/test seams are in
+run_input_snapshot/design.md. Add the small stdlib-only collective-profile
+input module and the manager's ownership field/property under CORE ownership.
+The backend, base interface and backend tests keep their PRICING ownership.
+
+Allocate at most340 gross lines (source120/tests220) across the ten named paths
+in repairs/run_input_snapshot_scope_amendment.json, measured after delivered
+byte code2f2d9339. Transfer100 CORE and24 PRICING allowance lines internally.
+Two additional paths make114; CORE4404/PRICING3956/native1582/source9942/global10000
+remain unchanged. Final review covers the combined bytes and snapshot change.
+Keep the existing standalone backend call shape and one loading implementation.
+New-run failure checks replace hot-update checks; actual-point checks remain.

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Verify byte receipts24/3 and paired78PASS; select shared run ownership and allocate the114-path snapshot successor. |
 | 2026-10-24 | Record YC's run-fixed input decision, receive byte repair32/36 and inspect the existing ownership/lifetime before its successor allocation. |
 | 2026-10-24 | Allocate artifact bytes36 through two unused PRICING allowance lines; retain per-call reads and all existing behavior assertions. |
 | 2026-10-23 | Merge verified cost-fields75404143, archive both reviews and HTSIM-completed checks, correct workload clocks and close negative identity-cache analysis. |
@@ -55,6 +56,22 @@
 
 ### Current-session resumption (supersedes handoff next-session timing)
 
+- completed/receipt-check: root recomputed all24 byte-repair evidence hashes,
+  three committed source hashes and both78PASS JUnit sets, allowing only the
+  documented current_text/current_bytes test-name change. Records-only commit
+  56529fcd is archived as e4cb7a59; byte code2f2d9339 remains unmerged.
+- completed/design: D29-RUN-INPUT-LIFETIME (ses_e965227e0ffewRlo7k5AqiDNsQ)
+  traced one manager per Simulator and distinct per-role backends. Root selects
+  one manager-owned input collection; backend-only prefetch can mix versions.
+  Constructor binding uses existing arguments before super, not unset self fields.
+- in-progress: D29-RUN-INPUT-SNAPSHOT; design and340-gross allocation are in
+  run_input_snapshot/design.md and repairs/run_input_snapshot_scope_amendment.json.
+  Effective114 paths, CORE49/4404,native19/1582,PRICING46/3956. Donor files stay
+  untouched; source9942/global10000 caps remain. Planning baseline on delivered
+  bytes is9377 source/9391 global, not a final union acceptance.
+- pending: snapshot behavior RED/GREEN, actual P/D and next-run constructor
+  checks, full-wave equality, independent combined review and parent checks.
+  Then integration/freeze/regressions/full workflow and T2/native gates.
 - completed/diagnostic: main08 residual records1f42fb00 are archived at3164ad84.
   Parent layer61 warm2.653s reproduces28003 decodes/80 reads,165 captured pairs
   match. The complete adjacent layer60 warm2.837s has208/208 matching pairs and
