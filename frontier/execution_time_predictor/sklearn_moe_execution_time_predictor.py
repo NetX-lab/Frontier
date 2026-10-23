@@ -113,9 +113,22 @@ class SklearnMoEExecutionTimePredictor(
         base_name = get_moe_gating_base_model_name(model_name)
         precision, identity = step5_operator_binding(self, metadata, base_name, context=context)
         family = self._measurement_family_name(self._active_measurement_type)
+        selector = None
+        if (context is not None and context.get("model_architecture_profile") == "step5"
+                and context.get("routing_runtime_path") == "position_cyclic"):
+            selector = dict(native_context=context)
+            if "native_facts" in context:
+                from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+                from frontier.moe_load_imbalance import moe_native_binding_context
+                group = next(group for group in resolve_routed_layer_groups(self._model_config)
+                             if metadata.attention_spec.global_layer_id in group.layer_ids)
+                selector.update(native_source=context["native_facts"]["shared"],
+                    selected_native_metadata=dict(moe_layer_ids=group.row_metadata()["moe_layer_ids"],
+                        native_binding=moe_native_binding_context(context)))
         model = self._model_manager._get_family_model(
             family, model_name, precision_key=precision.name,
             requested_identity=identity,
+            native_binding=selector,
         )
         if model is None:
             raise ValueError(f"Step measured {model_name} {precision.name} layer {metadata.attention_spec.global_layer_id} coverage is unavailable")
@@ -141,9 +154,11 @@ class SklearnMoEExecutionTimePredictor(
         if position_scope:
             if context is not None:
                 from frontier.moe_load_imbalance import moe_native_binding_context
-                if json.loads(PredictionModelRegistry._measurement_identity(model)["native_context"]) != moe_native_binding_context(context):
+                selected_binding = PredictionModelRegistry._native_measurement_binding(
+                    PredictionModelRegistry._measurement_identity(model))
+                if selected_binding["native_context"] != moe_native_binding_context(context):
                     raise ValueError("Step selected model native context differs from the actual bound context")
-                if "native_facts" in context and PredictionModelRegistry._measurement_identity(model).get("native_source") != context["native_facts"]["shared"]:
+                if "native_facts" in context and selected_binding.get("native_source") != context["native_facts"]["shared"]:
                     raise ValueError("Step selected model installed source differs from the actual bound context")
             key = tuple(float(features[name]) for name in names)
             if count_model is None or tuple(count_model._frontier_feature_names) != names or set(count_model._frontier_exact_lookup) != set(exact):
