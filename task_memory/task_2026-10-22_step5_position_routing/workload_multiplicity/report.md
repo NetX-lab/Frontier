@@ -47,7 +47,9 @@ EP-only projection leaves only a few GB before other output; both modes exceed
 available space by roughly250GB. `/home/brainpp` and `/mnt` resolve to the same
 root filesystem, with59,530,031,104 bytes available. Capacity is a point-in-time
 observation, not reserved space. No cleanup or new storage operation is approved
-by this report; D8's older cleanup authority is limited to its named directories.
+by this report. Any cleanup must follow D8's handoff scope, retain cited evidence
+first, and preserve still-used directories and other sessions' work
+(`task_memory/task_2026-10-15_step5_preview_h800/requirements.md:389`).
 
 The private ownership diagnosis is closed without allocation; see
 `../detached_emission_ownership/parent_receipt.md`. Neither the estimated<=3ms

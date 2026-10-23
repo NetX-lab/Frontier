@@ -1,0 +1,25 @@
+{
+  "task_id": "D29-T2-SNAPSHOT-BINDING-COVERAGE",
+  "status": "PASS_STATIC_COVERAGE_NOT_REBOUND",
+  "root_head": "1a365ebc8f27090e48f9223de80807fc68fe13b0",
+  "prior_source": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "bound_paths_unchanged": 26,
+  "owner_session": "ses_e9593d566ffewode6CXodumj9I",
+  "runtime_source_contract": "Entire pinned repository mounted read-only at its absolute path and placed on PYTHONPATH;26 hashes supplement it and are not an import closure.",
+  "owner_static_findings": {
+    "frontier_module_closure": 43,
+    "snapshot_modules_reached": false,
+    "closure_modules_unchanged_from_79": true,
+    "new_bound_paths_needed": 0
+  },
+  "primary_checks": [
+    "26 disk SHA256 values match prior bindings",
+    "26 old/current Git blob IDs equal",
+    "Read actual repository mount and PYTHONPATH recipe"
+  ],
+  "limits": [
+    "43-module closure is owner static evidence; not a runtime/import execution.",
+    "Actual primary T2 execution_proposal still names1be91bad/integrated-04; latest79/integrated-06 static receipt is not staged/sealed runtime readiness.",
+    "Current63-checksum package was not rerun by this coverage check. Final source, record staging,26-file checks,seal,CPU workflow and platform/native qualification remain pending."
+  ]
+}

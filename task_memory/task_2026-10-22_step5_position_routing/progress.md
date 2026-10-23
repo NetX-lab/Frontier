@@ -92,6 +92,16 @@
   uniform-rate projection3604.3912s; corrected to90200×0.039956=3604.0312s.
   Rounded3604s and all workload counts are unchanged; rerun five arithmetic
   assertions and source whitespace checks PASS.
+- completed/read-only: D29-T2-SNAPSHOT-BINDING-COVERAGE,
+  session ses_e9593d566ffewode6CXodumj9I. Inspect the old26-file T2 binding and
+  actual package import root for coverage of collective_profile.py/manager
+  additions. No rebind, package write, seal, platform access or source allocation;
+  final source still waits for the key repair. The26 bindings supplement a full
+  pinned checkout, not a staged import closure. Owner static43-module closure
+  does not reach snapshot modules; parent26disk hashes/Git bindings match79.
+  No inventory expansion/helper change needed. Actual primary proposal still
+  points at1be/integrated-04; newer79 static receipt is not staged readiness.
+  Receipt: resumed_performance/t2_snapshot_coverage.json.
 - completed/diagnostic: immutable-plan records7d1cdc06 archived as a3525856.
   Warm plan/tensor construction is already0; eight complete plans are retained.
   Key-only control removes192 encodes/wave, with paired warm0.167724->0.128676s
