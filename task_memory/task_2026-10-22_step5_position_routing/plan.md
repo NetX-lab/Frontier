@@ -121,7 +121,7 @@ change is allocated. See early_init_repro/report.md.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
-| Approval, ownership and baseline | Complete; effective112 under existing budgets; cost-fields8 adds no path allowance. |
+| Approval, ownership and baseline | Complete; effective114 after snapshot allocation276e6520, with unchanged owner/global budgets. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
 | CORE/SOURCE49 allocated | Group/loader/trace/prepared closed;4105/4404 before snapshot work. Two new input-lifetime paths share the unchanged cap. |

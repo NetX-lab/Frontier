@@ -145,10 +145,16 @@
 - completed/user decision: YC approves fixing collective_local.json for one
   simulator run and loading changes in the next. Current per-call hot updates
   and their tests may adopt that lifetime. Per-point validation/output stay.
-- in-progress/design: D29-RUN-INPUT-LIFETIME, session
-  ses_e965227e0ffewRlo7k5AqiDNsQ, traces the actual run/Cluster/predictor boundary
-  and shared ownership. No successor source allocation yet. Review the final
-  combined snapshot diff rather than separately approving a superseded read loop.
+- completed/design: D29-RUN-INPUT-LIFETIME, session
+  ses_e965227e0ffewRlo7k5AqiDNsQ, traces the actual run/Cluster/predictor lifetime.
+  Root allocation276e6520 selects shared manager ownership; implementation is
+  assigned to ses_e9669de64ffeH614F6iNYIqgeb in step5-d29-input-snapshot.
+  Review the final combined snapshot diff rather than a superseded read loop.
+- in-progress/independent diagnosis: D29-IMMUTABLE-PLAN-PREPARATION, session
+  ses_e963098ecffebqCOtdysKGY6Xe, uses frozen byte source2f2d9339 to distinguish
+  repeated immutable plan construction, derived-key serialization and necessary
+  live work. No implementation or numerical/proof cache is allocated. It does
+  not inspect the concurrent input-snapshot or output-encoding implementation.
 - completed/corrected diagnosis: ccd9b728 replaces the old78% unexplained startup
   estimate. Actual P/D call multiplicity is10+1 MoE reads per measurement family;
   unit-cost scaling now explains about1035/1288s, with253s remaining. Warning/log,
