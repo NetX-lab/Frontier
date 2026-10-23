@@ -1,0 +1,47 @@
+{
+  "task_id": "W128-V4-NATIVE-SERVE-PROFILE",
+  "status": "BLOCKED_SCOPE_INCREMENT",
+  "baseline": "993f05f59ef22bfab38433dd93e2fcf486fc113a",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile",
+  "python": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "python_version": "3.12.13",
+  "pytest_version": "9.0.2",
+  "source_sha256": {
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "14165098417f7ee98e7a1410338b783721c0fceee99f4c372f68ece0a12dae81",
+    "tests/comparison/calibration/pd_replay.py": "fe196c08ff6357451be5ba0684db0db60f8ff8fcd955d1970cc45cd402642353",
+    "tests/comparison/calibration/native_pd_worker.py": "233b30f1310645076728b84007e98c1adb0e1aa3b0d5d12abadf4d4aa11691ac",
+    "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py": "67f3192302b6d12c0b8296581ee8b2788a772bce80b158ad45bc349eacb32a7b"
+  },
+  "probe_command": "env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY'\nimport json\nfrom pathlib import Path\nfrom tests.unit.test_dp_placement_harness import native_engine\nfrom tests.comparison.dp_placement_pp.vllm_replay import server_env, server_command\nfrom tests.comparison.calibration.pd_replay import instance_env\nextension = 'native_serve_profile.NativeServeProfile'\nengine = native_engine() | dict(worker_extension_cls=extension, moe_gating_routing_runtime_path='balanced_topk')\ntry:\n    server_env('clean', engine, Path('/not-written'), {'PATH': '/usr/bin'})\nexcept ValueError as error:\n    print(json.dumps(dict(probe='new_extension_balanced_routing', outcome='BLOCKED', error=str(error))))\nelse:\n    raise AssertionError('Expected the current selector refusal')\nengine.pop('moe_gating_routing_runtime_path')\nengine['kv_transfer'] = dict(kv_buffer_device='cuda', side_channel_host='10.0.0.1', prefill_side_channel_port=6200, decode_side_channel_port=6300)\nfor selected in (extension, 'native_full_structure.FullModelInventory'):\n    env, changed = instance_env('clean', engine | dict(worker_extension_cls=selected), Path('/not-written'), {'PATH': '/usr/bin'}, '0,1,2,3,4,5,6,7', role='prefill')\n    print(json.dumps(dict(probe='extension_pythonpath', extension=selected, pythonpath=env.get('PYTHONPATH'), changed_keys=sorted(changed))))\nengine['profiler_config'] = dict(profiler='torch', torch_profiler_dir='/not-written/traces')\nmodel = Path('data/config/models/deepseek-v4-flash-random')\nfrom tests.comparison.dp_placement_pp import vllm_replay\noriginal = vllm_replay.local_model_config\nvllm_replay.local_model_config = lambda path: dict(architectures=['DeepseekV4ForCausalLM'], vocab_size=129280)\ntry:\n    command = server_command(engine, model, 8100)\nfinally:\n    vllm_replay.local_model_config = original\nprint(json.dumps(dict(probe='profiler_config_forwarding', forwarded='--profiler-config' in command)))\nPY",
+  "observed": [
+    {"probe": "new_extension_balanced_routing", "outcome": "BLOCKED", "error": "Native balanced routing requires the registered worker extension"},
+    {"probe": "extension_pythonpath", "extension": "native_serve_profile.NativeServeProfile", "pythonpath": null, "changed_keys": ["CUDA_VISIBLE_DEVICES", "VLLM_NIXL_SIDE_CHANNEL_HOST", "VLLM_NIXL_SIDE_CHANNEL_PORT"]},
+    {"probe": "extension_pythonpath", "extension": "native_full_structure.FullModelInventory", "pythonpath": "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration", "changed_keys": ["CUDA_VISIBLE_DEVICES", "PYTHONPATH", "VLLM_NIXL_SIDE_CHANNEL_HOST", "VLLM_NIXL_SIDE_CHANNEL_PORT"]},
+    {"probe": "profiler_config_forwarding", "forwarded": false}
+  ],
+  "scope_increment": {
+    "applied": false,
+    "diff": "scope_increment.diff",
+    "check_command": "git apply --check --numstat --unidiff-zero task_memory/task_2026-10-23_v4_remaining_measurements/collector/scope_increment.diff",
+    "check_exit": 0,
+    "files": {
+      "tests/comparison/dp_placement_pp/vllm_replay.py": {"added": 7, "deleted": 1, "changed": 8},
+      "tests/comparison/calibration/pd_replay.py": {"added": 2, "deleted": 2, "changed": 4}
+    }
+  },
+  "tests": [
+    {"suite": "tests/unit/test_native_serving_inventory.py", "passed": 28, "seconds": 0.95, "exit": 0},
+    {"suite": "tests/unit/test_native_v2_serving_inventory.py", "passed": 45, "seconds": 4.42, "exit": 0},
+    {"suite": "tests/unit/test_native_reader_binding.py", "passed": 135, "seconds": 55.17, "exit": 0, "checker": "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py"}
+  ],
+  "image": {
+    "requested": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "observed_local_id": "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "hook_resolution": "NOT_RUN",
+    "container_started": false
+  },
+  "capabilities": {"new_stream_event_evidence": "UNKNOWN", "per_kernel_pdl": "UNKNOWN", "capture_replay_event_survival": "UNKNOWN", "cupti_restart": "UNKNOWN"},
+  "collector_implemented": false,
+  "native_sources_unchanged": true,
+  "gpu_jobs": 0
+}

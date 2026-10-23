@@ -1,0 +1,21 @@
+--- a/tests/comparison/dp_placement_pp/vllm_replay.py
++++ b/tests/comparison/dp_placement_pp/vllm_replay.py
+@@ -132,0 +133,4 @@
++NATIVE_WORKER_EXTENSIONS = {
++    "native_full_structure.FullModelInventory": "native_full_structure.py",
++    "native_serve_profile.NativeServeProfile": "native_serve_profile.py",
++}
+@@ -246 +250 @@
+-                    or engine.get("worker_extension_cls") != "native_full_structure.FullModelInventory"):
++                    or engine.get("worker_extension_cls") not in NATIVE_WORKER_EXTENSIONS):
+@@ -347,0 +352,2 @@
++        if "profiler_config" in engine:
++            command += ["--profiler-config", json.dumps(engine["profiler_config"])]
+--- a/tests/comparison/calibration/pd_replay.py
++++ b/tests/comparison/calibration/pd_replay.py
+@@ -80 +80 @@
+-    request_records,
++    request_records, NATIVE_WORKER_EXTENSIONS,
+@@ -191 +191 @@
+-        if engine.get("worker_extension_cls") == "native_full_structure.FullModelInventory":
++        if engine.get("worker_extension_cls") in NATIVE_WORKER_EXTENSIONS:
