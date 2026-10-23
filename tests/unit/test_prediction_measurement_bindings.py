@@ -228,6 +228,51 @@ def test_unique_legacy_registry_default_and_precision_labels_unchanged(tmp_path)
     assert manager._contract_model_registry("kernel_only") == {}
 
 
+def test_prepared_points_follow_actual_model_rows_identity_and_fresh_queries(bound, tmp_path, monkeypatch):
+    from tests.unit.test_moe_position_routing import materialize, source
+    manager, replica, _, paths, _ = bound
+    path = fixture.position_collective_costs(tmp_path, paths[1], device=replica.device)
+    p = _predictor(replica.model_config, manager); p._replica_config = replica
+    p._cc_backend = SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
+    lane = materialize(source(padding=16)).lane(0)
+    real_loads, reads, source_reads = json.loads, [], []
+    def observe(text, *args, **kwargs):
+        reads.append(text)
+        if '"source_frames"' in text: source_reads.append(text)
+        return real_loads(text, *args, **kwargs)
+    monkeypatch.setattr(json, "loads", observe)
+    for layer in (3, 88):
+        with p._step5_measured_layer(layer):
+            first = p._step5_position_queries(lane)
+            model, precision = p._step5_ffn_model("moe_grouped_gemm", context=first[0])
+            before, sources_before = len(reads), len(source_reads); again = p._step5_position_queries(lane)
+            assert len(reads) - before < 20, "warm selection must not rescan physical rows and plan keys"
+            assert len(source_reads) == sources_before
+            assert first == again and first[0] is not again[0] and first[1] is not again[1]
+            identity = model._frontier_measurement_identity
+            rows = model._frontier_moe_physical_rows
+            for change in ("rows", "identity", "model"):
+                if change == "rows": model._frontier_moe_physical_rows = tuple(list(rows))
+                if change == "identity": model._frontier_measurement_identity = identity + " "
+                if change == "model":
+                    model = deepcopy(model); manager._store_model_precision("moe_grouped_gemm", precision.name, model)
+                before = len(source_reads); result = p._step5_position_queries(lane)
+                assert len(source_reads) > before and result == first
+                model._frontier_moe_physical_rows = ()
+                with pytest.raises(ValueError, match="actual source/native point"): p._step5_position_queries(lane)
+                model._frontier_moe_physical_rows = rows
+            with pytest.raises(ValueError, match="measurement identities differ"):
+                p._predict_step5_ffn_operator("moe_grouped_gemm", result[1]["moe_grouped_gemm"], context=result[0])
+            model._frontier_measurement_identity = identity
+            value = p._predict_step5_ffn_operator("moe_grouped_gemm", result[1]["moe_grouped_gemm"], context=result[0])
+            assert value > 0 and p._step5_ffn_costs["moe_grouped_gemm"]["kernel_count"] > 0
+            retained = p._step5_physical_points[model]
+            model._frontier_moe_physical_rows = ({**rows[0], "routing_input": "{"},)
+            with pytest.raises(json.JSONDecodeError): p._step5_position_queries(lane)
+            assert p._step5_physical_points[model] is retained
+            model._frontier_moe_physical_rows = rows
+
+
 @pytest.mark.parametrize("native_first", [False, True])
 @pytest.mark.parametrize("typed", [False, True])
 def test_mixed_native_non_native_views_keep_both_insert_orders(bound, tmp_path, native_first, typed):

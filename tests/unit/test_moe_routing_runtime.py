@@ -76,6 +76,28 @@ def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path, f
     assert all(json.loads(plan.buffer_json)["compute_context"]==context for plan in plans.values())
     model,_=p._step5_ffn_model("moe_grouped_gemm",context=context)
     assert model._frontier_cache_model_name=="moe_grouped_gemm" and model._frontier_moe_physical_rows
+    saved = path.read_text()
+    prepared = p._step5_collective_receipts
+    path.write_text("{")
+    with pytest.raises(json.JSONDecodeError): p._step5_position_queries(lane)
+    assert p._step5_collective_receipts is prepared
+    path.write_text(saved)
+    assert p._step5_position_queries(lane) == (native, features, plans)
+    prepared = p._step5_collective_receipts
+    path.write_text(saved + " ")
+    assert p._step5_position_queries(lane) == (native, features, plans)
+    assert p._step5_collective_receipts[2] is not prepared[2]
+    path.write_text(saved)
+    p._step5_position_queries(lane); prepared = p._step5_collective_receipts
+    for case in ("buffer_receipt", "context"):
+        changed = json.loads(saved)
+        for receipt in changed["counts"].values(): receipt[case] = {"foreign": True} if case == "buffer_receipt" else {**receipt[case], "foreign": True}
+        path.write_text(json.dumps(changed))
+        with pytest.raises(ValueError, match="buffer/count|context/count"): p._step5_position_queries(lane)
+        assert p._step5_collective_receipts is prepared
+        path.write_text(saved)
+        assert p._step5_position_queries(lane) == (native, features, plans)
+        prepared = p._step5_collective_receipts
     for key,receipt in list(counts.items()):
         value=json.loads(key);value["buffer_json"]=json.dumps(dict(actual_buffer="foreign",compute_context=foreign));counts[json.dumps(value,sort_keys=True,separators=(",",":"))]=counts.pop(key)
     path.write_text(json.dumps(dict(counts=counts)))

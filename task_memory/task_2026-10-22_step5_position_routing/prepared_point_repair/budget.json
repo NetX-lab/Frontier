@@ -1,0 +1,62 @@
+{
+  "task_id": "D29-PREPARED-POINT-REUSE",
+  "base": "caffccbb48011f0140359d391ad75b58906ff15b",
+  "paths": [
+    {
+      "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "added": 73,
+      "deleted": 19,
+      "net": 54,
+      "gross": 92,
+      "step_cap": 180,
+      "retained_added": 191,
+      "retained_deleted": 6,
+      "retained_gross": 197,
+      "retained_cap": 323,
+      "sha256": "d9423f3f318cd355f2773ea6a65a9bf9d297cdc3ec7c8c46230b38456ccacbfc"
+    },
+    {
+      "path": "tests/unit/test_prediction_measurement_bindings.py",
+      "added": 45,
+      "deleted": 0,
+      "net": 45,
+      "gross": 45,
+      "step_cap": 45,
+      "retained_added": 299,
+      "retained_deleted": 0,
+      "retained_gross": 299,
+      "retained_cap": 299,
+      "sha256": "7fc5f851cfcac0b4f676ec21a39812389e8c0d7427faf24e858a4cacf2087912"
+    },
+    {
+      "path": "tests/unit/test_moe_routing_runtime.py",
+      "added": 22,
+      "deleted": 0,
+      "net": 22,
+      "gross": 22,
+      "step_cap": 25,
+      "retained_added": 75,
+      "retained_deleted": 0,
+      "retained_gross": 75,
+      "retained_cap": 78,
+      "sha256": "87c1ebb9c92fca27cc37bc34b7b63534b86f8920c4325f835c44d11352b86805"
+    }
+  ],
+  "step_gross": 159,
+  "step_ceiling": 250,
+  "core_base": 3970,
+  "trace_reservation": 20,
+  "retained_gain": 121,
+  "conservative_core": 4149,
+  "core_retained": 4111,
+  "core_ceiling": 4404,
+  "conservative_remaining": 255,
+  "modification_history": [
+    {
+      "date": "2026-10-23",
+      "change": "Record exact committed-source gross/net and retained ceilings including trace reservation"
+    }
+  ],
+  "code_commit": "0be11762d0f83e9db77658a1447a672507166872",
+  "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113"
+}
