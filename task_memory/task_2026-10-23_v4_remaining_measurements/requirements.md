@@ -13,6 +13,7 @@
 | 2026-10-23 | Accepted G2 CPU source 05952396 after both re-reviews, final separate-suite verification and explicit matrix binding; new GPU authority remains pending. |
 | 2026-10-23 | YC approved the native profile run and granted standing authority for task-required H800 RJobs of any necessary scale. |
 | 2026-10-23 | Recorded the owner-scoped staged-entry repair and fresh profile02 generation after the independently reproduced profile01 import failure. |
+| 2026-10-23 | YC retained the queued32-GPU run and prioritized independent tickets, including useful8-GPU or smaller pending work. |
 
 ## Original requests and decision
 
@@ -31,6 +32,10 @@
 [Original Request — YC H800 response] “批准；h800集群的的运行无需向我过问，允许你提交符合任务需求的任意规模的rjob（在h800上）”.
 
 [Decision D-V4-H800-RJOB-AUTHORITY — 2026-10-23 UTC] The current 32-H800 native profiling run is approved. Task-required H800 RJobs no longer need repeated resource approval, including necessary changes in scale. Respect actual quota/capacity, personal StepMind submission, local source mounts, storage boundaries and auxiliary soft gates. This resource authority does not change calibration predicates, native/C26 source approval or unrelated paused task scope. The first run retains the recorded 32-H800, 3600-second, 64-worker-step plan; any subsequent run records its concrete purpose, resources and evidence before submission.
+
+[Original Request — queue-time priorities] “继续等待32卡的gpus资源，优先进行其他tickets等todo事项（可以先进行8卡等规模的待处理任务）”.
+
+[Decision D-V4-QUEUE-PARALLEL-WORK — 2026-10-23 UTC] Keep profile02 queued and its launcher alive. Prioritize independent unfinished DSV4 ticket work; smaller H800 measurements may run under the existing standing authority once their missing tuples, source/configuration, resource ceiling and acceptance are recorded. A smaller topology qualifies only its measured scope. Existing GLM pause, native/C26 boundaries and CPU-overhead-last order remain in force.
 
 [Decision D-V4-KERNEL-ONLY-GPU-COST] Adopt the recommended per-operator KERNEL_ONLY route. Implement V4-private input/consumer prerequisites and design measurements from native source and retained evidence. Kernel-to-scope uniqueness is not completeness or wall-clock additivity. Serving attention totals require complete attribution plus explicit GPU-stream/dependency accounting. CUDA_EVENT stays separate diagnostic/equivalence evidence; the unexplained uncompressed difference is not labelled CPU overhead or removed by scaling.
 

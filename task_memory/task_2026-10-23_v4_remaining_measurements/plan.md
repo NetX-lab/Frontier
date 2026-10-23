@@ -16,8 +16,16 @@
 | 2026-10-23 | Opened the approved H800 collection phase: bounded package preparation, locked-image/source checks, run and retained-evidence verification. |
 | 2026-10-23 | Returned the reproduced profile01 entry-import defect to its package owner; fresh profile02 keeps the two-file/300-line allocation and requires actual fresh-process entry checks. |
 | 2026-10-23 | Completed I1/I2 and sealed profile02; I3 submitted exp-1023-180821-373637, platform Pending with verified identity/resources/local mount. |
+| 2026-10-23 | Opened queue-time independent work under YC's instruction; CPU ticket and small-GPU feasibility inspections run independently of I3 scheduling. |
 
 ## Dependencies and ownership
+
+Queue-time priority: `Q0 current ticket/dependency census -> {Q1 independent CPU slice, Q2 concrete small-H800 supplement -> source/package checks -> collection/acceptance}` runs alongside `I3 queued32-H800 -> I4 actual native profile analysis`. Root selects only evidenced, unfinished work and records each selected slice's file ownership and scope before implementation. Initial read-only owners: W128-QUEUE-CPU-TODOS (`ses_e973542d0ffe0q9pPkLWZqidhT`) and W128-QUEUE-SMALL-GPU (`ses_e9734d10dffedFg9G5IQxJ653u`). Root retains platform operations and final acceptance; neither inspection changes sources or submits jobs.
+
+Selected queue-time work:
+1. Q1/P0 case binding: one owner writes only parent `canonical_case_20261021/p0_binding/` and ticket17 (at most60 changed ticket lines). Reuse the shared workload and admitted native06 evidence; validate three repetitions, token IDs/counts, warmup separation and four metric formulas. Close only evidenced P0 scope, not all four hardware/topology cases or numerical calibration. No new production checker.
+2. Q2a/balanced decode: prepare a fresh1-H800 package using the existing accepted q1 producer and balanced registration. Exact missing scope is six isolated layers × C6143..7166 × CUDA_EVENT/KERNEL_ONLY with balanced identity; historical unbalanced q1 is not relabeled. Package-owner budget: at most two maintained non-core source/config files and300 changed lines, excluding generated immutable package contents/records. Reuse existing launch/seal/bootstrap; no core/native/C26 edits. Source/actual image checks precede submission; planned1800s/0.5GPUh ceiling, subject to the final executable plan. Consumer/admission work follows observed data and does not block collecting the missing rows.
+3. Q2b/local MoE: root checks the existing profiler's EP expert-sharding semantics, native P0 token/payload shapes and MXFP4/MARLIN compatibility before fixing a concrete1-H800 measurement grid. No EP8 comparison is added merely because8 GPUs were suggested. Native EP communication and full P0 topology are separate evidence requirements. No new core/source edit is allocated at this stage.
 
 Current status: A/B/C/D/E/F/G1/H, G2a–d and I1/I2 **completed for CPU preparation**. H acceptance is `collector_primary/primary_acceptance.json`; G2 acceptance is `driver/primary_acceptance.json` at source `05952396`. I3 submitted profile02 as `exp-1023-180821-373637` under D-V4-H800-RJOB-AUTHORITY; platform Pending at 10:10Z with launcher alive. I4 actual runtime/trace verification remains pending. The initial and repair allocations below remain historical.
 
