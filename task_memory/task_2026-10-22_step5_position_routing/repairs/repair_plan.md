@@ -29,6 +29,11 @@ core_review_scope_amendment.json, legacy_output_scope_amendment.json and
 prepare_metadata_scope_amendment.json. Effective scope is111 paths: CORE46/4404,
 native19/1582 and PRICING46/3956; source9942/global10000 ceilings remain unchanged.
 The explicit grouped-path adjustments supersede the original estimates.
+Apply final_scope_reconciliation.json last:46 allowance adjustments (+1258/-1258)
+within the same owners reconcile all actual per-path costs at1be91bad. Allocated
+paths remain111 (110 changed); totals9062 source/9076 global. Individual repair
+step ceilings remain independently binding. H04/H17 ownership follows the explicit
+table below; the raw auditor's majority-based description is not the rule.
 Then apply core_review_scope_amendment.json, a zero-sum230-line redistribution
 for existing CORE repair paths. The existing wrapper is also assigned its three-gross
 point-diagnostics persistence change inside the same230 repair total and the

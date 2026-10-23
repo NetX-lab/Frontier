@@ -14,12 +14,14 @@
 ## Current acceptance route
 
 The three implementation streams have delivered their source work. CORE/registry
-and joint producer reviews are closed; PRICING's selected prepare metadata P2 is
-the remaining recorded source finding. Original approval scope.json stays intact.
+and joint producer reviews are closed; PRICING's selected prepare metadata P2 also
+closed on1be91bad after parent196PASS and independent No findings. Original scope.json stays intact.
 Apply repairs/{registry_scope_amendment,core_review_scope_amendment,
 legacy_output_scope_amendment,prepare_metadata_scope_amendment}.json in that order:
 111 effective paths, CORE46/4404, native19/1582, PRICING46/3956; source9942 and
-global10000 gross ceilings are unchanged. requirements.md records YC's authority.
+global10000 gross ceilings are unchanged. Apply repairs/final_scope_reconciliation.json
+last for the adopted actual per-path allowances; no path/owner total changes.
+requirements.md records YC's authority.
 
 Dependency: prepare metadata repair -> affected checks and independent re-review
 -> final source freeze -> {strict77, full-unit failure/error-set comparison,
@@ -39,14 +41,14 @@ unchanged. Final T2 acceptance must verify the actual final script/helper bytes.
 | Derived image and source receipts | Published and verified; runtime remains separate. |
 | CORE/SOURCE46 | Source review and affected fixture repairs complete. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
-| PRICING46 | Pending selected prepare precision/source/factor repair and re-review. |
-| Complete integration and final freeze | Pending reviewed repair and all source/docs integration. |
-| Legacy strict77 | 60ba has77/77 PASS; repeat on final frozen production source. |
-| Full-unit failure/error-set gate | Pending final-source comparison with retained baseline and explicit environment evidence. |
+| PRICING46 | Source review complete;3879/3956 gross. |
+| Complete integration and final freeze | Final code frozen1be91bad; main-branch code/docs integration awaits final gates. |
+| Legacy strict77 | 60ba has77/77 PASS; final03 running on1be91bad. |
+| Full-unit failure/error-set gate | Parent03 running on1be91bad; compare retained baseline with explicit environment evidence. |
 | Fresh fixture and full CLI | fixture03 complete; final offline and online each require6144/1024,2400s and all retained validation checks. |
-| Independent source review | Close remaining P2 on the final exact delta. |
+| Independent source review | All recorded source findings closed on1be91bad. |
 | T2 final-source binding | Verify final script/helper, input hashes and unchanged engine limits. |
-| Final per-path accounting | Reconcile actual completed deltas against all overlays and owner/global ceilings. |
+| Final per-path accounting | Complete:111 allocated/110 changed,9062 source/9076 global; adopted same-owner zero-sum reconciliation. |
 | Package/GPU/G3/E2E | Blocked by workflow readiness and separate resource approval; original gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments

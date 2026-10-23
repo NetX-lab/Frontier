@@ -50,8 +50,11 @@
 - received: PRICING delivers prepare metadata repair3d51b9b2 and recordsbbd39fe3,
   31/40 gross across two existing paths. Owner reports196 affected PASS and real
   approximation retained; PRICING3879/3956,remaining77,paths19/29 and62/70.
-  Parent verifies and independent reviewer rechecks the immutable integrated-04
-  snapshot before acceptance. No final source freeze yet.
+  Parent verification196PASS and independent No findings now close the source P2.
+  Final code snapshot1be91bad is frozen in integrated-04 for the required gates.
+- completed: parent affected metadata suite196PASS/0FAIL/ERROR/SKIP,6.911s;
+  actual CSV rows confirm matching FP8/profiling/empty factor, retained genuine
+  approximation and byte-identical legacy Llama2 metadata. Re-review is closed.
 - in-progress: main04 remains an immutable diagnostic run at60ba4c75 using
   fixture03, with2400s per mode. Its launch preceded review closure, so its results
   cannot count as final CLI acceptance. Preserve artifacts and inspect its result
@@ -59,13 +62,26 @@
 - received: T2 source binding43c2947c/2adbf9f2 binds60ba, reports63/63 checksums and
   unchanged26 source files. Root acceptance and explicit final-revision byte binding
   remain pending. Engine limits7168/8192/128, imagef037 and native1350/1582 unchanged.
+- completed: independent T2 verification confirms63 checksums,26 bound source
+  files and the2907/12/53 publication chain. Two non-blocking record corrections
+  (staging pointers and85-step/81-retained arithmetic) are with the native owner;
+  final_parent/review_2026-10-23_t2_binding.md retains the evidence and boundaries.
 - completed: apply checkpoint D7/S5 corrections to plan.md and repairs/repair_plan.md;
   the route now requires review closure before final freeze and final-source gates.
   Move superseded status entries below; defer unrelated work through future.md.
-- pending: after P2 closure, freeze the complete integrated source and run required
-  strict77, full-unit failure/error-set comparison, affected tests, and full
-  offline/online CLI on that source. Verify final T2 bindings and actual per-path
-  allowances; then merge accepted code and records into feat/step5-preview.
+- in-progress: after P2 closure, final code1be91bad runs strict77 final03,full-unit
+  parent03 and full offline/online main05 using fixture03. Integrated-04 must stay
+  immutable throughout; T2 record staging follows these runs or uses a separate
+  verified staging tree. Final gates retain2400s per CLI mode and original checks.
+- completed: actual111-path accounting independently audited and root remeasured:
+  native1350/1582,CORE3833/4404,PRICING3879/3956;source9062/global9076. Root adopts
+  final_scope_reconciliation.json (+1258/-1258 within owners),zero remaining
+  per-path violations,110 actually changed paths. Raw proposal and root receipt
+  are in final_parent/. The size note's inventory is updated without growing its
+  12-line baseline charge. All prior step ceilings remain separate.
+- pending: accept final regression/CLI outputs,finish T2 staging/byte bindings,
+  then merge accepted code and records into feat/step5-preview. Later record-only
+  commits must retain an explicit relationship to frozen production source1be91bad.
 - blocked: GPU/native collection, G3 and clean E2E await workflow readiness and
   explicit resources/run approval. T2's16 H800/two-node/30-minute proposal remains
   unapproved. D30 remains integrated4ec5b23; CPU-gap work remains last.

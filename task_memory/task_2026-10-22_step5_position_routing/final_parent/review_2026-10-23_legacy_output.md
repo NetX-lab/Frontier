@@ -35,7 +35,7 @@ CLI/strict77 outputs or claim GPU/native qualification.
 
 ## Disposition and allocation
 
-OPEN;returned to original PRICING owner as D29-PREPARE-METADATA-REPAIR. Additional
+CLOSED by the re-review below;originally returned to PRICING as D29-PREPARE-METADATA-REPAIR. Additional
 delta<=40,only quantization_manager.py and test_comm_operator_families.py,inside
 remaining100 at approved test commit047f7313 (PRICING3856/3956). Quantization cap29
 remains;test cap rises50→70 funded by step5_cost120→100,zero-sum. No new paths,
@@ -46,3 +46,21 @@ Root independently compared the repaired legacy workflow:77/77 identical against
 It rehashed451 artifacts and verified519 cache filenames per side. Receipt:
 final_parent/fidelity_repair02_audit.json. This PASS covers the legacy matrix;
 it does not close the Step-specific P2 above. The active CLI remains frozen60ba.
+
+## Re-review: P2 closed on1be91bad
+
+TaskID D29-PREPARE-METADATA-REPAIR-REVIEW,same independent reviewer. It checked
+the complete four-path prepare_metadata_review_delta.diff and actual files at
+1be91bad431d3bd886de7f5d80c19bd7e6c54a25,including the two catalogue fixtures.
+Verdict:No findings;original P2 closed. Matching selected prepare reports the
+complete FP8/profiling/empty-factor row; genuine precision/signature approximation
+remains. Source inventory and explicit operation precision retain precedence;
+new registration state resets with load_config/model configuration. The last
+two properties were inspected statically,not newly tested by the reviewer.
+
+Catalogue changes preserve assertions and V4 applicability;no fallback,skip or
+timing/lookup/hash change. Reviewer read owner196PASS XML and both actual CSVs;
+it did not run tests or inspect the active CLI. Parent separately completed
+196PASS and CSV/legacy-byte checks in test_report_2026-10-23_final_source.md.
+Source finding closure permits final-code freeze;it does not certify final
+strict77/full-unit/CLI or GPU numerical gates.
