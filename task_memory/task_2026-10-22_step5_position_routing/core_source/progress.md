@@ -8,6 +8,7 @@
 | 2026-10-23 | Resume with root-authorized peer history integration and selected bound-fact consumers. |
 | 2026-10-23 | Record actual runtime point binding, pricing F3-F6 import and fresh fixture boundary. |
 | 2026-10-23 | Verify canonical producer, automatic shared/independent fits and source census. |
+| 2026-10-23 | Correct stale checkpoint, commit exact source and complete compute/buffer fixture seams. |
 | 2026-10-23 | Consume closed F4a/F4b; enforce source exact pairs at the actual estimator seam. |
 
 - completed: baseline clean, branch feat/step5-position-core at 1aee0af; scope.json grouped by exact path yields 44 paths/4404 gross lines.
@@ -36,7 +37,7 @@
 - boundary observed: actual `_store_model_precision` replaces first same-name/typed-contract/precision native binding; `/data/ycfeng/tmp/d29-core-registry-collision03.log`. Registry/identity paths are outside44 owned files. Root coordination required; no aliases/parallel registry introduced. First diagnostic attempts used wrong hardcoded family and failed before observation; third uses actual family. Continue independent wrapper API wiring, not repeat registry exploration.
 - completed: executor/schema/model lookup commitbf458db. Position wrapper now does not initialize/time legacy shuffle/loop; source-local16/live0 and gathered17 actual tensor setup calls H17 prepare/context/inclusive APIs, retaining typed targets and merged actual provenance. Source branch03 CPU seam3PASS;35PASS/20SKIP legacy. py312 full collection lacks fasteners/sklearn, isolated test-only zero interval corrected to empty arrays after actual descriptor rejection. Report:test_report_2026-10-23_position_wrapper.md. Current41/44 paths,2690/4404 gross,1714 remain; path ceilings/AST/whitespace PASS. Next: commit -> authorized8e61c2d merge -> gathered schemas/production binding consumers/main. No claim of runtime/H17/fixture completion.
 
-## 1. 规划完成情况
+## Historical checkpoint (superseded by the current checkpoint below)
 
 - completed: canonical consumer41bbf035; root-authorized27b3499 history mergef4dbfc22. F4 update1740 is retained: CORE passes full measured point policy/branch/buffer/count key without affine grouping or startup-enabled equality.
 - completed WIP: runtime `_step5_position_queries` recovers unique source/EP/native point from retained physical rows, validates selected expert feature receipt, and restores exact existing CollectivePlan/count context including measured execution_policy/shared receipt. Native layout/tensor widths come from actual adapter, not formulas/defaults. H04 reached through physical layer/public MoE entry; actual BF16 estimator→H04→ExecutionTime2PASS including live-local0 positive count/duration/no shuffle; collective leaf isexplicit CPU fixture, not native.
@@ -94,3 +95,56 @@
 1. Actual auto selected producers/preflight/shared+independent cold/warm now PASS; H04 real estimator composition is partial CPU evidence。
 2. Registry retains onlyname/typed/precision; CPU actual-main has no existing plan-cost CLIentry. Both paths areunowned root dependencies, not missing PRICING definitions。
 3. Full per-cell measured policy/branch/buffer/counts are passed through; corrected frozen-runtime affine fit identity remainsPRICING-owned and not finalized here。
+
+- completed:396a3806 exact source/shared scope guard; decisive real fitted norm count-key deletion RED→GREEN,27PASS.26946b85 full compute point equals observed plan buffer/count identity; explicit same-context CPU layouts/scales/topk/output/graph/cost records and existing profiling_data_dir forwarding. Latest36PASS/3SKIP,6PASS/3SKIP,finalbuffer2PASS; all commands in compute_buffer_fixture/source_exact_pairs reports.44/44 paths,+3150/-155=3305/4404 gross;1099 remain. No per-path overage; integration test153/153, runtime test59/60. Source union152PASS/1SKIP/4 retained torch-absence failures. Baseline-size inventory probe initially tried git show on a new file and failed after quota output; corrected to inspect old content only for current>2000 modules, AST/quota PASS. Size-note proposal includes disaggregation3019->3015 and scheduler1993->2002; root owns documentation.
+- pending:actualCLIseam02 has internal2400s and no outer timeout; automatic terminal notification not received. It uses complete earlier CSVs but predates new buffer payload, so no acceptance claim. Full generator600s preflight timeout retained; no CPU tuning/regeneration campaign.
+- current blockers:existing unowned registry multi-binding retention/selection; explicit CPU plan cost consumer in existing backend; observed native compute-to-buffer association and repaired C1/C2 import. Root now authorizes f41d1ee9 after current committed work. CPU fixed composition payload is plumbing, not finite calibrated model/native evidence.
+
+## 1. 规划完成情况
+
+**汇总：** PASS 3｜BLOCKED/FAILED/SKIPPED 1｜TODO 1
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| count/source/tensor/verifier interfaces | PASS | committed foundation and795a583 actual bound-selector correction |
+| scheduler/runtime/cache | PASS | complete source identity/threading; actual width/constructor/cache tests |
+| selected consumer/source package integration | TODO | both automatic trainer cold/warm and wrapper/source/static receipts pass; native/source-binding final integration pending |
+| source event/provenance protocol | PASS | real singleton/parser/event and authentic2907-source static checks |
+| fresh actual-main fixture/runner | BLOCKED | CPU input/runner plumbing committed; registry/backend/native association dependencies and no completed CLI manifest/result |
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：**1efe927a checkpoint至26946b85｜**当前前沿：**C2 strict handoff/peer import, actual CLI terminal evidence, precise root registry/backend seams
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | fixture buffer/cost inputs satisfy owned H14-H16; stop after affected tests settle |
+| D2 细节反复重试 | CLEAR | source count-key RED hypothesis and graph/source identity corrections narrow real consumer defects; no repeated full-generation campaign |
+| D3 支线问题修补 | CLEAR | C2 user-directed; no unrelated environment/source changes |
+| D4 可并行任务停滞 | CLEAR | actual CLI runs while independent strict source/fixture code advances; user prohibits extra agents |
+| D5 超范围镀金 | CLEAR |44 paths/3305 gross, no backend/registry edit or native claim |
+| D6 分析空转 | CLEAR |396a3806,26946b85 delivered verified mainline slices |
+| D7 路线违背 | CLEAR | authorized peer imports only; full evidence retained, no CPU-to-native relabeling |
+
+**文档检查：**S5 summary.md/plan.md historical "schema absent/import unauthorized" and F4 pending contradicted delivered8e61c2d/bfe6f2ae; updated current authoritative sections/accounting. S2 real registry/backend/native association blockers are now assigned to root coordination in plan/current receipt. S1/S3/S4/S6 CLEAR within delegated boundaries.
+**归因：**无。
+
+## 3. 纠正建议
+
+**分支：**B：文档存在陈旧状态，先更新再继续。
+**文档更新（先执行）：**
+1. summary.md/plan.md/interface_receipt.md：replace current status with delivered consumers, exact C2/registry/backend boundaries and44-path3305 accounting（可直接执行，已完成）。
+2. requirements.md/progress.md：retain new F4/C2 decisions and automatic CLI terminal state（可直接执行）。
+
+**需停止的偏离行为：**无。
+**接下去的路线：**
+1. Commit current records, import authorized f41d1ee9 → 完成标志：history intact; actual caller fails before prediction on wrong complete point/layout。
+2. Actual CLI terminal evidence ‖ independent affected source checks → 完成标志：preserve internal2400s and report actual errors/pending; no assertion of completed fixture/native run。
+3. Root delivers existing registry/backend/native observed association → 完成标志：no new registry/backend, both source bindings retained, CPU remains CPU, exact point/count evidence survives。
+
+## 4. 最值得关注的 3 点
+
+1. F1/P2 fixed795a583; exact source396a3806 and strict C2 CORE26946b85 verified without native semantics/peer edits。
+2. Main fixture/runner not complete: actual terminal pending and unowned registry/backend/native association block acceptance。
+3.44/3305 within quota; integration test153/153 and source metadata85/85 exhausted; root-only size note needs scheduler1993->2002 delta。
