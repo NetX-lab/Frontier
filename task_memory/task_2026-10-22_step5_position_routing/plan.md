@@ -47,7 +47,7 @@ unchanged. Final T2 acceptance must verify the actual final script/helper bytes.
 | Full-unit failure/error-set gate | Closed on1be91bad with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. |
 | Fresh fixture and full CLI | fixture03 complete; final offline and online each require6144/1024,2400s and all retained validation checks. |
 | Independent source review | All recorded source findings closed on1be91bad. |
-| T2 final-source binding | Verify final script/helper, input hashes and unchanged engine limits. |
+| T2 final-source binding | Parent verifies final1be tree,26 files and63 checksums; physical staging/seal follows CLI completion. |
 | Final per-path accounting | Complete:111 allocated/110 changed,9062 source/9076 global; adopted same-owner zero-sum reconciliation. |
 | Package/GPU/G3/E2E | Blocked by workflow readiness and separate resource approval; original gates remain. |
 

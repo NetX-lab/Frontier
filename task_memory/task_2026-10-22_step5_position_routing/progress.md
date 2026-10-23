@@ -59,13 +59,17 @@
   fixture03, with2400s per mode. Its launch preceded review closure, so its results
   cannot count as final CLI acceptance. Preserve artifacts and inspect its result
   when it completes. Final offline/online runs follow the reviewed source freeze.
-- received: T2 source binding43c2947c/2adbf9f2 binds60ba, reports63/63 checksums and
-  unchanged26 source files. Root acceptance and explicit final-revision byte binding
-  remain pending. Engine limits7168/8192/128, imagef037 and native1350/1582 unchanged.
+- completed: T2 final target correction2c0f9bd7 now binds accepted production1be91bad
+  and its full Git tree;60ba is history. Parent verifies26 full files against final
+  Git and target disk,63 checksums,and engine limits7168/8192/128. Imagef037 and
+  native1350/1582 unchanged. Receipt:final_parent/t2_final_target_receipt.json.
 - completed: independent T2 verification confirms63 checksums,26 bound source
-  files and the2907/12/53 publication chain. Two non-blocking record corrections
-  (staging pointers and85-step/81-retained arithmetic) are with the native owner;
+  files and the2907/12/53 publication chain. Both non-blocking record corrections
+  (staging pointers and85-step/81-retained arithmetic) are now resolved;
   final_parent/review_2026-10-23_t2_binding.md retains the evidence and boundaries.
+- pending: physically stage the11 delivered T2 records in integrated-04 only after
+  the active CPU runs finish;repeat source/index checks and seal. The current
+  receipt is static binding acceptance,not a claim that staging already occurred.
 - completed: apply checkpoint D7/S5 corrections to plan.md and repairs/repair_plan.md;
   the route now requires review closure before final freeze and final-source gates.
   Move superseded status entries below; defer unrelated work through future.md.
