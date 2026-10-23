@@ -1,0 +1,148 @@
+...........................................FF...F.....F................. [ 88%]
+..F......                                                                [100%]
+=================================== FAILURES ===================================
+_______ test_linear_wrapper_result_carries_plan_typed_operator_contracts _______
+
+    def test_linear_wrapper_result_carries_plan_typed_operator_contracts() -> None:
+        """The real producer row keeps profile-owned metadata beside timings."""
+    
+        from frontier.profiling.common.model_config import ModelConfig
+>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
+
+tests/unit/test_profiling_governance_minimal_red.py:589: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    import copy
+    import os
+    from collections.abc import Mapping
+    
+>   import torch
+E   ModuleNotFoundError: No module named 'torch'
+
+frontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError
+_____ test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts _____
+
+    def test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts() -> None:
+        """A result row declares typed contracts only for measured operators."""
+    
+        from frontier.profiling.common.model_config import ModelConfig
+>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
+
+tests/unit/test_profiling_governance_minimal_red.py:630: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    import copy
+    import os
+    from collections.abc import Mapping
+    
+>   import torch
+E   ModuleNotFoundError: No module named 'torch'
+
+frontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError
+_______ test_real_linear_producer_csv_round_trip_reaches_manager_loader ________
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/affected-temp/test_real_linear_producer_csv_0')
+
+    def test_real_linear_producer_csv_round_trip_reaches_manager_loader(tmp_path) -> None:
+        """A plan-built producer row survives CSV serialization and typed admission."""
+    
+        from frontier.profiling.common.model_config import ModelConfig
+        from frontier.profiling.linear_op import main as linear_op_main
+>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
+
+tests/unit/test_profiling_governance_minimal_red.py:733: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    import copy
+    import os
+    from collections.abc import Mapping
+    
+>   import torch
+E   ModuleNotFoundError: No module named 'torch'
+
+frontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError
+__________ test_moe_wrapper_typed_result_round_trips_through_manager ___________
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/affected-temp/test_moe_wrapper_typed_result_0')
+
+    def test_moe_wrapper_typed_result_round_trips_through_manager(tmp_path) -> None:
+        """The existing MoE producer emits a routed contract that the manager admits."""
+    
+        from frontier.operators.typed_contracts import (
+            serialize_typed_operator_contract_column,
+        )
+        from frontier.profiling.common.model_config import ModelConfig
+>       from frontier.profiling.moe.moe_wrapper import MoEWrapper
+
+tests/unit/test_profiling_governance_minimal_red.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """
+    MoE profiling wrapper.
+    
+    This module wraps MoE operations for profiling, following the same pattern as the linear-op wrapper.
+    """
+    
+    import operator
+    import os
+    import math
+    import json
+    from collections.abc import Mapping
+    from typing import List, Optional
+    
+>   import torch
+E   ModuleNotFoundError: No module named 'torch'
+
+frontier/profiling/moe/moe_wrapper.py:14: ModuleNotFoundError
+____________ test_moe_wrapper_initializes_runtime_with_routed_width ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fd196a3ee00>
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/affected-temp/test_moe_wrapper_initializes_r0')
+
+    def test_moe_wrapper_initializes_runtime_with_routed_width(monkeypatch, tmp_path) -> None:
+        """The existing MoE producer uses the profile-owned routed width end to end."""
+    
+>       moe_module = importlib.import_module("frontier.profiling.moe.moe_wrapper")
+
+tests/unit/test_profiling_governance_minimal_red.py:1896: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+<frozen importlib._bootstrap>:1050: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1027: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1006: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:688: in _load_unlocked
+    ???
+<frozen importlib._bootstrap_external>:883: in exec_module
+    ???
+<frozen importlib._bootstrap>:241: in _call_with_frames_removed
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """
+    MoE profiling wrapper.
+    
+    This module wraps MoE operations for profiling, following the same pattern as the linear-op wrapper.
+    """
+    
+    import operator
+    import os
+    import math
+    import json
+    from collections.abc import Mapping
+    from typing import List, Optional
+    
+>   import torch
+E   ModuleNotFoundError: No module named 'torch'
+
+frontier/profiling/moe/moe_wrapper.py:14: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/unit/test_profiling_governance_minimal_red.py::test_linear_wrapper_result_carries_plan_typed_operator_contracts
+FAILED tests/unit/test_profiling_governance_minimal_red.py::test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts
+FAILED tests/unit/test_profiling_governance_minimal_red.py::test_real_linear_producer_csv_round_trip_reaches_manager_loader
+FAILED tests/unit/test_profiling_governance_minimal_red.py::test_moe_wrapper_typed_result_round_trips_through_manager
+FAILED tests/unit/test_profiling_governance_minimal_red.py::test_moe_wrapper_initializes_runtime_with_routed_width
+5 failed, 76 passed in 33.07s
