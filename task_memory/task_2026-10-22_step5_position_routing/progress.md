@@ -61,10 +61,19 @@
 - in-progress/implementation: D29-PLAN-KEY-REUSE, session
   ses_e963098ecffebqCOtdysKGY6Xe, owns the two allocated paths in the isolated
   step5-d29-plan-key worktree from087db1bf. Snapshot worktree remains its baseline.
-- in-progress/read-only: D29-DETACHED-EMISSION-OWNERSHIP, session
+- completed/read-only: D29-DETACHED-EMISSION-OWNERSHIP, session
   ses_e96a5c1c7ffeoPBK7V08CMas7v, inspects existing profiles and private ownership
-  after required getter snapshots. No new probe campaign or source allocation;
-  public conversion/borrowed-source shortcuts remain rejected.
+  after required getter snapshots. Records3020a885/82b0e311 archived as
+  b1225635/e200bb78;9/9 Git blobs match,2JSON parse, four inspected source files
+  equal accepted snapshot. Root declines the estimated<=3ms interface control
+  and2.5ms scalar-parse follow-up. Raw profile retains one EOF whitespace warning;
+  parent disposition is detached_emission_ownership/parent_receipt.md.
+- in-progress/read-only: D29-FULL-WORKFLOW-BUDGET,
+  ses_e95ade762ffe71fWPn1WYHfZnl, checks actual first-token/prefill/decode counters
+  and per-wave allowance from retained evidence; no new measurement.
+- in-progress/audit: D29-SNAPSHOT-SCOPE-AUDIT,
+  ses_e95ac82fdffeSeMEUfR9SxvW03, independently checks the114-path snapshot and
+  non-superproject evidence before the separately running key implementation.
 - completed/diagnostic: immutable-plan records7d1cdc06 archived as a3525856.
   Warm plan/tensor construction is already0; eight complete plans are retained.
   Key-only control removes192 encodes/wave, with paired warm0.167724->0.128676s
