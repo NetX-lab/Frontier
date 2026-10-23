@@ -624,7 +624,7 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
     Linear/MoE selection uses the existing typed readers and feature classifier.
     Attention requires an independently qualified complete flattened layout;
     accepted prefill and decode bind input bytes and runtime identity in that
-    same explicit contract, never inferred from candidate rows. Reduced metadata
+    same explicit or externally admitted sidecar contract, never inferred from candidate rows. Reduced metadata
     in that contract never asserts serving capacity.
     """
     import json
@@ -664,6 +664,10 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         from frontier.profiling.attention.dsv4_attention_rows import _ENGINE_COLUMNS
 
         path = predictor._attention_input_file
+        if attention_layout is None:
+            from frontier.execution_time_predictor.dsv4_attention_input import load_isolated_prefill_layout
+
+            attention_layout = load_isolated_prefill_layout(path, layer_id, measurement, phase)
         accepted_prefill = phase == "prefill" and (getattr(replica,
             "moe_gating_routing_runtime_path", None) == "balanced_topk" or attention_layout is not None
             and "input_file_sha256" in attention_layout)

@@ -1,0 +1,116 @@
+{
+  "Modification History": [
+    {
+      "date": "2026-10-23",
+      "change": "Preserved actual-candidate missing-admission rejection, current CSV writer exact rebuild and environment differences without altering capture source."
+    }
+  ],
+  "task_id": "W128-V4-ATTENTION-INPUT",
+  "actual_candidate_automatic_lookup": "TYPED_REJECTION_BOTH_METHODS_NO_ADMISSION",
+  "actual_candidate_explicit_lookup": "PASS_CUDA_EVENT_0.9120000004768372ms_KERNEL_ONLY_0.898909ms",
+  "production_admission_issued": false,
+  "candidate_sidecar_sha256": "d688f3a27e972b5ca9903498f841de0fb50311512cb2b98404c5d478208489f7",
+  "consumer_environment": {
+    "python": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "packages": {
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "scipy": "1.15.3",
+      "scikit-learn": "1.7.2",
+      "pytest": "9.1.1",
+      "fasteners": "0.20",
+      "ddsketch": "3.0.1"
+    }
+  },
+  "current_csv_writer_py312": {
+    "Modification History": [
+      {
+        "date": "2026-10-23",
+        "change": "Current repository actual CSV writer rebuild is byte-identical under accepted Python3.12 environment."
+      }
+    ],
+    "task_id": "W128-V4-ATTENTION-INPUT",
+    "status": "PASS_BYTE_IDENTICAL_BOTH_METHODS",
+    "writer_repo_root": "/data/ycfeng/Frontier/.worktrees/v4-attention-input",
+    "writer_python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+    "receipts": [
+      {
+        "measurement_type": "CUDA_EVENT",
+        "rows": 6,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_csv_writer_py312_direct01/attention.csv",
+        "sha256": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f",
+        "original": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/attention.csv",
+        "byte_identical": true
+      },
+      {
+        "measurement_type": "KERNEL_ONLY",
+        "rows": 6,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_csv_writer_py312_direct01/attention_kernel_only.csv",
+        "sha256": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43",
+        "original": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/attention_kernel_only.csv",
+        "byte_identical": true
+      }
+    ],
+    "py310_initial_check": "FAIL_BYTE_IDENTITY: 5CUDA_EVENT std-only last-bit differences; medians/metadata unchanged; no production rewrite",
+    "py312_full_consumer_import": "UNAVAILABLE_FASTENERS; used existing lightweight profiling CLI/writer only, no installs"
+  },
+  "py310_std_only_differences": [
+    {
+      "row": 0,
+      "column": "time_stats.dsv4_fused_qkv_rmsnorm.std",
+      "original": "0.0005935112155497518",
+      "py310_rebuilt": "0.0005935112155497519"
+    },
+    {
+      "row": 1,
+      "column": "time_stats.dsv4_index_prepare.std",
+      "original": "0.0017198811228028592",
+      "py310_rebuilt": "0.001719881122802859"
+    },
+    {
+      "row": 2,
+      "column": "time_stats.dsv4_attention_layer.std",
+      "original": "0.009582663267420112",
+      "py310_rebuilt": "0.009582663267420114"
+    },
+    {
+      "row": 4,
+      "column": "time_stats.dsv4_sparse_attention.std",
+      "original": "0.007948605996068517",
+      "py310_rebuilt": "0.007948605996068519"
+    },
+    {
+      "row": 5,
+      "column": "time_stats.dsv4_fused_q_kv_prepare.std",
+      "original": "0.0010460953290341397",
+      "py310_rebuilt": "0.00104609532903414"
+    }
+  ],
+  "logs": {
+    "/data/ycfeng/tmp/v4_attention_input_unadmitted_candidate.log": {
+      "sha256": "92ea483507f82339b05196664aaad9bf8ad5cf1eaf8eb6d9326ed233b1e2c1a2",
+      "text": "WARNING 11:56:22 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported\nCUDA_EVENT PASS_UNADMITTED_REJECTION V4 isolated attention input rejected in /data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/dsv4_attention.json: [Errno 2] No such file or directory: '/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/dsv4_attention.admission.json'\nCUDA_EVENT PASS_EXPLICIT_COMPATIBILITY 0.9120000004768372\nKERNEL_ONLY PASS_UNADMITTED_REJECTION V4 isolated attention input rejected in /data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/dsv4_attention.json: [Errno 2] No such file or directory: '/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/dsv4_attention.admission.json'\nKERNEL_ONLY PASS_EXPLICIT_COMPATIBILITY 0.898909\n"
+    },
+    "/data/ycfeng/tmp/v4_attention_input_consumer_environment.json": {
+      "sha256": "100912a40354c340575999ab22a1d70e411a5242bf428c2942f0439b30678229",
+      "text": "{\n  \"python\": \"/data/ycfeng/envs/frontier-py310/bin/python\",\n  \"packages\": {\n    \"numpy\": \"2.2.6\",\n    \"pandas\": \"2.3.3\",\n    \"scipy\": \"1.15.3\",\n    \"scikit-learn\": \"1.7.2\",\n    \"pytest\": \"9.1.1\",\n    \"fasteners\": \"0.20\",\n    \"ddsketch\": \"3.0.1\"\n  }\n}\n"
+    },
+    "/data/ycfeng/tmp/v4_attention_input_current_csv_writer.log": {
+      "sha256": "9604fe3ee1a2a6d1c1f3cdd2e09f6644367ffae57301bbb8fb25c4898e860f23",
+      "text": "WARNING 11:58:28 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported\nTraceback (most recent call last):\n  File \"<stdin>\", line 19, in <module>\nAssertionError\n"
+    },
+    "/data/ycfeng/tmp/v4_attention_input_current_csv_writer_py312.log": {
+      "sha256": "855a1d72b61cd662e83f43ff05d804e715a607068e3ca20db74a9f3fe3197495",
+      "text": "Traceback (most recent call last):\n  File \"<stdin>\", line 3, in <module>\n  File \"/data/ycfeng/Frontier/.worktrees/v4-attention-input/tests/comparison/calibration/prepare_dsv4_attention_input.py\", line 8, in <module>\n    from frontier.execution_time_predictor.deepseek_v4 import build_isolated_prefill_layouts\n  File \"/data/ycfeng/Frontier/.worktrees/v4-attention-input/frontier/execution_time_predictor/__init__.py\", line 4, in <module>\n    from frontier.execution_time_predictor.execution_time_predictor_registry import (\n  File \"/data/ycfeng/Frontier/.worktrees/v4-attention-input/frontier/execution_time_predictor/execution_time_predictor_registry.py\", line 13, in <module>\n    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (\n  File \"/data/ycfeng/Frontier/.worktrees/v4-attention-input/frontier/execution_time_predictor/sklearn_execution_time_predictor.py\", line 28, in <module>\n    from fasteners import InterProcessReaderWriterLock\nModuleNotFoundError: No module named 'fasteners'\n"
+    },
+    "/data/ycfeng/tmp/v4_attention_input_current_csv_writer_py312_direct.log": {
+      "sha256": "dc3258b3ecb2d4ceb122311b9d287bdf1ce1f42fb0664f2135bfc75f475dce6c",
+      "text": "WARNING 12:00:30 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported\nPASS_CURRENT_REPOSITORY_CSV_WRITER CUDA_EVENT 6 52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f\nPASS_CURRENT_REPOSITORY_CSV_WRITER KERNEL_ONLY 6 fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43\n"
+    }
+  },
+  "actual_writer_rebuild_receipt": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_csv_writer_py312_direct01/rebuild_receipt.json",
+    "sha256": "c1c746bedd2c151c94cc5e44a2a7aa0388146d59cc28f5a3b29d3f7ea955ef4d"
+  },
+  "fixed_source_unchanged": true
+}
