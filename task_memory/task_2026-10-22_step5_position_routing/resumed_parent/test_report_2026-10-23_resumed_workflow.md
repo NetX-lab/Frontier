@@ -3,11 +3,12 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Record main07 FAIL:both modes reach the2400s timeout;retain exact evidence and start short-loop diagnosis. |
 | 2026-10-23 | Accept raw-XML regression reconciliation and T2 static binding;preserve main06 interruption and record main07 command. |
 | 2026-10-23 | Verify archived three-suite results without rerunning tests;retain pending long-run verdicts. |
 | 2026-10-23 | Freeze e41abc07 and launch fullCLI;independent regressions/T2 binding run in parallel. |
 
-Status:IN_PROGRESS for full CLI;fresh e41 regression and static T2 checks PASS.
+Status:FAIL_TIMEOUT for full CLI;fresh e41 regression and static T2 checks PASS.
 
 Source:e41abc073500d61f224eda4fca1123e74e40544d,clean
 /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05;
@@ -84,4 +85,14 @@ the frozen integrated05 worktree:
 timeout 5100s env -u FRONTIER_TEST_CPU_WRITER_FILE -u FRONTIER_TEST_CPU_WRITER_SHA256 PYTHONPATH="$PWD:$PWD/tests/unit" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json --output-root /data/ycfeng/tmp/d29-parent-position-main07 --mode all > /data/ycfeng/tmp/d29-parent-position-main07.log 2>&1
 ```
 
-main07 is still running;its final workload/trace validation remains pending.
+Observed main07 result:wrapper exit1,offline wall2400.103553s and online
+wall2400.096253s. Both execution receipts have returncode=null,timed_out=true;
+both validation receipts say FAIL. This is a recorded timeout,not the earlier
+server interruption. main07_timeout_receipt.json pins commands,logs and receipts.
+
+Both scheduler files contain7 PREFILL records (two iteration starts/ends,one
+allocation,one decision andone batch);their final simulation times remain0.0
+offline and0.25 online. Neither mode has final request/system metrics or stage,
+lane or transfer ledgers. Logs contain no traceback. This partial progress does
+not identify the CPU hotspot. CORE now owns a faithful,seconds-scale profiling
+loop;no source change,full CLI retry or numerical/GPU qualification is claimed.

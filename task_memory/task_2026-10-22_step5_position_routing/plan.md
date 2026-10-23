@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Both main07 modes hit2400s;require a short real-path performance loop before repair or another full run. |
 | 2026-10-23 | Close final e41 regression/static binding checks;replace interrupted main06 with main07 under unchanged bounds. |
 | 2026-10-23 | Resume in current session on frozene41abc07;run fullCLI,requiredregressions and isolated T2 rebinding concurrently. |
 | 2026-10-23 | Complete the active CLI repair and consolidate reviewed code/records for YC's session handoff; retain fresh workflow gates as pending. |
@@ -42,7 +43,9 @@ The earlier main04 attempt on60ba is diagnostic only. Main05 on1be supplies the
 current placement failure; its raw command/log/execution receipts stay preserved.
 The e41 T2 rebind is delivered and parent-verified in the isolated preparation
 tree. Final target staging/seal follows full CLI completion. main06 was interrupted
-by the server restart;main07 repeats it without a workload or source change.
+by the server restart;main07 repeated it without a workload or source change and
+both modes hit2400s. Current dependency adds a faithful short performance loop,
+hotspot diagnosis and owner-scoped repair/review before a new final-source run.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
@@ -55,7 +58,7 @@ by the server restart;main07 repeats it without a workload or source change.
 | Complete integration and final freeze | Complete:e41abc07 frozen clean in verify-step5-d29-integrated-05,gitlink3dac53c. |
 | Legacy strict77 | Final04 on e41:77/77 identical;451 artifact hashes and519 cache names per side verified. |
 | Full-unit failure/error-set gate | Closed on e41 with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. Raw suite still exits1. |
-| Fresh fixture and full CLI | main05 failed;repair accepted;main06 interrupted;main07 running on e41,modeall,6144/1024,2400s per mode. |
+| Fresh fixture and full CLI | main05 failed;placement repair accepted;main06 interrupted;main07 both modes timed out at2400s. CORE builds a bounded real-path performance loop. |
 | Independent source review | Earlier findings closed on1be91bad;CLI40-gross repair closed No findings at75ad26f9. |
 | T2 final-source binding | e41 rebind d7d6ad8c delivered;parent63 checksums/26 full files PASS;physical staging/seal follows CLI completion. |
 | Final per-path accounting | Delivery remeasured:111 allocated/110 changed,9102 source/9116 global,zero per-path violations. |

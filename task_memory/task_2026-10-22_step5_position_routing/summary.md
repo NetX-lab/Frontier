@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | main07 fails both2400s limits;record new performance diagnosis and keep full workflow unaccepted. |
 | 2026-10-23 | Resume current session;archive e41 regression/static T2 acceptance and interrupted main06 with main07 pending. |
 | 2026-10-23 | Archive consolidated source/records and closed CLI placement repair;keep whole-workflow and GPU acceptance explicitly open. |
 | 2026-10-22 | Record six design findings and disjoint mandatory correction assignments. |
@@ -20,8 +21,9 @@ Evidence:resumed_regressions/ and resumed_parent/regression_acceptance.json.
 T2 records e8e91070/d7d6ad8c bind the same e41 source;parent63 checksums and26
 full-file comparisons pass. Physical target staging/sealing remains pending.
 main06 was interrupted by the server restart and is unverified;the unchanged
-main07 full offline/online rerun is active. Whole workflow and GPU/native/G3/E2E
-acceptance remain open. See progress.md and resumed_parent/ for current evidence.
+main07 full offline/online rerun hit both2400s limits. CORE is establishing a
+short real-path performance loop before repair. Whole workflow and GPU/native/
+G3/E2E acceptance remain open. See progress.md and resumed_parent/ for evidence.
 
 ## Delivered handoff checkpoint (historical)
 

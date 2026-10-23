@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | main07 times out in both modes at2400s;archive receipts and assign bounded real-path performance diagnosis to CORE. |
 | 2026-10-23 | Accept fresh e41 regression and static T2 receipts;record interrupted main06 and unchanged main07 rerun. |
 | 2026-10-23 | Parent verifies fresh e41 supplement101,metadata196 and catalogue53 receipts;long-running gates remain pending. |
 | 2026-10-23 | Resume current session;freeze e41abc07 and launch main06 with independent regressions and isolated T2 source rebinding. |
@@ -48,10 +49,17 @@
   Post-restart inspection found no matching process, no offline completion receipt,
   and no online attempt. Preserved artifacts and hashes are recorded in
   resumed_parent/main06_interruption.json; no exit or timeout verdict is inferred.
-- in-progress: main07 repeats the same frozen source,fixture03,6144/1024 workload,
-  modeall,2400s per mode and5100s outer limit in a new output directory:
-  /data/ycfeng/tmp/d29-parent-position-main07,log at the same path plus .log.
-  This remains CPU/synthetic-cost workflow evidence. Its completion is pending.
+- failed: main07 on the same frozen source and fixture03 times out in both modes:
+  offline2400.103553s,online2400.096253s,wrapper exit1. Output:
+  /data/ycfeng/tmp/d29-parent-position-main07. Both modes retain only PREFILL
+  scheduler progress and lack completed request/system metrics or stage/lane/
+  transfer ledgers. No traceback appears in the run logs. Failure and hashes:
+  resumed_parent/main07_timeout_receipt.json. No whole-workflow acceptance.
+- in-progress: D29-CLI-TIMEOUT-REPRO,CORE owner ses_e9b3efeebffem2dcbXlVGNr8O2,
+  builds a seconds-scale deterministic real-call-path performance loop using
+  retained inputs and current source. Diagnostic scratch:
+  /data/ycfeng/tmp/d29_cli_timeout_repro/. No production/test edits or full CLI
+  retries assigned yet;old outputs,workload,2400s gate and GPU restrictions remain.
 - completed: D29-E41-FINAL-REGRESSIONS records committed b5a74416/5ceb68c9.
   strict77 final04 is77/77 identical,451 artifact hashes and519 cache filenames per
   side. Full unit:8015PASS/279FAIL/32ERROR/281SKIP,raw exit1. The exact historical
@@ -69,9 +77,10 @@
   match. Index d3eff42d8026d30df48907479420ec1a2d1eacaf826593b9afe5bf10885e1b89.
   Receipt:resumed_parent/t2_e41_binding_receipt.json. Active integrated05 is
   unchanged;physical staging/final sealing follows full CLI completion.
-- pending: inspect actual CLI outputs and validators,triage any new failure via a
-  faithful short reproduction,accept fresh regressions and T2 binding,then finish
-  package readiness. GPU resources remain unapproved.
+- pending: establish the timeout's real hotspot,assign an evidence-backed bounded
+  repair to its owner,verify/review/refreeze any source change,then rerun affected
+  final gates and full CLI. Final T2 staging and package readiness remain blocked.
+  GPU resources remain unapproved.
 
 ### Delivered checkpoint (retained;pending items now execute above)
 
