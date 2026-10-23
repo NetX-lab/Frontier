@@ -15,6 +15,7 @@
 | 2026-10-23 | Repair C1 actual routing and C2 point/layout binding after review. |
 | 2026-10-23 | Close observed native point producer and exact count association. |
 | 2026-10-23 | Deliver explicitly unadmitted CPU composition/trace within remaining quota. |
+| 2026-10-23 | Repair deterministic point join and retain full diagnostics with shared writer receipt. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -911,3 +912,60 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. CPU writer payload现在能由真实backend读取，必须双重CPU与未admitted证明。
 2. Observed producer已交付；剩余额度243，submodule不变。
 3. CPU composition不证明GPU/nativequalification，globalacceptance由root完成。
+
+## D29-PRODUCER-JOIN-REPAIR
+
+- completed: prepared_context still validates every loaded native Python module
+  and reached callable; join imports restricted to verified reached-source modules,
+  selector included. Full results remain native.point_diagnostics/probe per-layer
+  compute_diagnostics; constructor/oracle provenance untouched. No consumer strip.
+- completed: real sealed-package verifier/two-producer RED1 FAIL→GREEN5 PASS and
+  actual exporter association; different valid ambient modules no longer split
+  identity, invalid bytes/origin/callables reject and changed layout cannot join.
+- completed: test CPU writer defaults to current repo; external stage file requires
+  exact supplied SHA256. Default/missing/wrong/exact reference RED5 FAIL→GREEN.
+  Native/CPU behavior unchanged, four phases/25 negatives/injection/trace retained.
+- verified final disjoint suites395=315 PASS/80 SKIP/0 FAIL/ERROR; original published
+  router64 PASS separately. Exact env/source hash/JUnit/errors in producer_join
+  test report. Quota43 paths+3708/-97=3805/3956,remaining151; five-path patch106.
+- required CORE-owned hunk: MoEWrapper._profile_position_cell uses
+  experts.point_diagnostics in its existing full row provenance union and serializes
+  it separately. Exact one-line replacement+one-line addition=3 gross, receipt
+  delivered; no peer edit/import. Full shared table persistence awaits root/CORE.
+- corrected detour: extra H04 execution in torch-only env hit fasteners; entire
+  py310 package path failed NumPy. Removed unnecessary expansion, no production
+  workaround/environment edit. Verified actual exporter handoff + existing separate
+  H04 suite instead. No further test breadth required; scoped commit next.
+
+## 1. 规划完成情况
+**汇总：** PASS3｜BLOCKED1｜TODO1
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Stable producer join/full observer diagnostics | PASS |Real verifier/two-producer+exporter GREEN |
+| Explicit sealed test writer/current repo default | PASS |Reference negatives/four phases/native unchanged |
+| Scoped verification/ownership quota | PASS |395 cases315 PASS/80 SKIP;3805/3956 |
+| Full shared table point diagnostics | BLOCKED |CORE _profile_position_cell3-gross receipt, no peer authority |
+| Scoped source commit | TODO |Final report and exact hunk ready |
+## 2. 偏离检测
+**结论：** 已偏离：命中D1，已纠正。
+**检测窗口：**84e66115至今｜**当前前沿：**owned commit与CORE persistence receipt
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | HIT |Optional H04-in-torch-env expansion caused dependency detour; removed |
+| D2 细节反复重试 | CLEAR |Join and reference RED/GREEN settle distinct stated causes |
+| D3 支线问题修补 | CLEAR |No shipped env/peer fixes; explicit join scope only |
+| D4 可并行任务停滞 | CLEAR |Consumer/probe/native checks parallel, no agents |
+| D5 超范围镀金 | CLEAR |Five owned paths106 delta; stable criteria/model retained |
+| D6 分析空转 | CLEAR |Real join/ref code verified; exact shared hunk supplied |
+| D7 路线违背 | CLEAR |Full validation retained; no consumer strip or constructor overwrite |
+**文档检查：**S5 earlier unconditional handoff closure superseded by review; records now name actual shared persistence hunk. S1-S4/S6无明显缺陷。
+**归因：**D1执行偏离。
+## 3. 纠正建议
+**分支：**B：更新新发现的shared persistence boundary（已完成）。
+**文档更新（先执行）：**requirements/plan/receipt/summary/report记录stable/full诊断与CORE3-gross hunk（可直接执行）。
+**需停止的偏离行为：**D1停止可选跨环境H04扩展；使用真实exporter handoff与既有独立H04检查。
+**接下去的路线：**owned source commit→root/CORE明确hunk整合；root负责复审/globalqualification。
+## 4. 最值得关注的 3 点
+1. Context join稳定且fullambientverification/diagnostics保留，不能在consumer剥离。
+2. CORE需3-gross hunk完成row持久化，owned剩余151，不改peer。
+3. CPU reference显式sealed；真实GPU/global资格仍由root完成。

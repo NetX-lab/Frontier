@@ -11,6 +11,7 @@
 | 2026-10-23 | Resume C1 actual-router diagnostics and C2 compute/collective binding. |
 | 2026-10-23 | Complete the owned observed compute-point producer/count handoff. |
 | 2026-10-23 | Bind explicitly unadmitted actual-main CPU plan composition and trace provenance. |
+| 2026-10-23 | Repair deterministic observed point join and explicit sealed CPU test source. |
 
 TaskID: D29-PRICING-IMPLEMENTATION.
 
@@ -108,3 +109,16 @@ negatives and native injection. Only the four specified existing owned paths,
 <=120 additional gross within3956. No flags/config/backend/API/peer imports or
 GPU/platform/delegation. Observed producer remains completed9dbca5b3;
 actual GPU observation/qualification and integrated acceptance remain root-owned.
+
+[Original Request] D29-PRODUCER-JOIN-REPAIR: re-review finds full ambient vllm
+imports in prepared_context prevent actual probe/profiler point join. Keep full
+verification, shared source/actual callees/stable modules and all layout/padding
+facts; retain complete imports separately as point diagnostics without overwriting
+constructor/oracle provenance. Real two-producer/different-validated-inventory
+positive plus callable/source/layout/invalid-ambient negatives required. If CORE
+writer must persist diagnostics, provide exact function/hunk/cost, no peer edit.
+CPU test writer defaults to current repo actual function; stage reference must
+be explicit and SHA256-verified, no hardcoded host fallback/silent skip. Preserve
+CPU branch and native qualification/numerical criteria. Resume84e66115 at3713/
+3956,remaining243,43/44 paths; no new paths/imports/agents/platform/GPU. Root owns
+shared hunk allocation, integration, independent review and final qualification.

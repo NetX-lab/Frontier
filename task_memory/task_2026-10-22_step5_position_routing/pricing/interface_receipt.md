@@ -14,6 +14,7 @@
 | 2026-10-23 | Require observed route values and exact per-cell compute/plan binding. |
 | 2026-10-23 | Emit observed native compute points and associate exact buffer/count receipts. |
 | 2026-10-23 | Deliver explicit unadmitted CPU plan consumer and numerical trace source. |
+| 2026-10-23 | Separate full point diagnostics from stable producer join and seal test references. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -509,3 +510,50 @@ remains completed. Submodule unchanged3dac53c; root owns final gitlink and full
 integration/qualification. Exact commands in test_report_2026-10-23_cpu_plan.md.
 Verified scoped source/tests/records commit78a475be is ready for root-authorized
 CORE development integration. No new API, peer import or qualification claim.
+
+## D29-PRODUCER-JOIN-REPAIR
+
+NativeRoutedExperts.prepared_context still runs the original full installed-module
+and actual-callable verifier. `native_facts.shared` and complete actual callee
+facts stay in compute identity; `native_facts.imports` contains only those verified
+modules whose actual paths supply these callees (including the reached selector).
+No consumer normalizer or reduced numeric/layout/padding context is introduced.
+Every full verifier result, including all validated ambient Python imports, is
+retained separately as `native.point_diagnostics` (init=False/non-comparison field).
+It is cleared before verification; constructor/oracle `native.provenance` remains
+untouched. DispatchObserver retains this result as compute_diagnostics and writes
+it alongside compute_context in each layer report, not inside the join key.
+
+CORE-owned necessary persistence: `frontier/profiling/moe/moe_wrapper.py`,
+`MoEWrapper._profile_position_cell`, inspected lines998 and1009:
+
+```python
+provenance = [self.gating.native_facts, experts.provenance, experts.point_diagnostics]
+# Within the existing row.update:
+point_diagnostics=canonical_json(experts.point_diagnostics),
+```
+
+This replaces one line and adds one line:3 gross in that shared owner, no new
+API/builder/classification. Full point ambient validation then joins existing full
+row native_facts without losing per-point evidence; native_context remains stable
+for exact join. Root/CORE must apply this hunk; PRICING may not edit/import it.
+MoE main's existing per-row native_facts handling already persists the full maps.
+Owned probe diagnostics persistence is complete. Full integrated producer/table
+persistence is NOT claimed complete before this shared writer hunk is applied.
+
+CPU test writer now defaults to current-repo tests/integration/
+step5_measured_compute_fixture.py. Phased external reference requires BOTH
+FRONTIER_TEST_CPU_WRITER_FILE and its exact FRONTIER_TEST_CPU_WRITER_SHA256;
+no hardcoded path, host fallback or skip. This branch needs the explicit stage
+reference until CORE's actual function is integrated. The known file at CORE
+d96b3279 has SHA25687752f5816cc59baa8eb63733bfe9a4be7dde9b32d890ad5a0afbf3336f0d86b.
+Ordinary default resolver, missing file/hash, wrong hash and exact reference are
+tested. No production flag/config or native numerical behavior changed.
+
+Real prepared_context/full-verifier two-producer proof uses different VALIDATED
+extra imports, untouched constructor provenance, equal stable compute identity,
+different retained diagnostics and actual exporter observation association.
+Wrong callable origin/source/ambient bytes reject; changed layout cannot join.
+Affected395 cases315 PASS/80 SKIP; published native64 PASS. Owned5 paths patch
++98/-8=106; baseline43 paths+3708/-97=3805/3956,remaining151,unchanged sub3dac53c.
+Exact staged commands/identity in test_report_2026-10-23_producer_join.md.

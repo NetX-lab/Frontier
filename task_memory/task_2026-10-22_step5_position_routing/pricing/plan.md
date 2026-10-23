@@ -10,6 +10,7 @@
 | 2026-10-23 | Repair C1 observed routing and C2 exact frame/plan binding. |
 | 2026-10-23 | Close PRICING-owned compute-point writer and count association. |
 | 2026-10-23 | Complete explicit CPU plan composition and truthful numerical trace source. |
+| 2026-10-23 | Repair stable point join/diagnostic persistence and portable sealed test source. |
 
 1. **completed:** Publish selected targets, ROUTED prepare binding, immutable plan/result.
 2. **completed:** Extend isolated collective-sim with strict plan serialization, joint ordered
@@ -104,3 +105,15 @@ fit/HTSIM/count semantics remain; counts.cost is consumed only by this explicit
 unadmitted CPU fixture branch. Current:68 PASS, cold process without PYTHONPATH;
 scoped source/tests/records committed78a475be. Root re-review/integrated actual-main remain
 external acceptance, not CPU admission or a missing producer implementation.
+
+## D29-PRODUCER-JOIN-REPAIR
+
+Read both actual writer boundaries -> prepared_context stable reached provenance
+plus separate full verifier diagnostics -> probe report retention and exact shared
+CORE row persistence receipt -> real two-producer RED/GREEN/exporter association
+and wrong callable/source/layout/ambient negatives -> sealed explicit CPU test
+reference RED/GREEN/default repo resolver -> affected suites/quota -> owned commit.
+No consumer stripping or second normalizer. Full ambient verification runs first.
+CORE _profile_position_cell3-gross-line persistence hunk is required, not owned;
+root coordinates it. Current owned seams verified395 cases315 PASS/80 SKIP plus
+native64 PASS,3805/3956. Independent review and full integration remain root.

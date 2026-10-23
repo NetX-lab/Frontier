@@ -12,6 +12,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from tests.unit.test_step5_fixed_probe import installed_profile_receipt
 
 from frontier.profiling.collectives import step5_dispatch_probe as probe
 
@@ -1006,7 +1007,7 @@ def test_native_point_writer_uses_existing_prepared_context_and_source_verifier(
     fused._prepare_expert_assignment=lambda *a,**kw:(None,None,torch.tensor(32))
     for m in (module,deep,fused): monkeypatch.setitem(sys.modules,m.__name__,m)
     seen=[];monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
-    monkeypatch.setattr(runtime_identity,"verify_step5_profile_runtime",lambda path,**kw:seen.append(kw["callables"]) or dict(shared="cpu_fixture"))
+    monkeypatch.setattr(runtime_identity,"verify_step5_profile_runtime",lambda path,**kw:seen.append(kw["callables"]) or dict(shared="cpu_fixture",imports={},callables={}))
     a=torch.ones(17,4,dtype=torch.bfloat16);ids=torch.zeros(17,8,dtype=torch.int32);weights=torch.zeros(17,8)
     expert=TritonExperts();method=SimpleNamespace(moe_kernel=SimpleNamespace(fused_experts=expert),unquantized_backend=SimpleNamespace(value="TRITON"))
     layer=SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=method)))
@@ -1021,7 +1022,7 @@ def test_native_point_writer_uses_existing_prepared_context_and_source_verifier(
     assert context["native_padding"] == dict(scheme="triton_expert_assignment",alignment=16,num_tokens_post_padded=32,
         ignore_invalid_experts=False,config=dict(BLOCK_SIZE_M=16))
     assert context["source_activation_layout"]["shape"] == [16,4] and context["activation_layout"]["shape"] == [17,4]
-    assert context["native_facts"] == dict(shared="cpu_fixture") and expert.apply in seen[0]
+    assert context["native_facts"] == dict(shared="cpu_fixture",imports={},callables={}) and expert.apply in seen[0]
     from dataclasses import asdict
     from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
     from tests.unit.test_step5_comm_cost_export import EXPORT
@@ -1042,3 +1043,59 @@ def test_native_point_writer_uses_existing_prepared_context_and_source_verifier(
     assert EXPORT.observed_collective_points(record,dict(parallelism=dict(tp=8),ranks=[dict(rank=0,layers=[layer])]),{inp.moe_input_id:inp}) == []
     observer.routing_calls[0]["result"]=(weights[:16],ids[:16])
     with pytest.raises(ValueError,match="router outputs"): observer.compute_context(SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=method))),SimpleNamespace(model_type="step5"))
+
+
+@pytest.mark.parametrize("fault",[None,"callable","source","layout","ambient"])
+def test_two_native_point_producers_join_with_different_valid_imports(installed_profile_receipt,monkeypatch,tmp_path,fault):
+    torch=pytest.importorskip("torch")
+    import importlib.util
+    from dataclasses import asdict
+    from frontier.profiling.moe.fp8_block_experts import NativeRoutedExperts
+    from frontier.profiling.common.runtime_identity import file_sha256,canonical_json
+    from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
+    from tests.unit.test_step5_comm_cost_export import EXPORT
+    path,modules,manifest=installed_profile_receipt;root=Path(manifest["native_binding"]["installed_package"])
+    texts={"experts.triton_moe":"class TritonExperts:\n def apply(self,hidden_states,**kwargs): return hidden_states\n def workspace_shapes(self,*a): return ((136,4),(136,4),(17,4))\n def finalize_weight_and_reduce_impl(self): return self\n",
+        "experts.deep_gemm_moe":"class DeepGemmExperts: pass\n",
+        "fused_moe":"import torch\ndef try_get_optimal_moe_config(*a): return {'BLOCK_SIZE_M':16}\ndef _prepare_expert_assignment(*a,**kw): return None,None,torch.tensor(32)\n"}
+    receipt_path=path.parent/manifest["native_binding"]["native_source_receipt"];receipt=json.loads(receipt_path.read_text())
+    for suffix,text in texts.items():
+        name="vllm.model_executor.layers.fused_moe."+suffix;p=root/Path(*name.split(".")[1:]).with_suffix(".py")
+        p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text);receipt["sources"]["vllm/"+p.relative_to(root).as_posix()]=file_sha256(p)
+        spec=importlib.util.spec_from_file_location(name,p);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);monkeypatch.setitem(sys.modules,name,module)
+    receipt_path.write_text(json.dumps(receipt));manifest["sha256"][receipt_path.name]=file_sha256(receipt_path);path.write_text(json.dumps(manifest))
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST",str(path))
+    expert=sys.modules["vllm.model_executor.layers.fused_moe.experts.triton_moe"].TritonExperts()
+    expert.quant_config=SimpleNamespace(quant_dtype=None,use_int8_w8a16=False,use_int4_w4a16=False,config_name=lambda dtype:"cpu_fixture")
+    for k,v in dict(expects_unquantized_inputs=False,a2_scale=None,block_shape=None,_lora_context=None,per_act_token_quant=False,quantization_emulation=False,quant_dtype=None).items(): setattr(expert,k,v)
+    kernel=SimpleNamespace(fused_experts=expert);a=torch.ones(17,4096,dtype=torch.bfloat16);weights=torch.zeros(17,8);ids=torch.zeros(17,8,dtype=torch.int32)
+    w1=torch.empty(22,8,4);w2=torch.empty(22,4,4);original={"constructor":"retained"}
+    native=NativeRoutedExperts("TRITON","TritonExperts",None,kernel,w1,w2,"swiglustep",352,original)
+    extra="vllm.model_executor.layers.fused_moe.oracle.unquantized";module=modules[extra];monkeypatch.delitem(sys.modules,extra)
+    profile=native.prepared_context(a,None,topk_ids=ids,source_tensors=(a[:16],None));first=native.point_diagnostics
+    monkeypatch.setitem(sys.modules,extra,module)
+    if fault == "callable":
+        ns={"__name__":type(expert).__module__};exec(compile("def apply(self,*a,**kw): pass",str(tmp_path/"foreign.py"),"exec"),ns);expert.apply=ns["apply"].__get__(expert)
+    elif fault in ("source","ambient"): Path((sys.modules[type(expert).__module__] if fault == "source" else module).__file__).write_text("# changed native bytes\n")
+    observer=probe.DispatchObserver(lambda e:None);source=[a[:16],weights[:16],ids[:16]]
+    observer.collective_operands=[dict(op="all_gatherv",inputs=source,outputs=[a,weights,ids]),dict(op="reduce_scatterv_into_output",outputs=[a[:16]])]
+    observer.routing_calls=[dict(result=(source[1],source[2]))]
+    observer.expert_operands=[(expert,dict(hidden_states=a,topk_weights=weights,topk_ids=ids,a1q_scale=None,w1=w1,w2=w2,activation="swiglustep",global_num_experts=352,expert_map=None))]
+    layer=SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=SimpleNamespace(moe_kernel=kernel,unquantized_backend=SimpleNamespace(value="TRITON")))))
+    if fault in ("callable","source","ambient"):
+        with pytest.raises((ValueError,FileNotFoundError)): observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+        return
+    point=observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+    profile.update(model_architecture_profile="step5",routing_runtime_path="position_cyclic",collective_tensors=point["collective_tensors"])
+    if fault == "layout": profile["activation_layout"]["stride"]=[1,17]
+    assert (canonical_json(profile) == canonical_json(point)) == (fault is None)
+    assert first != observer.compute_diagnostics and extra not in first["imports"] and extra in observer.compute_diagnostics["imports"]
+    assert native.provenance is original and set(first["callables"]) == set(point["native_facts"]["callables"])
+    inp=MoERoutingProfileInput("same_point",(MoESourceFrame(0,(16,),(0,),16,"standalone_legacy"),MoESourceFrame(1,(1,),(0,),1,"standalone_legacy")),17)
+    schemas=[probe.tensor_schema(t) for t in source];policy=dict(branches=["cpu_fixture"],runtime={})
+    call=dict(op="all_gatherv",group_ranks=[0,8],execution_policy=policy,inputs=schemas,completed=True)
+    record=dict(op="all_gatherv",call="moe_dispatch_all_gatherv_bf16",participating_ranks=[0],group_ranks=[[0,8]],tokens_per_dp_rank=[16,1],
+        dtypes=[t["dtype"] for t in schemas],columns=[t["shape"][1] for t in schemas],native_context=dict(shared=point["native_facts"]["shared"],execution_policy={"0":policy}))
+    report=dict(layer_id=88,moe_input_id=inp.moe_input_id,source_frame=json.loads(json.dumps(asdict(inp.source_frames[0]))),compute_context=point,comparison=dict(status="match"),routing_comparison=dict(status="match"),collectives=[call])
+    linked=EXPORT.observed_collective_points(record,dict(parallelism=dict(tp=8),ranks=[dict(rank=0,layers=[report])]),{inp.moe_input_id:inp})
+    assert len(linked) == 1 and (canonical_json(linked[0]["compute_context"]) == canonical_json(profile)) == (fault is None)

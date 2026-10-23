@@ -215,11 +215,11 @@ def test_native_inclusive_scope_calls_real_source_methods_with_prepare_excluded(
     seen=[]
     with patch.dict(os.environ,{"FRONTIER_STEP5_PROFILE_MANIFEST":"cpu_fixture"}), patch(
         "frontier.profiling.common.runtime_identity.verify_step5_profile_runtime",
-        side_effect=lambda path,**kw:seen.append((path,kw["callables"])) or {"evidence_kind":"cpu_fixture"}):
+        side_effect=lambda path,**kw:seen.append((path,kw["callables"])) or {"evidence_kind":"cpu_fixture","imports":{},"callables":{}}):
         selected=impl.fused_experts.experts
         selected.apply=lambda:None
         assert native.prepared_context(activation,scales)["native_facts"]["evidence_kind"] == "cpu_fixture"
-    assert seen == [("cpu_fixture",[selected.apply])]
+    assert seen == [("cpu_fixture",[impl.fused_experts._select_experts_impl,selected.apply])]
 
 
 @pytest.mark.parametrize("ep_id",[0,8,15])

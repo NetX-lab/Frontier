@@ -9,6 +9,7 @@
 | 2026-10-23 | Archive C1 observed routing/C2 compute binding and3305-line budget. |
 | 2026-10-23 | Close observed point producer/count binding and3606-line budget. |
 | 2026-10-23 | Archive explicit CPU plan consumer, truthful trace and3713-line budget. |
+| 2026-10-23 | Archive deterministic point identity/full diagnostics and3805-line budget. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Branch: feat/step5-position-pricing.
 Baseline:1aee0af. Working directory:
@@ -54,6 +55,13 @@ composition without claiming joint HTSIM/native measured input. Actual CORE writ
 four-phase costs pass the real constructor; stale and native-label negatives fail.
 Verified source/tests/records commit78a475be delivered; root integration/review
 pending. No producer closure is reopened or deferred by the CPU consumer fix.
+Subsequent D29-PRODUCER-JOIN-REPAIR fixes actual ambient-import incompatibility:
+prepared_context verifies full runtime/callees, retains full point diagnostics
+separately and emits stable actual reached-source identity. Probe serializes both;
+CORE row persistence needs the exact3-gross hunk in interface_receipt, not edited
+here. Full integrated diagnostics persistence remains dependent on that hunk.
+CPU test source defaults to the current repo; external phased reference is
+explicit file+SHA256, no host fallback. CPU consumer behavior stays accepted.
 Authorized CORE02f061d/Native2c4cc9e and published67d5b5e dependencies imported;
 437b312 records published dependency integration. No peer file edited.
 Isolated collective-sim branch d29-position-pricing commits:
@@ -86,10 +94,13 @@ Isolated checkout is clean; no gitlink or peer changes were staged.
   suites68 PASS/0 SKIP/FAIL/ERROR without PYTHONPATH, exact commands and budget.
   Current CPU-consumer patch+109/-2=111 versus120 reserve; native model behavior
   and completed observed producer unchanged. No broad suite rerun claimed.
+- `test_report_2026-10-23_producer_join.md`: actual verifier/two-producer RED/GREEN,
+  exporter identity handoff, wrong callable/source/layout/ambient checks and sealed
+  portable CPU writer reference. Final disjoint395=315 PASS/80 SKIP; native64 PASS.
 
 ## Exact owned code/test/config diff
 
-43 changed paths; +3617/-96=3713 gross versus3956, remaining243. The five
+43 changed paths; +3708/-97=3805 gross versus3956, remaining151. The five
 submodule files total333 gross and are included. Peer imports/task records/root
 gitlink are excluded. The sole unchanged approved path is
 `tests/unit/test_step5_contract_reuse.py`; its existing tests pass unchanged.
@@ -116,10 +127,10 @@ gitlink are excluded. The sole unchanged approved path is
 | frontier/metrics/op_trace_utils.py |45|0|45|
 | frontier/operators/families.py |41|1|42|
 | frontier/operators/spec.py |15|5|20|
-| frontier/profiling/collectives/step5_dispatch_probe.py |223|10|233|
+| frontier/profiling/collectives/step5_dispatch_probe.py |225|10|235|
 | frontier/profiling/collectives/vllm_collective_benchmark.py |277|39|316|
 | frontier/profiling/collectives/vllm_forward_collectives.py |18|7|25|
-| frontier/profiling/moe/fp8_block_experts.py |98|1|99|
+| frontier/profiling/moe/fp8_block_experts.py |104|2|106|
 | frontier/profiling/moe/moe_vllm_kernel.py |12|0|12|
 | frontier/scheduler/utils/batch_builders.py |4|0|4|
 | frontier/scheduler/utils/expert_parallel.py |6|0|6|
@@ -130,14 +141,14 @@ gitlink are excluded. The sole unchanged approved path is
 | tests/integration/step5_comm/validate_result.py |88|5|93|
 | tests/integration/step5_comm/worker.py |34|4|38|
 | tests/unit/test_collective_benchmark_helpers.py |151|1|152|
-| tests/unit/test_collective_sim_cc_backend.py |172|0|172|
+| tests/unit/test_collective_sim_cc_backend.py |198|0|198|
 | tests/unit/test_comm_operator_families.py |26|0|26|
 | tests/unit/test_ep_wave_trace_context.py |46|0|46|
 | tests/unit/test_op_trace_utils.py |47|0|47|
 | tests/unit/test_step5_comm_cost_export.py |271|0|271|
 | tests/unit/test_step5_comm_package.py |84|0|84|
 | tests/unit/test_step5_comm_transport.py |200|4|204|
-| tests/unit/test_step5_dispatch_probe.py |271|1|272|
+| tests/unit/test_step5_dispatch_probe.py |328|1|329|
 | tests/unit/test_step5_moe_pricing.py |300|0|300|
 
 ## Remaining acceptance dependencies
@@ -154,6 +165,8 @@ gitlink are excluded. The sole unchanged approved path is
      exact plan's buffer_json/count receipt. Owned writer/exporter now supplies
      it; inspected CORE chooser already consumes the field and checks the buffer
      receipt. Root integrates these existing interfaces without inferred context.
+     CORE must persist experts.point_diagnostics alongside native_context and use
+     it in existing full row provenance union; exact3-gross hunk in receipt.
 2. Root prepares actual bound input vectors/layers/frozen device/network inputs
    and independently measured local/protocol/TP/count evidence, then separate
    parent qualification. The bounded template is

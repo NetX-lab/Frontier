@@ -102,6 +102,16 @@ def test_importer_groups_frozen_policy_but_keeps_complete_count_and_cache_identi
     assert json.loads(result.count_receipt_json)["context"] == context
 
 
+def cpu_writer_source():
+    """Default to this checkout; explicitly sealed references support phased integration."""
+    import os,hashlib
+    reference=os.environ.get("FRONTIER_TEST_CPU_WRITER_FILE")
+    source=Path(reference) if reference else Path(__file__).resolve().parents[2]/"tests/integration/step5_measured_compute_fixture.py"
+    if reference and hashlib.sha256(source.read_bytes()).hexdigest() != os.environ.get("FRONTIER_TEST_CPU_WRITER_SHA256"):
+        raise ValueError("External CPU writer requires its exact immutable SHA256")
+    return source
+
+
 def cpu_writer_payload(tmp_path,monkeypatch):
     """Execute CORE's retained actual writer without importing or editing its tree."""
     import ast,pandas as pd
@@ -112,7 +122,7 @@ def cpu_writer_payload(tmp_path,monkeypatch):
     table=tmp_path/"compute.csv"
     pd.DataFrame([dict(moe_frame_scope="dp_gathered",routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])),
         native_context=json.dumps(native),graph_mode="none")]).to_csv(table,index=False)
-    source=Path("/data/ycfeng/Frontier/.worktrees/verify-step5-core-delivery-01/tests/integration/step5_measured_compute_fixture.py")
+    source=cpu_writer_source()
     fn=next(n for n in ast.parse(source.read_text()).body if isinstance(n,ast.FunctionDef) and n.name == "position_collective_costs")
     ns=dict(pd=pd,json=json);exec(compile(ast.Module(body=[fn],type_ignores=[]),str(source),"exec"),ns)
     writer_path=ns[fn.name](tmp_path,table,device="h800");artifact=json.loads(writer_path.read_text());path.write_text(json.dumps(artifact))
@@ -170,3 +180,19 @@ def test_native_import_ignores_injected_full_cost(tmp_path,monkeypatch):
         per_rank_events=[["cpu_schema_only"]*35 for _ in range(16)],cost={"duration_ms":999.})
     path.write_text(json.dumps(artifact));cost=backend.predict_collective_plan(plan)
     assert cost.duration_ms == pytest.approx(1.75*16*8192/200e9*1000+.014)
+
+
+@pytest.mark.parametrize("mode",["local","missing_hash","wrong_hash","missing_file","exact"])
+def test_cpu_writer_reference_is_explicit_and_sealed(tmp_path,monkeypatch,mode):
+    import hashlib
+    monkeypatch.delenv("FRONTIER_TEST_CPU_WRITER_FILE",raising=False)
+    monkeypatch.delenv("FRONTIER_TEST_CPU_WRITER_SHA256",raising=False)
+    if mode == "local":
+        assert cpu_writer_source() == Path(__file__).resolve().parents[2]/"tests/integration/step5_measured_compute_fixture.py"
+        return
+    source=tmp_path/"writer.py";source.write_text("# CPU reference identity fixture\n")
+    monkeypatch.setenv("FRONTIER_TEST_CPU_WRITER_FILE",str(source if mode != "missing_file" else tmp_path/"absent.py"))
+    if mode != "missing_hash": monkeypatch.setenv("FRONTIER_TEST_CPU_WRITER_SHA256",hashlib.sha256(source.read_bytes()).hexdigest() if mode != "wrong_hash" else "wrong")
+    if mode == "exact": assert cpu_writer_source() == source
+    else:
+        with pytest.raises((ValueError,FileNotFoundError)): cpu_writer_source()

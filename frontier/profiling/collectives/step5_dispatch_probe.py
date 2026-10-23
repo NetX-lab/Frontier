@@ -405,6 +405,7 @@ class DispatchObserver:
             args["w1"],args["w2"],args["activation"],args["global_num_experts"])
         context=native.prepared_context(gathered[0],args["a1q_scale"],topk_ids=args["topk_ids"],
             expert_map=args["expert_map"],source_tensors=(source[0],source[3] if len(source) == 4 else None))
+        self.compute_diagnostics=native.point_diagnostics
         if context["experts_class"] != type(self.expert_operands[0][0]).__name__:
             raise ValueError("Observed expert implementation differs from inspected point")
         def tensor(name,value):
@@ -680,6 +681,7 @@ def run_probe(args, plan):
                         result["comparison"]["status"]=result["routing_comparison"]["status"]
                     with diagnostic_scope(observer.errors,"observed_compute_context"):
                         result["compute_context"]=observer.compute_context(layer,config.model_config.hf_text_config)
+                        result["compute_diagnostics"]=observer.compute_diagnostics
                 if observer.errors or len(errors) > error_start:
                     result["comparison"]["status"] = "unverified"
                 emit({"event": "layer_verdict", "layer_id": case["layer_id"], **result["comparison"]})
