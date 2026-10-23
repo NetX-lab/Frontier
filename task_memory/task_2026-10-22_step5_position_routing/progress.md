@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Verify actual complete208-operator wave; allocate one-path trace replacement and investigate prepared selection/collective lifetime independently. |
 | 2026-10-23 | Parent accepts final79 regression comparison; both main08 modes time out after reaching decode. Start a new execution-path diagnostic loop. |
 | 2026-10-23 | Parent verifies fresh79 strict77/short suites and T2 static63/26;feature mergecf894fa4 matches frozen code. |
 | 2026-10-23 | Accept three performance components,freeze79f1a3fd,verify integrated point/9254 accounting and start main08/fresh regressions/T2 rebinding. |
@@ -48,6 +49,20 @@
 
 ### Current-session resumption (supersedes handoff next-session timing)
 
+- completed/diagnostic: main08 residual records1f42fb00 are archived at3164ad84.
+  Parent layer61 warm2.653s reproduces28003 decodes/80 reads,165 captured pairs
+  match. The complete adjacent layer60 warm2.837s has208/208 matching pairs and
+  the same repeated-work counts. Full proofs retain the current global_layer_id;
+  timing equality does not permit caching a different layer's proof. Receipts:
+  resumed_performance/{main08_wave_verification.json,test_report_2026-10-23_main08_wave.md}.
+- in-progress: CORE prepared-point selection analysis,
+  ses_e9b3efeebffem2dcbXlVGNr8O2; common collective lifetime analysis,
+  ses_e975020aeffe7JnGJiqLD2PJ0r. Both are source-read-only and unallocated.
+- allocated: trace serialization's single write path,<=20 gross in one new CORE
+  path. Sole-reader evidence confirms the internal to_dict helper can be removed;
+  its replacement must preserve full JSON bytes and flush failure restoration.
+  Active scope112 paths,unchanged CORE4404/source9942/global10000 ceilings.
+  No new full CLI starts before combined evidence,review and source freeze.
 - completed: YC requests continuation here. Frozen sourcee41abc073500d61f224eda4fca1123e74e40544d
   is clean in /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05;
   independent submodule checkout3dac53c matches. Receipt:resumed_parent/source_freeze.json.

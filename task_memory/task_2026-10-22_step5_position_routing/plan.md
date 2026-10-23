@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent verifies complete208-operator wave; investigate prepared selection/common collectives and allocate trace's single serialization path within20 gross. |
 | 2026-10-23 | Accept final79 unit comparison and environment supplements; record both main08 timeouts and reopen real execution-path diagnosis. |
 | 2026-10-23 | Consolidate feature codecf894fa4;parent accepts fresh77/77 and101/197/53 plus T2 static63/26;full-unit/main08 pending. |
 | 2026-10-23 | Close all three performance reviews/parent checks;freeze79f1a3fd and start main08/fresh regressions/T2 rebinding. |
@@ -38,6 +39,10 @@ Then apply init_validation_scope_amendment.json and
 collective_artifact_parse_scope_amendment.json:two existing CORE paths<=45 gross
 and two existing PRICING paths<=50 gross, with27/50 zero-sum allowance transfers.
 requirements.md records YC's authority and the later task-required H800 approval.
+Apply trace_serialization_scope_amendment.json next:one new CORE path under the
+standing repair authority,20 gross reserved through a20-line internal transfer.
+The active ledger is112 paths (CORE47/native19/PRICING46), with unchanged owner
+and total ceilings. The accepted79 audit remains111 paths/9254 measured lines.
 
 Completed handoff boundary: CLI placement repair -> parent real-constructor checks
 and independent re-review -> feature-branch code/record consolidation. YC now
@@ -53,6 +58,13 @@ The main08 full-workflow edge failed. Its active return path is now:
 real execution-path feedback loop -> measured cause -> bounded repair allocation
 -> focused verification and independent review -> new source freeze -> required
 regressions and full CLI. A passing isolated point is not the full-workflow gate.
+Parent has now verified the original layer61 loop and all208 operators of the
+complete adjacent layer60 wave at position6147. The active parallel work is:
+prepared row/plan selection analysis + common collective lifetime analysis +
+trace serialization replacement (20-gross allocation). Combine measured effects
+and evaluate full-wave multiplicity before another full CLI. Whole proof objects
+remain layer-specific even when timings/plans match. Root receipts are under
+resumed_performance/main08_wave_verification.json.
 
 The earlier main04 attempt on60ba is diagnostic only. Main05 on1be supplies the
 current placement failure; its raw command/log/execution receipts stay preserved.
@@ -69,7 +81,7 @@ residual-point check,not full workflow duration. main08 offline timed out after
 2400.175s,with four decode tokens emitted and the next decode iteration scheduled.
 Online subsequently timed out after2400.152s at the same recorded decode count.
 The workload stays6144/1024 with2400s per-mode cap. D29-MAIN08-RESIDUAL-REPRO
-now owns a new real execution-path loop beyond the isolated initial-P point;
+has delivered a real execution-path loop beyond the isolated initial-P point;
 main08_residual_repro/ records its scope and evidence. Early-init report remains a partial
 bounded diagnosis:1288s includes the whole predictor construction;one attention
 phase performs three same-frame serializations. It does not justify a cache-key
@@ -78,10 +90,10 @@ and its own faithful short loop. See early_init_repro/report.md.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
-| Approval, ownership and baseline | Complete; effective111 under existing budgets. |
+| Approval, ownership and baseline | Complete; effective112 under existing budgets, including the trace20 allocation. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
-| CORE/SOURCE46 | Group/loader repairs closed;3970/4404 measured on79. Parent81/1oldskip,2,29,52 recorded separately. |
+| CORE/SOURCE47 allocated | Group/loader repairs closed;46 paths/3970 measured on79. Trace20 pending in the new path;total cap4404. Parent81/1oldskip,2,29,52 recorded separately. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Exact-current-text parsing repair closed;parent128PASS;3920/3956 measured. |
 | Complete integration and final freeze | Complete:79 frozen in integrated06,gitlink3dac53c;feature mergecf894fa4 source bytes identical. |

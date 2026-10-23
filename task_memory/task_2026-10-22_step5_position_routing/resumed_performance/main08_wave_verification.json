@@ -1,0 +1,37 @@
+{
+  "status": "VERIFIED_DIAGNOSTIC_RED",
+  "source_revision": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "owner_records_commit": "1f42fb00",
+  "owner_records_merge": "3164ad84",
+  "layer61": {
+    "pricing_s": [3.3040983732789755, 2.6532103740610182],
+    "warm_json_decodes": 28003,
+    "artifact_reads_per_wave": 80,
+    "captured_pairs": 165,
+    "replayed_pairs": 208,
+    "mismatches": 0,
+    "payload_sha256": "b2593e723ee095488ff213e84ddcd6e85391c11f42e092a7a5ba8b77a38ffc3a",
+    "result_path": "/data/ycfeng/tmp/d29_main08_residual_repro/parent-red01/result.json",
+    "result_sha256": "617953178439feccbbdce9caadcaf43fafb31b612daef2e29e819e9d1b009bf0"
+  },
+  "complete_layer60": {
+    "pricing_s": [3.292490883730352, 2.836787779815495],
+    "warm_json_decodes": 28003,
+    "artifact_reads_per_wave": 80,
+    "captured_pairs": 208,
+    "replayed_pairs": 208,
+    "mismatches": 0,
+    "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "result_path": "/data/ycfeng/tmp/d29_main08_residual_repro/parent-layer60/result.json",
+    "result_sha256": "60fb55f24f9305d64c30b402bf1c03ac83ed102b51eb039605145debb7465f2c",
+    "binding_sha256": "57984c117cb5ab2eb52d0e1a06c59d0364e7d234f95a6160dc0b304a4465585b",
+    "comparison_sha256": "bdc04abea031d2d457a8e15d6db1db2ce0f8c53918223c8e3127947a7d14602b"
+  },
+  "layer_comparison": "All durations, native contexts and collective plans/costs match between60 and61. The144 operator_cost objects differ in global_layer_id. The full proof payloads must not be treated as interchangeable across layers.",
+  "scripts": {
+    "wave_loop.py": "06fff29b0b6b6df435153786266b81a212cc414484ac2f08753c58784d86e332",
+    "compare_actual_wave.py": "fa045662d96380b52097a7b4295380905f968ec7cf6b0998c9a3ad00ce9ee0be",
+    "parent_complete_wave.py": "0e7130a0a88932a1a80a95fad5bc5abe0432440fbe9de8a55b2193ca570976b8"
+  },
+  "limits": "Bounded8MiB actual tail; complete adjacent layer60 at the same6147 position and16EP participants. No attention/event queue/full initialization replay, full CLI pass or native/GPU qualification. Count-based RED is diagnostic, not a replacement gate. Original scripts and retained inputs remain unchanged."
+}

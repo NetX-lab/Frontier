@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent confirms complete208-operator decode wave; allocate20-gross trace replacement and continue two unallocated reuse investigations. |
 | 2026-10-23 | Accept final79 unit comparison and record both main08 timeouts; residual execution-path diagnosis remains pending. |
 | 2026-10-23 | Record feature consolidation and accepted fresh79 strict77/short/T2 static receipts;full-unit/main08 unfinished. |
 | 2026-10-23 | Accept all performance components,freeze79f1a3fd and start final-source CLI/regression/T2 checks after exact9254 audit. |
@@ -45,7 +46,12 @@ with explicit101/52 environment supplements. Main08 offline still times out at
 2400s after reaching decode;online also times out at the same recorded four-token
 progress. Post-run frozen source and submodule remain clean. Regression records
 are archived atf3a3147e. The CORE
-owner is establishing a new real execution-path feedback loop from this run.
+owner established a real layer61/16-EP feedback loop;parent reproduced it and
+verified the complete adjacent layer60 wave against all208 captured operators.
+Both remain count-based RED (28003 warm decodes/80 reads),not a workflow pass.
+Only a20-gross trace serialization replacement is allocated;prepared point/plan
+selection and collective lifetime remain separate read-only investigations.
+The active ledger now has112 paths with unchanged owner/global ceilings.
 Early-init attribution remains
 partial;no additional implementation or hash-identity change is authorized.
 Task-required H800 authority is already granted;workflow/package readiness remains.

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Allocate a20-gross single-path trace serialization replacement under existing repair-path authority; other residual proposals remain unallocated. |
 | 2026-10-23 | Record bounded residual CPU repairs and carry forward YC's task-required H800 authority. |
 | 2026-10-23 | YC defers handoff and resumes all remaining work in the current session;existing acceptance/resource limits remain. |
 | 2026-10-23 | YC requests closure of the currently executing work, code/document commits and a prompt for continuation in another session. |
@@ -168,3 +169,22 @@ quota/capacity, platform/storage rules, D29 scope and workflow/package readiness
 remain binding. This does not approve H200 resources or qualify a pending run.
 Earlier unapproved-resource statements below historical checkpoints retain only
 their historical meaning; final T2 staging must carry this current authority.
+
+## [Implementation Decision] D29-TRACE-SERIALIZATION
+
+Under D29-REPAIR-PATH-AUTHORITY, allocate one new CORE path,
+`frontier/metrics/trace_store.py`, for at most20 gross lines. Remove the internal,
+unexported, one-caller `TraceEvent.to_dict` method and serialize declared fields
+at the existing `flush` write site. All supported producers already supply
+JSON-compatible metadata. This avoids redundant copying without exposing an
+aliased dictionary-return interface or retaining a second serialization path.
+
+Preserve field order, top-level None omission, all metadata and exact JSONL bytes,
+plus error propagation and buffer restoration. The source has no supported
+nested-dataclass metadata producer; no new generic conversion behavior is added.
+The zero-sum overlay transfers20 unused lines from the existing CORE fixed-probe
+path, making112 allocated paths and CORE47/4404, while native19/1582,
+PRICING46/3956, source9942 and global10000 remain unchanged. Existing real-disk
+tests and retained actual-wave replay settle the focused verification; the final
+regression set follows the review/freeze route. Prepared-point and collective
+lifetime changes are still analysis-only and receive no allocation here.
