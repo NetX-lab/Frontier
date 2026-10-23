@@ -57,6 +57,17 @@ def plan(sizes=(16, 1), phase="dispatch"):
 
 def test_lossless_plan_order_identity_and_count_separation():
     p = plan()
+    key = p.cache_key()
+    assert key == json.dumps(p.to_dict(), sort_keys=True, separators=(",", ":"))
+    assert p.cache_key() is key
+    public = p.to_dict()
+    public["context"]["quant_dtype"] = "mutated"
+    assert p.to_dict()["context"]["quant_dtype"] is None
+    for raw in (b'{"fixture":true}', bytearray(b'{"fixture":true}')):
+        invalid = replace(p, buffer_json=raw)
+        for _ in range(2):
+            with pytest.raises(TypeError, match="not JSON serializable"):
+                invalid.cache_key()
     assert p.stages == (("Broadcast", 0, 0), ("Broadcast", 0, 1))
     assert p.endpoint_bytes(8) == (8192, 17 * 8192)
     assert p.cache_key() != plan((1, 16)).cache_key()

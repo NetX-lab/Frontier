@@ -89,7 +89,10 @@ class CollectivePlan:
                 "native_grouping": "outer_tensor_group/nested_root_group"}
 
     def cache_key(self):
-        return json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"))
+        if "_cache_key_json" not in self.__dict__:
+            object.__setattr__(self, "_cache_key_json",
+                json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":")))
+        return self._cache_key_json
 
     def endpoint_bytes(self, rank):
         if type(rank) is not int or not 0 <= rank < 16:
