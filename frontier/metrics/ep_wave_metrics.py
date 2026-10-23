@@ -118,8 +118,10 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                 cursor += duration * 1e-3
             if ledger_enabled and communication is not None:
                 from dataclasses import asdict
-                ledger_phases[phase]["collective_proofs"]={name:dict(plan=communication.plans[name].to_dict(),
+                collective_proofs={name:dict(plan=communication.plans[name].to_dict(),
                     cost=asdict(communication.costs[name])) for _,name,_ in operators if name in communication.plans}
+                if collective_proofs:
+                    ledger_phases[phase]["collective_proofs"] = collective_proofs
             if ledger_enabled and step5_frame is not None:
                 ledger_phases[phase]["compute_proofs"]={name:step5_frame["operator_costs"][name]
                     for kind,name,_ in operators if kind == "COMPUTE" and name in step5_frame["operator_costs"]}
