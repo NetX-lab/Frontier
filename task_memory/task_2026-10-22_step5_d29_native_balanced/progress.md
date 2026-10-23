@@ -3,11 +3,14 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root final steering accepts production1be/P2,rebind runtime identity and preserve60ba history;post-CPUgate04staging planned. |
+| 2026-10-23 | Correct intended target04/pending-root-staging pointers and exact85/81accounting,verifybound26without target writes. |
 | 2026-10-23 | Read approved allocation/design and begin interface milestone. |
 | 2026-10-23 | Complete native19 integration, CPU418 PASS, D3048 PASS and static T2; retain root-only prerequisites. |
 | 2026-10-23 | Close four reviewer findings;485 affected CPU PASS and1269/1582 gross. |
 | 2026-10-23 | Import accepted9090407 and prepare controlled T2 metadata/inputs/resource proposal; static checks only. |
 | 2026-10-23 | Complete root-directed two-file engine-limit correction, verified helper-body flow and85 gross delta; root integration pending. |
+| 2026-10-23 | Bind final60ba full sources in an isolated records tree; preserve inputs/native bytes and disclose integrated helper environment obligations. |
 
 - completed: clean branch feat/step5-position-native at1aee0af; all approved native
   design sections and local instructions inspected; no peer writes/platform calls.
@@ -29,9 +32,10 @@
 - completed: P4 schema/types/bounds/static topology/hash review and bash-n-only
   commands; all6 artifacts in hashes.sha256 verify. Input-only commit aa872fa;
   no production/test delta against9090407.
-- pending (root): helper integration, independent sealing/readiness and actual-image
-  config check; resource/run approval, mounts/rendezvous/output and GPU evidence.
-  The unsupported engine-limit interface gap is closed below, not runtime accepted.
+- completed (parent historical): selected helper integrated662849e/892b6a1 and
+  published-image final CPU values7168/8192/128 accepted; this is not GPU evidence.
+- pending (root): final packet sealing/readiness, resource/run approval,
+  mounts/rendezvous/output and GPU evidence. The engine-limit interface is closed.
 - completed: D29-T2-ENGINE-LIMITS L1 actual engine7168/8192/128 triple/hash and L2
   required cases mapping before both constructors; final limits observed/checks
   are diagnostic-only, no configuration assignment afterward.
@@ -55,41 +59,107 @@
   whitespace PASS. Draft two-file incremental87 gross (17add/5del script,
   65add test), within100; final85 gross/green evidence supersedes that draft.
 
+## D29-T2-FINAL-SOURCE-BINDING progress
+
+- completed F1: original owner clean tree preserved; authorized isolated branch
+  docs/step5-d29-t2-final created at60ba4c. All records writes occur only there;
+  active root CLI/fidelity worktree never written, checked out or committed in.
+- completed F2: full repo8/publication9/parent3/native32 hashes bound. Retained
+  actual export2907/backend12/pins53 agree; constructor/topology/loader/diagnostic
+  ASTs equal662 but full helper/recipe differ. T2/native unit bytes unchanged;
+  final dispatch test byte-identical9974 after d0dfcdb5 duplicate removal.
+- completed F3: packet source/path/proposal points60ba; metadata/cases unchanged.
+  Controlled clean shell unsets inherited FRONTIER_STEP5_PROFILE_MANIFEST because
+  T2 supplies no manifest/runtime_policy. Existing routing_input_file=None stays.
+  New expert operand/native quant-defer-input observations remain soft/runtime
+  unverified. No new input mode, formula, tolerance, backend or qualification.
+- completed F4 static checks: full-source/schema/input bytes/native4/archive/raw
+  platform manifest/AST7/bash3/unapproved resource bounds PASS in
+  /data/ycfeng/tmp/d29-t2-final-static-preindex.log. Initial inspection assumed
+  inputs.py existed at662 and failed git-show128; checked old tree and recorded
+  ABSENT, changing only the inspection lookup. One tool dispatch aborted before
+  execution due to location shutdown; explicit isolated workdir rerun completed.
+  A records patch failed stale heading verification and applied no partial edit;
+  reread actual headings and reapplied. No source/acceptance changes for these.
+- completed F4 checks/records: documented stdlib command PASS,index63/63 PASS,
+  English report/review/summary complete. Precommit26 bound-file equivalence PASS;
+  only11 existing native records changed. First documented command extraction
+  split at a triple-backtick literal and truncated heredoc (bash1); delimiter-
+  specific extraction corrected only extraction, documented check rerun PASS.
+- completed F4 handoff: records commit43c2947c6d08b699d5a1efc1602117ba87850772;
+  postcommit26 full bound-file equality to60ba/63checksums/11record-only paths/
+  code-test diff0/clean PASS in d29-t2-final-postcommit-equivalence.log. Packet
+  index SHAa4bed10cd7b0189153f9bf5d1c1886dafd6d64fff4867612adf9cf9d1dd20e15.
+  Final handoff-record update changes no packet/source bytes; explicit equivalence
+  is rechecked after its commit. Native1350/1582,source increment0.
+
+## D29-T2-TARGET-POINTERS progress
+- completed T1: read-only04HEAD1be91bad/disk/full26files match60ba/local bound
+  bytes; current04packet remains old. Exact original6ebb038->a5e5189diff and
+  locked-base1aee0afdiffs recorded in test report:85step gross/81retained growth,
+  native1350/1582,not guessed. d29-t2-target-inspection.log retains full evidence.
+- completed T2: REPO/mount/frozen pointers now intended04; explicit root staging
+  NOT YET PRESENT and runtime60ba/checkout1be91bad/docs revisions distinguished.
+  Neither04nor02written; P2 stays independent-review/unqualified.
+- completed T3 records: exact accounting in one existing report; native/input/
+  metadata/image/limits/resources/native4 unchanged,source increment0.
+- completed T3/T4 checks: existing index63PASS/nonpacket57unchanged,04source26
+  PASS,existing schema/AST/bash/ownership PASS. Both documented static blocks
+  execute successfully; logs d29-t2-target-static.log/d29-t2-final-static-final.log.
+  Exact source diffs/accounting verified; only11existing records changed,code0.
+- completed T4 handoff: isolated records commit8c57df44;existing11paths only,
+  source/test0,native1350/1582. Index7dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5.
+  Root stages/rechecks26/seals04. Final commit-ID record update changes no packet;
+  post-handoff63/26verification repeated. Neither04nor02written.
+- completed final steering checks:root freezes production1be/P2No findings/196PASS.
+  Runtime and checkout identity now1be,not prior60ba or docs commit. Actual
+  quantization_manager SHA/tree inspected;production change outside26 confirmed,
+  so not records-only. RootCPUgates run in04,packet staging planned afterward.
+  Pointer/revision edits completed,then existing63index regenerated once. Both
+  documented existing static blocks PASS:26/full-helper/finaltree/schema/AST/
+  shell/63hashes;nonpacket57unchanged. Final index1e36d25e3fe8c41a4f2e7e04f2df7d352fd9b474d5aa34c3bda6bc92de5c97ca.
+  No further packet changes;only handoff commit remaining. Live03/04untouched.
+- completed final handoff:records174e58e0(after pointer correction8c57df44),
+  runtime final1be immutable. Postcommit both documented static blocks PASS,
+  26/full-helper/tree/63hashes/clean PASS;only11record paths/source0. Final
+  commit-ID archive modifies no packet/index bytes;postarchive recheck repeated.
+
 ## 1. 规划完成情况
-**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0（D29-T2-ENGINE-LIMITS；不是GPU验收）
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0（D29-T2-TARGET-POINTERS final steering;not GPU acceptance）
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
-| L1 actual serving triple | PASS | retained engine SHA7947f58b…；7168/8192/128，metadata字节未变 |
-| L2两路径constructor flow | PASS | a5e5189；同mapping在creation前传入，final值diagnostic-only |
-| L3 verified helper | PASS | PRICING3f54bc6真实body host flow PASS；mixed import留root |
-| L4checks/inputs/records | PASS | affected175 PASS/15 SKIP，85gross；static/hash/records已更新，交接commit封存 |
+| T1 target/accounting evidence | PASS |04bound26equal60ba;original/locked-base diffs inspected |
+| T2 intended pointers/final identity | PASS |04target/final runtime1be,prior60ba/history,planned staging afterCPUgates |
+| T3 final-revision record/index refresh | PASS | final1bepacket,index63PASS/57source hashes unchanged |
+| T4 final verification/commit | PASS | records174e58e0;postcommit26/helper/tree/63hashes/cleanPASS |
 
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
-**检测窗口：** D29-T2-ENGINE-LIMITS dispatch至a5e5189和records封存｜**当前前沿：** root dependency整合/seal（本流外）
+**检测窗口：** final1be steering至174e58e0/postcommitPASS｜**当前前沿：** root post-CPUgate staging/seal(outside slice)
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | focused/affected现有2suites验证明确flow，未重跑418/485或host gap |
-| D2 细节反复重试 | CLEAR | red定位旧helper遗漏；verified signature后green，不做参数/运行workaround |
-| D3 支线问题修补 | CLEAR | limits、peer plan接口及hash均服务L1–L4，无其它producer修复 |
-| D4 可并行任务停滞 | CLEAR | L1/L2在真实helper dependency前完成；no subagents，root持有整合与GPU |
-| D5 超范围镀金 | CLEAR | 限定2files/85gross；无new CLI/builder/native source/tolerance |
-| D6 分析空转 | CLEAR | a5e5189已交付；只剩用户要求input/records hash收尾 |
-| D7 路线违背 | CLEAR | no platform/GPU/peer写入；不导入mixed central记录；保持controlled和soft handling |
-**文档检查：** S1–S6均未发现未记录缺陷；历史input-only gap已明确被root授权L1–L4替代，真实helper整合仍由root持有。
+| D1 工具打磨 | CLEAR | requested static/hash verification only; no new suite/harness |
+| D2 细节反复重试 | CLEAR | exact diff settles requested accounting;no runtime tuning |
+| D3 支线问题修补 | CLEAR | precise root final-revision steering only,no production repair |
+| D4 可并行任务停滞 | CLEAR | independent reads parallel; explicit no-agent instruction |
+| D5 超范围镀金 | CLEAR | source/test0, existing packet/handoff only; resources unchanged |
+| D6 分析空转 | CLEAR | final tree/pointers/index verified,records174e58e0delivered |
+| D7 路线违背 | CLEAR | live03/04untouched,runtime final1be,CPU/GPU separated |
+**文档检查：** S5:old60ba-runtime rule contradicted root final production1be steering,corrected with prior history and non-record-only tree. S1–S4/S6 clear.
 **归因：** 无。
 
 ## 3. 纠正建议
-**分支：** A：当前spec/plan合理，无需扩展scope或新增seam。
+**分支：** B: stale binding records require update, no scope/criteria change.
+**文档更新（先执行）：** runtime1be/finaltree,60baprior history,P2reported CPUacceptance,planned post-CPUgate staging;finish all revisions then index once (authorized,no code).
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. root独立helper整合/actual-image/seal → 完成标志：新helper和native source身份、两配置真实值及input hash。
-2. root readiness后请求run approval → 完成标志：实际资源/路径/finite unit授权；本流不运行。
+1. Root finishCPUgates/stage11records/finalcheck/seal -> done:packet/source ready;owner records complete.
+2. Root resource/run decision -> done:explicit finite-unit approval/paths;currently unapproved.
 
 ## 4. 最值得关注的 3 点
-1. 两个final config值已在host flow观测；不等于实际image/GPU配置验收。
-2. PRICING mixed commit未导入，root必须整合optional keyword；native19为1350/1582。
-3. controlled inputs及16H800/30min8GPUh提案均非observed/launch，G3/tolerance未变。
+1. Intended04has old packet;root must stage updated records before seal/mount.
+2. Runtime source immutable1beincludes productionP2;prior60ba historical,native1350/1582,live03/04untouched.
+3. Controlled inputs/16H80030min8GPUh are not observed/approved; G3/tolerance unchanged.
 
 ## Verification iterations
 - Baseline251 PASS; interface9 PASS then addedinvalid K/logits controls11 PASS.

@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Apply final source steering:runtime1be includes productionP2,prior60ba historical;records staged later after active04CPUgates. |
+| 2026-10-23 | Retarget intended mount04 pending root staging,verify26bound bytes and settle85/81accounting; zero code changes. |
+| 2026-10-23 | Bind complete final60ba source/receipts in isolated records tree; preserve inputs/native bytes and unapproved resources. |
 | 2026-10-23 | Parent accepts T2 constructor/source binding and merges892b6a1 after177 PASS/15 SKIP, actual-image config values and independent No findings. |
 | 2026-10-23 | Parent accepts and integrates native19, publishes the image and supplies verified installed-source artifacts. |
 | 2026-10-23 | Prepare controlled T2 metadata/cases and bounded execution/resource proposal; static-only, no code change or launch. |
@@ -16,14 +19,126 @@
 
 ## Current implementation outcome
 
-Parent T2 acceptance: verified662849e/records94244bc merged892b6a1. Both real
+Current task:D29-T2-TARGET-POINTERS,with root final-revision steering. Accepted
+immutable production/runtime source and intended04checkout are both
+1be91bad431d3bd886de7f5d80c19bd7e6c54a25,Git treea5cb27c3e26943f0dfa638301b3564fb2427d56d.
+All26bound files/full helper are byte-identical prior60ba and04disk/Git. Final1be
+includes production quantization_manager change outside26,NOT records-only.
+ItsSHA44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83 differs
+prior319fae30239499ab421c6ed56057e100059a80ce02925015a658b0a2b33a1bcc.
+Prior60ba is binding history,not final runtime identity;docs commits differ from
+immutable final source. Root reports P2re-review No findings/parent196PASS,not
+rerun here and not GPU proof. Strict77/fullunit/main05 run in04,results not inferred.
+
+Intended staging/mount:/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04.
+Updated native packet is NOT currently staged there;root plans staging after
+CPUgates finish,then26/full-helper recheck/seal. Live03/04and prior02untouched.
+Native1350/1582,owner source/test0. Exact85incremental/81retained accounting is
+settled in existing test report using original diff/locked-base diffs. Input/
+image/native4/limits/formula/modes/resources unchanged;no runtime/GPU/allocation
+authorization inferred. Final existing63index regenerated after all revision edits.
+
+Final revision packet hashes:proposal31de5c40d0c46759e33d68472415af41c713e6c908701bc408310bfedc6c158a;
+provenancef27e6e43ec251858dbe82c57067ac940af6843d81f8bf91a52a98371c2444aa8;
+resource4e8038756a7c3c22e27121c97cb667a80ec88fe100c984c6f0fa175e01cace23;
+receipt77ea9babf8b7930f05c4ce902b3f7eb57173d82b6981f348e87c738800505306;
+index1e36d25e3fe8c41a4f2e7e04f2df7d352fd9b474d5aa34c3bda6bc92de5c97ca.
+Both existing documented static commands PASS after that single index refresh:
+63checksums,26boundfiles/full-helper hashes,actual final tree/production SHA,
+prior60ba comparison,2907/12/53/native4,schema/AST/bash and resource-unapproved.
+Nonpacket57hashes unchanged;native1350/1582/code0. Only existing11record paths.
+
+Final delivery commits:8c57df44(pointer/accounting),174e58e0(final1beproduction
+identity steering). Post174e58e0 both documented static blocks/26helper/tree/
+63checksums/clean PASS. Source runtime1be and records174e58e0 are distinct.
+Complete correction diff `git diff 2adbf9f2 174e58e0 -- task_memory/task_2026-10-22_step5_d29_native_balanced`;
+only11record paths/code0. Final ID archive changes only task handoff,not packet.
+Root planned staging afterCPUgates and final26/full-helper check/seal remain.
+
+Historical8c57df44delivery hashes (superseded by final-revision packet):proposal b27067409696ba32f6fb99167c6880fa1e107abf5c6e4a927e0a61d4ee270796;
+provenance5e92fe0f157a28b71bc46a6ddbea1dede00d102ba4d9b0825482ded2ec1c584e;
+resource5eec1231b5966911a3151e2e83a4521bd2bc356b8f99d9b62ae95b6e58591207;
+receipt09ff6b36646161d25d2fdf10de5fea903915f4a4590fae973d32867edc5f378c;
+index7dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5.
+Existing63checksums/schema/AST/bash,target04bound26 PASS;57nonpacket hashes
+unchanged,inputs unchanged. Exact original/locked-base diff and target inspection
+commands/results in test_report;raw logs under/data/ycfeng/tmp. Root stage/seal/
+Post-CPUgate record staging/resource-run decisions remain;target trees untouched.
+
+Delivery commit8c57df44updates only11existing native records,272add/36delete
+documentation lines,source/test0. Complete correction diff:
+`git diff 2adbf9f2 8c57df44 -- task_memory/task_2026-10-22_step5_d29_native_balanced`.
+Commit-ID archive changes only handoff,not packet/index/source. Post-handoff
+static63/source26checks repeat;root staging/recheck/seal pending. Those initial
+runtime60ba/pointer1be statements are superseded by final steering above.
+
+Prior binding source:60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Records-only
+docs/step5-d29-t2-final is isolated from active verify-step5-d29-integrated-02;
+no writes occurred in that CLI/fidelity tree. Full files/receipts, not selected
+functions,are bound in t2_preparation. This prior identity was superseded by
+accepted production1be,not by an isolated record commit.
+
+Historical parent T2 acceptance: verified662849e/records94244bc merged892b6a1. Both real
 installed-image CPU configs retain7168/8192/128 after with_hf_config; independent
-constructor review reports No findings. Complete integrated files and the6-entry
-controlled-input index are rebound in t2_preparation/. The frozen source is
-verify-step5-t2-limits-01. This closes earlier root integration/image-value/seal
+constructor review reports No findings. That earlier binding used
+verify-step5-t2-limits-01; the final packet supersedes its source identity.
+This closes earlier root integration/image-value
 handoff items below; it does not authorize the16H800/1800s proposal or qualify
 GPU graphs/backend/G3/full serving. Parent evidence is under the position-routing
 task's repairs/test_report_2026-10-23_t2_config.md and review_2026-10-23_t2_config.md.
+
+## D29-T2-FINAL-SOURCE-BINDING (historical60ba packet)
+
+Only existing native task records/T2 metadata changed; production/tests/native4/
+root ledger unchanged. Native1350/1582, task source increment0. Deliverables:
+t2_preparation/provenance.json,execution_proposal.md,resource_proposal.json,
+static_review_receipt.json,hashes.sha256 and task requirements/plan/progress/review/
+test_report/summary handoff. Metadata78447bytes/SHAe535c5c9... and cases
+SHAea353100... are byte-identical to both frozen60ba and accepted662.
+
+Full final hashes: T2
+7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25;
+helper63baf64781a533a72e31b0e622fd99524b3d40acd4149a8552c6b1808266b2ff;
+recipe c7ee4de334cd06c777282fd20979c435588456ca734c5188bfe774aa884a8746.
+Repo8/publication9/parent3/native32 full files bound; all2907 actual Python
+files/backend12/existing53pins agree with complete retained inventory.
+Published platformf037,retained archive/native4 hashes verified locally,
+not rebuilt or accessed remotely. Full constructor/topology/loader/diagnostic
+ASTs remain equal662; full helper/recipe differ. Controlled stdlib plan on real
+complete metadata is equal. Final dispatch test byte equality9974 confirms
+d0dfcdb5 duplicate cleanup without source behavior inference.
+
+Integrated expert observer records native apply operands and backend reads
+quant/defer-input attributes under diagnostics. Its collective observer enters
+bound-profile policy observation when FRONTIER_STEP5_PROFILE_MANIFEST is inherited,
+but controlled T2 supplies no manifest/runtime_policy. Proposal clean shell now
+unsets it, preserves existing routing_input_file=None and does not invoke helper
+parse_args/run_probe/new routing or compute-context APIs. This retains the approved
+controlled mode; no new formula/tolerance/backend forcing or qualification.
+Worker wrapper is not invoked; reused pre-Python driver recipe is unchanged.
+
+Static source/export/schema/input/native4/AST7/bash3/resources PASS in
+/data/ycfeng/tmp/d29-t2-final-static-preindex.log. Root final native-position16PASS/
+native-config2PASS are reported evidence, not reruns or GPU proof. Historical
+actual-image7168/8192/128 CPU values remain CPU-only. Exact static commands,
+full hash comparisons, selected evidence and changed paths are recorded below
+in the existing test report/review/progress.
+
+Records commit43c2947c6d08b699d5a1efc1602117ba87850772 changes11 existing task
+paths only. Postcommit26 full bound repository/receipt/input/native snapshot
+files byte-identical60ba,63/63checksums,production/test diff0 and clean worktree
+PASS in /data/ycfeng/tmp/d29-t2-final-postcommit-equivalence.log. Packet index
+SHA256a4bed10cd7b0189153f9bf5d1c1886dafd6d64fff4867612adf9cf9d1dd20e15.
+Final handoff update changes only progress/review/report/summary, not packet or
+runtime source identity; post-handoff equivalence is checked again.
+
+Remaining: root final packet acceptance/sealing and independent integration
+readiness, explicit resource/run authorization/finite collection coordination,
+worker/mount/rendezvous/output/retention/source/library/config/backend/memory
+receipts and GPU NONE/PW/FULL/MRv2/full-backend/G3/state/transfer/E2E criteria.
+16H800/two nodes/1800s8GPUh remains UNAPPROVED. No Torch/vLLM import/config
+construction/accepted suite rerun,GPU/platform/auth/quota/cloud/SSH/Docker/network/
+push/delegation action occurred in this records task.
 
 TaskID: **D29-NATIVE-IMPLEMENTATION**. Approved native19 implementation is complete
 on feat/step5-position-native. Commits: e48cdc0 (early native interface/source

@@ -3,13 +3,83 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root final-revision steering binds production1be,not prior60ba or docs commit; distinguish P2 acceptance from runtime proof. |
+| 2026-10-23 | Review intended04 pointers/pending staging and read-only26source equality; exact incremental/retained quota explanation in existing test report. |
 | 2026-10-22 | Close all four design findings after c9e9274; correct the proxy path and record parent budget verification. |
 | 2026-10-22 | Record four independent design findings and assign corrections before scope approval. |
 | 2026-10-23 | Record four implementation-review repairs, CPU evidence and unverified live boundaries. |
 | 2026-10-23 | Review controlled T2 input schema/provenance and execution proposal statically; no source/CPU acceptance rerun. |
 | 2026-10-23 | Review two-file engine-limit flow, host regressions and85 gross delta; actual-image review remains root-owned. |
+| 2026-10-23 | Review records-only final source60ba binding, full-file comparison and controlled helper obligations; no runtime execution. |
 
-## D29-T2-ENGINE-LIMITS scoped self-review
+## D29-T2-TARGET-POINTERS static review
+Original native owner reviews existing11record paths only,isolated branch at
+2adbf9f2. Read-only04HEAD1be91bad/disk/Git matches all26bound60bafiles; current
+04packet differs from delivered native records. Corrected REPO/mount/frozen
+pointers select04as intended root staging target,not a currently staged packet.
+Runtime60ba,checkout1be91bad and records revisions are explicitly distinct.
+This sentence records the initial pointer-only stage,now superseded by root's
+final revision steering:runtime and inspected checkout both immutable1be91bad,
+records revision distinct,60ba retained as prior history. Final1be changes production
+quantization_manager outside26;full tree/commit identity is bound,not record-only.
+Neither live03/04nor02written. Root now reports P2 re-review No findings/196PASS;
+no GPU/runtime acceptance follows. Accounting settled via exact original/base diffs
+in test report; scope receipt unchanged/native1350/1582. Existing63-entry hash
+recipe/receipt refreshed,controlled manifest unset/input/native4/resource limits
+unchanged. Root must stage11records,repeat26check and seal; no runtime/launch
+approval or extra agents/suites/network/platform actions.
+
+Initial pointer-only static result at8c57df44:63/63checksums,57unchanged nonpacket hashes,04bound26,
+schema/AST/bash PASS. Index7dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5.
+No additions/deletions to code/native inputs. Deliver existing11record paths;
+root retains post-activeCPUgate staging/final-source/runtime obligations.
+
+Final steering source=immutable1be91bad/treea5cb27c3e26943f0dfa638301b3564fb2427d56d.
+Actual production quantization_manager fullSHA44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83
+differs prior60ba. Full tree/commit binding prevents calling1be records-only
+because26native-bound files match. Root P2No findings/196PASS are reported
+CPU/source evidence,not rerun or GPU acceptance. Finish all pointer/revision
+edits before one final index regeneration. Staging04planned after activeCPUgates;
+not already present. Live03/04untouched,no code/budget/runtime approval change.
+
+Final static checks completed after one final index refresh:final1be/tree/actual
+production SHA,26full files/full-helper,63checksums,57nonpacket hashes unchanged,
+inventory2907/12/53/native4,existing schema/AST/bash PASS. Final index
+1e36d25e3fe8c41a4f2e7e04f2df7d352fd9b474d5aa34c3bda6bc92de5c97ca.
+Packet now fixed;subsequent archive edits do not alter its bytes. Native1350/1582,
+11record paths only,no code/live03/04write;staging remains planned afterCPUgates.
+
+## D29-T2-FINAL-SOURCE-BINDING static review (historical)
+
+Reviewer: original native owner, no delegated reviewer. Scope: existing native
+task records/T2 preparation only, isolated docs/step5-d29-t2-final based on
+60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Active integrated-02 CLI/fidelity
+worktree is never written/checkouts/commits performed there.
+
+| Requirement | Inspected evidence and result | Boundary |
+| --- | --- | --- |
+| Complete final source binding | Full8 repository files,9publication artifacts,3parent artifacts,32native files hashed; all actual2907 Python bytes equal full published inventory,backend12/pins53. Index63 entries PASS. | AST is explanatory only, not identity. No installed import/GPU/runtime attestation. |
+| Constructor continuity | create_native_config/topology/loader/diagnostic AST equal accepted662. T2/native unit full bytes equal662. Full helper/worker recipe differ and are rebound. | Root historical CPU configs and reported16+2CPU checks remain CPU-only; not rerun here. |
+| Reachable integrated helper changes | Native quant/defer-input attribute reads supported by published modular_kernel; expert apply operand retention under diagnostics. Controlled plan on full metadata equals prior plan. | Actual CUDA expert operands/diagnostics still unverified. No new modes/formulas/tests. |
+| Conditional profile branch | Final collectives checks inherited FRONTIER_STEP5_PROFILE_MANIFEST, T2 provides no manifest/runtime_policy; proposal now unsets it in its fresh process. Existing routing_input_file=None prevents new bound-plan branch. | Not a profiler verifier bypass: this separate controlled T2 bundle never supplied profiling inputs. Helper parse_args/run_probe/routing/compute_context not invoked. |
+| Immutable inputs/native4 | Metadata/cases byte-identical60ba and662, official revision/hash/lock unchanged. Native4 export/retained snapshots unchanged, limits7168/8192/128 unchanged. | Controlled/unobserved only, no G3/state tolerance changed. |
+| Publication/resource records | All9 retained publication artifacts hashed; decoded platform manifestf037 and archive hash match. Resource16H800/2nodes1800s8GPUh remains UNAPPROVED. | Local reads only, no registry/network/image/platform operations. |
+| Dispatch merge duplicate | Final dispatch test full bytes equal9974; inspected d0dfcdb5 only duplicate removal. | Equality recorded; no suite rerun/native routing qualification inferred. |
+
+Existing static checks PASS: schema/types/shapes, complete-source hashes, unchanged
+input bytes,AST7,bash-n3 and63 checksums. Raw logs under/data/ycfeng/tmp,
+exact commands in test_report_2026-10-23_native_integration.md. Source/test delta0;
+native budget1350/1582. Root owns packet acceptance/sealing, completed integration
+readiness and actual launch/resource/runtime decisions. Full bound-file equivalence
+to60ba must remain true after the isolated records commit.
+
+Verified after43c2947c:26full bound-file byte equality60ba,63checksums,
+frontier/tests/native4 diff0,only11existing native record paths changed/clean
+PASS. Selected output retained in progress/summary,exact command in test report.
+Final handoff-only update leaves packet/index/source unchanged; no new code
+verification needed.
+
+## D29-T2-ENGINE-LIMITS scoped self-review (historical)
 
 Reviewed a5e5189 against6ebb038: only the two authorized native-owned Python
 files changed,15add/2del script and68add test (85 gross<=100); native19 now1350/1582.

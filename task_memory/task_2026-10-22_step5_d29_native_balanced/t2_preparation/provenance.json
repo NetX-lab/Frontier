@@ -1,8 +1,8 @@
 {
-  "task_id": "D29-T2-ENGINE-LIMITS",
+  "task_id": "D29-T2-TARGET-POINTERS",
   "preparation_task_id": "D29-T2-INPUT-PREPARATION",
   "status": "CONTROLLED_INPUTS_NOT_OBSERVED_NOT_RUN_NOT_LAUNCH_AUTHORIZATION",
-  "accepted_repo_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+  "accepted_repo_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
   "accepted_native_commit": "6827507",
   "native_acceptance_commit": "9495cfb",
   "publication_commit": "67d5b5e",
@@ -26,35 +26,85 @@
   "script_sources": {
     "tests/integration/step5_environment/test_position_cyclic_graph.py": {
       "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
-      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
-      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
+      "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+      "root_acceptance": "Root frozen integrated source; byte-identical to accepted662 T2, CPU-only evidence, no GPU qualification"
     },
     "frontier/profiling/collectives/step5_dispatch_probe.py": {
-      "sha256": "8284363ed6c4090fbd57f5f9c00bac32f0b3183790f56e2c85e452e24bc9afc4",
-      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
-      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
+      "sha256": "63baf64781a533a72e31b0e622fd99524b3d40acd4149a8552c6b1808266b2ff",
+      "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+      "root_acceptance": "Root frozen integrated full file; constructor AST equal to662, full helper changed, no GPU qualification"
     },
     "tests/integration/step5_profiling/run_on_worker.sh": {
-      "sha256": "f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0",
-      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
-      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
+      "sha256": "c7ee4de334cd06c777282fd20979c435588456ca734c5188bfe774aa884a8746",
+      "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+      "root_acceptance": "Full actual recipe file bound; only existing driver-compatibility branch used in proposal, wrapper not invoked"
     }
   },
+  "supporting_repository_sources": {
+    "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "sources": {
+      "tests/unit/test_step5_native_position_cyclic.py": "5afb5cfd80bc9ad848ba1027ded6021cbe840f6e82965cda4f6f7c927d43fafd",
+      "tests/unit/test_step5_dispatch_probe.py": "739a9663e3df3fdf87c69446b67c3b7d9e6caca131c860d325b2c0a82aac4790",
+      "frontier/profiling/collectives/vllm_collective_benchmark.py": "9c3fd1db580bc4f3738e2f1c0a1f8ca1a5ed01afc6a4536c616775be3868372b",
+      "frontier/profiling/common/runtime_identity.py": "1edc3dbbb9b2c5a664a814ae61550d510dd894dc00ba642b7b964eea568e7e28",
+      "frontier/profiling/moe/inputs.py": "baff3d0596da96e1a92ff96f1fd12d90a7519cd82626fb378e9179c723ba6477"
+    },
+    "scope": "Full files, not extracted functions; new bound-profiler dependencies are conditional and not exercised by controlled T2"
+  },
   "native_mechanism_sources": {
+    "vllm/compilation/breakable_cudagraph.py": "c2ebbdcaf9b44e5fd2c9790399e7f6d4840425d66ae7eec138aa320d37d48d00",
+    "vllm/distributed/parallel_state.py": "0e47cff9a89717183bdce6403f0454961848247f51306a0f1dfbe3d6e1b93336",
+    "vllm/engine/arg_utils.py": "a7c3cfd379ba6a3f340071badb0029acf9c6e1dbfa59825c816c75bbff0bedfb",
+    "vllm/envs.py": "6d05d31ea62e752e55b6f569ae48dbb3c4d1aa8fe76b61736abe31e561f45362",
+    "vllm/forward_context.py": "7d9f19ad2797fc8c9fdfdef3f3d739156702d2f6a6d584f4391f7875f7011930",
     "vllm/models/step5/nvidia/model.py": "693e24e3cd9e86708a1363d42101eebcbb47c7ea84185bcc88aaf0ad6c189269",
     "vllm/transformers_utils/configs/step5.py": "8577c87ff10a1aac2f14cad49105692121ca86da3e545427211124d42c4aa579",
     "vllm/config/vllm.py": "02ddc04019a0cc3dd60cdf564aa069638667950905019d734d8672521d412511",
     "vllm/model_executor/layers/fused_moe/config.py": "575248839aa351e8a1ab47a0965882b32c35932eb3e6e780271606e5b3451d9d",
     "vllm/model_executor/layers/quantization/fp8.py": "37db0145189cd8870d8ac53a6eeb59ac070af51fe78e933597f51e8948250403",
     "vllm/model_executor/layers/fused_moe/unquantized_fused_moe_method.py": "1ab96e74cce2d1a8540af0eb5518cf8ff77d02c7b770d55c2556cdb34c74bc1c",
-    "vllm/model_executor/layers/fused_moe/layer.py": "ddc92bf76eabaf0465e2dc515b844293c16691bb6e66f92a45e47c4956b6e328"
+    "vllm/model_executor/layers/fused_moe/layer.py": "ddc92bf76eabaf0465e2dc515b844293c16691bb6e66f92a45e47c4956b6e328",
+    "vllm/model_executor/layers/fused_moe/experts/deep_gemm_moe.py": "016ade628799bde9a22d86ad882b6f49c49e938022fa0f787977dd7db0bb50fe",
+    "vllm/model_executor/layers/fused_moe/experts/fallback.py": "eacc78a7d6bf099ea4e311594dcd297e32ce9a02ffb8f6c7610c70ecc59091e3",
+    "vllm/model_executor/layers/fused_moe/experts/triton_deep_gemm_moe.py": "c7209fa5e1ccb184a68b37a0706fc571a76696c2ae79802ddc7f889b1c29684d",
+    "vllm/model_executor/layers/fused_moe/experts/triton_moe.py": "ee6b83b108a0460e6308e35447434165d0778a053aa39f0c6c8ed7f36a3ddbab",
+    "vllm/model_executor/layers/fused_moe/fused_moe_method_base.py": "f8defdd0f8aa1f7a4cb68aca64f9d8e737eb9c65f00fa2d66571704aa1532916",
+    "vllm/model_executor/layers/fused_moe/modular_kernel.py": "82a5d100f42d3df3d20baea4a86e5147d4d5c17e3775ed7b5a1ce4bfb433fe0a",
+    "vllm/model_executor/layers/fused_moe/oracle/fp8.py": "31245dae9406d6beeab9376be89bcda6935c97153436021172015e425c2ac62d",
+    "vllm/model_executor/layers/fused_moe/oracle/unquantized.py": "eb37b993cfdebb70545e8772c7ec2311e53510385781c2e03303143dff4bba7a",
+    "vllm/model_executor/layers/fused_moe/prepare_finalize/naive_dp_ep.py": "3265cd408ccb00db79933bfdc851520954a5e4aa76c2d9bae08b783cd52bc11e",
+    "vllm/model_executor/layers/fused_moe/router/base_router.py": "c909924fcfa461ccdaa6290d215d4d35bd4062fb02feeb23619b234da993f6bf",
+    "vllm/model_executor/layers/fused_moe/router/router_factory.py": "c1b24be354a16ad7914725a1e220c4e4113407aa72502e344c5f47295daf8fef",
+    "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py": "9ee0db5084b41c9fdbc56f432c255c136315fb03e1ffb77cda47637e55abc725",
+    "vllm/model_executor/layers/fused_moe/runner/moe_runner.py": "20b69fe514bebd6723a1378f89a564c8fec4144c30244101f629c3f32c188183",
+    "vllm/model_executor/layers/quantization/utils/quant_utils.py": "d25a4290d9b8530e38a073125ca6122b40054583814198eb5c8306adf21263d7",
+    "vllm/model_executor/model_loader/dummy_loader.py": "ad1c3fea9a60fdd9f31fed97bdb5731f8618e8a4f9b228b0026e21247c45e50e",
+    "vllm/model_executor/model_loader/utils.py": "3091a9f64cbe42ad0e7fc0907fbbcb9197d2d56d5da4008779c5a16d9b8649a6",
+    "vllm/utils/deep_gemm.py": "3fae19d459c220d36eb00f1f4818c07fdfe28c0056c5a48dbee9e907a74b0bc8",
+    "vllm/utils/torch_utils.py": "6dc98f42330625237b9336a291b8b8056c1a6393d5b146a493e5abadbae635b2",
+    "vllm/v1/worker/gpu_worker.py": "dc0c35412670477f73200f935a761091fca455489fd21c665afd95e05b1b8f7e",
+    "vllm/v1/worker/workspace.py": "681c99f19bac3d8c445c887113e61c75754c9ae615530abfe5014e7b7b47ef10"
   },
   "publication_artifacts": {
     "task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json": "561c5a87518cd22b02e8ee47ec396860ad0af84548921874c8f3557e170c32ec",
     "task_memory/task_2026-10-22_step5_position_routing/image_publication/installed_export_receipt.json": "ddcf8119dbccb5028c81df4e148d1caa90399e8ebef2515b5b89eef61276abee",
     "task_memory/task_2026-10-22_step5_position_routing/image_publication/installed_source_sha256.txt": "22631c8a194b5f4e91442f82234b8d0ae7a5615eebf6013e9879a012576682a4",
     "task_memory/task_2026-10-22_step5_position_routing/image_publication/native_installed_sources.json": "b99bc33b7e17f1256e970a93be5698544a2b52c11ab0683029b2c75e18f87a09",
-    "task_memory/task_2026-10-22_step5_position_routing/image_publication/publication_receipt.json": "efda9dbaaeacb2899cc99b3ac9e9fea03a5c28d2b084efc2cd232b0bbd38430f"
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/publication_receipt.json": "efda9dbaaeacb2899cc99b3ac9e9fea03a5c28d2b084efc2cd232b0bbd38430f",
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/emitter_payload.txt": "d1add201d2d01fb0da518aeeaab81352a9fbfd456e6d146346c1bb03d5e2f864",
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/export_payload.txt": "1d62858c08195192d287024a3b9d8b3e7db6f5a46d8fa98aacd2f99307a78701",
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/registry_index.json": "10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d",
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/registry_manifests.json": "d7fa350cad415532798560d63ae94f79d346abd89fa014f47d869d238d986b79"
+  },
+  "actual_installed_source_binding": {
+    "source_count": 2907,
+    "backend_source_count": 12,
+    "serving_pin_count": 53,
+    "verification": "All retained actual Python bytes equal complete native_installed_sources.json; backend12 and existing53pins agree, no native edits",
+    "archive": "/data/ycfeng/tmp/d29_published_sources01/installed_python.tar.gz",
+    "archive_sha256": "b6dd8fdb4d1e6141cb3f75d7ad5b66412dce49874260a25017c2bad49f7af905",
+    "hash_index": "hashes.sha256 binds full relevant source files and complete retained inventory/receipts, not only constructor functions",
+    "runtime_import_or_library_qualification": false
   },
   "approved_design": {
     "path": "/data/ycfeng/Frontier/.worktrees/step5-d24-stage/task_memory/task_2026-10-22_step5_d29_native_balanced/native_design.md",
@@ -205,7 +255,71 @@
       }
     }
   },
-  "frozen_source_worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01",
+  "frozen_source_worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
+  "preparation_worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-t2-final",
+  "source_identity_rule": "Final accepted runtime source is immutable1be91bad431d3bd886de7f5d80c19bd7e6c54a25, not subsequent records commits. Prior60ba is history, not final identity. Final1be includes production quantization_manager changes outside bound26; full commit/tree identity plus bound-file hashes must be preserved. Bound26 equality alone never implies the whole revision was records-only",
+  "prior_native_binding": {
+    "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "records_commit": "2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea",
+    "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02",
+    "superseded_runtime_identity": true,
+    "bound26_byte_equal_to_final": true
+  },
+  "final_production_source": {
+    "commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "git_tree": "a5cb27c3e26943f0dfa638301b3564fb2427d56d",
+    "not_record_only_relative_to_60ba": true,
+    "changed_production_path": "frontier/config/quantization_manager.py",
+    "changed_production_sha256": "44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83",
+    "prior_production_sha256": "319fae30239499ab421c6ed56057e100059a80ce02925015a658b0a2b33a1bcc",
+    "root_reported_p2_review": "Independent re-review closed No findings; parent196PASS, not rerun by native records task",
+    "root_final_cpu_gates": "Strict77/fullunit/main05 RUNNING in immutable04, no result inferred here",
+    "gpu_runtime_qualified": false
+  },
+  "intended_staging_target": {
+    "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
+    "inspected_checkout_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "bound_runtime_source_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "records_preparation_base_revision": "2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea",
+    "records_delivery_revision": "This task's isolated records commit, recorded in progress/summary; not the runtime source revision",
+    "updated_records_staged": false,
+    "staging_owner": "Root plans to stage these11 records into04 after activeCPUgates finish, then repeat26 full-file equivalence to immutable final1be. Packet is not currently staged; live03/04 remain untouched by native owner",
+    "inspection_result": "PASS all26 bound files:04 disk and1be91bad Git bytes equal60ba Git and local bound bytes; current04 packet remains old",
+    "p2_qualification": "Root reports P2 independent re-review No findings/parent196PASS; accepted production source final1be includes this change, but no GPU/runtime qualification follows",
+    "target_write_in_this_task": false,
+    "prior_mount_pointer": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02"
+  },
+  "previous_accepted_binding": {
+    "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+    "frozen_worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01",
+    "script_sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
+    "helper_sha256": "8284363ed6c4090fbd57f5f9c00bac32f0b3183790f56e2c85e452e24bc9afc4",
+    "worker_recipe_sha256": "f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0"
+  },
+  "final_integration_comparison": {
+    "t2_and_native_unit_full_file_equal_to_662": true,
+    "helper_full_file_equal_to_662": false,
+    "worker_recipe_full_file_equal_to_662": false,
+    "constructor_topology_loader_diagnostic_ast_equal_to_662": true,
+    "controlled_probe_plan_same_metadata_output": true,
+    "dispatch_test_byte_equal_to_9974": true,
+    "duplicate_cleanup_commit": "d0dfcdb5",
+    "native_budget_gross": 1350,
+    "native_budget_ceiling": 1582,
+    "new_source_test_changes_in_preparation": 0,
+    "runtime_obligations": [
+      "Fresh controlled T2 shell unsets FRONTIER_STEP5_PROFILE_MANIFEST; this bundle does not supply a bound profiling manifest or observer.runtime_policy",
+      "T2 already sets routing_input_file=None and does not invoke helper parse_args/run_probe or new routing/compute-context methods",
+      "Integrated expert observer records native apply operands under soft diagnostics; native_backend reads actual quant_config.quant_dtype and expects_unquantized_inputs, declared by published modular kernel",
+      "Worker wrapper adds conditional profiling source preflight but remains uninvoked; proposal reuses unchanged driver compatibility branch before Python starts"
+    ],
+    "gpu_qualified": false
+  },
+  "parent_acceptance_artifacts": {
+    "task_memory/task_2026-10-22_step5_position_routing/repairs/t2_config/image_config.json": "62bbbbaa9c4fd4f81c0b8882a891670d7f2d92d847c755b6e66f3ba5403782ab",
+    "task_memory/task_2026-10-22_step5_position_routing/repairs/test_report_2026-10-23_t2_config.md": "3682b5a1f70530775476e8efbbe3e97f5b29e8a6b837ff0d131f6844958aa7b6",
+    "task_memory/task_2026-10-22_step5_position_routing/repairs/review_2026-10-23_t2_config.md": "d9ffb114bc023d2bc2577f76e0936d111c29c025af851ce9fb28499e1014e553"
+  },
   "parent_acceptance": {
     "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
     "review": "D29-T2-ENGINE-LIMITS-REVIEW: No findings",

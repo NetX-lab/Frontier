@@ -3,16 +3,19 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Bind root final production1be/full tree,retain60ba history and planned post-CPUgate04record staging;no code. |
+| 2026-10-23 | Retarget intended root staging04, verify26 actual full files and reconcile exact85incremental/81retained gross. |
 | 2026-10-23 | Record owned CPU, D30, source/image-context and static graph results. |
 | 2026-10-23 | Record reviewer repair red/green/affected checks, exact quota and narrower graph evidence. |
 | 2026-10-23 | Append documentation/input-only T2 static conformance and resource proposal evidence. |
 | 2026-10-23 | Begin two-file engine-limit regression; record red constructor-flow and preserved old controls. |
 | 2026-10-23 | Verify engine-limit actual-entrypoint/helper-body flow and affected175 PASS/15 SKIP; refresh input provenance and exact native budget. |
+| 2026-10-23 | Verify final60ba full-file/source export/proposal binding statically in isolated worktree; no code/runtime work. |
 
 ## Environment and exact commands
-All commands ran in /data/ycfeng/Frontier/.worktrees/step5-position-native.
+Historical implementation commands below ran in /data/ycfeng/Frontier/.worktrees/step5-position-native.
 Prefix: `env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1`.
-Python /data/ycfeng/envs/asyncopd-py312/bin/python,3.12.13; Torch2.9.1+cu128.
+Python /data/ycfeng/envs/asyncopd-py312/bin/python,3.12.13; historical CPU suites used Torch2.9.1+cu128.
 No CUDA/GPU operation was run. Baseline251 PASS is in the interface test report.
 
 ```bash
@@ -392,3 +395,292 @@ triple/hash,AST2,total1350/1582,bash-n2,checksums6/6. First ad-hoc static comman
 failed FileNotFoundError on native_source/forward_context.py because it removed
 vllm/ twice. Inspected actual native_source/vllm path; correcting only this read
 path passed final02. No test/production/artifact byte modification for this error.
+
+## D29-T2-FINAL-SOURCE-BINDING
+
+The source-comparison evidence below is historical. Current intended mount target
+is04 as recorded in D29-T2-TARGET-POINTERS below. The reusable static command reads
+the current provenance pointer rather than hardcoding02. Final steering binds1be;
+former60ba runtime identity below is historical only.
+
+Frozen source60ba4c7569b7c9fd4c8f9f43a16f92249fa76181; prior packet662849e99223c98b9ea0d47d34783c3977cb3282.
+All new commands run in isolated `/data/ycfeng/Frontier/.worktrees/step5-d29-t2-final`,
+branch docs/step5-d29-t2-final. Active integrated-02 CLI/fidelity worktree never
+written/checked out/committed in. Only11 existing native-record paths changed:
+requirements.md,plan.md,progress.md,review.md,summary.md,this report plus
+t2_preparation/{execution_proposal.md,hashes.sha256,provenance.json,
+resource_proposal.json,static_review_receipt.json}. Source/test delta0; native1350/1582.
+Metadata/cases/native4 unchanged; no new file. Stdlib Python3.12.13,asyncopd-py312,
+PYTHONDONTWRITEBYTECODE=1,OMP_NUM_THREADS=1,OPENBLAS_NUM_THREADS=1.
+
+### Full actual file comparison
+| File | accepted662 SHA256 | final60ba SHA256 | Observation |
+| --- | --- | --- | --- |
+| T2 graph script |7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25|same|byte-identical|
+| helper |8284363ed6c4090fbd57f5f9c00bac32f0b3183790f56e2c85e452e24bc9afc4|63baf64781a533a72e31b0e622fd99524b3d40acd4149a8552c6b1808266b2ff|changed full file; constructor AST equal|
+| worker recipe |f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0|c7ee4de334cd06c777282fd20979c435588456ca734c5188bfe774aa884a8746|changed wrapper; driver branch unchanged|
+| native-position unit |5afb5cfd80bc9ad848ba1027ded6021cbe840f6e82965cda4f6f7c927d43fafd|same|byte-identical|
+| dispatch unit |8087f51835dea2ff5723039b69cf7c59f09d9894337d8d43fdebb4e3dedd4f46|739a9663e3df3fdf87c69446b67c3b7d9e6caca131c860d325b2c0a82aac4790|differs662,byte-identical9974 after d0dfcdb5|
+
+Provenance/index bind8full repository files,9publication artifacts,3parent
+artifacts,32actual native files and5original provenance paths. Complete retained
+native inventory SHA256b99bc33b7e17f1256e970a93be5698544a2b52c11ab0683029b2c75e18f87a09;
+pins SHA25622631c8a194b5f4e91442f82234b8d0ae7a5615eebf6013e9879a012576682a4;
+derivation SHA256561c5a87518cd22b02e8ee47ec396860ad0af84548921874c8f3557e170c32ec.
+Actual2907source map agrees/backend12/pins53/native4 unchanged. Published platform
+f037 and archive SHA verified with retained local files only. Complete source
+identity is not replaced by selected-function AST equality or CPU results.
+
+Metadata78447bytes/SHAe535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63;
+cases SHAea35310017b9057a305266a90988db72ab81aaeed0fcf5457ada401e8ec60002.
+Both byte-identical60ba/662; official revision364b3b03/source/lock retained. Graph
+2x17/live16,4;modules physical[6129,1]/[1,17]/[4,4],live[6128,0]/[0,16]/[1,0].
+Limits7168/8192/128/formula/modes/qualification unchanged. Resource16H800/2nodes/
+1800s8GPUh remains UNAPPROVED. No new tolerance/full-serving parity/GPU claim.
+
+Initial source inspection failed git-show128 on new inputs.py assumed present
+at662; verified old tree absence and recorded ABSENT in
+/data/ycfeng/tmp/d29-t2-final-source-inspection02.log, correcting only lookup.
+One tool dispatch aborted before execution due to location shutdown; explicit
+isolated-workdir rerun passed. Records patch attempts failed stale heading
+verification without partial edits; actual file headings reread/reapplied.
+Static-preindex exact inline Python check (tool command) produced7 PASS records
+in /data/ycfeng/tmp/d29-t2-final-static-preindex.log: unchanged2inputs,
+schema/limits,repo8/pub9/parent3,export2907/native32/backend12/pins53/archive/
+platform/native4,constructorAST/controlledplan/AST7/bash3/resources,dispatch9974.
+The reproducible final command below also covers the expanded hash index.
+
+### Final static command (existing schema/hash/AST mechanisms only)
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY' > /data/ycfeng/tmp/d29-t2-final-static-final.log 2>&1
+import ast,base64,hashlib,json,subprocess
+from pathlib import Path
+from types import SimpleNamespace
+repo=Path.cwd();task=repo/'task_memory/task_2026-10-22_step5_d29_native_balanced';packet=task/'t2_preparation';pub=repo/'task_memory/task_2026-10-22_step5_position_routing/image_publication'
+source='1be91bad431d3bd886de7f5d80c19bd7e6c54a25';old='662849e99223c98b9ea0d47d34783c3977cb3282'
+def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+def gitbytes(commit,path):return subprocess.check_output(['git','show',commit+':'+str(path.relative_to(repo))])
+p=json.loads((packet/'provenance.json').read_text());c=json.loads((packet/'cases.json').read_text());r=json.loads((packet/'resource_proposal.json').read_text());s=json.loads((packet/'static_review_receipt.json').read_text())
+assert p['accepted_repo_commit']==r['source_commit']==s['source_commit']==source
+for name in ('cases.json','model_metadata/config.json'):assert (packet/name).read_bytes()==gitbytes(source,packet/name)==gitbytes(old,packet/name)
+engine=Path(p['frozen_serving_limits']['path']);assert sha(engine)==p['frozen_serving_limits']['sha256']
+assert c['engine_limits']=={key:json.loads(engine.read_text())[key] for key in c['engine_limits']}==dict(max_model_len=7168,max_num_batched_tokens=8192,max_num_seqs=128)==r['workload']['engine_limits']==p['inputs']['engine_limits']==s['input_schema']['required_engine_limits']
+assert [len(x['positions']) for x in c['graph']]==[17,17] and [sum(not y for y in x['mask']) for x in c['graph']]==[16,4]
+assert [[len(x['positions']) for x in y['dp']] for y in c['modules']]==[[6129,1],[1,17],[4,4]]
+assert [[sum(not z for z in x['mask']) for x in y['dp']] for y in c['modules']]==[[6128,0],[0,16],[1,0]]
+for x in c['graph']+[x for y in c['modules'] for x in y['dp']]:assert len(x['positions'])==len(x['mask']) and all(type(y)is int and 0<=y<7168 for y in x['positions']) and all(type(y)is bool for y in x['mask'])
+files={name:row['sha256'] for name,row in p['script_sources'].items()};files.update(p['supporting_repository_sources']['sources']);files.update(p['publication_artifacts']);files.update(p['parent_acceptance_artifacts'])
+for name,h in files.items():assert sha(repo/name)==h and (repo/name).read_bytes()==gitbytes(source,repo/name)
+root=Path(p['actual_source_root']);actual={str(x.relative_to(root)):sha(x) for x in sorted((root/'vllm').rglob('*.py'))}
+inventory=json.loads((pub/'native_installed_sources.json').read_text());export=json.loads((pub/'installed_export_receipt.json').read_text());publication=json.loads((pub/'publication_receipt.json').read_text())
+assert len(actual)==2907 and actual==inventory['sources']
+for name,h in p['native_mechanism_sources'].items():assert actual[name]==h
+for name,h in export['backend_source_hashes'].items():assert actual[name.replace('.','/')+'.py']==h
+pins=(pub/'installed_source_sha256.txt').read_text().splitlines();assert len(pins)==53 and len(export['backend_source_hashes'])==12
+for line in pins:
+    h,path=line.split(None,1);assert actual['vllm/'+path.removeprefix(p['installed_native_root']+'/')]==h
+assert p['image']==inventory['image']==export['image']==publication['final_image']
+assert sha(Path(p['actual_installed_source_binding']['archive']))==export['archive_sha256']
+manifest=next(x for x in json.loads((pub/'registry_manifests.json').read_text()) if x['Descriptor']['digest']==publication['platform']['digest']);assert hashlib.sha256(base64.b64decode(manifest['Raw'])).hexdigest()==p['image'].split('@sha256:')[1]
+for name,h in json.loads((pub/'derivation_manifest.json').read_text())['derived_source_sha256'].items():assert actual[name]==h==sha(task/'native_source'/name)
+helper=repo/'frontier/profiling/collectives/step5_dispatch_probe.py';trees=[ast.parse(gitbytes(old,helper)),ast.parse(helper.read_text())]
+for name in ('create_native_config','expected_topology','validate_launcher','load_native_layer','diagnostic_scope'):assert len({ast.dump(next(n for n in t.body if getattr(n,'name',None)==name),include_attributes=False) for t in trees})==1
+plans=[]
+for t in trees:
+    ns=dict(json=json,LAYERS=((3,'fp8',4288),(88,'bf16',8256)));body=[n for n in t.body if getattr(n,'name',None) in ('expected_topology','probe_plan')];exec(compile(ast.Module(body=body,type_ignores=[]),str(helper),'exec'),ns)
+    plans.append(ns['probe_plan'](SimpleNamespace(model_path=packet/'model_metadata',tensor_parallel_size=8,data_parallel_size=2,gpus_per_node=8,tokens_per_dp_rank=(6129,1),disable_custom_all_reduce=False,routing_input_file=None)))
+assert plans[0]==plans[1] and plans[1]['topology']['world_size']==16
+for name in files:
+    if name.endswith('.py'):ast.parse((repo/name).read_text())
+blocks=(packet/'execution_proposal.md').read_text().split('```bash\n')[1:];assert len(blocks)==2 and 'unset FRONTIER_STEP5_PROFILE_MANIFEST' in blocks[0] and 'REPO='+p['frozen_source_worktree'] in blocks[0]
+for block in blocks:subprocess.run(['bash','-n'],input=block.split('```')[0],text=True,check=True)
+subprocess.run(['bash','-n',str(repo/'tests/integration/step5_profiling/run_on_worker.sh')],check=True)
+assert not r['suggested_allocation']['approved'] and r['topology']['total_gpus']==16 and r['suggested_allocation']['wallclock_seconds']==1800 and r['suggested_allocation']['max_gpu_hours']==8
+assert (repo/'tests/unit/test_step5_dispatch_probe.py').read_bytes()==subprocess.check_output(['git','show','9974acdb:tests/unit/test_step5_dispatch_probe.py'])
+subprocess.run(['sha256sum','-c','hashes.sha256'],cwd=packet,check=True)
+assert len((packet/'hashes.sha256').read_text().splitlines())==63
+print('PASS full-source/export/backend12/pins53/native4/input-bytes/schema/constructor-plan/AST7/bash3/63checksums; no Torch/vLLM/GPU runtime')
+PY
+git diff --check
+```
+Run this exact block without executing any proposal launch command. Log retention
+is under/data/ycfeng/tmp. Initial packet6checksums PASS; expanded63checksums PASS
+in d29-t2-final-checksums.log. Existing index SHA256
+a4bed10cd7b0189153f9bf5d1c1886dafd6d64fff4867612adf9cf9d1dd20e15.
+
+Observed final documented block: PASS in d29-t2-final-static-final.log;63/63
+checksums and all assertions above. AST7/bash3/whitespace PASS. Precommit26 bound
+repository/publication/parent/input/native snapshot files equal60ba; only11
+existing native-record files changed. First command extraction split on an
+embedded triple-backtick string literal and truncated heredoc (bash1); extraction
+was corrected to the line-delimited closing fence, with no code/packet byte change.
+Final documented command PASS; not a runtime or accepted-suite rerun.
+
+New runtime obligation: clean controlled shell unsets inherited
+FRONTIER_STEP5_PROFILE_MANIFEST because final collective observer conditionally
+imports bound-profiler policy diagnostics and T2 supplies no manifest/runtime_policy.
+Existing routing_input_file=None stays; helper parse_args/run_probe/new routing/
+compute-context APIs are not invoked. New expert operand retention and actual
+quant/defer-input reads are soft but runtime UNVERIFIED. No check criteria are
+disabled; no new profiler input mode or numerical fit. Worker wrapper is uninvoked;
+reused driver recipe unchanged. Full source identity stays60ba after records commit.
+
+Remaining: root packet acceptance/seal/readiness, explicit resource/run approval,
+real finite-unit/mount/rendezvous/retention/source/import/library/backend/config/
+memory/graph/MRv2/G3/state evidence. Root16+2CPU results and historical real-image
+7168/8192/128 CPU values are cited observations, not reruns/GPU proof. No native
+runtime/accepted suite rerun/network/platform/GPU operation by this records task.
+
+### Historical60ba postcommit equivalence command and result
+Records commit43c2947c6d08b699d5a1efc1602117ba87850772. Exact command:
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY' > /data/ycfeng/tmp/d29-t2-final-postcommit-equivalence.log 2>&1
+import hashlib,json,subprocess
+from pathlib import Path
+source='60ba4c7569b7c9fd4c8f9f43a16f92249fa76181';repo=Path.cwd();task=Path('task_memory/task_2026-10-22_step5_d29_native_balanced');packet=task/'t2_preparation';p=json.loads((packet/'provenance.json').read_text())
+paths=list(p['script_sources'])+list(p['supporting_repository_sources']['sources'])+list(p['publication_artifacts'])+list(p['parent_acceptance_artifacts'])+[str(task/'native_source'/x) for x in json.loads(Path('task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json').read_text())['derived_source_sha256']]+[str(packet/'cases.json'),str(packet/'model_metadata/config.json')]
+assert len(paths)==26
+for path in paths:assert Path(path).read_bytes()==subprocess.check_output(['git','show',source+':'+path]),path
+subprocess.run(['git','diff','--exit-code',source,'HEAD','--','frontier','tests','Dockerfile'],check=True)
+subprocess.run(['git','diff','--exit-code',source,'HEAD','--',*paths],check=True)
+changed=subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines();assert len(changed)==11 and all(path.startswith(str(task)+'/') for path in changed)
+assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+assert p['accepted_repo_commit']==source
+subprocess.run(['sha256sum','-c','hashes.sha256'],cwd=packet,check=True)
+print('RECORD_COMMIT',subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
+print('SOURCE_IDENTITY',source)
+print('INDEX_SHA256',hashlib.sha256((packet/'hashes.sha256').read_bytes()).hexdigest())
+print('PASS26 full bound-file bytes identical frozen source after record commit;63checksums;11native-record-only paths;no frontier/tests/native4 changes;clean')
+PY
+```
+Expected/observed:26full files byte-identical60ba,63checksums PASS,11native-record
+paths only,production/tests/native4 diff0,clean; runtime source60ba/indexSHAa4bed10c...
+unchanged. Re-execute this exact documented block after final handoff-record commit;
+packet was unchanged at that historical handoff;final steering supersedes its
+60ba-runtime assertion. Do not rerun the historical assertion against current1be;
+use the current target/source recipe below instead.
+
+## D29-T2-TARGET-POINTERS
+
+Records-only follow-through on isolated docs/step5-d29-t2-final,starting docs HEAD
+2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea. Intended staging target04 was inspected
+read-only at1be91bad431d3bd886de7f5d80c19bd7e6c54a25. All26 full bound files
+equal04disk,1be91badGit,local bound files and60baGit. Neither04 nor02 is modified.
+Runtime source identity remains60ba4c7569b7c9fd4c8f9f43a16f92249fa76181;
+checkout1be91bad and eventual delivered docs commit are distinct revisions.
+These initial pointer-stage statements are historical,superseded by root final
+steering below:runtime/checkout immutable1be,prior60ba history,docs distinct.
+Updated11native records are NOT yet in04; root will stage and repeat26byte check
+before mounting after activeCPUgates. Root now reports P2review No findings/
+parent196PASS;not rerun here or GPU/runtime proof. Native1350/1582/source0.
+
+### Exact85incremental versus81retained accounting
+Inspected full original diff6ebb038->a5e5189 and locked baseline1aee0af diffs:
+```bash
+git diff --numstat 6ebb038 a5e5189 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+git diff 6ebb038 a5e5189 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+git diff --numstat 1aee0af 6ebb038 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+git diff --numstat 1aee0af a5e5189 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+```
+| Existing owned path | Original step add/delete | Step gross | Locked-base before add/delete | Locked-base after add/delete | Retained gross increase |
+| --- | --- | --- | --- | --- | --- |
+| graph script |15/2|17|293/0|306/0|13|
+| native-position unit |68/0|68|245/0|313/0|68|
+| Total |83/2|85|538/0|619/0|81|
+
+Both files are absent from locked baseline1aee0af. The original step replaces two
+lines previously introduced by this native stream: create_native_config(args)
+and direct external_launcher EngineArgs construction. Its15added lines include
+the two replacement lines; deleting the old2lines reduces previously retained
+native additions. Per-stepgross=83+2=85,locked-base growth=83-2=81. Difference4
+is the two deletions counted positively in step gross but negatively in retained
+growth,not omitted source edits. All other baseline/native4 paths are unchanged
+by a5e5189,so1269+81=1350. Original step reserve<=100 and total<=1582 both hold.
+No scope receipt change; this single report records the reconciliation.
+
+### Read-only target/source and index recipe
+Exact target inspection/accounting log:/data/ycfeng/tmp/d29-t2-target-inspection.log.
+It includes all26file hashes,04packet-before hashes,and complete original diff.
+Current04has old provenanceb91d28d4...,proposale74453d7...,indexb0748012...,
+resourcea52f71fc...,not the accepted2adbf9f2packet. Pointers now select04 only
+as root's intended future staged mount; no claim records are already present.
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY' > /data/ycfeng/tmp/d29-t2-target-static.log 2>&1
+import hashlib,json,subprocess
+from pathlib import Path
+repo=Path.cwd();task=Path('task_memory/task_2026-10-22_step5_d29_native_balanced');packet=task/'t2_preparation';p=json.loads((packet/'provenance.json').read_text());r=json.loads((packet/'resource_proposal.json').read_text());s=json.loads((packet/'static_review_receipt.json').read_text())
+target=Path(p['frozen_source_worktree']);revision=source='1be91bad431d3bd886de7f5d80c19bd7e6c54a25';prior='60ba4c7569b7c9fd4c8f9f43a16f92249fa76181'
+assert str(target)=='/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04'
+assert subprocess.check_output(['git','-C',str(target),'rev-parse','HEAD'],text=True).strip()==revision
+assert p['accepted_repo_commit']==r['source_commit']==s['source_commit']==source
+assert p['prior_native_binding']['source_commit']==prior
+assert p['source_identity_rule'].startswith('Final accepted runtime source is immutable1be91bad')
+assert p['final_production_source']['git_tree']==subprocess.check_output(['git','rev-parse',source+'^{tree}'],text=True).strip()
+q=p['final_production_source']['changed_production_path'];raw=subprocess.check_output(['git','show',source+':'+q]);assert raw==(target/q).read_bytes() and hashlib.sha256(raw).hexdigest()==p['final_production_source']['changed_production_sha256']
+assert raw!=subprocess.check_output(['git','show',prior+':'+q]) and p['final_production_source']['not_record_only_relative_to_60ba']
+assert p['intended_staging_target']['inspected_checkout_revision']==r['intended_checkout_revision']==s['intended_target_review']['checkout_revision']==revision
+assert not p['intended_staging_target']['updated_records_staged'] and not s['intended_target_review']['updated_packet_present']
+assert r['mount_proposal'][0]['source']==r['mount_proposal'][0]['target']==str(target)
+paths=list(p['script_sources'])+list(p['supporting_repository_sources']['sources'])+list(p['publication_artifacts'])+list(p['parent_acceptance_artifacts'])+[str(task/'native_source'/x) for x in json.loads(Path('task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json').read_text())['derived_source_sha256']]+[str(packet/'cases.json'),str(packet/'model_metadata/config.json')]
+assert len(paths)==26
+for path in paths:assert Path(path).read_bytes()==(target/path).read_bytes()==subprocess.check_output(['git','show',source+':'+path])==subprocess.check_output(['git','show',prior+':'+path])
+for name,row in p['script_sources'].items():assert row['source_commit']==source and hashlib.sha256((target/name).read_bytes()).hexdigest()==row['sha256']
+for name in ('provenance.json','execution_proposal.md','hashes.sha256','resource_proposal.json'):assert (target/packet/name).read_bytes()!=(packet/name).read_bytes()
+index=(packet/'hashes.sha256').read_text().splitlines();assert len(index)==63
+for row in index:
+    h,name=row.split(None,1);assert hashlib.sha256((packet/name).read_bytes()).hexdigest()==h
+blocks=(packet/'execution_proposal.md').read_text().split('```bash\n')[1:];assert len(blocks)==2 and 'REPO='+str(target) in blocks[0] and 'unset FRONTIER_STEP5_PROFILE_MANIFEST' in blocks[0]
+for block in blocks:subprocess.run(['bash','-n'],input=block.split('```')[0],text=True,check=True)
+assert not r['suggested_allocation']['approved'] and r['topology']['total_gpus']==16 and r['suggested_allocation']['wallclock_seconds']==1800 and r['suggested_allocation']['max_gpu_hours']==8
+print('PASSfinal1be/full-tree/not-record-only/04bound26/full-helper/prior60ba/old-target-packet/63hashes/bash2/resource-unapproved; no target writes/runtime')
+PY
+```
+Index regeneration uses the existing recipe: packet6,repo8,pub9,parent3,native32,
+original provenance5 full-file hashes,63lines. Only packet hashes may change;
+source/publication/original hashes stay unchanged. Reusable final static command
+above also checks existing schema/AST/export2907/backend12/pins53/native4.
+Environment remains stdlib Python3.12.13 with no Torch/vLLM imports,suites,network
+or runtime. Root stage/seal/readiness/P2review and resource/run authorization remain.
+
+Observed: both documented static blocks PASS,existing63checksums and04bound26
+PASS,AST/schema/bash PASS. 57nonpacket hashes unchanged from2adbf9f2;only4packet
+document hashes changed,model_metadata/cases unchanged. Existing11record paths
+only,code0/native1350/1582. No target writes. One records patch failed stale-line
+verification and applied no partial edits; reread exact heading/reapplied.
+Preparation docs base was resolved with git rev-parse2adbf9f2 rather than inferred.
+Current delivery packet hashes/index are recorded in summary;commit is isolated,
+not runtime source identity. Root must stage and repeat final26byte check.
+
+Initial8c57df44index SHA2567dc1467cd199c8ab7c639678d0ca914a21dc3e96289edba8eafee9dafef419d5,superseded by final1be packet.
+Both existing documented blocks rerun after receipt/index refresh PASS. Final63
+checksums plus target26/schema/shell conformance PASS;source/native4/metadata/
+cases/publication/resource triple unchanged. Expected source/code delta0 observed;
+native1350/1582 unchanged. Final checkout/records/source revisions remain distinct.
+
+### Final accepted production revision steering
+Root freezes production1be91bad431d3bd886de7f5d80c19bd7e6c54a25,Git tree
+a5cb27c3e26943f0dfa638301b3564fb2427d56d. Prior60ba remains binding history;
+8c57df44was initial pointer correction,not final source. Runtime/04checkout
+now both1be;records commit differs. Actual quantization_manager.py finalSHA
+44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83 differs
+priorSHA319fae30239499ab421c6ed56057e100059a80ce02925015a658b0a2b33a1bcc.
+It is production change outside26,so final1be is NOT records-only. Immutable
+commit/tree identity is explicit;26/full-helper hashes supplement it,not proof
+the rest of the revision was unchanged. This owner changes no production code.
+
+Root reports P2re-review No findings/parent196PASS,not rerun here. Strict77/
+fullunit/main05 are running in live04,no completion inferred. Live03/04 untouched.
+Packet staging is planned by root AFTER CPUgates finish,not already present.
+Runtime/GPU/backend/G3/resource/allocation approvals unchanged. Finish all packet
+pointer/revision edits then regenerate existing63index once;budget1350/1582.
+
+Observed after final pointer/revision edits and single index refresh:both current
+documented blocks PASS in d29-t2-final-static-final.log/d29-t2-target-static.log.
+Final1be commit/tree/actual production SHA bound;26full files/full helper match
+04disk/finalGit/prior60ba;57nonpacket hashes unchanged,63checksums PASS,full
+inventory2907/backend12/pins53/native4/schema/AST/bash/resources unchanged.
+Index SHA2561e36d25e3fe8c41a4f2e7e04f2df7d352fd9b474d5aa34c3bda6bc92de5c97ca.
+Source/test0/native1350/1582,only11existing record paths. No additional packet
+edit after index refresh. All check commands retained above;no suites/runtime/
+network/live03/04write. Root post-CPUgate staging and final recheck remain planned.

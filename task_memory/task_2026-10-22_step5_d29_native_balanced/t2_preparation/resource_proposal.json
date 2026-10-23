@@ -1,6 +1,9 @@
 {
-  "task_id": "D29-T2-INPUT-PREPARATION",
+  "task_id": "D29-T2-TARGET-POINTERS",
   "status": "PROPOSAL_ONLY_NOT_APPROVED_NOT_SUBMITTED",
+  "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+  "intended_checkout_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+  "records_staging_status": "NOT_YET_STAGED: root plans staging in04 after activeCPUgates finish and verifies bound26 against immutable final1be. Records delivery commits do not replace runtime1be; prior60ba is history. Final1be includes production P2, not a records-only revision",
   "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
   "topology": {
     "gpu_type": "H800",
@@ -96,10 +99,10 @@
   },
   "mount_proposal": [
     {
-      "source": "/data/ycfeng/Frontier/.worktrees/step5-position-native",
-      "target": "/data/ycfeng/Frontier/.worktrees/step5-position-native",
+      "source": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
+      "target": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
       "mode": "read-only",
-      "purpose": "Existing T2 and Frontier component imports plus controlled metadata/cases"
+      "purpose": "Intended root staging target at final production1be91bad:26 bound bytes unchanged from prior60ba; updated packet NOT PRESENT YET. Root plans staging afterCPUgates, repeats26/full-helper checks then seals. P2 re-review closed No findings/parent196PASS; no runtime or allocation approval"
     },
     {
       "source": "ROOT_CHOSEN_FRESH_LOCAL_TEMP_DIRECTORY",
@@ -112,8 +115,10 @@
     "Root independent acceptance/sealing and implementation readiness",
     "Root explicit16-H800 resource/run authorization and existing launcher lifecycle/finite-collection coordination",
     "Root fresh output/rendezvous/node placement and retained-output location",
-    "Root integrate native a5e5189 and PRICING verified optional helper keyword; seal source/inputs and actual-image config check",
+    "Root finish running04CPUgates,stage updated records,repeat bound26/full-helper check and seal immutable source1be identity; no CPU-to-GPU qualification",
     "Actual worker import/backend/CUDA compatibility/rank reports remain UNVERIFIED"
   ],
-  "no_cloud_access_in_preparation": true
+  "no_cloud_access_in_preparation": true,
+  "controlled_t2_environment": "FRONTIER_STEP5_PROFILE_MANIFEST unset; routing_input_file=None already supplied by T2; no profiling manifest/mode extension",
+  "resource_proposal_changed": false
 }

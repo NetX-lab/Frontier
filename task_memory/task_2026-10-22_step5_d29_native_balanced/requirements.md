@@ -3,10 +3,13 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root steering freezes accepted production1be91bad; replace final runtime identity60ba, retain prior history and planned post-CPUgate04record staging. |
+| 2026-10-23 | Root directs records-only T2 target-pointer correction to intended integrated-04 staging and exact85/81 gross reconciliation. |
 | 2026-10-23 | Record native19 implementation allocation. |
 | 2026-10-23 | Authorize four reviewer repairs within the unchanged native19/1582 allocation. |
 | 2026-10-23 | Authorize T2 controlled-input preparation only, with no code changes or launch approval. |
 | 2026-10-23 | Root authorizes D29-T2-ENGINE-LIMITS in exactly two existing owned files, <=100 additional gross. |
+| 2026-10-23 | Authorize records-only final T2 binding at integrated60ba4c in an isolated worktree; active CLI worktree remains untouched. |
 
 ## [Original Request]
 TaskID D29-NATIVE-IMPLEMENTATION. Implement D29-SCOPE-107-10000 native19,
@@ -116,6 +119,64 @@ is consumed read-only for host checks, not copied/edited or imported into native
 Root integrates/seals that dependency before actual-image validation/launch.
 Current/peer controlled probe_plan branches were checked equal with actual retained
 metadata and routing_input_file=None. No observed-input semantics are substituted.
+
+## [Original Request] D29-T2-FINAL-SOURCE-BINDING
+Original native owner updates metadata/records only. Create isolated
+/data/ycfeng/Frontier/.worktrees/step5-d29-t2-final from frozen root integration
+60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Never write, checkout or commit in
+/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02 where CLI/fidelity
+work is running. Own only existing native T2 preparation metadata/records and
+task handoff; no production/test/root-ledger edits or GPU/platform/Docker/network.
+
+Bind complete actual scripts/helper/relevant sources, publication receipts and
+hash index to60ba4c rather than earlier662849e. Preserve model_metadata/cases bytes,
+7168/8192/128, official revision364b3b03, published imagef037,2907-source export,
+12backend sources and53pins; native4 and approved formula/modes/qualification stay.
+Compare accepted662-to60ba create_native_config AST and relevant actual sources
+to identify new runtime obligations, never use function-only source identity or
+call CPU config/regressions GPU qualification. Root restored native T2 via892b6a1;
+native quota1350/1582. d0dfcdb5 removes only a duplicate dispatch test, restoring
+file bytes to9974. Root reports native-position16PASS/native-config2PASS; previous
+published-image checks preserve final values. These results are carried evidence,
+not reruns in this records task.
+
+Recheck full hashes, metadata/cases preservation, checksums/schema/shell syntax
+using existing static mechanisms; no accepted large suite reruns. Resource
+proposal remains UNAPPROVED16H800/two nodes/30min/8GPUh, no allocation/auth/query.
+Persist English exact changed-path/hash comparison/verification/runtime limits,
+commit only isolated records and explicitly verify relevant file equivalence
+afterward. Runtime source identity remains60ba even when task docs are committed.
+
+## [Original Request] D29-T2-TARGET-POINTERS
+Independent read-only verification accepts63/63checksums,all26source bytes
+60ba==ca135==disk,2907/12/53/native4 publication chain and controlled
+FRONTIER_STEP5_PROFILE_MANIFEST unset. Correct only existing11native record paths,
+source increment0. Intended mount/REPO/frozen_source_worktree becomes
+/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04,current HEAD
+1be91bad431d3bd886de7f5d80c19bd7e6c54a25. Verify bound26 against04; distinguish
+runtime source60ba,inspected checkout and docs delivery revisions. Updated records
+will be staged by root and are NOT currently present in04. Do not write04 or02.
+P2 quantization-manager/additional tests/docs remain under independent review;
+bound26should be unaffected,no final runtime qualification/allocation approval.
+
+Inspect exact original two-file diff to explain85incremental gross vs native
+locked-base retained increase81 in one existing record,without guessing.
+Regenerate existing hash index/static receipts via existing recipe,verify63all.
+Commit records and return hashes/diff/commands; native stays1350/1582. Root merges
+these11records,performs final26byte check and freeze. No agents/platform/network/
+accepted suite reruns.
+
+### [Original Request] D29-T2-TARGET-POINTERS final revision steering
+P2 independent re-review closed No findings,parent196PASS. Accepted final
+production source is immutable1be91bad431d3bd886de7f5d80c19bd7e6c54a25 in04,
+where strict77/fullunit/main05 run. Do NOT write live03/04. Final1be includes
+production quantization_manager outside26,not records-only. Bind accepted_repo_commit
+and runtime identity to1be,not future docs commit;60ba remains prior binding/history.
+Verify26bytes/full-helper hash as planned,then regenerate index once after all
+pointer/revision edits. Root plans packet staging after04CPUgates finish;do not
+say already staged. Source helper/image/cases unchanged,no code/newqualification/
+budget/allocation change. This steering supersedes60ba-as-final identity in the
+earlier target-pointer request;original words remain historical above.
 
 ## Preserved pre-allocation record (historical)
 

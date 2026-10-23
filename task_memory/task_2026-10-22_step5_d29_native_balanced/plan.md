@@ -3,10 +3,13 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Apply precise runtime identity steering to final production1be; keep60ba historical,planned04 staging and one final index regeneration. |
+| 2026-10-23 | Add records-only intended04 pointers, read-only26-byte verification and exact incremental/retained budget reconciliation. |
 | 2026-10-23 | Establish approved implementation milestones. |
 | 2026-10-23 | Add the explicitly requested four-finding repair and affected verification milestone. |
 | 2026-10-23 | Add input-only T2 preparation; actual launch remains root-owned and unapproved. |
 | 2026-10-23 | Add root-directed two-file engine-limit correction with PRICING helper dependency. |
+| 2026-10-23 | Add isolated records-only final source binding at60ba4c, full-file/hash checks and post-record equivalence. |
 
 1. Native scoped context, outer Step forward and registered factory strategy ->
    actual-source CPU tests, four-file receipt and early interface commit.
@@ -67,6 +70,39 @@ Status at a5e5189: L1/L2 PASS; L3 actual verified PRICING3f54bc6 helper-body flo
 PASS with host dependencies, mixed-commit integration deferred to root to avoid
 peer/central writes. L4 affected175 PASS/15 SKIP, two-path85 incremental gross,
 native19 total1350; local records/input hash refresh follows. No new source slice.
+
+## D29-T2-FINAL-SOURCE-BINDING
+F1 -> {F2,F3} -> F4; all writes confined to native task records/T2 metadata.
+- F1: create authorized isolated docs/step5-d29-t2-final at60ba4c; read actual
+  accepted packet and integrated full files through this checkout/Git objects,
+  without writing the active root CLI/fidelity worktree.
+- F2: compare662-to60ba complete script/helper files and constructor/reachable
+  mechanism AST. Bind full source hashes, retained publication/export/53pins and
+  backend12; identify new controlled-T2 runtime/environment obligations.
+- F3: update source paths/proposal/provenance and existing index, preserve metadata
+  and cases bytes,7168/8192/128 and unapproved16H800/1800s8GPUh. No new semantics,
+  native changes, numeric tolerance or runtime qualification.
+- F4: static full-source/export/hash/schema/shell checks -> English test report,
+  summary/progress/checkpoint -> isolated records commit -> explicitly compare
+  all bound relevant files to60ba after commit. Source identity stays60ba, not
+  the docs commit. No accepted suite reruns or Torch/vLLM/GPU invocation.
+
+## D29-T2-TARGET-POINTERS
+T1 -> {T2,T3} -> T4. All writes restricted to existing11native record paths.
+- T1: read only04 HEAD1be91bad/disk vs runtime60ba bound26files; verify intended
+  target lacks updated packet. Read exact6ebb038->a5e5189two-file diff and
+  locked-base1aee0afdiff to settle85incremental/81retained difference.
+- T2: retarget pointers04,explicit pending root staging after activeCPUgates.
+  Latest steering binds immutable runtime1be91bad/checkout1be;docs revision differs.
+  Retain prior60ba history and actual productionP2/full-tree identity,not record-only.
+  Cite root No findings/196PASS as reported CPU acceptance,not GPU qualification.
+- T3: update one existing report with exact gross table,retain native1350/1582;
+  refresh existing receipts/index with existing hashing/schema/bash mechanisms.
+  Preserve metadata/cases/native4/settings/limits/resources.
+- T4: finish all pointer/revision docs edits,then regenerate index once;
+  static63/index coverage/04bound26/full-helper/final tree/shell/ownership -> records ->
+  isolated commit -> root final staging/recheck/seal dependency. No04/02writes,
+  suites or runtime.
 
 ## Preserved pre-allocation record (historical)
 

@@ -1,6 +1,36 @@
 {
-  "task_id": "D29-T2-ENGINE-LIMITS",
-  "status": "PASS_STATIC_INPUT_ONLY_NOT_RUN_NOT_LAUNCH_APPROVAL",
+  "task_id": "D29-T2-TARGET-POINTERS",
+  "status": "PASS_STATIC_TARGET_POINTERS_NOT_STAGED_NOT_RUN_NOT_LAUNCH_APPROVAL",
+  "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+  "intended_target_review": {
+    "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
+    "checkout_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "bound_source_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "records_preparation_base": "2adbf9f25108e3cb6d8f1f2a0810de2792acb0ea",
+    "bound26": "PASS04 disk and1be91bad bytes equal60ba/local bound bytes",
+    "updated_packet_present": false,
+    "remaining": "Root finish active04CPUgates,plan record staging,repeat26/full-helper check and seal final1be. P2review No findings/parent196PASS reported; no runtime/allocation approval",
+    "target_written": false,
+    "inspection_log": "/data/ycfeng/tmp/d29-t2-target-inspection.log"
+  },
+  "target_pointer_checks": {
+    "index_recipe": "Existing63entries:packet6/repo8/pub9/parent3/native32/original5; source and publication hashes unchanged",
+    "binding": "Read-only04disk/1be91badGit equal60ba/local for all26boundfiles; packet not yet staged",
+    "accounting": "Exact original step and locked-baseline diffs reconciled in existing test report;85stepgross and81retained increase",
+    "verification_log": "/data/ycfeng/tmp/d29-t2-target-static.log",
+    "status": "Existing recipe revalidates final1be26/full-helper/tree/63hashes/schema/bash after one final revision-index refresh; no target write or runtime"
+  },
+  "final_revision_review": {
+    "runtime_source": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "prior_binding": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "git_tree": "a5cb27c3e26943f0dfa638301b3564fb2427d56d",
+    "production_quantization_sha256": "44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83",
+    "not_record_only": true,
+    "root_p2_evidence": "No findings/parent196PASS, not rerun here",
+    "active_cpu_gates": "Strict77/fullunit/main05 running, no completion inferred",
+    "runtime_qualification": false,
+    "live03_04_written": false
+  },
   "reviewer": "native owner self-check, no extra subagent",
   "environment": {
     "python_executable": "/data/ycfeng/envs/asyncopd-py312/bin/python",
@@ -16,7 +46,7 @@
     "sha256": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
     "revision": "364b3b03fed2477aa0953fe855a2c4c8c48ee3cc",
     "original_max_position_embeddings": 1048576,
-    "engine_limit_constructor_flow": "PASS host actual entrypoint/verified helper body; not actual vllm config or GPU receipt",
+    "engine_limit_constructor_flow": "Historical root image CPU final values PASS; constructor AST unchanged at60ba, no new config/GPU execution",
     "config_or_metadata_changes": false
   },
   "input_schema": {
@@ -69,7 +99,7 @@
       "max_num_seqs": 128
     },
     "engine_source_hash": "7947f58bf37ab0256756faf1ec0613f4dc92101e94ad4a7f596c50ae4a11655e",
-    "graph_and_module_inputs_unchanged": "PASS against aa872fa"
+    "graph_and_module_inputs_unchanged": "Byte-identical cases.json to frozen60ba/accepted662; original controlled frame values retained"
   },
   "existing_static_probe_plan": {
     "status": "PASS executed only existing stdlib source bodies",
@@ -93,13 +123,14 @@
   "provenance_review": {
     "retained_model_bytes": "PASS",
     "prepared_cases_hash": "PASS",
-    "script_and_helper_hashes": "PASS full actual integrated files at662849e; original prepared binding retained as history",
+    "script_and_helper_hashes": "PASS full files at final1be, compared with04disk/Git; unchanged vs prior60ba; constructor AST only explanatory",
     "accepted_publication_artifact_hashes": "PASS",
-    "selected_mechanism_source_hashes": "PASS, not a rerun of accepted full source/CPU suites",
+    "selected_mechanism_source_hashes": "PASS full32 relevant native files; actual complete2907 export/backend12/53pins verified, no accepted suite rerun",
     "resource_dimension_formulas": "PASS raw dimensions only, not measured allocator/backend/collective data"
   },
   "scope": {
-    "production_test_code_edits": 2,
+    "production_test_code_edits": 0,
+    "previous_engine_limit_source_test_edits": 2,
     "native19_previous_accepted_gross": 1269,
     "native19_current_gross": 1350,
     "two_file_incremental_gross": 85,
@@ -124,11 +155,43 @@
     "ast_whitespace_owned_paths_budget": "PASS"
   },
   "remaining": [
-    "Remaining implementation readiness and actual allocation source binding",
+    "Root finish active04CPUgates,stage records,repeat26/full-helper check and seal runtime1be; prior60ba retained as history",
     "Root actual resource/run authorization and finite-collection coordination",
     "Actual worker/mount/rendezvous/output/retention identities",
     "Actual GPU/import/library/backend/runtime/G3 evidence"
   ],
+  "final_source_comparison": {
+    "old_source": "662849e99223c98b9ea0d47d34783c3977cb3282",
+    "final_source": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "t2_native_unit_byte_equal": true,
+    "helper_recipe_byte_equal": false,
+    "constructor_topology_loader_diagnostic_ast_equal": true,
+    "controlled_stdlib_plan_equal_on_actual_metadata": true,
+    "dispatch_test_byte_equal_to_9974_after_duplicate_cleanup": true,
+    "new_reachable_diagnostics": "Expert operand retention and native quant/defer-input reads; diagnostic-only, actual CUDA objects remain UNVERIFIED",
+    "conditional_bound_profile_observer": "Fresh controlled shell unsets FRONTIER_STEP5_PROFILE_MANIFEST, no profile manifest supplied by these inputs",
+    "function_ast_is_final_identity": false
+  },
+  "root_reported_final_checks": {
+    "evidence_origin": "Root task dispatch, not rerun in this preparation",
+    "native_position_passed": 16,
+    "native_config_passed": 2,
+    "gpu_runtime_qualified": false
+  },
+  "final_preparation_checks": {
+    "frozen_source_bytes": "PASS 8 complete repository files,9 publication artifacts,3 parent evidence files",
+    "actual_export": "PASS 2907 Python files against retained inventory; selected32 files/backend12/existing53pins",
+    "archive_platform_manifest": "PASS archive hash and decoded platform manifest SHA256f037; local reads only",
+    "native4": "PASS published hashes equal retained snapshots, no source edit",
+    "input_bytes": "PASS metadata/cases identical to60ba/662; official source/lock/design/engine hashes retained",
+    "input_schema": "PASS graph2x17/live16,4/module3frames/required limits7168,8192,128",
+    "syntax": "PASS 7 Python AST parses,2 proposal bash blocks,existing worker wrapper bash-n",
+    "controlled_plan": "PASS stdlib plan bodies on complete metadata give identical662/60ba output; not runtime or final identity substitute",
+    "resources": "UNCHANGED UNAPPROVED16H800/2nodes/1800s8GPUh",
+    "log": "/data/ycfeng/tmp/d29-t2-final-static-preindex.log",
+    "hash_index": "hashes.sha256 includes packet,full bound repository/native files,publication/parent receipts and original provenance paths",
+    "new_suites_or_runtime": "NONE; no Torch/vLLM import,CPU config construction,GPU or platform operation"
+  },
   "parent_acceptance": {
     "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
     "review": "D29-T2-ENGINE-LIMITS-REVIEW: No findings",
