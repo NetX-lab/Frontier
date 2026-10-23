@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Apply checkpoint corrections: effective111 scope, current acceptance frontier, and final-source verification order. |
 | 2026-10-23 | Record D29-SCOPE-107-10000 approval; start three sole-writer implementation streams with explicit quotas. |
 | 2026-10-23 | Complete all design reviews and parent107-path/9942-line reconciliation; request model/scope decision before implementation. |
 | 2026-10-22 | Remove unsupported exact-NCCL reconstruction prerequisite; require finite explicit model assumptions and subsequent qualification. |
@@ -10,23 +11,49 @@
 | 2026-10-22 | Assign six review findings and three disjoint mandatory design streams; remove unrelated new-policy scope. |
 | 2026-10-22 | Record review and complete-scope dependencies after the first design delivery. |
 
-Dependency: producer/source trace -> design -> independent design review ->
-{count/schema/coverage correction, source-local/collective pricing,
-derived profiling source entry} -> reconciled native/Frontier/profile/fixture
-scope -> user scope decision ->
-implementation and affected regression -> new inputs/native evidence.
+## Current acceptance route
 
-Current frontier: implement YC's approved numerical model and complete scope.
-All native/core/source/finite-pricing/producer design findings are closed.
-`shared_scope.md` and `scope.json` bind107 code/test/config paths,9942 gross lines,
-plus the named size-note and gitlink updates within the approved10000 total.
-D30 is independently integrated4ec5b23. Approval leads to native/source interfaces
-and parallel nonshared core/pricing work, then single-writer shared integration,
-fixture/main/regression checks and fresh source-bound native/profile evidence.
-The finite collection's actual resource/run authorization is settled at readiness.
-`repairs/repair_plan.md` owns current implementation assignments, dependency order,
-change markers and verification. The original analysis below is retained history;
-the approved finite collective_sim model supersedes its open model-choice wording.
+The three implementation streams have delivered their source work. CORE/registry
+and joint producer reviews are closed; PRICING's selected prepare metadata P2 is
+the remaining recorded source finding. Original approval scope.json stays intact.
+Apply repairs/{registry_scope_amendment,core_review_scope_amendment,
+legacy_output_scope_amendment,prepare_metadata_scope_amendment}.json in that order:
+111 effective paths, CORE46/4404, native19/1582, PRICING46/3956; source9942 and
+global10000 gross ceilings are unchanged. requirements.md records YC's authority.
+
+Dependency: prepare metadata repair -> affected checks and independent re-review
+-> final source freeze -> {strict77, full-unit failure/error-set comparison,
+full offline/online actual-main, final T2 source binding, actual per-path accounting}
+-> integration into feat/step5-preview -> package readiness -> resource/run decision
+-> fresh native/profile evidence -> G3 and independent four-metric E2E acceptance.
+
+In parallel now: finish the already-running main04 diagnostic on frozen60ba4c75;
+prepare T2 bindings and reconcile task records. main04 began before review closed
+and cannot substitute for final CLI acceptance. Its source and artifacts stay
+unchanged. Final T2 acceptance must verify the actual final script/helper bytes.
+
+| Actionable subtask | Recorded state / completion condition |
+| --- | --- |
+| Approval, ownership and baseline | Complete; effective111 under existing budgets. |
+| Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
+| Derived image and source receipts | Published and verified; runtime remains separate. |
+| CORE/SOURCE46 | Source review and affected fixture repairs complete. |
+| Registry multiple bindings | Source review and mixed-view repair complete. |
+| PRICING46 | Pending selected prepare precision/source/factor repair and re-review. |
+| Complete integration and final freeze | Pending reviewed repair and all source/docs integration. |
+| Legacy strict77 | 60ba has77/77 PASS; repeat on final frozen production source. |
+| Full-unit failure/error-set gate | Pending final-source comparison with retained baseline and explicit environment evidence. |
+| Fresh fixture and full CLI | fixture03 complete; final offline and online each require6144/1024,2400s and all retained validation checks. |
+| Independent source review | Close remaining P2 on the final exact delta. |
+| T2 final-source binding | Verify final script/helper, input hashes and unchanged engine limits. |
+| Final per-path accounting | Reconcile actual completed deltas against all overlays and owner/global ceilings. |
+| Package/GPU/G3/E2E | Blocked by workflow readiness and separate resource approval; original gates remain. |
+
+D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments
+and verification. Native CPU-gap work remains last. Deferred independent-consumer
+and module-split work is indexed in future.md, outside this acceptance route.
+
+## Historical design notes (superseded by the approved model and route above)
 
 Native design corrections and D30 run independently. Confirm which shared
 interfaces are necessary for the active Step path; avoid unrelated mode work.

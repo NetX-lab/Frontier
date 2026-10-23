@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Reconcile effective111 and four scope overlays; require final-source gates after review closure. |
 | 2026-10-23 | Close scope investigation: preserve both trainer checks; independent public consumer is not a D29 repair prerequisite. |
 | 2026-10-23 | Allocate registry mixed-view P2 inside remaining58; move20 unused caller allowance to its test and investigate independent public binding separately. |
 | 2026-10-23 | Add the existing CORE wrapper's diagnostics persistence to the current repair allocation; authorize immutable development dependency merges. |
@@ -23,25 +24,34 @@ in this directory binds the approval and analysis. Native19 design remains at
 
 Use the retained rows of `../scope.json` (138 rows after removing H11,107 unique
 paths). Sum each path's retained allowances once; do not subtract H11 again.
-For current implementation, apply registry_scope_amendment.json to this preserved
-approval ledger:109 effective paths, CORE46 paths/4404, all owner/global totals
-unchanged. Its explicit grouped-path adjustments supersede the original estimates.
+Apply registry_scope_amendment.json to this preserved approval ledger, followed by
+core_review_scope_amendment.json, legacy_output_scope_amendment.json and
+prepare_metadata_scope_amendment.json. Effective scope is111 paths: CORE46/4404,
+native19/1582 and PRICING46/3956; source9942/global10000 ceilings remain unchanged.
+The explicit grouped-path adjustments supersede the original estimates.
 Then apply core_review_scope_amendment.json, a zero-sum230-line redistribution
 for existing CORE repair paths. The existing wrapper is also assigned its three-gross
-point-diagnostics persistence change inside the same230 repair total and unchanged
-194 path allowance. This does not alter registry exclusivity or any total.
+point-diagnostics persistence change inside the same230 repair total and the
+current179 path allowance. This does not alter registry exclusivity or any total.
 The review overlay also transfers20 unused registry-caller allowance to the
 existing binding test for the mixed legacy/native view correction. Its total
-registry delta stays360, with58 remaining after8f96408c. Independent scope review
+registry delta stays360; mixed-view repaira5189e19 finishes at331/360. Independent scope review
 confirms no public-binder implementation is required by the approved P/D path;
 both actual trainer fit/cache checks remain mandatory. See independent_consumer_scope.md.
+
+Legacy output repair retains its four-path<=80 allocation; the two approved
+catalogue test paths add<=60 (50/10) within PRICING3956. Those deliveries are
+b60dfddd and047f7313. Selected prepare metadata repair uses two existing paths,
+<=40 additional gross inside PRICING's100 remaining at047f7313. Its overlay moves
+20 allowance from step5_cost120→100 to test_comm_operator_families50→70. Record
+actual final deltas before closing the owner/global ledger. No new GPU authority.
 
 | Stream / change marker | Files | Gross quota | Assignment |
 | --- | ---: | ---: | --- |
 | D29-NATIVE-IMPLEMENTATION | 19 | 1582 | All native-owner rows, including four native-image paths. |
-| D29-CORE-SOURCE-IMPLEMENTATION | 44 | 4404 | Any path with a core/source row, except H04/H17. |
-| D29-REGISTRY-SEAM (CORE allocation) | +2 new;2 existing | Within CORE4404 | Four-path isolated repair; at most360 delta per registry_scope_amendment.json. |
-| D29-PRICING-IMPLEMENTATION | 44 | 3956 | Remaining pricing paths, plus H04/H17 with their contributor allowances. |
+| D29-CORE-SOURCE-IMPLEMENTATION | 46 | 4404 | Core/source rows except H04/H17, including the two registry additions. |
+| D29-REGISTRY-SEAM (CORE subset) | 4 already included | Within CORE4404 | Four-path isolated repair; at most360 delta per registry_scope_amendment.json. |
+| D29-PRICING-IMPLEMENTATION | 46 | 3956 | Pricing paths plus H04/H17 and the two approved catalogue test paths. |
 
 H04=`frontier/execution_time_predictor/moe_operator_times.py`;
 H17=`frontier/profiling/moe/fp8_block_experts.py`. Each stream implements all
@@ -71,6 +81,14 @@ a7e2a3ca and registryb6714757 for development verification of the actual joined
 interfaces. This does not accept those changes or authorize edits to peer-owned
 files. Root independently verifies/reviews and freezes the combined source before
 fresh full actual-main and final regression gates.
+
+If production code changes after that freeze, create a new frozen revision and
+rerun strict77, affected unit checks, the required full-unit baseline comparison,
+and offline/online CLI on it. Preserve prior results with their original source
+identity. Current main04 on60ba is diagnostic because review had not closed when
+it started; allow it to finish, but do not promote it to final CLI acceptance.
+T2 bindings must match the final script/helper bytes; unchanged bytes may be
+verified and explicitly rebound without repeating unrelated measurements.
 
 Native-image paths denote edits against the locked native source, not new full
 files charged as zero. Use a fresh derived-source candidate, preserve the old
