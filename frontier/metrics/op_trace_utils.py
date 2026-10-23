@@ -295,12 +295,12 @@ def compute_op_trace_meta(
         if metadata.attention_spec.global_layer_id != ctx.global_layer_id:
             raise ValueError("Step trace metadata differs from the actual layer identity")
         if ctx.collective_plans is not None and op_name in ctx.collective_plans:
-            from dataclasses import asdict
+            from dataclasses import fields
             plan=ctx.collective_plans[op_name];cost=ctx.collective_costs[op_name]
             if cost.plan_key != plan.cache_key():
                 raise ValueError("Trace collective plan and cost identities disagree")
             evidence=__import__("json").loads(cost.count_receipt_json)["evidence_kind"]
-            return dict(collective_plan=plan.to_dict(),collective_cost=asdict(cost),
+            return dict(collective_plan=plan.to_dict(),collective_cost={field.name:getattr(cost,field.name) for field in fields(cost)},
                 numerical_source="cpu_fixture_composition_not_native" if evidence == "cpu_fixture" else "joint_htsim+measured_local+effective_remainder_no_overlap",
                 kernel_count=cost.kernel_counts[ctx.step5_moe_frame["ep_id"]],
                 algorithmic_stage_count=len(plan.stages),evidence_kind=evidence)
