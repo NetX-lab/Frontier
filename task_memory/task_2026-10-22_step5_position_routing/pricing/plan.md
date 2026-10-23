@@ -72,4 +72,5 @@ Missing producer/CORE field is a recorded dependent prerequisite, no inference.
 Native eager probe must reject routing mismatch even when comm schemas match;
 validator requires observed match/totals instead of trusting generic match alone.
 Affected final682=529 PASS/153 SKIP, cold10 PASS. Exact43 paths/3305 gross and
-records verified; scoped commit/root re-review receipt remains TODO.
+records verified; scoped source/record commit989a883d delivered for root re-review.
+Observed compute binding is a CORE/producer prerequisite; no owned substitute.

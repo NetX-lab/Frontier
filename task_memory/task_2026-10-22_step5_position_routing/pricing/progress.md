@@ -679,7 +679,7 @@ remain genuine dependencies, not permission to create alternate APIs.
   gross rises238. No peer/import/new source paths. Sub3dac53c clean, full patch
   unchanged. Source AST/whitespace passes; summary ledger off by1 row detected
   and corrected against git numstat before commit.
-- pending: verified scoped source/records commit and ID receipt. Real observed
+- completed: verified scoped source/records commit989a883d delivered. Real observed
   compute_context producer/CORE handoff not available; fail explicitly. Root
   re-review/full integrated acceptance/GPU qualification remains external.
 
@@ -713,3 +713,44 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Complete compute_context须来自actual evidence，不能复制candidate prediction。
 2. C1/C2已通过owned checks，剩余额度651。
 3. Root负责独立复审/global integration，GPU qualification尚未提供。
+
+## C1/C2 scoped delivery checkpoint
+
+- completed:989a883d verified source/tests/records, six existing owned paths,
+  no extra code paths/imports/peers/agents/GPU. Only root-owned gitlink unstaged;
+  isolated sub3dac53c remains clean and complete patch unchanged. Requirements
+  reread; artifacts match exact3305/3956 budget and682 JUnit/64 native/10 cold.
+- blocked dependent acceptance: actual compute_context producer/CORE binding,
+  independent root re-review/full gates and real runtime/GPU qualification.
+  No replacement API or candidate prediction claimed as observed proof.
+
+## 1. 规划完成情况
+**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| C1 original route observation/validation | PASS |989a883d,64 published native-method PASS |
+| C2 point/plan/layout binding | PASS |989a883d,66 actual H04 cases before any pricing |
+| Scoped tests/records/commit | PASS |682=529 PASS/153 SKIP;3305 gross;989a883d |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**989a883d至今｜**当前前沿：**root re-review/CORE binding receipt
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Only commit-ID archive; no expanded checks |
+| D2 细节反复重试 | CLEAR |Owned checks passing; no active retry |
+| D3 支线问题修补 | CLEAR |No peer binding workaround |
+| D4 可并行任务停滞 | CLEAR |Owned scope done; external acceptance separate |
+| D5 超范围镀金 | CLEAR |Existing six paths; native/model criteria unchanged |
+| D6 分析空转 | CLEAR |989a883d concrete delivery |
+| D7 路线违背 | CLEAR |No inferred compute evidence or fabricated GPU proof |
+**文档检查：**S5 pending commit/archive facts updated to989a883d; S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新已完成提交事实。
+**文档更新（先执行）：**pricing plan/receipt/summary/report/progress记录989a883d（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**Root复审/CORE observed binding；仅接到具体新finding后恢复owned代码。
+## 4. 最值得关注的 3 点
+1. Owner code delivery989a883d，预算剩余651。
+2. Actual observed compute_context handoff remains CORE/producer dependency。
+3. Runtime/GPU/global qualification未完成，CPU checks不替代。

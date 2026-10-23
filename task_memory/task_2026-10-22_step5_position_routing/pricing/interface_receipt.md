@@ -448,4 +448,4 @@ query. Owned43 paths,+3210/-95=3305/3956 (remaining651), unchanged sub3dac53c/
 333 gross included. Six existing owned source/test paths repaired,+260/-22=282
 against bfe6f2ae; approved original-baseline gross increases238. Exact commands
 and numerical limits in test_report_2026-10-23_compute_repair.md. Scoped commit
-is recorded next; observed compute binding/CORE and global qualification remain open.
+989a883d delivered; observed compute binding/CORE and global qualification remain open.

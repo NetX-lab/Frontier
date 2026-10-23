@@ -148,3 +148,7 @@ boundary. No copied candidate prediction/native classname is accepted as measure
 point proof. Global runtime/quant/backend/GPU/T2/G3/qualification and full CORE
 integrated acceptance remain root-owned/unverified. This report establishes owned
 validation seams and CPU numerical/method behavior only.
+
+Verified scoped parent code/record commit989a883d. Sub3dac53c unchanged/clean;
+root-owned gitlink remains unstaged. Requirements reread before archive. Independent
+root re-review and actual compute-context evidence/CORE handoff remain open.

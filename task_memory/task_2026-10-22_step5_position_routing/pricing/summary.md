@@ -37,6 +37,8 @@ contexts and tensor layouts before compute or collective pricing. Complete obser
 compute_context belongs to the per-cell buffer/count key, not frozen affine fit
 identity. The collector/CORE handoff for that observed field is still a prerequisite;
 missing binding fails instead of guessing or inventing evidence.
+Verified C1/C2 source/record commit989a883d. Root independent re-review and actual
+compute-context producer/CORE binding remain open, not owner-approved runtime proof.
 Authorized CORE02f061d/Native2c4cc9e and published67d5b5e dependencies imported;
 437b312 records published dependency integration. No peer file edited.
 Isolated collective-sim branch d29-position-pricing commits:
