@@ -191,6 +191,23 @@ def position_compute_tables(directory, model, *, device, measurement):
                         stride=[model.embedding_dim,1],dtype="bfloat16",element_size=2),
                     native_padding=dict(scheme="triton_expert_assignment",alignment=16,
                         num_tokens_post_padded=0 if counts is None else sum((n+15)//16*16 for n in counts)))
+                def layout(rows,columns,dtype,element_size):
+                    return dict(shape=[rows,columns],stride=[columns,1],dtype=dtype,element_size=element_size)
+                fp8 = native["quant_dtype"] is not None
+                dtype, element_size = (native["quant_dtype"],1) if fp8 else ("bfloat16",2)
+                native.update(native_facts=dict(shared=dict(evidence_kind="cpu_fixture",source_receipt="CPU_CONTRACT_FIXTURE_NOT_NATIVE")),
+                    activation_layout=layout(source.gathered_physical_rows,model.embedding_dim,dtype,element_size),
+                    source_activation_layout=layout(frame.physical_rows,model.embedding_dim,dtype,element_size),
+                    scale_layout=None,source_scale_layout=None)
+                if fp8:
+                    columns = (model.embedding_dim+model.quantization_config.weight_block_size[1]-1)//model.quantization_config.weight_block_size[1]
+                    native.update(scale_layout=layout(source.gathered_physical_rows,columns,"float32",4),
+                                  source_scale_layout=layout(frame.physical_rows,columns,"float32",4))
+                def tensor(name,dtype,element_size,columns):
+                    return dict(name=name,dtype=dtype,element_size=element_size,columns=columns,row_stride=columns)
+                native["collective_tensors"] = dict(dispatch=[tensor("activation",dtype,element_size,model.embedding_dim),
+                    tensor("weights","float32",4,model.num_experts_per_tok),tensor("ids","int32",4,model.num_experts_per_tok),
+                    *([] if not fp8 else [tensor("scales","float32",4,columns)])],output=[tensor("output","bfloat16",2,model.embedding_dim)])
                 specs = [op for op in get_moe_profiling_operators(native) if op.ep_agnostic == (ep_id is None)]
                 value = .01+physical/10000
                 contracts = {op.name:contracts_by_group[group.layer_range][op.name] for op in specs}
@@ -205,6 +222,7 @@ def position_compute_tables(directory, model, *, device, measurement):
                 row.update(metadata,device=device,measurement_type=measurement.value,moe_frame_scope=scope,
                     moe_input_id=routing.moe_input_id,moe_source_lane_id=source_id,moe_ep_rank=ep_id,
                     live_routing_token_count=live,masked_routing_token_count=physical-live,
+                    graph_mode=source.source_lanes[source_id].graph_mode.lower(),native_facts=json.dumps(native["native_facts"]),
                     routing_input=json.dumps(cell.to_json()["routing_input"]),native_context=json.dumps(native),
                     native_binding=json.dumps(moe_native_binding_context(native),sort_keys=True,separators=(",",":")),moe_quantization_mode=group.precision.value)
                 if ep_id is not None:
@@ -215,6 +233,35 @@ def position_compute_tables(directory, model, *, device, measurement):
     frame = frame.drop(columns=[name for name in frame if name.startswith("typed_operator_contracts.")])
     frame.to_csv(paths[1],index=False)
     return paths, inputs
+
+
+def position_collective_costs(output, table, *, device):
+    """Write explicit CPU plan costs, not fitted or native-qualified parameters."""
+    from dataclasses import asdict
+    from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor, CollectivePlanCost
+    counts = {}
+    frame = pd.read_csv(table)
+    for row in frame.loc[frame.moe_frame_scope.eq("dp_gathered"),["routing_input","native_context","graph_mode"]].drop_duplicates().itertuples(index=False):
+        routing,native = json.loads(row.routing_input),json.loads(row.native_context)
+        sources = routing["source_frames"]
+        sizes = tuple(s["physical_rows"] for s in sources)
+        mode = "full" if row.graph_mode == "full" else "none"
+        measured = dict(shared=native["native_facts"]["shared"],execution_policy={str(rank):dict(
+            runtime=dict(evidence_kind="cpu_fixture"),branches=["cpu_fixture"],buffers=dict(evidence_kind="cpu_fixture")) for rank in range(16)})
+        buffers = dict(evidence_kind="cpu_fixture",compute_context=native)
+        for phase in ("dispatch","combine","routed_tp","shared_tp"):
+            tensors = tuple(CollectiveTensor(**t) for t in native["collective_tensors"]["dispatch" if phase=="dispatch" else "output"])
+            groups = tuple((i,8+i) for i in range(8)) if phase in ("dispatch","combine") else (tuple(range(8)),tuple(range(8,16)))
+            plan = CollectivePlan(phase,sizes,tensors,groups,mode,json.dumps(measured,sort_keys=True),json.dumps(buffers,sort_keys=True))
+            receipt = dict(evidence_kind="cpu_fixture",kernel_counts=[3]*16,per_rank_events=[["cpu_fixture"]]*16,
+                source_receipt="CPU_CONTRACT_FIXTURE_NOT_NATIVE",context=measured,buffer_receipt=buffers,plan_key=plan.cache_key())
+            cost = CollectivePlanCost(.03,.01,(.01,)*16,.01,(3,)*16,json.dumps(receipt,sort_keys=True),plan.cache_key(),"CPU_CONTRACT_FIXTURE_NOT_NATIVE")
+            counts[plan.cache_key()] = dict(receipt,cost=asdict(cost))
+    path = output/"fixture_collectives"/device/"collective_local.json"
+    path.parent.mkdir(parents=True,exist_ok=False)
+    path.write_text(json.dumps(dict(schema_version="step5.collective_local.v1",device_type=device,
+        evidence_kind="cpu_fixture",native_admitted=False,candidate_only=True,counts=counts),sort_keys=True)+"\n")
+    return path
 
 
 def refresh_compute(output: Path):
@@ -280,6 +327,7 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
         else:
             compute[measurement] = compute_tables(directory, model, device=device,
                                                  expert_parallel_size=ep, measurement=measurement)
+    collective_path = position_collective_costs(output,compute[MeasurementType.CUDA_EVENT][1],device=device) if position_cyclic else None
     gap = output / "fixture_kernel_gap.csv"
     pd.DataFrame({"execution_mode": ["eager", "cuda_graph"],
                   "num_tensor_parallel_workers": [8, 8],
@@ -343,7 +391,8 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
     if position_cyclic:
         from dataclasses import asdict
         manifest.update(schema="step5_position_compute_cpu_fixture.v1",routing_distribution_type="position_cyclic",
-            routing_inputs=[asdict(item) for item in routing_inputs])
+            routing_inputs=[asdict(item) for item in routing_inputs],collective_plan_input_file=str(collective_path),
+            compute_coverage=dict(local_widths=LOCAL_COMPUTE_WIDTHS,routing="position_cyclic supplied sources; all physical EP cells including live0"))
     (output / "fixture_manifest.json").write_text(json.dumps(manifest, indent=2, default=str) + "\n")
     return manifest
 

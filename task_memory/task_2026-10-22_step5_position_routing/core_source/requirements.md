@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Record delegated implementation scope and approval. |
 | 2026-10-23 | Carry root-authorized peer imports and published source inputs into the continuation. |
+| 2026-10-23 | Retain F4 frozen-fit correction and C2 complete compute/buffer binding. |
 
 TaskID: D29-CORE-SOURCE-IMPLEMENTATION.
 
@@ -19,5 +20,9 @@ Root owns integration, strict77/full-unit/review/image/native runs and the <=12-
 [Original Request] 2026-10-23 foundation P2 correction from reviewer ses_e9abd8364ffee5sQKdpiQh3yH4: actual native_router._select_experts was absent from callable provenance. Add the actual bound implementation to the existing verifier; demonstrate RED→GREEN at the actual adapter seam while retaining class, module/file/hash and select_experts. Commit early for root re-review, continue pending scope, no duplicate verifier/fallback or native semantic changes.
 
 [Original Request] 2026-10-23 delivery: root authorizes import8e61c2d after preserving/committing owned edits. H04/H17, native schemas/ranges and explicit CPU plan cost payload are delivered; interface authority is not final source/runtime acceptance. Submodule1a16426 may be used only in an isolated local checkout while preserving existing checkouts; final gitlink belongs to root. Continue all remaining44/4404 scope and fresh actual-main within original2400s. Retain F1/P2 correction795a583 and RED→GREEN evidence. No platform/GPU/Docker/extra agents or peer edits.
+
+[Original Request] 2026-10-23 updates: root authorizes PRICING27b3499 and then bfe6f2ae development imports with history intact. F4a/F4b independently closed: retain full per-rank execution_policy and buffer/count/cache identity; only PRICING collective_model_context owns frozen-fit normalization, excluding mutable enabled_communicators. No CORE normalization or pooling distinct frozen runtimes.
+
+[Original Request] 2026-10-23 compute review: C1 actual routing observation and C2 H04 complete compute/plan binding belong to PRICING. CORE must construct and carry plans and compute from the same actual native point, not only shared/frozen-fit identity. Precise delivered seam: full point equals json.loads(plan.buffer_json)["compute_context"], retained from observed buffer/count evidence, with unchanged complete plan.context_json.execution_policy. Native collector's absent association is a concrete peer prerequisite. CPU fixtures remain explicitly synthetic and do not establish native evidence.
 
 [Original Request] 2026-10-23 F3–F6 and F4a/F4b: root authorizes27b3499 then bfe6f2ae development imports;1934 reports F4a/F4b closed/NoFindings. Retain full actual per-rank runtime/ordered branches/buffers/diagnostics in plan context and exact count/cache keys. Only PRICING collective_model_context owns frozen affine-fit identity; CORE must not duplicate it. Final compute review C1 (bound router config/logits/IDs/weights) and C2 (same canonical actual compute/plan context and dispatch layouts before pricing) are PRICING repairs. CORE must preserve the same actual context/evidence in callers and fixtures, await precise changed peer contracts, and continue independent owned items. No expanded scope or runtime acceptance is granted.

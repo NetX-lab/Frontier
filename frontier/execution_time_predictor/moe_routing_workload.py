@@ -161,6 +161,9 @@ class MoeRoutingWorkload:
                         or value["graph_mode"] != mode or value["tensors"] != tensors): continue
                 measured = receipt["context"]
                 if measured["shared"] != context["native_facts"]["shared"] or not measured.get("execution_policy"): continue
+                from frontier.profiling.common.runtime_identity import canonical_json
+                if canonical_json(json.loads(value["buffer_json"]).get("compute_context")) != canonical_json(context): continue
+                if receipt["buffer_receipt"] != json.loads(value["buffer_json"]): raise ValueError("Measured collective buffer/count key mismatch")
                 plan = CollectivePlan(phase,tuple(value["sizes"]),tuple(CollectiveTensor(**t) for t in tensors),
                     tuple(tuple(g) for g in value["groups"]),mode,value["context_json"],value["buffer_json"])
                 if json.loads(plan.context_json) != measured or plan.cache_key() != key: raise ValueError("Measured collective context/count key mismatch")

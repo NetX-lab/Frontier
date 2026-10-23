@@ -125,8 +125,10 @@ def test_position_producer_rows_reach_real_automatic_shared_fit_and_cache(tmp_pa
     monkeypatch.setattr(fixture,"range",lambda *a:(6144,6145) if a == (6143,7167) else range(*a),raising=False)
     model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
     paths, inputs = fixture.position_compute_tables(tmp_path,model,device="h800",measurement=MeasurementType[method])
+    plans=json.loads(fixture.position_collective_costs(tmp_path,paths[1],device="h800").read_text())
+    assert plans["evidence_kind"]=="cpu_fixture" and all(json.loads(k)["buffers"]["compute_context"]==v["buffer_receipt"]["compute_context"] for k,v in plans["counts"].items())
     frame = pd.read_csv(paths[1])
-    assert len(inputs) == 7 and len(frame) == 252 and "native_facts" not in frame
+    assert len(inputs) == 7 and len(frame) == 252 and all(json.loads(v)["shared"]["evidence_kind"]=="cpu_fixture" for v in frame.native_facts)
     replica = _replica(model)
     replica.moe_expert_parallel_size,replica.moe_routing_distribution_type = 16,"position_cyclic"
     bindings = position_moe_operator_facts(frame,replica)
@@ -202,6 +204,9 @@ def test_actual_main_command_retains_capacity_graph_topology_and_measured_read(t
     assert argv[argv.index("--vllm_v1_scheduler_config_max_tokens_in_batch") + 1] == "8192"
     assert argv[argv.index("--decode_cuda_graph_mode") + 1] == "full_and_piecewise"
     assert "--no-use_cuda_graph" in argv and "--use_cuda_graph" not in argv
+    fixture.update(routing_distribution_type="position_cyclic",collective_plan_input_file=str(tmp_path/"collectives/h800/collective_local.json"))
+    positioned=command("online",tmp_path,fixture,path)
+    assert positioned[positioned.index("--collective_sim_cc_backend_config_profiling_data_dir")+1]==str(tmp_path/"collectives")
     assert argv[argv.index("--replica_config_moe_routing_distribution_type") + 1] == "balanced"
     assert argv[argv.index("--replica_config_moe_routing_seed") + 1] == "42"
     for role in ("prefill", "decode"):

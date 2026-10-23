@@ -50,7 +50,8 @@ def test_position_policy_resolves_before_parent_initialization(monkeypatch):
         SourcePredictor(**kwargs)
 
 
-def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path):
+@pytest.mark.parametrize("foreign", [None, {"quant_dtype":"float8_e4m3fn"}])
+def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path, foreign):
     import json
     from types import SimpleNamespace
     from dataclasses import asdict
@@ -75,11 +76,15 @@ def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path):
     counts={}
     for phase in ("dispatch","combine","routed_tp","shared_tp"):
         groups=tuple((i,8+i) for i in range(8)) if phase in ("dispatch","combine") else (tuple(range(8)),tuple(range(8,16)))
-        plan=CollectivePlan(phase,(16,1),tuple(CollectiveTensor(**t) for t in tensors),groups,"none",json.dumps(measured),'{"actual_buffer":"cpu_fixture"}')
-        counts[plan.cache_key()]=dict(context=measured)
+        plan=CollectivePlan(phase,(16,1),tuple(CollectiveTensor(**t) for t in tensors),groups,"none",json.dumps(measured),json.dumps(dict(actual_buffer="cpu_fixture",compute_context=context)))
+        counts[plan.cache_key()]=dict(context=measured,buffer_receipt=json.loads(plan.buffer_json))
     path=tmp_path/"h800/collective_local.json";path.parent.mkdir();path.write_text(json.dumps(dict(counts=counts)))
     native,features,plans=p._step5_position_queries(lane)
     assert native==context and features["moe_gating_linear"]==dict(num_tokens=16,live_routing_token_count=16)
     assert all(json.loads(plan.context_json)==measured for plan in plans.values())
+    for key,receipt in list(counts.items()):
+        value=json.loads(key);value["buffer_json"]=json.dumps(dict(actual_buffer="foreign",compute_context=foreign));counts[json.dumps(value,sort_keys=True,separators=(",",":"))]=counts.pop(key)
+    path.write_text(json.dumps(dict(counts=counts)))
+    with pytest.raises(ValueError,match="unique measured"):p._step5_position_queries(lane)
     model._frontier_moe_physical_rows=()
     with pytest.raises(ValueError,match="actual source/native point"):p._step5_position_queries(lane)
