@@ -817,6 +817,10 @@ class QuantizationManager:
 
     def get_operation_precision_metadata(self) -> List[Dict[str, Any]]:
         metadata = []
+        context_moe_ops = {
+            name for operator in MOE_FAMILY.operators if not operator.is_applicable()
+            for name in (operator.precision_name(), operator.profiling_name())
+        }
         compute_ops = self._supported_operations.get("compute_operations", [])
         for op_name in sorted(compute_ops):
             if self._operation_source_inventory:
@@ -824,10 +828,14 @@ class QuantizationManager:
                     continue
             elif op_name in self._DSV4_OPERATION_NAMES:
                 continue
+            elif op_name in context_moe_ops and op_name not in self._operation_profiling_precision:
+                continue
             if op_name in self._GDN_OPERATION_NAMES and not self._active_gdn_operations:
                 continue
             source_inventory = self._operation_source_inventory.get(op_name, {})
             precision_name = source_inventory.get("precision")
+            if precision_name is None and op_name in context_moe_ops and op_name in self._operation_profiling_precision:
+                precision_name = self._operation_profiling_precision[op_name].name
             if precision_name is None:
                 precision_name = self.get_precision(op_name).name
             data_source = self._operation_data_sources.get(op_name, "profiling")

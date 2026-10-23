@@ -86,6 +86,8 @@ def test_ep_context_is_built_only_once_per_traced_positive_phase(
     assert all(call.kwargs["global_layer_id"] == 7 for call in context_spy.call_args_list)
     assert store._push_metric.call_count == (5 if operations and not zero_work else 0)
     assert len(store._frontier_ep_wave_lane_ledger_rows) == int(ledger)
+    if ledger:
+        assert all("collective_proofs" not in phase for phase in store._frontier_ep_wave_lane_ledger_rows[0]["phases"].values())
     events = [call.args[0] for call in store.trace_store.log_event.call_args_list]
     assert len(events) == (5 if positive_phases else 0)
     if not events:
@@ -158,3 +160,4 @@ def test_step5_real_wave_metrics_trace_and_ledger_share_physical_proofs():
     assert ledger["routing_source"]["source_lanes"][0]["source_batch_id"] == 2
     assert ledger["phases"]["dispatch"]["collective_proofs"]["step5_moe_dispatch"]["cost"]["kernel_counts"] == (2,)*16
     assert ledger["phases"]["routed_compute"]["compute_proofs"]["moe_grouped_gemm"]["kernel_count"] == 3
+    assert {phase for phase, row in ledger["phases"].items() if "collective_proofs" in row} == {"dispatch", "combine", "post_combine"}

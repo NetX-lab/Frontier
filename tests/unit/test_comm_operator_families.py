@@ -1123,3 +1123,25 @@ def test_step5_plan_registry_cost_pair_and_phase_accounting():
     layer.add_kernel_gap(.1,0,{"moe_gating_linear":1,"moe_gating_routing_topk":1,
         "moe_input_quantize":1,"moe_grouped_gemm":1,"step5_ffn_merge":1})
     assert layer.kernel_gap_time == pytest.approx(.6)
+
+
+@pytest.mark.parametrize("model_name,admitted", [("meta-llama/Llama-2-7b-hf", False), ("stepfun-ai/Step-5-Preview", True)])
+def test_precision_csv_requires_actual_selected_prepare_inventory(tmp_path, request, model_name, admitted):
+    import pandas as pd
+    from frontier.config import get_quantization_manager
+    from frontier.config.precision_type import PrecisionType
+    from frontier.metrics.metrics_store import MetricsStore
+    from frontier.operators.families import get_moe_profiling_operators
+    manager = get_quantization_manager()
+    request.addfinalizer(lambda: manager.load_config(None))
+    model = BaseModelConfig.create_from_name(model_name)
+    manager.configure_from_model_config(model)
+    if admitted:
+        context = dict(model_architecture_profile="step5", routing_runtime_path="position_cyclic", quant_dtype="float8_e4m3fn", defer_input_quant=False)
+        prepare = next(op for op in get_moe_profiling_operators(context) if op.name == "moe_input_quantize")
+        manager.register_profiling_metadata([prepare.precision_name()], PrecisionType.FP8, model.get_quant_signature(), model.get_quant_signature(), "selected_moe.csv")
+    MetricsStore._write_op_precision_metadata(SimpleNamespace(_config=SimpleNamespace(output_dir=str(tmp_path))))
+    frame = pd.read_csv(tmp_path / "op_precision_metadata.csv").set_index("operation")
+    assert ("moe_input_quantize" in frame.index) is admitted
+    if admitted:
+        assert frame.loc["moe_input_quantize", "precision"] == "FP8"
