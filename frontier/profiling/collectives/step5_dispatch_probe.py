@@ -46,9 +46,18 @@ def parse_args(argv=None):
     parser.add_argument("--data-parallel-size", type=int, default=2)
     parser.add_argument("--gpus-per-node", type=int, default=8)
     parser.add_argument("--tokens-per-dp-rank", type=int, nargs="+")
+    parser.add_argument("--routing-input-file",type=Path)
+    parser.add_argument("--moe-input-ids",nargs="+")
     parser.add_argument("--disable-custom-all-reduce", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
+    bound=os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
+    selected=os.environ.get("VLLM_MOE_ROUTING_SIMULATION_STRATEGY") == "position_cyclic"
+    if bound or selected or args.routing_input_file or args.moe_input_ids:
+        if not (bound and args.routing_input_file and args.moe_input_ids) or args.tokens_per_dp_rank is not None:
+            parser.error("Bound position probe requires explicit input file/IDs, not a legacy token vector")
+        if len(set(args.moe_input_ids)) != len(args.moe_input_ids):
+            parser.error("Probe input IDs must be distinct")
     try:
         expected_topology(args.tensor_parallel_size, args.data_parallel_size, args.gpus_per_node)
     except ValueError as error:
@@ -151,8 +160,8 @@ def probe_plan(args):
         cases.append({"layer_id": layer, "precision": precision,
                       "prefix": f"model.layers.{layer}.moe",
                       "expected_columns_dtypes": tensors,
-                      "design_row_bytes": design_bytes})
-    return {"schema_version": 1, "purpose": "native_dispatch_identity",
+                       "design_row_bytes": design_bytes})
+    result = {"schema_version": 1, "purpose": "native_dispatch_identity",
             "cost_data": False, "timing_rows": 0,
             "verification_scope": "native_moe_layer",
             "full_model_verified": False, "model_runner_verified": False,
@@ -163,7 +172,20 @@ def probe_plan(args):
                                           args.gpus_per_node),
             "tokens_per_dp_rank": list(args.tokens_per_dp_rank),
             "disable_custom_all_reduce": args.disable_custom_all_reduce,
-            "cases": cases}
+             "cases": cases}
+    if args.routing_input_file:
+        from dataclasses import asdict
+        from frontier.profiling.moe.inputs import read_routing_profile_inputs
+        inputs={item.moe_input_id:item for item in read_routing_profile_inputs(args.routing_input_file)}
+        if not set(args.moe_input_ids) <= inputs.keys():
+            raise ValueError("Selected probe input is missing from retained source file")
+        if any(len(inputs[key].source_frames) != args.data_parallel_size for key in args.moe_input_ids):
+            raise ValueError("Selected probe input DP world differs from allocation")
+        result.pop("tokens_per_dp_rank")
+        result.update(verification_scope="eager_native_moe_module",profile_manifest=os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"],
+            routing_input_file=str(args.routing_input_file),moe_input_ids=args.moe_input_ids,
+            cases=[{**case,"routing_input":asdict(inputs[key])} for key in args.moe_input_ids for case in cases])
+    return result
 
 
 def tensor_schema(tensor):
@@ -209,7 +231,75 @@ class DispatchObserver:
         self.emit = emit
         self.calls = []
         self.expert_calls = []
+        self.routing_calls = []
+        self.collective_operands = []
+        self.expert_operands = []
         self.errors = []
+
+    @contextmanager
+    def routing(self, router):
+        """Retain native selection references only; numerical checks run afterwards."""
+        original=router.select_experts
+        @wraps(original)
+        def selected(hidden_states,router_logits,topk_indices_dtype=None,*,input_ids=None):
+            record=dict(hidden=hidden_states,logits=router_logits,indices_dtype=topk_indices_dtype,
+                input_ids=input_ids)
+            with diagnostic_scope(self.errors,"routing.enter"):
+                from vllm.forward_context import get_forward_context
+                from vllm import envs
+                from vllm.model_executor.layers.fused_moe.router.routing_simulator_router import RoutingSimulator
+                context=get_forward_context()
+                record.update(positions=context.routing_positions,is_padding=context.is_padding,
+                    actual_config=dict(top_k=router.top_k,global_num_experts=router.global_num_experts,
+                        renormalize=router.renormalize,routed_scaling_factor=router.routed_scaling_factor,
+                        eplb_enabled=router.eplb_state is not None,routing_method_type=router.routing_method_type.name,
+                        strategy=envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY,skip_padding=envs.VLLM_MOE_SKIP_PADDING),
+                    strategy=RoutingSimulator._routing_strategies[envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY])
+            value=original(hidden_states=hidden_states,router_logits=router_logits,
+                topk_indices_dtype=topk_indices_dtype,input_ids=input_ids)
+            with diagnostic_scope(self.errors,"routing.exit"):
+                record["result"]=value
+                self.routing_calls.append(record)
+            return value
+        with patch.object(router,"select_experts",selected): yield
+
+    def compare_routing(self, source_tensors, text):
+        """Verify observed outputs against explicit positions and those same logits."""
+        import torch
+        observations=[];differences=[]
+        def check(field,actual,expected):
+            if actual != expected: differences.append(dict(field=field,actual=actual,expected=expected))
+        with diagnostic_scope(self.errors,"routing.compare"):
+            positions,mask=source_tensors
+            check("routing_count",len(self.routing_calls),1)
+            for record in self.routing_calls:
+                config=record["actual_config"];logits=record["logits"];weights,ids=record["result"]
+                expected_config=dict(top_k=text.moe_top_k,global_num_experts=text.moe_num_experts,
+                    renormalize=text.norm_expert_weight,routed_scaling_factor=text.moe_router_scaling_factor,
+                    eplb_enabled=False,routing_method_type="Simulated",strategy="position_cyclic",skip_padding=True)
+                check("router_config",config,expected_config)
+                check("scoring_func",getattr(text,"moe_router_activation","sigmoid"),"sigmoid")
+                check("strategy_class",type(record["strategy"]).__name__,"PositionCyclicRouting")
+                check("logits_shape",list(logits.shape),[len(positions),text.moe_num_experts])
+                check("positions",torch.equal(record["positions"],positions),True)
+                check("is_padding",torch.equal(record["is_padding"],mask),True)
+                wanted_ids=(positions.to(torch.int64)[:,None]*text.moe_top_k+
+                    torch.arange(text.moe_top_k,device=positions.device))%text.moe_num_experts
+                wanted_weights=logits.float().gather(1,wanted_ids).sigmoid()
+                if text.norm_expert_weight: wanted_weights=wanted_weights/wanted_weights.sum(-1,keepdim=True)
+                wanted_weights=wanted_weights*text.moe_router_scaling_factor
+                wanted_ids=wanted_ids.masked_fill(mask[:,None],-1)
+                wanted_weights=wanted_weights.masked_fill(mask[:,None],0)
+                check("ids",torch.equal(ids,wanted_ids),True)
+                check("weights",torch.equal(weights,wanted_weights),True)
+                check("ids_dtype",str(ids.dtype),str(record["indices_dtype"] or torch.int32))
+                check("weights_dtype",str(weights.dtype),str(torch.float32))
+                observations.append(dict(actual_config=config,scoring_contract="selected_unbiased_sigmoid",
+                    strategy_class=type(record["strategy"]).__name__,logits=tensor_schema(logits),
+                    positions=positions.tolist(),is_padding=mask.tolist(),ids=ids.tolist(),weights=weights.tolist(),
+                    physical_rows=len(positions),live_rows=int((~mask).sum()),live_assignments=int((ids>=0).sum())))
+        return dict(status="unverified" if self.errors else "discrepancy" if differences else "match",
+            differences=differences,observations=observations)
 
     @contextmanager
     def collectives(self, coordinator):
@@ -236,13 +326,28 @@ class DispatchObserver:
                                 "completed": False}
                         self.calls.append(call)
                         self.emit({"event": "collective_enter", **call})
-                    result = _original(group, input_, *args, **kwargs)
+                    operation=lambda:_original(group, input_, *args, **kwargs)
+                    if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST") and call is not None:
+                        observe=None
+                        with diagnostic_scope(self.errors,"execution_policy.setup"):
+                            from frontier.profiling.collectives.vllm_collective_benchmark import observe_collective_execution
+                            observe=observe_collective_execution
+                        if observe is None: result=operation()
+                        else:
+                            result,policy=observe(group,tensors,operation,output=bound.arguments.get("output"))
+                            with diagnostic_scope(self.errors,"execution_policy.receipt"):
+                                call["execution_policy"]=policy
+                                policy["runtime"]=self.runtime_policy()
+                                self.errors.extend(dict(operation="execution_policy",error=error) for error in policy["diagnostic_errors"])
+                    else:
+                        result=operation()
                     if call is not None:
                         with diagnostic_scope(self.errors, f"{_name}.exit"):
                             output = bound.arguments.get("output", result)
                             outputs = output if isinstance(output, list) else [output]
                             call["outputs"] = [tensor_schema(t) for t in outputs if t is not None]
                             call["completed"] = True
+                            self.collective_operands.append(dict(op=_name,inputs=tensors,outputs=outputs))
                             self.emit({"event": "collective_exit", **call})
                     return result
 
@@ -262,7 +367,13 @@ class DispatchObserver:
                         name = type(instance).__name__
                         self.expert_calls.append(name)
                         self.emit({"event": "expert_enter", "experts_class": name})
-                    return original(*args, **kwargs)
+                    result=original(*args, **kwargs)
+                    with diagnostic_scope(self.errors,"expert.operands"):
+                        import inspect
+                        bound=inspect.signature(original).bind(*args,**kwargs)
+                        bound.apply_defaults()
+                        self.expert_operands.append((instance,bound.arguments))
+                    return result
 
                 stack.enter_context(patch.object(instance, "apply", applied))
                 # Native FallbackExperts owns precisely these two children.
@@ -273,6 +384,39 @@ class DispatchObserver:
 
             observe(experts)
             yield
+
+    def compute_context(self, layer, text):
+        """Associate the actual expert invocation with its native dispatch operands."""
+        from frontier.profiling.moe.fp8_block_experts import NativeRoutedExperts
+        from frontier.profiling.common.model_config import get_model_architecture_profile
+        dispatch,=[c for c in self.collective_operands if c["op"] == "all_gatherv"]
+        instance,args=self.expert_operands[0]
+        source=dispatch["inputs"];gathered=dispatch["outputs"]
+        weights,ids=self.routing_calls[0]["result"]
+        if weights is not source[1] or ids is not source[2]:
+            raise ValueError("Observed router outputs differ from actual dispatch operands")
+        if (gathered[0] is not args["hidden_states"] or gathered[1] is not args["topk_weights"] or
+                gathered[2] is not args["topk_ids"] or
+                (gathered[3] if len(gathered) == 4 else None) is not args["a1q_scale"]):
+            raise ValueError("Actual expert operands differ from completed native dispatch")
+        method=layer.experts.routed_experts.quant_method
+        backend=getattr(method,"fp8_backend",getattr(method,"unquantized_backend",None))
+        native=NativeRoutedExperts(backend.value,type(instance).__name__,None,method.moe_kernel,
+            args["w1"],args["w2"],args["activation"],args["global_num_experts"])
+        context=native.prepared_context(gathered[0],args["a1q_scale"],topk_ids=args["topk_ids"],
+            expert_map=args["expert_map"],source_tensors=(source[0],source[3] if len(source) == 4 else None))
+        self.compute_diagnostics=native.point_diagnostics
+        if context["experts_class"] != type(self.expert_operands[0][0]).__name__:
+            raise ValueError("Observed expert implementation differs from inspected point")
+        def tensor(name,value):
+            return dict(name=name,dtype=str(value.dtype).removeprefix("torch."),
+                element_size=value.element_size(),columns=value.shape[1],row_stride=value.stride(0))
+        combine,=[c for c in self.collective_operands if c["op"] == "reduce_scatterv_into_output"]
+        context.update(model_architecture_profile=get_model_architecture_profile(text).profile_id,
+            routing_runtime_path="position_cyclic",collective_tensors=dict(
+                dispatch=[tensor(n,t) for n,t in zip(("activation","weights","ids","scales"),source)],
+                output=[tensor("output",combine["outputs"][0])]))
+        return context
 
 
 def compare_dispatch(case, calls, *, rows, sizes, dp_ranks, tp_ranks, hidden):
@@ -369,14 +513,34 @@ def native_backend(layer):
     method = routed.quant_method
     backend = getattr(method, "fp8_backend", getattr(method, "unquantized_backend", None))
     kernel = method.moe_kernel
+    quant=kernel.fused_experts.quant_config.quant_dtype
     return {"runner_class": type(layer.experts).__name__,
             "quant_method": type(method).__name__,
             "oracle_backend": getattr(backend, "name", None),
             "experts_class": type(kernel.fused_experts).__name__,
+            "quant_dtype": None if quant is None else str(quant).removeprefix("torch."),
+            "defer_input_quant": bool(kernel.fused_experts.expects_unquantized_inputs),
             "prepare_finalize_class": type(kernel.prepare_finalize).__name__,
             "w13": tensor_schema(routed.w13_weight),
             "w2": tensor_schema(routed.w2_weight),
-            "sequence_parallel": layer.use_sequence_parallel}
+             "sequence_parallel": layer.use_sequence_parallel}
+
+
+@contextmanager
+def source_forward_context(config, rows, sizes, device, routing_input, dp_rank):
+    """Bind the one CORE materialization to the real native eager forward."""
+    from vllm.forward_context import set_forward_context
+    if routing_input is None:
+        with set_forward_context(None,config,num_tokens=rows,num_tokens_across_dp=sizes):
+            yield
+    else:
+        from frontier.profiling.moe.inputs import MoESourceFrame, source_frame_tensors
+        from vllm.forward_context import set_routing_positions
+        frame=MoESourceFrame(**routing_input["source_frames"][dp_rank])
+        positions,is_padding=source_frame_tensors(frame,device=device)
+        with set_forward_context(None,config,num_tokens=rows,num_tokens_across_dp=sizes,is_padding=is_padding):
+            with set_routing_positions(positions):
+                yield positions,is_padding
 
 
 def run_probe(args, plan):
@@ -417,6 +581,10 @@ def run_probe(args, plan):
             init_workspace_manager(device)
             groups = {name: getattr(ps, f"get_{name}_group")() for name in ("tp", "dp", "ep")}
             report["group_ranks"] = {name: list(group.ranks) for name, group in groups.items()}
+            if args.routing_input_file:
+                with diagnostic_scope(errors,"actual_communicator_policy"):
+                    from frontier.profiling.collectives.vllm_collective_benchmark import native_collective_runtime,collective_runtime_policy
+                    report["startup_runtime_policy"]=collective_runtime_policy(native_collective_runtime(torch,config,groups))
             expected_rank = topology["ranks"][rank]
             expected_groups = expected_rank["group_ranks"]
             expected_tp, expected_dp = expected_groups["tp"], expected_groups["dp"]
@@ -436,13 +604,33 @@ def run_probe(args, plan):
             sizes = torch.tensor(args.tokens_per_dp_rank, dtype=torch.int32, device="cpu")
             hidden = config.model_config.hf_text_config.hidden_size
             for case in plan["cases"]:
+                routing_input=case.get("routing_input")
+                vector=(args.tokens_per_dp_rank if routing_input is None else
+                    [frame["physical_rows"] for frame in routing_input["source_frames"]])
+                rows=vector[dp_rank];sizes=torch.tensor(vector,dtype=torch.int32,device="cpu")
                 error_start = len(errors)
                 emit({"event": "layer_start", "layer_id": case["layer_id"]})
                 layer = load_native_layer(config, case, device)
                 observer = DispatchObserver(lambda event: emit({"layer_id": case["layer_id"], **event}))
+                if args.routing_input_file:
+                    observer.runtime_policy=lambda:collective_runtime_policy(native_collective_runtime(torch,config,groups))
                 result = {"layer_id": case["layer_id"], "observer_errors": observer.errors,
                           "comparison": {"status": "unverified", "differences": []}}
                 report["layers"].append(result)
+                if routing_input is not None:
+                    result.update(moe_input_id=routing_input["moe_input_id"],source_frame=routing_input["source_frames"][dp_rank])
+                    with diagnostic_scope(observer.errors,"bound_native_source"):
+                        from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+                        from vllm.forward_context import set_routing_positions
+                        from vllm.model_executor.layers.fused_moe.router.routing_simulator_router import RoutingSimulator
+                        from vllm import envs
+                        result["native_facts"]=verify_step5_profile_runtime(plan["profile_manifest"],
+                            callables=[type(layer),layer.forward,set_forward_context,set_routing_positions,
+                                 layer.experts.router.select_experts,
+                                 layer.experts.router._select_experts,layer.experts.router._compute_routing,
+                                 RoutingSimulator.simulate_routing,RoutingSimulator._routing_strategies[
+                                     envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY].route_tokens,
+                                layer.experts.routed_experts.quant_method.moe_kernel.apply])
                 with diagnostic_scope(observer.errors, "native_backend"):
                     result.update(native_backend(layer))
                 emit({"event": "native_backend", **result})
@@ -453,9 +641,11 @@ def run_probe(args, plan):
                 with diagnostic_scope(observer.errors, "observe_experts"):
                     observation.enter_context(observer.experts(
                         layer.experts.routed_experts.quant_method.moe_kernel.fused_experts))
+                if routing_input is not None:
+                    with diagnostic_scope(observer.errors,"observe_routing"):
+                        observation.enter_context(observer.routing(layer.experts.router))
                 try:
-                    with torch.inference_mode(), set_forward_context(
-                            None, config, num_tokens=rows, num_tokens_across_dp=sizes):
+                    with torch.inference_mode(), source_forward_context(config,rows,sizes,device,routing_input,dp_rank) as source_tensors:
                         shared, routed = layer(inputs)
                         torch.cuda.synchronize(device)
                 finally:
@@ -467,9 +657,31 @@ def run_probe(args, plan):
                     result.update({"shared_output": tensor_schema(shared),
                                    "routed_output": tensor_schema(routed)})
                 with diagnostic_scope(observer.errors, "compare_dispatch"):
+                    expected_case=case
+                    if routing_input is not None:
+                        quant=result["quant_dtype"]
+                        if quant not in (None,"float8_e4m3fn"):
+                            raise ValueError("Bound probe reached an unsupported activation quantization")
+                        fp8=quant == "float8_e4m3fn" and not result["defer_input_quant"]
+                        topk=config.model_config.hf_text_config.moe_top_k
+                        columns=[(hidden,"float8_e4m3fn" if fp8 else "bfloat16"),(topk,"float32"),(topk,"int32")]
+                        if fp8:
+                            quant_config=layer.experts.routed_experts.quant_method.moe_kernel.fused_experts.quant_config
+                            shape=quant_config.scale_shape(rows,hidden)
+                            if shape != (1,1): columns.append((shape[1],"float32"))
+                        from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
+                        expected_case={**case,"expected_columns_dtypes":columns,
+                            "design_row_bytes":sum(c*DTYPE_BYTES[d] for c,d in columns)}
                     result["comparison"] = compare_dispatch(
-                        case, observer.calls, rows=rows, sizes=args.tokens_per_dp_rank,
+                        expected_case, observer.calls, rows=rows, sizes=vector,
                         dp_ranks=expected_dp, tp_ranks=expected_tp, hidden=hidden)
+                if routing_input is not None:
+                    result["routing_comparison"]=observer.compare_routing(source_tensors,config.model_config.hf_text_config)
+                    if result["routing_comparison"]["status"] != "match":
+                        result["comparison"]["status"]=result["routing_comparison"]["status"]
+                    with diagnostic_scope(observer.errors,"observed_compute_context"):
+                        result["compute_context"]=observer.compute_context(layer,config.model_config.hf_text_config)
+                        result["compute_diagnostics"]=observer.compute_diagnostics
                 if observer.errors or len(errors) > error_start:
                     result["comparison"]["status"] = "unverified"
                 emit({"event": "layer_verdict", "layer_id": case["layer_id"], **result["comparison"]})

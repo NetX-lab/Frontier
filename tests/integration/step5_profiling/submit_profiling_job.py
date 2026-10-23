@@ -38,6 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout-seconds", type=int, required=True)
     parser.add_argument("--gpu-tag", choices=("H800", "H200"), default=GPU_TAG)
     parser.add_argument("--charged-group", default=CHARGED_GROUP)
+    parser.add_argument("--image", default=STEP_IMAGE)
     parser.add_argument("--preemptible", action="store_true")
     parser.add_argument(
         "worker_command",
@@ -68,7 +69,7 @@ def main() -> int:
         gpu=args.gpus,
         mem_gb=args.mem_gb,
         replica=1,
-        image=STEP_IMAGE,
+        image=args.image,
         positive_tags=[args.gpu_tag],
         extra_requirements=[],
         mounts=[CLOUD_MOUNT],

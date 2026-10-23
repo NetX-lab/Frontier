@@ -6,6 +6,8 @@ trainer then fits one model per MoE operator from the admitted rows.
 """
 
 import json
+import hashlib
+from dataclasses import replace
 import numpy as np
 import os
 import pandas as pd
@@ -47,8 +49,56 @@ BLOCK_SIZE_M_COLUMN = "time_stats.moe_grouped_gemm.block_size_m"
 BLOCK_SIZE_M_RANGES_COLUMN = "time_stats.moe_grouped_gemm.block_size_m_ranges"
 
 
+def position_moe_operator_facts(frame, replica_config):
+    """Bind producer contexts and source groups before any legacy family helpers."""
+    from frontier.operators.families import get_moe_profiling_operators
+    from frontier.operators.binding import bind_operator_query
+    from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+    from frontier.moe_load_imbalance import moe_native_binding_context
+    from frontier.config import PrecisionType
+    from frontier.moe_gating_runtime import get_moe_gating_prediction_model_name
+    from frontier.execution_time_predictor.step5_cost import STEP5_NATIVE_EXPERT_SCHEMAS
+    model = replica_config.model_config
+    groups = {group.layer_range: group for group in resolve_routed_layer_groups(model)}
+    if frame[["moe_layer_ids", "native_binding", "native_context"]].isna().any().any() or set(frame.moe_layer_ids) != set(groups):
+        raise ValueError("Position MoE rows require every actual routed group/native binding")
+    bound = []
+    for (group_name, native_binding), rows in frame.groupby(["moe_layer_ids", "native_binding"], sort=False):
+        group = groups[group_name]
+        expected = dict(num_experts=model.num_experts,router_topk=model.num_experts_per_tok,
+            hidden_dim=model.embedding_dim,expert_hidden_dim=model.get_model_architecture_profile().resolve_layer_contract(
+                model,layer_id=group.layer_ids[0],operator_name="moe_grouped_gemm",moe_tp_size=replica_config.moe_tensor_parallel_size,
+                expert_parallel_size=replica_config.moe_expert_parallel_size).effective_ffn_width,
+            **group.row_metadata())
+        if any(name not in rows or rows[name].ne(value).any() for name,value in expected.items()):
+            raise ValueError("Position MoE rows differ from actual model/routed-group dimensions")
+        context = json.loads(native_binding)
+        if any(moe_native_binding_context(json.loads(value)) != context for value in rows["native_context"]):
+            raise ValueError("MoE row context differs from its native binding")
+        facts = {}
+        for spec in get_moe_profiling_operators(context):
+            contract = model.get_model_architecture_profile().resolve_layer_contract(model,
+                layer_id=group.layer_ids[0], operator_name=spec.name,
+                moe_tp_size=replica_config.moe_tensor_parallel_size,
+                expert_parallel_size=replica_config.moe_expert_parallel_size)
+            contexts = rows.loc[rows.moe_frame_scope.eq("source_local"), "gating_runtime_context"].unique() if spec.precision_name() == "moe_gating" else [None]
+            for gating_context in contexts:
+                name = get_moe_gating_prediction_model_name(spec.name, requested_context=gating_context) if gating_context else spec.name
+                precision = PrecisionType.FP32 if spec.precision_name() == "moe_gating" else PrecisionType.FP8 if spec.name == "moe_input_quantize" else group.precision
+                features = ("num_tokens", "live_routing_token_count") if spec.ep_agnostic else STEP5_NATIVE_EXPERT_SCHEMAS[context["experts_class"]]
+                facts[name] = dict(model_name=name,spec=spec,binding=bind_operator_query(spec.name),
+                    layer_contract=contract,precision=precision,native_context=context,
+                    frame_scope="source_local" if spec.ep_agnostic else "dp_gathered",
+                    row_metadata=dict(moe_layer_ids=group_name,native_binding=native_binding),
+                    gating_runtime_context=gating_context,feature_columns=features)
+        bound.append(facts)
+    if not bound:
+        raise ValueError("Position MoE data contains no selected native bindings")
+    return bound
+
+
 def select_moe_operator_features(
-    model_name: str, op_df: pd.DataFrame
+    model_name: str, op_df: pd.DataFrame, *, operator_facts=None,
 ) -> tuple[pd.DataFrame, List[str]]:
     """Return the training rows and feature columns of one MoE operator model.
 
@@ -58,6 +108,23 @@ def select_moe_operator_features(
     load-imbalance set is an inconsistent table. Shuffling uses the full
     load-imbalance set when present. Every other operator uses ``num_tokens``.
     """
+    if operator_facts is not None:
+        if model_name != operator_facts["model_name"]:
+            raise ValueError("MoE feature selection conflicts with bound model context")
+        features = list(operator_facts["feature_columns"])
+        if not operator_facts["spec"].ep_agnostic:
+            from frontier.moe_load_imbalance import moe_grouped_gemm_schema
+            moe_grouped_gemm_schema(features, native_context=operator_facts["native_context"])
+            if "native_binding" in op_df:
+                from frontier.execution_time_predictor.step5_cost import step5_native_expert_features
+                for _, row in op_df.iterrows():
+                    expected = step5_native_expert_features(json.loads(row.native_context),
+                        physical_rows=int(row.num_tokens), live_assignments=int(row.total_routed_tokens))
+                    if any(row[name] != value for name, value in expected.items()):
+                        raise ValueError("MoE features differ from actual native padding/capacity receipt")
+        if not features or set(features) - set(op_df.columns) or op_df[features].isna().any().any():
+            raise ValueError("MoE selected native feature schema lacks complete physical coverage")
+        return op_df, features
     load_features = [name for name in MOE_LOAD_IMBALANCE_FEATURES if name in op_df.columns]
     has_load_features = len(load_features) == len(MOE_LOAD_IMBALANCE_FEATURES)
     if model_name == "moe_grouped_gemm":
@@ -69,7 +136,8 @@ def select_moe_operator_features(
                     "the grouped GEMM needs it on every row or on none"
                 )
             padded_df = op_df.assign(num_tokens_post_padded=op_df[NUM_TOKENS_POST_PADDED_COLUMN])
-            return padded_df, list(MOE_GROUPED_GEMM_PADDED_FEATURES)
+            from frontier.moe_load_imbalance import moe_grouped_gemm_schema
+            return padded_df, list(moe_grouped_gemm_schema(MOE_GROUPED_GEMM_PADDED_FEATURES).features)
         if load_features and not has_load_features:
             missing = [name for name in MOE_LOAD_IMBALANCE_FEATURES if name not in op_df.columns]
             raise ValueError(
@@ -161,6 +229,12 @@ def _validate_moe_columns(moe_df: pd.DataFrame) -> None:
 class MoeDatasetTraining:
     """MoE profiling dataset admission and per-operator training."""
 
+    def _get_model_hash(self, model_name, df=None):
+        identity = getattr(self, "_moe_training_identity", None)
+        model_hash = super()._get_model_hash(model_name, df)
+        if identity is None:
+            return model_hash
+        return hashlib.md5(f"{model_hash}_{json.dumps(identity, sort_keys=True)}".encode()).hexdigest()[:8]
 
     def _validate_moe_dataset_contract(
         self,
@@ -169,8 +243,19 @@ class MoeDatasetTraining:
         model_names: List[str],
         moe_tp_size: int,
         moe_ep_size: int,
+        *, operator_facts=None,
     ) -> pd.DataFrame:
         """Validate op-level MoE key coverage and return model-filtered dataframe."""
+        if operator_facts is not None:
+            from frontier.moe_routing_runtime import filter_moe_operator_rows
+            if not operator_facts:
+                raise ValueError("MoE preflight requires nonempty selected operator_facts")
+            for facts in operator_facts.values():
+                filter_moe_operator_rows(moe_df, operator_facts=facts,
+                    requested_runtime_path=facts["native_context"]["routing_runtime_path"], source_name=moe_input_file)
+            return moe_df
+        if self._get_requested_moe_gating_routing_runtime_path() == "position_cyclic":
+            raise ValueError("Position MoE preflight requires selected operator_facts before legacy helpers")
         _validate_moe_columns(moe_df)
         required_columns = [
             "num_experts",
@@ -275,7 +360,7 @@ class MoeDatasetTraining:
 
         return base_df
 
-    def _train_moe_models(self) -> Dict[str, BaseEstimator]:
+    def _train_moe_models(self, *, operator_facts=None) -> Dict[str, BaseEstimator]:
         """Train MoE-specific models (gating, shuffling, grouped_gemm) for independent training mode.
 
         Features per operator follow select_moe_operator_features.
@@ -288,6 +373,10 @@ class MoeDatasetTraining:
             return models
 
         moe_df = pd.read_csv(moe_input_file)
+        if operator_facts is None and self._get_requested_moe_gating_routing_runtime_path() == "position_cyclic":
+            for facts in position_moe_operator_facts(moe_df, self._replica_config):
+                models.update(self._train_moe_models(operator_facts=facts))
+            return models
         if TYPED_OPERATOR_CONTRACTS_COLUMN in moe_df.columns:
             # Validate every row before scalar or TP/EP filtering can hide a
             # malformed typed contract.
@@ -297,6 +386,55 @@ class MoeDatasetTraining:
                     model_config=self._model_config,
                 )
             )
+
+        if operator_facts is not None:
+            from frontier.moe_routing_runtime import filter_moe_operator_rows
+            self._validate_moe_dataset_contract(moe_df, moe_input_file, list(operator_facts),
+                self._replica_config.moe_tensor_parallel_size, self._replica_config.moe_expert_parallel_size,
+                operator_facts=operator_facts)
+            for name, facts in operator_facts.items():
+                rows = filter_moe_operator_rows(moe_df, operator_facts=facts,
+                    requested_runtime_path=facts["native_context"]["routing_runtime_path"], source_name=moe_input_file)
+                rows, features = select_moe_operator_features(name, rows, operator_facts=facts)
+                target = facts["spec"].profiling_name()
+                if rows.groupby(features)[f"time_stats.{target}.kernel_count"].nunique().gt(1).any():
+                    raise ValueError("MoE selected physical key has conflicting measured kernel counts")
+                from frontier.execution_time_predictor.step5 import step5_operator_training_rows
+                _, bound_context = step5_operator_training_rows(name, rows,
+                    dict(operator_facts=facts, input_file=moe_input_file), self._active_measurement_type)[0]
+                identity = {**bound_context["measurement_identity"],
+                            "typed_contract": json.dumps(facts["layer_contract"].typed_metadata_identity(), sort_keys=True)}
+                metadata = self._get_profiling_metadata(rows, moe_input_file)
+                self._validate_active_measurement_type(metadata, moe_input_file)
+                self._register_profiling_metadata_for_ops([name], replace(metadata, profiling_precision=facts["precision"]), moe_input_file)
+                self._moe_training_identity = identity
+                try:
+                    duration = self._train_model(name, rows, features, f"time_stats.{target}.median")
+                    count = getattr(duration, "_frontier_kernel_count_model", None)
+                    if count is None:
+                        count = self._train_model(f"{name}_kernel_count", rows, features, f"time_stats.{target}.kernel_count")
+                finally:
+                    self._moe_training_identity = None
+                if set(duration._frontier_exact_lookup) != set(count._frontier_exact_lookup):
+                    raise ValueError("MoE physical duration/count exact feature keys differ")
+                for fitted in (duration, count):
+                    cached_identity = getattr(fitted, "_frontier_measurement_identity", None)
+                    if cached_identity is not None and json.loads(cached_identity) != identity:
+                        raise ValueError("MoE cached selected measurement identity conflicts with the actual binding")
+                    fitted._frontier_measurement_identity = json.dumps(identity, sort_keys=True)
+                    fitted._frontier_feature_bounds = {col: (float(rows[col].min()), float(rows[col].max())) for col in features}
+                    if "native_binding" in rows:
+                        from frontier.moe_load_imbalance import moe_physical_row_receipts
+                        fitted._frontier_moe_physical_rows = moe_physical_row_receipts(rows)
+                count._frontier_operator_name = target
+                duration._frontier_kernel_count_model = count
+                for fitted_name, fitted in ((name, duration), (f"{name}_kernel_count", count)):
+                    fitted._frontier_target_col = f"time_stats.{target}.{'median' if fitted_name == name else 'kernel_count'}"
+                    self._store_model_in_cache(fitted_name, fitted._frontier_model_hash, fitted)
+                models[name] = duration
+            return models
+        if self._get_requested_moe_gating_routing_runtime_path() == "position_cyclic":
+            raise ValueError("Position MoE training requires committed native row bindings before legacy enumeration")
 
         metadata = self._get_profiling_metadata(moe_df, moe_input_file)
         self._validate_active_measurement_type(metadata, moe_input_file)
@@ -435,14 +573,28 @@ class MoeDatasetTraining:
                 feature_cols=feature_cols,
                 target_col=target_col,
             )
-            if feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
+            from frontier.moe_load_imbalance import moe_grouped_gemm_schema
+            schema = moe_grouped_gemm_schema(feature_cols)
+            if schema is not None and schema.uses_block_size_m_ranges:
                 models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(op_df)
             logger.info(f"Trained MoE model: {model_name}")
 
         return models
 
-    def _register_additional_profiling_metadata_from_files(self) -> None:
+    def _register_additional_profiling_metadata_from_files(self, *, operator_facts=None) -> None:
         moe_input_file = self._moe_input_file
+        if operator_facts is not None:
+            from frontier.moe_routing_runtime import filter_moe_operator_rows
+            for name, facts in operator_facts.items():
+                rows = filter_moe_operator_rows(pd.read_csv(moe_input_file), operator_facts=facts,
+                    requested_runtime_path=facts["native_context"]["routing_runtime_path"], source_name=moe_input_file)
+                metadata = self._get_profiling_metadata(rows, moe_input_file)
+                self._register_profiling_metadata_for_ops([name], replace(metadata, profiling_precision=facts["precision"]), moe_input_file)
+            return
+        if self._get_requested_moe_gating_routing_runtime_path() == "position_cyclic":
+            for facts in position_moe_operator_facts(pd.read_csv(moe_input_file), self._replica_config):
+                self._register_additional_profiling_metadata_from_files(operator_facts=facts)
+            return
         model_names = _get_moe_family_model_names()
         if should_enable_prefill_hot_moe_gating_contract(
             model_config=self._model_config,

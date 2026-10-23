@@ -36,7 +36,10 @@ import socket
 import statistics
 import time
 from dataclasses import replace
+from contextlib import ExitStack
+from functools import wraps
 from pathlib import Path
+from unittest.mock import patch
 
 from frontier.profiling.collectives.vllm_forward_collectives import (
     CollectiveCall,
@@ -96,6 +99,73 @@ def runtime_environment(vllm_envs) -> dict:
                              if name.startswith("NCCL_")},
         "nccl_log_destination": os.environ.get("NCCL_DEBUG_FILE", "stderr (stage wrapper log)"),
     }
+
+
+def collective_runtime_policy(runtime):
+    """Execution-affecting actual runtime receipts, excluding diagnostic paths."""
+    policy={k:runtime[k] for k in ("torch","vllm","enabled_communicators","pynccl_versions",
+        "disable_custom_all_reduce","disable_nccl_for_dp_synchronization",
+        "vllm_environment","nccl_environment")}
+    policy["nccl_environment"]={k:v for k,v in policy["nccl_environment"].items()
+        if k not in ("NCCL_DEBUG","NCCL_DEBUG_SUBSYS","NCCL_DEBUG_FILE")}
+    return policy
+
+
+def native_collective_runtime(torch, vllm_config, groups):
+    import vllm
+    from vllm import envs
+    enabled={};versions={}
+    for name,group in groups.items():
+        comm=group.device_communicator
+        enabled[name]={attr:getattr(comm,attr,None) is not None and
+            not getattr(getattr(comm,attr),"disabled",False)
+            for attr in ("pynccl_comm","ca_comm","symm_mem_comm","fi_ar_comm",
+                         "fi_pcie_ipc_ar_comm","qr_comm","all2all_manager")}
+        versions[name]=comm.pynccl_comm.nccl_version if enabled[name]["pynccl_comm"] else None
+    return dict(torch=torch.__version__,vllm=vllm.__version__,enabled_communicators=enabled,
+        pynccl_versions=versions,disable_custom_all_reduce=vllm_config.parallel_config.disable_custom_all_reduce,
+        disable_nccl_for_dp_synchronization=vllm_config.parallel_config.disable_nccl_for_dp_synchronization,
+        **runtime_environment(envs))
+
+
+def observe_collective_execution(group, inputs, operation, *, output=None):
+    """Observe one untimed native invocation without guessing its selected branch."""
+    policy=dict(branches=[],buffers={},diagnostic_errors=[])
+    with ExitStack() as stack:
+        try:
+            from vllm.distributed.device_communicators.pynccl_allocator import is_symmetric_memory_tensor
+            policy["buffers"]=dict(input_registered=[is_symmetric_memory_tensor(t) for t in inputs],
+                supplied_output=output is not None,output_registered=None if output is None else is_symmetric_memory_tensor(output))
+            comm=group.device_communicator
+            targets=[("",comm, ("_all_gather_symm_mem","_all_gather_batched_symm_mem","_reduce_scatter_symm_mem"))]
+            import torch
+            targets += [("torch.distributed.",torch.distributed,("all_reduce",))]
+            if hasattr(torch.ops.vllm,"all_reduce_symmetric_with_copy"):
+                targets.append(("torch.ops.vllm.",torch.ops.vllm,("all_reduce_symmetric_with_copy",)))
+            methods=("all_gatherv","all_gather","reduce_scatterv","reduce_scatter","all_reduce",
+                "quick_all_reduce","custom_all_reduce","custom_reduce_scatter","custom_all_gather")
+            for name in ("pynccl_comm","ca_comm","symm_mem_comm","fi_ar_comm","qr_comm","fi_pcie_ipc_ar_comm"):
+                target=getattr(comm,name,None)
+                if target is not None: targets.append((name+".",target,methods))
+            for prefix,target,names in targets:
+                for name in names:
+                    if not hasattr(target,name): continue
+                    original=getattr(target,name)
+                    @wraps(original)
+                    def observed(*a,_original=original,_label=prefix+name,**kw):
+                        policy["branches"].append(_label)
+                        return _original(*a,**kw)
+                    stack.enter_context(patch.object(target,name,observed))
+        except Exception as error:
+            policy["diagnostic_errors"].append(repr(error))
+        result=operation()
+        try:
+            if output is not None:
+                policy["buffers"].update(input_output_alias=any(t.data_ptr()==output.data_ptr() for t in inputs),
+                    return_output_alias=result.data_ptr()==output.data_ptr())
+        except Exception as error:
+            policy["diagnostic_errors"].append(repr(error))
+    return result,policy
 
 
 def active_dp_rails(parallel: ServingParallelism, call: CollectiveCall,
@@ -251,6 +321,7 @@ class CollectiveRunner:
             list(range(i * parallel.world_size, (i + 1) * parallel.world_size)),
             backend="gloo") for i in range(instances)]
         self.instance_cpu = instance_groups[self.instance]
+        self.identity_errors=[]
         self._check_layout()
         self.hosts = [None] * parallel.world_size
         torch.distributed.all_gather_object(self.hosts, socket.gethostname(),
@@ -293,28 +364,8 @@ class CollectiveRunner:
 
     def communicators(self) -> dict:
         """Which all-reduce communicators vLLM enabled on each group of this rank."""
-        import vllm
-        from vllm import envs
-
-        enabled = {}
-        pynccl_versions = {}
-        for name, group in self.groups.items():
-            comm = group.device_communicator
-            enabled[name] = {
-                attr: getattr(comm, attr, None) is not None
-                and not getattr(getattr(comm, attr), "disabled", False)
-                 for attr in ("pynccl_comm", "ca_comm", "symm_mem_comm", "fi_ar_comm",
-                              "qr_comm", "all2all_manager")}
-            pynccl_versions[name] = (comm.pynccl_comm.nccl_version
-                                     if enabled[name]["pynccl_comm"] else None)
-        return {"torch": self.torch.__version__, "vllm": vllm.__version__,
-                 "enabled_communicators": enabled,
-                 "pynccl_versions": pynccl_versions,
-                "disable_custom_all_reduce": self.vllm_config.parallel_config.disable_custom_all_reduce,
-                "disable_nccl_for_dp_synchronization": (
-                    self.vllm_config.parallel_config.disable_nccl_for_dp_synchronization),
+        return {**native_collective_runtime(self.torch,self.vllm_config,self.groups),
                 "dp_rail_isolation": self.dp_rail_isolation,
-                **runtime_environment(envs),
                 "group_ranks": {name: list(g.ranks) for name, g in self.groups.items()},
                 "hosts": self.hosts,
                 "sleep_cycles_per_us": self.sleep_cycles_per_us}
@@ -336,6 +387,17 @@ class CollectiveRunner:
         rows = call.shard_rows[self.instance_rank]
         offset = self.instance * self.parallel.world_size
         sizes = [call.shard_rows[m - offset] for m in group.ranks]
+        if call.op in ("local_copy", "local_add"):
+            (tensor,) = self._tensors(call, rows, self.device)
+            output = torch.empty_like(tensor)
+            if call.op == "local_copy":
+                if tensor.dtype == torch.float8_e4m3fn:
+                    tensor, output = tensor.view(torch.uint8), output.view(torch.uint8)
+                return lambda: output.copy_(tensor)
+            if tensor.dtype != torch.bfloat16:
+                raise ValueError("The measured reduction proxy requires actual BF16 operands")
+            peer = torch.empty_like(tensor)
+            return lambda: torch.add(tensor, peer, out=output)
         if call.op == "cpu_all_reduce":
             (tensor,) = self._tensors(call, rows, "cpu")
             return lambda: torch.distributed.all_reduce(tensor, group=group.cpu_group)
@@ -344,7 +406,9 @@ class CollectiveRunner:
             return lambda: torch.distributed.all_reduce(tensor, group=group.device_group)
         if call.op == "all_reduce":
             (tensor,) = self._tensors(call, rows, self.device)
-            return lambda: group.all_reduce(tensor)
+            def issue(): return group.all_reduce(tensor)
+            issue.inputs=[tensor]
+            return issue
         if call.op == "all_gather":
             (tensor,) = self._tensors(call, rows, self.device)
             return lambda: group.all_gather(tensor, dim=call.dim)
@@ -353,10 +417,51 @@ class CollectiveRunner:
             return lambda: group.reduce_scatter(tensor, dim=call.dim)
         if call.op == "all_gatherv":
             tensors = self._tensors(call, rows, self.device)
-            return lambda: group.all_gatherv(tensors, dim=call.dim, sizes=sizes)
+            def issue():
+                return group.all_gatherv(tensors, dim=call.dim, sizes=sizes)
+            outputs = issue()
+            issue.inputs=tensors
+            issue.buffer_receipt = dict(entrypoint="all_gatherv",sizes=sizes,dim=call.dim,
+                inputs=[dict(shape=list(t.shape),stride=list(t.stride()),dtype=str(t.dtype),
+                             element_size=t.element_size()) for t in tensors],
+                outputs=[dict(shape=list(t.shape),stride=list(t.stride()),dtype=str(t.dtype),
+                              element_size=t.element_size()) for t in outputs],
+                lifetime="captured" if call.captured else "eager_native_allocation")
+            return issue
         if call.op == "reduce_scatterv":
             (tensor,) = self._tensors(call, sum(sizes), self.device)
             return lambda: group.reduce_scatterv(tensor, dim=call.dim, sizes=sizes)
+        if call.op == "reduce_scatterv_into_output":
+            (tensor,) = self._tensors(call, sum(sizes), self.device)
+            (output,) = self._tensors(call, rows, self.device)
+            from vllm.distributed.device_communicators.pynccl_allocator import is_symmetric_memory_tensor
+            from vllm import envs
+            def layout(value):
+                return dict(shape=list(value.shape),stride=list(value.stride()),dtype=str(value.dtype),
+                            element_size=value.element_size(),registered=is_symmetric_memory_tensor(value))
+            def issue():
+                return group.reduce_scatterv_into_output(tensor, output, dim=call.dim, sizes=sizes)
+            returned = issue()
+            issue.inputs=[tensor];issue.output=output
+            issue.buffer_receipt = dict(entrypoint="reduce_scatterv_into_output",sizes=sizes,dim=call.dim,
+                input=layout(tensor),output=layout(output),supplied_output=True,
+                input_output_alias=tensor.data_ptr() == output.data_ptr(),
+                return_output_alias=returned.data_ptr() == output.data_ptr(),
+                explicit_size_branch="uniform" if len(set(sizes)) == 1 else "unequal",
+                lifetime="captured" if call.captured else "eager_preallocated",
+                timed_allocation=False,pynccl_version=group.device_communicator.pynccl_comm.nccl_version,
+                nccl_symm_enabled=envs.VLLM_USE_NCCL_SYMM_MEM,batch_invariant=envs.VLLM_BATCH_INVARIANT)
+            from vllm.distributed.device_communicators.all_reduce_utils import should_nccl_symm_mem_ag_rs
+            from vllm.distributed.device_communicators.cuda_communicator import NCCL_DIRECT_SYMM_RS_OUTPUT_MIN_VERSION
+            receipt=issue.buffer_receipt
+            receipt["native_symmetric_branch"]=(len(set(sizes)) == 1 and
+                (receipt["output"]["registered"] or receipt["pynccl_version"] >= NCCL_DIRECT_SYMM_RS_OUTPUT_MIN_VERSION)
+                and receipt["input"]["registered"] and should_nccl_symm_mem_ag_rs())
+            receipt.update(staging_copy_count=0,staging_copy_bytes=0,timed_fill=False,
+                branch="registered_no_staging" if receipt["native_symmetric_branch"] else "ordinary_into_output")
+            if not issue.buffer_receipt["return_output_alias"]:
+                raise ValueError("Native into-output combine did not retain the supplied output storage")
+            return issue
         raise ValueError(f"Unknown op {call.op!r}")
 
     def prepare(self, call: CollectiveCall):
@@ -367,6 +472,17 @@ class CollectiveRunner:
         """
         torch = self.torch
         issue = self._issue(call)
+        selected=bool(os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")) and call.op in (
+            "all_gatherv","reduce_scatterv_into_output","all_reduce")
+        def observed_issue():
+            _,policy=observe_collective_execution(self.groups[call.group],issue.inputs,issue,
+                output=getattr(issue,"output",None))
+            try: policy["runtime"]=collective_runtime_policy(self.communicators())
+            except Exception as error: policy["diagnostic_errors"].append(repr(error))
+            issue.execution_policy=policy
+            self.identity_errors.extend(policy["diagnostic_errors"])
+        if selected:
+            observed_issue()
         per_repeat = self.settings["calls_per_repeat"]
         for _ in range(self.settings["warmup_calls"]):
             issue()
@@ -383,7 +499,8 @@ class CollectiveRunner:
         with self.groups[call.group].graph_capture() as context:
             with torch.cuda.graph(graph, stream=context.stream):
                 for _ in range(per_repeat):
-                    issue()
+                    if selected: observed_issue()
+                    else: issue()
         torch.cuda.synchronize()
         return issue, graph.replay
 
@@ -494,14 +611,24 @@ class CollectiveRunner:
         self.torch.distributed.barrier(group=self.instance_cpu)
         local = None
         if self.participates(call, scenario):
-            issue, run = self.prepare(call)
+            prepared = getattr(self, "_prepared_calls", None)
+            if prepared is None:
+                prepared = self._prepared_calls = {}
+            key = scenario.name, call.name
+            if key not in prepared:
+                prepared[key] = self.prepare(call)
+            issue, run = prepared[key]
             local = {**self.time_call(call, run),
-                     "bytes": call_bytes(call, self.parallel, self.instance_rank)}
+                      "bytes": call_bytes(call, self.parallel, self.instance_rank)}
+            if hasattr(issue,"buffer_receipt"):
+                local["buffer_receipt"] = issue.buffer_receipt
+            if hasattr(issue,"execution_policy"):
+                local["execution_policy"]=issue.execution_policy
             del issue, run
         gathered = self.gather(local)
         if gathered is None:
             return None
-        return {
+        record = {
             **self.call_record(scenario, call, gathered),
             "per_rank_call_us": [g["call_us"] if g else None for g in gathered],
             "per_rank_launch_call_us": [g["launch_call_us"] if g else None for g in gathered],
@@ -510,25 +637,71 @@ class CollectiveRunner:
             "per_rank_enqueue_us": [g["enqueue_us"] if g else None for g in gathered],
             "per_rank_queue_sleep_us": [g["queue_sleep_us"] if g else None for g in gathered],
         }
+        if any(g and "buffer_receipt" in g for g in gathered):
+            record["buffer_receipt"] = {str(rank):g["buffer_receipt"] for rank,g in enumerate(gathered) if g}
+        if any(g and "execution_policy" in g for g in gathered):
+            record["execution_policy"]={str(rank):g["execution_policy"] for rank,g in enumerate(gathered) if g}
+        return record
 
-    def kernel_names(self, call: CollectiveCall, scenario=None) -> list[str] | None:
+    def kernel_names(self, call: CollectiveCall, scenario=None, *, prepared=None) -> list[str] | None:
         """CUDA kernels of one ``run`` of ``call``, merged over ranks on the first rank."""
         torch = self.torch
         torch.distributed.barrier(group=self.instance_cpu)
-        names = []
+        names, graph_events = [], []
         if self.participates(call, scenario) and call.op != "cpu_all_reduce":
-            issue, run = self.prepare(call)
+            if prepared is None:
+                prepared = getattr(self, "_prepared_calls", {}).get((getattr(scenario,"name",None),call.name))
+            issue, run = self.prepare(call) if prepared is None else prepared
             with torch.profiler.profile(
-                    activities=[torch.profiler.ProfilerActivity.CUDA]) as profile:
+                    activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA]) as profile:
                 run()
                 torch.cuda.synchronize()
             names = [event.name for event in profile.events()
-                     if event.device_type == torch.autograd.DeviceType.CUDA]
+                      if event.device_type == torch.autograd.DeviceType.CUDA]
+            graph_events = [event.name for event in profile.events() if event.name == "cudaGraphLaunch"]
             del issue, run
-        gathered = self.gather(names)
+        evidence = self.gather({"kernels":names, "graph_events":graph_events})
+        gathered = None if evidence is None else [rank["kernels"] for rank in evidence]
         if gathered is None:
             return None
+        graphs = [rank["graph_events"] for rank in evidence]
+        per_repeat = self.settings["calls_per_repeat"]
+        self._last_kernel_evidence = {
+            "per_rank_events": gathered, "per_rank_graph_events": graphs,
+            "profiled_calls": per_repeat,
+            "per_rank_kernel_counts": [len(events)//per_repeat if events and len(events)%per_repeat == 0
+                                       else None for events in gathered],
+            "kernel_count_scope": "observed_device_events_per_native_call",
+            "graph_launch_count_scope": "observed_cpu_cudaGraphLaunch_events_per_profiled_run"}
+        self._last_kernel_evidence["per_rank_copy_events"] = [
+            [name for name in events if "memcpy" in name.lower() or "copy" in name.lower()]
+            for events in gathered]
         return sorted({name for rank_names in gathered for name in rank_names})
+
+    def measure_local_work(self, definition):
+        """Independent preallocated layout-specific CUDA probes, not native durations."""
+        kind, dtype, columns = definition["kind"], definition["dtype"], definition["columns"]
+        if kind not in ("copy", "add") or dtype not in ("bfloat16", "float8_e4m3fn", "float32", "int32"):
+            raise ValueError("Unsupported reached local-work proxy")
+        from frontier.profiling.collectives.vllm_forward_collectives import ForwardScenario
+        rows = definition["rows"]
+        scenario = ForwardScenario(definition["name"], (rows,)*self.parallel.data_parallel_size,
+                                   (0,)*self.parallel.data_parallel_size, definition["cuda_graph"])
+        call = CollectiveCall(definition["name"], "local_"+kind, "tp", 0, (columns,), (dtype,),
+                              (rows,)*self.parallel.world_size, 1, "independent_local_proxy", scenario.cuda_graph)
+        issue, run = self.prepare(call)
+        local = self.time_call(call, run)
+        gathered = self.gather(local)
+        kernels = self.kernel_names(call, scenario, prepared=(issue,run))
+        del issue, run
+        if gathered is None:
+            return None
+        return {**definition, "scope":"independent_preallocated_operand", "row_stride":columns,
+            "fp8_copy_byte_view":dtype == "float8_e4m3fn", "kernels":kernels,
+            "per_rank_call_us":[r["call_us"] for r in gathered],
+            "per_rank_launch_call_us":[r["launch_call_us"] for r in gathered],
+            "per_rank_queue_held":[r["queue_held"] for r in gathered],
+            "device":str(self.device), **self._last_kernel_evidence}
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
@@ -557,7 +730,8 @@ def main() -> None:
     scenarios = scenarios_from_grid(parallel, config["grid"])
     if args.dp_rail_isolation:
         scenarios = [replace(scenario, active_dp_rails=(0,)) for scenario in scenarios]
-    plan = [(s, c) for s in scenarios for c in forward_collectives(model, parallel, s)]
+    plan = [(s, c) for s in scenarios for c in forward_collectives(
+        model, parallel, s, native_call_names=config["grid"].get("native_call_names"))]
     settings = {key: int(config[key]) for key in RUN_SETTINGS}
     if args.list_cases:
         for scenario, call in plan:
@@ -569,13 +743,46 @@ def main() -> None:
               "measurements", len(plan) * settings["passes"])
         return
     runner = CollectiveRunner(parallel, settings, engine=config["engine"],
-                              dp_rail_isolation=args.dp_rail_isolation)
+                               dp_rail_isolation=args.dp_rail_isolation)
+    native_facts = None
+    identity_errors = []
+    if "profile_manifest" in config:
+        from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+        try:
+            if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST") != config["profile_manifest"] or any(
+                    os.environ.get(name) != value for name,value in config["native_environment"].items()):
+                raise ValueError("Actual collector binding/environment differs from prepared input")
+            native_callables = [getattr(group,name) for group in runner.groups.values()
+                for name in ("all_gatherv","reduce_scatterv_into_output","all_reduce")]
+            for group in runner.groups.values():
+                communicator=getattr(group,"device_communicator",None)
+                pynccl=getattr(communicator,"pynccl_comm",None)
+                if pynccl is not None:
+                    native_callables += [pynccl.all_gatherv,pynccl.reduce_scatterv]
+            native_facts=verify_step5_profile_runtime(config["profile_manifest"],callables=native_callables)
+        except Exception as error:
+            identity_errors.append(repr(error))
+            print("STEP5_COMM_ADVISORY native_identity",repr(error),flush=True)
     output = Path(config["output_dir"])
+    actual_runtime=None
+    if "profile_manifest" in config:
+        runtime={}
+        try:
+            runtime=runner.communicators()
+            policy=collective_runtime_policy(runtime)
+        except Exception as error:
+            policy={};identity_errors.append(repr(error))
+        actual_runtime=runner.gather(policy)
     log = None
     if runner.rank == 0:
         output.mkdir(parents=True, exist_ok=True)
+        if actual_runtime is None: runtime=runner.communicators()
+        if actual_runtime is not None: runtime["per_rank_startup_runtime"]={str(r):p for r,p in enumerate(actual_runtime)}
+        if native_facts is not None: runtime["native_facts"]=native_facts
         (output / "plan.json").write_text(json.dumps(
-            {"config": config, "cases": len(plan), "runtime": runner.communicators()},
+            {"config": config, "cases": len(plan), "runtime": runtime,
+              **({"evidence_kind":"native_measurement"} if native_facts is not None else {}),
+              **({"identity_errors":identity_errors} if "profile_manifest" in config else {})},
             indent=2))
         log = (output / "measurements.jsonl").open("a")
     records = []
@@ -585,18 +792,49 @@ def main() -> None:
             if record is None:
                 continue
             record = {"pass": pass_index, **record}
+            if native_facts is not None:
+                record.update(evidence_kind="native_measurement",native_context=dict(shared=native_facts["shared"],
+                    engine=config["engine"],native_environment=config["native_environment"],
+                    execution_policy=record.pop("execution_policy",{})),
+                    buffer_receipt=record.get("buffer_receipt",dict(scope="native_group_owned_prepared_buffers")))
             log.write(json.dumps(record) + "\n")
             log.flush()
             records.append(record)
-    kernels = {(s.name, c.name): runner.kernel_names(c, s) for s, c in plan}
+    kernels, evidence = {}, {}
+    for s,c in plan:
+        kernels[s.name,c.name] = runner.kernel_names(c,s)
+        if runner.rank == 0:
+            evidence[s.name,c.name] = runner._last_kernel_evidence
+    if native_facts is not None:
+        try:
+            verify_step5_profile_runtime(config["profile_manifest"],callables=native_callables)
+        except Exception as error:
+            identity_errors.append(repr(error))
+            print("STEP5_COMM_ADVISORY native_identity",repr(error),flush=True)
+    local_records = []
+    for definition in config["grid"].get("local_work", []):
+        for p in range(settings["passes"]):
+            record = runner.measure_local_work(definition)
+            if record is not None:
+                local_records.append({"pass":p, **record})
+    if "profile_manifest" in config:
+        identity_errors.extend(getattr(runner,"identity_errors",[]))
+        gathered_identity = runner.gather(identity_errors)
+        if gathered_identity is not None:
+            identity_errors = [error for errors in gathered_identity for error in errors]
     if runner.rank == 0:
         log.close()
+        if "profile_manifest" in config:
+            (output/"native_identity.json").write_text(json.dumps(dict(
+                status="UNVERIFIED" if identity_errors else "PASS",errors=identity_errors)))
         with (output / "kernels.jsonl").open("a") as kernel_log:
             for scenario, call in plan:
                 names = kernels[(scenario.name, call.name)]
                 kernel_log.write(json.dumps({"scenario": scenario.name, "call": call.name,
-                                             "communicator": actual_communicator(call.op, names),
-                                             "kernels": names}) + "\n")
+                                              "communicator": actual_communicator(call.op, names),
+                                              "kernels": names, **evidence[scenario.name,call.name]}) + "\n")
+        if local_records:
+            (output/"local_work.jsonl").write_text("".join(json.dumps(r)+"\n" for r in local_records))
         summary = [summarize({**r, "kernels": kernels[(r["scenario"], r["call"])]})
                    for r in records]
         write_csv(output / "summary.csv", summary)

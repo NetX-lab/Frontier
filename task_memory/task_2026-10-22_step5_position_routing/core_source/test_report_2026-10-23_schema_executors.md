@@ -1,0 +1,15 @@
+# Schema, executor and actual model lookup evidence
+
+## Modification History
+| Date | Change |
+| --- | --- |
+| 2026-10-23 | Record independent selected consumer checks and real registry boundary. |
+
+TaskID: D29-CORE-SOURCE-IMPLEMENTATION. Environment: `/data/ycfeng/envs/frontier-py310/bin/python`, Python3.10.6. Every command uses `PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=$PWD`, `python -B`, `pytest -q -p no:cacheprovider`, logs/basetemp below `/data/ycfeng/tmp`.
+
+1. `--basetemp=/data/ycfeng/tmp/d29-core-schema-executors02 tests/unit/test_moe_grouped_gemm_padded_features.py tests/unit/test_step5_measured_ffn.py tests/unit/test_moe_routing_conservation.py tests/unit/test_moe_profiling_output_metadata.py > /data/ycfeng/tmp/d29-core-schema-executors02.log 2>&1`: **65 PASS,1 SKIP**. Sequential, multiprocessing and Ray branches run actual profile_model cell enumeration; CPU wrapper/transport spies only. Each preserves36 cells, source16 vs gathered17, actual source association. Multiprocessing has no cross-GPU submission ordering contract; test compares cell set and uses frame_scope. Native schema SKIP requires PRICING registry import authority.
+2. `--basetemp=/data/ycfeng/tmp/d29-core-selected-model01 tests/unit/test_step5_measured_ffn.py tests/unit/test_moe_grouped_gemm_padded_features.py tests/unit/test_moe_position_routing.py tests/unit/test_moe_routing_conservation.py tests/unit/test_moe_profiling_output_metadata.py > /data/ycfeng/tmp/d29-core-selected-model01.log 2>&1`: **72 PASS,2 SKIP**. Real manager storage/lookup preserves FP8 and BF16 precision selection through `_step5_ffn_model`; generic `_predictions` cannot satisfy this path. Exact paired/source/cache tests retained. Native-schema import and existing torch-dependent case remain SKIP.
+3. `git diff --check` and Python AST/exact44-path per-file ceiling accounting: **PASS**,40 changed owned paths. Gross after removing unreachable generic native-range guard:2514/4404. No quota borrowed, peer edits or new unallocated files.
+4. Actual inline CPU registry diagnostic, same env, using `tests.unit.test_step5_measured_training._manager`, model's real layer3/TP1/EP16 resolved contract, `_store_model_precision` twice, actual `_measurement_family_name`, then `_contract_precision_registry`: `/data/ycfeng/tmp/d29-core-registry-collision03.log`. **Boundary reproduced**: only the second FP8 binding remains. First two diagnostic attempts inspected hardcoded `device_event` instead of actual CUDA_EVENT family and failed KeyError before collision observation; preserved as collision01/02 logs. Third uses actual family. No production registry changed.
+
+Limits: CPU plumbing and source contracts, no native kernel timing/fidelity, full installed runtime, GPU or actual-main qualification. The native feature branch intentionally requires actual supplied context and PRICING feature API; no legacy model is substituted. Existing registry collision is root-owned coordination, not repaired here.

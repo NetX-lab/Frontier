@@ -262,3 +262,28 @@ def test_cli_capacity_smaller_than_grid_is_rejected(tmp_path, flag, value):
     with pytest.raises(ValueError, match="must cover"):
         main(["--model-path", str(tmp_path), "--max-model-len", "7168", "--output-dir", str(tmp_path),
               "--decode-batches", "2", "--prefill-tokens", "16", flag, value, "--dry-run"])
+
+
+def test_position_moe_cli_uses_explicit_input_widths_not_the_legacy_token_grid(tmp_path, monkeypatch):
+    import json
+    import sys
+    from frontier.profiling.moe import main
+    from frontier.profiling.moe.inputs import SCHEMA_VERSION
+    path = tmp_path / "inputs.json"
+    path.write_text(json.dumps(dict(schema_version=SCHEMA_VERSION, routing_runtime_path="position_cyclic", inputs=[dict(
+        moe_input_id="cpu_plumbing", gathered_physical_rows=17, source_frames=[dict(source_lane_id=i,
+        query_lens=[] if i else [2], context_lens=[] if i else [6128], physical_rows=1 if i else 16,
+        gating_runtime_context="standalone_legacy") for i in range(2)])])))
+    argv = ["moe", "--device", "h800", "--models", "stepfun-ai/Step-5-Preview", "--num_tensor_parallel_workers", "1",
+            "--expert_parallel_sizes", "16", "--routing_runtime_path", "position_cyclic", "--routing_input_file", str(path), "--dry_run"]
+    monkeypatch.setattr(sys, "argv", argv)
+    args, _ = main.parse_args()
+    model = main._dry_run(args, [4096])["models"][args.models[0]]
+    assert model["profiled_steps"] == 36 and model["routing_inputs"][0]["gathered_physical_rows"] == 17
+    assert model["routing_inputs"][0]["source_frames"][1]["query_lens"] == ()
+    monkeypatch.setattr(sys, "argv", argv[:-3] + ["--dry_run"])
+    with pytest.raises(SystemExit):
+        main.parse_args()
+    args.num_tensor_parallel_workers = [8]
+    with pytest.raises(ValueError, match="MoE-TP1/EP16"):
+        main._dry_run(args, [4096])

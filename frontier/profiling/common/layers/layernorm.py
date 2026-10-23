@@ -162,13 +162,21 @@ class Step5RMSNorm(nn.Module):
                     "Step RMSNorm profiling requires make_step5_rms_norm "
                     "from the Step vLLM image."
                 ) from exc
-            self._impl = make_step5_rms_norm(
+            impl = make_step5_rms_norm(
                 self.hidden_size,
                 eps=self.variance_epsilon,
                 zero_centered=self.zero_centered,
                 dtype=self._weight_dtype,
             )
-            self._impl.weight = self.weight
+            impl.weight = self.weight
+            import os
+            manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
+            if manifest:
+                from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+                self.native_facts = verify_step5_profile_runtime(
+                    manifest, callables=(make_step5_rms_norm, type(impl), impl.forward),
+                )
+            self._impl = impl
         return self._impl
 
     def forward(self, x: torch.Tensor, residual: Optional[torch.Tensor] = None):

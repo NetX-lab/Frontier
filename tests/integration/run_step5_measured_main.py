@@ -61,7 +61,7 @@ def source_identity():
 
 def read_profile(path):
     fixture = json.loads(path.read_text())
-    require(fixture["schema"] == "step5_measured_compute_cpu_fixture.v2",
+    require(fixture["schema"] in ("step5_measured_compute_cpu_fixture.v2","step5_position_compute_cpu_fixture.v1"),
             "Historical full-prompt fixture cannot cover the corrected P target; generate a new fixture")
     for key, value in (("evidence_kind", "cpu_fixture"), ("native_admitted", False),
                        ("device", "h800"), ("attention_tp", 8), ("attention_dp", 2),
@@ -70,8 +70,9 @@ def read_profile(path):
         require(fixture[key] == value, f"Unsupported fixture {key}: {fixture[key]}")
     require(fixture["decode_cuda_graph_mode"] == "full_and_piecewise", "Fixture graph policy must be native")
     require(fixture["cases"][0] == [6128, 0, "prefill", "none"], "Fixture must cover actual P6128")
-    require(fixture["routing_distribution_type"] == "balanced" and fixture["routing_seed"] == 42,
-            "Fixture must retain explicit balanced routing")
+    expected="position_cyclic" if fixture["schema"] == "step5_position_compute_cpu_fixture.v1" else "balanced"
+    require(fixture["routing_distribution_type"] == expected and fixture["routing_seed"] == 42,
+             "Fixture must retain its explicit routing policy")
     return fixture
 
 
@@ -124,7 +125,7 @@ def command(mode, root, fixture, read_cost):
         "--replica_config_device", "h800", "--replica_config_network_device", "h800_dgx",
         "--replica_config_attn_dp", "2", "--replica_config_attention_backend", "STEP5_DSA",
         "--replica_config_kv_cache_dtype", "auto",
-        "--replica_config_moe_routing_distribution_type", "balanced",
+        "--replica_config_moe_routing_distribution_type", fixture.get("routing_distribution_type","balanced"),
         "--replica_config_moe_routing_seed", "42",
         "--replica_scheduler_config_type", "vllm_v1",
         "--no-vllm_v1_scheduler_config_enable_prefix_caching",
@@ -153,6 +154,11 @@ def command(mode, root, fixture, read_cost):
         "--no-metrics_config_enable_op_level_tracing", "--no-metrics_config_store_plots",
         "--no-metrics_config_enable_chrome_trace", "--metrics_config_write_json_trace",
     ]
+    if fixture.get("routing_distribution_type","balanced") == "position_cyclic":
+        args.append("--metrics_config_enable_op_level_tracing")
+        args.remove("--no-metrics_config_enable_op_level_tracing")
+        args.extend(("--collective_sim_cc_backend_config_profiling_data_dir",str(Path(fixture["collective_plan_input_file"]).parents[1])))
+        args.extend(("--collective_sim_cc_backend_config_placement_order","TP,DP"))
     for role in ("prefill", "decode"):
         prefix = f"--cluster_config_{role}_replica_config_"
         for key, value in dict(num_pipeline_stages=1, attn_tensor_parallel_size=8,
@@ -217,6 +223,39 @@ def validate(root, mode, document):
             == Counter({(16,): 1, (1,): 1023}), "Wrong D tail/forward census")
     first_decode = min(decode, key=lambda row: row["stage_start_ts"])
     require(first_decode["stage_start_ts"] >= read_end["target_ready_time"], "D launched before READ readiness")
+    if cluster["prefill_replica_config"]["moe_routing_distribution_type"] == "position_cyclic":
+        lanes=[json.loads(line) for line in (run/"frontier_ep_wave_lane_ledger.jsonl").read_text().splitlines()]
+        require(lanes and all("routing_source" in row for row in lanes),"Missing actual position source census")
+        empty=0
+        for row in lanes:
+            source=row["routing_source"]
+            require(sum(s["physical_rows"] for s in source["source_lanes"])==source["gathered_physical_rows"],"Physical source conservation failed")
+            from frontier.moe_routing_policy import source_lane_index_for_ep
+            from frontier.operators.families import get_moe_profiling_operators
+            from frontier.operators.binding import bind_operator_query
+            replica=cluster[row["cluster"].lower()+"_replica_config"]
+            owner=source["source_lanes"][source_lane_index_for_ep(row["ep_id"],attention_tp_size=replica["attn_tensor_parallel_size"],
+                source_lane_count=len(source["source_lanes"]),participant_ep_ids=range(replica["world_size"]))]
+            context=row["phases"]["dispatch"]["collective_proofs"]["step5_moe_dispatch"]["plan"]["buffers"]["compute_context"]
+            applicable={op.name for op in get_moe_profiling_operators(context)}
+            require({name for phase in row["phases"].values() for name in phase["operators_ms"]} >= applicable,"Missing applicable compute source operators")
+            empty+=int(owner["live_rows"]==0)
+            for phase in row["phases"].values():
+                require("moe_shuffling" not in phase["operators_ms"],"Position path charged legacy shuffle")
+                compute={name for name,duration in phase["operators_ms"].items() if (duration>0 or name in applicable) and bind_operator_query(name).operator.trace_kind.value=="COMPUTE"}
+                require(set(phase.get("compute_proofs",{})) == compute,"Missing actual compute source proof correspondence")
+                require(all(bind_operator_query(name).family_id!="moe" or name in applicable for name in compute),"Inapplicable compute source operator")
+                for name,proof in phase.get("compute_proofs",{}).items():
+                    require(proof["exact_lookup"] and math.isfinite(proof["duration_ms"]) and proof["duration_ms"]>0 and
+                            not isinstance(proof["kernel_count"],bool) and math.isfinite(proof["kernel_count"]) and proof["kernel_count"]>0 and proof["kernel_count"]==int(proof["kernel_count"]) and
+                            proof["duration_ms"]==phase["operators_ms"].get(name),"Missing exact positive compute pair")
+                for proof in phase.get("collective_proofs",{}).values():
+                    plan,cost=proof["plan"],proof["cost"]
+                    require(plan["sizes"]==[s["physical_rows"] for s in source["source_lanes"]],"Collective physical sizes mismatch")
+                    require(len(cost["kernel_counts"])==16 and all(n>0 for n in cost["kernel_counts"]),"Missing collective count pairs")
+                    require(json.loads(cost["count_receipt_json"])["evidence_kind"]=="cpu_fixture","CPU actual-main must remain CPU evidence")
+                    require(abs(cost["duration_ms"]-cost["network_ms"]-max(cost["local_rank_ms"])-cost["remainder_ms"])<1e-9,"Collective completion equation mismatch")
+        require(empty>0,"No empty physical source scope retained")
     require(all(math.isfinite(row["execution_time"]["total_time_ms"])
                 and row["execution_time"]["total_time_ms"] > 0 for row in useful), "Invalid stage cost")
     return dict(mode=mode, status="PASS", evidence_kind="cpu_fixture", native_admitted=False,

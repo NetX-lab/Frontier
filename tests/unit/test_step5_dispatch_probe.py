@@ -12,6 +12,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from tests.unit.test_step5_fixed_probe import installed_profile_receipt
 
 from frontier.profiling.collectives import step5_dispatch_probe as probe
 
@@ -30,7 +31,7 @@ def model_path(tmp_path):
 
 def arguments(model_path, tmp_path, *extra):
     return probe.parse_args(["--model-path", str(model_path),
-                             "--output-dir", str(tmp_path / "output"), *extra])
+                              "--output-dir", str(tmp_path / "output"), *extra])
 
 
 @pytest.mark.parametrize("limits", [None, {"max_model_len": 7168,
@@ -333,6 +334,33 @@ class CpuCoordinator:
 
     def all_reduce(self, input_):
         return input_
+
+
+def test_bound_observer_uses_actual_branch_policy_without_blocking_native_errors(monkeypatch):
+    from frontier.profiling.collectives import vllm_collective_benchmark as benchmark
+    tensor=SimpleNamespace(shape=(1,2),stride=lambda:(2,1),dtype="torch.bfloat16",
+        element_size=lambda:2,numel=lambda:2,device="cpu",data_ptr=lambda:1)
+    calls=[];error=RuntimeError("actual_native_error")
+    def native(*a,**kw):
+        calls.append("native")
+        if len(calls)>1: raise error
+        return tensor
+    pynccl=SimpleNamespace(reduce_scatterv=native)
+    group=CpuCoordinator([]);group.device_communicator=SimpleNamespace(pynccl_comm=pynccl)
+    monkeypatch.setattr(CpuCoordinator,"reduce_scatterv_into_output",lambda group,input_,output,dim=0,sizes=None:pynccl.reduce_scatterv(input_,output))
+    import types
+    allocator=types.ModuleType("vllm.distributed.device_communicators.pynccl_allocator")
+    allocator.is_symmetric_memory_tensor=lambda tensor:False
+    monkeypatch.setitem(sys.modules,allocator.__name__,allocator)
+    monkeypatch.setitem(sys.modules,"torch",SimpleNamespace(distributed=SimpleNamespace(),ops=SimpleNamespace(vllm=SimpleNamespace())))
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
+    observer=probe.DispatchObserver(lambda event:None);observer.runtime_policy=lambda:{"cpu_fixture":True}
+    with observer.collectives(CpuCoordinator):
+        assert group.reduce_scatterv_into_output(tensor,tensor,0,[1,1]) is tensor
+        with pytest.raises(RuntimeError) as caught: group.reduce_scatterv_into_output(tensor,tensor,0,[1,1])
+    assert caught.value is error and calls == ["native","native"]
+    policy=observer.calls[0]["execution_policy"]
+    assert policy["branches"] == ["pynccl_comm.reduce_scatterv"] and policy["runtime"] == observer.runtime_policy()
 
 
 def test_observation_precedes_original_and_preserves_arguments_and_result():
@@ -813,3 +841,261 @@ def test_official_layer_prepare_finalize_and_group_calls_on_cpu(
     assert observer.calls[0]["group_ranks"] == expected["group_ranks"]["dp"]
     assert observer.calls[0]["sizes"] == sizes
     assert all(call["completed"] for call in observer.calls)
+def test_bound_probe_plans_exact_input_layer_keys(model_path,tmp_path,monkeypatch):
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST",str(tmp_path/"manifest.json"))
+    monkeypatch.setenv("VLLM_MOE_ROUTING_SIMULATION_STRATEGY","position_cyclic")
+    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput
+    monkeypatch.setattr("frontier.profiling.moe.inputs.read_routing_profile_inputs",lambda path:[
+        MoERoutingProfileInput("tail16",(
+            MoESourceFrame(0,(16,),(6128,),16,"standalone_legacy"),
+            MoESourceFrame(1,(),(),1,"standalone_legacy")),17)])
+    args=arguments(model_path,tmp_path,"--routing-input-file",str(tmp_path/"inputs.json"),
+        "--moe-input-ids","tail16","--tensor-parallel-size","8")
+    plan=probe.probe_plan(args)
+    assert [(c["routing_input"]["moe_input_id"],c["layer_id"]) for c in plan["cases"]] == [("tail16",3),("tail16",88)]
+    assert plan["verification_scope"] == "eager_native_moe_module"
+    assert not plan["full_model_verified"] and "tokens_per_dp_rank" not in plan
+
+
+def test_bound_forward_materializes_core_positions_once_and_preserves_native_exception(monkeypatch):
+    torch=pytest.importorskip("torch")
+    from contextlib import contextmanager
+    from frontier.profiling.moe.inputs import MoESourceFrame,source_frame_tensors
+    materialized=[];events=[]
+    def materialize(frame,*,device):
+        materialized.append(frame)
+        return source_frame_tensors(frame,device=device)
+    @contextmanager
+    def forward(*args,**kwargs):
+        assert kwargs["is_padding"].tolist() == [False]*16+[True]
+        events.append("forward_enter")
+        try: yield
+        finally: events.append("forward_exit")
+    @contextmanager
+    def positions(value):
+        assert value.dtype == torch.int64 and value.tolist() == list(range(6128,6144))+[0]
+        events.append("positions_enter")
+        try: yield
+        finally: events.append("positions_exit")
+    monkeypatch.setattr("frontier.profiling.moe.inputs.source_frame_tensors",materialize)
+    monkeypatch.setitem(sys.modules,"vllm.forward_context",SimpleNamespace(set_forward_context=forward,set_routing_positions=positions))
+    frame=dict(source_lane_id=0,query_lens=[16],context_lens=[6128],physical_rows=17,gating_runtime_context="standalone_legacy")
+    error=RuntimeError("native_failed")
+    with pytest.raises(RuntimeError) as caught:
+        with probe.source_forward_context(object(),17,[17,1],"cpu",dict(source_frames=[frame]),0): raise error
+    assert caught.value is error and materialized == [MoESourceFrame(**frame)]
+    assert events == ["forward_enter","positions_enter","positions_exit","forward_exit"]
+
+
+@pytest.mark.parametrize("fault",[None,"ids","weights","mask","config","strategy","native_error","diagnostic",
+    "padding_ids","padding_weights","topk","experts","normalization","positions","enter_diagnostic","native_error_diagnostic"])
+@pytest.mark.parametrize("normalize",[False,True])
+@pytest.mark.parametrize("pad_only",[False,True])
+def test_actual_native_router_observer_checks_values_once_after_execution(monkeypatch,fault,normalize,pad_only):
+    torch=pytest.importorskip("torch")
+    import ast,types
+    from tests.unit.test_step5_native_position_cyclic import native
+    native=native.__wrapped__()
+    native.ns["RoutingMethodType"]=SimpleNamespace(Simulated=SimpleNamespace(name="Simulated"))
+    router=native.factory(8,352,scoring_func="sigmoid",renormalize=normalize,routed_scaling_factor=3.)
+    path=native.root/"model_executor/layers/fused_moe/router/fused_moe_router.py"
+    cls=next(n for n in ast.parse(path.read_text()).body if isinstance(n,ast.ClassDef))
+    fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name == "select_experts")
+    exec(compile(ast.Module(body=[fn],type_ignores=[]),str(path),"exec"),native.ns)
+    router._routing_replay_out=None
+    original=types.MethodType(native.ns["select_experts"],router)
+    calls=[];error=RuntimeError("original router failure")
+    def selected(hidden_states,router_logits,topk_indices_dtype=None,*,input_ids=None):
+        calls.append((hidden_states,router_logits,input_ids))
+        if fault in ("native_error","native_error_diagnostic"): raise error
+        value=original(hidden_states=hidden_states,router_logits=router_logits,
+            topk_indices_dtype=topk_indices_dtype,input_ids=input_ids)
+        if fault == "ids": value[1][0,0]=99
+        if fault == "weights": value[0][0,0]=99.
+        if fault == "padding_ids": value[1][-1,0]=0
+        if fault == "padding_weights": value[0][-1,0]=1.
+        return value
+    router.select_experts=selected
+    positions=torch.tensor([6128,6144,0],dtype=torch.int64);mask=torch.tensor([False,False,True])
+    if pad_only: mask[:]=True
+    native.context.is_padding=mask
+    hidden=torch.zeros(3,4);logits=torch.arange(3*352).reshape(3,352).float()%31-15
+    saved=logits.clone()
+    monkeypatch.setitem(sys.modules,"vllm.forward_context",SimpleNamespace(get_forward_context=lambda:native.context))
+    monkeypatch.setitem(sys.modules,"vllm.envs",native.env)
+    monkeypatch.setitem(sys.modules,"vllm",SimpleNamespace(envs=native.env))
+    monkeypatch.setitem(sys.modules,"vllm.model_executor.layers.fused_moe.router.routing_simulator_router",
+        SimpleNamespace(RoutingSimulator=native.ns["RoutingSimulator"]))
+    if fault == "mask": native.env.VLLM_MOE_SKIP_PADDING=False
+    if fault == "config": router.routed_scaling_factor=2.
+    if fault == "topk": router.top_k=7
+    if fault == "experts": router.global_num_experts=351
+    if fault == "normalization": router.renormalize=not normalize
+    if fault == "strategy": native.env.VLLM_MOE_ROUTING_SIMULATION_STRATEGY="uniform_random"
+    observer=probe.DispatchObserver(lambda e:None)
+    if fault == "diagnostic": monkeypatch.setattr(probe,"tensor_schema",lambda t:(_ for _ in ()).throw(OSError("diagnostic failed")))
+    if fault in ("enter_diagnostic","native_error_diagnostic"):
+        sys.modules["vllm.forward_context"].get_forward_context=lambda:(_ for _ in ()).throw(OSError("context diagnostic failed"))
+    with observer.routing(router),native.setter(positions+1 if fault == "positions" else positions):
+        if fault in ("native_error","native_error_diagnostic"):
+            with pytest.raises(RuntimeError) as caught: router.select_experts(hidden_states=hidden,router_logits=logits,input_ids=None)
+            assert caught.value is error
+        else:
+            value=router.select_experts(hidden_states=hidden,router_logits=logits,input_ids=None)
+    assert router.select_experts is selected and len(calls) == 1
+    assert calls[0][0] is hidden and calls[0][1] is logits and not observer.calls
+    assert torch.equal(logits,saved) and torch.equal(hidden,torch.zeros_like(hidden))
+    if fault in ("native_error","native_error_diagnostic"):
+        if fault == "native_error_diagnostic": assert observer.errors
+        return
+    text=SimpleNamespace(moe_num_experts=352,moe_top_k=8,moe_router_activation="sigmoid",
+        norm_expert_weight=normalize,moe_router_scaling_factor=3.)
+    verdict=observer.compare_routing((positions,mask),text)
+    assert verdict["status"] == ("match" if fault is None else "unverified" if fault in ("diagnostic","enter_diagnostic") else "discrepancy"),verdict
+    assert observer.routing_calls[0]["result"] is value and observer.routing_calls[0]["logits"] is logits
+    if fault in ("diagnostic","enter_diagnostic"): assert observer.errors
+    else: assert verdict["observations"][0]["actual_config"]["top_k"] == (7 if fault == "topk" else 8)
+
+
+def test_observed_compute_point_retains_original_operands(monkeypatch):
+    torch=pytest.importorskip("torch")
+    from frontier.profiling.moe.fp8_block_experts import NativeRoutedExperts
+    class TritonExperts:
+        def apply(self,hidden_states,w1,w2,topk_weights,topk_ids,a1q_scale,expert_map,activation,global_num_experts):
+            return hidden_states
+    expert=TritonExperts();activation=torch.ones(17,4);ids=torch.zeros(17,8,dtype=torch.int32)
+    weights=torch.zeros(17,8);source=[activation[:16],weights[:16],ids[:16]]
+    gathered=[activation,weights,ids];observer=probe.DispatchObserver(lambda e:None)
+    observer.routing_calls=[dict(result=(source[1],source[2]))]
+    observer.collective_operands=[dict(op="all_gatherv",inputs=source,outputs=gathered),
+        dict(op="reduce_scatterv_into_output",outputs=[activation[:16]])]
+    kernel=SimpleNamespace(fused_experts=expert)
+    layer=SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=SimpleNamespace(
+        moe_kernel=kernel,unquantized_backend=SimpleNamespace(value="TRITON")))))
+    seen=[]
+    def context(self,hidden,scales,**kwargs):
+        seen.append((hidden,scales,kwargs));return dict(experts_class="TritonExperts",native_facts=dict(shared="cpu_fixture"))
+    monkeypatch.setattr(NativeRoutedExperts,"prepared_context",context)
+    with observer.experts(expert):
+        assert expert.apply(hidden_states=activation,w1=torch.empty(22,8,4),w2=torch.empty(22,4,4),
+            topk_weights=weights,topk_ids=ids,a1q_scale=None,expert_map=None,activation="swiglustep",global_num_experts=352) is activation
+    value=observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+    assert len(seen) == 1 and seen[0][0] is activation and seen[0][2]["topk_ids"] is ids
+    assert seen[0][2]["source_tensors"][0] is source[0]
+    assert value["collective_tensors"]["dispatch"][2]["dtype"] == "int32"
+    assert value["routing_runtime_path"] == "position_cyclic"
+    observer.collective_operands[0]["outputs"]=[activation.clone(),weights,ids]
+    with pytest.raises(ValueError,match="operands"): observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+
+
+def test_native_point_writer_uses_existing_prepared_context_and_source_verifier(monkeypatch):
+    torch=pytest.importorskip("torch")
+    import types
+    from frontier.profiling.common import runtime_identity
+    class TritonExperts:
+        quant_config=SimpleNamespace(quant_dtype=None,use_int8_w8a16=False,use_int4_w4a16=False,
+            config_name=lambda dtype:"cpu_fixture")
+        expects_unquantized_inputs=False;a2_scale=None;block_shape=None;_lora_context=None
+        per_act_token_quant=False;quantization_emulation=False;quant_dtype=None
+        def workspace_shapes(self,*args): return ((136,4),(136,4),(17,4))
+        def finalize_weight_and_reduce_impl(self): return self
+        def apply(self,hidden_states,w1,w2,topk_weights,topk_ids,a1q_scale,expert_map,activation,global_num_experts): return hidden_states
+    module=types.ModuleType("vllm.model_executor.layers.fused_moe.experts.triton_moe");module.TritonExperts=TritonExperts
+    deep=types.ModuleType("vllm.model_executor.layers.fused_moe.experts.deep_gemm_moe");deep.DeepGemmExperts=type("DeepGemmExperts",(),{})
+    fused=types.ModuleType("vllm.model_executor.layers.fused_moe.fused_moe")
+    fused.try_get_optimal_moe_config=lambda *a:dict(BLOCK_SIZE_M=16)
+    fused._prepare_expert_assignment=lambda *a,**kw:(None,None,torch.tensor(32))
+    for m in (module,deep,fused): monkeypatch.setitem(sys.modules,m.__name__,m)
+    seen=[];monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
+    monkeypatch.setattr(runtime_identity,"verify_step5_profile_runtime",lambda path,**kw:seen.append(kw["callables"]) or dict(shared="cpu_fixture",imports={},callables={}))
+    a=torch.ones(17,4,dtype=torch.bfloat16);ids=torch.zeros(17,8,dtype=torch.int32);weights=torch.zeros(17,8)
+    expert=TritonExperts();method=SimpleNamespace(moe_kernel=SimpleNamespace(fused_experts=expert),unquantized_backend=SimpleNamespace(value="TRITON"))
+    layer=SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=method)))
+    observer=probe.DispatchObserver(lambda e:None)
+    observer.collective_operands=[dict(op="all_gatherv",inputs=[a[:16],weights[:16],ids[:16]],outputs=[a,weights,ids]),
+        dict(op="reduce_scatterv_into_output",outputs=[a[:16]])]
+    observer.routing_calls=[dict(result=tuple(observer.collective_operands[0]["inputs"][1:3]))]
+    with observer.experts(expert):
+        assert expert.apply(hidden_states=a,w1=torch.empty(22,8,4),w2=torch.empty(22,4,4),topk_weights=weights,
+            topk_ids=ids,a1q_scale=None,expert_map=None,activation="swiglustep",global_num_experts=352) is a
+    context=observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+    assert context["native_padding"] == dict(scheme="triton_expert_assignment",alignment=16,num_tokens_post_padded=32,
+        ignore_invalid_experts=False,config=dict(BLOCK_SIZE_M=16))
+    assert context["source_activation_layout"]["shape"] == [16,4] and context["activation_layout"]["shape"] == [17,4]
+    assert context["native_facts"] == dict(shared="cpu_fixture",imports={},callables={}) and expert.apply in seen[0]
+    from dataclasses import asdict
+    from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
+    from tests.unit.test_step5_comm_cost_export import EXPORT
+    inp=MoERoutingProfileInput("observed16",(MoESourceFrame(0,(16,),(0,),16,"standalone_legacy"),
+        MoESourceFrame(1,(1,),(0,),1,"standalone_legacy")),17)
+    policy=dict(branches=["cpu_fixture"],runtime=dict(pynccl_versions={"dp":"cpu_fixture"}))
+    schemas=[probe.tensor_schema(t) for t in observer.collective_operands[0]["inputs"]]
+    call=dict(op="all_gatherv",group_ranks=[0,8],execution_policy=policy,inputs=schemas,completed=True)
+    record=dict(op="all_gatherv",call="moe_dispatch_all_gatherv_bf16",participating_ranks=[0],group_ranks=[[0,8]],
+        tokens_per_dp_rank=[16,1],dtypes=[t["dtype"] for t in schemas],columns=[t["shape"][1] for t in schemas],
+        native_context=dict(shared="cpu_fixture",execution_policy={"0":policy}))
+    layer=dict(layer_id=88,moe_input_id=inp.moe_input_id,source_frame=json.loads(json.dumps(asdict(inp.source_frames[0]))),
+        compute_context=context,comparison=dict(status="match"),routing_comparison=dict(status="match"),collectives=[call])
+    points=EXPORT.observed_collective_points(record,dict(parallelism=dict(tp=8),ranks=[dict(rank=0,layers=[layer])]),{inp.moe_input_id:inp})
+    assert len(points) == 1 and points[0]["compute_context"] is context
+    assert points[0]["native_point"]["inputs"] is schemas
+    record["useful_tokens_per_dp_rank"]=[16,0]
+    assert EXPORT.observed_collective_points(record,dict(parallelism=dict(tp=8),ranks=[dict(rank=0,layers=[layer])]),{inp.moe_input_id:inp}) == []
+    observer.routing_calls[0]["result"]=(weights[:16],ids[:16])
+    with pytest.raises(ValueError,match="router outputs"): observer.compute_context(SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=method))),SimpleNamespace(model_type="step5"))
+
+
+@pytest.mark.parametrize("fault",[None,"callable","source","layout","ambient"])
+def test_two_native_point_producers_join_with_different_valid_imports(installed_profile_receipt,monkeypatch,tmp_path,fault):
+    torch=pytest.importorskip("torch")
+    import importlib.util
+    from dataclasses import asdict
+    from frontier.profiling.moe.fp8_block_experts import NativeRoutedExperts
+    from frontier.profiling.common.runtime_identity import file_sha256,canonical_json
+    from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
+    from tests.unit.test_step5_comm_cost_export import EXPORT
+    path,modules,manifest=installed_profile_receipt;root=Path(manifest["native_binding"]["installed_package"])
+    texts={"experts.triton_moe":"class TritonExperts:\n def apply(self,hidden_states,**kwargs): return hidden_states\n def workspace_shapes(self,*a): return ((136,4),(136,4),(17,4))\n def finalize_weight_and_reduce_impl(self): return self\n",
+        "experts.deep_gemm_moe":"class DeepGemmExperts: pass\n",
+        "fused_moe":"import torch\ndef try_get_optimal_moe_config(*a): return {'BLOCK_SIZE_M':16}\ndef _prepare_expert_assignment(*a,**kw): return None,None,torch.tensor(32)\n"}
+    receipt_path=path.parent/manifest["native_binding"]["native_source_receipt"];receipt=json.loads(receipt_path.read_text())
+    for suffix,text in texts.items():
+        name="vllm.model_executor.layers.fused_moe."+suffix;p=root/Path(*name.split(".")[1:]).with_suffix(".py")
+        p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text);receipt["sources"]["vllm/"+p.relative_to(root).as_posix()]=file_sha256(p)
+        spec=importlib.util.spec_from_file_location(name,p);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);monkeypatch.setitem(sys.modules,name,module)
+    receipt_path.write_text(json.dumps(receipt));manifest["sha256"][receipt_path.name]=file_sha256(receipt_path);path.write_text(json.dumps(manifest))
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST",str(path))
+    expert=sys.modules["vllm.model_executor.layers.fused_moe.experts.triton_moe"].TritonExperts()
+    expert.quant_config=SimpleNamespace(quant_dtype=None,use_int8_w8a16=False,use_int4_w4a16=False,config_name=lambda dtype:"cpu_fixture")
+    for k,v in dict(expects_unquantized_inputs=False,a2_scale=None,block_shape=None,_lora_context=None,per_act_token_quant=False,quantization_emulation=False,quant_dtype=None).items(): setattr(expert,k,v)
+    kernel=SimpleNamespace(fused_experts=expert);a=torch.ones(17,4096,dtype=torch.bfloat16);weights=torch.zeros(17,8);ids=torch.zeros(17,8,dtype=torch.int32)
+    w1=torch.empty(22,8,4);w2=torch.empty(22,4,4);original={"constructor":"retained"}
+    native=NativeRoutedExperts("TRITON","TritonExperts",None,kernel,w1,w2,"swiglustep",352,original)
+    extra="vllm.model_executor.layers.fused_moe.oracle.unquantized";module=modules[extra];monkeypatch.delitem(sys.modules,extra)
+    profile=native.prepared_context(a,None,topk_ids=ids,source_tensors=(a[:16],None));first=native.point_diagnostics
+    monkeypatch.setitem(sys.modules,extra,module)
+    if fault == "callable":
+        ns={"__name__":type(expert).__module__};exec(compile("def apply(self,*a,**kw): pass",str(tmp_path/"foreign.py"),"exec"),ns);expert.apply=ns["apply"].__get__(expert)
+    elif fault in ("source","ambient"): Path((sys.modules[type(expert).__module__] if fault == "source" else module).__file__).write_text("# changed native bytes\n")
+    observer=probe.DispatchObserver(lambda e:None);source=[a[:16],weights[:16],ids[:16]]
+    observer.collective_operands=[dict(op="all_gatherv",inputs=source,outputs=[a,weights,ids]),dict(op="reduce_scatterv_into_output",outputs=[a[:16]])]
+    observer.routing_calls=[dict(result=(source[1],source[2]))]
+    observer.expert_operands=[(expert,dict(hidden_states=a,topk_weights=weights,topk_ids=ids,a1q_scale=None,w1=w1,w2=w2,activation="swiglustep",global_num_experts=352,expert_map=None))]
+    layer=SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=SimpleNamespace(moe_kernel=kernel,unquantized_backend=SimpleNamespace(value="TRITON")))))
+    if fault in ("callable","source","ambient"):
+        with pytest.raises((ValueError,FileNotFoundError)): observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+        return
+    point=observer.compute_context(layer,SimpleNamespace(model_type="step5"))
+    profile.update(model_architecture_profile="step5",routing_runtime_path="position_cyclic",collective_tensors=point["collective_tensors"])
+    if fault == "layout": profile["activation_layout"]["stride"]=[1,17]
+    assert (canonical_json(profile) == canonical_json(point)) == (fault is None)
+    assert first != observer.compute_diagnostics and extra not in first["imports"] and extra in observer.compute_diagnostics["imports"]
+    assert native.provenance is original and set(first["callables"]) == set(point["native_facts"]["callables"])
+    inp=MoERoutingProfileInput("same_point",(MoESourceFrame(0,(16,),(0,),16,"standalone_legacy"),MoESourceFrame(1,(1,),(0,),1,"standalone_legacy")),17)
+    schemas=[probe.tensor_schema(t) for t in source];policy=dict(branches=["cpu_fixture"],runtime={})
+    call=dict(op="all_gatherv",group_ranks=[0,8],execution_policy=policy,inputs=schemas,completed=True)
+    record=dict(op="all_gatherv",call="moe_dispatch_all_gatherv_bf16",participating_ranks=[0],group_ranks=[[0,8]],tokens_per_dp_rank=[16,1],
+        dtypes=[t["dtype"] for t in schemas],columns=[t["shape"][1] for t in schemas],native_context=dict(shared=point["native_facts"]["shared"],execution_policy={"0":policy}))
+    report=dict(layer_id=88,moe_input_id=inp.moe_input_id,source_frame=json.loads(json.dumps(asdict(inp.source_frames[0]))),compute_context=point,comparison=dict(status="match"),routing_comparison=dict(status="match"),collectives=[call])
+    linked=EXPORT.observed_collective_points(record,dict(parallelism=dict(tp=8),ranks=[dict(rank=0,layers=[report])]),{inp.moe_input_id:inp})
+    assert len(linked) == 1 and (canonical_json(linked[0]["compute_context"]) == canonical_json(profile)) == (fault is None)

@@ -35,6 +35,23 @@ from frontier.types import ClusterType
 _ALL_PHASES = (OperatorPhase.PREFILL, OperatorPhase.DECODE, OperatorPhase.MIXED)
 
 
+def is_step5_position_context(context) -> bool:
+    return context is not None and (
+        context["model_architecture_profile"] == "step5"
+        and context["routing_runtime_path"] == "position_cyclic"
+    )
+
+
+def _source_prepare_applicable(context) -> bool:
+    if not is_step5_position_context(context):
+        return False
+    if context["quant_dtype"] not in (None, "float8_e4m3fn"):
+        raise ValueError("Step prepare requires the reached native quant_dtype")
+    if type(context["defer_input_quant"]) is not bool:
+        raise ValueError("Step prepare requires native defer_input_quant")
+    return context["quant_dtype"] is not None and not context["defer_input_quant"]
+
+
 FFN_FAMILY = OperatorFamilySpec(
     family_id="ffn",
     display_name="Dense FFN",
@@ -85,6 +102,7 @@ MOE_FAMILY = OperatorFamilySpec(
     profiling_order=(
         "moe_gating_linear",
         "moe_gating_routing_topk",
+        "moe_input_quantize",
         "moe_shuffling",
         "moe_grouped_gemm",
     ),
@@ -121,6 +139,18 @@ MOE_FAMILY = OperatorFamilySpec(
             resource_class=ResourceClass.MEMORY,
             tp_mode=TensorParallelMode.MOE_TP,
             ep_agnostic=True,
+            applicability=lambda context: not is_step5_position_context(context),
+        ),
+        OperatorSpec(
+            name="moe_input_quantize",
+            role=OperatorRole.RESHAPE,
+            phases=_ALL_PHASES,
+            trace_kind=TraceKind.COMPUTE,
+            execution_time_attr="moe_input_quantize_time",
+            resource_class=ResourceClass.MEMORY,
+            tp_mode=TensorParallelMode.MOE_TP,
+            ep_agnostic=True,
+            applicability=_source_prepare_applicable,
         ),
         OperatorSpec(
             name="moe_grouped_gemm",
@@ -154,6 +184,11 @@ _DEFERRED_DISAGGREGATED_LEGACY_MOE_TP_OPS = frozenset(
 )
 
 
+def get_moe_profiling_operators(context=None) -> tuple[OperatorSpec, ...]:
+    """Select charged targets from the one registry using native prepare facts."""
+    return MOE_FAMILY.profiling_ops(context)
+
+
 def get_moe_family_operator_by_profiling_name(
     op_name: str,
     family: OperatorFamilySpec | None = None,
@@ -161,7 +196,7 @@ def get_moe_family_operator_by_profiling_name(
     family = family or MOE_FAMILY
     moe_ops = {
         operator.profiling_name(): operator
-        for operator in family.profiling_ops()
+        for operator in family.operators if operator.profiling_target
     }
     if op_name not in moe_ops:
         raise ValueError(f"Unsupported MoE op: {op_name}")
@@ -605,6 +640,11 @@ COMM_FAMILY = OperatorFamilySpec(
     supported_variants=("collective",),
     resource_class=ResourceClass.COMM,
     operators=(
+        *(CommOperatorSpec(name="step5_moe_"+phase,role=OperatorRole.COMMUNICATION,
+            phases=_ALL_PHASES,trace_kind=TraceKind.COMM,resource_class=ResourceClass.COMM,
+            execution_time_attr="step5_moe_"+phase+"_time",
+            comm_group="attn_dp",comm_domain="ATTN_DP",plan_builder=lambda ctx:ctx.collective_plan)
+          for phase in ("dispatch","combine")),
         CommOperatorSpec(
             name="attn_tensor_parallel_allreduce",
             role=OperatorRole.COMMUNICATION,

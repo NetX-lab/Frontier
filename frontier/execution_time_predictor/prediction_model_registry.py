@@ -33,6 +33,7 @@ from frontier.model_architectures import LayerKind, ResolvedLayerContract
 from frontier.moe_gating_runtime import get_moe_gating_base_model_name
 from frontier.operators.binding import bind_operator_query
 from frontier.operators.spec import TensorParallelMode
+from frontier.profiling.common.runtime_identity import canonical_json
 from frontier.types import ClusterType, MeasurementType
 from sklearn.base import BaseEstimator
 from typing import Any, Dict, List, Mapping, Optional, Tuple
@@ -276,7 +277,7 @@ class PredictionModelRegistry:
 
     def _contract_model_registry(
         self, family_name: str
-    ) -> Dict[Tuple[str, Optional[str]], BaseEstimator]:
+    ) -> Dict[Tuple[str, Any], BaseEstimator]:
         registry_attr = {
             "eager": "_trained_models_eager_by_contract",
             "device_event": "_trained_models_device_event_by_contract",
@@ -288,7 +289,7 @@ class PredictionModelRegistry:
 
     def _contract_precision_registry(
         self, family_name: str
-    ) -> Dict[str, Dict[Tuple[str, Optional[str]], BaseEstimator]]:
+    ) -> Dict[str, Dict[Tuple[str, Any], BaseEstimator]]:
         registry_attr = {
             "eager": "_models_by_precision_eager_by_contract",
             "device_event": "_models_by_precision_device_event_by_contract",
@@ -349,6 +350,10 @@ class PredictionModelRegistry:
         precision_key = precision.upper()
         family_name = self._measurement_family_name(self._active_measurement_type)
         identity = self._model_contract_identity(model, layer_contract)
+        binding = (self._native_measurement_binding(self._measurement_identity(model))
+                   if hasattr(model, "_frontier_measurement_identity") else None)
+        if binding is not None:
+            identity = (identity, precision_key, canonical_json(binding))
         if identity is None:
             self._legacy_model_registry(family_name)[model_name] = model
             self._legacy_precision_registry(family_name).setdefault(
@@ -369,6 +374,8 @@ class PredictionModelRegistry:
         *,
         precision_key: Optional[str] = None,
         requested_identity: Optional[str] = None,
+        native_binding: Optional[Mapping[str, Any]] = None,
+        include_native: bool = True,
     ) -> Optional[BaseEstimator]:
         if precision_key is not None:
             precision_key = precision_key.upper()
@@ -382,7 +389,27 @@ class PredictionModelRegistry:
             identity: candidate
             for (candidate_name, identity), candidate in source.items()
             if candidate_name == model_name
+            and (include_native or not isinstance(identity, tuple))
         }
+        if requested_identity is not None:
+            typed_candidates = {
+                key: model for key, model in typed_candidates.items()
+                if (key[0] if isinstance(key, tuple) else key) == requested_identity
+            }
+        if native_binding is not None:
+            requested = self._native_measurement_binding(native_binding)
+            if requested is None:
+                raise ValueError("native binding query requires native_context")
+            if "native_source" not in requested and any(
+                isinstance(key, tuple) for key in typed_candidates
+            ):
+                raise ValueError("native binding query requires explicit native_source")
+            typed_candidates = {
+                key: model for key, model in typed_candidates.items()
+                if isinstance(key, tuple) and all(
+                    json.loads(key[2]).get(field) == value for field, value in requested.items()
+                )
+            }
         legacy = (
             self._legacy_precision_bucket(family_name, precision_key).get(model_name)
             if precision_key is not None
@@ -395,14 +422,20 @@ class PredictionModelRegistry:
         )
 
         if requested_identity is not None:
-            model = typed_candidates.get(requested_identity)
-            if model is not None:
-                return model
-            if legacy is not None and legacy_identity == requested_identity:
+            if len(typed_candidates) == 1:
+                return next(iter(typed_candidates.values()))
+            if (not typed_candidates and native_binding is None
+                    and legacy is not None and legacy_identity == requested_identity):
                 return legacy
-            return None
+            if not typed_candidates:
+                return None
 
         if len(typed_candidates) > 1:
+            if any(isinstance(key, tuple) for key in typed_candidates):
+                raise ValueError(
+                    f"Model '{model_name}' has ambiguous native bindings; "
+                    "provide native_binding/source/group"
+                )
             identities = sorted(
                 "<legacy>" if identity is None else identity
                 for identity in typed_candidates
@@ -413,14 +446,14 @@ class PredictionModelRegistry:
             )
         if len(typed_candidates) == 1:
             typed_identity = next(iter(typed_candidates))
-            if legacy is not None and legacy_identity != typed_identity:
+            if native_binding is None and legacy is not None and legacy_identity != typed_identity:
                 raise ValueError(
                     f"Model '{model_name}' has multiple layer contracts; provide "
                     f"layer_contract. Available identities: "
                     f"[{typed_identity!r}, {legacy_identity or '<legacy>'!r}]"
                 )
             return next(iter(typed_candidates.values()))
-        return legacy
+        return legacy if native_binding is None else None
 
     def _resolve_cluster_model_contract(
         self,
@@ -484,14 +517,22 @@ class PredictionModelRegistry:
         family_name: str,
         cluster_type: Optional[ClusterType] = None,
     ) -> Dict[str, BaseEstimator]:
-        """Project one measurement family's canonical registries to model names."""
+        """Project legacy names and enumerate every native binding by its cache hash."""
 
         names = set(self._legacy_model_registry(family_name))
         names.update(
             model_name
-            for model_name, _identity in self._contract_model_registry(family_name)
+            for model_name, identity in self._contract_model_registry(family_name)
+            if not isinstance(identity, tuple)
         )
         models: Dict[str, BaseEstimator] = {}
+        for (name, identity), model in self._contract_model_registry(family_name).items():
+            if isinstance(identity, tuple) and not self._is_ffn_typed_model_for_cluster(cluster_type, name):
+                label = f"{name}:{model._frontier_model_hash}"
+                if (label in models
+                        and models[label]._frontier_measurement_identity != model._frontier_measurement_identity):
+                    raise ValueError(f"Conflicting native model artifacts for {label!r}")
+                models[label] = model
         for model_name in sorted(names):
             if self._is_ffn_typed_model_for_cluster(cluster_type, model_name):
                 continue
@@ -501,6 +542,7 @@ class PredictionModelRegistry:
                 family_name,
                 model_name,
                 requested_identity=identity,
+                include_native=False,
             )
             if identity is not None and model is None:
                 raise ValueError(
@@ -516,6 +558,7 @@ class PredictionModelRegistry:
         model_name: str,
         precision: Optional[str] = None,
         layer_contract: Optional[ResolvedLayerContract] = None,
+        *, native_binding: Optional[Mapping[str, Any]] = None,
     ) -> Optional[BaseEstimator]:
         """Get a model by name, precision, and optional typed contract."""
 
@@ -529,6 +572,7 @@ class PredictionModelRegistry:
                 model_name,
                 precision_key=precision_key,
                 requested_identity=requested_identity,
+                native_binding=native_binding,
             )
             if model is not None:
                 return model
@@ -619,6 +663,30 @@ class PredictionModelRegistry:
         self._store_model_in_cache(model_name, model_hash, model)
 
     @staticmethod
+    def _native_measurement_binding(identity: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
+        """Normalize explicit native selectors; point layouts remain row evidence."""
+        if "native_context" not in identity:
+            return None
+        from frontier.moe_load_imbalance import moe_native_binding_context
+        binding = {
+            field: json.loads(identity[field]) if isinstance(identity[field], str) else identity[field]
+            for field in ("native_context", "native_source", "selected_native_metadata")
+            if field in identity
+        }
+        if any(not isinstance(value, Mapping) or not value for value in binding.values()):
+            raise ValueError("native binding fields must be explicit nonempty mappings")
+        binding["native_context"] = moe_native_binding_context(binding["native_context"])
+        if "selected_native_metadata" in binding:
+            selected = dict(binding["selected_native_metadata"])
+            if "native_binding" in selected:
+                value = selected["native_binding"]
+                selected["native_binding"] = moe_native_binding_context(
+                    json.loads(value) if isinstance(value, str) else value
+                )
+            binding["selected_native_metadata"] = selected
+        return json.loads(canonical_json(binding))
+
+    @staticmethod
     def _canonical_measurement_identity(identity: Mapping[str, Any]) -> str:
         """Serialize explicit provenance without defaults or JSON coercions."""
 
@@ -629,6 +697,8 @@ class PredictionModelRegistry:
             raise ValueError("measurement identity fields must be explicit and nonempty")
 
         def normalize(value, field):
+            if field in ("identity.native_context", "identity.selected_native_metadata") and isinstance(value, Mapping):
+                return json.loads(canonical_json(value))
             if isinstance(value, Mapping):
                 result = {}
                 for key, item in value.items():
@@ -909,10 +979,14 @@ class PredictionModelRegistry:
                 add(name, model, precision)
         for precision, bucket in self._contract_precision_registry(family_name).items():
             for (name, typed_identity), model in bucket.items():
+                if isinstance(typed_identity, tuple):
+                    typed_identity = typed_identity[0]
                 add(name, model, precision, typed_identity)
         for name, model in self._legacy_model_registry(family_name).items():
             add(name, model)
         for (name, typed_identity), model in self._contract_model_registry(family_name).items():
+            if isinstance(typed_identity, tuple):
+                typed_identity = typed_identity[0]
             add(name, model, typed_identity=typed_identity)
 
         complete_identity = dict(identity)

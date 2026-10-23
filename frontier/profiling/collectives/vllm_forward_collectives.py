@@ -53,7 +53,7 @@ DTYPE_BYTES = {"bfloat16": 2, "float16": 2, "float32": 4, "int32": 4,
 # torch.distributed all-reduces on the group's NCCL and gloo process groups,
 # as dp_utils._run_ar issues them.
 OPS = ("all_reduce", "reduce_scatter", "all_gather", "all_gatherv",
-       "reduce_scatterv", "device_group_all_reduce", "cpu_all_reduce")
+       "reduce_scatterv", "reduce_scatterv_into_output", "device_group_all_reduce", "cpu_all_reduce")
 
 
 def _ceil_div(a: int, b: int) -> int:
@@ -297,18 +297,29 @@ def call_bytes(call: CollectiveCall, parallel: ServingParallelism,
         return own, total
     if call.op == "reduce_scatter":
         return own * len(members), own
-    if call.op == "reduce_scatterv":
+    if call.op in ("reduce_scatterv", "reduce_scatterv_into_output"):
         return total, own
     raise ValueError(f"Unknown op {call.op!r}")
 
 
 def forward_collectives(model: ModelShape, parallel: ServingParallelism,
-                        scenario: ForwardScenario) -> list[CollectiveCall]:
+                        scenario: ForwardScenario, *, native_call_names=None) -> list[CollectiveCall]:
     """List the distinct collectives of one forward pass for ``scenario``."""
     if model.model_type == "step5":
         parallel.validate_step5_moe()
         scenario.validate(parallel)
-        return _step5_collectives(model, parallel, scenario)
+        calls = _step5_collectives(model, parallel, scenario, into_output=native_call_names is not None)
+        if native_call_names is None:
+            return calls
+        names = tuple(native_call_names)
+        if isinstance(native_call_names, str) or not names or len(set(names)) != len(names):
+            raise ValueError("native_call_names requires nonempty distinct call names")
+        unknown = set(names) - {call.name for call in calls}
+        if unknown:
+            raise ValueError(f"Unknown or unreached native call names: {sorted(unknown)}")
+        return [call for call in calls if call.name in names]
+    if native_call_names is not None:
+        raise ValueError("native_call_names is supported only for Step5")
     parallel.validate_sequence_parallel_moe()
     tp, dp = parallel.tensor_parallel_size, parallel.data_parallel_size
     scenario.validate(parallel)
@@ -371,7 +382,7 @@ def forward_collectives(model: ModelShape, parallel: ServingParallelism,
 
 
 def _step5_collectives(model: ModelShape, parallel: ServingParallelism,
-                      scenario: ForwardScenario) -> list[CollectiveCall]:
+                      scenario: ForwardScenario, *, into_output=False) -> list[CollectiveCall]:
     tp, dp = parallel.tensor_parallel_size, parallel.data_parallel_size
     hidden, act = model.hidden_size, parallel.activation_dtype
     n_moe = len(model.moe_layer_ids())
@@ -409,9 +420,9 @@ def _step5_collectives(model: ModelShape, parallel: ServingParallelism,
                 (act, TOPK_WEIGHTS_DTYPE, TOPK_IDS_DTYPE), dp_tokens, n_moe - n_fp8,
                 "naive_dp_ep.py:prepare; all2all.py:AgRsAll2AllManager.dispatch"))
         calls += [
-            CollectiveCall("moe_combine_reduce_scatterv", "reduce_scatterv", "dp", 0,
+            CollectiveCall("moe_combine_reduce_scatterv", "reduce_scatterv_into_output" if into_output else "reduce_scatterv", "dp", 0,
                            (hidden,), (act,), dp_tokens, n_moe,
-                           "all2all.py:AgRsAll2AllManager.combine"),
+                            "all2all.py:AgRsAll2AllManager.combine_into_output" if into_output else "all2all.py:AgRsAll2AllManager.combine"),
             CollectiveCall("routed_expert_all_reduce", "all_reduce", "tp", 0,
                            (hidden,), (act,), tokens, n_moe,
                            "moe_runner.py:_maybe_reduce_final_output"),

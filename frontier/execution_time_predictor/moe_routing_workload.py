@@ -25,14 +25,45 @@ from frontier.moe_load_imbalance import (
     MOE_LOAD_IMBALANCE_FEATURES,
     MoELoadImbalanceInput,
     block_size_m_for_tokens,
+    moe_grouped_gemm_schema,
     num_tokens_post_padded,
 )
 from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
+from frontier.moe_routing_policy import WaveRoutingSource, resolve_routing_count_policy
 from frontier.types import ClusterType
 from typing import Dict, List, Mapping, Optional
 
 
 logger = init_logger(__name__)
+
+
+def validate_position_moe_source_row(row):
+    """Compare retained producer census with the one position-count owner."""
+    import pandas as pd
+    from frontier.profiling.moe.inputs import routing_profile_cell
+    from frontier.moe_routing_policy import position_cyclic_expert_counts, TokenInterval, source_lane_index_for_ep
+    scope = row.moe_frame_scope
+    cell = routing_profile_cell(dict(routing_input=json.loads(row.routing_input),
+        moe_frame_scope=scope,source_lane_id=int(row.moe_source_lane_id),
+        ep_id=None if pd.isna(row.moe_ep_rank) else int(row.moe_ep_rank)))
+    frames, local = cell.routing_input.source_frames, cell.routing_input.source_frames[cell.source_lane_id]
+    live = local.live_rows if scope == "source_local" else sum(frame.live_rows for frame in frames)
+    physical = local.physical_rows if scope == "source_local" else cell.routing_input.gathered_physical_rows
+    if (row.num_tokens != physical or row.live_routing_token_count != live
+            or row.gating_runtime_context != local.gating_runtime_context
+            or row.moe_input_id != cell.routing_input.moe_input_id):
+        raise ValueError("MoE measured physical row differs from its supplied source descriptor")
+    if scope == "dp_gathered":
+        ep = int(row.expert_parallel_size)
+        if cell.source_lane_id != source_lane_index_for_ep(cell.ep_id,attention_tp_size=ep//len(frames),
+                source_lane_count=len(frames),participant_ep_ids=range(ep)):
+            raise ValueError("MoE measured source/EP association differs from its descriptor")
+        counts = position_cyclic_expert_counts((TokenInterval(c,q) for frame in frames
+            for c,q in zip(frame.context_lens,frame.query_lens)),int(row.router_topk),int(row.num_experts))
+        width = int(row.num_experts)//ep
+        expected = [counts[i] for i in range(cell.ep_id*width,(cell.ep_id+1)*width)]
+        if json.loads(row.expert_token_counts) != expected or row.total_routed_tokens != sum(expected):
+            raise ValueError("MoE measured expert counts differ from the supplied position source")
 
 
 def _normalize_routing_details_for_trace(
@@ -93,14 +124,81 @@ def _normalize_routing_details_for_trace(
 class MoeRoutingWorkload:
     """Expert-load distribution and per-lane routed workload."""
 
-    @staticmethod
+    def _step5_position_queries(self, lane):
+        """Recover actual point facts and complete measured plans, never numerical defaults."""
+        from frontier.profiling.moe.inputs import MoESourceFrame
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from pathlib import Path
+        source = lane.routing_source
+        from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+        group = next(group for group in resolve_routed_layer_groups(self._model_config)
+                     if self._step5_layer_metadata.attention_spec.global_layer_id in group.layer_ids)
+        family = self._measurement_family_name(self._active_measurement_type)
+        models = self._model_manager._models_view_for_family(family, self._cluster_type)
+        rows = []
+        for model in models.values():
+            if getattr(model, "_frontier_cache_model_name", None) != "moe_grouped_gemm":
+                continue
+            binding = self._model_manager._native_measurement_binding(
+                self._model_manager._measurement_identity(model))
+            if binding["selected_native_metadata"]["moe_layer_ids"] == group.row_metadata()["moe_layer_ids"]:
+                rows.extend(model._frontier_moe_physical_rows)
+        frames = tuple(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),
+            tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context) for s in source.source_lanes)
+        contexts = {}
+        for row in rows:
+            if row["moe_ep_rank"] != lane.ep_id or row["total_routed_tokens"] != lane.routed_token_count: continue
+            value = json.loads(row["routing_input"])
+            if tuple(MoESourceFrame(**frame) for frame in value["source_frames"]) == frames:
+                contexts[row["native_context"]] = json.loads(row["native_context"])
+        if len(contexts) != 1: raise ValueError("Position expert query lacks a unique actual source/native point receipt")
+        context = next(iter(contexts.values()))
+        features = self._build_grouped_gemm_features(lane,native_context=context)
+        local = source.source_lanes[lane.ep_id//self._replica_config.attn_tensor_parallel_size]
+        from frontier.operators.families import get_moe_profiling_operators
+        queries = {op.name:dict(num_tokens=local.physical_rows,live_routing_token_count=local.live_rows)
+                   if op.ep_agnostic else features for op in get_moe_profiling_operators(context)}
+        artifact = json.loads((Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_text())
+        plans = {}
+        phases = {"step5_moe_dispatch":"dispatch","step5_moe_combine":"combine",
+            "moe_tensor_parallel_allreduce":"routed_tp"}
+        if self._model_config.supports_share_expert(): phases["share_expert_tensor_parallel_allreduce"] = "shared_tp"
+        mode = "full" if local.graph_mode == "FULL" else "none"
+        for name,phase in phases.items():
+            matches = {}
+            tensors = context["collective_tensors"]["dispatch" if phase == "dispatch" else "output"]
+            for key,receipt in artifact["counts"].items():
+                value = json.loads(key)
+                if (value["phase"] != phase or tuple(value["sizes"]) != tuple(s.physical_rows for s in source.source_lanes)
+                        or value["graph_mode"] != mode or value["tensors"] != tensors): continue
+                measured = receipt["context"]
+                if measured["shared"] != context["native_facts"]["shared"] or not measured.get("execution_policy"): continue
+                from frontier.profiling.common.runtime_identity import canonical_json
+                if canonical_json(json.loads(value["buffer_json"]).get("compute_context")) != canonical_json(context): continue
+                if receipt["buffer_receipt"] != json.loads(value["buffer_json"]): raise ValueError("Measured collective buffer/count key mismatch")
+                plan = CollectivePlan(phase,tuple(value["sizes"]),tuple(CollectiveTensor(**t) for t in tensors),
+                    tuple(tuple(g) for g in value["groups"]),mode,value["context_json"],value["buffer_json"])
+                if json.loads(plan.context_json) != measured or plan.cache_key() != key: raise ValueError("Measured collective context/count key mismatch")
+                matches[key] = plan
+            if len(matches) != 1: raise ValueError("Position collective lacks unique measured policy/layout/buffer coverage")
+            plans[name] = next(iter(matches.values()))
+        return context,queries,plans
 
     def _emit_routing_details_snapshot(
+        self,
         cluster_type: ClusterType,
         routing_details: Mapping[int, Mapping[int, Mapping[int, float]]],
     ) -> None:
         """Emit the exact predictor-owned routing map for external validation."""
 
+        policy = resolve_routing_count_policy(getattr(self, "_moe_routing_distribution_type", "balanced"))
+        if policy.requires_source:
+            logger.info("[ROUTING-POLICY-SNAPSHOT] %s", json.dumps({
+                "policy_id": self._moe_routing_distribution_type, "router_topk": self._replica_config.router_topk,
+                "total_expert_num": self._replica_config.total_expert_num,
+                "interval_contract": "(logical_position * top_k + slot) % num_experts",
+            }, sort_keys=True))
+            return
         normalized = _normalize_routing_details_for_trace(routing_details)
         payload = {
             "schema_version": 1,
@@ -271,6 +369,8 @@ class MoeRoutingWorkload:
         Monolithic decode with EP enabled needs a global view across all experts to
         derive per-lane post-MoE arrival skew before the shared-domain all-reduce.
         """
+        if resolve_routing_count_policy(self._moe_routing_distribution_type).requires_source:
+            return {}
         total_experts = self._replica_config.total_expert_num
         if self._cluster_type == ClusterType.DECODE_ATTN or not self._model_config.is_moe:
             return {}
@@ -390,19 +490,25 @@ class MoeRoutingWorkload:
         return self._replica_config
 
     def _materialize_layer_ep_workload(
-        self, batch: Batch, cluster_type: ClusterType, layer_id: int
+        self, batch: Batch, cluster_type: ClusterType, layer_id: int, routing_source: WaveRoutingSource | None = None,
     ) -> LayerEPWorkload:
         """Materialize one exact Replica-local EP workload for a MoE layer."""
         # Routing tables are built once by the constructor and have no runtime
         # mutation API. Topology and exact replica/layer/token identity are in
         # the key; the frozen workload can be shared across repeated EP waves.
+        policy_id = getattr(self, "_moe_routing_distribution_type", "balanced")
+        policy = resolve_routing_count_policy(policy_id)
+        if policy.requires_source and (
+            not isinstance(routing_source, WaveRoutingSource) or routing_source.policy_id != policy_id
+        ):
+            raise ValueError("source-based prediction requires an explicitly matching routing_source")
         workload_cache = self._layer_workload_cache
         cache_capacity = self._layer_workload_cache_capacity
         cluster_replica_config = self._get_cluster_replica_config(cluster_type)
-        routing_details = self._get_routing_details_for_cluster(cluster_type)
+        routing_details = None if policy.requires_source else self._get_routing_details_for_cluster(cluster_type)
         target_replica_id = int(batch.replica_id)
         global_layer_id = int(layer_id)
-        # A decode CUDA-graph step routes its padding tokens too.
+        # Physical rows include padding even when source assignments are masked.
         routing_token_count = int(batch.get_effective_total_tokens_for_compute(cluster_type))
         router_topk = int(cluster_replica_config.router_topk)
         total_expert_num = int(cluster_replica_config.total_expert_num)
@@ -416,12 +522,14 @@ class MoeRoutingWorkload:
             total_expert_num,
             moe_ep_size,
         )
+        if policy.requires_source:
+            cache_key += (policy_id, routing_source)
         cached_workload = workload_cache.get(cache_key)
         if cached_workload is not None:
             workload_cache.move_to_end(cache_key)
             return cached_workload
         workload = materialize_layer_ep_workload(
-            routing_ratios=resolve_routing_details(
+            routing_ratios=None if policy.requires_source else resolve_routing_details(
                 routing_details,
                 target_replica_id=target_replica_id,
                 global_layer_id=global_layer_id,
@@ -436,6 +544,8 @@ class MoeRoutingWorkload:
                 total_expert_num,
                 moe_ep_size,
             ),
+            policy_id=policy_id,
+            routing_source=routing_source,
         )
         workload_cache[cache_key] = workload
         workload_cache.move_to_end(cache_key)
@@ -579,6 +689,7 @@ class MoeRoutingWorkload:
         lane_workload: EPLaneWorkload,
         *,
         batch: Optional[Batch] = None,
+        native_context=None,
     ) -> Dict[str, float]:
         """Features of the on-demand grouped-GEMM model for one EP lane.
 
@@ -589,8 +700,21 @@ class MoeRoutingWorkload:
         pre-routing token count, from the ranges the profiler recorded. Other
         models take the load-imbalance features.
         """
+        if lane_workload.routing_source is not None:
+            if native_context is None:
+                raise ValueError("Position expert features require the actual selected native context")
+            from frontier.execution_time_predictor.step5_cost import step5_native_expert_features
+            model, _ = self._step5_ffn_model("moe_grouped_gemm", context=native_context)
+            schema = moe_grouped_gemm_schema(model._frontier_feature_names, native_context=native_context)
+            features = step5_native_expert_features(native_context,
+                physical_rows=lane_workload.routing_source.gathered_physical_rows,
+                live_assignments=lane_workload.routed_token_count)
+            if tuple(features) != schema.features:
+                raise ValueError("Native expert features differ from the selected per-layer model schema")
+            return features
         model_info = self._predictions["moe_grouped_gemm"]
-        if tuple(model_info["_feature_names"]) != MOE_GROUPED_GEMM_PADDED_FEATURES:
+        schema = moe_grouped_gemm_schema(model_info["_feature_names"])
+        if schema is None:
             return self._build_moe_load_imbalance_features(lane_workload, batch=batch)
         block_size_m = block_size_m_for_tokens(
             model_info["_model"]._frontier_block_size_m_ranges,

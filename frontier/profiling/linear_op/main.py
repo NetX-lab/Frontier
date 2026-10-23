@@ -383,6 +383,13 @@ def parse_args():
     args = parser.parse_args()
     if (args.source_revision is None) != (args.model_config_revision is None):
         parser.error("--source_revision and --model_config_revision must be given together")
+    manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
+    if manifest:
+        binding = json.loads(Path(manifest).read_text())
+        if args.source_revision != binding["source"]["commit"] or args.model_config_revision != binding["native_binding"]["model_config_revision"]:
+            parser.error("bound profiling requires the staged source/config revisions")
+        if not args.disable_ray or args.num_gpus != 1:
+            parser.error("bound profiling requires --disable_ray --num_gpus 1")
     args.profile_method = normalize_profile_method(args.profile_method)
     if not args.dry_run:
         os.makedirs(args.output_dir, exist_ok=True)
@@ -664,6 +671,7 @@ def _attach_runtime_identity(
 ) -> pd.DataFrame:
     from frontier.profiling.common.runtime_identity import (
         attach_identity_columns,
+        canonical_json,
         measure_runtime_identity,
     )
 
@@ -675,8 +683,16 @@ def _attach_runtime_identity(
         quant_signature=model_config.get_quant_signature(),
         parallel_groups={"engine_tensor_parallel": 1},
         graph_mode="eager",
+        native_facts=(json.loads(df.iloc[0]["native_facts"]) if "native_facts" in df else None),
     )
-    return pd.DataFrame(attach_identity_columns(df.to_dict("records"), identity))
+    records = df.to_dict("records")
+    if "native_facts" in df:
+        from dataclasses import replace
+        records = [{**row, "native_facts": canonical_json(json.loads(row["native_facts"]))} for row in records]
+        if any(json.loads(row["native_facts"])["shared"] != identity.native_facts["shared"] for row in records):
+            raise ValueError("linear producer rows have incompatible shared native identity")
+        return pd.DataFrame(attach_identity_columns([row], replace(identity, native_facts=json.loads(row["native_facts"])))[0] for row in records)
+    return pd.DataFrame(attach_identity_columns(records, identity))
 
 
 def _resolve_fp8_settings(
@@ -728,6 +744,9 @@ def profile_model(
     # Determine available GPUs for non-Ray mode
     available_gpus = _get_available_gpus(args.num_gpus)
     actual_num_gpus = len(available_gpus)
+    if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST"):
+        from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+        verify_step5_profile_runtime(os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"])
 
     if actual_num_gpus < args.num_gpus:
         raise RuntimeError(
@@ -931,6 +950,14 @@ def profile_model(
 
             for num_tokens in num_tokens_to_profile:
                 result = wrapper.profile(num_tokens)
+                manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
+                if manifest:
+                    from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+                    facts = verify_step5_profile_runtime(manifest)
+                    for module in wrapper.model.modules():
+                        if getattr(module, "native_facts", None) is not None:
+                            facts["callables"].update(module.native_facts["callables"])
+                    result["native_facts"] = json.dumps(facts, sort_keys=True)
                 _collect_result(result)
                 pbar.update(1)
 

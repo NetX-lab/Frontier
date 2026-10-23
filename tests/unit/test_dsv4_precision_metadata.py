@@ -81,8 +81,10 @@ def test_inventory_uses_canonical_v4_scopes_without_generic_duplicate_owners(
             MOE_FAMILY, SHARE_EXPERT_FAMILY,
         )
         for operator in family.operators
+        if operator.is_applicable(dict(model_architecture_profile=model.get_model_architecture_profile().profile_id, routing_runtime_path="standard_fused_topk"))
     }
     assert set(rows) == expected | {"moe_gating"}
+    assert "moe_input_quantize" not in rows
     assert not {"add", "emb", "input_layernorm", "attn_pre_proj"} & rows.keys()
     for row in rows.values():
         assert row["source_inventory_only"] is True
