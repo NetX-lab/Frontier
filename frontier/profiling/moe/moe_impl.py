@@ -296,6 +296,7 @@ class SigmoidBiasGatingNetwork(nn.Module):
                 raise ValueError("position profiler requires the selected native routing environment")
             from vllm.forward_context import set_forward_context, set_routing_positions
             from vllm.model_executor.layers.fused_moe.router.router_factory import create_fused_moe_router
+            from vllm.model_executor.layers.fused_moe.router.routing_simulator_router import RoutingSimulator
             self.native_router = create_fused_moe_router(
                 top_k=router_topk, global_num_experts=num_experts, scoring_func=router.scoring_func,
                 renormalize=router.renormalize, routed_scaling_factor=router.routed_scaling_factor,
@@ -305,6 +306,8 @@ class SigmoidBiasGatingNetwork(nn.Module):
                 raise ValueError("position profiling must execute the native Simulated router")
             native_callables += (create_fused_moe_router, type(self.native_router),
                                  self.native_router.select_experts, self.native_router._select_experts,
+                                 self.native_router._compute_routing, RoutingSimulator.simulate_routing,
+                                 RoutingSimulator._routing_strategies["position_cyclic"].route_tokens,
                                  set_forward_context, set_routing_positions)
             self.routing_assignment_policy = "position_modulo_experts"
         manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
