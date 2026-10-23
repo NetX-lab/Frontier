@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-H-CLOSURE-DOCS: H CPU collector accepted/merged64f3c950 after five finding closures; G2 replay profiling/sampling controls handed off, with no new GPU authority or full-ticket acceptance. |
 | 2026-10-23 | W128-V4-INPUT-INTEGRATION-RECORDS: isolated private input merged732406aa, real94 automatic/explicit equality and bound strict77; full serving/cost gates remain open, H collector launch wiring in progress. |
 | 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: native06 P0 reference acceptedR4/8/8, merged208PASS and bound matrix reuse; D-Q10 integrated e89b45d, full tickets unfinished. |
 | 2026-10-23 | Applied postrun checkpoint: completed native06 client/RCA, bounded versioned reader repair and independent accepted CPU integration. |
@@ -178,6 +179,8 @@
 
 ## Routing milestone — current (2026-10-23)
 
+Latest CPU completion and next-session route: [CPU collector closure — current](#cpu-collector-closure--current-2026-10-23). The dated H launch snapshot below is historical.
+
 - completed: A186dfef accepted after218root tests/independent review/strict77 identical, merged292c489. C8c2502c runner-values P2 accepted after real producer/consumer negatives,22affected tests and independent recheck; merged84c806f with26combined A/C testsPASS. Final prefill builder/source selection39b2bf8 gives C5files/202routing lines.
 - completed: YC approved routing23files/950lines and said `批准；类似问题不用再询问，自己决策即可`. The historical deadline ceiling952 and e9e79d4 actual950 are superseded by committed b62c155's existing model-name case-input correction (+2/-1): current actual/ceiling23/953=A432+B319+C202, dispatch491 separate. Root independently recomputed routing `evidence/final_union_b62c155.json`; original delegation/resource semantics unchanged, historical `evidence/native_builder_final.json` not rewritten.
 - completed C fixed-source verification:39b2bf8 has184root unitPASS and strict77=77/77identical with451artifact entries, no failures/provenance/cache findings. Receipt `../task_2026-10-22_v4_balanced_routing/prefill_primary_fidelity.json` binds all77 raw rows to the clean source/harness.
@@ -189,7 +192,65 @@
 - completed independent CPU integration: D-Q10 INTEGRATED_ISOLATED_PREREQUISITE e89b45d/source2f87828, merged144PASS/94exact/legacy102positive72negative,3files197lines/core55. Contract `integration_receipt.json` authoritative. R4 matrix gate accounted by reuse of actual576d27877/77/451actual hashes/519cache names/777runtime-input bytes/same environment+gitlink/unreached changed unit file, NOT new R4 capture. Additional R4 scope2files223lines/zeroCore under3/300 separate from historical routing953/dispatch491 and D-Q103/197/core55; no net-union claim. No new GPU budget/old-q1 relabeling, GLM paused/CPU-overhead-last.
 - completed isolated private input prerequisite (E): source4a1b53e6/delivery04a72b08 merged732406aa235ff63c97e7b9bbd6d5836fe1881de7. Selected attention CSV now discovers an externally admitted V4-private `dsv4_attention.json` through `read_isolated_scope` when layouts are omitted; explicit layouts retain their existing path. Layouts derive from seven non-timing engine/step records, not candidate CSV timing. Real candidate02 is ACCEPTED_ISOLATED_INPUT_REPRESENTATION only:94 automatic medians/layouts exactly equal explicit94 (50 CUDA_EVENT/44 KERNEL_ONLY), legacy102positive/72typednegative preserved, serving_admission=false. Root source reviews Standards/Spec both No findings; root owner-worktree194PASS and merged-worktree194PASS are separate runs, never summed. Evidence: [input admission](../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json), [representation verification](../task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json), [primary report](../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md), [source reviews](../task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_input_source.md). Merged receipts: `/data/ycfeng/tmp/glm53_dsv4/root_attention_input_merged_732406aa.json` and `/data/ycfeng/tmp/glm53_dsv4/root_attention_input_merged_732406aa_scopes.json`.
 - completed E matrix binding: fixed source4a1b53e6 compared with bound576d278 gives77/77 IDENTICAL and451 artifacts rehashed. Merged frontier/data/examples and matrix driver domains are byte-equal to that capture; outside task records only the standalone read-only `tests/analysis/v4_kernel_coverage.py` audit differs. [Merged matrix binding](../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json) reuses that capture, not a new capture at merge. This completes isolated input discovery, not full constructor/family admission, serving totals, TP8/DP2/EP16 measured cost, graph equivalence, balanced decode cost or full05/09/19. Native06 R4 ACCEPTED, old R3 FAIL/native05 UNVERIFIED, GLM pause and official mean/30%/10% gates stay unchanged.
-- in-progress H collector: not implemented at last delivery9366b6e4; root approved two launch-seam additions and the owner is implementing them. Current allocation/requirements: [H launch integration allocation](../task_2026-10-23_v4_remaining_measurements/requirements.md#h-launch-integration-allocation). No new GPU run or CPU-overhead suite; workflow/GPU/operator-gap alignment remains before CPU-overhead-last.
+- historical H launch snapshot — superseded by the CPU closure below: in-progress H collector: not implemented at last delivery9366b6e4; root approved two launch-seam additions and the owner is implementing them. Then-current allocation/requirements: [H launch integration allocation](../task_2026-10-23_v4_remaining_measurements/requirements.md#h-launch-integration-allocation). No new GPU run or CPU-overhead suite; workflow/GPU/operator-gap alignment remains before CPU-overhead-last.
+
+## CPU collector closure — current (2026-10-23)
+
+- completed H: [primary acceptance](../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json) records ACCEPTED_CPU_COLLECTOR_COMPONENT, source `f8621a8258ffa445abfb51f5ea73258ad271494e`, merged `64f3c9509b09279f321d237e3a95cbe904c6dd22`. All five original findings are closed by independent Spec/Standards [final re-reviews](../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md); five non-core files/880 changed lines within987, zero core edits.
+- completed verification: root final-source and merged-source suites ran separately, each with collector28, inventory28, V2 inventory45, R4 reader135, native worker16, DP harness75, PD harness68 and manifest14 PASS; every suite has zero failures/errors/skips. Do not sum suites or the two revisions. Final-source command/environment and results: [root report](../task_2026-10-23_v4_remaining_measurements/collector_primary/test_report_2026-10-23_final.md), Python3.12.13/pytest9.0.2. Merged receipt: `/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/receipt.json`.
+- completed compatibility: merged automatic isolated input94 is exactly equal to prior merged732406aa (`/data/ycfeng/tmp/glm53_dsv4/root_input_collector_64f3c950.json`); E/F/G1 remain ACCEPTED_ISOLATED_INPUT_COMPONENT only. H's [merged matrix binding](../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json) explicitly reuses the existing4a1b53e6 capture77/77; no new capture at64f3c950.
+- unchanged limits: emitted H profile output remains UNVERIFIED. GPU stream handle-to-trace mapping, actual per-kernel GPU PDL, compile/breakable annotation/event survival, captured-segment per-replay ownership and GPU CUPTI restart remain UNKNOWN. Driver not implemented, new_gpu_runs=0, no new GPU approval, no serving/cost admission. Native06 retains ACCEPTED_NATIVE_REFERENCE_R4; old R3 FAIL/native05 UNVERIFIED intact. Full05/09/19 and whole calibration remain unfinished; GLM PAUSED_PENDING_USER_APPROVAL, official mean/30%/10% gates unchanged, CPU-overhead last.
+- pending G2, next session: implement the real `tests/comparison/calibration/pd_replay.py` start/stop profiling bracket with sampling and `serving_profile_limits`, then CPU controls before a concrete GPU request. [Driver design](../task_2026-10-23_v4_remaining_measurements/driver_design.md) traces the actual callsite: both role heads start before selected formal dispatch, stop after drain, unselected replay unchanged, auxiliary failures soft and native exceptions preserved. Collector currently records since startup; `/start_profile` does not reset its retention budget. Prove the selected window's complete step/ownership/synchronization records survive record/byte limits; no invented serving sum or broad CPU-overhead suite. Continuation: [root handoff](../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md).
+
+### W128-H-CLOSURE-DOCS self-check
+
+## 1. 规划完成情况
+
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| 指定五份父任务记录同步 | PASS | H验收/复审/矩阵binding已写入，旧H快照和旧total-authority结论标为历史 |
+| 文档sanity及只改五份/未staged核验 | PASS | Python3.10.6只读inline检查205/205；五份文件修改、未staged、无whitespace错误 |
+
+Verification: read-only `python3 - <<'PY' ... PY` in `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028` (full inline command in W128-H-CLOSURE-DOCS execution transcript),205/205PASS/exit0. Checks bind actual collector acceptance/matrix JSON, all five retained historical-tail and quotation SHA256 values, current status/counts/limits/links, exactly five owned modifications and no staged owned files, all seven acceptance source hashes, unchanged parent requirements, and byte-identical merged94 evidence versus prior732406aa. `git diff --check -- task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md` passed/exit0. No source suites, comparator, platform or GPU checks rerun; no index/commit action. Test-report ownership remains with root in the current subtask; this five-document slice adds no sixth file.
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** W128-H-CLOSURE-DOCS派发至文档核验｜**当前前沿：** 五份记录交付；root下一session的G2
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | 只做要求的记录同步和focused sanity |
+| D2 细节反复重试 | CLEAR | 无source/native/matrix重跑 |
+| D3 支线问题修补 | CLEAR | 仅五份指定记录 |
+| D4 可并行任务停滞 | CLEAR | 用户要求当前收尾；G2明确留给下个session |
+| D5 超范围镀金 | CLEAR | 无source、接口、票据或新run |
+| D6 分析空转 | CLEAR | 实际acceptance/re-review直接落为checkpoint |
+| D7 路线违背 | CLEAR | 无Git index/commit、平台、GLM或CPU-overhead collection |
+
+**文档检查：** S5：原current仍称H未实现/launch wiring进行中；prediction §8的未决total-authority选择已被kernel-only决定取代。已显式标为历史并指向当前验收/G2。S1–S4/S6在本次五份记录范围未发现新增缺陷。
+**归因：** 无执行偏离；旧状态滞后为S5。
+
+## 3. 纠正建议
+
+**分支：** B：spec/tickets存在状态缺陷，先更新文档再继续。
+
+**文档更新（先执行）：**
+1. 指定progress/summary、05/09、prediction note：更新H CPU验收和G2边界，原历史tails/quotes不变（可直接执行，已完成）。
+
+**需停止的偏离行为：无**
+
+**接下去的路线：**
+1. 本次交付：五份记录sanity → 完成标志：引用/状态一致，保护历史内容不变，仅五份文档修改且未staged。
+2. 下一session G2：实际pd_replay profiling bracket、sampling/serving_profile_limits与CPU controls → 完成标志：双head启动/dispatch/drain/stop次序、未选profiling兼容性、soft instrumentation/native exception及retention窗口核验通过，再准备具体GPU申请。
+
+## 4. 最值得关注的 3 点
+
+1. H只完成source/CPU collector验收；profile输出仍UNVERIFIED，五项GPU证据UNKNOWN。
+2. E/F/G1和native06 R4验收保留；没有新capture、GPU运行或审批。
+3. G2尚未实现；05/09/19与完整校准未完成，GLM暂停、CPU overhead最后。
 
 ## Historical execution checkpoint — before balanced A/C integration (2026-10-22)
 

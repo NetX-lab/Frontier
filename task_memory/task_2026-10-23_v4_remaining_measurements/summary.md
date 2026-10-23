@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Archived the accepted input component and current collector/measurement dependencies. |
+| 2026-10-23 | Archived accepted H collector integration64f3c950 and the final G2 continuation boundary. |
 
 ## Completed
 
@@ -16,12 +17,16 @@
 
 Acceptance and exact artifact paths: `input_primary/primary_acceptance.json`, `input_primary/input_admission.json`, `input_primary/merged_matrix_binding.json`, and `input_primary/test_report_2026-10-23_primary.md`. Owner delivery records are in `input_bundle/`.
 
+- Native collector source `f8621a8258ffa445abfb51f5ea73258ad271494e` is integrated at `64f3c9509b09279f321d237e3a95cbe904c6dd22`. All five initial review findings are closed by independent Spec/Standards re-reviews. Scope: five non-core files,880/987changed lines. Status: `ACCEPTED_CPU_COLLECTOR_COMPONENT`.
+- Root verified final-source and merged suites separately: collector28, inventory28, V2inventory45, reader135, worker16, DPharness75, P/Dharness68 and manifest14, all PASS with zero failures/errors/skips. Merged automatic94 remains exactly equal to the prior accepted input receipt. The H default matrix gate explicitly reuses the4a1b53e6 capture with77/77identical; no new capture was run.
+- Final H evidence: `collector_primary/primary_acceptance.json`, `collector_primary/review_2026-10-23_final.md`, `collector_primary/test_report_2026-10-23_final.md`, `collector_primary/merged_matrix_binding.json`. Initial failures/RED controls are retained. Source and task records are consolidated on `feat/glm53-dsv4-vllm028`; the continuation prompt is `handoff_prompt.md` and pending actions are in `progress.md`.
+
 ## Remaining
 
-H collector implementation is active in `/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile`. Its first delivery found and reproduced three launch omissions; root authorized the two additional launch paths, bringing allocation to five non-core files/787changed lines. Collector source/CPU verification, installed hooks, independent review and integration remain required.
-
-Initial source deliveryd94b821a used728lines. Independent reviews found five unique source/retention defects; the same owner is repairing them under the necessary five-file/987line allocation. The old CPU_COMPLETE claim is not acceptance. Reports: `collector_primary/review_2026-10-23_initial.md`. YC requested closure and a session handoff; G2 is reserved for the next session after this collector repair/verification/integration completes.
+H source/CPU closure is complete. Its emitted profiles remain UNVERIFIED: real GPU stream mapping, per-kernel PDL, compile/breakable survival, captured-segment ownership and GPU CUPTI restart require runtime evidence. Installed-image31/31source symbols are static evidence, not successful native executable hook resolution.
 
 G2 driver requirements are recorded in `driver_design.md`. The real replay callsite must activate profiling on both role heads before selected formal dispatch and stop after drain, preserving native behavior and auxiliary soft failures. Implementation and bounded resource/window planning precede any new GPU request.
+
+The collector currently records from startup and emits without resetting its buffers; `/start_profile` does not reset its retention budget. G2 must align records/bytes capacity with the actual selected profiling windows and preserve their required evidence.
 
 Serving totals, complete kernel attribution, actual stream dependencies, graph/TP8/PD cost equivalence, balanced decode coverage and four-metric calibration are still open. Native06 remains the admitted R4 reference. GLM remains paused, and CPU-overhead work stays last. No new GPU allocation was used or authorized in this phase.

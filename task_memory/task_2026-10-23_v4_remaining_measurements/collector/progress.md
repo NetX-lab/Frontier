@@ -7,10 +7,15 @@
 | 2026-10-23 | Inspected the mandatory sources, reproduced launch-seam blockers, verified baseline suites, and stopped before implementation under the file-ownership limit. |
 | 2026-10-23 | Root approved the two-path increment; completed the composed collector, GREEN launch controls and CPU/image verification. |
 | 2026-10-23 | Repaired five unique review findings, refreshed fixed-source tests/hashes, and prepared CPU-only handoff. |
+| 2026-10-23 | Root accepted and integratedf8621a8 at64f3c950; owner-delivery pending statuses below are historical. |
 
 Status: **completed (CPU collector); GPU qualification pending**. Baseline: `993f05f59ef22bfab38433dd93e2fcf486fc113a`, branch `feat/v4-native-serve-profile`.
 
-## Review repair and handoff (latest state)
+## Root acceptance after delivery
+
+Current status: **ACCEPTED_CPU_COLLECTOR_COMPONENT**, sourcef8621a8 integrated64f3c950. Both independent re-reviews closed all five findings; root final-source and merged suites independently reproduced collector28/inventory28/V2inventory45/reader135/worker16/DP75/P-D68/manifest14, separately. Joint automatic94 is unchanged; default77matrix is explicitly bound to the existing capture, with no new capture. See `../collector_primary/primary_acceptance.json` and `../progress.md` for current pending G2 work. GPU qualification remains UNVERIFIED. The owner-delivery/root-review TODO statements below describe their historical time and are superseded by this acceptance.
+
+## Review repair and handoff (owner delivery)
 
 Root continuation supersedes the historical allocation below: collector<=550, one test<=400, worker<=25, command builder<=8, P/D env<=4; five non-core files<=987 changed lines. Actual final scope:457+400+11+8+4=880. Relative to d94b821a:collector92 added/40 deleted; test112 added/12 deleted; other three unchanged. Net scope increment152 lines, patch edit volume256; no native/C26/inventory/root edits or merges.
 

@@ -7,10 +7,15 @@
 | 2026-10-23 | Archived verified launch-seam blockers and separate baseline-suite results; collector implementation is pending root file allocation. |
 | 2026-10-23 | Completed approved collector/launch integration; archived CPU/image results and runtime gates. |
 | 2026-10-23 | Closed five unique review defects with CPU RED/GREEN evidence and fixed-source hashes; prepared another-session handoff. |
+| 2026-10-23 | Linked root acceptance/integration64f3c950 and retained the owner-delivery evidence as historical. |
 
 ## Outcome
 
-**CPU collector COMPLETE; GPU qualification UNVERIFIED.** Root approved the two-file increment. No delegation, GPU/platform/SSH/cloud/native/C26 operation, root merge, driver, scaling or CPU-cost inference occurred.
+**ACCEPTED_CPU_COLLECTOR_COMPONENT; GPU qualification UNVERIFIED.** Root integrated reviewed sourcef8621a8 at64f3c950, independently reran all eight suites separately, verified joint automatic94 equality and explicitly bound the existing77/77matrix capture. Final evidence: `../collector_primary/primary_acceptance.json`. G2 driver/window/proposal work is handed off in `../progress.md` and `../handoff_prompt.md`.
+
+### Historical owner delivery
+
+At owner delivery, root integration/review remained pending. No delegation, GPU/platform/SSH/cloud/native/C26 operation, root merge, driver, scaling or CPU-cost inference occurred in that owner scope. The source/CPU results and pending-root statements below retain that historical meaning; current root acceptance above supersedes them.
 
 Latest repair supersedes initial source/test counts and validation below. Five-file baseline scope880/987:collector457, single test400, worker11, command builder8, P/D env4. Compared with d94b821a:collector92+/40-, test112+/12-, three launch files unchanged; net152 source lines. Five unique findings repaired:load-time None manager uses class hooks; early slot-mapping metadata has actual owners; internal launch PDL/GDC and local-import CUDA compressor boundaries observed; enriched steps atomically admitted/detached; detailed stderr capped64 with suppressed count. Frozen inventory/checker/native/C26/root files unchanged.
 

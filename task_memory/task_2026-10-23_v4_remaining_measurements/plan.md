@@ -8,8 +8,11 @@
 | 2026-10-23 | Checkpoint correction: split G into G1 (merge/matrix) and G2 (measurement proposal); added H (native V2 profiling extension) that owns the audit's minimum capture additions. |
 | 2026-10-23 | H now owns the two reproduced launch seams, five non-core files / 787 changed lines; E entered independent acceptance in parallel. |
 | 2026-10-23 | Session-close scope: finish H review repairs (five files/987), integrate verified CPU work and hand off G2. |
+| 2026-10-23 | A–H CPU prerequisites complete; H accepted at64f3c950 and G2 handed off. |
 
 ## Dependencies and ownership
+
+Current status: A/B/C/D/E/F/G1/H **completed**. H acceptance is `collector_primary/primary_acceptance.json`: five findings closed,880/987lines, final-source and merged separate-suite checks passed, joint automatic94 unchanged, existing77/77matrix explicitly bound. G2 is **pending** for the next session; `progress.md` contains its numbered actions. The initial and repair allocations below remain the historical scope record.
 
 `A -> {B kernel/dependency audit, C private-input design, D native measurement seam}; C -> E bounded implementation -> F focused verification/review -> G1 merge and matrix gate; {B, D} -> H native profiling extension -> G2 executable measurement proposal`
 

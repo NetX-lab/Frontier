@@ -6,6 +6,26 @@
 | --- | --- |
 | 2026-10-23 | Recorded approval and began CPU audit/design; previous native reference evidence verified intact. |
 | 2026-10-23 | E/F/G1 accepted at merged732406aa; H launch increment authorized and implementation resumed. |
+| 2026-10-23 | Closed five H findings, integrated64f3c950, verified merged suites/input/matrix binding, and finalized the G2 handoff. |
+
+## Current handoff — 2026-10-23
+
+- completed A/B/C/D/E/F/G1/H: H source `f8621a8258ffa445abfb51f5ea73258ad271494e` is integrated on `feat/glm53-dsv4-vllm028` at `64f3c9509b09279f321d237e3a95cbe904c6dd22`. Both independent re-reviews closed all five original issues with no new findings. Scope: five non-core files,880/987changed lines. Root acceptance: `collector_primary/primary_acceptance.json`, status `ACCEPTED_CPU_COLLECTOR_COMPONENT`.
+- completed final-source and merged verification: collector28, inventory28, V2inventory45, R4reader135, nativeworker16, DPharness75, P/Dharness68, manifest14 PASS, each suite separately with zero failures/errors/skips. Merged automatic input94 has full receipt equality with the accepted732406aa result. `collector_primary/test_report_2026-10-23_final.md` records commands and exact evidence.
+- completed H default matrix gate: `collector_primary/merged_matrix_binding.json` explicitly binds64f3c950 to the accepted4a1b53e6 capture,77/77identical; simulator/data/examples/matrix bytes are unchanged. This is not a fresh capture or native-profile qualification.
+- completed source/CPU workstream closure: implementer and both reviewers delivered and stopped; owner code/records are consolidated on the main task branch. No new GPU run was launched. The original failed checks and initial review findings remain historical evidence below and in `collector_primary/`.
+- pending G2: real replay driver, collection-window/retention limits, CPU driver verification and a concrete GPU proposal. No G2 driver implementation or new GPU approval exists. Profile output remains UNVERIFIED, with stream mapping, actual PDL, compile/breakable survival, captured-segment ownership and GPU CUPTI restart unresolved.
+
+### Numbered next actions
+
+1. Read `handoff_prompt.md`, `requirements.md`, `driver_design.md`, accepted receipts and actual Git state; preserve `.pi/`, `.cortexkit/`, original evidence and existing worktrees.
+2. Assign the real `pd_replay.py` driver/collector coordination to one owner. Add both-head start-before-formal-dispatch and stop-after-drain through the existing invocation path. Set explicit `serving_profile_limits` and profiler windows. The collector records from startup and does not reset on `/start_profile`; prove selected-window records survive the capacity limits.
+3. Verify unselected compatibility, original returns/exceptions, both-head ordering and auxiliary-failure isolation with CPU controls; independently review and freeze that source.
+4. Present the pinned source/workload/windows, GPU count/duration, artifact volume and runtime gates for YC's explicit run approval. Then follow workflow/GPU/operator-gap before CPU-overhead work. Full05/09/19 and four-metric calibration remain unfinished; GLM stays paused.
+
+## Execution history
+
+Intermediate H pending/in-progress statements below describe their recorded time and are superseded by the current handoff above.
 
 - completed: YC approved the recommended KERNEL_ONLY CPU implementation/measurement-design route. New GPU runs require a concrete later proposal.
 - completed: Root rehashed R4 freeze dependencies/evidence/originals and original R3 prelaunch evidence; all intact. Prior admission records archived at972f0cb1 (24record files; no source changes).

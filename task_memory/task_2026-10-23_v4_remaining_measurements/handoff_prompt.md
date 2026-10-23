@@ -5,12 +5,14 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Prepared the next-session prompt; final collector closure is recorded in progress.md and the acceptance receipts. |
+| 2026-10-23 | Bound the prompt to accepted H sourcef8621a8/integration64f3c950 and final merged checks. |
 
 ```text
 你接手 Frontier 的 GLM-5.3 / DeepSeek-V4 校准工作。先核对实际 Git 状态和下列记录，再执行下一步。
 
 工作目录：/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028
 分支：feat/glm53-dsv4-vllm028
+已验证代码集成点：64f3c9509b09279f321d237e3a95cbe904c6dd22；其后收尾提交仅更新文档和验收记录。先核对实际 HEAD 与该提交的关系。
 主任务：task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/
 当前子任务：task_memory/task_2026-10-23_v4_remaining_measurements/
 
@@ -24,7 +26,7 @@
 - native06 exp-1023-043123-830898 是 ACCEPTED_NATIVE_REFERENCE_R4：原运行 b62c155，32×H800，12.002222 GPU·h；R4 冻结复验8/8，client432/432。原 R3 FAIL、native05 UNVERIFIED 均保留。主任务 native06_acceptance_20261023/ 保存最终凭据。它只是 native reference，不等于 Frontier 数值或算子成本通过。
 - 私有 attention input 已合入732406aa：选择 CSV 后，read_isolated_scope 可发现 dsv4_attention.json，并要求独立的 .admission.json。七个 non-timing engine/step records 推导十二个布局。真实自动读取94项与显式入口完全一致，merged194测试通过，legacy102/72保留，strict77/77一致；合并时明确复用固定4a1b53e6 capture。准入仅 isolated_prefill_input_only。
 - 已准入输入目录：/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02/。使用前核对 input_primary 中的 hashes；文件缺失或不匹配应报告，不得 fallback 或改写原始表。
-- native collector 的最终源码提交、修复结果和复测由 collector_primary/ 最终记录给出。初审五个问题为 graph-manager 生命周期、slot-mapping ownership、实际 source-visible PDL 参数、最终 step byte admission、重复错误日志上限；只依据最终复审判定其关闭。
+- native collector 源码f8621a8已合入64f3c950，collector_primary/primary_acceptance.json为ACCEPTED_CPU_COLLECTOR_COMPONENT。初审五个问题（graph-manager生命周期、slot-mapping、实际PDL参数、完整step容量检查、重复日志上限）均经独立复审关闭，五文件880/987行。Root在最终源码和合并后分别复跑：collector28、inventory28、V2inventory45、reader135、worker16、DPharness75、P/Dharness68、manifest14，全部通过，不能相加。合并后自动94结果完全一致；H的77/77矩阵通过显式复用已有capture完成，没有新capture。代码/CPU阶段已收尾，profile输出仍UNVERIFIED。
 
 下一阶段是 G2：
 先根据最终 collector 状态实现真实 pd_replay 调用链上的 profiling driver，选择 serving_profile_limits 与原生 profiler 的有界采样窗口，做 CPU API/错误隔离验证；然后形成具体 GPU 请求，等待 YC 批准。

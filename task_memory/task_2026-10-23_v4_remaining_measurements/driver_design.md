@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Root traced the real P0 replay path and specified the remaining driver boundary before a GPU proposal. |
+| 2026-10-23 | H source/CPU accepted at64f3c950; recorded startup-to-window retention coordination for G2. |
 
 ## Existing execution path
 
@@ -26,6 +27,6 @@ The profile API fanout to headless DP peers and all TP workers is already traced
 
 ## Exit conditions for the GPU proposal
 
-H's installed hook resolution, phase/step identity, event/stream mapping, capture/replay distinction and soft-error behavior must first pass source/CPU review. Then the driver must pass stand-in API tests through the actual replay callsite: both heads activated before dispatch, drain before stop, unselected compatibility, instrumentation-failure isolation and native-error preservation. The final proposal pins source, input trace, profiling window limits, expected artifact volume, runtime unknowns, GPU count and duration. Source feasibility alone is not launch readiness.
+H's source/CPU review is accepted at64f3c950 (`collector_primary/primary_acceptance.json`); real installed execution and GPU mapping remain runtime gates. The driver must next pass stand-in API tests through the actual replay callsite: both heads activated before dispatch, drain before stop, unselected compatibility, instrumentation-failure isolation and native-error preservation. The final proposal pins source, input trace, profiling window limits, expected artifact volume, runtime unknowns, GPU count and duration. Source feasibility alone is not launch readiness.
 
 No driver code or GPU run is authorized by this design beyond the existing CPU implementation scope. The exact implementation allocation and new run resources remain recorded at their respective steps.
