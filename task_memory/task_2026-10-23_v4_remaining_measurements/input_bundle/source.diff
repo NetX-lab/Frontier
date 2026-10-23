@@ -1,0 +1,481 @@
+diff --git a/frontier/execution_time_predictor/deepseek_v4.py b/frontier/execution_time_predictor/deepseek_v4.py
+index ad472631..ca924d82 100644
+--- a/frontier/execution_time_predictor/deepseek_v4.py
++++ b/frontier/execution_time_predictor/deepseek_v4.py
+@@ -624,7 +624,7 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
+     Linear/MoE selection uses the existing typed readers and feature classifier.
+     Attention requires an independently qualified complete flattened layout;
+     accepted prefill and decode bind input bytes and runtime identity in that
+-    same explicit contract, never inferred from candidate rows. Reduced metadata
++    same explicit or externally admitted sidecar contract, never inferred from candidate rows. Reduced metadata
+     in that contract never asserts serving capacity.
+     """
+     import json
+@@ -664,6 +664,10 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
+         from frontier.profiling.attention.dsv4_attention_rows import _ENGINE_COLUMNS
+ 
+         path = predictor._attention_input_file
++        if attention_layout is None:
++            from frontier.execution_time_predictor.dsv4_attention_input import load_isolated_prefill_layout
++
++            attention_layout = load_isolated_prefill_layout(path, layer_id, measurement, phase)
+         accepted_prefill = phase == "prefill" and (getattr(replica,
+             "moe_gating_routing_runtime_path", None) == "balanced_topk" or attention_layout is not None
+             and "input_file_sha256" in attention_layout)
+diff --git a/frontier/execution_time_predictor/dsv4_attention_input.py b/frontier/execution_time_predictor/dsv4_attention_input.py
+new file mode 100644
+index 00000000..e89edcf9
+--- /dev/null
++++ b/frontier/execution_time_predictor/dsv4_attention_input.py
+@@ -0,0 +1,88 @@
++"""Read externally admitted isolated prefill layouts beside a selected V4 CSV."""
++
++import hashlib
++import json
++from pathlib import Path
++
++from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
++
++
++SCHEMA = "dsv4_attention_input.v1"
++QUALIFICATION = "isolated_prefill_input_only"
++
++
++def _require(condition, message):
++    if not condition:
++        raise DeepSeekV4CoverageError(f"V4 isolated attention input rejected: {message}")
++
++
++def _read_reference(directory, reference):
++    raw = (directory / reference["path"]).read_bytes()
++    _require(hashlib.sha256(raw).hexdigest() == reference["sha256"], "evidence digest")
++    _require(bool(raw), "empty evidence")
++    return raw
++
++
++def load_isolated_prefill_layout(csv_path, layer_id, measurement, phase):
++    """Return a reviewed layout, or None only when no sidecar is present.
++
++    The external reviewer qualifies the representation against its evidence.
++    This reader verifies those bindings, not GPU coverage or serving additivity.
++    """
++    csv_path = Path(csv_path)
++    path = csv_path.parent / "dsv4_attention.json"
++    if not path.exists() and not path.is_symlink():
++        return None
++    try:
++        raw = path.read_bytes()
++        payload = json.loads(raw)
++        admission = json.loads(path.with_suffix(".admission.json").read_bytes())
++        for document in (payload, admission):
++            _require(document["schema_version"] == SCHEMA, "schema")
++            _require(document["qualification"] == QUALIFICATION
++                     and document["serving_admission"] is False, "isolated-only qualification")
++        _require(phase == "prefill", "unsupported phase")
++        _require(admission["verdict"] == "PASS"
++                 and admission["sidecar_sha256"] == hashlib.sha256(raw).hexdigest(),
++                 "external admission")
++        _require(isinstance(admission["reviewed_by"], str) and admission["reviewed_by"].strip(),
++                 "external reviewer")
++        _read_reference(path.parent, admission["review"])
++        evidence = payload["evidence"]
++        _require(admission["evidence"] == evidence, "admission evidence bindings")
++        _require(set(evidence) == {"acceptance", "manifest", "plan", "model", "job", "raw", "summary"},
++                 "complete source lineage")
++        documents = {name: _read_reference(path.parent, ref) for name, ref in evidence.items()}
++        acceptance, manifest, summary = (json.loads(documents[name])
++                                         for name in ("acceptance", "manifest", "summary"))
++        _require(acceptance["status"] == "ACCEPTED_ISOLATED_DATA"
++                 and acceptance["serving_admission"] is False, "original acceptance")
++        _require(acceptance["manifest_sha256"] == evidence["manifest"]["sha256"], "original manifest")
++        _require(manifest["files"]["plan.json"] == evidence["plan"]["sha256"]
++                 and manifest["files"]["model/config.json"] == evidence["model"]["sha256"],
++                 "plan/model lineage")
++        _require(manifest["files"][evidence["job"]["manifest_path"]] == evidence["job"]["sha256"],
++                 "job lineage")
++        retained = {Path(name).name: pin["sha256"] for name, pin in acceptance["retained_files"].items()}
++        _require(retained["dsv4_raw_e0.jsonl"] == evidence["raw"]["sha256"]
++                 and retained["dsv4_aggregate_summary.json"] == evidence["summary"]["sha256"],
++                 "original raw/summary lineage")
++        identity = payload["identity"]
++        _require(identity == {name: summary["identity"][name] for name in identity}
++                 and set(identity) == {"source_revision", "runtime_fingerprint", "model_config_sha256"},
++                 "summary identity")
++        _require(identity["source_revision"] == acceptance["source_revision"] == manifest["source_revision"]
++                 and identity["model_config_sha256"] == evidence["model"]["sha256"], "source/model identity")
++        table = payload["tables"][csv_path.name]
++        _require(table["measurement_type"] == measurement.value, "selected timing method")
++        _require(table["file"]["path"] == csv_path.name, "selected table path")
++        _require(table["file"]["sha256"] == retained[csv_path.name], "original table lineage")
++        _read_reference(path.parent, table["file"])
++        layout = table["layouts"][str(layer_id)]
++        _require(isinstance(layout, dict) and all(layout[name] == value for name, value in identity.items())
++                 and layout["input_file_sha256"] == table["file"]["sha256"], "layout identity")
++        return dict(layout)
++    except DeepSeekV4CoverageError:
++        raise
++    except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
++        raise DeepSeekV4CoverageError(f"V4 isolated attention input rejected in {path}: {exc}") from exc
+diff --git a/tests/comparison/calibration/prepare_dsv4_attention_input.py b/tests/comparison/calibration/prepare_dsv4_attention_input.py
+new file mode 100644
+index 00000000..86e87f87
+--- /dev/null
++++ b/tests/comparison/calibration/prepare_dsv4_attention_input.py
+@@ -0,0 +1,104 @@
++"""Export a fresh V4 isolated-input candidate; never issue consumer admission."""
++
++import argparse
++import json
++import shutil
++from pathlib import Path
++
++from frontier.execution_time_predictor.deepseek_v4 import build_isolated_prefill_layouts
++from frontier.execution_time_predictor.dsv4_attention_input import QUALIFICATION, SCHEMA
++from frontier.profiling.attention.dsa_rows import read_records
++from frontier.profiling.attention.dsv4_attention_main import build_parser, build_plan
++from frontier.profiling.common.runtime_identity import file_sha256
++
++
++JOB = "jobs/PREFILL_WARM_6144_C0_BALANCED.json"
++
++
++def _require(condition, message):
++    if not condition:
++        raise ValueError(f"V4 input preparation rejected: {message}")
++
++
++def accepted_prefill_inputs(acceptance_path, package):
++    """Validate retained source bytes and reconstruct its plan using local code."""
++    acceptance_path, package = Path(acceptance_path), Path(package)
++    acceptance = json.loads(acceptance_path.read_text())
++    _require(acceptance["status"] == "ACCEPTED_ISOLATED_DATA"
++             and acceptance["serving_admission"] is False, "original isolated acceptance")
++    _require(file_sha256(package / "manifest.json") == acceptance["manifest_sha256"], "manifest digest")
++    manifest = json.loads((package / "manifest.json").read_text())
++    for name in ("plan.json", "model/config.json", JOB):
++        _require(file_sha256(package / name) == manifest["files"][name], f"package digest: {name}")
++    job = json.loads((package / JOB).read_text())
++    argv = job["phases"][0]["steps"][1]["commands"][0]["argv"]
++    plan_args = build_parser().parse_args(argv[3:])
++    plan_args.model_config_path = package / "model/config.json"
++    plan = build_plan(plan_args)
++    _require(json.loads(json.dumps(plan.to_json())) == json.loads((package / "plan.json").read_text()),
++             "reconstructed plan")
++    inputs = {}
++    for name, pin in acceptance["retained_files"].items():
++        path = acceptance_path.parents[3] / name
++        _require(file_sha256(path) == pin["sha256"] and path.stat().st_size == pin["bytes"],
++                 f"retained digest/size: {name}")
++        inputs[path.name] = path
++    identity = json.loads(inputs["dsv4_aggregate_summary.json"].read_text())["identity"]
++    _require(identity["source_revision"] == acceptance["source_revision"] == manifest["source_revision"],
++             "source identity")
++    _require(identity["model_config_sha256"] == manifest["files"]["model/config.json"], "model identity")
++    return plan, job, identity, inputs
++
++
++def prefill_layouts(plan, identity, inputs):
++    records = read_records([inputs["dsv4_raw_e0.jsonl"]])
++    return {name: build_isolated_prefill_layouts(plan, records, expected_identity={
++        key: identity[key] for key in ("source_revision", "runtime_fingerprint", "model_config_sha256")},
++        input_file_sha256=file_sha256(inputs[name]))
++        for name in ("attention.csv", "attention_kernel_only.csv")}
++
++
++def prepare_attention_input(acceptance_path, package, output):
++    plan, _, identity, inputs = accepted_prefill_inputs(acceptance_path, package)
++    layouts = prefill_layouts(plan, identity, inputs)
++    output = Path(output)
++    output.mkdir(parents=True, exist_ok=False)
++    sources = {"acceptance": Path(acceptance_path), "manifest": Path(package) / "manifest.json",
++        "plan": Path(package) / "plan.json", "model": Path(package) / "model/config.json",
++        "job": Path(package) / JOB, "raw": inputs["dsv4_raw_e0.jsonl"],
++        "summary": inputs["dsv4_aggregate_summary.json"]}
++    evidence = {}
++    (output / "evidence").mkdir()
++    for name, source in sources.items():
++        destination = output / "evidence" / f"{name}{source.suffix}"
++        shutil.copyfile(source, destination)
++        evidence[name] = {"path": str(destination.relative_to(output)), "sha256": file_sha256(source)}
++        _require(file_sha256(destination) == evidence[name]["sha256"], f"copied evidence: {name}")
++    evidence["job"]["manifest_path"] = JOB
++    tables = {}
++    for name, method in (("attention.csv", "CUDA_EVENT"), ("attention_kernel_only.csv", "KERNEL_ONLY")):
++        shutil.copyfile(inputs[name], output / name)
++        digest = file_sha256(inputs[name])
++        _require(file_sha256(output / name) == digest, f"copied table: {name}")
++        tables[name] = {"file": {"path": name, "sha256": digest}, "measurement_type": method,
++                        "layouts": layouts[name]}
++    sidecar = output / "dsv4_attention.json"
++    sidecar.write_text(json.dumps({"schema_version": SCHEMA, "qualification": QUALIFICATION,
++        "serving_admission": False, "identity": {name: identity[name] for name in (
++            "source_revision", "runtime_fingerprint", "model_config_sha256")},
++        "evidence": evidence, "tables": tables}, indent=2, allow_nan=False) + "\n")
++    return sidecar
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--accepted-prefill", type=Path, required=True)
++    parser.add_argument("--prefill-package", type=Path, required=True)
++    parser.add_argument("--output", type=Path, required=True)
++    args = parser.parse_args()
++    sidecar = prepare_attention_input(args.accepted_prefill, args.prefill_package, args.output)
++    print(f"CANDIDATE_REQUIRES_EXTERNAL_REVIEW {sidecar}; no admission issued")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/tests/integration/check_dsv4_measured_scopes.py b/tests/integration/check_dsv4_measured_scopes.py
+index eae48b27..0a1462ae 100644
+--- a/tests/integration/check_dsv4_measured_scopes.py
++++ b/tests/integration/check_dsv4_measured_scopes.py
+@@ -11,7 +11,7 @@ import pandas as pd
+ from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
+ from frontier.config.model_config import BaseModelConfig
+ from frontier.entities import Batch, Request
+-from frontier.execution_time_predictor.deepseek_v4 import build_isolated_prefill_layouts, read_isolated_scope
++from frontier.execution_time_predictor.deepseek_v4 import read_isolated_scope
+ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import SklearnMoEExecutionTimePredictor
+ from frontier.moe_ep_workload import split_global_expert_tokens_into_lanes
+ from frontier.types import ClusterType, MeasurementType
+@@ -30,58 +30,36 @@ def source_batch(query=6144, context=0, decoding=False):
+                  num_context_tokens=[context], request_is_decoding=[decoding])
+ 
+ 
+-def check_accepted_prefill(p, acceptance_path, package):
+-    from frontier.profiling.attention.dsa_rows import read_records
+-    from frontier.profiling.attention.dsv4_attention_main import build_parser, build_plan
++def check_accepted_prefill(p, acceptance_path, package, *, attention_input=None):
++    from tests.comparison.calibration.prepare_dsv4_attention_input import accepted_prefill_inputs, prefill_layouts
+     from frontier.profiling.attention.dsv4_attention_plan import expected_scopes
+-    from frontier.profiling.common.runtime_identity import file_sha256
+ 
+-    acceptance = json.loads(acceptance_path.read_text())
+-    assert acceptance["status"] == "ACCEPTED_ISOLATED_DATA" and not acceptance["serving_admission"]
+-    assert file_sha256(package / "manifest.json") == acceptance["manifest_sha256"]
+-    manifest = json.loads((package / "manifest.json").read_text())
+-    for name in ("plan.json", "model/config.json", "jobs/PREFILL_WARM_6144_C0_BALANCED.json"):
+-        assert file_sha256(package / name) == manifest["files"][name]
+-    job = json.loads((package / "jobs/PREFILL_WARM_6144_C0_BALANCED.json").read_text())
+-    argv = job["phases"][0]["steps"][1]["commands"][0]["argv"]
+-    plan_args = build_parser().parse_args(argv[3:])
+-    plan_args.model_config_path = package / "model/config.json"
+-    plan = build_plan(plan_args)
+-    assert json.loads(json.dumps(plan.to_json())) == json.loads((package / "plan.json").read_text())
+-    inputs = {}
+-    for name, pin in acceptance["retained_files"].items():
+-        if name.endswith((".csv", "dsv4_raw_e0.jsonl", "dsv4_aggregate_summary.json")):
+-            path = acceptance_path.parents[3] / name
+-            assert file_sha256(path) == pin["sha256"]
+-            inputs[path.name] = path, pin["sha256"]
+-    identity = json.loads(inputs["dsv4_aggregate_summary.json"][0].read_text())["identity"]
+-    assert identity["source_revision"] == acceptance["source_revision"] == manifest["source_revision"]
+-    assert identity["model_config_sha256"] == manifest["files"]["model/config.json"]
++    plan, job, identity, inputs = accepted_prefill_inputs(acceptance_path, package)
+     p._replica_config.device = job["gpu_type"].lower()
+     p._replica_config.attn_dp = job["target_per_role"]["dp"]
+     p._replica_config.moe_expert_parallel_size = job["target_per_role"]["ep"]
+     p._replica_config.moe_gating_routing_runtime_path = "balanced_topk"
+     p._replica_config.attn_tensor_parallel_size = plan.shape.target_tensor_parallel_size
+     p._block_size = plan.limits.block_size
+-    records = read_records([inputs["dsv4_raw_e0.jsonl"][0]])
++    layouts = prefill_layouts(plan, identity, inputs)
+     receipts = []
+     for method, name in ((MeasurementType.CUDA_EVENT, "attention.csv"),
+                          (MeasurementType.KERNEL_ONLY, "attention_kernel_only.csv")):
+-        path, digest = inputs[name]
++        path = Path(attention_input) / name if attention_input is not None else inputs[name]
+         p._attention_input_file = str(path)
+         p._active_measurement_type = method
+-        layouts = build_isolated_prefill_layouts(plan, records, expected_identity={
+-            key: identity[key] for key in ("source_revision", "runtime_fingerprint", "model_config_sha256")},
+-            input_file_sha256=digest)
+         rows = pd.read_csv(p._attention_input_file, float_precision="round_trip")
++        assert path.read_bytes() == inputs[name].read_bytes()
+         for layer in plan.shape.layers:
+             row = rows[rows.global_layer_ids == json.dumps([layer.global_layer_id])].iloc[0]
+             for scope in expected_scopes(layer.attention_variant,
+                     plan.shape.index_scores_executed(plan.cases[0].prompt_len),
+                     annotated_only=method is MeasurementType.KERNEL_ONLY):
+                 result = read_isolated_scope(p, source_batch(plan.cases[0].prompt_len),
+-                    layer.global_layer_id, scope, attention_layout=layouts[layer.global_layer_id])
++                    layer.global_layer_id, scope, attention_layout=layouts[name][layer.global_layer_id]
++                    if attention_input is None else None)
+                 assert result["time_ms"] == row[f"time_stats.{scope}.median"]
++                assert result["attention_layout"] == layouts[name][layer.global_layer_id]
+                 assert result["serving_admission"] is False
+                 receipts.append(result)
+     return receipts
+@@ -93,10 +71,13 @@ def main():
+     parser.add_argument("--compute-root", type=Path)
+     parser.add_argument("--accepted-prefill", type=Path)
+     parser.add_argument("--prefill-package", type=Path)
++    parser.add_argument("--attention-input", type=Path, help="Externally admitted prepared prefill input directory")
+     parser.add_argument("--output", type=Path, required=True)
+     args = parser.parse_args()
+     if (args.accepted_prefill is not None) != (args.prefill_package is not None):
+         parser.error("--accepted-prefill and --prefill-package must be supplied together")
++    if args.attention_input is not None and args.accepted_prefill is None:
++        parser.error("--attention-input requires the original accepted prefill receipt/package")
+     if args.accepted_prefill is None and (args.attention_root is None or args.compute_root is None):
+         parser.error("legacy checking requires --attention-root and --compute-root")
+     p = ScopePredictor.__new__(ScopePredictor)
+@@ -110,7 +91,8 @@ def main():
+     p._cluster_type = ClusterType.MONOLITHIC
+     p._block_size = 256
+     if args.accepted_prefill is not None:
+-        receipts = check_accepted_prefill(p, args.accepted_prefill, args.prefill_package)
++        receipts = check_accepted_prefill(p, args.accepted_prefill, args.prefill_package,
++                                         attention_input=args.attention_input)
+         args.output.parent.mkdir(parents=True, exist_ok=True)
+         args.output.write_text(json.dumps({"status": "PASS", "positive_count": len(receipts),
+             "serving_admission": False, "receipts": receipts}, indent=2) + "\n")
+diff --git a/tests/unit/test_dsv4_graph_measured.py b/tests/unit/test_dsv4_graph_measured.py
+index 4d455f44..e3220eb5 100644
+--- a/tests/unit/test_dsv4_graph_measured.py
++++ b/tests/unit/test_dsv4_graph_measured.py
+@@ -604,6 +604,9 @@ def accepted_prefill():
+     package = root.parent / "v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced"
+     if not acceptance.is_file() or not package.is_dir():
+         pytest.skip("Accepted prefill receipts/package are unavailable")
++    from frontier.profiling.common.runtime_identity import file_sha256
++
++    assert file_sha256(acceptance) == "616ee98996664c82c03b8d505de64b9cea917529a44c8a94b0068c708d5115e6"
+     p = ScopePredictor.__new__(ScopePredictor)
+     p._model_config = BaseModelConfig.create_from_name("deepseek-ai/DeepSeek-V4-Flash")
+     p._replica_config = SimpleNamespace(model_config=p._model_config, num_pipeline_stages=1,
+@@ -658,3 +661,133 @@ def test_accepted_prefill_contract_typed_rejections(accepted_prefill, method, ch
+         assert "routing_runtime_path" not in rows
+     with pytest.raises(DeepSeekV4CoverageError):
+         read_isolated_scope(p, batch, 2, "dsv4_sparse_attention", attention_layout=layout)
++
++
++def write_test_input_admission(sidecar):
++    """Bind a test fixture only; this is not production qualification evidence."""
++    from frontier.profiling.common.runtime_identity import file_sha256
++
++    review = sidecar.parent / "fixture_review.txt"
++    review.write_text("TEST FIXTURE ONLY. No production or GPU qualification.\n")
++    payload = json.loads(sidecar.read_text())
++    sidecar.with_suffix(".admission.json").write_text(json.dumps({
++        "schema_version": payload["schema_version"], "qualification": payload["qualification"],
++        "serving_admission": False, "verdict": "PASS", "reviewed_by": "TEST_FIXTURE_NOT_PRODUCTION",
++        "sidecar_sha256": file_sha256(sidecar), "evidence": payload["evidence"],
++        "review": {"path": review.name, "sha256": file_sha256(review)}}))
++
++
++@pytest.fixture(scope="module")
++def accepted_input(accepted_prefill, tmp_path_factory):
++    from tests.comparison.calibration.prepare_dsv4_attention_input import prepare_attention_input
++    from tests.integration.check_dsv4_measured_scopes import check_accepted_prefill
++
++    p, explicit = accepted_prefill
++    root = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028")
++    acceptance = root / "task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/primary_acceptance.json"
++    package = root.parent / "v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced"
++    output = tmp_path_factory.mktemp("v4_attention_input") / "candidate"
++    sidecar = prepare_attention_input(acceptance, package, output)
++    assert not sidecar.with_suffix(".admission.json").exists()
++    write_test_input_admission(sidecar)
++    automatic = check_accepted_prefill(p, acceptance, package, attention_input=output)
++    assert [(r["scope"], r["time_ms"], r["attention_layout"]) for r in automatic] == [
++        (r["scope"], r["time_ms"], r["attention_layout"]) for r in explicit]
++    return p, sidecar, automatic
++
++
++def test_current_writer_all94_selected_input_results(accepted_input):
++    _, _, receipts = accepted_input
++    assert {m: sum(r["measurement_type"] == m for r in receipts) for m in
++            ("CUDA_EVENT", "KERNEL_ONLY")} == {"CUDA_EVENT": 50, "KERNEL_ONLY": 44}
++    assert all(r["serving_admission"] is False for r in receipts)
++
++
++@pytest.mark.parametrize("method", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
++@pytest.mark.parametrize("change", ["missing_sidecar", "malformed_sidecar", "stale_sidecar",
++    "missing_admission", "altered_admission", "admission_evidence", "serving_admission",
++    "missing_review", "altered_review", "altered_csv", "altered_raw", "altered_plan",
++    "altered_model", "altered_summary", "raw_lineage", "job_lineage", "sidecar_serving",
++    "measurement", "provenance", "missing_layout", "layout", "routing", "phase", "graph"])
++def test_selected_input_typed_refusals(accepted_input, tmp_path, monkeypatch, method, change):
++    import shutil
++
++    p, original, _ = accepted_input
++    directory = tmp_path / "candidate"
++    shutil.copytree(original.parent, directory)
++    sidecar = directory / original.name
++    admission = sidecar.with_suffix(".admission.json")
++    payload = json.loads(sidecar.read_text())
++    name = "attention.csv" if method is MeasurementType.CUDA_EVENT else "attention_kernel_only.csv"
++    monkeypatch.setattr(p, "_attention_input_file", str(directory / name))
++    monkeypatch.setattr(p, "_active_measurement_type", method)
++    batch = source_batch([6144], [0])
++    if change in ("missing_sidecar", "missing_admission", "missing_review"):
++        {"missing_sidecar": sidecar, "missing_admission": admission,
++         "missing_review": directory / "fixture_review.txt"}[change].unlink()
++    elif change == "malformed_sidecar":
++        sidecar.write_text("{")
++    elif change == "stale_sidecar":
++        sidecar.write_text(sidecar.read_text() + " ")
++    elif change in ("altered_admission", "admission_evidence", "serving_admission"):
++        receipt = json.loads(admission.read_text())
++        if change == "altered_admission":
++            receipt["sidecar_sha256"] = "unaccepted"
++        elif change == "admission_evidence":
++            receipt["evidence"] = {}
++        else:
++            receipt["serving_admission"] = True
++        admission.write_text(json.dumps(receipt))
++    elif change.startswith("altered_"):
++        path = directory / (name if change == "altered_csv" else "fixture_review.txt"
++            if change == "altered_review" else payload["evidence"][change.removeprefix("altered_")]["path"])
++        path.write_bytes(path.read_bytes() + b" ")
++    elif change == "phase":
++        batch = ongoing_batch(6143)
++    elif change == "graph":
++        batch = graph_batch([6144], [0], padded=6144)
++    else:
++        layout = payload["tables"][name]["layouts"]["2"]
++        if change in ("raw_lineage", "job_lineage"):
++            from frontier.profiling.common.runtime_identity import file_sha256
++
++            reference = payload["evidence"]["raw" if change == "raw_lineage" else "job"]
++            path = directory / reference["path"]
++            path.write_bytes(path.read_bytes() + b" ")
++            reference["sha256"] = file_sha256(path)
++        elif change == "sidecar_serving":
++            payload["serving_admission"] = True
++        elif change == "measurement":
++            payload["tables"][name]["measurement_type"] = "UNQUALIFIED"
++        elif change == "provenance":
++            layout["source_revision"] = "self-consistent-but-unaccepted"
++        elif change == "missing_layout":
++            del payload["tables"][name]["layouts"]["2"]
++        else:
++            layout["routing_runtime_path" if change == "routing" else "swa_metadata.block_size"] = (
++                "random" if change == "routing" else 1)
++        sidecar.write_text(json.dumps(payload))
++        write_test_input_admission(sidecar)
++    with pytest.raises(DeepSeekV4CoverageError):
++        read_isolated_scope(p, batch, 2, "dsv4_sparse_attention")
++
++
++def test_preparation_refuses_existing_output_and_unsupported_acceptance(accepted_input, tmp_path):
++    from tests.comparison.calibration.prepare_dsv4_attention_input import prepare_attention_input
++
++    _, sidecar, _ = accepted_input
++    evidence = sidecar.parent / "evidence"
++    # Original acceptance paths resolve to retained files in their source tree.
++    original = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/"
++        "task_2026-10-22_v4_balanced_routing/prefill_results/primary_acceptance.json")
++    package = Path("/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/"
++        "task_2026-10-22_v4_h800_prefill/h800_prefill_balanced")
++    with pytest.raises(FileExistsError):
++        prepare_attention_input(original, package, sidecar.parent)
++    acceptance = json.loads((evidence / "acceptance.json").read_text())
++    acceptance["status"] = "PASS"
++    path = tmp_path / "unsupported.json"
++    path.write_text(json.dumps(acceptance))
++    with pytest.raises(ValueError, match="original isolated acceptance"):
++        prepare_attention_input(path, package, tmp_path / "must_not_exist")
++    assert not (tmp_path / "must_not_exist").exists()

@@ -604,6 +604,9 @@ def accepted_prefill():
     package = root.parent / "v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced"
     if not acceptance.is_file() or not package.is_dir():
         pytest.skip("Accepted prefill receipts/package are unavailable")
+    from frontier.profiling.common.runtime_identity import file_sha256
+
+    assert file_sha256(acceptance) == "616ee98996664c82c03b8d505de64b9cea917529a44c8a94b0068c708d5115e6"
     p = ScopePredictor.__new__(ScopePredictor)
     p._model_config = BaseModelConfig.create_from_name("deepseek-ai/DeepSeek-V4-Flash")
     p._replica_config = SimpleNamespace(model_config=p._model_config, num_pipeline_stages=1,
@@ -658,3 +661,133 @@ def test_accepted_prefill_contract_typed_rejections(accepted_prefill, method, ch
         assert "routing_runtime_path" not in rows
     with pytest.raises(DeepSeekV4CoverageError):
         read_isolated_scope(p, batch, 2, "dsv4_sparse_attention", attention_layout=layout)
+
+
+def write_test_input_admission(sidecar):
+    """Bind a test fixture only; this is not production qualification evidence."""
+    from frontier.profiling.common.runtime_identity import file_sha256
+
+    review = sidecar.parent / "fixture_review.txt"
+    review.write_text("TEST FIXTURE ONLY. No production or GPU qualification.\n")
+    payload = json.loads(sidecar.read_text())
+    sidecar.with_suffix(".admission.json").write_text(json.dumps({
+        "schema_version": payload["schema_version"], "qualification": payload["qualification"],
+        "serving_admission": False, "verdict": "PASS", "reviewed_by": "TEST_FIXTURE_NOT_PRODUCTION",
+        "sidecar_sha256": file_sha256(sidecar), "evidence": payload["evidence"],
+        "review": {"path": review.name, "sha256": file_sha256(review)}}))
+
+
+@pytest.fixture(scope="module")
+def accepted_input(accepted_prefill, tmp_path_factory):
+    from tests.comparison.calibration.prepare_dsv4_attention_input import prepare_attention_input
+    from tests.integration.check_dsv4_measured_scopes import check_accepted_prefill
+
+    p, explicit = accepted_prefill
+    root = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028")
+    acceptance = root / "task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/primary_acceptance.json"
+    package = root.parent / "v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced"
+    output = tmp_path_factory.mktemp("v4_attention_input") / "candidate"
+    sidecar = prepare_attention_input(acceptance, package, output)
+    assert not sidecar.with_suffix(".admission.json").exists()
+    write_test_input_admission(sidecar)
+    automatic = check_accepted_prefill(p, acceptance, package, attention_input=output)
+    assert [(r["scope"], r["time_ms"], r["attention_layout"]) for r in automatic] == [
+        (r["scope"], r["time_ms"], r["attention_layout"]) for r in explicit]
+    return p, sidecar, automatic
+
+
+def test_current_writer_all94_selected_input_results(accepted_input):
+    _, _, receipts = accepted_input
+    assert {m: sum(r["measurement_type"] == m for r in receipts) for m in
+            ("CUDA_EVENT", "KERNEL_ONLY")} == {"CUDA_EVENT": 50, "KERNEL_ONLY": 44}
+    assert all(r["serving_admission"] is False for r in receipts)
+
+
+@pytest.mark.parametrize("method", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
+@pytest.mark.parametrize("change", ["missing_sidecar", "malformed_sidecar", "stale_sidecar",
+    "missing_admission", "altered_admission", "admission_evidence", "serving_admission",
+    "missing_review", "altered_review", "altered_csv", "altered_raw", "altered_plan",
+    "altered_model", "altered_summary", "raw_lineage", "job_lineage", "sidecar_serving",
+    "measurement", "provenance", "missing_layout", "layout", "routing", "phase", "graph"])
+def test_selected_input_typed_refusals(accepted_input, tmp_path, monkeypatch, method, change):
+    import shutil
+
+    p, original, _ = accepted_input
+    directory = tmp_path / "candidate"
+    shutil.copytree(original.parent, directory)
+    sidecar = directory / original.name
+    admission = sidecar.with_suffix(".admission.json")
+    payload = json.loads(sidecar.read_text())
+    name = "attention.csv" if method is MeasurementType.CUDA_EVENT else "attention_kernel_only.csv"
+    monkeypatch.setattr(p, "_attention_input_file", str(directory / name))
+    monkeypatch.setattr(p, "_active_measurement_type", method)
+    batch = source_batch([6144], [0])
+    if change in ("missing_sidecar", "missing_admission", "missing_review"):
+        {"missing_sidecar": sidecar, "missing_admission": admission,
+         "missing_review": directory / "fixture_review.txt"}[change].unlink()
+    elif change == "malformed_sidecar":
+        sidecar.write_text("{")
+    elif change == "stale_sidecar":
+        sidecar.write_text(sidecar.read_text() + " ")
+    elif change in ("altered_admission", "admission_evidence", "serving_admission"):
+        receipt = json.loads(admission.read_text())
+        if change == "altered_admission":
+            receipt["sidecar_sha256"] = "unaccepted"
+        elif change == "admission_evidence":
+            receipt["evidence"] = {}
+        else:
+            receipt["serving_admission"] = True
+        admission.write_text(json.dumps(receipt))
+    elif change.startswith("altered_"):
+        path = directory / (name if change == "altered_csv" else "fixture_review.txt"
+            if change == "altered_review" else payload["evidence"][change.removeprefix("altered_")]["path"])
+        path.write_bytes(path.read_bytes() + b" ")
+    elif change == "phase":
+        batch = ongoing_batch(6143)
+    elif change == "graph":
+        batch = graph_batch([6144], [0], padded=6144)
+    else:
+        layout = payload["tables"][name]["layouts"]["2"]
+        if change in ("raw_lineage", "job_lineage"):
+            from frontier.profiling.common.runtime_identity import file_sha256
+
+            reference = payload["evidence"]["raw" if change == "raw_lineage" else "job"]
+            path = directory / reference["path"]
+            path.write_bytes(path.read_bytes() + b" ")
+            reference["sha256"] = file_sha256(path)
+        elif change == "sidecar_serving":
+            payload["serving_admission"] = True
+        elif change == "measurement":
+            payload["tables"][name]["measurement_type"] = "UNQUALIFIED"
+        elif change == "provenance":
+            layout["source_revision"] = "self-consistent-but-unaccepted"
+        elif change == "missing_layout":
+            del payload["tables"][name]["layouts"]["2"]
+        else:
+            layout["routing_runtime_path" if change == "routing" else "swa_metadata.block_size"] = (
+                "random" if change == "routing" else 1)
+        sidecar.write_text(json.dumps(payload))
+        write_test_input_admission(sidecar)
+    with pytest.raises(DeepSeekV4CoverageError):
+        read_isolated_scope(p, batch, 2, "dsv4_sparse_attention")
+
+
+def test_preparation_refuses_existing_output_and_unsupported_acceptance(accepted_input, tmp_path):
+    from tests.comparison.calibration.prepare_dsv4_attention_input import prepare_attention_input
+
+    _, sidecar, _ = accepted_input
+    evidence = sidecar.parent / "evidence"
+    # Original acceptance paths resolve to retained files in their source tree.
+    original = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/"
+        "task_2026-10-22_v4_balanced_routing/prefill_results/primary_acceptance.json")
+    package = Path("/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/"
+        "task_2026-10-22_v4_h800_prefill/h800_prefill_balanced")
+    with pytest.raises(FileExistsError):
+        prepare_attention_input(original, package, sidecar.parent)
+    acceptance = json.loads((evidence / "acceptance.json").read_text())
+    acceptance["status"] = "PASS"
+    path = tmp_path / "unsupported.json"
+    path.write_text(json.dumps(acceptance))
+    with pytest.raises(ValueError, match="original isolated acceptance"):
+        prepare_attention_input(path, package, tmp_path / "must_not_exist")
+    assert not (tmp_path / "must_not_exist").exists()
