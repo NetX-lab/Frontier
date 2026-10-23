@@ -1,0 +1,2 @@
+Running scope as unit: run-r4902d9aeb7554b2890571f5bca6fbc07.scope
+PASS freeze {'baseline': 20, 'candidate': 21} 82 existing tests; accepted protected body

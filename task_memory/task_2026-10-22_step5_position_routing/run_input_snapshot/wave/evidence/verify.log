@@ -1,0 +1,35 @@
+Running scope as unit: run-ra86b74f2e5c44010835738508f9cdd74.scope
+PASS all invariants; source still uncommitted; complete payload/whole JSONL/ledger equality
+{
+  "warm_baseline_s": 0.34086694475263357,
+  "warm_candidate_s": 0.1627145241945982,
+  "candidate_binding_s": 0.08949868101626635,
+  "candidate_main_reads": 1,
+  "candidate_warm_reads": [
+    0,
+    0,
+    0
+  ],
+  "hashes": {
+    "baseline": {
+      "wave_result": "/data/ycfeng/tmp/d29_run_snapshot_wave_20261024_02/baseline/wave_result.json",
+      "wave_result_sha256": "581ac7743ba1bc48c6d9b5c9868f847adb533d95b0453a41ffc790f49b0ae3f3",
+      "pricing_payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "whole_jsonl": "/data/ycfeng/tmp/d29_run_snapshot_wave_20261024_02/baseline/accepted-output/baseline/iteration-0/op_traces.jsonl",
+      "whole_jsonl_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+      "ledger": "/data/ycfeng/tmp/d29_run_snapshot_wave_20261024_02/baseline/accepted-output/baseline/ledger.json",
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "output_result_sha256": "144bda57426079b37eefc9e7ad9a30f1b62600b91ff60c0fdeee85560af61cd3"
+    },
+    "candidate": {
+      "wave_result": "/data/ycfeng/tmp/d29_run_snapshot_wave_20261024_02/candidate/wave_result.json",
+      "wave_result_sha256": "51aa7cd8829136c1c8ac6ed5a7bd42a37ef01ed32e2752368fe7ac0c45e54626",
+      "pricing_payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "whole_jsonl": "/data/ycfeng/tmp/d29_run_snapshot_wave_20261024_02/candidate/accepted-output/candidate/iteration-0/op_traces.jsonl",
+      "whole_jsonl_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+      "ledger": "/data/ycfeng/tmp/d29_run_snapshot_wave_20261024_02/candidate/accepted-output/candidate/ledger.json",
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "output_result_sha256": "62dbd18923849b30c83ff0318131683d196745b7a7c0afee8bbbb0cef778787e"
+    }
+  }
+}
