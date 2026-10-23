@@ -34,6 +34,12 @@ native budget1350/1582. Root owns packet acceptance/sealing, completed integrati
 readiness and actual launch/resource/runtime decisions. Full bound-file equivalence
 to60ba must remain true after the isolated records commit.
 
+Verified after43c2947c:26full bound-file byte equality60ba,63checksums,
+frontier/tests/native4 diff0,only11existing native record paths changed/clean
+PASS. Selected output retained in progress/summary,exact command in test report.
+Final handoff-only update leaves packet/index/source unchanged; no new code
+verification needed.
+
 ## D29-T2-ENGINE-LIMITS scoped self-review (historical)
 
 Reviewed a5e5189 against6ebb038: only the two authorized native-owned Python

@@ -68,6 +68,14 @@ actual-image7168/8192/128 CPU values remain CPU-only. Exact static commands,
 full hash comparisons, selected evidence and changed paths are recorded below
 in the existing test report/review/progress.
 
+Records commit43c2947c6d08b699d5a1efc1602117ba87850772 changes11 existing task
+paths only. Postcommit26 full bound repository/receipt/input/native snapshot
+files byte-identical60ba,63/63checksums,production/test diff0 and clean worktree
+PASS in /data/ycfeng/tmp/d29-t2-final-postcommit-equivalence.log. Packet index
+SHA256a4bed10cd7b0189153f9bf5d1c1886dafd6d64fff4867612adf9cf9d1dd20e15.
+Final handoff update changes only progress/review/report/summary, not packet or
+runtime source identity; post-handoff equivalence is checked again.
+
 Remaining: root final packet acceptance/sealing and independent integration
 readiness, explicit resource/run authorization/finite collection coordination,
 worker/mount/rendezvous/output/retention/source/library/config/backend/memory

@@ -523,3 +523,30 @@ real finite-unit/mount/rendezvous/retention/source/import/library/backend/config
 memory/graph/MRv2/G3/state evidence. Root16+2CPU results and historical real-image
 7168/8192/128 CPU values are cited observations, not reruns/GPU proof. No native
 runtime/accepted suite rerun/network/platform/GPU operation by this records task.
+
+### Postcommit equivalence command and result
+Records commit43c2947c6d08b699d5a1efc1602117ba87850772. Exact command:
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY' > /data/ycfeng/tmp/d29-t2-final-postcommit-equivalence.log 2>&1
+import hashlib,json,subprocess
+from pathlib import Path
+source='60ba4c7569b7c9fd4c8f9f43a16f92249fa76181';repo=Path.cwd();task=Path('task_memory/task_2026-10-22_step5_d29_native_balanced');packet=task/'t2_preparation';p=json.loads((packet/'provenance.json').read_text())
+paths=list(p['script_sources'])+list(p['supporting_repository_sources']['sources'])+list(p['publication_artifacts'])+list(p['parent_acceptance_artifacts'])+[str(task/'native_source'/x) for x in json.loads(Path('task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json').read_text())['derived_source_sha256']]+[str(packet/'cases.json'),str(packet/'model_metadata/config.json')]
+assert len(paths)==26
+for path in paths:assert Path(path).read_bytes()==subprocess.check_output(['git','show',source+':'+path]),path
+subprocess.run(['git','diff','--exit-code',source,'HEAD','--','frontier','tests','Dockerfile'],check=True)
+subprocess.run(['git','diff','--exit-code',source,'HEAD','--',*paths],check=True)
+changed=subprocess.check_output(['git','diff','--name-only',source,'HEAD'],text=True).splitlines();assert len(changed)==11 and all(path.startswith(str(task)+'/') for path in changed)
+assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+assert p['accepted_repo_commit']==source
+subprocess.run(['sha256sum','-c','hashes.sha256'],cwd=packet,check=True)
+print('RECORD_COMMIT',subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
+print('SOURCE_IDENTITY',source)
+print('INDEX_SHA256',hashlib.sha256((packet/'hashes.sha256').read_bytes()).hexdigest())
+print('PASS26 full bound-file bytes identical frozen source after record commit;63checksums;11native-record-only paths;no frontier/tests/native4 changes;clean')
+PY
+```
+Expected/observed:26full files byte-identical60ba,63checksums PASS,11native-record
+paths only,production/tests/native4 diff0,clean; runtime source60ba/indexSHAa4bed10c...
+unchanged. Re-execute this exact documented block after final handoff-record commit;
+packet is unchanged and no runtime/suite action is introduced.

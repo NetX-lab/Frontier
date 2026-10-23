@@ -84,21 +84,25 @@
   only11 existing native records changed. First documented command extraction
   split at a triple-backtick literal and truncated heredoc (bash1); delimiter-
   specific extraction corrected only extraction, documented check rerun PASS.
-- in-progress F4 handoff: isolated docs commit -> explicit postcommit bound-file
-  equivalence to60ba. Native1350/1582,source/test increment0; no suites/runtime.
+- completed F4 handoff: records commit43c2947c6d08b699d5a1efc1602117ba87850772;
+  postcommit26 full bound-file equality to60ba/63checksums/11record-only paths/
+  code-test diff0/clean PASS in d29-t2-final-postcommit-equivalence.log. Packet
+  index SHAa4bed10cd7b0189153f9bf5d1c1886dafd6d64fff4867612adf9cf9d1dd20e15.
+  Final handoff-record update changes no packet/source bytes; explicit equivalence
+  is rechecked after its commit. Native1350/1582,source increment0.
 
 ## 1. 规划完成情况
-**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1（D29-T2-FINAL-SOURCE-BINDING; not GPU acceptance）
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0（D29-T2-FINAL-SOURCE-BINDING; not GPU acceptance）
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | F1 isolated source | PASS | records branch from60ba; active worktree untouched |
 | F2 full binding/comparison | PASS | repo8/pub9/parent3/native32/export2907; constructor equal, full helper changed |
 | F3 packet/proposal | PASS | source60ba/clean controlled env; metadata/cases/native4 unchanged |
-| F4 static/index/commit | TODO | static/index63 PASS; isolated commit/postcommit equivalence remaining |
+| F4 static/index/commit | PASS | records43c2947c; postcommit26equivalence/63checksums/clean PASS |
 
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
-**检测窗口：** D29-T2-FINAL-SOURCE-BINDING dispatch to current｜**当前前沿：** F4index/records
+**检测窗口：** D29-T2-FINAL-SOURCE-BINDING dispatch to43c2947c/postcommit PASS｜**当前前沿：** root accept/seal (outside owner scope)
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | requested static/hash verification only; no new suite/harness |
@@ -106,7 +110,7 @@
 | D3 支线问题修补 | CLEAR | helper obligations are F2 scope; no production repair |
 | D4 可并行任务停滞 | CLEAR | independent reads parallel; explicit no-agent instruction |
 | D5 超范围镀金 | CLEAR | source/test0, existing packet/handoff only; resources unchanged |
-| D6 分析空转 | CLEAR | full bindings applied/static PASS; proceeding to record commit |
+| D6 分析空转 | CLEAR | bindings committed43c2947c; postcommit equivalence PASS |
 | D7 路线违背 | CLEAR | active tree untouched, source60ba, CPU/GPU limits separated |
 **文档检查：** S5: old packet/progress referenced662/unintegrated helper, contradicted root60ba instruction and full-file evidence; updated within authorization. S1–S4/S6 clear.
 **归因：** 无。
@@ -116,8 +120,8 @@
 **文档更新（先执行）：** packet provenance/proposal/index and local progress/summary: bind60ba, retain historical CPU evidence, disclose helper clean-env obligation (authorized).
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. F4 index/records -> done: all checksums PASS, isolated docs commit, full bound files equal60ba afterward.
-2. Root accept/seal/readiness -> done: explicit resource/run approval and actual finite-unit paths; this stream does not launch.
+1. Root accept/seal/readiness -> done: packet with full source60ba binding and unchanged inputs/limits; this stream complete.
+2. Root resource/run decision -> done: explicit finite-unit authorization/paths/receipts;16H8001800s remains unapproved.
 
 ## 4. 最值得关注的 3 点
 1. Full helper changed; constructor AST equality is not source identity or GPU proof.
