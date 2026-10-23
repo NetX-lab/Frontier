@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Resume in current session on frozene41abc07;run fullCLI,requiredregressions and isolated T2 rebinding concurrently. |
 | 2026-10-23 | Complete the active CLI repair and consolidate reviewed code/records for YC's session handoff; retain fresh workflow gates as pending. |
 | 2026-10-23 | Apply checkpoint corrections: effective111 scope, current acceptance frontier, and final-source verification order. |
 | 2026-10-23 | Record D29-SCOPE-107-10000 approval; start three sole-writer implementation streams with explicit quotas. |
@@ -27,11 +28,11 @@ the new repair to65 gross.
 requirements.md records YC's authority.
 
 Completed handoff boundary: CLI placement repair -> parent real-constructor checks
-and independent re-review -> feature-branch code/record consolidation. The user
-requests continuation in another session. Code merge4ed67d78 and T2 records merge
+and independent re-review -> feature-branch code/record consolidation. YC now
+defers handoff and resumes here. Code merge4ed67d78 and T2 records merge
 9c77b559 are delivery checkpoints,not full workflow admission.
 
-Next dependency: freeze the consolidated source -> {required regression/full
+Current dependency: freezee41abc07 (complete) -> {required regression/full
 actual-main checks,final T2 source binding,updated actual per-path accounting}
 -> package readiness -> resource/run decision
 -> fresh native/profile evidence -> G3 and independent four-metric E2E acceptance.
@@ -49,12 +50,12 @@ Final target staging/seal and rebinding to the later accepted candidate remain.
 | CORE/SOURCE46 | Source review and CLI repair closed;parent57PASS/6unchangedSKIP,No findings;3873/4404 gross. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Source review complete;3879/3956 gross. |
-| Complete integration and final freeze | Code4ed67d78 and records9c77b559 merged into feat/step5-preview;new final workflow freeze pending. |
+| Complete integration and final freeze | Complete:e41abc07 frozen clean in verify-step5-d29-integrated-05,gitlink3dac53c. |
 | Legacy strict77 | Final03 on1be91bad:77/77 identical,902 artifact hashes verified. |
 | Full-unit failure/error-set gate | Closed on1be91bad with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. |
-| Fresh fixture and full CLI | main05 failed;bounded repair accepted;fresh full main06 is the first runtime task for the next session. |
+| Fresh fixture and full CLI | main05 failed;bounded repair accepted;main06 now running on frozene41,modeall,6144/1024,2400s per mode. |
 | Independent source review | Earlier findings closed on1be91bad;CLI40-gross repair closed No findings at75ad26f9. |
-| T2 final-source binding | Parent verifies final1be tree,26 files and63 checksums; physical staging/seal follows CLI completion. |
+| T2 final-source binding | 1be packet preserved;owner prepares e41/integrated05 rebind separately;physical staging/seal follows active CPU gates. |
 | Final per-path accounting | Delivery remeasured:111 allocated/110 changed,9102 source/9116 global,zero per-path violations. |
 | Package/GPU/G3/E2E | Blocked by workflow readiness and separate resource approval; original gates remain. |
 

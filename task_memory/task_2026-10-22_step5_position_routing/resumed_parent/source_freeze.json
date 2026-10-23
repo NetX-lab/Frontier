@@ -1,0 +1,12 @@
+{
+  "frozen_commit": "e41abc073500d61f224eda4fca1123e74e40544d",
+  "branch": "verify/step5-d29-integrated-05",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05",
+  "submodule": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "dirty_paths": [],
+  "created_at_utc": "2026-10-23T06:21:40.310166+00:00",
+  "reviewed_code": "75ad26f9dfcd2467dde8912856333592c7c600c5",
+  "fixture": "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json",
+  "full_cli_output": "/data/ycfeng/tmp/d29-parent-position-main06",
+  "gpu_approved": false
+}

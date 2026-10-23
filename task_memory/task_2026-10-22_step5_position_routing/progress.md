@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Resume current session;freeze e41abc07 and launch main06 with independent regressions and isolated T2 source rebinding. |
 | 2026-10-23 | Close CLI repair after parent57PASS/6SKIP and No findings;merge code4ed67d78/T2 records9c77b559 and record next-session execution. |
 | 2026-10-23 | Apply checkpoint route corrections; separate current frontier from historical receipts and restrict main04 to diagnostic evidence. |
 | 2026-10-23 | strict77 passes77/77 with902 artifact hashes;review finds one Step prepare metadata P2,returned to owner inside existing quota. |
@@ -35,6 +36,27 @@
 | 2026-10-22 | Receive the first design and request independent scope/correctness review. |
 
 ## Current frontier and session handoff
+
+### Current-session resumption (supersedes handoff next-session timing)
+
+- completed: YC requests continuation here. Frozen sourcee41abc073500d61f224eda4fca1123e74e40544d
+  is clean in /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05;
+  independent submodule checkout3dac53c matches. Receipt:resumed_parent/source_freeze.json.
+- in-progress: root fullCLI main06,modeall,fixture03,6144/1024 and2400s per mode;
+  outer5100s limit unchanged. Output/log:/data/ycfeng/tmp/d29-parent-position-main06{,.log}.
+  This is CPU/synthetic-cost workflow evidence,not a native timing run.
+- in-progress: D29-E41-FINAL-REGRESSIONS,agent ses_e98925887ffecetw6nTB6nD8f0,
+  owns only resumed_regressions/ records and new scratch outputs. strict77,
+  full-unit baseline-ID comparison,Python3.12 supplement and retained affected
+  checks all use frozene41 source. No exclusion or source modification permitted.
+- in-progress: D29-T2-E41-SOURCE-BINDING,owner ses_e9b3f65b5ffeMAo4OpbcxD9LIV,
+  prepares record-only rebind in a separate e41-based worktree. It must not edit
+  active integrated05. Root staging/seal occurs after CPU gates finish.
+- pending: inspect actual CLI outputs and validators,triage any new failure via a
+  faithful short reproduction,accept fresh regressions and T2 binding,then finish
+  package readiness. GPU resources remain unapproved.
+
+### Delivered checkpoint (retained;pending items now execute above)
 
 - completed: current two-file placement repairae1fb721/75ad26f9. Parent affected
   suite57PASS/6unchangedSKIP/0FAIL/ERROR;independent No findings. Real runner argv

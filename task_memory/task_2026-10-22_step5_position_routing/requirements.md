@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC defers handoff and resumes all remaining work in the current session;existing acceptance/resource limits remain. |
 | 2026-10-23 | YC requests closure of the currently executing work, code/document commits and a prompt for continuation in another session. |
 | 2026-10-23 | YC approves two extra test paths and analogous necessary repair-path adjustments within the existing budgets. |
 | 2026-10-23 | Clarify both-trainer coverage and shared-manager P/D consumer scope; withdraw an unrequested independent public-consumer prerequisite. |
@@ -134,3 +135,14 @@ parent57PASS/6unchangedSKIP and independent No findings. Consolidate reviewed
 implementation and records on feat/step5-preview for the next session,while
 keeping full CLI replay,final-source qualification and GPU work explicitly open.
 This delivery merge is not the final D29 workflow admission described earlier.
+
+## [Original Request] D29-RESUME-CURRENT-SESSION
+
+YC requests:
+
+> 暂不执行handoff，继续在当前session执行剩余任务。
+
+Continue from the verified delivery in this session. Freeze e41abc07 for fresh
+full CLI and required regressions;rebind T2 records in parallel without modifying
+the active frozen worktree. The handoff document remains a historical checkpoint.
+This request does not change budgets,workload,gates or GPU approval boundaries.
