@@ -1,0 +1,49 @@
+{
+  "task_id": "D29-TRACE-SERIALIZATION-REPAIR",
+  "repair": {
+    "path": "frontier/metrics/trace_store.py",
+    "baseline": "767da5437609301a6183dbfdcfd87b2402a32007",
+    "added": 7,
+    "deleted": 7,
+    "gross": 14,
+    "numstat": "7\t7\tfrontier/metrics/trace_store.py"
+  },
+  "retained_trace": {
+    "path": "frontier/metrics/trace_store.py",
+    "baseline": "1aee0af11cd58691e64603b99eca0ac459a5b350",
+    "added": 7,
+    "deleted": 7,
+    "gross": 14,
+    "numstat": "7\t7\tfrontier/metrics/trace_store.py"
+  },
+  "donor": {
+    "path": "tests/integration/step5_profiling/verify_fixed_probe.py",
+    "baseline": "1aee0af11cd58691e64603b99eca0ac459a5b350",
+    "added": 40,
+    "deleted": 1,
+    "gross": 41,
+    "numstat": "40\t1\ttests/integration/step5_profiling/verify_fixed_probe.py",
+    "unchanged": true,
+    "ceiling_before": 65,
+    "ceiling_after": 45,
+    "remaining": 4
+  },
+  "repair_ceiling": 20,
+  "repair_remaining": 6,
+  "changed_source_paths": [
+    "frontier/metrics/trace_store.py"
+  ],
+  "new_source_paths": [
+    "frontier/metrics/trace_store.py"
+  ],
+  "new_test_paths": [],
+  "owner_ceiling": 4404,
+  "source_ceiling": 9942,
+  "global_ceiling": 10000,
+  "effective_allocated_paths": 112,
+  "allocation_path": "/data/ycfeng/Frontier/.worktrees/step5-d29-trace-serialization/task_memory/task_2026-10-22_step5_position_routing/repairs/trace_serialization_scope_amendment.json",
+  "allocation_sha256": "39c53847e930196b7a9ee248f6e15510c708cdfab62c2897f1618aa7f87beb6e",
+  "diff_sha256": "3db6ca9bc1aad196a2cb3bbb5685e72daad03d3ca6bd93c9dbf6ae1d532aee74",
+  "whitespace_check": "PASS",
+  "limits": "This is exact scoped accounting, not a fresh final-union owner/global audit. The parent owns reconciliation after independent review and source freeze."
+}
