@@ -1,0 +1,48 @@
+{
+  "observed_at_utc": "2026-10-23T07:04:36.577903+00:00",
+  "source": "e41abc073500d61f224eda4fca1123e74e40544d",
+  "old_output": "/data/ycfeng/tmp/d29-parent-position-main06",
+  "status": "INTERRUPTED_UNVERIFIED",
+  "trigger": "OpenCode shell cancellation notification: server restarted",
+  "observations": [
+    "No matching D29 CLI process present at post-restart inspection",
+    "offline has no execution.json or validation.json;top-level summary.json absent",
+    "online directory absent",
+    "logs contain no traceback;traces show request arrival and prefill iteration start/end only"
+  ],
+  "not_inferred": [
+    "normal exit code",
+    "timeout",
+    "successful workflow completion",
+    "GPU job termination from cancelled historical pidfd waiters"
+  ],
+  "preserved": {
+    "/data/ycfeng/tmp/d29-parent-position-main06/environment.json": {
+      "bytes": 783,
+      "sha256": "75c82e58ecb7e8909f461003662edbefb4dd2eadae0e1db976368f366462a910"
+    },
+    "/data/ycfeng/tmp/d29-parent-position-main06/input_hashes.json": {
+      "bytes": 1371,
+      "sha256": "bed32f17bb27e2d20581a7d7516ed77c942ad0de6d36eafa55d8f93bcd02d46a"
+    },
+    "/data/ycfeng/tmp/d29-parent-position-main06/offline/command.json": {
+      "bytes": 6358,
+      "sha256": "bc6cb0d188d8d3c3c8479687e26b20a73e739357a7c0693f31118f8220249ac8"
+    },
+    "/data/ycfeng/tmp/d29-parent-position-main06/offline/run.log": {
+      "bytes": 4839,
+      "sha256": "8f864fdb724a64687ef3846bcc4aed5bd9143e070244b4a10eeeedbad4780ed2"
+    },
+    "/data/ycfeng/tmp/d29-parent-position-main06/offline/scheduler.jsonl": {
+      "bytes": 37085,
+      "sha256": "464abc5df8fe5cc91fe2994cb4738b4c8ded920d09801d32c5101e9639fac22d"
+    },
+    "/data/ycfeng/tmp/d29-parent-position-main06.log": {
+      "bytes": 414,
+      "sha256": "337ba61767ce0629a7438c15b900ee461a42dad12092c08f3ade0d577c00d714"
+    }
+  },
+  "rerun_output": "/data/ycfeng/tmp/d29-parent-position-main07",
+  "workload_unchanged": true,
+  "per_mode_timeout_s": 2400
+}

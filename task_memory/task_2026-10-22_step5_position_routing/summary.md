@@ -3,11 +3,27 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Resume current session;archive e41 regression/static T2 acceptance and interrupted main06 with main07 pending. |
 | 2026-10-23 | Archive consolidated source/records and closed CLI placement repair;keep whole-workflow and GPU acceptance explicitly open. |
 | 2026-10-22 | Record six design findings and disjoint mandatory correction assignments. |
 | 2026-10-22 | Archive the first design delivery with its unclosed review and pricing scope. |
 
-## Delivered
+## Current-session continuation
+
+YC deferred the handoff. Frozen production source e41abc07 now has fresh strict77
+77/77 and a closed full-unit regression-delta gate:8015PASS;the exact historical
+267FAIL/31ERROR sets remain,with12 aiohttp failures and1 Torch collection error
+covered by the explicit101PASS Python3.12 supplement. The raw unit suite exits1.
+Metadata196PASS and catalogue53PASS are separate suites and are not summed.
+Evidence:resumed_regressions/ and resumed_parent/regression_acceptance.json.
+
+T2 records e8e91070/d7d6ad8c bind the same e41 source;parent63 checksums and26
+full-file comparisons pass. Physical target staging/sealing remains pending.
+main06 was interrupted by the server restart and is unverified;the unchanged
+main07 full offline/online rerun is active. Whole workflow and GPU/native/G3/E2E
+acceptance remain open. See progress.md and resumed_parent/ for current evidence.
+
+## Delivered handoff checkpoint (historical)
 
 The three owner streams and their source-review repairs are consolidated on
 feat/step5-preview. Code merge4ed67d786e98c26f2d620ebb1138f761bc924396 includes the
@@ -27,7 +43,7 @@ Current task root:task_memory/task_2026-10-22_step5_position_routing/.
 - sibling task_2026-10-22_step5_d29_native_balanced/t2_preparation/:merged packet
  with63/63 checksums,still explicitly bound to1be91bad,awaiting final rebinding/seal.
 
-## Validation and remaining work
+## Handoff-time validation and remaining work (historical)
 
 The current repair uses actual CLI command/config/Cluster/backend construction
 and exact CPU plan/count receipts for both modes and roles. Legacy defaults and

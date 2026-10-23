@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Close final e41 regression/static binding checks;replace interrupted main06 with main07 under unchanged bounds. |
 | 2026-10-23 | Resume in current session on frozene41abc07;run fullCLI,requiredregressions and isolated T2 rebinding concurrently. |
 | 2026-10-23 | Complete the active CLI repair and consolidate reviewed code/records for YC's session handoff; retain fresh workflow gates as pending. |
 | 2026-10-23 | Apply checkpoint corrections: effective111 scope, current acceptance frontier, and final-source verification order. |
@@ -39,8 +40,9 @@ actual-main checks,final T2 source binding,updated actual per-path accounting}
 
 The earlier main04 attempt on60ba is diagnostic only. Main05 on1be supplies the
 current placement failure; its raw command/log/execution receipts stay preserved.
-T2 has a verified1be binding and its records are now on the feature branch.
-Final target staging/seal and rebinding to the later accepted candidate remain.
+The e41 T2 rebind is delivered and parent-verified in the isolated preparation
+tree. Final target staging/seal follows full CLI completion. main06 was interrupted
+by the server restart;main07 repeats it without a workload or source change.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
@@ -51,11 +53,11 @@ Final target staging/seal and rebinding to the later accepted candidate remain.
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Source review complete;3879/3956 gross. |
 | Complete integration and final freeze | Complete:e41abc07 frozen clean in verify-step5-d29-integrated-05,gitlink3dac53c. |
-| Legacy strict77 | Final03 on1be91bad:77/77 identical,902 artifact hashes verified. |
-| Full-unit failure/error-set gate | Closed on1be91bad with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. |
-| Fresh fixture and full CLI | main05 failed;bounded repair accepted;main06 now running on frozene41,modeall,6144/1024,2400s per mode. |
+| Legacy strict77 | Final04 on e41:77/77 identical;451 artifact hashes and519 cache names per side verified. |
+| Full-unit failure/error-set gate | Closed on e41 with explicit101PASS environment supplement;267/31 baseline sets retained,no new code failures. Raw suite still exits1. |
+| Fresh fixture and full CLI | main05 failed;repair accepted;main06 interrupted;main07 running on e41,modeall,6144/1024,2400s per mode. |
 | Independent source review | Earlier findings closed on1be91bad;CLI40-gross repair closed No findings at75ad26f9. |
-| T2 final-source binding | 1be packet preserved;owner prepares e41/integrated05 rebind separately;physical staging/seal follows active CPU gates. |
+| T2 final-source binding | e41 rebind d7d6ad8c delivered;parent63 checksums/26 full files PASS;physical staging/seal follows CLI completion. |
 | Final per-path accounting | Delivery remeasured:111 allocated/110 changed,9102 source/9116 global,zero per-path violations. |
 | Package/GPU/G3/E2E | Blocked by workflow readiness and separate resource approval; original gates remain. |
 

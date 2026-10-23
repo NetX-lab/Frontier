@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept fresh e41 regression and static T2 receipts;record interrupted main06 and unchanged main07 rerun. |
 | 2026-10-23 | Parent verifies fresh e41 supplement101,metadata196 and catalogue53 receipts;long-running gates remain pending. |
 | 2026-10-23 | Resume current session;freeze e41abc07 and launch main06 with independent regressions and isolated T2 source rebinding. |
 | 2026-10-23 | Close CLI repair after parent57PASS/6SKIP and No findings;merge code4ed67d78/T2 records9c77b559 and record next-session execution. |
@@ -43,22 +44,31 @@
 - completed: YC requests continuation here. Frozen sourcee41abc073500d61f224eda4fca1123e74e40544d
   is clean in /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05;
   independent submodule checkout3dac53c matches. Receipt:resumed_parent/source_freeze.json.
-- in-progress: root fullCLI main06,modeall,fixture03,6144/1024 and2400s per mode;
-  outer5100s limit unchanged. Output/log:/data/ycfeng/tmp/d29-parent-position-main06{,.log}.
-  This is CPU/synthetic-cost workflow evidence,not a native timing run.
-- in-progress: D29-E41-FINAL-REGRESSIONS,agent ses_e98925887ffecetw6nTB6nD8f0,
-  owns only resumed_regressions/ records and new scratch outputs. strict77,
-  full-unit baseline-ID comparison,Python3.12 supplement and retained affected
-  checks all use frozene41 source. No exclusion or source modification permitted.
+- interrupted/unverified: main06 stopped during the OpenCode server restart.
+  Post-restart inspection found no matching process, no offline completion receipt,
+  and no online attempt. Preserved artifacts and hashes are recorded in
+  resumed_parent/main06_interruption.json; no exit or timeout verdict is inferred.
+- in-progress: main07 repeats the same frozen source,fixture03,6144/1024 workload,
+  modeall,2400s per mode and5100s outer limit in a new output directory:
+  /data/ycfeng/tmp/d29-parent-position-main07,log at the same path plus .log.
+  This remains CPU/synthetic-cost workflow evidence. Its completion is pending.
+- completed: D29-E41-FINAL-REGRESSIONS records committed b5a74416/5ceb68c9.
+  strict77 final04 is77/77 identical,451 artifact hashes and519 cache filenames per
+  side. Full unit:8015PASS/279FAIL/32ERROR/281SKIP,raw exit1. The exact historical
+  267FAIL/31ERROR sets remain;12 missing-aiohttp failures and1 missing-Torch
+  collection error are covered by the same-source Python3.12 supplement.
+  No baseline case loss or PASS-to-SKIP/new code failure. Parent reparsed original
+  XMLs and verified evidence hashes:resumed_parent/regression_acceptance.json.
 - completed: parent reads archived JUnit for three independent fresh e41 suites:
   supplement101PASS,metadata196PASS,catalogue53PASS;each zeroFAIL/ERROR/SKIP.
   Times8.598/8.208/2.581s respectively. These counts are not summed and do not
-  close the still-running strict77/full-unit/main06 gates. Checksummed receipt:
-  resumed_parent/short_suites_receipt.json. Regression owner will finish its
-  exact comparisons and commit its complete records after tool notifications.
-- in-progress: D29-T2-E41-SOURCE-BINDING,owner ses_e9b3f65b5ffeMAo4OpbcxD9LIV,
-  prepares record-only rebind in a separate e41-based worktree. It must not edit
-  active integrated05. Root staging/seal occurs after CPU gates finish.
+  establish full CLI completion. Checksummed receipt:resumed_parent/short_suites_receipt.json.
+- completed/static: D29-T2-E41-SOURCE-BINDING delivered e8e91070/d7d6ad8c in
+  step5-d29-t2-e41. Parent confirms all63 checksums and26 complete files against
+  the recorded hashes,e41 Git and integrated05 disk;full source tree and limits
+  match. Index d3eff42d8026d30df48907479420ec1a2d1eacaf826593b9afe5bf10885e1b89.
+  Receipt:resumed_parent/t2_e41_binding_receipt.json. Active integrated05 is
+  unchanged;physical staging/final sealing follows full CLI completion.
 - pending: inspect actual CLI outputs and validators,triage any new failure via a
   faithful short reproduction,accept fresh regressions and T2 binding,then finish
   package readiness. GPU resources remain unapproved.
