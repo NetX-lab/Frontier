@@ -11,6 +11,7 @@
 | 2026-10-23 | Both G2 delegation attempts failed with API quota code40005; root completed source inspection and assumed sole implementation ownership. |
 | 2026-10-23 | Implemented G2, repaired the baseline cold-start fixture and three independent-review issues; repaired source433/750lines has four separately passing suites and awaits follow-up review. |
 | 2026-10-23 | Accepted G2 source 05952396 after two no-finding re-reviews and final checks; prepared the separate 32-H800 single-window decision. |
+| 2026-10-23 | YC approved the first native-profile run and standing task-required H800 RJob authority; began package preparation. |
 
 ## Current execution — G2 resumed
 
@@ -18,7 +19,7 @@
 - completed G2a: root inspected the real replay, native profile RPC, iteration controls and collector retention. The design and six-file/750-line allocation are in `driver_design.md`; no GPU runtime claim follows from source inspection.
 - completed G2b source/CPU implementation: root is the sole owner after both initial design delegations failed (sessions `ses_e986cf2afffe8uakCUenZqno7f` and `ses_e9916feb6ffeDDJENvata6ugYg`, API quota code40005). Seven existing non-core files433/750lines, including the baseline-reproduced cold-start test fixture dependency correction; no worker/GPU quota failure occurred.
 - completed G2c: both R1 reviews (Spec `ses_e984289acffe3o6TiR1NxOFgNA`, Standards `ses_e9841fef9ffePvnX6RHfChfqKD`) closed all three distinct defects and found no new issues. Frozen source `05952396` passed every required suite separately: collector 32, worker 19, streaming 39, inventory 28, V2 inventory 45, reader 135, DP harness 75, P/D harness 68, manifest 14, cold-start 18, client metrics 24, canonical HTTP 1; all have zero errors/failures/skips. Existing 77/77 evidence is explicitly bound to this source, with no new capture. Acceptance: `driver/primary_acceptance.json`; commands, hashes and timings: `driver/final_checks.json`; raw logs/XML: `/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396`.
-- completed G2d proposal: `proposal.md` specifies one 32-H800 job, at most 60 minutes/32 GPUh, a first-formal 64-worker-step window, independent collector limits and explicit trace-volume uncertainty. Pending: user GPU decision, then a fresh source/image-verified package and runtime collection. No new GPU run is authorized or submitted.
+- completed G2d proposal and approval: `proposal.md` specifies one 32-H800 job, at most 60 minutes/32 GPUh, a first-formal 64-worker-step window, independent collector limits and explicit trace-volume uncertainty. YC approved it and authorized task-required H800 RJobs without repeated resource questions (D-V4-H800-RJOB-AUTHORITY). Source CPU commit05952396 and records commitb8fe6b2d are complete. Packaging/image checks are in progress; no new run has yet been submitted.
 
 Final verification note: the first matrix-binding helper assertion treated `identical_cases` and failure lists as scalar counts. It failed before writing a binding; the retained comparison schema has a 77-element list and empty failure lists. The corrected helper verifies exact list/cardinality semantics, the unchanged comparison digest and all unchanged simulator/input domains; `driver/matrix_binding_final.json` records PASS. No comparison evidence or source was changed to satisfy the helper.
 

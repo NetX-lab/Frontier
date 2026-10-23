@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Completed the single-window full-native resource proposal after G2 source 05952396 acceptance; GPU approval remains pending. |
+| 2026-10-23 | YC approved this run and standing task-required H800 RJob authority; the first run retains this concrete resource/window plan. |
 | 2026-10-23 | Checkpoint correction: CUDA_EVENT component sums now exclude the outer scope (audit receipt); J3 premise rewritten for active breakable capture in native V4. |
 | 2026-10-23 | YC approved the recommended KERNEL_ONLY CPU implementation/design route; requirements.md now owns the decision. GPU figures below remain historical preliminary estimates. |
 | 2026-10-23 | Created. Read-only design legwork for a user GPU/modelling decision: existing producer APIs, exact capture limits, two options for the serving attention total, minimum jobs and per-job closure. No source, test, config, GPU, platform or cloud change. |
@@ -104,8 +105,8 @@ actual native06 checks of all 32 rank files find prefill NONE (one request/6144 
 FULL plus PIECEWISE at descriptors 1/2/4/8/16 (1..11 scheduled requests per lane). A128-request captured descriptor is capacity,
 not an observed serving batch; shape-key reuse is not context/phase timing qualification.
 
-New GPU resources will be requested only with a concrete validated implementation and run
-plan. No shared-field decision or new job budget is implied by the preliminary table.
+Every new run needs a concrete validated implementation and run plan. Task-required H800
+resources now use D-V4-H800-RJOB-AUTHORITY; the preliminary table remains a historical estimate.
 
 ## Unsupported facts and blockers
 
@@ -117,7 +118,7 @@ plan. No shared-field decision or new job budget is implied by the preliminary t
 - The GPUh figures are planning ceilings for feasible pieces only, derived from native06's observed
   ~12 GPUh as an order-of-magnitude reference. They are not a measured cost or an approved budget.
 
-## G2 single-window collection — ready for a GPU decision
+## G2 single-window collection — approved
 
 The next diagnostic collection uses the existing full native P/D path. G2 source `05952396` is CPU-accepted after both independent re-reviews and final verification (`driver/primary_acceptance.json`). The earlier J1–J5 table remains a historical list of coverage needs, not an executable campaign or approval.
 
@@ -129,7 +130,7 @@ The next diagnostic collection uses the existing full native P/D path. G2 source
 | Frozen workload | Existing canonical6144/1024,128formal requests plus16warmups per round,three rounds,QPS1. No request/arrival changes. This instrumented run cannot replace native06's clean reference. |
 | Input provenance | `driver/proposal_inputs.json` rehashes the five workload files against `FINAL_FREEZE_R4.json`; trace CSV SHA-256 is `2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2`. The three native06 configuration files are reference inputs only; the new package must explicitly generate its profile configuration and source/output bindings. |
 | Engine limits | Preserve max_model_len7168,max_num_batched_tokens8192,max_num_seqs128. These are configured capacities, not runtime batches. |
-| Window | Both role-head APIs bracket first-formal replay and its existing drain. Native `max_iterations=64`, zero delay/warmup/wait and `ignore_frontend=true`. One native torch/CUPTI collection window; this request includes no retry allocation. |
+| Window | Both role-head APIs bracket first-formal replay and its existing drain. Native `max_iterations=64`, zero delay/warmup/wait and `ignore_frontend=true`. One native torch/CUPTI collection window in this run; any necessary subsequent H800 run gets a separate concrete plan under the standing authority. |
 | Trace options | Torch CPU+CUDA activities from native Worker.profile; gzip enabled, stack/shapes/FLOPs/memory profiling disabled. Raw traces remain necessary for kernel correlation and coverage checks. |
 | Collector limits | Per rank: at most 250000 retained rows and 268435456 serialized row bytes, separately for startup and the selected window. Retain the startup archive, window snapshot and final inventory. These are capacity limits, not guaranteed coverage; drops and archive failures remain explicit. |
 | Storage | Planned new tag `dsv4-h800-p0-profile-20261023-01`, under `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023`. Each node writes traces under its role/DP subdirectory. Verify the new destination is unused; mount the current local workspace and personal cloud volume through StepMind Python. |
@@ -143,9 +144,9 @@ At the proposed row-byte limit, one32-rank snapshot has at most8GiB of serialize
 ### Runtime acceptance and source prerequisites
 
 1. CPU source gate complete at `05952396`: both reviews, the cold-start correction, 433/750-line accounting, separate final suites and explicit matrix binding passed. Pin this source and the frozen workload hashes in a fresh package.
-2. Verify the new staged extension, real native hook resolution, per-node trace paths and all image/source/binary pins. A valid CPU package is not GPU approval; request the above resources explicitly after the source gate is complete.
+2. Verify the new staged extension, real native hook resolution, per-node trace paths and all image/source/binary pins. Resource authority is D-V4-H800-RJOB-AUTHORITY; package verification does not itself qualify GPU evidence.
 3. At runtime retain all32worker receipts, actual model/layout/routing/source identity, local scheduler requests/tokens, DP-synchronized descriptor/mode, first-formal IDs and actual start/stop/drain outcomes. At least three distinct aligned useful logical batches are required for each claimed phase; absent or dropped tuples remain unverified.
 4. For a usable KERNEL_ONLY slice, prove kernel-to-launch/owner completeness, event handles/generations and stream mapping, and preserve actual PDL/GDC evidence. Missing captured-segment ownership or stream dependencies prevents additive totals; no scaling or CPU-gap attribution fills the difference.
-5. Archive raw traces, inventories, client rows, terminal receipts and every observation failure. Auxiliary profiling/validation errors stay soft; healthy workload completion continues, affected evidence remains UNVERIFIED, and any later collection requires its own resource decision.
+5. Archive raw traces, inventories, client rows, terminal receipts and every observation failure. Auxiliary profiling/validation errors stay soft; healthy workload completion continues, affected evidence remains UNVERIFIED. Any later collection records its need and concrete resources; task-required H800 runs use the standing authority.
 
-Current status: **READY_FOR_USER_GPU_DECISION**. No package has been sealed for this collection and no GPU allocation is approved or submitted. After approval, complete fresh package/source/image checks and quota verification before submitting the single bounded run.
+Current status: **APPROVED_FOR_H800_PREPARATION_AND_RUN**, decision D-V4-H800-RJOB-AUTHORITY. YC also permits future task-required H800 RJobs without repeated resource approval. The first run retains this concrete plan. Complete fresh package/source/image checks and quota verification before submission; no new package is sealed or run submitted yet.
