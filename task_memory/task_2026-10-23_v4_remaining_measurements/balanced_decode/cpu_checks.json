@@ -1,0 +1,404 @@
+{
+  "checks": {
+    "balanced_prefill": {
+      "inputs": 529,
+      "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+      "status": "PASS_UNCHANGED"
+    },
+    "bootstrap_entry": {
+      "actual_native_model_run": false,
+      "controls": [
+        {
+          "error": null,
+          "fault": "success",
+          "launches": [
+            {
+              "PYTHONPATH": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/success/staged",
+              "command": [
+                "/data/ycfeng/envs/frontier-py310/bin/python",
+                "-B",
+                "-c",
+                "import json,runpy,sys,types\nfrom pathlib import Path\nscript,flag,config_path,fault=sys.argv[1:]\nconfig=json.loads(Path(config_path).read_text())\nassert not any(n.startswith(('torch','vllm','frontier.profiling.attention')) for n in sys.modules)\nclass Boundary(Exception):pass\nclass RoutingStrategy:pass\nclass RoutingSimulator:\n _routing_strategies={}\n @classmethod\n def register_strategy(cls,name,strategy):cls._routing_strategies[name]=strategy\ninjected=False\ndef trace(frame,event,arg):\n global injected\n if event=='call' and frame.f_code.co_name=='register_balanced_topk' and frame.f_code.co_filename==str(Path(script).with_name('balanced_routing.py')):\n  assert not any(n.startswith(('torch','vllm')) for n in sys.modules)\n  group=types.SimpleNamespace(world_size=1,rank_in_group=0)\n  for name,values in {'vllm.distributed':{'get_ep_group':lambda:group},'vllm.forward_context':{'get_forward_context':lambda:types.SimpleNamespace(dp_metadata=None)},'vllm.model_executor.layers.fused_moe.router.routing_simulator_router':{'RoutingSimulator':RoutingSimulator,'RoutingStrategy':RoutingStrategy}}.items():\n   module=types.ModuleType(name);module.__dict__.update(values);sys.modules[name]=module\n  injected=True\n if event=='call' and frame.f_code.co_name=='_run_command' and frame.f_code.co_filename==str(Path(config['source_snapshot'])/'frontier/profiling/attention/dsv4_attention_main.py'):\n  from frontier.profiling.attention import dsv4_attention_runner\n  args=frame.f_locals['args']\n  assert injected and 'balanced_topk' in RoutingSimulator._routing_strategies\n  assert dsv4_attention_runner.routing_config==config and args.case_ids==['e0-decode-q1-c6143-7166'] and args.keep_traces and args.query_one_context_min==6143 and args.query_one_context_max==7166\n  assert sys.path[0:2]==[config['source_snapshot'],config['worker_wheel_site']]\n  print(json.dumps({'status':'PASS_ACTUAL_BOOTSTRAP_WRAPPER_ENTRY_CPU_STANDINS','case_id':args.case_ids[0],'bootstrap_PYTHONPATH':str(Path(script).parent),'native_dependency_preloads':0,'routing_registration_after_origin_checks':injected,'gpu_operations':0}));raise Boundary\n return trace\nsys.argv=[script,flag,config_path];sys.settrace(trace)\ntry:runpy.run_path(script,run_name='__main__')\nexcept Boundary:pass\nelse:raise AssertionError('Expected native-run boundary')\nfinally:sys.settrace(None)\n",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/success/staged/profile_dsv4_prefill.py",
+                "--config",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/success/staged/config.json",
+                "success"
+              ],
+              "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+              "generated_argv": [
+                "/data/ycfeng/envs/frontier-py310/bin/python",
+                "-B",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/success/staged/profile_dsv4_prefill.py",
+                "--config",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/success/staged/config.json"
+              ],
+              "returncode": 0,
+              "stderr": "",
+              "stdout": "{\"status\": \"PASS_ACTUAL_BOOTSTRAP_WRAPPER_ENTRY_CPU_STANDINS\", \"case_id\": \"e0-decode-q1-c6143-7166\", \"bootstrap_PYTHONPATH\": \"/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/success/staged\", \"native_dependency_preloads\": 0, \"routing_registration_after_origin_checks\": true, \"gpu_operations\": 0}\n"
+            }
+          ],
+          "status": "PASS_CONTROL",
+          "uses_fake_installed_package_and_binaries": true
+        },
+        {
+          "error": null,
+          "fault": "native_source",
+          "launches": [
+            {
+              "PYTHONPATH": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/native_source/staged",
+              "command": [
+                "/data/ycfeng/envs/frontier-py310/bin/python",
+                "-B",
+                "-c",
+                "import json,runpy,sys,types\nfrom pathlib import Path\nscript,flag,config_path,fault=sys.argv[1:]\nconfig=json.loads(Path(config_path).read_text())\nassert not any(n.startswith(('torch','vllm','frontier.profiling.attention')) for n in sys.modules)\nclass Boundary(Exception):pass\nclass RoutingStrategy:pass\nclass RoutingSimulator:\n _routing_strategies={}\n @classmethod\n def register_strategy(cls,name,strategy):cls._routing_strategies[name]=strategy\ninjected=False\ndef trace(frame,event,arg):\n global injected\n if event=='call' and frame.f_code.co_name=='register_balanced_topk' and frame.f_code.co_filename==str(Path(script).with_name('balanced_routing.py')):\n  assert not any(n.startswith(('torch','vllm')) for n in sys.modules)\n  group=types.SimpleNamespace(world_size=1,rank_in_group=0)\n  for name,values in {'vllm.distributed':{'get_ep_group':lambda:group},'vllm.forward_context':{'get_forward_context':lambda:types.SimpleNamespace(dp_metadata=None)},'vllm.model_executor.layers.fused_moe.router.routing_simulator_router':{'RoutingSimulator':RoutingSimulator,'RoutingStrategy':RoutingStrategy}}.items():\n   module=types.ModuleType(name);module.__dict__.update(values);sys.modules[name]=module\n  injected=True\n if event=='call' and frame.f_code.co_name=='_run_command' and frame.f_code.co_filename==str(Path(config['source_snapshot'])/'frontier/profiling/attention/dsv4_attention_main.py'):\n  from frontier.profiling.attention import dsv4_attention_runner\n  args=frame.f_locals['args']\n  assert injected and 'balanced_topk' in RoutingSimulator._routing_strategies\n  assert dsv4_attention_runner.routing_config==config and args.case_ids==['e0-decode-q1-c6143-7166'] and args.keep_traces and args.query_one_context_min==6143 and args.query_one_context_max==7166\n  assert sys.path[0:2]==[config['source_snapshot'],config['worker_wheel_site']]\n  print(json.dumps({'status':'PASS_ACTUAL_BOOTSTRAP_WRAPPER_ENTRY_CPU_STANDINS','case_id':args.case_ids[0],'bootstrap_PYTHONPATH':str(Path(script).parent),'native_dependency_preloads':0,'routing_registration_after_origin_checks':injected,'gpu_operations':0}));raise Boundary\n return trace\nsys.argv=[script,flag,config_path];sys.settrace(trace)\ntry:runpy.run_path(script,run_name='__main__')\nexcept Boundary:pass\nelse:raise AssertionError('Expected native-run boundary')\nfinally:sys.settrace(None)\n",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/native_source/staged/profile_dsv4_prefill.py",
+                "--config",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/native_source/staged/config.json",
+                "native_source"
+              ],
+              "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+              "generated_argv": [
+                "/data/ycfeng/envs/frontier-py310/bin/python",
+                "-B",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/native_source/staged/profile_dsv4_prefill.py",
+                "--config",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/native_source/staged/config.json"
+              ],
+              "returncode": 1,
+              "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 30, in <module>\n  File \"/usr/lib/python3.10/runpy.py\", line 289, in run_path\n    return _run_module_code(code, init_globals, run_name,\n  File \"/usr/lib/python3.10/runpy.py\", line 96, in _run_module_code\n    _run_code(code, mod_globals, init_globals,\n  File \"/usr/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/native_source/staged/profile_dsv4_prefill.py\", line 51, in <module>\n    main()\n  File \"/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/native_source/staged/profile_dsv4_prefill.py\", line 26, in main\n    raise RuntimeError(f\"Native source mismatch: {name}\")\nRuntimeError: Native source mismatch: vllm/envs.py\n",
+              "stdout": ""
+            }
+          ],
+          "status": "PASS_CONTROL",
+          "uses_fake_installed_package_and_binaries": true
+        },
+        {
+          "error": null,
+          "fault": "routing_selector",
+          "launches": [
+            {
+              "PYTHONPATH": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/routing_selector/staged",
+              "command": [
+                "/data/ycfeng/envs/frontier-py310/bin/python",
+                "-B",
+                "-c",
+                "import json,runpy,sys,types\nfrom pathlib import Path\nscript,flag,config_path,fault=sys.argv[1:]\nconfig=json.loads(Path(config_path).read_text())\nassert not any(n.startswith(('torch','vllm','frontier.profiling.attention')) for n in sys.modules)\nclass Boundary(Exception):pass\nclass RoutingStrategy:pass\nclass RoutingSimulator:\n _routing_strategies={}\n @classmethod\n def register_strategy(cls,name,strategy):cls._routing_strategies[name]=strategy\ninjected=False\ndef trace(frame,event,arg):\n global injected\n if event=='call' and frame.f_code.co_name=='register_balanced_topk' and frame.f_code.co_filename==str(Path(script).with_name('balanced_routing.py')):\n  assert not any(n.startswith(('torch','vllm')) for n in sys.modules)\n  group=types.SimpleNamespace(world_size=1,rank_in_group=0)\n  for name,values in {'vllm.distributed':{'get_ep_group':lambda:group},'vllm.forward_context':{'get_forward_context':lambda:types.SimpleNamespace(dp_metadata=None)},'vllm.model_executor.layers.fused_moe.router.routing_simulator_router':{'RoutingSimulator':RoutingSimulator,'RoutingStrategy':RoutingStrategy}}.items():\n   module=types.ModuleType(name);module.__dict__.update(values);sys.modules[name]=module\n  injected=True\n if event=='call' and frame.f_code.co_name=='_run_command' and frame.f_code.co_filename==str(Path(config['source_snapshot'])/'frontier/profiling/attention/dsv4_attention_main.py'):\n  from frontier.profiling.attention import dsv4_attention_runner\n  args=frame.f_locals['args']\n  assert injected and 'balanced_topk' in RoutingSimulator._routing_strategies\n  assert dsv4_attention_runner.routing_config==config and args.case_ids==['e0-decode-q1-c6143-7166'] and args.keep_traces and args.query_one_context_min==6143 and args.query_one_context_max==7166\n  assert sys.path[0:2]==[config['source_snapshot'],config['worker_wheel_site']]\n  print(json.dumps({'status':'PASS_ACTUAL_BOOTSTRAP_WRAPPER_ENTRY_CPU_STANDINS','case_id':args.case_ids[0],'bootstrap_PYTHONPATH':str(Path(script).parent),'native_dependency_preloads':0,'routing_registration_after_origin_checks':injected,'gpu_operations':0}));raise Boundary\n return trace\nsys.argv=[script,flag,config_path];sys.settrace(trace)\ntry:runpy.run_path(script,run_name='__main__')\nexcept Boundary:pass\nelse:raise AssertionError('Expected native-run boundary')\nfinally:sys.settrace(None)\n",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/routing_selector/staged/profile_dsv4_prefill.py",
+                "--config",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/routing_selector/staged/config.json",
+                "routing_selector"
+              ],
+              "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+              "generated_argv": [
+                "/data/ycfeng/envs/frontier-py310/bin/python",
+                "-B",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/routing_selector/staged/profile_dsv4_prefill.py",
+                "--config",
+                "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/routing_selector/staged/config.json"
+              ],
+              "returncode": 1,
+              "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 30, in <module>\n  File \"/usr/lib/python3.10/runpy.py\", line 289, in run_path\n    return _run_module_code(code, init_globals, run_name,\n  File \"/usr/lib/python3.10/runpy.py\", line 96, in _run_module_code\n    _run_code(code, mod_globals, init_globals,\n  File \"/usr/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/routing_selector/staged/profile_dsv4_prefill.py\", line 51, in <module>\n    main()\n  File \"/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/routing_selector/staged/profile_dsv4_prefill.py\", line 30, in main\n    raise ValueError(\"Prefill bootstrap requires explicit balanced_topk\")\nValueError: Prefill bootstrap requires explicit balanced_topk\n",
+              "stdout": ""
+            }
+          ],
+          "status": "PASS_CONTROL",
+          "uses_fake_installed_package_and_binaries": true
+        },
+        {
+          "error": "Hash mismatch: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/strategy_hash/staged/balanced_routing.py",
+          "fault": "strategy_hash",
+          "launches": [],
+          "status": "PASS_CONTROL",
+          "uses_fake_installed_package_and_binaries": true
+        }
+      ],
+      "dependency_preloads": 0,
+      "status": "PASS_ACTUAL_CODE_CPU_STANDINS_NOT_IMAGE_CHECK"
+    },
+    "candidate01_preserved": {
+      "inputs": 530,
+      "manifest_sha256": "9ac0e6c09df9755d44980ff448f2e71244dde4b4c6772fc0525213a7f4899910",
+      "status": "PASS_UNCHANGED"
+    },
+    "candidate02": {
+      "inputs": 530,
+      "manifest_sha256": "9714cdb749e8504df32955bb62e080467434e33e20da1d23ae653da2ce8e09cf",
+      "status": "PASS_UNCHANGED"
+    },
+    "case_and_engine": {
+      "CLI_chunk_budget": 6144,
+      "LLM_max_num_batched_tokens_argument": 6144,
+      "actual_engine_max_num_batched_tokens": "UNVERIFIED",
+      "aggregate_plan_equal": true,
+      "case_id": "e0-decode-q1-c6143-7166",
+      "configured_LLM_max_num_seqs": 1,
+      "contexts": [
+        6143,
+        7166
+      ],
+      "estimated_native_steps_each": 1027,
+      "expected_outputs": {
+        "calls": {
+          "cuda_event": 51200,
+          "kernel_only": 45056
+        },
+        "rows": {
+          "cuda_event": 6144,
+          "kernel_only": 6144
+        },
+        "steps": {
+          "cuda_event": 1024,
+          "kernel_only": 1024
+        }
+      },
+      "measured_steps_each": 1024,
+      "planner_max_num_seqs": 128,
+      "seed_prompt": 6141,
+      "status": "PASS_CPU_CONSTRUCTOR_STANDIN",
+      "warmups": 2
+    },
+    "environments": {
+      "conda": "Not used; existing Python virtual environments",
+      "minimal_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "torch_CPU_environment": {
+        "cuda_initialized": false,
+        "python": "3.10.20 (main, May 10 2026, 19:27:29) [Clang 22.1.3 ]",
+        "torch": "2.1.2+cu121"
+      },
+      "torch_probe_argv": [
+        "/data/ycfeng/envs/distillm-py310/bin/python",
+        "-B",
+        "-c",
+        "import json,sys,torch;print(json.dumps({'python':sys.version,'torch':torch.__version__,'cuda_initialized':torch.cuda.is_initialized()}))"
+      ]
+    },
+    "existing_bootstrap_controls": {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-B",
+        "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/existing_bootstrap/verify_bootstrap.py"
+      ],
+      "status": "PASS_8",
+      "stderr": "",
+      "stdout": "{\"task_id\": \"W128-V4-G0B\", \"status\": \"PASS\", \"bootstrap_cases\": [{\"case\": \"success\", \"passed\": true, \"rejection\": null}, {\"case\": \"source\", \"passed\": true, \"rejection\": \"Hash mismatch: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/existing_bootstrap/offline_bootstrap_34t1lqe2/staged/overlay_model.py\"}, {\"case\": \"base\", \"passed\": true, \"rejection\": \"Installed base mismatch: models/deepseek_v4/nvidia/model.py\"}, {\"case\": \"binary\", \"passed\": true, \"rejection\": \"Hash mismatch: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_entry_q2rbkdwr/existing_bootstrap/offline_bootstrap_pt4cbdls/installed/_C_stable_libtorch.abi3.so\"}, {\"case\": \"binary_manifest\", \"passed\": true, \"rejection\": \"Installed binary manifest incomplete\"}, {\"case\": \"extra_file\", \"passed\": true, \"rejection\": \"Only the accepted V4 model leaf is allowed\"}, {\"case\": \"origin\", \"passed\": true, \"rejection\": \"Installed vLLM origin mismatch\"}, {\"case\": \"early_import\", \"passed\": true, \"rejection\": \"Torch or vLLM already loaded\"}], \"native_writes\": 0, \"gpu_operations\": 0}\n"
+    },
+    "fresh_generation_rejection": {
+      "commands": [
+        {
+          "argv": [
+            "/data/ycfeng/envs/frontier-py310/bin/python",
+            "-B",
+            "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/prepare_package.py"
+          ],
+          "returncode": 1,
+          "stderr": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/prepare_package.py\", line 175, in <module>\n    main()\n  File \"/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/prepare_package.py\", line 47, in main\n    raise RuntimeError(\"Fresh generation only; never alter an existing package\")\nRuntimeError: Fresh generation only; never alter an existing package\n",
+          "stdout": ""
+        }
+      ],
+      "status": "PASS"
+    },
+    "launcher_entry": {
+      "commands": [
+        {
+          "argv": [
+            "/data/ycfeng/envs/frontier-py310/bin/python",
+            "-I",
+            "-B",
+            "-c",
+            "import json,runpy,sys\nfrom pathlib import Path\nlauncher,config,root=sys.argv[1:]\nclass Boundary(Exception):pass\ndef trace(frame,event,arg):\n if event=='call' and frame.f_code.co_filename==launcher and frame.f_code.co_name=='submit':\n  assert frame.f_globals['WORKSPACE']==Path(root) and frame.f_locals['config_path']==Path(config)\n  assert not any(n.startswith(('torch','vllm','steptron')) for n in sys.modules)\n  print(json.dumps({'status':'PASS_ACTUAL_LAUNCHER_ENTRY','workspace':root,'dependency_preloads':0,'platform_calls':0}));raise Boundary\n return trace\nsys.argv=[launcher,'submit','--config',config];sys.settrace(trace)\ntry:runpy.run_path(launcher,run_name='__main__')\nexcept Boundary:pass\nelse:raise AssertionError('Did not reach submit entry')\nfinally:sys.settrace(None)\n",
+            "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/launch/glm_producer_jobs.py",
+            "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/jobs/Q1_WARM_6143_7166_BALANCED.json",
+            "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run"
+          ],
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "{\"status\": \"PASS_ACTUAL_LAUNCHER_ENTRY\", \"workspace\": \"/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run\", \"dependency_preloads\": 0, \"platform_calls\": 0}\n"
+        },
+        {
+          "argv": [
+            "/data/ycfeng/tmp/stepmind-env/bin/python",
+            "-I",
+            "-B",
+            "-c",
+            "import json,runpy,sys\nfrom pathlib import Path\nlauncher,config,root=sys.argv[1:]\nclass Boundary(Exception):pass\ndef trace(frame,event,arg):\n if event=='call' and frame.f_code.co_filename==launcher and frame.f_code.co_name=='submit':\n  assert frame.f_globals['WORKSPACE']==Path(root) and frame.f_locals['config_path']==Path(config)\n  assert not any(n.startswith(('torch','vllm','steptron')) for n in sys.modules)\n  print(json.dumps({'status':'PASS_ACTUAL_LAUNCHER_ENTRY','workspace':root,'dependency_preloads':0,'platform_calls':0}));raise Boundary\n return trace\nsys.argv=[launcher,'submit','--config',config];sys.settrace(trace)\ntry:runpy.run_path(launcher,run_name='__main__')\nexcept Boundary:pass\nelse:raise AssertionError('Did not reach submit entry')\nfinally:sys.settrace(None)\n",
+            "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/launch/glm_producer_jobs.py",
+            "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/jobs/Q1_WARM_6143_7166_BALANCED.json",
+            "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run"
+          ],
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "{\"status\": \"PASS_ACTUAL_LAUNCHER_ENTRY\", \"workspace\": \"/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run\", \"dependency_preloads\": 0, \"platform_calls\": 0}\n"
+        }
+      ],
+      "generated_workspace_locator_only": true,
+      "preemptible_argument": "UNCHANGED_RESOURCECONFIG_DEFAULT_ROOT_VERIFICATION_REQUIRED",
+      "status": "PASS_BOTH_FRESH_INTERPRETERS"
+    },
+    "limits": {
+      "Docker_operations": 0,
+      "GPU_operations": 0,
+      "StepMind_operations": 0,
+      "admission_created": false,
+      "cloud_operations": 0,
+      "image_native_runtime_verified": false,
+      "seal_operations": 0
+    },
+    "matrix_binding": {
+      "capture_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+      "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+      "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+      "identical_cases": 77,
+      "new_capture": false,
+      "source_commit": "97803f07f72454030a4d3fe538d7cdf473906b8a",
+      "status": "PASS_EXPLICIT_EXISTING_BINDING",
+      "unchanged_domains": [
+        "frontier",
+        "data",
+        "examples",
+        "tests/e2e/refactor_fidelity",
+        "tests/integration/canonical_case"
+      ]
+    },
+    "pytest": {
+      "minimal": {
+        "errors": "0",
+        "failures": "0",
+        "skipped": "1",
+        "tests": "66",
+        "time": "1.197"
+      },
+      "related": {
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "256",
+        "time": "78.529"
+      },
+      "torch": {
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "131",
+        "time": "18.276"
+      }
+    },
+    "q1": {
+      "inputs": 527,
+      "manifest_sha256": "7929afaef9deced67543262ad9a3eec398048b68914fd0322b00c97416cbe360",
+      "status": "PASS_UNCHANGED"
+    },
+    "source_and_provenance": {
+      "C26_sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+      "binary_pins": 20,
+      "installed_image_binary_status": "UNVERIFIED_ROOT_OWNED",
+      "model_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "native_pin_status": "PASS_LOCAL_GIT_ONLY",
+      "native_pins": 60,
+      "snapshot_files": 512,
+      "source_revision": "97803f07f72454030a4d3fe538d7cdf473906b8a",
+      "status": "PASS_CPU_PINS",
+      "strategy_sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+      "tool_pins": 520
+    },
+    "synthetic_aggregate": {
+      "CPU_fixture_only": true,
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.attention.dsv4_attention_main",
+        "aggregate",
+        "--model_name",
+        "deepseek-ai/DeepSeek-V4-Flash",
+        "--target_tensor_parallel_size",
+        "8",
+        "--num_layers",
+        "6",
+        "--block_size",
+        "256",
+        "--kv_cache_dtype",
+        "fp8",
+        "--max_context_len",
+        "7168",
+        "--max_kv_tokens_per_lane",
+        "7168",
+        "--max_num_seqs",
+        "128",
+        "--chunk_budgets",
+        "6144",
+        "--decode_warmup_steps",
+        "2",
+        "--query_one_context_min",
+        "6143",
+        "--query_one_context_max",
+        "7166",
+        "--model_config_path",
+        "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/model/config.json",
+        "--raw_dir",
+        "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_aggregate_jpbsv03h/raw",
+        "--output_root",
+        "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_aggregate_jpbsv03h/out",
+        "--device",
+        "h800",
+        "--source_revision",
+        "97803f07f72454030a4d3fe538d7cdf473906b8a",
+        "--model_config_revision",
+        "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5"
+      ],
+      "hardware_or_timing_evidence": false,
+      "outputs": [
+        {
+          "measurement": "CUDA_EVENT",
+          "name": "attention.csv",
+          "rows": 6144,
+          "sha256": "008ca6611886e076906fec8f39e3a63781c7951d76ba7848c0bc5b10b49f04c4",
+          "status": "PASS_SYNTHETIC_PRODUCER_CSV_NOT_GPU_EVIDENCE"
+        },
+        {
+          "measurement": "KERNEL_ONLY",
+          "name": "attention_kernel_only.csv",
+          "rows": 6144,
+          "sha256": "f110a1b9eac865ae749ada5f0caa5de8d9a270d368507c88c788bfaad6526961",
+          "status": "PASS_SYNTHETIC_PRODUCER_CSV_NOT_GPU_EVIDENCE"
+        }
+      ],
+      "raw_sha256": "606dbc5820190dee25be270bfe2625effe13d681b0743d5bd01a73aead50dc32",
+      "records": {
+        "CUDA_EVENT": {
+          "call": 51200,
+          "step": 1024
+        },
+        "KERNEL_ONLY": {
+          "call": 45056,
+          "step": 1024
+        }
+      },
+      "rejection_control": "Missing or mismatched constructed balanced routing identity",
+      "status": "PASS_EXISTING_PRODUCER_FACTORIES_NO_CONSUMER_LAYOUT",
+      "stderr": "",
+      "stdout": "WARNING 21:11:53 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported\n[dsv4] wrote 6144 CUDA_EVENT rows to /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_aggregate_jpbsv03h/out/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv\n[dsv4] wrote 6144 KERNEL_ONLY rows to /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_balanced_aggregate_jpbsv03h/out/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv\n"
+    },
+    "worker_entry": {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-I",
+        "-B",
+        "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/launch/glm_producer_worker.py",
+        "--help"
+      ],
+      "status": "PASS_FRESH_STDLIB_HELP",
+      "stderr": "",
+      "stdout": "usage: glm_producer_worker.py [-h] --config CONFIG\n\nRun one sealed DeepSeek-V4 profiling unit on an H200 worker. The job config\nlists phases (smoke, then full); each phase is a list of steps, and a step is\none command or a group of commands that run concurrently on separate GPUs.\nCommands run from the committed source snapshot named in the config. Producers\nwrite to worker-local disk; after each phase the tables, raw records, logs,\nand completed profiler traces are copied to the cloud output directory,\ntogether with ``status.json``. A failed phase stops the job. Only the standard\nlibrary is used, so the image's ``python3`` runs it as is.\n\noptions:\n  -h, --help       show this help message and exit\n  --config CONFIG\n"
+    }
+  },
+  "maintained_scope": {
+    "files": 2,
+    "gross_changed_lines": 214,
+    "limit_files": 2,
+    "limit_lines": 300
+  },
+  "post_code_commit_hash_recheck": "PASS_530_UNCHANGED",
+  "source_builder_commit": "64133239c4f4c7fdc50b1b0b85d57d2d72fe3097",
+  "source_revision": "97803f07f72454030a4d3fe538d7cdf473906b8a",
+  "status": "CPU_PREPARATION_CHECKS_PASS_ROOT_IMAGE_SEAL_RUNTIME_PENDING",
+  "task_id": "W128-V4-BALANCED-DECODE-PACKAGE"
+}
