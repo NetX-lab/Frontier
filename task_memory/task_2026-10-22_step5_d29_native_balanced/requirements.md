@@ -7,6 +7,7 @@
 | 2026-10-23 | Authorize four reviewer repairs within the unchanged native19/1582 allocation. |
 | 2026-10-23 | Authorize T2 controlled-input preparation only, with no code changes or launch approval. |
 | 2026-10-23 | Root authorizes D29-T2-ENGINE-LIMITS in exactly two existing owned files, <=100 additional gross. |
+| 2026-10-23 | Authorize records-only final T2 binding at integrated60ba4c in an isolated worktree; active CLI worktree remains untouched. |
 
 ## [Original Request]
 TaskID D29-NATIVE-IMPLEMENTATION. Implement D29-SCOPE-107-10000 native19,
@@ -116,6 +117,33 @@ is consumed read-only for host checks, not copied/edited or imported into native
 Root integrates/seals that dependency before actual-image validation/launch.
 Current/peer controlled probe_plan branches were checked equal with actual retained
 metadata and routing_input_file=None. No observed-input semantics are substituted.
+
+## [Original Request] D29-T2-FINAL-SOURCE-BINDING
+Original native owner updates metadata/records only. Create isolated
+/data/ycfeng/Frontier/.worktrees/step5-d29-t2-final from frozen root integration
+60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Never write, checkout or commit in
+/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02 where CLI/fidelity
+work is running. Own only existing native T2 preparation metadata/records and
+task handoff; no production/test/root-ledger edits or GPU/platform/Docker/network.
+
+Bind complete actual scripts/helper/relevant sources, publication receipts and
+hash index to60ba4c rather than earlier662849e. Preserve model_metadata/cases bytes,
+7168/8192/128, official revision364b3b03, published imagef037,2907-source export,
+12backend sources and53pins; native4 and approved formula/modes/qualification stay.
+Compare accepted662-to60ba create_native_config AST and relevant actual sources
+to identify new runtime obligations, never use function-only source identity or
+call CPU config/regressions GPU qualification. Root restored native T2 via892b6a1;
+native quota1350/1582. d0dfcdb5 removes only a duplicate dispatch test, restoring
+file bytes to9974. Root reports native-position16PASS/native-config2PASS; previous
+published-image checks preserve final values. These results are carried evidence,
+not reruns in this records task.
+
+Recheck full hashes, metadata/cases preservation, checksums/schema/shell syntax
+using existing static mechanisms; no accepted large suite reruns. Resource
+proposal remains UNAPPROVED16H800/two nodes/30min/8GPUh, no allocation/auth/query.
+Persist English exact changed-path/hash comparison/verification/runtime limits,
+commit only isolated records and explicitly verify relevant file equivalence
+afterward. Runtime source identity remains60ba even when task docs are committed.
 
 ## Preserved pre-allocation record (historical)
 

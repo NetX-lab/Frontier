@@ -3,11 +3,12 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Bind full final integrated source/receipts at60ba4c; preserve inputs and add the required clean controlled-T2 manifest environment. |
 | 2026-10-23 | Root accepts constructor/CPU values and rebinds full integrated files at662849e; run approval remains pending. |
 | 2026-10-23 | Prepare existing-schema inputs and exact commands; no run/resource approval or execution. |
 | 2026-10-23 | Bind retained serving triple through both pre-construction paths; host flow PASS, root integration/image check pending. |
 
-TaskID: D29-T2-ENGINE-LIMITS, following D29-T2-INPUT-PREPARATION.
+TaskID: D29-T2-FINAL-SOURCE-BINDING, following D29-T2-ENGINE-LIMITS.
 Status: **PROPOSAL ONLY / NOT RUN**.
 Root accepts this controlled-input/code bundle and still requires actual run/resource
 authorization after remaining implementation readiness. Only root-directed
@@ -15,17 +16,32 @@ two-file limit binding is added; no new numerical state tolerance, mode or harne
 
 ## Identity and controlled inputs
 
-- Integrated code snapshot:662849e99223c98b9ea0d47d34783c3977cb3282, including
-  native a5e5189/4a7adb7 and the selected helper/test from PRICING3f54bc6.
-  Root verified selected-function AST equality,177 PASS/15 SKIP, actual installed
-  image config values and independent No findings. The full integrated script/helper
-  hashes in provenance.json replace the prepared mixed-file identity. The frozen
-  source worktree is `/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01`.
-  Do not change its code without producing a new binding and acceptance record.
+- Final integrated source:60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Frozen source
+  worktree is `/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02`.
+  CLI/fidelity work is active there; this preparation never writes/checks out/
+  commits in that tree. Records are prepared in isolated `step5-d29-t2-final`.
+  Native T2 was restored by892b6a1; native19 remains1350/1582. Root reports final
+  native-position16PASS/native-config2PASS. Accepted662 constructor/image CPU
+  evidence remains historical and GPU-unqualified, not rerun by this task.
+- Full final files are bound in provenance.json and hashes.sha256: T2 SHA256
+  `7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25`, helper
+  `63baf64781a533a72e31b0e622fd99524b3d40acd4149a8552c6b1808266b2ff`, recipe
+  `c7ee4de334cd06c777282fd20979c435588456ca734c5188bfe774aa884a8746`.
+  T2/native unit bytes and constructor AST equal accepted662; complete helper/
+  recipe bytes differ. AST equality explains constructor continuity only and is
+  not a substitute for full-file identity. New runtime obligations are below.
+- Source identity remains60ba4c if later task-doc/test-only commits are sealed.
+  Root must stage these amended records with the selected source and explicitly
+  compare all bound relevant files to60ba before mounting; no mutable unverified
+  checkout, record commit or function-only identity replaces this source binding.
 - Accepted linux/amd64 image:
   `hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee`.
 - Actual source export: `/data/ycfeng/tmp/d29_published_sources01/source`.
   It is retained provenance, **not** a worker PYTHONPATH/mount overlay.
+- Complete retained export inventory has2907 Python files, backend12 and existing
+  serving53pins. All actual bytes were rehashed against retained publication
+  receipts; full relevant32 native files and all9 publication artifacts are bound
+  in the index. This is source provenance, not loaded-library/runtime evidence.
 - Installed native root: `/usr/local/lib/python3.12/dist-packages/vllm`.
 - Unchanged complete metadata copy: `model_metadata/config.json`,78447 bytes,
   SHA256 `e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63`.
@@ -109,8 +125,8 @@ actual memory fit remains UNVERIFIED. See `resource_proposal.json` for formulas.
 
 Use the published image above, not a mutable tag/local index digest. Mount this
 accepted source worktree at its absolute local path, read-only, on both workers.
-Root has bound native a5e5189, inputs and the integrated helper at662849e; actual
-allocation mounts must preserve that binding. T2 sets existing routing_input_file=None to
+Root freezes integrated source at60ba4c; actual allocation mounts must preserve
+all bound source bytes and the updated packet. T2 sets existing routing_input_file=None to
 preserve its controlled plan, not substitute observed profiling inputs.
 The repository mount includes existing script/helper and controlled inputs. It
 does not contain a top-level vllm package. Do not put source exports,
@@ -134,13 +150,14 @@ dependencies plus the repository namespace, not profiler pandas/sklearn extras.
 
 ```bash
 set -euo pipefail
-REPO=/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01
+REPO=/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02
 INPUTS="$REPO/task_memory/task_2026-10-22_step5_d29_native_balanced/t2_preparation"
 export PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 export VLLM_MOE_ROUTING_SIMULATION_STRATEGY=position_cyclic VLLM_MOE_SKIP_PADDING=1
 unset VLLM_TARGET_DEVICE VLLM_USE_BREAKABLE_CUDAGRAPH
+unset FRONTIER_STEP5_PROFILE_MANIFEST
 export PYTHONPATH="$REPO"
 export TMPDIR=/work/t2/tmp XDG_CACHE_HOME=/work/t2/cache
 export TRITON_CACHE_DIR=/work/t2/cache/triton TORCHINDUCTOR_CACHE_DIR=/work/t2/cache/torchinductor
@@ -163,6 +180,21 @@ On R580+ do not prepend that older compatibility package. Actual mapped libcuda,
 host driver, installed native origin and effective configuration are root runtime
 evidence still required; the existing script's source-origin report does not
 attest the image digest or all library mappings by itself.
+
+**Final helper obligations:** controlled T2 does not supply a profiling manifest
+or observer.runtime_policy. The integrated collective observer conditionally
+imports the bound-profiler execution-policy observer when
+FRONTIER_STEP5_PROFILE_MANIFEST is inherited. The clean T2 shell therefore unsets
+that variable before Python. This prevents accidental selection of an unrelated
+bound-profiler path, not a bypass of a T2 criterion or a new approved input mode.
+T2 already sets routing_input_file=None, uses its own positions/masks/route capture,
+and never calls helper parse_args/run_probe/new routing or compute-context APIs.
+The full helper's expert observer now retains apply operands under soft diagnostics;
+native_backend reads actual quant_config.quant_dtype and expects_unquantized_inputs
+declared by published modular_kernel.py. Actual object/layout diagnostics remain
+runtime UNVERIFIED. The worker recipe also gains conditional profiling preflight,
+but its wrapper is still not invoked; the reused driver-compatibility branch is
+unchanged. No profiler source frames, numerical fits or backend evidence are added.
 
 Root supplies MASTER_ADDR (reachable node0 address), MASTER_PORT (unused port)
 and T2_RUN_ID (new finite-unit rendezvous ID), identically on both nodes. They
@@ -196,7 +228,8 @@ native errors. Even a future PASS_THIN_GRAPH_AND_EAGER_MODULES is **not** MRv2
 serving inputs, attention/connector breaks, real backend graphs, G3/state/transfer,
 original-router semantics, numerical fitting or op-gap/CPU overhead qualification.
 
-Unfinished: remaining implementation readiness; explicit
+Unfinished: root packet acceptance/sealing and completed independent integration
+readiness; explicit
 resource/run approval and finite-collection coordination; real node/mount/output/
 rendezvous/retention identities; actual
 worker source/import/library/config/backend/memory/runtime receipts. No runtime

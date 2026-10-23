@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Bind complete final60ba source/receipts in isolated records tree; preserve inputs/native bytes and unapproved resources. |
 | 2026-10-23 | Parent accepts T2 constructor/source binding and merges892b6a1 after177 PASS/15 SKIP, actual-image config values and independent No findings. |
 | 2026-10-23 | Parent accepts and integrates native19, publishes the image and supplies verified installed-source artifacts. |
 | 2026-10-23 | Prepare controlled T2 metadata/cases and bounded execution/resource proposal; static-only, no code change or launch. |
@@ -16,14 +17,64 @@
 
 ## Current implementation outcome
 
-Parent T2 acceptance: verified662849e/records94244bc merged892b6a1. Both real
+Current final source:60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Records-only
+docs/step5-d29-t2-final is isolated from active verify-step5-d29-integrated-02;
+no writes occurred in that CLI/fidelity tree. Full files/receipts, not selected
+functions, are bound in t2_preparation. Later record commits do not replace60ba.
+
+Historical parent T2 acceptance: verified662849e/records94244bc merged892b6a1. Both real
 installed-image CPU configs retain7168/8192/128 after with_hf_config; independent
-constructor review reports No findings. Complete integrated files and the6-entry
-controlled-input index are rebound in t2_preparation/. The frozen source is
-verify-step5-t2-limits-01. This closes earlier root integration/image-value/seal
+constructor review reports No findings. That earlier binding used
+verify-step5-t2-limits-01; the final packet supersedes its source identity.
+This closes earlier root integration/image-value
 handoff items below; it does not authorize the16H800/1800s proposal or qualify
 GPU graphs/backend/G3/full serving. Parent evidence is under the position-routing
 task's repairs/test_report_2026-10-23_t2_config.md and review_2026-10-23_t2_config.md.
+
+## D29-T2-FINAL-SOURCE-BINDING
+
+Only existing native task records/T2 metadata changed; production/tests/native4/
+root ledger unchanged. Native1350/1582, task source increment0. Deliverables:
+t2_preparation/provenance.json,execution_proposal.md,resource_proposal.json,
+static_review_receipt.json,hashes.sha256 and task requirements/plan/progress/review/
+test_report/summary handoff. Metadata78447bytes/SHAe535c5c9... and cases
+SHAea353100... are byte-identical to both frozen60ba and accepted662.
+
+Full final hashes: T2
+7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25;
+helper63baf64781a533a72e31b0e622fd99524b3d40acd4149a8552c6b1808266b2ff;
+recipe c7ee4de334cd06c777282fd20979c435588456ca734c5188bfe774aa884a8746.
+Repo8/publication9/parent3/native32 full files bound; all2907 actual Python
+files/backend12/existing53pins agree with complete retained inventory.
+Published platformf037,retained archive/native4 hashes verified locally,
+not rebuilt or accessed remotely. Full constructor/topology/loader/diagnostic
+ASTs remain equal662; full helper/recipe differ. Controlled stdlib plan on real
+complete metadata is equal. Final dispatch test byte equality9974 confirms
+d0dfcdb5 duplicate cleanup without source behavior inference.
+
+Integrated expert observer records native apply operands and backend reads
+quant/defer-input attributes under diagnostics. Its collective observer enters
+bound-profile policy observation when FRONTIER_STEP5_PROFILE_MANIFEST is inherited,
+but controlled T2 supplies no manifest/runtime_policy. Proposal clean shell now
+unsets it, preserves existing routing_input_file=None and does not invoke helper
+parse_args/run_probe/new routing or compute-context APIs. This retains the approved
+controlled mode; no new formula/tolerance/backend forcing or qualification.
+Worker wrapper is not invoked; reused pre-Python driver recipe is unchanged.
+
+Static source/export/schema/input/native4/AST7/bash3/resources PASS in
+/data/ycfeng/tmp/d29-t2-final-static-preindex.log. Root final native-position16PASS/
+native-config2PASS are reported evidence, not reruns or GPU proof. Historical
+actual-image7168/8192/128 CPU values remain CPU-only. Exact static commands,
+full hash comparisons, selected evidence and changed paths are recorded below
+in the existing test report/review/progress.
+
+Remaining: root final packet acceptance/sealing and independent integration
+readiness, explicit resource/run authorization/finite collection coordination,
+worker/mount/rendezvous/output/retention/source/library/config/backend/memory
+receipts and GPU NONE/PW/FULL/MRv2/full-backend/G3/state/transfer/E2E criteria.
+16H800/two nodes/1800s8GPUh remains UNAPPROVED. No Torch/vLLM import/config
+construction/accepted suite rerun,GPU/platform/auth/quota/cloud/SSH/Docker/network/
+push/delegation action occurred in this records task.
 
 TaskID: **D29-NATIVE-IMPLEMENTATION**. Approved native19 implementation is complete
 on feat/step5-position-native. Commits: e48cdc0 (early native interface/source

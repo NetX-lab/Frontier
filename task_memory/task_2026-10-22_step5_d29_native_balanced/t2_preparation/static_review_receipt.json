@@ -1,6 +1,7 @@
 {
-  "task_id": "D29-T2-ENGINE-LIMITS",
-  "status": "PASS_STATIC_INPUT_ONLY_NOT_RUN_NOT_LAUNCH_APPROVAL",
+  "task_id": "D29-T2-FINAL-SOURCE-BINDING",
+  "status": "PASS_STATIC_FINAL_SOURCE_BINDING_NOT_RUN_NOT_LAUNCH_APPROVAL",
+  "source_commit": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
   "reviewer": "native owner self-check, no extra subagent",
   "environment": {
     "python_executable": "/data/ycfeng/envs/asyncopd-py312/bin/python",
@@ -16,7 +17,7 @@
     "sha256": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
     "revision": "364b3b03fed2477aa0953fe855a2c4c8c48ee3cc",
     "original_max_position_embeddings": 1048576,
-    "engine_limit_constructor_flow": "PASS host actual entrypoint/verified helper body; not actual vllm config or GPU receipt",
+    "engine_limit_constructor_flow": "Historical root image CPU final values PASS; constructor AST unchanged at60ba, no new config/GPU execution",
     "config_or_metadata_changes": false
   },
   "input_schema": {
@@ -69,7 +70,7 @@
       "max_num_seqs": 128
     },
     "engine_source_hash": "7947f58bf37ab0256756faf1ec0613f4dc92101e94ad4a7f596c50ae4a11655e",
-    "graph_and_module_inputs_unchanged": "PASS against aa872fa"
+    "graph_and_module_inputs_unchanged": "Byte-identical cases.json to frozen60ba/accepted662; original controlled frame values retained"
   },
   "existing_static_probe_plan": {
     "status": "PASS executed only existing stdlib source bodies",
@@ -93,13 +94,14 @@
   "provenance_review": {
     "retained_model_bytes": "PASS",
     "prepared_cases_hash": "PASS",
-    "script_and_helper_hashes": "PASS full actual integrated files at662849e; original prepared binding retained as history",
+    "script_and_helper_hashes": "PASS full actual integrated files at60ba4c, compared against Git bytes; prior662 retained as history",
     "accepted_publication_artifact_hashes": "PASS",
-    "selected_mechanism_source_hashes": "PASS, not a rerun of accepted full source/CPU suites",
+    "selected_mechanism_source_hashes": "PASS full32 relevant native files; actual complete2907 export/backend12/53pins verified, no accepted suite rerun",
     "resource_dimension_formulas": "PASS raw dimensions only, not measured allocator/backend/collective data"
   },
   "scope": {
-    "production_test_code_edits": 2,
+    "production_test_code_edits": 0,
+    "previous_engine_limit_source_test_edits": 2,
     "native19_previous_accepted_gross": 1269,
     "native19_current_gross": 1350,
     "two_file_incremental_gross": 85,
@@ -124,11 +126,43 @@
     "ast_whitespace_owned_paths_budget": "PASS"
   },
   "remaining": [
-    "Remaining implementation readiness and actual allocation source binding",
+    "Root final packet acceptance/sealing and independent integration readiness; runtime source remains60ba4c",
     "Root actual resource/run authorization and finite-collection coordination",
     "Actual worker/mount/rendezvous/output/retention identities",
     "Actual GPU/import/library/backend/runtime/G3 evidence"
   ],
+  "final_source_comparison": {
+    "old_source": "662849e99223c98b9ea0d47d34783c3977cb3282",
+    "final_source": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+    "t2_native_unit_byte_equal": true,
+    "helper_recipe_byte_equal": false,
+    "constructor_topology_loader_diagnostic_ast_equal": true,
+    "controlled_stdlib_plan_equal_on_actual_metadata": true,
+    "dispatch_test_byte_equal_to_9974_after_duplicate_cleanup": true,
+    "new_reachable_diagnostics": "Expert operand retention and native quant/defer-input reads; diagnostic-only, actual CUDA objects remain UNVERIFIED",
+    "conditional_bound_profile_observer": "Fresh controlled shell unsets FRONTIER_STEP5_PROFILE_MANIFEST, no profile manifest supplied by these inputs",
+    "function_ast_is_final_identity": false
+  },
+  "root_reported_final_checks": {
+    "evidence_origin": "Root task dispatch, not rerun in this preparation",
+    "native_position_passed": 16,
+    "native_config_passed": 2,
+    "gpu_runtime_qualified": false
+  },
+  "final_preparation_checks": {
+    "frozen_source_bytes": "PASS 8 complete repository files,9 publication artifacts,3 parent evidence files",
+    "actual_export": "PASS 2907 Python files against retained inventory; selected32 files/backend12/existing53pins",
+    "archive_platform_manifest": "PASS archive hash and decoded platform manifest SHA256f037; local reads only",
+    "native4": "PASS published hashes equal retained snapshots, no source edit",
+    "input_bytes": "PASS metadata/cases identical to60ba/662; official source/lock/design/engine hashes retained",
+    "input_schema": "PASS graph2x17/live16,4/module3frames/required limits7168,8192,128",
+    "syntax": "PASS 7 Python AST parses,2 proposal bash blocks,existing worker wrapper bash-n",
+    "controlled_plan": "PASS stdlib plan bodies on complete metadata give identical662/60ba output; not runtime or final identity substitute",
+    "resources": "UNCHANGED UNAPPROVED16H800/2nodes/1800s8GPUh",
+    "log": "/data/ycfeng/tmp/d29-t2-final-static-preindex.log",
+    "hash_index": "hashes.sha256 includes packet,full bound repository/native files,publication/parent receipts and original provenance paths",
+    "new_suites_or_runtime": "NONE; no Torch/vLLM import,CPU config construction,GPU or platform operation"
+  },
   "parent_acceptance": {
     "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
     "review": "D29-T2-ENGINE-LIMITS-REVIEW: No findings",

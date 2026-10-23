@@ -8,8 +8,33 @@
 | 2026-10-23 | Record four implementation-review repairs, CPU evidence and unverified live boundaries. |
 | 2026-10-23 | Review controlled T2 input schema/provenance and execution proposal statically; no source/CPU acceptance rerun. |
 | 2026-10-23 | Review two-file engine-limit flow, host regressions and85 gross delta; actual-image review remains root-owned. |
+| 2026-10-23 | Review records-only final source60ba binding, full-file comparison and controlled helper obligations; no runtime execution. |
 
-## D29-T2-ENGINE-LIMITS scoped self-review
+## D29-T2-FINAL-SOURCE-BINDING static review
+
+Reviewer: original native owner, no delegated reviewer. Scope: existing native
+task records/T2 preparation only, isolated docs/step5-d29-t2-final based on
+60ba4c7569b7c9fd4c8f9f43a16f92249fa76181. Active integrated-02 CLI/fidelity
+worktree is never written/checkouts/commits performed there.
+
+| Requirement | Inspected evidence and result | Boundary |
+| --- | --- | --- |
+| Complete final source binding | Full8 repository files,9publication artifacts,3parent artifacts,32native files hashed; all actual2907 Python bytes equal full published inventory,backend12/pins53. Index63 entries PASS. | AST is explanatory only, not identity. No installed import/GPU/runtime attestation. |
+| Constructor continuity | create_native_config/topology/loader/diagnostic AST equal accepted662. T2/native unit full bytes equal662. Full helper/worker recipe differ and are rebound. | Root historical CPU configs and reported16+2CPU checks remain CPU-only; not rerun here. |
+| Reachable integrated helper changes | Native quant/defer-input attribute reads supported by published modular_kernel; expert apply operand retention under diagnostics. Controlled plan on full metadata equals prior plan. | Actual CUDA expert operands/diagnostics still unverified. No new modes/formulas/tests. |
+| Conditional profile branch | Final collectives checks inherited FRONTIER_STEP5_PROFILE_MANIFEST, T2 provides no manifest/runtime_policy; proposal now unsets it in its fresh process. Existing routing_input_file=None prevents new bound-plan branch. | Not a profiler verifier bypass: this separate controlled T2 bundle never supplied profiling inputs. Helper parse_args/run_probe/routing/compute_context not invoked. |
+| Immutable inputs/native4 | Metadata/cases byte-identical60ba and662, official revision/hash/lock unchanged. Native4 export/retained snapshots unchanged, limits7168/8192/128 unchanged. | Controlled/unobserved only, no G3/state tolerance changed. |
+| Publication/resource records | All9 retained publication artifacts hashed; decoded platform manifestf037 and archive hash match. Resource16H800/2nodes1800s8GPUh remains UNAPPROVED. | Local reads only, no registry/network/image/platform operations. |
+| Dispatch merge duplicate | Final dispatch test full bytes equal9974; inspected d0dfcdb5 only duplicate removal. | Equality recorded; no suite rerun/native routing qualification inferred. |
+
+Existing static checks PASS: schema/types/shapes, complete-source hashes, unchanged
+input bytes,AST7,bash-n3 and63 checksums. Raw logs under/data/ycfeng/tmp,
+exact commands in test_report_2026-10-23_native_integration.md. Source/test delta0;
+native budget1350/1582. Root owns packet acceptance/sealing, completed integration
+readiness and actual launch/resource/runtime decisions. Full bound-file equivalence
+to60ba must remain true after the isolated records commit.
+
+## D29-T2-ENGINE-LIMITS scoped self-review (historical)
 
 Reviewed a5e5189 against6ebb038: only the two authorized native-owned Python
 files changed,15add/2del script and68add test (85 gross<=100); native19 now1350/1582.
