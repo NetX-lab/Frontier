@@ -7,6 +7,7 @@
 | 2026-10-23 | Recorded initial profile01 image/hook checks, fresh-entry RED controls and preserved verification-harness errors. |
 | 2026-10-23 | Rechecked repaired profile02 after both reviews and merge cc0227e9; final entry/image/four-position checks and 45-file seal passed. |
 | 2026-10-23 | Recorded actual submission, platform resource/mount checks, queued follow-up and separate watch permission failure. |
+| 2026-10-23 | Recorded the11:41/11:48 queue observations and source-only I4 analysis-plan corrections. |
 
 ## Scope and environment
 
@@ -88,3 +89,10 @@ Created job **exp-1023-180821-373637** at **2026-10-23T10:08:21Z**. Root's exact
 Receipt: `profile02_platform_launch.json`. Follow-up at10:22:53Z remained Pending with no replicas and the same launcher alive (`/data/ycfeng/tmp/glm53_dsv4/profile02_platform_72do4e1w/receipt.json`). Worker GPU identity, native startup, business completion, profile coverage and terminal state are therefore **not yet observed**.
 
 A separate Kubernetes watch request received403 Forbidden at10:11:53Z. Exact retained error and classification are `profile02_watch_error.{log,json}`. Snapshot get/list access worked before and after this failure. The watcher performed no job/launcher control, and no duplicate job was submitted. It is an auxiliary monitoring limitation, not a workload failure.
+
+## Continued queue inspection and I4 preparation
+
+- Exact-job `get_namespaced_custom_object` and `client.list([name])` at11:41:36Z: **Pending**, zero replicas, PID3236764 alive; `/data/ycfeng/tmp/glm53_dsv4/profile02_platform_73xlvpah/receipt.json`. `ps -p 3236764 -o pid,lstart,etime,args` independently confirmed the expected interpreter/launcher and18:08:13 local start time.
+- Executed the unchanged `/data/ycfeng/tmp/step5_quota/read_quota.py` under StepMind Python3.10.6, company proxy and personal authentication, after asserting sourceSHA19746066439f539ff889dd154cac6f32bffd5467a63f892e8dd87f3ca784f275; an AST replacement changed only `OUTPUT` to a fresh path. The complete creator-filtered census reused its first page and would follow any continuation token. At11:48:11Z:104 personal jobs, one page, only profile02 active/Pending; codesign non-preemptible H800 use114/128. Snapshot requests **PASS**; scheduling remains **PENDING**. Evidence: `/data/ycfeng/tmp/glm53_dsv4/profile02_queue_quota_gqoa3nwz/{quota,census}.json`. The node sample returns200 of222 nodes and is not a whole-cluster free-capacity claim.
+- W128-PROFILE02-ANALYSIS-BINDING delivered source-backed document corrections; root inspected the diff against `native_serve_profile.py:105-139,160-188,409-488`, `native_full_structure.py:385-415`, and `forward_device_timeline.py:55-97`. Follow-up removed wrong delimiter/step-count claims and any static-rank inference of iteration identity. The final plan retains source-versus-observed distinctions and requires a new terminal platform receipt. Runtime artifacts and trace joins have not been checked.
+- Root verification command `/data/ycfeng/envs/frontier-py310/bin/python -B -` ran the inline AST/config/identifier checks at11:54:57Z, Python3.10.6, without importing torch/vLLM. **PASS_SOURCE_ONLY** in `analysis_binding_checks.json`: four relevant runtime sources equal their sealed-package pins; run/trace roots and4×8 trace layout match config; evaluation of the actual annotation expression yields `frontier_native_attention|7|attention.forward` with three fields; both supported native-ID suffix examples normalize to the same client ID; final analysis-plan scope59/60 changed lines; `git diff --check` PASS. These CPU examples do not verify emitted GPU trace contents.
