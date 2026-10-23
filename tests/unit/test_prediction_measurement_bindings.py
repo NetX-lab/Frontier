@@ -172,3 +172,29 @@ def test_unique_legacy_registry_default_and_precision_labels_unchanged(tmp_path)
     assert manager.get_model("legacy", "BF16") is first
     assert manager.get_models()["kernel_only"] == {"legacy": second}
     assert manager._contract_model_registry("kernel_only") == {}
+
+
+@pytest.mark.parametrize("native_first", [False, True])
+@pytest.mark.parametrize("typed", [False, True])
+def test_mixed_native_non_native_views_keep_both_insert_orders(bound, tmp_path, native_first, typed):
+    trained, replica, _, _, _ = bound
+    name = "moe_gating_linear"
+    native = next(model for key, model in trained._contract_precision_registry("kernel_only")["FP32"].items()
+                  if key[0] == name)
+    non_native = SimpleNamespace()
+    if typed:
+        non_native._frontier_layer_cache_identity = native._frontier_layer_cache_identity
+    manager = _manager(tmp_path / "mixed")
+    manager._cluster_configs = trained._cluster_configs
+    manager._get_measurement_types_for_cluster = lambda *args: (MeasurementType.KERNEL_ONLY,)
+    manager._event_measurement_type_for_replica = lambda *args: MeasurementType.CUDA_EVENT
+    for model in (native, non_native) if native_first else (non_native, native):
+        manager._store_model_precision(name, "FP32", model)
+    non_native._frontier_layer_cache_identity = native._frontier_layer_cache_identity
+    expected = {name: non_native, f"{name}:{native._frontier_model_hash}": native}
+    assert manager.get_models()["kernel_only"] == expected
+    assert manager.get_models_for_cluster(ClusterType.MONOLITHIC)["kernel_only"] == expected
+    with pytest.raises(ValueError, match="ambiguous native|multiple layer contracts"):
+        manager.get_model(name, "FP32")
+    binding = manager._native_measurement_binding(manager._measurement_identity(native))
+    assert manager.get_model(name, "FP32", native_binding=binding) is native
