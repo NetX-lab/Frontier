@@ -41,12 +41,33 @@ def write_json(path, value):
     path.write_text(json.dumps(value, sort_keys=True, indent=2) + '\n')
 
 
-def main(generation='06'):
+def main(generation='06', profile_plan=None):
     global PACKAGE
-    PACKAGE = HERE / f'candidate_h800_p0_{generation}'
-    assert generation == '06', 'Only the root-selected fresh native06 generation is authorized'
+    plan = None if profile_plan is None else json.loads(profile_plan.read_text())
+    if plan is None:
+        assert generation == '06', 'Only the root-selected fresh native06 generation is authorized'
+    else:
+        assert generation == '01' and plan['generation'] == generation
+        assert plan['diagnostic_only'] and not plan['e2e_reference_admission']
+        assert profile_plan.resolve().is_relative_to(REPO / 'task_memory')
+    PACKAGE = HERE / f'candidate_h800_p0_{"profile_" if plan else ""}{generation}'
     commit = git(REPO, 'rev-parse', 'HEAD').decode()
     assert not git(REPO, 'status', '--short'), 'Commit verified source before staging'
+    modules = MODULES + (['tests/comparison/calibration/native_serve_profile.py'] if plan else [])
+    if plan:
+        accepted = plan['accepted_runtime_commit']
+        for name in modules:
+            assert subprocess.check_output(['git', '-C', str(REPO), 'show', f'{commit}:{name}']) == subprocess.check_output(
+                ['git', '-C', str(REPO), 'show', f'{accepted}:{name}']), name
+        assert profile_plan.read_bytes() == subprocess.check_output(
+            ['git', '-C', str(REPO), 'show', f'{commit}:{profile_plan.relative_to(REPO)}'])
+        inputs = json.loads((REPO / plan['proposal_inputs']).read_text())
+        freeze = json.loads((REPO / inputs['freeze_path']).read_text())
+        assert sha((REPO / inputs['freeze_path']).read_bytes()) == inputs['freeze_sha256']
+        assert inputs['source_commit'] == accepted
+        acceptance = json.loads((REPO / plan['primary_acceptance']).read_text())
+        assert acceptance['status'] == 'ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT'
+        assert acceptance['source_commit'] == accepted
     native_commit = git(NATIVE, 'rev-parse', 'HEAD').decode()
     assert native_commit == '2cf0a6915ce544dc493a0990f2ea38d81601128a'
     assert not git(NATIVE, 'status', '--short'), 'The original native snapshot must remain clean'
@@ -83,6 +104,26 @@ def main(generation='06'):
         data_parallel_size=2, tensor_parallel_size=8, pipeline_parallel_size=1,
         seed=prior['llm']['seed'], block_size=None, kv_cache_dtype='fp8',
         worker_extension_cls='native_full_structure.FullModelInventory', moe_gating_routing_runtime_path='balanced_topk')
+    if plan:
+        output = Path(plan['cloud_root']) / 'case/runs/groundtruth_clean' / plan['run_tag']
+        config.update(run_tag=plan['run_tag'], job_tag=plan['run_tag'], output_dir=str(output),
+            diagnostic_only=True, e2e_reference_admission=False,
+            serving_profile_limits=plan['serving_profile_limits'])
+        engine.update(worker_extension_cls=plan['worker_extension_cls'],
+            profiler_config=plan['profiler_config'] | {'torch_profiler_dir': str(output / 'torch_traces')})
+        lock.update(accepted_runtime_commit=accepted, diagnostic_only=True,
+            e2e_reference_admission=False,
+            packaging_source=dict(path=str(Path(__file__).relative_to(REPO)), commit=commit,
+                sha256=sha(Path(__file__).read_bytes())))
+        content = profile_plan.read_bytes()
+        stage('profile_plan.json', content)
+        config['retained_files']['profile_plan.json'] = sha(content)
+        config['tool_hashes'][str(PACKAGE / 'profile_plan.json')] = sha(content)
+        lock['profile_plan'] = dict(path=str(profile_plan.relative_to(REPO)), commit=commit,
+            staged_path='profile_plan.json', sha256=sha(content))
+        lock['profile_inputs'] = {name: dict(path=path, sha256=sha((REPO / path).read_bytes()))
+            for name, path in dict(primary_acceptance=plan['primary_acceptance'],
+                proposal_inputs=plan['proposal_inputs'], final_freeze=inputs['freeze_path']).items()}
     # Native compilation/capture defaults are kept unresolved, as in accepted G0B.
     engine.pop('compilation_config', None)
     accepted_model_sha = prior['expected_source_hashes'][
@@ -108,11 +149,18 @@ def main(generation='06'):
     for name in checker.ROUTING_PINS:
         config['expected_source_hashes'][name] = sha((NATIVE / name).read_bytes())
     assert len(config['expected_source_hashes']) == 74, 'Routing source binding must have74 pins'
-    for name in MODULES:
+    if plan:
+        for name in plan['native_profile_source_pins']:
+            config['expected_source_hashes'][name] = sha((NATIVE / name).read_bytes())
+        lock['native_profile_source_hashes'] = {name: config['expected_source_hashes'][name]
+            for name in plan['native_profile_source_pins']}
+    for name in modules:
         target = 'native_pd_worker.py' if name.endswith('/native_pd_worker.py') else name
         if name == checker.BALANCED_MODULE:
             target = 'tests/comparison/calibration/balanced_routing.py'
         content = subprocess.check_output(['git', '-C', str(REPO), 'show', f'{commit}:{name}'])
+        if plan:
+            assert content == subprocess.check_output(['git', '-C', str(REPO), 'show', f'{accepted}:{name}']), name
         stage(target, content)
         config['harness_files'][name] = target
         lock['committed_files'][target] = dict(path=name, commit=commit, sha256=sha(content))
@@ -151,6 +199,8 @@ def main(generation='06'):
     assert sha((NATIVE / 'vllm/models/deepseek_v4/nvidia/model.py').read_bytes()) == leaf['base_sha256']
     write_json(PACKAGE / 'overlay.json', overlay)
     config['retained_files']['overlay.json'] = sha((PACKAGE / 'overlay.json').read_bytes())
+    if plan:
+        config['tool_hashes'][str(PACKAGE / 'overlay.json')] = config['retained_files']['overlay.json']
     lock['runtime_overlay'] = overlay
     original_model = Path(prior['llm']['model'])
     for name, expected in config['model_hashes'].items():
@@ -160,6 +210,9 @@ def main(generation='06'):
     hashes = {}
     for name in ('trace.csv', 'request_ids.json', 'warmup_pool.csv', 'manifest.json', 'SHA256SUMS'):
         content = subprocess.check_output(['git', '-C', str(REPO), 'show', f'68f891b:{WORKLOAD}/{name}'])
+        if plan:
+            source = inputs['files']['trace/' + name]
+            assert sha(content) == source['sha256'] == freeze['original_files'][source['source_path']], name
         stage('trace/' + name, content)
         stage('case/inputs/trace/' + name, content)
         hashes[name] = sha(content)
@@ -191,6 +244,16 @@ def main(generation='06'):
             root_cap_check_required=True, root_package_acceptance_required=True,
             auxiliary_validators_soft=True, H200_nonpreemptible_running_plus_queued_limit=32,
             formal64_requires_same_model_same_hardware32_all_four_errors_at_most=0.30))
+    if plan:
+        case.update(case_id='dsv4-h800-p0-profile-fixed128-qps1',
+            run_generation=f'v4-native-v028-h800-p0-profile-20261023-{generation}',
+            purpose='Diagnostic native serving profile; no E2E or reference admission',
+            diagnostic_only=True, e2e_reference_admission=False,
+            profile_plan=lock['profile_plan'], accepted_runtime_commit=accepted,
+            groundtruth_checker_usage='Historical source/Frontier binding only; not profile acceptance',
+            policy=dict(priority='P0', gpu_type='H800', charged_group='codesign', preemptible=False,
+                diagnostic_only=True, e2e_reference_admission=False, auxiliary_validators_soft=True,
+                root_cap_check_required=True, root_package_acceptance_required=True))
     stage('case/manifest.yaml', yaml.safe_dump(case, sort_keys=False).encode())
     launch = (TEMPLATE / 'launch.py').read_text()
     launch = launch.replace("('H200', 'step_main', 8, 8)", "('H800', 'codesign', 8, 4)")
@@ -208,6 +271,15 @@ def main(generation='06'):
     seal = seal.replace("('model', 'tests', 'trace')", "('model', 'tests', 'trace', 'case/inputs')")
     seal = seal.replace('files = sorted([path', "files = sorted([HERE / 'case/manifest.yaml'] + [path")
     stage('seal.py', seal.encode())
+    if plan:
+        for name in ('launch.py', 'seal.py'):
+            content = (PACKAGE / name).read_bytes()
+            config['retained_files'][name] = sha(content)
+            config['tool_hashes'][str(PACKAGE / name)] = sha(content)
+            lock['retained_files'][name] = dict(source=str(TEMPLATE / name),
+                source_sha256=sha((TEMPLATE / name).read_bytes()), sha256=sha(content))
+        write_json(PACKAGE / 'config.json', config)
+        write_json(PACKAGE / 'case/inputs/native_config.json', config)
     write_json(PACKAGE / 'source_lock.json', lock)
     write_json(PACKAGE / 'evidence_readiness.json', dict(
         status='UNSEALED_REVIEW_CANDIDATE', submitted=False, runtime_qualified=False,
@@ -222,6 +294,18 @@ def main(generation='06'):
             scheduled_arrival_span_seconds=426, minimum_schedule_gpu_hours=32*426/3600,
             h800_measured_startup_or_timing=False),
         reused_h200_evidence='Source/bootstrap/native dtype and geometry functions only; no H800 memory/timing claim'))
+    if plan:
+        readiness = json.loads((PACKAGE / 'evidence_readiness.json').read_text())
+        readiness.update(diagnostic_only=True, e2e_reference_admission=False,
+            source_instrumentation='NativeServeProfile with accepted driver/collector runtime bytes',
+            accepted_runtime_commit=accepted, profile_plan=lock['profile_plan'],
+            native_limits=['All32 rank receipts and actual source/model/layout/routing identity',
+                'Actual first-formal start/stop/drain outcomes and retained request IDs',
+                'Startup archive, window snapshot, final inventory and raw torch traces',
+                'Coverage, graph ownership and stream/event/PDL proof remain runtime gates'],
+            primary_review=['Unsealed diagnostic package; root source/image checks pending',
+                'Ineligible for E2E or native/reference admission'])
+        write_json(PACKAGE / 'evidence_readiness.json', readiness)
     print(json.dumps(dict(package=str(PACKAGE), source_commit=commit,
         native_source_pins=len(config['expected_source_hashes']), unsealed=True,
         actual_submission_or_native_admission=False)))
@@ -231,7 +315,8 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--generation', required=True, type=int)
+    parser.add_argument('--profile-plan', type=Path)
     args = parser.parse_args()
     if args.generation < 1:
         parser.error('generation must be positive')
-    main(f'{args.generation:02d}')
+    main(f'{args.generation:02d}', None if args.profile_plan is None else args.profile_plan.resolve())
