@@ -8,7 +8,7 @@ for compute operations, communication primitives, and inter-cluster transfers.
 import json
 import os
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, fields
 from typing import Dict, Any, List, Optional
 from threading import Lock
 
@@ -39,11 +39,6 @@ class TraceEvent:
 
     # Flexible metadata
     meta: Optional[Dict[str, Any]] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary, filtering out None values."""
-        data = asdict(self)
-        return {k: v for k, v in data.items() if v is not None}
 
 
 class TraceStore:
@@ -118,7 +113,12 @@ class TraceStore:
         try:
             with open(self._filepath, "a") as f:
                 for event in events_to_write:
-                    f.write(json.dumps(event.to_dict()) + "\n")
+                    row = {
+                        field.name: getattr(event, field.name)
+                        for field in fields(event)
+                        if getattr(event, field.name) is not None
+                    }
+                    f.write(json.dumps(row) + "\n")
         except Exception as e:
             logger.error(f"Failed to flush trace events: {e}")
             with self._buffer_lock:
