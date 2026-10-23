@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept CPU behavior; return deterministic compute-provenance join and portable writer tests to PRICING within remaining243. |
 | 2026-10-23 | Record CORE three-P2 review and isolated repair allocation; freeze PRICING84e66115 for producer/CPU re-review. |
 | 2026-10-23 | Allocate registry retention/query correction:109 effective paths, unchanged CORE4404/global10000 via300-line redistribution. |
 | 2026-10-23 | Allocate the existing explicit CPU fixture backend/trace consumer within PRICING's quota; start CORE independent review. |
@@ -24,23 +25,24 @@
 
 - completed: native19/source16/core33/pricing60 design reviews, including both
   final producer seams and the shared source-frame materializer.
-- completed: parent parses all scope rows and removes only H11's34-line duplicate;
- 107 unique code/test/config paths,9942 gross. Plus existing gitlink and at most12
-  size-note lines, approved10000 total. `shared_scope.md`/`scope.json` bind details.
+- completed: original approval ledger has107 paths/9942 gross after removing H11's
+  duplicate. Effective registry/review overlays give109 paths with the same9942
+  source budget and10000 total. Apply both amendments in repairs/ after scope.json;
+  CORE46/4404, native1582 and PRICING3956 totals are unchanged.
 - completed: YC selects `批准完整方案 (Recommended)` for D29-SCOPE-107-10000;
   requirements and human review receipt retain the exact decision.
 - completed: native19 source/CPU acceptance, published image/actual source receipts,
   and T2 limits/controlled-input binding merged892b6a1. Native1350/1582; four image
   files unchanged. T2 parent177 PASS/15 SKIP, real image CPU7168/8192/128 for both
   configs, independent No findings and actual full-file rebinding6/6 PASS.
-- in-progress: CORE/SOURCE d96b3279 has parent143 unique PASS/4 SKIP and44-path
-  3304/4404 accounting; independent review and registry/backend/producer integration
-  remain open. PRICING full
-  deliveryf41d1ee9 (43 changed paths/3305 gross including333 submodule lines) has
-  passed parent cross-environment593 unique PASS/89 SKIP plus cold10 subset.
-  All finite-side F3–F6 and owned C1/C2 validation findings are closed. The actual
-  observed compute_context producer/handoff remains open. CORE may integrate
-  delivered interfaces for development; final acceptance is not implied.
+- in-progress: CORE/SOURCE d96b3279 has parent143 unique PASS/4 SKIP and3304/4404
+  accounting; original owner repairs three P2 in step5-core-review-fixes. A separate
+  registry worker owns its four paths in step5-registry-bindings. PRICING84e66115
+  has43 changed paths/3713 gross including333 submodule lines and parent691 unique
+  PASS/33 SKIP. Finite F3–F6 and owned C1/C2 validation are closed; CPU consumer
+  behavior is accepted. Observed writer code exists, but deterministic cross-producer
+  compute-provenance matching and portable writer tests remain P1/P2 blockers.
+  Original PRICING owner repairs them within remaining243; full merge is pending.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
   qualification and fresh GPU/native evidence. Additional collection resources
@@ -197,6 +199,15 @@ the two extra invocations are subsets, not additional cases. Source unchanged,
 existing12 HTSIM checks explicitly rebound to unchanged sub3dac rather than rerun.
 Persistent evidence: verify-step5-pricing-05/.../pricing_closure_parent/.
 No global qualification or full integration is claimed.
+
+Producer/CPU review completes: actual observed writer/reference and count/buffer
+code is present, CPU behavior/labels are acceptable, but full ambient native import
+inventory makes independently produced compute contexts differ. Shared prepared
+context must expose a stable verified compute view while retaining full ambient
+diagnostics outside join identity. The CPU test's fixed temporary-worktree reader
+must default to the current repository, with explicit identity-checked external
+reference only for the isolated stage. Root assigns P1/P2 to PRICING within243;
+review_2026-10-23_producer_cpu_closure.md records the evidence and boundary.
 
 ## Active implementation dispatch — 2026-10-23
 
