@@ -20,6 +20,8 @@ Acceptance and exact artifact paths: `input_primary/primary_acceptance.json`, `i
 
 H collector implementation is active in `/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile`. Its first delivery found and reproduced three launch omissions; root authorized the two additional launch paths, bringing allocation to five non-core files/787changed lines. Collector source/CPU verification, installed hooks, independent review and integration remain required.
 
+Initial source deliveryd94b821a used728lines. Independent reviews found five unique source/retention defects; the same owner is repairing them under the necessary five-file/987line allocation. The old CPU_COMPLETE claim is not acceptance. Reports: `collector_primary/review_2026-10-23_initial.md`. YC requested closure and a session handoff; G2 is reserved for the next session after this collector repair/verification/integration completes.
+
 G2 driver requirements are recorded in `driver_design.md`. The real replay callsite must activate profiling on both role heads before selected formal dispatch and stop after drain, preserving native behavior and auxiliary soft failures. Implementation and bounded resource/window planning precede any new GPU request.
 
 Serving totals, complete kernel attribution, actual stream dependencies, graph/TP8/PD cost equivalence, balanced decode coverage and four-metric calibration are still open. Native06 remains the admitted R4 reference. GLM remains paused, and CPU-overhead work stays last. No new GPU allocation was used or authorized in this phase.

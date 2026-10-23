@@ -7,6 +7,7 @@
 | 2026-10-23 | Started approved kernel-only route with parallel evidence audit and integration design. |
 | 2026-10-23 | Checkpoint correction: split G into G1 (merge/matrix) and G2 (measurement proposal); added H (native V2 profiling extension) that owns the audit's minimum capture additions. |
 | 2026-10-23 | H now owns the two reproduced launch seams, five non-core files / 787 changed lines; E entered independent acceptance in parallel. |
+| 2026-10-23 | Session-close scope: finish H review repairs (five files/987), integrate verified CPU work and hand off G2. |
 
 ## Dependencies and ownership
 
@@ -15,6 +16,8 @@
 E and H run in parallel; they own disjoint files.
 
 H allocation: `native_serve_profile.py` 450, `native_pd_worker.py` 25, one unit-test file 300, `dp_placement_pp/vllm_replay.py` 8, and `calibration/pd_replay.py` 4 changed lines. The last two additions repair the reproduced extension-registration, PYTHONPATH and profiler-config forwarding blockers (`collector/launch_seam_receipt.json`, owner commit `9366b6e4`). Root owns driver preparation under G2; H owns implementation and source/CPU validation.
+
+Current H repair allocation supersedes the preceding initial limits: collector550, existing test400, worker25, command builder8, P/D environment4; total987, same owner and five paths. Five initial review findings must close through owner fixes, targeted source re-review and root verification before integration. E/F/G1 are accepted at732406aa. Under YC's session-close request, G2 is handed off after H closure rather than started in this session.
 
 | Step | Owner | Acceptance |
 | --- | --- | --- |

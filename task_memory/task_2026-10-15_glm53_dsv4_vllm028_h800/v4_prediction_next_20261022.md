@@ -9,6 +9,9 @@
 | 2026-10-23 | W128-V4-COVERAGE-AFTER-BALANCED-PREFILL: §3 class 4 superseded for the accepted balanced 6144/C0 case (isolated eager rows now exist); §5 recommendation replaced by §7; corrected the D-Q10 citation to `requirements.md:1063-1069`; §§1-6 kept as the 2026-10-22 historical record. Same day, same section: corrected stale status (prefill supplement already accepted, native06 in CPU package checks), separated approved-unfinished consumer wiring from new-collection authority, stated the probe's satisfiability-only limit, and removed any suggestion to change the legacy checker default. |
 | 2026-10-23 | W128-V4-NEXT-CPU-CALLSITE: appended §8. Traced the real public predictor to the measured reader on merged `e89b45d` and concluded no honest CPU caller slice can proceed now; records the exact three-part dependency instead of a guard removal or a new contract API. §§1-7 unchanged. |
 | 2026-10-23 | W128-V4-NEXT-CPU-CALLSITE correction, same §8: the V4 bundle is carried by the existing V4-private `dsa_full_dummy` sidecar/`.admission.json` receipt mechanism, so it is approved-but-unfinished wiring, not an unapproved shared interface; a single composite entry in the V4-local phase registry is a table edit, distinct from the summation-semantics decision; narrowed the conclusion to the unowned total-authority decision plus missing component rows. |
+| 2026-10-23 | W128-V4-INPUT-INTEGRATION-RECORDS: updated only §8 private-input implementation statements and current pointers after merged732406aa isolated admission; earlier caller/total-authority audit and §§1–7 retained as history. |
+
+Current milestone: [Routing milestone — current](progress.md#routing-milestone--current-2026-10-23) records merged732406aa private isolated input completion. Sections1–7 and the e89b45d serving-call/total-authority audit in section8 are historical; section8's input statements below are updated. The subsequent kernel-only cost decision and H collector allocation are in [remaining-measurements requirements](../task_2026-10-23_v4_remaining_measurements/requirements.md); this synchronization does not change that decision or open serving gates.
 
 Task ID: `W128-V4-P0-PREDICTION-NEXT`. Branch `feat/glm53-dsv4-vllm028`, HEAD `2c150a7` (code `7c1b888`).
 Everything below is CPU/static evidence. No serving run, no GPU, no guard bypass, no shimmed timing.
@@ -247,9 +250,12 @@ before `read_isolated_scope`:
   refusal at `:7607-7611` when `not _enable_dummy_mode` (that branch returns before
   `require_enabled_for_execution`, `:7657`). `_get_execution_time_internal` (`:585-594`) is
   the non-V4 path; `_predict_moe_layer_execution_time` returns before it for V4.
-The measured reader `read_isolated_scope` (`deepseek_v4.py:617`) and its contract builder
-`build_isolated_prefill_layouts` (`:579`, merged in `e89b45d`) are still called only from
-`tests/integration/check_dsv4_measured_scopes.py` and unit tests.
+At the historical e89b45d audit, the measured reader `read_isolated_scope` (`deepseek_v4.py:617`)
+and its contract builder `build_isolated_prefill_layouts` (`:579`) were called only from
+`tests/integration/check_dsv4_measured_scopes.py` and unit tests. Current source4a1b53e6,
+delivery04a72b08, merged732406aa completes the isolated input prerequisite: selecting an
+attention CSV lets `read_isolated_scope` discover an externally admitted V4-private sidecar
+when layouts are omitted. It does not wire the full serving callers past their gates.
 
 **Why the attention component cannot absorb the accepted scopes.** For
 `attention_family_id == "deepseek_v4_attention"` the serving layer attention time *is* the
@@ -281,18 +287,30 @@ is the working precedent for exactly this shape: a *private* `SCHEMA` constant
 measurement type, graph mode and existence — and an external reviewed receipt at
 `path.with_suffix(".admission.json")` whose `sidecar_sha256` binds the sidecar (`:50-54`),
 with every referenced evidence file digest-checked (`:29-32`). No config field, no shared
-schema, and typed errors throughout. The same shape carries a V4 isolated bundle: the sidecar
-beside `_attention_input_file`, the receipt beside the sidecar, contents being what the
-accepted package already retains (`plan.json` is a complete serialization —
-`check_dsv4_measured_scopes.py:50` compares it to `plan.to_json()` — plus
-`raw/dsv4_raw_e0.jsonl`, aggregate identity and both CSV digests). Selecting the target needs
+schema, and typed errors throughout. The same shape now carries the V4 isolated bundle:
+`dsv4_attention.json` beside the selected attention CSV and the external
+`dsv4_attention.admission.json` receipt beside the sidecar. Seven non-timing engine/step
+records independently derive both six-layer layout maps; candidate CSV timing is not the
+layout source. The retained plan, original acceptance/identity evidence and both CSV digests
+remain bound. Selecting the target needs
 no new field either: `atten_input_file` and the `training_file_paths` override map
 (`measurement_input_paths.py:72`, `:101-110`) already resolve any path, including the
-accepted package's `compute/<device>/<model>/attention.csv`. This dependency is therefore
-**approved-but-unfinished V4-private wiring**, not an unapproved shared interface; no
-mandatory shared field or interface exists to name.
+accepted package's `compute/<device>/<model>/attention.csv`. This dependency is now
+**completed V4-private isolated input wiring**, not an unapproved shared interface; no
+mandatory shared field or interface was added. Real candidate02 is externally admitted
+ACCEPTED_ISOLATED_INPUT_REPRESENTATION only: all94 automatic medians/layouts exactly equal
+explicit94, legacy102positive/72typednegative preserved and serving_admission=false. Root
+Standards/Spec source reviews both No findings; root owner194PASS and merged194PASS are
+separate runs, never summed. [Admission](../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json),
+[representation verification](../task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json),
+[primary report](../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md)
+and [merged matrix binding](../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json)
+record fixed4a1b53e6 versus bound576d27877/77 IDENTICAL/451 artifacts rehashed, byte-equal
+merged runtime/data/examples/matrix domains and only the standalone audit difference outside
+records. No new capture at merge; no full constructor/family admission, serving totals,
+TP8/DP2/EP16 measured cost, graph equivalence, balanced decode cost or full05/09/19 completion.
 
-**Remaining dependencies** (numbered as before; the former item 1 is corrected above):
+**Historical serving dependencies at e89b45d** (numbered as before; input item1 is now completed above):
 2. *Family execution admission.* `attention/families.py:646-647` keeps
    `execution_enabled=False`, so `BaseExecutionTimePredictor.__init__`
    (`base_execution_time_predictor.py:39-46`) rejects every non-dummy V4 predictor before any
@@ -320,12 +338,12 @@ shape of the distinction (formal prefill rows `has_prefill=True` at 6144 tokens;
 warmup forward (`graph_mode=NONE`), not a formal serving step. No native/reference admission
 is claimed or used here.
 
-**Conclusion.** No caller slice proceeds now. The blocking factors are one unowned modelling
+**Historical serving conclusion at e89b45d.** No caller slice proceeds now. The blocking factors are one unowned modelling
 decision (which attention total is authoritative, above) and components no accepted package
 measures — not an approval gap and not a missing shared interface. Carrying the bundle is
-approved-shaped V4-private work on the `dsa_full_dummy` precedent (`sidecar` + `.admission.json`
+completed V4-private isolated work on the `dsa_full_dummy` precedent (`sidecar` + `.admission.json`
 receipt, private schema, convention-based discovery, typed errors); no new flag, config field,
-schema or wide proposal is needed for it. This section therefore proposes no guard removal and
+shared schema or wide proposal was added. This section therefore proposes no guard removal and
 no artificial contract API, and it does not allocate an implementation. What it records is that
 the next real unit is consumer-side and waits on the total-authority decision plus the mHC/
 embedding/shared-expert/routing rows; until then the honest outcome stays a typed

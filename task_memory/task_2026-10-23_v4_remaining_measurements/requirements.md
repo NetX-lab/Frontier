@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-23 | Recorded YC's approval of the recommended kernel-only route and CPU implementation/measurement-design scope. |
 | 2026-10-23 | Root allocated the two reproduced native collector launch seams under existing repair-scope delegation; GPU authority is unchanged. |
+| 2026-10-23 | YC requested completion/commit/handoff of current work; root allocated bounded repairs for five unique collector review findings. |
 
 ## Original requests and decision
 
@@ -14,6 +15,8 @@
 [Original Request — proposed choice] “后续 V4 注意力总耗时采用哪条路线？这次选择确定 CPU 实现和测量设计；新增 GPU 运行会在具体方案就绪后单独申请。” Recommended: “以 KERNEL_ONLY 为算子成本，依据原生依赖处理 GPU 流重叠。先补齐覆盖和归因证据，不直接累加现有 scope，也不把未知差额归为 CPU gap。”
 
 [Original Request — YC response] “批准，继续”.
+
+[Original Request — session close] “请你完整当前正在执行任务的收尾，然后完整提交更新docs和codes，生成一段handoff prompts，我将在其他session中继续执行”. Close the active collector source/CPU findings, verify and consolidate accepted code and records on the main branch, and produce a self-contained continuation prompt. Future driver/runtime/GPU work belongs in the handoff.
 
 [Decision D-V4-KERNEL-ONLY-GPU-COST] Adopt the recommended per-operator KERNEL_ONLY route. Implement V4-private input/consumer prerequisites and design measurements from native source and retained evidence. Kernel-to-scope uniqueness is not completeness or wall-clock additivity. Serving attention totals require complete attribution plus explicit GPU-stream/dependency accounting. CUDA_EVENT stays separate diagnostic/equivalence evidence; the unexplained uncompressed difference is not labelled CPU overhead or removed by scaling.
 
@@ -33,5 +36,9 @@
 ### H launch integration allocation
 
 Root authorizes the delivering H owner to add `tests/comparison/dp_placement_pp/vllm_replay.py` (8 changed lines) and `tests/comparison/calibration/pd_replay.py` (4 changed lines). `collector/launch_seam_receipt.json` at owner commit `9366b6e4` reproduces all three blockers: the new extension is rejected for balanced routing, its worker PYTHONPATH is absent, and its profiler configuration is discarded. Reuse one extension registry across these launch paths and `native_pd_worker.py`; no parallel mechanism or permissive fallback. H's allocation is now five non-core files / 787 changed lines (450 collector, 25 native worker, 300 tests, 8 command builder, 4 P/D environment). Existing per-step local/synchronized dispatch evidence remains required. This is necessary wiring for the approved collector, not new calibration semantics or a GPU run approval.
+
+### H review repair allocation
+
+The preceding787-line allocation is superseded for necessary review corrections only. At d94b821a, independent reviews found one P1 and four unique P2 issues: graph-hook lifecycle, slot-mapping ownership, actual source-visible PDL arguments, atomic step-retention admission and bounded detailed error logging. Root authorizes the same five-file owner to use collector550/test400/native-worker25/command-builder8/P-D-environment4, total987changed lines. Record exact changes and RED/GREEN controls; do not remove controls or compress implementation to fit. Both review reports are retained in `collector_primary/review_2026-10-23_initial.md`. No new shared surface, native/C26 change, driver implementation or GPU authority is granted by this repair allocation.
 
 Native06 is ACCEPTED_NATIVE_REFERENCE_R4: originalb62c155, reader integrationd278659, bound by parent `native06_acceptance_20261023/{primary_acceptance_r4.json,frozen_r4_result.json}`. Isolated consumer integratede89b45d:144unit/94exact/legacy102-72, fixed576d278 strict77. Original R3 FAIL/native05 UNVERIFIED remain historical. GLM remains paused; four-metric calibration is unfinished.
