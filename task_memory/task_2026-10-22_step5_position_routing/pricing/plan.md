@@ -9,6 +9,7 @@
 | 2026-10-23 | Reopen only F4 frozen grouping and startup/call-time boundaries. |
 | 2026-10-23 | Repair C1 observed routing and C2 exact frame/plan binding. |
 | 2026-10-23 | Close PRICING-owned compute-point writer and count association. |
+| 2026-10-23 | Complete explicit CPU plan composition and truthful numerical trace source. |
 
 1. **completed:** Publish selected targets, ROUTED prepare binding, immutable plan/result.
 2. **completed:** Extend isolated collective-sim with strict plan serialization, joint ordered
@@ -90,3 +91,16 @@ remain future inputs, not missing producer code.
 Current: writer+association/validator implemented; actual-seam RED/GREEN and valid
 producer validator->exporter PASS. Scoped source/record commit9dbca5b3 delivered. No broad
 regression, peer edits or submodule change required.
+
+## D29-CPU-PLAN-CONSUMER
+
+Actual retained CORE writer -> four-phase real-constructor RED -> explicit dual
+CPU/unadmitted identity gate before native qualification -> exact count/cost/
+context/buffer validation -> trace provenance RED/GREEN and native cost-injection
+negative -> affected three suites/JUnit -> precise111/120 patch and3713/3956 budget
+-> scoped interface commit/root integration. No new builder, CLI or model path.
+Observed producer9dbca5b3 is already complete and unaffected. Native finite
+fit/HTSIM/count semantics remain; counts.cost is consumed only by this explicit
+unadmitted CPU fixture branch. Current:68 PASS, cold process without PYTHONPATH;
+code and records ready for commit. Root re-review/integrated actual-main remain
+external acceptance, not CPU admission or a missing producer implementation.

@@ -100,3 +100,73 @@ def test_importer_groups_frozen_policy_but_keeps_complete_count_and_cache_identi
     result=backend.predict_collective_plan(switched)
     assert result.duration_ms == expected.duration_ms and result.plan_key == switched.cache_key()
     assert json.loads(result.count_receipt_json)["context"] == context
+
+
+def cpu_writer_payload(tmp_path,monkeypatch):
+    """Execute CORE's retained actual writer without importing or editing its tree."""
+    import ast,pandas as pd
+    backend,plan,_,path,_=setup_model(tmp_path,monkeypatch)
+    context=json.loads(plan.context_json);context["shared"]={"evidence_kind":"cpu_fixture","source_receipt":"CPU_CONTRACT_FIXTURE_NOT_NATIVE"}
+    native=dict(native_facts=dict(shared=context["shared"]),collective_tensors=dict(
+        dispatch=[vars(CollectiveTensor("activation","bfloat16",2,4096,4096))],output=[vars(plan.tensors[0])]))
+    table=tmp_path/"compute.csv"
+    pd.DataFrame([dict(moe_frame_scope="dp_gathered",routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])),
+        native_context=json.dumps(native),graph_mode="none")]).to_csv(table,index=False)
+    source=Path("/data/ycfeng/Frontier/.worktrees/verify-step5-core-delivery-01/tests/integration/step5_measured_compute_fixture.py")
+    fn=next(n for n in ast.parse(source.read_text()).body if isinstance(n,ast.FunctionDef) and n.name == "position_collective_costs")
+    ns=dict(pd=pd,json=json);exec(compile(ast.Module(body=[fn],type_ignores=[]),str(source),"exec"),ns)
+    writer_path=ns[fn.name](tmp_path,table,device="h800");artifact=json.loads(writer_path.read_text());path.write_text(json.dumps(artifact))
+    return backend,artifact,path
+
+
+@pytest.mark.parametrize("phase",["dispatch","combine","shared_tp","routed_tp"])
+def test_real_cpu_writer_costs_use_actual_constructor(tmp_path,monkeypatch,phase):
+    backend,artifact,_=cpu_writer_payload(tmp_path,monkeypatch)
+    key=next(k for k in artifact["counts"] if json.loads(k)["phase"] == phase);v=json.loads(key)
+    plan=CollectivePlan(v["phase"],v["sizes"],tuple(CollectiveTensor(**t) for t in v["tensors"]),v["groups"],v["graph_mode"],v["context_json"],v["buffer_json"])
+    cost=backend.predict_collective_plan(plan)
+    assert cost.duration_ms == .03 and cost.plan_key == key
+    assert json.loads(cost.count_receipt_json)["evidence_kind"] == "cpu_fixture" and artifact["native_admitted"] is False
+
+
+@pytest.mark.parametrize("fault",["artifact_kind","plan_kind","schema","device","admitted","candidate","missing_admitted","missing_counts","key","context","buffer","entry_kind","receipt_kind","cost_key","cost_sum","receipt_context","missing_candidate","missing_shared","missing_entry","missing_cost_key","missing_receipt","buffer_kind","receipt_buffer","receipt_key","receipt_counts"])
+def test_cpu_writer_identity_and_unadmitted_proof_are_required(tmp_path,monkeypatch,fault):
+    backend,artifact,path=cpu_writer_payload(tmp_path,monkeypatch);key=next(iter(artifact["counts"]));v=json.loads(key)
+    plan=CollectivePlan(v["phase"],v["sizes"],tuple(CollectiveTensor(**t) for t in v["tensors"]),v["groups"],v["graph_mode"],v["context_json"],v["buffer_json"])
+    entry=artifact["counts"][key];receipt=json.loads(entry["cost"]["count_receipt_json"])
+    if fault == "artifact_kind": artifact["evidence_kind"]="native_measurement"
+    elif fault == "plan_kind": c=json.loads(plan.context_json);c["shared"]["evidence_kind"]="native_measurement";plan=replace(plan,context_json=json.dumps(c))
+    elif fault == "schema": artifact["schema_version"]="wrong"
+    elif fault == "device": artifact["device_type"]="h200"
+    elif fault == "admitted": artifact["native_admitted"]=True
+    elif fault == "candidate": artifact["candidate_only"]=False
+    elif fault == "missing_admitted": artifact.pop("native_admitted")
+    elif fault == "missing_candidate": artifact.pop("candidate_only")
+    elif fault == "missing_shared": c=json.loads(plan.context_json);c["shared"].pop("evidence_kind");plan=replace(plan,context_json=json.dumps(c))
+    elif fault == "missing_counts": artifact.pop("counts")
+    elif fault == "missing_entry": artifact["counts"].pop(key)
+    elif fault == "missing_cost_key": entry["cost"].pop("plan_key")
+    elif fault == "missing_receipt": entry["cost"]["count_receipt_json"]="{}";receipt={}
+    elif fault == "buffer_kind": b=json.loads(plan.buffer_json);b["evidence_kind"]="native_measurement";plan=replace(plan,buffer_json=json.dumps(b))
+    elif fault == "key": entry["plan_key"]="wrong"
+    elif fault == "context": entry["context"]={"wrong":True}
+    elif fault == "buffer": entry["buffer_receipt"]={"wrong":True}
+    elif fault == "entry_kind": entry["evidence_kind"]="native_measurement"
+    elif fault == "receipt_kind": receipt["evidence_kind"]="native_measurement"
+    elif fault == "cost_key": entry["cost"]["plan_key"]="wrong"
+    elif fault == "cost_sum": entry["cost"]["duration_ms"]=99.
+    elif fault == "receipt_buffer": receipt["buffer_receipt"]={"wrong":True}
+    elif fault == "receipt_key": receipt["plan_key"]="wrong"
+    elif fault == "receipt_counts": receipt["kernel_counts"]=[7]*16
+    else: receipt["context"]={"wrong":True}
+    entry["cost"]["count_receipt_json"]=json.dumps(receipt);path.write_text(json.dumps(artifact))
+    with pytest.raises((ValueError,KeyError,TypeError)): backend.predict_collective_plan(plan)
+
+
+def test_native_import_ignores_injected_full_cost(tmp_path,monkeypatch):
+    backend,plan,artifact,path,params=setup_model(tmp_path,monkeypatch)
+    artifact["evidence_kind"]=params["evidence_kind"]="native_measurement"
+    entry=artifact["counts"][plan.cache_key()];entry.update(evidence_kind="native_measurement",profiled_calls=5,
+        per_rank_events=[["cpu_schema_only"]*35 for _ in range(16)],cost={"duration_ms":999.})
+    path.write_text(json.dumps(artifact));cost=backend.predict_collective_plan(plan)
+    assert cost.duration_ms == pytest.approx(1.75*16*8192/200e9*1000+.014)

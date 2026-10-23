@@ -632,3 +632,25 @@ def test_step5_physical_prepare_and_inclusive_expert_trace():
     prepare=compute_op_trace_meta("moe_input_quantize","COMPUTE",replace(ctx,step5_moe_frame=frame))
     assert prepare["tensor_shape"]["input"] == prepare["tensor_shape"]["output"] == [1,4096]
     assert prepare["tensor_dtype"]["input"] != prepare["tensor_dtype"]["output"]
+
+
+@pytest.mark.parametrize("native",[False,True])
+def test_collective_trace_source_uses_explicit_cost_provenance(tmp_path,monkeypatch,native):
+    import json
+    from dataclasses import replace
+    from frontier.cc_backend.collective_plan import CollectivePlanCost
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.metrics.op_trace_utils import compute_op_trace_meta
+    from tests.unit.test_collective_sim_cc_backend import cpu_writer_payload
+    from frontier.cc_backend.collective_plan import CollectivePlan,CollectiveTensor
+    backend,artifact,_=cpu_writer_payload(tmp_path,monkeypatch);key=next(iter(artifact["counts"]));v=json.loads(key)
+    plan=CollectivePlan(v["phase"],v["sizes"],tuple(CollectiveTensor(**t) for t in v["tensors"]),v["groups"],v["graph_mode"],v["context_json"],v["buffer_json"])
+    cost=backend.predict_collective_plan(plan)
+    if native:
+        receipt=json.loads(cost.count_receipt_json);receipt.update(evidence_kind="native_measurement",profiled_calls=1,per_rank_events=[["cpu_schema_only"]*3]*16)
+        cost=replace(cost,count_receipt_json=json.dumps(receipt))
+    ctx=replace(_build_context(True),model_config=BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview"),global_layer_id=3,
+        step5_moe_frame={"ep_id":0},collective_plans={"step5_moe_dispatch":plan},collective_costs={"step5_moe_dispatch":cost})
+    result=compute_op_trace_meta("step5_moe_dispatch","COMM",ctx)
+    assert result["numerical_source"] == ("joint_htsim+measured_local+effective_remainder_no_overlap" if native else "cpu_fixture_composition_not_native")
+    assert result["kernel_count"] == 3 and result["collective_cost"]["duration_ms"] == .03

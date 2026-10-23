@@ -8,6 +8,7 @@
 | 2026-10-23 | Archive F4a/F4b frozen identity/call-time repairs and3067-line budget. |
 | 2026-10-23 | Archive C1 observed routing/C2 compute binding and3305-line budget. |
 | 2026-10-23 | Close observed point producer/count binding and3606-line budget. |
+| 2026-10-23 | Archive explicit CPU plan consumer, truthful trace and3713-line budget. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Branch: feat/step5-position-pricing.
 Baseline:1aee0af. Working directory:
@@ -46,6 +47,11 @@ references, existing prepared_context/verifier, validator and exact buffer/count
 association implemented. Actual selected validator->exporter fixture passes;
 stale compute, source, policy and geometry negatives reject. No peer API required.
 Verified source/tests/records commit9dbca5b3; root independent re-review pending.
+Approved D29-CPU-PLAN-CONSUMER is implemented: explicitly unadmitted CPU artifact
+and plan.shared identity gate, exact cost/count/context/buffer proofs before native
+qualification, with native counts.cost still ignored. Trace labels CPU fixture
+composition without claiming joint HTSIM/native measured input. Actual CORE writer
+four-phase costs pass the real constructor; stale and native-label negatives fail.
 Authorized CORE02f061d/Native2c4cc9e and published67d5b5e dependencies imported;
 437b312 records published dependency integration. No peer file edited.
 Isolated collective-sim branch d29-position-pricing commits:
@@ -74,10 +80,14 @@ Isolated checkout is clean; no gitlink or peer changes were staged.
    observer64 PASS. Previous unchanged real HTSIM12/cold10 results remain historical,
    not rerun or claimed as new tests. No GPU numerical qualification.
 - AST/JSON parse and whitespace:PASS. No GPU/calibration claim.
+- `test_report_2026-10-23_cpu_plan.md`: actual writer RED/GREEN, three affected
+  suites68 PASS/0 SKIP/FAIL/ERROR without PYTHONPATH, exact commands and budget.
+  Current CPU-consumer patch+109/-2=111 versus120 reserve; native model behavior
+  and completed observed producer unchanged. No broad suite rerun claimed.
 
 ## Exact owned code/test/config diff
 
-43 changed paths; +3510/-96=3606 gross versus3956, remaining350. The five
+43 changed paths; +3617/-96=3713 gross versus3956, remaining243. The five
 submodule files total333 gross and are included. Peer imports/task records/root
 gitlink are excluded. The sole unchanged approved path is
 `tests/unit/test_step5_contract_reuse.py`; its existing tests pass unchanged.
@@ -90,7 +100,7 @@ gitlink are excluded. The sole unchanged approved path is
 | frontier/cc_backend/backends/collective-sim/python/collective_sim_core/predictor.py |30|0|30|
 | frontier/cc_backend/backends/collective-sim/python/collective_sim_core/schema.py |53|0|53|
 | frontier/cc_backend/backends/collective-sim/tests/test_grouped_plan_input.py |119|0|119|
-| frontier/cc_backend/backends/collective_sim_cc_backend.py |64|0|64|
+| frontier/cc_backend/backends/collective_sim_cc_backend.py |78|0|78|
 | frontier/cc_backend/base_cc_backend.py |6|0|6|
 | frontier/cc_backend/collective_plan.py |136|0|136|
 | frontier/config/quantization_manager.py |1|1|2|
@@ -101,7 +111,7 @@ gitlink are excluded. The sole unchanged approved path is
 | frontier/execution_time_predictor/step5_cost.py |37|2|39|
 | frontier/metrics/constants.py |3|0|3|
 | frontier/metrics/ep_wave_metrics.py |20|0|20|
-| frontier/metrics/op_trace_utils.py |44|0|44|
+| frontier/metrics/op_trace_utils.py |45|0|45|
 | frontier/operators/families.py |41|1|42|
 | frontier/operators/spec.py |15|5|20|
 | frontier/profiling/collectives/step5_dispatch_probe.py |223|10|233|
@@ -118,10 +128,10 @@ gitlink are excluded. The sole unchanged approved path is
 | tests/integration/step5_comm/validate_result.py |88|5|93|
 | tests/integration/step5_comm/worker.py |34|4|38|
 | tests/unit/test_collective_benchmark_helpers.py |151|1|152|
-| tests/unit/test_collective_sim_cc_backend.py |102|0|102|
+| tests/unit/test_collective_sim_cc_backend.py |172|0|172|
 | tests/unit/test_comm_operator_families.py |26|0|26|
 | tests/unit/test_ep_wave_trace_context.py |46|0|46|
-| tests/unit/test_op_trace_utils.py |25|0|25|
+| tests/unit/test_op_trace_utils.py |47|0|47|
 | tests/unit/test_step5_comm_cost_export.py |271|0|271|
 | tests/unit/test_step5_comm_package.py |84|0|84|
 | tests/unit/test_step5_comm_transport.py |200|4|204|

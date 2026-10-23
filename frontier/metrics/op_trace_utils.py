@@ -299,10 +299,11 @@ def compute_op_trace_meta(
             plan=ctx.collective_plans[op_name];cost=ctx.collective_costs[op_name]
             if cost.plan_key != plan.cache_key():
                 raise ValueError("Trace collective plan and cost identities disagree")
+            evidence=__import__("json").loads(cost.count_receipt_json)["evidence_kind"]
             return dict(collective_plan=plan.to_dict(),collective_cost=asdict(cost),
-                numerical_source="joint_htsim+measured_local+effective_remainder_no_overlap",
+                numerical_source="cpu_fixture_composition_not_native" if evidence == "cpu_fixture" else "joint_htsim+measured_local+effective_remainder_no_overlap",
                 kernel_count=cost.kernel_counts[ctx.step5_moe_frame["ep_id"]],
-                algorithmic_stage_count=len(plan.stages),evidence_kind=__import__("json").loads(cost.count_receipt_json)["evidence_kind"])
+                algorithmic_stage_count=len(plan.stages),evidence_kind=evidence)
         if ctx.step5_moe_frame is not None:
             frame=ctx.step5_moe_frame;source=frame["routing_source"]
             lane=source.source_lanes[frame["ep_id"]//ctx.attn_tp]

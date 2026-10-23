@@ -14,6 +14,7 @@
 | 2026-10-23 | Verify F4a/F4b frozen grouping/call-time boundaries and3067 budget. |
 | 2026-10-23 | Repair C1 actual routing and C2 point/layout binding after review. |
 | 2026-10-23 | Close observed native point producer and exact count association. |
+| 2026-10-23 | Deliver explicitly unadmitted CPU composition/trace within remaining quota. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -860,3 +861,53 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Required observed native point writer/code handoff已交付9dbca5b3。
 2. 剩余额度350，sub3dac53c未修改，gitlink由root处理。
 3. 实际GPU值/独立qualification/globalacceptance不由CPUfixture证明。
+
+## D29-CPU-PLAN-CONSUMER
+
+- completed: read actual CORE writer read-only and execute its function on CPU
+  input table. Four phases RED at missing native qualification; explicit artifact
+  and plan.shared CPU/unadmitted gate GREEN. Exact entry/buffer/embedded receipt/
+  plan keys checked; native injected cost999 ignored, original fit result retained.
+- completed: trace labels explicit CPU composition, native label unchanged. CPU
+  trace RED1 FAIL/native PASS; restored expression GREEN with actual cost object.
+- completed checks: final68 JUnit=68 PASS/0 SKIP/FAIL/ERROR,4.235s, real constructor
+  without PYTHONPATH. Three affected suites only; no broad rerun. Exact commands
+  and limitations in test_report_2026-10-23_cpu_plan.md. Whitespace/substatus PASS.
+- completed quota: four existing paths revision delta+109/-2=111<=120. Baseline
+  owned43 rows,+3617/-96=3713/3956,remaining243. Unchanged333-gross sub3dac53c
+  included; only root-owned gitlink remains unstaged. No peer/new path/extra agent.
+- in-progress: scoped source/records commit. Observed native point producer already
+  completed9dbca5b3/d24a2fe2, untouched. Global/root review and actual GPU values
+  are pending runtime acceptance, not deferred producer code.
+
+## 1. 规划完成情况
+**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Actual CPU writer/import gate | PASS |Four real-constructor phases and25 receipt/admission negatives |
+| Truthful trace/native unchanged | PASS |CPU trace RED/GREEN; native cost injection ignored |
+| Affected verification/ownership quota | PASS |68 PASS,3713/3956,111/120 delta |
+| Scoped commit/receipt | TODO |Records updated; commit next |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**d24a2fe2至今｜**当前前沿：**CPU consumer scoped commit
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Required actual writer/trace/negative seams only, three affected suites |
+| D2 细节反复重试 | CLEAR |Four qualification failures reproduced once; cause-specific gate passes |
+| D3 支线问题修补 | CLEAR |Explicit root CPU decision; no environment/peer changes |
+| D4 可并行任务停滞 | CLEAR |Producer already delivered; no extra agents allowed |
+| D5 超范围镀金 | CLEAR |Four owned paths111<=120, no new CLI/config/backend |
+| D6 分析空转 | CLEAR |Actual constructor/writer GREEN; source commit next |
+| D7 路线违背 | CLEAR |CPU admission explicit, native full-plan cost ignored |
+**文档检查：**S5 prior unconditional CPU rejection superseded by root decision; requirements/plan/receipt updated. S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：记录新CPU授权与已完成生产事实。
+**文档更新（先执行）：**requirements/plan/interface_receipt/report/summary记录CPU gate/trace、111 delta与3713总额（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**scoped commit→root/CORE开发整合；不启动额外GPU或广泛suites。
+## 4. 最值得关注的 3 点
+1. CPU writer payload现在能由真实backend读取，必须双重CPU与未admitted证明。
+2. Observed producer已交付；剩余额度243，submodule不变。
+3. CPU composition不证明GPU/nativequalification，globalacceptance由root完成。

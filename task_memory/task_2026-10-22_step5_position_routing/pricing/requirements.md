@@ -10,6 +10,7 @@
 | 2026-10-23 | Resume F4a/F4b frozen-policy and lazy-state boundary repairs. |
 | 2026-10-23 | Resume C1 actual-router diagnostics and C2 compute/collective binding. |
 | 2026-10-23 | Complete the owned observed compute-point producer/count handoff. |
+| 2026-10-23 | Bind explicitly unadmitted actual-main CPU plan composition and trace provenance. |
 
 TaskID: D29-PRICING-IMPLEMENTATION.
 
@@ -93,3 +94,17 @@ valid producer positive and stale/mismatch negatives required. Existing43/44 pat
 3305/3956 leaves651 gross; no new paths/peers/imports/GPU/platform/agents. If an
 actual shared API/input or quota blocks completion, supply exact writer/source
 evidence and minimal proposal/cost rather than a generic evidence deferral.
+
+[Original Request / Root Decision] D29-CPU-PLAN-CONSUMER: CPU-only synthetic
+composition is approved for actual-main, not native/measured full-plan lookup.
+Existing manifest.collective_plan_input_file selects the device's collective_local
+artifact. Before native qualification, require BOTH artifact and plan.shared
+evidence_kind=cpu_fixture, existing schema/device, native_admitted=False and
+candidate_only=True, exact plan/count/context/buffer/cost identities and CPU entry/
+receipt provenance. Native counts.cost remains ignored. Trace must label CPU
+composition rather than native HTSIM/measured inputs. Reuse CORE's actual writer
+from read-only verify-step5-core-delivery-01; test four phases with real constructor,
+negatives and native injection. Only the four specified existing owned paths,
+<=120 additional gross within3956. No flags/config/backend/API/peer imports or
+GPU/platform/delegation. Observed producer remains completed9dbca5b3;
+actual GPU observation/qualification and integrated acceptance remain root-owned.

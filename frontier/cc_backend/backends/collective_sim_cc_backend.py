@@ -809,6 +809,20 @@ class CollectiveSimCCBackend(BaseCCBackend):
             raise ValueError("Step plans require explicitly configured TP8/DP2 placement")
         path = Path(self._config.profiling_data_dir) / self._device_type / "collective_local.json"
         artifact = json.loads(path.read_text())
+        context=json.loads(plan.context_json)
+        if artifact.get("evidence_kind") == "cpu_fixture" or context.get("shared",{}).get("evidence_kind") == "cpu_fixture":
+            if (artifact.get("evidence_kind") != "cpu_fixture" or context.get("shared",{}).get("evidence_kind") != "cpu_fixture" or
+                    artifact.get("schema_version") != "step5.collective_local.v1" or artifact.get("device_type") != self._device_type or
+                    artifact.get("native_admitted") is not False or artifact.get("candidate_only") is not True):
+                raise ValueError("CPU plan composition requires matching explicit unadmitted fixture identities")
+            key=plan.cache_key();entry=artifact["counts"][key];buffers=json.loads(plan.buffer_json)
+            cost=CollectivePlanCost(**entry["cost"]);receipt=json.loads(cost.count_receipt_json)
+            if (entry.get("evidence_kind") != "cpu_fixture" or receipt.get("evidence_kind") != "cpu_fixture" or
+                    buffers.get("evidence_kind") != "cpu_fixture" or entry.get("plan_key") != key or cost.plan_key != key or
+                    entry.get("context") != context or entry.get("buffer_receipt") != buffers or
+                    receipt != {k:v for k,v in entry.items() if k != "cost"}):
+                raise ValueError("CPU count/cost receipt differs from the exact fixture workload")
+            return cost
         qualification = artifact["qualification"]
         if (artifact["schema_version"] != "step5.collective_local.v1" or
                 artifact["device_type"] != self._device_type or
