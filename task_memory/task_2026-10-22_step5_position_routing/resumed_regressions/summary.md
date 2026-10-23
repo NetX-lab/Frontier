@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Record evidence commitb5a74416 and37-file archive verification. |
 | 2026-10-23 | Archive required final-source regression results and preserved limits. |
 
 ## Overview
@@ -56,6 +57,9 @@ All retained files are under:
 
 Raw artifacts and generated caches remain at:
 `/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s`.
+Evidence delivery commit: `b5a74416b453288e5ca6c1fdfecad65a54128f80`,55
+files confined to this record directory. All37 archived raw evidence files pass
+hash/size verification. Follow-up status-only documentation records completion.
 
 ## Open work and limitations
 

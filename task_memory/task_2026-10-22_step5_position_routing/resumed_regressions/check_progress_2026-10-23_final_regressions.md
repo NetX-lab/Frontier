@@ -3,9 +3,10 @@
 ### Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Record record-only commitb5a74416 and complete all delegated subtasks. |
 | 2026-10-23 | Final regression checkpoint before record-only commit. |
 
-**汇总：** PASS 7｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 8｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -16,19 +17,19 @@
 | metadata196 | PASS | 196PASS，实际CSV正确；全量unit同IDs通过 |
 | catalogue53 | PASS | 53PASS，旧IDs完全保留；全量unit通过 |
 | 最终source/归档 | PASS | e41/sub3dac clean，2611文件零hash差异；证据已保留 |
-| record-only commit | TODO | 提交前检查stage仅本目录 |
+| record-only commit | PASS | b5a74416，55文件仅本目录；37 evidence hashes核验通过 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** strict77 checkpoint 至今｜**当前前沿：** 最终record-only commit
+**检测窗口：** strict77 checkpoint 至今｜**当前前沿：** 向root返回结果
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | unit比较/归档均为既定验收，不扩展测试 |
 | D2 细节反复重试 | CLEAR | unit首次完成后直接精确比较，无重跑/修复 |
 | D3 支线问题修补 | CLEAR | 基线267/31问题保持原证据，不修复 |
-| D4 可并行任务停滞 | CLEAR | 所有独立套件已完成；只剩本目录提交 |
+| D4 可并行任务停滞 | CLEAR | 所有独立套件及本目录提交已完成 |
 | D5 超范围镀金 | CLEAR | 源码只读，仅授权记录/scratch新增 |
 | D6 分析空转 | CLEAR | full-unit与补充实证闭合环境比较门禁 |
 | D7 路线违背 | CLEAR | 未改gate、排除cases、重跑CLI/GPU或进一步委派 |

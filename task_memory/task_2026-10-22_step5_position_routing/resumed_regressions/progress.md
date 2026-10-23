@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Commit55 record files asb5a74416;37 archived evidence hashes verified,stage scope confined. |
 | 2026-10-23 | Full-unit parent04 exact-ID/environment gate closes; final2611-file hash check clean. |
 | 2026-10-23 | strict77 final04 and full evidence audit PASS77/77; full-unit remains running. |
 | 2026-10-23 | Supplement101, metadata196 and catalogue53 independently pass; strict77/full-unit continue. |
@@ -56,13 +57,14 @@
   source inventories and exact-ID comparison archived in evidence/. Final
   check-progress finds no route drift;raw unit FAIL and regression gate PASS remain
   explicitly separate. All required regression runs are complete,not broadened.
-- pending: record-only commit after staged-path/hash verification.
+- completed: record-only commitb5a74416b453288e5ca6c1fdfecad65a54128f80,
+  55 files only under resumed_regressions/. All37 archived evidence files match
+  retained hash/size manifests. Unrelated .cortexkit/.pi remain untouched.
 - outside ownership: root main06 CLI; GPU/native/G3/E2E remain separate.
 
 ## Unfinished work and next actions
 
-1. Verify archived hash inventory and stage only this new record directory; commit
-   final records. No required regression subtask remains unfinished.
-2. Return concise per-suite results,source/submodule HEADs,artifact paths and raw
+1. No required regression subtask remains unfinished. Return concise per-suite
+   results,source/submodule HEADs,artifact paths and raw
    failure/environment limits to root. Root owns main06 and wider workflow acceptance.
    No source fix,exclusions or new suite is authorized.
