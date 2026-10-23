@@ -1,0 +1,30 @@
+{
+  "status": "PRELAUNCH_GATES_PASS",
+  "utc": "2026-10-23T10:08:16.152484+00:00",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02",
+  "run_tag": "dsv4-h800-p0-profile-20261023-02",
+  "manifest_sha256": "51e39a42ec863e496f20be8a165230e0dee17c34906ad6bd4fade14bf898ee91",
+  "readiness_sha256": "90b45a0131df550114299aae0c7eaef6e2ead8a0a2d7a1b223945e4fed65ce37",
+  "quota": "/data/ycfeng/tmp/glm53_dsv4/profile02_quota_4fw5fy06/census.json",
+  "quota_sha256": "dbe8aaa5a5009094de94f027d968b8ef4c1c285767884baa54bef73c791339fc",
+  "destination": "/data/ycfeng/tmp/glm53_dsv4/profile02_destination_rotlq0zx/receipt.json",
+  "destination_sha256": "53a3a667ad7ab1117f6f3abfd71a8da49c161abb64daeebc9c02efde97ef7cf0",
+  "source_host": "kun-workspace-vgen2",
+  "expected_nfs": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02:/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02",
+  "expected_creator": "i-fengyicheng",
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "gpus": 32,
+  "charged_group": "codesign",
+  "preemptible": false,
+  "timeout_seconds": 3600,
+  "max_iterations": 64,
+  "authorization_decision": "D-V4-H800-RJOB-AUTHORITY",
+  "diagnostic_only": true,
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/launch.py"
+  ],
+  "log": "/data/ycfeng/tmp/glm53_dsv4/profile02_launch_20261023.log"
+}

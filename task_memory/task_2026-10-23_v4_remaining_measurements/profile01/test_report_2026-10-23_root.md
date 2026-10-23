@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-23 | Recorded initial profile01 image/hook checks, fresh-entry RED controls and preserved verification-harness errors. |
 | 2026-10-23 | Rechecked repaired profile02 after both reviews and merge cc0227e9; final entry/image/four-position checks and 45-file seal passed. |
+| 2026-10-23 | Recorded actual submission, platform resource/mount checks, queued follow-up and separate watch permission failure. |
 
 ## Scope and environment
 
@@ -71,3 +72,19 @@ Source repair `d87f4c74` was accepted by both delta reviewers and merged at `cc0
 - The intermediate `profile02_image_entry_hvboefyj` run proved the fresh child import but failed the old verifier's one-directory PYTHONPATH assertion. The template expectation was corrected in memory to require exactly package root plus the staged DP directory, preserving cwd and every source/binary check. Original failure and executed scripts are retained; the accepted final result uses this corrected expectation.
 - Root invoked the unchanged staged `seal.py`, then `launch.py --check-only`, with `/data/ycfeng/tmp/stepmind-env/bin/python -B`. Seal contains exactly the 45 verified inputs; manifest SHA-256 `51e39a42ec863e496f20be8a165230e0dee17c34906ad6bd4fade14bf898ee91`. Check-only printed `INPUT_HASHES_PASS_NO_SUBMISSION`. `profile02_root_readiness.json` records **SEALED_READY_DIAGNOSTIC**, not GPU/reference admission.
 - Fresh personal quota census: `/data/ycfeng/tmp/glm53_dsv4/profile02_quota_4fw5fy06/census.json`, 2026-10-23T10:02:36Z, zero active personal jobs; codesign non-preemptible use 126/128 GPUs. Fresh read-only destination proof: `profile02_destination_rotlq0zx/receipt.json`, personal profile root absent and parent mode 0755. These are snapshots, not capacity reservations.
+
+## Submission and platform observations
+
+The unchanged staged launcher was executed as `/data/ycfeng/tmp/stepmind-env/bin/python -u -B <profile02-package>/launch.py`, after the documented company-proxy/personal-auth initialization, `STEPMIND_BACKEND=rjob` and `PYTHONPATH=/data/ycfeng/steptron`. Authorization text cites D-V4-H800-RJOB-AUTHORITY; credential values are not retained. Exact command and prelaunch predicates are in `profile02_root_submission.json`; log is `/data/ycfeng/tmp/glm53_dsv4/profile02_launch_20261023.log`. The script uses existing `spawn_tasks()`/Python RJobBackend and mounts the local package directory.
+
+Created job **exp-1023-180821-373637** at **2026-10-23T10:08:21Z**. Root's exact-job personal Python query at10:10:16Z verified:
+
+- Creator `i-fengyicheng`, charged group `codesign`, preemptible label `no`.
+- Four replicas, each requesting 8 GPUs and 64 CPUs; actual platform memory limit **500Gi**, corresponding to the unchanged SDK input `mem_gb=512`.
+- Locked image; RDMA limits `mellanox.com/mlnx_rdma=1`, `rdma/mlnx_shared=8`.
+- NFS source/target `100.96.128.195:<profile02-package>:<profile02-package>`.
+- Status **Pending**, reason/message `RJob is queuing`, no replicas yet; launcher PID3236764 alive.
+
+Receipt: `profile02_platform_launch.json`. Follow-up at10:22:53Z remained Pending with no replicas and the same launcher alive (`/data/ycfeng/tmp/glm53_dsv4/profile02_platform_72do4e1w/receipt.json`). Worker GPU identity, native startup, business completion, profile coverage and terminal state are therefore **not yet observed**.
+
+A separate Kubernetes watch request received403 Forbidden at10:11:53Z. Exact retained error and classification are `profile02_watch_error.{log,json}`. Snapshot get/list access worked before and after this failure. The watcher performed no job/launcher control, and no duplicate job was submitted. It is an auxiliary monitoring limitation, not a workload failure.

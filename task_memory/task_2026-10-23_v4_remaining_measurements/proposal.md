@@ -7,6 +7,7 @@
 | 2026-10-23 | Completed the single-window full-native resource proposal after G2 source 05952396 acceptance; GPU approval remains pending. |
 | 2026-10-23 | YC approved this run and standing task-required H800 RJob authority; the first run retains this concrete resource/window plan. |
 | 2026-10-23 | Selected fresh profile02 after the unsubmitted profile01 entry-import failure; resources, workload and collection window are unchanged. |
+| 2026-10-23 | Profile02 submitted as exp-1023-180821-373637; recorded platform Pending and actual 500Gi memory per replica. |
 | 2026-10-23 | Checkpoint correction: CUDA_EVENT component sums now exclude the outer scope (audit receipt); J3 premise rewritten for active breakable capture in native V4. |
 | 2026-10-23 | YC approved the recommended KERNEL_ONLY CPU implementation/design route; requirements.md now owns the decision. GPU figures below remain historical preliminary estimates. |
 | 2026-10-23 | Created. Read-only design legwork for a user GPU/modelling decision: existing producer APIs, exact capture limits, two options for the serving attention total, minimum jobs and per-job closure. No source, test, config, GPU, platform or cloud change. |
@@ -125,7 +126,7 @@ The next diagnostic collection uses the existing full native P/D path. G2 source
 
 | Item | Proposed value and evidence |
 | --- | --- |
-| Resource ceiling | One job with four nodes, each with 8 H800 GPUs, 64 CPUs and 512 GiB RAM; 32 GPUs total, `codesign`, non-preemptible. Payload limit 3600 s, startup limit 1800 s, replay limit 1800 s; at most 32 GPUh. Native06 used 12.002222 GPUh; profiling duration is unmeasured. |
+| Resource ceiling | One job with four nodes, each with 8 H800 GPUs, 64 CPUs and `mem_gb=512` (the existing SDK converts this to platform 500Gi RAM); 32 GPUs total, `codesign`, non-preemptible. Payload limit 3600 s, startup limit 1800 s, replay limit 1800 s; at most 32 GPUh. Native06 used 12.002222 GPUh; profiling duration is unmeasured. |
 | Topology | P16+D16; each role TP8/DP2/EP16/PP1, one local DP lane per node. Preserve native V2,MXFP4/MARLIN,balanced_topk and native06's graph configuration. |
 | Native/image | Source2cf0a6915ce544dc493a0990f2ea38d81601128a; image`hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635`. Re-verify source and binary pins in the new package before launch. |
 | Frozen workload | Existing canonical6144/1024,128formal requests plus16warmups per round,three rounds,QPS1. No request/arrival changes. This instrumented run cannot replace native06's clean reference. |
@@ -150,4 +151,4 @@ At the proposed row-byte limit, one32-rank snapshot has at most8GiB of serialize
 4. For a usable KERNEL_ONLY slice, prove kernel-to-launch/owner completeness, event handles/generations and stream mapping, and preserve actual PDL/GDC evidence. Missing captured-segment ownership or stream dependencies prevents additive totals; no scaling or CPU-gap attribution fills the difference.
 5. Archive raw traces, inventories, client rows, terminal receipts and every observation failure. Auxiliary profiling/validation errors stay soft; healthy workload completion continues, affected evidence remains UNVERIFIED. Any later collection records its need and concrete resources; task-required H800 runs use the standing authority.
 
-Current status: **SEALED_READY_DIAGNOSTIC**, decision D-V4-H800-RJOB-AUTHORITY. The original profile01 entry failure is preserved. Fresh profile02 passed both repair reviews and root's final actual-entry/image/source checks after merge `cc0227e9`; its 45 inputs are sealed by manifest `51e39a42ec863e496f20be8a165230e0dee17c34906ad6bd4fade14bf898ee91`. Fresh quota/destination checks are recorded in `profile01/test_report_2026-10-23_root.md`; root submission is next. Runtime and evidence qualification remain open.
+Current status: **SUBMITTED_PENDING**, job `exp-1023-180821-373637`, decision D-V4-H800-RJOB-AUTHORITY. Submitted 2026-10-23T10:08:21Z; platform snapshot 10:10Z confirms personal creator, non-preemptible 4×8 GPU resources, local NFS source and locked image while queued. The original profile01 entry failure is preserved. Profile02 passed both repair reviews and frozen root checks after merge `cc0227e9`; 45 inputs are sealed by manifest `51e39a42ec863e496f20be8a165230e0dee17c34906ad6bd4fade14bf898ee91`. Runtime and evidence qualification remain open.

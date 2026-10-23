@@ -5,6 +5,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-PROFILE02-STAGE-DOCS factual delta: job exp-1023-180821-373637 created10:08:21Z, verified SUBMITTED_PENDING/queuing at10:10:16Z with personal creator/resources/image/NFS/RDMA; I3 monitoring then I4 verification remain open. |
+| 2026-10-23 | W128-PROFILE02-STAGE-DOCS: synchronized reviewed repair d87f4c74/records a90c9dbb/merge cc0227e9, separate final entry/image/hook PASS and 45-input diagnostic seal; root launch started without an evidenced platform job identity. |
 | 2026-10-23 | W128-H800-AUTHORITY-DOCS: recorded approved first32-H800 profiling run and standing task-required H800 resource authority; fresh package/source/image checks and runtime qualification remain pending, with no new submission or acceptance. |
 | 2026-10-23 | W128-G2-CLOSURE-DOCS: accepted G2 CPU profile-driver05952396, seven non-core files/433 of750 lines, three distinct findings closed and separate final suites/bound77 retained; next is a new GPU decision, not implementation or an approved run. |
 | 2026-10-23 | W128-H-CLOSURE-DOCS: H CPU collector accepted/merged64f3c950 after five finding closures; G2 replay profiling/sampling controls handed off, with no new GPU authority or full-ticket acceptance. |
@@ -181,7 +183,7 @@
 
 ## Routing milestone — current (2026-10-23)
 
-Latest CPU completion, approved H800 authority and package-preparation action: [G2 profile-driver closure — current](#g2-profile-driver-closure--current-2026-10-23). The dated H launch, H-only handoff and earlier GPU-approval-pending snapshots below are historical.
+Latest CPU completion, approved H800 authority and profile02 SUBMITTED_PENDING at2026-10-23T10:10:16Z: [G2 profile-driver closure — current](#g2-profile-driver-closure--current-2026-10-23). The dated H launch, H-only handoff, package-preparation, no-job-identity and earlier GPU-approval-pending snapshots below are historical.
 
 - completed: A186dfef accepted after218root tests/independent review/strict77 identical, merged292c489. C8c2502c runner-values P2 accepted after real producer/consumer negatives,22affected tests and independent recheck; merged84c806f with26combined A/C testsPASS. Final prefill builder/source selection39b2bf8 gives C5files/202routing lines.
 - completed: YC approved routing23files/950lines and said `批准；类似问题不用再询问，自己决策即可`. The historical deadline ceiling952 and e9e79d4 actual950 are superseded by committed b62c155's existing model-name case-input correction (+2/-1): current actual/ceiling23/953=A432+B319+C202, dispatch491 separate. Root independently recomputed routing `evidence/final_union_b62c155.json`; original delegation/resource semantics unchanged, historical `evidence/native_builder_final.json` not rewritten.
@@ -203,7 +205,103 @@ Latest CPU completion, approved H800 authority and package-preparation action: [
 - completed frozen-source verification: [final checks](../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json), Python3.12.13, separately pass collector32, worker19, streaming39, inventory28, V2 inventory45, R4 reader135, DP75, P-D68, manifest14, cold18, metrics24 and HTTP1; every suite has zero failures/errors/skips. Do not sum suites or combine them with prior H checks. The [final matrix binding](../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json) explicitly binds existing4a1b53e6 capture77/77 to05952396; NOT a fresh capture.
 - unchanged acceptance limits: runtime/GPU qualification and emitted profile output remain UNVERIFIED. Kernel/owner completeness, GPU stream mapping/dependencies, actual per-kernel PDL/GDC, event/annotation survival through compile/breakable capture and captured-segment replay ownership remain unproven; no CUPTI restart is admitted. Constructor/family admission, serving totals, TP8/DP2/EP16 cost evidence, graph/stream/kernel coverage, balanced decode and complete05/09/19 remain OPEN. Native06 retains ACCEPTED_NATIVE_REFERENCE_R4, old R3 FAIL/native05 UNVERIFIED preserved; GLM PAUSED_PENDING_USER_APPROVAL, official mean/30%/10% gates and CPU-overhead last unchanged.
 - completed resource decision: [requirements.md](../task_2026-10-23_v4_remaining_measurements/requirements.md) records D-V4-H800-RJOB-AUTHORITY and YC's approval of the current32-H800/codesign/non-preemptible run, at most60minutes/32GPUh, first-formal64worker steps. Task-required H800 RJobs of any necessary scale need no repeated resource approval; each subsequent run records its purpose, resources and evidence and respects actual quota/capacity. This does not authorize native/C26 edits, publication, broad CUPTI investigation, CPU-overhead collection or paused GLM work, nor change calibration predicates.
-- pending next action: fresh diagnostic package/source/image checks and quota verification against the [approved single-window plan](../task_2026-10-23_v4_remaining_measurements/proposal.md), then seal, submit and inspect retained runtime evidence. Accepted CPU source05952396 and recordsb8fe6b2d are unchanged; no new package is sealed or run submitted. Runtime/package/GPU qualification remains pending. Native06 remains the clean reference, not an instrumented replacement; missing/dropped tuples stay UNVERIFIED and auxiliary validators must not stop healthy work. The handoff is informational while work continues in this session.
+- completed profile02 package/source preparation: the initial profile01 fresh entry remains FAIL (`ModuleNotFoundError: No module named 'vllm_replay'`), unchanged, unsealed and unsubmitted. Original owner repair `d87f4c74`, records `a90c9dbb`, merged `cc0227e9`, uses two maintained source/config files and cumulative152/300 changed lines. Both independent re-reviews have zero open findings. [Review](../task_2026-10-23_v4_remaining_measurements/profile01/review.md); [owner delivery](../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json) is the historical unsealed owner snapshot, not root's final readiness.
+- completed final root checks after source/package binding: actual StepMind-interpreter launcher PASS; real locked-image bootstrap/fresh child PASS with87native/23tool/20binary pins; four isolated hook/role-path probes each PASS separately. No actual GPU constructor/model forward/replay was exercised. Root sealed45 inputs, manifest `51e39a42ec863e496f20be8a165230e0dee17c34906ad6bd4fade14bf898ee91`, status SEALED_READY_DIAGNOSTIC. [Final root report](../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md); [readiness](../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json).
+- in-progress I3: **SUBMITTED_PENDING**, job `exp-1023-180821-373637`, created2026-10-23T10:08:21Z; snapshot2026-10-23T10:10:16Z is Pending/`RJob is queuing`, `replicas=[]`, not Running or success. Verified creator `i-fengyicheng`, `codesign`, preemptible=no, four replicas each8GPU/64CPU/500Gi (SDK mem_gb=512 converts to500Gi), locked image, exact local NFS `100.96.128.195:<profile02-package>:<profile02-package>` and RDMA1/8. Launcher PID3236764 was alive at that snapshot. [Platform receipt](../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json); [root submission record](../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json) preserves the prelaunch gates, not the later platform state. Next I3 scheduling/business monitoring, then I4 retained-data verification under the [approved single-window plan](../task_2026-10-23_v4_remaining_measurements/proposal.md); no repeated H800 resource approval is needed. Accepted CPU source05952396 and existing77 binding remain intact. GPUs/runtime/operator coverage/stream/event/graph/TP8 costs and full05/09/19 remain unfinished. Native06 remains the clean R4 reference, not an instrumented replacement; missing/dropped tuples stay UNVERIFIED and auxiliary validators must not stop healthy work. The handoff remains informational during same-session work.
+
+The following prior self-checks and H-only execution snapshots are historical; their then-pending package/G2/approval and launch-started/no-job-identity statements are superseded by the current SUBMITTED_PENDING checkpoint above.
+
+### W128-PROFILE02-STAGE-DOCS submitted-Pending delta self-check
+
+## 1. 规划完成情况
+
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| 七文件实际job状态同步 | PASS | 10:10:16Z platform receipt明确Pending/queuing；无Running或成功推断 |
+| 文本/receipt及历史保护核验 | PASS | Python3.10.6只读286/286，七targets、historical tails、checkboxes和G2/matrix/R4 receipts不变 |
+
+Command: `python3 - <<'PY' ... PY`, primary worktree, baseline `/data/ycfeng/tmp/glm53_dsv4/profile02_pending_docs_zavvmhua/baseline.json`; exact inline command is retained in the execution transcript. Expected/actual:286/286 PASS/exit0 for current status/timestamps/resources/links, removed stale current pointers, retained historical bytes and accepted receipts. Initial285/286 was a checker-only hyphen mismatch (`prelaunch gates` versus `prelaunch-gates`); the checker accepts both, with no document-evidence change. No Git/source/package/platform operation.
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** 实际job receipt派发至七文件delta交付｜**当前前沿：** root I3 scheduling/business monitoring
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | 仅针对本delta的文本核验，无扩展工具 |
+| D2 细节反复重试 | CLEAR | 单个checker假阴性修正，无job/source重试 |
+| D3 支线问题修补 | CLEAR | 仅指定七文件 |
+| D4 可并行任务停滞 | CLEAR | docs单writer，root独立monitoring |
+| D5 超范围镀金 | CLEAR | 只更新已有receipt事实 |
+| D6 分析空转 | CLEAR | 读取receipt后直接交付 |
+| D7 路线违背 | CLEAR | Pending不推断GPU/business成功；standing authority/soft gates不变 |
+
+**文档检查：** S1–S6均无未解决缺陷；旧no-job-identity/current-next指针已更正，历史快照保留。
+**归因：** 无。
+
+## 3. 纠正建议
+
+**分支：** A：当前spec/tickets合理，无需进一步改动。
+**需停止的偏离行为：** 无。
+**接下去的路线：**
+1. I3 scheduling/business monitoring → 完成标志：真实worker身份、business outputs和terminal receipts，不由Pending推断。
+2. I4 retained-data verification → 完成标志：runtime/coverage/stream/event/graph证据逐项给出PASS或UNVERIFIED。
+
+## 4. 最值得关注的 3 点
+
+1. 10:10:16Z为SUBMITTED_PENDING/queuing、replicas=[]；launcher当时alive。
+2. G2/R4/bound77与full05/09/19限制不变；提交不等于runtime qualification。
+3. Handoff说明独立watch403只是辅助权限问题，既有snapshot/log client可用，无job stop。
+
+### W128-PROFILE02-STAGE-DOCS self-check
+
+## 1. 规划完成情况
+
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| 指定七文件同步 | PASS | profile02 repair/re-review/final tests/seal与launch-started状态已同步；历史FAIL和验收限制保留 |
+| 文本核验及范围保护 | PASS | Python3.10.6只读312/312；历史tails、checkboxes、G2/matrix/R4 receipts和HEAD/index不变；七文件diff-check通过 |
+
+Verification command: `GIT_OPTIONAL_LOCKS=0 python3 - <<'PY' ... PY`, run at the primary worktree against `/data/ycfeng/tmp/glm53_dsv4/profile02_docs_izw88zm3/baseline.json`; exact inline command is retained in this task's execution transcript. Expected: all current pointers, local links, preserved historical tails/Modification History rows/checkboxes, unchanged accepted receipts, exactly seven unstaged owned changes and unchanged HEAD/index. Final result:312/312 PASS/exit0, plus `git diff --check --` the seven paths PASS/exit0. Initial310/312 had two checker-only false negatives for capitalized `Native06`; case-insensitive matching corrected the checker without changing document evidence. No source suites, fresh77 capture, source/package edits, Git stage/commit or platform/SSH/Docker/GPU/credential action. Root-owned active records were read only; root continues independently.
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** W128-PROFILE02-STAGE-DOCS派发至文本交付｜**当前前沿：** 七文件同步完成；root记录实际launch receipt/identity
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | 一次focused文本核验及其大小写修正，无工具扩展 |
+| D2 细节反复重试 | CLEAR | 仅修正checker假阴性，无source/runtime重试 |
+| D3 支线问题修补 | CLEAR | 只改指定七文件，无额外问题修复 |
+| D4 可并行任务停滞 | CLEAR | docs单writer，root独立执行launch；不等待可选review |
+| D5 超范围镀金 | CLEAR | 只同步已有证据和当前指针，不改变验收条件 |
+| D6 分析空转 | CLEAR | evidence读取直接形成七文件交付，无重复调查 |
+| D7 路线违背 | CLEAR | H800 standing authority和soft gates保留；无伪造job状态或GPU acceptance |
+
+**文档检查：** S1–S6均未发现当前范围内未解决缺陷；原S5 package-pending指针已按root证据更正，旧快照明确为historical。
+**归因：** 无。
+
+## 3. 纠正建议
+
+**分支：** A：当前spec/tickets合理，无需进一步改动。
+
+**需停止的偏离行为：** 无。
+
+**接下去的路线：**
+1. Root记录实际launch receipt/platform identity → 完成标志：有具体job identity及其真实状态，不由seal或launch开始推断。
+2. Root按批准plan检查retained runtime artifacts → 完成标志：实际worker/window/coverage/stream/event/graph证据逐项给出PASS或UNVERIFIED；健康workload不因辅助错误中断。
+
+## 4. 最值得关注的 3 点
+
+1. Profile02是SEALED_READY_DIAGNOSTIC；launch已开始但本checkpoint无platform job identity。
+2. GPUs/runtime/operator/stream/event/graph/TP8成本及full05/09/19仍未完成；native06仍是clean R4 reference。
+3. 历史profile01 FAIL、G2 source05952396和existing77 binding不变；H800无需重复资源批准。
 
 ### W128-H800-AUTHORITY-DOCS self-check
 
