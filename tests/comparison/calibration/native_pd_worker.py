@@ -15,6 +15,9 @@ import tempfile
 import time
 import traceback
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'dp_placement_pp'))
+from vllm_replay import NATIVE_WORKER_EXTENSIONS
+
 
 def write_run_manifest(config, authorization):
     """Bind actual clean sources and staged inputs before the native job launches."""
@@ -266,7 +269,7 @@ def run(config):
                                     selected[role], observer=observer, role=role)
         env['VLLM_ENGINE_READY_TIMEOUT_S'] = str(config['startup_timeout_s'])
         changed['VLLM_ENGINE_READY_TIMEOUT_S'] = env['VLLM_ENGINE_READY_TIMEOUT_S']
-        if plan['engine'].get('worker_extension_cls') == 'native_full_structure.FullModelInventory':
+        if plan['engine'].get('worker_extension_cls') in NATIVE_WORKER_EXTENSIONS:
             fields = ('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR',
                       'FRONTIER_NATIVE_RUN_GENERATION', 'FRONTIER_NATIVE_ROLE')
             for name in fields:
@@ -278,9 +281,13 @@ def run(config):
                 if not isinstance(generation, str) or not generation:
                     raise ValueError('Actual prelaunch run generation must be a nonempty string')
                 values = dict(zip(fields, (str(node), generation, role)))
-                module_hash = sha256(Path(config['harness_dir']) / 'native_full_structure.py')
+                module_hash = sha256(Path(config['harness_dir']) /
+                    NATIVE_WORKER_EXTENSIONS[plan['engine']['worker_extension_cls']])
                 env.update(values)
                 changed.update(values)
+                if 'serving_profile_limits' in config:
+                    env['FRONTIER_NATIVE_PROFILE_LIMITS'] = json.dumps(config['serving_profile_limits'])
+                    changed['FRONTIER_NATIVE_PROFILE_LIMITS'] = env['FRONTIER_NATIVE_PROFILE_LIMITS']
                 result['serving_instrumentation'] = dict(
                     extension=plan['engine']['worker_extension_cls'],
                     module_sha256=module_hash,
