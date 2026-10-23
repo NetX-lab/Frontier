@@ -10,8 +10,11 @@
 | 2026-10-23 | Verify canonical producer, automatic shared/independent fits and source census. |
 | 2026-10-23 | Correct stale checkpoint, commit exact source and complete compute/buffer fixture seams. |
 | 2026-10-23 | Consume closed F4a/F4b; enforce source exact pairs at the actual estimator seam. |
+| 2026-10-23 | Import precise C2 tip; fix actual-main automatic metadata registration with RED/GREEN and real caller coverage. |
 
 - completed: baseline clean, branch feat/step5-position-core at 1aee0af; scope.json grouped by exact path yields 44 paths/4404 gross lines.
+- latest completed: records committed before authorized f41d1ee9 merge591894f1. Real caller now consumes actual CPU plan/count binder and formal ReplicaConfig TP8/DP2/EP16. C2 caller37PASS/3SKIP; no H04 peer edits or default guards.
+- latest observed actual CLI: seam02 exit1,1295.815292s,not timedout,internal2400s unchanged. Trace stops in owned metadata hook, not registry/backend. Hypothesis recorded before persistent RED: trainer auto-enumerates but hook does not. RED real hook raises same selected operator_facts error; GREEN reuses position_moe_operator_facts and37PASS/3SKIP. Metadata162/164,test105/108;44-path3304/4404,AST/whitespacePASS. Report:test_report_2026-10-23_actual_main_metadata.md.
 - completed: first count/source/tensor/provenance interfaces, 53 PASS/1 SKIP in frontier-py310; actual source tensors/counts in asyncopd-py312 4 PASS/1 deselected. AST and whitespace PASS. Current 7 code/test paths, 713 gross/4404.
 - completed: first interface commit `c995fdc`, 713 gross code/test lines, receipt delivered to root.
 - completed: runtime/source threading: constructors resolve registry before parent initialization, shared scheduler passes actual bound DP sources, immutable full-source cache separates lane reorder/padding/position/context, ratio tables are not synthesized for the new policy. Source/load/conservation consumer tests pass.

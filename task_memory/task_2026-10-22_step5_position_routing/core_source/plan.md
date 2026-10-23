@@ -8,6 +8,7 @@
 | 2026-10-23 | Record delivered pricing APIs, runtime point binding and exact unowned actual-main dependencies. |
 | 2026-10-23 | Verify full PRICING canonical consumers and record runtime seams. |
 | 2026-10-23 | Update current route after F4 import and C2 strict buffer/fixture integration. |
+| 2026-10-23 | Consume precise C2 tip and correct actual CLI metadata-hook failure before dependency handoff. |
 
 Dependency: count/source/tensor/verifier interfaces -> {scheduler/runtime, source package/producers, selected trainer/profiling consumers} -> fixture/runner -> root integration qualification.
 
@@ -18,6 +19,8 @@ Dependency: count/source/tensor/verifier interfaces -> {scheduler/runtime, sourc
 5. Add a fresh CPU-only actual-main fixture and runner integration using peer contracts; retain old fixture/workload/timeout.
 
 Acceptance: exact P/D/chunk/mask conservation, source identity/cache binding, actual module/callable receipt negatives, selected frame/schema paired exact keys including empty physical scopes, real timer replay/restore/event preservation, meaningful source/consumer checks, owned-path/quota/AST/whitespace accounting. Native/runtime/E2E qualification remains root-owned.
+
+Current authoritative frontier: precise C2 f41d1ee9 merged591894f1; actual plan/count binder and formal ReplicaConfig consumer37PASS/3SKIP. Actual CLI seam02 finishedexit1 at1295.815s before2400s, exposing automatic metadata registration missing selected facts. That owned hook is corrected with real RED/GREEN; commit and rerun the preserved actual CLI/cache. Native producer compute-to-buffer association, existing registry multi-binding and existing backend CPU input remain root-coordinated boundaries, not excuses for the fixed metadata defect. No repeated full generator or CPU performance campaign.
 
 ## Authorized continuation
 

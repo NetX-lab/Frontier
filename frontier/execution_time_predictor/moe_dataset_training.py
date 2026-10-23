@@ -592,7 +592,9 @@ class MoeDatasetTraining:
                 self._register_profiling_metadata_for_ops([name], replace(metadata, profiling_precision=facts["precision"]), moe_input_file)
             return
         if self._get_requested_moe_gating_routing_runtime_path() == "position_cyclic":
-            raise ValueError("Position MoE metadata requires selected operator_facts")
+            for facts in position_moe_operator_facts(pd.read_csv(moe_input_file), self._replica_config):
+                self._register_additional_profiling_metadata_from_files(operator_facts=facts)
+            return
         model_names = _get_moe_family_model_names()
         if should_enable_prefill_hot_moe_gating_contract(
             model_config=self._model_config,

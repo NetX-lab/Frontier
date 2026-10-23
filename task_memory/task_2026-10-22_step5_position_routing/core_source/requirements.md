@@ -6,6 +6,7 @@
 | 2026-10-23 | Record delegated implementation scope and approval. |
 | 2026-10-23 | Carry root-authorized peer imports and published source inputs into the continuation. |
 | 2026-10-23 | Retain F4 frozen-fit correction and C2 complete compute/buffer binding. |
+| 2026-10-23 | Record root-authorized f41d1ee9 development use with native producer association still pending. |
 
 TaskID: D29-CORE-SOURCE-IMPLEMENTATION.
 
@@ -26,3 +27,5 @@ Root owns integration, strict77/full-unit/review/image/native runs and the <=12-
 [Original Request] 2026-10-23 compute review: C1 actual routing observation and C2 H04 complete compute/plan binding belong to PRICING. CORE must construct and carry plans and compute from the same actual native point, not only shared/frozen-fit identity. Precise delivered seam: full point equals json.loads(plan.buffer_json)["compute_context"], retained from observed buffer/count evidence, with unchanged complete plan.context_json.execution_policy. Native collector's absent association is a concrete peer prerequisite. CPU fixtures remain explicitly synthetic and do not establish native evidence.
 
 [Original Request] 2026-10-23 F3–F6 and F4a/F4b: root authorizes27b3499 then bfe6f2ae development imports;1934 reports F4a/F4b closed/NoFindings. Retain full actual per-rank runtime/ordered branches/buffers/diagnostics in plan context and exact count/cache keys. Only PRICING collective_model_context owns frozen affine-fit identity; CORE must not duplicate it. Final compute review C1 (bound router config/logits/IDs/weights) and C2 (same canonical actual compute/plan context and dispatch layouts before pricing) are PRICING repairs. CORE must preserve the same actual context/evidence in callers and fixtures, await precise changed peer contracts, and continue independent owned items. No expanded scope or runtime acceptance is granted.
+
+[Original Request] 2026-10-23 latest delivery: root authorizes development import f41d1ee9/code989a883d after committing owned edits. Complete observed point comes from actual producer/count artifacts in buffer.compute_context, not candidate prediction copied into a receipt. Root resumed PRICING producer association work; CORE preserves observed handoff once delivered. No duplicated normalization, peer edits or phase acceptance before verification.
