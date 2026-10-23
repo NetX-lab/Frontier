@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Confirm approved P/D always supplies manager; withdraw independent-public-consumer prerequisite while retaining both trainer checks. |
 | 2026-10-23 | Registry review finds mixed legacy/native view P2; assign repair within58 remaining and investigate independent public-consumer gap. |
 | 2026-10-23 | Parent verifies join fix379 PASS/16 SKIP; registry8f96408c delivered302/360 and begins independent review/parent tests. |
 | 2026-10-23 | Receive PRICING join repair a7e2a3ca/3805 gross; assign existing CORE wrapper's3-gross diagnostics persistence inside current quota. |
@@ -52,8 +53,9 @@
   Registry code8f96408c (four paths,302/360) and recordsb6714757 are frozen for
   review; parent independently verifies213 PASS, both real gate bindings and30
   bundle artifacts. Review finds a mixed legacy/native enumeration P2, assigned
-  to its original owner within remaining58 repair lines. The independent public
-  retention/binding gap is separately under bounded investigation. CORE may merge
+  to its original owner within remaining58 repair lines. Independent scope review
+  confirms the public-binder gap is outside approved D29 product reachability;
+  both trainer fit/cache checks remain required. CORE may merge
   delivered interfaces and PRICINGa7 for development
   after its isolated repair commit, without changing peer-owned files.
 - pending: full interface integration, remaining focused checks/reviews, parent
@@ -253,6 +255,15 @@ confirms pre-existing independent `models.update()` binding loss and absent publ
 manager. D29-INDEPENDENT-CONSUMER-SCOPE now traces the agreed capability and exact
 minimal correction, independently of the two-path view fix. Full dual-path
 acceptance remains open. See review_2026-10-23_registry_implementation.md.
+
+Independent investigation is complete. Parent checks requirements/design and the
+actual product call graph: position routing is P/D-only, and Simulator always
+provides its shared manager. Both independent/shared trainers remain required;
+an independent public binder is not. Root withdraws the extra prerequisite rather
+than expanding source scope for an unqualified mode. The latent issue and exact
+limits remain recorded in repairs/independent_consumer_scope.md. No code or budget
+is allocated for it. Registry mixed-view P2, CORE fixes/persistence and the original
+integration/qualification gates continue unchanged.
 
 ## Active implementation dispatch — 2026-10-23
 

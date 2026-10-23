@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Close scope investigation: preserve both trainer checks; independent public consumer is not a D29 repair prerequisite. |
 | 2026-10-23 | Allocate registry mixed-view P2 inside remaining58; move20 unused caller allowance to its test and investigate independent public binding separately. |
 | 2026-10-23 | Add the existing CORE wrapper's diagnostics persistence to the current repair allocation; authorize immutable development dependency merges. |
 | 2026-10-23 | Redistribute230 CORE lines for three review repairs; retain registry exclusive paths and all aggregate caps. |
@@ -31,8 +32,9 @@ point-diagnostics persistence change inside the same230 repair total and unchang
 194 path allowance. This does not alter registry exclusivity or any total.
 The review overlay also transfers20 unused registry-caller allowance to the
 existing binding test for the mixed legacy/native view correction. Its total
-registry delta stays360, with58 remaining after8f96408c. The independent public
-consumer gap is under bounded scope investigation before implementation assignment.
+registry delta stays360, with58 remaining after8f96408c. Independent scope review
+confirms no public-binder implementation is required by the approved P/D path;
+both actual trainer fit/cache checks remain mandatory. See independent_consumer_scope.md.
 
 | Stream / change marker | Files | Gross quota | Assignment |
 | --- | ---: | ---: | --- |

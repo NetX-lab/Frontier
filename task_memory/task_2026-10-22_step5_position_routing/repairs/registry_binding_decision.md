@@ -58,6 +58,9 @@ gross within their revised caps. Whole repair at most360 gross/four paths.
 Use an isolated worktree based on d96b3279 so the already-running seam03 source is
 not edited. The registry workstream alone writes these four paths until handoff;
 original CORE resumes those paths only after root integration authorization.
-Required completion: RED/GREEN, actual shared/independent trainer/binder and bundle
-coverage, legacy regression checks, exact diff and budget, then independent review.
+Required completion: RED/GREEN, both actual trainer fit/cache paths, the shared
+manager binder used by the approved P/D entrypoint, bundle coverage, legacy
+regression checks, exact diff and budget, then independent review. This clarifies
+the earlier ambiguous "shared/independent trainer/binder" wording; it does not add
+an independent public consumer. See independent_consumer_scope.md.
 Full actual-main/strict77 and native qualification remain later global gates.

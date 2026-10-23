@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent scope/reachability review classifies independent public binding outside D29; mixed-view P2 remains open. |
 | 2026-10-23 | Record mixed legacy/native enumeration P2 and independent public-consumer dependency; assign separate follow-up work. |
 
 TaskID: D29-REGISTRY-IMPLEMENTATION-REVIEW. Reviewer:
@@ -39,6 +40,14 @@ configuration, approved capability, all affected retention/binding/consumer seam
 and smallest correction reusing the existing registry. It must report paths, owners,
 budget and real public-constructor/query checks before implementation allocation.
 This dependency is not silently deferred or added to the small mixed-view repair.
+
+Parent disposition after the bounded investigation: the actual approved P/D
+product entrypoint always supplies the shared manager, and position routing rejects
+monolithic mode. The design requires both trainer fit/cache paths, not a new
+independent public consumer. Therefore the observed latent issue is outside D29
+scope and is not a closing prerequisite. The earlier broader parent interpretation
+is withdrawn; no such support is claimed. See repairs/independent_consumer_scope.md
+and requirements.md D29-TRAINER-CONSUMER-BOUNDARY. The mixed-view P2 is unaffected.
 
 ## Root assignment and limits
 

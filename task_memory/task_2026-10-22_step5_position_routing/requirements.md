@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Clarify both-trainer coverage and shared-manager P/D consumer scope; withdraw an unrequested independent public-consumer prerequisite. |
 | 2026-10-23 | Root selects the existing constructor seam for explicit T2 engine limits within the approved scope. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; begin phased implementation. |
 | 2026-10-22 | Bind the design artifact to the approved parent decision and complete workflow scope. |
@@ -79,3 +80,19 @@ Root reserves up to100 additional gross lines in the two existing native T2/scri
 test paths and60 in PRICING's existing dispatch probe/test paths, within unchanged
 native19/1582 and PRICING44/3956 totals. Sole-writer rules and stop/report on quota
 exhaustion apply. No new source paths, image change or allocation is authorized.
+
+## [Implementation Clarification] D29-TRAINER-CONSUMER-BOUNDARY
+
+This clarifies the existing approval, not a new user request. Both independent
+and shared trainer entrypoints must exercise the selected binding, validation,
+duration/count fit and cache contracts in design.md869–944. The approved runtime
+consumer scope remains Step P/D position routing. Its product entrypoint always
+constructs and supplies the shared manager (simulator.py152–174); the position
+scope validator rejects monolithic routing (moe_routing_policy.py194–207).
+
+Adding an independent public-predictor binder or monolithic measured Step mode is
+not required or allocated. Root withdraws its earlier extra prerequisite while
+retaining the observed latent None-manager/name-projection issue and the explicit
+test limits in repairs/independent_consumer_scope.md. Do not weaken the two-trainer
+fit/cache checks or claim independent public-consumer qualification. All approved
+actual-main, source/routing, legacy, G3 and numerical gates remain unchanged.
