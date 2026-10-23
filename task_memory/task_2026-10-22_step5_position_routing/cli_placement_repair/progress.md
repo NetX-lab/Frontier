@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Record actual RED/GREEN, preserved input evidence, exact budget and final mainline checkpoint. |
+| 2026-10-23 | Record verified source/tests/records commit ae1fb721 and complete handoff. |
 
 TaskID:D29-CLI-PLACEMENT-REPAIR.
 
@@ -13,11 +14,11 @@ TaskID:D29-CLI-PLACEMENT-REPAIR.
 - completed GREEN: same realconstructorregression plus oldcommand/read/capacity check **5PASS2.18s**. Entireaffectedfiles first57PASS/6SKIP59.97s. Explicit legacybalanceddefault assertion then added;finalwholefiles **57PASS/6SKIP59.24s**;noFAIL/ERROR/exclusions.
 - completed originalfixture short-chain: actualcommand built from retainedfixture03;changedonlyoutput/cachepathsbeforeparse. Existing manifest/collective file read-only;currentrepoimports, nofullCLI. Bothoffline/online andP/D price exact retaineddispatch plan0.03ms, matchingcachekeys;count/fullCPUadmissionchecks execute unchanged. Manifestshaed049187...,collectivesha447e697... unchanged. Scratch `/data/ycfeng/tmp/d29-cli-placement-retained01` holdsgeneratedargv,results,config andnewREADfixture. No retainedmain05orintegrated04write;scoutconfigincident remains disclosed and not repaired/relabelled.
 - completed accounting: two paths+40/-0=40/65;driver47/66,test260/283;donor unchanged,cap70;CORE3873/4404,global9116/10000,111paths unchanged. ExactAST/diffcaps/whitespacePASS. No source/code change outsidetwoexistingpaths. No newflag/default/backend/fallback/hash orqualificationscopechange.
-- TODO finalfrontier: verifiedcode+recordscommit andimmutablehandoff only. No unresolvedownedfailures;independentreview/T2/fullmain/gates stayroot-owned.
+- completed verifiedcode+recordscommit:ae1fb721. No unresolvedownedfailures;independentreview/T2/fullmain/gates stayroot-owned. Worktree and pinned submodule are clean.
 
 ## 1. Plan completion
 
-**Summary:** PASS5 | BLOCKED/FAILED/SKIPPED0 | TODO1
+**Summary:** PASS6 | BLOCKED/FAILED/SKIPPED0 | TODO0
 
 | Subtask | Status | Evidence |
 | --- | --- | --- |
@@ -26,7 +27,7 @@ TaskID:D29-CLI-PLACEMENT-REPAIR.
 | Position-only selector | PASS | Oneaddedrunnerline,olddefaultkept |
 | Regression/wholefiles/originalfixture | PASS | 5PASS;57PASS/6SKIP;fourretainedexactcosts |
 | Budget/AST/whitespace | PASS | 40/65,3873/4404 |
-| Immutable handoff | TODO | Evidencecomplete;scopedcommitfollows |
+| Immutable handoff | PASS | Verifiedsource/tests/recordscommit ae1fb721 |
 
 ## 2. Drift detection
 

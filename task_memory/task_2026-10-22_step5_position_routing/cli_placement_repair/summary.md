@@ -4,8 +4,11 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Archive one-line runner repair, real constructor regression and exact validation/ownership boundaries. |
+| 2026-10-23 | Seal immutable verified source/tests/records commit ae1fb721. |
 
 TaskID:**D29-CLI-PLACEMENT-REPAIR**. Base1be91bad431d3bd886de7f5d80c19bd7e6c54a25;branchfeat/step5-cli-placement-repair;isolatedworktree `/data/ycfeng/Frontier/.worktrees/step5-cli-placement-repair`.
+
+Verified source/tests/records commit: **ae1fb721**. This receipt-only update adds no code changes.
 
 ## Delivered behavior
 

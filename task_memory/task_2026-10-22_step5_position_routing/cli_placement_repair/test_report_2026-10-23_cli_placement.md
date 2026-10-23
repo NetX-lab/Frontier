@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Record real placement RED/GREEN, whole-file checks, retained fixture probe and exact ownership accounting. |
+| 2026-10-23 | Seal verified source/tests/records commit ae1fb721. |
 
 TaskID: **D29-CLI-PLACEMENT-REPAIR**. Worktree `/data/ycfeng/Frontier/.worktrees/step5-cli-placement-repair`, branch `feat/step5-cli-placement-repair`, base `1be91bad431d3bd886de7f5d80c19bd7e6c54a25`. Python `/data/ycfeng/envs/frontier-py310/bin/python`, version 3.10.6. Local pinned submodule checkout `3dac53c544e546574cb6e8078cd14053d0916113`. No package installation, full simulation CLI, full-unit, GPU, network or other platform actions.
 
@@ -123,3 +124,5 @@ Results: both offline and online have PREFILL andDECODE with dimensionsTP8/CP1/D
 Exact final patch: `placement_repair.diff`; machine ledger: `budget.json`. Commands: `git diff --numstat 1be91bad -- <two paths>`, `git diff --numstat 1aee0af -- <two paths>`, `git diff --check`; PythonAST parse and numeric cap assertions pass. Final source delta+40/-0=40/65. Driver47/66,test260/283,donor unchanged. Root final ledger3833CORE/9076global plus40 =3873/4404 and9116/10000;111paths/PRICING77 unchanged. No root overlay/document edits or new source paths.
 
 This closes only the reproduced selected placement wiring at actual constructors. Root independently reviews/integrates/freezes and runs fresh full6144/1024offline/online within2400s. Strict77/native/source/GPU/gap/T2 restaging are not performed or claimed. Inert role-scoped overrides are explicitly deferred. The scout's previously overwritten retained main05offlineconfig is not restored, relabelled or used as original evidence. No debug instrumentation, retries, fallback or downstream exceptions-as-GREEN remain.
+
+Immutable verified source/tests/records commit:ae1fb721. Final tested source matches this commit exactly. Worktree/submodule remain clean; no root-owned or retained-run path is modified.
