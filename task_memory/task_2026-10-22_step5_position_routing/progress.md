@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Joint CORE/producer and registry-view re-reviews return No findings; parent693PASS/5 known fixture FAIL/19SKIP, including three formerly dependency-blocked wrapper checks. |
+| 2026-10-23 | Freeze CORE e49b26f8, seven-path228/230 and combined3786/4404; assign five affected fixture failures within a separate80-line, two-existing-path allocation. |
 | 2026-10-23 | Confirm approved P/D always supplies manager; withdraw independent-public-consumer prerequisite while retaining both trainer checks. |
 | 2026-10-23 | Registry review finds mixed legacy/native view P2; assign repair within58 remaining and investigate independent public-consumer gap. |
 | 2026-10-23 | Parent verifies join fix379 PASS/16 SKIP; registry8f96408c delivered302/360 and begins independent review/parent tests. |
@@ -39,29 +41,49 @@
   and T2 limits/controlled-input binding merged892b6a1. Native1350/1582; four image
   files unchanged. T2 parent177 PASS/15 SKIP, real image CPU7168/8192/128 for both
   configs, independent No findings and actual full-file rebinding6/6 PASS.
-- in-progress: CORE/SOURCE d96b3279 has parent143 unique PASS/4 SKIP and3304/4404
-  accounting; original owner repairs three P2 in step5-core-review-fixes. A separate
-  registry worker owns its four paths in step5-registry-bindings. PRICING84e66115
-  has43 changed paths/3713 gross including333 submodule lines and parent691 unique
-  PASS/33 SKIP. Finite F3–F6 and owned C1/C2 validation are closed; CPU consumer
-  behavior is accepted. Observed writer code exists, but deterministic cross-producer
-  compute-provenance matching and portable writer tests remain P1/P2 blockers.
-  PRICING returns owned join/portable-writer fix a7e2a3ca at3805/3956,151 remaining.
-  CORE must persist point_diagnostics in its existing wrapper; root assigns that
-  three-gross source change and existing test verification inside current230 repair
-  delta/4404 quota. Full merge and joint re-review remain pending.
-  Registry code8f96408c (four paths,302/360) and recordsb6714757 are frozen for
-  review; parent independently verifies213 PASS, both real gate bindings and30
-  bundle artifacts. Review finds a mixed legacy/native enumeration P2, assigned
-  to its original owner within remaining58 repair lines. Independent scope review
-  confirms the public-binder gap is outside approved D29 product reachability;
-  both trainer fit/cache checks remain required. CORE may merge
-  delivered interfaces and PRICINGa7 for development
-  after its isolated repair commit, without changing peer-owned files.
+- completed: joint source review of CORE e49b26f8, PRICING a7e2a3ca and registry
+  a5189e19 in frozen bfbc87ad returns No findings. All five CORE/producer findings
+  and registry mixed-view P2 are closed at source level. CORE repair228/230,
+  PRICING3805/3956 and registry331/360 receipts are retained. Diagnostics persist
+  independently of stable compute context; current-repo CPU writer is used.
+- in-progress: parent combined tests observe693PASS/5FAIL/19SKIP across717 unique
+  cases. All failures are assigned to CORE's two existing fixture files within a
+  separate80-gross allocation. Three prior wrapper environment blockers are now
+  independently3PASS using an isolated extra-site. No full regression acceptance
+  yet. Both actual trainer fit/cache/preflight paths remain required; independent
+  public consumer binding is outside the approved P/D product path.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
   qualification and fresh GPU/native evidence. Additional collection resources
   and run approval follow readiness. D30 remains integrated4ec5b23.
+
+### CORE review repair delivery and affected fixture allocation
+
+CORE delivers e49b26f8 with the actual delegated callable verification, mandatory
+source descriptor, actual zero-live owner proof checks and full point-diagnostics
+CSV persistence. PRICING a7e2a3ca and registry b6714757 histories are integrated for
+development. Seven owned paths are228/230 gross; combined CORE is3786/4404.
+Owner evidence is retained under core_review_repair/; parent freezes the complete
+tree in verify-step5-core-closure-01 for independent tests and joint review.
+
+Parent inspected both raw failure logs and the affected fixture builders. Three
+training tests omit the now-required routing_input; two runtime tests use a
+SimpleNamespace without the actual model/group/registry state required by retained
+binding enumeration. These are unresolved integration test failures, not an
+accepted baseline. Root assigns their original CORE owner a separate80-gross,
+test-only repair in the two already-approved paths, with zero-sum per-path
+reallocation in repairs/core_review_scope_amendment.json. Preserve their positive
+and negative assertions and every source/context check. Registry-view P2 remains
+with its original owner. Full CLI, strict77 and native qualification remain pending.
+
+Registry view a5189e19 is now in frozen bfbc87ad; its re-review closes the P2.
+Joint CORE/producer review closes all five source findings with No findings.
+Parent cross-environment verification:717 unique cases,693PASS,5FAIL,19SKIP;
+all failures match the assigned two-file fixture repair. Isolated dependencies
+complete the three previously blocked wrapper checks without editing either
+existing Python environment. Exact parent evidence is in the frozen worktree's
+core_parent/; review_2026-10-23_core_producer_joint.md records acceptance limits.
+The seven-path source repair is review-closed; full regression awaits the fixtures.
 
 ### T2 closure and PRICING parent checkpoint
 
