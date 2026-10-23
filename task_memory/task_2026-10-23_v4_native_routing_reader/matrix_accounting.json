@@ -1,0 +1,66 @@
+{
+  "status": "COMPREHENSIVE_GATE_REUSED_WITH_CAPTURE_AND_BYTE_BINDING",
+  "fixed_capture_commit": "576d278156ea21b209da33791337bd195047ae3e",
+  "merged_commit": "d278659f8469a1cde6b4d5113a23ad1084587e59",
+  "fresh_capture": false,
+  "identical_cases": 77,
+  "actual_artifacts_rehashed": 451,
+  "cache_filenames_rechecked": 519,
+  "regular_runtime_matrix_input_files_rehashed": 777,
+  "gitlinks": [
+    [
+      "frontier/cc_backend/backends/collective-sim",
+      "d28fe917370c2d55230c3ea226e5660785b44aca"
+    ]
+  ],
+  "non_task_diff": [
+    "tests/unit/test_native_reader_binding.py"
+  ],
+  "entry_scripts": [
+    "examples/architecture/co-location/offline/dense_model_basic.sh",
+    "examples/architecture/co-location/offline/moe_model_basic.sh",
+    "examples/architecture/co-location/offline/moe_prefix_caching.sh",
+    "examples/architecture/co-location/offline/moe_spec_dec.sh",
+    "examples/architecture/co-location/offline/thinking_mode_basic.sh",
+    "examples/architecture/co-location/online/dense_model_basic_online.sh",
+    "examples/architecture/co-location/online/moe_model_basic_online.sh",
+    "examples/architecture/co-location/online/moe_prefix_caching_online.sh",
+    "examples/architecture/co-location/online/moe_spec_dec_online.sh",
+    "examples/architecture/co-location/online/thinking_mode_basic_online.sh",
+    "examples/architecture/pd-af-disagg/offline/dense_cuda_graph.sh",
+    "examples/architecture/pd-af-disagg/offline/dense_model_basic.sh",
+    "examples/architecture/pd-af-disagg/offline/moe_cuda_graph.sh",
+    "examples/architecture/pd-af-disagg/offline/moe_model_basic.sh",
+    "examples/architecture/pd-af-disagg/offline/moe_model_ep.sh",
+    "examples/architecture/pd-af-disagg/online/dense_model_basic_online.sh",
+    "examples/architecture/pd-af-disagg/online/moe_cuda_graph_online.sh",
+    "examples/architecture/pd-af-disagg/online/moe_model_basic_online.sh",
+    "examples/architecture/pd-af-disagg/online/moe_model_ep_online.sh",
+    "examples/architecture/pdd/offline/dense_model_basic.sh",
+    "examples/architecture/pdd/offline/moe_model_basic.sh",
+    "examples/architecture/pdd/offline/moe_prefix_caching.sh",
+    "examples/architecture/pdd/offline/moe_spec_dec.sh",
+    "examples/architecture/pdd/offline/thinking_mode_basic.sh",
+    "examples/architecture/pdd/online/dense_model_basic_online.sh",
+    "examples/architecture/pdd/online/moe_model_basic_online.sh",
+    "examples/profiling/smoke_simulator_dense_csv.sh",
+    "examples/profiling/smoke_simulator_moe_csv.sh"
+  ],
+  "entrypoints_do_not_execute_pytest_or_native_checker": true,
+  "package_versions": {
+    "python": "3.10.6",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "sklearn": "1.7.2",
+    "scipy": "1.15.3",
+    "plotly": "7.1.0",
+    "fasteners": "0.20",
+    "ddsketch": "3.0.1"
+  },
+  "evidence": {
+    "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/comparison.json": "3d4d92454c6a492775d0ac847b36618382483e024fe310aa70bdb050ed62c57c",
+    "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/candidate/manifest.json": "5d145735432517070ccca40193e3ad199fc7da1fa68f45e1ea94118a174c85ce",
+    "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/candidate/results.jsonl": "c0438c158defadaa893c9d8e77a7f8b7c746f16daca12be429f00b937cda768d"
+  },
+  "rationale": "Only the native-checker unit file differs outside task records; all runtime/capture inputs and environment match the actual fixed77capture. Native checker semantics are separately exercised by208tests and8-predicate real-data checks; this is not a new77case capture."
+}

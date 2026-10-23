@@ -4,9 +4,20 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: archived final merged/frozen R4 native06 P0 reference acceptance and matrix accounting; original owner handoff preserved. |
 | 2026-10-23 | Archived verified bounded correction and root-owned acceptance limits. |
 
 Task ID: W128-V4-NATIVE06-ROUTING-READER. Decision: D-V4-NATIVE06-ROUTER-OWNER-READER. Baseline b62c155; branch fix/v4-native-routing-reader.
+
+## Current accepted outcome (2026-10-23)
+
+Root accepted native06 P0 reference: ACCEPTED_NATIVE_REFERENCE_R4 in parent `native06_acceptance_20261023/primary_acceptance_r4.json`, frozen result all8/8PASS. Reader merged d278659/root208PASS/0fail/error/skip/both source reviews NoFindings, `FINAL_FREEZE_R4.json` binds67f31923 and unchanged frozenR3ca8ddcea/R229523700. Original b62c155 run/12.002222GPUh and old R3 FAIL/native05 UNVERIFIED preserved; separate case uses original runs symlink/byte-and-mtime-preserved inputs. Client432/432/three rounds/seven boundaries PASS;32ranks/six phases physical graph P NONE/D PIECEWISE+FULL.
+
+Scope2files223lines/zeroCore under3/300 separate from historical routing953/dispatch491/D-Q103/197/core55, no net-union claim. `matrix_accounting.json` reuses actual576d27877/77/451actual hashes/519cache names/777runtime-input bytes/same environment+gitlink/unreached changed unit file, NOT new R4 capture. D-Q10 integrated e89b45d/source2f87828/merged144PASS/94exact/legacy102positive72negative. Only18 P0 subtask PASS; full18/05/09/19/Frontier prediction/four-metric calibration/operator-cost/physicalTP8-profile/independent histogram unfinished. No new GPU budget/GLM paused/CPU-overhead-last.
+
+## Historical owner completion archive — pre-root admission (2026-10-23)
+
+The original delivery/diagnostic/open-root-work summary below remains unchanged; final root review, accounting, freeze and admission above supersede those pending-status labels without relabeling the original diagnostic as a freeze evaluation.
 
 ## Outcome
 

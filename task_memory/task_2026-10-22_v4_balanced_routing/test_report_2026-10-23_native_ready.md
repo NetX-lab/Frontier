@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Subsequent reviewed/frozen R4 re-evaluation admits the unchanged native06 reference; original R3 result remains FAIL. |
 | 2026-10-23 | Recorded completed client/RCA evidence, remote-byte validation and bounded successor-reader decision. |
 | 2026-10-23 | Recorded complete CPU delivery, locked-image74/18/20 PASS and startup-check input correction before retry. |
 | 2026-10-23 | Recorded successful native06 terminal evidence and the complete frozen-R3 result: seven PASS, routing identity FAIL. |
@@ -53,3 +54,9 @@ Root separately compared65worker-produced files/32,481,016bytes against hashes r
 Root decision D-V4-NATIVE06-ROUTER-OWNER-READER permits an additional bounded <=3non-core-file/300-line successor using the independently retained owner identities, preserving all criteria and originalR3FAIL. Review/rerun/freeze and separate complete re-evaluation precede any new admission. No newGPU is authorized. Parent requirements record the decision; source work owns the v4-native-routing-reader worktree.
 
 The original submission wrapper checked personal non-preemptible H200 usage against70; the task's explicit D-CALIBRATION-PRIORITIES limit is32. Actual recorded usage was0 (H800 also0), so this submission violated neither limit. Future task admission must use32 and actual platform yes/no preemption labels; the original wrapper/result remain historical evidence, not a reusable policy.
+
+## Subsequent R4 reference acceptance
+
+Root merged the reviewed223-line non-core correction at d278659, independently passed208tests and the complete actual-data diagnostic, bound the existing77/77comprehensive capture to777unchanged runtime/matrix files and the same environment, then froze R4/its dependencies in `../task_2026-10-22_v4_native_dispatch/FINAL_FREEZE_R4.json`. The existing CLI was run in a new analysis context with original run data and byte/mtime-preserved inputs. All8predicates PASS; every protected original remains unchanged and original R3 FAIL is preserved.
+
+Current native06 state: `ACCEPTED_NATIVE_REFERENCE_R4`, recorded in parent `native06_acceptance_20261023/primary_acceptance_r4.json` with `frozen_r4_result.json`. Full commands, checks and limits: `../task_2026-10-23_v4_native_routing_reader/test_report_2026-10-23_primary.md`. This supersedes the earlier UNVERIFIED status for the new evaluation only. It does not admit Frontier's prediction, new profiling costs or four-metric calibration, and it does not authorize another GPU run.

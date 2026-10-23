@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: archived final R4 native06 P0 reference acceptance and D-Q10 integration, with matrix reuse and calibration exclusions explicit. |
 | 2026-10-23 | Completed RCA/client verification; bounded owner-reader implementation is now the native admission frontier. |
 | 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS final delta: Succeeded native06 remains unadmitted after frozen routing identity FAIL; D-Q10 isolated prerequisite/matrix accepted, merge root-owned. |
 | 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS: current native06 frozen/sealed/submitted Running; D-Q10 source/root checks/review complete with fixed576d278 strict77 running, final qualification still open. |
@@ -22,7 +23,7 @@ Primary source milestone: shared A186dfef is accepted (218 root tests, independe
 
 Root receipt `prefill_primary_fidelity.json` records source39b2bf8088dff40dc8b695b6927d6e6322c337e9 and comparison SHA256 `135494258bb972dc29cc794bab50f8e6aacc064ef6cb53008cab4d7bf12ece35`. Source commands and clean source/harness/cache observations are in `test_report_2026-10-23_prefill_acceptance.md`; measured-data limits and retained anomalies are in `prefill_results/test_report_2026-10-23_results.md`. Acceptance excludes independent expert histogram, steady-state, TP8-PD, graph, serving and E2E qualification. Historical q1 tables lack balanced identity and cannot be relabeled or counted as balanced decode qualification; ticket09 coverage remains unfinished.
 
-Native06 b62c155/exp-1023-043123-830898 completed Succeeded4/4/exit0/restarts0/12.002222GPUh; frozen actual-case R3 all8 computed7PASS/rank_runtime_graph identity FAIL, reference UNVERIFIED. D-Q10 source2f87828 is ACCEPTED_ISOLATED_PREREQUISITE with complete fixed576d278 matrix; primary merge underway/root-owned. [Current root state](progress.md#current-root-state), `native06_platform_terminal.json` and `test_report_2026-10-23_native_ready.md` are authoritative. Routing23/953/dispatch491/original approvals/source/fidelity are unchanged; no full05/09/18/19 acceptance or new GPU/fix authority, native05 historical UNVERIFIED.
+Native06 P0 reference is ACCEPTED_NATIVE_REFERENCE_R4 under merged reader d278659/frozen67f31923, all8/8PASS against unchanged b62c155 run/Succeeded4/4/exit0/restarts0/12.002222GPUh. D-Q10 is integrated e89b45d. [Current root state](progress.md#current-root-state) links final acceptance/result/freeze/matrix/integration JSON; old R3 FAIL/native05 UNVERIFIED preserved. Only18 P0 reference subtask PASS, full05/09/18/19 remains unfinished; no Frontier prediction/four-metric calibration/operator or graph costs/physicalTP8 profiling/independent expert-histogram qualification or new GPU budget.
 
 The following paragraphs preserve the earlier C-only delivery context.
 
@@ -44,7 +45,7 @@ Balanced prefill wiring delivered in commit `ac21f88` on `v4-h800-prefill`, foll
 - `tests/unit/test_native_reader_binding.py` and `tests/unit/test_native_v2_serving_inventory.py`: meaningful missing/mismatch/source-shadow/real-input controls and original non-graph AST invariants.
 - `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py`: b62c155 existing case-input correction after0832200 deadlines/e9e79d4 redundant hash removal; dispatch70/routing74 pins, host R3/R2 and native/C26 unchanged.
 - Complete candidate: native-model `candidate_h800_p0_06`, sourceb62c155,43 sealed inputs/manifest8eb3f794. Native-model's delivery/test report retain the historical UNSEALED_CPU_CHECKED stage; `native06_root_readiness.json` records subsequent SEALED_READY, superseded for submission status by `native06_platform_launch.json`.
-- Native authoritative evidence: `native06_root_readiness.json`, `native06_root_submission.json`, `native06_platform_launch.json`, `../task_2026-10-22_v4_native_dispatch/FINAL_FREEZE.json` and `test_report_2026-10-23_native_ready.md`; retain original source/fidelity/review/union/mount/builder reports unchanged.
+- Final native admission evidence: parent `native06_acceptance_20261023/{primary_acceptance_r4.json,frozen_r4_result.json,client_receipt.json}`, dispatch `FINAL_FREEZE_R4.json`, R4 task `matrix_accounting.json`; launch/readiness/original freeze/reports remain their unchanged historical stages. Exact paths are in [current root state](progress.md#current-root-state).
 
 ## Validation observations
 
@@ -58,9 +59,9 @@ Archive SHA3808af195b09e32074922b2f068e4b670ba1a8ed80fe916a2527967ab3997223 and 
 
 ## Open root/native work
 
-Native06 terminal is complete: Succeeded4/4/exit0/restarts0/12.002222GPUh. FrozenR3 retains7PASS/rank_runtime_graphFAIL; completed RCA identifies its incomplete FP8-only owner enumeration, while independent metadata records43MXFP4/MARLIN owners on all32ranks. Client business/three-round checks pass. Root authorized a versioned <=3non-core-file/300-line owner-reader correction using retained evidence; independent review/rerun/freeze and complete downstream acceptance remain open. No newGPU is authorized. [Current root state](progress.md#current-root-state) links evidence; original failures and caps remain unchanged.
+Native06 P0 reference acceptance is complete: frozen R4 all8/8PASS,32ranks/six phases, physical graph P NONE and D PIECEWISE/FULL; client432/432/three rounds/seven boundaries PASS. Root merged208PASS/no findings and FINAL_FREEZE_R4 precede final acceptance JSON. R4 evaluation case is separate, original runs symlinked/inputs byte-and-mtime preserved; original R3 FAIL unchanged. R4 additional2files223lines/zeroCore under3/300 and historical routing953/dispatch491/D-Q103/197/core55 are separately accounted, no net-union claim. [Current root state](progress.md#current-root-state) links final evidence; no new GPU budget.
 
-D-Q10 source2f87828 (3files197lines/core55, separate from routing953) is ACCEPTED_ISOLATED_PREREQUISITE: clean576d278 strict77 COMPLETE77/77,451actual hashes/519cache filenames verified, affected checks and dual-axis review complete/P3closed. Contract-task `primary_acceptance.json`/`test_report_2026-10-23_primary.md` and [current root state](progress.md#current-root-state) retain evidence; root primary merge underway with no merge hash claimed. Full05/09/18/19, balanced decode/graph/TP8-PD/serving costs remain unfinished; no newGPUcollection or relabeling historical unbalanced q1. GLM pause/CPU-overhead-last and following historical handoff are unchanged.
+D-Q10 is INTEGRATED_ISOLATED_PREREQUISITE e89b45d, merged144PASS/94exact/legacy102positive72negative. R4 matrix accounting explicitly reuses actual576d27877/77 with451actual hashes/519cache names/777runtime-input bytes, same environment/gitlink and unreached changed unit file; NOT a new R4 capture. Contract `integration_receipt.json` and [current root state](progress.md#current-root-state) retain authoritative evidence. Full05/09/18/19/Frontier prediction/four-metric calibration/operator costs/physicalTP8 profiling/independent expert histogram remain unqualified. No historical-q1 relabeling; GLM paused/CPU-overhead-last/history unchanged.
 
 Completed R1 root decision in39b2bf8: current-clean-HEAD snapshot mechanism, h800_prefill_balanced / PREFILL_WARM_6144_C0_BALANCED and matching revision-derived tag/output/task identity. Earlier literal-source and pending-selection instructions are historical.
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: final R4 native06 P0 reference accepted8/8 after merged208PASS and bound matrix reuse; D-Q10 integrated, old snapshots preserved. |
 | 2026-10-23 | D-Q10 isolated prerequisite integrated at e89b45d and merged checks passed; R4 independent review/root verification continue. |
 | 2026-10-23 | Closed postrun S5 pointers: client/RCA complete; root authorized the bounded versioned owner-reader correction, independent of CPU integration. |
 | 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS final delta: native06 Succeeded12.002222GPUh but frozen identity predicate FAIL; D-Q10 isolated prerequisite accepted with complete matrix, root merge underway. |
@@ -23,7 +24,64 @@
 
 ## Current root state
 
-Latest integration update: D-Q10 is INTEGRATED_ISOLATED_PREREQUISITE at e89b45da0346d2d3de7c735d47a00c4a580193ad. Merged144unit/94accepted/legacy102-72 checks pass; all three accepted source hashes and complete production/test/data/gitlink bytes match verified576d278. See `../task_2026-10-23_v4_prefill_contract/integration_receipt.json`. Earlier primary-merge-pending statements below are dated snapshots. Native R4 source29790c9 (2non-core files/223changed lines) has owner/root8-predicate diagnostic PASS but remains in independent review; no new native admission is claimed here.
+Latest admission — W128-V4-NATIVE06-ADMISSION-RECORDS: parent `../task_2026-10-15_glm53_dsv4_vllm028_h800/native06_acceptance_20261023/primary_acceptance_r4.json` is ACCEPTED_NATIVE_REFERENCE_R4 at2026-10-22T21:57:59Z; `frozen_r4_result.json` all8/8PASS at21:56:20Z. Ticket18 P0 reference subtask PASS; full18 retains other hardware/prerequisites and05/09/19 remains unfinished. Existing b62c155/exp-1023-043123-830898 is unchanged, Succeeded4/4/exit0/restarts0/12.002222GPUh; no new run or GPU budget.
+
+- completed R4 source/review/freeze: reader merge d278659f8469a1cde6b4d5113a23ad1084587e59; root208PASS/0fail/error/skip XML `/data/ycfeng/tmp/glm53_dsv4/root_native_r4_merged_d278659.xml`, both source reviews NoFindings. `../task_2026-10-22_v4_native_dispatch/FINAL_FREEZE_R4.json` binds R4 SHA67f3192302b6d12c0b8296581ee8b2788a772bce80b158ad45bc349eacb32a7b and unchanged frozenR3ca8ddcea/R229523700. Its PENDING_FROZEN_REEVALUATION field is the freeze-time snapshot, superseded only by final acceptance JSON. Additional R4 scope2files223lines/zeroCore under3/300; historical routing953/dispatch491 and D-Q103/197/core55 separately recorded, not a net-union total.
+- completed separate frozen re-evaluation: `/data/ycfeng/tmp/glm53_dsv4/native06_case_r4_20261023` uses runs symlink to original plus byte/mtime-preserved case inputs. Original case `/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023` and R3 FAIL analysis remain immutable; final receipt verifies123original files unchanged. R4 verifies32physical ranks/six phases, physical graph P NONE and D PIECEWISE/FULL. Client432/432, three rounds/seven boundaries PASS (`../task_2026-10-15_glm53_dsv4_vllm028_h800/native06_acceptance_20261023/client_receipt.json`). This admits only the retained native P0 reference, not Frontier prediction/four-metric calibration/operator or graph costs/physicalTP8 profiling/independent expert histogram. Native05 stays historical UNVERIFIED, GLM paused/CPU-overhead last.
+- completed comprehensive-matrix accounting: `../task_2026-10-23_v4_native_routing_reader/matrix_accounting.json` reuses actual clean576d27877/77 capture,451actual artifact hashes/519cache names/777regular runtime-matrix-input bytes; same environment/gitlink, only non-task diff is the unit file not reached by capture entrypoints. NOT a new R4 matrix capture or gate waiver.
+- completed independent integration: D-Q10 INTEGRATED_ISOLATED_PREREQUISITE e89b45da0346d2d3de7c735d47a00c4a580193ad, original source2f87828/3files197lines/core55, merged144unitPASS/94exact accepted scopes/legacy102positive72negative. `../task_2026-10-23_v4_prefill_contract/integration_receipt.json` is authoritative; full predictor/physicalTP8/PD/graph/serving/E2E remain unqualified. Historical unbalanced q1 cannot be relabeled.
+
+### Records validation — W128-V4-NATIVE06-ADMISSION-RECORDS
+
+Read-only inline `/usr/bin/python3`3.10.6 (`pathlib`, SHA256, JSON, XML), cwd `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`: expected final18 current pointers to match acceptance/freeze/matrix/integration/client JSON, preserve every historical tail/quote, and avoid full-ticket/new-capture/new-budget claims. Final520/520PASS, zero failures; historical-tail and quotation hashes each18/18 byte-identical, no exclusions. Initial513/520 had one absent plan legacy72 pointer (added its existing receipt-bound value) and six literal-only false negatives for equivalent capture/budget wording; next518/520 had two remaining wording false negatives, resolved in the read-only checker without changing those valid paragraphs. Evidence-only readback verified8/8 receipt/hash/XML/old-case checks,208tests/0fail/error/skip in existing XML and9case input files byte/mtime equal with original runs symlink. No code, tests, config, Git, platform or root report/JSON/freeze was changed or executed; only the18 owned records were written. Writer stops after final readback.
+
+## 1. 规划完成情况
+
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| 18份当前准入/集成指针同步 | PASS | 最终R4 acceptance8/8、D-Q10 integration JSON；仅18P0 reference子任务PASS。 |
+| 文档sanity和历史保留 | PASS | 520/520；历史尾部及引用各18/18不变。 |
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** W128-V4-NATIVE06-ADMISSION-RECORDS 请求至本次sanity｜**当前前沿：** 记录writer停止；剩余05/09成本与Frontier prediction/calibration由root继续。
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | 仅请求的记录与比例适当的read-only sanity；验收后停止。 |
+| D2 细节反复重试 | CLEAR | 一次缺指针补齐，其余为checker literal false negatives，无行为补丁。 |
+| D3 支线问题修补 | CLEAR | 无源码、平台或其他文件修改。 |
+| D4 可并行任务停滞 | CLEAR | records不阻塞root；R4/D-Q10依据最终JSON已完成。 |
+| D5 超范围镀金 | CLEAR | 仅18授权记录，不增加budget/threshold/qualification。 |
+| D6 分析空转 | CLEAR | 读取决定性证据后直接同步、sanity、停止。 |
+| D7 路线违背 | CLEAR | 保留GLMpause/CPUlast/旧R3FAIL/native05UNVERIFIED。 |
+
+**文档检查：** S5旧准入/merge-pending指针已按最终JSON修正；S1/S2/S3/S4/S6未发现本records-scope缺陷。
+**归因：** 无。
+
+## 3. 纠正建议
+
+**分支：** B：S5当前状态过期，先更新文档再继续。
+
+**文档更新（先执行）：**
+1. routing6、parent4/tickets05/09/18/19及R4task4：已同步final R4/P0-only acceptance、D-Q10 integration、matrix-reuse和remaining gates；历史原文保留（可直接执行，已完成）。
+
+**需停止的偏离行为：** 无。
+
+**接下去的路线：**
+1. 本records writer停止 → 完成标志：18文件current pointers/sanity/history preservation通过。
+2. root继续既有05/09/19 qualified cost/prediction/operator-gap路径；CPU-overhead最后；未授权的新GPU collection不得启动。
+
+## 4. 最值得关注的 3 点
+
+1. 仅native06 P0 reference子任务PASS；完整18/05/09/19与Frontier prediction/four-metric calibration仍未完成。
+2. R4 gate复用真实576d278 capture，未生成新R4 matrix；旧R3FAIL/native05UNVERIFIED不变。
+3. R4additional2/223/zeroCore与历史routing953/dispatch491、D-Q103/197/core55分列，无新GPUbudget/net-union claim。
+
+### Historical terminal/admission-pending snapshots — superseded 2026-10-23 by final R4 JSON above
 
 Latest continuation — W128-V4-NATIVE06-RUNNING-RECORDS final delta: native06 b62c155/exp-1023-043123-830898 completed Succeeded4/4/exit0/restarts0/12.002222GPUh, but frozen R3 computed7PASS/rank_runtime_graph identity FAIL, reference UNVERIFIED. D-Q10 source2f87828 is ACCEPTED_ISOLATED_PREREQUISITE; clean576d278 strict77 COMPLETE77/77,451 actual artifacts/519cache filenames verified, primary merge underway/root-owned with no merge hash claimed. Routing23/953=A432+B319+C202/dispatch491, frozen R3/R2 and original source/fidelity evidence are unchanged; full05/09/18/19 acceptance stays open.
 
@@ -35,7 +93,7 @@ Latest continuation — W128-V4-NATIVE06-RUNNING-RECORDS final delta: native06 b
 - in-progress native06 run: after `native06_root_submission.json` root gates/quota receipt, exp-1023-043123-830898 was submitted2026-10-22T20:31:23Z. `native06_platform_launch.json` observes Running4 active at20:36:55Z, creator i-fengyicheng,32H800/codesign/non-preemptible, locked image2286e853 and local sourceNFS100.96.128.195 verified. Bounds remain3600payload/1800startup/1800replay/32GPUh. Latest root-supplied observation20:45:34Z: all4 Running/zero restarts, own-cloud-namespace32serving rank files/32actual H800 devices/no node observation errors, successful200requests, replay unfinished. This records the supplied root observation, not a new platform/cloud inspection. Rank-file existence and partial HTTP200 completions do not prove graph/runtime/reference admission; final replay/business/terminal/full R3 remains UNVERIFIED. Native05 remains historical UNVERIFIED; auxiliary validators stay soft gates.
 - completed D-Q10 source/affected verification, matrix in-progress: W128-V4-PREFILL-CONTRACT-DQ10 source2f87828 delivers3files/197lines/core55, separately counted from routing953. Root144PASS,94 exact accepted scopes (50CUDA_EVENT/44KERNEL_ONLY), legacy102positive/72negative, serving_admission=false. Dual-axis source review found no code defect; sole approval-pointer P3 closed via stable D-Q10 heading. Evidence: `/data/ycfeng/Frontier/.worktrees/v4-prefill-contract/task_memory/task_2026-10-23_v4_prefill_contract/{review.md,test_report_2026-10-23_v4_prefill_contract.md}` and `/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_2f87828{.xml,_accepted.json,_legacy.json}`. Clean fixed-source576d278 strict77 is RUNNING for the repository >=50-scenario matrix gate; result/comparison/root integration pending. Do not edit the worktree during capture. Independent non-timing layouts/hashes and existing-reader/H200 legacy defaults remain; exploratory50/50 is historical satisfiability only. No full family/PD/graph/serving, balanced-q1 relabeling, newGPUcollection or full ticket PASS follows. GLM stays paused except completed narrow causality question; CPU-overhead remains last.
 
-### Terminal and isolated-prerequisite acceptance — current final delta
+### Historical terminal and isolated-prerequisite acceptance — pre-R4 final delta
 
 - completed native06 platform run: `native06_platform_terminal.json` observes Succeeded4/4 at2026-10-22T20:58:00Z, finish20:54:54Z, all containers exit0/restarts0, durations1364/1263/1386/1388s with8GPUs each =12.002222222222223GPUh. Sourceb62c155,43-file manifest8eb3f794, frozenR3ca8ddcea/R229523700 and3600payload/1800startup/1800replay/32GPUh caps unchanged. Running observations above are historical, not current status.
 - failed native06 frozen runtime/reference admission: R3 computed7PASS/rank_runtime_graph identity FAIL. Completed RCA identifies an FP8-only owner enumeration while all32rank inventories independently retain43MXFP4/MARLIN owners, children and backends with matching strategy/source identity. Client business independently passes432/432, three formal windows and seven boundaries; see parent native06_acceptance_20261023/{routing_rca.md,client_report.md}. Root authorized D-V4-NATIVE06-ROUTER-OWNER-READER: additional <=3non-core files/300lines, hash-bound successor, unchanged raw/frozenR3 result and downstream criteria, separate full re-evaluation only after review/rerun/freeze. Implementation owns the v4-native-routing-reader worktree; no newGPU. Native05 remains historical UNVERIFIED. Root also compared65downloaded business files/32,481,016bytes with cloud hashes, all equal (`native06_results_integrity.json`).

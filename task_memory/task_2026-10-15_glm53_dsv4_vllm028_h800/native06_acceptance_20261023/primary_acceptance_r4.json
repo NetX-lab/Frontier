@@ -1,0 +1,57 @@
+{
+  "status": "ACCEPTED_NATIVE_REFERENCE_R4",
+  "accepted_at_utc": "2026-10-22T21:57:59.461659+00:00",
+  "decision": "D-V4-NATIVE06-ROUTER-OWNER-READER",
+  "rjob_name": "exp-1023-043123-830898",
+  "original_source_revision": "b62c155abd981a71e12e62aa0c0fe3990741d2f8",
+  "reader_source_revision": "d278659f8469a1cde6b4d5113a23ad1084587e59",
+  "checker_sha256": "67f3192302b6d12c0b8296581ee8b2788a772bce80b158ad45bc349eacb32a7b",
+  "freeze_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/FINAL_FREEZE_R4.json",
+  "freeze_sha256": "f87a68688bc4f6c4474e7eab640e049cb2dd2ca3eaf2cfb2e11f531be904727a",
+  "evaluation_case": "/data/ycfeng/tmp/glm53_dsv4/native06_case_r4_20261023",
+  "original_case": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023",
+  "run_tag": "dsv4-h800-p0-canonical-20261021-06",
+  "mode": "clean",
+  "result_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native06_acceptance_20261023/frozen_r4_result.json",
+  "result_sha256": "71bc110b8162af3672460d59a4ff95e9e8b224ad45605eb43753b983b83c5faa",
+  "client_receipt_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native06_acceptance_20261023/client_receipt.json",
+  "client_receipt_sha256": "593705ab739c021cfd938a97370f2ce8862082917b23bb6a5a82b848cd3b434c",
+  "predicate_count": 8,
+  "physical_ranks": 32,
+  "phases_per_rank": 6,
+  "serving_counts": {
+    "prefill": {
+      "NONE_forwards": 3456,
+      "NONE_replays": 0
+    },
+    "decode": {
+      "PIECEWISE_forwards": 6760,
+      "PIECEWISE_replays": 297440,
+      "FULL_forwards": 442064,
+      "FULL_replays": 442064
+    }
+  },
+  "original_frozen_r3_status": "FAIL",
+  "original_frozen_r3_preserved": true,
+  "original_files_verified_after_evaluation": 123,
+  "new_gpu_run": false,
+  "actual_gpu_hours": 12.002222222222223,
+  "qualified_workload": {
+    "formal_requests_per_round": 128,
+    "warmups_per_round": 16,
+    "rounds": 3,
+    "prompt_tokens": 6144,
+    "output_tokens": 1024,
+    "qps": 1,
+    "physical_layout": "P16+D16; per-role TP8/DP2/EP16/PP1",
+    "routing": "balanced_topk",
+    "dtype_backend": "MXFP4/MARLIN"
+  },
+  "frontier_prediction_admission": false,
+  "four_metric_calibration_admission": false,
+  "limitations": [
+    "Qualifies this retained native reference under corrected R4; the historical R3 rejection and native05 status remain unchanged.",
+    "Not an independent expert histogram or measured operator-cost/TP8-profile/graph-cost/Frontier coverage qualification.",
+    "No CPU-overhead analysis, observer-overhead claim, new threshold or new collection."
+  ]
+}

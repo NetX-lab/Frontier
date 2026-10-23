@@ -4,11 +4,23 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: root review/merged208/freeze/matrix reuse/frozen8/8 complete, native06 P0 reference accepted; preserved original owner chronology. |
 | 2026-10-23 | Started bounded reader correction from clean b62c155 worktree. |
 | 2026-10-23 | Verified focused MXFP4 RED/R4 GREEN and strict actual-rank identity controls. |
 | 2026-10-23 | Completed 208-test final regression, diagnostic 8/8 PASS, immutable evidence and matrix-scope inspection. |
 
 Task ID: W128-V4-NATIVE06-ROUTING-READER.
+
+## Current root status (2026-10-23)
+
+- completed source integration/review: reader merged d278659f8469a1cde6b4d5113a23ad1084587e59; root208PASS/0fail/error/skip XML `/data/ycfeng/tmp/glm53_dsv4/root_native_r4_merged_d278659.xml`, both source reviews NoFindings. Scope2files223lines/zeroCore under3/300, separately from historical routing953/dispatch491 and D-Q103/197/core55; no net-union claim.
+- completed matrix accounting: `matrix_accounting.json` reuses actual576d27877/77 capture/451actual artifact hashes/519cache names/777runtime-input bytes, same environment/gitlink, only changed non-task unit file not reached by capture entrypoints. NOT a new R4 matrix capture or gate waiver.
+- completed final freeze/evaluation/admission: dispatch `FINAL_FREEZE_R4.json` binds67f31923 plus frozenR3ca8ddcea/R229523700. Parent `native06_acceptance_20261023/{primary_acceptance_r4.json,frozen_r4_result.json}` is ACCEPTED_NATIVE_REFERENCE_R4/all8/8PASS. Separate evaluation case `/data/ycfeng/tmp/glm53_dsv4/native06_case_r4_20261023` uses original runs symlink/byte-and-mtime-preserved inputs. Original b62c155 run/12.002222GPUh and R3 FAIL/native05 UNVERIFIED unchanged; client432/432/three rounds/seven boundaries PASS,32ranks/six phases physical graph P NONE/D PIECEWISE+FULL.
+- completed independent CPU integration: D-Q10 e89b45d/source2f87828, merged144PASS/94exact/legacy102positive72negative per contract `integration_receipt.json`. Only18 P0 reference subtask PASS; full18/05/09/19 unfinished. No Frontier prediction/four-metric calibration/operator or graph costs/physicalTP8 profiling/independent expert histogram/new GPU budget; GLM paused/CPU-overhead-last.
+
+## Historical owner status — pre-root admission snapshot (2026-10-23)
+
+The original owner diagnostics, failures and pending root work below remain verbatim; completed root gates and acceptance above supersede only their current-status interpretation.
 
 ## Status
 

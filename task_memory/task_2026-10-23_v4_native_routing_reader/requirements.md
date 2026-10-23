@@ -4,9 +4,20 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: root merged/reviewed/froze R4 and accepted the unchanged native06 P0 reference; original authority, acceptance rules and pre-admission evidence preserved. |
 | 2026-10-23 | Root recorded the bounded reader correction and separate reconsideration of unchanged native06 evidence. |
 
 Task ID: W128-V4-NATIVE06-ROUTING-READER. Parent: ticket18 in task_2026-10-15_glm53_dsv4_vllm028_h800. Baseline b62c155. Root owns final acceptance.
+
+## Current acceptance (2026-10-23)
+
+Root accepted native06 P0 reference as ACCEPTED_NATIVE_REFERENCE_R4 in `../task_2026-10-15_glm53_dsv4_vllm028_h800/native06_acceptance_20261023/primary_acceptance_r4.json`; final `frozen_r4_result.json` all8/8PASS. Reader merged d278659f8469a1cde6b4d5113a23ad1084587e59, root208PASS/0fail/error/skip, both source reviews NoFindings. `../task_2026-10-22_v4_native_dispatch/FINAL_FREEZE_R4.json` binds67f31923 plus frozenR3ca8ddcea/R229523700. Original b62c155 run/12.002222GPUh and old R3 FAIL/native05 UNVERIFIED remain unchanged.
+
+Delivered scope is separately2files223lines/zeroCore under3/300; historical routing953/dispatch491 and D-Q103/197/core55 unchanged, no net-union claim. `matrix_accounting.json` binds reuse of actual576d27877/77/451actual hashes/519cache names/777runtime-input bytes, same environment/gitlink and unit file not reached by capture; NOT a new R4 capture. D-Q10 integrated e89b45d/merged144PASS/94exact/legacy102positive72negative (`../task_2026-10-23_v4_prefill_contract/integration_receipt.json`). Only18 P0 reference subtask PASS; full18/05/09/19 unfinished, no Frontier prediction/four-metric calibration/operator or graph costs/physicalTP8 profiling/independent expert histogram/new GPU budget. GLM paused/CPU-overhead-last.
+
+## Historical pre-admission requirements snapshot — superseded status only (2026-10-23)
+
+The original authority, decisions and criteria below are preserved verbatim; its then-unestablished downstream acceptance and originalR3FAIL describe the pre-R4 snapshot, not the final acceptance above.
 
 ## Authority and decision
 
