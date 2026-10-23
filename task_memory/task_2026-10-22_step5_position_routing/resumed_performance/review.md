@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Append separate prepared-point Standards/Spec closure and explicit primary acceptance at eece87b2; preserve earlier review sections and provenance. |
 | 2026-10-23 | Add independent trace Standards/Spec closure and parent component acceptance at64881373. |
 | 2026-10-23 | Archive separate Standards/Spec closure,group records P2 disposition and explicit primary component acceptance. |
 
@@ -126,3 +127,83 @@ actual operator duration/proof pairs match in each wave, with baseline event byt
 unchanged. Source was merged at `64881373`, byte-identical to reviewed `9ae60ebc`.
 `trace_parent_acceptance.json` records commands' artifacts, hashes, source binding
 and Git-derived14/20 scope. Final union regression/CLI/native gates remain open.
+
+## Prepared point selection component
+
+Archive task: **D29-PREPARED-PARENT-ARCHIVE**. Component:
+**D29-PREPARED-POINT-REUSE**. Base `caffccbb48011f0140359d391ad75b58906ff15b`,
+code `0be11762d0f83e9db77658a1447a672507166872`, owner records
+`b476907e9afe865476e0a3a6720f8eb4e3290c40`, integrated at
+`eece87b2378bf86c6673b74f1a769f566bc5792a`.
+
+Both independent reviewers inspected actual complete source and the three-path
+diff, parent/owner requirements and plan, source/receipt lifetime and the actual
+contract `prepared_point_repair/interface_receipt.md`. The component directory
+has no `design.md`. Diff artifact:
+`task_memory/task_2026-10-22_step5_position_routing/prepared_point_repair/prepared_point_repair.diff`.
+Neither reviewer reran tests or hashes. The following axes archive the primary's
+supplied results; this records-only task does not repeat or reinterpret the
+earlier source reviews above.
+
+### Standards
+
+Reviewer `ses_e97039e03ffeu3ZRIC116k0GwS`: **No findings;0 findings,worst none**.
+
+The private preparation in
+`frontier/execution_time_predictor/moe_routing_workload.py:136–246` stays local
+to the predictor, keyed by actual estimator, attached physical-row tuple,
+measurement identity and exact current artifact text. It reuses the existing
+query interface and replaces the old scan rather than adding a public API or
+alternate implementation. No numerical/global/whole-proof cache is introduced.
+Supported receipt lifetime/replacement follows the inspected construction and
+fit paths; nested in-place row mutation is not a supported serving path or a
+newly promised invalidation mechanism.
+
+### Spec
+
+Reviewer `ses_e97039de3ffe8fnhZlDO38w5lY`: **No findings;0 findings,worst none**.
+
+Current group/family/registry/source/model/point selection stays live, as do
+per-query file reads, fresh native contexts, exact duration/count lookup and
+complete source proofs. Full plan keys, shared/compute domains, ambiguity,
+buffer/context/policy and error checks remain. Replacement/error assertions at
+`tests/unit/test_prediction_measurement_bindings.py:254–272` and
+`tests/unit/test_moe_routing_runtime.py:79–104` cover the actual seam without a
+second production preparation path. Failed preparation does not publish partial
+retained state. Existing error and numerical rules are not weakened.
+
+### Primary acceptance and evidence limits
+
+Primary explicitly **ACCEPTED** this component after both independent axes and
+its own verification, then merged owner record deliveryb476 at eece. Parent raw
+artifacts show82 PASS/1 existing Torch SKIP/0 FAIL/ERROR and a separate2 PASS
+both-trainer/preflight/independent-fit-cache selection. Keep those selections and
+their provenance separate; neither is reviewer execution.
+
+The parent b476 layer60 replay has one16464-row/168-key preparation,
+cold3258/warm1968 decodes and80 current reads per wave. Both complete payloads
+retain `3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83`.
+The retained comparison checks208 captured/208 replay/all208 duration and five
+complete proof-field pairs, with zero mismatches. Raw wave/comparison scope
+literals still say layer61; the executed filter and current layer60 source,
+records/counts/proof hashes establish the accurate complete captured scope.
+Both raw artifacts remain unchanged, with this limitation disclosed in
+`test_report_2026-10-23_prepared_point_repair.md` and accurate derived scope in
+`prepared_parent_acceptance.json`. This is source-replay parity, not GPU truth.
+
+Owner committed36-positive/24-negative matrix remains owner evidence, not a root
+rerun or the parent's earlier prototype matrix. The executed prepared worktree
+does not include trace390, so its pricing/approximately0.131s flush measurements
+cannot establish integrated-union timing or be added to separate trace speedups.
+
+This archive independently checks source bytes/Git accounting and reparses
+existing receipts only: the three prepared files equal0be; integrated trace
+equals390; gitlink3dac and all18 donor paths remain unchanged. Step159/250 and
+cumulative197/323,299/299,75/78 pass their caps. Accepted79 audit plus the actual
+four-path retained increase135 gives CORE4105/source9375/global9389; this is not
+the pending final112-path union audit. Main plan/progress/summary remain root-owned.
+
+Final union review/accounting/freeze, fresh strict77/full-unit, complete6144/1024
+CLI within2400s, T2 final-source seal, native runtime/GPU/G3 and four-metric E2E
+acceptance remain open for the new union. No successful check was rerun, source
+edited, new agent spawned or network/platform/GPU operation performed here.

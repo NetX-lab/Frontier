@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Initial read-only investigation of the unexplained 21.5-minute initialization window; bounded unit probes and budget reconciliation. |
 | 2026-10-23 | Second pass: added the omitted Step attention training/cache-hit phase and its hash multiplicity, retracted the column-wise hashing proposal, corrected the budget to the current overlays. Earlier observations are preserved; superseded numbers are marked **REVISED**. |
+| 2026-10-23 | Third pass (D29-INIT-CACHE-RECONCILIATION): cache verdict from published bundles + mtimes + real load/save code; corrected MoE read/admission multiplicity, the admission rate, and the 22/78 split. Bindings: historical claims stay on e41 (`verify-step5-d29-integrated-05`); the current merged source is not used. Superseded figures are marked **REVISED**. |
 
 Task ID: **D29-EARLY-INIT-REPRO**. Read-only. No production source, test, input,
 prior run, GPU or platform state was touched. Frozen source
@@ -21,7 +22,7 @@ whole 5.63 GB input. This work is disjoint from the in-flight repair to
 | --- | --- |
 | offline wall / cap | 2400.10 s / 2400 s, timeout |
 | first log line | 15:05:16 model-architecture warning, then the printed cluster summary |
-| **predictor training finished** | `cache/bundle_3d960f88….json` written **15:26:44** |
+| **predictor training finished** | bundles written **15:26:43-15:26:46** (`3e462326`, `48e35a87`, `3d960f88`, `52781c91`) |
 | first profiling-metadata warning | 15:26:46 `quantization_manager.py:814` op=attn_pre_proj |
 | last metadata warning | 15:30:57 op=moe_grouped_gemm (cluster 2) |
 | CLI `--log_level` | `warning` — nothing else is logged in this window |
@@ -29,8 +30,10 @@ whole 5.63 GB input. This work is disjoint from the in-flight repair to
 **REVISED anchor.** `_publish_step5_model_bundles()` runs immediately after
 `_train_all_required_models()` (`shared_prediction_model_manager.py:112-113`), and
 the retained bundle `bundle_3d960f88a3aecb8fd3e5b732f251bec594838d257e3c044d6e1aa93dfadc4934.json`
-has mtime 15:26:44 — two seconds before the first metadata warning. Therefore the
-unexplained window **15:05:16 -> 15:26:44 (1288 s)** is entirely predictor-model
+has mtime 15:26:44, and the last of the four is 15:26:46 — the first metadata warning
+is 15:26:46, so training ended no later than that. Therefore the
+unexplained window **15:05:16 -> 15:26:46 (~1290 s; 1288 s used as the round figure
+below and in §6a)** is entirely predictor-model
 construction, and the 15:26:46 onward warnings belong to the *subsequent*
 quantization/cluster phase, not to training. Earlier wording that placed the
 window's end at "the FFN preflight" is superseded by this anchor.
@@ -194,7 +197,7 @@ Direct measurements (unchanged from the first pass unless marked):
 | `md5(encode)` | 0.314 s / 2 000 rows | `slice01` |
 | per-row validation body | 0.491 ms/row | `attnloop01` |
 | `_validate_targets` | 0.321 ms/row | `trainpass02` |
-| MoE position admission | 1.09 ms/iterated row, 7 operator calls | `moefilter02` |
+| MoE position admission | **REVISED**: 3.813 s over 7 calls x 3 000 rows = 0.1816 ms per row-visit (the earlier "1.09 ms/iterated row" divided by selected rows, not visited rows), 7 operator calls | `moefilter02` |
 | attention hash multiplicity | **3 serialisations, 2 identical hashes** | `attnphase02` |
 | root-op contract rows | **0**, yet whole frame hashed | `attnphase02` |
 
@@ -210,16 +213,49 @@ Scaled to the full CUDA_EVENT union (94 852 rows; **estimates**, row-linear):
 | `_validate_targets` | 30.4 s |
 | **3 x (`to_json` + `md5`)** | **85.9 s**, each pass serialising ~5.78 GB (was 28.6 s before the omission was found) |
 | attention union subtotal | **~236 s** |
-| MoE preflight (read + full admission) | 49.6 s |
+| MoE preflight (read + full admission) | ~~49.6 s~~ **REVISED, see 6a** |
 | layernorm | 1.1 s |
-| **explained** | **~287 s of 1288 s (22 %)** |
-| **unattributed** | **~1001 s (78 %)** |
+| **explained** | ~~**~287 s of 1288 s (22 %)**~~ **REVISED: ~1035 s (80 %), see 6a** |
+| **unattributed** | ~~**~1001 s (78 %)**~~ **REVISED: ~253 s (20 %)** |
 
-The attention term grew by the two extra serialisations, but the 78 % residual is
-still the dominant unknown, and it is not a full-frame-only artefact of the
-attention union: the window also contains every other predictor stage for both
-clusters and both measurement families (dense/linear, MoE, residual, communication)
-whose full-scale costs were not measured here.
+The attention term grew by the two extra serialisations. The 78 % residual figure
+was an artefact of counting the MoE path once instead of at its real multiplicity;
+6a replaces it.
+
+### 6a. Corrected multiplicity and accounting (D29-INIT-CACHE-RECONCILIATION)
+
+Measured read multiplicity, `moereads01` (real `_train_ffn_models_for_cluster`, both
+roles sharing one `trained_model_signatures` set, head-slice input so the *counts*
+are faithful and the timings unused):
+
+| Call | MoE `read_csv` calls | linear-op reads | Outcome |
+| --- | --- | --- | --- |
+| PREFILL / one family | **10** | 6 | completes: 12 models |
+| DECODE / same family | **1** | 0 | returns after the facts read (signature hit) |
+
+The 10 MoE reads decompose exactly as `frontier/execution_time_predictor/prediction_family_trainers.py:141-146`
+(1 unconditional facts read, before any signature check) + `:244-247`/`layer_contract_resolution.py:397`
+(2 per-group contract reads) + `:270` (7 per-operator loads through the position branch of
+`_get_moe_df_for_op`, which has **no** `moe_df_cache`; the cache at `:252-345` is the legacy branch only).
+
+Derived scaling per measurement family (37 044 rows, measured unit rates):
+
+| Term | Count | Per unit (measured) | Total |
+| --- | --- | --- | --- |
+| MoE `read_csv` 2.11 GB | 11 | 9.232 s | 101.6 s |
+| typed-contract map (pre-repair) | 7 | 35.344 s | 247.4 s |
+| position admission | 7 | 6.73 s | 47.1 s |
+| **MoE per family** | | | **~396 s** |
+| **MoE, two families (CUDA_EVENT, KERNEL_ONLY)** | | | **~792 s** |
+| attention CUDA union (§6, incl. 2 fingerprints) | 1 | | ~242 s |
+| **explained** | | | **~1035 s of 1288 s (80 %)** |
+| **residual** | | | **~253 s (20 %)** |
+
+With the accepted loader repair (typed map 35.344 s -> 3.426 s, measured at 37 044
+rows) the MoE term becomes 101.6 + 24.0 + 47.1 = ~173 s per family, ~345 s for two,
+i.e. the repair is worth roughly **450 s of the 1288 s window**. That is a scaled
+statement from measured unit rates times measured multiplicity, not a measurement of
+the repaired run.
 
 ## 7. Hash-equivalence evidence, and the retracted proposal
 
@@ -247,7 +283,8 @@ here, and no line count is claimed until the missing measurement below is made.
 Superseded: the first-pass figures (CORE 3 833 / global 9 076, "44 planned slack")
 came from `final_parent/final_ledger_proposal03.json` and are **stale**.
 
-Current, per the latest overlays and the primary's measurements:
+Historical baseline of this task, recorded for context only and **not** a new
+budget request; the authoritative caps are the overlay chain named below:
 
 | Figure | CORE (core_source) | global |
 | --- | --- | --- |
@@ -272,16 +309,22 @@ No budget is consumed or requested by this task.
 
 ## 9. Remaining gap and the one supported next measurement
 
-Still unknown, and not closable by any head slice: the 78 % residual, and whether
-main07's production model hashes were cache hits or misses.
+**REVISED by the third pass.** The cache-hit/miss half of this gap is now closed by
+§12: every model lookup in the retained window hit the cache, so no GridSearchCV ran.
+The remaining gap is the ~253 s residual of §6a, not 78 % of the window.
 
-Missing seam: one instrumented, authorized run of **one** attention stage on the
-real CUDA_EVENT union — the same phases as §6 (read, dedup, row loop, typed maps,
-`_validate_targets`, concat, and the three serialisations) with monotonic timers and
-`getrusage` around each — plus the actual `_load_model_from_cache` verdict for
-`b5cab8e1`/`6a1b9de5`. Bounded at the assignment's 60 s per command by splitting it
-into per-phase commands over a persisted intermediate frame, or by one run of
-~240 s only if the primary raises the cap; I did not do so.
+Still unknown, and not closable by any head slice: the composition of that ~253 s
+(linear-op, residual and communication sub-stages, GDN predictors, model unpickling,
+and any stage after `_publish_step5_model_bundles`).
+
+Missing seam, unchanged in shape: an authorized phase census over one full
+`_train_all_required_models` at real scale. It cannot run under this task's 60 s /
+30 GiB caps, because the phase itself is 1288 s. Two bounded substitutes exist and
+neither was run: (a) a no-instrumentation stage census from the existing INFO lines
+(`shared_prediction_model_manager.py:445-450`, `prediction_family_trainers.py:206`,
+`:331`) on a run the primary authorizes with a longer cap, and (b) further unit
+probes, which have reached the point of diminishing returns because the two large
+terms are already accounted for in §6a.
 
 ## 10. Artifacts
 
@@ -310,10 +353,13 @@ Inputs and retained artifacts unchanged: `fixture_attention_cuda_event.csv` mtim
 
 ## 11. Unresolved limits
 
-- The 78 % residual is unattributed; the MoE/dense/communication stages for the
-  second cluster and the second measurement family were not measured at full scale.
-- Cache hit versus miss for the production hashes is unknown; a miss would add
-  full-union `GridSearchCV` time and is not bounded here.
+- **REVISED (third pass):** the residual is ~20 % (~253 s, §6a), not 78 %. The MoE
+  term is now scaled from measured multiplicity (`moereads01`); the linear-op,
+  residual, communication and GDN sub-stages, and model unpickling, remain estimated
+  only by omission.
+- **REVISED (third pass):** cache hit versus miss is **settled as hit** for every
+  lookup in the retained window (§12). What remains unverified is only the strength of
+  the absence-of-warning argument, not the outcome.
 - `hash_phase_probe.py` is retained as a superseded negative result: it passed
   `step5_generic_compute`, which activates an operator-selection path the attention
   stage does not use, and raised. The production context has neither
@@ -321,3 +367,106 @@ Inputs and retained artifacts unchanged: `fixture_attention_cuda_event.csv` mtim
   hashed.
 - Sparsity of the contract census (12 spaced samples + head + tail, 0 rows declaring
   `step5_layer_e2e`) supports but does not prove the zero count over all 94 852 rows.
+
+## 12. Cache reconciliation: were the production lookups hits or misses?
+
+TaskID **D29-INIT-CACHE-RECONCILIATION**. Read-only. No source, input, cache byte or
+prior run was changed; the four attention pickles and both CSV inputs keep their
+original mtimes. Scratch: `/data/ycfeng/tmp/d29_init_cache_reconciliation/`.
+Bundle parsing read JSON metadata only (20 files x 4.2 MB); no pickle body and no CSV.
+
+### 12.1 Observations
+
+1. `/data/ycfeng/tmp/d29-parent-position-fixture03/cache` holds **20 bundles, 38
+   models each**, 10 `prefill` and 10 `decode` (`census.json`, `roles`).
+2. The four bundles written at the end of main07's training phase are
+   `3e462326` 15:26:43 prefill, `48e35a87` 15:26:43 prefill, `3d960f88` 15:26:44
+   decode, `52781c91` 15:26:46 decode. **Correction to the briefing as I received
+   it:** they do not all name the same attention caches. They name the same *pair per
+   measurement family*, shared by both roles:
+
+| Family | `step5_layer_e2e` | `step5_layer_e2e_kernel_count` | mtime | bytes |
+| --- | --- | --- | --- | --- |
+| CUDA_EVENT | `b5cab8e1` | `6a1b9de5` | 10:06:00 / 10:06:52 | 71 552 314 / 71 551 759 |
+| KERNEL_ONLY | `816d519f` | `e422457b` | 10:15:17 / 10:15:17 | 326 497 / 326 084 |
+
+   The `coverage` recorded on the CUDA pickles is 94 852 rows (the whole file), the
+   KERNEL_ONLY ones 276 rows — consistent with §3.
+3. **None** of the 96 `.pkl` files has an mtime inside 15:05-15:30; the window's
+   buckets are empty and the newest pre-window writes are 12:38. Total pickle bytes
+   are 178 MB, of which the two CUDA attention models are 143 MB.
+4. main07 `run.log` (offline and online, 4 839 / 4 838 bytes, continuous from
+   15:05:16 to 15:30:57) contains **0** occurrences of `MODEL CACHE MISS` and **0** of
+   `CACHE MISS: Training`, and exactly 12 `Profiling metadata mismatch` lines
+   (2 per op, 6 ops) starting 15:26:46.
+
+### 12.2 Real code and config behaviour (read from e41)
+
+- Miss path: `prediction_family_trainers.py:1841` `logger.warning(error_msg)` — the
+  "MODEL CACHE MISS ERROR" block is logged at WARNING, so `--log_level warning` (the
+  actual main07 argv) does **not** hide it. Then `:1849-1866` builds and fits
+  `GridSearchCV`, then `:1896` `_store_model_in_cache(...)`.
+- The stale comment at `:1792` ("we expect all models to be pre-trained") is
+  contradicted by the live code: `:1837` says real-time training is temporarily
+  enabled, and the fit is unconditional on a miss. The comment is historical; the code
+  is authoritative.
+- Hit path: `_load_model_from_cache` (`prediction_model_registry.py:611-630`) returns
+  `None` only when `{model_name}_{model_hash}.pkl` is absent (the `expected_sha256`
+  check is optional and the call site at `:1757` passes none).
+- `_ensure_exact_lookup_metadata` (`:639-663`) **can** write: it falls through to
+  `_store_model_in_cache` when `_frontier_exact_lookup` is missing. It does not here:
+  the retained CUDA pickles already carry 94 852 exact-lookup keys and the
+  KERNEL_ONLY ones 276 (`cache01`, previous task). That is also why mtime is a valid
+  witness.
+
+### 12.3 Verdict (inference, with its support and its limit)
+
+**All model lookups in the 15:05:16-15:26:46 window hit the cache; no model fitting
+or GridSearchCV ran there.** Support: (i) the miss path is a mandatory WARNING at the
+run's own log level and it never appears; (ii) every pkl mtime predates the run and a
+miss or a metadata migration would have rewritten the file; (iii) the hashes published
+by the run's own bundles at 15:26 are exactly the files on disk; (iv) the bundles were
+written into `fixture03/cache`, which proves that directory was the active
+`_cache_dir` for main07, so a miss would have deposited its pickle there.
+
+Limit: this is inference from absence-of-warning plus mtimes, not from observing
+`_load_model_from_cache` return values; an actor that rewrote a pickle with identical
+bytes and restored mtime would defeat it, and none is known. The run log shows no
+truncation or rotation. Consequence for §6a: the "cache-hit phase" costs only
+unpickling (<=178 MB), which is why it does not appear as a separate term.
+
+### 12.4 Corrections this pass makes to earlier statements
+
+| Earlier statement | Corrected |
+| --- | --- |
+| attention input read twice (prefill and decode) | read **once per measurement family**: `load_step5_attention_input_union` builds sources from `{*manager._cluster_configs, cluster_type}` (`step5.py:331-334`), so both roles share one union; the second role re-enters and pays only `dataset_fingerprint` before the retention check |
+| MoE preflight ~50 s | **~792 s** for two families: 11 reads + 7 typed maps + 7 admissions per family, multiplicity measured in `moereads01` |
+| admission 1.09 ms per iterated row | **0.1816 ms per row-visit**; the earlier figure divided by selected rows |
+| 22 % explained / 78 % residual | **~80 % / ~20 %** (§6a) |
+| hit/miss unknowable without the full frame | **hit**, per 12.3 |
+
+### 12.5 Is a new bounded whole-manager census justified?
+
+Not as a *new* measurement of the two large terms — those are now covered by measured
+unit rates times measured multiplicity. It would only be justified for the ~253 s
+residual, and it cannot be executed inside this task's 60 s / 30 GiB caps because the
+phase is 1288 s. The cheapest faithful route is the existing INFO instrumentation on a
+primary-authorized full run; I did not run one, and no optimization is recommended on
+the strength of the residual.
+
+### 12.6 Binding
+
+Historical claims in this report remain bound to frozen source
+`e41abc073500d61f224eda4fca1123e74e40544d` (`verify-step5-d29-integrated-05`). The
+current merged source on `feat/step5-preview` (this records-only worktree is
+`eece87b2`) was **not** used for any measurement here. No per-column hash change and
+no other optimization is proposed.
+
+### 12.7 Artifacts (this pass)
+
+| Artifact | SHA256 |
+| --- | --- |
+| `bundle_census.py` | `0114d2ac45944c6e9721183914968b2272fa637c79f52dfc56f02103d1e8523a` |
+| `moe_read_census.py` | `09be9efa27a5534af29ef365daea4489f254e577497bf8a3d944df27fd25fdd8` |
+| `census.json` | `e8e4d7c3336ece972629e831afe3d5812b82f82aa6eb31fccacfdbf4ad035715` |
+| `moereads01/result.json` | `1e1681a6b4fc1dcf1041f0e79a61aedc326be4460903b9653cdfdcfa55252bc1` |
