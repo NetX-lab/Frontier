@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Close40/65 CLI repair and deliver reviewed code for session handoff;final workflow qualification remains pending. |
 | 2026-10-23 | Reconcile effective111 and four scope overlays; require final-source gates after review closure. |
 | 2026-10-23 | Close scope investigation: preserve both trainer checks; independent public consumer is not a D29 repair prerequisite. |
 | 2026-10-23 | Allocate registry mixed-view P2 inside remaining58; move20 unused caller allowance to its test and investigate independent public binding separately. |
@@ -37,7 +38,7 @@ table below; the raw auditor's majority-based description is not the rule.
 Finally apply cli_placement_scope_amendment.json for the current two-file CORE
 runner repair:40 same-owner allowance transferred,<=65 incremental gross,111
 paths and every aggregate cap unchanged.
-Then apply core_review_scope_amendment.json, a zero-sum230-line redistribution
+The previously applied core_review_scope_amendment.json contains a zero-sum230-line redistribution
 for existing CORE repair paths. The existing wrapper is also assigned its three-gross
 point-diagnostics persistence change inside the same230 repair total and the
 current179 path allowance. This does not alter registry exclusivity or any total.
@@ -97,6 +98,14 @@ identity. Current main04 on60ba is diagnostic because review had not closed when
 it started; allow it to finish, but do not promote it to final CLI acceptance.
 T2 bindings must match the final script/helper bytes; unchanged bytes may be
 verified and explicitly rebound without repeating unrelated measurements.
+
+YC requests the active repair to be closed and code/docs committed for a new
+session. CLI repairae1fb721 is accepted after parent57PASS/6unchangedSKIP and
+independent No findings;40/65 gross. Reviewed code and records are consolidated
+on feat/step5-preview (4ed67d78,9c77b559). This is a delivery checkpoint rather
+than final workflow admission. Fresh full CLI and final-source checks remain
+required;../handoff_prompt.md and the current frontier in ../progress.md carry the
+next execution order. Final delivery source9102/global9116 stays within every cap.
 
 Native-image paths denote edits against the locked native source, not new full
 files charged as zero. Use a fresh derived-source candidate, preserve the old

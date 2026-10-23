@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Close CLI repair after parent57PASS/6SKIP and No findings;merge code4ed67d78/T2 records9c77b559 and record next-session execution. |
 | 2026-10-23 | Apply checkpoint route corrections; separate current frontier from historical receipts and restrict main04 to diagnostic evidence. |
 | 2026-10-23 | strict77 passes77/77 with902 artifact hashes;review finds one Step prepare metadata P2,returned to owner inside existing quota. |
 | 2026-10-23 | YC approves repair-path amendment; parent legacy194PASS; strict77 and full offline/online CLI started on frozen60ba4c75. |
@@ -33,7 +34,60 @@
 | 2026-10-22 | Receive six design findings and start disjoint core, pricing and profile-source corrections. |
 | 2026-10-22 | Receive the first design and request independent scope/correctness review. |
 
-## Current frontier
+## Current frontier and session handoff
+
+- completed: current two-file placement repairae1fb721/75ad26f9. Parent affected
+  suite57PASS/6unchangedSKIP/0FAIL/ERROR;independent No findings. Real runner argv
+  now selects globalTP,DP only for position routing. Both modes and P/D roles
+  return the exact0.03ms CPU cost and count receipt through the actual constructor
+  chain. Delta40/65 gross. Evidence:final_parent/cli_placement_acceptance.json and
+  final_parent/review_2026-10-23_cli_placement.md;owner cli_placement_repair/.
+- completed: reviewed implementation and records merged on feat/step5-preview:
+  code4ed67d786e98c26f2d620ebb1138f761bc924396,T2 records9c77b559f96b1ef3c38c746a7ffd68618ac47fe8.
+  Main-tree frontier/tests/data/Dockerfile bytes equal reviewed75ad26f9. The local
+  clean submodule now matches the committed3dac53c544e546574cb6e8078cd14053d0916113.
+  This is the user-requested handoff delivery,not complete D29 workflow admission.
+- completed: delivery budget independently remeasured:111 allocated/110 changed,
+  native1350/1582,CORE3873/4404,PRICING3879/3956;source9102/9942,global9116/10000.
+  Every path fits its current ceiling. Baseline scope.json plus six ordered
+  overlays remains authoritative. See final_parent/handoff_source_receipt.json.
+- completed: merged T2 packet passes all63 checksums. Its declared source remains
+  1be91bad,and the earlier26-file/2907-source/12-backend/53-pin checks remain bound
+  to that revision. Records are consolidated;final staging/rebinding/seal for the
+  next accepted workflow candidate is still pending.
+- completed on1be only: strict77 final03 is77/77 identical;unit parent03 is
+  8015PASS/279FAIL/32ERROR/281SKIP. Exact historical267FAIL/31ERROR sets are retained;
+  added12aiohttp failures and1Torch collection error are covered by101PASS in the
+  explicit Python3.12 supplement. No baseline case loss or PASS→SKIP. Raw suite
+  remains exit1. Suites are not summed and these receipts are not relabelled as
+  fresh checks on the new delivery commit.
+- failed,retained: main05 offline/online both exit1,not timeout,at the old placement
+  guard (1580.9479549/1560.1816782s). Original commands/logs/execution receipts remain
+  at /data/ycfeng/tmp/d29-parent-position-main05. Scout overwritten offline metrics
+  config.json is excluded as original evidence;its exact path is in
+  repairs/cli_placement_repair.md. The subsequent fix has only constructor-level
+  acceptance so far. main04/60ba is also diagnostic only.
+- pending,first next action: freeze the delivered code and run fresh complete
+  offline/online with retained fixture03,6144/1024 and2400s per mode. Proposed new
+  output /data/ycfeng/tmp/d29-parent-position-main06;use a fresh name if present.
+  Exact command and environment are in handoff_prompt.md. Inspect business
+  outputs and validators before accepting. If it fails,establish a seconds-scale
+  faithful reproduction before modifying the owning code or launching another
+  long run. Preserve all previous artifacts and numeric/admission gates.
+- pending: perform final-source regression/baseline comparison under the retained
+  plan,then T2 target staging/rebinding/seal. Use existing final_parent reports for
+  exact commands and environment dependencies;do not promote earlier-source runs.
+- blocked: T2 GPU/native collection,profiling,G3 and independent four-metric E2E.
+  The16H800/two-node/30-minute/8GPUh proposal is still unapproved. Native CPU-gap
+  work remains last. No GPU job or long CLI run is being left active by this handoff.
+- preserved: unrelated untracked .cortexkit/ and .pi/. Do not delete or stage them.
+  All active delegated tasks are complete;owner/reviewer details are in the
+  current repair receipt. No remote push is part of this delivery.
+
+## Prior frontier before the handoff (historical)
+
+The following entries preserve earlier states;their pending/in-progress labels
+are superseded by the current frontier above.
 
 - completed: approved scope is111 effective code/test/config paths under four
   repairs/*scope_amendment.json overlays. CORE46/4404, native19/1582,
