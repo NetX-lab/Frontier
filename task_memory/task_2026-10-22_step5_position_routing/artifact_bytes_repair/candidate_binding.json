@@ -1,0 +1,73 @@
+{
+  "task_id": "D29-COLLECTIVE-ARTIFACT-BYTES",
+  "label": "candidate",
+  "head": "2cfbb34474c1d4d31f6daf8f9c626d03ad972f58",
+  "source_root": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+  "source_hashes": {
+    "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+    "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+    "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+    "frontier/execution_time_predictor/moe_routing_workload.py": "9942587be5803af284e1e5b581f3096d87de3f70453c477d793e4fe344701017",
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py": "d18bde6f67c28b14353b2da4ea8cf9deaa3927a23b727f62607007e9b16a7198",
+    "frontier/cc_backend/collective_plan.py": "690b20dde386e092cbc549a40569f11e2b1b76f341c9b7eed850ee0ccc581b1d",
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": "e763fb0523c21b947faf5e15749824461cd1b2f4ffec464e76d15d16be312e49"
+  },
+  "original_setup": "/data/ycfeng/tmp/d29_cost_fields_parent01/current_setup.py",
+  "original_setup_sha256": "b6c869b2b01bd118b02aaf0a9755ee6b87e25a7f00c9667cbd52d50a2cca2b80",
+  "derived_setup": "/data/ycfeng/tmp/d29_artifact_bytes_repair/verified03/candidate_setup.py",
+  "derived_setup_sha256": "b88526c33caf5f53e5852262ac8701bf0482ff1b49d9af4987aa7f648cd20091",
+  "parent_run_sha256": "2016ad061af987451dc72fad36f48ebf85d96f5dfbbdf533fd2f53b3007c1dbb",
+  "parent_binding_sha256": "386a76145f1c1542bda20cd6f75be5d22896afe4927c6777f1d8a0d97d49eae9",
+  "unchanged_body": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/probe_body.py",
+  "unchanged_body_sha256": "1cabc04f024e6e1c8ee8d9902e74fee6e5dff4d95faeeaab0f8902e67d6d8555",
+  "wrapper_sha256": "2efbb9cface31e73173dc70f2ad626d14db7770f3a36c9467d28435336611056",
+  "transformation": "Setup changes only two source-root assertions and one HEAD assertion; fresh cwd/output; unchanged emission body.",
+  "layer": 60,
+  "samples": [
+    {
+      "json_loads": 2810,
+      "read_bytes_core": 16,
+      "read_bytes_backend": 64,
+      "artifact_parses": 2,
+      "pricing_s": 1.1234479248523712,
+      "total_current_reads": 80
+    },
+    {
+      "json_loads": 1520,
+      "read_bytes_core": 16,
+      "read_bytes_backend": 64,
+      "artifact_parses": 0,
+      "pricing_s": 0.42134770657867193,
+      "total_current_reads": 80
+    },
+    {
+      "json_loads": 1520,
+      "read_bytes_core": 16,
+      "read_bytes_backend": 64,
+      "artifact_parses": 0,
+      "pricing_s": 0.31052515376359224,
+      "total_current_reads": 80
+    },
+    {
+      "json_loads": 1520,
+      "read_bytes_core": 16,
+      "read_bytes_backend": 64,
+      "artifact_parses": 0,
+      "pricing_s": 0.3252036948688328,
+      "total_current_reads": 80
+    }
+  ],
+  "warm_median_s": 0.3252036948688328,
+  "pricing_payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+  "fixture_metadata_unchanged": true,
+  "fixture_file_count": 262,
+  "command_sha256": "4cb47eb98d3cfee78e087495dc84e79392a0471a5d79803078aeaa79bf15a9bf",
+  "capture_sha256": "23486bceac94e23e6bab2dc8c851300ed353bc71000e1ba6aa2e28b393655694",
+  "scratch_model_json_sha256": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+  "loaded_models_count": 76,
+  "loaded_models_manifest_sha256": "73694d8a5832d8c8344e5f697ae4b55419dbe259983c19849dd03f1e28389e9e",
+  "raw_binding": {
+    "path": "/data/ycfeng/tmp/d29_artifact_bytes_repair/verified03/candidate_binding.json",
+    "sha256": "5afda6340b66cc3c5caf27266d3cdf2857e771c73362b42ebcb2e3e9bc6422e3"
+  }
+}
