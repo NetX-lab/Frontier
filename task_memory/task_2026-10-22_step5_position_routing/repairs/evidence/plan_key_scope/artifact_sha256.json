@@ -1,0 +1,21 @@
+{
+ "algorithm": "sha256",
+ "files": {
+  "plan_key_delta_receipt.json": {
+   "sha256": "b483694024bb4e32aed051e494018e0005824656492b4801032f48351f9e1c07",
+   "bytes": 43834
+  },
+  "changed_file_guard.json": {
+   "sha256": "77f0601e0164fc522f8fef0daebcc3a0fcd9fc91f1b4f2746d9ecd49880f4015",
+   "bytes": 1629
+  },
+  "report_2026-10-24_plan_key_scope_delta.md": {
+   "sha256": "4e6865da079bea1445affd3a1f715d19dfefa3cb54ca6d61786fc31f2f7cfe7d",
+   "bytes": 11059
+  },
+  "recompute_plan_key_delta.py": {
+   "sha256": "59ce90f25ee6443be63ddb948bff253acb9616f74d18cc53d33cdb210f779e82",
+   "bytes": 29824
+  }
+ }
+}
