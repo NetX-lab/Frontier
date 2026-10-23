@@ -130,11 +130,23 @@ class MoeRoutingWorkload:
         from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
         from pathlib import Path
         source = lane.routing_source
-        model,_ = self._step5_ffn_model("moe_grouped_gemm")
+        from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+        group = next(group for group in resolve_routed_layer_groups(self._model_config)
+                     if self._step5_layer_metadata.attention_spec.global_layer_id in group.layer_ids)
+        family = self._measurement_family_name(self._active_measurement_type)
+        models = self._model_manager._models_view_for_family(family, self._cluster_type)
+        rows = []
+        for model in models.values():
+            if getattr(model, "_frontier_cache_model_name", None) != "moe_grouped_gemm":
+                continue
+            binding = self._model_manager._native_measurement_binding(
+                self._model_manager._measurement_identity(model))
+            if binding["selected_native_metadata"]["moe_layer_ids"] == group.row_metadata()["moe_layer_ids"]:
+                rows.extend(model._frontier_moe_physical_rows)
         frames = tuple(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),
             tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context) for s in source.source_lanes)
         contexts = {}
-        for row in model._frontier_moe_physical_rows:
+        for row in rows:
             if row["moe_ep_rank"] != lane.ep_id or row["total_routed_tokens"] != lane.routed_token_count: continue
             value = json.loads(row["routing_input"])
             if tuple(MoESourceFrame(**frame) for frame in value["source_frames"]) == frames:

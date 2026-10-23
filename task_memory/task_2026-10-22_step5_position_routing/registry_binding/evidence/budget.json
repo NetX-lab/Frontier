@@ -1,0 +1,70 @@
+{
+  "task_id": "D29-REGISTRY-SEAM-IMPLEMENTATION",
+  "base": "d96b3279",
+  "paths": [
+    {
+      "path": "frontier/execution_time_predictor/prediction_model_registry.py",
+      "cap": 120,
+      "baseline": {
+        "added": 82,
+        "deleted": 11,
+        "gross": 93
+      },
+      "repair": {
+        "added": 82,
+        "deleted": 11,
+        "gross": 93
+      },
+      "sha256": "491c9479248f4e53c2c634997dcf85fab9753e8f0a78b48331293a7527c80d8d"
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "cap": 138,
+      "baseline": {
+        "added": 96,
+        "deleted": 17,
+        "gross": 113
+      },
+      "repair": {
+        "added": 17,
+        "deleted": 2,
+        "gross": 19
+      },
+      "sha256": "f744977e8f56f3b7f0dc8d3f54a4c3a400340bfa317306961b213a99e37c49b8"
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "cap": 145,
+      "baseline": {
+        "added": 130,
+        "deleted": 6,
+        "gross": 136
+      },
+      "repair": {
+        "added": 14,
+        "deleted": 2,
+        "gross": 16
+      },
+      "sha256": "57feef9fcdc1fd068908cbcd26235a934038a23382c5a89e8b0827333874fdd6"
+    },
+    {
+      "path": "tests/unit/test_prediction_measurement_bindings.py",
+      "cap": 180,
+      "baseline": {
+        "added": 174,
+        "deleted": 0,
+        "gross": 174
+      },
+      "repair": {
+        "added": 174,
+        "deleted": 0,
+        "gross": 174
+      },
+      "sha256": "71cff91020c3c5355067a4cbf3f3eb3a8ef89542ce38b10343fd9fc1e61e1197"
+    }
+  ],
+  "repair_gross": 302,
+  "repair_cap": 360,
+  "caller_gross": 35,
+  "caller_cap": 60
+}

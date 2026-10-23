@@ -1,0 +1,465 @@
+diff --git a/frontier/execution_time_predictor/moe_routing_workload.py b/frontier/execution_time_predictor/moe_routing_workload.py
+index c725fd77..ae1ed1ea 100644
+--- a/frontier/execution_time_predictor/moe_routing_workload.py
++++ b/frontier/execution_time_predictor/moe_routing_workload.py
+@@ -130,11 +130,23 @@ class MoeRoutingWorkload:
+         from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+         from pathlib import Path
+         source = lane.routing_source
+-        model,_ = self._step5_ffn_model("moe_grouped_gemm")
++        from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
++        group = next(group for group in resolve_routed_layer_groups(self._model_config)
++                     if self._step5_layer_metadata.attention_spec.global_layer_id in group.layer_ids)
++        family = self._measurement_family_name(self._active_measurement_type)
++        models = self._model_manager._models_view_for_family(family, self._cluster_type)
++        rows = []
++        for model in models.values():
++            if getattr(model, "_frontier_cache_model_name", None) != "moe_grouped_gemm":
++                continue
++            binding = self._model_manager._native_measurement_binding(
++                self._model_manager._measurement_identity(model))
++            if binding["selected_native_metadata"]["moe_layer_ids"] == group.row_metadata()["moe_layer_ids"]:
++                rows.extend(model._frontier_moe_physical_rows)
+         frames = tuple(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),
+             tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context) for s in source.source_lanes)
+         contexts = {}
+-        for row in model._frontier_moe_physical_rows:
++        for row in rows:
+             if row["moe_ep_rank"] != lane.ep_id or row["total_routed_tokens"] != lane.routed_token_count: continue
+             value = json.loads(row["routing_input"])
+             if tuple(MoESourceFrame(**frame) for frame in value["source_frames"]) == frames:
+diff --git a/frontier/execution_time_predictor/prediction_model_registry.py b/frontier/execution_time_predictor/prediction_model_registry.py
+index ddfdc826..995dfc60 100644
+--- a/frontier/execution_time_predictor/prediction_model_registry.py
++++ b/frontier/execution_time_predictor/prediction_model_registry.py
+@@ -33,6 +33,7 @@ from frontier.model_architectures import LayerKind, ResolvedLayerContract
+ from frontier.moe_gating_runtime import get_moe_gating_base_model_name
+ from frontier.operators.binding import bind_operator_query
+ from frontier.operators.spec import TensorParallelMode
++from frontier.profiling.common.runtime_identity import canonical_json
+ from frontier.types import ClusterType, MeasurementType
+ from sklearn.base import BaseEstimator
+ from typing import Any, Dict, List, Mapping, Optional, Tuple
+@@ -276,7 +277,7 @@ class PredictionModelRegistry:
+ 
+     def _contract_model_registry(
+         self, family_name: str
+-    ) -> Dict[Tuple[str, Optional[str]], BaseEstimator]:
++    ) -> Dict[Tuple[str, Any], BaseEstimator]:
+         registry_attr = {
+             "eager": "_trained_models_eager_by_contract",
+             "device_event": "_trained_models_device_event_by_contract",
+@@ -288,7 +289,7 @@ class PredictionModelRegistry:
+ 
+     def _contract_precision_registry(
+         self, family_name: str
+-    ) -> Dict[str, Dict[Tuple[str, Optional[str]], BaseEstimator]]:
++    ) -> Dict[str, Dict[Tuple[str, Any], BaseEstimator]]:
+         registry_attr = {
+             "eager": "_models_by_precision_eager_by_contract",
+             "device_event": "_models_by_precision_device_event_by_contract",
+@@ -349,6 +350,10 @@ class PredictionModelRegistry:
+         precision_key = precision.upper()
+         family_name = self._measurement_family_name(self._active_measurement_type)
+         identity = self._model_contract_identity(model, layer_contract)
++        binding = (self._native_measurement_binding(self._measurement_identity(model))
++                   if hasattr(model, "_frontier_measurement_identity") else None)
++        if binding is not None:
++            identity = (identity, precision_key, canonical_json(binding))
+         if identity is None:
+             self._legacy_model_registry(family_name)[model_name] = model
+             self._legacy_precision_registry(family_name).setdefault(
+@@ -369,6 +374,7 @@ class PredictionModelRegistry:
+         *,
+         precision_key: Optional[str] = None,
+         requested_identity: Optional[str] = None,
++        native_binding: Optional[Mapping[str, Any]] = None,
+     ) -> Optional[BaseEstimator]:
+         if precision_key is not None:
+             precision_key = precision_key.upper()
+@@ -383,6 +389,25 @@ class PredictionModelRegistry:
+             for (candidate_name, identity), candidate in source.items()
+             if candidate_name == model_name
+         }
++        if requested_identity is not None:
++            typed_candidates = {
++                key: model for key, model in typed_candidates.items()
++                if (key[0] if isinstance(key, tuple) else key) == requested_identity
++            }
++        if native_binding is not None:
++            requested = self._native_measurement_binding(native_binding)
++            if requested is None:
++                raise ValueError("native binding query requires native_context")
++            if "native_source" not in requested and any(
++                isinstance(key, tuple) for key in typed_candidates
++            ):
++                raise ValueError("native binding query requires explicit native_source")
++            typed_candidates = {
++                key: model for key, model in typed_candidates.items()
++                if isinstance(key, tuple) and all(
++                    json.loads(key[2]).get(field) == value for field, value in requested.items()
++                )
++            }
+         legacy = (
+             self._legacy_precision_bucket(family_name, precision_key).get(model_name)
+             if precision_key is not None
+@@ -395,14 +420,20 @@ class PredictionModelRegistry:
+         )
+ 
+         if requested_identity is not None:
+-            model = typed_candidates.get(requested_identity)
+-            if model is not None:
+-                return model
+-            if legacy is not None and legacy_identity == requested_identity:
++            if len(typed_candidates) == 1:
++                return next(iter(typed_candidates.values()))
++            if (not typed_candidates and native_binding is None
++                    and legacy is not None and legacy_identity == requested_identity):
+                 return legacy
+-            return None
++            if not typed_candidates:
++                return None
+ 
+         if len(typed_candidates) > 1:
++            if any(isinstance(key, tuple) for key in typed_candidates):
++                raise ValueError(
++                    f"Model '{model_name}' has ambiguous native bindings; "
++                    "provide native_binding/source/group"
++                )
+             identities = sorted(
+                 "<legacy>" if identity is None else identity
+                 for identity in typed_candidates
+@@ -413,14 +444,14 @@ class PredictionModelRegistry:
+             )
+         if len(typed_candidates) == 1:
+             typed_identity = next(iter(typed_candidates))
+-            if legacy is not None and legacy_identity != typed_identity:
++            if native_binding is None and legacy is not None and legacy_identity != typed_identity:
+                 raise ValueError(
+                     f"Model '{model_name}' has multiple layer contracts; provide "
+                     f"layer_contract. Available identities: "
+                     f"[{typed_identity!r}, {legacy_identity or '<legacy>'!r}]"
+                 )
+             return next(iter(typed_candidates.values()))
+-        return legacy
++        return legacy if native_binding is None else None
+ 
+     def _resolve_cluster_model_contract(
+         self,
+@@ -484,14 +515,22 @@ class PredictionModelRegistry:
+         family_name: str,
+         cluster_type: Optional[ClusterType] = None,
+     ) -> Dict[str, BaseEstimator]:
+-        """Project one measurement family's canonical registries to model names."""
++        """Project legacy names and enumerate every native binding by its cache hash."""
+ 
+         names = set(self._legacy_model_registry(family_name))
+         names.update(
+             model_name
+-            for model_name, _identity in self._contract_model_registry(family_name)
++            for model_name, identity in self._contract_model_registry(family_name)
++            if not isinstance(identity, tuple)
+         )
+         models: Dict[str, BaseEstimator] = {}
++        for (name, identity), model in self._contract_model_registry(family_name).items():
++            if isinstance(identity, tuple) and not self._is_ffn_typed_model_for_cluster(cluster_type, name):
++                label = f"{name}:{model._frontier_model_hash}"
++                if (label in models
++                        and models[label]._frontier_measurement_identity != model._frontier_measurement_identity):
++                    raise ValueError(f"Conflicting native model artifacts for {label!r}")
++                models[label] = model
+         for model_name in sorted(names):
+             if self._is_ffn_typed_model_for_cluster(cluster_type, model_name):
+                 continue
+@@ -516,6 +555,7 @@ class PredictionModelRegistry:
+         model_name: str,
+         precision: Optional[str] = None,
+         layer_contract: Optional[ResolvedLayerContract] = None,
++        *, native_binding: Optional[Mapping[str, Any]] = None,
+     ) -> Optional[BaseEstimator]:
+         """Get a model by name, precision, and optional typed contract."""
+ 
+@@ -529,6 +569,7 @@ class PredictionModelRegistry:
+                 model_name,
+                 precision_key=precision_key,
+                 requested_identity=requested_identity,
++                native_binding=native_binding,
+             )
+             if model is not None:
+                 return model
+@@ -618,6 +659,30 @@ class PredictionModelRegistry:
+         )
+         self._store_model_in_cache(model_name, model_hash, model)
+ 
++    @staticmethod
++    def _native_measurement_binding(identity: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
++        """Normalize explicit native selectors; point layouts remain row evidence."""
++        if "native_context" not in identity:
++            return None
++        from frontier.moe_load_imbalance import moe_native_binding_context
++        binding = {
++            field: json.loads(identity[field]) if isinstance(identity[field], str) else identity[field]
++            for field in ("native_context", "native_source", "selected_native_metadata")
++            if field in identity
++        }
++        if any(not isinstance(value, Mapping) or not value for value in binding.values()):
++            raise ValueError("native binding fields must be explicit nonempty mappings")
++        binding["native_context"] = moe_native_binding_context(binding["native_context"])
++        if "selected_native_metadata" in binding:
++            selected = dict(binding["selected_native_metadata"])
++            if "native_binding" in selected:
++                value = selected["native_binding"]
++                selected["native_binding"] = moe_native_binding_context(
++                    json.loads(value) if isinstance(value, str) else value
++                )
++            binding["selected_native_metadata"] = selected
++        return json.loads(canonical_json(binding))
++
+     @staticmethod
+     def _canonical_measurement_identity(identity: Mapping[str, Any]) -> str:
+         """Serialize explicit provenance without defaults or JSON coercions."""
+@@ -629,6 +694,8 @@ class PredictionModelRegistry:
+             raise ValueError("measurement identity fields must be explicit and nonempty")
+ 
+         def normalize(value, field):
++            if field in ("identity.native_context", "identity.selected_native_metadata") and isinstance(value, Mapping):
++                return json.loads(canonical_json(value))
+             if isinstance(value, Mapping):
+                 result = {}
+                 for key, item in value.items():
+@@ -909,10 +976,14 @@ class PredictionModelRegistry:
+                 add(name, model, precision)
+         for precision, bucket in self._contract_precision_registry(family_name).items():
+             for (name, typed_identity), model in bucket.items():
++                if isinstance(typed_identity, tuple):
++                    typed_identity = typed_identity[0]
+                 add(name, model, precision, typed_identity)
+         for name, model in self._legacy_model_registry(family_name).items():
+             add(name, model)
+         for (name, typed_identity), model in self._contract_model_registry(family_name).items():
++            if isinstance(typed_identity, tuple):
++                typed_identity = typed_identity[0]
+             add(name, model, typed_identity=typed_identity)
+ 
+         complete_identity = dict(identity)
+diff --git a/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py b/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
+index ce9a30d4..ada70f09 100644
+--- a/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
++++ b/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
+@@ -113,9 +113,22 @@ class SklearnMoEExecutionTimePredictor(
+         base_name = get_moe_gating_base_model_name(model_name)
+         precision, identity = step5_operator_binding(self, metadata, base_name, context=context)
+         family = self._measurement_family_name(self._active_measurement_type)
++        selector = None
++        if (context is not None and context.get("model_architecture_profile") == "step5"
++                and context.get("routing_runtime_path") == "position_cyclic"):
++            selector = dict(native_context=context)
++            if "native_facts" in context:
++                from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
++                from frontier.moe_load_imbalance import moe_native_binding_context
++                group = next(group for group in resolve_routed_layer_groups(self._model_config)
++                             if metadata.attention_spec.global_layer_id in group.layer_ids)
++                selector.update(native_source=context["native_facts"]["shared"],
++                    selected_native_metadata=dict(moe_layer_ids=group.row_metadata()["moe_layer_ids"],
++                        native_binding=moe_native_binding_context(context)))
+         model = self._model_manager._get_family_model(
+             family, model_name, precision_key=precision.name,
+             requested_identity=identity,
++            native_binding=selector,
+         )
+         if model is None:
+             raise ValueError(f"Step measured {model_name} {precision.name} layer {metadata.attention_spec.global_layer_id} coverage is unavailable")
+@@ -141,9 +154,11 @@ class SklearnMoEExecutionTimePredictor(
+         if position_scope:
+             if context is not None:
+                 from frontier.moe_load_imbalance import moe_native_binding_context
+-                if json.loads(PredictionModelRegistry._measurement_identity(model)["native_context"]) != moe_native_binding_context(context):
++                selected_binding = PredictionModelRegistry._native_measurement_binding(
++                    PredictionModelRegistry._measurement_identity(model))
++                if selected_binding["native_context"] != moe_native_binding_context(context):
+                     raise ValueError("Step selected model native context differs from the actual bound context")
+-                if "native_facts" in context and PredictionModelRegistry._measurement_identity(model).get("native_source") != context["native_facts"]["shared"]:
++                if "native_facts" in context and selected_binding.get("native_source") != context["native_facts"]["shared"]:
+                     raise ValueError("Step selected model installed source differs from the actual bound context")
+             key = tuple(float(features[name]) for name in names)
+             if count_model is None or tuple(count_model._frontier_feature_names) != names or set(count_model._frontier_exact_lookup) != set(exact):
+diff --git a/tests/unit/test_prediction_measurement_bindings.py b/tests/unit/test_prediction_measurement_bindings.py
+new file mode 100644
+index 00000000..eddc2884
+--- /dev/null
++++ b/tests/unit/test_prediction_measurement_bindings.py
+@@ -0,0 +1,174 @@
++"""Real Step binding retention; CPU fixtures do not qualify native timings."""
++
++from copy import deepcopy
++import json
++from types import SimpleNamespace
++
++import pandas as pd
++import pytest
++
++from frontier.config import ReplicaConfig, global_vars
++from frontier.execution_time_predictor.moe_dataset_training import position_moe_operator_facts
++from frontier.moe_load_imbalance import moe_native_binding_context
++from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
++from frontier.types import ClusterType, MeasurementType
++from tests.integration import step5_measured_compute_fixture as fixture
++from tests.unit.test_step5_measured_ffn import _config
++from tests.unit.test_step5_measured_ffn_replay import _predictor
++from tests.unit.test_step5_measured_training import _manager
++
++
++@pytest.fixture
++def bound(tmp_path, monkeypatch):
++    monkeypatch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", list(fixture.CAPTURE_SIZES))
++    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "full_and_piecewise")
++    monkeypatch.setattr(fixture, "range", lambda *a: (6144,) if a == (6143, 7167) else range(*a), raising=False)
++    replica = ReplicaConfig(model_name="stepfun-ai/Step-5-Preview", device="h800",
++        attn_tensor_parallel_size=8, attn_dp=2, moe_expert_parallel_size=16,
++        moe_routing_distribution_type="position_cyclic")
++    paths, _ = fixture.position_compute_tables(tmp_path, replica.model_config,
++        device="h800", measurement=MeasurementType.KERNEL_ONLY)
++    manager = _manager(tmp_path / "cache")
++    manager._cluster_configs = {ClusterType.MONOLITHIC: SimpleNamespace(replica_config=replica)}
++    frame = pd.read_csv(paths[1])
++    facts = position_moe_operator_facts(frame, replica)
++    for selected in facts:
++        manager._train_ffn_models_for_cluster(ClusterType.MONOLITHIC, replica, _config(),
++            str(paths[0]), str(paths[1]), True, set(), operator_facts=selected)
++    return manager, replica, frame, paths, facts
++
++
++def test_actual_dual_binder_retains_fp32_gates_for_layers_3_and_88(bound):
++    manager, replica, frame, _, _ = bound
++    gates = [model for key, model in manager._contract_precision_registry("kernel_only")["FP32"].items()
++             if key[0] == "moe_gating_linear"]
++    assert len(gates) == 2, "both fitted native FP32 gate bindings must survive registration"
++    assert len({model._frontier_model_hash for model in gates}) == 2
++    predictor = _predictor(replica.model_config, manager)
++    predictor._replica_config = replica
++    for layer in (3, 88):
++        group = next(group for group in resolve_routed_layer_groups(replica.model_config) if layer in group.layer_ids)
++        context = json.loads(frame.loc[frame.moe_layer_ids.eq(group.row_metadata()["moe_layer_ids"]), "native_context"].iloc[0])
++        with predictor._step5_measured_layer(layer):
++            selected, precision = predictor._step5_ffn_model("moe_gating_linear", context=context)
++        assert precision.name == "FP32"
++        measured = manager._measurement_identity(selected)
++        assert json.loads(measured["selected_native_metadata"])["moe_layer_ids"] == group.layer_range
++        assert json.loads(measured["native_context"]) == moe_native_binding_context(context)
++
++
++@pytest.mark.parametrize("name,precision,retained", [("moe_gating_linear", "FP32", 5), ("moe_grouped_gemm", "BF16", 4)])
++def test_same_precision_native_source_selection_ambiguity_and_json_mapping(bound, name, precision, retained):
++    manager, replica, _, _, _ = bound
++    original = next(model for key, model in manager._contract_precision_registry("kernel_only")[precision].items()
++                    if key[0] == name)
++    measured = deepcopy(manager._measurement_identity(original))
++    selector = manager._native_measurement_binding(measured)
++    variant = deepcopy(original)
++    alternate = {**selector, "native_source": {"source_receipt": "OTHER_CPU_FIXTURE_NOT_NATIVE"}}
++    variant._frontier_measurement_identity = json.dumps({**measured, **alternate}, sort_keys=True)
++    manager._store_model_precision(name, precision, variant)
++    identity = original._frontier_layer_cache_identity
++    def get(binding):
++        return manager._get_family_model("kernel_only", name,
++            precision_key=precision, requested_identity=identity, native_binding=binding)
++    assert get(selector) is original and get(alternate) is variant
++    assert manager.get_model(name, precision, native_binding=selector) is original
++    assert get({**alternate, "native_source": json.dumps(alternate["native_source"])}) is variant
++    with pytest.raises(ValueError, match="ambiguous native"):
++        manager.get_model(name, precision)
++    with pytest.raises(ValueError, match="native_source"):
++        get({"native_context": selector["native_context"]})
++    assert get({**selector, "native_source": {"source_receipt": "MISSING"}}) is None
++    assert get({**selector, "selected_native_metadata": {"moe_layer_ids": "missing"}}) is None
++    backend = deepcopy(original)
++    changed = deepcopy(selector)
++    changed["native_context"]["backend"] = "OTHER_CPU_BACKEND_NOT_NATIVE"
++    changed["selected_native_metadata"]["native_binding"] = changed["native_context"]
++    backend._frontier_measurement_identity = json.dumps({**measured, **changed}, sort_keys=True)
++    manager._store_model_precision(name, precision, backend)
++    assert get(changed) is backend
++    grouped = deepcopy(original)
++    other_group = deepcopy(selector)
++    other_group["selected_native_metadata"]["moe_layer_ids"] = (
++        "88-90" if selector["selected_native_metadata"]["moe_layer_ids"] == "3-87" else "3-87")
++    grouped._frontier_measurement_identity = json.dumps({**measured, **other_group}, sort_keys=True)
++    manager._store_model_precision(name, precision, grouped)
++    assert get(other_group) is grouped
++    assert get(selector) is original
++    with pytest.raises(ValueError, match="ambiguous native"):
++        get({"native_context": selector["native_context"], "native_source": selector["native_source"]})
++    with pytest.raises(ValueError, match="Conflicting native model artifacts"):
++        manager.get_models()
++    assert len([key for key in manager._contract_precision_registry("kernel_only")[precision]
++                if key[0] == name]) == retained
++    assert manager._get_family_model("eager", name, native_binding=selector) is None
++
++
++def test_all_native_bindings_survive_family_view_snapshot_and_warm_cache(bound, tmp_path, monkeypatch):
++    manager, replica, _, paths, facts = bound
++    models = manager.get_models()["kernel_only"]
++    native = {f"{name}:{model._frontier_model_hash}": model
++              for (name, key), model in manager._contract_model_registry("kernel_only").items()
++              if isinstance(key, tuple)}
++    assert native and all(models[label] is model for label, model in native.items())
++    assert len([label for label in native if label.startswith("moe_gating_linear:")]) == 2
++    assert len([label for label in native if label.startswith("moe_grouped_gemm:")]) == 2
++    before = {path.name: path.read_bytes() for path in (tmp_path / "cache").glob("*.pkl")}
++    common = dict(model_name=replica.model_name, model_architecture_profile="step5", device="h800",
++        role="monolithic", topology={"attention_tp": 8, "attention_dp": 2, "ep": 16},
++        graph_policy="none", evidence_kind="cpu_fixture", coverage={"layers": [3, 88]})
++    receipt = manager.publish_registered_model_bundle(common, "kernel_only", ClusterType.MONOLITHIC)
++    assert set(native) <= set(receipt["models"])
++    loaded = manager.load_model_bundle(receipt["path"], receipt["identity"])
++    for label, model in native.items():
++        assert loaded[label]._frontier_model_hash == model._frontier_model_hash
++        assert loaded[label]._frontier_exact_lookup == model._frontier_exact_lookup
++        assert receipt["models"][label]["typed_identity"] == model._frontier_layer_cache_identity
++    assert {path.name: path.read_bytes() for path in (tmp_path / "cache").glob("*.pkl")} == before
++    warm = _manager(tmp_path / "cache")
++    monkeypatch.setattr(warm, "_create_estimator_and_params", lambda *_: pytest.fail("warm cache refitted"))
++    for selected in facts:
++        warm._train_ffn_models_for_cluster(ClusterType.MONOLITHIC, replica, _config(),
++            str(paths[0]), str(paths[1]), True, set(), operator_facts=selected)
++    assert set(warm._models_view_for_family("kernel_only")) == set(models)
++    manager._get_measurement_types_for_cluster = lambda *args: (MeasurementType.KERNEL_ONLY,)
++    manager._event_measurement_type_for_replica = lambda *args: MeasurementType.CUDA_EVENT
++    assert manager.get_models_for_cluster(ClusterType.MONOLITHIC)["kernel_only"] == models
++    for label, model in native.items():
++        cached = warm._models_view_for_family("kernel_only")[label]
++        assert cached._frontier_model_hash == model._frontier_model_hash
++        assert cached._frontier_exact_lookup == model._frontier_exact_lookup
++
++
++def test_position_queries_enumerate_group_physical_rows_before_model_selection(bound, tmp_path):
++    from tests.unit.test_moe_position_routing import materialize, source
++    manager, replica, _, paths, _ = bound
++    predictor = _predictor(replica.model_config, manager)
++    predictor._replica_config = replica
++    path = fixture.position_collective_costs(tmp_path, paths[1], device="h800")
++    predictor._cc_backend = SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
++    lane = materialize(source(padding=16)).lane(0)
++    for layer in (3, 88):
++        with predictor._step5_measured_layer(layer):
++            context, queries, plans = predictor._step5_position_queries(lane)
++            selected, _ = predictor._step5_ffn_model("moe_gating_linear", context=context)
++        assert "moe_grouped_gemm" in queries and set(plans) == {
++            "step5_moe_dispatch", "step5_moe_combine", "moe_tensor_parallel_allreduce",
++            "share_expert_tensor_parallel_allreduce"}
++        assert manager._native_measurement_binding(manager._measurement_identity(selected))["native_context"] == moe_native_binding_context(context)
++        changed = deepcopy(context)
++        changed["workspace_shapes"] = {"rows": [987]}
++        changed["activation_layout"]["shape"][0] += 1
++        assert moe_native_binding_context(changed) == moe_native_binding_context(context)
++
++
++def test_unique_legacy_registry_default_and_precision_labels_unchanged(tmp_path):
++    manager = _manager(tmp_path / "cache")
++    first, second = SimpleNamespace(), SimpleNamespace()
++    manager._store_model_precision("legacy", "bf16", first)
++    manager._store_model_precision("legacy", "fp32", second)
++    assert manager.get_model("legacy") is second
++    assert manager.get_model("legacy", "BF16") is first
++    assert manager.get_models()["kernel_only"] == {"legacy": second}
++    assert manager._contract_model_registry("kernel_only") == {}
