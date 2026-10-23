@@ -1,0 +1,278 @@
+{
+  "status": "PASS",
+  "task_id": "W128-PROFILE03-COLLECTION",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-profile03-collection",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69"
+  },
+  "source_sha256": {
+    "tests/comparison/calibration/native_pd_worker.py": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b",
+    "tests/unit/test_native_pd_worker.py": "84fa7a4be7a8a957eb62671e652d6e00ff48d153c92671bea7a53fe6528cea4c"
+  },
+  "source_preserved": true,
+  "separate_processes": true,
+  "suites": [
+    {
+      "suite": "test_native_pd_worker",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_worker.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_worker.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_worker_temp"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T19:22:44.761354+00:00",
+      "end_utc": "2026-10-23T19:22:46.910783+00:00",
+      "counts": {
+        "tests": 36,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_worker.log",
+      "tail": [
+        "....................................                                     [100%]",
+        "36 passed in 1.69s"
+      ],
+      "log_sha256": "0799119131787f56a29c068ed4dbcc252e85a6d4484dcd8be8e48e58756d50d0",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_worker.xml",
+      "xml_sha256": "b9ac7d3e4ca64f591b275d080223749f1d0b9bcc09fba42fb78d964c515834cd"
+    },
+    {
+      "suite": "test_native_pd_manifest",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_manifest.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_manifest.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_manifest_temp"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T19:23:40.210306+00:00",
+      "end_utc": "2026-10-23T19:23:41.864665+00:00",
+      "counts": {
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_manifest.log",
+      "log_sha256": "bb5d0fcc13b6c8f53e0b5da7cc7de21b9d04ea9e558417ad9cb0e54949042349",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_manifest.xml",
+      "xml_sha256": "932e9916fa08f21a40ff7876910ed0176d4c07d593ea1d9402c61552e8c7830c",
+      "tail": [
+        "..............                                                           [100%]",
+        "14 passed in 1.30s"
+      ]
+    },
+    {
+      "suite": "test_native_serve_profile",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_serve_profile.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_serve_profile.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_serve_profile_temp"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T19:23:40.210696+00:00",
+      "end_utc": "2026-10-23T19:23:42.837342+00:00",
+      "counts": {
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_serve_profile.log",
+      "log_sha256": "d48aa087fc0eb0f8359a50fb415e8b85d8fd006731913dd93a7391249681334a",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_serve_profile.xml",
+      "xml_sha256": "13a0859f9f42a0fdbf07d87bfdc10d0700dfd8ee791bba03211c4e839e0e4a7d",
+      "tail": [
+        ".................................                                        [100%]",
+        "33 passed in 2.24s"
+      ]
+    },
+    {
+      "suite": "test_native_streaming_replay",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_streaming_replay.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_streaming_replay.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_streaming_replay_temp"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T19:23:40.211093+00:00",
+      "end_utc": "2026-10-23T19:24:39.829743+00:00",
+      "counts": {
+        "tests": 39,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_streaming_replay.log",
+      "log_sha256": "8ed1e6cc7f974d724f018df21ebfeb73080f10eea81a928d600f9b2386be9636",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_streaming_replay.xml",
+      "xml_sha256": "6c9a2aff04a204c987af7b1d561a8b2333f90dd8186f69688c24e733b458f6a2",
+      "tail": [
+        ".......................................                                  [100%]",
+        "39 passed in 58.96s"
+      ]
+    },
+    {
+      "suite": "test_native_cold_start",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_cold_start.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_cold_start.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_cold_start_temp"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T19:23:41.865349+00:00",
+      "end_utc": "2026-10-23T19:24:17.518092+00:00",
+      "counts": {
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_cold_start.log",
+      "log_sha256": "5740ae88835004bd99cbf5a734a02487037c8197c7874ab225f4c1b2b6b0e89e",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_cold_start.xml",
+      "xml_sha256": "973581caa5241486f02ebb77ee0d6e159b3e4c060e89bdfdd4c6722a1042dc9f",
+      "tail": [
+        "..................                                                       [100%]",
+        "18 passed in 35.15s"
+      ]
+    },
+    {
+      "suite": "test_native_pd_canonical_http",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_canonical_http.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_canonical_http.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_canonical_http_temp"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T19:23:42.838162+00:00",
+      "end_utc": "2026-10-23T19:23:50.170869+00:00",
+      "counts": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_canonical_http.log",
+      "log_sha256": "cae945f2ccd48ffd8b3a868f6a94f56504e59a7a1238892f53d66240b1325fba",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_canonical_http.xml",
+      "xml_sha256": "c86680a29d31c797172056134572080fd8dd8c5d6ca531a5814297b1ee86dde2",
+      "tail": [
+        ".                                                                        [100%]",
+        "1 passed in 6.82s"
+      ]
+    },
+    {
+      "suite": "test_calibration_pd_harness",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_calibration_pd_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_calibration_pd_harness.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_calibration_pd_harness_temp"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T19:23:50.171389+00:00",
+      "end_utc": "2026-10-23T19:23:56.422645+00:00",
+      "counts": {
+        "tests": 68,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_calibration_pd_harness.log",
+      "log_sha256": "68344c5ece8e6d5edae1c555e1e6c700869d0f2a5c4f3a6cd64fc1b35f6bf2e2",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_calibration_pd_harness.xml",
+      "xml_sha256": "a0720695b30761b256e94e33b77a1099cc4ab651dd9cd9ab1d13bf7b2dbc8f01",
+      "tail": [
+        "....................................................................     [100%]",
+        "68 passed in 5.73s"
+      ]
+    },
+    {
+      "suite": "test_dp_placement_harness",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_dp_placement_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_dp_placement_harness.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_dp_placement_harness_temp"
+      ],
+      "returncode": 0,
+      "start_utc": "2026-10-23T19:23:56.423776+00:00",
+      "end_utc": "2026-10-23T19:23:57.608417+00:00",
+      "counts": {
+        "tests": 75,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_dp_placement_harness.log",
+      "log_sha256": "78c6fa4b5cbd888924eee5890e4eefa17bdf6aa3dcf5f7ecc65dade3d5492d43",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_dp_placement_harness.xml",
+      "xml_sha256": "c9463e865e2956a3a35ea7f682bc9b4444b422aee3a9750808fd4bd170d55f64",
+      "tail": [
+        "........................................................................ [ 96%]",
+        "...                                                                      [100%]",
+        "75 passed in 0.78s"
+      ]
+    }
+  ]
+}
