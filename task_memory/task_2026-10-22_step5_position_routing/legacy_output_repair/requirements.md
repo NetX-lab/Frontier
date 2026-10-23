@@ -6,6 +6,7 @@
 | 2026-10-23 | Record bounded strict77 regression repair and final integration accounting. |
 | 2026-10-23 | Record root fixture amendment and corrected3805 baseline after duplicate merge repair. |
 | 2026-10-23 | Correct two-path proposal authority; pause those edits/commits pending YC approval. |
+| 2026-10-23 | Record explicit YC two-path approval and resume the preserved fixture-only repair. |
 
 TaskID D29-LEGACY-OUTPUT-REPAIR.
 
@@ -47,7 +48,7 @@ four-path<=80 step; combined<=140 within151, effective111 global authorized path
 Do not edit dependency-bound parent aiohttp/torch tests, production fallbacks,
 skips or assertions away. No additional delegation or worktree required.
 
-[Original Request / Latest Authority Correction] Pause only edits/commits to the
+[Original Request / Historical Authority Correction] Pause only edits/commits to the
 two proposed test paths. Approved requirements forbid implicit file expansion;
 root's earlier self-authorization was premature and YC confirmation is pending.
 Preserve already-edited files isolated/uncommitted; do not discard or stage them.
@@ -55,3 +56,12 @@ Read-only diagnosis/RED remains allowed. Continue original four already-approved
 legacy files and<=80 scope to completion. Root owns asking YC and notification;
 no substitute path/fallback. Two-path edits/tests ran before this correction;
 they are recorded observations, not approved deliverables or global scope expansion.
+
+[Original Request / Latest Explicit Approval] Root reports YC's exact answer:
+"批准，类似问题都授权". Resume the preserved16-gross two-file changes;caps50/10,
+two-file delta<=60,owner3956/global10000 unchanged,effective111 authorized paths.
+Complete exact six failed IDs RED→GREEN and both whole files,preserve every
+existing assertion and actual V4 applicability,commit separately from b60dfddd,
+archive precise receipt/tests/budget. No new production edits without an actual
+in-scope failure;report before crossing caps. Root independently handles strict77,
+full CLI/global gates. No GPU/platform/full CLI/further delegation here.
