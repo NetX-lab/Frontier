@@ -1,0 +1,39 @@
+{
+  "task_id": "D29-PREPARED-POINT-REUSE",
+  "modification_history": [
+    {
+      "date": "2026-10-23",
+      "change": "Bind immutable source, actual replay and test artifacts"
+    }
+  ],
+  "code_commit": "0be11762d0f83e9db77658a1447a672507166872",
+  "source_root": "/data/ycfeng/Frontier/.worktrees/step5-d29-prepared-point",
+  "base": "caffccbb48011f0140359d391ad75b58906ff15b",
+  "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "source_sha256": {
+    "frontier/execution_time_predictor/moe_routing_workload.py": "d9423f3f318cd355f2773ea6a65a9bf9d297cdc3ec7c8c46230b38456ccacbfc",
+    "tests/unit/test_prediction_measurement_bindings.py": "7fc5f851cfcac0b4f676ec21a39812389e8c0d7427faf24e858a4cacf2087912",
+    "tests/unit/test_moe_routing_runtime.py": "87c1ebb9c92fca27cc37bc34b7b63534b86f8920c4325f835c44d11352b86805"
+  },
+  "scripts": {
+    "/data/ycfeng/tmp/d29_prepared_point_repair/candidate_wave.py": "1946c316d521d886b09e469a3492f94260204a4c2ed03544beadc30e35ce9602",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/candidate_matrix.py": "b5cc657bb57abe31f5571c7617cd432f15902acb57922debb20ad5ec67e6eaa5",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/candidate_compare.py": "b580275d67843a73f29d2d8ab1a46cfdb836a16099db75a2e20661160b7aa173"
+  },
+  "results": {
+    "/data/ycfeng/tmp/d29_prepared_point_repair/wave-final01/result.json": "c133824f8a74f9ed912d7faf279410206d7107afd6c7045b8f7a58d8cc28a4b2",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/matrix-final01/matrix_result.json": "c61eac32f8cefdf469a593d9b40f217750e7d5947cbad2a37ba1188b466fca22",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/wave-layer60-final01/result.json": "2a0f44a8103fca46c7356d7cdbeab6e20da3f2ead0a420fa9db84eaeea6ea11e",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/wave-profile-final01/result.json": "a3002fb2bc68af4a987913c7f79370cba131b12d3e06acd0fabc7807bbfe67d1",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/wave-final01-actual_comparison.json": "713c119b5644dd21edf35d50dee2caa6f2b6b69a9964b30b3fc42007d2fbc1a5",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/wave-layer60-final01-actual_comparison.json": "bdc04abea031d2d457a8e15d6db1db2ce0f8c53918223c8e3127947a7d14602b",
+    "/data/ycfeng/tmp/d29_prepared_point_affected_final01.xml": "664d505c5451706695eba8e9326d4211bbaf6320fe6f500fdd38ce90d8ba4f52",
+    "/data/ycfeng/tmp/d29_prepared_point_trainers01.xml": "a436f0eb905b621548434458f46cc891ec171dc35e81f2b8b3013e6b28de450e"
+  },
+  "diff_sha256": "23332fb8c936d09d55eec43703bd51798d84eb7d8346f5eb2ee36f969081b7db",
+  "diagnostic_preparation": false,
+  "numerical_cache": false,
+  "raw_read_suppression": false,
+  "scope_unchanged": true,
+  "probe_rebinding_diff_sha256": "10f0b5754230762eef782207022ac1d9be66f643224febfa4ecdb637d499becf"
+}
