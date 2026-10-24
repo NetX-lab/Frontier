@@ -5,6 +5,15 @@
 | --- | --- |
 | 2026-10-24 | Completed S1/S2 owner checks/source5e2fe861; this records archive is the final delivery boundary. |
 | 2026-10-24 | Completed the authorized P2 closed-log correction0490c33d and CPU tuple repaird55782d7; root acceptance pending. |
+| 2026-10-24 | Root accepted S1/S2 after complete dual review,26raw bindings and two independent50-case replays; S3/S4 remain separate. |
+
+## Primary current acceptance — 2026-10-24
+
+- completed S1/S2: [primary_acceptance.json](primary_acceptance.json) is ACCEPTED_CPU_SOURCE_WITH_LIMITS. Tuple/hash findings and complete13-file repairdiff coverage gaps CLOSED in both reviews. Actual composed252source/179tests within265/185; original48-case/failure evidence below remains historical.
+- completed independent execution: owner-source candidatee081d5e8 and mergedd3f9bbcd each50PASS/0failures/errors/skips,25fixtureexports, CUDAuninitialized and actual30GiB; all selected source/native/runtime/45sealed04 input bytes unchanged. [Root raw closure](root_raw_binding_closure.json) rehashes26retained bindings/22raw artifacts.
+- pending S3/S4: separately allocated package/image/SDK and one bounded GPU observe/control. No actual TLS/lifetime, native integration/ownership, non-perturbation or cost/reference qualification is implied by CPU/source acceptance.
+
+## Historical owner delivery and repair checkpoints
 
 - completed S0 inspection: owned branch feat/v4-scope-lifetime-probe is clean; actual range175–206 and resource envelope indirection match the source binding. Official header requires copying callback payload during invocation; sample queries full original/clone IDs in callbacks.
 - completed S1: frozen ABI/IDs/lifecycle reused; real range and callback13 record distinct clocks/native_id/get_ident. Source250/test160 gross lines; no shared-source edits. Initial callback13 RED is retained in scratch/red.log, followed by GREEN.

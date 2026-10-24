@@ -1,0 +1,62 @@
+{
+  "status": "PASS_LOADING_GC_CONTROL_EQUIVALENCE",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+    "compare",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/decode_dp1_load_control_02.json",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/decode_dp1_freeze_control_01.json"
+  ],
+  "exit": 0,
+  "comparison": {
+    "payload_equal": true,
+    "kernel_rows_equal": true,
+    "rows": [
+      142567,
+      142567
+    ],
+    "kernel_total": [
+      {
+        "count": 142567,
+        "sum_ms": 1377.599441999903,
+        "union_ms": 1215.560419921875
+      },
+      {
+        "count": 142567,
+        "sum_ms": 1377.599441999903,
+        "union_ms": 1215.560419921875
+      }
+    ],
+    "useful_steps": [
+      61,
+      61
+    ]
+  },
+  "load_gc_disabled": {
+    "t": 0.043,
+    "stage": "load_gc_disabled",
+    "rss_mb": 22.0,
+    "enabled": false
+  },
+  "freeze": {
+    "t": 2.797,
+    "stage": "freeze_after_load",
+    "rss_mb": 513.4,
+    "seconds": 1.1351890861988068e-05,
+    "objects": 667676,
+    "gc_enabled": true
+  },
+  "gc_rows_during_load": [],
+  "source_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+  "stderr": "Running scope as unit: run-rdfce450a19474e218f803592870bbfa3.scope\n",
+  "limits": "Decode control only, not P0/full32 acceptance."
+}

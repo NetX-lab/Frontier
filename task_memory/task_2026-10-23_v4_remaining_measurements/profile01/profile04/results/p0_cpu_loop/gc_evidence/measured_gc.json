@@ -1,0 +1,166 @@
+{
+  "completed_gen2": 21,
+  "completed_gc_seconds": 15.835609389003366,
+  "during_load_gc_seconds": 13.108310013078153,
+  "after_load_gc_seconds": 2.7019150885753334,
+  "load_seconds": 44.458999999999996,
+  "pre_kernel_seconds": 56.554,
+  "last_gc_open": {
+    "t": 58.669869667850435,
+    "phase": "start",
+    "generation": 2,
+    "collected": 0,
+    "uncollectable": 0
+  },
+  "pairs": [
+    {
+      "start": 0.2502722996287048,
+      "stop": 0.27565658697858453,
+      "seconds": 0.02538428734987974,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 9.344421796035022,
+      "stop": 9.397834114730358,
+      "seconds": 0.05341231869533658,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 9.533359973691404,
+      "stop": 9.611860097851604,
+      "seconds": 0.07850012416020036,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 9.746157542802393,
+      "stop": 9.843414107803255,
+      "seconds": 0.09725656500086188,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 9.980137747712433,
+      "stop": 10.090033848769963,
+      "seconds": 0.10989610105752945,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 10.26169834472239,
+      "stop": 10.394731977954507,
+      "seconds": 0.1330336332321167,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 10.606540038716048,
+      "stop": 10.764969303738326,
+      "seconds": 0.15842926502227783,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 11.034373779781163,
+      "stop": 11.227332051843405,
+      "seconds": 0.19295827206224203,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 11.563042189925909,
+      "stop": 11.801185666583478,
+      "seconds": 0.2381434766575694,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 12.216449186671525,
+      "stop": 12.500723251607269,
+      "seconds": 0.2842740649357438,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 13.015230065677315,
+      "stop": 13.364844155032188,
+      "seconds": 0.3496140893548727,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 14.008210508618504,
+      "stop": 14.435365831013769,
+      "seconds": 0.4271553223952651,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 15.251412353944033,
+      "stop": 16.091478001791984,
+      "seconds": 0.8400656478479505,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 18.340887426864356,
+      "stop": 19.4015083136037,
+      "seconds": 1.0606208867393434,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 21.25615421961993,
+      "stop": 22.06987583776936,
+      "seconds": 0.8137216181494296,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 23.687874312046915,
+      "stop": 24.69219515658915,
+      "seconds": 1.0043208445422351,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 26.66122213471681,
+      "stop": 27.8768051979132,
+      "seconds": 1.2155830631963909,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 30.620806437917054,
+      "stop": 32.34350077668205,
+      "seconds": 1.7226943387649953,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 35.62689224071801,
+      "stop": 37.59259120002389,
+      "seconds": 1.9656989593058825,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 41.50940876174718,
+      "stop": 43.87234018370509,
+      "seconds": 2.36293142195791,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "start": 49.10315465601161,
+      "stop": 51.805069744586945,
+      "seconds": 2.7019150885753334,
+      "collected": 0,
+      "uncollectable": 0
+    }
+  ],
+  "algorithm_changed": false,
+  "limits": "One P0 observation; open GC duration is censored by the 60second timeout, not a completed duration. GC contributes observed pauses but is not established as the sole timeout cause."
+}
