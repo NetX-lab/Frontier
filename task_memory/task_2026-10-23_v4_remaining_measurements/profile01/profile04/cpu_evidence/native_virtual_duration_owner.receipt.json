@@ -1,0 +1,969 @@
+{
+  "task_id": "W128-PROFILE03-STATISTICS-CONTROL",
+  "local_cpu_only": true,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "base_script_sha256": "5608b2ec83b0744fa756ca203f8d01963b33516a6018d7adab1f5c1c37db80d9",
+  "adapter_sha256": "ed17c13990d1058d514f58358f52d09d1fb3ccaf58d0843cfd3977dfca0d9c1a",
+  "base_transformations": {
+    "removed_top_level_runner": [
+      {
+        "type": "Assign",
+        "lines": [
+          202,
+          202
+        ]
+      },
+      {
+        "type": "If",
+        "lines": [
+          203,
+          213
+        ]
+      },
+      {
+        "type": "Expr",
+        "lines": [
+          214,
+          217
+        ]
+      },
+      {
+        "type": "Expr",
+        "lines": [
+          218,
+          218
+        ]
+      }
+    ],
+    "native_table_methods_added": [
+      "_build_profiler_table",
+      "_write_profiler_table"
+    ],
+    "unchanged_native_code_objects": {
+      "_start": true,
+      "_stop": true,
+      "_profiler_step": true,
+      "_maybe_add_version_metadata": true
+    },
+    "native_activity_assignment_lines": [
+      213,
+      213
+    ],
+    "native_uri_helper_lines": [
+      24,
+      35
+    ],
+    "native_default_true_line": 90,
+    "mock_endpoint_subclass_only": true
+  },
+  "source_hashes": {
+    "vllm/envs.py": {
+      "sha256": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9",
+      "package_pin": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9",
+      "observed_pin": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9"
+    },
+    "vllm/distributed/device_communicators/shm_broadcast.py": {
+      "sha256": "f3e7a3f3ff713fccbd535e0d41650ee05bdf8677e83d4b90519910645022c30b",
+      "package_pin": null,
+      "observed_pin": null
+    },
+    "vllm/profiler/wrapper.py": {
+      "sha256": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+      "package_pin": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+      "observed_pin": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15"
+    },
+    "vllm/v1/executor/multiproc_executor.py": {
+      "sha256": "d5ca86635611758c2bd543ffd1fe9ad200db62880ce1f47eda8e4c63847595ea",
+      "package_pin": "d5ca86635611758c2bd543ffd1fe9ad200db62880ce1f47eda8e4c63847595ea",
+      "observed_pin": "d5ca86635611758c2bd543ffd1fe9ad200db62880ce1f47eda8e4c63847595ea"
+    },
+    "vllm/v1/worker/gpu_worker.py": {
+      "sha256": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552",
+      "package_pin": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552",
+      "observed_pin": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552"
+    },
+    "vllm/distributed/kv_transfer/kv_connector/utils.py": {
+      "sha256": "d13b26e939ebc289ae5fedd4c504823e074927a9e5be6c33bc8d4e9c86b5a179",
+      "package_pin": null,
+      "observed_pin": null
+    },
+    "vllm/config/profiler.py": {
+      "sha256": "78af917ec2ea2ba3bacda15f58fda9782b8ff82c0b810fd5c9563f4203aa5ba8",
+      "package_pin": "78af917ec2ea2ba3bacda15f58fda9782b8ff82c0b810fd5c9563f4203aa5ba8",
+      "observed_pin": "78af917ec2ea2ba3bacda15f58fda9782b8ff82c0b810fd5c9563f4203aa5ba8"
+    }
+  },
+  "native_slices": [
+    {
+      "file": "vllm/profiler/wrapper.py",
+      "class": "WorkerProfiler",
+      "members": null,
+      "ranges": [
+        [
+          29,
+          51
+        ],
+        [
+          54,
+          56
+        ],
+        [
+          59,
+          61
+        ],
+        [
+          64,
+          66
+        ],
+        [
+          68,
+          74
+        ],
+        [
+          76,
+          83
+        ],
+        [
+          85,
+          95
+        ],
+        [
+          97,
+          128
+        ],
+        [
+          130,
+          138
+        ],
+        [
+          140,
+          152
+        ],
+        [
+          154,
+          158
+        ],
+        [
+          160,
+          162
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/profiler/wrapper.py",
+      "class": "TorchProfilerWrapper",
+      "members": [
+        "_start",
+        "_stop",
+        "_profiler_step",
+        "_maybe_add_version_metadata"
+      ],
+      "ranges": [
+        [
+          277,
+          299
+        ],
+        [
+          302,
+          306
+        ],
+        [
+          309,
+          330
+        ],
+        [
+          333,
+          348
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/v1/executor/multiproc_executor.py",
+      "class": "WorkerProc",
+      "members": [
+        "ResponseStatus"
+      ],
+      "ranges": [
+        [
+          975,
+          977
+        ]
+      ],
+      "bases_replaced": [],
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/v1/executor/multiproc_executor.py",
+      "class": "FutureWrapper",
+      "members": null,
+      "ranges": [
+        [
+          79,
+          89
+        ],
+        [
+          91,
+          99
+        ],
+        [
+          101,
+          108
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/v1/executor/multiproc_executor.py",
+      "class": "MultiprocExecutor",
+      "members": [
+        "execute_model",
+        "collective_rpc"
+      ],
+      "ranges": [
+        [
+          337,
+          348
+        ],
+        [
+          372,
+          445
+        ]
+      ],
+      "bases_replaced": [],
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/v1/worker/gpu_worker.py",
+      "class": "Worker",
+      "members": [
+        "annotate_profile",
+        "execute_model"
+      ],
+      "ranges": [
+        [
+          931,
+          1042
+        ],
+        [
+          1053,
+          1141
+        ]
+      ],
+      "bases_replaced": [],
+      "decorators_removed": [
+        "execute_model"
+      ]
+    },
+    {
+      "file": "vllm/distributed/kv_transfer/kv_connector/utils.py",
+      "class": "KVOutputAggregator",
+      "members": null,
+      "ranges": [
+        [
+          55,
+          56
+        ],
+        [
+          58,
+          63
+        ],
+        [
+          66,
+          67
+        ],
+        [
+          69,
+          174
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/distributed/device_communicators/shm_broadcast.py",
+      "class": "MessageQueue",
+      "members": [
+        "ReadTimeoutWithWarnings",
+        "acquire_read",
+        "dequeue"
+      ],
+      "ranges": [
+        [
+          719,
+          758
+        ],
+        [
+          761,
+          821
+        ],
+        [
+          882,
+          907
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/profiler/wrapper.py",
+      "class": "TorchProfilerWrapper",
+      "members": [
+        "_start",
+        "_stop",
+        "_profiler_step",
+        "_maybe_add_version_metadata",
+        "_build_profiler_table",
+        "_write_profiler_table"
+      ],
+      "ranges": [
+        [
+          255,
+          265
+        ],
+        [
+          267,
+          275
+        ],
+        [
+          277,
+          299
+        ],
+        [
+          302,
+          306
+        ],
+        [
+          309,
+          330
+        ],
+        [
+          333,
+          348
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    }
+  ],
+  "old_artifact_hashes_unchanged": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/command.md": "fdf63d41e188aefb22a0b3476743b2e5eba4da8bddcd85e25e8e8f4a67f9a4c0",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.json": "02e1d2df3a779a4902800094e098def776fcefc1dff35e7a60ea3b907ffc77b0",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md": "84de6593f5c902f2f8218de585927ae2629ad880771ec32c29fc4b461de456c3",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_command.md": "c15044b21528c93fef099d3c95622e9d5bea707d1379c1403ca7c1fd84a5d248",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md": "159ffb474980d29d5d8cc4e61627f2823009dec5fc4ee83a4ea043af11a85021",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.json": "c06abc548549a35ad7e3411585870fc629aee8677deffda1aaeb3953058270b4",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md": "642bb310b814ee23cec39887283a951cd78e9e4993ed657554ff420057b85a05",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json": "82406421d9c21ccda4b0b1191aef7c68d4bc058230a5519b2c23918ee14f1b5c",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md": "58b1901d38b258a96df876b9f6d4807983122dea7a569fcb0cb083e6bebe01e6",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py": "5608b2ec83b0744fa756ca203f8d01963b33516a6018d7adab1f5c1c37db80d9",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/initial_missing_log_constant.log": "59ba445688e7d08c932146b2d9528f9a4560c36edd2dfdab9c5f777fbf54b6e8",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/matrix_1.json": "c7830c55eabc3758709dd954812c9bc18675f454c7f2aa935e0d8e2a66cbc94d",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/matrix_1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/matrix_2.json": "5c2a7252e9a3bb3e4c027c06727921b195ec75f68b0b060b189110a43491530d",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/matrix_2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/symptom_1.json": "d142c18c31f4b32bd814404b95ce4c447fd2aca72940b1fdc1772403bc21fd9a",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/symptom_1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/symptom_2.json": "a10d0b0ebb71d1da2ba8225e7a2880954543b934d4463850cbbbe2b4ff1c69fc",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/symptom_2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/native_import_failure.log": "40533cffafd79c163483a0690267bbb1306351aabe78025c4e352679cecd70db"
+  },
+  "results": [
+    {
+      "case": "cuda_default_true",
+      "verdict": "RED",
+      "error": "RPC call to execute_model timed out.",
+      "cause": "TimeoutError",
+      "native_traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 430, in get_response\n    status, result = mq.dequeue(timeout=dequeue_timeout)\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 160, in dequeue\n    return super().dequeue(timeout, indefinite)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 889, in dequeue\n    with self.acquire_read(timeout, indefinite) as buf:\n  File \"/usr/lib/python3.10/contextlib.py\", line 135, in __enter__\n    return next(self.gen)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 794, in acquire_read\n    self._spin_condition.wait(timeout_ms=read_timeout.timeout_ms())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 747, in timeout_ms\n    raise TimeoutError\nTimeoutError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 188, in case\n    assert future.result() is None\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 99, in result\n    return super().result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 451, in result\n    return self.__get_result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 403, in __get_result\n    raise self._exception\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 103, in _wait_for_response\n    response = self.aggregate(self.get_response())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 432, in get_response\n    raise TimeoutError(f\"RPC call to {method} timed out.\") from e\nTimeoutError: RPC call to execute_model timed out.\n",
+      "virtual_seconds": 300.0,
+      "stop_seconds": 222,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "mock statistics input: key_averages",
+          "mock statistics input: table",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "mock statistics input: key_averages",
+          "mock statistics input: table",
+          "model_runner.execute_model after autostop"
+        ]
+      ],
+      "inputs": {
+        "case": "cuda_default_true",
+        "export_seconds": 222,
+        "statistics_seconds": 313,
+        "dump": true,
+        "activities": [
+          "CPU",
+          "CUDA"
+        ],
+        "controlled_not_measured": true
+      },
+      "phase_checks": [
+        {
+          "rank": 0,
+          "export_calls": 1,
+          "key_averages_calls": 1,
+          "table_calls": [
+            {
+              "sort_by": "self_cuda_time_total"
+            }
+          ],
+          "dump_cpu_time_total": false,
+          "files": {
+            "cuda_default_true/rank0/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203",
+            "cuda_default_true/rank0/profiler_out_0.txt": "7dbc70c53154a06af0c8822c74056210821ad5eb37e03632ffdbe2d5d03df2e3"
+          }
+        },
+        {
+          "rank": 1,
+          "export_calls": 1,
+          "key_averages_calls": 1,
+          "table_calls": [
+            {
+              "sort_by": "self_cuda_time_total"
+            }
+          ],
+          "dump_cpu_time_total": false,
+          "files": {
+            "cuda_default_true/rank1/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203",
+            "cuda_default_true/rank1/profiler_out_1.txt": "7dbc70c53154a06af0c8822c74056210821ad5eb37e03632ffdbe2d5d03df2e3"
+          }
+        }
+      ],
+      "native_table_stdout": "tiny controlled table self_cuda_time_total\n"
+    },
+    {
+      "case": "cuda_false",
+      "verdict": "GREEN",
+      "error": null,
+      "cause": null,
+      "native_traceback": null,
+      "virtual_seconds": 222.0,
+      "stop_seconds": 222,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "model_runner.execute_model after autostop"
+        ]
+      ],
+      "inputs": {
+        "case": "cuda_false",
+        "export_seconds": 222,
+        "statistics_seconds": 313,
+        "dump": false,
+        "activities": [
+          "CPU",
+          "CUDA"
+        ],
+        "controlled_not_measured": true
+      },
+      "phase_checks": [
+        {
+          "rank": 0,
+          "export_calls": 1,
+          "key_averages_calls": 0,
+          "table_calls": [],
+          "dump_cpu_time_total": false,
+          "files": {
+            "cuda_false/rank0/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203"
+          }
+        },
+        {
+          "rank": 1,
+          "export_calls": 1,
+          "key_averages_calls": 0,
+          "table_calls": [],
+          "dump_cpu_time_total": false,
+          "files": {
+            "cuda_false/rank1/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203"
+          }
+        }
+      ],
+      "native_table_stdout": ""
+    },
+    {
+      "case": "export_too_slow_false",
+      "verdict": "RED",
+      "error": "RPC call to execute_model timed out.",
+      "cause": "TimeoutError",
+      "native_traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 430, in get_response\n    status, result = mq.dequeue(timeout=dequeue_timeout)\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 160, in dequeue\n    return super().dequeue(timeout, indefinite)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 889, in dequeue\n    with self.acquire_read(timeout, indefinite) as buf:\n  File \"/usr/lib/python3.10/contextlib.py\", line 135, in __enter__\n    return next(self.gen)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 794, in acquire_read\n    self._spin_condition.wait(timeout_ms=read_timeout.timeout_ms())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 747, in timeout_ms\n    raise TimeoutError\nTimeoutError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 188, in case\n    assert future.result() is None\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 99, in result\n    return super().result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 451, in result\n    return self.__get_result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 403, in __get_result\n    raise self._exception\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 103, in _wait_for_response\n    response = self.aggregate(self.get_response())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 432, in get_response\n    raise TimeoutError(f\"RPC call to {method} timed out.\") from e\nTimeoutError: RPC call to execute_model timed out.\n",
+      "virtual_seconds": 300.0,
+      "stop_seconds": 301,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "model_runner.execute_model after autostop"
+        ]
+      ],
+      "inputs": {
+        "case": "export_too_slow_false",
+        "export_seconds": 301,
+        "statistics_seconds": 313,
+        "dump": false,
+        "activities": [
+          "CPU",
+          "CUDA"
+        ],
+        "controlled_not_measured": true
+      },
+      "phase_checks": [
+        {
+          "rank": 0,
+          "export_calls": 1,
+          "key_averages_calls": 0,
+          "table_calls": [],
+          "dump_cpu_time_total": false,
+          "files": {
+            "export_too_slow_false/rank0/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203"
+          }
+        },
+        {
+          "rank": 1,
+          "export_calls": 1,
+          "key_averages_calls": 0,
+          "table_calls": [],
+          "dump_cpu_time_total": false,
+          "files": {
+            "export_too_slow_false/rank1/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203"
+          }
+        }
+      ],
+      "native_table_stdout": ""
+    },
+    {
+      "case": "cpu_only_false",
+      "verdict": "RED",
+      "error": "RPC call to execute_model timed out.",
+      "cause": "TimeoutError",
+      "native_traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 430, in get_response\n    status, result = mq.dequeue(timeout=dequeue_timeout)\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 160, in dequeue\n    return super().dequeue(timeout, indefinite)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 889, in dequeue\n    with self.acquire_read(timeout, indefinite) as buf:\n  File \"/usr/lib/python3.10/contextlib.py\", line 135, in __enter__\n    return next(self.gen)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 794, in acquire_read\n    self._spin_condition.wait(timeout_ms=read_timeout.timeout_ms())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 747, in timeout_ms\n    raise TimeoutError\nTimeoutError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 188, in case\n    assert future.result() is None\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 99, in result\n    return super().result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 451, in result\n    return self.__get_result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 403, in __get_result\n    raise self._exception\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 103, in _wait_for_response\n    response = self.aggregate(self.get_response())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 432, in get_response\n    raise TimeoutError(f\"RPC call to {method} timed out.\") from e\nTimeoutError: RPC call to execute_model timed out.\n",
+      "virtual_seconds": 300.0,
+      "stop_seconds": 222,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "mock statistics input: key_averages",
+          "mock statistics input: table",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "mock statistics input: key_averages",
+          "mock statistics input: table",
+          "model_runner.execute_model after autostop"
+        ]
+      ],
+      "inputs": {
+        "case": "cpu_only_false",
+        "export_seconds": 222,
+        "statistics_seconds": 313,
+        "dump": false,
+        "activities": [
+          "CPU"
+        ],
+        "controlled_not_measured": true
+      },
+      "phase_checks": [
+        {
+          "rank": 0,
+          "export_calls": 1,
+          "key_averages_calls": 1,
+          "table_calls": [
+            {
+              "sort_by": "self_cpu_time_total",
+              "row_limit": 50
+            }
+          ],
+          "dump_cpu_time_total": true,
+          "files": {
+            "cpu_only_false/rank0/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203",
+            "cpu_only_false/rank0/profiler_out_0.txt": "89772faa99850589f1bceca805a5ab74a064300a87d2df81d48f54d54547a571"
+          }
+        },
+        {
+          "rank": 1,
+          "export_calls": 1,
+          "key_averages_calls": 1,
+          "table_calls": [
+            {
+              "sort_by": "self_cpu_time_total",
+              "row_limit": 50
+            }
+          ],
+          "dump_cpu_time_total": true,
+          "files": {
+            "cpu_only_false/rank1/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203",
+            "cpu_only_false/rank1/profiler_out_1.txt": "89772faa99850589f1bceca805a5ab74a064300a87d2df81d48f54d54547a571"
+          }
+        }
+      ],
+      "native_table_stdout": "tiny controlled table self_cpu_time_total\n"
+    },
+    {
+      "case": "cuda_false_fifo",
+      "verdict": "GREEN",
+      "error": null,
+      "cause": null,
+      "native_traceback": null,
+      "virtual_seconds": 222.0,
+      "stop_seconds": 222,
+      "reply_ranks": [
+        null,
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 0,
+          "call": 1,
+          "timeout": 78.0,
+          "time": 222.0
+        },
+        {
+          "rank": 1,
+          "call": 1,
+          "timeout": 78.0,
+          "time": 222.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "model_runner.execute_model after autostop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "mock export/event complete",
+          "model_runner.execute_model after autostop",
+          "model_runner.execute_model after autostop"
+        ]
+      ],
+      "inputs": {
+        "case": "cuda_false_fifo",
+        "export_seconds": 222,
+        "statistics_seconds": 313,
+        "dump": false,
+        "activities": [
+          "CPU",
+          "CUDA"
+        ],
+        "controlled_not_measured": true
+      },
+      "phase_checks": [
+        {
+          "rank": 0,
+          "export_calls": 1,
+          "key_averages_calls": 0,
+          "table_calls": [],
+          "dump_cpu_time_total": false,
+          "files": {
+            "cuda_false_fifo/rank0/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203"
+          }
+        },
+        {
+          "rank": 1,
+          "export_calls": 1,
+          "key_averages_calls": 0,
+          "table_calls": [],
+          "dump_cpu_time_total": false,
+          "files": {
+            "cuda_false_fifo/rank1/mock_export_event.marker": "159b6f02310e62cf0bb911b48198122ee208cd40c5f355777505f3a23b93e203"
+          }
+        }
+      ],
+      "native_table_stdout": ""
+    }
+  ],
+  "timeout_seconds": 300,
+  "wall_seconds": 0.016419687774032354,
+  "status": "PASS_SOURCE_BOUND_STATISTICS_TOGGLE_NOT_ORIGINAL_PHASE_PROOF",
+  "commands": [
+    {
+      "argv": [
+        "/data/ycfeng/toolchain/bin/uv",
+        "run",
+        "--offline",
+        "--no-project",
+        "--python",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "--",
+        "python",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/adapter.py",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/run_1"
+      ],
+      "stdout": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/run_1.json",
+      "stderr": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/run_1.stderr",
+      "actual_exit": 0,
+      "expected_exit": 0,
+      "matrix_wall_seconds": 0.016419687774032354,
+      "stdout_sha256": "05d23a80ba3fee6c62972c08dc4509378cbd19de87e2a6af5a746e1b3a188b60",
+      "fresh_output_directory": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/run_1"
+    },
+    {
+      "argv": [
+        "/data/ycfeng/toolchain/bin/uv",
+        "run",
+        "--offline",
+        "--no-project",
+        "--python",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "--",
+        "python",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/adapter.py",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/run_2"
+      ],
+      "stdout": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/run_2.json",
+      "stderr": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/run_2.stderr",
+      "actual_exit": 0,
+      "expected_exit": 0,
+      "matrix_wall_seconds": 0.015765476040542126,
+      "stdout_sha256": "cdd35857a8f8aa6622c3cb92bfd84021bb998978fa9b3a73027623dad568c3ea",
+      "fresh_output_directory": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/run_2"
+    }
+  ],
+  "summary": [
+    {
+      "case": "cuda_default_true",
+      "verdict": "RED",
+      "virtual_seconds": 300.0,
+      "export_calls": [
+        1,
+        1
+      ],
+      "key_averages_calls": [
+        1,
+        1
+      ],
+      "table_files": 2,
+      "table_args": [
+        [
+          {
+            "sort_by": "self_cuda_time_total"
+          }
+        ],
+        [
+          {
+            "sort_by": "self_cuda_time_total"
+          }
+        ]
+      ]
+    },
+    {
+      "case": "cuda_false",
+      "verdict": "GREEN",
+      "virtual_seconds": 222.0,
+      "export_calls": [
+        1,
+        1
+      ],
+      "key_averages_calls": [
+        0,
+        0
+      ],
+      "table_files": 0,
+      "table_args": [
+        [],
+        []
+      ]
+    },
+    {
+      "case": "export_too_slow_false",
+      "verdict": "RED",
+      "virtual_seconds": 300.0,
+      "export_calls": [
+        1,
+        1
+      ],
+      "key_averages_calls": [
+        0,
+        0
+      ],
+      "table_files": 0,
+      "table_args": [
+        [],
+        []
+      ]
+    },
+    {
+      "case": "cpu_only_false",
+      "verdict": "RED",
+      "virtual_seconds": 300.0,
+      "export_calls": [
+        1,
+        1
+      ],
+      "key_averages_calls": [
+        1,
+        1
+      ],
+      "table_files": 2,
+      "table_args": [
+        [
+          {
+            "sort_by": "self_cpu_time_total",
+            "row_limit": 50
+          }
+        ],
+        [
+          {
+            "sort_by": "self_cpu_time_total",
+            "row_limit": 50
+          }
+        ]
+      ]
+    },
+    {
+      "case": "cuda_false_fifo",
+      "verdict": "GREEN",
+      "virtual_seconds": 222.0,
+      "export_calls": [
+        1,
+        1
+      ],
+      "key_averages_calls": [
+        0,
+        0
+      ],
+      "table_files": 0,
+      "table_args": [
+        [],
+        []
+      ]
+    }
+  ],
+  "determinism": "All output fields except wall_seconds identical across two fresh output directories",
+  "adapter": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/adapter.py",
+  "adapter_gross_lines": 139,
+  "native_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "source_commit_checks": {
+    "vllm/envs.py": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9",
+    "vllm/distributed/device_communicators/shm_broadcast.py": "f3e7a3f3ff713fccbd535e0d41650ee05bdf8677e83d4b90519910645022c30b",
+    "vllm/profiler/wrapper.py": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+    "vllm/v1/executor/multiproc_executor.py": "d5ca86635611758c2bd543ffd1fe9ad200db62880ce1f47eda8e4c63847595ea",
+    "vllm/v1/worker/gpu_worker.py": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552",
+    "vllm/distributed/kv_transfer/kv_connector/utils.py": "d13b26e939ebc289ae5fedd4c504823e074927a9e5be6c33bc8d4e9c86b5a179",
+    "vllm/config/profiler.py": "78af917ec2ea2ba3bacda15f58fda9782b8ff82c0b810fd5c9563f4203aa5ba8"
+  },
+  "inherited_root_verification": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json",
+    "sha256": "3b9a3327cd4a2fd65f8900cc7605ede7ccb71d38d70f30fd65113c570cc2fda7"
+  },
+  "limits": [
+    "CPU AST control only, not actual-image config construction or GPU execution",
+    "222 export and313 statistics are explicitly chosen controlled inputs, not measured original CPU/GPU phase durations",
+    "One RPC caller/two simulated endpoints; endpoint0 phase costs0, endpoint1 receives controlled costs",
+    "Actual native stop/table/file methods and flags unchanged; mock profiler.stop/key_averages/table inputs only",
+    "Mock export marker is not a trace or proof of raw-trace identity, integrity, completeness or future exporter budget",
+    "CPU-only statistics remains active when CUDA text-table flag is false; mixed CPU+CUDA omits it",
+    "False CUDA-table flag does not guarantee every export fits300 seconds; export301 control remains RED",
+    "Original pending-reply chronology, original slow phase and GPU/EngineDeadError root cause remain unproved",
+    "Inherited constructor/decorator, None-output, PP1, spinloop/memory-fence and unpinned queue/KV limitations apply",
+    "No production/native/package/GPU/parent-document/Git/subagent writes"
+  ]
+}

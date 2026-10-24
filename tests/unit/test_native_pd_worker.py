@@ -420,14 +420,23 @@ def test_missing_serving_provenance_is_soft_and_does_not_enable_stale_emission(t
     assert 'FRONTIER_NATIVE_SERVING_EVIDENCE_DIR' not in result['server_environments'][0]
 
 
-@pytest.mark.parametrize('iterations', [{}, {'prefill': 7, 'decode': 5}, {'prefill': 7}])
-def test_profile_nodes_have_distinct_trace_directories_without_changing_input(iterations):
+@pytest.mark.parametrize('iterations', [{}, {'prefill': 7, 'decode': 5}, {'prefill': 7},
+                                       {'prefill': 512, 'decode': 64}])
+@pytest.mark.parametrize('dump_cuda_time_total', [True, False])
+def test_profile_nodes_have_distinct_trace_directories_without_changing_input(
+        tmp_path, iterations, dump_cuda_time_total):
+    from tests.unit.test_calibration_pd_harness import nixl_engine
+    from tests.comparison.calibration.pd_replay import server_command
+
+    (tmp_path / 'config.json').write_text(json.dumps({
+        'architectures': ['DeepseekV4ForCausalLM'], 'vocab_size': 129280}))
     config = dict(data_parallel_size_local=1, http_ports=dict(prefill=8100, decode=8200),
         dp_rpc_ports=dict(prefill=3100, decode=3200), role_profiler_max_iterations=iterations,
-        engine=dict(data_parallel_size=2,
+        engine=nixl_engine() | dict(data_parallel_size=2,
             tensor_parallel_size=8, kv_transfer={},
             worker_extension_cls='native_serve_profile.NativeServeProfile',
-            profiler_config=dict(profiler='torch', torch_profiler_dir='/trace', max_iterations=3)))
+            profiler_config=dict(profiler='torch', torch_profiler_dir='/trace', max_iterations=3,
+                torch_profiler_dump_cuda_time_total=dump_cuda_time_total)))
     original = json.dumps(config, sort_keys=True)
     peers = [dict(host=f'cpu{i}', ip=f'192.0.2.{i + 1}') for i in range(4)]
     plans = [native_pd_worker.node_plan(config, peers, peer['host'], list(range(8))) for peer in peers]
@@ -439,6 +448,10 @@ def test_profile_nodes_have_distinct_trace_directories_without_changing_input(it
         assert plan['engine']['profiler_config'] == config['engine']['profiler_config'] | {
             'torch_profiler_dir': f"/trace/{plan['role']}/dp{plan['lane']}",
             'max_iterations': iterations.get(plan['role'], 3)}
+        command = server_command(plan['engine'], tmp_path, config['http_ports'][plan['role']])
+        profiler = json.loads(command[command.index('--profiler-config') + 1])
+        assert profiler == plan['engine']['profiler_config']
+        assert profiler['torch_profiler_dump_cuda_time_total'] is dump_cuda_time_total
     assert all(p['engine']['profiler_config'] is not config['engine']['profiler_config'] for p in plans)
     assert json.dumps(config, sort_keys=True) == original
 

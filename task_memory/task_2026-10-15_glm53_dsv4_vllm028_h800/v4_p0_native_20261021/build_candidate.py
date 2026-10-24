@@ -47,7 +47,7 @@ def main(generation='06', profile_plan=None):
     if plan is None:
         assert generation == '06', 'Only the root-selected fresh native06 generation is authorized'
     else:
-        assert generation == '03' and plan['generation'] == generation
+        assert generation == '04' and plan['generation'] == generation
         assert plan['diagnostic_only'] and not plan['e2e_reference_admission']
         assert profile_plan.resolve().is_relative_to(REPO / 'task_memory')
     PACKAGE = HERE / f'candidate_h800_p0_{"profile_" if plan else ""}{generation}'

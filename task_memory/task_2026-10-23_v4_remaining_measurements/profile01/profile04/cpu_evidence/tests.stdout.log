@@ -1,0 +1,575 @@
+..........FFFF.................................................FFFFFFFFF [ 58%]
+FFFFFFF...............FF...........................                      [100%]
+=================================== FAILURES ===================================
+________ test_worker_launch_exports_staged_extension_path_to_real_child ________
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_worker_launch_exports_sta0')
+
+    def test_worker_launch_exports_staged_extension_path_to_real_child(tmp_path):
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child')
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:379: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/comparison/calibration/native_pd_worker.py", line 321, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/unit/test_native_pd_worker.py", line 126, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+_ test_worker_child_ready_timeout_matches_configured_startup_budget[3600-None] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_worker_child_ready_timeou0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fe6892a4280>
+budget = 3600, inherited = None
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:402: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/comparison/calibration/native_pd_worker.py", line 321, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/unit/test_native_pd_worker.py", line 126, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+_ test_worker_child_ready_timeout_matches_configured_startup_budget[3600-600] __
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_worker_child_ready_timeou1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fe72edd3550>
+budget = 3600, inherited = '600'
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:402: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/comparison/calibration/native_pd_worker.py", line 321, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/unit/test_native_pd_worker.py", line 126, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+__ test_worker_child_ready_timeout_matches_configured_startup_budget[37-7200] __
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_worker_child_ready_timeou2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fe72ed3e590>
+budget = 37, inherited = '7200'
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:402: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/comparison/calibration/native_pd_worker.py", line 321, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/unit/test_native_pd_worker.py", line 126, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+__ test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[None] ___
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na0')
+fault = None
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError
+_ test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[missing] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na1')
+fault = 'missing'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError
+__ test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[push] ___
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na2')
+fault = 'push'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError
+_ test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[identity] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na3')
+fault = 'identity'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError
+_ test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[blocks] __
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na4')
+fault = 'blocks'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError
+_ test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[response_list] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na5')
+fault = 'response_list'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError
+_ test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata[200-False] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_streams_before0')
+decode_status = 200, disconnect = False
+
+    @pytest.mark.parametrize(("decode_status", "disconnect"), [(200, False), (503, False), (200, True)])
+    def test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata(tmp_path, decode_status, disconnect):
+>       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:163: ModuleNotFoundError
+_ test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata[503-False] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_streams_before1')
+decode_status = 503, disconnect = False
+
+    @pytest.mark.parametrize(("decode_status", "disconnect"), [(200, False), (503, False), (200, True)])
+    def test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata(tmp_path, decode_status, disconnect):
+>       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:163: ModuleNotFoundError
+_ test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata[200-True] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_streams_before2')
+decode_status = 200, disconnect = True
+
+    @pytest.mark.parametrize(("decode_status", "disconnect"), [(200, False), (503, False), (200, True)])
+    def test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata(tmp_path, decode_status, disconnect):
+>       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:163: ModuleNotFoundError
+_______ test_legacy_proxy_preserves_address_id_and_unchanged_decode_body _______
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_legacy_proxy_preserves_ad0')
+
+    def test_legacy_proxy_preserves_address_id_and_unchanged_decode_body(tmp_path):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:239: ModuleNotFoundError
+_ test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.10.2-False] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_uses_independent_up0')
+vllm_version = '0.10.2', stream = False
+
+    @pytest.mark.parametrize(("vllm_version", "stream"), [
+        ("0.10.2", False), ("0.28.0", False), ("0.28.0", True),
+    ])
+    def test_proxy_uses_independent_upstream_connections_for_consecutive_posts(tmp_path, vllm_version, stream):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:274: ModuleNotFoundError
+_ test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.28.0-False] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_uses_independent_up1')
+vllm_version = '0.28.0', stream = False
+
+    @pytest.mark.parametrize(("vllm_version", "stream"), [
+        ("0.10.2", False), ("0.28.0", False), ("0.28.0", True),
+    ])
+    def test_proxy_uses_independent_upstream_connections_for_consecutive_posts(tmp_path, vllm_version, stream):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:274: ModuleNotFoundError
+_ test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.28.0-True] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_uses_independent_up2')
+vllm_version = '0.28.0', stream = True
+
+    @pytest.mark.parametrize(("vllm_version", "stream"), [
+        ("0.10.2", False), ("0.28.0", False), ("0.28.0", True),
+    ])
+    def test_proxy_uses_independent_upstream_connections_for_consecutive_posts(tmp_path, vllm_version, stream):
+>       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:274: ModuleNotFoundError
+_ test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[prefill] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_does_not_retry_disc0')
+disconnect_at = 'prefill'
+
+    @pytest.mark.parametrize("disconnect_at", ["prefill", "decode_headers", "decode_stream"])
+    def test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent(tmp_path, disconnect_at):
+>       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:360: ModuleNotFoundError
+_ test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[decode_headers] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_does_not_retry_disc1')
+disconnect_at = 'decode_headers'
+
+    @pytest.mark.parametrize("disconnect_at", ["prefill", "decode_headers", "decode_stream"])
+    def test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent(tmp_path, disconnect_at):
+>       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:360: ModuleNotFoundError
+_ test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[decode_stream] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_does_not_retry_disc2')
+disconnect_at = 'decode_stream'
+
+    @pytest.mark.parametrize("disconnect_at", ["prefill", "decode_headers", "decode_stream"])
+    def test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent(tmp_path, disconnect_at):
+>       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:360: ModuleNotFoundError
+__ test_v028_external_pd_replays_http_without_owning_native_servers[200-200] ___
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_external_pd_replays_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fe68950fca0>
+decode_status = 200, health_status = 200
+
+    @pytest.mark.parametrize("decode_status,health_status", [(200, 200), (503, 200), (200, 503)])
+    def test_v028_external_pd_replays_http_without_owning_native_servers(
+        tmp_path, monkeypatch, decode_status, health_status,
+    ):
+        import socket
+        import threading
+        import urllib.request
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    
+        received, launched = [], []
+        params = {
+            "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
+            "remote_engine_id": "native-p-engine", "remote_request_id": "native-p-request",
+            "remote_host": "192.0.2.10", "remote_port": 5557, "remote_block_ids": [[7, 9]],
+        }
+    
+        class Endpoint(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+    
+            def do_GET(self):
+                assert self.path == "/health"
+                self.send_response(health_status)
+                self.end_headers()
+    
+            def do_POST(self):
+                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                received.append((self.server.role, self.headers["X-Request-Id"], body))
+                status = 200 if self.server.role == "prefill" else decode_status
+                payload = ({"kv_transfer_params": params} if self.server.role == "prefill" else
+                           {"choices": [{"text": "native response", "finish_reason": "length"}],
+                            "usage": {"prompt_tokens": 65, "completion_tokens": 3}})
+                streaming = self.server.role == "decode" and status == 200 and body["stream"]
+                self.send_response(status)
+                self.send_header("Content-Type", "text/event-stream" if streaming else "application/json")
+                self.end_headers()
+                if streaming:
+                    events = [
+                        {"choices": [{"index": 0, "text": "", "token_ids": [7, 8, 9], "finish_reason": "length"}]},
+                        {"choices": [], "usage": {"prompt_tokens": 65, "completion_tokens": 3, "total_tokens": 68}},
+                    ]
+                    self.wfile.write(("".join("data: " + json.dumps(event) + "\n\n" for event in events)
+                                     + "data: [DONE]\n\n").encode())
+                else:
+                    self.wfile.write(json.dumps(payload).encode())
+    
+        servers, threads = [], []
+        try:
+            urls = []
+            for role in ("prefill", "decode"):
+                server = ThreadingHTTPServer(("127.0.0.1", 0), Endpoint)
+                server.role = role
+                servers.append(server)
+                thread = threading.Thread(target=server.serve_forever, daemon=True)
+                thread.start()
+                threads.append(thread)
+                urls.append(f"http://127.0.0.1:{server.server_port}")
+            with socket.socket() as listener:
+                listener.bind(("127.0.0.1", 0))
+                proxy_port = listener.getsockname()[1]
+            engine = nixl_engine()
+            del engine["role_devices"]
+            argv, output = native_replay_inputs(tmp_path, engine)
+            argv += ["--prefill-url", urls[0], "--decode-url", urls[1],
+                     "--proxy-port", str(proxy_port), "--origin-lead-s", "0",
+                     "--startup-timeout-s", "0.01" if health_status != 200 else "10"]
+            popen = pd_replay.subprocess.Popen
+    
+            def spawn(command, **kwargs):
+                assert command[1].endswith("/pd_proxy.py")
+                process = popen(command, **kwargs)
+                launched.append(process)
+                return process
+    
+            monkeypatch.setattr(pd_replay.subprocess, "Popen", spawn)
+            if health_status == 200:
+>               assert pd_replay.main(argv) == (0 if decode_status == 200 else 4)
+
+tests/unit/test_calibration_pd_harness.py:634: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/comparison/calibration/pd_replay.py:744: in main
+    wait_until_ready(processes["proxy"], args.proxy_port, args.startup_timeout_s)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+server = <Popen: returncode: 1 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>
+port = 44769, timeout_s = 10.0, host = '127.0.0.1'
+
+    def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: float, *,
+                         host: str = "127.0.0.1") -> float:
+        started = time.monotonic()
+        while time.monotonic() - started < timeout_s:
+            if server is not None and server.poll() is not None:
+>               raise RuntimeError(f"vllm serve exited with {server.returncode} during startup")
+E               RuntimeError: vllm serve exited with 1 during startup
+
+tests/comparison/dp_placement_pp/vllm_replay.py:415: RuntimeError
+__ test_v028_external_pd_replays_http_without_owning_native_servers[503-200] ___
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_external_pd_replays_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fe689417760>
+decode_status = 503, health_status = 200
+
+    @pytest.mark.parametrize("decode_status,health_status", [(200, 200), (503, 200), (200, 503)])
+    def test_v028_external_pd_replays_http_without_owning_native_servers(
+        tmp_path, monkeypatch, decode_status, health_status,
+    ):
+        import socket
+        import threading
+        import urllib.request
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    
+        received, launched = [], []
+        params = {
+            "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
+            "remote_engine_id": "native-p-engine", "remote_request_id": "native-p-request",
+            "remote_host": "192.0.2.10", "remote_port": 5557, "remote_block_ids": [[7, 9]],
+        }
+    
+        class Endpoint(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+    
+            def do_GET(self):
+                assert self.path == "/health"
+                self.send_response(health_status)
+                self.end_headers()
+    
+            def do_POST(self):
+                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                received.append((self.server.role, self.headers["X-Request-Id"], body))
+                status = 200 if self.server.role == "prefill" else decode_status
+                payload = ({"kv_transfer_params": params} if self.server.role == "prefill" else
+                           {"choices": [{"text": "native response", "finish_reason": "length"}],
+                            "usage": {"prompt_tokens": 65, "completion_tokens": 3}})
+                streaming = self.server.role == "decode" and status == 200 and body["stream"]
+                self.send_response(status)
+                self.send_header("Content-Type", "text/event-stream" if streaming else "application/json")
+                self.end_headers()
+                if streaming:
+                    events = [
+                        {"choices": [{"index": 0, "text": "", "token_ids": [7, 8, 9], "finish_reason": "length"}]},
+                        {"choices": [], "usage": {"prompt_tokens": 65, "completion_tokens": 3, "total_tokens": 68}},
+                    ]
+                    self.wfile.write(("".join("data: " + json.dumps(event) + "\n\n" for event in events)
+                                     + "data: [DONE]\n\n").encode())
+                else:
+                    self.wfile.write(json.dumps(payload).encode())
+    
+        servers, threads = [], []
+        try:
+            urls = []
+            for role in ("prefill", "decode"):
+                server = ThreadingHTTPServer(("127.0.0.1", 0), Endpoint)
+                server.role = role
+                servers.append(server)
+                thread = threading.Thread(target=server.serve_forever, daemon=True)
+                thread.start()
+                threads.append(thread)
+                urls.append(f"http://127.0.0.1:{server.server_port}")
+            with socket.socket() as listener:
+                listener.bind(("127.0.0.1", 0))
+                proxy_port = listener.getsockname()[1]
+            engine = nixl_engine()
+            del engine["role_devices"]
+            argv, output = native_replay_inputs(tmp_path, engine)
+            argv += ["--prefill-url", urls[0], "--decode-url", urls[1],
+                     "--proxy-port", str(proxy_port), "--origin-lead-s", "0",
+                     "--startup-timeout-s", "0.01" if health_status != 200 else "10"]
+            popen = pd_replay.subprocess.Popen
+    
+            def spawn(command, **kwargs):
+                assert command[1].endswith("/pd_proxy.py")
+                process = popen(command, **kwargs)
+                launched.append(process)
+                return process
+    
+            monkeypatch.setattr(pd_replay.subprocess, "Popen", spawn)
+            if health_status == 200:
+>               assert pd_replay.main(argv) == (0 if decode_status == 200 else 4)
+
+tests/unit/test_calibration_pd_harness.py:634: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/comparison/calibration/pd_replay.py:744: in main
+    wait_until_ready(processes["proxy"], args.proxy_port, args.startup_timeout_s)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+server = <Popen: returncode: 1 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>
+port = 57667, timeout_s = 10.0, host = '127.0.0.1'
+
+    def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: float, *,
+                         host: str = "127.0.0.1") -> float:
+        started = time.monotonic()
+        while time.monotonic() - started < timeout_s:
+            if server is not None and server.poll() is not None:
+>               raise RuntimeError(f"vllm serve exited with {server.returncode} during startup")
+E               RuntimeError: vllm serve exited with 1 during startup
+
+tests/comparison/dp_placement_pp/vllm_replay.py:415: RuntimeError
+=========================== short test summary info ============================
+FAILED tests/unit/test_native_pd_worker.py::test_worker_launch_exports_staged_extension_path_to_real_child
+FAILED tests/unit/test_native_pd_worker.py::test_worker_child_ready_timeout_matches_configured_startup_budget[3600-None]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_child_ready_timeout_matches_configured_startup_budget[3600-600]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_child_ready_timeout_matches_configured_startup_budget[37-7200]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[None]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[missing]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[push]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[identity]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[blocks]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[response_list]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata[200-False]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata[503-False]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata[200-True]
+FAILED tests/unit/test_calibration_pd_harness.py::test_legacy_proxy_preserves_address_id_and_unchanged_decode_body
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.10.2-False]
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.28.0-False]
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.28.0-True]
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[prefill]
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[decode_headers]
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[decode_stream]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_external_pd_replays_http_without_owning_native_servers[200-200]
+FAILED tests/unit/test_calibration_pd_harness.py::test_v028_external_pd_replays_http_without_owning_native_servers[503-200]
+22 failed, 101 passed in 8.80s

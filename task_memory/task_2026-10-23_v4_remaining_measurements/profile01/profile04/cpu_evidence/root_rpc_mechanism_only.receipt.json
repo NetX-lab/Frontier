@@ -1,0 +1,98 @@
+{
+  "status": "PASS_EXPECTED_RED_AND_GREEN",
+  "script": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py",
+  "script_sha256": "5608b2ec83b0744fa756ca203f8d01963b33516a6018d7adab1f5c1c37db80d9",
+  "checks": [
+    {
+      "name": "matrix",
+      "argv": [
+        "/data/ycfeng/toolchain/bin/uv",
+        "run",
+        "--offline",
+        "--no-project",
+        "--python",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "--",
+        "python",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py"
+      ],
+      "returncode": 0,
+      "verdicts": [
+        {
+          "case": "no_pause",
+          "verdict": "GREEN",
+          "error": null
+        },
+        {
+          "case": "within_budget",
+          "verdict": "GREEN",
+          "error": null
+        },
+        {
+          "case": "exact_deadline_ready",
+          "verdict": "GREEN",
+          "error": null
+        },
+        {
+          "case": "autostop_exceeds_budget",
+          "verdict": "RED",
+          "error": "RPC call to execute_model timed out."
+        },
+        {
+          "case": "shared_deadline_remaining",
+          "verdict": "RED",
+          "error": "RPC call to execute_model timed out."
+        },
+        {
+          "case": "all_ready_after_deadline",
+          "verdict": "GREEN",
+          "error": null
+        },
+        {
+          "case": "no_aggregator_nonoutput_pause",
+          "verdict": "GREEN",
+          "error": null
+        },
+        {
+          "case": "future_fifo",
+          "verdict": "GREEN",
+          "error": null
+        },
+        {
+          "case": "future_fifo_lazy_ready",
+          "verdict": "GREEN",
+          "error": null
+        }
+      ],
+      "wall_seconds": 0.007081438787281513
+    },
+    {
+      "name": "symptom",
+      "argv": [
+        "/data/ycfeng/toolchain/bin/uv",
+        "run",
+        "--offline",
+        "--no-project",
+        "--python",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "--",
+        "python",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py",
+        "--symptom"
+      ],
+      "returncode": 1,
+      "verdicts": [
+        {
+          "case": "autostop_exceeds_budget",
+          "verdict": "RED",
+          "error": "RPC call to execute_model timed out."
+        }
+      ],
+      "wall_seconds": 0.0018224362283945084
+    }
+  ],
+  "scope": "Local CPU reproduction of the native profiler/RPC timeout mechanism, not original GPU timing or root cause.",
+  "output": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4"
+}
