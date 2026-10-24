@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 HKT | Consolidate both finite diagnoses and parent evidence; no source or measured runtime change. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
@@ -49,7 +50,9 @@ All mandatory suites ran once on this clean final source. Strict77 is77/77 ident
 
 Evidence is archived at ledger_memory/evidence/frozen_regressions_2026-10-25/:64 exact files/7126759B plus archive command/log. The comparator's initial field-reading error, its corrected exact predicate and both raw logs remain retained; no suite was rerun. Production now includes the ledger at2ca5e57113b0bc99ab84e926e5bb492b3670072e. All non-task files equal the tested146 source. Six task-record conflicts preserve both owners’ evidence; no source conflict. The fresh parent guard recomputes116 paths/114 predecessor rows/18 overlays/native patch and passes all126 bindings, exactly matching146. Accepted production is9682source/9696global with zero violations; this is source admission only. Integration evidence is ledger_memory/evidence/production_integration_2026-10-25/acceptance.json.
 
-Snapshot-copy and initialization diagnoses continue under their original separate records ownership; final receipts and consumed counts are collected before integration or further invocation. Current pricing+emission+flush, worker environment/append throughput/full-workload memory, completeCLI<=2400s per main process, finalT2/package/native/G3/E2E remain open. OSS sufficiency is user-confirmed and required-shape allowance remains6/6 used. This archive makes no new resource, fullCLI, native or RSS claim.
+Both finite diagnoses are complete and consolidated on the primary branch. Snapshot-copyb061f884/52831c6e closes NO_ALLOC by static supported-copy counterexamples,0/1 controls and0 launches. Init6335f581/c6b3da15 closes ALLOC_RECOMMENDATION_ONLY,0 new/recovered controls and0 source allocation. Its126.58s modeled removed work is historical inference, excludes accepted loader savings, and is not current startup qualification. Parent verification passes25 copy bindings,13 init bindings,14 retained init receipts and all13 owned record paths; the non-task source still equals2ca5e571 and frozen146. Six exact parent evidence files and archive.json are retained under resumed_execution/evidence/diagnosis_closeout_2026-10-25/. Both clean diagnosis worktrees are retained and their agents closed.
+
+Current pricing+emission+flush, worker environment/append throughput/full-workload memory, completeCLI<=2400s per main process, finalT2/package/native/G3/E2E remain open. Define the next joint execution without extending old diagnostic controls or required-shape6/6. OSS sufficiency is user-confirmed. The init recommendation has no patch/allowance; no resource, fullCLI, native or RSS claim follows from this records completion.
 
 ## Previous handoff boundary (2026-10-25; historical)
 

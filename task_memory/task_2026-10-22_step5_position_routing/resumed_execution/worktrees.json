@@ -823,9 +823,9 @@
     "selected_active_worktrees": [
       {
         "path": "/data/ycfeng/Frontier/.worktrees/step5-preview",
-        "head": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+        "head": "c6b3da155f920f264749e497f884722ee75d78f1",
         "branch": "feat/step5-preview",
-        "role": "Final production code and consolidated records"
+        "role": "Accepted production source and consolidated ledger/copy/init records"
       },
       {
         "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
@@ -843,15 +843,31 @@
         "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
         "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
         "branch": "d29-snapshot-copy-finish",
-        "role": "Snapshot-copy diagnosis records; collect final receipt before integration"
+        "role": "Closed NO_ALLOC static diagnosis; seven records integrated52831c6e; clean retained worktree"
       },
       {
         "path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
-        "head": "886608ea574dd2107d0b30771d63d8057d23cac6",
+        "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
         "branch": "d29-init-preparation-finish",
-        "role": "Initialization diagnosis records; original read-only scope"
+        "role": "Closed ALLOC recommendation only; six records integratedc6b3da15; zero controls/allocation; clean retained worktree"
       }
     ],
     "scope": "Only five current responsibilities refreshed; original89-row recovery census retained unchanged."
+  },
+  "diagnosis_closeout_checkpoint": {
+    "collected_utc": "2026-10-24T19:22:39.702005+00:00",
+    "primary_records_head": "c6b3da155f920f264749e497f884722ee75d78f1",
+    "production_source_unchanged": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "copy_owner_commit": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+    "copy_merge": "52831c6e0743039f28e63d040b052e6ed8700d15",
+    "copy_verdict": "NO_ALLOC_STATIC_DIAGNOSIS",
+    "copy_controls_used": 0,
+    "init_owner_commit": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+    "init_merge": "c6b3da155f920f264749e497f884722ee75d78f1",
+    "init_verdict": "ALLOC_RECOMMENDATION_ONLY",
+    "init_controls_used": 0,
+    "init_allocated_lines": 0,
+    "agents_closed": true,
+    "scope": "Five current responsibilities refreshed; historical89-row census remains unchanged."
   }
 }

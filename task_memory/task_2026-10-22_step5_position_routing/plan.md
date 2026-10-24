@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 HKT | Complete finite copy/init record integration; advance to current cohesive timing and worker/cloud execution conditions. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
@@ -58,11 +59,13 @@ Final candidate1461573de388b72450189bc0c1b88b4ac32491f0 is clean in the ledger a
 
 All final-source mandatory regressions have finished without rerunning suites. Strict77 is77/77 identical; the original auditor rehashes451 artifacts/519 cache names per side. Canonical unit is raw8028PASS/279FAIL/32ERROR/281SKIP,exit1; the comparator passes exact equality of all8620 IDs/statuses, failure/error/skip sets and versions against the accepted native-key baseline. Separate101/197/53/52 supplements have identical IDs/statuses and environments. The historical approved hot-update ID absence remains raw presenceFAIL and unwaived.
 
-`audit + reviews + mandatory regressions + archive + production integration/parent guard PASS -> {copy/init finite closure, current pricing+emission+flush + worker/cloud readiness} -> complete6144/1024 offline/online CLI<=2400s per main subprocess -> final T2/source/package -> native/G3/E2E`.
+`audit + reviews + mandatory regressions + archive + production integration/parent guard PASS + copy/init finite closure PASS -> current pricing+emission+flush + worker/cloud readiness -> complete6144/1024 offline/online CLI<=2400s per main subprocess -> final T2/source/package -> native/G3/E2E`.
 
 Archive: ledger_memory/evidence/frozen_regressions_2026-10-25/;64 exact files/7126759B plus archive command/log. The ledger is now admitted as production source2ca5e571 after the merge and fresh parent guard: all116 paths/native patch recomputed,126 bindings exactly equal to146,9682source/9696global,zero violations. Evidence is ledger_memory/evidence/production_integration_2026-10-25/. Six task-record conflicts preserve latest parent outcomes and candidate owner records; four source files merge unchanged. Old merge-tree preview troubleshooting remains stopped.
 
-In parallel, collect final snapshot-copy and initialization receipts from their existing dedicated worktrees. Reconcile actual consumed counts and commits before integration or further action. No new diagnostic invocation follows from missing notifications. Required-shape6/6 is exhausted; OSS quota is USER_CONFIRMED_SUFFICIENT. Current timing, worker environment/append throughput/full-workload memory, finalCLI and native gates remain open.
+Finite diagnoses are complete and consolidated: snapshot-copyb061f884/merge52831c6e is NO_ALLOC_STATIC_DIAGNOSIS with0/1 controls and0 launches; init6335f581/mergec6b3da15 is ALLOC_RECOMMENDATION_ONLY with0 controls and0 allocated lines. Parent verifies25 copy source bindings,13 init bindings and14 retained receipts, with unchanged2ca5e571 source. Init126.58s is historical inference and no present startup saving or new source allocation. Both clean diagnosis worktrees remain retained.
+
+Next define a current-source joint pricing/emission/flush execution from existing actual inputs without rerunning the old5-wave/15-emission controls or adding required-shape calls. In parallel, qualify worker interpreter/image, source mount, lifecycle and personal-volume append; full-workload memory/runtime must be measured during the unchanged complete workload. This preparation needs no new simulator output mode. Required-shape6/6 is exhausted; OSS quota is USER_CONFIRMED_SUFFICIENT. FullCLI/T2/native/G3/E2E remain open. A future init patch requires the existing bounded allocation/review/freeze process; the recommendation itself allocates nothing.
 
 ## Previous handoff boundary (2026-10-25; historical)
 

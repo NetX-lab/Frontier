@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 HKT | Record finite copy/init closure and unchanged production source/budgets; ALLOC is recommendation only. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
@@ -44,6 +45,8 @@ Continue all unfinished work under the already approved scope and authority. The
 Final1461573d mandatory source regressions are now complete and archived. Strict77 is77/77 identical; canonical unit preserves all8620 IDs/statuses and raw8028PASS/279FAIL/32ERROR/281SKIP,exit1. Separate101/197/53/52 supplements preserve their IDs and environments. This completion clears only the recorded source-integration prerequisite; fullCLI/worker/RSS/T2/native/G3/E2E remain unfinished. No invocation ceiling, source allocation or gate changes.
 
 Verified production integration is2ca5e57113b0bc99ab84e926e5bb492b3670072e. The non-task tree equals the tested146 candidate; the parent freshly recomputes all116 paths/114 predecessor rows/18 overlays/native patch and126 bindings with no violations. Accepted production usage is9682source/9696global,CORE4377/4404,PRICING3955/3956,native1350/1582. This supersedes prior accepted9566source/9580global usage only; budgets, completeCLI2400s and final qualification requirements are unchanged.
+
+Copy/init finite diagnostics are now complete and consolidated: copyb061f884/52831c6e is NO_ALLOC_STATIC_DIAGNOSIS,0/1 controls and0 launches; init6335f581/c6b3da15 is ALLOC_RECOMMENDATION_ONLY,0 new/recovered controls and0 allocated lines. Parent verifies current bindings and retained evidence without a runtime invocation. Init126.58s is historical modeled work, excludes accepted loader savings, and does not qualify current startup or authorize a patch. Source2ca5e571, existing budgets, old-control ceilings and required-shape6/6 remain unchanged. Continue current cohesive timing and worker/cloud readiness under the existing acceptance route.
 
 
 ## [Original Request]

@@ -1,0 +1,32 @@
+{
+  "status": "ACCEPTED_NO_ALLOC_STATIC_DIAGNOSIS",
+  "source": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "head": "52831c6e0743039f28e63d040b052e6ed8700d15",
+  "owner_commit": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+  "current_bindings_verified": 25,
+  "record_paths_verified": [
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/evidence.json",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/plan.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/progress.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/receipt.json",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/requirements.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/summary.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/test_report_2026-10-24_snapshot_copy.md"
+  ],
+  "control_used": 0,
+  "control_ceiling": 1,
+  "launch_attempts": 0,
+  "inferred_new_implemented_savings_s": 0,
+  "current_speedup_measured": false,
+  "argv": [
+    "git",
+    "merge",
+    "--no-ff",
+    "b061f88458ef9b64c164d551038643eb9ca77fd5",
+    "-m",
+    "docs(step5): integrate the closed snapshot-copy diagnosis"
+  ],
+  "returncode": 0,
+  "collected_utc": "2026-10-24T19:12:42.339746+00:00",
+  "non_task_source_unchanged": true
+}

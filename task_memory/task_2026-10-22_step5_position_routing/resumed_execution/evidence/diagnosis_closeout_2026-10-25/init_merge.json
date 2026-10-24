@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "git",
+    "-c",
+    "core.hooksPath=/dev/null",
+    "merge",
+    "--no-ff",
+    "6335f581e0129ddb273836f058f4e84fcbb35c22",
+    "-m",
+    "docs(step5): integrate the closed init preparation diagnosis"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "start_utc": "2026-10-24T19:20:03.696709+00:00",
+  "end_utc": "2026-10-24T19:20:03.716993+00:00",
+  "wall_s": 0.02026475127786398,
+  "returncode": 0,
+  "hook_override_reason": "Avoid unassigned runtime controls during a records-only merge; no config file changed.",
+  "merge_head": "c6b3da155f920f264749e497f884722ee75d78f1",
+  "non_task_source_unchanged": true,
+  "record_paths_identical_to_owner": true,
+  "status": "?? .cortexkit/\n?? .pi/\n"
+}

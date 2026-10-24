@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 HKT | Update accepted2ca5e571 ledger behavior and finite diagnosis closure; execution environment/throughput/memory remain unverified. |
 | 2026-10-25 | Accept YC's sufficient-quota confirmation and update the committed-but-unadmitted ledger candidate and handoff execution boundary. |
 | 2026-10-24 | Link the verified135-gross ledger allocation;implementation and worker readiness remain pending. |
 | 2026-10-24 | Record corrected storage accounting, timing boundaries and unresolved worker/memory prerequisites. |
@@ -12,12 +13,13 @@
 **BLOCKER: execution readiness is not established.** This is a static proposal,
 not a job approval, capacity reservation, throughput measurement or CLI result.
 Quota capacity itself is USER_CONFIRMED_SUFFICIENT by YC on2026-10-25; do not
-repeat quota discovery as a blocker. Worker environment, throughput and source
-admission remain separate unverified conditions.
+repeat quota discovery as a blocker. Worker environment, append throughput and full-workload memory/runtime remain
+unverified; production source admission is complete at2ca5e571.
 Read-only analysis: D29-CLI-CLOUD-WRITE-PLAN, session
 `ses_e91b47e39ffeRn6lPWVUegoZQ6`. Primary owns acceptance and subsequent allocation.
-Source inspected by that analysis: `b0277287`; accepted production usage remains
-9566 source / 9580 global. No source change is allocated by this document.
+Source inspected by that historical analysis: `b0277287`. Current accepted source
+is2ca5e571,9682 source / 9696 global, with the116-path/126-binding parent audit
+complete. This document allocates no source change.
 
 ## Existing execution route
 
@@ -59,13 +61,12 @@ history, not current readiness calculations.
 
 ## Memory and timing are independent prerequisites
 
-Accepted production retains EP lane rows until final output. `validate()` also
-materializes the whole EP lane ledger using `read_text().splitlines()` and a
-dictionary list. Full multiplicity is 1,443,200 ledger rows per mode. This is
-unqualified growth with complete output; no actual RSS was measured and no claim
-is made that every possible machine is unable to execute it. The committed ledger
-candidate removes these two EP growth patterns, but is not admitted production;
-stage-batch/event-trace memory and actual whole-workload RSS remain unqualified.
+Production2ca5e571 writes each complete EP lane row and releases historical row
+objects; actual-main validation reads the complete ledger one row at a time.
+These two EP growth patterns are removed and their source gates are accepted.
+Full multiplicity remains1,443,200 ledger rows per mode. Stage-batch/event-trace
+memory and actual whole-workload RSS remain unmeasured; source admission alone
+does not qualify the execution environment or establish a full-run memory bound.
 
 | Timing boundary | Contract |
 | --- | --- |
@@ -98,16 +99,21 @@ a successful run; completion requires terminal execution and validation receipts
 1. Allocation is verified in ledger_memory/ and
    repairs/ep_lane_ledger_scope_amendment.json: four CORE files,135gross,
     116allocated paths,unchanged budgets; amended caps36/20/65/14 in886945f3.
-    Final implementation1f6b4314/dd3b6a69 is committed and caller/focused checks
-    pass; independent audit/review/frozen admission remain pending.
+    Final candidate1461573d and production2ca5e571 pass caller, independent
+    audit/reviews, mandatory frozen suites and production parent guard. Source
+    admission is complete; full workflow remains pending.
     Standing authority is requirements.md119–134.
 2. Verify supported successful output bytes/order, snapshots and failure behavior;
    re-freeze and run required regressions after any accepted source repair.
-3. Choose and authorize concrete worker resources, image and source mount; qualify
-    environment, creator, worker cloud access/append throughput and lifecycle.
-    Quota sufficiency is already user-confirmed; no worker is launched for handoff.
-4. Obtain cohesive current-source timing before another full 6144/1024 run; retain
-   the unchanged per-mode 2400-second acceptance criterion and full output.
+3. Choose concrete task-required worker resources, image and the current-machine
+    source mount under the recorded H800/codesign authority; qualify environment,
+    creator, worker cloud access/append throughput and lifecycle. Quota sufficiency
+    is user-confirmed. This records update does not launch a worker.
+4. Copy/init diagnoses are complete: NO_ALLOC static copy and ALLOC init
+   recommendation only, both with zero new controls and no source allocation.
+   Obtain cohesive current-source timing before another full6144/1024 run; do not
+   extend old diagnostic ceilings. Retain2400 seconds per main subprocess and
+   full output. Measure full-run memory rather than substituting configured limits.
 
 Static references: run_step5_measured_main.py:206–258,274–323;
 metrics_store.py:380,525–538,4995–5017; ep_wave_metrics.py:119–134;

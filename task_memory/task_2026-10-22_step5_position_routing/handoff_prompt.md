@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 HKT | Close and integrate both finite diagnoses; refresh the continuation frontier without adding controls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Record verified production integration2ca5e571 and completed mandatory regressions; earlier candidate prompt becomes historical. |
 | 2026-10-25 | Add late copy/init analyzer failures, full read-only history recovery and original unconsumed control limits. |
 | 2026-10-25 | Renew the complete next-session prompt for the committed ledger candidate, explicit sufficient-quota decision and unfinished admission/workflow gates. |
@@ -28,8 +29,8 @@ source9682/9942、global9696/10000，零违规。Step124gross/net96/累计增量
 6个真实任务记录冲突已保留双方意图解决，代码无冲突；停止旧merge-tree预览排查。
 
 下一前沿：
-1. 收取并整合snapshot-copy/init两个现有诊断分支的最终回执、consumed count及commit；不重跑control。
-2. 取得当前同源码同环境pricing+emission+flush实测，落实worker镜像/解释器、lifecycle、append吞吐和全workload内存条件。
+1. Copy/init已收口并整合：copyb061f884/52831c6e为静态NO_ALLOC，control0/1且launch0；init6335f581/c6b3da15为ALLOC建议，control0、source allocation0。Parent25copy/13init bindings及14旧回执全部通过，见resumed_execution/evidence/diagnosis_closeout_2026-10-25/。两工作树干净保留、agents已关闭，不重开诊断或control。126.58s只是旧测量推算，不是当前startup收益。
+2. 定义并取得当前同源码同环境pricing+emission+flush实测；不重跑旧5-wave/15-emission controls、不追加required-shape6/6。并行落实worker镜像/解释器、lifecycle、append吞吐和全workload内存条件。
 3. 之后完整6144/1024 offline/online CLI，每模式frontier.main子进程<=2400s，全部输出/proof/key/顺序/逐点校验保留。
 4. 再完成最终T2/source/package、native/G3和各E2E<=10%；这些仍pending。
 
