@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | W128-STREAM-ACCEPTANCE-DOCS: synchronized limited GPU stream/restart acceptance, CPU counter control and the active diagnostic DP slice; native coverage/graph/full-ticket gaps remain open. |
 | 2026-10-24 | W128-OCT24-DATA-DOCS: accepted diagnostic profile02 audit and isolated MoE data synchronized; full05/09/19 OPEN and bounded collection-gap design/CPU repairs are next. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS acceptance: root ACCEPTED_ISOLATED_DATA after no-finding review/exact fresh raw and trace reruns; prior pending checkpoints historical, full05/09/19 and consumer/native qualifications remain open. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS followup: balanced job Succeeded with execution checks PASS/data audit pending; profile02 Pending at14:18:37Z; corrected MoE design complete and independent packaging active, no MoE GPU submission. |
@@ -185,6 +186,14 @@
 | 2026-10-18 | Started approved controlled fixture checks/review beside dependency-aware ticket02 coverage and ticket03 cache preparation. |
 
 
+## GPU stream acceptance and active DP slice — current (2026-10-24)
+
+- completed: [Primary acceptance](../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json) is ACCEPTED_GPU_STREAM_IDENTITY_WITH_LIMITS, probe source `5f7d0950`, CUPTI repair `0d745706`. Actual 1-H800 job `exp-1024-020317-012085` Succeeded, 23 container seconds/exit0/restart0. [Root complete audit](../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/root_verification.json) passed 162/162 checks, byte-identical with no exclusions; independent [review](../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/review.md) reported No findings.
+- observed: 8 eager + 16 priming joins, 16 stable stream snapshot rows and all 28 raw kernels. Torch IDs0/3 differ from CUPTI/trace IDs7/13. Two complete native-profiler cycles were observed; captured per-op graph ownership remains UNKNOWN despite successful capture and both synchronized replays. Startup capture alone did not close ownership. Cycle2 version-metadata loss, runtime API13030 versus trace13000 and telemetry-only binary/inner-profiler identity limits remain; no serving/operator cost, GPU dependency or native-reference admission.
+- completed CPU control: exact-image WS2 Gloo counters1..6 match on both ranks; [root verification](../task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence_cpu/root_verification.json) rederived all 12 matrices and source/hash bindings, not a new Docker run. This proves only the measured CPU group, not native DP pairing.
+- in-progress source slice: `W128-DP-SEQUENCE-IMPLEMENTATION`, worktree `/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record`, session `ses_e95f3ea82ffenerOUFcb2XWVDm`; four existing non-core files/180 gross lines. Optional `steps[].dp_post_all_reduce_sequence` uses the existing post-all-reduce hook/thread-local state, preserving exact frozen base dispatch/hook schemas. Not yet delivered, reviewed, merged or run; [allocation and controls](../task_2026-10-23_v4_remaining_measurements/requirements.md#diagnostic-dp-sequence-allocation).
+- pending: fresh native coverage, DP pairing, shutdown and graph attribution. Require at least 3 useful steps per lane; profile02 prefillDP1 retains its 2/64 gap and all 192 old null stream maps remain missing, not retroactive PASS. Native06 R4, Q2a/901ef960 and local-MoE isolated acceptance are unchanged; full05/09/19 OPEN, GLM paused and CPU-overhead last. Earlier dated checkpoints below retain their historical scope.
+
 ## Profile02 and local-MoE acceptance — current (2026-10-24)
 
 - completed profile02 diagnostic audit: [primary acceptance](../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json) ACCEPTED_DIAGNOSTIC_AUDIT_WITH_GAPS; [root full32-trace rerun](../task_2026-10-23_v4_remaining_measurements/profile01/results/root_verification.json) matches all non-clock fields/decompressed indices,326328annotations/7600008kernels, useful P0/P1/D0/D1=23/2/61/61.192 null stream maps (`libcupti.so`),6802600 graph kernels' UNKNOWN ownership and UNKNOWN shared cross-DP identity/dependencies remain gaps; no cost/serving/reference admission.
@@ -195,7 +204,7 @@
 
 ## Routing milestone — current (2026-10-23)
 
-Latest root decisions: [profile02/MoE acceptance](#profile02-and-local-moe-acceptance--current-2026-10-24) and [balanced q1 isolated-data acceptance](#balanced-q1-isolated-data-acceptance--current-2026-10-23). Earlier queued/package-pending/current execution wording below is historical, superseded only within the accepted scope; standing H800 authority and prior CPU/native-reference milestones remain unchanged.
+Latest root decisions: [limited stream acceptance and active DP slice](#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24), [profile02/MoE acceptance](#profile02-and-local-moe-acceptance--current-2026-10-24) and [balanced q1 isolated-data acceptance](#balanced-q1-isolated-data-acceptance--current-2026-10-23). Earlier queued/package-pending/current execution wording below is historical, superseded only within the accepted scope; standing H800 authority and prior CPU/native-reference milestones remain unchanged.
 
 - completed: A186dfef accepted after218root tests/independent review/strict77 identical, merged292c489. C8c2502c runner-values P2 accepted after real producer/consumer negatives,22affected tests and independent recheck; merged84c806f with26combined A/C testsPASS. Final prefill builder/source selection39b2bf8 gives C5files/202routing lines.
 - completed: YC approved routing23files/950lines and said `批准；类似问题不用再询问，自己决策即可`. The historical deadline ceiling952 and e9e79d4 actual950 are superseded by committed b62c155's existing model-name case-input correction (+2/-1): current actual/ceiling23/953=A432+B319+C202, dispatch491 separate. Root independently recomputed routing `evidence/final_union_b62c155.json`; original delegation/resource semantics unchanged, historical `evidence/native_builder_final.json` not rewritten.
@@ -234,7 +243,7 @@ Latest root decisions: [profile02/MoE acceptance](#profile02-and-local-moe-accep
 
 ## G2 profile-driver closure — current (2026-10-23)
 
-The profile02 first-submission status/timestamps retained below are historical; the latest supplied platform snapshot is the13:40:46Z record above.
+The profile02 first-submission status/timestamps retained below are historical; the accepted profile02 audit and fresh single-card stream probe above supersede their pending state, not their qualification limits.
 
 - completed G2: [primary acceptance](../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json) records ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT, frozen source `05952396b0b8e5a794c53e10f9a21213beb5193d`, seven non-core files/433 changed lines within750, zero core edits. Both independent R1 Spec/Standards [final reviews](../task_2026-10-23_v4_remaining_measurements/driver/review_final.md) close all three distinct original findings with no new findings; their overlapping findings are not added together.
 - completed CPU behavior: the actual `tests/comparison/calibration/pd_replay.py` path now brackets first-formal dispatch with both-head start, existing drain and both-head stop. Sampling/`serving_profile_limits` reach the worker. Selected-window retention has independent record/byte allowances and separate startup/window snapshots; a startup archive error does not prevent the new allowance. Unselected replay remains compatible, auxiliary profiling/checkpoint failures stay in profiling receipts, and native workload exceptions remain unchanged. These CPU controls do not prove complete useful-batch GPU coverage.

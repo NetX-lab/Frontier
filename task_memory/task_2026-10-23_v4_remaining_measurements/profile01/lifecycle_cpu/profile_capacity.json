@@ -1,0 +1,290 @@
+[
+  {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts/nodes/gpu-h800-0091.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+    "bytes": 20036729,
+    "sha256": "84f52cfb54fe827984a771e84850d1327619d64e342c2e01266902d0b9b18e7f",
+    "scalars": {
+      "coverage": "Observed Python calls only; no timing, completeness or GPU verification verdict",
+      "dropped": 0,
+      "inventory_join": "serving/rank0.json",
+      "rank": 0,
+      "retained_bytes": 19930958,
+      "role": "prefill",
+      "run_generation": "v4-native-v028-h800-p0-profile-20261023-02",
+      "schema": "native_serving_profile_v1",
+      "stage": "profile_stopped",
+      "status": "UNVERIFIED",
+      "suppressed_errors": 0
+    },
+    "collection_counts": {
+      "annotations": 35417,
+      "errors": 6,
+      "hooks": 44,
+      "inventory_observation_errors": 0,
+      "steps": 64,
+      "synchronization": 9229,
+      "unknowns": 4
+    },
+    "maps": {
+      "limits": {
+        "bytes": 268435456,
+        "records": 250000
+      },
+      "window": {
+        "open": false,
+        "profiler_config": "ProfilerConfig(profiler='torch', torch_profiler_dir='/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261023-02/torch_traces/prefill/dp0', proton_profiler_dir='', proton_context='shadow', proton_data='tree', proton_backend=None, proton_mode=None, proton_hook=None, proton_output_format=None, torch_profiler_with_stack=False, torch_profiler_with_flops=False, torch_profiler_use_gzip=True, torch_profiler_dump_cuda_time_total=True, torch_profiler_record_shapes=False, torch_profiler_with_memory=False, capture_torch_profiler=False, detailed_trace_annotation=False, ignore_frontend=True, delay_iterations=0, max_iterations=64, warmup_iterations=0, active_iterations=5, wait_iterations=0)",
+        "start_annotation": 176826,
+        "start_step": 30,
+        "stop_annotation": 212243,
+        "stop_step": 139
+      }
+    },
+    "annotation_kind": {
+      "dummy": 6046,
+      "serving": 29371
+    },
+    "step_none_kind": {
+      "dummy": 6046
+    },
+    "top_keys": [
+      "annotations",
+      "coverage",
+      "dropped",
+      "errors",
+      "facts",
+      "hooks",
+      "inventory_join",
+      "inventory_observation_errors",
+      "limits",
+      "rank",
+      "retained_bytes",
+      "role",
+      "run_generation",
+      "schema",
+      "stage",
+      "status",
+      "steps",
+      "streams",
+      "suppressed_errors",
+      "synchronization",
+      "unknowns",
+      "window"
+    ]
+  },
+  {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts/nodes/gpu-h800-0213.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+    "bytes": 2410867,
+    "sha256": "dd4cdf0c27d535144f7865300a622a300226f14143bcf16e8700648aa36d73c7",
+    "scalars": {
+      "coverage": "Observed Python calls only; no timing, completeness or GPU verification verdict",
+      "dropped": 0,
+      "inventory_join": "serving/rank0.json",
+      "rank": 0,
+      "retained_bytes": 2383703,
+      "role": "prefill",
+      "run_generation": "v4-native-v028-h800-p0-profile-20261023-02",
+      "schema": "native_serving_profile_v1",
+      "stage": "profile_stopped",
+      "status": "UNVERIFIED",
+      "suppressed_errors": 0
+    },
+    "collection_counts": {
+      "annotations": 4201,
+      "errors": 6,
+      "hooks": 44,
+      "inventory_observation_errors": 0,
+      "steps": 64,
+      "synchronization": 1141,
+      "unknowns": 4
+    },
+    "maps": {
+      "limits": {
+        "bytes": 268435456,
+        "records": 250000
+      },
+      "window": {
+        "open": false,
+        "profiler_config": "ProfilerConfig(profiler='torch', torch_profiler_dir='/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261023-02/torch_traces/prefill/dp1', proton_profiler_dir='', proton_context='shadow', proton_data='tree', proton_backend=None, proton_mode=None, proton_hook=None, proton_output_format=None, torch_profiler_with_stack=False, torch_profiler_with_flops=False, torch_profiler_use_gzip=True, torch_profiler_dump_cuda_time_total=True, torch_profiler_record_shapes=False, torch_profiler_with_memory=False, capture_torch_profiler=False, detailed_trace_annotation=False, ignore_frontend=True, delay_iterations=0, max_iterations=64, warmup_iterations=0, active_iterations=5, wait_iterations=0)",
+        "start_annotation": 176826,
+        "start_step": 28,
+        "stop_annotation": 181027,
+        "stop_step": 433
+      }
+    },
+    "annotation_kind": {
+      "serving": 2554,
+      "dummy": 1647
+    },
+    "step_none_kind": {
+      "dummy": 1647
+    },
+    "top_keys": [
+      "annotations",
+      "coverage",
+      "dropped",
+      "errors",
+      "facts",
+      "hooks",
+      "inventory_join",
+      "inventory_observation_errors",
+      "limits",
+      "rank",
+      "retained_bytes",
+      "role",
+      "run_generation",
+      "schema",
+      "stage",
+      "status",
+      "steps",
+      "streams",
+      "suppressed_errors",
+      "synchronization",
+      "unknowns",
+      "window"
+    ]
+  },
+  {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts/nodes/gpu-h800-0216.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+    "bytes": 389482,
+    "sha256": "2001934d44f0d9d0e3772e08e4b6ffe9ed2323127497111ff3745b4925e32440",
+    "scalars": {
+      "coverage": "Observed Python calls only; no timing, completeness or GPU verification verdict",
+      "dropped": 0,
+      "inventory_join": "serving/rank0.json",
+      "rank": 0,
+      "retained_bytes": 371635,
+      "role": "decode",
+      "run_generation": "v4-native-v028-h800-p0-profile-20261023-02",
+      "schema": "native_serving_profile_v1",
+      "stage": "profile_stopped",
+      "status": "UNVERIFIED",
+      "suppressed_errors": 0
+    },
+    "collection_counts": {
+      "annotations": 682,
+      "errors": 6,
+      "hooks": 44,
+      "inventory_observation_errors": 0,
+      "steps": 64,
+      "synchronization": 0,
+      "unknowns": 4
+    },
+    "maps": {
+      "limits": {
+        "bytes": 268435456,
+        "records": 250000
+      },
+      "window": {
+        "open": false,
+        "profiler_config": "ProfilerConfig(profiler='torch', torch_profiler_dir='/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261023-02/torch_traces/decode/dp0', proton_profiler_dir='', proton_context='shadow', proton_data='tree', proton_backend=None, proton_mode=None, proton_hook=None, proton_output_format=None, torch_profiler_with_stack=False, torch_profiler_with_flops=False, torch_profiler_use_gzip=True, torch_profiler_dump_cuda_time_total=True, torch_profiler_record_shapes=False, torch_profiler_with_memory=False, capture_torch_profiler=False, detailed_trace_annotation=False, ignore_frontend=True, delay_iterations=0, max_iterations=64, warmup_iterations=0, active_iterations=5, wait_iterations=0)",
+        "start_annotation": 176687,
+        "start_step": 2169,
+        "stop_annotation": 177369,
+        "stop_step": 4740
+      }
+    },
+    "annotation_kind": {
+      "dummy": 203,
+      "serving": 479
+    },
+    "step_none_kind": {
+      "dummy": 203
+    },
+    "top_keys": [
+      "annotations",
+      "coverage",
+      "dropped",
+      "errors",
+      "facts",
+      "hooks",
+      "inventory_join",
+      "inventory_observation_errors",
+      "limits",
+      "rank",
+      "retained_bytes",
+      "role",
+      "run_generation",
+      "schema",
+      "stage",
+      "status",
+      "steps",
+      "streams",
+      "suppressed_errors",
+      "synchronization",
+      "unknowns",
+      "window"
+    ]
+  },
+  {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts/nodes/gpu-h800-0266.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+    "bytes": 301761,
+    "sha256": "6290819a77e910d25ae932bdddb675728dd48c4171b3f0daff7328532bbcfcff",
+    "scalars": {
+      "coverage": "Observed Python calls only; no timing, completeness or GPU verification verdict",
+      "dropped": 0,
+      "inventory_join": "serving/rank0.json",
+      "rank": 0,
+      "retained_bytes": 284300,
+      "role": "decode",
+      "run_generation": "v4-native-v028-h800-p0-profile-20261023-02",
+      "schema": "native_serving_profile_v1",
+      "stage": "profile_stopped",
+      "status": "UNVERIFIED",
+      "suppressed_errors": 0
+    },
+    "collection_counts": {
+      "annotations": 491,
+      "errors": 6,
+      "hooks": 44,
+      "inventory_observation_errors": 0,
+      "steps": 64,
+      "synchronization": 0,
+      "unknowns": 4
+    },
+    "maps": {
+      "limits": {
+        "bytes": 268435456,
+        "records": 250000
+      },
+      "window": {
+        "open": false,
+        "profiler_config": "ProfilerConfig(profiler='torch', torch_profiler_dir='/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261023-02/torch_traces/decode/dp1', proton_profiler_dir='', proton_context='shadow', proton_data='tree', proton_backend=None, proton_mode=None, proton_hook=None, proton_output_format=None, torch_profiler_with_stack=False, torch_profiler_with_flops=False, torch_profiler_use_gzip=True, torch_profiler_dump_cuda_time_total=True, torch_profiler_record_shapes=False, torch_profiler_with_memory=False, capture_torch_profiler=False, detailed_trace_annotation=False, ignore_frontend=True, delay_iterations=0, max_iterations=64, warmup_iterations=0, active_iterations=5, wait_iterations=0)",
+        "start_annotation": 173582,
+        "start_step": 1102,
+        "stop_annotation": 174073,
+        "stop_step": 3757
+      }
+    },
+    "annotation_kind": {
+      "dummy": 12,
+      "serving": 479
+    },
+    "step_none_kind": {
+      "dummy": 12
+    },
+    "top_keys": [
+      "annotations",
+      "coverage",
+      "dropped",
+      "errors",
+      "facts",
+      "hooks",
+      "inventory_join",
+      "inventory_observation_errors",
+      "limits",
+      "rank",
+      "retained_bytes",
+      "role",
+      "run_generation",
+      "schema",
+      "stage",
+      "status",
+      "steps",
+      "streams",
+      "suppressed_errors",
+      "synchronization",
+      "unknowns",
+      "window"
+    ]
+  }
+]

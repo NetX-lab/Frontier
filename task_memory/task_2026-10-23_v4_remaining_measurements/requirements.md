@@ -4,7 +4,9 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-24 | Root allocated optional diagnostic DP sequence recording after exact-image WS2 proof, preserving frozen base inventory schemas. |
+| 2026-10-24 | YC approved the fresh callback payload-correction probe and standing authority for similar bounded diagnostic repairs/probes. |
+| 2026-10-24 | Allocated two existing non-core files for source-backed coverage and shutdown corrections after CPU lifecycle reproduction. |
+| 2026-10-24 | Root allocated optional diagnostic DP sequence recording after exact-image WS2 proof, including direct dummy-execution annotations while preserving frozen base inventory schemas. |
 | 2026-10-24 | Root allocated the reproduced collector CUPTI-loader repair and a targeted single-H800 stream/capture probe under the existing CPU/H800 authority. |
 | 2026-10-23 | Recorded YC's approval of the recommended kernel-only route and CPU implementation/measurement-design scope. |
 | 2026-10-23 | Root allocated the two reproduced native collector launch seams under existing repair-scope delegation; GPU authority is unchanged. |
@@ -100,3 +102,23 @@ Root authorizes one owner to change four existing non-core files: `tests/compari
 Read the actual explicit `group=` operand; do not infer WORLD or silently accept missing/throwing getters. Reuse existing soft observation errors, preserving native return/exception behavior and the separately observed CPU vector. Update only local stand-ins to pass realistic groups, including the local namespace around the frozen oracle; never edit its retained source. Reset per-execution state so no stale counter reaches a later step. No duplicate-collective branch is needed beyond existing ambiguity handling unless a reachable case is demonstrated.
 
 CPU acceptance includes nonzero startup counter, repeated/zero vectors, post-native-call ordering, inactive dispatch, missing/raising getter isolation, unchanged native failures, reset/detached-row/capacity behavior and frozen-checker positive/negative regressions. Bind the existing unchanged-domain77-case matrix explicitly. Future pairing compares raw values within `(run generation, role, ordered DP group members)` with lane/rank as member identity, without offset correction; it never equates counters to step indices. This is optional diagnostic evidence, not a new calibration predicate or native-reference admission.
+
+The actual pinned `gpu_worker.py:1210–1212` also calls `_dummy_run` directly through `execute_dummy_batch`, outside `Worker.execute_model`. Profile02 rank0 snapshots retain6046/1647/203/12 dummy annotations with `step=null` on P0/P1/D0/D1. Therefore the same optional raw counter must also travel through the existing annotation/context envelope during active native dispatch. Do not invent worker steps for those calls. Post-execution/sample-token context uses its detached step's counter rather than a newer unrelated thread-local value. This placement correction remains within the same four-file/180-line allocation and requires direct-dummy and stale-context controls.
+
+## Post-profile02 coverage and lifecycle allocation
+
+Under the existing CPU implementation/repair authority, root selects `profile01/profile03_design.md` and assigns one owner two existing non-core files: `tests/comparison/calibration/native_pd_worker.py` (80gross lines) and `tests/unit/test_native_pd_worker.py` (180gross), total260. Add task-local `role_profiler_max_iterations` handling through existing per-node profiler plan construction, preserving input objects and per-role/lane paths. Package values512/64 and records600000/bytes268435456 remain a later explicit package change, not edits to sealed inputs.
+
+Use known-peer drain paths for both the head quorum and retained membership, and the existing `peer_wait_seconds` for the headless post-stop-marker wait. Preserve post-stop-marker meaning, native stop escalation, native return/failure handling and the soft missing-marker observation. Retain narrow monotonic wait/stop timing in a separate diagnostic result field without changing frozen `shutdown_order` semantics. A finite wait is not a completion guarantee and local clocks do not prove cross-host order.
+
+Acceptance requires source-preserving CPU RED/GREEN controls for the delayed head marker, visible direct paths with delayed enumeration, incomplete known-peer quorum, late/missing marker soft failure and ordinary native shutdown paths; verify role-specific profiler values and immutable inputs. Reuse existing tests, then independent reviews and root verification before integration. No core/native/C26/checker edit, new callback subscription, CPU-overhead inference or GPU submission is part of this source slice.
+
+## Callback payload correction and similar diagnostic authority
+
+[Original Request — fresh callback proposal, 2026-10-24] “旧 callback 诊断的3/3次数已用尽。官方 sample 已确认旧探针缺少一层 resourceDescriptor 解引用。是否批准修正一个新副本（最多80行改动），先做 CPU 检查，再最多进行一次1×H800／600秒验证，失败即停？目标是直接验证 graph 节点对应关系。”
+
+[Original Request — YC response] “批准，类似请求无需申请权限，皆授权”.
+
+[Decision D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY — 2026-10-24] Approve the fresh callback payload correction and its at-most-one1H800/600s diagnostic run after CPU verification. Similar bounded task-required diagnostic repairs/probes need no repeated approval. Before execution record the concrete scope, resource/attempt ceiling, evidence and acceptance. Existing H800 platform authority applies. This decision supersedes the earlier callback exclusion only for this scope; it does not change native/C26/calibration predicates or resume unrelated GLM work. The old3/3 failed-attempt history stays unchanged; no blind automatic retry is selected.
+
+One owner may create a fresh probe copy under `profile01/graph_probe/`, with at most80gross probe changes relative to the frozen attempt3 `probe_diagnostic.py`; inherited bytes are recorded separately. Keep its existing event/DAG scope labels, callback set, in-callback query order and strict9-node/5-kernel/4-event correspondence predicate. Correct the envelope indirection following the exact official13.0.85 sample. Root additionally allocates at most160lines for CPU regression controls, which must exercise the actual callback with allocated ctypes envelopes and check soft rejection of missing descriptors. Reuse existing probe checks; do not build a parallel mapper or change any old package/test source. Root owns package/image/SDK validation, seal, submission and actual-data acceptance.

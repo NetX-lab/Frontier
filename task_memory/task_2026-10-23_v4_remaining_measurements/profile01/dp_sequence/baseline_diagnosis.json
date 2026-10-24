@@ -1,0 +1,234 @@
+{
+  "task_id": "W128-DP-SEQUENCE-ROOT-FAILURE",
+  "diagnosis": "PRE_EXISTING_V2_FIXTURE_INSTALLATION_MISMATCH_NOT_COUNTER_REGRESSION",
+  "hypotheses_tested": {
+    "stale_standin": "supported by exact baseline failure",
+    "optional_counter_regression": "not supported by this differential",
+    "c26_fixture_identity_mismatch": "not supported; identical pinned hashes"
+  },
+  "revisions": {
+    "baseline": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+    "candidate": "178c1123ee736fe040d8f1a12a443e8f18ce3a76"
+  },
+  "receipts": {
+    "baseline": {
+      "task_id": "W128-DP-SEQUENCE-ROOT-FAILURE",
+      "name": "baseline",
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline",
+      "command": [
+        "sudo",
+        "-n",
+        "systemd-run",
+        "--scope",
+        "--quiet",
+        "-p",
+        "MemoryMax=30G",
+        "timeout",
+        "60s",
+        "runuser",
+        "-u",
+        "brainpp",
+        "--",
+        "env",
+        "PYTHONPATH=.:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+        "FRONTIER_VLLM_BS_ROOT=/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+        "TMPDIR=/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "CUDA_VISIBLE_DEVICES=",
+        "NATIVE_CHECKER_LEGACY_BASELINE=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+        "OPENBLAS_NUM_THREADS=1",
+        "OMP_NUM_THREADS=1",
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_groundtruth_check.py::test_v2_native_auto_and_c26_actual_collector_cover_all32ranks[serving_counters0]",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/baseline.xml"
+      ],
+      "environment": {
+        "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+        "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+        "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": "",
+        "NATIVE_CHECKER_LEGACY_BASELINE": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1"
+      },
+      "start_utc": "2026-10-23T19:11:24.840310+00:00",
+      "returncode": 1,
+      "counts": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "keyerror_rows": 32,
+      "final_incomplete_inventory": true,
+      "input_hashes": {
+        "overlay_model.py": {
+          "path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay_model.py",
+          "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/overlay_model.py",
+          "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee"
+        },
+        "overlay.json": {
+          "path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay.json",
+          "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/overlay.json",
+          "sha256": "52559fe7bba086ab05622b29a3136f3c6f26c5a2029816cfa50dd07452842fdc"
+        },
+        "source_lock.json": {
+          "path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/source_lock.json",
+          "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/source_lock.json",
+          "sha256": "d33a2cdb55efa34b18794924e590958a79b95e359551d5727bac999421293e51"
+        }
+      },
+      "legacy": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+        "sha256": "c615832529ecaf54805f5d399ea084414f868b477ae3e45c196a4ec1272d2b7b"
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/baseline.log",
+      "log_sha256": "60086964f93742fa15a23105cd5db09e019e0e41b4f02e1433e8fd3d26bb9a4c",
+      "xml_sha256": "ca59d31b4881c1c9bac8cda1d346f0cd5f30cf60042d4ec565d9a38125b057a4"
+    },
+    "candidate": {
+      "task_id": "W128-DP-SEQUENCE-ROOT-FAILURE",
+      "name": "candidate",
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record",
+      "command": [
+        "sudo",
+        "-n",
+        "systemd-run",
+        "--scope",
+        "--quiet",
+        "-p",
+        "MemoryMax=30G",
+        "timeout",
+        "60s",
+        "runuser",
+        "-u",
+        "brainpp",
+        "--",
+        "env",
+        "PYTHONPATH=.:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+        "FRONTIER_VLLM_BS_ROOT=/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+        "TMPDIR=/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "CUDA_VISIBLE_DEVICES=",
+        "NATIVE_CHECKER_LEGACY_BASELINE=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+        "OPENBLAS_NUM_THREADS=1",
+        "OMP_NUM_THREADS=1",
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_groundtruth_check.py::test_v2_native_auto_and_c26_actual_collector_cover_all32ranks[serving_counters0]",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/candidate.xml"
+      ],
+      "environment": {
+        "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+        "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+        "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CUDA_VISIBLE_DEVICES": "",
+        "NATIVE_CHECKER_LEGACY_BASELINE": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1"
+      },
+      "start_utc": "2026-10-23T19:10:20.817041+00:00",
+      "returncode": 1,
+      "counts": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "keyerror_rows": 32,
+      "final_incomplete_inventory": true,
+      "input_hashes": {
+        "overlay_model.py": {
+          "path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay_model.py",
+          "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/overlay_model.py",
+          "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee"
+        },
+        "overlay.json": {
+          "path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay.json",
+          "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/overlay.json",
+          "sha256": "52559fe7bba086ab05622b29a3136f3c6f26c5a2029816cfa50dd07452842fdc"
+        },
+        "source_lock.json": {
+          "path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/source_lock.json",
+          "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/source_lock.json",
+          "sha256": "d33a2cdb55efa34b18794924e590958a79b95e359551d5727bac999421293e51"
+        }
+      },
+      "legacy": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+        "sha256": "c615832529ecaf54805f5d399ea084414f868b477ae3e45c196a4ec1272d2b7b"
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/candidate.log",
+      "log_sha256": "6d7e0bdd310c58eea006cd5d105d59ddb397cbbadc2c588246113b230180060f",
+      "xml_sha256": "a4ae61023b8815aaa47de1dcc5f22a70d3251575248885e8d37f3a771503d782"
+    }
+  },
+  "source_sha256": {
+    "baseline": {
+      "tests/unit/test_native_groundtruth_check.py": "ac993d053a5ad77ee464e29921b395afc19623f85d317c36a7012dace3805166",
+      "tests/comparison/calibration/native_full_structure.py": "e6a9025c9af92237cd0d25dd937ecd00177a36a0cddf512bb9aa5d81176378aa",
+      "tests/comparison/calibration/native_serve_profile.py": "17d6dea11d35a2dc9849a11986fe5df46b45adb84d2d2bdeb958642a851b26ef",
+      "tests/unit/test_native_v2_serving_inventory.py": "f3062bda04be9ced06cad0c66c19e9ceb53c1a0059fe620dccc9b319d7f718a7",
+      "tests/unit/test_native_serve_profile.py": "a43f82d524e08250f1aa1b4b3bc3d9f4d9ba01935b6e1b9326c0a62ecf190c84"
+    },
+    "candidate": {
+      "tests/unit/test_native_groundtruth_check.py": "ac993d053a5ad77ee464e29921b395afc19623f85d317c36a7012dace3805166",
+      "tests/comparison/calibration/native_full_structure.py": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+      "tests/comparison/calibration/native_serve_profile.py": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+      "tests/unit/test_native_v2_serving_inventory.py": "26fd11feb1f5eac213590a7dca0b1fd4534b062f4768402cb51e04b0731a12fd",
+      "tests/unit/test_native_serve_profile.py": "e733a174815b3b8ee0d0ca6fbf6a79a3f379c3054711462f20d647fe41c6159d"
+    }
+  },
+  "canonical_workload_sha256": {
+    "SHA256SUMS": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+    "manifest.json": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+    "request_ids.json": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+    "trace.csv": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+    "warmup_pool.csv": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e"
+  },
+  "artifact_roots": {
+    "candidate": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/pytest-of-brainpp/pytest-4/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture",
+    "baseline": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/pytest-of-brainpp/pytest-5/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture"
+  },
+  "physical_rank_rows": 32,
+  "errors_each_rank": [
+    {
+      "where": "v2_installation",
+      "error": "KeyError: 'vllm.v1.worker.gpu.dp_utils'"
+    }
+  ],
+  "all32_counters_identical": true,
+  "all32_hook_lists_identical": true,
+  "installed_hook_count": 11,
+  "frozen_records_unchanged": true,
+  "candidate_records_manifest_sha256": "259ecb0c4a73106f28c706d9f8cb58a72a53f8400dd0288ee46ed9794d697196",
+  "clean_worktrees": {
+    "baseline": "",
+    "candidate": ""
+  },
+  "no_source_or_test_changes": true,
+  "proposed_scope": {
+    "file": "tests/unit/test_native_groundtruth_check.py",
+    "gross_line_ceiling": 60,
+    "changes": [
+      "Update only the V2 serving_counters stand-in to expose and invoke actual classifier/DP dispatch functions with an explicit local CPU group.",
+      "Use the existing frozen R3 successor for the V2 fixture source/operand/hook checks, without editing any frozen checker.",
+      "Keep the currently reproduced failure as a recorded pre-existing baseline limitation until a separately allocated fixture repair is verified."
+    ],
+    "verified_fix": false,
+    "warning": "Adding only dp_utils would expose missing runner-module functions; after complete dispatch installation the old exact-hook checker also rejects the added3 existing dispatch hooks."
+  }
+}
