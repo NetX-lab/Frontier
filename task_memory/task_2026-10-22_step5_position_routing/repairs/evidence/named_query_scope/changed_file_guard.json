@@ -1,0 +1,98 @@
+{
+  "task_id": "D29-NAMED-QUERY-SCOPE-DELTA",
+  "accepted": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+  "candidate": "1737ce9c4a761d2c57ee617f5f3a78d7bcfd9a58",
+  "records": "3d75c786781802ad2753cbdd81d989c9b694660c",
+  "expected_non_task_memory_name_status": [
+    "M\tfrontier/execution_time_predictor/moe_routing_workload.py",
+    "M\tfrontier/execution_time_predictor/prediction_model_registry.py",
+    "M\ttests/unit/test_moe_routing_runtime.py",
+    "M\ttests/unit/test_prediction_measurement_bindings.py"
+  ],
+  "baseline_all_digest": "b869dadda64d7a61360f75af8ac24d64a9d7d1dcc75d524ce0082304553ef50e",
+  "candidate_all_digest": "e8c3240577b726dae2f9f3bbc4c64ed0286f52afd5474d788fafe589bbfff694",
+  "non_query_count": 120,
+  "non_query_digest": "19c5718dfc1aa4cb11eef0306b8b877dbd9f234f1192053cb77ce4de7c9337fb",
+  "query_bindings": [
+    {
+      "binding": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "kind": "superproject",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "cdda686a5f1e0103d751d9da829af233e7b72ea3",
+        "sha256": "d1561f20e0a0f045af8ddeabe88bd36b017cc554e9fcc44dd2d6ba4c0adb3d46",
+        "bytes": 40974
+      },
+      "candidate": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "1e7bc66d37fb3a0c0780f65d81b43ed83c5b2df9"
+      },
+      "candidate_sha256": "0c8525f01124d43e5c21d5ec5a037a8719339e5e4301b3f44958cc90618899b4",
+      "local_sha256": "0c8525f01124d43e5c21d5ec5a037a8719339e5e4301b3f44958cc90618899b4",
+      "bytes": 41017,
+      "changed": true
+    },
+    {
+      "binding": "frontier/execution_time_predictor/prediction_model_registry.py",
+      "kind": "superproject",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "03eed35fb6b8b7724d89a3b46dbd0f4077b0f249",
+        "sha256": "6689aa89aabc2c10521a62488295adb68e6e0d0d17c576cafb777003b2cfcc54",
+        "bytes": 59447
+      },
+      "candidate": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "643c916df675f8706b7dbf0a16d32fa115fd032c"
+      },
+      "candidate_sha256": "f1eaedb9a1d27c7f9d7505a6961f8000ff195248d0ac73305d083ea51cd4ddb0",
+      "local_sha256": "f1eaedb9a1d27c7f9d7505a6961f8000ff195248d0ac73305d083ea51cd4ddb0",
+      "bytes": 59693,
+      "changed": true
+    },
+    {
+      "binding": "tests/unit/test_moe_routing_runtime.py",
+      "kind": "superproject",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "41347327443580d97abb651ab6088daae2c00e1a",
+        "sha256": "e52190ec893dfc431ac96b37b9cdb7de92649ecd21bb7adb9fb273b67f739262",
+        "bytes": 9237
+      },
+      "candidate": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a6b2af7663d0444ec6b3bdf947373187d6a46970"
+      },
+      "candidate_sha256": "5a4a5d8bbafa5dce3dbe9b0374e7ada80091fe20102cb55b1e3fa6d44a0e2dac",
+      "local_sha256": "5a4a5d8bbafa5dce3dbe9b0374e7ada80091fe20102cb55b1e3fa6d44a0e2dac",
+      "bytes": 11088,
+      "changed": true
+    },
+    {
+      "binding": "tests/unit/test_prediction_measurement_bindings.py",
+      "kind": "superproject",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "df64b3d6a86715e909f552c9e91479e66384494f",
+        "sha256": "18c1c2b6741441db5f2f98dcd3fecf92d43d22fa8659988a94102b2a47bd3f27",
+        "bytes": 19405
+      },
+      "candidate": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a413855c7230b46509eb76bc32412c69e9196b50"
+      },
+      "candidate_sha256": "ed8a6a164ffa36fd7ee5d32161e859d457623f317291e91f26864b4a7513d295",
+      "local_sha256": "ed8a6a164ffa36fd7ee5d32161e859d457623f317291e91f26864b4a7513d295",
+      "bytes": 22541,
+      "changed": true
+    }
+  ]
+}
