@@ -43,6 +43,7 @@ def save_state(simulator, path):
     references.update({id(type(predictor)): ("predictor_class", role.name)
                        for role, predictor in simulator._predictors.items()})
     references[id(simulator._execution_time_prediction_model_manager)] = ("manager", "shared")
+    references[id(simulator._metric_store._frontier_ep_wave_lane_ledger_rows)] = ("ep_ledger", len(simulator._metric_store._frontier_ep_wave_lane_ledger_rows))
     pools = []
     for scheduler in simulator._global_scheduler._cluster_schedulers.values():
         for replica in scheduler._replica_schedulers.values():
@@ -99,6 +100,9 @@ def load_state(simulator, path, output):
         def persistent_load(self, identity):
             if identity[0] == "block":
                 return blocks[identity[1]][identity[2]]
+            if identity[0] == "ep_ledger":
+                simulator._metric_store._frontier_ep_wave_lane_ledger_rows._count = identity[1]
+                return simulator._metric_store._frontier_ep_wave_lane_ledger_rows
             kind, name = identity
             if kind == "model":
                 return models[name]
@@ -480,7 +484,7 @@ def main(args):
                       for role, cluster in simulator._clusters.items()}
     ledger_before = len(simulator._metric_store._frontier_ep_wave_lane_ledger_rows)
     ledger_path = Path(simulator._metric_store._frontier_ep_wave_lane_ledger_rows._path)
-    ledger_position = ledger_path.stat().st_size if ledger_before else 0
+    ledger_position = ledger_path.stat().st_size if ledger_path.exists() else 0
     stage_ledger_before = len(simulator._metric_store._frontier_stage_batch_ledger_rows)
     start = time.perf_counter()
     if args.profile:
