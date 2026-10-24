@@ -1,0 +1,176 @@
+{
+  "task_id": "D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS",
+  "source_head": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+  "source_tree": "6c43090097e92c6fc0c33aa7358e69c2cf092705",
+  "record_scope": "task_memory/task_2026-10-22_step5_position_routing/post_named_query_regressions/",
+  "files": [
+    {
+      "path": "check_progress_2026-10-24_final.md",
+      "bytes": 2765,
+      "sha256": "1f3c0533fd2c9647cf44dda2f7a81f8a4851e44404205ce4182d760f0fabab48"
+    },
+    {
+      "path": "check_progress_2026-10-24_preflight.md",
+      "bytes": 2594,
+      "sha256": "f302f5959a85938ca7791c97b0a716e6ad826e5c12b0656bf5769781e7ee1916"
+    },
+    {
+      "path": "check_progress_2026-10-24_short.md",
+      "bytes": 2477,
+      "sha256": "8296c0ed76556bd65086a94348da5c9c812017b842f6fb8ec4c5f95c469478c9"
+    },
+    {
+      "path": "evidence/catalogue53/comparison.json",
+      "bytes": 1301,
+      "sha256": "ea5f99ac8538e5a9f9f0c160f39f149ae0a2c143504f6361b0f6e088f395f749"
+    },
+    {
+      "path": "evidence/catalogue53/execution.json",
+      "bytes": 7426,
+      "sha256": "82cc158bdff9b22aeed04ed75e4dd9ac30e201e2ec5df33c77ea71b756fc0664"
+    },
+    {
+      "path": "evidence/final_archive_manifest.json",
+      "bytes": 2900,
+      "sha256": "87d7e1cea03b6a4e8d99e31fec124337e4f9af623e0b72fb2f1cadf2c5fd351c"
+    },
+    {
+      "path": "evidence/final_verification.json",
+      "bytes": 6935,
+      "sha256": "7f62e417eb47391a928bda5e302deda83bb14ba774d054a6b92836fb8be42d62"
+    },
+    {
+      "path": "evidence/governance52/comparison.json",
+      "bytes": 1372,
+      "sha256": "496764f470d42239d54c5b55e4b55eca5cde154d10dac92599ec5422fc158fcb"
+    },
+    {
+      "path": "evidence/governance52/execution.json",
+      "bytes": 7542,
+      "sha256": "f501bb5bddd0c3b3bb23ef1bb3f4a80ee884e47591e3e4449510d2800731f94a"
+    },
+    {
+      "path": "evidence/initial_archive_manifest.json",
+      "bytes": 2456,
+      "sha256": "4272585778f30c0be2c4a7e694843882d90429497e974c52c565fa4d3b3ccd7b"
+    },
+    {
+      "path": "evidence/metadata196/comparison.json",
+      "bytes": 1580,
+      "sha256": "4469217d6055bceb14577822734dcaafabd4fa8078c5aa0d122ca31142db4e55"
+    },
+    {
+      "path": "evidence/metadata196/execution.json",
+      "bytes": 7670,
+      "sha256": "63c21928fa8cd295eeec8baeb3a012e90d43bd65b5d0177d95170e4f1766254c"
+    },
+    {
+      "path": "evidence/preflight.json",
+      "bytes": 10608,
+      "sha256": "61265f7ddfa696f39197004a501498b4ff80262d1688a8a02e9b3ec00bafdd1d"
+    },
+    {
+      "path": "evidence/scope_guard_after.json",
+      "bytes": 4799,
+      "sha256": "8efc7bce63ff956ef4c03962acd13afc35c76229885a0e078fbe051c92e5d989"
+    },
+    {
+      "path": "evidence/scope_guard_before.json",
+      "bytes": 4799,
+      "sha256": "8efc7bce63ff956ef4c03962acd13afc35c76229885a0e078fbe051c92e5d989"
+    },
+    {
+      "path": "evidence/short_completion_archive_manifest.json",
+      "bytes": 1663,
+      "sha256": "1ad11b220c6ac179bca740189ce8cda190fa287176605fe068f79e000cfaa593"
+    },
+    {
+      "path": "evidence/source_final_receipt.json",
+      "bytes": 13226,
+      "sha256": "310af75b322d419c7f85a26161471f2abd997ca5f1c5c24f0ccc54f200d22041"
+    },
+    {
+      "path": "evidence/source_inventory.json",
+      "bytes": 533070,
+      "sha256": "effe392c515ee95c80005aec834be6132d541ef599022be6fafb2ead027526a1"
+    },
+    {
+      "path": "evidence/strict77/archive_manifest.json",
+      "bytes": 1622,
+      "sha256": "e391446721006aeed5b3841d25b1021d74b4fda64e8cdd491f25435e9b66a244"
+    },
+    {
+      "path": "evidence/strict77/comparison.json",
+      "bytes": 3793,
+      "sha256": "680c535ee73b14fffb1ed7e0d622b547ad6e8ac341502f9e70fce2510e51a447"
+    },
+    {
+      "path": "evidence/strict77/execution.json",
+      "bytes": 12417,
+      "sha256": "f2922e714183259ed15c8639a3fbcb9b2456e5e0362c26e89e89b05dd2d4532c"
+    },
+    {
+      "path": "evidence/strict77/final07_receipt.json",
+      "bytes": 4066,
+      "sha256": "a30cb89d4d79a4ce9ddeac30f90fa1f1d7ea4f818fc8cc6898b75ad3aff43bd6"
+    },
+    {
+      "path": "evidence/strict77/postrun_receipt.json",
+      "bytes": 2778,
+      "sha256": "db19519102c2f6217d22900e553b9f0e74379b983a9982c7d0fbce7de5fca767"
+    },
+    {
+      "path": "evidence/supplement101/comparison.json",
+      "bytes": 758,
+      "sha256": "4cc6332bbb9b4ac7f4a2e9cf67391573686e12bb07a0a641c143624d66cebe92"
+    },
+    {
+      "path": "evidence/supplement101/execution.json",
+      "bytes": 7670,
+      "sha256": "a0631debd68ebbcb22e63abd33b4082eb64f90ae4ce0ab14caeed38f1e21d096"
+    },
+    {
+      "path": "evidence/unit/execution.json",
+      "bytes": 7175,
+      "sha256": "80dc944130c62b1277bb6f6cd6c93c5bcf798666881170ba452cd59c8184524b"
+    },
+    {
+      "path": "evidence/unit/final_comparison_both_baselines.json",
+      "bytes": 84523,
+      "sha256": "61c16a9edf8c09726a43a1322f66654e0d042c419a84da25f304e8de35643277"
+    },
+    {
+      "path": "evidence/unit/legacy_comparison.json",
+      "bytes": 172014,
+      "sha256": "5d9be87bbfcdb9838e3acecb51ec589e43eae63699867d9c8e348f8fe7662f16"
+    },
+    {
+      "path": "plan.md",
+      "bytes": 3153,
+      "sha256": "7b776032e3db269c4268f53bd5b2c9ee14ab66cbed5680cc0e032d5812f4b5d9"
+    },
+    {
+      "path": "progress.md",
+      "bytes": 5566,
+      "sha256": "ac865f1acad0b575eb64a85f38a8c6d964f11939af303b3c56911c7db46b441b"
+    },
+    {
+      "path": "requirements.md",
+      "bytes": 4741,
+      "sha256": "4ad440c1f0c7f8f804e86205205d844622c3cb8fbdf52d42507e507505e58b0d"
+    },
+    {
+      "path": "summary.md",
+      "bytes": 3715,
+      "sha256": "42489fa315e5cc73fd8dfffcc93d6ce4e417cdaeed5d32bad94acc9863537aa2"
+    },
+    {
+      "path": "test_report_2026-10-24_post_named_query_regressions.md",
+      "bytes": 7935,
+      "sha256": "75572af3277535807aeba8afae5d3af8e01c93dcaaf3012348883f3439566458"
+    }
+  ],
+  "file_count": 33,
+  "raw_79_presence_predicate_unwaived": true,
+  "source_or_peer_files_staged": false
+}
