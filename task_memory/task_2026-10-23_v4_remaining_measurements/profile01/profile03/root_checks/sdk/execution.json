@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-B",
+    "-c",
+    "import ast,json,sys\nfrom pathlib import Path\nfrom steptron.exp.base_exp import ResourceConfig\np=Path(sys.argv[1]);config=json.loads((p/'config.json').read_text());tree=ast.parse((p/'submit_native_diagnostic.py').read_text());calls=[n for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=='ResourceConfig'];assert len(calls)==1\nr=eval(compile(ast.Expression(calls[0]),str(p/'submit_native_diagnostic.py'),'eval'),{'ResourceConfig':ResourceConfig,'config':config})\nfields=('gpu','replica','cpu','mem_gb','preemptible','positive_tags','image','mounts','custom_resources','task_anti_affinities','restart_on');values={k:getattr(r,k) for k in fields}\nassert (r.gpu,r.replica,r.cpu,r.mem_gb)==(8,4,64,512) and r.preemptible is False and r.restart_on is None\nassert r.positive_tags==['H800'] and r.image==config['image'] and r.mounts==[config['cloud_mount']]\nassert r.custom_resources==['mellanox.com/mlnx_rdma:1','rdma/mlnx_shared:8']\nassert r.task_anti_affinities==['hard/default'] and r.envs['DISTRIBUTED_JOB']=='true'\nassert not any(k.startswith('NCCL_') for k in r.envs)\nassert all(r.envs[k]=='1' for k in ('HF_HUB_OFFLINE','TRANSFORMERS_OFFLINE','HF_DATASETS_OFFLINE','VLLM_ENABLE_CUDA_COMPATIBILITY'))\nprint(json.dumps(dict(status='PASS_ACTUAL_SDK_RESOURCE_CONSTRUCTOR',python=sys.version,resources=values,platform_operations=0,scope='Actual frozen ResourceConfig expression; no backend submission, topology or GPU proof.')))\n",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03"
+  ],
+  "start_utc": "2026-10-24T05:59:59.556487+00:00",
+  "end_utc": "2026-10-24T06:00:01.339031+00:00",
+  "returncode": 0,
+  "script_sha256": "a78c066d793e2200a73e0d0723a22f41380729dd8eacaf444afea2892276587c",
+  "output": "/data/ycfeng/tmp/glm53_dsv4/profile03_root_sdk_46joquue"
+}

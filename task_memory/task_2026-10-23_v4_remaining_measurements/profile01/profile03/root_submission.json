@@ -1,0 +1,29 @@
+{
+  "status": "LAUNCHER_STARTED",
+  "observed_at_utc": "2026-10-24T06:13:37.498241+00:00",
+  "pid": 3212023,
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03",
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03/launch.py"
+  ],
+  "log": "/data/ycfeng/tmp/glm53_dsv4/profile03_launch_20261024.log",
+  "seal_sha256": "fcd19d080ee492c514f30b6917607b53eab5fd34d99e57ffbeace6ff5c598d08",
+  "manifest_sha256": "4e827ca74e26abfba5816b61f6bac095ca1da326957b80d0f5e4d5c0c59423b7",
+  "authorization": "D-V4-H800-RJOB-AUTHORITY",
+  "attempt": 1,
+  "attempt_ceiling": 1,
+  "resources": {
+    "gpu_type": "H800",
+    "charged_group": "codesign",
+    "gpu": 8,
+    "replica": 4,
+    "cpu": 64,
+    "mem_gb": 512,
+    "timeout_seconds": 3600,
+    "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+    "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-03"
+  }
+}
