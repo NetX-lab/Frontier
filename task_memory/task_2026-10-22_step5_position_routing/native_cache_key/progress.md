@@ -3,7 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-24 | Verify clean frozen unit identity and strict77; preserve two auditor namespace failures and start independent final reviews and accounting. |
+| 2026-10-24 | Accept the clean scope audit and integrate c668a938; primary verifies124 bindings,24 frozen artifacts and exact source equivalence. |
 | 2026-10-24 | Verify all8620unitIDs/states unchanged and commit3-line source376983d2;start clean frozenunit/matrix without weakening prior dirty-provenanceFAIL. |
 | 2026-10-24 | Verify corrected208-event wave and19file comparisons;reconcile9580global/124bindings;retain theprecommitmatrix provenanceFAIL despite77equal cases. |
 | 2026-10-24 | Record three-line RED/GREEN,124/1 status parity,key-only timing and the missing scratch-input diagnosis; authorize the bounded corrected wave replay. |
@@ -16,7 +16,7 @@
 - completed/allocation: standing D29-NAMED-MODEL-QUERY authorization covers this
   analogous bounded performance change. Two existing PRICING paths,3gross with
   at most1 cumulative growth; one allowance line transfers from the unedited
-  plan donor to the backend test. The accepted source remains unchanged.
+   plan donor to the backend test. Allocation alone did not change accepted usage.
 - completed/allocation check: an inline `python3 -B` validator reads the accepted
   named-query114-path TSV and the new JSON overlay. All before values, donor
   actual139/cap139, three-gross split and zero-sum adjustments pass. Owner caps
@@ -91,7 +91,7 @@
   then unit_comparison02.log/rawexit0. Tests and originalXMLs were not changed.
 - completed/sourcecommit: owned worktree source376983d2contains exactly
   backend1replacement/test1assertion afterfocused,canonicalwave,fullunit
-  andscope checks;gitdiff--checkpasses. Source is not primary-integrated.
+   andscope checks;gitdiff--checkpasses. Primary integration is completed below.
 - completed/clean frozen runs: `frozen_checks.py` reuses precommit_checks.py
   with onlyfreshfrozen-outputpaths,exact376983d2/clean-sourceguards and updated
   provenance description. Originalnamespace,unit/matrix/comparatorcommands,
@@ -121,7 +121,7 @@
   `frozen-audit-03/`; `frozen-audit-02/` and the host audit FAIL remain intact.
 - completed/Standards review: D29-NATIVE-KEY-STANDARDS,
   ses_e928c1cc6ffepH81XvJ3TLbxxU, returns No findings. This is inspected evidence,
-  not another test run; final clean accounting and integration remain required.
+   not another test run. Final clean accounting and integration are completed below.
 - completed/Spec review: D29-NATIVE-KEY-SPEC,
   ses_e928bd454ffeGozXzaLlVfc9OQ, returns No findings on the committed two-path
   diff. Both independent reviews are recorded in review.md; neither reran tests.
@@ -129,17 +129,26 @@
   hash-verified under evidence/frozen_regressions/. Raw unit XML/logs and caches
   remain in scratch and are referenced, not duplicated. Both auditor failures
   and the later PASS receipt remain separately byte-preserved.
-- in-progress/independent scope delta: D29-NATIVE-KEY-SCOPE-DELTA,
-  ses_e95ac82fdffeSeMEUfR9SxvW03, checks the clean committed successor, all114 caps
-  and124 bindings, including the unchanged122 non-key bindings.
-- pending: independent clean accounting acceptance and primary integration.
-  Native hardware and full6144/1024 CLI remain unaccepted. The frozen CPU matrix
-  and208-event replay do not establish native admission or whole-CLI speedup.
+- completed/independent scope delta: D29-NATIVE-KEY-SCOPE-DELTA,
+  ses_e95ac82fdffeSeMEUfR9SxvW03, accepts clean376983d2 with zero violations:
+ 114allocated/113changed, CORE4261/4404, PRICING3955/3956, native1350/1582,
+ source9566/9942/global9580/10000. All17 overlays are zero-sum, all124 bindings
+ pass,122 remain unchanged, and submodule333/nativepatch99 are unchanged. Owner
+ records1dd96179/65a2766d are integrated as04d4319a/9584941c.
+- completed/primary integration: source376983d2 is integrated as c668a938.
+ `verify_integration.py` passes under60s/systemd30GiB/runuser brainpp/
+ frontier-py310-B. It rechecks9 scope artifacts,24 frozen artifacts/scripts,
+ 124 tree/file/native bindings,122 non-key digest and fresh cumulative costs
+ backend93/test237/donor139. All non-task source is identical to clean376983d2;
+ the donor is unedited. Receipt:evidence/primary_integration.json. No suite or
+ probe is rerun; the frozen results are carried by exact source equivalence.
+ Unrelated untracked.cortexkit/.pi files are preserved, not staged or removed.
+- pending/global: native hardware, full6144/1024 CLI within2400s, G3 and E2E.
+ The frozen CPU matrix and208-event replay do not establish those gates.
 
 Exact commands, raw results and corrected iterations are appended here; the
-dated test report will distinguish observed results from the projection.
+dated test report records observed results separately from diagnostic projections.
 
 All current raw scripts/logs/XMLs and full24 timing samples are under
-`/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/`. Source376983d2is
-committed in its isolatedworktree,not primary-integrated or accepted;the
-preceding accepted primarysource remains unchanged.
+`/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/`. Accepted component source
+is376983d2, integrated as c668a938; exact delivery and limits are in summary.md.

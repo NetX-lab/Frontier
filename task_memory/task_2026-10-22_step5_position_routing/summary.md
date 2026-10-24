@@ -3,7 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-24 | Record clean native-key unit/strict77 preservation on isolated376983d2; final independent accounting/review and integration remain open. |
+| 2026-10-24 | Accept native-key source c668a938 and9580global union after reviews, clean audit and124-binding/33-artifact primary integration verification. |
 | 2026-10-24 | Allocate a3-gross native-key candidate; accepted9579 usage and all whole-CLI/native limits remain unchanged pending verification. |
 | 2026-10-24 | Archive completed dbe19f53 regressions and final audit; small JSON controls are not allocated and required-shape validation continues. |
 | 2026-10-24 | Accept four frozen dbe19f53 short suites after27 parent checks; strict/full-unit remain pending. |
@@ -34,8 +34,9 @@
 
 ## Current-session continuation
 
-Current feature source includes accepted named query ffb435ca, with9565source/
-9579global and zero audit violations. Parent component acceptance is in
+Current feature source includes accepted native-key c668a938 and named query
+ffb435ca, with9566source/9580global and zero audit violations. Native-key primary
+acceptance is in native_cache_key/evidence/primary_integration.json; named-query acceptance is in
 runtime_model_view/parent/acceptance.json. The preceding key checkpoint is
 c4e06a61 at30fb6a30. Both review
 axes have No findings. Parent124PASS/1existingTorchSKIP and full208-event costs,
@@ -74,7 +75,7 @@ confirms9579/10000 and all114caps. Step96gross, physical net84 and cumulative
 budget growth88 are distinct. Code/records are integrated asffb435ca/8ecb705e.
 Parent records are runtime_model_view/parent/.
 Independent bounded snapshot-copy and initialization analyses remain without
-source allocation. Production usage is9579/10000. Full CLI acceptance remains open.
+source allocation. Production usage is9580/10000. Full CLI acceptance remains open.
 
 Frozen successor dbe19f53 has completed all assigned regressions:strict77 is77/77
 identical;independent short results101/197/53/52PASS;raw unit8028PASS/279FAIL/
@@ -100,18 +101,21 @@ three60s/30G cached-fixture production-path probes. P6128/DECODE16/BF16 event/by
 expectations remain unmeasured until its actual results arrive.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
-The next native-key candidate replaces repeated whole-artifact encoding with
+The accepted native-key change replaces repeated whole-artifact encoding with
 the already validated run-fixed bytes in the backend-instance LRU. Only two
 existing PRICING paths are allocated3gross/at most1 cumulative growth. One unused
-plan allowance moves to the backend test, with donor code unchanged. The accepted
-source still has9565source/9579global. Isolated source376983d2 is verified at
-precommit9566source/9580global; independent clean accounting remains pending.
+plan allowance moves to the backend test, with donor code unchanged. Source
+376983d2 is integrated as c668a938; independent clean accounting accepts
+9566source/9580global with zero violations. Audit1dd96179/65a2766d is integrated
+as04d4319a/9584941c, with124 bindings and17 zero-sum overlays.
 RED/GREEN, focused124/1 on each side and208-event/19-file parity pass. Clean
 frozen unit preserves all8620IDs/states with raw8028PASS/279FAIL/32ERROR/281SKIP,
 exit1; strict77 passes77/77 with451 artifacts/519 cache names per side. Auditor
 namespace failures remain preserved; the unchanged auditor passes after correct
-read-only mounts. Both independent review axes have No findings; final clean
-accounting/integration remain open under native_cache_key/. The CPU-fixture
+read-only mounts. Both independent review axes have No findings. Primary accepts
+integration after124 binding checks,33 artifact hashes and an empty non-task
+source diff against376983d2; no suite/probe rerun. Evidence is under native_cache_key/.
+The CPU-fixture
 pricing branch is unchanged; no whole-CLI/native acceleration is claimed.
 
 Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trainerPASS,

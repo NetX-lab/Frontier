@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Complete all component steps, independent audit/reviews and primary source/binding acceptance. |
 | 2026-10-24 | Allocate the minimal change and separate key-only evidence from native qualification. |
 
 ## Scope and dependencies
@@ -36,5 +37,7 @@ independent ownership and are not duplicated or blocked by this change.
 8. Reconcile all114 caps and unchanged source/native bindings, then review and
    integrate. Stop dependent acceptance on any unexplained output/check drift.
 
-Expected cumulative usage after this three-gross/one-net step is9566source/
-9580global and PRICING3955/3956; these are projections until measured.
+All eight steps are complete. Accepted cumulative usage is9566source/9580global,
+PRICING3955/3956, with zero violations. Source376983d2 is integrated as c668a938.
+The independent scope receipt and primary_integration.json bind the final result;
+the whole-CLI/native acceptance route remains open in the parent plan.

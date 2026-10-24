@@ -3,7 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-24 | Verify clean376983d2 unit/strict77 receipts; retain the failed host audit and failed cache-only mount before the unchanged auditor passes in the correct namespace. |
+| 2026-10-24 | Accept independent clean scope9580 and integrated c668a938 after124-binding/33-artifact primary verification; retain all frozen/raw verdicts. |
 | 2026-10-24 | Compare8620unitIDs/states with no change,retainrawexit1;sourcecommit376983d2andclean frozen execution follow the precommit checks. |
 | 2026-10-24 | Record corrected canonicalwavePASS,9580scope/124bindings and the expectedraw precommitprovenanceFAIL;final frozen gates stay pending. |
 | 2026-10-24 | Add observed RED/GREEN,focused status comparison and exact-expression timing; retain first wave-preparation failures and bound the corrective replay. |
@@ -332,5 +332,36 @@ training/simulation run is repeated during these auditor corrections.
 
 These checks settle frozen behavior preservation only. Synthetic native-schema
 tests are not hardware admission, and the canonical CPU wave does not enter the
-changed native-key branch. Independent final accounting/review and integration,
-native/GPU/G3/E2E qualification and the2400s whole-CLI gate remain separate.
+changed native-key branch. Independent final accounting/review and integration
+are completed below; native/GPU/G3/E2E and the2400s whole-CLI gate remain separate.
+
+## Independent clean audit and primary integration
+
+The independent audit on clean376983d2 passes with zero violations. Its9 bound
+artifacts plus the pinned manifest are byte-preserved under evidence/frozen_scope/;
+owner1dd96179/65a2766d are integrated as04d4319a/9584941c. Source376983d2 is
+integrated as c668a938. Both independent review axes have No findings.
+
+Primary command, from `/data/ycfeng/Frontier/.worktrees/step5-preview`:
+
+```bash
+timeout 60s sudo -n systemd-run --scope --quiet -p MemoryMax=30G runuser -u brainpp -- env PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B task_memory/task_2026-10-22_step5_position_routing/native_cache_key/verify_integration.py > /data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/primary_integration.log 2>&1
+```
+
+Python3.10.6, no project imports or dataset/model/trace scan; no suite/probe rerun.
+Actual exit0, PASS_PRIMARY_SOURCE_AND_FROZEN_BINDINGS:
+
+| Check | Expected | Actual | Verdict |
+| --- | --- | --- | --- |
+| Integrated source | All non-task source equals clean376983d2; exact two-path source commit | c668a938, zero non-task differences | PASS |
+| Frozen evidence |9 scope artifacts and24 frozen artifacts/scripts retain hashes | All33 checked | PASS |
+| Source/native bindings |124 exact tree/file/pin bindings;122 non-key digest unchanged |124, digest eaf97ec1…74ba01b6 | PASS |
+| Cumulative two-path/donor bill | Backend93, test237, donor139; donor code unchanged |93/237/139 | PASS |
+| Independent full allocation |114 allocated/113 changed; all caps/17 zero-sum overlays valid | CORE4261/4404, PRICING3955/3956, native1350/1582; source9566/9942, global9580/10000 | PASS |
+
+The primary receipt is evidence/primary_integration.json; it records exact
+source/tree, interpreter and script SHA256. Tracked source/index are clean;
+unrelated untracked.cortexkit/.pi files are preserved. Frozen8028PASS/279FAIL/
+32ERROR/281SKIP(rawexit1) and strict77/77 are carried by exact source equivalence,
+not described as newly rerun or as an entirely passing unit suite. Native
+hardware and the full6144/1024 CLI within2400s remain unaccepted.

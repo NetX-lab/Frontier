@@ -3,7 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-24 | Verify native-key clean376983d2 full-unit identity/strict77; retain auditor mount failures and begin final independent reviews/accounting. |
+| 2026-10-24 | Accept the clean9580 native-key union, integrate c668a938/9584941c and verify124 bindings plus33 retained artifacts; global workflow gates remain open. |
 | 2026-10-24 | Allocate the3-gross native artifact-key replacement under standing authority; accepted source usage stays9579 until verified integration. |
 | 2026-10-24 | Close frozen dbe19f53 regressions and final archive audit; JSON control is unallocated and required-shape validation is assigned. |
 | 2026-10-24 | Parent verifies frozen dbe19f53 short101/197/53/52 with27 hashes and exact46fe IDs; strict/full-unit remain running. |
@@ -71,8 +71,8 @@
 
 ### Current-session resumption (supersedes handoff next-session timing)
 
-- in-progress/native-key acceptance: D29-NATIVE-KEY-BYTES is committed as
-  isolated source376983d2, exactly3gross/net1 in two existing PRICING paths.
+- completed/native-key component: D29-NATIVE-KEY-BYTES source376983d2 is
+  integrated as c668a938, exactly3gross/net1 in two existing PRICING paths.
   RED/GREEN1FAIL->1PASS, focused124PASS/1existingSKIP on each side,208-event
   replay/19 complete-file comparisons and precommit9580 accounting pass.
   Key/LRU-only median2.806s->94.784us is not native pricing or CLI timing.
@@ -80,11 +80,14 @@
   rawexit1. Strict77 passes77/77,451 artifacts and519 cache names per side.
   Two auditor namespace/mount failures remain; the unchanged auditor passes
   after using the actual generated cache namespaces. Both independent review
-  axes return No findings; the clean scope delta audit is running.24 selected
-  frozen artifacts/scripts are hash-verified in the component evidence archive.
-  Primary integration remains pending. Accepted primary usage remains9579;
-  measured precommit successor9580 is not yet final acceptance. CPU fixture
-  pricing is unchanged; native/full-CLI gates remain open. Records:native_cache_key/.
+   axes return No findings. The clean scope audit1dd96179/65a2766d, integrated as
+   04d4319a/9584941c, accepts114allocated/113changed, CORE4261/4404,
+   PRICING3955/3956, native1350/1582, source9566/9942/global9580/10000,
+   zero violations. Primary rechecks9 scope artifacts,24 frozen artifacts/scripts
+   and124 bindings;122 non-key digest remains eaf97ec1…74ba01b6 and all non-task
+   source equals376983d2. No suite/probe rerun. Unrelated.cortexkit/.pi files are
+   preserved. CPU-fixture pricing is unchanged; native/full-CLI gates remain open.
+   Records:native_cache_key/{summary.md,evidence/primary_integration.json}.
 - completed/component: D29-PLAN-KEY-REUSE, session
   ses_e963098ecffebqCOtdysKGY6Xe, delivered c4e06a61/d1e2fb8c, integrated as
   30fb6a30/6c52a4d6. Both independent review axes have No findings. Parent124PASS/

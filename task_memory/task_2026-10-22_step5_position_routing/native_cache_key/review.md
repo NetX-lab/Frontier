@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Record primary closure after independent scope acceptance and exact integrated-source/binding verification. |
 | 2026-10-24 | Record independent Standards and Spec reviews of the committed three-gross-line candidate. |
 
 ## Component and fixed point
@@ -56,5 +57,6 @@ accounting, not clean final integration acceptance.
 - Early dirty-provenance and auditor failures remain; no gate waiver is inferred.
 
 Findings: Standards0, Spec0. No component remediation is required. Independent
-clean accounting and primary integration remain pending. Native hardware,
-6144/1024 workload within2400s, G3 and E2E acceptance remain separate open gates.
+clean accounting and primary integration are now accepted, with source c668a938
+matching376983d2 and evidence/primary_integration.json verifying124 bindings.
+Native hardware,6144/1024 workload within2400s, G3 and E2E remain separate gates.
