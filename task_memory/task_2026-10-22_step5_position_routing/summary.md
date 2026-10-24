@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate a3-gross native-key candidate; accepted9579 usage and all whole-CLI/native limits remain unchanged pending verification. |
 | 2026-10-24 | Archive completed dbe19f53 regressions and final audit; small JSON controls are not allocated and required-shape validation continues. |
 | 2026-10-24 | Accept four frozen dbe19f53 short suites after27 parent checks; strict/full-unit remain pending. |
 | 2026-10-24 | Integrate and accept named-query ffb435ca with final9579 global audit and124-binding parent guard. |
@@ -98,6 +99,14 @@ three60s/30G cached-fixture production-path probes. P6128/DECODE16/BF16 event/by
 expectations remain unmeasured until its actual results arrive.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
+The next native-key candidate replaces repeated whole-artifact encoding with
+the already validated run-fixed bytes in the backend-instance LRU. Only two
+existing PRICING paths are allocated3gross/at most1 cumulative growth. One unused
+plan allowance moves to the backend test, with donor code unchanged. The accepted
+source still has9565source/9579global;9580global is a projection. Verification,
+review and integration are pending under native_cache_key/. The CPU fixture
+branch is unchanged; no whole-CLI/native result is claimed by this allocation.
+
 Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trainerPASS,
 five path checks, both review axes No findings and complete208-event output parity
 pass. One P/D input-binding read, zero cold/warm reads; warm0.340867→0.162715s is

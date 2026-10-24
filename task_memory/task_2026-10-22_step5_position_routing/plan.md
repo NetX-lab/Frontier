@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate native artifact-key bytes reuse in two existing PRICING paths at3gross; keep whole-CLI/native gates and independent investigations open. |
 | 2026-10-24 | Close named-query frozen regressions and archive audit; decline small JSON controls and assign required-shape verification. |
 | 2026-10-24 | Parent admits completed dbe19f53 short101/197/53/52; retain strict/full-unit/final-guard dependencies. |
 | 2026-10-24 | Close named-query integration and composed9579 audit; the accepted successor is ready for a new frozen regression pass. |
@@ -146,6 +147,13 @@ initialization-local analysis and required-shape verification(P6128/DECODE16/BF1
 The shape task allows at most three60s/30G cached-fixture probes, no new fullCSV,
 init/CLI/source/GPU work. Full CLI still waits for a useful reviewed repair and
 storage readiness, not another relabelled point check.
+The independent native-key candidate uses the existing run-fixed bytes in the
+instance-local LRU key. Apply native_collective_key_scope_amendment.json next:
+two existing PRICING paths,3gross/at most1 cumulative growth, with one unused
+plan allowance transferred to the backend test and no donor code edit. Follow
+native_cache_key/plan.md for RED/GREEN, schema/cache/negative checks, one bounded
+key-only measurement, actual wave parity, regressions, audit and review. This
+does not improve the CPU-fixture branch or replace whole-CLI/native qualification.
 The non-I/O identity-cache control is rejected because it did not improve timing.
 Cost-fields75404143 is now parent-verified and independently reviewed,8gross and
 zero retained growth, and merged with trace/prepared on feat/step5-preview.

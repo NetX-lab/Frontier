@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate the3-gross native artifact-key replacement under standing authority; accepted source usage stays9579 until verified integration. |
 | 2026-10-24 | Close frozen dbe19f53 regressions and final archive audit; JSON control is unallocated and required-shape validation is assigned. |
 | 2026-10-24 | Parent verifies frozen dbe19f53 short101/197/53/52 with27 hashes and exact46fe IDs; strict/full-unit remain running. |
 | 2026-10-24 | Integrate named-query ffb435ca/8ecb705e and auditc6b1f3b8; final124-binding guard accepts9579 global, with stepnet84 distinct from budget increment88. |
@@ -69,6 +70,15 @@
 
 ### Current-session resumption (supersedes handoff next-session timing)
 
+- in-progress/native key: D29-NATIVE-KEY-BYTES, primary, independent of the three
+  existing investigations. Source inspection confirms fixed input bytes and an
+  instance-local LRU; the whole artifact is nevertheless encoded per native call.
+  Two existing PRICING paths receive3gross(source2/test1), with one allowance line
+  transferred from unedited plan140 to139 to backend-test236 to237. Accepted
+  usage remains9565source/9579global;9580global is only the projected successor.
+  RED/GREEN, native-schema controls, key-only measurement, canonical wave, final
+  audit/review/regression and integration remain pending. CPU fixture pricing is
+  unchanged, and no native/full-CLI admission is implied. Records:native_cache_key/.
 - completed/component: D29-PLAN-KEY-REUSE, session
   ses_e963098ecffebqCOtdysKGY6Xe, delivered c4e06a61/d1e2fb8c, integrated as
   30fb6a30/6c52a4d6. Both independent review axes have No findings. Parent124PASS/
@@ -160,6 +170,8 @@
   error included real auxiliary header clocks; corrected checks retain their
   raw hashes and compare the exact3902-byte failure body. Original failed log
   is preserved. Evidence:runtime_json_reuse/; production/source quota unchanged.
+  Primary sends this source-backed timestamp/body correction to the existing
+  snapshot-copy owner for its final verification without restarting that control.
 - in-progress/required-shape verification: D29-REQUIRED-WAVE-SHAPES, session
   ses_e93176c15ffefHaQWQESiTHY7D, uses frozen dbe19f53 and cached fixture for P6128,
   firstDECODE16 and BF16-layer88-90. At most three60s/30G production-path probes;

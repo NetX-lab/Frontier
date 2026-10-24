@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate the3-gross native-key byte component under standing authorization and unchanged owner/global limits. |
 | 2026-10-24 | Carry YC's continue request into bounded post-regression diagnostics; JSON controls receive no production allocation. |
 | 2026-10-24 | YC approves named querying and analogous in-scope performance changes; allocate100gross within unchanged CORE/global limits. |
 | 2026-10-24 | Record an unapproved named-model query proposal and its demonstrated unrelated-model error-policy difference. |
@@ -383,3 +384,23 @@ P6128, first-DECODE16 and BF16-layer88-90 shapes. At most three invocations, eac
 GPU/platform/network operation, source edit or numerical/proof memo is assigned.
 If the retained setup cannot reach a required shape within those bounds, report
 the exact blocker rather than substituting toy timing or extending the limit.
+
+## [Original Request / Execution Decision] D29-NATIVE-KEY-BYTES
+
+UTC date2026-10-24. YC continues: **“continue”**. Carry forward the verbatim
+standing D29-NAMED-MODEL-QUERY authorization for analogous in-scope performance
+changes; this is not a new human-review answer or native qualification.
+
+Primary allocates two existing PRICING paths at3gross(source2/test1) to replace
+only the native cache's whole-artifact JSON encoding with the existing validated
+run-fixed bytes. Keep all native checks before lookup and the existing LRU,
+complete plan key, numerical output and evidence predicates. Transfer one unused
+allowance line from plan140 to139 to backend-test236 to237; donor code stays
+unchanged. Source9942/global10000,114 paths and all owner ceilings are unchanged.
+See native_cache_key/{requirements.md,design.md,plan.md} and the next repair
+overlay. The projected cumulative increment is1, not the three-gross step.
+
+The CPU fixture branch does not use this expression; no CPU whole-CLI speedup
+or native admission follows from the key-only probe. Required RED/GREEN, current
+native-schema checks, canonical wave, regressions, audit and independent review
+precede integration. Snapshot-copy/init/required-shape work remains independent.
