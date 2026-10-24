@@ -877,7 +877,7 @@ class CollectiveSimCCBackend(BaseCCBackend):
         if parameters["evidence_kind"] != "native_measurement" or counts["evidence_kind"] != "native_measurement":
             raise ValueError("CPU fixtures are not native parameter or kernel-count evidence")
         collective.update(plan=plan.to_dict(), local_parameters={**parameters,"context":context})
-        key = ("plan", plan.cache_key(), json.dumps(artifact, sort_keys=True))
+        key = ("plan", plan.cache_key(), self.collective_profile_bytes())
         cached = self._get_cached_prediction(key)
         if cached is not None:
             return cached

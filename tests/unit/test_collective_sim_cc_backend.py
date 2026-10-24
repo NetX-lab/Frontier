@@ -87,6 +87,7 @@ def test_importer_groups_frozen_policy_but_keeps_complete_count_and_cache_identi
         per_rank_events=[["cpu_schema_only"]*35 for _ in range(16)])
     path.write_text(json.dumps(artifact))
     expected=backend.predict_collective_plan(plan)
+    assert next(iter(backend._prediction_cache))[-1] is backend.collective_profile_bytes()
     context=json.loads(plan.context_json)
     context["execution_policy"]["0"].update(branches=["pynccl_comm.all_reduce"],
         buffers=dict(input_registered=[True]))
