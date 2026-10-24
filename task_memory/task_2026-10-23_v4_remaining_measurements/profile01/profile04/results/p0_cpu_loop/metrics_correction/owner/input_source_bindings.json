@@ -1,0 +1,50 @@
+{
+  "recorded_utc": "2026-10-24T18:07:53.203871+00:00",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "branch": "feat/glm53-dsv4-vllm028",
+  "head": "b33656556ce483245f45a6e6f14615742ed3a8ea",
+  "sources": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+      "expected_sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+      "before_sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+      "lines": 197,
+      "after_sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+      "unchanged": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py",
+      "expected_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+      "before_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+      "lines": 210,
+      "after_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+      "unchanged": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+      "expected_sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4",
+      "before_sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4",
+      "lines": 128,
+      "after_sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4",
+      "unchanged": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py",
+      "expected_sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c",
+      "before_sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c",
+      "lines": 43,
+      "after_sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c",
+      "unchanged": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py",
+      "expected_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+      "before_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+      "lines": 34,
+      "after_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+      "unchanged": true
+    }
+  ],
+  "full_trace_inputs_read": false,
+  "verified_after_utc": "2026-10-24T18:14:36.276605+00:00"
+}

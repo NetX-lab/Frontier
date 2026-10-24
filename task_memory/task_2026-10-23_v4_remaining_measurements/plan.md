@@ -42,6 +42,7 @@
 
 1. Primary: verify frozen executable package and archive -> fresh local storage/project-quota/NFS + personal-cloud destination + personal StepMind quota/capacity receipts -> separate root seal -> existing once-only1H800/600s observe/control -> P1–P6 raw audit/terminal/source binding -> scoped acceptance and commit.
 2. Parallel metrics owner: frozen seam -> <=200-line metrics adapter/<=180-line exact unit controls -> primary two complete trace controls + independent Spec/Standards -> new once-onlyP0rank0 pilot -> remaining seven once each at60s/30GiB/max2 -> exact outputs/retained errors -> R5 status and scoped commit.
+- Verified source milestone: P0adapter120/200, tests175/180, both reviews No findings, primary8unit PASS and two exact whole-output controls PASS. Next is one P0rank0 pilot; remaining7 wait for complete pilot, within the unchanged envelope.
 3. Dependency: `{GPU scoped runtime audit, complete P0 outputs} -> applicable R6/R7 synthesis`; neither line proves native serving ownership or costs. Original S1/S2/S3 CPU acceptances, R3/R4, native06R4 and all failed runs remain accepted/preserved within their original limits.
 
 Primary owns requirements/plan/progress/summary and package_primary/fresh gates, seal/submission/results acceptance; metrics owner writes only its two named source/test paths and metrics_correction/owner/. No shared write paths or platform work by subagents. Original handoff below is the committed starting snapshot.

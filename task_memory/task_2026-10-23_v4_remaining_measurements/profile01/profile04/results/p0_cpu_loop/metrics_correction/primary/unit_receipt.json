@@ -1,0 +1,22 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-B",
+    "tests/unit/test_v4_trace_audit_metrics.py",
+    "-v"
+  ],
+  "start_utc": "2026-10-24T19:10:59.893535+00:00",
+  "end_utc": "2026-10-24T19:11:01.850669+00:00",
+  "returncode": 0,
+  "seconds": 1.9571637259796262,
+  "python": "3.10.6",
+  "source_sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+  "test_sha256": "76734ee80dadfcc49111c01218db23e665ee1f085de892e1fdd832c30538ede9",
+  "log_hashes": {
+    "unit.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "unit.stderr": "e3793a13b5f4a3cf5656b44bd28cf291f06e7333e65885d49c00663acfcb57c6"
+  },
+  "full_input_invocations": 0
+}

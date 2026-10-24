@@ -1,0 +1,30 @@
+{
+  "allocation": "D-V4-P0-AUDIT-METRICS-CORRECTION",
+  "controls": [
+    {
+      "key": [
+        "decode",
+        1,
+        0
+      ],
+      "attempt_ceiling": 1,
+      "new_prefix": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_correction_20261025_01/control_decode_dp1_rank0"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        0
+      ],
+      "attempt_ceiling": 1,
+      "new_prefix": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_correction_20261025_01/control_prefill_dp1_rank0"
+    }
+  ],
+  "pilot_and_remaining_ranks": "NOT_STARTED",
+  "per_rank_timeout_s": 60,
+  "actual_limit_required_bytes": 32212254720,
+  "max_concurrency": 2,
+  "driver": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_correction_20261025_01/run_controls.py",
+  "driver_sha256": "c43ab517a44cabc975d9c88bebdbc79b0acb76402804840f77f1a0bb0fa1f2f0",
+  "recorded_utc": "2026-10-24T19:06:33.989185+00:00"
+}

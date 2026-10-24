@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded the spent single scope GPU attempt and accepted metrics source/exact controls; primary runtime acceptance and P0 pilot remain pending. |
 | 2026-10-25 | Confirmed the committed handoff and opened fresh package gates in parallel with a separately allocated metrics correction. |
 | 2026-10-25 | Integrated the prepared mirrored package, archived completed root gates/metrics evidence, and recorded the canonical next-session handoff. |
 | 2026-10-24 | Independently reproduced193R3checks/all32metadata; review found temporary-partitionP2 and raw trace coverage is24complete/8timeouts. |
@@ -45,16 +46,20 @@
 
 - completed: repository identity confirmed at b33656556ce483245f45a6e6f14615742ed3a8ea/feat/glm53-dsv4-vllm028; only .pi/, .cortexkit/ and remaining_measurements/ are untracked. They remain untouched and unstaged.
 - completed: fresh package gates and separate root seal at 2026-10-24T18:09:22.573232+00:00;18manifest inputs/67original pins exact, shared XFS/project0 quota read, current codesign87/128 and12node-usable GPUs, original local NFS100.96.128.195 and exact cloud destination absent. See [prelaunch report](profile01/scope_lifetime/package_primary/test_report_2026-10-25_prelaunch.md) and [seal](profile01/scope_lifetime/package_primary/root_seal.json). Original package inputs/worktree and CPU acceptance stay unchanged.
-- in-progress: existing single GPU observe/control attempt is ready;0/1 submitted before this milestone. Actual creator/mount/GPU/cloud write, P1–P6 and terminal evidence remain pending.
-- in-progress: D-V4-P0-AUDIT-METRICS-CORRECTION is newly recorded before implementation. Frozen auditor/stage/GC telemetry provides the existing red-capable loop; no old diagnostic is rerun. Two exact complete controls and eight once-only affected ranks are separately allocated.
-- pending: P1–P6 actual GPU data/terminal audit; metrics source/control/review/pilot; remaining R5/R6/R7. CPU/package PASS supplies no GPU/native/cost admission.
+- completed execution: the unique scope job exp-1025-021228-212042 ran on i-fengyicheng/codesign, original local NFS, locked image and 1H800/16CPU/64000Mi. Platform/replica Succeeded, container Completed/exit0/restart0 and launcher exit0. GPU allocation is spent1/1; no retry. The five cloud outputs (224883bytes) were imported hash-identically. Producer P1–P6 PASS is not primary data acceptance.
+- completed primary reproduction: final R2 raw callback/window/full-ID/lifetime/control audit60checks PASS/5joins/6unmatched,0.122845s; execution/source/GPU binding20checks PASS. Latest32-line personal API log includes actual H800 UUID. Independent R2 re-review and scoped acceptance remain pending; initial four-line log read and root-owned0600 cloud-read PermissionError are preserved.
+- completed owner delivery: Russell stopped after120/200 source and175/180 tests; owner8CPU tests PASS. Later primary exact controls/reviews are accepted below; pilot remains pending. Neither source delivery nor partial indices close R5.
+- completed P0 source prerequisites: metrics120/200 + tests175/180, owner8PASS/primary8PASS, independent Standards/Spec No findings, two newly allocated whole-output controls exact (142567/570964kernel rows,6.014371/30.108530s enclosing,actual30GiB). Frozen five pins and77-case unchanged-domain binding verified; [source acceptance](profile01/profile04/results/p0_cpu_loop/metrics_correction/primary/source_acceptance.json). This is source/equality only; P0pilot/remaining7 NOT_STARTED and R5still24/32.
+- completed controls: decodeDP1/rank0 and prefillDP1/rank0 each used their new1/1allocation; every semantic field and decompressed kernel-index row equals its retained baseline. No old diagnostic was rerun; exact fresh-output provenance is separately retained.
+- completed continuation verification:28retained source/control bindings PASS in0.031266s; no unit/control/full-trace rerun. See metrics_correction/primary/continuation_binding.json.
+- pending: scope R2 independent runtime re-review/primary acceptance; once-only P0pilot then seven conditional ranks; remaining R5/R6/R7. CPU/package PASS supplies no GPU/native/cost admission.
 - observed UTC at resume recording: 2026-10-24T18:00:24.927957+00:00; document date follows the supplied Hong Kong continuation date. The previous handoff section remains the committed starting state, superseded only by this continuation.
 
 <a id="current-session-handoff-2026-10-25"></a>
 
 ## Current session handoff — 2026-10-25
 
-This section supersedes all earlier current/next-action snapshots. Measurements retain their original 2026-10-24 UTC timestamps; 2026-10-25 is the closeout document date. No new experiment or GPU job is launched during this handoff.
+Historical starting handoff: the Current continuation section above supersedes its package/submission and allocation states. This section superseded all earlier current/next-action snapshots when written. Measurements retain their original 2026-10-24 UTC timestamps; 2026-10-25 is the closeout document date. No new experiment or GPU job is launched during this handoff.
 
 ### Completed and preserved
 

@@ -4,7 +4,8 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-25 | Archived prepared package/root CPU-image-SDK gates and final metrics observation; committed handoff preserves unsealed/unsubmitted and incomplete-trace boundaries. |
+| 2026-10-25 | Recorded sealed/completed single GPU execution and accepted metrics source/exact controls; runtime acceptance and P0 outputs remain pending. |
+| 2026-10-25 | Archived prepared package/root CPU-image-SDK gates and final metrics observation; historical handoff preserves its earlier boundaries. |
 | 2026-10-24 | Accepted S1/S2 CPU-source and allocated fresh mirrored packaging; loading-GC still leaves final trace metrics incomplete. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
 | 2026-10-24 | Accepted restored CPU fixture and corrected native capture prerequisite; original failures, queued profile04 and all runtime/cost boundaries preserved. |
@@ -26,6 +27,12 @@
 | 2026-10-23 | Archived accepted H collector integration64f3c950 and the final G2 continuation boundary. |
 | 2026-10-23 | Recorded G2 source/CPU implementation and review repairs; independent follow-up and final acceptance remain pending. |
 | 2026-10-23 | Accepted G2 CPU source 05952396 and completed its proposal; GPU decision and runtime work remain open. |
+
+## Current continuation — 2026-10-25
+
+The scope probe is sealed and its unique GPU attempt is spent1/1: exp-1025-021228-212042 completed Succeeded/exit0/restart0 with the original image/NFS and personal identity. Five cloud outputs/224883bytes are hash-identical locally. Producer observe P1–P6 PASS, control topology/output identity true; primary final R2 raw reproduction60checks/5joins/6unmatched and execution/source/GPU binding20checks PASS; latest32-line log supplies actual H800 UUID. Independent R2 re-review and scoped primary acceptance remain pending. Control verdict UNVERIFIED is retained and no timing/native/cost/reference admission follows.
+
+D-V4-P0-AUDIT-METRICS-CORRECTION source/equality prerequisites are accepted:120/200 source,175/180 tests, primary8unit PASS, both independent reviews No findings and two complete-output controls exact (142567/570964rows,6.014371/30.108530s enclosing,actual30GiB). [Source acceptance](profile01/profile04/results/p0_cpu_loop/metrics_correction/primary/source_acceptance.json). Once-only P0rank0 pilot and seven conditional ranks remain pending at60s/actual30GiB/max2. R5 remains24/32. The handoff and older current paragraphs below are historical starting snapshots.
 
 ## Current handoff frontier — 2026-10-25
 

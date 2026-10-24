@@ -1,0 +1,109 @@
+{
+  "recorded_utc": "2026-10-24T18:14:36.315320+00:00",
+  "status": "PASS",
+  "sources": [
+    {
+      "path": "tests/analysis/v4_trace_audit_metrics.py",
+      "absolute_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+      "sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+      "gross_added_lines": 120,
+      "deleted_lines": 0,
+      "limit": 200
+    },
+    {
+      "path": "tests/unit/test_v4_trace_audit_metrics.py",
+      "absolute_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_metrics.py",
+      "sha256": "76734ee80dadfcc49111c01218db23e665ee1f085de892e1fdd832c30538ede9",
+      "gross_added_lines": 175,
+      "deleted_lines": 0,
+      "limit": 180
+    }
+  ],
+  "maintained_markdown_lines": {
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/progress.md": 15,
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/check_progress_2026-10-25_metrics_correction.md": 49,
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/test_report_2026-10-25_metrics_correction.md": 32
+  },
+  "maintained_markdown_total": 96,
+  "maintained_markdown_limit": 100,
+  "checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--no-index",
+        "--check",
+        "--",
+        "/dev/null",
+        "tests/analysis/v4_trace_audit_metrics.py"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--no-index",
+        "--numstat",
+        "--",
+        "/dev/null",
+        "tests/analysis/v4_trace_audit_metrics.py"
+      ],
+      "exit_code": 1,
+      "stdout": "120\t0\t/dev/null => tests/analysis/v4_trace_audit_metrics.py\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--no-index",
+        "--check",
+        "--",
+        "/dev/null",
+        "tests/unit/test_v4_trace_audit_metrics.py"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--no-index",
+        "--numstat",
+        "--",
+        "/dev/null",
+        "tests/unit/test_v4_trace_audit_metrics.py"
+      ],
+      "exit_code": 1,
+      "stdout": "175\t0\t/dev/null => tests/unit/test_v4_trace_audit_metrics.py\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--name-only",
+        "--",
+        "tests/analysis/v4_trace_audit_metrics.py",
+        "tests/unit/test_v4_trace_audit_metrics.py",
+        "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "compile_status": "PASS without bytecode writes",
+  "direct_whitespace_status": "PASS",
+  "frozen_source_pins_status": "PASS all five unchanged",
+  "owned_index_empty": true,
+  "full_trace_invocations": 0,
+  "requirements_reread_before_delivery": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md",
+  "verified_final_utc": "2026-10-24T18:18:02.738651+00:00"
+}

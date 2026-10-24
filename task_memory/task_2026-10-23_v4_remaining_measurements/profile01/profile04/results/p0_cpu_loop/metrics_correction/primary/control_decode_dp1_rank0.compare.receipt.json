@@ -1,0 +1,57 @@
+{
+  "key": [
+    "decode",
+    1,
+    0
+  ],
+  "status": "PASS_EXACT_COMPLETE_CONTROL",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+    "compare",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_correction_20261025_01/control_decode_dp1_rank0.json",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.json"
+  ],
+  "start_utc": "2026-10-24T19:10:30.215968+00:00",
+  "end_utc": "2026-10-24T19:10:30.365630+00:00",
+  "returncode": 0,
+  "seconds": 0.1496590869501233,
+  "result": {
+    "payload_equal": true,
+    "kernel_rows_equal": true,
+    "rows": [
+      142567,
+      142567
+    ],
+    "kernel_total": [
+      {
+        "count": 142567,
+        "sum_ms": 1377.599441999903,
+        "union_ms": 1215.560419921875
+      },
+      {
+        "count": 142567,
+        "sum_ms": 1377.599441999903,
+        "union_ms": 1215.560419921875
+      }
+    ],
+    "useful_steps": [
+      61,
+      61
+    ]
+  },
+  "comparison_sha256": "5d3531f4956bf11080422418589acf7feb894f54a7587d118c028cca5e0c8b27",
+  "rank_receipt_sha256": "55934da94e0d454ce3b9bdfeb48298acf9198e7999f8d27b18cf2f55a36b29e5",
+  "enclosing_rank_seconds": 6.014371378812939,
+  "actual_memory_limit_bytes": 32212254720,
+  "projection": "Exclude elapsed_seconds/maxrss_kib and the fresh kernel_sample_index path/compressed SHA only; every other JSON field and all decompressed kernel rows compare exactly. Fresh index paths and compressed hashes are separately validated."
+}

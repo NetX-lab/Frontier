@@ -1,0 +1,236 @@
+{
+  "recorded_utc": "2026-10-24T18:18:02.749394+00:00",
+  "status": "OWNER_DELIVERED_PRIMARY_VALIDATION_PENDING",
+  "owner_work_complete": true,
+  "owner_stops_after_delivery": true,
+  "workspace": {
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "branch": "feat/glm53-dsv4-vllm028",
+    "starting_head": "b33656556ce483245f45a6e6f14615742ed3a8ea",
+    "delivery_head": "0f2fb6cdffbbe86f2fdc06e5141e3e80c227c2b9"
+  },
+  "authority": "D-V4-P0-AUDIT-METRICS-CORRECTION and the direct exclusive-owner request",
+  "changed_paths": [
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/check_progress_2026-10-25_metrics_correction.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/complete_control_bindings.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/input_source_bindings.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/negative_control.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/owner_delivery.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/progress.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/source_diff.patch",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/test_report_2026-10-25_metrics_correction.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/unit.stderr",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/unit.stdout",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/unit_receipt.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/verification_receipt.json",
+    "tests/analysis/v4_trace_audit_metrics.py",
+    "tests/unit/test_v4_trace_audit_metrics.py"
+  ],
+  "source_artifacts": [
+    {
+      "path": "tests/analysis/v4_trace_audit_metrics.py",
+      "absolute_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+      "sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+      "gross_added_lines": 120,
+      "deleted_lines": 0,
+      "limit": 200
+    },
+    {
+      "path": "tests/unit/test_v4_trace_audit_metrics.py",
+      "absolute_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_metrics.py",
+      "sha256": "76734ee80dadfcc49111c01218db23e665ee1f085de892e1fdd832c30538ede9",
+      "gross_added_lines": 175,
+      "deleted_lines": 0,
+      "limit": 180
+    }
+  ],
+  "maintained_markdown": {
+    "lines_by_path": {
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/progress.md": 15,
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/check_progress_2026-10-25_metrics_correction.md": 49,
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/test_report_2026-10-25_metrics_correction.md": 32
+    },
+    "total_lines": 96,
+    "limit": 100
+  },
+  "separate_raw_artifact_counts": {
+    "json": {
+      "files": 6,
+      "lines": 499
+    },
+    "logs": {
+      "files": 2,
+      "lines": 13
+    },
+    "diff": {
+      "files": 1,
+      "lines": 307
+    }
+  },
+  "frozen_source_bindings": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/input_source_bindings.json",
+  "retained_complete_control_bindings": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/complete_control_bindings.json",
+  "input_binding_limit": "Retained JSON hashes were verified. Raw trace/profile/inventory/kernel-index hashes are inherited from complete outputs; raw bytes were not reopened.",
+  "unit_controls": {
+    "command": [
+      "timeout",
+      "60s",
+      "/usr/bin/python3",
+      "-B",
+      "tests/unit/test_v4_trace_audit_metrics.py",
+      "-v"
+    ],
+    "python": "Python 3.10.6",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "exit_code": 0,
+    "unit_reported_seconds": 1.823,
+    "enclosing_subprocess_seconds": 1.91348662879318,
+    "receipt": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/unit_receipt.json",
+    "negative_control": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/negative_control.json"
+  },
+  "ast_controls": {
+    "selected_metrics_callsites": [
+      "per_stream",
+      "kernel_total",
+      "kernel_status",
+      "hierarchy_coverage_nonadditive",
+      "unique_non_graph_leaf_diagnostic"
+    ],
+    "exact_original_trace_and_module_restoration": true,
+    "stable_sort_count": 1,
+    "original_order_builtin_sum": true,
+    "repeated_memberships_and_empty_groups_preserved": true,
+    "original_stage_observations_preserved": true,
+    "pipeline_only_insertion": "compose_metrics(observer.stage) after observer.stage._obs = observation",
+    "original_pipeline_file_binding": true,
+    "injected_function_self_contained": true,
+    "forbidden_predicate_negative_control_caught": true
+  },
+  "evidence": {
+    "test_report": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/test_report_2026-10-25_metrics_correction.md",
+    "verification": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/verification_receipt.json",
+    "source_diff": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/source_diff.patch",
+    "check_progress": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/check_progress_2026-10-25_metrics_correction.md",
+    "check_progress_verdict": "Branch A; no drift; this is a phase checkpoint, not a correctness review"
+  },
+  "primary_followup": {
+    "fresh_gates_and_seal_commit": "0f2fb6cd",
+    "gpu_job": "exp-1025-021228-212042",
+    "terminal": "Succeeded/exit0/restart0",
+    "basis": "Latest user report; owner performed no platform inspection",
+    "gpu_data_acceptance": "PENDING_PRIMARY",
+    "no_more_gpu_submission": true
+  },
+  "pending_complete_output_controls": [
+    {
+      "key": [
+        "decode",
+        1,
+        0
+      ],
+      "status": "PENDING_PRIMARY",
+      "allocation": "Once only",
+      "reported_baseline_seconds": 7,
+      "baseline_timing_basis": "Latest primary user report; not measured by this owner",
+      "retained_output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.json",
+      "retained_output_sha256": "fd5f94dc2aa14ded6e9694237b966148163bb79a84e52d2778a90b316ddb380d",
+      "trace_relative": "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842735368033988.pt.trace.json.gz",
+      "command_template": [
+        "sudo",
+        "-n",
+        "systemd-run",
+        "--scope",
+        "-p",
+        "MemoryMax=30G",
+        "timeout",
+        "60s",
+        "/usr/bin/python3",
+        "-B",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+        "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842735368033988.pt.trace.json.gz",
+        "<PRIMARY_FRESH_OUTPUT_PREFIX>"
+      ]
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        0
+      ],
+      "status": "PENDING_PRIMARY",
+      "allocation": "Once only",
+      "reported_baseline_seconds": 35,
+      "baseline_timing_basis": "Latest primary user report; not measured by this owner",
+      "retained_output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank0.json",
+      "retained_output_sha256": "668aef53e51bd42bb3186453f9d3a7e6745d845fd3e13839fb79cb5f195df10b",
+      "trace_relative": "torch_traces/prefill/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842747939163438.pt.trace.json.gz",
+      "command_template": [
+        "sudo",
+        "-n",
+        "systemd-run",
+        "--scope",
+        "-p",
+        "MemoryMax=30G",
+        "timeout",
+        "60s",
+        "/usr/bin/python3",
+        "-B",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+        "torch_traces/prefill/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842747939163438.pt.trace.json.gz",
+        "<PRIMARY_FRESH_OUTPUT_PREFIX>"
+      ]
+    }
+  ],
+  "pending_reviews": [
+    {
+      "axis": "Spec",
+      "status": "PENDING_PRIMARY_INDEPENDENT_REVIEW"
+    },
+    {
+      "axis": "Standards",
+      "status": "PENDING_PRIMARY_INDEPENDENT_REVIEW"
+    }
+  ],
+  "pending_affected_ranks": {
+    "owner": "primary",
+    "pilot": {
+      "role": "prefill",
+      "lane": 0,
+      "rank": 0,
+      "status": "PENDING_CONTROLS_AND_REVIEWS",
+      "invocation_ceiling": 1
+    },
+    "remaining_ranks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "remaining_status": "PENDING_COMPLETE_PILOT",
+    "invocation_ceiling_per_rank": 1,
+    "timeout_seconds": 60,
+    "actual_memory_limit_bytes": 32212254720,
+    "max_concurrent_cpu_ranks": 2
+  },
+  "execution_boundaries": {
+    "owner_full_trace_invocations": 0,
+    "owner_gpu_platform_auth_network_docker_ssh_operations": 0,
+    "spawned_agents": 0,
+    "new_worktrees": 0,
+    "owned_index_empty": true,
+    "staged": false,
+    "committed": false,
+    "frozen_source_or_raw_output_edits": false,
+    "primary_document_edits": false
+  },
+  "acceptance_limits": [
+    "Full-output equality and full-trace runtime/peak memory remain unverified.",
+    "The earlier 30-40-line and 4.5-second values remain estimates, not limits or measurements.",
+    "No GPU/native/R5/full32/dependency/cost/reference acceptance is made."
+  ]
+}

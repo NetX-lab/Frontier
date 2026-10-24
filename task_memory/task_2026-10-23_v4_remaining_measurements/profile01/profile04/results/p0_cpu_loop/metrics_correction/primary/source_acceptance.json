@@ -1,0 +1,33 @@
+{
+  "status": "ACCEPTED_CPU_METRICS_CORRECTION_SOURCE",
+  "decision": "D-V4-P0-AUDIT-METRICS-CORRECTION",
+  "observed_utc": "2026-10-24T19:14:36.756073+00:00",
+  "baseline": "0f2fb6cdffbbe86f2fdc06e5141e3e80c227c2b9",
+  "source": {
+    "path": "tests/analysis/v4_trace_audit_metrics.py",
+    "sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+    "gross_lines": 120,
+    "cap": 200
+  },
+  "tests": {
+    "path": "tests/unit/test_v4_trace_audit_metrics.py",
+    "sha256": "76734ee80dadfcc49111c01218db23e665ee1f085de892e1fdd832c30538ede9",
+    "gross_lines": 175,
+    "cap": 180
+  },
+  "primary_unit_tests": 8,
+  "primary_exact_controls": 2,
+  "review_standards": "No findings within source/CPU coverage",
+  "review_spec": "No findings within source/AST coverage",
+  "record_bindings": {
+    "review_standards.md": "4b087c619d7019afa455861d17df52249d3f8981196e0639bfdc1d2cfd6bae84",
+    "review_spec.md": "ba334326b3115029676121aa51c0481a844cbcde845797fc4a0dee33fd79259e",
+    "primary/complete_controls.json": "4a005d438d4cb1804ad90f07d22c0e1dbed15948c6a3fb08808864b8e5260db2",
+    "primary/unit_receipt.json": "782897100bbbec4fce5a1a38e78f0ddbb52922e1b4f7640e9784b12b507bb0eb",
+    "primary/matrix_binding.json": "51bc15df389de536e31c92373e49e42c87bf9d12879a5df9489b234a308f4f9c"
+  },
+  "p0_attempts_used": 0,
+  "p0_pilot": "NOT_STARTED",
+  "r5_complete_ranks": 24,
+  "limits": "Source/AST and two complete controls only; no affected P0 output, measured saving, complete R5, GPU/native ownership/dependency/cost/reference admission."
+}
