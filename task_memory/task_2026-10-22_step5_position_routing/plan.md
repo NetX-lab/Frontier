@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
@@ -70,15 +71,15 @@ Archive: ledger_memory/evidence/frozen_regressions_2026-10-25/;64 exact files/71
 
 Finite diagnoses are complete and consolidated: snapshot-copyb061f884/merge52831c6e is NO_ALLOC_STATIC_DIAGNOSIS with0/1 controls and0 launches; init6335f581/mergec6b3da15 is ALLOC_RECOMMENDATION_ONLY with0 controls and0 allocated lines. Parent verifies25 copy source bindings,13 init bindings and14 retained receipts, with unchanged2ca5e571 source. Init126.58s is historical inference and no present startup saving or new source allocation. Both clean diagnosis worktrees remain retained.
 
-Next define a current-source joint pricing/emission/flush execution from existing actual inputs without rerunning the old5-wave/15-emission controls or adding required-shape calls. In parallel, qualify worker interpreter/image, source mount, lifecycle and personal-volume append; full-workload memory/runtime must be measured during the unchanged complete workload. This preparation needs no new simulator output mode. Required-shape6/6 is exhausted; OSS quota is USER_CONFIRMED_SUFFICIENT. FullCLI/T2/native/G3/E2E remain open. A future init patch requires the existing bounded allocation/review/freeze process; the recommendation itself allocates nothing.
+The current-source joint pricing, emission and flush driver is prepared and reviewed. Its two ordinary D1/layer60 calls await the explicit finite decision. The single worker import, reference append and lifecycle execution has completed below. Full-workload memory and runtime must be observed during the unchanged complete workload. Required-shape 6/6 and old control ceilings do not increase. OSS quota is USER_CONFIRMED_SUFFICIENT. FullCLI/T2/native/G3/E2E remain open; the init recommendation itself allocates no patch.
 
 The worker CPU interpreter/image import prerequisite is now PASS: retain the copied dependency/base prefixes and the unchanged strict probe's local/image receipts. Prepare the current-source joint script and finite pricing-call proposal in parallel with source-mount/lifecycle/append preparation. The runtime probe does not qualify actual worker throughput or full-workload memory. Existing diagnostic ceilings remain unchanged; a new label or a resume request supplies no extra pricing calls.
 
 ### Prepared current executions
 
-The joint driver and worker plan/scripts now exist and pass static source/input/AST checks, seven checker corruption controls and a no-operation worker dry run. `resumed_execution/execution_plan_2026-10-25.md` records exact commands, resource/mount/lifecycle/cleanup bounds and the next fullCLI path. This closes script preparation only. Two new ordinary captured D1/layer60 pricing calls await a separate finite decision; no new label extends prior controls. In parallel, the existing H800 task-resource authority covers one zero-GPU readiness worker after prepared-script review, without new GPU/native allocation. Actual timing/worker/RSS/fullCLI/T2/native/G3/E2E remain open.
+The joint driver and worker plan/scripts now exist and pass static source/input/AST checks, seven checker corruption controls and a no-operation worker dry run. `resumed_execution/execution_plan_2026-10-25.md` records exact commands, resource/mount/lifecycle/cleanup bounds and the next fullCLI path. This closes script preparation only. Two new ordinary captured D1/layer60 pricing calls await a separate finite decision; no new label extends prior controls. In parallel, the existing H800 task-resource authority covers one zero-GPU readiness worker after prepared-script review, without new GPU/native allocation. Actual joint timing, workload RSS, fullCLI/T2/native/G3/E2E remain open; the completed worker result is recorded below.
 
-### Preparation review correction and original SDK check
+### Preparation review correction and original SDK check (historical preparation)
 
 Initial Standards review reports three documented findings plus one optional unused-options observation; initial Spec has No findings. Repairs compare the complete expected trace simulation_info, read mandatory frozen cache names, use model_bytes, and remove the unused profile/iterations options. Static05 passes all prior controls plus three trace-header identity rejections without setup/pricing or platform operations. Independent follow-up review is pending.
 
@@ -86,9 +87,21 @@ Final worker_spec03 passes the original SDK object shape and fields at4CPU/0GPU/
 
 The final preparation Standards and Spec follow-ups now both report No findings, including the Git assets/configuration and original SDK mount behavior. All initial preparation findings are closed. This permits the already authorized one readiness worker after the task-only commit; the two ordinary pricing calls still require their pending finite decision.
 
-### Final worker Git preparation
+### Final worker Git preparation (historical preparation)
 
 The worker uses hash-bound copied Git2.34.1 and an exact two-repository task configuration. Fixed-image worker_git_preflight04 verifies real source/input/fixture/script bindings before any worker submission; static06 verifies the final prepared script hashes, full reference output and all10 rejection controls. The original missing-Git and ownership failures remain retained. This closes the last discovered execution-environment preparation defect. Stop Git/configuration probing after these affected checks; close the existing independent reviews and commit the task-only result before the one readiness job. Keep records HEAD unchanged during that job's before/after binding checks. No new pricing call is authorized.
+
+### Completed worker readiness and current frontier
+
+The single authorized job `exp-1025-050336-389487` has completed. RJob and replica are `Succeeded`; the container is `Completed`, exit 0, restart 0. Creator `i-fengyicheng`, codesign, 4 CPUs, 0 GPUs, 64000Mi, one replica, image f037d958 and local NFS `100.96.128.195:/data/ycfeng:/data/ycfeng` match the reviewed plan. Worker mountinfo confirms the local NFS and JuiceFS mounts. The separate Pod API read returned 403 Forbidden; its original response is retained, and the replica CR provides the container terminal state. The launcher and terminal-read sessions are collected. No readiness job or poll remains active.
+
+The unchanged worker runtime probe passes in 2.771702s with Python 3.10.6, canonical package versions, expected module origins and numerical checks. Its process RSS peak is 176,275,456B. Reference append replays 206 complete waves: 1,071,031,904B, 3296 ledger rows and 42848 operator rows. Append plus close takes 3.249062s, fsync 0.038647s, and read-back 1.325742s. Append throughput is 329.64MB/s, or 325.77MB/s including fsync; append-process RSS peak is 29,085,696B. Both complete read-back digests match. The worker removes only its two completed personal-cloud test files and empty test directory. These measurements exclude production pricing and emitter serialization and do not establish full-workload RSS or the 2400s gate.
+
+Parent verification runs once at records HEAD `dfe603ed`, exit 0, wall 1.423269s, using the existing 60s, configured MemoryMax 30GiB, Python 3.10.6, -B and single-thread math settings. It verifies 25 source hashes, six inputs, 262 fixture metadata entries, nine reviewed scripts, Git assets, current source identity, five worktrees and both retained reference digests. It performs no new runtime, pricing or platform call. Sixteen screened business/platform/log artifacts totaling 21,528B, plus the parent script, receipt and exact command capture, are archived in `resumed_execution/evidence/worker_readiness_2026-10-25/`. Raw launcher logs remain restricted local evidence. The report is `resumed_execution/test_report_2026-10-25_worker_readiness.md`.
+
+The four current satellite worktrees are clean and ancestors of the sole execution branch `feat/step5-preview`. Non-task files equal admitted production `2ca5e571` and frozen `1461573d`. The original 89-row recovery census is historical; `resumed_execution/worktrees.json` appends this five-worktree checkpoint. Existing source budgets, mandatory regressions, both review axes and finite copy/init outcomes remain accepted without reruns.
+
+The prepared two-call ordinary D1/layer60 cold/warm joint pricing proposal remains Not Approved. After its finite decision and current-source pricing, emission and flush observations, proceed to the complete 6144/1024 offline/online CLI with every output and validation check, at most 2400s per `frontier.main` child. Measure actual full-workload RSS during that execution. Fresh T2/source/package, native/G3/E2E remain subsequent requirements. Required-shape 6/6 is exhausted; no old control, new source allocation or gate change follows from this worker result.
 
 ## Previous handoff boundary (2026-10-25; historical)
 

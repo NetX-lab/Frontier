@@ -869,5 +869,81 @@
     "init_allocated_lines": 0,
     "agents_closed": true,
     "scope": "Five current responsibilities refreshed; historical89-row census remains unchanged."
+  },
+  "worker_readiness_checkpoint": {
+    "collected_utc": "2026-10-24T21:18:38.613529+00:00",
+    "primary_records_head_at_verification": "dfe603edab128d2a4aacb1b7b64d898993d4ae09",
+    "production_source_unchanged": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "non_task_tree_equals_production_and_frozen146": true,
+    "production_budget_retained_not_recomputed": {
+      "paths": 116,
+      "bindings": 126,
+      "source_actual": 9682,
+      "global_actual": 9696
+    },
+    "job_name": "exp-1025-050336-389487",
+    "worker_status": "PASS_CPU_IMPORT_REFERENCE_APPEND_AND_LIFECYCLE_ONLY",
+    "parent_status": "PASS_SELECTED_RECEIPTS_SOURCE_AND_ARCHIVE_ONLY",
+    "parent_receipt": "resumed_execution/evidence/worker_readiness_2026-10-25/parent_receipt.json",
+    "selected_active_worktrees": [
+      {
+        "name": "step5-preview",
+        "path": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+        "head": "dfe603edab128d2a4aacb1b7b64d898993d4ae09",
+        "branch": "feat/step5-preview",
+        "status": "M task_memory/task_2026-10-22_step5_position_routing/progress.md\n?? .cortexkit/\n?? .pi/",
+        "ancestor_of_primary": true,
+        "role": "Sole current execution branch; admitted production and consolidated records; observed before this records commit"
+      },
+      {
+        "name": "step5-d29-ledger-stream",
+        "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+        "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+        "branch": "fix/d29-ledger-stream",
+        "status": "",
+        "ancestor_of_primary": true,
+        "role": "Admitted ledger component and integrated owner records; clean retained worktree"
+      },
+      {
+        "name": "d29-ledger-final-1f6b4314",
+        "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+        "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+        "branch": "",
+        "status": "",
+        "ancestor_of_primary": true,
+        "role": "Clean frozen source used by completed mandatory regressions"
+      },
+      {
+        "name": "d29-snapshot-copy-finish",
+        "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+        "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+        "branch": "d29-snapshot-copy-finish",
+        "status": "",
+        "ancestor_of_primary": true,
+        "role": "Closed static NO_ALLOC; integrated52831c6e; zero controls and launches"
+      },
+      {
+        "name": "d29-init-preparation-finish",
+        "path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+        "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+        "branch": "d29-init-preparation-finish",
+        "status": "",
+        "ancestor_of_primary": true,
+        "role": "Closed ALLOC recommendation only; integratedc6b3da15; zero controls and allocated lines"
+      }
+    ],
+    "original_recovery_census_rows": 89,
+    "scope": "Five current responsibilities verified; original89-row census and previous checkpoints remain historical and unchanged.",
+    "remaining": [
+      "Unapproved two ordinary D1/layer60 cold/warm joint pricing calls",
+      "Complete6144/1024offline/onlineCLI<=2400s per main child",
+      "Actual full-workload RSS",
+      "FreshT2/source/package/native/G3/E2E"
+    ],
+    "new_pricing_shape_fullcli_native_calls": 0,
+    "required_shape_used_and_ceiling": [
+      6,
+      6
+    ]
   }
 }

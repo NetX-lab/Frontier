@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
@@ -15,7 +16,7 @@ Preparation has two independent branches:
 
 `source admission + existing runtime PASS -> {joint script + finite pricing decision, worker scripts + original H800/resource authority} -> current-wave and worker observations -> unchanged complete6144/1024 CLI -> final T2/source/package -> native/G3/E2E`.
 
-The first two preparation deliverables are complete. Actual joint timing and worker execution remain unperformed. Do not rerun source regressions, runtime local/image probes, copy/init diagnoses, old five-pricing/fifteen-emission controls, or the exhausted required-shape6/6 controls.
+The first two preparation deliverables and the single authorized job `exp-1025-050336-389487` for worker import, reference append and lifecycle are complete. Actual joint timing remains unperformed pending its finite decision. See test_report_2026-10-25_worker_readiness.md and evidence/worker_readiness_2026-10-25/. Do not rerun source regressions, local/image probes, copy/init diagnoses, old five-pricing/fifteen-emission controls, exhausted required-shape6/6 or the completed readiness job.
 
 ## Joint timing: two-call proposal
 
@@ -47,7 +48,7 @@ timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G \
 
 Record the command, environment, attempted calls, cold/warm components and joint totals, complete output parity, actual probe RSS and source/input bindings. A timeout or failed parity remains a raw failure and consumes attempted calls; never silently retry. Do not multiply this one-layer observation into a claimed whole-CLI PASS or combine it with older components.
 
-## Worker: one zero-GPU readiness execution
+## Worker: one zero-GPU readiness execution (completed; retained plan)
 
 `worker_plan.json`, `launch_worker.py`, `worker_entry.py`, `worker_append.py` and `run_worker.sh` prepare one codesign worker:4CPU,0GPU,64 `mem_gb`, one replica, H800 placement, explicit published imagef037d958, no extra requirements, no RDMA requests and no retry. Root requirements' existing H800 task-resource authority applies; this preparation requests no new GPU allocation or native/profile collection.
 
@@ -65,7 +66,7 @@ Prepared submit entry:
 bash task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/run_worker.sh
 ```
 
-This entry is not run in preparation. It configures existing personal credentials before any client and performs exactly one local Python RJobBackend submission. It does not install packages, change credentials/VPN/v1 configuration or run native profiling.
+This entry was not run during preparation; its single authorized execution has now completed. It configures existing personal credentials before any client and performs exactly one local Python RJobBackend submission. It does not install packages, change credentials/VPN/v1 configuration or run native profiling.
 
 ## Original SDK materialization and review boundary
 
@@ -77,7 +78,7 @@ The original ResourceConfig.__iter__ appends juicefs+s3://oss.i.shaipower.com/te
 
 The fixed image lacks git, and its root UID differs from the owned source UID10250. Retain Git01's FileNotFoundError, Git02's original ownership failure and Git03's exact diagnostic child stderr. The copied host Git2.34.1 is already in the mounted runtime; the task-only configuration file contains exactly the two owned repository paths. worker_entry.py verifies both asset hashes, selects that runtime PATH and sets GIT_CONFIG_GLOBAL before the real source binding call. Host/image global configuration and production source are unchanged.
 
-worker_git_preflight04 passes these exact assets/configuration and two real check_bindings calls in the same pinned image, read-only mount, network none and60s/30GiB configuration. Static06 passes the final prepared hashes, full retained outputs, all10 expected rejections and no-operation worker dry run. Do not add Git probes after the passing affected checks. Both existing follow-ups now have No findings. Commit the task-only changes and hold that records HEAD during the one readiness worker; its before/after binding check requires the HEAD to remain stable. Runtime import/append and platform lifecycle are still the actual worker's deliverables, not these preparation results.
+worker_git_preflight04 passes these exact assets/configuration and two real check_bindings calls in the same pinned image, read-only mount, network none and60s/30GiB configuration. Static06 passes the final prepared hashes, full retained outputs, all10 expected rejections and no-operation worker dry run. Do not add Git probes after the passing affected checks. Both existing follow-ups now have No findings. Commit the task-only changes and hold that records HEAD during the one readiness worker; its before/after binding check requires the HEAD to remain stable. The single actual worker now supplies import/append and platform lifecycle evidence separately from these retained preparation results.
 
 ## Complete workload follows observations
 

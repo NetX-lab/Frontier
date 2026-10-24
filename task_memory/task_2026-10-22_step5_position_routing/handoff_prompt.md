@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
@@ -31,18 +32,22 @@ source9682/9942、global9696/10000，零违规。Step124gross/net96/累计增量
 证据：ledger_memory/evidence/{frozen_regressions_2026-10-25,production_integration_2026-10-25}/。
 6个真实任务记录冲突已保留双方意图解决，代码无冲突；停止旧merge-tree预览排查。
 
-当前执行准备已在resumed_execution/execution_plan_2026-10-25.md落盘。保持copied dependency/base两个runtime prefixes，使用原个人Python RJobBackend。准备修复后的static05通过10项故障注入，SDK03只构造对象、无认证/提交。原SDK01 AttributeError及SDK02被list mutation污染的mount比较保留；原SDK必加tenant mount已明确记录，worker不读写它。两轴follow-up review仍待收集；新pricing/shape/fullCLI/platform均0。两次普通D1/layer60 joint pricing尚未批准；一个4CPU/0GPU/64mem_gb readiness worker在复审后按已有H800 task-resource授权执行。不要重做已完成生产review/regressions/copy/init。
+当前唯一执行树是 step5-preview，分支 feat/step5-preview。Worker 和父端核验时 records HEAD 为 dfe603edab128d2a4aacb1b7b64d898993d4ae09，随后只有任务记录提交前进。Ledger/frozen146、copyb061f884、init6335f581 四个保留树均干净，且是主线祖先，已整合。不要再 merge 或删除工作树。resumed_execution/worktrees.json 追加五树 checkpoint；原89行 census 只作历史。非 task_memory 源码保持2ca/146；原116 paths/126 bindings预算沿用，本轮未重跑 composed audit。
 
-最新准备检查：fixed-image Git04通过真实check_bindings两次，static06通过最终脚本hash及10项拒绝检查。Git01/02原失败和03诊断保留；copied Git及仅信任两个任务仓库的GIT_CONFIG_GLOBAL文件已绑定。两轴follow-up已收集且均No findings；提交这些最终字节后运行一个worker；运行期间不得推进records HEAD。没有pricing/shape/fullCLI/StepMind操作。
+准备脚本的两个 follow-up 均 No findings，agents 已关闭。Fixed-image Git04/static06 与9个 reviewed scripts 的 hash绑定保持。唯一已授权 worker exp-1025-050336-389487 已完成：creator=i-fengyicheng、codesign、4CPU/0GPU/64000Mi/1replica、f037d958 image、本机NFS100.96.128.195:/data/ycfeng:/data/ycfeng和JuiceFS实际mountinfo一致。RJob/replica Succeeded，container Completed/exit0/restart0。单独PodAPI403Forbidden原样保留；replicaCR已给container终态，无需改权限或重提。
+
+Worker原runtime probe PASS，Python3.10.6，2.771702s，RSS176,275,456B。完整reference append206波，共1,071,031,904B、3296 ledger rows、42848 operators。Append+close3.249062s、fsync0.038647s、read-back1.325742s；含fsync325.77MB/s，append RSS29,085,696B。两文件完整digest/read-back PASS；worker已清理这两份完成的个人云测试文件和空子目录。测量排除production pricing/emitter serialization，不证明全workload RSS或2400s门槛；0GPU请求和不可用nvidia-smi不证明GPU runtime。
+
+父端脚本已运行一次，exit0、1.423269s；25source/6inputs/262metadata/9scripts/Git assets、五树/source与保留完整参考digest核验通过。16份screened小证据21,528B和parent script/receipt/command capture在resumed_execution/evidence/worker_readiness_2026-10-25/；报告为resumed_execution/test_report_2026-10-25_worker_readiness.md。Raw launcher logs保留在本地restricted目录。原session87306和41640已收集exit0，不再轮询；没有活跃worker/fullCLI/GPU job，不重提readiness。原backend atexit Job Stop在Succeeded后记录，无手工stop。新pricing/shape/fullCLI/native/GPU allocation均0；两次普通D1/layer60 joint pricing仍Not Approved。
 
 下一前沿：
 1. Copy/init已收口并整合：copyb061f884/52831c6e为静态NO_ALLOC，control0/1且launch0；init6335f581/c6b3da15为ALLOC建议，control0、source allocation0。Parent25copy/13init bindings及14旧回执全部通过，见resumed_execution/evidence/diagnosis_closeout_2026-10-25/。两工作树干净保留、agents已关闭，不重开诊断或control。126.58s只是旧测量推算，不是当前startup收益。
-2. 定义并取得当前同源码同环境pricing+emission+flush实测；不重跑旧5-wave/15-emission controls、不追加required-shape6/6。并行落实worker镜像/解释器、lifecycle、append吞吐和全workload内存条件。
+2. 已准备的两次普通D1/layer60 joint pricing仍未批准。先取得最多2次cold/warm、一个60s/30GiB、无warmup/profiling/retry的有限决定，再按execution_plan运行原joint_timing.py并检查16 lanes、208 operators、144 proofs和全部pricing bytes。Worker import/reference-append/lifecycle已完成，不重跑旧5-wave/15-emission或required-shape6/6。
 3. 之后完整6144/1024 offline/online CLI，每模式frontier.main子进程<=2400s，全部输出/proof/key/顺序/逐点校验保留。
 4. 再完成最终T2/source/package、native/G3和各E2E<=10%；这些仍pending。
 
 OSS quota为USER_CONFIRMED_SUFFICIENT，不重复quota发现作为阻塞；云访问仅个人目录。
-Required-shape6/6已耗尽，resume不追加旧pricing control/shape或GPU额度。当前主线尚未跑新完整CLI/worker。
+Required-shape6/6已耗尽，resume不追加旧pricing control/shape或GPU额度。当前主线已完成唯一readiness worker；新完整CLI尚未运行。
 先读root requirements/plan/progress/summary及上述验收报告，以实际Git和最新progress为准。
 下面的候选交接及2026-10-23提示保留历史用途，不再规定当前准入前沿。
 

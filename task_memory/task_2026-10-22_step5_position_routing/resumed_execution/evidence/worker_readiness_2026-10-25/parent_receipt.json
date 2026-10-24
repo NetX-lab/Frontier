@@ -1,0 +1,269 @@
+{
+  "task_id": "D29-WORKER-READINESS-PARENT",
+  "status": "PASS_SELECTED_RECEIPTS_SOURCE_AND_ARCHIVE_ONLY",
+  "collected_utc": "2026-10-24T21:18:38.613529+00:00",
+  "job_name": "exp-1025-050336-389487",
+  "source": {
+    "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "records_head": "dfe603edab128d2a4aacb1b7b64d898993d4ae09",
+    "source_paths": 25,
+    "fixture_metadata_paths": 262
+  },
+  "worker_plan_sha256": "c9c4a120058068e1a5505ebbfe23d018e3e6578bf3a2cec313c23f80100f8ca0",
+  "reviewed_script_hashes": {
+    "worker_entry.py": "d3aef9e846507617c9c364885bc687ddbdb721b8c3b9449dd6dc807145c30dbc",
+    "joint_timing.py": "ed1836a6fc3cd4c2dbcba62db2a7c65fa4718c0ea1b3c35d7b24df4001a7c2d1",
+    "launch_worker.py": "25eb00bdb57170fc9ed8cd4c7098cda68a68fa97e3bc008e3a5848de80b6ec35",
+    "verify_worker_spec.py": "50da3599f76444cbb21c2a18322664f0b12473e79fc161b26911eb6b5fcd24b3",
+    "worker_append.py": "4e479de4d3d2eec607d48f5a240f6f547197ca9a76e717433308a893d988a97c",
+    "joint_wave.py": "a0ecf89a64cdee2513a85caffaf0d77b06835c7c9eb73b3b94447c180ac2d549",
+    "joint_setup.py": "a83464c153ae0c92ba097cf5ac52a943fcc8304142f45d985e7de6697811dfdf",
+    "verify_preparation.py": "0f3286ca625a85f6d91a4d4b4c6b9468f0b14dc00114da00530c2a50eba3d698",
+    "run_worker.sh": "1d41bb75bf775da667ea641f7f3556af954d9a8243891dce789c79c5a40bbdfb"
+  },
+  "checks": {
+    "source_and_inputs": "PASS_25_SOURCE_6_INPUTS_262_METADATA",
+    "reviewed_scripts": "PASS_9_UNCHANGED",
+    "platform_and_container": "PASS_SUCCEEDED_EXIT0_RESTART0",
+    "worker_mounts": "PASS_LOCAL_NFS_AND_JUICEFS",
+    "runtime": "PASS_ORIGINAL_CPU_PROBE",
+    "append": "PASS_COMPLETE_REFERENCE_BYTE_COUNTS_AND_DIGESTS",
+    "cleanup": "PASS_TWO_COMPLETED_TEST_FILES_REMOVED",
+    "secret_scan": "PASS_SELECTED_LOCAL_EVIDENCE_ONLY"
+  },
+  "platform": {
+    "phase": "Succeeded",
+    "replica_phase": "Succeeded",
+    "container_exit": 0,
+    "restart_count": 0,
+    "replica_name": "exp-1025-050336-389487-cfcd2084",
+    "worker_hostname": "gpu-h800-0326.host.platform.shaipower.com",
+    "pod_read": {
+      "status": 403,
+      "reason": "Forbidden",
+      "body": "{\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"pods \\\"exp-1025-050336-389487-cfcd2084\\\" is forbidden: User \\\"e7163316ad76ba7266a33f9787afd70a\\\" cannot get resource \\\"pods\\\" in API group \\\"\\\" in the namespace \\\"shai-core\\\"\",\"reason\":\"Forbidden\",\"details\":{\"name\":\"exp-1025-050336-389487-cfcd2084\",\"kind\":\"pods\"},\"code\":403}\n"
+    },
+    "creator": "i-fengyicheng",
+    "charged_group": "codesign",
+    "resource_requests_and_limits": {
+      "cpu": "4",
+      "memory": "64000Mi",
+      "nvidia.com/gpu": "0"
+    },
+    "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+    "nfs": "100.96.128.195:/data/ycfeng:/data/ycfeng"
+  },
+  "observed": {
+    "launcher_wrapper_wall_s": 159.62591278599575,
+    "original_launcher_wall_s": 158.8727912940085,
+    "runtime_wall_s": 2.7717022635042667,
+    "runtime_peak_rss_bytes": 176275456,
+    "append": {
+      "task_id": "D29-WORKER-READINESS",
+      "status": "PASS_SERIALIZED_REFERENCE_APPEND_ONLY",
+      "started_utc": "2026-10-24T21:06:01.640149+00:00",
+      "cloud_root": "/mnt/codesign-exp/ycfeng/frontier_d29/worker_readiness_20261025_01",
+      "reference_only": true,
+      "production_pricing_calls": 0,
+      "production_emission_calls": 0,
+      "trace_buffer_events": 5000,
+      "files": [
+        {
+          "path": "/mnt/codesign-exp/ycfeng/frontier_d29/worker_readiness_20261025_01/ledger.jsonl",
+          "bytes": 475762974,
+          "sha256": "6af08420908ebfe79f7258e9dabe088023395662c1fde0e550034225e37a63d0",
+          "read_back": "PASS"
+        },
+        {
+          "path": "/mnt/codesign-exp/ycfeng/frontier_d29/worker_readiness_20261025_01/operators.jsonl",
+          "bytes": 595268930,
+          "sha256": "56f202c245427093750932be27d97033482915eb93651c2af3c71e8d3c31607b",
+          "read_back": "PASS"
+        }
+      ],
+      "repetitions": 206,
+      "bytes": 1071031904,
+      "ledger_rows": 3296,
+      "operator_rows": 42848,
+      "append_and_close_s": 3.2490616543218493,
+      "fsync_s": 0.03864716459065676,
+      "read_back_s": 1.325741677545011,
+      "append_bytes_per_s": 329643453.387636,
+      "append_with_fsync_bytes_per_s": 325768479.8115033,
+      "whole_cli_storage_floor_from_projection_bytes_per_s": 195416666.66666666,
+      "full_workload_memory_verified": false,
+      "cleanup": "PASS_TWO_COMPLETED_TEST_FILES_REMOVED",
+      "finished_utc": "2026-10-24T21:06:06.417280+00:00",
+      "process_peak_rss_bytes": 29085696
+    }
+  },
+  "worktrees": [
+    {
+      "name": "step5-preview",
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "head": "dfe603edab128d2a4aacb1b7b64d898993d4ae09",
+      "branch": "feat/step5-preview",
+      "status": "M task_memory/task_2026-10-22_step5_position_routing/progress.md\n?? .cortexkit/\n?? .pi/",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "step5-d29-ledger-stream",
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "branch": "fix/d29-ledger-stream",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "d29-ledger-final-1f6b4314",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "branch": "",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "d29-snapshot-copy-finish",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+      "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+      "branch": "d29-snapshot-copy-finish",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "d29-init-preparation-finish",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+      "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+      "branch": "d29-init-preparation-finish",
+      "status": "",
+      "ancestor_of_primary": true
+    }
+  ],
+  "artifacts": [
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/launcher.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/business/launcher.json",
+      "bytes": 2595,
+      "sha256": "f1724931f555036324eeefb56e8a6abb4dd96a8600af28ed6f616269c02ead8b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/worker/append.execution.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/business/worker/append.execution.json",
+      "bytes": 755,
+      "sha256": "533ac2b54670a72bcfa54250cc930ae5a3c371dc0b864e9d19ecaa0725713790"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/worker/append.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/business/worker/append.json",
+      "bytes": 1437,
+      "sha256": "1648c9a2519a9d5bd21456a2888e17dc11b5a53047980de78310d0eaf5e7966d"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/worker/append.stderr",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/business/worker/append.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/worker/append.stdout",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/business/worker/append.stdout",
+      "bytes": 165,
+      "sha256": "c1d7d18cadd0d5b4ad61538188792f17522e4dcbb6f32095680fa5804ac50370"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/worker/readiness.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/business/worker/readiness.json",
+      "bytes": 2649,
+      "sha256": "a24773d98037995263c19653cc7c707429b62f05ec5b09d6e82a1cf732eeb7f0"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/worker/runtime_probe.execution.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/business/worker/runtime_probe.execution.json",
+      "bytes": 535,
+      "sha256": "e734b7037e701d98f68443cff921be89fb359825c92f3fd310e13316ccc16d5c"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/worker/runtime_probe.stderr",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/business/worker/runtime_probe.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/worker/runtime_probe.stdout",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/business/worker/runtime_probe.stdout",
+      "bytes": 3500,
+      "sha256": "44d92f4e8ba1667b46bccb2e238b9a8acdbb8d80d7ce1568ffaedb79444233a8"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_launcher_20261025_01/execution.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/launcher/execution.json",
+      "bytes": 1877,
+      "sha256": "e26748cd4630b2f0cefada8201bed3d9d88920ddc8da38b78b5e92b37ddb5f7d"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_launcher_20261025_01/job_name.txt",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/launcher/job_name.txt",
+      "bytes": 23,
+      "sha256": "eed939f4d139436d2018751e67b9870fcb78bd8a0650cfcca2849951c21da0da"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_launcher_20261025_01/platform01.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/launcher/platform01.json",
+      "bytes": 2661,
+      "sha256": "482be14fc48e7b56736148da77f6c1dd71d89d831370dc18790660862ab5d07a"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_launcher_20261025_01/platform02_terminal.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/launcher/platform02_terminal.json",
+      "bytes": 3213,
+      "sha256": "51267fbb2c684e2dc6a045b2f2e4d944fee835438111abac2bf936b309918246"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_launcher_20261025_01/replica600.log",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/launcher/replica600.log",
+      "bytes": 574,
+      "sha256": "9f3300bfb5d8cec6e9ec6a2b14c6dc1c71e2063c8aa4f01c3f38a0f2633e3220"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_launcher_20261025_01/stdout.redacted",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/launcher/stdout.redacted",
+      "bytes": 180,
+      "sha256": "9b8ef3b4fe983f7a11c5f8e71563c66f57329870546ca3f24001fd391c6a2dd8"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_launcher_20261025_01/stderr.redacted",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/launcher/stderr.redacted",
+      "bytes": 1364,
+      "sha256": "c4855ec4e5fe46117581ee739b0fd58af6126a42ff7ca4cf007201e97cb4fc6b"
+    }
+  ],
+  "archive_files": 16,
+  "archive_bytes": 21528,
+  "environment": {
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "bytecode_disabled": true,
+    "uid": 10250,
+    "math_thread_env": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "configured_memory_max_bytes": 32212254720,
+    "effective_cgroup_peak": "not measured"
+  },
+  "duration_s": 1.3400716753676534,
+  "new_runtime_or_platform_calls": 0,
+  "new_pricing_calls": 0,
+  "new_required_shape_calls": 0,
+  "new_full_cli_calls": 0,
+  "limits": [
+    "One completed readiness job only; no resubmission, manual stop or independent Pod permission change.",
+    "Original source admission and126-binding budget are retained, not recomputed by this receipt.",
+    "Expected replay hashes are recomputed from retained reference bytes; deleted cloud files cannot be reread here.",
+    "Append/import RSS and serialized-reference throughput do not qualify production pricing/emission or full workload.",
+    "Original automatic backend exit-handler Job Stop follows succeeded; annotations alone do not exclude external actions.",
+    "Raw launcher logs remain permission-restricted in local scratch; only screened redacted copies are archived."
+  ]
+}

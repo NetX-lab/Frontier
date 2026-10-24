@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree/workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Prepare current-source joint and zero-GPU worker scripts; verify static full-output controls without extending calls or source budgets. |
@@ -37,6 +38,16 @@
 | 2026-10-23 | Root selects the existing constructor seam for explicit T2 engine limits within the approved scope. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; begin phased implementation. |
 | 2026-10-22 | Bind the design artifact to the approved parent decision and complete workflow scope. |
+
+## [Execution Observation] Completed D29 worker readiness (2026-10-24 UTC / 2026-10-25 HKT)
+
+The single already-authorized readiness worker exp-1025-050336-389487 is complete. Original local personal RJobBackend submission used creator i-fengyicheng, codesign, one replica with requests/limits4CPU/0GPU/64000Mi, fixed f037d958 image and NFS100.96.128.195:/data/ycfeng:/data/ycfeng. The worker reports the actual local NFS and JuiceFS mounts. RJob/replica Succeeded, container Completed/exit0/restart0; the independent Pod read's403Forbidden is preserved. The replica CR supplies the terminal container state; no permission change or resubmission follows.
+
+The unchanged runtime probe passes on worker Python3.10.6 in2.771702s with176,275,456B probe RSS. Complete serialized-reference append replays206 full waves:1,071,031,904B,3296ledger rows and42848operator rows. Append+close3.249062s,fsync0.038647s,read-back1.325742s;329.64MB/s append or325.77MB/s including fsync, with29,085,696B append-process RSS. Both full read-back digests match. The worker removes only its two completed personal-cloud test files and empty test directory after verification. This excludes production pricing/emitter serialization and does not qualify full workload memory or the2400s gate.
+
+Parent verification runs once at records HEADdfe603ed,exit0,1.423269s in the existing60s/configured30GiB/Python3.10.6/-B/single-thread scope. It verifies25source/sixinputs/262fixture metadata/nine reviewed scripts/Git assets, source identity before/after, five current worktrees and the retained full reference digests. Sixteen screened small business/platform/log artifacts totaling21,528B plus parent script/receipt/capture are archived at resumed_execution/evidence/worker_readiness_2026-10-25/. Raw launcher logs remain permission-restricted locally. No new runtime/platform call is performed by this parent check; no new pricing/required-shape/fullCLI/native/GPU allocation occurs.
+
+This closes only the planned worker import/reference-append/lifecycle deliverable. Production remains2ca5e571/frozen146 with the accepted116-path/126-binding budgets. Required-shape6/6 stays exhausted. The D29-CURRENT-JOINT-TIMING-TWO-CALLS proposal below remains Not Approved; workflow/fullCLI/RSS/finalT2/package/native/G3/E2E remain unfinished.
 
 ## [Execution Proposal / Not Approved] D29-CURRENT-JOINT-TIMING-TWO-CALLS
 

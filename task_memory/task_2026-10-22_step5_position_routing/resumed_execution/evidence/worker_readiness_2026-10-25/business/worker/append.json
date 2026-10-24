@@ -1,0 +1,38 @@
+{
+  "task_id": "D29-WORKER-READINESS",
+  "status": "PASS_SERIALIZED_REFERENCE_APPEND_ONLY",
+  "started_utc": "2026-10-24T21:06:01.640149+00:00",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier_d29/worker_readiness_20261025_01",
+  "reference_only": true,
+  "production_pricing_calls": 0,
+  "production_emission_calls": 0,
+  "trace_buffer_events": 5000,
+  "files": [
+    {
+      "path": "/mnt/codesign-exp/ycfeng/frontier_d29/worker_readiness_20261025_01/ledger.jsonl",
+      "bytes": 475762974,
+      "sha256": "6af08420908ebfe79f7258e9dabe088023395662c1fde0e550034225e37a63d0",
+      "read_back": "PASS"
+    },
+    {
+      "path": "/mnt/codesign-exp/ycfeng/frontier_d29/worker_readiness_20261025_01/operators.jsonl",
+      "bytes": 595268930,
+      "sha256": "56f202c245427093750932be27d97033482915eb93651c2af3c71e8d3c31607b",
+      "read_back": "PASS"
+    }
+  ],
+  "repetitions": 206,
+  "bytes": 1071031904,
+  "ledger_rows": 3296,
+  "operator_rows": 42848,
+  "append_and_close_s": 3.2490616543218493,
+  "fsync_s": 0.03864716459065676,
+  "read_back_s": 1.325741677545011,
+  "append_bytes_per_s": 329643453.387636,
+  "append_with_fsync_bytes_per_s": 325768479.8115033,
+  "whole_cli_storage_floor_from_projection_bytes_per_s": 195416666.66666666,
+  "full_workload_memory_verified": false,
+  "cleanup": "PASS_TWO_COMPLETED_TEST_FILES_REMOVED",
+  "finished_utc": "2026-10-24T21:06:06.417280+00:00",
+  "process_peak_rss_bytes": 29085696
+}
