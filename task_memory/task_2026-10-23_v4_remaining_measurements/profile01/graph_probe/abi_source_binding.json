@@ -1,0 +1,70 @@
+{
+  "status": "PASS_SOURCE_COMPILED_ABI",
+  "command": [
+    "c++",
+    "-std=c++11",
+    "-I/data/ycfeng/envs/oneshot-opd-py312/lib/python3.12/site-packages/nvidia/cu13/include",
+    "-x",
+    "c++",
+    "-fsyntax-only",
+    "-"
+  ],
+  "compiler_stdin": "#include \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_source_evidence/cupti_callbacks.h\"\nstatic_assert(sizeof(CUpti_ResourceData) == 24 && alignof(CUpti_ResourceData) == 8);\nstatic_assert(__builtin_offsetof(CUpti_ResourceData, context) == 0 && __builtin_offsetof(CUpti_ResourceData, resourceHandle) == 8 && __builtin_offsetof(CUpti_ResourceData, resourceDescriptor) == 16);\nstatic_assert(sizeof(((CUpti_ResourceData*)0)->resourceHandle) == 8 && __builtin_offsetof(CUpti_ResourceData, resourceHandle.stream) == 8);\nstatic_assert(sizeof(CUpti_GraphData) == 56 && alignof(CUpti_GraphData) == 8 && __builtin_offsetof(CUpti_GraphData, node) == 16 && __builtin_offsetof(CUpti_GraphData, originalNode) == 24 && __builtin_offsetof(CUpti_GraphData, nodeType) == 32 && __builtin_offsetof(CUpti_GraphData, dependency) == 40 && __builtin_offsetof(CUpti_GraphData, graphExec) == 48);\n",
+  "compiler_stdin_lines": 5,
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "",
+  "native_api_calls": false,
+  "header": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_source_evidence/cupti_callbacks.h",
+  "header_sha256": "b2f82221fb03ecb2b2a27afa2d64284babdf49fee1a3a2811258d473285e1105",
+  "local_header_equal": true,
+  "ctypes_abi": {
+    "size": 56,
+    "alignment": 8,
+    "offsets": {
+      "graph": 0,
+      "originalGraph": 8,
+      "node": 16,
+      "originalNode": 24,
+      "nodeType": 32,
+      "dependency": 40,
+      "graphExec": 48
+    },
+    "resource_domain": 3,
+    "node_cloned": 20,
+    "exec_created": 18,
+    "resource_data": {
+      "size": 24,
+      "alignment": 8,
+      "offsets": {
+        "context": 0,
+        "resourceHandle": 8,
+        "resourceDescriptor": 16
+      }
+    },
+    "resource_handle": {
+      "size": 8,
+      "alignment": 8,
+      "offsets": {
+        "stream": 0
+      }
+    }
+  },
+  "unchanged_graph_abi_fixture": {
+    "size": 56,
+    "alignment": 8,
+    "offsets": {
+      "graph": 0,
+      "originalGraph": 8,
+      "node": 16,
+      "originalNode": 24,
+      "nodeType": 32,
+      "dependency": 40,
+      "graphExec": 48
+    },
+    "resource_domain": 3,
+    "node_cloned": 20,
+    "exec_created": 18
+  },
+  "scope": "Local x86_64 compiler/ctypes layout from pinned header; not native callback payload proof."
+}
