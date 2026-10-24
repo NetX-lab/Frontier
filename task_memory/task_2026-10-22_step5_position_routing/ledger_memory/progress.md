@@ -51,8 +51,10 @@
   duplicates and their two empty scratch directories removed after byte checks
   against retained evidence. cleanup.json records hashes. Pinned checkout, caller
   states/outputs, legacy fixture and all other-session paths remain untouched.
-- pending/record-commit: owned progress, summary, checkpoint, test report and new
-  evidence only; retain both earlier record histories and leave branch clean.
+- completed/record-delivery: 486e7072 commits owned progress, summary, checkpoint,
+  test report and27 copied evidence artifacts. This closing status update records
+  the completed owner boundary; exact final record revision is available in Git.
+  Both earlier histories are retained. No further owner implementation/test work.
 - pending/primary-handoff-gates: independent clean composed audit, Standards/Spec,
   final-source freeze/full regressions and accepted-production integration. Candidate
   is UNADMITTED; fullCLI/native/G3/E2E and other root workflow items remain pending.

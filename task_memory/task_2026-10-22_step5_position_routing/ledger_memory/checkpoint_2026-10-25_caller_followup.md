@@ -5,8 +5,9 @@
 | --- | --- |
 | 2026-10-25 | Check the authorized actual-caller and checkout milestone before the final focused integration run. |
 | 2026-10-25 | Confirm integration, source commit and archived parity; only owned record commit remains in this slice. |
+| 2026-10-25 | Close the owner checkpoint after486e7072 records commit; independent acceptance remains pending. |
 
-**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 1｜TODO 1
+**汇总：** PASS 6｜BLOCKED/FAILED/SKIPPED 1｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -15,13 +16,13 @@
 | 普通 pinned checkout | PASS | 本地独立 checkout clean；四个构造测试4PASS |
 | 原四 EP suites | PASS | followup_ep：30PASS |
 | 完整 integration | PASS |66PASS/6SKIP；93旧 ID/status 保持；9新增PASS |
-| source/record commits 和交接证据 | TODO | source1f6b4314和27证据已归档；owned record commit 待执行 |
+| source/record commits 和交接证据 | PASS | source1f6b4314；records486e7072；27证据归档 |
 | 独立 audit/review/frozen regressions | SKIPPED | 本 owner 不执行；primary/新 session 明确 pending |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 2026-10-25 follow-up 至今｜**当前前沿：** owned record commit、clean branch 交回。
+**检测窗口：** 2026-10-25 follow-up 至今｜**当前前沿：** clean branch 交回；之后 primary 独立验收。
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -42,9 +43,9 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 完成 owned evidence/docs commit → 完成标志：所有新增记录归属 ledger_memory，branch clean。
-2. 将 source1f6b4314、raw96PASS/6SKIP和124gross交回 primary → 完成标志：列明 UNADMITTED 与独立审核/冻结 gates。
-3. 停止本 slice 的测试扩展 → 后续独立审核和 full regressions 由 primary/新 session 执行。
+1. 提交本 checkpoint 收尾并确认 branch clean；将 source1f6b4314、raw96PASS/6SKIP和124gross交回 primary。
+2. 明确 UNADMITTED 与独立审核/冻结 gates；不继续本 slice 的测试扩展。
+3. 后续独立审核和 full regressions 由 primary/新 session 执行。
 
 ## 4. 最值得关注的 3 点
 
