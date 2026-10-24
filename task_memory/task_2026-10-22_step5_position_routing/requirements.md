@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Record copied-runtime local/image CPU import acceptance; preserve original failures and unchanged invocation/source limits. |
 | 2026-10-25 HKT | Record finite copy/init closure and unchanged production source/budgets; ALLOC is recommendation only. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
@@ -48,6 +49,8 @@ Verified production integration is2ca5e57113b0bc99ab84e926e5bb492b3670072e. The 
 
 Copy/init finite diagnostics are now complete and consolidated: copyb061f884/52831c6e is NO_ALLOC_STATIC_DIAGNOSIS,0/1 controls and0 launches; init6335f581/c6b3da15 is ALLOC_RECOMMENDATION_ONLY,0 new/recovered controls and0 allocated lines. Parent verifies current bindings and retained evidence without a runtime invocation. Init126.58s is historical modeled work, excludes accepted loader savings, and does not qualify current startup or authorize a patch. Source2ca5e571, existing budgets, old-control ceilings and required-shape6/6 remain unchanged. Continue current cohesive timing and worker/cloud readiness under the existing acceptance route.
 
+
+Runtime preparation now passes the unchanged CPU dependency/origin/numerical probe on the local host and in the fixed published image. The copied prefix `/data/ycfeng/envs/frontier-runtime-py310-d29-20261025` has a distinct copied base prefix, preserving Python3.10.6 and all canonical package versions without changing the original environment. Evidence is `resumed_execution/evidence/execution_preparation_2026-10-25/runtime_acceptance.json`. This is CPU import acceptance only; source2ca5e571, budgets, required-shape6/6 and pricing execution bounds remain unchanged. No joint pricing, fullCLI or worker operation is performed by this preparation.
 
 ## [Original Request]
 

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Recover the uncommitted runtime preparation, fix the distinct base prefix, and pass the unchanged local/image probes; checkpoint requires parallel joint-script preparation. |
 | 2026-10-25 HKT | Close and consolidate copy/init diagnoses with current source/receipt verification; preserve zero controls and unchanged source admission. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
@@ -82,6 +83,10 @@
 
 ## Current resumed execution (2026-10-24 UTC / 2026-10-25 local)
 
+- completed/runtime recovery: reuse original environment copy timeout124 and completion receipts (11,371files/386,015,193B). Both copied-prefix imports failed numpy because Debian site.py only selected dist-packages when base/dependency prefixes were equal. Preserve both raw failures and the original strict probeSHA5669d6b0 unchanged.
+- completed/runtime repair: add one identical CPython binary under a separate base prefix, one shared-stdlib symlink, and the standard pyvenv.cfg; original environment/packages and copied file bytes remain unchanged. Configuration commandexit0,0.109191s; its base-prefix assertion passes before configuration.
+- completed/runtime verification: unchanged strict probePASS locally/image,1.857779/2.892711s,Python3.10.6 and exact canonical versions/origins/tiny numerical results. Process RSS178,016,256/183,410,688B applies only to those imports; configured30GiB and imageCPU4 are not whole-workload evidence. No Simulator constructor or pricing/shape/GPU/fullCLI call. runtime_acceptance.json confirms2ca/146non-task identity and five relevant worktree states; four satellite trees clean/integrated.
+- completed/checkpoint and next action: check_progress_2026-10-25_runtime_environment.md finds D4: joint-script preparation stayed idle while runtime was prepared. Stop runtime expansion and prepare the real current-source joint script/finite call proposal in parallel with worker execution conditions. No old5-wave/15-emission or required-shape6/6 allowance is extended. Dated runtime report includes exact commands, errors and remaining limits.
 - completed/recovery: original primaryd13108ae/candidate97ae8d9b match the supplied handoff. Late copy/init failures are independently recovered and land as primary8e7ac28c/candidate17fd799e; source unchanged. Census `resumed_execution/worktrees.json` records89 relevant attachments and six active responsibilities. Primary.cortexkit/.pi and the unused managed checkout remain untouched.
 - completed/initial audit: clean frozen97ae8d9b/source1f6b4314 recomputes116paths/114predecessor rows/18overlays/126bindings,9682source/9696global. The concurrent-record and JSON-Path failures are retained with the corrected PASS under ledger_memory/evidence/composed_scope_2026-10-24/.
 - completed/review repair: Standards identifies only the prohibited test-local name bounded_read. Candidate1461573d renames its definition and registration to reject_ep_ledger_read_text; the body and assertions stay unchanged.39PASS/3existingSKIP,2.71s,42actualIDs/statuses preserved. No new wave or quota consumption;124gross/net96/increment116 remain distinct.

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Record copied-runtime local/image CPU import acceptance; preserve original failures and unchanged invocation/source limits. |
 | 2026-10-25 HKT | Consolidate both finite diagnoses and parent evidence; no source or measured runtime change. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
@@ -53,6 +54,8 @@ Evidence is archived at ledger_memory/evidence/frozen_regressions_2026-10-25/:64
 Both finite diagnoses are complete and consolidated on the primary branch. Snapshot-copyb061f884/52831c6e closes NO_ALLOC by static supported-copy counterexamples,0/1 controls and0 launches. Init6335f581/c6b3da15 closes ALLOC_RECOMMENDATION_ONLY,0 new/recovered controls and0 source allocation. Its126.58s modeled removed work is historical inference, excludes accepted loader savings, and is not current startup qualification. Parent verification passes25 copy bindings,13 init bindings,14 retained init receipts and all13 owned record paths; the non-task source still equals2ca5e571 and frozen146. Six exact parent evidence files and archive.json are retained under resumed_execution/evidence/diagnosis_closeout_2026-10-25/. Both clean diagnosis worktrees are retained and their agents closed.
 
 Current pricing+emission+flush, worker environment/append throughput/full-workload memory, completeCLI<=2400s per main process, finalT2/package/native/G3/E2E remain open. Define the next joint execution without extending old diagnostic controls or required-shape6/6. OSS sufficiency is user-confirmed. The init recommendation has no patch/allowance; no resource, fullCLI, native or RSS claim follows from this records completion.
+
+CPU runtime preparation now passes the original strict probe locally and in the pinned published image, with Python3.10.6 and unchanged canonical package versions. A separate copied base prefix fixes Debian site-packages discovery; original copy timeout and both import failures remain retained. Evidence: `resumed_execution/evidence/execution_preparation_2026-10-25/` and the dated runtime report. Local/image probe wall times are1.857779s/2.892711s, with probe-only peak RSS178,016,256B/183,410,688B. No production source, pricing-wave, required-shape, fullCLI or StepMind operation changes. Worker/cloud/RSS and joint execution remain open.
 
 ## Previous handoff boundary (2026-10-25; historical)
 
