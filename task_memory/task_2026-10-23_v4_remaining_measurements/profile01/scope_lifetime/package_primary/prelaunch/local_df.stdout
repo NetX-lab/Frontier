@@ -1,0 +1,3 @@
+Filesystem          1-blocks         Used    Available Capacity Mounted on
+/dev/rbd1      1098974756864 870329958400 228644798464      80% /data
+/dev/rbd1      1098974756864 870329958400 228644798464      80% /data

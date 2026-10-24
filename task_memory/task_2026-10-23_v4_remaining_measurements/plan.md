@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Resumed two independent frontiers with explicit package/GPU and metrics-correction ownership and invocation limits. |
 | 2026-10-25 | Close reviewed package and measurement records for handoff; no new experiment or GPU submission during closeout. |
 | 2026-10-24 | R3/R4mechanics reproduced by primary; correct semantic temporary partitions and diagnose8P0audit timeouts before full32acceptance. |
 | 2026-10-24 | Profile04 execution passed4/4/exit0/restart0; retrieve/hash-bind inputs before parallel local client, metadata and32-trace audits. |
@@ -36,6 +37,15 @@
 | 2026-10-23 | Q2a isolated data accepted after root reruns; Q2b source reviews closed; profile02 platform terminal verified and I4 begins. |
 
 ## Dependencies and ownership
+
+### Current continuation — 2026-10-25
+
+1. Primary: verify frozen executable package and archive -> fresh local storage/project-quota/NFS + personal-cloud destination + personal StepMind quota/capacity receipts -> separate root seal -> existing once-only1H800/600s observe/control -> P1–P6 raw audit/terminal/source binding -> scoped acceptance and commit.
+2. Parallel metrics owner: frozen seam -> <=200-line metrics adapter/<=180-line exact unit controls -> primary two complete trace controls + independent Spec/Standards -> new once-onlyP0rank0 pilot -> remaining seven once each at60s/30GiB/max2 -> exact outputs/retained errors -> R5 status and scoped commit.
+3. Dependency: `{GPU scoped runtime audit, complete P0 outputs} -> applicable R6/R7 synthesis`; neither line proves native serving ownership or costs. Original S1/S2/S3 CPU acceptances, R3/R4, native06R4 and all failed runs remain accepted/preserved within their original limits.
+
+Primary owns requirements/plan/progress/summary and package_primary/fresh gates, seal/submission/results acceptance; metrics owner writes only its two named source/test paths and metrics_correction/owner/. No shared write paths or platform work by subagents. Original handoff below is the committed starting snapshot.
+
 
 ### Current handoff frontier — 2026-10-25
 

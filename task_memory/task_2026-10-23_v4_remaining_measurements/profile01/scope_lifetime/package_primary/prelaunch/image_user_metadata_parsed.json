@@ -1,0 +1,11 @@
+{
+  "image_id": "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "user_field_present": false,
+  "configured_user": null,
+  "default_uid_when_absent": 0,
+  "repo_digests": [
+    "vllm/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+  ],
+  "operation": "Existing local image metadata read only; no container execution"
+}

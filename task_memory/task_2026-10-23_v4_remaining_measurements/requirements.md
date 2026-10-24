@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Resumed frozen package fresh gates and allocated a separate metrics correction, exact controls and eight once-only affected-rank validations. |
 | 2026-10-25 | YC requested committed code/documentation updates and a complete handoff; stop new experiments and submissions during closeout. |
 | 2026-10-24 | Allocated one metrics-call timing observation under unchanged60s/30GiB and fixed loading-GC pipeline; no algorithm/full32 expansion. |
 | 2026-10-24 | Accepted scope/lifetime CPU-source and allocated its fresh mirrored package preparation only; actual GPU gates remain separate. |
@@ -249,3 +250,19 @@ One owner may create a fresh probe copy under `profile01/graph_probe/`, with at 
 - [Original Request — 2026-10-25] 请你进行docs和codes的更新和commits，进行handoff工作，生成一段完整handoff prompts，我将在其他session继续执行当前task。
 - [Decision — closeout scope] Integrate the already reviewed mirrored package, archive completed CPU/image/SDK and metrics-observation evidence, update current pointers, verify and commit only owned changes, and place the self-contained continuation prompt in progress.md. Do not launch another experiment or GPU job during handoff. Preserve unrelated work and the original package worktree required by its absolute NFS paths.
 - Remaining storage/quota/destination/seal/submission and actual TLS/lifetime gates transfer to the next session. The metrics optimization is a read-only proposal, not an allocated implementation or additional full-input invocation. Existing attempt ceilings and evidence/admission limits remain unchanged.
+
+
+### D-V4-CONTINUE-FRESH-GATES — 2026-10-25 local continuation
+
+- [Original Request] “请继续 Frontier 的 V4 remaining-measurements task，从已提交状态接续，不要重新开始已验收工作。” “本轮仅本地提交，未 push。保留 .pi/、.cortexkit/、unrelated remaining_measurements/，不除、不 reset、不 stage。”
+- [Original Request] “先完成这些检查和receipt，再执行现有单次GPU额度” and “先记录新的bounded correction及control/invocation额度，再exact equality验证所有count/sum/union/hierarchy/leaf/per-stream字段，之后执行新获分配的affected-rank验证。”
+- [Decision] Resume from b33656556ce483245f45a6e6f14615742ed3a8ea. The handoff-only stop on new work is superseded by this continuation. Preserve all previously accepted source, fixtures, package inputs, sealed profile04 and original failures. Primary alone performs fresh local storage/project-quota/NFS checks, personal-cloud destination absence, personal StepMind quota/capacity reads, a separate root seal and the existing single 1-H800/600-second observe-then-control submission. No package regeneration/path changes, automatic retry, push or publication.
+- Native subagents may run at most three concurrently with disjoint writes; primary owns GPU operations, final acceptance and this task's requirements/plan/progress/summary.
+
+### D-V4-P0-AUDIT-METRICS-CORRECTION — new allocation
+
+- [Decision — primary under the continuation and existing bounded correction authority] Inspect and replace only repeated metrics interval sorting in a fresh audit adapter. Allocate one owner for tests/analysis/v4_trace_audit_metrics.py (<=200 new gross lines) and tests/unit/test_v4_trace_audit_metrics.py (<=180 new gross lines), plus owner records only under profile01/profile04/results/p0_cpu_loop/metrics_correction/owner/ (<=100 maintained Markdown lines; JSON/raw evidence separately counted). No frozen auditor/reader, production/native/C26, loader/GC policy, grouping, attribution, overlap/reversal, raw-input or original-result edits. Do not compress to the earlier 30–40-line estimate.
+- Read the frozen auditor7ed0ea45 and readerfe4c3f82, sparse stage instrumentf7f1253c and existing34-line loading-GC pipeline. Build one global stable sort(ts, ts+dur) and apply the unchanged union recurrence per existing key. Preserve each original group's trace-order count/sum and all duplicate hierarchy membership. No float tolerance, event omission, numeric ID remapping or timeout/memory increase.
+- Exact controls: at most two fresh complete-control invocations, decodeDP1/rank0 and prefillDP1/rank0, each once against its retained complete output. Compare every non-clock JSON field, all count/sum/union/hierarchy/leaf/per-stream fields and decompressed kernel-index rows exactly. Unit controls cover empty groups, overlap, ties, original-order float accumulation and repeated memberships. Source/AST closure and independent Spec/Standards reviews precede affected-rank execution.
+- New affected-rank allocation: at most eight fresh P0 invocations, each rank0..7 once; rank0 is the pilot and remaining seven start only after a complete pilot. Each invocation retains60s, actual30GiB and max2 concurrent CPU ranks. All outputs use a fresh scratch directory under /data/ycfeng/tmp. No reuse of spent observation invocations. A failure remains recorded; do not silently retry it. Primary records exact commands, input/source hashes and full outputs before any R5 acceptance.
+- Existing24 completed ranks and eight original timeouts stay immutable. Complete-output audit acceptance remains distinct from whole-DP/captured ownership/dependency/cost/reference admission. Existing unchanged-domain77-case evidence may be explicitly bound because no simulator source changes.

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Confirmed the committed handoff and opened fresh package gates in parallel with a separately allocated metrics correction. |
 | 2026-10-25 | Integrated the prepared mirrored package, archived completed root gates/metrics evidence, and recorded the canonical next-session handoff. |
 | 2026-10-24 | Independently reproduced193R3checks/all32metadata; review found temporary-partitionP2 and raw trace coverage is24complete/8timeouts. |
 | 2026-10-24 | Profile04 terminal verifiedSucceeded/fourCompleted/exit0/restart0; fresh personal-cloud202-file census and local data verification started. |
@@ -39,6 +40,15 @@
 | 2026-10-23 | Continued queue inspection and bound the I4 analysis plan to sealed profile02 paths and actual collector identifiers. |
 | 2026-10-23 | YC prioritized independent tickets/smaller GPU tasks; selected P0 case binding, balanced decode package preparation and local-MoE feasibility. |
 | 2026-10-23 | Accepted Q1 P0 workload/metric binding after root independently reproduced the owner command; Q2 preparation remains active. |
+
+## Current continuation — 2026-10-25
+
+- completed: repository identity confirmed at b33656556ce483245f45a6e6f14615742ed3a8ea/feat/glm53-dsv4-vllm028; only .pi/, .cortexkit/ and remaining_measurements/ are untracked. They remain untouched and unstaged.
+- completed: fresh package gates and separate root seal at 2026-10-24T18:09:22.573232+00:00;18manifest inputs/67original pins exact, shared XFS/project0 quota read, current codesign87/128 and12node-usable GPUs, original local NFS100.96.128.195 and exact cloud destination absent. See [prelaunch report](profile01/scope_lifetime/package_primary/test_report_2026-10-25_prelaunch.md) and [seal](profile01/scope_lifetime/package_primary/root_seal.json). Original package inputs/worktree and CPU acceptance stay unchanged.
+- in-progress: existing single GPU observe/control attempt is ready;0/1 submitted before this milestone. Actual creator/mount/GPU/cloud write, P1–P6 and terminal evidence remain pending.
+- in-progress: D-V4-P0-AUDIT-METRICS-CORRECTION is newly recorded before implementation. Frozen auditor/stage/GC telemetry provides the existing red-capable loop; no old diagnostic is rerun. Two exact complete controls and eight once-only affected ranks are separately allocated.
+- pending: P1–P6 actual GPU data/terminal audit; metrics source/control/review/pilot; remaining R5/R6/R7. CPU/package PASS supplies no GPU/native/cost admission.
+- observed UTC at resume recording: 2026-10-24T18:00:24.927957+00:00; document date follows the supplied Hong Kong continuation date. The previous handoff section remains the committed starting state, superseded only by this continuation.
 
 <a id="current-session-handoff-2026-10-25"></a>
 

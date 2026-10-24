@@ -1,0 +1,10 @@
+{
+   "filesystems": [
+      {
+         "target": "/data",
+         "source": "/dev/rbd1",
+         "fstype": "xfs",
+         "options": "rw,relatime,nouuid,attr2,inode64,logbufs=8,logbsize=64k,sunit=128,swidth=128,prjquota"
+      }
+   ]
+}
