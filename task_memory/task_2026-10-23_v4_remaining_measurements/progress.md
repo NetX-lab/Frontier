@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Closed and hash-verified the read-only runtime inventory; allocated one new same-runtime native-stack diagnostic before source or execution work. |
 | 2026-10-25 | Archived the unique segment diagnostic SIGABRT before metrics; allthree timing hypotheses remain unmeasured and only read-only abort RCA is allocated. |
 | 2026-10-25 | Accepted the112-line segment source and114-line fresh tiny after32 exact checks and both reviews; froze the original once-only diagnostic command. |
 | 2026-10-25 | Original tiny failed before AST on the cgroup sensor; one fresh v1-sensor control is separately allocated and the diagnostic remains0/1. |
@@ -53,6 +54,9 @@
 | 2026-10-23 | Accepted Q1 P0 workload/metric binding after root independently reproduced the owner command; Q2 preparation remains active. |
 
 ## Current continuation — 2026-10-25
+
+- completed allocator inventory:84/100-line report and eight sidecar metadata-only queries; primary verified10 path/hash bindings, ten frozen source pins and six closed log bindings without task execution. [Acceptance](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/abort_inventory_acceptance.json) qualifies local readiness only. Cause UNKNOWN; no alternate Python numeric qualification.
+- in-progress new native-stack allocation: [allocation](profile01/profile04/results/p0_cpu_loop/native_stack03/primary/allocation.json) records original Python3.10.6/allocator/GC/loader, unchanged timing source/triplet, fresh GDB exit/signal control1 and full diagnostic1,60s/actual30GiB/selected1/no retry. Both NOT_RUN. Worker writes only new GDB/control/notes; primary owns launcher, execution and acceptance. R5still24/32;no affected/complete/GPU allowance.
 
 - failed unique segment diagnostic1/1: source gatee46cafe3;child-6/driver1/enclosing40.333549s,actual32,212,254,720bytes. Stderr reports `malloc(): unsorted double linked list corrupted`;last kernel_progress39.935s, no kernel_done/metrics boundary/final JSON. [Failure](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/diagnostic_failure.json) binds closed logs/receipt and partial compressed index without claiming EOF/count. Intendedthree hypotheses remainUNMEASURED;source/tiny gates stay accepted,R5still24/32. [Read-only allocation](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/abort_rca_allocation.json) owns runtime/source investigation;no rerun or new algorithm/rank/control is selected.
 

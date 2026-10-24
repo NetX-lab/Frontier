@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Accepted bounded allocator runtime inventory and separately allocated one native-stack control/diagnostic without changing the runtime or metrics. |
 | 2026-10-25 | Archived the unique segment diagnostic SIGABRT before metrics; allthree timing hypotheses remain unmeasured and only read-only abort RCA is allocated. |
 | 2026-10-25 | Accepted the112-line segment source and114-line fresh tiny after32 exact checks and both reviews; froze the original once-only diagnostic command. |
 | 2026-10-25 | Preserved the pre-AST cgroup sensor failure and allocated one fresh sensor-corrected tiny control using the existing v1 mapping. |
@@ -311,3 +312,9 @@ One owner may create a fresh probe copy under `profile01/graph_probe/`, with at 
 
 - [Observed failure — 2026-10-24 UTC / 2026-10-25 Hong Kong] The unique segment diagnostic endedSIGABRT/-6 after40.333548916038126s,actual30GiB. Stderr reports `malloc(): unsorted double linked list corrupted`;last kernel-progress observation39.935s, no kernel_pass_done, no metrics boundary or final JSON. The generic original receipt labelCENSORED is preserved;primary diagnostic_failure.json distinguishes the native CPU abort from a60-second timeout. Allthree intended timing hypotheses remainUNMEASURED. Partial index is hash-bound but EOF/count/attribution are unverified;do not infer a full result. Diagnostic1/1 is spent.
 - [Decision — bounded investigation] Primary owns closed receipt/log/source binding and current records. One sidecar owns only `group_metrics_tail02/abort_source_diagnosis.md`<=100maintained lines, reading retained logs, local interpreter/source metadata and existing documented environments. No old scripts may run/import;no source/GC/loader/raw/package/environment edit, dependency install, new full trace/control/rank/GPU invocation or runtime/cost admission. A new diagnostic or environment qualification needs its own evidence-backed allocation before work.
+
+### D-V4-P0-NATIVE-STACK-DIAGNOSTIC
+
+- [Decision — evidence-backed primary allocation] The read-only allocator inventory is accepted in `group_metrics_tail02/primary/abort_inventory_acceptance.json`:84/100 lines, eight sidecar metadata queries, existing GDB/matching glibc symbols and unchanged Python3.10.6. Corruption origin remains UNKNOWN. Distinct Python versions are not qualified for exact float sums.
+- Select a single GDB observation of the same accepted group timing source with original interpreter/allocator/GC/loader and full retained P0rank0 input. Allocate one GDB command source<=90gross lines, a fresh exit0/SIGABRT/cgroup control<=140gross lines, primary driver<=110gross lines and owner notes<=70 maintained lines, with disjoint writes in `native_stack03/primary/allocation.json`. Worker implements only; primary executes the new control once and full diagnosis once after source/pin/control acceptance. No old driver/control is run or imported.
+- Keep60seconds/actual30GiB/max2(selected1). Record inferior exit or observed signal separately from GDB/driver returncodes; retain native stack/library-map observations on SIGABRT without evaluating inferior functions. A stopped inferior is not a natural exit. No automatic retry, allocator/debug-hook/tracemalloc/interpreter change, core dump, environment install, metric correction, complete control, affected rank or GPU invocation is granted. The three recorded hypotheses distinguish detection paths or non-reproduction; no clean diagnostic establishes a cure or R5 admission.

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Accepted the84-line local runtime inventory after streamed path/source/log bindings; allocated the next same-runtime native observation separately. |
 | 2026-10-25 | Archived the unique allocator-aborted diagnostic and preserved all unmeasured metric regions. |
 
 The source/tiny gate is accepted at `e46cafe3`; the112-line timing source and114-line active control retain32 exact checks, actual30GiB and two independent zero-open-finding reviews. The original cgroup control's zero-check failure and its separately allocated repair stay immutable. This report records a different failure in the sole full segment diagnostic.
@@ -42,3 +43,5 @@ Primary streamed-rehashed every closed output and unchanged source pin, then cop
 `abort_runtime_metadata.json` reads parent/usrbinPython3.10.6 executable SHA256dbb04ace02303fa5cb3a6d1aa0e7a180d8dd23d3257cc6a0b155d0ee219432a2, selected non-secret environment fields and local core configuration. ParentRLIMIT_CORE is0/-1, core_patterncore/core_uses_pid1;no core file was found in this exactrepo root. Childcorelimit/module list/corruption origin areUNKNOWN;parent metadata does not establish them. The inspected reader/stage/GC source uses standard-library loading/index paths;this does not exclude a native-library or runtime defect.
 
 FAIL for planned metrics-segment evidence. Original diagnostic1/1 is spent, no retry. R5 remains24/32 and both sets of seven conditional ranks stayBLOCKED. CPU/source/fixture and scopeGPU1/1 acceptance retain their limits. Native serving ownership/dependency/timing/non-perturbation, whole-DP/transport/trace-ID and cost/reference admission remain open. Only the separately recorded read-only abort RCA is allocated;no new full control, affected rank, algorithm correction, environment change or GPU action follows from this report.
+
+Read-only inventory closure: `abort_source_diagnosis.md` is84/100 maintained lines, SHA2567fb0d39a63475fa1d8c9690e3ab1cd14acb8a50c61d1369540c478e5c984ea78. Sidecar records8/8 metadata-only interpreter queries; primary rehashed10 exact path bindings,10 frozen source pins and6 archived output bindings, all PASS. `primary/abort_inventory_acceptance.json` retains the command method, paths/bytes/hashes and explicit limits. No failed child/runtime/source claim is upgraded; corruption origin and native stack remain UNKNOWN. Native-stack source/control/diagnostic receives its own allocation in `../native_stack03/primary/allocation.json`; neither invocation was executed by inventory closure.
