@@ -1,0 +1,45 @@
+{
+  "status": "PENDING_RUNTIME_VERIFICATION",
+  "job_name": "exp-1024-172225-512616",
+  "observed_at_utc": "2026-10-24T09:49:36.266296+00:00",
+  "platform_phase": "Starting",
+  "creator": "i-fengyicheng",
+  "charged_group": "codesign",
+  "preemptible": "no",
+  "replicas": 4,
+  "assigned_nodes": 0,
+  "gpu_attempt": 1,
+  "attempt_ceiling": 1,
+  "manifest_sha256": "25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f",
+  "initial_platform_receipt": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_platform_e1jpb7ap/receipt.json",
+    "sha256": "cfbd7e74f5ed833ebb9b8c80e6224096ed8f21e151c3450fde3ce330034edef9"
+  },
+  "latest_platform_receipt": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_platform_o35jf2yk/receipt.json",
+    "sha256": "5283ea3ec6c46809f5bfdf1893e41307e0c4bf1ae151bc3cedae7e645ebd2261"
+  },
+  "requested_resources_verified": {
+    "gpus_per_replica": 8,
+    "cpu_per_replica": 64,
+    "memory_per_replica": "500Gi",
+    "rdma_limits_per_replica": {
+      "mellanox.com/mlnx_rdma": "1",
+      "rdma/mlnx_shared": "8"
+    },
+    "local_nfs_ip": "100.96.128.195",
+    "image_digest": "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+  },
+  "platform_affinity": "preferredDuringSchedulingIgnoredDuringExecution",
+  "affinity_encoding_discrepancy": "UNRESOLVED; actual four-host placement must be checked after scheduling",
+  "actual_hosts_and_32_h800_identities": "UNVERIFIED",
+  "actual_rdma_transport": "UNVERIFIED",
+  "client_432_requests": "UNVERIFIED",
+  "formal_metadata_and_useful_steps": "UNVERIFIED",
+  "raw_dp_pairing": "UNVERIFIED",
+  "stream_correspondence": "UNVERIFIED",
+  "post_stop_evidence": "UNVERIFIED",
+  "captured_per_operator_ownership": "UNVERIFIED",
+  "serving_or_cost_admission": false,
+  "next_action": "Keep the existing launcher alive; inspect this exact job after scheduling, then verify terminal state and retained raw artifacts. Do not submit another attempt."
+}
