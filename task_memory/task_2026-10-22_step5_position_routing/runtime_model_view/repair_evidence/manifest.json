@@ -1,0 +1,89 @@
+{
+  "scratch_root": "/data/ycfeng/tmp/d29_named_model_query01",
+  "files": {
+    "freeze.json": {
+      "bytes": 34861,
+      "sha256": "563b8200c83a49efb1749fe02df98e5157dd93d3c35f32a9ec7c2dfc06d595a2"
+    },
+    "run.py": {
+      "bytes": 13771,
+      "sha256": "b69629fd3ecc754120badc5d9ba540e4add7d1ee1b1d8ab05878ab97e3866a9d"
+    },
+    "fixture_wiring.py": {
+      "bytes": 3574,
+      "sha256": "bffe25039ecb0aae94b5eab905aff0c4cecb150eabbfcf4912aa6d5f9e7b95f1"
+    },
+    "prepare.log": {
+      "bytes": 6723,
+      "sha256": "6efaae216514bd717fed26bf0fa0af31216da646ca08cdc3b0c96124b39d3df0"
+    },
+    "baseline.log": {
+      "bytes": 8227,
+      "sha256": "f7980d3f5c7e17cf4d81a013a408f1aa5aa461af2d57173dc79c18039b7f9fce"
+    },
+    "candidate.log": {
+      "bytes": 8232,
+      "sha256": "51fd1b6e4818887a4af62959de35c613e254907c4bb324d1d363c35acfca5fa2"
+    },
+    "verification.json": {
+      "bytes": 69703,
+      "sha256": "d5f2c5939f6279f460469a048b32636402ff0ee1a4636c4475d6531ac1c9c6c5"
+    },
+    "baseline/wave_result.json": {
+      "bytes": 25926,
+      "sha256": "9b4df3536fcb8a81036f48debac5bef189ab38d8c9b4db26bf9f8c746ff8bbf7"
+    },
+    "candidate/wave_result.json": {
+      "bytes": 28801,
+      "sha256": "e486194d7df2ac66a45e274b9ea45f5334a5a2d8577773122d25bbb1c9a50af5"
+    },
+    "red.log": {
+      "bytes": 1297716,
+      "sha256": "f46b328149a61d247bfcdbac76e6adfa2efa4359c0e934b2bd3ae15e8f53c32a"
+    },
+    "green.log": {
+      "bytes": 192,
+      "sha256": "6888e33a059785fa077ecac64a67879e5948d7d649d69cc11582804071c6fe9c"
+    },
+    "final-green.log": {
+      "bytes": 192,
+      "sha256": "abb4d5c2db584f6cfa415aba85960b9cbeaf05206951173fd6fae5705b4caf6b"
+    },
+    "final-green.xml": {
+      "bytes": 2225,
+      "sha256": "08516876236fb810b88a9d0fd1ce2fe4a776cb0280ccdf8771907ce6bef5c9bc"
+    },
+    "focused-baseline.log": {
+      "bytes": 270,
+      "sha256": "52989864c203dea348c2f218fa9df4a2d4285401a5b01cba8c9446f5788a7bc0"
+    },
+    "focused-candidate.log": {
+      "bytes": 270,
+      "sha256": "a615dec987f92e07e3d6adbfa946c401dd88c7ab3a14ce40c070421ff84721fb"
+    },
+    "focused-baseline.xml": {
+      "bytes": 19157,
+      "sha256": "c217a866ebd28e24f81e69ed4deecd4b012a672704b2523717388cf6d7afe474"
+    },
+    "focused-candidate.xml": {
+      "bytes": 20476,
+      "sha256": "8d282c15e3fe53b6562d3424d8bf1dc9135d5a207fc48f4a65c47d2aba424136"
+    },
+    "governance-baseline.log": {
+      "bytes": 1443,
+      "sha256": "1b260b9b57aee53f7f11adbb7ea7b555699e25e2761b64f60897aef1b0de76f1"
+    },
+    "governance-candidate.log": {
+      "bytes": 1444,
+      "sha256": "d13c4a974f9a5279a5f5ef581b11af770cd46dd1fb47370d86ebff4c55e9ded3"
+    },
+    "governance-baseline.xml": {
+      "bytes": 3604,
+      "sha256": "e9daf5421938370b8967ab2a933cdde8dae8542a79c3aeaa1d9eb5ac92a19455"
+    },
+    "governance-candidate.xml": {
+      "bytes": 3605,
+      "sha256": "658d5a6f707c39ac7d522bcaa14373d5f4259e467feb533bf057fc1b774755fd"
+    }
+  }
+}

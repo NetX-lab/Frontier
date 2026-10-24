@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Source1737ce9c and production wave verified; parent reviews/final scope/integration remain. |
 | 2026-10-24 | Allocate approved change and verification/review dependencies. |
 
 Dependency: approved control -> allocation -> implementation/focused checks ->
@@ -20,4 +21,11 @@ integration -> final freeze/regressions. Prior46fe full-unit work is independent
 4. Primary coordinates independent reviews and scope audit, verifies decisive
    evidence and integrates. Record measured deltas, not caps as usage.
 5. Continue whole-workflow diagnosis. This component alone is not a2400s pass;
-   remaining full-output costs and storage are still open.
+    remaining full-output costs and storage are still open.
+
+Implementation status: steps1–3 completed. Four-file source commit1737ce9c is
+96gross, with final selected12PASS and focused125PASS/1existingSKIP against
+baseline117PASS/1SKIP. Fresh production wave has19 byte comparisons, unchanged
+actual-point/numerical/proof counts and−28.16% warm pricing median. Step4 remains
+primary-owned; step5 remains separate workflow work. See the dated production
+test report and `repair_evidence/verification.json`.

@@ -1,0 +1,28 @@
+Running scope as unit: run-rf254813b8b7e47d5ab587df47b693ad3.scope
+F..............                                                          [100%]
+=================================== FAILURES ===================================
+_______ test_real_linear_producer_csv_round_trip_reaches_manager_loader ________
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_named_model_query01/governance-baseline/test_real_linear_producer_csv_0')
+
+    def test_real_linear_producer_csv_round_trip_reaches_manager_loader(tmp_path) -> None:
+        """A plan-built producer row survives CSV serialization and typed admission."""
+    
+        from frontier.profiling.common.model_config import ModelConfig
+        from frontier.profiling.linear_op import main as linear_op_main
+>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
+
+tests/unit/test_profiling_governance_minimal_red.py:733: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    import copy
+    import os
+    from collections.abc import Mapping
+    
+>   import torch
+E   ModuleNotFoundError: No module named 'torch'
+
+frontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/unit/test_profiling_governance_minimal_red.py::test_real_linear_producer_csv_round_trip_reaches_manager_loader
+1 failed, 14 passed, 37 deselected in 1.94s
