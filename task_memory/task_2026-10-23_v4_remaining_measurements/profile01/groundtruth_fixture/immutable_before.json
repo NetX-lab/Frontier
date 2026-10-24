@@ -1,0 +1,955 @@
+{
+  "status": "PASS",
+  "files": {
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/check_groundtruth_run.py": {
+      "sha256": "9116ab7c83da2b4e7cafb871c272af56c8322954eccd56abf2eeac1b55906b55",
+      "bytes": 84800,
+      "resolved": "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/check_groundtruth_run.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py": {
+      "sha256": "ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917",
+      "bytes": 16659,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py": {
+      "sha256": "29523700ac8492fa6e192ce272f8ab5a7a48d1528bd4064417e26e811533d10a",
+      "bytes": 93850,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py": {
+      "sha256": "c615832529ecaf54805f5d399ea084414f868b477ae3e45c196a4ec1272d2b7b",
+      "bytes": 35369,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/frontier/profiling/moe/balanced_routing.py": {
+      "sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+      "bytes": 2985,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/frontier/profiling/moe/balanced_routing.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/balanced_routing.py": {
+      "sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+      "bytes": 2985,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/balanced_routing.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/client_metrics.py": {
+      "sha256": "ca91383caa9c5f60f5d942f5a561e2a90862e8c25451eff04f1f439b9776309d",
+      "bytes": 7461,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/client_metrics.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/client_metrics.py": {
+      "sha256": "ca91383caa9c5f60f5d942f5a561e2a90862e8c25451eff04f1f439b9776309d",
+      "bytes": 7461,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/client_metrics.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/e2e_metrics_gap.py": {
+      "sha256": "2785c1f0580032bc2d6ed49aaa74f9d55cfbb73022f883597c450b6173c1bd3f",
+      "bytes": 14419,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/e2e_metrics_gap.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/e2e_metrics_gap.py": {
+      "sha256": "2785c1f0580032bc2d6ed49aaa74f9d55cfbb73022f883597c450b6173c1bd3f",
+      "bytes": 14419,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/e2e_metrics_gap.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/native_dummy_initialization.py": {
+      "sha256": "118b5feb8b3fb15f72f3736fbf0af166eaeebe99cba46245b2ddf5ddc2b6a8ca",
+      "bytes": 29867,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/native_dummy_initialization.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/native_dummy_initialization.py": {
+      "sha256": "118b5feb8b3fb15f72f3736fbf0af166eaeebe99cba46245b2ddf5ddc2b6a8ca",
+      "bytes": 29867,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/native_dummy_initialization.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/native_full_structure.py": {
+      "sha256": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+      "bytes": 53427,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/native_full_structure.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/native_full_structure.py": {
+      "sha256": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+      "bytes": 53427,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/native_full_structure.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/native_pd_worker.py": {
+      "sha256": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b",
+      "bytes": 24805,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/native_pd_worker.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/native_pd_worker.py": {
+      "sha256": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b",
+      "bytes": 24805,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/native_pd_worker.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/native_serve_profile.py": {
+      "sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+      "bytes": 26078,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/native_serve_profile.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/native_serve_profile.py": {
+      "sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+      "bytes": 26078,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/native_serve_profile.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/pd_metrics.py": {
+      "sha256": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+      "bytes": 7543,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/pd_metrics.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/pd_metrics.py": {
+      "sha256": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+      "bytes": 7543,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/pd_metrics.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/pd_proxy.py": {
+      "sha256": "ebc8d3c6f171368f85ac22e21e2bb6829eef670c6f6fe0d24615c657c11bd942",
+      "bytes": 11826,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/pd_proxy.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/pd_proxy.py": {
+      "sha256": "ebc8d3c6f171368f85ac22e21e2bb6829eef670c6f6fe0d24615c657c11bd942",
+      "bytes": 11826,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/pd_proxy.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/pd_replay.py": {
+      "sha256": "65ec81721ebe1d02a4028388521bc25d57888bb39a721bc59c21dc6f0a3ed0ae",
+      "bytes": 46537,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/calibration/pd_replay.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/pd_replay.py": {
+      "sha256": "65ec81721ebe1d02a4028388521bc25d57888bb39a721bc59c21dc6f0a3ed0ae",
+      "bytes": 46537,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/pd_replay.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/dp_placement_pp/vllm_replay.py": {
+      "sha256": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901",
+      "bytes": 40605,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/dp_placement_pp/vllm_replay.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/dp_placement_pp/vllm_replay.py": {
+      "sha256": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901",
+      "bytes": 40605,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/dp_placement_pp/vllm_replay.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/stage_admission_pp/vllm_burst_driver.py": {
+      "sha256": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+      "bytes": 12297,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/comparison/stage_admission_pp/vllm_burst_driver.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/stage_admission_pp/vllm_burst_driver.py": {
+      "sha256": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+      "bytes": 12297,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/stage_admission_pp/vllm_burst_driver.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/integration/native_extension_startup_probe.py": {
+      "sha256": "8c04aad06417ddde7e33f11b41959b3330404f0a4106756318c95ff1700227a3",
+      "bytes": 7057,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/tests/integration/native_extension_startup_probe.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/integration/native_extension_startup_probe.py": {
+      "sha256": "8c04aad06417ddde7e33f11b41959b3330404f0a4106756318c95ff1700227a3",
+      "bytes": 7057,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/integration/native_extension_startup_probe.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/compilation/breakable_cudagraph.py": {
+      "sha256": "722683b44b4461ffd9a6498741da18945cbaac231c3bb01f0b0443dafe9e053e",
+      "bytes": 15913,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/compilation/breakable_cudagraph.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/compilation/cuda_graph.py": {
+      "sha256": "cbc474f9098386d2eef2e3ff61364c611fbc1338d9c259ad5a24439aa7f06412",
+      "bytes": 14179,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/compilation/cuda_graph.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/cache.py": {
+      "sha256": "8790351601be188ed1cc7ad9de2af1978b238269da4724873af1185c91165ef6",
+      "bytes": 13934,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/cache.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/compilation.py": {
+      "sha256": "6e57a553093753856baaf7987e37ff24a15b73c95730e397e74d22c539d440ec",
+      "bytes": 68576,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/compilation.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/model.py": {
+      "sha256": "17c687232886184f0390f38fc1c2c8ae078eaf24ebd1960a6b0c6a0669a35a98",
+      "bytes": 102559,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/model.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/parallel.py": {
+      "sha256": "f29f984ac39f4ae11622c2c64f92a657951f3a28e624a2a60d1040b49e025311",
+      "bytes": 44810,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/parallel.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/profiler.py": {
+      "sha256": "78af917ec2ea2ba3bacda15f58fda9782b8ff82c0b810fd5c9563f4203aa5ba8",
+      "bytes": 9885,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/profiler.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/vllm.py": {
+      "sha256": "fb07f95658ae0ee6e6c16c0f36e90f9179e8761221a45d4bf1aebe8bcf63cdcb",
+      "bytes": 118577,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/vllm.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_scheduler.py": {
+      "sha256": "a1c1f2f06874836649d2e7534143c32ffec301b99b621a2d275f168eb36f5af2",
+      "bytes": 21351,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_scheduler.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py": {
+      "sha256": "4860f51b6ac3301c243794b7626b5536f6b0ec41204e426ee6b61bc0e1d0bdb7",
+      "bytes": 118087,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/connector.py": {
+      "sha256": "b4d632ade1e3c6f49a09dce3d9877e5e71e4fb30ce751bd930f7fee2147f58fd",
+      "bytes": 14806,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/connector.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/pull_scheduler.py": {
+      "sha256": "b258f9f544ebbb7bacfe7d7c2a5053d3b833ee2f58068be42fdff5e597f1802f",
+      "bytes": 11527,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/pull_scheduler.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py": {
+      "sha256": "507fe6bfd994b4b75a624397ffe198adbec18a6a8295f03612fb47bb55a7bf23",
+      "bytes": 17670,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/parallel_state.py": {
+      "sha256": "c6d65b96a260ea0d779da1073d1799392813eee74c9ed44753dfa56f4e7a9e4c",
+      "bytes": 86135,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/parallel_state.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/utils.py": {
+      "sha256": "792146b357139e705064a68d3b66858de8a0baaca4dc7db1232fa217d45db231",
+      "bytes": 27341,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/engine/arg_utils.py": {
+      "sha256": "75636c2a7903738f0e8954394fcedfced318d30a41598a8aca533be2ea2c38c4",
+      "bytes": 124200,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/engine/arg_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/llm.py": {
+      "sha256": "52de4ac99489e004ef6c61d0bedc84aa96020dd58b8bd1ae500814b548b2b83e",
+      "bytes": 41687,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/llm.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/openai/cli_args.py": {
+      "sha256": "5b6c1c61bc9d25c703086b92a3e0040d21cc054305d9a0fbe69767dfd26af646",
+      "bytes": 20028,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/openai/cli_args.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/openai/completion/protocol.py": {
+      "sha256": "73a91d8b511fe02a09e1c8cd5374d1cbc07246968c167667959003b50f519059",
+      "bytes": 27009,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/openai/completion/protocol.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/openai/completion/serving.py": {
+      "sha256": "c4348ccaf254e4a6b729f9c452aa02f899df64a1fb6d3ab7b7dde199f53dff40",
+      "bytes": 29949,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/openai/completion/serving.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/serve/profile/api_router.py": {
+      "sha256": "b943c3a2201134e2d0b38bfa86d00e8b5685f5be6a54f6c7178dee784c1b78e5",
+      "bytes": 1470,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/serve/profile/api_router.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/envs.py": {
+      "sha256": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9",
+      "bytes": 110373,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/envs.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/forward_context.py": {
+      "sha256": "985adacc9e7ed2a7695819ac2e2ad9cb264a7d886806d3091ad75bfda7392242",
+      "bytes": 14252,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/forward_context.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/kernels/linear/scaled_mm/deep_gemm.py": {
+      "sha256": "26268c14b1597a0f733a0cc408cfc39b3f0b3454fa50e30098e15e86f47955b8",
+      "bytes": 5390,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/kernels/linear/scaled_mm/deep_gemm.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/config.py": {
+      "sha256": "036633db18b77a1923ec36585a65b37353cb051421cac4e388704b076bda203c",
+      "bytes": 51308,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/config.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/experts/flashinfer_cutlass_moe.py": {
+      "sha256": "52887cec5fe628e0a4e7793deb546b40f6c29f7362b3b436c10ca36934ab9826",
+      "bytes": 14804,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/experts/flashinfer_cutlass_moe.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/experts/marlin_moe.py": {
+      "sha256": "f00460310b033bcb84644677e16af83773464f026c0dad15bcfe25bd28b39745",
+      "bytes": 37283,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/experts/marlin_moe.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/modular_kernel.py": {
+      "sha256": "cd1815f8bdd779ac6e377bf498e05c9565b2af0df2442c5f4f254b36ef783491",
+      "bytes": 61684,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/modular_kernel.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/oracle/fp8.py": {
+      "sha256": "a4cab17ac95c380dc74df908fb554def104a75a9cce8d78363bd3e31a832083c",
+      "bytes": 26521,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/oracle/fp8.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/oracle/mxfp4.py": {
+      "sha256": "4746cae6054f890cb82df89b4bfa952c36e8c7865d9f4a94390bbfb1d4b3332f",
+      "bytes": 67185,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/oracle/mxfp4.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/router/router_factory.py": {
+      "sha256": "64fb057329d35b585d8790d3b3ac33dbefd029343064588fa9c9cb1ad113162e",
+      "bytes": 9109,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/router/router_factory.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py": {
+      "sha256": "a7345df5add00cf3bd93024492d6fc1189fd3ecf2754a11cef1b03a295d791f7",
+      "bytes": 11903,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/runner/moe_runner.py": {
+      "sha256": "a19ecf2417c80b93c0fe5594e74528f686665847732196f9b29ef967b38110b0",
+      "bytes": 37683,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/fused_moe/runner/moe_runner.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/layernorm.py": {
+      "sha256": "3460eba01758849027bb59b8592626406e33ab25b23d2def729bb0ec42afce67",
+      "bytes": 10489,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/layernorm.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/fp8.py": {
+      "sha256": "2be6e530b0a9ba4388b17db3a810b7dbd0bf493846b8549e0c7a41e01d026dc9",
+      "bytes": 32580,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/fp8.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/mxfp4.py": {
+      "sha256": "774ce488c3d22fa21b953d3532eb7c019ad674ecd05230d2c146b94329e15a6d",
+      "bytes": 32453,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/mxfp4.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/utils/flashinfer_utils.py": {
+      "sha256": "eedaaa7097e58bd2892ee68dafd021d400082a4be4e9e27034088cad4f6b8d16",
+      "bytes": 19312,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/utils/flashinfer_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/utils/fp8_utils.py": {
+      "sha256": "ba29e79fa8ef4060b49111257550643223dbc8047ccde09ca66cb601d279bd90",
+      "bytes": 48393,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/utils/fp8_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/utils/marlin_utils.py": {
+      "sha256": "6f91cbf2b0ae276abd4b57b80b20f260307f9df3e24d40ee2b0abf76f4c7f100",
+      "bytes": 26649,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/utils/marlin_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/utils/marlin_utils_fp4.py": {
+      "sha256": "a7c61d4f67b5d23c4236645ffc0f6f1fe6f8ef2577e83229c479b311c1cddd8b",
+      "bytes": 28356,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/quantization/utils/marlin_utils_fp4.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/sparse_attn_indexer.py": {
+      "sha256": "22d1d98bd475b1dc22de85d0e414d0490860de50c8bbd26371175e5ea6411116",
+      "bytes": 32691,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/sparse_attn_indexer.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/vocab_parallel_embedding.py": {
+      "sha256": "b3e8a07296607153424b4b7ca5f75f00dcec1bce0f49e54b5eff6262fdf80201",
+      "bytes": 22902,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/layers/vocab_parallel_embedding.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/model_loader/dummy_loader.py": {
+      "sha256": "667a350fd64afa3bd4956f0f32c6ffe15b36d93d38124738ab0ea760bcf2ce27",
+      "bytes": 2497,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/model_loader/dummy_loader.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/model_loader/weight_utils.py": {
+      "sha256": "b42ff2bd9301c4034592598f86a03df7d60a9fc7e13576054deb44bce9ceccf7",
+      "bytes": 59584,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/model_loader/weight_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/models/deepseek_v2.py": {
+      "sha256": "58d8916458de7c6f73b40bfef9d2f57bdd6fa0fb79be9e269331af6e66149fe2",
+      "bytes": 75645,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/model_executor/models/deepseek_v2.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/common/ops/fused_qk_rmsnorm.py": {
+      "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+      "bytes": 3177,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/common/ops/fused_qk_rmsnorm.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/attention.py": {
+      "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+      "bytes": 37363,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/attention.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py": {
+      "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+      "bytes": 10855,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/compressor.py": {
+      "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+      "bytes": 18460,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/compressor.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/eager_scratch.py": {
+      "sha256": "a49d732592c7b316e138b2186c2760070122cbc1e0ea789e04c3b4278b0ee0f6",
+      "bytes": 4874,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/eager_scratch.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/nvidia/flashmla.py": {
+      "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+      "bytes": 15906,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/nvidia/flashmla.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/nvidia/model.py": {
+      "sha256": "c01be6d313f494eb38982c8f56c314267bbf67310e7f13ca53b596b31aef4e44",
+      "bytes": 60646,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/nvidia/model.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/nvidia/ops/o_proj.py": {
+      "sha256": "ffb28e7cc44124bb2878e596617b70ec2659c7b26a2048a06facc343fa4d24e1",
+      "bytes": 2255,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/nvidia/ops/o_proj.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py": {
+      "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+      "bytes": 82256,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/quant_config.py": {
+      "sha256": "6fdd20b617640741a19643f893b9b8a31d390b0ccb04d322ece29f57ff8290c9",
+      "bytes": 7818,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/quant_config.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/sparse_mla.py": {
+      "sha256": "beb9af7e7e82b4aa05027a8267ea99020b6b00076de02e8177ca77d167cc7109",
+      "bytes": 15384,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/models/deepseek_v4/sparse_mla.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/platforms/interface.py": {
+      "sha256": "31406ba149718fcafa3927c329a5a78bc2a48a34c8bf2cf151efcdffd4702ecf",
+      "bytes": 48690,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/platforms/interface.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/profiler/wrapper.py": {
+      "sha256": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+      "bytes": 18032,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/profiler/wrapper.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/transformers_utils/config.py": {
+      "sha256": "869c46fc5c78aa33b86df168c56a6e9e52a1e22ed5becccabce153c8839c6a30",
+      "bytes": 46581,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/transformers_utils/config.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/transformers_utils/configs/deepseek_v4.py": {
+      "sha256": "8637e356deecb9c4780d0470332d2d4c0e2821e3be9240c245954f27ca7293c1",
+      "bytes": 737,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/transformers_utils/configs/deepseek_v4.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/utils/multi_stream_utils.py": {
+      "sha256": "3ee8bba03950f586175e718bdbab4a25bc51051a1a4c81bf58ce60ab723dc86f",
+      "bytes": 4737,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/utils/multi_stream_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/attention/backends/mla/indexer.py": {
+      "sha256": "d01f056025eb0fcbbe4b6b97bca9654f97d6b8811223f473da0e209ce194cb9e",
+      "bytes": 46911,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/attention/backends/mla/indexer.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/attention/backends/mla/sparse_swa.py": {
+      "sha256": "4a85df0a4207e2223b8e243eb418e216f1c0e562a9abc906c481547a1bf31f56",
+      "bytes": 36145,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/attention/backends/mla/sparse_swa.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/core/kv_cache_utils.py": {
+      "sha256": "088f2201bee86fade694e78141b6e99a5cd0cdd23c5c7ab3526dd119f76e4aec",
+      "bytes": 93945,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/core/kv_cache_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/core/sched/output.py": {
+      "sha256": "51643386fab3a56b7747aa784ad657833966ebe823acee1f37222e33c1e5696a",
+      "bytes": 11315,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/core/sched/output.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/core/sched/scheduler.py": {
+      "sha256": "4b79ab760c3864af6838d555c01335deea3aac97c9be2be415fa0e5dab32f07e",
+      "bytes": 141223,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/core/sched/scheduler.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/cudagraph_dispatcher.py": {
+      "sha256": "51f632753af729aeee6ce4a802d9d74b64f22eef02a524f36e2a24b07ef0cf63",
+      "bytes": 15494,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/cudagraph_dispatcher.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/engine/async_llm.py": {
+      "sha256": "bceed0b3f5f0c834fef79525f2462a092f082390f0070526280abc95945837dd",
+      "bytes": 47095,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/engine/async_llm.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/engine/core.py": {
+      "sha256": "f4b1e07b6d91fac1549bc74a5c804e5a88793d663b5dc045c9e455db6550f5ad",
+      "bytes": 104019,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/engine/core.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/engine/core_client.py": {
+      "sha256": "afb2b627cf9ef861f05b411494156cc6ad5076ea770c6f2a4c8a941ca82103ec",
+      "bytes": 77043,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/engine/core_client.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/abstract.py": {
+      "sha256": "7514edb4a569220851e43206dccfca92e5b36b4639fcfd27a2825f38990670f8",
+      "bytes": 15056,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/abstract.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py": {
+      "sha256": "d5ca86635611758c2bd543ffd1fe9ad200db62880ce1f47eda8e4c63847595ea",
+      "bytes": 44915,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/kv_cache_interface.py": {
+      "sha256": "932e9175796706506c34c3014cc3c69b146e199426dbbacf19f24056f7332ec3",
+      "bytes": 39859,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/kv_cache_interface.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/metrics/loggers.py": {
+      "sha256": "d5a91626cf79118f98ae6438c842cb30fc44ca14463c7e2af5871e3da8e51bcf",
+      "bytes": 53560,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/metrics/loggers.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/dp_utils.py": {
+      "sha256": "1c529cbce3652037c426544d87f55f7b3d1819c4bf1a9c6fed05679ec62faf89",
+      "bytes": 9084,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/dp_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/attn_utils.py": {
+      "sha256": "af27f25caf705b34201d1938b81ad212a65ed9178b19e89a517811f390f16eab",
+      "bytes": 29196,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/attn_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/block_table.py": {
+      "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+      "bytes": 13091,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/block_table.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/cudagraph_utils.py": {
+      "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+      "bytes": 29523,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/cudagraph_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/dp_utils.py": {
+      "sha256": "3c882f85109ba47e473953351d166c4377ceb995205e91cbf128ca5075775a5d",
+      "bytes": 4963,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/dp_utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/model_runner.py": {
+      "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+      "bytes": 87746,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/model_runner.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/model_states/default.py": {
+      "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+      "bytes": 7723,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/model_states/default.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/states.py": {
+      "sha256": "99418f5df43ca612ded72609fee011620b065b2cab2f249ccb387096bf4ae71a",
+      "bytes": 5271,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu/states.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu_model_runner.py": {
+      "sha256": "7f2890eefca1efe25565bf1c7e5906a87948ae922610a7aaac620b28b46f26aa",
+      "bytes": 355498,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu_model_runner.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu_worker.py": {
+      "sha256": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552",
+      "bytes": 60550,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/gpu_worker.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/kv_connector_model_runner_mixin.py": {
+      "sha256": "4b3d86125114857a6af0e60b2f37a338f75df497967b8416b719bb0a2af24c09",
+      "bytes": 10283,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/kv_connector_model_runner_mixin.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/utils.py": {
+      "sha256": "e9d4381d903f7345c9b2fa7e9facfdfe7de7c36c2488bf7e28398183282b7a07",
+      "bytes": 25369,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/utils.py"
+    },
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/workspace.py": {
+      "sha256": "d21c08167d1d0d1c0cddaa80453a53a0b4dec5d81b5a537c94a21324344976b3",
+      "bytes": 11181,
+      "resolved": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/worker/workspace.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/engine.json": {
+      "sha256": "473fe10fb1aaa35996e147f8f3b6d8b4508ac1bd645f789ae74b48b0335c6fb1",
+      "bytes": 1830,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/engine.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/frontier.json": {
+      "sha256": "747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
+      "bytes": 55620,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/frontier.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/native_config.json": {
+      "sha256": "9761d3e53ccadeba8536f4c358d1913c6821661c9b420d5103800da95dbe9d10",
+      "bytes": 24745,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/native_config.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/SHA256SUMS": {
+      "sha256": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+      "bytes": 321,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/SHA256SUMS"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/manifest.json": {
+      "sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+      "bytes": 4208,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/manifest.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/request_ids.json": {
+      "sha256": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+      "bytes": 32630,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/request_ids.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/trace.csv": {
+      "sha256": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+      "bytes": 1986,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/trace.csv"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/warmup_pool.csv": {
+      "sha256": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e",
+      "bytes": 929,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/warmup_pool.csv"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/manifest.yaml": {
+      "sha256": "ec93153eb0112bb45c7f6b3c8e3c10874c9f96f20ca0de11ba10fdb45cb710a1",
+      "bytes": 2447,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/manifest.yaml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/config.json": {
+      "sha256": "9761d3e53ccadeba8536f4c358d1913c6821661c9b420d5103800da95dbe9d10",
+      "bytes": 24745,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/config.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/engine.json": {
+      "sha256": "473fe10fb1aaa35996e147f8f3b6d8b4508ac1bd645f789ae74b48b0335c6fb1",
+      "bytes": 1830,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/engine.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/evidence_readiness.json": {
+      "sha256": "09a47be359960415d0e5534ccbd451861ee632baf18266bec26e91db8017f610",
+      "bytes": 1626,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/evidence_readiness.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/launch.py": {
+      "sha256": "bee2ca673e613e4acf4a83b04feb2194509a838dfd516f9ebc6a040fd05e907b",
+      "bytes": 2581,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/launch.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/config.json": {
+      "sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "bytes": 1749,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/config.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/generation_config.json": {
+      "sha256": "5fccff80f55a4d455bbe516bdd552edf3e9623df95e99fbf2a3c3389fdf91af0",
+      "bytes": 170,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/generation_config.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/tokenizer.json": {
+      "sha256": "8f9f37ca37fdc4f5fd36d5cf4d3b0e8392edb4e894fd10cc0d70b4957c8633cf",
+      "bytes": 6367146,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/tokenizer.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/tokenizer_config.json": {
+      "sha256": "6ac8c8dc065ed118161d02dd532749ae3f52c243deac27872134fae2f50d8547",
+      "bytes": 801,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/tokenizer_config.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/native_dummy_bootstrap.py": {
+      "sha256": "74cf0dec1c0b4d271abf2291252b9ca3cd6f6ce889a9f1f6485983eecb4393ec",
+      "bytes": 3834,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/native_dummy_bootstrap.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/overlay.json": {
+      "sha256": "ca88a5031edcd6b5d866bf3461e0487d24f000ca9a5bf52f7a39b77ebfe1a5a2",
+      "bytes": 3764,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/overlay.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/overlay_model.py": {
+      "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+      "bytes": 60892,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/overlay_model.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/probe_nixl_read.py": {
+      "sha256": "22995e66121122adb3924502ec4c763a500c88e90fc6fba5b340a832098ac997",
+      "bytes": 13016,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/probe_nixl_read.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/probe_runtime_inventory.py": {
+      "sha256": "929498b5ba4db72f0d2aef8abf3f73d6c625c439bbe8c4a74774719602bdafa6",
+      "bytes": 31862,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/probe_runtime_inventory.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/profile_plan.json": {
+      "sha256": "5eb6d8bbb450fb88aeb9e11b503a4c0b0839348fb81b8a7aa2ea90d3d2cd6bd5",
+      "bytes": 2041,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/profile_plan.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/seal.py": {
+      "sha256": "851ff85b03c5684613f4ea2f4536796bfa971497556f94a6f6bb04a46b761619",
+      "bytes": 839,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/seal.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/serve_observers.json": {
+      "sha256": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
+      "bytes": 5,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/serve_observers.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/source_lock.json": {
+      "sha256": "07f9a087a9bf965e6d6737dbbb9fca0c94baf571fe251166775654dc2a8e7265",
+      "bytes": 14131,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/source_lock.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/submit_native_diagnostic.py": {
+      "sha256": "80effbbb5f0315b54ecdb2f3bb979dc33e00e94f8a10bcf416cc590d02424359",
+      "bytes": 3020,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/submit_native_diagnostic.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/SHA256SUMS": {
+      "sha256": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+      "bytes": 321,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/SHA256SUMS"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/manifest.json": {
+      "sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+      "bytes": 4208,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/manifest.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/request_ids.json": {
+      "sha256": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+      "bytes": 32630,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/request_ids.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/trace.csv": {
+      "sha256": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+      "bytes": 1986,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/trace.csv"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/warmup_pool.csv": {
+      "sha256": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e",
+      "bytes": 929,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/warmup_pool.csv"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/manifest.json": {
+      "sha256": "25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f",
+      "bytes": 4768,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/manifest.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json": {
+      "sha256": "de66faae79b94d749214412d46c6f8b9f06d71ae3d3481bdf34306979bd79259",
+      "bytes": 11867,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay_model.py": {
+      "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+      "bytes": 60892,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/overlay_model.py"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay.json": {
+      "sha256": "52559fe7bba086ab05622b29a3136f3c6f26c5a2029816cfa50dd07452842fdc",
+      "bytes": 3760,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/overlay.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/source_lock.json": {
+      "sha256": "d33a2cdb55efa34b18794924e590958a79b95e359551d5727bac999421293e51",
+      "bytes": 14055,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/source_lock.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/baseline.json": {
+      "sha256": "a22a5f1100b2223dcc1f0e9e6b7ba0b1789e599e8b7afad626774a167562a9fa",
+      "bytes": 4177,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/baseline.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/candidate.json": {
+      "sha256": "5e11d7f8685f189f586c9a20dc5d9659f67c48e73e01c22e949346a7285f56ab",
+      "bytes": 4172,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/candidate.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/baseline.xml": {
+      "sha256": "ca59d31b4881c1c9bac8cda1d346f0cd5f30cf60042d4ec565d9a38125b057a4",
+      "bytes": 1435,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/baseline.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/candidate.xml": {
+      "sha256": "a4ae61023b8815aaa47de1dcc5f22a70d3251575248885e8d37f3a771503d782",
+      "bytes": 1435,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/candidate.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/baseline.log": {
+      "sha256": "60086964f93742fa15a23105cd5db09e019e0e41b4f02e1433e8fd3d26bb9a4c",
+      "bytes": 4825,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/baseline.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/candidate.log": {
+      "sha256": "6d7e0bdd310c58eea006cd5d105d59ddb397cbbadc2c588246113b230180060f",
+      "bytes": 4825,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/candidate.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/receipt.json": {
+      "sha256": "667a7b366066c2a985fa9dcd341f1151d9f12d70187f58626161459eaa81da9d",
+      "bytes": 33769,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/receipt.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_worker.log": {
+      "sha256": "3484e0efcb0c6f5356c43fdeba2e96ad948b092babae63f5b4da37e27465a0a3",
+      "bytes": 99,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_worker.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_worker.xml": {
+      "sha256": "ede794d2df8422200da3c7fb23d2758683f5e3c463659637a044153f4fae1faa",
+      "bytes": 6167,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_worker.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_manifest.log": {
+      "sha256": "57c4aff7f5e0e73a86f54b4785433c53f17339e4cac3df21cd6929a458fdfd7a",
+      "bytes": 99,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_manifest.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_manifest.xml": {
+      "sha256": "4e0332c094e7a0276fa4fca27206c634fc84867ca5e7ed9b6e2bfea1fd647807",
+      "bytes": 2353,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_manifest.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serve_profile.log": {
+      "sha256": "628bfe088f647ebad5b777f068494b44787900e65c5f9a4cdd5d01bc9a23d9ff",
+      "bytes": 99,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serve_profile.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serve_profile.xml": {
+      "sha256": "89f3f19965c82fa1246818e3c6eb8439b0815f990405ed4f5da2ce8d308f14fc",
+      "bytes": 5669,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serve_profile.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_streaming_replay.log": {
+      "sha256": "6427faa562c97b8ed304392e7e3aea65eb0dc0e5245bb8b50bb178d7c118dca5",
+      "bytes": 100,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_streaming_replay.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_streaming_replay.xml": {
+      "sha256": "44788c3eff98ed7879a3f900deeef5b8f84f64af5625b481d13db4c37f1a4a9f",
+      "bytes": 6331,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_streaming_replay.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_cold_start.log": {
+      "sha256": "b4c55d0ae0e4b343f4800e8b3595fc133e340a4bcfdc14750f2badb7cfd69d5e",
+      "bytes": 100,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_cold_start.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_cold_start.xml": {
+      "sha256": "f2e59d1dfd753f6b05f8bbe8f401b69cacc27073f73ede8ca01f931988f59305",
+      "bytes": 2816,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_cold_start.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_canonical_http.log": {
+      "sha256": "e6d816a7ccde803d2bd48ef6937c5c896883d80f13ea14b4dc764514ca236b27",
+      "bytes": 98,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_canonical_http.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_canonical_http.xml": {
+      "sha256": "c75c955f1071e54f9f3a5638047a422675a8331e010d039b446b2610a69240bb",
+      "bytes": 406,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_canonical_http.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_calibration_pd_harness.log": {
+      "sha256": "d53febb04ee30227d973b983cf2c5538f9575b06d0839df1a2340d52da3e6b9b",
+      "bytes": 99,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_calibration_pd_harness.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_calibration_pd_harness.xml": {
+      "sha256": "e1c030bfdf8ea09fb47fdc4f4c6194b00ac2893d5ce7f447f6db4b2599a5c805",
+      "bytes": 11332,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_calibration_pd_harness.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_dp_placement_harness.log": {
+      "sha256": "4950d7c811d0331be7ec79f15dd9d3c3a0f496512ddd6c66b60b267932a9c29f",
+      "bytes": 179,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_dp_placement_harness.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_dp_placement_harness.xml": {
+      "sha256": "d19efb58e2e3df290e74930172de42ef70c0b251b38bb5138b56137fc74d643d",
+      "bytes": 11336,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_dp_placement_harness.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_v2_serving_inventory.log": {
+      "sha256": "29ae57972f1bf856ec2632a0f48c3e990fbf5bc80f3fe7905657c282dda32cf0",
+      "bytes": 99,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_v2_serving_inventory.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_v2_serving_inventory.xml": {
+      "sha256": "1850f1435bb4ee37efcc4022ad98097de2341df081d6f519c9dea9079f01a2dd",
+      "bytes": 7419,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_v2_serving_inventory.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serving_inventory.log": {
+      "sha256": "545dee8316363da67c90edb7a1a8490db87e7881554aae4634020e0f28cc1214",
+      "bytes": 99,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serving_inventory.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serving_inventory.xml": {
+      "sha256": "188abf2bb1c6d76f69db297e4d9703fb036d43c23fc3a80aff6540ae1dfbf314",
+      "bytes": 4500,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serving_inventory.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_groundtruth_check.log": {
+      "sha256": "0523dc6d0f66b96de368b0b5c8083595fb5de2b20148d23254956e55bda5d61f",
+      "bytes": 4917,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_groundtruth_check.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_groundtruth_check.xml": {
+      "sha256": "2d5d3670f2417ff4e21bdeda00151dda2412914fc310e2b1b6db457ae294d2c9",
+      "bytes": 16998,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_groundtruth_check.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_full_structure.log": {
+      "sha256": "389b2de15809d6b3041bc69be2d06bb2172d19cc33e633b6e3d5e4d4e41f2c0d",
+      "bytes": 98,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_full_structure.log"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_full_structure.xml": {
+      "sha256": "410fc767a8c31c132dedb2fae52bae517db5d92f32839a72ecf847530570fb31",
+      "bytes": 1127,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_full_structure.xml"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json": {
+      "sha256": "96d6e17cac8ca4ff1a8503ec525505c24cbc30690f7ad1d60d743fd5d6b67bc4",
+      "bytes": 7652,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_report_2026-10-24_integration.md": {
+      "sha256": "5f0081b5ad823e5515ff09cc83de63c3a500ed5144d5dbd5a21614f37694ea8a",
+      "bytes": 3221,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_report_2026-10-24_integration.md"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_diagnosis.json": {
+      "sha256": "db093b8cfe39a26feb25fded97e76c736a8488a7a5d221c5fd5b66550cf87445",
+      "bytes": 13038,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_diagnosis.json"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_diagnosis.txt": {
+      "sha256": "6ac5adc73fff3cc329b800fd59b23688379ee64a68e36aa34ea54e0021cb8a11",
+      "bytes": 4675,
+      "resolved": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_diagnosis.txt"
+    }
+  },
+  "runtime_modules": 13,
+  "native_sources": 87,
+  "sealed_profile04_files": 45,
+  "accepted_runtime": "1437ace6f4a438c1bb879d904e2bede0c777303c",
+  "binary_limit": "No Docker/image binary execution or rehash; existing sealed source/package pins retained."
+}
