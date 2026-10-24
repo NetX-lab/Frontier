@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-24 | Selected the corrected bounded standalone proof; no implementation or submission yet. |
+| 2026-10-24 | Implemented the standalone CPU/source slice; independent reviews and all image/GPU gates remain pending. |
 
 ## Purpose and boundary
 
@@ -16,8 +16,8 @@ before that source graph disappears. It does not run the native V4 model or
 change serving ownership, calibration predicates or operator-cost admission.
 
 Authority is `D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY`; concrete allocation is
-`D-V4-SCOPE-LIFETIME-PROBE` in ../../requirements.md. The implementation has
-not begun. Corrected feasibility estimates are not measurement results.
+`D-V4-SCOPE-LIFETIME-PROBE` in ../../requirements.md. The standalone source and
+CPU controls are implemented; real callback/TLS/lifetime results remain unmeasured.
 
 ## Smallest selected implementation
 
