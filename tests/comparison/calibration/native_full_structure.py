@@ -578,6 +578,12 @@ class NativeServingInventory:
                     record('dp_post_all_reduce', tensor.tolist())
 
                 observer.observe('dp_post_all_reduce', snapshot)
+
+                def sequence():
+                    if getattr(observer.local, 'dispatch_evidence', None) is not None:
+                        observer.local.dp_sequence = kwargs['group']._get_sequence_number_for_group()
+
+                observer.observe('dp_post_all_reduce_sequence', sequence)
                 return result
 
         wrap('get_uniform_decode_token_count', classified)
@@ -691,6 +697,7 @@ def _install_native_serving_inventory():
 
         def execute(original):
             def call(worker, *args, **kwargs):
+                observer.local.dp_sequence = None
                 previous = getattr(observer.local, 'context', None)
                 output = args[0] if args else kwargs.get('scheduler_output')
                 if not getattr(observer.local, 'startup_warmup', False):
@@ -753,6 +760,7 @@ def _install_native_serving_inventory():
                     return bound.arguments
 
                 def call(model_runner, *args, **kwargs):
+                    observer.local.dp_sequence = None
                     previous = getattr(observer.local, 'context', None)
                     previous_runner = getattr(observer.local, 'runner', None)
                     previous_dispatch = getattr(observer.local, 'dispatch_evidence', None)

@@ -1,0 +1,40 @@
+{
+  "phase": "final2",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "CUDA_VISIBLE_DEVICES": ""
+  },
+  "results": [
+    {
+      "name": "native_serve_profile",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_serve_profile.py",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/final2_native_serve_profile.xml"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record",
+      "start_utc": "2026-10-23T18:46:24.572372+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 36,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/final2_native_serve_profile.log",
+      "xml": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/final2_native_serve_profile.xml",
+      "log_sha256": "41ddb30638b47a961b218db2768c3ce48065994918485eddbacb5f2295aebe43",
+      "xml_sha256": "199b05e6f84cc3096f65e6c2a1700c20e7f0b79f08f81172289b8b93f693737a"
+    }
+  ]
+}

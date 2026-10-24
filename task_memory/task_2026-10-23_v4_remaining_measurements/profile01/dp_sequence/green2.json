@@ -1,0 +1,40 @@
+{
+  "phase": "green2",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "CUDA_VISIBLE_DEVICES": ""
+  },
+  "results": [
+    {
+      "name": "native_serve_profile",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_serve_profile.py",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/green2_native_serve_profile.xml"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record",
+      "start_utc": "2026-10-23T18:42:36.071713+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 36,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/green2_native_serve_profile.log",
+      "xml": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/green2_native_serve_profile.xml",
+      "log_sha256": "6c0a1b431f9ff3a746c0ad7720f33e451a558b59e56a7cfb836c356644668a8a",
+      "xml_sha256": "336aee0d75aa208618d8e7e4022d6649300c3637f709abeeb8ed2e5018690a4f"
+    }
+  ]
+}

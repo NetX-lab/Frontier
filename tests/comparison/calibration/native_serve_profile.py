@@ -144,6 +144,8 @@ class ServingProfile:
         native = self.inventory.local
         dispatch = getattr(native, 'dispatch_evidence', None)
         step = getattr(self.local, 'step', None)
+        sequence = (getattr(native, 'dp_sequence', None) if dispatch is not None else
+            None if step is None else step.get('dp_post_all_reduce_sequence'))
         if dispatch is None and step is not None:
             dispatch = step.get('dispatch_evidence')
         if dispatch is not None:
@@ -157,7 +159,7 @@ class ServingProfile:
         execution = ('capture' if kind == 'capture' or capture_active or stream_capturing else
             'replay_eager_segment' if getattr(self.local, 'replaying', False) else
             'eager_serving' if kind == 'serving' else kind)
-        return dict(step=None if step is None else step['step'], kind=kind,
+        metadata = dict(step=None if step is None else step['step'], kind=kind,
             repeat=context.get('repeat'), request_phase=context.get('phase'),
             has_prefill=has_prefill, token_phase=None if has_prefill is None else
                 'prefill' if has_prefill else 'decode', execution=execution,
@@ -165,6 +167,9 @@ class ServingProfile:
             startup_warmup=getattr(native, 'startup_warmup', False),
             breakable_capture_active=capture_active, stream_capturing=stream_capturing,
             layer=getattr(self.local, 'layer', None))
+        if sequence is not None:
+            metadata['dp_post_all_reduce_sequence'] = sequence
+        return metadata
 
     @contextmanager
     def range(self, category, scope, owner=None, arguments=None):
@@ -488,6 +493,9 @@ class ServingProfile:
             pending['has_prefill'] = dispatch.get('classifier', {}).get('inputs', {}).get('has_prefill')
             pending['synchronized_descriptor'] = dispatch.get('dispatch', {}).get('descriptor')
             pending['synchronized_mode'] = (pending['synchronized_descriptor'] or {}).get('cg_mode')
+        sequence = getattr(self.inventory.local, 'dp_sequence', None)
+        if sequence is not None:
+            pending['dp_post_all_reduce_sequence'] = sequence
         return self.append(self.steps, json.loads(json.dumps(pending)))
 
 
