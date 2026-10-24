@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Completed submission-doc and CPU-fixture acceptance; native capture prerequisite accepted with limits, while the existing profile04 job awaits placement/runtime. |
 | 2026-10-24 | Profile04 submitted once; restore the pre-existing positive fixture and synchronize submission records independently while preserving the queued job. |
 | 2026-10-24 | Selected correction-backed profile04: preserve runtime/window/RPC budget, disable only the optional CUDA statistics table and prepare a fresh reviewed package. |
 | 2026-10-24 | Native CPU timeout loop and two prefill-rank0 censuses passed; verify the existing optional CUDA-table toggle before fresh package preparation. |
@@ -54,6 +55,8 @@ Profile04 preparation runs alongside the final CPU-control review: `same runtime
 Current parallel work: `profile04 exp-1024-172225-512616 queued -> actual placement/runtime -> terminal/raw-data acceptance` runs alongside `{known baseline fixture diagnosis -> one-file<=60gross CPU restoration -> Spec/Standards review + root fixture-enabled verification -> integration, seven-file<=150gross submission-document synchronization -> root link/hash/scope verification -> commit}`. Root owns all platform work and primary requirements/plan/progress; owners write disjoint fixture/worktree records or the seven named documents. Original profile03, sealed profile04 inputs, native06R4 and existing calibration/admission rules remain unchanged. No second GPU attempt is selected.
 
 The third independent source-only slice reads the existing native capture/compiled-forward scope paths and writes only `profile01/native_capture_scope.md`<=110lines. Its prerequisite question is whether Python per-op scopes execute at graph capture; a source call path alone cannot prove callback thread/scope freshness. It neither changes profile04 nor authorizes a collector/probe implementation or GPU run. Root evaluates this result separately from fixture and submitted-job acceptance.
+
+Completed queue-time prerequisites: seven-file documentation accepted atc19833fe; fixture source integrated0dbb617f/records3c3fdce4 and root acceptedb0856975 after dual review/two145-test runs/32CPU snapshots. [Native prerequisite](profile01/native_capture_scope_acceptance.json) accepts the91-line corrected report, independent159748-row census, actual retention limits and image-bound Torch API source; callback/TLS/node ownership remains unproved. Next `separately recorded capture-scope/lifetime proof -> CPU/source/review/package gates -> bounded runtime evidence` is only a proposal, not an allocation or run. Keep profile04's existing queued launcher and sealed inputs untouched.
 
 G2 dependencies: `{G2a native window/API evidence, driver callsite design} -> G2b one-owner implementation and CPU controls -> G2c independent Spec/Standards review and root final-source verification -> G2d concrete resource/window proposal -> YC GPU decision`. G2a/b/c are complete for source `05952396`, with seven existing non-core files and 433/750 changed lines. Both R1 reviews closed all findings; final separate suites and repaired-source matrix binding passed (`driver/primary_acceptance.json`). G2d, resource authority, fresh package/source/image checks and the diagnostic collection/audit are complete; native/operator/serving qualification remains open.
 

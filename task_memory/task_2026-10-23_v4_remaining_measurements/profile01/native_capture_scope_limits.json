@@ -1,0 +1,23 @@
+{
+  "status": "PASS_BOUND_CAPTURE_LIMITS",
+  "source": "/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts/nodes/gpu-h800-0216.host.platform.shaipower.com/serving_profile/rank0.before_profile.json",
+  "source_sha256": "147c37ec6cd822f4dc5d72673bbc1a53dfb59ae5b9f53ee226f7014f6773fa41",
+  "limits": {
+    "bytes": 268435456,
+    "records": 250000
+  },
+  "scope": "Only configured retention limits read from the same retained startup artifact; no node correspondence or completeness claim.",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "python3",
+    "-B",
+    "-"
+  ]
+}
