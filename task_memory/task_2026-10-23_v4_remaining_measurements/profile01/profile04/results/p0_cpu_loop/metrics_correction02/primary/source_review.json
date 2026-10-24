@@ -1,0 +1,151 @@
+{
+  "status": "PASS_PRIMARY_SOURCE_AST_AND_CONTROL_CHECKS_PENDING_INDEPENDENT_REVIEWS",
+  "observed_utc": "2026-10-24T20:35:52.727467+00:00",
+  "fixed_point": "4ae81052e8b7a82593b68c6740dadb07e9e1624b",
+  "reviewer": "primary",
+  "inspected_files": [
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/primary_unit.receipt.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/ast_closure.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/complete_controls.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_execution_allocation.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_comparison_allocation.json"
+  ],
+  "source_sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+  "test_sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827",
+  "source_lines": 80,
+  "source_cap": 220,
+  "test_lines": 194,
+  "test_cap": 200,
+  "owner_markdown_lines": 100,
+  "owner_markdown_cap": 100,
+  "source_pins": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+      "expected_sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+      "actual_sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+      "expected_sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827",
+      "actual_sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+      "expected_sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+      "actual_sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+      "expected_sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+      "actual_sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+      "expected_sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4",
+      "actual_sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py",
+      "expected_sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c",
+      "actual_sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py",
+      "expected_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+      "actual_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py",
+      "expected_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+      "actual_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+      "status": "PASS"
+    }
+  ],
+  "owner_unit": {
+    "tests": 9,
+    "evidence": 42,
+    "invocations_used": 1,
+    "receipt_sha256": "54ff3b0421108f5ba20aa0c6b33fd97f9fc41d7ed0e23c9d35a241f5c8522886"
+  },
+  "primary_unit": {
+    "tests": 9,
+    "evidence": 42,
+    "invocations_used": 1,
+    "actual_memory_limit_bytes": 32212254720,
+    "receipt_sha256": "df6347a47bb3b191798e4e0d6c0df340d8364eaf01528e09807fc3b6a13d101f"
+  },
+  "complete_controls": {
+    "invocations_used": 2,
+    "receipt_sha256": "8a5cbbb4f022b631871703074fd61541816429fa3931d60028f9cdb07f9afa21",
+    "non_clock_json_exact": true,
+    "decompressed_indices_exact": true,
+    "rows": [
+      142567,
+      570964
+    ],
+    "exact_metric_groups": [
+      361,
+      240
+    ]
+  },
+  "ast_checks": [
+    {
+      "name": "accepted_input_AST_unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "outside_metrics_definition_AST",
+      "status": "PASS"
+    },
+    {
+      "name": "original_grouping_expressions_and_calls",
+      "status": "PASS"
+    },
+    {
+      "name": "telemetry_stripped_source_AST",
+      "status": "PASS"
+    },
+    {
+      "name": "exact_frozen_union_recurrence_AST",
+      "status": "PASS"
+    },
+    {
+      "name": "no_mutable_membership_lists",
+      "status": "PASS"
+    },
+    {
+      "name": "composition_AST",
+      "status": "PASS"
+    },
+    {
+      "name": "original_single_composition_boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "original_loading_GC_pipeline_AST",
+      "status": "PASS"
+    },
+    {
+      "name": "unchanged_entry_main_AST",
+      "status": "PASS"
+    }
+  ],
+  "findings": [],
+  "reason": "Avoid measured per-event mutable/default-list allocation while preserving original count/sum and union recurrence. Accepted AST composition remains the only route; no original source or output mutation.",
+  "static_inference": "Group order uses the same globally sorted interval key via integer positions. Equal interval endpoints can differ in tie order across groups without changing the frozen union recurrence; duplicated memberships remain represented. The unit includes direct tie/duplicate/float-order witnesses.",
+  "limitations": [
+    "No full P0 performance or complete32-rank acceptance yet.",
+    "Owner unit/full controls do not establish native serving ownership, dependencies, non-perturbation, GPU cost or reference admission.",
+    "The earlier read-only scratch run_controls.py lookup used a nonexistent path; no old script executed or experiment allowance consumed. Retained source was subsequently inspected from its committed source archive."
+  ],
+  "new_unit_or_control_invocations_in_this_check": 0
+}

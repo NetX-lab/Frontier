@@ -1,0 +1,37 @@
+{
+  "decision": "D-V4-P0-AUDIT-METRICS-GROUP-CORRECTION",
+  "recorded_utc": "2026-10-24T20:32:00.304467+00:00",
+  "comparison_driver_path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/compare_exact_controls.py",
+  "comparison_driver_sha256": "efeb1c710d9e050802aecdb299a491fa96a6df7322fddb908afa93978b5dfd5e",
+  "comparison_driver_gross_lines": 121,
+  "comparison_driver_line_cap": 150,
+  "control_inputs_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_inputs.json",
+  "control_inputs_sha256": "750d7b26404c0bd7356f66ef530c0fc6323260bd95d25427fec7e62589f0e72e",
+  "artifact_comparison_invocation_ceiling": 1,
+  "new_trace_audit_invocation_ceiling": 0,
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/compare_exact_controls.py"
+  ],
+  "timeout_seconds": 60,
+  "actual_memory_limit_bytes": 32212254720,
+  "max_rank_concurrency": 2,
+  "excluded_fields": [
+    "elapsed_seconds",
+    "maxrss_kib",
+    "kernel_sample_index.path",
+    "kernel_sample_index.sha256"
+  ],
+  "comparison": "Canonical exact non-clock JSON, explicit metric float-hex equality and every decompressed index byte; fresh excluded fields validated independently.",
+  "automatic_retry": false
+}

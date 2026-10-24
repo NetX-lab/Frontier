@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Accepted group-metrics CPU source, separate owner/primary9-test units and two complete exact controls after both independent reviews; fresh P0 remains pending. |
 | 2026-10-25 | Recorded the spent metrics-tail diagnosis and the separate measured group-metrics correction, control and affected-rank allocation. |
 | 2026-10-25 | Recorded the failed once-only P0 pilot and allocated one sparse metrics-tail diagnosis without another correction or rank run. |
 | 2026-10-25 | Resumed frozen package fresh gates and allocated a separate metrics correction, exact controls and eight once-only affected-rank validations. |
