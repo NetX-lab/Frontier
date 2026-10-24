@@ -42,4 +42,8 @@
 - completed: final report/checksum inventory and16-file record consistency checks
   PASS. Parent/owner/frozen HEAD and index hashes remain unchanged. Parent receipt
   SHA25674735eb00f1aa190472b8927ed312c11cf18921b3b05639d7f8a972f0450753b.
-- pending: scoped commit verification and return; no unfinished evidence check.
+- completed: evidence commit507234ed122051dbf87e3cabf9c2d9d61f1e80a0 contains
+  exactly16 owned additions. Post-commit checksum/changed-file guards PASS;
+  own worktree clean, zero outside-owned paths, source and protected indexes unchanged.
+- completed: phase checkpoint updated after the verified deliverable. All audit
+  steps complete; parent merge/current acceptance/root-doc updates remain parent-owned.

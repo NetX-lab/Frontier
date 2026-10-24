@@ -2,23 +2,24 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | 已验证 records-only commit 与最终 checksum/路径守卫；四项全部完成。 |
 | 2026-10-24 | 在 receipts、bindings 和 admission 三个验证步骤完成后检查路线。 |
 
 ## 1. 规划完成情况
 
-**汇总：** PASS 3｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | 绑定 owner commits、档案和既有 parent 机制 | PASS | 34 个档案文件符合当前 owner Git commit；第二 commit 仅五个范围内状态文档。 |
 | 独立 raw JUnit/strict 核对 | PASS | 77/77、902 artifact hashes、46fe 8新增PASS；raw exit1 和79 presenceFAIL保持。 |
 | source/input/script/scope 最终绑定及 admission | PASS | 2755/14/12、124/120、3762 unique hashes、零违规；三个阶段 HEAD/index 保持。 |
-| 报告、checksum inventory 和 records-only commit | TODO | 验证完成，最终交付文件和提交守卫待关闭。 |
+| 报告、checksum inventory 和 records-only commit | PASS | 507234ed 仅16个owned additions；checksum与提交守卫通过，worktree clean。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 本次任务请求至三阶段验证完成｜**当前前沿：** 报告与 scoped commit
+**检测窗口：** 本次任务请求至提交后守卫完成｜**当前前沿：** 交付 parent
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -43,8 +44,8 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 当前报告和 checksum inventory：记录实际失败与 namespace 诊断、完整 hashes/limits → 完成标志：与三阶段 receipt一致。
-2. Scoped commit：只提交 `resumed_performance/post_named_query_final_parent/` → 完成标志：changed-file 守卫通过且本 worktree clean。
+1. 交付当前独立 audit：报告与 receipt一致，16个路径守卫已通过；本任务没有未完成验证。
+2. Parent 合并 owner/audit，再更新 root/current acceptance；CLI/native/G3/E2E仍为独立范围，不由本审计扩展执行。
 
 ## 4. 最值得关注的 3 点
 

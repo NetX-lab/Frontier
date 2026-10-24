@@ -7,8 +7,8 @@
       "sha256": "d8bac4724ad2ee6b359e69beab165815d2fea0fac429eb5630830c98a1b21311"
     },
     "check_progress_2026-10-24_final_parent.md": {
-      "bytes": 3429,
-      "sha256": "70879319cfa6a4ea797ac86aef7480aa764ea36782db0f5b43842ee66fd709c3"
+      "bytes": 3499,
+      "sha256": "e64593de93b37725c8ef8c1c3d44ac63e4a7af6029d92c777118b2bdf2bfed66"
     },
     "comparison.json": {
       "bytes": 3793,
@@ -31,8 +31,8 @@
       "sha256": "db19519102c2f6217d22900e553b9f0e74379b983a9982c7d0fbce7de5fca767"
     },
     "progress.md": {
-      "bytes": 3176,
-      "sha256": "93509bb4aa7d5e7fa0e307da03d1306aa0eea3fec8e20e9003321b5f932a8f6c"
+      "bytes": 3506,
+      "sha256": "2988e74e311e951924a7693227b3d3f464183dde666721c3328e4f62fa526676"
     },
     "receipt_namespace_command.json": {
       "bytes": 4871,
