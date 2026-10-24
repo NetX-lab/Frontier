@@ -1,0 +1,159 @@
+{
+  "task_id": "D29-LATE-COPY-INIT-ERROR-RECOVERY",
+  "timestamp_utc": "2026-10-24T18:07:12.471355+00:00",
+  "verdict": "PASS_RECOVERY_ONLY_TECHNICAL_DIAGNOSES_UNFINISHED",
+  "candidate_source": "1f6b431478e2351e3ca6819f707cccbc3e4336e2",
+  "candidate_records_base": "97ae8d9b64f4728ba3d3c9af0647832e83ee0335",
+  "api_launcher": "/home/brainpp/.opencode-v2/scripts/opencode-v2",
+  "api_commands": [
+    {
+      "session_id": "ses_e92338e41ffe081mlmDNjpmxP5",
+      "initial": [
+        "/home/brainpp/.opencode-v2/scripts/opencode-v2",
+        "api",
+        "get",
+        "/api/session/ses_e92338e41ffe081mlmDNjpmxP5/message"
+      ],
+      "next_page_query": "?cursor=<cursor.next from initial response>",
+      "timeout_seconds": 60,
+      "stdout": "private regular file, no PIPE"
+    },
+    {
+      "session_id": "ses_e92340744ffe58Yx5C7xx4qApF",
+      "initial": [
+        "/home/brainpp/.opencode-v2/scripts/opencode-v2",
+        "api",
+        "get",
+        "/api/session/ses_e92340744ffe58Yx5C7xx4qApF/message"
+      ],
+      "next_page_query": "?cursor=<cursor.next from initial response>",
+      "timeout_seconds": 60,
+      "stdout": "private regular file, no PIPE"
+    }
+  ],
+  "session_summaries": [
+    {
+      "task": "init",
+      "session_id": "ses_e92338e41ffe081mlmDNjpmxP5",
+      "messages": 24,
+      "older_messages": 0,
+      "tool_types": {
+        "shell": 30,
+        "ctx_reduce": 1,
+        "read": 3
+      },
+      "terminal": {
+        "id": "msg_16f04c2d0001hf3RAa47vG2LCa",
+        "time": {
+          "created": 1792863945424
+        },
+        "type": "idle",
+        "outcome": "failed",
+        "error": {
+          "type": "unknown",
+          "message": "Agent not found: \"analyzer\""
+        }
+      },
+      "completed_tools": 33,
+      "permission_rejections": 1,
+      "new_technical_controls": 0,
+      "owned_record_writes": 0
+    },
+    {
+      "task": "copy",
+      "session_id": "ses_e92340744ffe58Yx5C7xx4qApF",
+      "messages": 20,
+      "older_messages": 0,
+      "tool_types": {
+        "read": 23,
+        "grep": 21,
+        "shell": 5,
+        "ctx_reduce": 1
+      },
+      "terminal": {
+        "id": "msg_16f0542e2001HJxD9BgbRy4JFO",
+        "time": {
+          "created": 1792863978210
+        },
+        "type": "idle",
+        "outcome": "failed",
+        "error": {
+          "type": "unknown",
+          "message": "Agent not found: \"analyzer\""
+        }
+      },
+      "completed_tools": 47,
+      "permission_rejections": 3,
+      "new_technical_controls": 0,
+      "owned_record_writes": 0
+    }
+  ],
+  "worktrees": [
+    {
+      "task": "init",
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+      "head": "886608ea574dd2107d0b30771d63d8057d23cac6",
+      "status": "",
+      "owned_records_path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish/task_memory/task_2026-10-22_step5_position_routing/init_preparation_reuse",
+      "owned_records_exist": false,
+      "failed_tools": [
+        {
+          "tool": "shell",
+          "error": {
+            "type": "permission.rejected",
+            "message": "Permission denied: external_directory"
+          },
+          "content": null
+        }
+      ]
+    },
+    {
+      "task": "copy",
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+      "head": "886608ea574dd2107d0b30771d63d8057d23cac6",
+      "status": "",
+      "owned_records_path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy",
+      "owned_records_exist": false,
+      "failed_tools": [
+        {
+          "tool": "read",
+          "error": {
+            "type": "permission.rejected",
+            "message": "Permission denied: external_directory"
+          },
+          "content": null
+        },
+        {
+          "tool": "grep",
+          "error": {
+            "type": "permission.rejected",
+            "message": "Permission denied: external_directory"
+          },
+          "content": null
+        },
+        {
+          "tool": "read",
+          "error": {
+            "type": "permission.rejected",
+            "message": "Permission denied: external_directory"
+          },
+          "content": null
+        }
+      ]
+    }
+  ],
+  "shape_invocations": {
+    "used": 6,
+    "ceiling": 6,
+    "added": 0
+  },
+  "snapshot_control_ceiling": 1,
+  "snapshot_controls_used_by_this_owner": 0,
+  "initialization_benchmark_authorized": false,
+  "replacement_launched": false,
+  "code_or_config_changed": false,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "metadata_rlimit_as_bytes": 32212254720,
+  "metadata_timeout_seconds": 60,
+  "root_cause_limit": "Terminal agent lookup and tool permission rejections observed; reason for registration availability change not investigated."
+}

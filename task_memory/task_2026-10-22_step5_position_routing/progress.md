@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recover both late failed analyzer sessions; preserve read-only evidence, permission rejections and unconsumed controls without restarting either diagnosis. |
 | 2026-10-25 | Complete the corrected caller handoff boundary, parent39PASS/27artifact/116-cap checks and complete next-session prompt; candidate remains UNADMITTED. |
 | 2026-10-25 | YC confirms sufficient OSS quota and requests handoff; allocate the two-line zero-sum snapshot correction and retain candidate admission as pending. |
 | 2026-10-24 | Commit allocation0ca54025 and assign isolated four-file implementation;primary continues independent storage prerequisite inspection. |
@@ -275,16 +276,30 @@
   active fixture/scripts remain. No direct CPU mount,new GPU,shape run or output
   reduction. Actual CLI cloud write-path/runtime/quota remains pending.
   Evidence:storage_readiness/{cloud_control.json,cleanup_receipt.json,evidence.json}.
-- in-progress/independent diagnosis: D29-SNAPSHOT-COPY-FINISH, session
+- failed/unfinished independent diagnosis: D29-SNAPSHOT-COPY-FINISH, session
   ses_e92340744ffe58Yx5C7xx4qApF, checks whether a C-backed deep snapshot can
   preserve supported getter semantics and reduce measured copying. Read-only
   source plus at most one decisive scratch control; no source quota allocated. Reject any
   supported alias/error/custom-object divergence rather than adding a fallback.
-- in-progress/independent initialization analysis: D29-INIT-PREPARATION-FINISH,
+  Late terminal notification is `Agent not found: "analyzer"`. Complete20-message
+  recovery contains50 tools:47 completed read-only inspections and3 rejected
+  external-directory accesses. Five shell commands only inspect files/Git.
+  No snapshot control or record write ran; the one-control ceiling is unconsumed.
+  Owned runtime_snapshot_copy directory is absent and source worktree stays clean
+  at886608ea. No safety/performance verdict is delivered. Evidence:
+  handoff_late_failures/ and test_report_2026-10-25_late_agent_failures.md.
+- failed/unfinished independent initialization analysis: D29-INIT-PREPARATION-FINISH,
   session ses_e92338e41ffe081mlmDNjpmxP5, inspects remaining training-call-local
   dataframe/facts/contract repetition after the accepted loader repair. Source
   and retained records only; no new CSV/model read, init run or source quota.
   Historical loader savings must not be counted again.
+  Complete24-message recovery contains34 tools:33 completed read-only inspections
+  and1 external-directory rejection. The rejected final shell includes a small
+  scope-JSON inspection, not an initialization run. Terminal error is the same
+  missing analyzer. No new init/benchmark/wave or record write; owned directory
+  absent and source worktree clean at886608ea. No useful-seam verdict is delivered.
+  Neither failed session is automatically resumed or replaced during handoff;
+  future continuation uses a currently available agent and the retained scope.
 - completed/retained evidence: runtime_config_scan/ verifies23 source bindings,
   allowing only the two declared native-key changes. No fresh timing/model/wave;
   disposition NO_PRODUCTION_ALLOCATION, with selected profile receipt retained.
