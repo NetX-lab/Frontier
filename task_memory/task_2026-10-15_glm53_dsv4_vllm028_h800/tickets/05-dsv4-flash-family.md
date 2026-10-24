@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: advanced current pointer past completed package preparation; full05 and historical checklists unchanged. |
 | 2026-10-24 | Advanced bounded scope/lifetime CPU-source frontier, preserving full ticket and trace/ownership gates. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
 | 2026-10-24 | W128-PROFILE04-STAGE-DOCS: one profile04 attempt submitted, dated Starting/unassigned snapshot only; original profile03 FAILED and full05/09/19 OPEN preserved. |
@@ -73,11 +74,14 @@
 
 
 
-## Final execution state — current (2026-10-24)
+## Final execution state — current (2026-10-25)
 
-**Status: PARTIAL measured family; native06 P0 reference acceptedR4, full05 cost/predictor qualification OPEN.** DSV4-only, GLM PAUSED_PENDING_USER_APPROVAL and official mean/30%/10% gates unchanged. Current progress: [Profile04 terminal audit frontier](../progress.md#profile04-terminal-audit-frontier--current-2026-10-24).
+**Status: PARTIAL measured family; native06 P0 reference acceptedR4, full05 cost/predictor qualification OPEN.** DSV4-only, GLM PAUSED_PENDING_USER_APPROVAL and official mean/30%/10% gates unchanged. Resume from the [canonical next-session handoff](../../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25); experiments/submissions stop in this session.
+[Package CPU preparation accepted](../../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json) at merge08b389052e6249776a16f152163da81ff90d4229: S1/S2 and one S3 generation/reviews complete; both reviews No findings within declared static coverage, root merged hashes/67pins/image/SDK PASS. Original executable owner package preserved; UNSEALED/UNSUBMITTED,0/1 GPU submissions.
+Next session: fresh storage/quota/destination -> seal -> S4/S5, alongside P0 metrics diagnosis/read-only stable-sort proposal; no correction/additional full-input allocation yet. R5 remains24/32; R3 retained-run/R4 metadata-only limits unchanged, actual TLS/lifetime/native/cost/full05/09/19 OPEN, CPU-overhead last. Dated checkpoints and original checklists below are historical, unchanged.
 
-### GPU stream acceptance and active DP slice — current (2026-10-24)
+<a id="gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"></a>
+### Historical GPU stream and DP checkpoint — 2026-10-24
 
 #### Profile04 terminal audit frontier — current (2026-10-24)
 

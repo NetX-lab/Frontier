@@ -1,0 +1,34 @@
+"""Observe the unchanged prepared CPU image check at statement boundaries."""
+import ast
+import hashlib
+import json
+from pathlib import Path
+import sys
+import time
+
+package = Path(sys.argv[1])
+source = package / "inputs/image_check.py"
+manifest = json.loads((package / "manifest.json").read_text())
+assert hashlib.sha256(source.read_bytes()).hexdigest() == manifest["files"]["inputs/image_check.py"]
+tree = ast.parse(source.read_text())
+main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+body = []
+for statement in main.body:
+    head = ast.unparse(statement).splitlines()[0]
+    stage = next((name for token, name in [
+        ("for name, expected", "manifest"),
+        ("with contextlib.redirect_stdout", "launcher_dry_run"),
+        ("spec.loader.exec_module", "probe_import"),
+        ("profile = module.serving_profile", "serving_profile"),
+        ("import torch", "torch_import"),
+        ("import cuda.bindings", "cuda_bindings_import"),
+        ("for name, pin in lock['binaries']", "binary_pins"),
+    ] if token in head), None)
+    if stage:
+        body += ast.parse(f"print(json.dumps(dict(stage={stage!r}, phase='start', t=time.monotonic())), file=sys.stderr, flush=True)").body
+    body.append(statement)
+    if stage:
+        body += ast.parse(f"print(json.dumps(dict(stage={stage!r}, phase='end', t=time.monotonic())), file=sys.stderr, flush=True)").body
+main.body = body
+exec(compile(ast.fix_missing_locations(tree), str(source), "exec"),
+     {"__name__": "__main__", "__file__": str(source), "time": time})

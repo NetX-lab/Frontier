@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Integrated the prepared mirrored package, archived completed root gates/metrics evidence, and recorded the canonical next-session handoff. |
 | 2026-10-24 | Independently reproduced193R3checks/all32metadata; review found temporary-partitionP2 and raw trace coverage is24complete/8timeouts. |
 | 2026-10-24 | Profile04 terminal verifiedSucceeded/fourCompleted/exit0/restart0; fresh personal-cloud202-file census and local data verification started. |
 | 2026-10-24 | Accepted corrected native capture prerequisite after readable-receipt review and input-limit verification; no callback/probe execution or additional run selected. |
@@ -39,7 +40,73 @@
 | 2026-10-23 | YC prioritized independent tickets/smaller GPU tasks; selected P0 case binding, balanced decode package preparation and local-MoE feasibility. |
 | 2026-10-23 | Accepted Q1 P0 workload/metric binding after root independently reproduced the owner command; Q2 preparation remains active. |
 
-## Current execution — accepted data and remaining collection gaps
+<a id="current-session-handoff-2026-10-25"></a>
+
+## Current session handoff — 2026-10-25
+
+This section supersedes all earlier current/next-action snapshots. Measurements retain their original 2026-10-24 UTC timestamps; 2026-10-25 is the closeout document date. No new experiment or GPU job is launched during this handoff.
+
+### Completed and preserved
+
+- S1/S2 source accepted at `84a66948`: original source `d55782d7`, records `e081d5e8`, composed source/tests 252/179 within 265/185. Both full repair reviews closed tuple/loghash findings; owner and merged primary runs each passed 50 tests with 25 fixture exports, actual 30 GiB and CUDA uninitialized.
+- S3 package source/records `10677995`, `15b1d197`, `0243b415` integrated by `08b389052e6249776a16f152163da81ff90d4229`. [Package CPU acceptance](profile01/scope_lifetime/package_primary/primary_acceptance.json) and [root report](profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md): one generation, 18 inputs/19 files/184,495 bytes, 67 preserved pins; both package reviews No findings within declared coverage; actual locked-image CPU 5.324804s/CUDA false and actual SDK launch-entry control PASS with submission intercepted.
+- Package is UNSEALED/UNSUBMITTED. The runnable copy remains in `v4-scope-lifetime-package`; its absolute workspace/script paths must not be relocated. The main-branch copy has identical bytes but is an archive, not a new configured launch location.
+- R3 retained-run and R4 metadata-only acceptance remain [run_metadata_acceptance.json](profile01/profile04/results/run_metadata_acceptance.json). Profile04 `exp-1024-172225-512616` completed four replicas/exit0/restart0 and 432 requests, but 13 children required SIGKILL; whole DP alignment, actual transport and captured ownership are not admitted.
+- R5 remains 24/32 complete with all eight original P0 60s timeouts preserved. [Final-metrics observation](profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md): 155 returned metrics calls cost 1.451824s; the last 1,215,919-kernel call starts at 59.258s and is censored. No final audit JSON; no P0/full32 acceptance.
+- All native/runtime/collector/checker/C26 and sealed profile04 inputs remain frozen. Native06 R4 remains the reference; full05/09/19 open, GLM paused, CPU-overhead last. `.pi/`, `.cortexkit/` and unrelated `remaining_measurements/` are preserved and unstaged. All delegated work in this phase has stopped; there is no new scope-probe launcher to monitor.
+
+### Unfinished work and numbered next actions
+
+1. Read the continuation prompt below and actual Git state, requirements, plan, summary, package/source acceptance and P0 report. Do not repeat accepted fixture/S1/S2/package-generation/review work merely because a historical paragraph still says pending.
+2. Finish fresh local storage/project-quota, personal H800 capacity/quota, original source mount and cloud-destination absence checks. Record prelaunch receipts; then seal the unchanged original executable package. These gates have NOT run. Never treat an old capacity/free-space observation as a reservation.
+3. Use the existing single 1-H800/codesign/non-preemptible/16CPU/64mem_gb/600s GPU allocation, attempt ceiling 1. No scope-probe GPU submission has been used. After valid seal/prelaunch receipts, submit through local personal StepMind Python RJobBackend, keep the launcher alive, verify actual worker identity/mount/GPU, retain terminal logs and directly audit P1–P6/observe-control. No automatic retry or general native/cost admission.
+4. Independently inspect the measured P0 metrics seam. One global stable interval sort with per-key union state is a read-only proposal, not implemented or allocated. Record a bounded correction/test/invocation allocation first; retain exact original trace-order count/sum and unchanged union recurrence. Require all count/sum/union/hierarchy/leaf/per-stream outputs to match on existing completed controls before newly allocated affected-rank validation.
+5. Complete R5/R6/R7 only from full actual outputs and direct correspondence. Preserve timeout/raw-error history, partial-DP and child-SIGKILL limitations. Update current docs and scoped commits after verified steps; publishing/pushing is not part of this handoff.
+
+### Complete continuation prompt
+
+```text
+继续 Frontier 的 V4 remaining-measurements task，不要重新开始已验收工作。
+
+工作目录：/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028
+分支：feat/glm53-dsv4-vllm028
+主任务：task_memory/task_2026-10-23_v4_remaining_measurements/
+父任务：task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/
+先读 AGENTS.md、主任务 requirements.md/plan.md/progress.md/summary.md，并核对 git status/log；本段是当前 handoff，旧 current/pending 段落是历史。
+
+已完成：fixture 验收 b0856975；capture 前置验收 5a580948；scope/lifetime CPU-source 验收 84a66948。Source d55782d7、records e081d5e8，源码/tests 252/179（cap265/185）。双审两项 findings 和完整13-file repairdiff 缺口均关闭；owner/main 各50PASS、25fixtures、真实30GiB、CUDAfalse。不要重做这些修复。
+
+新包已生成一次、双审通过，并通过 root image/SDK/hash 检查；源码10677995、records15b1d197/0243b415，main merge08b389052e6249776a16f152163da81ff90d4229。
+权威记录：主任务/profile01/scope_lifetime/package_primary/{primary_acceptance.json,root_archive_verification.json,test_report_2026-10-25_package_primary.md,review_2026-10-25_package.md}。
+仍是UNSEALED/UNSUBMITTED；没有scope-probe GPU job，0次提交已使用。18inputs/19files/184495B；manifest SHA256=9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e；source SHA256=bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685。
+实际CPU image检查5.324804s/CUDAfalse，SDK仅序列化/entry，spawn_tasks被拦截，没有平台提交。初始image超时和一次遗漏docker -i的空输出保留，不算PASS。
+
+必须保留原可执行package和worktree：
+/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01
+config/launcher固定该绝对workspace/script路径；不要改路径、重建包或删worktree。Main里的相同包只是归档副本。
+镜像：hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635
+cloud_run_root：/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_scope_lifetime_20261024_01
+资源：1H800/codesign/non-preemptible/16CPU/64mem_gb/600s，单次GPUattempt1/1；一次CLI在同进程observe→control，不存在独立run/observe/control子命令。不得自动重试。
+
+接下来优先完成fresh storage/quota/capacity/NFS/cloud destination不存在检查，写receipt、seal，再执行已分配单次GPU验证。当前这些prelaunch/seal/GPU gates均NOT_RUN。
+GPU操作前读/data/ycfeng/stepfun-env-handbook/stepmind-python-rjob.md并加载相关skill。当前custom/openai provider要由primary直接用本机StepMind Python RJobBackend/i-fengyicheng个人auth，STEPMIND_BACKEND=rjob；不要stepmind-helper/brainctl/rlaunch/jlaunch/独立rjob CLI。保留launcher整个生命周期。Stop遵循现有runbook和rjob_stop.sh。
+挂载现有local NFS package source及juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp；cloud所有访问限/mnt/codesign-exp/ycfeng（ssh shai-ycfeng只读alias/mnt/ws-jfs/ycfeng）。不得访问别人的目录；df同一存储池不能相加，/data是共享XFS prjquota，提交前重新测，不把旧空闲量当预留。
+
+GPU验收必须按冻结P1–P6：copy callback payload只在回调有效期；使用完整(created node,full ID)与clone(originalNode,originalNodeId)二元组，再直接join replay full graph-node ID。Scope freshness是callback monotonic_ns落在唯一op窗口且scope名称相等；OS/Python thread ID只分别记录，不据此推断TLS。Capture_end后最多一次raw_cuda_graph预期raise布尔观测，禁止source handle解引用；control只证明topology/output identity，不证明timing/non-perturbation。负结果只否定本image/driver/shape的live-TLS路径，不否定所有ownership路线。
+
+并行未完成的P0问题：主任务/profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md。原32rank审计只有24完成，8P0原60s timeout保留；R5 INCOMPLETE。Loading-GC pilot到31.384s并产生1215919完整kernel indices/39 useful steps，但final JSON缺失，不算通过。Metrics观测155calls=1.451824s，最后1215919-kernel metrics于59.258s开始并被timeout切断。
+原scratch：/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/；旧stage wrapper：/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py。冻结auditor/reader SHA7ed0ea45.../fe4c3f82...。
+只读建议是one global stable sort(ts,ts+dur)+per-key union state，count/sum必须仍按原trace顺序；30–40lines/约4.5s节省仅估计，未实现/未分配。先记录新的bounded correction及control/invocation额度，exact equality验证所有metrics字段，再进行新获分配的affected-rank执行。已有各诊断的单次P0额度已用完，不得复跑旧脚本当新实验。
+CPU rank envelope仍60s/30GiB/max2并发，不提高；初始cgroup usage不是peak，后续RSS约6.3GiB，保留实测区别。
+
+Profile04原job exp-1024-172225-512616：4Succeeded/exit0/restart0，432successes，32H800；原45sealed inputs/runtime1437ace6不可改。R3 retained-run/R4 metadata-only已验收（80direct joins/1320sampling，32formal窗口closed/0drops）。13child SIGKILL不代表自然退出；wholeDP/transport/trace-ID/captured ownership仍未验收。202files/6.02GB保留于/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts。不要重提profile04或旧tiny graph job。
+Native06 R4是现有reference，full05/09/19OPEN，GLM PAUSED，CPU-overhead last；未完整ownership/dependency前不得累计为serving total或给cost/reference admission。
+
+保护.pi/、.cortexkit/、unrelated remaining_measurements/和其他session改动，不stash/reset/delete；只stage当前step文件（task_memory被ignore时exact-path git add -f）。No push/publication已执行或获新授权。任务记录用英语、对用户默认boss YC中文。Native subagents至多3并行，先划分文件/目标/验收，primary保留GPU操作与最终验收；不能依赖旧subagent ID恢复，以磁盘记录为准。每个完成step验证→更新progress/test report→scoped commit。
+先报告实际state和两个frontier，然后继续fresh package prelaunch gates，并独立为P0 correction定范围；不要复述历史或把CPU/package PASS当GPU/native ownership PASS。
+```
+
+## Historical execution — accepted data and remaining collection gaps
 
 ### CUPTI stream loader — CPU component accepted (2026-10-24)
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: archived package CPU acceptance and next-session pointer without sealing/submission or full-ticket admission. |
 | 2026-10-24 | Archived CPU-source acceptance and mirrored-package frontier; complete trace/native ownership remains open. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
 | 2026-10-24 | W128-PROFILE04-STAGE-DOCS: archived one submitted profile04 attempt and dated Starting/unassigned snapshot without runtime success or cost admission; original failed run and full-ticket gates retained. |
@@ -83,11 +84,14 @@
 | 2026-10-18 | Earlier pause archive retained completed preparations and incomplete/unapplied A2; no model completion was claimed. |
 
 
-## Final state — current (2026-10-24)
+## Final state — current (2026-10-25)
 
-Active acceptance remains DSV4 only; GLM remains PAUSED_PENDING_USER_APPROVAL. Official mean client TTFT/TPOT/E2E, total THPT and30% promotion/10% final gates are unchanged. Current execution pointer: [Profile04 terminal audit frontier](progress.md#profile04-terminal-audit-frontier--current-2026-10-24).
+Active acceptance remains DSV4 only; GLM remains PAUSED_PENDING_USER_APPROVAL. Official mean client TTFT/TPOT/E2E, total THPT and30% promotion/10% final gates are unchanged. Resume from the [canonical next-session handoff](../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25); experiments/submissions stop in this session.
+[Package CPU preparation accepted](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json) at merge08b389052e6249776a16f152163da81ff90d4229: S1/S2 and one S3 generation/reviews complete, both reviews No findings within declared static coverage; merged hashes/67pins, locked-image CPU and intercepted actual-SDK checks PASS. Preserve the receipt's original executable owner package; UNSEALED/UNSUBMITTED,0/1 GPU submissions.
+Next session: fresh storage/quota/destination -> seal -> S4/S5; independent P0 metrics diagnosis/read-only stable-sort proposal has no correction/additional full-input allocation. R5 remains24/32, R6/R7 and actual TLS/lifetime/native/cost/full05/09/19 OPEN; R3/R4 limited acceptance/native06R4 unchanged, CPU-overhead last. The dated checkpoints below preserve historical facts and then-current routes.
 
-### GPU stream acceptance and active DP slice — current (2026-10-24)
+<a id="gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"></a>
+### Historical GPU stream and DP checkpoint — 2026-10-24
 
 #### Profile04 terminal audit frontier — current (2026-10-24)
 

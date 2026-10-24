@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Canonical current handoff moved to progress.md; preserved previous informational prompts as history. |
 | 2026-10-24 | Advanced to accepted GPU stream/restart evidence and bounded diagnostic DP sequence implementation. |
 | 2026-10-24 | Advanced the stream probe to completed execution and pending independent data acceptance; added parallel DP-counter CPU verification. |
 | 2026-10-24 | Bound the continuation to CPU stream-loader repair0d745706 and the pending targeted probe; retained the historical G2/run references. |
@@ -15,7 +16,11 @@
 | 2026-10-23 | Bound the prompt to accepted H sourcef8621a8/integration64f3c950 and final merged checks. |
 | 2026-10-23 | Marked the H handoff historical after YC resumed this session and G2 CPU source 05952396 was accepted. |
 
-## Current informational continuation state — 2026-10-24
+## Current continuation — 2026-10-25
+
+Use the complete canonical [next-session prompt in progress.md](progress.md#current-session-handoff-2026-10-25), plus current requirements/plan/summary and actual Git state. S1/S2 and mirrored S3 CPU preparation are complete; fresh prelaunch/seal/single GPU validation and the separately allocated future P0 metrics correction remain unfinished. Package is unsealed/unsubmitted; R5 remains24/32. The prompts below are historical and grant no new implementation/run permission.
+
+## Historical informational continuation state — 2026-10-24
 
 Post-audit delta: CUPTI repair0d745706 and probe5f7d0950 have accepted targeted GPU stream/restart evidence from exp-1024-020317-012085, after independent No findings and byte-identical root162-check audit. Read `profile01/stream_probe/results/primary_acceptance.json`:8eager/16priming joins,16stable snapshots; captured per-op graph ownership remains UNKNOWN. Exact-image WS2 gloo control passed (`profile01/dp_sequence_cpu.md`). Next is four-file/180-line optional diagnostic DP sequence recording under the current requirements allocation, preserving frozen base dispatch/hook schemas. No custom callback, CUDA13.1 tools-ID API, numeric graph-ID conversion or paused GLM work is included.
 

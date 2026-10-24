@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: recorded accepted package preparation and canonical next-session gates; dated evidence remains historical. |
 | 2026-10-24 | Recorded accepted scope/lifetime CPU-source and incomplete loading-GC pilot without GPU/native admission. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
 | 2026-10-24 | W128-PROFILE04-STAGE-DOCS: synchronized one submitted profile04 attempt and dated Starting/unassigned snapshot; original profile03 FAILED, accepted evidence and all admission gates retained. |
@@ -192,7 +193,15 @@
 | 2026-10-18 | Started approved controlled fixture checks/review beside dependency-aware ticket02 coverage and ticket03 cache preparation. |
 
 
-## GPU stream acceptance and active DP slice — current (2026-10-24)
+## Current parent-task pointer — 2026-10-25
+
+[Canonical next-session handoff](../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25) controls resumption; experiments/submissions stop now. S1/S2 CPU-source acceptance84a66948 and S3 generation/reviews are complete. [Package acceptance](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json): merge08b389052e6249776a16f152163da81ff90d4229, one generation/18inputs/19files/184495B, manifest9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e; source140/27/78=245/275, launcher74/100.
+Preserve the executable owner package: `/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01`. [Root verification](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/root_archive_verification.json) confirms merged hashes/67pins unchanged, locked-image CPU5.324804s/CUDAfalse and intercepted actual-SDK launch-entry PASS; both package reviews No findings within declared static coverage.
+UNSEALED/UNSUBMITTED,0/1 GPU submissions; existing attempt1H800/codesign/non-preemptible/16CPU/64mem_gb/600s unchanged. Next session: fresh storage/quota/destination -> seal -> S4 observe/control -> S5 audit; actual TLS/lifetime/native/cost remain unqualified.
+[Archived P0 metrics observation](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_observation/):155 complete calls/1.451824s; final1215919-kernel call starts59.258s before60s timeout/no final JSON. R5 remains24/32; one-global-stable-sort is a read-only proposal, with no correction/additional full-input allocation yet. R3/R4 retained-run/metadata-only acceptance and native06R4 reference unchanged; full05/09/19 OPEN, GLM paused, CPU-overhead last.
+
+<a id="gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"></a>
+## Historical GPU stream and DP checkpoint — 2026-10-24
 
 ### Profile04 terminal audit frontier — current (2026-10-24)
 

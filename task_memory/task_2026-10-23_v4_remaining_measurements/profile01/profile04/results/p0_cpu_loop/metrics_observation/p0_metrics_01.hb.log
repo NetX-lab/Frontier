@@ -1,0 +1,106 @@
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/usr/lib/python3.10/gzip.py", line 496 in read
+  File "/usr/lib/python3.10/_compression.py", line 118 in readall
+  File "/usr/lib/python3.10/gzip.py", line 301 in read
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/usr/lib/python3.10/json/decoder.py", line 353 in raw_decode
+  File "/usr/lib/python3.10/json/decoder.py", line 337 in decode
+  File "/usr/lib/python3.10/json/__init__.py", line 346 in loads
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/usr/lib/python3.10/json/decoder.py", line 353 in raw_decode
+  File "/usr/lib/python3.10/json/decoder.py", line 337 in decode
+  File "/usr/lib/python3.10/json/__init__.py", line 346 in loads
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/usr/lib/python3.10/json/decoder.py", line 353 in raw_decode
+  File "/usr/lib/python3.10/json/decoder.py", line 337 in decode
+  File "/usr/lib/python3.10/json/__init__.py", line 346 in loads
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/usr/lib/python3.10/json/decoder.py", line 353 in raw_decode
+  File "/usr/lib/python3.10/json/decoder.py", line 337 in decode
+  File "/usr/lib/python3.10/json/__init__.py", line 346 in loads
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 62 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 65 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 87 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/usr/lib/python3.10/json/encoder.py", line 248 in iterencode
+  File "/usr/lib/python3.10/json/encoder.py", line 199 in encode
+  File "/usr/lib/python3.10/json/__init__.py", line 231 in dumps
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 119 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 119 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>
+Timeout (0:00:05)!
+Thread 0x00007fc3f9e26280 (most recent call first):
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 129 in <listcomp>
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 129 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_metrics.py", line 35 in <module>

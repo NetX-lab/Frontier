@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: advanced current handoff pointer after package CPU acceptance; original prediction Sections1–8 unchanged. |
 | 2026-10-24 | Advanced current source/package frontier, preserving original prediction sections and incomplete R5. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
 | 2026-10-24 | W128-PROFILE04-STAGE-DOCS: next dependency is the single submitted profile04 attempt's actual runtime/data verification; dated Starting only, prior failures and Sections1–8 unchanged. |
@@ -27,9 +28,12 @@
 | 2026-10-23 | W128-V4-INPUT-INTEGRATION-RECORDS: updated only §8 private-input implementation statements and current pointers after merged732406aa isolated admission; earlier caller/total-authority audit and §§1–7 retained as history. |
 | 2026-10-23 | W128-H-CLOSURE-DOCS: recorded accepted H CPU collector/merged64f3c950, G2 replay profiling/sampling controls and the adopted kernel-only route; all original §§1–8 bytes remain historical evidence. |
 
-Current execution pointer: [Profile04 terminal audit frontier](progress.md#profile04-terminal-audit-frontier--current-2026-10-24); limited stream/profile02/isolated MoE/Q2a ACCEPTED_ISOLATED_DATA/901ef960 retain their acceptances. Consumer/native qualifications still open under standing H800 authority. Earlier dated pending/current snapshots and Sections1–8, including caller/total-authority conclusions, remain historical evidence. Section8's total-authority choice is superseded by D-V4-KERNEL-ONLY-GPU-COST in [requirements](../task_2026-10-23_v4_remaining_measurements/requirements.md): per-operator KERNEL_ONLY plus evidenced native GPU dependencies, not overlapping sums or an unexplained CPU gap. No new source/serving admission or authority follows from this sync.
+Current execution pointer: [canonical next-session handoff](../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25); limited stream/profile02/isolated MoE/Q2a ACCEPTED_ISOLATED_DATA/901ef960 retain their acceptances. Consumer/native qualifications still open under standing H800 authority. Earlier dated pending/current snapshots and Sections1–8, including caller/total-authority conclusions, remain historical evidence. Section8's total-authority choice is superseded by D-V4-KERNEL-ONLY-GPU-COST in [requirements](../task_2026-10-23_v4_remaining_measurements/requirements.md): per-operator KERNEL_ONLY plus evidenced native GPU dependencies, not overlapping sums or an unexplained CPU gap. No new source/serving admission or authority follows from this sync.
+[Package CPU preparation accepted](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json) at merge08b389052e6249776a16f152163da81ff90d4229: S1/S2 and one S3 generation/reviews complete; both reviews No findings within declared static coverage, root merged hashes/67pins/image/SDK PASS. Preserve the receipt's original executable owner package; UNSEALED/UNSUBMITTED,0/1 GPU submissions. Experiments/submissions stop in this session.
+Next session: fresh storage/quota/destination -> seal -> S4/S5, alongside P0 metrics diagnosis/read-only stable-sort proposal; no correction/additional full-input allocation yet. R5 remains24/32; actual TLS/lifetime/native/cost/full05/09/19 OPEN, R3/R4 limited acceptance/native06R4 unchanged, GLM paused/CPU-overhead last. Dated routes below remain historical; original prediction Sections1–8 unchanged.
 
-## GPU stream acceptance and active DP slice — current (2026-10-24)
+<a id="gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"></a>
+## Historical GPU stream and DP checkpoint — 2026-10-24
 
 ### Profile04 terminal audit frontier — current (2026-10-24)
 

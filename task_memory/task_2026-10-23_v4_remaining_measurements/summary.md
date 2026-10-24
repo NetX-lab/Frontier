@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Archived prepared package/root CPU-image-SDK gates and final metrics observation; committed handoff preserves unsealed/unsubmitted and incomplete-trace boundaries. |
 | 2026-10-24 | Accepted S1/S2 CPU-source and allocated fresh mirrored packaging; loading-GC still leaves final trace metrics incomplete. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
 | 2026-10-24 | Accepted restored CPU fixture and corrected native capture prerequisite; original failures, queued profile04 and all runtime/cost boundaries preserved. |
@@ -26,7 +27,17 @@
 | 2026-10-23 | Recorded G2 source/CPU implementation and review repairs; independent follow-up and final acceptance remain pending. |
 | 2026-10-23 | Accepted G2 CPU source 05952396 and completed its proposal; GPU decision and runtime work remain open. |
 
-## GPU stream acceptance and active DP slice — current (2026-10-24)
+## Current handoff frontier — 2026-10-25
+
+S1/S2 remains accepted CPU/source at `84a66948` (252/179, each primary worktree 50 tests/25 fixtures/actual30GiB/CUDAfalse). New mirrored package source/records `10677995`/`15b1d197`/`0243b415` is integrated by `08b38905`; [package acceptance](profile01/scope_lifetime/package_primary/primary_acceptance.json) is preparation only: 18inputs/19files/184495B, identical merged/original bytes and67pins, locked-image CPU5.324804s/CUDAfalse and intercepted actualSDK PASS. Root failures and review coverage limits are preserved in the [test report](profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md).
+
+The package remains UNSEALED/UNSUBMITTED: fresh storage/quota/destination then seal and the already allocated single1H800/600s attempt transfer to the next session. Preserve original executable worktree `v4-scope-lifetime-package`; copied main files do not change absolute launch paths. Actual TLS/lifetime, native ownership/non-perturbation/cost/reference remain unverified.
+
+[P0 metrics observation](profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md) completed its diagnostic scope, not trace acceptance:155calls/1.451824s returned, final1215919-kernel call started59.258s then60s timeout/no finalJSON. R5still24/32; the stable-global-sort seam is an unimplemented/unallocated proposal. R3/R4 retained-run/metadata acceptance, native06R4 reference, full05/09/19OPEN/GLMpaused/CPU-overheadlast and immutable evidence remain unchanged.
+
+Canonical complete next-session prompt, unfinished work and numbered actions: [progress.md](progress.md#current-session-handoff-2026-10-25). Code/package merge and scoped documentation commits are local only; no push/publication, new experiment or GPU submission during closeout. Unrelated `.pi/`, `.cortexkit/`, `remaining_measurements/` remain untouched.
+
+## Historical GPU stream acceptance and active DP slice (2026-10-24)
 
 ### Profile04 terminal audit frontier — current (2026-10-24)
 

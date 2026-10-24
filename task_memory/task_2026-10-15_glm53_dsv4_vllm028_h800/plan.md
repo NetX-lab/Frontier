@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: linked the next-session handoff after package CPU acceptance; preserved dated routes and remaining gates. |
 | 2026-10-24 | Advanced current pointers to scope/lifetime CPU-source acceptance and separate mirrored-package allocation; R5 remains incomplete. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
 | 2026-10-24 | W128-PROFILE04-STAGE-DOCS: current dependency advances from reviewed/sealed profile04 to its single submitted attempt's placement/runtime/data verification; failed history and gates unchanged. |
@@ -128,7 +129,13 @@
 | 2026-10-18 | Approved controlled CUTLASS fixture and renewed parallel ticket02 coverage/ticket03 cache preparation under unchanged gates. |
 
 
-## Final execution route — current (2026-10-24)
+## Final execution route — current (2026-10-25)
+
+Resume from the [canonical next-session handoff](../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25); experiments/submissions stop in this session. S1/S2 CPU-source acceptance84a66948 and the single S3 generation/package reviews are complete, not pending prerequisites.
+[Package CPU preparation accepted](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json) at merge08b389052e6249776a16f152163da81ff90d4229; UNSEALED/UNSUBMITTED, GPU submissions0/1. Root merged hashes/67pins, locked-image CPU and intercepted actual-SDK launch entry PASS; both reviews No findings within declared static coverage. Preserve the original executable owner package named in that receipt.
+Next session: `{fresh storage/quota/destination -> seal -> S4 observe/control -> S5 audit} ‖ {P0 metrics diagnosis -> separately authorized correction/full-input allocation}`. R5 remains24/32; R6/R7, actual TLS/lifetime/native/cost and full05/09/19 remain OPEN. R3/R4 limited acceptance/native06R4 unchanged; GLM paused, CPU-overhead last.
+
+### Historical terminal-audit route — 2026-10-24
 
 Current dependency: `{R3/R4 metadata limited acceptance} ‖ {P0 final-metrics cost diagnosis} ‖ {accepted S1/S2 -> mirrored S3package -> root/image/SDK gates}`; R5 -> R6 -> R7 remain unfinished. [Current evidence and limits](../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24) supersede the submission-only route, not its evidence.
 Profile04 exp-1024-172225-512616 remains GPU attempt1/1, original45 inputs/runtime1437ace6 unchanged:4Succeeded/exit0/restart0, actual H800 hosts0030/0158/0187/0574/32UUIDs,432success/0failed and202 hash-identical files/6,024,578,382B. R3 scoped No findings and primary193checks/99bindings/token-negative plus32-rank mechanical replay PASS are not corrected R4 acceptance.
