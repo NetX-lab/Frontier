@@ -1,0 +1,53 @@
+.....................F.................................................. [ 72%]
+...........................                                              [100%]
+=================================== FAILURES ===================================
+_ test_v2_native_auto_and_c26_actual_collector_cover_all32ranks[serving_counters0] _
+
+serving_counters = namespace(checker=<module 'external_groundtruth_check' from '/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stac...ive_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host3/serving/rank7.json')], decode_mode='FULL')
+
+    @pytest.mark.parametrize('serving_counters', [('FULL', 2, 'H800', False, 'V2')], indirect=True)
+    def test_v2_native_auto_and_c26_actual_collector_cover_all32ranks(serving_counters):
+        fixture = serving_counters
+        assert 'compilation_config' not in fixture.engine
+        passed, evidence = check_serving_counters(fixture)
+>       assert passed, evidence
+E       AssertionError: UNVERIFIED: ValueError: Incomplete or mismatched pre-shutdown serving inventory: fixture-host0/0
+E       assert False
+
+tests/unit/test_native_groundtruth_check.py:608: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+NATIVE_SERVING_UNVERIFIED {'where': 'v2_installation', 'error': "KeyError: 'vllm.v1.worker.gpu.dp_utils'"}
+=========================== short test summary info ============================
+FAILED tests/unit/test_native_groundtruth_check.py::test_v2_native_auto_and_c26_actual_collector_cover_all32ranks[serving_counters0]
+1 failed, 98 passed in 52.71s

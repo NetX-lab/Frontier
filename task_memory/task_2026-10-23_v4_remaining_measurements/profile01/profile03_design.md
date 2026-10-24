@@ -12,9 +12,9 @@
 Collect at least three useful first-formal steps per role/lane, actual cross-DP counter correspondence, functioning stream identities and post-stop evidence. Profile02 remains immutable diagnostic evidence with useful counts23/2/61/61. These additions support native tuple/dependency analysis; they do not establish complete operator costs.
 
 - Stream identity: accepted targeted H800 evidence at `stream_probe/results/primary_acceptance.json`; default/auxiliary CUPTI IDs7/13 were joined to traces through two native profiler cycles.
-- DP observation: source `bb50186e`, records `178c1123`, four files/156gross lines; both independent source reviews report No findings. Root restored real fixtures and observed214PASS/1FAIL/0SKIP. The positive32-rank fixture fails identically at baseline44f2ddb9 and candidate178c1123: all32 counter/hook dictionaries match and both omit the dp_utils stand-in. This is an existing fixture limitation, not a counter regression. Integration remains pending.
+- DP and coverage/lifecycle repairs are integrated at1437ace6; both components' Standards and Spec reviews report No findings. Root's twelve-suite verification observed465PASS/1unchanged-baselineFAIL/0SKIP ([acceptance](integration_cpu/primary_acceptance.json), [report](integration_cpu/test_report_2026-10-24_integration.md)). The old positive32-rank fixture lacks dp_utils; baseline/candidate32 counter/hook dictionaries match. This limitation remains explicit.
 - Direct dummy execution is represented in annotations with `step=null`; no synthetic Worker step or counter offset is introduced. Pair raw counters within run generation, role and ordered DP group members, retaining rank/lane membership.
-- Captured per-op ownership remains UNKNOWN. The ordinary capture-profiler probe did not expose source-node ownership. A callback probe is a separate, unapproved decision described below.
+- Captured per-op ownership remains UNKNOWN. The ordinary capture-profiler probe did not expose source-node ownership. The separately approved callback probe is described below.
 
 ## Coverage changes
 
@@ -47,4 +47,4 @@ Approved by D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY: a fresh copy of the old diagnosti
 
 ## Execution order
 
-`DP source integration` runs alongside `coverage/shutdown independent review` and `approved callback source/CPU correction`. Then each executable follows `fresh package + exact image/SDK checks -> concrete H800 submission -> scoped data audit`. Actual >=3 coverage, raw DP pairing, zero unintended drops, stream joins and correct post-stop evidence are verified from the new native run; callback correspondence is verified independently on the probe. A successful process exit alone is insufficient.
+DP and coverage/shutdown source integration is complete; native profile03 package preparation runs alongside callback package validation. Each follows `fresh package + exact image/SDK checks -> concrete H800 submission -> scoped data audit`. Actual >=3 coverage, raw DP pairing, zero unintended drops, stream joins and correct post-stop evidence are verified from the new native run; callback correspondence is verified independently on the probe. A successful process exit alone is insufficient.
