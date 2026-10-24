@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Complete parent46fe full regression admission with explicit old-ID replacement; named query and independent snapshot-copy diagnosis proceed. |
 | 2026-10-24 | YC approves named querying and similar in-scope changes; allocate four CORE paths100gross with65 zero-sum transfer. |
 | 2026-10-24 | Qualify the named-model control at−26.81% pricing; require an error-policy decision before any100-line CORE allocation. |
 | 2026-10-24 | Accept fresh46fe strict77/77 and separate101/197/53 checks; full-unit and its closing guards remain pending. |
@@ -100,7 +101,11 @@ evidence. Key-only reuse is accepted and integrated30fb6a30:16gross/+14, parent
 124PASS/1existingTorchSKIP, both reviews No findings and complete208-event parity.
 Final union source46fe83ac matches the verified owner source; its122 non-key
 bindings and9491 global total pass the composed snapshot/delta audit. Fresh
-frozen regressions are assigned under post_key_regressions/. Config-scan work
+frozen regressions are complete under post_key_regressions/: canonical8020PASS,
+unchanged279FAIL/32ERROR/281SKIP sets, three newPASS IDs and one approved old-ID
+replacement. Its raw presence predicate remainsFAIL; primary admission records
+that distinction. Parent2736hash/JUnit checks and separate52governancePASS close
+the verification task. The named-query successor will need fresh checks. Config-scan work
 remains UNQUALIFIED, public fields conversion is rejected, and private encoding
 remains unallocated. All actual-point validation and full output stay required.
 The cancelled remaining-runtime design task is replaced by primary's completed
@@ -112,7 +117,8 @@ allowance transfer,114 paths and unchanged owner/global limits. Next: scoped
 implementation -> selected/mixed/public-view regressions and independent review
 -> final freeze. See runtime_model_view/{requirements.md,plan.md}.
 The10 matching contract groups and one demonstrated error-surface difference
-are recorded separately. Existing full-unit work proceeds independently.
+are recorded separately. Independent read-only snapshot-copy investigation is
+bounded to supported deep-copy semantics; no source allocation is implied.
 The non-I/O identity-cache control is rejected because it did not improve timing.
 Cost-fields75404143 is now parent-verified and independently reviewed,8gross and
 zero retained growth, and merged with trace/prepared on feat/step5-preview.

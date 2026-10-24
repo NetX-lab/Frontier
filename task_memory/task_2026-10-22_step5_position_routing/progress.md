@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Parent accepts46fe full regressions after2736 hash/JUnit checks; raw old-ID gate remainsFAIL for the approved replacement. Named query implementation is assigned. |
 | 2026-10-24 | YC approves named querying and analogous optimizations; allocate100gross and resume frozen regression completion. |
 | 2026-10-24 | Complete named-model control:−26.81%,208-event byte parity,23 source bindings and one explicit error-policy difference; allocation waits for YC. |
 | 2026-10-24 | Cancelled design worker has no delivery; primary resumes with a bounded whole-view versus named-model query control and separate contract inspection. |
@@ -75,13 +76,19 @@
   guard on46fe, reproducing all122 non-key bindings and the two approved blobs.
   Snapshot audit plus delta plus final binding guard accepts114allocated/
   113changed,CORE4173/PRICING3954/native1350,9477source/9491global,zero violations.
-- in-progress/regressions: D29-POST-KEY-FROZEN-REGRESSIONS, session
-  ses_e98925887ffecetw6nTB6nD8f0, runs on source46fe83ac in integrated07.
+- completed/regressions: D29-POST-KEY-FROZEN-REGRESSIONS, session
+  ses_e98925887ffecetw6nTB6nD8f0, source46fe83ac in integrated07.
   Strict77 passes77/77, with owner451artifact hashes/519cache names per side;
   short suites separately101/197/53PASS. Parent27hash checks and old/new JUnit
   ID/status parsing pass. The approved metadata lifetime test is one removed/
-  new passing ID, not an alias. Full-unit, dependent comparisons, necessary
-  supplements and final guards remain pending. Owner records:post_key_regressions/;
+  new passing ID, not an alias. Canonical full-unit8020PASS/279FAIL/32ERROR/281SKIP;
+  exact FAIL/ERROR/SKIP sets and all retained-present statuses match79, three new
+  IDs pass. The single approved old hot-update ID stays missing; raw comparator
+  presence gate remainsFAIL and is not rewritten. Governance52PASS separately.
+  Parent2736hash checks include2629source/13input/8script/39record files and raw
+  JUnit comparisons. Owner archives e85547fa/36af3394; no unfinished run remains.
+  Parent accepts no new code failures with the approved replacement explicitly.
+  Owner records:post_key_regressions/;
   primary:resumed_performance/post_key_regression_acceptance.json.
 - cancelled/no delivery: D29-REMAINING-RUNTIME-DESIGN, session
   ses_e9577903effeYhkEtAPQt7g228. Primary resumes the design investigation.
@@ -97,11 +104,22 @@
   inspection:ses_e951e411cffenineDsU35LlI6M; source was not edited. Source scratch
   diff14/+4. YC approves100gross(source20/tests80) and analogous in-scope changes.
   Primary assigns registry15/workload5/bindings50/runtime30 and65 zero-sum CORE
-  allowance transfer with no donor edits. Four-path implementation is next;
+  allowance transfer with no donor edits. Allocation617d832b; implementation is
+  assigned to ses_e93af1ff7ffe0YosowRNrc24Xa in an isolated worktree;
   see runtime_model_view/{requirements.md,plan.md,progress.md} and the amendment.
   Three archive-checker errors(header clocks twice, then wrong samples field)
   were corrected without rerunning the wave; original logs retained and final
   verification PASS. Records:runtime_model_view/{design.md,test_report_2026-10-24_runtime_model_view.md,evidence/}.
+- in-progress/independent diagnosis: D29-SNAPSHOT-COPY-CONTROL, session
+  ses_e93a71d28ffendJiHmtuzK8ec6, checks whether a C-backed deep snapshot can
+  preserve supported getter semantics and reduce measured copying. Read-only
+  source plus bounded scratch controls; no source quota allocated. Reject any
+  supported alias/error/custom-object divergence rather than adding a fallback.
+- in-progress/independent initialization analysis: D29-INIT-PREPARATION-REUSE,
+  session ses_e93a13ad5ffe7Xk4AwrlAAdjw0, inspects remaining training-call-local
+  dataframe/facts/contract repetition after the accepted loader repair. Source
+  and retained records only; no new CSV/model read, init run or source quota.
+  Historical loader savings must not be counted again.
 - completed/read-only: D29-DETACHED-EMISSION-OWNERSHIP, session
   ses_e96a5c1c7ffeoPBK7V08CMas7v, inspects existing profiles and private ownership
   after required getter snapshots. Records3020a885/82b0e311 archived as

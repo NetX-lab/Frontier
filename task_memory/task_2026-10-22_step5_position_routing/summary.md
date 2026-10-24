@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept completed46fe full regression evidence with2736 parent checks and the approved old-ID replacement; assign named-query implementation. |
 | 2026-10-24 | Record YC's approval/preauthorization and the four-path100-gross named-query allocation. |
 | 2026-10-24 | Complete the bounded named-model view control; archive−26.81% pricing and its unapproved unrelated-model error-surface change. |
 | 2026-10-24 | Accept fresh46fe strict77/77 and separate101/197/53 checks; full-unit/final guards remain pending. |
@@ -37,8 +38,14 @@ the114allocated/113changed union with zero violations. Evidence is in
 plan_key_reuse/parent/ and repairs/evidence/plan_key_scope/.
 Fresh46fe strict77 passes77/77, and short suites separately101/197/53PASS.
 Parent27hash and old/new JUnit checks pass, explicitly preserving the approved
-one-ID metadata-test replacement. Full-unit/dependent comparisons/final guards
-remain pending under post_key_regressions/. The remaining-runtime design worker
+one-ID metadata-test replacement. Full-unit is now complete: canonical8020PASS/
+279FAIL/32ERROR/281SKIP with exact79 FAIL/ERROR/SKIP sets, unchanged retained-present
+statuses and three newPASS IDs. One approved old hot-update ID is absent; raw
+presence gate staysFAIL. Parent admits the declared source/test replacement,
+verifies2736 hashes including2629source/13input/8script/39record files and raw
+JUnit membership, and verifies separate52governancePASS. Archives e85547fa/36af3394
+and resumed_performance/post_key_regression_acceptance.json retain every raw
+verdict. No interrupted or pending verification run remains. The remaining-runtime design worker
 was cancelled without delivery. Primary completed the named-model query control:
 warm0.122211→0.089447s,384 contract derivations→0, full208-event payload/JSONL/
 ledger parity, live288/144/64/16 numerical/proof/collective/point calls preserved.
@@ -48,7 +55,9 @@ unrelated native-label collision. Current-model failures remain effective.
 Evidence is in runtime_model_view/. YC approved the100-gross CORE change and
 preauthorized analogous in-scope performance work. Primary allocates four paths
 (15/5source,50/30tests) through65 zero-sum CORE allowance lines; donor code stays
-unchanged. Implementation and review are next. Production usage stays9491/10000
+unchanged. Allocation617d832b is assigned for isolated implementation and review.
+An independent bounded snapshot-copy diagnosis is also running without source
+allocation. Production usage stays9491/10000
 until measured changes land; full CLI acceptance remains open.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
