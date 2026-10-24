@@ -1,0 +1,89 @@
+{
+  "status": "PASS_INDEPENDENT_PROFILE04_RUN_METADATA_REPLAY",
+  "python": "3.10.6",
+  "root": "/data/ycfeng/tmp/glm53_dsv4/profile04_root_data_o2_qhawu",
+  "commands": {
+    "run": {
+      "command": [
+        "sudo",
+        "-n",
+        "systemd-run",
+        "--scope",
+        "-p",
+        "MemoryMax=30G",
+        "timeout",
+        "60s",
+        "runuser",
+        "-u",
+        "brainpp",
+        "--",
+        "/usr/bin/python3",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile04_run_data_audit.py"
+      ],
+      "start_utc": "2026-10-24T12:31:40.564035+00:00",
+      "end_utc": "2026-10-24T12:31:41.209784+00:00",
+      "exit": 0,
+      "expected_exit": 0
+    },
+    "run_negative": {
+      "command": [
+        "sudo",
+        "-n",
+        "systemd-run",
+        "--scope",
+        "-p",
+        "MemoryMax=30G",
+        "timeout",
+        "60s",
+        "runuser",
+        "-u",
+        "brainpp",
+        "--",
+        "/usr/bin/python3",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile04_run_data_audit.py",
+        "--negative-control"
+      ],
+      "start_utc": "2026-10-24T12:31:41.210084+00:00",
+      "end_utc": "2026-10-24T12:31:41.879852+00:00",
+      "exit": 1,
+      "expected_exit": 1
+    },
+    "metadata": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile04_root_data_o2_qhawu/profile04_metadata_audit.py",
+        "run",
+        "/data/ycfeng/tmp/glm53_dsv4/profile04_root_data_o2_qhawu/metadata.json"
+      ],
+      "start_utc": "2026-10-24T12:31:41.912640+00:00",
+      "end_utc": "2026-10-24T12:34:08.829431+00:00",
+      "exit": 0,
+      "expected_exit": 0
+    }
+  },
+  "run": {
+    "bindings_sha256": "c387eaf61f5fe1d217af3366d363c8db889b0171dc2e2f284859009750d01820",
+    "checks": 193,
+    "inputs": 99,
+    "observation_sha256": "dad03371d922e48393fa4a17dce93dafffc0a1429ea3acc61f2daaff020b25b6",
+    "pandas": "2.0.1",
+    "python": "3.10.6",
+    "task_id": "W128-PROFILE04-RUN-DATA",
+    "verdict": "PASS_SCOPED_RETAINED_RUN_AUDIT_WITH_LIMITS"
+  },
+  "metadata_byte_equal": true,
+  "metadata_sha256": "24b45c4465562a9434102f0ec41c026fb1f7fa73ebbb5e7206ec331c417d1593",
+  "selected_inputs_unchanged": true,
+  "bindings": {
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_run_data_audit.py": "44286821124477652ea334f6f9f881dafd2ad74e65d4fbc133f307c9a83406d0",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_metadata_audit.py": "e2c932ce5616771f5b847d89acd8fbab7d9e40b9cbfc314203b4b9051410d1f7",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_audit.json": "0268a7dd8eccc65909df8c22ddbfb5d654cb76a56a51daae22bc68dacc19dde0",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/metadata_audit.json": "24b45c4465562a9434102f0ec41c026fb1f7fa73ebbb5e7206ec331c417d1593"
+  },
+  "script_sha256": "f87458d81a0fb6d49a488e964c5fc95477b13942f26eb708d2f8070d91d68fba",
+  "method": "Byte-identical metadata coordinator copy redirects only its new raw harness-log paths; source logic and result bytes are unchanged.",
+  "limits": "Local CPU reproduction only; raw trace/captured ownership, actual transport, child natural exit and cost/reference admission remain separate."
+}

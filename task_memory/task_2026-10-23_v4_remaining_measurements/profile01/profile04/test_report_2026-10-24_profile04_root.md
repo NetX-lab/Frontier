@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Recorded independent193-check/all32metadata CPU replay, semantic reviewP2 and24complete/8timeout trace boundary without final data admission. |
+| 2026-10-24 | RecordedSucceeded4/4/exit0/restart0, immutable202-file download/45-host-input/40-runtime-manifest bindings and opened local data audits. |
 | 2026-10-24 | Archived primary CPU/image/source checks, the corrected launch environment, and a queued platform snapshot. |
 
 ## Scope and expected result
@@ -43,3 +45,19 @@ Platform reads used the personal Python client, exact job `exp-1024-172225-51261
 ## Remaining acceptance
 
 Keep launcherPID3950111 alive and inspect only this job. After scheduling verify four distinct hosts,32H800 UUIDs and actual RDMA transport. On completion inspect all432client rows, raw traces, published formal metadata, at least three useful kernel-bearing steps per role/lane, raw DP counters without offset correction, stream correlation and post-stop evidence. The optional text tables are intentionally absent. Synchronous raw export can still exceed300seconds; a failure ends this attempt without automatic resubmission. Captured per-operator ownership and all serving/operator-cost admission remain independent and unverified. Profile03 remains FAILED with its original evidence unchanged.
+
+## Terminal/input checks (2026-10-24)
+
+The preceding pending statements are the09:49:36Z submission snapshot. The launcher now reports `FINAL_STATUS succeeded`; [terminal_platform.json](results/terminal_platform.json) records platformSucceeded/fourCompleted/exit0/restart0. Actual placement is read fromstatus.nodeName (0030/0158/0187/0574), not absent spec.nodeName. Installed-clientlabel_quotagroup resolves `quotagroup.brainpp.cn/quotagroup`; [platform_group_binding.json](results/platform_group_binding.json) confirms codesign, personal creator andpreemptible=no. Both inspections are read-only; first receipt's wrong-key null is preserved. Expected/actual terminal and identity checks PASS; actual NET/IB, GPUUUIDs and data checks remain pending.
+
+Download command: `sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- /usr/bin/python3 -B /data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/download.py`. The retained script adapts only the prior inventory root, reads via personalSSH/sudo, streams tar into a fresh local directory and rehashes every file. Expected202files/allsize-and-hash equality; actual202files/6024578382bytes andboth archive exits0: PASS. [Receipt](results/download_receipt.json) pins exact inventory/archive/extract argv, scriptc6887e78...9f76 andinventory85b0ef23...7c8c. No raw artifact is overwritten or uploaded.
+
+Primary inline Python rehashed the45sealed host inputs againstmanifest25bc61be...d58f and the40run_manifest input entries against either downloadedcase-relative files or exact absolute package files: allPASS ([host_package_check.json](results/host_package_check.json), [download_input_check.json](results/download_input_check.json)). The four generation/role/lane joins match, diagnostic_only=true/reference_admission=false, and32trace/32profile-stop files exist. Content checks are separate. A first harness attempt incorrectly read result.json.status and raisedKeyError; [preserved failure](results/first_input_check_failure.json) and inspectedqualification_verified/observation_errors replace that mistaken lookup, not the native behavior. Local run, metadata and trace owners are now auditing disjoint files; independent review/reproduction and limited data acceptance remain unfinished.
+
+## Independent data replay and current limits (2026-10-24)
+
+Primary ran `sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- /usr/bin/python3 -B /data/ycfeng/tmp/glm53_dsv4/profile04_root_data_o2_qhawu/verify.py`. The script, per-case exact commands/stdout/stderr and [receipt](results/root_cpu_replay_01.json) retain Python3.10.6/pandas2.0.1,193checks/99bindings PASS, expected token-count negative exit1,32metadata outputs byte-equal24b45c44..., and unchanged selected sources/results. Metadata workers retain60seconds/30G/concurrency2; coordinator has no aggregate timeout. A byte-identical coordinator copy redirects only fresh harness-log paths, not logic. R3owner's original bare/user-systemd permission failures remain preserved; primary's actualsudo-systemd commands both executed and matched expected results.
+
+The independent review found one semanticP2: old `pair()` populated `unpublished_tmp_*` partitions from formal snapshots although this run has no temporary files. The mechanical byte match does not close that defect. R4owner archives/corrects only derived metadata and adds semantic controls; formal DP observations must remain unchanged. R3has no actionable finding, and its inspected432successful clients/fourhosts/32H800UUIDs support only limited diagnostic evidence. Thirteen childSIGKILLs remain observed native escalation, not all-natural shutdown; actualNET/IB/Socket and workerbinary rehash remainUNKNOWN.
+
+R5completed24ranks, with at least3useful kernel-bearing steps on P1/D0/D1; all8P0ranks hit60seconds/exit124. Full32coverage isINCOMPLETE. See [trace report](results/test_report_2026-10-24_trace.md). Sparse CPU stage diagnosis is separately allocated before any audit-algorithm correction; no increased limit or GPUretry. Streams/dependencies/captured per-op ownership and any reference/cost admission remain separate and unverified.
