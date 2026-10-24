@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Complete native-key frozen unit/77-case verification; preserve audit namespace failures and require independent clean accounting/review before integration. |
 | 2026-10-24 | Allocate native artifact-key bytes reuse in two existing PRICING paths at3gross; keep whole-CLI/native gates and independent investigations open. |
 | 2026-10-24 | Close named-query frozen regressions and archive audit; decline small JSON controls and assign required-shape verification. |
 | 2026-10-24 | Parent admits completed dbe19f53 short101/197/53/52; retain strict/full-unit/final-guard dependencies. |
@@ -154,6 +155,14 @@ plan allowance transferred to the backend test and no donor code edit. Follow
 native_cache_key/plan.md for RED/GREEN, schema/cache/negative checks, one bounded
 key-only measurement, actual wave parity, regressions, audit and review. This
 does not improve the CPU-fixture branch or replace whole-CLI/native qualification.
+The three-gross source is now committed as376983d2 in its isolated worktree.
+Focused124/1,208-event replay and precommit scope9580 are verified. Clean frozen
+full-unit preserves all8620IDs/states (raw8028PASS/279FAIL/32ERROR/281SKIP,exit1),
+and strict77 is77/77 identical with451 artifacts/519 cache names per side. The
+unchanged auditor passes in the correct generated cache namespace; both earlier
+audit/mount failures remain. Both independent review axes have No findings. The
+independent clean114-cap/124-binding delta audit must close before primary
+integration. No native runtime or whole-CLI acceleration is inferred.
 The non-I/O identity-cache control is rejected because it did not improve timing.
 Cost-fields75404143 is now parent-verified and independently reviewed,8gross and
 zero retained growth, and merged with trace/prepared on feat/step5-preview.

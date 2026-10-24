@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Record clean native-key unit/strict77 preservation on isolated376983d2; final independent accounting/review and integration remain open. |
 | 2026-10-24 | Allocate a3-gross native-key candidate; accepted9579 usage and all whole-CLI/native limits remain unchanged pending verification. |
 | 2026-10-24 | Archive completed dbe19f53 regressions and final audit; small JSON controls are not allocated and required-shape validation continues. |
 | 2026-10-24 | Accept four frozen dbe19f53 short suites after27 parent checks; strict/full-unit remain pending. |
@@ -103,9 +104,15 @@ The next native-key candidate replaces repeated whole-artifact encoding with
 the already validated run-fixed bytes in the backend-instance LRU. Only two
 existing PRICING paths are allocated3gross/at most1 cumulative growth. One unused
 plan allowance moves to the backend test, with donor code unchanged. The accepted
-source still has9565source/9579global;9580global is a projection. Verification,
-review and integration are pending under native_cache_key/. The CPU fixture
-branch is unchanged; no whole-CLI/native result is claimed by this allocation.
+source still has9565source/9579global. Isolated source376983d2 is verified at
+precommit9566source/9580global; independent clean accounting remains pending.
+RED/GREEN, focused124/1 on each side and208-event/19-file parity pass. Clean
+frozen unit preserves all8620IDs/states with raw8028PASS/279FAIL/32ERROR/281SKIP,
+exit1; strict77 passes77/77 with451 artifacts/519 cache names per side. Auditor
+namespace failures remain preserved; the unchanged auditor passes after correct
+read-only mounts. Both independent review axes have No findings; final clean
+accounting/integration remain open under native_cache_key/. The CPU-fixture
+pricing branch is unchanged; no whole-CLI/native acceleration is claimed.
 
 Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trainerPASS,
 five path checks, both review axes No findings and complete208-event output parity

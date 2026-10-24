@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Verify native-key clean376983d2 full-unit identity/strict77; retain auditor mount failures and begin final independent reviews/accounting. |
 | 2026-10-24 | Allocate the3-gross native artifact-key replacement under standing authority; accepted source usage stays9579 until verified integration. |
 | 2026-10-24 | Close frozen dbe19f53 regressions and final archive audit; JSON control is unallocated and required-shape validation is assigned. |
 | 2026-10-24 | Parent verifies frozen dbe19f53 short101/197/53/52 with27 hashes and exact46fe IDs; strict/full-unit remain running. |
@@ -70,15 +71,20 @@
 
 ### Current-session resumption (supersedes handoff next-session timing)
 
-- in-progress/native key: D29-NATIVE-KEY-BYTES, primary, independent of the three
-  existing investigations. Source inspection confirms fixed input bytes and an
-  instance-local LRU; the whole artifact is nevertheless encoded per native call.
-  Two existing PRICING paths receive3gross(source2/test1), with one allowance line
-  transferred from unedited plan140 to139 to backend-test236 to237. Accepted
-  usage remains9565source/9579global;9580global is only the projected successor.
-  RED/GREEN, native-schema controls, key-only measurement, canonical wave, final
-  audit/review/regression and integration remain pending. CPU fixture pricing is
-  unchanged, and no native/full-CLI admission is implied. Records:native_cache_key/.
+- in-progress/native-key acceptance: D29-NATIVE-KEY-BYTES is committed as
+  isolated source376983d2, exactly3gross/net1 in two existing PRICING paths.
+  RED/GREEN1FAIL->1PASS, focused124PASS/1existingSKIP on each side,208-event
+  replay/19 complete-file comparisons and precommit9580 accounting pass.
+  Key/LRU-only median2.806s->94.784us is not native pricing or CLI timing.
+  Clean frozen unit retains all8620IDs/states:8028PASS/279FAIL/32ERROR/281SKIP,
+  rawexit1. Strict77 passes77/77,451 artifacts and519 cache names per side.
+  Two auditor namespace/mount failures remain; the unchanged auditor passes
+  after using the actual generated cache namespaces. Both independent review
+  axes return No findings; the clean scope delta audit is running.24 selected
+  frozen artifacts/scripts are hash-verified in the component evidence archive.
+  Primary integration remains pending. Accepted primary usage remains9579;
+  measured precommit successor9580 is not yet final acceptance. CPU fixture
+  pricing is unchanged; native/full-CLI gates remain open. Records:native_cache_key/.
 - completed/component: D29-PLAN-KEY-REUSE, session
   ses_e963098ecffebqCOtdysKGY6Xe, delivered c4e06a61/d1e2fb8c, integrated as
   30fb6a30/6c52a4d6. Both independent review axes have No findings. Parent124PASS/
