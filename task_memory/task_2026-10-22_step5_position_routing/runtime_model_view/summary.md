@@ -3,9 +3,16 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept and integrate ffb435ca after parent checks, both reviews and the9579 composed audit. |
 | 2026-10-24 | Archive implementation and production verification; leave parent acceptance open. |
 
 ## Outcome
+
+**Component accepted and integrated.** Source `ffb435ca` matches owner `1737ce9c`;
+records `8ecb705e` preserve owner `3d75c786`. Composed audit `de5eeab0` is archived
+at `c6b1f3b8`, with zero violations. Parent checks all124 final bindings and the
+120 non-query digest in `parent/acceptance.json`. Complete CLI qualification
+is still open.
 
 Implemented approved D29-NAMED-MODEL-QUERY in isolated branch/worktree
 `step5-d29-named-query` at
@@ -53,12 +60,15 @@ remain under `/data/ycfeng/tmp/d29_named_model_query01`.
 - Measured step14/3/49/30=96gross (source17/tests79), retained84. Cumulative
   registry104/120, workload196/223, bindings348/353, runtime147/151. Incremental
   union: CORE4261/4404, PRICING3954/3956, native1350/1582, source9565/9942,
-  global9579/10000. No donor changes; final composed audit belongs to primary.
+  global9579/10000. No donor changes. Independent composed audit and the parent
+  final-head guard now confirm these totals and all114 caps.
+- Parent final-source focused125PASS/1existingSKIP and full208-event replay with
+  19 byte comparisons pass. Both independent review axes have No findings.
 
 ## Open acceptance and limits
 
-Primary owns Standards/Spec reviews, independent verification, final composed
-scope audit and integration. Full-output/current-model whole-workflow validation,
+Standards/Spec reviews, parent verification, composed audit and integration are
+complete. Full-output/current-model whole-workflow validation,
 final frozen regression/full-unit/strict77,6144/1024/2400s CLI, native/GPU/G3/E2E
 remain open. No such runs or external actions were performed here. Output emission
 was not optimized; observed medians37.372→42.533ms are not attributed to this

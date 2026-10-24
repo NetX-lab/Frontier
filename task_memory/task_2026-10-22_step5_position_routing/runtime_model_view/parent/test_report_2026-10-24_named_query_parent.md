@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept composed scope and integrated source after a fresh124-binding final-head guard. |
 | 2026-10-24 | Verify final-source focused tests and complete two-arm wave replay; retain independent reviews and audit dependency. |
 
 ## Scope and result
@@ -14,7 +15,8 @@ Requirements: parent D29-NAMED-MODEL-QUERY decision and
 **PASS for component replay and focused tests.** Parent independently executed
 the final committed tests and both real production wave arms. Both review axes
 report No findings in `review.md`. Composed budget audit and final acceptance
-are still pending; this report does not qualify the full CLI.
+were pending at this first check; the final section below closes them. This
+report does not qualify the full CLI.
 
 | Check | Expected | Observed |
 | --- | --- | --- |
@@ -80,3 +82,28 @@ to the original scripts; this report describes the parent execution.
 - Global/cap figures remain owner incremental evidence until the independent
   composed audit returns. No full CLI, frozen strict77/full-unit, GPU/native,
   G3 or E2E qualification is claimed for the named-query successor.
+
+## Final integration and scope acceptance
+
+Independent audit `de5eeab0`, archived as `c6b1f3b8`, verifies all114 caps and the
+65-line zero-sum allowance transfer. Step usage is96gross (17source/79tests),
+net84; cumulative budget growth is88. The accepted union is CORE4261/4404,
+PRICING3954/3956,native1350/1582,source9565/9942 and global9579/10000, with zero
+violations. Source `ffb435ca` equals owner `1737ce9c`; owner records are `8ecb705e`.
+
+Parent verified all six audit artifacts against hashes and original committed
+blobs, then rechecked all124 bindings on integrated `c6b1f3b8`: four query deltas,
+120 unchanged non-query bindings, fixed native source bytes, pinned submodule
+blobs and exact non-task source equality. Non-query digest:
+`19c5718dfc1aa4cb11eef0306b8b877dbd9f234f1192053cb77ce4de7c9337fb`.
+The audit's small specified reads used30GiB RLIMIT_AS after transient scope
+denial; parent used the required working30G cgroup wrapper below.
+
+```sh
+timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/runtime_model_view/parent/final_scope_guard.py > /data/ycfeng/tmp/d29_named_query_parent01/final_scope_guard.log 2>&1
+```
+
+PASS first attempt. Machine receipt `acceptance.json` SHA256
+`442847ed6cb9526b53ebb562689821a93f30dc6c7698f967b05c176fe91c0793`, status
+`ACCEPTED_COMPONENT_AND_COMPOSED_SCOPE`. The successor's frozen regression and
+whole-workflow gates remain required; component acceptance does not close them.

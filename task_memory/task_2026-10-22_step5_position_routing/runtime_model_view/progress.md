@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept and integrate the component after both reviews, parent tests/replay and composed9579 audit; final124-binding guard passes. |
 | 2026-10-24 | Complete96-gross implementation and committed-source wave; archive parity/timing/guards for parent acceptance. |
 | 2026-10-24 | Record approval, parent-confirmed scope and pending implementation. |
 
@@ -71,10 +72,17 @@
 - observed/limits: emission medians37.372→42.533ms (15 samples/arm), not attributable
   to named querying and not an output-performance improvement. Original protected
   body labels remain historical. Full CLI/full-unit/strict77/GPU/native not launched.
-- pending/acceptance: two-axis review, parent verification, integration/final
-  freeze. The separate46fe full-unit owner has delivered its completed records;
-  parent acceptance of that receipt is independent of this implementation.
-- next actions for primary: (1) review four-file source diff1737ce9c vs617d832b
-  on Standards/Spec axes; (2) verify `repair_evidence/verification.json` and composed
-  scope audit; (3) integrate source and final evidence records, then proceed to
-  the separate source freeze/full-output/current-model/6144/1024/2400s acceptance.
+- completed/parent: both independent review axes have No findings. Final-source
+  focused125PASS/1existingSKIP preserves118 old statuses and passes8new cases.
+  Both real wave arms preserve all19 full-file comparisons and protected guards.
+- completed/audit: de5eeab0 is archived c6b1f3b8. All114 caps pass,65 allowance
+  lines transfer zero-sum and120 non-query bindings are unchanged. Step96gross,
+  net84, cumulative budget increment88 are distinct. CORE4261/4404,
+  PRICING3954/3956,native1350/1582,source9565/9942,global9579/10000; zero violations.
+- completed/integration: code1737ce9c is integrated as ffb435ca; owner records
+  3d75c786 as8ecb705e. Parent final guard on c6b1f3b8 independently checks all124
+  bindings, four cumulative deltas and source equality to1737ce9c. Evidence:
+  `parent/{acceptance.json,final_scope_guard.py,review.md,test_report_2026-10-24_named_query_parent.md}`.
+- pending/next phase: freeze the accepted source and run required scenario/full-unit
+  regressions. Full6144/1024/2400s CLI and native/GPU/G3/E2E remain open. Existing46fe
+  regression acceptance is retained but is not a run of this successor.

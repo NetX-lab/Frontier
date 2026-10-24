@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Integrate and accept named-query ffb435ca with final9579 global audit and124-binding parent guard. |
 | 2026-10-24 | Record named-query component delivery, independent No findings and parent125PASS/1SKIP plus full-wave parity; final audit pending. |
 | 2026-10-24 | Accept completed46fe full regression evidence with2736 parent checks and the approved old-ID replacement; assign named-query implementation. |
 | 2026-10-24 | Record YC's approval/preauthorization and the four-path100-gross named-query allocation. |
@@ -29,7 +30,10 @@
 
 ## Current-session continuation
 
-Current feature source includes accepted key c4e06a61 at30fb6a30. Both review
+Current feature source includes accepted named query ffb435ca, with9565source/
+9579global and zero audit violations. Parent component acceptance is in
+runtime_model_view/parent/acceptance.json. The preceding key checkpoint is
+c4e06a61 at30fb6a30. Both review
 axes have No findings. Parent124PASS/1existingTorchSKIP and full208-event costs,
 proofs, keys, JSONL/ledger bytes, negative and snapshot checks pass. Source16/17
 gross and14/15retained yields9477source/9491global. Independent two-path audit
@@ -61,11 +65,13 @@ Owner delivered code1737ce9c/records3d75c786 at96gross. Both axes report No find
 parent125PASS/1existingSKIP preserves118 old statuses and passes8new cases. The
 real208-event wave matches19 full files, all numerical/proof/error/input guards.
 Parent warm medians0.121525/0.090143s are observational under concurrent execution.
-Composed budget audit and integration remain pending; owner9579/10000 is not yet
-the final accepted union. Parent records are runtime_model_view/parent/.
+Composed budget auditde5eeab0 is archivedc6b1f3b8; final124-binding parent guard
+confirms9579/10000 and all114caps. Step96gross, physical net84 and cumulative
+budget growth88 are distinct. Code/records are integrated asffb435ca/8ecb705e.
+Parent records are runtime_model_view/parent/.
 An independent bounded snapshot-copy diagnosis is also running without source
-allocation. Production usage stays9491/10000
-until measured changes land; full CLI acceptance remains open.
+allocation. Production usage is9579/10000. Fresh successor regressions and full
+CLI acceptance remain open.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
 Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trainerPASS,

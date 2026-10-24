@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Integrate named-query ffb435ca/8ecb705e and auditc6b1f3b8; final124-binding guard accepts9579 global, with stepnet84 distinct from budget increment88. |
 | 2026-10-24 | Named-query code1737ce9c passes both reviews and parent125PASS/1SKIP plus19 byte comparisons; composed audit remains pending. |
 | 2026-10-24 | Parent accepts46fe full regressions after2736 hash/JUnit checks; raw old-ID gate remainsFAIL for the approved replacement. Named query implementation is assigned. |
 | 2026-10-24 | YC approves named querying and analogous optimizations; allocate100gross and resume frozen regression completion. |
@@ -107,13 +108,17 @@
   Primary assigns registry15/workload5/bindings50/runtime30 and65 zero-sum CORE
   allowance transfer with no donor edits. Allocation617d832b; owner
   ses_e93af1ff7ffe0YosowRNrc24Xa delivered code1737ce9c and records3d75c786.
-  Step96gross(source17/tests79), retained growth88 is owner evidence pending
-  composed audit. Both independent axes returned No findings. Parent final-source
+  Step96gross(source17/tests79), physical net84 and cumulative budget increment88
+  are independently verified. Both independent axes returned No findings. Parent final-source
   focused125PASS/1existingSKIP, all118 retained statuses unchanged,8newPASS;
   208-event replay/19 full-file byte comparisons and source/input/error guards
   PASS. Parent observed warm0.121525→0.090143s during concurrent isolated arms;
   not a whole-workflow timing claim. Records:runtime_model_view/parent/.
-  Final audit assigned to ses_e95ac82fdffeSeMEUfR9SxvW03 before integration;
+  Audit ses_e95ac82fdffeSeMEUfR9SxvW03 returned de5eeab0, archived c6b1f3b8:
+  all114caps PASS,CORE4261/PRICING3954/native1350,9565source/9579global,zero
+  violations. Source1737ce9c and records3d75c786 are integrated asffb435ca/8ecb705e.
+  Parent final-head124-binding guard reproduces the unchanged120 non-query digest;
+  receipt runtime_model_view/parent/acceptance.json. New frozen checks are next;
   see runtime_model_view/{requirements.md,plan.md,progress.md} and the amendment.
   Three archive-checker errors(header clocks twice, then wrong samples field)
   were corrected without rerunning the wave; original logs retained and final

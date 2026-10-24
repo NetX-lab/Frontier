@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Complete step4 with both reviews, parent verification, composed audit and integration; successor regressions remain. |
 | 2026-10-24 | Source1737ce9c and production wave verified; parent reviews/final scope/integration remain. |
 | 2026-10-24 | Allocate approved change and verification/review dependencies. |
 
@@ -23,9 +24,11 @@ integration -> final freeze/regressions. Prior46fe full-unit work is independent
 5. Continue whole-workflow diagnosis. This component alone is not a2400s pass;
     remaining full-output costs and storage are still open.
 
-Implementation status: steps1–3 completed. Four-file source commit1737ce9c is
+Implementation status: steps1–4 completed. Four-file source commit1737ce9c is
 96gross, with final selected12PASS and focused125PASS/1existingSKIP against
 baseline117PASS/1SKIP. Fresh production wave has19 byte comparisons, unchanged
-actual-point/numerical/proof counts and−28.16% warm pricing median. Step4 remains
-primary-owned; step5 remains separate workflow work. See the dated production
-test report and `repair_evidence/verification.json`.
+actual-point/numerical/proof counts and−28.16% warm pricing median. Parent125PASS/
+1existingSKIP and both reviews pass; composed scope9579/10000 has zero violations,
+and final124-binding guard matches the audited source. Integrated source isffb435ca;
+records are8ecb705e/c6b1f3b8. See `parent/acceptance.json`. Step5 and the new frozen
+regression pass remain separate workflow work.
