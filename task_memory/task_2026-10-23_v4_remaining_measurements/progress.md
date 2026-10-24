@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Archived the unique segment diagnostic SIGABRT before metrics; allthree timing hypotheses remain unmeasured and only read-only abort RCA is allocated. |
 | 2026-10-25 | Accepted the112-line segment source and114-line fresh tiny after32 exact checks and both reviews; froze the original once-only diagnostic command. |
 | 2026-10-25 | Original tiny failed before AST on the cgroup sensor; one fresh v1-sensor control is separately allocated and the diagnostic remains0/1. |
 | 2026-10-25 | Resumed from947da5ee, preserved stopped-owner partials and retained24 binding; no new tiny or diagnostic invocation yet. |
@@ -52,6 +53,8 @@
 | 2026-10-23 | Accepted Q1 P0 workload/metric binding after root independently reproduced the owner command; Q2 preparation remains active. |
 
 ## Current continuation — 2026-10-25
+
+- failed unique segment diagnostic1/1: source gatee46cafe3;child-6/driver1/enclosing40.333549s,actual32,212,254,720bytes. Stderr reports `malloc(): unsorted double linked list corrupted`;last kernel_progress39.935s, no kernel_done/metrics boundary/final JSON. [Failure](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/diagnostic_failure.json) binds closed logs/receipt and partial compressed index without claiming EOF/count. Intendedthree hypotheses remainUNMEASURED;source/tiny gates stay accepted,R5still24/32. [Read-only allocation](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/abort_rca_allocation.json) owns runtime/source investigation;no rerun or new algorithm/rank/control is selected.
 
 - completed segment CPU/source gate: [source review](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/source_review.json) binds112/140-line timer,114/115-line active control02,32 consistent exact checks/actual30GiB and both independent full-source reviews with zero open findings. Firsttiny1/1FAIL and repairtiny1/1PASS remain immutable. [Diagnostic allocation](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/diagnostic_execution_allocation.json) freezes original55-line driver, unchangedtriplet/dependencies and unique0/1 diagnostic;no complete-control/affected authority. All reviewers are closed.
 
@@ -103,14 +106,14 @@ This live continuation record supersedes the originalb3365655 handoff and every 
 ### Unfinished work and numbered next actions
 
 1. Preserve group source/control8b4d6993 and frozen affected allocation00840389. Its one fresh pilot FAILED;seven conditional ranks remainNOT_RUN/BLOCKED. No old unit/control/pilot/diagnostic rerun.
-2. The original segment tiny is FAILED/spent1/1 before any AST check due to the cgroup sensor. Freshcontrol02 is PASS/spent1/1 with32 consistent checks and actual30GiB;Both reviews and primary CPU/source gate are complete;the original diagnostic is frozen0/1 at60s/actual30GiB. Execute it once and inspect completed/censored segments. Do not rerun either tiny;the diagnostic grants no correction/complete-control/affected authority.
-3. Decide any subsequent bounded correction from the measured segment evidence, with new exact-control and affected allocations before work. The fixed60s/actual30GiB/max2,unchanged predicates/raw IDs and >=3useful-step/full-output requirements remain.
+2. The original segment tiny is FAILED/spent1/1 before any AST check due to the cgroup sensor. Freshcontrol02 is PASS/spent1/1 with32 consistent checks and actual30GiB;Both reviews and primary CPU/source gate are complete;the original diagnostic is FAILED_SIGABRT/spent1/1 beforemetrics. Continue only the read-only allocator-abort RCA;allthree metrics timing hypotheses are unmeasured. Do not rerun either tiny;the diagnostic grants no correction/complete-control/affected authority.
+3. The allocator corruption origin is UNKNOWN. Bind local runtime/source evidence and select a separately allocated diagnostic/qualification before any further execution. No metrics algorithm correction is supported by this aborted run. The fixed60s/actual30GiB/max2,unchanged predicates/raw IDs and >=3useful-step/full-output requirements remain.
 4. Final R5/R6/R7 waits for complete actual32-rank outputs. R6/R7 compact evidence preparation may continue independently; preserve all failures and native/reference limits. Update reports/check-progress and commit only owned files locally.
 
 ### Complete continuation prompt
 
 ```text
-最新checkpoint：group source8b4d6993和affected allocation00840389已提交；group freshpilot1/8已用且FAILED124/60.324082s，no finalJSON。kernel_done55.532、batch_start55.992、metrics gen2callbacks0；完整1215919index只作诊断，其余7NOT_RUN/BLOCKED，R5仍24/32。原segment tiny已FAILED/spent1/1，cgroup sensor路径错误且零checks；错误及originalfiles不改不复跑。primary/tiny_repair_allocation.json下fresh tiny_control02已PASS/spent1/1，32consistentchecks/实际30GiB；双审zeroopenfindings且primarysource_review已验收。原segmentdiagnostic已exact command/source/input绑定，仍0/1，只执行一次；无correction/completecontrol/affected额度。不把下文历史0/8、ownerpending当current。
+最新checkpoint：group source8b4d6993和affected allocation00840389已提交；group freshpilot1/8已用且FAILED124/60.324082s，no finalJSON。kernel_done55.532、batch_start55.992、metrics gen2callbacks0；完整1215919index只作诊断，其余7NOT_RUN/BLOCKED，R5仍24/32。原segment tiny已FAILED/spent1/1，cgroup sensor路径错误且零checks；错误及originalfiles不改不复跑。primary/tiny_repair_allocation.json下fresh tiny_control02已PASS/spent1/1，32consistentchecks/实际30GiB；双审zeroopenfindings且primarysource_review已验收。原segmentdiagnostic已FAILED_SIGABRT/spent1/1：child-6/40.333549s/实际30GiB，stderrmallocheapcorruption，metrics尚未开始。三项timing假设UNMEASURED；只有primary/abort_rca_allocation.json只读RCA，无新run或correction/completecontrol/affected额度。不把下文历史0/8、ownerpending当current。
 
 继续/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028，feat/glm53-dsv4-vllm028，主任务task_memory/task_2026-10-23_v4_remaining_measurements/。先读AGENTS.md和主requirements/plan/progress/summary及git状态；本段及上方Current continuation是当前记录，旧current/pending是历史。
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Archived the unique segment diagnostic SIGABRT before metrics; allthree timing hypotheses remain unmeasured and only read-only abort RCA is allocated. |
 | 2026-10-25 | Accepted the112-line segment source and114-line fresh tiny after32 exact checks and both reviews; froze the original once-only diagnostic command. |
 | 2026-10-25 | Preserved the pre-AST cgroup sensor failure and allocated one fresh sensor-corrected tiny control using the existing v1 mapping. |
 | 2026-10-25 | Recorded primary takeover and a 115-line tiny cap before the unchanged once-only segment diagnosis. |
@@ -305,3 +306,8 @@ One owner may create a fresh probe copy under `profile01/graph_probe/`, with at 
 
 - [Observed failure] The original segment tiny1/1 returnedFAIL with zero checks in0.000708s because new primary code assumed a nonexistent memory.max path. The local memory controller isv1; existing observe_gc.py already maps its controller/mount root and reads memory.limit_in_bytes. Preserve the original tiny/source/input/result/launch receipt; never run/import that spent control again.
 - [Decision — measured ordinary in-scope repair] Allocate one fresh `group_metrics_tail02/owner/tiny_control02.py`<=115gross lines and copied tiny_inputs02/result02; reuse the four existing v1 sensor expressions and strengthen exact six-row membership telemetry comparison. Timer112-line/hash9f456317 and all existing computation remain unchanged. One separately bound fresh tiny invocation is permitted,60s/actual30GiB/selectedconcurrency1/no retry; zero complete-controls/affected. The originally allocated segment diagnostic remains0/1 and may start only after the new proof and primary/review bindings.
+
+### D-V4-P0-GROUP-SEGMENTS-ABORT-READONLY-RCA
+
+- [Observed failure — 2026-10-24 UTC / 2026-10-25 Hong Kong] The unique segment diagnostic endedSIGABRT/-6 after40.333548916038126s,actual30GiB. Stderr reports `malloc(): unsorted double linked list corrupted`;last kernel-progress observation39.935s, no kernel_pass_done, no metrics boundary or final JSON. The generic original receipt labelCENSORED is preserved;primary diagnostic_failure.json distinguishes the native CPU abort from a60-second timeout. Allthree intended timing hypotheses remainUNMEASURED. Partial index is hash-bound but EOF/count/attribution are unverified;do not infer a full result. Diagnostic1/1 is spent.
+- [Decision — bounded investigation] Primary owns closed receipt/log/source binding and current records. One sidecar owns only `group_metrics_tail02/abort_source_diagnosis.md`<=100maintained lines, reading retained logs, local interpreter/source metadata and existing documented environments. No old scripts may run/import;no source/GC/loader/raw/package/environment edit, dependency install, new full trace/control/rank/GPU invocation or runtime/cost admission. A new diagnostic or environment qualification needs its own evidence-backed allocation before work.
