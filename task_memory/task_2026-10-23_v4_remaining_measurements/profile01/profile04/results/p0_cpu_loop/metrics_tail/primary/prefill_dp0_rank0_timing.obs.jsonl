@@ -1,0 +1,78 @@
+{"t": 0.072, "stage": "instrumented", "rss_mb": 18.9, "hits": ["after:data = reader.load_trace(path)", "after:events = data['traceEvents']", "after:header = reader.trace_header(path)", "after:in calls.items():", "after:in enumerate(events):", "after:in enumerate(syn):", "after:in profile['steps']:", "after:in streams.items():", "after:inventory = read(inventory_path)", "after:names = collections.Counter", "after:output.write_text(", "after:print(json.dumps({", "after:result = {", "after:start = time.monotonic()", "after:with gzip.open(raw_path,", "before:data = reader.load_trace(path)", "before:header = reader.trace_header(path)", "before:step_rows = []", "before:with gzip.open(raw_path,", "loop:in enumerate(events):", "loop:in kernels:"], "auditor_sha": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8", "reader_sha": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52", "trace": "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz", "output": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.json"}
+{"t": 0.076, "stage": "enter", "rss_mb": 19.0}
+{"t": 0.488, "stage": "metadata_loaded", "rss_mb": 138.4}
+{"t": 0.492, "stage": "header_start", "rss_mb": 138.7}
+{"t": 0.492, "stage": "header_done", "rss_mb": 138.7}
+{"t": 0.492, "stage": "load_gc_disabled", "rss_mb": 138.7, "enabled": false}
+{"t": 0.492, "stage": "load_start", "rss_mb": 138.7, "trace_gz_bytes": 142288791}
+{"t": 30.315, "stage": "load_done", "rss_mb": 5901.2}
+{"t": 30.694, "stage": "freeze_after_load", "rss_mb": 5901.2, "seconds": 1.5459023416042328e-05, "objects": 6994987, "gc_enabled": true}
+{"t": 30.694, "stage": "events_ready", "rss_mb": 5901.2, "events": 5062740}
+{"t": 31.241, "stage": "annotations_named", "rss_mb": 5901.2, "names": 63944}
+{"t": 31.242, "stage": "event_pass_progress", "rss_mb": 5901.2, "idx": 0}
+{"t": 31.428, "stage": "event_pass_progress", "rss_mb": 5903.1, "idx": 500000}
+{"t": 31.619, "stage": "event_pass_progress", "rss_mb": 5905.6, "idx": 1000000}
+{"t": 31.91, "stage": "event_pass_progress", "rss_mb": 5912.1, "idx": 1500000}
+{"t": 32.549, "stage": "event_pass_progress", "rss_mb": 5934.3, "idx": 2000000}
+{"t": 33.352, "stage": "event_pass_progress", "rss_mb": 5956.4, "idx": 2500000}
+{"t": 34.079, "stage": "event_pass_progress", "rss_mb": 5978.9, "idx": 3000000}
+{"t": 34.936, "stage": "event_pass_progress", "rss_mb": 6001.3, "idx": 3500000}
+{"t": 35.685, "stage": "event_pass_progress", "rss_mb": 6023.5, "idx": 4000000}
+{"t": 36.49, "stage": "event_pass_progress", "rss_mb": 6049.2, "idx": 4500000}
+{"t": 37.007, "stage": "event_pass_progress", "rss_mb": 6069.9, "idx": 5000000}
+{"t": 37.026, "stage": "event_pass_done", "rss_mb": 6069.9, "events": 5062740, "kernels": 1215919, "calls": 512220, "ranges": 63944}
+{"t": 39.952, "stage": "correlation_done", "rss_mb": 6251.9, "launch_owner_rows": 512220, "correlations": 512220}
+{"t": 39.952, "stage": "kernel_pass_start", "rss_mb": 6251.9}
+{"t": 40.085, "stage": "kernel_pass_progress", "rss_mb": 6252.9, "idx": 1450000}
+{"t": 40.167, "stage": "kernel_pass_progress", "rss_mb": 6253.7, "idx": 1475000}
+{"t": 40.332, "stage": "kernel_pass_progress", "rss_mb": 6255.0, "idx": 1525000}
+{"t": 40.415, "stage": "kernel_pass_progress", "rss_mb": 6255.8, "idx": 1550000}
+{"t": 40.618, "stage": "kernel_pass_progress", "rss_mb": 6257.3, "idx": 1625000}
+{"t": 40.873, "stage": "kernel_pass_progress", "rss_mb": 6259.4, "idx": 1700000}
+{"t": 41.123, "stage": "kernel_pass_progress", "rss_mb": 6261.2, "idx": 1800000}
+{"t": 41.289, "stage": "kernel_pass_progress", "rss_mb": 6262.7, "idx": 1850000}
+{"t": 41.372, "stage": "kernel_pass_progress", "rss_mb": 6263.2, "idx": 1875000}
+{"t": 41.597, "stage": "kernel_pass_progress", "rss_mb": 6265.0, "idx": 1950000}
+{"t": 41.823, "stage": "kernel_pass_progress", "rss_mb": 6266.9, "idx": 2025000}
+{"t": 41.907, "stage": "kernel_pass_progress", "rss_mb": 6267.6, "idx": 2050000}
+{"t": 42.071, "stage": "kernel_pass_progress", "rss_mb": 6268.9, "idx": 2100000}
+{"t": 42.323, "stage": "kernel_pass_progress", "rss_mb": 6271.0, "idx": 2200000}
+{"t": 43.177, "stage": "kernel_pass_progress", "rss_mb": 6273.0, "idx": 2275000}
+{"t": 43.501, "stage": "kernel_pass_progress", "rss_mb": 6274.6, "idx": 2350000}
+{"t": 43.849, "stage": "kernel_pass_progress", "rss_mb": 6275.4, "idx": 2375000}
+{"t": 44.525, "stage": "kernel_pass_progress", "rss_mb": 6276.6, "idx": 2425000}
+{"t": 44.884, "stage": "kernel_pass_progress", "rss_mb": 6277.4, "idx": 2450000}
+{"t": 45.736, "stage": "kernel_pass_progress", "rss_mb": 6279.0, "idx": 2525000}
+{"t": 46.802, "stage": "kernel_pass_progress", "rss_mb": 6281.0, "idx": 2600000}
+{"t": 47.154, "stage": "kernel_pass_progress", "rss_mb": 6281.8, "idx": 2625000}
+{"t": 47.85, "stage": "kernel_pass_progress", "rss_mb": 6282.8, "idx": 2700000}
+{"t": 48.725, "stage": "kernel_pass_progress", "rss_mb": 6285.1, "idx": 2775000}
+{"t": 50.043, "stage": "kernel_pass_progress", "rss_mb": 6295.7, "idx": 3400000}
+{"t": 50.195, "stage": "kernel_pass_progress", "rss_mb": 6297.8, "idx": 3475000}
+{"t": 50.461, "stage": "kernel_pass_progress", "rss_mb": 6300.9, "idx": 3575000}
+{"t": 50.727, "stage": "kernel_pass_progress", "rss_mb": 6312.2, "idx": 3650000}
+{"t": 50.941, "stage": "kernel_pass_progress", "rss_mb": 6314.3, "idx": 3725000}
+{"t": 51.028, "stage": "kernel_pass_progress", "rss_mb": 6315.0, "idx": 3750000}
+{"t": 51.198, "stage": "kernel_pass_progress", "rss_mb": 6316.9, "idx": 3800000}
+{"t": 51.464, "stage": "kernel_pass_progress", "rss_mb": 6319.2, "idx": 3900000}
+{"t": 51.726, "stage": "kernel_pass_progress", "rss_mb": 6321.5, "idx": 3975000}
+{"t": 51.827, "stage": "kernel_pass_progress", "rss_mb": 6322.3, "idx": 4000000}
+{"t": 52.056, "stage": "kernel_pass_progress", "rss_mb": 6335.4, "idx": 4075000}
+{"t": 52.316, "stage": "kernel_pass_progress", "rss_mb": 6338.0, "idx": 4150000}
+{"t": 52.587, "stage": "kernel_pass_progress", "rss_mb": 6339.8, "idx": 4225000}
+{"t": 52.667, "stage": "kernel_pass_progress", "rss_mb": 6340.6, "idx": 4250000}
+{"t": 52.837, "stage": "kernel_pass_progress", "rss_mb": 6342.4, "idx": 4300000}
+{"t": 52.923, "stage": "kernel_pass_progress", "rss_mb": 6343.1, "idx": 4325000}
+{"t": 53.091, "stage": "kernel_pass_progress", "rss_mb": 6344.4, "idx": 4375000}
+{"t": 53.353, "stage": "kernel_pass_progress", "rss_mb": 6346.5, "idx": 4475000}
+{"t": 53.608, "stage": "kernel_pass_progress", "rss_mb": 6348.6, "idx": 4550000}
+{"t": 53.822, "stage": "kernel_pass_progress", "rss_mb": 6356.3, "idx": 4625000}
+{"t": 53.907, "stage": "kernel_pass_progress", "rss_mb": 6357.1, "idx": 4650000}
+{"t": 54.161, "stage": "kernel_pass_progress", "rss_mb": 6359.4, "idx": 4725000}
+{"t": 54.334, "stage": "kernel_pass_progress", "rss_mb": 6360.9, "idx": 4800000}
+{"t": 54.417, "stage": "kernel_pass_progress", "rss_mb": 6361.7, "idx": 4825000}
+{"t": 54.586, "stage": "kernel_pass_progress", "rss_mb": 6363.3, "idx": 4875000}
+{"t": 54.67, "stage": "kernel_pass_progress", "rss_mb": 6364.0, "idx": 4900000}
+{"t": 54.806, "stage": "kernel_pass_done", "rss_mb": 6364.8, "streams": 155, "status_rows": {"unowned": 11385, "unique_leaf": 138134, "captured_segment_unknown": 1066400}}
+{"t": 55.267, "stage": "DEBUG-V4-METRICS-TAIL-01:batch_start", "rss_mb": 6367.1, "events": 1215919, "groups": 240, "memberships": 5331778}
+{"t": 55.267, "stage": "DEBUG-V4-METRICS-TAIL-01:group_construction_start", "rss_mb": 6367.1}

@@ -1,0 +1,47 @@
+{
+  "status": "PASS_CLOSED_ARTIFACT_BINDING",
+  "files": {
+    "prefill_dp0_rank0_timing.receipt.json": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.receipt.json",
+      "sha256": "11d1dd153629469f7856edcc9fc18f176c3953ff9b92e4fbdae261ac2b00cfcc",
+      "bytes": 5683
+    },
+    "prefill_dp0_rank0_timing.cgroup.json": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.cgroup.json",
+      "sha256": "20ddf73fed4e35b8d90832f816c42b2d610429197029c521538e1ff74eb9f248",
+      "bytes": 1947
+    },
+    "prefill_dp0_rank0_timing.gc.jsonl": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.gc.jsonl",
+      "sha256": "391026509551b89f6f04bd060a53733e88a4faf19b3bb9644a4844be85e07a89",
+      "bytes": 3262
+    },
+    "prefill_dp0_rank0_timing.hb.log": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.hb.log",
+      "sha256": "51d63c35d336682f46a29d37b220db61a449a64b8ddf0bb88bbeb6f2fcf1668d",
+      "bytes": 10527
+    },
+    "prefill_dp0_rank0_timing.obs.jsonl": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.obs.jsonl",
+      "sha256": "23ed58b5e85b1c948a415ccc5fb6f35380b1653b2bace2867f3694e842dcafda",
+      "bytes": 7466
+    },
+    "prefill_dp0_rank0_timing.stderr": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.stderr",
+      "sha256": "d462e41408d3a9ac66c820e03ead1137cd4c1eec7a981be2be4aa2a96d50f618",
+      "bytes": 67
+    },
+    "prefill_dp0_rank0_timing.stdout": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "large_index_retained": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.kernels.jsonl.gz",
+    "bytes": 5383865,
+    "sha256": "cda63d5f150301c60fce64713a5ac8b7854e94aae5883a5c64b997acfb3a7306",
+    "validation": "Existence/hash only; no new complete-index or useful-step acceptance."
+  },
+  "new_audit_or_control_invocations": 0
+}

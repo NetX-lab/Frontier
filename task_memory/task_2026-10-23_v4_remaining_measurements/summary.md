@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Archived the one-shot censored construction diagnosis and separately allocated group-metrics correction; R5 remains24/32. |
 | 2026-10-25 | Archived limited S5GPU acceptance, R2review closure and failed P0pilot;R5still24/32 and new metrics-tail diagnosis is separately bounded. |
 | 2026-10-25 | Recorded sealed/completed single GPU execution and accepted metrics source/exact controls; runtime acceptance and P0 outputs remain pending. |
 | 2026-10-25 | Archived prepared package/root CPU-image-SDK gates and final metrics observation; historical handoff preserves its earlier boundaries. |
@@ -39,7 +40,9 @@ P0metrics source/equality prerequisites at0d0fe648 remain accepted:120/200source
 
 Scope/runtime and failed P0pilot archive is committedffbfbc37 locally. The new timer is98/140lines;owner Markdown88/90. Primary accepted the retained AST/five-fixture evidence without rerunning tiny1/1. One aggregate check row has a mutated list and remains invalid;[primary report](profile01/profile04/results/p0_cpu_loop/metrics_tail/test_report_2026-10-25_metrics_tail_primary.md) binds its stable order to the separately copied fixture.
 
-Current independent work is the separately allocated one-shot sparse metrics-tail diagnosis:<=140-line timer and90-line owner Markdown,one tiny AST/output control and one fresh P0timing run at60s/actual30GiB/max2. Membership construction,global sort,union recurrence and GC overlap must be measured before another source/control/affected allocation. This diagnostic supplies no R5acceptance. R6/R7full-trace synthesis waits for complete32-rank output;wholeDP/transport/trace-ID/captured ownership/dependency/cost/reference remain open. Native06R4 is still the reference;full05/09/19OPEN,GLMPAUSED andCPU-overheadlast. [Live continuation record](progress.md#current-session-handoff-2026-10-25) is authoritative;older snapshots below are historical. Commits are local only and protected unrelated paths stay unstaged.
+The one-shot sparse metrics-tail diagnosis is complete and spent1/1:child124/60.307500s/actual30GiB,no finalJSON. Kernel done54.806s andbatch55.267s show240groups/5331778memberships;construction remains open for at least3.352355s,with two gen2pauses totaling2.181248s. Sort/union never started. [Diagnostic report](profile01/profile04/results/p0_cpu_loop/metrics_tail/test_report_2026-10-25_metrics_tail_diagnostic.md) preserves exact sources/closed receipts/limits. R5 remains24/32.
+
+Current work is the separately allocated group-metrics representation correction:220source/200test/100owner Markdown,one owner and one primary unit,two fresh complete exact controls,then eight once-only conditional affected P0ranks. Hooke writes only newsource/tests andmetrics_correction02/owner/;primary prepares controls/reviews/execution. One stable global order plus per-group integer positions preserves original count/sum/duplicates/union while avoiding per-event mutable membership lists. Actual speed remains unverified;the remaining seven ranks require a complete fresh pilot. R6/R7full-trace synthesis waits for complete32-rank output;wholeDP/transport/trace-ID/captured ownership/dependency/cost/reference remain open. Native06R4 is still the reference;full05/09/19OPEN,GLMPAUSED andCPU-overheadlast. [Live continuation record](progress.md#current-session-handoff-2026-10-25) is authoritative;older snapshots below are historical. Commits are local only and protected unrelated paths stay unstaged.
 
 ## Historical handoff frontier — 2026-10-25, before fresh gates
 
