@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate the four-file135-gross EP ledger persistence/validation repair under standing path/performance authority; retain all runtime/resource limits. |
 | 2026-10-24 | Record the separate three-call shape supplement;total ceiling6,with no further automatic retry. |
 | 2026-10-24 | Record explicit codesign OSS test-storage and timely completed-artifact cleanup authorization; shape/GPU bounds remain unchanged. |
 | 2026-10-24 | Record checkpoint follow-up continuation without extending the exhausted three-invocation ceiling or authorizing storage changes. |
@@ -455,3 +456,31 @@ rawFAIL results and the60s/30GiB/single-math-thread limits;no GPU or full CLI.
 YC selects **“追加3次 (Recommended)”**. Total permitted production-path
 invocations increase from3 to6. This is a separate explicit decision,not an
 effect of the OSS permission. No further automatic retry is authorized.
+
+## [Execution Decision] Complete EP Ledger Persistence and Validation
+
+Continue under the original repair-path and analogous-performance authority at
+119–134 and354–360; this is not a new human answer. Primary allocates
+`repairs/ep_lane_ledger_scope_amendment.json`: four CORE files,135gross,
+two newly classified existing paths with zero historical increment from1aee0af
+to b0277287. Effective allocated inventory becomes116. Add135 allowance and
+remove135 from unchanged CORE donors; owner4404/3956/1582,source9942/global10000
+ceilings remain unchanged. Accepted actual usage remains9566source/9580global
+until a clean, verified successor is integrated.
+
+`ledger_memory/{requirements,design,plan}.md` owns this necessary complete-output
+repair: no historical EP row retention in the real MetricsStore, no whole-EP-file
+materialization in actual-main validation, full successful JSONL values/proofs/
+keys/order preserved. Keep every actual-point and row/proof check. Partial files,
+earlier native write errors and row-local failure priority are declared streaming
+behavior changes; no error suppression or invented success is authorized.
+
+The historical output estimate omitted the EP ledger. Sample-based combined
+projection is about469GB/mode or938GB/two modes, not a measured full file size
+or RSS bound. Worker resources, project quota and worker-to-cloud throughput
+remain unresolved. Existing configurable output_root relocation needs no CLI
+source change. The2400s subprocess cap remains unchanged and unpassed; its
+post-run validator is outside that cap. No required-shape or new worker/GPU
+invocation is added by this allocation. Retained warm configuration inspection
+closes NO_PRODUCTION_ALLOCATION in `runtime_config_scan/`; copy/init diagnoses
+remain independent.

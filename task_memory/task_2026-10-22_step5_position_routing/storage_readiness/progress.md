@@ -3,9 +3,26 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Correct current projection to include EP ledger; record static worker proposal and memory/readback blockers without a job or source allocation. |
 | 2026-10-24 | Record current local capacity and mark storage BLOCKED without authorizing cleanup or external staging. |
 
 ## Status
+
+- completed/cloud-write planning: D29-CLI-CLOUD-WRITE-PLAN,
+  ses_e91b47e39ffeRn6lPWVUegoZQ6. Existing output-root flags work with a mounted
+  worker volume; zero-GPU codesign is a candidate, not a qualified resource shape.
+- blocked/current readiness: older261GB/mode accounting omitted EP lane ledger.
+  Representative historical scaling is approximately469GB/mode and938GB/both,
+  excluding other outputs and without any RSS/full-file/throughput measurement.
+  Production retains all ledger rows;the validator materializes the entire file.
+  Worker resources/image/mount,quota,append throughput and cohesive current timing
+  remain unresolved. See execution_proposal.md;no worker or source repair allocated.
+- in-progress/ledger design and scope: primary reviews the bounded write/read
+  proposal; D29-LEDGER-SCOPE-BASIS,ses_e91a0552fffeM34Rv3FXfozhYu, verifies exact
+  cumulative baseline costs before allocation. Standing repair-path authority
+  permits necessary path amendments within unchanged owner/global budgets.
+
+## Dated local capacity and access evidence
 
 - completed/ownership: primary owns D29-STORAGE-READINESS.
 - completed/local inspection: explore session ses_e91ee5fefffee4jkdiQMREtWQh,

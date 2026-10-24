@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Archive verified135-gross/116-path ledger allocation and retained-config NO_ALLOC; preserve accepted9580 source usage and all workflow/cloud readiness limits. |
 | 2026-10-24 | Archive scoped supplemental shape PASS and canonical OSS output;native/fullCLI gates remain separate. |
 | 2026-10-24 | Synchronize failed shape attempts, exhausted quota, checker-only evidence and current local storage shortfall after the checkpoint. |
 | 2026-10-24 | Accept native-key source c668a938 and9580global union after reviews, clean audit and124-binding/33-artifact primary integration verification. |
@@ -39,9 +40,22 @@
 Current feature source includes accepted native-key c668a938 and named query
 ffb435ca, with9566source/9580global and zero audit violations. Native-key primary
 acceptance is in native_cache_key/evidence/primary_integration.json; named-query acceptance is in
-runtime_model_view/parent/acceptance.json. The preceding key checkpoint is
-c4e06a61 at30fb6a30. Both review
-axes have No findings. Parent124PASS/1existingTorchSKIP and full208-event costs,
+runtime_model_view/parent/acceptance.json.
+
+The complete EP ledger persistence/validation successor is allocated, not
+implemented or accepted: four CORE files135gross,116allocated paths,unchanged
+owner/source/global caps. `ledger_memory/` and its scope amendment retain the
+two zero-history baseline checks and zero-sum transfer. Config-profile inspection
+is NO_PRODUCTION_ALLOCATION. Copy/initialization diagnoses remain pending.
+The corrected sample output projection is approximately469GB/mode or938GB/two
+modes; neither total RSS nor current whole-CLI timing is measured. Worker resource,
+personal quota and worker-to-cloud throughput readiness remain unresolved, and
+the required-shape allowance stays6/6used. FullCLI/native/G3/E2E is not admitted.
+
+## Preceding accepted checkpoints
+
+The preceding key checkpoint is c4e06a61 at30fb6a30. Both review axes have
+No findings. Parent124PASS/1existingTorchSKIP and full208-event costs,
 proofs, keys, JSONL/ledger bytes, negative and snapshot checks pass. Source16/17
 gross and14/15retained yields9477source/9491global. Independent two-path audit
 6a980a51 is integrated46fe83ac; the primary final-head guard reproduces122

@@ -1,0 +1,61 @@
+{
+  "decision_id": "D29-EP-LANE-LEDGER-MEMORY",
+  "status": "ALLOCATED_UNDER_YC_REPAIR_PATH_AUTHORITY",
+  "authority": "requirements.md:119-134 and 354-360",
+  "apply_after": "native_collective_key_scope_amendment.json",
+  "owner": "core_source",
+  "owner_total_ceiling": 4404,
+  "source_gross_ceiling": 9942,
+  "total_gross_ceiling": 10000,
+  "repair_delta_ceiling": 135,
+  "baseline_revision": "1aee0af11cd58691e64603b99eca0ac459a5b350",
+  "accepted_source_revision": "b02772872d0c99ceb5ebb31a8e041926f12f7676",
+  "effective_unique_paths": 116,
+  "owner_paths": {"core_source": 51, "pricing": 46, "native": 19},
+  "owner_gross_ceilings": {"core_source": 4404, "pricing": 3956, "native": 1582},
+  "repair_paths": [
+    "frontier/metrics/metrics_store.py",
+    "tests/integration/run_step5_measured_main.py",
+    "tests/integration/test_step5_measured_main.py",
+    "tests/performance/step5_actual06_iteration.py"
+  ],
+  "path_step_ceilings": {
+    "frontier/metrics/metrics_store.py": 38,
+    "tests/integration/run_step5_measured_main.py": 20,
+    "tests/integration/test_step5_measured_main.py": 65,
+    "tests/performance/step5_actual06_iteration.py": 12
+  },
+  "new_paths": [
+    {"path": "frontier/metrics/metrics_store.py", "owner": "core_source", "ceiling": 38, "baseline_actual": 0, "reason": "Replace end-of-run EP lane retention/rewrite with complete write-through output at the existing owner seam."},
+    {"path": "tests/performance/step5_actual06_iteration.py", "owner": "core_source", "ceiling": 12, "baseline_actual": 0, "reason": "Read complete persisted row slices instead of requiring the real MetricsStore to retain historical rows."}
+  ],
+  "path_ceiling_adjustments": [
+    {"path": "tests/integration/run_step5_measured_main.py", "before": 47, "delta": 20, "after": 67},
+    {"path": "tests/integration/test_step5_measured_main.py", "before": 260, "delta": 65, "after": 325},
+    {"path": "frontier/cc_backend/collective_profile.py", "before": 24, "delta": -4, "after": 20},
+    {"path": "frontier/execution_time_predictor/layer_contract_resolution.py", "before": 15, "delta": -4, "after": 11},
+    {"path": "frontier/execution_time_predictor/moe_routing_workload.py", "before": 223, "delta": -27, "after": 196},
+    {"path": "frontier/execution_time_predictor/prediction_model_registry.py", "before": 120, "delta": -16, "after": 104},
+    {"path": "frontier/execution_time_predictor/profiling_dataframe_loaders.py", "before": 17, "delta": -4, "after": 13},
+    {"path": "frontier/execution_time_predictor/shared_prediction_model_manager.py", "before": 12, "delta": -6, "after": 6},
+    {"path": "frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py", "before": 38, "delta": -6, "after": 32},
+    {"path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", "before": 115, "delta": -2, "after": 113},
+    {"path": "frontier/execution_time_predictor/step5.py", "before": 36, "delta": -2, "after": 34},
+    {"path": "frontier/metrics/trace_store.py", "before": 19, "delta": -5, "after": 14},
+    {"path": "frontier/moe_load_imbalance.py", "before": 56, "delta": -5, "after": 51},
+    {"path": "frontier/moe_routing_policy.py", "before": 212, "delta": -5, "after": 207},
+    {"path": "frontier/moe_routing_runtime.py", "before": 105, "delta": -2, "after": 103},
+    {"path": "tests/integration/step5_profiling/run_on_worker.sh", "before": 26, "delta": -5, "after": 21},
+    {"path": "tests/integration/step5_profiling/submit_profiling_job.py", "before": 9, "delta": -6, "after": 3},
+    {"path": "tests/integration/step5_profiling/verify_fixed_probe.py", "before": 45, "delta": -4, "after": 41},
+    {"path": "tests/unit/test_moe_grouped_gemm_padded_features.py", "before": 237, "delta": -6, "after": 231},
+    {"path": "tests/unit/test_moe_position_routing.py", "before": 160, "delta": -1, "after": 159},
+    {"path": "tests/unit/test_moe_routing_runtime.py", "before": 151, "delta": -4, "after": 147},
+    {"path": "tests/unit/test_prediction_measurement_bindings.py", "before": 353, "delta": -5, "after": 348},
+    {"path": "tests/unit/test_step5_fixed_probe.py", "before": 155, "delta": -5, "after": 150},
+    {"path": "tests/unit/test_step5_measured_ffn.py", "before": 110, "delta": -5, "after": 105},
+    {"path": "tests/unit/test_step5_moe_profiling.py", "before": 350, "delta": -6, "after": 344}
+  ],
+  "verification": "RED-capable real writer retention and validator materialization controls; complete JSONL bytes/order; all supported error and row checks; existing reporting and focused suites; clean final cumulative accounting and required frozen regressions before integration.",
+  "limits": "Allocation only. Accepted usage remains source9566/global9580 until a verified source successor is accepted. Donor code, PRICING/native budgets, numerical/proof calls, full output and2400s per-mode gate are unchanged. No new required-shape or GPU/worker invocation is authorized."
+}

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocate135-gross complete EP ledger write/read repair at116paths; close retained config hypothesis without allocation and correct storage/runtime boundaries. |
 | 2026-10-24 | Close supplemental CPU shapes at3PASS/6total calls;retain exact selected OSS evidence and clean local duplicates. |
 | 2026-10-24 | Apply the read-only checkpoint corrections: consumed shape allowance, native-key final ledger, finite diagnosis outcomes, and primary-owned storage readiness. |
 | 2026-10-24 | Replace cancelled inspections-only owners with primary shape verification and narrowed independent copy/init analyses, keeping the original resource/source limits. |
@@ -225,10 +226,10 @@ change is allocated. See early_init_repro/report.md.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
-| Approval, ownership and baseline | Complete; effective114 after snapshot allocation276e6520, with unchanged owner/global budgets. |
+| Approval, ownership and baseline | Accepted114-path source; new EP ledger allocation116paths/135gross under standing authority, with unchanged owner/global budgets. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
-| CORE/SOURCE49 allocated | Final union:4261/4404; unchanged cap. |
+| CORE/SOURCE | Accepted4261/4404; new51-path allocation reserves135gross by zero-sum transfer, actual/source unchanged until acceptance. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Complete native-key union:3955/3956; native-key3gross/net1, with unchanged owner cap. |
 | Complete integration and final freeze | Native-keyc668a938/parent886608ea accepted; clean candidate376983d2 regressions complete and source-equivalent after integration. Gitlink3dac53c unchanged. |
@@ -238,14 +239,25 @@ change is allocated. See early_init_repro/report.md.
 | Independent source review | All accepted components including native-key have No findings on both axes. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
 | Final per-path accounting | Accepted native-key union:114allocated/113changed,9566source/9580global,zero violations;124 bindings/122 unchanged non-key bindings and clean independent audit. |
-| Remaining runtime diagnosis | JSON closedNO_ALLOC;copy/init pending bounded ALLOC/NO_ALLOC/BLOCKER deliverables; no source allocation implied. |
+| Remaining runtime diagnosis | JSON/config closedNO_ALLOC;copy/init pending finite ALLOC/NO_ALLOC/BLOCKER deliverables. Separate necessary EP persistence repair is allocated135gross. |
+| Complete EP ledger persistence/validation | Four-file135-gross allocation in ledger_memory/;RED/GREEN, full bytes/error/caller checks, clean audit, reviews and final freeze remain pending. |
 | Required P6128/D16/BF16 shapes | PASS_CPU_FIXTURE;YC-approved supplemental3/3PASS,total6/6used.992events/80ledger rows match;native/fullCLI and untested shapes remain separate. |
-| Full-output storage readiness | Cloud approved;capacity/basic write-read-delete checked,personal-only cleanup enforced. CLI access/runtime/quota verification pending;local/data remains insufficient and no CPU-host mount is allowed. |
+| Full-output storage readiness | BLOCKED; sample projection includes EP ledger at469GB/mode. Storage approval/basic integrity are not worker readiness: write/read repair, resources, project quota and worker-to-cloud throughput remain pending. No CPU-host mount. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments
 and verification. Native CPU-gap work remains last. Deferred independent-consumer
 and module-split work is indexed in future.md, outside this acceptance route.
+
+The135-gross amendment's two new paths have no prior1aee0af-to-b0277287 delta;
+caps cover their entire cumulative increment. Accepted114/113 changed and9580
+global remain the prior source snapshot, not the new allocated path count. The
+current-source runtime verdict requires pricing+emission+flush in one environment;
+do not sum old component numbers from different trees/arms. Each remaining
+diagnosis ends with supported ALLOC, NO_ALLOC or an exact missing-prerequisite
+BLOCKER. `storage_readiness/execution_proposal.md` separates the necessary persistence
+repair from resource and cloud-write decisions; no worker launch follows from a
+read-only plan. Required-shape allowance stays6/6used.
 
 ## Historical design notes (superseded by the approved model and route above)
 

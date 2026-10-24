@@ -1,0 +1,81 @@
+{
+  "status": "PASS_RETAINED_PROFILE_BINDING_ONLY",
+  "baseline_revision": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+  "current_revision": "b02772872d0c99ceb5ebb31a8e041926f12f7676",
+  "profile": "/data/ycfeng/tmp/d29_runtime_json_reuse01/registry/baseline/pricing.prof",
+  "profile_bytes": 51680,
+  "profile_sha256": "a4c8290ba6929198e913cafae5dc530112f96cc3ebe432924da7b22f89b8bc65",
+  "binding_count": 23,
+  "unchanged_bindings": 21,
+  "changed_bindings": [
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+    "tests/unit/test_collective_sim_cc_backend.py"
+  ],
+  "config_functions": [
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/config/model_config.py",
+      "line": 872,
+      "function": "supports_share_expert",
+      "calls": 48,
+      "self_s": 9.2989e-05,
+      "cumulative_s": 0.000322086
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/config/model_config.py",
+      "line": 806,
+      "function": "get_layer_attention_spec",
+      "calls": 80,
+      "self_s": 0.00012188300000000001,
+      "cumulative_s": 0.00018671400000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/model_architectures.py",
+      "line": 793,
+      "function": "supports_share_expert",
+      "calls": 48,
+      "self_s": 9.942000000000001e-05,
+      "cumulative_s": 0.000126888
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/config/model_config.py",
+      "line": 866,
+      "function": "get_model_architecture_profile",
+      "calls": 48,
+      "self_s": 6.7814e-05,
+      "cumulative_s": 0.00010220900000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/config/model_config.py",
+      "line": 898,
+      "function": "is_moe_layer",
+      "calls": 16,
+      "self_s": 3.7037000000000005e-05,
+      "cumulative_s": 5.1278000000000006e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/config/model_config.py",
+      "line": 799,
+      "function": "get_layer_attention_specs",
+      "calls": 80,
+      "self_s": 4.7588000000000006e-05,
+      "cumulative_s": 4.7588000000000006e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/model_architectures.py",
+      "line": 1360,
+      "function": "get",
+      "calls": 48,
+      "self_s": 3.4395000000000005e-05,
+      "cumulative_s": 3.4395000000000005e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/config/model_config.py",
+      "line": 876,
+      "function": "get_moe_layer_ids",
+      "calls": 16,
+      "self_s": 1.4241000000000001e-05,
+      "cumulative_s": 1.4241000000000001e-05
+    }
+  ],
+  "limits": "Retained instrumented sample only; no new wave, RSS or end-to-end timing."
+}

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Parent-verify zero-history ledger paths and135-gross zero-sum allocation;close retained config profile without source allocation and separate historical projections from current gates. |
 | 2026-10-24 | Accept all three supplemental CPU shapes,992events/80ledger lanes;record cloud archive and27-file cleanup. |
 | 2026-10-24 | Apply checkpoint corrections and record three failed shape attempts, exhausted quota, unchanged source/fixture guards and the new primary-owned storage blocker. |
 | 2026-10-24 | Recover all three cancelled execution histories; no production-wave allowance was used. Primary owns shape checks and fresh independent records owners close copy/init analyses. |
@@ -234,6 +235,20 @@
   dataframe/facts/contract repetition after the accepted loader repair. Source
   and retained records only; no new CSV/model read, init run or source quota.
   Historical loader savings must not be counted again.
+- completed/retained evidence: runtime_config_scan/ verifies23 source bindings,
+  allowing only the two declared native-key changes. No fresh timing/model/wave;
+  disposition NO_PRODUCTION_ALLOCATION, with selected profile receipt retained.
+- completed/allocation: D29-EP-LANE-LEDGER-MEMORY reserves135gross in four CORE
+  files:38/20/65/12. MetricsStore and the owned performance probe have identical
+  original/current blobs and zero historical gross; primary configured60s/30GiB
+  checks pass. Effective allocation116paths,51CORE;135 positive allowance is
+  fully offset by unchanged donors. Actual accepted source9566/global9580 stays
+  unchanged. Implementation/byte-error checks/audit/reviews/frozen gates pending;
+  see ledger_memory/ and repairs/ep_lane_ledger_scope_amendment.json.
+- completed/retention and cleanup: retain three byte-identical profile/allocation
+  JSON receipts; remove their completed disposable scratch copies (4696B).
+  ledger_memory/evidence/completed_duplicate_cleanup.json owns exact hashes and
+  paths. No source,fixture,other-session file or cloud object was deleted.
 - completed/read-only: D29-DETACHED-EMISSION-OWNERSHIP, session
   ses_e96a5c1c7ffeoPBK7V08CMas7v, inspects existing profiles and private ownership
   after required getter snapshots. Records3020a885/82b0e311 archived as
@@ -245,8 +260,9 @@
   ses_e95ade762ffe71fWPn1WYHfZnl, checks actual first-token/prefill/decode counters
   and per-wave allowance from retained evidence.90,200 waves is source-backed;
   expected successful-run EP events are18,712,400, not uniform208's18,761,600:
-  three BF16 layers omit input quantization. P6128/D16/BF16 output remains
-  unmeasured. The investigator violated the no-full-scan/60s/memory restrictions
+  three BF16 layers omit input quantization. At that inspector's capture the
+  required shapes were unmeasured; later supplemental PASS is recorded above.
+  The investigator violated the no-full-scan/60s/memory restrictions
   with one2.1GB full CSV read; exact command and limits are recorded in
   workload_multiplicity/{report.md,evidence.json}. No source/input write.
 - completed/audit: D29-SNAPSHOT-SCOPE-AUDIT,
@@ -255,11 +271,13 @@
   Owner d267db2d archived ae55a5f5; parent6artifact hashes/112bindings/105Git
   numstats/8native-file hashes/8image-evidence hashes PASS.114allocated/113changed,
    source9463/global9477,zero violations; subsequent key union is accepted above.
-- unresolved/workflow: the26.608ms average wave allowance is below the committed
-  key candidate's38.156ms FP8 emission measurement; this is a projection gap, not a universal
-  impossibility proof. Expected two-mode output is about520GB; parent measured
-  about266GB available on /data, not248GB. Other shapes/full output and storage
-  arrangements remain to be settled before a new complete CLI.
+- historical/workflow projection:26.608ms/90,200waves and the old key tree's
+  38.156ms emission were diagnostic numbers, not a current cohesive cap verdict.
+  The old520GB output estimate omitted EP ledger exposure; current sample-based
+  combined projection is469GB/mode or938GB/two modes, not a measured bound.
+  Earlier266GB local free space is not a reservation or readiness basis. Full
+  CLI remains unaccepted; persistence/validation, resources, project quota and
+  worker-to-cloud throughput are separate pending readiness conditions.
 - completed/record check: an initial arithmetic assertion caught a transcribed
   uniform-rate projection3604.3912s; corrected to90200×0.039956=3604.0312s.
   Rounded3604s and all workload counts are unchanged; rerun five arithmetic
