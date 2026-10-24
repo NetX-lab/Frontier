@@ -32,5 +32,8 @@
   all numerical scope and binding acceptance criteria are settled.
 - completed:10-file checksum/record consistency PASS; compact receipt7108bytes,
   detailed receipt and TSV hashes match, candidate/submodule still exact and clean.
-- in-progress: records-only delivery. Implementation review, native/regression/CLI
-  acceptance remain separate, not blockers of this audit.
+- completed: evidence commit1dd96179cd46d385011ee7cbe1584245836543c5 adds exactly
+ 10 owned record files. Scoped commit guard PASS; worktree clean and no outside
+  owned-subtree changes. All numerical accounting/binding work is complete.
+- completed: post-deliverable checkpoint confirms no drift. Implementation review,
+  native/regression/CLI acceptance remain separate and are not claimed here.

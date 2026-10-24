@@ -7,8 +7,8 @@
       "sha256": "3036aa96c3e70fa6c25945972bcc9e11410fdfff4fc7e3ea6d2c7a0264ff5728"
     },
     "check_progress_2026-10-24.md": {
-      "bytes": 2677,
-      "sha256": "e509c1e069b8dbc06666ffc08fe055def9576c9a6c54468528bf1b535bc7d6ed"
+      "bytes": 2724,
+      "sha256": "d39867c40f73bdddbe085c798abc96cb7aeb3111998d8b681f30f6672aed066f"
     },
     "frozen_scope_paths.tsv": {
       "bytes": 15662,
@@ -23,8 +23,8 @@
       "sha256": "a30e82ecdb2c4b83d30dadea4a51cafced552766ed9b6b0ccd78cab8d1412b81"
     },
     "progress.md": {
-      "bytes": 2429,
-      "sha256": "dcccd8613b6b044d1cfcca5f70a71484cedfb94f069cb9ae6d8c76bbecb50243"
+      "bytes": 2686,
+      "sha256": "1ef1d9ee8dc5d3c0ed8941408438b190bd9c45547360474eba6214d9ea46a457"
     },
     "recompute_frozen_scope.py": {
       "bytes": 22061,

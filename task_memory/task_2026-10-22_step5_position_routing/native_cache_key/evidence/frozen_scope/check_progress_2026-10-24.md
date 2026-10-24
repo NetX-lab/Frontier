@@ -2,23 +2,24 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | 验证10-file records-only commit与clean守卫，四项交付全部完成。 |
 | 2026-10-24 | 核算/绑定步骤通过后，检查当前独立 audit 路线。 |
 
 ## 1. 规划完成情况
 
-**汇总：** PASS 3｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | 当前 authority 和既有 ledger/hash 绑定 | PASS | current task docs、de5 records 和 accepted-source overlays 已绑定。 |
 | Exact commit/clean、两路径 guard 和124bindings | PASS | 只有两条M；122非key绑定完全不变，primary/index保持。 |
 | Overlay/cumulative billing 和114-row组成账目 | PASS | 17零和overlays；3stepgross/net1，但累计只+1；9566/9580，零违规。 |
-| 报告、checksum inventory 和 records-only delivery | TODO | 范围验证已完成，正在关闭交付文件与提交守卫。 |
+| 报告、checksum inventory 和 records-only delivery | PASS | 1dd96179仅10个owned additions；checksum/提交守卫通过，worktree clean。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 本次请求至重算PASS｜**当前前沿：** scoped records delivery
+**检测窗口：** 本次请求至提交后守卫PASS｜**当前前沿：** 交付parent
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -40,8 +41,8 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. Checksum与record一致性检查：只检查新owned artifacts → 完成标志：hash/数值/guard一致，零违规。
-2. Records-only commit：只提交frozen_scope/ → 完成标志：owned changed-file guard通过，source/primary不变、worktree clean。
+1. 交付parent：scope/hash/提交守卫均已通过，本任务没有未完成验证。
+2. Parent决定后续source integration、review/native/regression/CLI admission；不由本审计新增执行。
 
 ## 4. 最值得关注的 3 点
 
