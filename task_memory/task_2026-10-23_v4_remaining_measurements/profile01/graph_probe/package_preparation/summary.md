@@ -4,11 +4,13 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Bound maintenance source/records to6f84a88b; local preparation complete. |
 | 2026-10-24 | Archived the prepared immutable package, scoped CPU validation and remaining root gates. |
 
 Task ID: `W128-GRAPH-PAYLOAD-PACKAGE`.
 Branch/worktree: `v4-graph-payload-package`, `/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package`.
 Base: `a2c4ad87f231a113f0d4d543050e3697a208dcba`.
+Verified maintenance/records commit: `6f84a88bd17ef3cdd1626a6beb193275dab5df62`; final archive commit returned separately.
 
 ## Outcome and deliverables
 
@@ -19,7 +21,7 @@ Its8 inputs are `launch.py`, `config.json`, unchanged `probe_diagnostic.py`, `so
 
 The exact frozen probe revision is `1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077`,669 lines/34078B, SHA256 `a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0`. No reviewed worktree/source/records, old package, subscriber/stage/strict9-node5-kernel4-event logic or native/C26/simulator source changed.
 
-Committed maintenance/records reside only in sibling `package_preparation/`: builder/plan, requirements/progress/summary/test report, original pins, generated-entry/stand-in receipts, package inventory, launcher diff and existing matrix binding. Builder113+plan20=133/220 maintenance lines (162 including generated config); generated launcher73/100, old template65, delta12 added/4 deleted. `package_inventory.json` retains every exact source byte/line/hash.
+Committed maintenance/records reside only in sibling `package_preparation/`: builder/plan, requirements/progress/summary/test report, original pins, generated-entry/stand-in/selected-output receipts, package inventory, launcher diff, source provenance and existing matrix binding. Builder113+plan20=133/220 maintenance lines (162 including generated config); generated launcher73/100, old template65, delta12 added/4 deleted. `package_inventory.json` retains every exact source byte/line/hash; final `artifact_hashes.json` binds all preparation and generated artifacts. The old generated launcher is content-hash-bound rather than assigned an invented Git revision; source provenance distinguishes its old profile-source revision from launcher provenance.
 
 ## Configuration and validation
 

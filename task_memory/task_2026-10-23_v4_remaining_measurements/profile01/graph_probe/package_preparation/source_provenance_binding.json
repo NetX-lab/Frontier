@@ -2,6 +2,7 @@
   "status": "PASS_SOURCE_AND_CONTENT_PROVENANCE_BINDING",
   "probe_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
   "package_base_revision": "a2c4ad87f231a113f0d4d543050e3697a208dcba",
+  "maintenance_revision": "6f84a88bd17ef3cdd1626a6beb193275dab5df62",
   "probe_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
   "probe_bytes": 34078,
   "original_template_source_lock_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01/source_lock.json",

@@ -4,11 +4,11 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-24 | Applied check-progress after package/CPU acceptance; only local commit/handoff remains. |
+| 2026-10-24 | Final check-progress: committed6f84a88b; local task complete, package untracked/unsealed. |
 
 ## 1. 规划完成情况
 
-**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO1
+**汇总：** PASS5｜BLOCKED/FAILED/SKIPPED0｜TODO0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -16,12 +16,12 @@
 | B builder/plan | PASS |133/220 maintenance，launcher73/100，无新 wrapper。 |
 | C 新 immutable package | PASS |8 inputs+manifest，source1aa不变，untracked/unsealed。 |
 | D CPU 与绑定 | PASS | 实际 entry检查、7 command controls、SDK stand-in、33 pins、77 binding。 |
-| E 提交与交付 | TODO | 只剩 requirements/records 复核与 scoped commit。 |
+| E 提交与交付 | PASS |6f84a88b仅含preparation；tracked worktree干净，package0 tracked files。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 新 task 开始至 CPU 里程碑｜**当前前沿：** E 提交与返回 root
+**检测窗口：** CPU 里程碑至源码提交｜**当前前沿：** 无本地未完成事项，仅最终归档并返回 root
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -42,7 +42,7 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. E：复读 requirements，核对 immutable hashes 与归属，提交 preparation files → 完成标志：scoped commits，包仍untracked/unsealed。
+1. 本 agent：提交最终archive/hash records，返回commits与package路径，然后停止；包保持untracked/unsealed。
 2. root：等待冻结源码 review，完成 actual image/SDK/auth/NFS/destination 后 seal/单次运行；本 agent 不执行。
 
 ## 4. 最值得关注的 3 点
