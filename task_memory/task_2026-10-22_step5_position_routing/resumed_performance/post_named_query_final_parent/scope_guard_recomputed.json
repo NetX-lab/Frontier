@@ -1,0 +1,179 @@
+{
+  "task_id": "D29-NAMED-MODEL-QUERY-PARENT",
+  "status": "ACCEPTED_COMPONENT_AND_COMPOSED_SCOPE",
+  "integrated_head": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+  "integrated_tree": "6c43090097e92c6fc0c33aa7358e69c2cf092705",
+  "source_merge": "ffb435ca",
+  "owner_source": "1737ce9c4a761d2c57ee617f5f3a78d7bcfd9a58",
+  "owner_records_archive": "8ecb705e",
+  "audit_source_commit": "de5eeab05a2f312da415a9e6557847ab583b4990",
+  "audit_archive": "c6b1f3b8",
+  "audit_receipt_sha256": "60c0b373ec3b5dbccc45951dc72c8c68a20b87d6686e55096075d2903d330057",
+  "audited_files_verified": 6,
+  "binding_count": 124,
+  "non_query_binding_count": 120,
+  "all_binding_digest": "e8c3240577b726dae2f9f3bbc4c64ed0286f52afd5474d788fafe589bbfff694",
+  "non_query_binding_digest": "19c5718dfc1aa4cb11eef0306b8b877dbd9f234f1192053cb77ce4de7c9337fb",
+  "step": {
+    "numstat": {
+      "added": 90,
+      "deleted": 6,
+      "gross": 96,
+      "net": 84
+    },
+    "source_gross": 17,
+    "tests_gross": 79,
+    "gross_cap": 100,
+    "source_cap": 20,
+    "tests_cap": 80,
+    "retained_growth_ceiling": null,
+    "cumulative_gross_growth": 88,
+    "distinction": "96 step gross, 84 physical retained net, 88 cumulative budget-gross growth; no separate retained-growth cap is declared by this amendment",
+    "paths": [
+      {
+        "path": "frontier/execution_time_predictor/prediction_model_registry.py",
+        "owner": "core_source",
+        "step": {
+          "added": 9,
+          "deleted": 5,
+          "gross": 14,
+          "net": 4
+        },
+        "step_cap": 15,
+        "baseline": {
+          "added": 85,
+          "deleted": 11,
+          "gross": 96,
+          "net": 74
+        },
+        "cumulative": {
+          "added": 91,
+          "deleted": 13,
+          "gross": 104,
+          "net": 78
+        },
+        "cap": 120,
+        "headroom": 16
+      },
+      {
+        "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+        "owner": "core_source",
+        "step": {
+          "added": 2,
+          "deleted": 1,
+          "gross": 3,
+          "net": 1
+        },
+        "step_cap": 5,
+        "baseline": {
+          "added": 189,
+          "deleted": 6,
+          "gross": 195,
+          "net": 183
+        },
+        "cumulative": {
+          "added": 190,
+          "deleted": 6,
+          "gross": 196,
+          "net": 184
+        },
+        "cap": 223,
+        "headroom": 27
+      },
+      {
+        "path": "tests/unit/test_prediction_measurement_bindings.py",
+        "owner": "core_source",
+        "step": {
+          "added": 49,
+          "deleted": 0,
+          "gross": 49,
+          "net": 49
+        },
+        "step_cap": 50,
+        "baseline": {
+          "added": 299,
+          "deleted": 0,
+          "gross": 299,
+          "net": 299
+        },
+        "cumulative": {
+          "added": 348,
+          "deleted": 0,
+          "gross": 348,
+          "net": 348
+        },
+        "cap": 353,
+        "headroom": 5
+      },
+      {
+        "path": "tests/unit/test_moe_routing_runtime.py",
+        "owner": "core_source",
+        "step": {
+          "added": 30,
+          "deleted": 0,
+          "gross": 30,
+          "net": 30
+        },
+        "step_cap": 30,
+        "baseline": {
+          "added": 117,
+          "deleted": 0,
+          "gross": 117,
+          "net": 117
+        },
+        "cumulative": {
+          "added": 147,
+          "deleted": 0,
+          "gross": 147,
+          "net": 147
+        },
+        "cap": 151,
+        "headroom": 4
+      }
+    ]
+  },
+  "totals": {
+    "owner_paths": {
+      "pricing": 46,
+      "core_source": 49,
+      "native": 19
+    },
+    "owner_caps": {
+      "pricing": 3956,
+      "core_source": 4404,
+      "native": 1582
+    },
+    "owner_actual": {
+      "pricing": 3954,
+      "core_source": 4261,
+      "native": 1350
+    },
+    "baseline_owner_actual": {
+      "core_source": 4173,
+      "pricing": 3954,
+      "native": 1350
+    },
+    "baseline_source": 9477,
+    "baseline_global": 9491,
+    "source_actual": 9565,
+    "source_cap": 9942,
+    "source_headroom": 377,
+    "global_actual": 9579,
+    "global_cap": 10000,
+    "global_headroom": 421
+  },
+  "allocated_paths": 114,
+  "changed_paths": 113,
+  "violations": [],
+  "parent_tests_sha256": "0d9095925263f9beab801a738a41561efa8ccdffa8f391e669036b1efb22d8f5",
+  "reviews": {
+    "standards": "No findings",
+    "spec": "No findings",
+    "record": "review.md"
+  },
+  "limits": [
+    "Source and all124 bindings match the audited component; native accounting is not a new native run.",
+    "Owner small-read audit used30GiB RLIMIT_AS after scope denial; this parent guard runs under MemoryMax30G.",
+    "Fresh frozen regressions, full6144/1024/2400s CLI and native/GPU/G3/E2E remain separate gates."
+  ]
+}

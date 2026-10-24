@@ -1,0 +1,620 @@
+{
+  "task_id": "D29-POST-NAMED-QUERY-FINAL-PARENT-AUDIT",
+  "session_id": "ses_e95ac82fdffeSeMEUfR9SxvW03",
+  "status": "ACCEPTED_NO_NEW_CODE_FAILURE_WITH_UNWAIVED_APPROVED_79_ID_REPLACEMENT",
+  "source_revision": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+  "source_tree": "6c43090097e92c6fc0c33aa7358e69c2cf092705",
+  "submodule_revision": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "records_base": "86b9923f8c29f1c58ba9f8df23a396c70a4d1caa",
+  "owner_records": [
+    "0a42e56ef53769a85a999b652cd9d03973d1f727",
+    "39f0c1000a96c10f186cabe5f77dfc3058f86549"
+  ],
+  "unit": {
+    "counts": {
+      "skipped": 281,
+      "error": 32,
+      "pass": 8028,
+      "failure": 279
+    },
+    "raw_exit": 1,
+    "junit": {
+      "path": "/data/ycfeng/tmp/d29_unit_parent07.xml",
+      "sha256": "64371d6394026aedb9fa8d9c409a9263bfc2f23d72a063886581b61827b8b5b3",
+      "bytes": 2111062
+    },
+    "log": {
+      "path": "/data/ycfeng/tmp/d29_unit_parent07.log",
+      "bytes": 4614412,
+      "sha256": "9d055a740ae01a6428c5c13daca60cf3ee15bad934e6bcf61b73d017549a873b"
+    },
+    "junit_suite_attributes": [
+      {
+        "name": "pytest",
+        "errors": "32",
+        "failures": "279",
+        "skipped": "281",
+        "tests": "8620",
+        "time": "1230.348",
+        "timestamp": "2026-10-24T14:02:02.228970+08:00",
+        "hostname": "kun-workspace-vgen2"
+      }
+    ]
+  },
+  "raw_79_presence_gate": "FAIL_RETAINED_ID_LOSS_OR_STATUS_CHANGE",
+  "raw_legacy_gate_exit": 1,
+  "raw_legacy_verdict": "INCOMPLETE_OR_FAILED_REQUIRED_GATE",
+  "raw_required_gate_verdict": "FAIL_OR_INCOMPLETE_REQUIRED_GATE",
+  "raw_presence_gate_waived": false,
+  "transitions": {
+    "46fe": {
+      "baseline_counts": {
+        "skipped": 281,
+        "error": 32,
+        "pass": 8020,
+        "failure": 279
+      },
+      "retained_count": 8612,
+      "missing": [],
+      "new_ids_all_pass": [
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[cache_name]",
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_gating_linear]",
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_grouped_gemm]",
+        "tests.unit.test_prediction_measurement_bindings::test_named_native_view_keeps_selected_objects_and_unfiltered_order",
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[ambiguity]",
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[conflict]",
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[decode_attn]",
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[missing]"
+      ],
+      "changed_statuses": [],
+      "status_deltas": {
+        "failure": {
+          "added": [],
+          "removed": []
+        },
+        "error": {
+          "added": [],
+          "removed": []
+        },
+        "skipped": {
+          "added": [],
+          "removed": []
+        }
+      },
+      "raw_presence_gate": "PASS"
+    },
+    "79": {
+      "baseline_counts": {
+        "skipped": 281,
+        "error": 32,
+        "pass": 8018,
+        "failure": 279
+      },
+      "retained_count": 8609,
+      "missing": [
+        "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text"
+      ],
+      "new_ids_all_pass": [
+        "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published",
+        "tests.unit.test_moe_routing_runtime::test_collective_input_binds_both_role_constructors_and_refreshes_next_run",
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[cache_name]",
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_gating_linear]",
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_grouped_gemm]",
+        "tests.unit.test_prediction_measurement_bindings::test_named_native_view_keeps_selected_objects_and_unfiltered_order",
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[ambiguity]",
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[conflict]",
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[decode_attn]",
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[missing]",
+        "tests.unit.test_prediction_measurement_bindings::test_prepared_points_follow_actual_model_rows_identity_and_fresh_queries"
+      ],
+      "changed_statuses": [],
+      "status_deltas": {
+        "failure": {
+          "added": [],
+          "removed": []
+        },
+        "error": {
+          "added": [],
+          "removed": []
+        },
+        "skipped": {
+          "added": [],
+          "removed": []
+        }
+      },
+      "raw_presence_gate": "FAIL_APPROVED_OLD_ID_MISSING"
+    }
+  },
+  "new_query_cases": [
+    {
+      "id": "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[cache_name]",
+      "source_path": "tests/unit/test_moe_routing_runtime.py",
+      "function": "test_named_point_keeps_selected_collision_and_cache_name_guard",
+      "absent_in_46fe_source": true,
+      "present_in_frozen_source": true
+    },
+    {
+      "id": "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_gating_linear]",
+      "source_path": "tests/unit/test_moe_routing_runtime.py",
+      "function": "test_named_point_keeps_selected_collision_and_cache_name_guard",
+      "absent_in_46fe_source": true,
+      "present_in_frozen_source": true
+    },
+    {
+      "id": "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_grouped_gemm]",
+      "source_path": "tests/unit/test_moe_routing_runtime.py",
+      "function": "test_named_point_keeps_selected_collision_and_cache_name_guard",
+      "absent_in_46fe_source": true,
+      "present_in_frozen_source": true
+    },
+    {
+      "id": "tests.unit.test_prediction_measurement_bindings::test_named_native_view_keeps_selected_objects_and_unfiltered_order",
+      "source_path": "tests/unit/test_prediction_measurement_bindings.py",
+      "function": "test_named_native_view_keeps_selected_objects_and_unfiltered_order",
+      "absent_in_46fe_source": true,
+      "present_in_frozen_source": true
+    },
+    {
+      "id": "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[ambiguity]",
+      "source_path": "tests/unit/test_prediction_measurement_bindings.py",
+      "function": "test_named_typed_view_preserves_contract_errors_and_role_exclusion",
+      "absent_in_46fe_source": true,
+      "present_in_frozen_source": true
+    },
+    {
+      "id": "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[conflict]",
+      "source_path": "tests/unit/test_prediction_measurement_bindings.py",
+      "function": "test_named_typed_view_preserves_contract_errors_and_role_exclusion",
+      "absent_in_46fe_source": true,
+      "present_in_frozen_source": true
+    },
+    {
+      "id": "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[decode_attn]",
+      "source_path": "tests/unit/test_prediction_measurement_bindings.py",
+      "function": "test_named_typed_view_preserves_contract_errors_and_role_exclusion",
+      "absent_in_46fe_source": true,
+      "present_in_frozen_source": true
+    },
+    {
+      "id": "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[missing]",
+      "source_path": "tests/unit/test_prediction_measurement_bindings.py",
+      "function": "test_named_typed_view_preserves_contract_errors_and_role_exclusion",
+      "absent_in_46fe_source": true,
+      "present_in_frozen_source": true
+    }
+  ],
+  "strict77": {
+    "identical": 77,
+    "compared": 77,
+    "artifacts_rehashed_per_side": 451,
+    "cache_filenames_per_side": 519,
+    "fresh_evidence_auditor_exit": 0,
+    "comparison_sha256": "680c535ee73b14fffb1ed7e0d622b547ad6e8ac341502f9e70fce2510e51a447"
+  },
+  "independent_shorts": {
+    "supplement101": {
+      "counts": {
+        "pass": 101
+      },
+      "raw_exit": 0,
+      "versions": {
+        "python": "3.12.13",
+        "executable": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "pytest": "9.0.2",
+        "numpy": "2.2.6",
+        "pandas": "3.0.1",
+        "scipy": "1.17.1",
+        "scikit-learn": null,
+        "plotly": null,
+        "fasteners": null,
+        "ddsketch": null,
+        "torch": "2.9.1",
+        "aiohttp": "3.13.3"
+      },
+      "full_unit_status_counts_for_present_ids": {
+        "pass": 71,
+        "failure": 14
+      }
+    },
+    "metadata196": {
+      "counts": {
+        "pass": 197
+      },
+      "raw_exit": 0,
+      "versions": {
+        "python": "3.10.6",
+        "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+        "pytest": "9.1.1",
+        "numpy": "2.2.6",
+        "pandas": "2.3.3",
+        "scipy": "1.15.3",
+        "scikit-learn": "1.7.2",
+        "plotly": "7.1.0",
+        "fasteners": "0.20",
+        "ddsketch": "3.0.1",
+        "torch": null,
+        "aiohttp": null
+      },
+      "full_unit_status_counts_for_present_ids": {
+        "pass": 197
+      }
+    },
+    "catalogue53": {
+      "counts": {
+        "pass": 53
+      },
+      "raw_exit": 0,
+      "versions": {
+        "python": "3.10.6",
+        "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+        "pytest": "9.1.1",
+        "numpy": "2.2.6",
+        "pandas": "2.3.3",
+        "scipy": "1.15.3",
+        "scikit-learn": "1.7.2",
+        "plotly": "7.1.0",
+        "fasteners": "0.20",
+        "ddsketch": "3.0.1",
+        "torch": null,
+        "aiohttp": null
+      },
+      "full_unit_status_counts_for_present_ids": {
+        "pass": 53
+      }
+    },
+    "governance52": {
+      "counts": {
+        "pass": 52
+      },
+      "raw_exit": 0,
+      "versions": {
+        "python": "3.12.13",
+        "executable": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "pytest": "9.0.2",
+        "numpy": "2.2.6",
+        "pandas": "3.0.1",
+        "scipy": "1.17.1",
+        "scikit-learn": "1.7.2",
+        "plotly": "7.1.0",
+        "fasteners": "0.20",
+        "ddsketch": "3.0.1",
+        "torch": "2.9.1",
+        "aiohttp": "3.13.3"
+      },
+      "full_unit_status_counts_for_present_ids": {
+        "pass": 47,
+        "failure": 5
+      }
+    }
+  },
+  "counts_not_summed": true,
+  "environment_only_reconciliation": [
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-0.10.2]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-0.10.2]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-0.28.0]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-0.28.0]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-step5]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-step5]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-step5_position_cyclic]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-step5_position_cyclic]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-0.10.2]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-0.10.2]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-0.28.0]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-0.28.0]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-step5]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-step5]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-step5_position_cyclic]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-step5_position_cyclic]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[False-step5]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[False-step5]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[False-step5_position_cyclic]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[False-step5_position_cyclic]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[True-step5]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[True-step5]"
+      ]
+    },
+    {
+      "id": "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[True-step5_position_cyclic]",
+      "raw_status": "failure",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[True-step5_position_cyclic]"
+      ]
+    },
+    {
+      "id": "::tests.unit.test_step5_native_position_cyclic",
+      "raw_status": "error",
+      "supplement_passing_ids": [
+        "tests.unit.test_step5_native_position_cyclic::test_actual_outer_forward_identity_nested_exception_and_counter",
+        "tests.unit.test_step5_native_position_cyclic::test_factory_scoring_and_old_seeded_distribution_controls",
+        "tests.unit.test_step5_native_position_cyclic::test_invalid_positions_fail_without_fallback[None-requires scoped]",
+        "tests.unit.test_step5_native_position_cyclic::test_invalid_positions_fail_without_fallback[positions1-signed integer]",
+        "tests.unit.test_step5_native_position_cyclic::test_invalid_positions_fail_without_fallback[positions2-signed integer]",
+        "tests.unit.test_step5_native_position_cyclic::test_invalid_positions_fail_without_fallback[positions3-same device]",
+        "tests.unit.test_step5_native_position_cyclic::test_invalid_top_k_and_logits_shape[2-352-0]",
+        "tests.unit.test_step5_native_position_cyclic::test_invalid_top_k_and_logits_shape[2-352-353]",
+        "tests.unit.test_step5_native_position_cyclic::test_pd_chunk_q1_and_repeated_position_invariance",
+        "tests.unit.test_step5_native_position_cyclic::test_selected_unbiased_scores_mask_dtype_and_scale[False]",
+        "tests.unit.test_step5_native_position_cyclic::test_selected_unbiased_scores_mask_dtype_and_scale[True]",
+        "tests.unit.test_step5_native_position_cyclic::test_t2_capture_accepts_actual_moe_keyword_invocation",
+        "tests.unit.test_step5_native_position_cyclic::test_t2_entrypoint_supplies_and_observes_final_engine_limits[None]",
+        "tests.unit.test_step5_native_position_cyclic::test_t2_entrypoint_supplies_and_observes_final_engine_limits[graph]",
+        "tests.unit.test_step5_native_position_cyclic::test_t2_entrypoint_supplies_and_observes_final_engine_limits[modules]",
+        "tests.unit.test_step5_native_position_cyclic::test_t2_replays_dummy_before_assertion_and_baseline"
+      ]
+    }
+  ],
+  "governance_raw_failures_passing_separately": [
+    "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_carries_plan_typed_operator_contracts",
+    "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts",
+    "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_initializes_runtime_with_routed_width",
+    "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_typed_result_round_trips_through_manager",
+    "tests.unit.test_profiling_governance_minimal_red::test_real_linear_producer_csv_round_trip_reaches_manager_loader"
+  ],
+  "source_files_rehashed": 2755,
+  "guarded_inputs_rehashed": 14,
+  "scripts_rehashed": 12,
+  "scope_bindings": 124,
+  "non_query_bindings": 120,
+  "scope_totals": {
+    "owner_paths": {
+      "pricing": 46,
+      "core_source": 49,
+      "native": 19
+    },
+    "owner_caps": {
+      "pricing": 3956,
+      "core_source": 4404,
+      "native": 1582
+    },
+    "owner_actual": {
+      "pricing": 3954,
+      "core_source": 4261,
+      "native": 1350
+    },
+    "baseline_owner_actual": {
+      "core_source": 4173,
+      "pricing": 3954,
+      "native": 1350
+    },
+    "baseline_source": 9477,
+    "baseline_global": 9491,
+    "source_actual": 9565,
+    "source_cap": 9942,
+    "source_headroom": 377,
+    "global_actual": 9579,
+    "global_cap": 10000,
+    "global_headroom": 421
+  },
+  "non_query_digest": "19c5718dfc1aa4cb11eef0306b8b877dbd9f234f1192053cb77ce4de7c9337fb",
+  "violations": [],
+  "unique_file_hash_checks": 3762,
+  "phase_receipts": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-final-parent-audit/task_memory/task_2026-10-22_step5_position_routing/resumed_performance/post_named_query_final_parent/receipt_verification.json",
+      "sha256": "a8bfcb48114e4dc91536cd165628cd0031723532c63c6de72583f7875b1b1e77",
+      "bytes": 369498
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-final-parent-audit/task_memory/task_2026-10-22_step5_position_routing/resumed_performance/post_named_query_final_parent/binding_verification.json",
+      "sha256": "d8bac4724ad2ee6b359e69beab165815d2fea0fac429eb5630830c98a1b21311",
+      "bytes": 757419
+    }
+  ],
+  "limits": [
+    "No tests, probes, simulation, native rebuild, GPU/network/platform operation or production edit.",
+    "Raw canonical exit1, 279 failures/32 errors/281 skips and approved79 ID-loss FAIL remain visible; no aliases or suite sums.",
+    "Strict equality is bound to the retained original comparison and fresh unchanged evidence-auditor/hash checks; no large-trace or pandas CSV parsing.",
+    "Whole6144/1024/2400s CLI, native runtime, package, G3 and four-metric E2E acceptance remain outside this receipt."
+  ],
+  "environment": {
+    "uid": 10250,
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "bytecode_disabled": true,
+    "MemoryMax_bytes": 32212254720,
+    "systemd_properties": {
+      "ControlGroup": "/system.slice/run-r13c4192c088f4751b0aac28a3eb6c255.scope",
+      "MemoryMax": "32212254720",
+      "MemoryLimit": "infinity"
+    },
+    "cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r13c4192c088f4751b0aac28a3eb6c255.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r13c4192c088f4751b0aac28a3eb6c255.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r13c4192c088f4751b0aac28a3eb6c255.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r13c4192c088f4751b0aac28a3eb6c255.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r13c4192c088f4751b0aac28a3eb6c255.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-r13c4192c088f4751b0aac28a3eb6c255.scope\n0::/system.slice/run-r13c4192c088f4751b0aac28a3eb6c255.scope\n",
+    "timeout_seconds": 60,
+    "argv": [
+      "task_memory/task_2026-10-22_step5_position_routing/resumed_performance/post_named_query_final_parent/verify_final_parent.py",
+      "acceptance"
+    ],
+    "stream_block_bytes": 1048576
+  },
+  "protected_states_before": {
+    "primary": {
+      "head": "86b9923f8c29f1c58ba9f8df23a396c70a4d1caa",
+      "index_path": "/data/ycfeng/Frontier/.git/worktrees/step5-preview/index",
+      "index_sha256": "26603ed9ca380850ed26c789d1ebd164bcaa86c8662df2bfec4fa225aa1b7f13"
+    },
+    "owner": {
+      "head": "39f0c1000a96c10f186cabe5f77dfc3058f86549",
+      "index_path": "/data/ycfeng/Frontier/.git/worktrees/d29-post-named-query-regressions/index",
+      "index_sha256": "b00c97f2a69d59dec8ae6fd26a726ae51e6c918ae75573cd4ff5699e8ab70e42"
+    },
+    "frozen_source": {
+      "head": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+      "index_path": "/data/ycfeng/Frontier/.git/worktrees/verify-step5-d29-integrated-08/index",
+      "index_sha256": "c1d51d9d3edf483d79baad9f640c2730c590840e7ca9bdbc0299bf88d2bdf1c0"
+    }
+  },
+  "protected_states_after": {
+    "primary": {
+      "head": "86b9923f8c29f1c58ba9f8df23a396c70a4d1caa",
+      "index_path": "/data/ycfeng/Frontier/.git/worktrees/step5-preview/index",
+      "index_sha256": "26603ed9ca380850ed26c789d1ebd164bcaa86c8662df2bfec4fa225aa1b7f13"
+    },
+    "owner": {
+      "head": "39f0c1000a96c10f186cabe5f77dfc3058f86549",
+      "index_path": "/data/ycfeng/Frontier/.git/worktrees/d29-post-named-query-regressions/index",
+      "index_sha256": "b00c97f2a69d59dec8ae6fd26a726ae51e6c918ae75573cd4ff5699e8ab70e42"
+    },
+    "frozen_source": {
+      "head": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+      "index_path": "/data/ycfeng/Frontier/.git/worktrees/verify-step5-d29-integrated-08/index",
+      "index_sha256": "c1d51d9d3edf483d79baad9f640c2730c590840e7ca9bdbc0299bf88d2bdf1c0"
+    }
+  },
+  "git_commands": [
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "rev-parse",
+      "--git-path",
+      "index"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "rev-parse",
+      "HEAD"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions",
+      "rev-parse",
+      "--git-path",
+      "index"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions",
+      "rev-parse",
+      "HEAD"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+      "rev-parse",
+      "--git-path",
+      "index"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+      "rev-parse",
+      "HEAD"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "rev-parse",
+      "--git-path",
+      "index"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "rev-parse",
+      "HEAD"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions",
+      "rev-parse",
+      "--git-path",
+      "index"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions",
+      "rev-parse",
+      "HEAD"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+      "rev-parse",
+      "--git-path",
+      "index"
+    ],
+    [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+      "rev-parse",
+      "HEAD"
+    ]
+  ],
+  "duration_seconds": 0.0674563474021852
+}
