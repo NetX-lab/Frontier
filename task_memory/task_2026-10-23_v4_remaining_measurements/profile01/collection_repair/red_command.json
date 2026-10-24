@@ -1,0 +1,50 @@
+{
+  "argv": [
+    "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/unit/test_native_pd_worker.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/red_worker_temp"
+  ],
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69"
+  },
+  "returncode": 1,
+  "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/red_worker.log",
+  "worker_sha256": "9ec701ec12f7a5da0f442f994a353f98c5ae1d2880b9feca38106ea536fd5cab",
+  "source_preserved": true,
+  "tail": [
+    "  File \"/data/ycfeng/Frontier/.worktrees/v4-profile03-collection/tests/comparison/calibration/native_pd_worker.py\", line 372, in run",
+    "    await_condition(lambda: len(list(root.glob('nodes/*/drained.json'))) == config['replica'],",
+    "  File \"/data/ycfeng/Frontier/.worktrees/v4-profile03-collection/tests/comparison/calibration/native_pd_worker.py\", line 225, in await_condition",
+    "    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')",
+    "TimeoutError: Native P/D rendezvous or workload deadline exceeded",
+    "",
+    "NATIVE_PD_STAGE finished",
+    "=========================== short test summary info ============================",
+    "FAILED tests/unit/test_native_pd_worker.py::test_profile_nodes_have_distinct_trace_directories_without_changing_input[iterations1]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_profile_nodes_have_distinct_trace_directories_without_changing_input[iterations2]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_role_profiler_iterations_require_positive_integer_role_values[None]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_role_profiler_iterations_require_positive_integer_role_values[iterations1]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_role_profiler_iterations_require_positive_integer_role_values[iterations2]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_role_profiler_iterations_require_positive_integer_role_values[iterations3]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_role_profiler_iterations_require_positive_integer_role_values[iterations4]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_role_profiler_iterations_require_positive_integer_role_values[iterations5]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_natural_headless_exit-20-20-0-None-True]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_active_headless_exit-20-20-0-SIGINT-True]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_active_headless_exit-61-60-0-SIGINT-False]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_natural_headless_exit-None-60-0-None-False]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_headless_native_error-20-0-23-None-False]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_head_drain_quorum_and_membership_use_known_paths[True-0-0-0-members0]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_head_drain_quorum_and_membership_use_known_paths[False-20-20-0-members1]",
+    "FAILED tests/unit/test_native_pd_worker.py::test_head_drain_quorum_and_membership_use_known_paths[False-None-60-1-members2]",
+    "16 failed, 19 passed in 2.38s"
+  ]
+}

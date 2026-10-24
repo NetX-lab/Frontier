@@ -1,0 +1,52 @@
+[
+  {
+    "argv": [
+      "/data/ycfeng/envs/asyncopd-py312/bin/python",
+      "-B",
+      "-m",
+      "pytest",
+      "tests/unit/test_native_pd_worker.py",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/baseline_test_native_pd_worker_temp"
+    ],
+    "environment": {
+      "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69"
+    },
+    "returncode": 0,
+    "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/baseline_test_native_pd_worker.log",
+    "tail": [
+      "...................                                                      [100%]",
+      "19 passed in 1.96s"
+    ]
+  },
+  {
+    "argv": [
+      "/data/ycfeng/envs/asyncopd-py312/bin/python",
+      "-B",
+      "-m",
+      "pytest",
+      "tests/unit/test_native_pd_manifest.py",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/baseline_test_native_pd_manifest_temp"
+    ],
+    "environment": {
+      "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69"
+    },
+    "returncode": 0,
+    "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/baseline_test_native_pd_manifest.log",
+    "tail": [
+      "..............                                                           [100%]",
+      "14 passed in 1.26s"
+    ]
+  }
+]
