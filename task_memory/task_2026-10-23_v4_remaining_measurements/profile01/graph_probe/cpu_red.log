@@ -1,0 +1,54 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___________ test_resource_envelope_exact_handles_ids_and_copy[clone] ___________
+
+probe = namespace(__name__='<run_path>', __doc__='Probe retained CUDA graph identities using CUDA 13.0 topology and CUPTI APIs...s at 0x7f7c4c809300>, analyze_trace=<function analyze_trace at 0x7f7c4c8093a0>, main=<function main at 0x7f7c4c809440>)
+capture = (<<run_path>.CuptiGraphCallbacks object at 0x7f7c4c7377d0>, {'calls': [('cuptiSubscribe', None), ('cuptiEnableCallback...uptiEnableCallback', 18)], 'queries': [('node', 140171836187696), ('node', 927)], 'results': {}, 'in_callback': False})
+kind = 'clone'
+
+    @pytest.mark.parametrize("kind", ["clone", "exec"])
+    def test_resource_envelope_exact_handles_ids_and_copy(probe, capture, kind):
+        value, state = capture
+        value.start()
+        native, storage, resource = envelope(probe, node=11, originalNode=12, graph=701, graphExec=702)
+        callback_id = probe.NODE_CLONED if kind == "clone" else probe.EXEC_CREATED
+        invoke(probe, capture, callback_id, ctypes.byref(resource))
+        expected = ({"callback_id": 20, "node": 11, "original_node": 12,
+                     "node_id": 2**60 + 17, "original_node_id": 2**59 + 23} if kind == "clone" else
+                    {"callback_id": 18, "graph": 701, "graph_exec": 702, "graph_id": 101, "exec_graph_id": 202})
+>       assert state["queries"] == ([("node", 11), ("node", 12)] if kind == "clone" else
+                                    [("graph", 701), ("exec", 702)])
+E       AssertionError: assert [('node', 140...('node', 927)] == [('node', 11), ('node', 12)]
+E         
+E         At index 0 diff: ('node', 140171836187696) != ('node', 11)
+E         Use -v to get more diff
+
+tests/unit/test_cupti_graph_resource_payload.py:94: AssertionError
+___________ test_resource_envelope_exact_handles_ids_and_copy[exec] ____________
+
+probe = namespace(__name__='<run_path>', __doc__='Probe retained CUDA graph identities using CUDA 13.0 topology and CUPTI APIs...s at 0x7f7c4c80bce0>, analyze_trace=<function analyze_trace at 0x7f7c4c80bd80>, main=<function main at 0x7f7c4c80be20>)
+capture = (<<run_path>.CuptiGraphCallbacks object at 0x7f7c4c745a30>, {'calls': [('cuptiSubscribe', None), ('cuptiEnableCallback', 20), ('cuptiEnableCallback', 18)], 'queries': [('graph', 901), ('exec', 951)], 'results': {}, 'in_callback': False})
+kind = 'exec'
+
+    @pytest.mark.parametrize("kind", ["clone", "exec"])
+    def test_resource_envelope_exact_handles_ids_and_copy(probe, capture, kind):
+        value, state = capture
+        value.start()
+        native, storage, resource = envelope(probe, node=11, originalNode=12, graph=701, graphExec=702)
+        callback_id = probe.NODE_CLONED if kind == "clone" else probe.EXEC_CREATED
+        invoke(probe, capture, callback_id, ctypes.byref(resource))
+        expected = ({"callback_id": 20, "node": 11, "original_node": 12,
+                     "node_id": 2**60 + 17, "original_node_id": 2**59 + 23} if kind == "clone" else
+                    {"callback_id": 18, "graph": 701, "graph_exec": 702, "graph_id": 101, "exec_graph_id": 202})
+>       assert state["queries"] == ([("node", 11), ("node", 12)] if kind == "clone" else
+                                    [("graph", 701), ("exec", 702)])
+E       AssertionError: assert [('graph', 90...('exec', 951)] == [('graph', 70...('exec', 702)]
+E         
+E         At index 0 diff: ('graph', 901) != ('graph', 701)
+E         Use -v to get more diff
+
+tests/unit/test_cupti_graph_resource_payload.py:94: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_cupti_graph_resource_payload.py::test_resource_envelope_exact_handles_ids_and_copy[clone]
+FAILED tests/unit/test_cupti_graph_resource_payload.py::test_resource_envelope_exact_handles_ids_and_copy[exec]
+2 failed, 14 deselected in 0.16s

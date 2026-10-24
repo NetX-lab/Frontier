@@ -1,0 +1,46 @@
+{
+  "status": "PASS_BOUNDED_SOURCE_CORRECTION",
+  "base": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+  "original": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py",
+    "sha256": "f7314cfbc70a1ba347339245754e385d24239eff9f24ceb485e5f3fba379a1e0",
+    "bytes": 32887,
+    "lines": 647
+  },
+  "candidate": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py",
+    "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+    "bytes": 34078,
+    "lines": 669
+  },
+  "budget": {
+    "probe_added": 24,
+    "probe_deleted": 2,
+    "probe_gross": 26,
+    "probe_limit": 80,
+    "test_lines": 154,
+    "test_limit": 160,
+    "inherited_lines": 645,
+    "inherited_bytes": 32705
+  },
+  "ast_checks": {
+    "all_old_definitions_preserved": true,
+    "other_definitions_unchanged": true,
+    "callback_after_envelope_decode_unchanged": true,
+    "other_subscription_methods_unchanged": true,
+    "strict_9_5_4_and_scope_and_replay_logic_unchanged": true,
+    "query_order_unchanged": true
+  },
+  "fault_line_map": {
+    "119": 138,
+    "125": 144,
+    "196": 218,
+    "197": 219,
+    "203": 225,
+    "204": 226,
+    "504": 526,
+    "634": 656,
+    "647": 669
+  },
+  "changed_scope": "Two ctypes envelope classes, additive ABI reporting, descriptor/null decoding only."
+}
