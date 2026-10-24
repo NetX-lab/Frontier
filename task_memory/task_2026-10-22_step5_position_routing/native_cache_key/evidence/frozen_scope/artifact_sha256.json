@@ -1,0 +1,42 @@
+{
+  "task_id": "D29-NATIVE-KEY-SCOPE-DELTA",
+  "algorithm": "sha256",
+  "files": {
+    "audit_plan.md": {
+      "bytes": 1952,
+      "sha256": "3036aa96c3e70fa6c25945972bcc9e11410fdfff4fc7e3ea6d2c7a0264ff5728"
+    },
+    "check_progress_2026-10-24.md": {
+      "bytes": 2677,
+      "sha256": "e509c1e069b8dbc06666ffc08fe055def9576c9a6c54468528bf1b535bc7d6ed"
+    },
+    "frozen_scope_paths.tsv": {
+      "bytes": 15662,
+      "sha256": "ca84d0fd6c60c64d0278f0f7d523710fc5ff657a132a363b6b6a08d9b0113043"
+    },
+    "frozen_scope_receipt.json": {
+      "bytes": 299153,
+      "sha256": "7d083a14bc45b14de1f0b6d9c1c529fd996441a7a7352e84c43de1a402ac7689"
+    },
+    "frozen_scope_summary.json": {
+      "bytes": 7108,
+      "sha256": "a30e82ecdb2c4b83d30dadea4a51cafced552766ed9b6b0ccd78cab8d1412b81"
+    },
+    "progress.md": {
+      "bytes": 2429,
+      "sha256": "dcccd8613b6b044d1cfcca5f70a71484cedfb94f069cb9ae6d8c76bbecb50243"
+    },
+    "recompute_frozen_scope.py": {
+      "bytes": 22061,
+      "sha256": "632d4b1bb98a942b96c5b35c8f3d38a503094b72f97e8ab11e9735555d2d0eb2"
+    },
+    "summary.md": {
+      "bytes": 1629,
+      "sha256": "e35104438ef96a897193442d7763b0d42e42d6d721af487c336b45134ac648ca"
+    },
+    "test_report_2026-10-24_native_key_scope.md": {
+      "bytes": 8908,
+      "sha256": "0d1f8a0bceae9f9086c4385c03245b52136ef37389de2e3cbf14edc4d899a976"
+    }
+  }
+}
