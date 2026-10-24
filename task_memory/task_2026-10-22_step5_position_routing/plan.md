@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Parent admits completed dbe19f53 short101/197/53/52; retain strict/full-unit/final-guard dependencies. |
 | 2026-10-24 | Close named-query integration and composed9579 audit; the accepted successor is ready for a new frozen regression pass. |
 | 2026-10-24 | Named-query component passes parent tests/wave and independent reviews; compose the budget before integration and new frozen checks. |
 | 2026-10-24 | Complete parent46fe full regression admission with explicit old-ID replacement; named query and independent snapshot-copy diagnosis proceed. |
@@ -129,7 +130,9 @@ zero violations. Code/records are integrated asffb435ca/8ecb705e. Freeze this
 accepted successor dbe19f53 for required scenario/full-unit checks. Task
 D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS is assigned to the previous regression owner
 ses_e98925887ffecetw6nTB6nD8f0, with isolated records in post_named_query_regressions/.
-Keep comparisons to46fe and79 and preserve raw old-ID replacement accounting. The separate
+Keep comparisons to46fe and79 and preserve raw old-ID replacement accounting.
+Short101/197/53/52 now pass parent27 hash/ID checks. Strict77, full-unit and final
+guards are still in progress and must complete before this regression pass closes. The separate
 initialization-local reuse analysis remains read-only with no source allocation.
 The non-I/O identity-cache control is rejected because it did not improve timing.
 Cost-fields75404143 is now parent-verified and independently reviewed,8gross and

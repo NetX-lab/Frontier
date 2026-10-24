@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Parent verifies frozen dbe19f53 short101/197/53/52 with27 hashes and exact46fe IDs; strict/full-unit remain running. |
 | 2026-10-24 | Integrate named-query ffb435ca/8ecb705e and auditc6b1f3b8; final124-binding guard accepts9579 global, with stepnet84 distinct from budget increment88. |
 | 2026-10-24 | Named-query code1737ce9c passes both reviews and parent125PASS/1SKIP plus19 byte comparisons; composed audit remains pending. |
 | 2026-10-24 | Parent accepts46fe full regressions after2736 hash/JUnit checks; raw old-ID gate remainsFAIL for the approved replacement. Named query implementation is assigned. |
@@ -129,6 +130,14 @@
   canonical full-unit, required supplements, raw-ID/status comparisons to46fe/79,
   and source/input/script guards. Records ownership is only
   `post_named_query_regressions/`; no full CLI or GPU/native run is assigned.
+  Four short suites now complete:101/197/53/52PASS,all rawexit0. Parent27 hashes
+  and independent JUnit comparisons reproduce all46fe IDs/statuses, with the
+  existing79metadata old/newID difference still explicit. Live frozen source/
+  tree/3dac are clean. Receipt:resumed_performance/post_named_query_regression_acceptance.json,
+  statusPASS_SHORT_SUITES_ONLY. Strict77/full-unit continue under their existing
+  execution envelopes; no unfinished output was inspected and no suite rerun.
+  An initial schema-discovery KeyError for supplement101's single-baseline field
+  was corrected before validation; final parent verification passes.
 - in-progress/independent diagnosis: D29-SNAPSHOT-COPY-CONTROL, session
   ses_e93a71d28ffendJiHmtuzK8ec6, checks whether a C-backed deep snapshot can
   preserve supported getter semantics and reduce measured copying. Read-only
