@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Named-query component passes parent tests/wave and independent reviews; compose the budget before integration and new frozen checks. |
 | 2026-10-24 | Complete parent46fe full regression admission with explicit old-ID replacement; named query and independent snapshot-copy diagnosis proceed. |
 | 2026-10-24 | YC approves named querying and similar in-scope changes; allocate four CORE paths100gross with65 zero-sum transfer. |
 | 2026-10-24 | Qualify the named-model control at−26.81% pricing; require an error-policy decision before any100-line CORE allocation. |
@@ -119,6 +120,12 @@ implementation -> selected/mixed/public-view regressions and independent review
 The10 matching contract groups and one demonstrated error-surface difference
 are recorded separately. Independent read-only snapshot-copy investigation is
 bounded to supported deep-copy semantics; no source allocation is implied.
+
+Named-query delivery1737ce9c/3d75c786 now passes both independent reviews and
+parent125PASS/1existingSKIP plus19 full wave-file comparisons. Composed114-path
+audit is in progress; only after acceptance will source/records be integrated
+and the successor frozen for required scenario/full-unit checks. The separate
+initialization-local reuse analysis remains read-only with no source allocation.
 The non-I/O identity-cache control is rejected because it did not improve timing.
 Cost-fields75404143 is now parent-verified and independently reviewed,8gross and
 zero retained growth, and merged with trace/prepared on feat/step5-preview.

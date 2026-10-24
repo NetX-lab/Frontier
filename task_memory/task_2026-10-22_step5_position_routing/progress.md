@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Named-query code1737ce9c passes both reviews and parent125PASS/1SKIP plus19 byte comparisons; composed audit remains pending. |
 | 2026-10-24 | Parent accepts46fe full regressions after2736 hash/JUnit checks; raw old-ID gate remainsFAIL for the approved replacement. Named query implementation is assigned. |
 | 2026-10-24 | YC approves named querying and analogous optimizations; allocate100gross and resume frozen regression completion. |
 | 2026-10-24 | Complete named-model control:−26.81%,208-event byte parity,23 source bindings and one explicit error-policy difference; allocation waits for YC. |
@@ -104,8 +105,15 @@
   inspection:ses_e951e411cffenineDsU35LlI6M; source was not edited. Source scratch
   diff14/+4. YC approves100gross(source20/tests80) and analogous in-scope changes.
   Primary assigns registry15/workload5/bindings50/runtime30 and65 zero-sum CORE
-  allowance transfer with no donor edits. Allocation617d832b; implementation is
-  assigned to ses_e93af1ff7ffe0YosowRNrc24Xa in an isolated worktree;
+  allowance transfer with no donor edits. Allocation617d832b; owner
+  ses_e93af1ff7ffe0YosowRNrc24Xa delivered code1737ce9c and records3d75c786.
+  Step96gross(source17/tests79), retained growth88 is owner evidence pending
+  composed audit. Both independent axes returned No findings. Parent final-source
+  focused125PASS/1existingSKIP, all118 retained statuses unchanged,8newPASS;
+  208-event replay/19 full-file byte comparisons and source/input/error guards
+  PASS. Parent observed warm0.121525→0.090143s during concurrent isolated arms;
+  not a whole-workflow timing claim. Records:runtime_model_view/parent/.
+  Final audit assigned to ses_e95ac82fdffeSeMEUfR9SxvW03 before integration;
   see runtime_model_view/{requirements.md,plan.md,progress.md} and the amendment.
   Three archive-checker errors(header clocks twice, then wrong samples field)
   were corrected without rerunning the wave; original logs retained and final

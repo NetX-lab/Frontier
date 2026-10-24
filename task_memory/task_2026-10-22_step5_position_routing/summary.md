@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Record named-query component delivery, independent No findings and parent125PASS/1SKIP plus full-wave parity; final audit pending. |
 | 2026-10-24 | Accept completed46fe full regression evidence with2736 parent checks and the approved old-ID replacement; assign named-query implementation. |
 | 2026-10-24 | Record YC's approval/preauthorization and the four-path100-gross named-query allocation. |
 | 2026-10-24 | Complete the bounded named-model view control; archive−26.81% pricing and its unapproved unrelated-model error-surface change. |
@@ -56,6 +57,12 @@ Evidence is in runtime_model_view/. YC approved the100-gross CORE change and
 preauthorized analogous in-scope performance work. Primary allocates four paths
 (15/5source,50/30tests) through65 zero-sum CORE allowance lines; donor code stays
 unchanged. Allocation617d832b is assigned for isolated implementation and review.
+Owner delivered code1737ce9c/records3d75c786 at96gross. Both axes report No findings;
+parent125PASS/1existingSKIP preserves118 old statuses and passes8new cases. The
+real208-event wave matches19 full files, all numerical/proof/error/input guards.
+Parent warm medians0.121525/0.090143s are observational under concurrent execution.
+Composed budget audit and integration remain pending; owner9579/10000 is not yet
+the final accepted union. Parent records are runtime_model_view/parent/.
 An independent bounded snapshot-copy diagnosis is also running without source
 allocation. Production usage stays9491/10000
 until measured changes land; full CLI acceptance remains open.
