@@ -1,0 +1,14 @@
+{
+  "suite": "unit",
+  "argv": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/run_suite.py",
+    "unit"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+  "start_utc": "2026-10-24T18:26:55.769312+00:00",
+  "end_utc": "2026-10-24T18:48:11.126434+00:00",
+  "returncode": 1,
+  "duration_s": 1275.3571319058537
+}

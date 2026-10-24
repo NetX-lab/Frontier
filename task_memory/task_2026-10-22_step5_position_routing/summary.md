@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
 | 2026-10-24 (UTC) | Record resumed complete candidate audit and review frontier without changing accepted production or workflow status. |
 | 2026-10-25 | Append recovered late analyzer failures for copy/init; preserve partial inspections and unchanged control/source budgets. |
@@ -39,17 +40,17 @@
 | 2026-10-22 | Record six design findings and disjoint mandatory correction assignments. |
 | 2026-10-22 | Archive the first design delivery with its unclosed review and pricing scope. |
 
-## Current resumed execution (2026-10-24 UTC / 2026-10-25 local)
+## Current resumed execution (2026-10-24 UTC / 2026-10-25 HKT)
 
-The clean final ledger candidate is1461573de388b72450189bc0c1b88b4ac32491f0, tree447a285aa403af747f838a3bf404b2b17e2eacf7. It remains UNADMITTED. A single test-local naming finding is fixed with two symbol changes;39PASS/3 existingSKIP preserve all42 selected IDs/statuses. Both independent review axes have No findings on this source.
+Final ledger candidate1461573de388b72450189bc0c1b88b4ac32491f0,tree447a285aa403af747f838a3bf404b2b17e2eacf7,passes both independent review axes and the final composed audit. The116 allocated paths,114 predecessor rows,18 overlays,126 bindings and reconstructed native patch yieldCORE4377/4404,PRICING3955/3956,native1350/1582,source9682/9942,global9696/10000,zero violations. Step124gross/net96/cumulative increment116 remain distinct.
 
-The refreshed independent composed audit recomputes all116 allocated paths,114 predecessor rows,18 zero-sum overlays,126 source/native/image bindings and the actual native patch: CORE4377/4404,PRICING3955/3956,native1350/1582,source9682/9942,global9696/10000,zero violations. Step124gross/net96/cumulative increment116 are distinct. Evidence is under ledger_memory/evidence/composed_scope_2026-10-25/; the prior source1f6 audit remains intact.
+All mandatory suites ran once on this clean final source. Strict77 is77/77 identical; original auditor verifies451 artifacts/519 cache names per side. Canonical unit is raw8028PASS/279FAIL/32ERROR/281SKIP,exit1,with all8620 actual IDs/statuses, failure/error/skip sets and versions exactly matching accepted native-key376983d2. Separate101/197/53/52 supplements preserve their IDs/statuses and environments. Counts overlap and are not summed. The prior approved hot-update ID absence remains raw presenceFAIL and unwaived.
 
-Required fresh strict77,canonical unit and101/197/53/52 supplements are running from this frozen readonly source with separate generated caches and native binary absent. Their raw outcomes and ID comparisons remain pending. Accepted production stays9566source/9580global until verified integration.
+Evidence is archived at ledger_memory/evidence/frozen_regressions_2026-10-25/:64 exact files/7126759B plus archive command/log. The comparator's initial field-reading error, its corrected exact predicate and both raw logs remain retained; no suite was rerun. The candidate is still UNADMITTED until the authorized integration and parent source/budget/binding guard. Production at this pre-merge record remains9566source/9580global.
 
-Snapshot-copy and initialization source analyses resume in their dedicated worktrees under original bounded records ownership. No new required-shape, pricing, GPU or fullCLI run occurs. Whole-workload timing/storage/RSS and finalT2/package/native/G3/E2E remain unfinished; personal OSS sufficiency is user-confirmed.
+Snapshot-copy and initialization diagnoses continue under their original separate records ownership; final receipts and consumed counts are collected before integration or further invocation. Current pricing+emission+flush, worker environment/append throughput/full-workload memory, completeCLI<=2400s per main process, finalT2/package/native/G3/E2E remain open. OSS sufficiency is user-confirmed and required-shape allowance remains6/6 used. This archive makes no new resource, fullCLI, native or RSS claim.
 
-## Current handoff boundary (2026-10-25)
+## Previous handoff boundary (2026-10-25; historical)
 
 Current feature source includes accepted native-key c668a938 and named query
 ffb435ca, with9566source/9580global and zero audit violations. Native-key primary

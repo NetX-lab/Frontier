@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
 | 2026-10-24 (UTC) | Resume source admission with a clean frozen checkout and independent composed audit; retain long gates and diagnoses. |
 | 2026-10-25 | Mark copy/init owners failed after late notifications and complete history recovery; continuation remains pending within the original limits. |
@@ -50,17 +51,19 @@
 | 2026-10-22 | Assign six review findings and three disjoint mandatory design streams; remove unrelated new-policy scope. |
 | 2026-10-22 | Record review and complete-scope dependencies after the first design delivery. |
 
-## Current resumed execution (2026-10-24 UTC / 2026-10-25 local)
+## Current resumed execution (2026-10-24 UTC / 2026-10-25 HKT)
 
-Final candidate1461573de388b72450189bc0c1b88b4ac32491f0 is clean in the existing project-local frozen worktree `d29-ledger-final-1f6b4314`. The latest repair renames two test-local symbols only;39PASS/3 existingSKIP preserve42 IDs/statuses. Standards and Spec both return No findings on this final source.
+Final candidate1461573de388b72450189bc0c1b88b4ac32491f0 is clean in the ledger and existing frozen worktrees. The final Standards/Spec reviews have No findings. Independent audit passes116 allocated paths,114 predecessor rows,18 overlays and126 bindings: CORE4377/4404,PRICING3955/3956,native1350/1582,source9682/9942,global9696/10000,zero violations.
 
-The refreshed independent audit recomputes116 current paths,114 predecessor rows,18 overlays and126 bindings: CORE4377,PRICING3955,native1350,source9682/global9696,zero violations. The prior1f6 audit remains historical. Accepted production remains9566source/9580global until regressions and integration.
+All final-source mandatory regressions have finished without rerunning suites. Strict77 is77/77 identical; the original auditor rehashes451 artifacts/519 cache names per side. Canonical unit is raw8028PASS/279FAIL/32ERROR/281SKIP,exit1; the comparator passes exact equality of all8620 IDs/statuses, failure/error/skip sets and versions against the accepted native-key baseline. Separate101/197/53/52 supplements have identical IDs/statuses and environments. The historical approved hot-update ID absence remains raw presenceFAIL and unwaived.
 
-`final audit + reviews PASS -> {strict77, canonical full-unit,101/197/53/52} -> production integration -> current cohesive timing + worker/cloud readiness -> full CLI -> final T2/source/package/native/G3/E2E`. Required suites start at2026-10-24T18:26:55UTC in separate readonly-source/generated-cache namespaces; no native binary is projected. Their raw outcomes are pending.
+`audit + reviews + mandatory regressions + archive PASS -> production integration and parent source/budget/binding guard -> current pricing+emission+flush + worker/cloud readiness -> complete6144/1024 offline/online CLI<=2400s per main subprocess -> final T2/source/package -> native/G3/E2E`.
 
-In parallel, the two completed reviewers continue the original snapshot-copy and initialization diagnoses in their dedicated clean886608ea worktrees, owning only runtime_snapshot_copy/ and init_preparation_reuse/ records. Snapshot control ceiling remains1,currently0used; init permits source/small retained evidence only. Required-shape6/6 is exhausted. The unavailable analyzer and provider/configuration state are not changed.
+Archive: ledger_memory/evidence/frozen_regressions_2026-10-25/;64 exact files/7126759B plus archive command/log. The ledger candidate remains UNADMITTED until integration and the parent guard; accepted production is still9566source/9580global at this record. Stop the old merge-tree preview troubleshooting and perform the authorized merge after this evidence commit.
 
-## Current handoff boundary (2026-10-25)
+In parallel, collect final snapshot-copy and initialization receipts from their existing dedicated worktrees. Reconcile actual consumed counts and commits before integration or further action. No new diagnostic invocation follows from missing notifications. Required-shape6/6 is exhausted; OSS quota is USER_CONFIRMED_SUFFICIENT. Current timing, worker environment/append throughput/full-workload memory, finalCLI and native gates remain open.
+
+## Previous handoff boundary (2026-10-25; historical)
 
 YC requests code/document commits and a complete prompt for another session.
 The existing ledger snapshot caller and bounded focused checks are complete on
@@ -267,6 +270,8 @@ Warnings,mtimes and published bundles support cache hits rather than retraining.
 The existing loader fix accounts for roughly450s of that old work by scaling,
 not a measured post-repair startup. No further init source or cache-identity
 change is allocated. See early_init_repro/report.md.
+
+The following table is the prior handoff snapshot. Current resumed execution above supersedes its pending states.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |

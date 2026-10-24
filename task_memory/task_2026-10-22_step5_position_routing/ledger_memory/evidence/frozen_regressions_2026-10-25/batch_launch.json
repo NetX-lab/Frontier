@@ -1,0 +1,14 @@
+{
+  "suites": [
+    "strict77",
+    "unit",
+    "supplement101",
+    "metadata196",
+    "catalogue53",
+    "governance52"
+  ],
+  "max_concurrent_suites": 3,
+  "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "start_utc": "2026-10-24T18:26:55.767661+00:00",
+  "scope": "Required frozen regressions only; no fullCLI, pricing wave, required shape or GPU operation."
+}

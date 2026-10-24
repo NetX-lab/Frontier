@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
 | 2026-10-24 (UTC) | Resume the current multi-worktree D29 task under existing decisions and limits. |
 | 2026-10-25 | Record YC's sufficient-OSS-quota confirmation and renewed handoff request; transfer two unused writer allowance lines to the existing snapshot caller without increasing any budget. |
@@ -38,6 +39,8 @@ UTC date2026-10-24; local date2026-10-25. YC requests:
 > resume current task (it now has mutiple worktree branch, make sure 梳理任务执行情况)。以下是之前session给出的handoff信息（仅供参考）：请继续 Frontier 的 D29 / Step-5 position-routing 任务。先恢复现场和已有证据，不要从头重做。
 
 Continue all unfinished work under the already approved scope and authority. The supplied handoff is reference evidence; actual Git, task artifacts and later notifications determine state. No new required-shape/pricing invocation ceiling, numerical source, gate relaxation or GPU allocation follows from resuming. Task-required H800 authority and personal OSS test storage/cleanup authority already recorded remain in force. Preserve concurrent handoff-record edits and all unrelated files.
+
+Final1461573d mandatory source regressions are now complete and archived. Strict77 is77/77 identical; canonical unit preserves all8620 IDs/statuses and raw8028PASS/279FAIL/32ERROR/281SKIP,exit1. Separate101/197/53/52 supplements preserve their IDs and environments. This completion clears only the recorded source-integration prerequisite; fullCLI/worker/RSS/T2/native/G3/E2E remain unfinished. No invocation ceiling, source allocation or gate changes.
 
 
 ## [Original Request]
