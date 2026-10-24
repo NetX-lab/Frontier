@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-24 | Completed S1/S2 owner checks/source5e2fe861; this records archive is the final delivery boundary. |
+| 2026-10-24 | Began the authorized P2 closed-log records correction and bounded tuple repair. |
 
 - completed S0 inspection: owned branch feat/v4-scope-lifetime-probe is clean; actual range175–206 and resource envelope indirection match the source binding. Official header requires copying callback payload during invocation; sample queries full original/clone IDs in callbacks.
 - completed S1: frozen ABI/IDs/lifecycle reused; real range and callback13 record distinct clocks/native_id/get_ident. Source250/test160 gross lines; no shared-source edits. Initial callback13 RED is retained in scratch/red.log, followed by GREEN.
@@ -45,3 +46,5 @@
 1. CPU 送达/拒绝控制不是真实 image/driver 下的 TLS 或 lifetime 测量。
 2. 250/160 是最终 gross 上限，不新增 shim 或放宽 P1–P6。
 3. sealed04、13runtime identities、77matrix 只保持/绑定；GPU/image/signature checks 留给 primary。
+
+Review repair checkpoint: closed_log_binding_before.json preserves both original receipts;26bindings/17closed artifacts checked, only hash_receipt.json:393 was stale. Its05db... is exactly the validator log's pre-print header hash; closed8b3b... matches commands.json:133. validate.log shares the producer pattern but its retaineda84d... already matches. No open retained-file descriptors, no source/test/collector/raw changes; 7/13/45/77 unchanged. Tuple repair remains pending; all D1–D7 CLEAR, source acceptance stays with root.

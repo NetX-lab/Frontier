@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-24 | Recorded source/CPU ownership and stop gate. |
+| 2026-10-24 | Added the separately allocated review-repair sequence and stop boundary. |
 
 Dependency: S0 frozen inputs -> S1 callback/window/lifetime/replay implementation and CPU RED/GREEN -> S2 exact source/static/CPU/budget/immutable closure -> primary independent dual review/replay -> separately allocated S3 package -> S4 bounded GPU -> S5 actual audit.
 
@@ -13,3 +14,5 @@ Dependency: S0 frozen inputs -> S1 callback/window/lifetime/replay implementatio
 4. Commit only owned source/tests after verification, then owned records; stop. Missing scope or budget blocks delivery rather than weakening predicates.
 
 Acceptance: P1–P6 remain independently auditable even for negative scope delivery; setup/query/trace errors are UNVERIFIED. Reuse the existing 77-case binding, without new capture or borrowed GPU-pin remeasurement claims.
+
+Review repair: immutable before-record archive -> post-process26binding/17artifact closure and records commit -> focused real-fixture tuple-decoy RED -> <=15/25gross same-file correction and new+frozen CPU GREEN under60s/30GiB -> closed-log/diff/budget/7/13/45/matrix records -> source/records commits -> STOP pending root re-review/replay.

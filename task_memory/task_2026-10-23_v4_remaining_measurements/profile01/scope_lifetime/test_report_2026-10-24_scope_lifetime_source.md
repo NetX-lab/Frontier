@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-24 | Recorded bounded source/CPU delivery and verification limits. |
+| 2026-10-24 | Added P2 review-repair records without rerunning the original CPU tests. |
 
 ## Results
 - PASS: new module250 gross lines; new tests160. Frozen callbacks/ABI/IDs/stage/target extraction and worktree-local real ServingProfile.range are reused, not copied implementations.
@@ -28,3 +29,7 @@ CLI: `python probe_scope_lifetime.py --output-dir <absent-directory> --image-dig
 No host CUDA execution, standalone CLI/GPU run, image/SDK qualification, package generation/seal, native integration, dependency mapping, serving/cost admission or new matrix capture occurred.
 CPU tests do not measure actual GPU observe/control orchestration, TLS/lifetime, timing or non-perturbation. Primary owns independent dual reviews/root replays and all S3–S5 gates.
 Untested alternatives remain runtime-API/activity correlation, clone/exec-only mapping, explicit push/pop independent of TLS and post-capture retained-activity attribution. A future clean negative is limited to the tested live-TLS image/driver/shape, not general impossibility.
+
+## Review repair
+- Closed-log PASS: closed_log_hash_receipt.json stores the exact post-process command/source/17artifact hash map and26binding comparisons; original contradictions are preserved in closed_log_binding_before.json. validate_final.log closed SHA256 is8b3b315f82c3c0cf72dc621c527fff046a0167781f048931fa95067f8ff1abbf, not the05db... process-output prefix. validate.log closed SHA256 isa84d08f2f8c87e9d369712df008962d7535f58bbbeccac945f7846e8506d1d90; no second retained mismatch. No old validator/log/snapshot/source/test changes or test rerun occurred in this records step.
+- Tuple source repair: pending the authorized focused RED/GREEN and delta-budget checks; the original48PASS is not source acceptance or evidence of GPU handle reuse.

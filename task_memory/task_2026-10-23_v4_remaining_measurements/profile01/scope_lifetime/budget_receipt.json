@@ -3,5 +3,5 @@
     "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": 250,
     "tests/unit/test_cupti_scope_lifetime.py": 160
   },
-  "maintained_markdown_gross": 112
+  "maintained_markdown_gross": 126
 }
