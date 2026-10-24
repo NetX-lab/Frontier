@@ -1,0 +1,34 @@
+{
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/scope_acceptance_20261025_01/verify_retained.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/retained_binding.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "start_utc": "2026-10-24T19:49:25.703864+00:00",
+  "end_utc": "2026-10-24T19:49:25.766443+00:00",
+  "returncode": 0,
+  "seconds": 0.0622298838570714,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "script_sha256": "9ddc8684a5fce4823f0d84a07ee13f5bea0fe74237a896a5f33046c57d146eca",
+  "head": "0d0fe6487f194dd58a2e63adad60d476fa53efa4",
+  "gpu_operations": 0,
+  "full_audit_reruns": 0,
+  "files": {
+    "retained_binding.stdout": "ce8225f764ff844ed8008bffd5380b8abe639f4fbc9998b4a48ee748b6908859",
+    "retained_binding.stderr": "08a393cf2f1d0abee6cd74e2ff0f722ae5ffa127a6dca4cc4709cc486d355f02",
+    "retained_binding_source.txt": "9ddc8684a5fce4823f0d84a07ee13f5bea0fe74237a896a5f33046c57d146eca"
+  },
+  "output_sha256": "968969ad3105d3f60f6d22313e4fb29176f305893d772dd4ae898db657ce854c"
+}

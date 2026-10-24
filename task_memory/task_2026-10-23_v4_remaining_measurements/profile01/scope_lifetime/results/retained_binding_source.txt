@@ -1,0 +1,59 @@
+import hashlib
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+scope = Path(sys.argv[1])
+output = Path(sys.argv[2])
+repo = scope.parents[3]
+review_path = scope / 'results/review_runtime_r2.json'
+review = json.loads(review_path.read_text())
+checks = []
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def check(name, value):
+    checks.append({'name': name, 'pass': bool(value)})
+    assert value, name
+
+check('review_r2_json_sha256', sha(review_path) == '064089ba8d7adc8f1448e03486af62f678ac71aa090c04599f759aef674f77bf')
+check('review_r2_markdown_sha256', sha(scope / 'results/review_runtime.md') == 'cd6c20af15680efc32a3fc7e7e8864fb0245239d6e0e542f630f432c854c4524')
+mutable = {scope.parents[1] / name for name in ('requirements.md', 'plan.md', 'progress.md', 'summary.md')}
+mutable.update(scope / name for name in ('progress.md', 'summary.md'))
+retained = {}
+for name, expected in review['inspected_artifacts'].items():
+    path = Path(name)
+    if path in mutable:
+        continue
+    actual = {'sha256': sha(path), 'bytes': path.stat().st_size}
+    check('retained:' + name, actual == expected)
+    retained[name] = actual
+verification = review['verification']
+check('review_73_scalar_checks', len(verification['scalar_checks']) == 73 and all(r['pass'] for r in verification['scalar_checks']))
+check('review_17_negative_controls', len(verification['repaired_expression_negative_checks']) == 17 and all(r['rejected'] for r in verification['repaired_expression_negative_checks']))
+check('r1_all_closed', len(review['r1_findings']) == 3 and all(v.startswith('CLOSED:') for v in review['r1_findings'].values()))
+audit = json.loads((scope / 'results/primary_raw_audit_r2.json').read_text())
+check('primary_60_checks', len(audit['checks']) == 60 and all(r['pass'] for r in audit['checks']))
+check('five_joins_six_unmatched', len(audit['joins']) == 5 and audit['unmatched_created_count'] == 6)
+check('control_limit_preserved', audit['producer_control_verdict_preserved'] == 'UNVERIFIED' and audit['control'] == 'PASS_TOPOLOGY_OUTPUT_IDENTITY_ONLY')
+binding = json.loads((scope / 'results/execution_source_binding.json').read_text())
+check('execution_20_checks', len(binding['checks']) == 20 and all(binding['checks'].values()))
+check('gpu_attempt_spent', binding['gpu_attempts_used'] == 1 and binding['gpu_attempts_remaining'] == 0)
+seal = json.loads((scope / 'package_primary/root_seal.json').read_text())
+package = Path(seal['package'])
+manifest = json.loads((package / 'manifest.json').read_text())
+check('sealed_18_inputs', len(manifest['files']) == 18 and manifest['files'] == seal['inputs'])
+archive = scope / 'h800_scope_lifetime_probe_01'
+for relative, expected in manifest['files'].items():
+    check('executable_archive:' + relative, sha(package / relative) == expected == sha(archive / relative))
+check('archive_manifest', sha(package / 'manifest.json') == seal['manifest_sha256'] == sha(archive / 'manifest.json'))
+result = {'status': 'PASS_RETAINED_SCOPE_ACCEPTANCE_BINDINGS', 'observed_utc': datetime.now(timezone.utc).isoformat(),
+          'checks': checks, 'immutable_reviewed_artifacts': retained, 'mutable_document_paths_excluded': sorted(map(str, mutable)),
+          'method': 'Closed-file hashes and retained scalar receipts only; no audit/probe/unit/control/platform/GPU rerun.',
+          'full_audit_invocations': 0, 'gpu_operations': 0}
+with output.open('x') as stream:
+    json.dump(result, stream, indent=2)
+    stream.write('\n')
+print(json.dumps({'status': result['status'], 'checks': len(checks), 'retained_artifacts': len(retained), 'package_inputs': len(manifest['files'])}))

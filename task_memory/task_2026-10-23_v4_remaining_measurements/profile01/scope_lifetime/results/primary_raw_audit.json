@@ -1,0 +1,350 @@
+{
+  "status": "PASS_SCOPED_RAW_REPRODUCTION",
+  "observed_utc": "2026-10-24T19:09:41.797811+00:00",
+  "predicates": {
+    "P1": "PASS",
+    "P2": "PASS",
+    "P3": "PASS",
+    "P4": "PASS",
+    "P5": "PASS",
+    "P6": "PASS"
+  },
+  "checks": [
+    {
+      "name": "no_errors_or_fault",
+      "pass": true
+    },
+    {
+      "name": "stage_sequence",
+      "pass": true
+    },
+    {
+      "name": "stage_clock_order",
+      "pass": true
+    },
+    {
+      "name": "callback_rows_match_stage_sink",
+      "pass": true
+    },
+    {
+      "name": "subscription_closed",
+      "pass": true
+    },
+    {
+      "name": "callback_kind_closure",
+      "pass": true
+    },
+    {
+      "name": "window_sink_identity",
+      "pass": true
+    },
+    {
+      "name": "window_set",
+      "pass": true
+    },
+    {
+      "name": "full_original_tuple_8589934592",
+      "pass": true
+    },
+    {
+      "name": "kernel_type_and_source_graph_4294967296",
+      "pass": true
+    },
+    {
+      "name": "payload_scalar_identity_8589934592",
+      "pass": true
+    },
+    {
+      "name": "unique_fresh_scope_4294967296",
+      "pass": true
+    },
+    {
+      "name": "separate_thread_observations_4294967296",
+      "pass": true
+    },
+    {
+      "name": "full_original_tuple_8589934593",
+      "pass": true
+    },
+    {
+      "name": "kernel_type_and_source_graph_4294967297",
+      "pass": true
+    },
+    {
+      "name": "payload_scalar_identity_8589934593",
+      "pass": true
+    },
+    {
+      "name": "unique_fresh_scope_4294967297",
+      "pass": true
+    },
+    {
+      "name": "separate_thread_observations_4294967297",
+      "pass": true
+    },
+    {
+      "name": "full_original_tuple_8589934594",
+      "pass": true
+    },
+    {
+      "name": "kernel_type_and_source_graph_4294967298",
+      "pass": true
+    },
+    {
+      "name": "payload_scalar_identity_8589934594",
+      "pass": true
+    },
+    {
+      "name": "unique_fresh_scope_4294967298",
+      "pass": true
+    },
+    {
+      "name": "separate_thread_observations_4294967298",
+      "pass": true
+    },
+    {
+      "name": "full_original_tuple_8589934595",
+      "pass": true
+    },
+    {
+      "name": "kernel_type_and_source_graph_4294967299",
+      "pass": true
+    },
+    {
+      "name": "payload_scalar_identity_8589934595",
+      "pass": true
+    },
+    {
+      "name": "unique_fresh_scope_4294967299",
+      "pass": true
+    },
+    {
+      "name": "separate_thread_observations_4294967299",
+      "pass": true
+    },
+    {
+      "name": "full_original_tuple_8589934596",
+      "pass": true
+    },
+    {
+      "name": "kernel_type_and_source_graph_4294967300",
+      "pass": true
+    },
+    {
+      "name": "payload_scalar_identity_8589934596",
+      "pass": true
+    },
+    {
+      "name": "unique_fresh_scope_4294967300",
+      "pass": true
+    },
+    {
+      "name": "separate_thread_observations_4294967300",
+      "pass": true
+    },
+    {
+      "name": "source_clone_unique",
+      "pass": true
+    },
+    {
+      "name": "source_scope_coverage",
+      "pass": true
+    },
+    {
+      "name": "producer_derived_rows",
+      "pass": true
+    },
+    {
+      "name": "unmatched_count_only",
+      "pass": true
+    },
+    {
+      "name": "callbacks_before_capture_end",
+      "pass": true
+    },
+    {
+      "name": "single_negative_source_api_in_frozen_source",
+      "pass": true
+    },
+    {
+      "name": "default_false_lifetime",
+      "pass": true
+    },
+    {
+      "name": "observe_raw_trace_join",
+      "pass": true
+    },
+    {
+      "name": "observe_complete_topology",
+      "pass": true
+    },
+    {
+      "name": "direct_full_id_replay",
+      "pass": true
+    },
+    {
+      "name": "observe_close_before_kineto",
+      "pass": true
+    },
+    {
+      "name": "observe_trace_source_path",
+      "pass": true
+    },
+    {
+      "name": "control_raw_trace_join",
+      "pass": true
+    },
+    {
+      "name": "control_complete_topology",
+      "pass": true
+    },
+    {
+      "name": "control_close_before_kineto",
+      "pass": true
+    },
+    {
+      "name": "control_trace_source_path",
+      "pass": true
+    },
+    {
+      "name": "unsubscribed_control",
+      "pass": true
+    },
+    {
+      "name": "topology_identity",
+      "pass": true
+    },
+    {
+      "name": "numeric_identity",
+      "pass": true
+    },
+    {
+      "name": "shape_and_expected_outputs",
+      "pass": true
+    }
+  ],
+  "joins": [
+    {
+      "scope": "add_a",
+      "source_node": 905808832,
+      "source_full_id": 4294967296,
+      "clone_node": 905818312,
+      "clone_full_id": 8589934592,
+      "callback_ns": 3250936458839103,
+      "window_start": 3250936453094248,
+      "window_end": 3250936466228408
+    },
+    {
+      "scope": "mul_b",
+      "source_node": 905810728,
+      "source_full_id": 4294967297,
+      "clone_node": 905820208,
+      "clone_full_id": 8589934593,
+      "callback_ns": 3250936496865374,
+      "window_start": 3250936490868376,
+      "window_end": 3250936501622389
+    },
+    {
+      "scope": "add_c",
+      "source_node": 905812624,
+      "source_full_id": 4294967298,
+      "clone_node": 905822104,
+      "clone_full_id": 8589934594,
+      "callback_ns": 3250936510753501,
+      "window_start": 3250936506736101,
+      "window_end": 3250936515910810
+    },
+    {
+      "scope": "mul_d",
+      "source_node": 905814520,
+      "source_full_id": 4294967299,
+      "clone_node": 905824000,
+      "clone_full_id": 8589934595,
+      "callback_ns": 3250936523806533,
+      "window_start": 3250936520355510,
+      "window_end": 3250936529051860
+    },
+    {
+      "scope": "sub_out",
+      "source_node": 905816416,
+      "source_full_id": 4294967300,
+      "clone_node": 905825896,
+      "clone_full_id": 8589934596,
+      "callback_ns": 3250936537104465,
+      "window_start": 3250936533063081,
+      "window_end": 3250936542416982
+    }
+  ],
+  "thread_equalities_observed_only": [
+    {
+      "native_id": true,
+      "python_ident": true
+    },
+    {
+      "native_id": true,
+      "python_ident": true
+    },
+    {
+      "native_id": true,
+      "python_ident": true
+    },
+    {
+      "native_id": true,
+      "python_ident": true
+    },
+    {
+      "native_id": true,
+      "python_ident": true
+    }
+  ],
+  "created_rows": 11,
+  "unmatched_created_count": 6,
+  "control": "PASS_TOPOLOGY_OUTPUT_IDENTITY_ONLY",
+  "producer_control_verdict_preserved": "UNVERIFIED",
+  "manifest_sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+  "source_sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+  "audit_source_sha256": "0cec6d93c28408c46c07078c40a5293ffd9974470428841bad368a0a0a1f7414",
+  "raw_files": [
+    {
+      "bytes": 0,
+      "gid": 0,
+      "mode": "0o600",
+      "path": "diagnostics/fault.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uid": 0
+    },
+    {
+      "bytes": 15576,
+      "gid": 0,
+      "mode": "0o600",
+      "path": "diagnostics/stages.jsonl",
+      "sha256": "ee426997af0349e1510d3113525f1e6700781da4c536385e64744136aca6818e",
+      "uid": 0
+    },
+    {
+      "bytes": 18882,
+      "gid": 0,
+      "mode": "0o644",
+      "path": "probe/control_trace.json",
+      "sha256": "a3815882be30a2ac83b50577b508e74cb5211cc06e66fb81327cf60d5c8f32bc",
+      "uid": 0
+    },
+    {
+      "bytes": 18845,
+      "gid": 0,
+      "mode": "0o644",
+      "path": "probe/observe_trace.json",
+      "sha256": "fe8c03c857ec412fbb5dd02335b2454e4ac3b25d3fa88b72d504c0786a6fbee8",
+      "uid": 0
+    },
+    {
+      "bytes": 171580,
+      "gid": 0,
+      "mode": "0o644",
+      "path": "probe/probe_report.json",
+      "sha256": "e988ee758ae7e08a52ecd996277b8b574f7113511f58d3ef9d4ddad77812e586",
+      "uid": 0
+    }
+  ],
+  "limits": "One image/driver/shape live-TLS diagnostic only. No native ownership, timing/non-perturbation, dependency, cost or reference admission."
+}

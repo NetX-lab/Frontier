@@ -1,0 +1,28 @@
+{
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_scope_lifetime_audit.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/primary_raw_audit_r2.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "start_utc": "2026-10-24T19:17:30.912977+00:00",
+  "end_utc": "2026-10-24T19:17:31.035831+00:00",
+  "returncode": 0,
+  "seconds": 0.12284475704655051,
+  "python": "3.10.6",
+  "source_sha256": "539da5af58b362d0ecdea09af8e9c6c3157f21af7f530fb12c3629ffce658f93",
+  "stdout_sha256": "7ae53936d97f7e2ec7d406f088a66a19a0f2940ad6b40bd70140d7a0cbc19383",
+  "stderr_sha256": "1f9a285c1212ad66a94adccdfe08d97df9f7433e6f98fa4b028e0f2ca03b057d",
+  "gpu_operations": 0,
+  "purpose": "Close three audit coverage omissions; old raw audit/logs preserved; no GPU or full trace rerun."
+}

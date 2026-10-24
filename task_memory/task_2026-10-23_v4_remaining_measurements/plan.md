@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | S5standalone runtime accepted;first metrics pilot FAILED and remaining seven held;added one independent metrics-tail diagnosis before another correction. |
 | 2026-10-25 | Resumed two independent frontiers with explicit package/GPU and metrics-correction ownership and invocation limits. |
 | 2026-10-25 | Close reviewed package and measurement records for handoff; no new experiment or GPU submission during closeout. |
 | 2026-10-24 | R3/R4mechanics reproduced by primary; correct semantic temporary partitions and diagnose8P0audit timeouts before full32acceptance. |
@@ -40,15 +41,14 @@
 
 ### Current continuation — 2026-10-25
 
-1. Primary: verify frozen executable package and archive -> fresh local storage/project-quota/NFS + personal-cloud destination + personal StepMind quota/capacity receipts -> separate root seal -> existing once-only1H800/600s observe/control -> P1–P6 raw audit/terminal/source binding -> scoped acceptance and commit.
-2. Parallel metrics owner: frozen seam -> <=200-line metrics adapter/<=180-line exact unit controls -> primary two complete trace controls + independent Spec/Standards -> new once-onlyP0rank0 pilot -> remaining seven once each at60s/30GiB/max2 -> exact outputs/retained errors -> R5 status and scoped commit.
-- Verified source milestone: P0adapter120/200, tests175/180, both reviews No findings, primary8unit PASS and two exact whole-output controls PASS. Next is one P0rank0 pilot; remaining7 wait for complete pilot, within the unchanged envelope.
-3. Dependency: `{GPU scoped runtime audit, complete P0 outputs} -> applicable R6/R7 synthesis`; neither line proves native serving ownership or costs. Original S1/S2/S3 CPU acceptances, R3/R4, native06R4 and all failed runs remain accepted/preserved within their original limits.
+1. **Completed primary scope line:** frozen package/archive -> fresh storage/project-quota/NFS/personal-cloud destination and StepMind quota/capacity receipts -> separate root seal -> unique1H800/600s observe/control -> R2raw/full-source/terminal/GPU review -> [limited S5acceptance](profile01/scope_lifetime/results/primary_acceptance.json). GPUattempts spent1/1;no further runtime invocation. P1–P6 qualify only this ordinary sealed pointwise probe;control supports topology/output identity only.
+2. **Completed source/failed execution line:** frozen metrics seam ->120/200-line adapter/175/180-line exact unit controls -> primary two complete trace controls+independent Spec/Standards -> sole P0rank0pilotFAILED124/no finalJSON. Source/controlcommit0d0fe648 remains accepted;affected allocation used1/8,the seven conditional ranks NOT_RUN. R5remains24/32.
+3. **Current P0frontier:** retained failure/source inspection -> new<=140-line sparse metrics-tail timer -> one tiny AST/output control+primary source review -> one fresh P0rank0diagnostic at60s/actual30GiB/max2 -> measured group-build/sort/union/GC costs -> separately recorded bounded correction/control/affected allocation. No new correction or full-rank/control allowance is created by the diagnostic. Source generation and scope-acceptance closeout proceed in parallel;write sets are disjoint.
+4. Dependency: complete actual32-rank outputs -> R5trace acceptance -> R6full review/primary synthesis -> R7limited diagnostic archive. Scoped GPU result can inform only its own P1–P6claims;neither line supplies native serving ownership,dependencies or costs. R3/R4metadata,S1/S2,Native06R4 and original failures remain accepted/preserved within their limits.
 
-Primary owns requirements/plan/progress/summary and package_primary/fresh gates, seal/submission/results acceptance; metrics owner writes only its two named source/test paths and metrics_correction/owner/. No shared write paths or platform work by subagents. Original handoff below is the committed starting snapshot.
+Primary owns requirements/plan/progress/summary,scope results acceptance,metrics_tail/primary/execution and all GPU/platform work. Hooke owns only tests/analysis/v4_trace_audit_metrics_timing.py and metrics_tail/owner/ within140source/90Markdown;no shared write paths. The original metrics source/tests and spent controls stay frozen during diagnosis. Completion criteria remain full output/source/identity/unchanged metrics and >=3useful steps,not successful exit or a complete index alone.
 
-
-### Current handoff frontier — 2026-10-25
+### Historical handoff frontier — 2026-10-25, before fresh gates
 
 - completed: R3 retained-run and R4 metadata-only acceptance; S1/S2 CPU/source acceptance. S3 mirrored package is generated once and both package reviews report No findings. Locked-image CPU and actual SDK launch-entry controls pass, without submission.
 - completed: package integrated by `08b38905`; [primary package archive](profile01/scope_lifetime/package_primary/primary_acceptance.json) accepts CPU preparation only. Fresh storage/quota/destination, seal and the existing single 1-H800/600-second attempt transfer to the next session. Preserve the original package worktree because config and launcher use its absolute paths.

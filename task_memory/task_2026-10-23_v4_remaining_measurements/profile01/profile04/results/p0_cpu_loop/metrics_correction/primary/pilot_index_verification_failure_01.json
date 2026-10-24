@@ -1,0 +1,11 @@
+{
+  "status": "AUXILIARY_VERIFICATION_FAIL",
+  "observed_utc": "2026-10-24T19:33:42.914249+00:00",
+  "returncode": 1,
+  "seconds_observed": 5.8708,
+  "error": "StopIteration at inline verification line51",
+  "cause": "The preserved loading-GC receipt uses files[path] -> sha256; the first verification looked for outputs[].path. The native audit and retained bytes were not changed.",
+  "traceback": "Traceback (most recent call last):\n  File \"<stdin>\", line 51, in <module>\nStopIteration\n",
+  "scope": "Retained index inspection only; zero full trace/audit or GPU invocations.",
+  "correction": "Use the inspected original files mapping, require its exact index hash and rerun only the bounded index inspection."
+}

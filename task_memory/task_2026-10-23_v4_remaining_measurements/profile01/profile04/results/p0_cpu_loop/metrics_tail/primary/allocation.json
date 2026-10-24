@@ -1,0 +1,42 @@
+{
+  "decision": "D-V4-P0-AUDIT-METRICS-TAIL-DIAGNOSIS",
+  "recorded_utc": "2026-10-24T19:47:40.194861+00:00",
+  "primary_head": "0d0fe6487f194dd58a2e63adad60d476fa53efa4",
+  "owner_source": "tests/analysis/v4_trace_audit_metrics_timing.py",
+  "owner_source_gross_cap": 140,
+  "owner_records": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/owner",
+  "owner_markdown_gross_cap": 90,
+  "source_byte_frozen": "tests/analysis/v4_trace_audit_metrics.py",
+  "source_sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+  "tiny_cpu_ast_equivalence_ceiling": 1,
+  "complete_trace_control_ceiling": 0,
+  "p0_diagnostic_invocation_ceiling": 1,
+  "affected_rank_invocation_ceiling": 0,
+  "automatic_retry": false,
+  "timeout_seconds": 60,
+  "actual_memory_limit_bytes": 32212254720,
+  "max_rank_concurrency": 2,
+  "scratch": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01",
+  "execution_owner": "primary",
+  "forbidden": [
+    "spent controls or pilot rerun",
+    "accepted adapter edit",
+    "loader or GC policy change",
+    "event or attribution change",
+    "GPU/platform/network operation",
+    "R5 or native/cost admission"
+  ],
+  "precondition": "Primary source/AST/tiny-fixture evidence check before the sole timing diagnosis",
+  "hypotheses": [
+    "group-membership construction cost",
+    "per-membership union recurrence cost",
+    "GC pause overlaps batch",
+    "pre-metrics deadline consumption"
+  ],
+  "old_affected_allocation": {
+    "used": 1,
+    "ceiling": 8,
+    "remaining_started": 0,
+    "pilot_status": "FAILED_NO_FINAL_JSON"
+  }
+}

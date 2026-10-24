@@ -1,0 +1,81 @@
+{
+  "charged_group": "codesign",
+  "controls_or_submissions": 0,
+  "creation_timestamp": "2026-10-24T18:12:28Z",
+  "creator": "i-fengyicheng",
+  "finish_time": "2026-10-24T18:13:09Z",
+  "job_name": "exp-1025-021228-212042",
+  "message": "RJob succeeded",
+  "observed_utc": "2026-10-24T18:14:17.058035+00:00",
+  "operation": "read_only_personal_python_api",
+  "phase": "Succeeded",
+  "preemptible": "no",
+  "reason": "RJobSucceeded",
+  "replicas": [
+    {
+      "container_statuses": [
+        {
+          "containerID": "containerd://b352d10a66acf2e985886ff4de93f1ae0c29274e4a691cafaf4137af1261e125",
+          "image": "sha256:609a5b463503f663bedc6a8045ef2aae530bf59c6dc20371c84b1d302fb6f9ca",
+          "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "lastState": {},
+          "name": "default",
+          "ready": false,
+          "restartCount": 0,
+          "started": false,
+          "state": {
+            "terminated": {
+              "containerID": "containerd://b352d10a66acf2e985886ff4de93f1ae0c29274e4a691cafaf4137af1261e125",
+              "exitCode": 0,
+              "finishedAt": "2026-10-24T18:13:08Z",
+              "reason": "Completed",
+              "startedAt": "2026-10-24T18:12:55Z"
+            }
+          }
+        }
+      ],
+      "finish_time": null,
+      "gpu_names": [],
+      "log_code": 200,
+      "log_path": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/platform_01.exp-1025-021228-212042-cfcd2084.log",
+      "log_rows": 4,
+      "message": "",
+      "name": "exp-1025-021228-212042-cfcd2084",
+      "node_name": "gpu-h800-0158.host.platform.shaipower.com",
+      "phase": "Succeeded",
+      "reason": null,
+      "start_time": "2026-10-24T18:12:35Z"
+    }
+  ],
+  "start_time": null,
+  "stop_annotations": {},
+  "tasks": {
+    "default": {
+      "containers": [
+        {
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "name": "default",
+          "resources": {
+            "limits": {
+              "cpu": "16",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "64000Mi",
+              "nvidia.com/gpu": "1",
+              "rdma/mlnx_shared": "8"
+            },
+            "requests": {
+              "cpu": "16",
+              "memory": "64000Mi",
+              "nvidia.com/gpu": "1"
+            }
+          },
+          "security_context": null
+        }
+      ],
+      "filestore_volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+      "replicas": 1,
+      "restart_policy": "Never",
+      "security_context": {}
+    }
+  }
+}

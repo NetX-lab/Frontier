@@ -1,0 +1,531 @@
+{
+  "status": "PASS_RETAINED_SCOPE_ACCEPTANCE_BINDINGS",
+  "observed_utc": "2026-10-24T19:49:25.756886+00:00",
+  "checks": [
+    {
+      "name": "review_r2_json_sha256",
+      "pass": true
+    },
+    {
+      "name": "review_r2_markdown_sha256",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/AGENTS.md",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/requirements.md",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/plan.md",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/scope_lifetime_design.md",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/review_runtime_r1.md",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/audit_allocation.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/primary_raw_audit_r2.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw_audit_receipt_r2.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw_audit_r2.stdout",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw_audit_r2.stderr",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/execution_source_binding.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/cloud_inventory.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/download_receipt.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/root_seal.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/package_inventory.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/platform_02.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/platform_02.exp-1025-021228-212042-cfcd2084.log",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/launcher_result.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/launcher_01.raw.log",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_scope_lifetime_audit.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_serve_profile.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/diagnostics/fault.log",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/diagnostics/stages.jsonl",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/probe/control_trace.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/probe/observe_trace.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/probe/probe_report.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/manifest.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/config.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/build_package.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_image_receipt",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_image_report",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_manifest",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_seal",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/image_check.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/launcher_template",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/profile_plan.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/source_acceptance",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/template_config",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/launch.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/source_lock.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/tests/comparison/calibration/native_full_structure.py",
+      "pass": true
+    },
+    {
+      "name": "retained:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/tests/comparison/calibration/native_serve_profile.py",
+      "pass": true
+    },
+    {
+      "name": "review_73_scalar_checks",
+      "pass": true
+    },
+    {
+      "name": "review_17_negative_controls",
+      "pass": true
+    },
+    {
+      "name": "r1_all_closed",
+      "pass": true
+    },
+    {
+      "name": "primary_60_checks",
+      "pass": true
+    },
+    {
+      "name": "five_joins_six_unmatched",
+      "pass": true
+    },
+    {
+      "name": "control_limit_preserved",
+      "pass": true
+    },
+    {
+      "name": "execution_20_checks",
+      "pass": true
+    },
+    {
+      "name": "gpu_attempt_spent",
+      "pass": true
+    },
+    {
+      "name": "sealed_18_inputs",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:config.json",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/build_package.py",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/graph_image_receipt",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/graph_image_report",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/graph_manifest",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/graph_seal",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/image_check.py",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/launcher_template",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/profile_plan.json",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/source_acceptance",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:inputs/template_config",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:launch.py",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:source_lock.json",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:tests/comparison/calibration/native_full_structure.py",
+      "pass": true
+    },
+    {
+      "name": "executable_archive:tests/comparison/calibration/native_serve_profile.py",
+      "pass": true
+    },
+    {
+      "name": "archive_manifest",
+      "pass": true
+    }
+  ],
+  "immutable_reviewed_artifacts": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/AGENTS.md": {
+      "sha256": "82354337fec8131194f31ad8f09d298d2ef6e3ad48282b0b4bd46e87b5a57249",
+      "bytes": 62494
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/requirements.md": {
+      "sha256": "faedecc3a642c5a8d487981d389b836e536f929938a35c81866bed1917bbd209",
+      "bytes": 2248
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/plan.md": {
+      "sha256": "9ce664a8abe2a6f2fd032bc78e9dbfa053f3c01e1f9b2c4a707c124ab057ebdd",
+      "bytes": 1788
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/scope_lifetime_design.md": {
+      "sha256": "e8469d17ea4ffed882523ebcc50f2614dafd411554b019bb3d3713099bf7b3bd",
+      "bytes": 5449
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json": {
+      "sha256": "89232a9e1ee60e5d57859dd707796a85b3d99ba89ad309d98aab3c93b2ed6b0b",
+      "bytes": 2557
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json": {
+      "sha256": "f639ab3351d436e32a6e2233f0aea5a18f989bb3927e1292a1ff062a7b1562bc",
+      "bytes": 2386
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": {
+      "sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+      "bytes": 13796
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/review_runtime_r1.md": {
+      "sha256": "8bf113280df85ac05bd2986e6e0f1e5a0afe3e7bda96c14d59df8ebe1df6f242",
+      "bytes": 5241
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/audit_allocation.json": {
+      "sha256": "68233741d60de6942daa9301844030bd14ec832796f51594c7ab76c5f77500b3",
+      "bytes": 987
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/primary_raw_audit_r2.json": {
+      "sha256": "a7dcdcbed3ac1fa50fe8fcd97a1142184df117faf3fa34bff8b90cefbbdf3584",
+      "bytes": 8344
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw_audit_receipt_r2.json": {
+      "sha256": "a5b768ba05179d5a0eeceb3159390ef7bd3c397823eb380bf7ea9fd8fe39851c",
+      "bytes": 1215
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw_audit_r2.stdout": {
+      "sha256": "7ae53936d97f7e2ec7d406f088a66a19a0f2940ad6b40bd70140d7a0cbc19383",
+      "bytes": 85
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw_audit_r2.stderr": {
+      "sha256": "1f9a285c1212ad66a94adccdfe08d97df9f7433e6f98fa4b028e0f2ca03b057d",
+      "bytes": 67
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/execution_source_binding.json": {
+      "sha256": "a8bcd4e22bb5816c1d244947040f37b19fdce6ae5759fe2aa641c88eb37cad6c",
+      "bytes": 2349
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/cloud_inventory.json": {
+      "sha256": "9eb11fbd97ecce24b0b7c7e41219fd2c10be4a8a6c4757abd7f630778cf99809",
+      "bytes": 1479
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/download_receipt.json": {
+      "sha256": "3be010ccd8cb5664f8b1802a18ef4443e9e6e593cca2fdb50095de730d6f38c4",
+      "bytes": 796
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/root_seal.json": {
+      "sha256": "44871474bc9018d2b3c0256a5e43f648b489c3a5ea71214c8956b7067490580a",
+      "bytes": 5918
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/package_inventory.json": {
+      "sha256": "dafbcb7cc266e018ba4c41efc4fe52e73c4ac47fc6fcd7aa8928d2a187f90165",
+      "bytes": 4522
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/platform_02.json": {
+      "sha256": "f036a63b0f2dad146c58a9d2c5ce8c1ceb558ba0305c90d8bb2a5a7a06c67416",
+      "bytes": 3081
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/platform_02.exp-1025-021228-212042-cfcd2084.log": {
+      "sha256": "fc18505c0803a545303d87e1d205da21e9390d80ba95d74b235a7a3980417d1c",
+      "bytes": 2102
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/launcher_result.json": {
+      "sha256": "e6fd33630b4792b705e10b47517298c223a86890d8a7418b2d88e9c47ee3b7eb",
+      "bytes": 2430
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/launcher_01.raw.log": {
+      "sha256": "515f434a7b77af8970a55b17161dd4a7661bd0e062ac61ed2cabac85f406cc59",
+      "bytes": 3620
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_scope_lifetime_audit.py": {
+      "sha256": "539da5af58b362d0ecdea09af8e9c6c3157f21af7f530fb12c3629ffce658f93",
+      "bytes": 10156
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py": {
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+      "bytes": 34078
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_serve_profile.py": {
+      "sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+      "bytes": 26078
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/diagnostics/fault.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/diagnostics/stages.jsonl": {
+      "sha256": "ee426997af0349e1510d3113525f1e6700781da4c536385e64744136aca6818e",
+      "bytes": 15576
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/probe/control_trace.json": {
+      "sha256": "a3815882be30a2ac83b50577b508e74cb5211cc06e66fb81327cf60d5c8f32bc",
+      "bytes": 18882
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/probe/observe_trace.json": {
+      "sha256": "fe8c03c857ec412fbb5dd02335b2454e4ac3b25d3fa88b72d504c0786a6fbee8",
+      "bytes": 18845
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/probe/probe_report.json": {
+      "sha256": "e988ee758ae7e08a52ecd996277b8b574f7113511f58d3ef9d4ddad77812e586",
+      "bytes": 171580
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/manifest.json": {
+      "sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+      "bytes": 2252
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/config.json": {
+      "sha256": "adc4e6af3f2ab4179d1722b23ee61bcd58c80f0c13fc6b21d9543c199b9e1103",
+      "bytes": 2182
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/build_package.py": {
+      "sha256": "a42524884ce480001f3cd44c2e348da94ae77b941d12a9283409926353ed7711",
+      "bytes": 8432
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_image_receipt": {
+      "sha256": "da9106453b0d9b291cddb6af6fe17f004a3c6ebed4069f00df1b8b905671f32c",
+      "bytes": 999
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_image_report": {
+      "sha256": "00e17cb6c58b45cdfb3f93c4947de8ad750c4ae08bd5b4ec870b258f9a529528",
+      "bytes": 9945
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_manifest": {
+      "sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146",
+      "bytes": 984
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_seal": {
+      "sha256": "3226e380175e5b573e30d2367b7be3130725b70e6e12a98177929e5c1985f2ca",
+      "bytes": 5833
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/image_check.py": {
+      "sha256": "002fb52b9b08c246fe01fcedefd4002d14cfea690540680de40feec481fe2639",
+      "bytes": 4102
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/launcher_template": {
+      "sha256": "2d84970c4bec06533942ceafbfd6a7a6eb729c6ee12e73fe594faaf797ee493d",
+      "bytes": 3037
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/profile_plan.json": {
+      "sha256": "90800cbed3a90453b045a5fdfbd4517be4201972e8e136e0c29187ebd85abc97",
+      "bytes": 1027
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/source_acceptance": {
+      "sha256": "f639ab3351d436e32a6e2233f0aea5a18f989bb3927e1292a1ff062a7b1562bc",
+      "bytes": 2386
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/template_config": {
+      "sha256": "6c94d88d6b24e09093dc9b90f5e2b48f41c661f0c22d858c2c0059738929d25e",
+      "bytes": 1328
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/launch.py": {
+      "sha256": "b3814788c5147f98ae60c7f023701b0291af17b1a89b94bc6ba6aaf5d6c0d71b",
+      "bytes": 3801
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/source_lock.json": {
+      "sha256": "cd6db51a0423a2b4cbb97a97db0f2954e2fdc090086da3eed1b85bf8d5e52f4b",
+      "bytes": 8251
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py": {
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+      "bytes": 34078
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": {
+      "sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+      "bytes": 13796
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json": {
+      "sha256": "89232a9e1ee60e5d57859dd707796a85b3d99ba89ad309d98aab3c93b2ed6b0b",
+      "bytes": 2557
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/tests/comparison/calibration/native_full_structure.py": {
+      "sha256": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+      "bytes": 53427
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/tests/comparison/calibration/native_serve_profile.py": {
+      "sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+      "bytes": 26078
+    }
+  },
+  "mutable_document_paths_excluded": [
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/progress.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/summary.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/summary.md"
+  ],
+  "method": "Closed-file hashes and retained scalar receipts only; no audit/probe/unit/control/platform/GPU rerun.",
+  "full_audit_invocations": 0,
+  "gpu_operations": 0
+}

@@ -3,15 +3,18 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Primary accepted S5standalone GPU evidence after R2closure and79retained bindings;all native/cost limits remain. |
 | 2026-10-24 | Completed S1/S2 owner checks/source5e2fe861; this records archive is the final delivery boundary. |
 | 2026-10-24 | Completed the authorized P2 closed-log correction0490c33d and CPU tuple repaird55782d7; root acceptance pending. |
 | 2026-10-24 | Root accepted S1/S2 after complete dual review,26raw bindings and two independent50-case replays; S3/S4 remain separate. |
 
-## Primary current acceptance — 2026-10-24
+## Primary current acceptance — 2026-10-25
 
 - completed S1/S2: [primary_acceptance.json](primary_acceptance.json) is ACCEPTED_CPU_SOURCE_WITH_LIMITS. Tuple/hash findings and complete13-file repairdiff coverage gaps CLOSED in both reviews. Actual composed252source/179tests within265/185; original48-case/failure evidence below remains historical.
 - completed independent execution: owner-source candidatee081d5e8 and mergedd3f9bbcd each50PASS/0failures/errors/skips,25fixtureexports, CUDAuninitialized and actual30GiB; all selected source/native/runtime/45sealed04 input bytes unchanged. [Root raw closure](root_raw_binding_closure.json) rehashes26retained bindings/22raw artifacts.
-- pending S3/S4: separately allocated package/image/SDK and one bounded GPU observe/control. No actual TLS/lifetime, native integration/ownership, non-perturbation or cost/reference qualification is implied by CPU/source acceptance.
+- completed S3/S4: mirrored package generated once/merged08b38905,18frozen inputs and67pins;fresh gates/root seal0f2fb6cd preceded uniqueexp-1025-021228-212042. Succeeded/Completed/exit0/restart0/launcher0 on original NFS/image/personal1H800;five outputs224883B hash-exact. Allocation spent1/1;original executable worktree/absolute paths remain frozen.
+- completed S5: [runtime decision](results/primary_acceptance.json) ACCEPTED_SINGLE_IMAGE_SCOPE_LIFETIME_WITH_LIMITS;primaryR2raw60checks/5full-ID joins/6unmatched and20execution bindings;independentR2 73scalar checks/17negative rejections closes threeR1omissions. Fresh79bindings/49immutable review artifacts/18executable-and-archive input matches,0.062230s;[GPU report](results/test_report_2026-10-25_scope_lifetime_gpu.md). No accepted source/audit/probe/control/GPU rerun during closeout.
+- limits: defaultFalse live-TLS delivery/freshness/full-ID correspondence qualifies only this sealed1024-element pointwise probe. Thread equality is observation;controlUNVERIFIED original field stays/topology-output only. Six unmatched causes UNKNOWN;driverreleaseUNRECORDED/API/CUPTItelemetry. Native serving compiled/breakable ownership,dependencies,timing/non-perturbation,cost/reference still unaccepted;P0/R5/R6/R7 continue independently.
 
 ## Historical owner delivery and repair checkpoints
 
