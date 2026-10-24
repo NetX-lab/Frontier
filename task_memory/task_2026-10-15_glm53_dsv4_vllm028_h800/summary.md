@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
 | 2026-10-24 | W128-PROFILE04-STAGE-DOCS: archived one submitted profile04 attempt and dated Starting/unassigned snapshot without runtime success or cost admission; original failed run and full-ticket gates retained. |
 | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: archived current profile03 FAILED and limited offline diagnosis; preserved Starting checkpoints, accepted captures and full05/09/19 OPEN. |
 | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: archived limited graph correspondence acceptance and merged/sealed profile03 Starting; runtime, placement, transport and full-ticket gates remain open. |
@@ -83,9 +84,18 @@
 
 ## Final state — current (2026-10-24)
 
-Active acceptance remains DSV4 only; GLM remains PAUSED_PENDING_USER_APPROVAL. Official mean client TTFT/TPOT/E2E, total THPT and30% promotion/10% final gates are unchanged. Current execution pointer: [Profile04 submission milestone](progress.md#profile04-submission-milestone--2026-10-24).
+Active acceptance remains DSV4 only; GLM remains PAUSED_PENDING_USER_APPROVAL. Official mean client TTFT/TPOT/E2E, total THPT and30% promotion/10% final gates are unchanged. Current execution pointer: [Profile04 terminal audit frontier](progress.md#profile04-terminal-audit-frontier--current-2026-10-24).
 
 ### GPU stream acceptance and active DP slice — current (2026-10-24)
+
+#### Profile04 terminal audit frontier — current (2026-10-24)
+
+Fixture acceptedb0856975 (source6abd2d8e/records0d5b0d6e), primary145PASS each worktree/189immutable unchanged; native capture prerequisite accepted5a580948 with limits, no per-op ownership. [Authoritative current summary](../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24) binds execution-only profile04/attempt1/1/original45inputs/runtime1437ace6:4Succeeded/exit0/restart0, actual0030/0158/0187/0574 H800 hosts/32UUIDs,432success/0failed/1024delta IDs+usage,202hash-identical files/6,024,578,382B/codesign/non-preemptible.
+R3 retained run-data/R4 metadata are [accepted with limits](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json):193 primary run checks/99bindings/token-negative, P2 re-review CLOSED and corrected32-rank output byte-identical8ba69802…,80 direct joins/1320 sampling unchanged. No whole DP alignment/trace-ID acceptance;13 childSIGKILLs and UNKNOWN NET/IB/Socket/workerbinary rehash remain.
+R5 FAILED/INCOMPLETE24/32: all8P0 original60s timeouts preserved, useful P1/D0/D1=4/61/61 per rank. GC telemetry measures15.836seconds completed pauses; one post-load freeze passes exact decode comparison but still times out on P0, loading47.129seconds/363354 partial lines. No complete kernel-stream mapping, limit increase, GPU retry or frozen-source/raw/package edit.
+Current frontier: `bounded P0 load-cost follow-up decision ‖ S1 tuple/hash repair -> re-review -> primary CPU replay`; R5 -> R6 -> R7 open. S1 delivered5e2fe861/272db0bd/owner48 CPU PASS but not accepted; repair caps265source/185tests and seven bindings. Single1H800/600s observe/control NOT submitted, package/image/runtime/native gates separate. Full05/09/19 OPEN, no serving/reference/cost/captured-operator/dependency admission; GLM PAUSED/CPU-overhead last, prior evidence unchanged.
+
+#### Historical submission checkpoint — 2026-10-24 09:49Z
 
 #### Profile04 submission milestone — 2026-10-24
 

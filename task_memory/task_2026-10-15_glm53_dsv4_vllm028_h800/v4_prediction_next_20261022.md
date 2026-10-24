@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
 | 2026-10-24 | W128-PROFILE04-STAGE-DOCS: next dependency is the single submitted profile04 attempt's actual runtime/data verification; dated Starting only, prior failures and Sections1–8 unchanged. |
 | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current dependency is FAILED profile03/offline synthesis, not Starting monitoring; accepted captures, prior annotations and Sections1–8 unchanged. |
 | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: next dependency is Starting profile03 runtime/coverage audit after limited graph acceptance and merged/sealed package; Sections1–8 unchanged. |
@@ -25,9 +26,18 @@
 | 2026-10-23 | W128-V4-INPUT-INTEGRATION-RECORDS: updated only §8 private-input implementation statements and current pointers after merged732406aa isolated admission; earlier caller/total-authority audit and §§1–7 retained as history. |
 | 2026-10-23 | W128-H-CLOSURE-DOCS: recorded accepted H CPU collector/merged64f3c950, G2 replay profiling/sampling controls and the adopted kernel-only route; all original §§1–8 bytes remain historical evidence. |
 
-Current recorded milestones: [limited stream acceptance and active DP slice](progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24), [accepted diagnostic profile02/isolated MoE data](progress.md#profile02-and-local-moe-acceptance--current-2026-10-24) and Q2a ACCEPTED_ISOLATED_DATA/901ef960. Consumer/native qualifications still open under standing H800 authority. Earlier dated pending/current snapshots and Sections1–8, including caller/total-authority conclusions, remain historical evidence. Section8's total-authority choice is superseded by D-V4-KERNEL-ONLY-GPU-COST in [requirements](../task_2026-10-23_v4_remaining_measurements/requirements.md): per-operator KERNEL_ONLY plus evidenced native GPU dependencies, not overlapping sums or an unexplained CPU gap. No new source/serving admission or authority follows from this sync.
+Current execution pointer: [Profile04 terminal audit frontier](progress.md#profile04-terminal-audit-frontier--current-2026-10-24); limited stream/profile02/isolated MoE/Q2a ACCEPTED_ISOLATED_DATA/901ef960 retain their acceptances. Consumer/native qualifications still open under standing H800 authority. Earlier dated pending/current snapshots and Sections1–8, including caller/total-authority conclusions, remain historical evidence. Section8's total-authority choice is superseded by D-V4-KERNEL-ONLY-GPU-COST in [requirements](../task_2026-10-23_v4_remaining_measurements/requirements.md): per-operator KERNEL_ONLY plus evidenced native GPU dependencies, not overlapping sums or an unexplained CPU gap. No new source/serving admission or authority follows from this sync.
 
 ## GPU stream acceptance and active DP slice — current (2026-10-24)
+
+### Profile04 terminal audit frontier — current (2026-10-24)
+
+[Authority/evidence](../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24): fixture acceptedb0856975/source6abd2d8e/records0d5b0d6e/primary145PASS each/189immutable unchanged; capture prerequisite accepted5a580948 with limits/no per-op ownership. Profile04 GPU attempt1/1/original45inputs/runtime1437ace6:4Succeeded/exit0/restart0/actual0030/0158/0187/0574 H800 hosts/32UUIDs/432success/0failed/1024delta IDs+usage/202hash-identical files/6,024,578,382B/codesign/non-preemptible.
+R3 retained run-data/R4 metadata are [accepted with limits](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json):193 primary run checks/99bindings/token-negative, P2 re-review CLOSED and corrected32-rank output byte-identical8ba69802…,80 direct joins/1320 sampling unchanged. No whole DP alignment/trace-ID acceptance;13 childSIGKILLs and UNKNOWN NET/IB/Socket/workerbinary rehash remain.
+R5 FAILED/INCOMPLETE24/32: all8P0 original60s timeouts preserved, useful P1/D0/D1=4/61/61 per rank. GC telemetry measures15.836seconds completed pauses; one post-load freeze passes exact decode comparison but still times out on P0, loading47.129seconds/363354 partial lines. No complete kernel-stream mapping, limit increase, GPU retry or frozen-source/raw/package edit.
+Next: `bounded P0 load-cost follow-up decision ‖ S1 tuple/hash repair -> re-review -> primary CPU replay`; R5 -> R6 -> R7 open. S1 delivered5e2fe861/272db0bd/owner48 CPU PASS but not accepted; repair caps265source/185tests and seven bindings. Single1H800/600s observe/control NOT submitted, package/image/runtime/native gates separate. Full05/09/19 OPEN, no serving/reference/cost/captured-operator/dependency admission; GLM PAUSED/CPU-overhead last and original Sections1–8 unchanged.
+
+### Historical submission checkpoint — 2026-10-24 09:49Z
 
 ### Profile04 submission milestone — 2026-10-24
 
