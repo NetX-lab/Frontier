@@ -71,6 +71,22 @@ def test_actual_range_callback_and_full_ids_join(case):
         case.value.ids.node_id(11)
 
 
+@pytest.mark.parametrize("different_id", [True, False])
+def test_created_tuple_disambiguates_same_handle_evidence(case, different_id):
+    rows = case.report["callback_capture"]["events"]
+    source = next(row for row in rows if row["callback_id"] == 13)
+    query = case.value.ids.node_id
+    def node_id(handle):
+        observed = query(handle)
+        return 2**62 + 31 if different_id else observed
+    case.value.ids.node_id = node_id
+    case.dispatch(13, node=source["node"], graph=source["graph"])
+    subject.analyze(case.report, case.events)
+    assert case.report["verdict"] == ("PASS" if different_id else "UNVERIFIED")
+    assert case.report["unmatched_created_count"] == (2 if different_id else 1)
+    assert len(rows) == 13
+
+
 @pytest.mark.parametrize("kind,field,value", [
     ("source", "scope", "stale_same_tid"), ("source", "monotonic_ns", "closed"),
     ("window", "slot", 4), ("clone", "original_node_id", 2**62 + 1),
@@ -107,6 +123,9 @@ def test_incomplete_callbacks_or_trace_preserve_evidence(case, fault, monkeypatc
             collection.append(copy.deepcopy(row))
     subject.analyze(case.report, case.events)
     assert case.report["verdict"] == ("NEGATIVE_LIVE_TLS_ROUTE" if fault == "ambiguous" else "UNVERIFIED")
+    if fault == "query":
+        assert "node_id" not in collection[-1] and len(collection) == 13
+        assert case.report["unmatched_created_count"] == 2
 
 
 def test_other_thread_has_distinct_identities_and_no_live_tls(case):

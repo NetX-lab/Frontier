@@ -121,8 +121,9 @@ def analyze(report, events):
     created = [r for r in rows if r["callback_id"] == 13]
     clones = [r for r in rows if r["callback_id"] == 20]
     execs = [r for r in rows if r["callback_id"] == 18]
-    originals = {r["original_node"] for r in clones}
-    report["unmatched_created_count"] = sum(r["node"] not in originals for r in created)
+    originals = {(r["original_node"], r["original_node_id"]) for r in clones
+                 if "original_node_id" in r}
+    report["unmatched_created_count"] = sum((r["node"], r.get("node_id")) not in originals for r in created)
     links = report["links"] = []
     try:
         if not capture["subscribed"] or not capture["unsubscribed"] or capture["subscription_active"] or capture["errors"] or report["profile_errors"]:
@@ -131,9 +132,10 @@ def analyze(report, events):
             raise ValueError("Expected five clones and one directly witnessed exec")
         relation = execs[0]
         for clone in clones:
-            selected = [r for r in created if r["node"] == clone["original_node"]]
+            selected = [r for r in created if (r["node"], r.get("node_id")) ==
+                        (clone["original_node"], clone["original_node_id"])]
             if len(selected) != 1:
-                raise ValueError("Original handle does not select exactly one created row")
+                raise ValueError("Original handle/full-ID tuple does not select exactly one created row")
             source = selected[0]
             links.append(dict(source=source, clone=clone))
             if (source["node_type"] != 0 or source["queried_type"] != 0 or source["node_id"] != clone["original_node_id"]
