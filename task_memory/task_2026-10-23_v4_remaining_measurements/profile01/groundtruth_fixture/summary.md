@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Closed root review, independent merged verification andCPU-only acceptance. |
 | 2026-10-24 | Archived the bounded source restoration and verified CPU evidence. |
 
 Source commit `6abd2d8e` restores the V2 fixture with the actual frozen R3 classifier/DP-dispatch bodies, an explicit CPU group, complete source/hook checks and an explicit existing C26 fixture location. Only `tests/unit/test_native_groundtruth_check.py` changed:32 additions/5 deletions,37/60gross lines. No test assertions or frozen/runtime/native/C26/core/package/evidence bytes changed.
@@ -15,4 +16,4 @@ Final immutable checks rehashed189files, including13runtime modules/87native sou
 
 The one-process full-suite attempt exceeded the fixed60-second CPU ceiling; exhaustive disjoint invocations covered every original test node without changing that ceiling. Initial coordinator/root-selection failures and original RED remain preserved. Image binaries were not re-executed/rehashed.
 
-These are CPU fixture results only. GPU/platform/auth/Docker/network/control operations and further delegation were excluded. Root owns independent review/rerun/integration and note #9 closure; no GPU/runtime/reference/operator-cost/serving acceptance or ticket closure is claimed. Source and completion records are committed separately before the clean-state handback and STOP.
+Root integrated source/records as0dbb617f/3c3fdce4 and accepted [primary_acceptance.json](primary_acceptance.json) after Standards/Spec No findings and independent145-test owner/main executions. Both rehashed189protected files;15main equivalents/matrix tree match and all32synthetic serving snapshots retain14hooks/six phases without losses. See [root report](test_report_2026-10-24_root_acceptance.md). Note9's repair is complete. GPU/runtime/reference/operator-cost/serving acceptance and full ticket closure remain excluded; original failures and the60-second whole-suite timeout stay archived.

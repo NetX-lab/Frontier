@@ -1,0 +1,16 @@
+{
+  "scope": "Local archival harness only; no test/source/package change.",
+  "failures": [
+    {
+      "returncode": 1,
+      "error": "AssertionError",
+      "reason": "Initial32-file archive treated engine-local worker_rank as role-global rank."
+    },
+    {
+      "returncode": 1,
+      "error": "StopIteration",
+      "reason": "Initial lookup expected rank8.json, but each node names local ranks0..7."
+    }
+  ],
+  "correction": "Read role-global groups.world.rank; retain worker_rank separately and check TP group-local equality."
+}
