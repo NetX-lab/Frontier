@@ -175,6 +175,17 @@ def command(mode, root, fixture, read_cost):
     return [sys.executable, "-B", "-m", "frontier.main", *args]
 
 
+def _ep_lane_rows(path):
+    with path.open() as stream:
+        found = False
+        for line in stream:
+            row = json.loads(line)
+            require("routing_source" in row, "Missing actual position source census")
+            found = True
+            yield row
+        require(found, "Missing actual position source census")
+
+
 def validate(root, mode, document):
     [config_path] = list((root / "metrics").rglob("config.json"))
     run = config_path.parent
@@ -224,10 +235,8 @@ def validate(root, mode, document):
     first_decode = min(decode, key=lambda row: row["stage_start_ts"])
     require(first_decode["stage_start_ts"] >= read_end["target_ready_time"], "D launched before READ readiness")
     if cluster["prefill_replica_config"]["moe_routing_distribution_type"] == "position_cyclic":
-        lanes=[json.loads(line) for line in (run/"frontier_ep_wave_lane_ledger.jsonl").read_text().splitlines()]
-        require(lanes and all("routing_source" in row for row in lanes),"Missing actual position source census")
         empty=0
-        for row in lanes:
+        for row in _ep_lane_rows(run/"frontier_ep_wave_lane_ledger.jsonl"):
             source=row["routing_source"]
             require(sum(s["physical_rows"] for s in source["source_lanes"])==source["gathered_physical_rows"],"Physical source conservation failed")
             from frontier.moe_routing_policy import source_lane_index_for_ep

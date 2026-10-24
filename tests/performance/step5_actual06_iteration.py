@@ -479,6 +479,8 @@ def main(args):
     backend_before = {role.name: cluster.cc_backend.get_prediction_cache_stats().copy()
                       for role, cluster in simulator._clusters.items()}
     ledger_before = len(simulator._metric_store._frontier_ep_wave_lane_ledger_rows)
+    ledger_path = Path(simulator._metric_store._frontier_ep_wave_lane_ledger_rows._path)
+    ledger_position = ledger_path.stat().st_size if ledger_before else 0
     stage_ledger_before = len(simulator._metric_store._frontier_stage_batch_ledger_rows)
     start = time.perf_counter()
     if args.profile:
@@ -519,9 +521,11 @@ def main(args):
     (output / "source_truth.json").write_text(json.dumps(truth, indent=2))
     (output / "boundaries.json").write_text(json.dumps(totals, indent=2))
     ledger_digest = hashlib.sha256()
-    for row in simulator._metric_store._frontier_ep_wave_lane_ledger_rows[ledger_before:]:
-        ledger_digest.update(json.dumps(row, sort_keys=True).encode())
-        ledger_digest.update(b"\n")
+    if len(simulator._metric_store._frontier_ep_wave_lane_ledger_rows) > ledger_before:
+        with ledger_path.open("rb") as stream:
+            stream.seek(ledger_position)
+            for line in stream:
+                ledger_digest.update(line)
     (output / "stage_ledger_prefix.json").write_text(json.dumps(
         simulator._metric_store._frontier_stage_batch_ledger_rows[stage_ledger_before:], indent=2))
     (output / "backend_cache.json").write_text(json.dumps(backend_snapshot(simulator), indent=2))
