@@ -1,0 +1,16 @@
+{
+  "status": "PASS_SOURCE_AND_CONTENT_PROVENANCE_BINDING",
+  "probe_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+  "package_base_revision": "a2c4ad87f231a113f0d4d543050e3697a208dcba",
+  "probe_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "probe_bytes": 34078,
+  "original_template_source_lock_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01/source_lock.json",
+  "original_template_source_lock_sha256": "62c56b89db69d2353e29a36d3fd6ddfd55a62c51b7e07b89e1ae02548180e5a4",
+  "original_template_profile_source_revision": "5f7d0950b78276a77a66b7330cf0041a9f380f12",
+  "original_template_launcher_base": {
+    "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt2_20261021/launch.py",
+    "sha256": "3cb4517d8f72da1c851b3ee413a1cfcf038c08d476e83482acd18ae4ed6be711"
+  },
+  "reference_cupti_library_sha256": "e2f9ed861fe27c492b8bb52b5e3220ef5120f3edcda36312e96b7fd8a186be3e",
+  "provenance_limit": "The old launcher is a generated package artifact bound by its exact manifest/template hash, not independently assigned a Git revision. The5f7d0950 revision is the original native profile source, not the generated launcher. Reference library hash is retained evidence only; actual image/worker identity remains root-owned."
+}

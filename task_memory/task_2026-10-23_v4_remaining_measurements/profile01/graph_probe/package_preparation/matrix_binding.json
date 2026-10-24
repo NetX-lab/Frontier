@@ -1,0 +1,21 @@
+{
+  "status": "PASS_EXISTING_UNCHANGED_DOMAIN_BINDING",
+  "source_base": "a2c4ad87f231a113f0d4d543050e3697a208dcba",
+  "probe_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+  "probe_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "existing_binding": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/matrix_binding.json",
+  "existing_binding_sha256": "39e2435a25ef718dadafa0a8f0a67c4b91fe559f409aa929e5014338c901a57b",
+  "identical_cases": 77,
+  "new_capture": false,
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "unchanged_domain_diff": "",
+  "scope": "Package/records-only additions, not a simulator or GPU fidelity capture."
+}
