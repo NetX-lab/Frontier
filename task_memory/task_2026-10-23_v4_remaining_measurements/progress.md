@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Committed accepted group source at8b4d6993 and froze new affected command/input bindings before the fresh pilot. |
 | 2026-10-25 | Rechecked accepted source/evidence bytes without execution, corrected the pilot frontier and began independent R6/R7 evidence preparation. |
 | 2026-10-25 | Accepted group-metrics CPU source, separate owner/primary9-test units and two complete exact controls after both independent reviews; fresh P0 remains pending. |
 | 2026-10-25 | Resumed from 2fbd5af6, verified seven closed diagnostic artifacts and driver bytes without execution, and preserved all spent allowances. |
@@ -48,6 +49,7 @@
 
 ## Current continuation — 2026-10-25
 
+- completed source commit8b4d6993 and new affected preflight: [allocation](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/affected_allocation.json) binds accepted source/controls, all frozen dependencies and unchanged eight input triplets. Fresh80-line driver uses exclusive receipts,60s/actual30GiB/no retries and chosen concurrency1 within max2. Affected0/8;rank0ready,sevenBLOCKED on complete primary pilot acceptance. R6/R7 compact evidence preparation is independent in review_preparation/.
 - completed resumed byte checks at HEAD4ae81052: all11owner manifest files, accepted source/test and two independent review hashes match; staged code equals disk and both whitespace checks PASS. No unit/control/trace/GPU invocation. The new [route checkpoint](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/check_progress_2026-10-25_affected_start.md) corrects the pilot TODO versus conditional-seven BLOCKED split and closed-agent ownership.
 - completed new group-metrics source/control acceptance: [decision](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/source_acceptance.json), [report](profile01/profile04/results/p0_cpu_loop/metrics_correction02/test_report_2026-10-25_group_metrics_primary.md). Frozen source80/220, tests194/200, owner Markdown100/100; owner and primary each9tests/42consistent serialized checks PASS, primaryactual30GiB. Fresh decode/prefill controls eachonce PASS: allnon-clock JSON,361/240metric groups floathex and142567/570964decompressed index rows exact. Spec/Standards bothNo findings;77matrix binding only. Units1/1each andcontrols2/2spent;affected0/8, fresh pilot next. No old experiment rerun or source/native/package change.
 - completed continuation checkpoint verification: actual branch feat/glm53-dsv4-vllm028 at2fbd5af6; ffbfbc37 archives S5/failed pilot and2fbd5af6 archives the timer. [Read-only archive receipt](profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/resume_archive_check.json) rechecks seven closed diagnostic files and the retained driver source exactly, without importing or executing any spent experiment. New group-metrics owner unit is already used1/1; primary unit/complete controls/affected ranks remain NOT_RUN at this checkpoint. Protected unrelated paths remain unstaged.
