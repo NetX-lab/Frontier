@@ -4,7 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-24 | Completed S1/S2 owner checks/source5e2fe861; this records archive is the final delivery boundary. |
-| 2026-10-24 | Began the authorized P2 closed-log records correction and bounded tuple repair. |
+| 2026-10-24 | Completed the authorized P2 closed-log correction0490c33d and CPU tuple repaird55782d7; root acceptance pending. |
 
 - completed S0 inspection: owned branch feat/v4-scope-lifetime-probe is clean; actual range175–206 and resource envelope indirection match the source binding. Official header requires copying callback payload during invocation; sample queries full original/clone IDs in callbacks.
 - completed S1: frozen ABI/IDs/lifecycle reused; real range and callback13 record distinct clocks/native_id/get_ident. Source250/test160 gross lines; no shared-source edits. Initial callback13 RED is retained in scratch/red.log, followed by GREEN.
@@ -47,4 +47,4 @@
 2. 250/160 是最终 gross 上限，不新增 shim 或放宽 P1–P6。
 3. sealed04、13runtime identities、77matrix 只保持/绑定；GPU/image/signature checks 留给 primary。
 
-Review repair checkpoint: closed_log_binding_before.json preserves both original receipts;26bindings/17closed artifacts checked, only hash_receipt.json:393 was stale. Its05db... is exactly the validator log's pre-print header hash; closed8b3b... matches commands.json:133. validate.log shares the producer pattern but its retaineda84d... already matches. No open retained-file descriptors, no source/test/collector/raw changes; 7/13/45/77 unchanged. Tuple repair remains pending; all D1–D7 CLEAR, source acceptance stays with root.
+Review repair checkpoint: closed_log_binding_before.json preserves original contradictions;26bindings/17closed artifacts checked, only hash_receipt.json:393 was stale (05db... pre-print header versus closed8b3b...). Records-only commit0490c33d preceded tuple source commitd55782d7. Focused RED1FAIL/1PASS -> GREEN50PASS/2.73s (34source+16frozen), production6added/4removed=10gross, tests19gross, composed252/179; partial query rows remain unmatched/UNVERIFIED and exact tuple duplicates reject. Original48CPU/raw/checker/collector and7/13/45/77 bindings unchanged. New scratch access failures and corrected ownership are recorded, with no log overwrite. All D1–D7 CLEAR; root re-review/replay and image/TLS/lifetime qualification remain pending; this records commit is the final STOP boundary.

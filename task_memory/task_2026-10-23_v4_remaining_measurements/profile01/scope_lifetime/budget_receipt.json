@@ -1,7 +1,18 @@
 {
   "source_test_gross": {
-    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": 250,
-    "tests/unit/test_cupti_scope_lifetime.py": 160
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": 252,
+    "tests/unit/test_cupti_scope_lifetime.py": 179
   },
-  "maintained_markdown_gross": 126
+  "maintained_markdown_gross": 126,
+  "review_repair_delta": {
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": {
+      "added": 6,
+      "removed": 4
+    },
+    "tests/unit/test_cupti_scope_lifetime.py": {
+      "added": 19,
+      "removed": 0
+    }
+  },
+  "review_repair_markdown_gross": 14
 }
