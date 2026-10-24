@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Append recovered late analyzer failures for copy/init; preserve partial inspections and unchanged control/source budgets. |
 | 2026-10-25 | Renew session handoff, record explicit sufficient-OSS-quota decision, and distinguish the committed ledger candidate from accepted production and fresh-gate requirements. |
 | 2026-10-24 | Archive verified135-gross/116-path ledger allocation and retained-config NO_ALLOC; preserve accepted9580 source usage and all workflow/cloud readiness limits. |
 | 2026-10-24 | Archive scoped supplemental shape PASS and canonical OSS output;native/fullCLI gates remain separate. |
@@ -63,6 +64,11 @@ quota discovery as a blocking prerequisite. Worker environment/append throughput
 stage/event memory and current cohesive timing remain unverified. The corrected
 sample projection is469GB/mode or938GB/both, not a completed-file or RSS bound.
 Copy/init analyses remain unfinished; JSON/config are NO_PRODUCTION_ALLOCATION.
+Their late terminal errors are missing analyzer; full20/24-message histories
+retain47/33 completed read-only tools and3/1 external-directory rejections.
+Neither diagnosis wrote owned records or executed a new control/initialization.
+The snapshot's one-control allowance is untouched. No replacement is launched;
+handoff_late_failures/ contains the recovered evidence, not an accepted seam verdict.
 All6 required-shape invocations are used. This handoff launches no additional
 shape, pricing, fullCLI or worker run. Final ledger audit, independent review,
 frozen regressions, production integration and fullCLI/native/G3/E2E remain open.

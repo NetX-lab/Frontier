@@ -1,0 +1,16 @@
+[
+  {
+    "task": "init",
+    "session_id": "ses_e92338e41ffe081mlmDNjpmxP5",
+    "exit": 0,
+    "bytes": 264559,
+    "stderr": ""
+  },
+  {
+    "task": "copy",
+    "session_id": "ses_e92340744ffe58Yx5C7xx4qApF",
+    "exit": 0,
+    "bytes": 257292,
+    "stderr": ""
+  }
+]

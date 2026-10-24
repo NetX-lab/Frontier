@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Mark copy/init owners failed after late notifications and complete history recovery; continuation remains pending within the original limits. |
 | 2026-10-25 | Renew the handoff boundary, record user-confirmed OSS quota, and retain final ledger admission/regressions as explicit next-session work. |
 | 2026-10-24 | Allocate135-gross complete EP ledger write/read repair at116paths; close retained config hypothesis without allocation and correct storage/runtime boundaries. |
 | 2026-10-24 | Close supplemental CPU shapes at3PASS/6total calls;retain exact selected OSS evidence and clean local duplicates. |
@@ -71,6 +72,11 @@ handoff. OSS quota is USER_CONFIRMED_SUFFICIENT; do not repeat quota discovery a
 a blocker. Actual worker environment/throughput and runtime remain unverified.
 Copy/init analyses are independent unfinished work; recover landed evidence and
 consumed allowance before any continuation rather than restarting them.
+Both recorded analyzer owners now terminate with `Agent not found: "analyzer"`.
+History recovery proves read-only work and external-directory rejections, no
+new controls or owned records. Preserve those inspections; next session may
+continue the original scope with an available `general`/`explore` agent rather
+than resuming an unavailable analyzer. No replacement or new run is launched here.
 
 ## Acceptance route and revision-bound history
 

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Add late copy/init analyzer failures, full read-only history recovery and original unconsumed control limits. |
 | 2026-10-25 | Renew the complete next-session prompt for the committed ledger candidate, explicit sufficient-quota decision and unfinished admission/workflow gates. |
 | 2026-10-23 | YC deferred handoff;current-session progress now owns execution and this prompt is historical. |
 | 2026-10-23 | Deliver reviewed code/records and exact continuation command after the bounded CLI repair. |
@@ -49,6 +50,16 @@ regressions 仍未完成，以下 focused PASS 不能替代这些验收。
 最终源码是 `1f6b431478e2351e3ca6819f707cccbc3e4336e2`，owner记录
 `dd3b6a69a17365b994a51ea7641197e768c8a237`。`handoff_parent.json` 绑定该源码；
 不要将初版 `6c2f179c` 当作已完成 caller 修复的最终版本。
+
+交接后的迟到通知：copy/init 两个 analyzer owner 均以 `Agent not found: "analyzer"`
+结束，不再是运行中。已完整恢复20/24条消息：47/33个完成工具均为只读取证，
+另有3/1个 external_directory 权限拒绝。没有新 control/init/wave 或 owned record 写入；
+两个工作树保持886608ea干净，runtime_snapshot_copy/init_preparation_reuse目录均不存在。
+快照的最多一次60s/30GiB control 尚未使用；初始化任务仍只允许源代码/小旧回执检查。
+没有已接受的安全性/收益结论。先读 `handoff_late_failures/receipt.json` 和
+`test_report_2026-10-25_late_agent_failures.md`，保留已恢复检查、权限错误和原始限制。
+不要自动重试 unavailable analyzer；后续用当前可用的 general/explore 接续原范围。
+这次补录没有重派子代理、改变配置或运行新的定价/形状/GPU任务。
 
 额度：116 allocated paths，CORE51。四文件 step caps 为36/20/65/14，总≤135gross；
 对应 metrics_store / actual-main runner / integration test / actual06 performance。

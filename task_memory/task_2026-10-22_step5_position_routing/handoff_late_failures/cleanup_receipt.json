@@ -1,0 +1,111 @@
+{
+  "owned_completed_duplicates_only": true,
+  "removed_files": [
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/init.json",
+      "bytes": 264559,
+      "sha256": "24759033b439858dd23968302d1c6b6060033bc5a2decfc78c4de79c171fb9d6",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/init_messages.json.gz",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/init.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "retained_as": "empty stderr confirmed",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/init_older.json",
+      "bytes": 51,
+      "sha256": "8aeb7676a045d011090ecda3199f8901db80316c272f23bea0087b0543518284",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/init_older.json",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/init_older.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "retained_as": "empty stderr confirmed",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/init_tool_census.json",
+      "bytes": 19546,
+      "sha256": "fe8eba7d7665773dd230f6ac03400f3adb2e727794f78b4c4de51b5cf4db76ff",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/init_tool_census.json",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/init_text.json",
+      "bytes": 106,
+      "sha256": "9cf743a9f9f9f7ff3079929d6855039fe87dc54f703e1831f5d47cda7297f11c",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/init_text.json",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/copy.json",
+      "bytes": 257292,
+      "sha256": "2c940e18606c1e18afefc4947c4212bf08f20e7abbc4a154c51541dbfaac671d",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/copy_messages.json.gz",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/copy.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "retained_as": "empty stderr confirmed",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/copy_older.json",
+      "bytes": 51,
+      "sha256": "8aeb7676a045d011090ecda3199f8901db80316c272f23bea0087b0543518284",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/copy_older.json",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/copy_older.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "retained_as": "empty stderr confirmed",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/copy_tool_census.json",
+      "bytes": 21554,
+      "sha256": "0cd17072b64e2ab0a5e9fe8f9e482c6a77396a2a95b0899478fb71dafa656d8c",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/copy_tool_census.json",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/copy_text.json",
+      "bytes": 202,
+      "sha256": "392ef6734755bf32b18f38438b60947851c7c6d6199d4d8a13d12b5030a77021",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/copy_text.json",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/read_receipt.json",
+      "bytes": 271,
+      "sha256": "b04da86158269649ff4b7a8d0fff60482cef3438c6e196fc4fc98a16bd8318f5",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/read_receipt.json",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/census_summary.json",
+      "bytes": 23580,
+      "sha256": "0173436b71b9bf47f7ae2a89f9c94551b0406a8a1fe4d2c096362eaea09e48b0",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/census_summary.json",
+      "removed": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_late_agent_errors_20261025/worktree_checks.json",
+      "bytes": 1601,
+      "sha256": "d950be8a2b839916b41e0c98e2dc7877f9cc149c9d097440d7cb869b50b19285",
+      "retained_as": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/worktree_checks.json",
+      "removed": true
+    }
+  ],
+  "bytes_removed": 588813
+}
