@@ -3,9 +3,10 @@
 ### Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Close recordcommit0a42e56e;all plannedexecution/archiveworkcomplete,raw79failureunmodified. |
 | 2026-10-24 | Checkpoint after all suites,two-baseline joins and final guard/archive completion. |
 
-**汇总：** PASS 7｜FAILED 1｜TODO 1
+**汇总：** PASS 8｜FAILED 1｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -17,12 +18,12 @@
 | Raw79presencepredicate | FAILED | 唯一原批准oldhotupdateID替换，保持rawFAIL未waive |
 | Dependencies/affectedjoins | PASS | 原267/31保留，13环境outcomes+5Torchgovernance有同源通过证据 |
 | Finalarchive/guards | PASS | selectedreceipts/rawpaths明确，无missing/interruptedrun |
-| Scopedrecordscommit | TODO | 所有验证完成，只剩commit/index检查 |
+| Scopedrecordscommit | PASS | 0a42e56e，34files只含ownsubtree，commit后clean |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** short/strictcheckpoint至今｜**当前前沿：** record-onlycommit
+**检测窗口：** short/strictcheckpoint至今｜**当前前沿：** 完成结果交付
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -44,12 +45,11 @@
 **需停止的偏离行为：** 无
 
 **接下去的路线：**
-1. 只stage已完成的post_named_query_regressions/ → diffpaths与权限一致。
-2. recordscommit并检查clean/sourceidentity → 返回commit与精确状态/路径/limits。
+1. 返回recordscommits与已测精确状态/路径/limits；不重复运行已完成suite。
 3. 无进一步测试；原79rawfailedpredicate与外部workflow/native/GPUqualification不改写。
 
 ## 4. 最值得关注的 3 点
 
 1. 46fe全部旧ID/status retained，新增8PASS，FAIL/ERROR/SKIPdelta0；rawunit仍exit1。
 2. Strict77/77与2755/14/12/124guards均实际通过，scope9579零违规。
-3. 原批准79oldIDloss保持FAILED；只余record-onlycommit，不是整体D29 admission。
+3. 原批准79oldIDloss保持FAILED；全部task完成，不是整体D29 admission。

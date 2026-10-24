@@ -6,8 +6,8 @@
   "files": [
     {
       "path": "check_progress_2026-10-24_final.md",
-      "bytes": 2765,
-      "sha256": "1f3c0533fd2c9647cf44dda2f7a81f8a4851e44404205ce4182d760f0fabab48"
+      "bytes": 2788,
+      "sha256": "e7e785b919409689a5d8b90af1aa67342a8dc7d3cb40c7c5ecd4ba2ee04b8ae0"
     },
     {
       "path": "check_progress_2026-10-24_preflight.md",
@@ -146,13 +146,13 @@
     },
     {
       "path": "plan.md",
-      "bytes": 3153,
-      "sha256": "7b776032e3db269c4268f53bd5b2c9ee14ab66cbed5680cc0e032d5812f4b5d9"
+      "bytes": 3413,
+      "sha256": "ced9e9acd86ca465a1fff2937f15830c1ceed72537f4519e58918920656430fb"
     },
     {
       "path": "progress.md",
-      "bytes": 5566,
-      "sha256": "ac865f1acad0b575eb64a85f38a8c6d964f11939af303b3c56911c7db46b441b"
+      "bytes": 5981,
+      "sha256": "aeab9d7598c0f914da756af7a046b9b6a5976efaf32561dbbaaa4b075679184a"
     },
     {
       "path": "requirements.md",
@@ -161,8 +161,8 @@
     },
     {
       "path": "summary.md",
-      "bytes": 3715,
-      "sha256": "42489fa315e5cc73fd8dfffcc93d6ce4e417cdaeed5d32bad94acc9863537aa2"
+      "bytes": 3909,
+      "sha256": "b45f64e007db02bb0159ff54d563d466a6c4558cd625cffe13fb3469a4c18189"
     },
     {
       "path": "test_report_2026-10-24_post_named_query_regressions.md",
@@ -172,5 +172,7 @@
   ],
   "file_count": 33,
   "raw_79_presence_predicate_unwaived": true,
-  "source_or_peer_files_staged": false
+  "source_or_peer_files_staged": false,
+  "archive_commit": "0a42e56ef53769a85a999b652cd9d03973d1f727",
+  "all_planned_steps_complete": true
 }

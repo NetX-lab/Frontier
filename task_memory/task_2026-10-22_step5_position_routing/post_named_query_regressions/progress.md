@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Commit the completed34-file archive at0a42e56e and close all execution/record status. |
 | 2026-10-24 | Close fullunit/two-baseline/dependency checks and final guards;archive precise IDs and preserve raw79 loss. |
 | 2026-10-24 | Complete strict77run/compare/audit,equality77/77 and451hashes/519cacheper-side;archive selected proof. |
 | 2026-10-24 | Close52PASS with identical46fe/accepted-parent IDs and archive all four short suites independently. |
@@ -62,12 +63,16 @@
   knownFAIL-ERROR-SKIPsets andfinalverificationretained under evidence/. Large
   rawXML2111062B/log4614412Bstayfreshscratch,SHAs64371d63.../9d055a74.... Outputs
   andwarnings are notfiltered orreduced. No totals added across overlapping suites.
-- pending: records-onlycommit;all required verification complete.
+- completed: records-onlyarchivecommit0a42e56ef53769a85a999b652cd9d03973d1f727,
+  34filesonlyunderownsubtree;no source/peerfilesstaged,worktreeclean. Allrequired
+  verificationcomplete. A directrunusercommitwrapperfailedbeforeGit because
+  currentshellalreadybrainpp;the identicalgitcommit succeeded asbrainpp without
+  source/gatechanges. This finalstatus update is a secondsmallrecords-onlycommit.
 
 ## Unfinished work and next actions
 
-1. Re-readrequirements/check ownrecords/index;commit only post_named_query_regressions/.
-2. Return actualsuitecounts/two-baselinedeltas/guards/commit/artifactpaths andlimits.
+1. Return completedmeasuredcounts/two-baselinedeltas/guards/recordcommits/rawpaths.
+2. No further regression orimplementation work remains in this task.
 
 No unfinished verification or new source failure. Original79rawpresence remains
 FAILED only for the already approved oldhot-update/newrun-fixed replacement.

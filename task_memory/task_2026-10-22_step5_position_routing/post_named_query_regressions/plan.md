@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Complete records-onlyarchivecommit0a42e56e;all planned verification anddeliverystepsdone. |
 | 2026-10-24 | Complete all suite/status/supplement and before-after guard acceptance;prepare records-only commit. |
 | 2026-10-24 | Define one frozen source,unchanged recipes,two exact baselines and independent suite outputs. |
 
@@ -43,4 +44,6 @@ Verification status: complete. Strict77/77 equality;distinct101/197/53/52PASS;
 fullunit8028PASS/279FAIL/32ERROR/281SKIP/rawexit1. All46feIDs/statuses retained,
 8newPASS. Original79plannedoneIDloss remainsrawFAIL,no waiver. Before/after
 2755files/14inputs/12scripts and124/120bindings match;scope9565/9579,violations0.
-The only remaining action is the scoped records commit and its final verification.
+Archivecommit0a42e56ef53769a85a999b652cd9d03973d1f727 contains34scopedrecordsfiles,
+verifiedno source/peer/indexchanges. All plannedverification/deliverysteps complete;
+the finalstatus-onlycommit hash is returned in the final response.
