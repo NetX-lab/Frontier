@@ -109,10 +109,29 @@
   ],
   "scripts": {
     "worker_append.py": "4e479de4d3d2eec607d48f5a240f6f547197ca9a76e717433308a893d988a97c",
-    "worker_entry.py": "f45f805e700813ff50bed646ca42778aa013d3afc71e3fff31efa8ae6d520b04",
-    "launch_worker.py": "f2160d50844763340795ebb8089de7c973ea46a26fc7b1819e67d531fb3fa121",
+    "worker_entry.py": "d3aef9e846507617c9c364885bc687ddbdb721b8c3b9449dd6dc807145c30dbc",
+    "launch_worker.py": "25eb00bdb57170fc9ed8cd4c7098cda68a68fa97e3bc008e3a5848de80b6ec35",
     "run_worker.sh": "1d41bb75bf775da667ea641f7f3556af954d9a8243891dce789c79c5a40bbdfb"
   },
   "inspection_request_timeout_s": 25,
-  "joint_bindings_sha256": "a33370c9704113c15d753c011542ff1d0ba8f7fdea258dcecbce97623ac992f0"
+  "joint_bindings_sha256": "88e24bd3b7f15adfe8499135eafe838b9d7995eb0834c57817c0c3cca2ba56fa",
+  "sdk_implicit_mounts": [
+    "juicefs+s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant"
+  ],
+  "sdk_implicit_mount_observation": {
+    "source": "/data/ycfeng/steptron/steptron/exp/base_exp.py",
+    "source_sha256": "0fc88ea9fd70ad08f69d76637f4e05c65309f80ce81b4ff933c3b0d0320d4d37",
+    "function": "ResourceConfig.__iter__",
+    "behavior": "The original SDK appends its mandatory tenant mount to every yielded task. The readiness workload never reads or writes that mount. All task cloud reads and writes remain in the personal codesign directory."
+  },
+  "git": {
+    "path": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/git",
+    "version": "git version 2.34.1",
+    "config": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/gitconfig_d29_worker",
+    "files": {
+      "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/git": "06c1cfb4848572479bd3bbf678c224432d262732049957884dd9be2457185ad7",
+      "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/gitconfig_d29_worker": "672995b50f25e01b216a981ac1f08eebee28b0713b4bb6c53aecfedad0bff6d4"
+    },
+    "scope": "Persistent copied-runtime Git; protected configuration file trusts exactly the two owned task repositories. No host/image global Git configuration is written."
+  }
 }

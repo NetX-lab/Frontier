@@ -3,6 +3,9 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
 | 2026-10-25 HKT | Close and integrate both finite diagnoses; refresh the continuation frontier without adding controls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Record verified production integration2ca5e571 and completed mandatory regressions; earlier candidate prompt becomes historical. |
 | 2026-10-25 | Add late copy/init analyzer failures, full read-only history recovery and original unconsumed control limits. |
@@ -27,6 +30,10 @@ Canonical full-unit=8028PASS/279FAIL/32ERROR/281SKIP、rawexit1；全部8620真�
 source9682/9942、global9696/10000，零违规。Step124gross/net96/累计增量116分开记。
 证据：ledger_memory/evidence/{frozen_regressions_2026-10-25,production_integration_2026-10-25}/。
 6个真实任务记录冲突已保留双方意图解决，代码无冲突；停止旧merge-tree预览排查。
+
+当前执行准备已在resumed_execution/execution_plan_2026-10-25.md落盘。保持copied dependency/base两个runtime prefixes，使用原个人Python RJobBackend。准备修复后的static05通过10项故障注入，SDK03只构造对象、无认证/提交。原SDK01 AttributeError及SDK02被list mutation污染的mount比较保留；原SDK必加tenant mount已明确记录，worker不读写它。两轴follow-up review仍待收集；新pricing/shape/fullCLI/platform均0。两次普通D1/layer60 joint pricing尚未批准；一个4CPU/0GPU/64mem_gb readiness worker在复审后按已有H800 task-resource授权执行。不要重做已完成生产review/regressions/copy/init。
+
+最新准备检查：fixed-image Git04通过真实check_bindings两次，static06通过最终脚本hash及10项拒绝检查。Git01/02原失败和03诊断保留；copied Git及仅信任两个任务仓库的GIT_CONFIG_GLOBAL文件已绑定。两轴follow-up已收集且均No findings；提交这些最终字节后运行一个worker；运行期间不得推进records HEAD。没有pricing/shape/fullCLI/StepMind操作。
 
 下一前沿：
 1. Copy/init已收口并整合：copyb061f884/52831c6e为静态NO_ALLOC，control0/1且launch0；init6335f581/c6b3da15为ALLOC建议，control0、source allocation0。Parent25copy/13init bindings及14旧回执全部通过，见resumed_execution/evidence/diagnosis_closeout_2026-10-25/。两工作树干净保留、agents已关闭，不重开诊断或control。126.58s只是旧测量推算，不是当前startup收益。

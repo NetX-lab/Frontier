@@ -1,13 +1,11 @@
 """Actual main08 decode EP wave/pricing and emission, frozen source, diagnosis only."""
 import argparse
-import cProfile
 from collections import defaultdict
 from dataclasses import asdict
 import hashlib
 import json
 from pathlib import Path
 import pickle
-import pstats
 import resource
 import subprocess
 import sys
@@ -15,8 +13,6 @@ import time
 resource.setrlimit(resource.RLIMIT_AS, (30 * 1024 ** 3, 30 * 1024 ** 3))
 parser = argparse.ArgumentParser()
 parser.add_argument('--output', type=Path, required=True)
-parser.add_argument('--profile', action='store_true')
-parser.add_argument('--iterations', type=int, default=2)
 args = parser.parse_args()
 args.output.mkdir(exist_ok=False)
 source = Path('/data/ycfeng/Frontier/.worktrees/step5-preview')
@@ -70,17 +66,17 @@ kernel_bundle = json.loads((cache / 'bundle_0d1f560050cac3803a37e544fa99e5ec8fbf
 combined.extend(((kernel_bundle, label, entry) for (label, entry) in kernel_bundle['models'].items()))
 for (table, label, entry) in combined:
     entries = table['models']
-    name = entry.get('cache_model_name', label)
-    data = (cache / f"{name}_{entry['model_hash']}.pkl").read_bytes()
-    assert hashlib.sha256(data).hexdigest() == entry['sha256']
-    model = pickle.loads(data)
+    name = entry['cache_model_name']
+    model_bytes = (cache / f"{name}_{entry['model_hash']}.pkl").read_bytes()
+    assert hashlib.sha256(model_bytes).hexdigest() == entry['sha256']
+    model = pickle.loads(model_bytes)
     model._frontier_cache_model_name = name
     if 'kernel_count_model' in entry:
         pair = entries[entry['kernel_count_model']]
-        countname = pair.get('cache_model_name', entry['kernel_count_model'])
-        data = (cache / f"{countname}_{pair['model_hash']}.pkl").read_bytes()
-        assert hashlib.sha256(data).hexdigest() == pair['sha256']
-        count = pickle.loads(data)
+        countname = pair['cache_model_name']
+        model_bytes = (cache / f"{countname}_{pair['model_hash']}.pkl").read_bytes()
+        assert hashlib.sha256(model_bytes).hexdigest() == pair['sha256']
+        count = pickle.loads(model_bytes)
         count._frontier_operator_name = entry['target_column'].split('.')[1]
         model._frontier_kernel_count_model = count
     manager._active_measurement_type = MeasurementType(entry['measurement_identity']['measurement_type'])

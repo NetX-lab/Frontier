@@ -1,0 +1,13 @@
+{
+  "operation": "Copy the verified local Git executable into the mounted copied runtime; no package installation or original environment change",
+  "source": "/usr/bin/git",
+  "destination": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/git",
+  "bytes": 3665328,
+  "sha256": "06c1cfb4848572479bd3bbf678c224432d262732049957884dd9be2457185ad7",
+  "version": "git version 2.34.1",
+  "started_utc": "2026-10-24T20:48:07.713257+00:00",
+  "finished_utc": "2026-10-24T20:48:07.819314+00:00",
+  "wall_s": 0.10604447824880481,
+  "new_pricing_calls": 0,
+  "new_platform_operations": 0
+}

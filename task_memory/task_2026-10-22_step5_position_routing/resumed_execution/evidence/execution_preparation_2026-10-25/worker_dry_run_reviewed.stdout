@@ -1,0 +1,28 @@
+{
+  "status": "DRY_RUN_NO_PLATFORM_OPERATIONS",
+  "resource": {
+    "cpu": 4,
+    "gpu": 0,
+    "mem_gb": 64,
+    "replica": 1,
+    "positive_tags": [
+      "H800"
+    ],
+    "custom_resources": [],
+    "extra_requirements": [],
+    "preemptible": false,
+    "command": "{COMMAND}",
+    "task_specs": {
+      "default": {
+        "is_critical": true
+      }
+    }
+  },
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "charged_group": "codesign",
+  "command": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_entry.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_plan.json",
+  "nfs_source": "/data/ycfeng",
+  "mounts": [
+    "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+  ]
+}

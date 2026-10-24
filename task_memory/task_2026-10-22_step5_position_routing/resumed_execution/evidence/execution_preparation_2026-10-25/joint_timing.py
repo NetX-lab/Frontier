@@ -145,7 +145,7 @@ def expected_output(identities, ledger, operators):
     return expected_ledger, expected_operators
 
 
-def validate_output(directory, identities, ledger, operators):
+def validate_output(directory, identities, ledger, operators, simulation_info):
     expected_ledger, expected_operators = expected_output(identities, ledger, operators)
     ledger_path = directory / "frontier_ep_wave_lane_ledger.jsonl"
     with ledger_path.open("rb") as stream:
@@ -161,6 +161,8 @@ def validate_output(directory, identities, ledger, operators):
                 {"timestamp", "simulation_info", "version"}, "Trace header schema differs")
         require(header["meta"]["version"] == "1.0" and
                 math.isfinite(header["meta"]["timestamp"]), "Invalid trace header")
+        require(header["meta"]["simulation_info"] == simulation_info,
+                "Trace source or cold/warm identity differs")
         for index, expected in enumerate(expected_operators):
             require(stream.readline() == (json.dumps(expected) + "\n").encode(),
                     f"Full operator row {index} differs")
@@ -228,8 +230,9 @@ def main():
             require(not config.store_operation_metrics and not config.enable_per_layer_expansion,
                     "Captured diagnostic output configuration changed")
             trace = namespace["TraceStore"](str(sample_root), enabled=config.enable_op_level_tracing)
-            trace.initialize({"evidence": "D29_CURRENT_JOINT_TIMING", "label": label,
-                              "source_commit": bindings["source_commit"]})
+            simulation_info = {"evidence": "D29_CURRENT_JOINT_TIMING", "label": label,
+                               "source_commit": bindings["source_commit"]}
+            trace.initialize(simulation_info)
             store = namespace["MetricsStore"](sample_config, namespace["clusters"], trace_store=trace)
             require(trace._buffer_size_limit == 5000, "Production trace threshold changed")
             receipt["pricing_attempts"] += 1
@@ -265,7 +268,7 @@ def main():
             (sample_root / "pricing_payload.json").write_bytes(payload)
             require(payload == references[0], "Complete pricing payload differs")
             sample["validation"] = validate_output(sample_root, sample["lane_identities"],
-                                                   references[1], references[2])
+                                                   references[1], references[2], simulation_info)
             write_json(root / "execution.json", receipt)
         os.chdir(source)
         require(check_bindings(bindings, directory) == source_before, "Binding changed during run")

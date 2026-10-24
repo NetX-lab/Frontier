@@ -44,23 +44,26 @@ identities = [{"ep_id": row["ep_id"], "batch_id": row["batch_id"] + 16,
                "num_tokens": [0]*len(row["request_ids"]),
                "source_batch_ids": row["source_batch_ids"]} for row in ledger]
 expected_ledger, expected_operators = expected_output(identities, ledger, operators)
-header = {"meta": {"timestamp": 0.0, "simulation_info": {"test": "retained_reference_only"},
-                    "version": "1.0"}}
+simulation_info = {"evidence": "D29_CURRENT_JOINT_TIMING", "label": "cold",
+                   "source_commit": bindings["source_commit"]}
+header = {"meta": {"timestamp": 0.0, "simulation_info": simulation_info, "version": "1.0"}}
 
 
-def write_outputs(rows, events):
+def write_outputs(rows, events, trace_header):
     (SCRATCH/"frontier_ep_wave_lane_ledger.jsonl").write_text(
         "".join(json.dumps(row, sort_keys=True)+"\n" for row in rows))
-    (SCRATCH/"op_traces.jsonl").write_text(json.dumps(header)+"\n"+
+    (SCRATCH/"op_traces.jsonl").write_text(json.dumps(trace_header)+"\n"+
         "".join(json.dumps(row)+"\n" for row in events))
 
 
-write_outputs(expected_ledger, expected_operators)
-positive = validate_output(SCRATCH, identities, ledger, operators)
+write_outputs(expected_ledger, expected_operators, header)
+positive = validate_output(SCRATCH, identities, ledger, operators, simulation_info)
 controls = []
 for name in ("missing_ledger_row", "ledger_order", "compute_proof", "operator_duration",
-             "extra_operator", "stale_cold_batch_ids", "captured_source_identity"):
+             "extra_operator", "stale_cold_batch_ids", "captured_source_identity",
+             "trace_evidence", "trace_label", "trace_source_commit"):
     rows, events = copy.deepcopy(expected_ledger), copy.deepcopy(expected_operators)
+    trace_header = copy.deepcopy(header)
     if name == "missing_ledger_row":
         rows.pop()
     elif name == "ledger_order":
@@ -76,15 +79,17 @@ for name in ("missing_ledger_row", "ledger_order", "compute_proof", "operator_du
         rows[0]["batch_id"] -= 16
     elif name == "captured_source_identity":
         rows[0]["source_batch_ids"] = [7053]
-    write_outputs(rows, events)
+    elif name.startswith("trace_"):
+        trace_header["meta"]["simulation_info"][name.removeprefix("trace_")] = "wrong_identity"
+    write_outputs(rows, events, trace_header)
     try:
-        validate_output(SCRATCH, identities, ledger, operators)
+        validate_output(SCRATCH, identities, ledger, operators, simulation_info)
     except AssertionError as error:
         controls.append({"control": name, "status": "PASS_EXPECTED_REJECTION", "error": str(error)})
     else:
         raise AssertionError(f"Corrupt output accepted: {name}")
-write_outputs(expected_ledger, expected_operators)
-validate_output(SCRATCH, identities, ledger, operators)
+write_outputs(expected_ledger, expected_operators, header)
+validate_output(SCRATCH, identities, ledger, operators, simulation_info)
 dry = subprocess.run([sys.executable, "-B", str(DIRECTORY/"launch_worker.py"),
         "--plan", str(DIRECTORY/"worker_plan.json")], capture_output=True, text=True, check=True)
 (SCRATCH/"worker_dry_run.stdout").write_text(dry.stdout)

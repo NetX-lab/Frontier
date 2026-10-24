@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Prepare current-source joint and zero-GPU worker scripts; verify static full-output controls without extending calls or source budgets. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Record copied-runtime local/image CPU import acceptance; preserve original failures and unchanged invocation/source limits. |
 | 2026-10-25 HKT | Record finite copy/init closure and unchanged production source/budgets; ALLOC is recommendation only. |
@@ -41,6 +43,18 @@
 Current-source execution scripts are prepared under `resumed_execution/evidence/execution_preparation_2026-10-25/`. Propose at most two new ordinary captured D1/layer60 CPU pricing calls, cold/warm once each, in one60s/30GiB execution. Use real MetricsStore, unchanged5000-event trace threshold, complete output/proofs/keys/order and per-point checks; fresh phases/plan and actual allocated destination IDs each time. No warmup, profiling call, automatic retry or new required-shape call. Existing required-shape6/6 and old-control ceilings do not change. This is a pending finite execution proposal, not an approval or source allocation.
 
 One independent4CPU/0GPU/64mem_gb codesign/H800 readiness worker is concretely prepared under the existing H800 task-resource authority. It uses the original local personal Python RJobBackend, exact current-machine NFS source and personal cloud path, unchanged runtime import probe and one30s/1GiB serialized-reference append control. It performs no pricing, shape, fullCLI or native run. Source/workflow/native package criteria are not bypassed; actual worker readiness remains unperformed at this preparation checkpoint.
+
+## [Preparation Observation] Fixed-image Git and repository ownership
+
+The pinned image does not contain Git, and the copied host Git2.34.1 reports dubious ownership for the image UID0 reading these UID10250 task repositories. The retained environment-variable trust attempt did not resolve that observed error. A separate copied-runtime executable and a task-specific GIT_CONFIG_GLOBAL file now bind exact hashes and trust only the current worktree and its pinned collective-sim checkout. No original environment, host/image global Git configuration, production source or submitted image is changed.
+
+Fixed-image worker_git_preflight04 passes the actual joint_timing.check_bindings twice in1.567929203s under read-only local mount, network none and60s/30GiB limits. Affected static06 passes the unchanged full-output checker with all10 corruption rejections in3.099603861s. Prior failures remain raw evidence. These are preparation/source checks only; no pricing, shape, runtime import probe, fullCLI or platform operation is performed. The two-call pricing proposal remains unapproved.
+
+## [Preparation Observation] Original SDK task fields and mandatory mount
+
+The preparation review is confined to task scripts and records. Exact trace-header evidence/label/source identity is now checked; both frozen bundles require cache_model_name, and unused profiling/iteration options are removed. The two-call execution proposal above remains unapproved; these changes authorize no new pricing, shape or fullCLI call.
+
+The original brainpp Task stores privateMachine and mount_config. ResourceConfig.__iter__ always appends its mandatory tenant mount to each task and mutates a supplied mount list. The corrected task configuration copies the requested list; the final SDK checker independently verifies that the frozen plan remains unchanged, and verifies the requested personal codesign mount plus the documented original SDK default. No SDK/API wrapper, mount override or tenant-data access is introduced. Every task cloud read/write remains confined to /mnt/codesign-exp/ycfeng. The original AttributeError and intermediate mutation-tainted mount comparison remain retained. Final worker_spec03 only materializes objects, with no client/auth/query/submission.
 
 ## [Original Request] D29-RESUME-MULTI-WORKTREE-20261024
 

@@ -3,6 +3,9 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Prepare current-source joint and zero-GPU worker scripts; verify static full-output controls without extending calls or source budgets. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Record copied-runtime local/image CPU import acceptance; preserve original failures and unchanged invocation/source limits. |
 | 2026-10-25 HKT | Consolidate both finite diagnoses and parent evidence; no source or measured runtime change. |
@@ -61,6 +64,16 @@ CPU runtime preparation now passes the original strict probe locally and in the 
 ### Prepared current-source executions
 
 `resumed_execution/execution_plan_2026-10-25.md` and `evidence/execution_preparation_2026-10-25/{joint_timing.py,joint_setup.py,joint_wave.py,joint_bindings.json,worker_plan.json,worker_entry.py,worker_append.py,launch_worker.py,run_worker.sh}` now provide concrete reviewable timing and worker executions. Static02 passes source/input/AST/syntax, exact16/208 reference JSONL, seven corruption rejections and a no-operation worker dry run in2.363082259s. Original system-scope authentication failure remains retained; the corrected invocation uses the existing sudo/runuser30GiB recipe. No production source, pricing, shape, runtime import or platform operation is added. Two ordinary pricing calls remain a finite unapproved proposal; worker execution, completeCLI/RSS and finalT2/native/G3/E2E remain open.
+
+### Preparation review repair and SDK materialization
+
+The initial preparation Standards review has three documented findings and one unused-options observation; initial Spec has No findings. The task-only repair now checks full trace-header identity, requires frozen cache names and removes unused options/names. Finalstatic05 passes10 expected corruption rejections and unchanged25source/sixinput/262metadata/16lane/208operator/144proof reference checks in2.865911072s. No pricing, shape, fullCLI or platform operation is performed.
+
+The SDK checker retains the original4.682937818s AttributeError and the4.299797723s intermediate mutation-tainted mount result. Finalworker_spec03 passes exact original SDK fields/resource/image/currentNFS with an unmodified frozen plan in4.515597923s. It documents the SDK's compulsory tenant mount without any workload read/write there; task cloud access remains personal codesign. This is object materialization only, with no authentication/client/query/submission. Follow-up review and the actual one zero-GPU readiness worker are pending. Source2ca and all budgets/invocation limits remain unchanged.
+
+### Final fixed-image Git preparation
+
+The last worker preparation defect is resolved on the CPU host. The copied-runtime Git2.34.1 and task-only GIT_CONFIG_GLOBAL file are hash-bound; the configuration trusts only the current worktree and pinned collective-sim checkout. Fixed-image preflight04 passes two real source-binding calls in1.567929203s. Static06 passes all10 corruption controls, full retained16/208/144 output predicates and no-operation dry run in3.099603861s. Original missing-Git, ownership and hidden-stderr failures/diagnostics remain unchanged. This verifies preparation only, with no new pricing/shape/fullCLI/StepMind operation. Both independent follow-ups now report No findings on these final bytes; all initial findings are resolved. The one authorized readiness worker is the next unperformed deliverable; source2ca and all budgets remain unchanged.
 
 ## Previous handoff boundary (2026-10-25; historical)
 

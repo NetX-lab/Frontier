@@ -58,7 +58,7 @@ def main():
         from steptron.utils.stepmind import get_rjob_client, spawn_tasks
         os.environ["EXP_ID"] = plan["experiment_id"]
         os.chdir(plan["local_mount_source"])
-        config = ResourceConfig(**plan["resource"], image=plan["image"], mounts=plan["mounts"],
+        config = ResourceConfig(**plan["resource"], image=plan["image"], mounts=list(plan["mounts"]),
             envs={"DISTRIBUTED_JOB": "false", "PYTHONDONTWRITEBYTECODE": "1",
                   **plan["math_thread_env"]})
         workers = spawn_tasks(config, command=command, charged_group=plan["charged_group"],

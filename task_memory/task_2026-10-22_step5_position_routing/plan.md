@@ -3,6 +3,9 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Prepare current-source joint and zero-GPU worker scripts; verify static full-output controls without extending calls or source budgets. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Record copied-runtime local/image CPU import acceptance; preserve original failures and unchanged invocation/source limits. |
 | 2026-10-25 HKT | Complete finite copy/init record integration; advance to current cohesive timing and worker/cloud execution conditions. |
@@ -74,6 +77,18 @@ The worker CPU interpreter/image import prerequisite is now PASS: retain the cop
 ### Prepared current executions
 
 The joint driver and worker plan/scripts now exist and pass static source/input/AST checks, seven checker corruption controls and a no-operation worker dry run. `resumed_execution/execution_plan_2026-10-25.md` records exact commands, resource/mount/lifecycle/cleanup bounds and the next fullCLI path. This closes script preparation only. Two new ordinary captured D1/layer60 pricing calls await a separate finite decision; no new label extends prior controls. In parallel, the existing H800 task-resource authority covers one zero-GPU readiness worker after prepared-script review, without new GPU/native allocation. Actual timing/worker/RSS/fullCLI/T2/native/G3/E2E remain open.
+
+### Preparation review correction and original SDK check
+
+Initial Standards review reports three documented findings plus one optional unused-options observation; initial Spec has No findings. Repairs compare the complete expected trace simulation_info, read mandatory frozen cache names, use model_bytes, and remove the unused profile/iterations options. Static05 passes all prior controls plus three trace-header identity rejections without setup/pricing or platform operations. Independent follow-up review is pending.
+
+Final worker_spec03 passes the original SDK object shape and fields at4CPU/0GPU/64000Mi/1replica, H800 and the fixed image/NFS source. The requested mount list is copied and unchanged; the mandatory SDK-added tenant mount is explicitly recorded and is never used by the workload. The original field AttributeError and the intermediate mount comparison defect remain retained. Stop checker expansion after the current review closes; submit the one prepared readiness worker under existing authority, preserving all pricing/shape/fullCLI limits.
+
+The final preparation Standards and Spec follow-ups now both report No findings, including the Git assets/configuration and original SDK mount behavior. All initial preparation findings are closed. This permits the already authorized one readiness worker after the task-only commit; the two ordinary pricing calls still require their pending finite decision.
+
+### Final worker Git preparation
+
+The worker uses hash-bound copied Git2.34.1 and an exact two-repository task configuration. Fixed-image worker_git_preflight04 verifies real source/input/fixture/script bindings before any worker submission; static06 verifies the final prepared script hashes, full reference output and all10 rejection controls. The original missing-Git and ownership failures remain retained. This closes the last discovered execution-environment preparation defect. Stop Git/configuration probing after these affected checks; close the existing independent reviews and commit the task-only result before the one readiness job. Keep records HEAD unchanged during that job's before/after binding checks. No new pricing call is authorized.
 
 ## Previous handoff boundary (2026-10-25; historical)
 

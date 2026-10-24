@@ -1,0 +1,47 @@
+{
+  "collected_utc": "2026-10-24T20:41:54.101956+00:00",
+  "scope": "Five current task worktrees; old89-attachment census is retained, not recomputed",
+  "worktrees": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "head": "c52eca18ff4f1a80819395f7cd36eab80e428133",
+      "branch": "feat/step5-preview",
+      "status": " M task_memory/task_2026-10-22_step5_position_routing/handoff_prompt.md\n M task_memory/task_2026-10-22_step5_position_routing/plan.md\n M task_memory/task_2026-10-22_step5_position_routing/progress.md\n M task_memory/task_2026-10-22_step5_position_routing/requirements.md\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_bindings.json\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_setup.py\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_timing.py\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/launch_worker.py\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/verify_preparation.py\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_plan.json\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/execution_plan_2026-10-25.md\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/test_report_2026-10-25_execution_preparation.md\n M task_memory/task_2026-10-22_step5_position_routing/summary.md\n?? .cortexkit/.gitignore\n?? .pi/subagents.json\n",
+      "ancestor_of_main": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "branch": "fix/d29-ledger-stream",
+      "status": "",
+      "ancestor_of_main": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "branch": "",
+      "status": "",
+      "ancestor_of_main": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+      "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+      "branch": "d29-snapshot-copy-finish",
+      "status": "",
+      "ancestor_of_main": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+      "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+      "branch": "d29-init-preparation-finish",
+      "status": "",
+      "ancestor_of_main": true
+    }
+  ],
+  "source_diff_checks": {
+    "2ca5e57113b0bc99ab84e926e5bb492b3670072e": "",
+    "1461573de388b72450189bc0c1b88b4ac32491f0": ""
+  },
+  "new_pricing_calls": 0,
+  "new_platform_operations": 0
+}

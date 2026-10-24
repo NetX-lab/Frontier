@@ -53,6 +53,11 @@ def main():
         "source_root": str(source), "pricing_calls": 0, "required_shape_calls": 0,
         "full_cli_calls": 0, "gpu_request": plan["resource"]["gpu"], "full_workload_memory_verified": False}
     try:
+        for filename, expected in plan["git"]["files"].items():
+            if hashlib.sha256(Path(filename).read_bytes()).hexdigest() != expected:
+                raise AssertionError(f"Mounted Git asset changed: {filename}")
+        os.environ["PATH"] = str(Path(plan["git"]["path"]).parent) + os.pathsep + os.environ["PATH"]
+        os.environ["GIT_CONFIG_GLOBAL"] = plan["git"]["config"]
         from joint_timing import check_bindings
         bindings = json.loads(Path(plan["joint_bindings"]).read_bytes())
         receipt["source"] = check_bindings(bindings, directory)

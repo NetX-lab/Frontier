@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Prepare the exact two-wave timing driver, full parity checks and one zero-GPU worker; no pricing or platform operation. |
 
 The production source is `2ca5e57113b0bc99ab84e926e5bb492b3670072e` and equals frozen `1461573d` outside `task_memory`. The existing116-path/126-binding budget remains CORE4377/4404, PRICING3955/3956, native1350/1582, source9682/9942 and global9696/10000. These are single-task scripts in the retained evidence bundle, not new production modules or source allocations.
@@ -63,6 +66,18 @@ bash task_memory/task_2026-10-22_step5_position_routing/resumed_execution/eviden
 ```
 
 This entry is not run in preparation. It configures existing personal credentials before any client and performs exactly one local Python RJobBackend submission. It does not install packages, change credentials/VPN/v1 configuration or run native profiling.
+
+## Original SDK materialization and review boundary
+
+Preparation follow-up repairs full trace-header identity and frozen cache-name handling without pricing. Finalstatic05 verifies10 expected output corruptions; finalworker_spec03 verifies the exact original SDK objects without client creation. The first field error and intermediate mutation-tainted mount check remain raw evidence.
+
+The original ResourceConfig.__iter__ appends juicefs+s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant for every task. The requested mount list is copied, and the checker verifies the requested codesign mount plus only this documented SDK default and an unchanged plan. The worker reads/writes no tenant data; all task cloud reads/writes remain under /mnt/codesign-exp/ycfeng. This records original SDK behavior and changes no SDK, submitted mount request or task scope. Follow-up review closes before the one readiness submission; the two new ordinary pricing calls remain unapproved.
+
+## Final copied-runtime Git verification
+
+The fixed image lacks git, and its root UID differs from the owned source UID10250. Retain Git01's FileNotFoundError, Git02's original ownership failure and Git03's exact diagnostic child stderr. The copied host Git2.34.1 is already in the mounted runtime; the task-only configuration file contains exactly the two owned repository paths. worker_entry.py verifies both asset hashes, selects that runtime PATH and sets GIT_CONFIG_GLOBAL before the real source binding call. Host/image global configuration and production source are unchanged.
+
+worker_git_preflight04 passes these exact assets/configuration and two real check_bindings calls in the same pinned image, read-only mount, network none and60s/30GiB configuration. Static06 passes the final prepared hashes, full retained outputs, all10 expected rejections and no-operation worker dry run. Do not add Git probes after the passing affected checks. Both existing follow-ups now have No findings. Commit the task-only changes and hold that records HEAD during the one readiness worker; its before/after binding check requires the HEAD to remain stable. Runtime import/append and platform lifecycle are still the actual worker's deliverables, not these preparation results.
 
 ## Complete workload follows observations
 

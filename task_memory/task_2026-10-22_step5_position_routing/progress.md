@@ -3,6 +3,9 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
+| 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Prepare current-source joint and zero-GPU worker scripts; verify static full-output controls without extending calls or source budgets. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Recover the uncommitted runtime preparation, fix the distinct base prefix, and pass the unchanged local/image probes; checkpoint requires parallel joint-script preparation. |
 | 2026-10-25 HKT | Close and consolidate copy/init diagnoses with current source/receipt verification; preserve zero controls and unchanged source admission. |
@@ -113,6 +116,36 @@
 - completed/static verification: Python3.10.6/BLAS1/-B, static02exit0,2.363082259s.25 source hashes/six inputs/262 fixture metadata, six Python syntax files, shell syntax, exact wave AST, full16/208 reference JSONL and seven expected corruption rejections pass. No-operation worker dry runPASS. Evidence `resumed_execution/evidence/execution_preparation_2026-10-25/`; measured cgroup peak unavailable, not reported as whole RSS.
 - completed/final bindings: remove one blank EOF line caught by staged whitespace check, refresh joint/worker hashes, finalstatic03exit0/2.199947817s with all seven rejection controls. No new wave; preserve static02 and raw failures. Remove four completed own reference-copy JSONL files after exact hash recording; original inputs remain.
 - in-progress/next: independent prepared-script Standards/Spec review; actual worker readiness can progress under standing H800 task-resource authority. Joint timing alone awaits the explicit finite two-call decision. Complete6144/1024 CLI<=2400s per main child, full-workload memory, finalT2/source/package/native/G3/E2E remain unfinished.
+
+### Preparation review correction and SDK check (2026-10-24 UTC / 2026-10-25 HKT)
+
+- completed/worktree reconciliation: main recordsHEAD c52eca18, production2ca5e571; all non-task bytes equal production2ca and frozen146. ledger-stream/frozen-ledger146, copy-finishb061f884 and init-finish6335f581 are clean main-branch ancestors. No satellite merge remains; old attachments and unrelated.cortexkit/.pi are retained. The five-tree receipt is resume_after_review.json.
+- completed/initial preparation review: Standards01a16f98-2468-7c30-8040-3f29d40a8fdb finds3 documented issues (trace header identity, unnecessary missing-cache-name fallback, data name) and1 optional unused-options observation; Spec01a16f98-608b-79b2-99b1-23d3b1e223f1 has No findings. Only task scripts/records are inspected; no production review/suite is reopened.
+- completed/review repair: exact expected evidence/label/source_commit comparison; mandatory cache_model_name indexing; model_bytes; unused profile/iterations and related imports removed. Static04exit0/2.704284248s preserves the7 earlier corruptions and rejects3 trace-header identity changes,25 source/six inputs/262 metadata and full16/208 references. No new pricing or setup runs.
+- corrected/SDK01: original object checkerexit1/4.682937818s because Task stores privateMachine, not private_machine; mount_config stays snake_case. Original checkerSHA bdc0676a and raw traceback/stdout/stderr are retained. Paramiko TripleDES warnings are not the cause and trigger no dependency changes.
+- corrected/SDK02: field/resource checkerexit0/4.299797723s reveals an automatic tenant mount. ResourceConfig.__iter__ mutates the input list, so its mount equality is tainted and does not establish the original plan's mount set. Exact intermediate script is recovered and matches its originalSHA e6e7e788; raw PASS is preserved with this explicit limit.
+- completed/SDK03: copied requested list and separately documented original SDK default pass unchanged-plan, exact task/resource/image/H800/NFS checks,exit0/4.515597923s,Python3.10.6. Only object construction; no client/auth/query/submission. The default tenant mount has no workload read/write; all task cloud accesses remain personal codesign. SDK and API are unchanged.
+- completed/final static05:exit0/2.865911072s,10 expected corruption rejections, full16lane/208operator/144proof references and no-operation worker dry run. The command ran concurrently with SDK03 in separately configured30G scopes; no measured full-workload memory is claimed. Source/budgets,shape6/6 and all old diagnostic ceilings remain unchanged.
+- in-progress/follow-up review: reuse the two existing independent reviewers on the repaired preparation slice. Once closed, commit the task scripts and evidence before the single zero-GPU readiness submission. Current new pricing0/shape0/fullCLI0/platform0. Joint execution alone awaits the finite two-call decision; final workflow/native gates remain open.
+
+| Current worktree | Branch / HEAD | Actual task disposition |
+| --- | --- | --- |
+| step5-preview | feat/step5-preview / c52eca18 before review-repair commit | Sole current execution branch; production2ca source unchanged. |
+| step5-d29-ledger-stream | fix/d29-ledger-stream /1461573d | Clean; code and records already integrated. |
+| d29-ledger-final-1f6b4314 | detached /1461573d | Clean retained source-freeze verification tree. |
+| d29-snapshot-copy-finish | d29-snapshot-copy-finish /b061f884 | Clean integrated static NO_ALLOC diagnosis. |
+| d29-init-preparation-finish | d29-init-preparation-finish /6335f581 | Clean integrated ALLOC recommendation only, no code allocation. |
+
+### Fixed-image Git recovery and final preparation (2026-10-24 UTC / 2026-10-25 HKT)
+
+- completed/state recovery: current main recordsHEAD c52eca18, source2ca5e571; the ledger/frozen146, copyb061f884 and init6335f581 dispositions remain as listed above. No source merge, regression, copy/init or previous measurement is repeated. Local submission host is kun-workspace-vgen2 resolving100.96.128.195; personal credential files already exist/nonempty/mode0600 and the fresh planned output directory is absent. No credential values are printed or changed.
+- corrected/Git01: fixed-image read-only query exits1 in1.818949030s with FileNotFoundError for git. Copy the already installed host executable to the persistent copied runtime,3665328B/SHA06c1cfb4,version2.34.1; the original environment and fixed image are unchanged.
+- corrected/Git02: copied executable links, but the image UID0 reads UID10250 source; the attempted GIT_CONFIG_COUNT safe.directory entries do not resolve dubious ownership. Raw exit1/1.043054268s is preserved. Diagnostic03 reuses the exact queries and exposes child stderr without claiming PASS,exit0/0.975511407s.
+- completed/Git04: the task-only GIT_CONFIG_GLOBAL file/SHA672995b5 trusts exactly current step5-preview and its collective-sim checkout. Worker verifies both assets before setting PATH/config. Fixed-image preflight04 exit0/1.567929203s verifies asset hashes, Git version, exact directory entries/origins and two identical real check_bindings results:25source/sixinputs/262fixture metadata; no setup, pricing, runtime import or platform operation. Docker uses --pull=never, read-only source/root, network none,60s/30GiB; configured memory is not measured workload RSS.
+- completed/static06: final task script/plan bindings, compile, bash-n, complete16lane/208operator/144proof reference parity, all10 expected rejection controls and no-operation worker dry run pass,exit0/3.099603861s under canonical Python3.10.6/-B/one math thread/60s/configured30GiB. Selected exact receipts/stdout/stderr/report are in resumed_execution/evidence/execution_preparation_2026-10-25/. No additional wave/setup/shape is run.
+- completed/preparation follow-up: both original reviewers inspect the final Git assets and passing affected checks; Standards reports0 documented findings/0 baseline smells, Spec reports0 findings. All original3 hard issues and1 optional observation are closed. Both reviewers are closed after collection. See resumed_execution/review_execution_preparation_2026-10-25.md.
+- completed/final metadata and cleanup: preparation_review_followup.json rechecks all5 current worktrees, both non-task source comparisons, final script/Git hashes and the passing Git04/static06 receipts. Record6 completed static04/05/06 reference-copy hashes, then remove exactly those6files/15603024B; preparation_review_cleanup.json retains paths/bytes/SHA256. Original active/cited inputs and all selected reports/logs/receipts remain.
+- in-progress/next: commit the verified task scripts/evidence before one zero-GPU readiness worker; keep the resulting records HEAD stable until both binding calls and platform/business terminal checks finish. Source2ca, all budgets and required-shape6/6 remain unchanged. New pricing0/shape0/fullCLI0/platform0. Current joint timing remains blocked only on the pending finite two-call decision.
 
 ## Previous session handoff and revision-bound history
 

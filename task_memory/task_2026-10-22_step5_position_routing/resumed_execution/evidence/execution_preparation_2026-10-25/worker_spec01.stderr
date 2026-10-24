@@ -1,0 +1,13 @@
+Running scope as unit: run-r479817d8e0bf4d6799a4360a69c874ba.scope
+/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/paramiko/pkey.py:82: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "cipher": algorithms.TripleDES,
+/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/paramiko/transport.py:253: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "class": algorithms.TripleDES,
+2026-10-25 04:28:41.500 | INFO     | steptron.exp.base_exp:find_leaf_task_specs:4512 - Get TaskSpecs from entire config tree:
+- @ResourceConfig: default
+2026-10-25 04:28:41.504 | INFO     | steptron.exp.base_exp:find_leaf_task_specs:4512 - Get TaskSpecs from entire config tree:
+- @ResourceConfig: default
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/verify_worker_spec.py", line 40, in <module>
+    "private_machine": str(task.private_machine), "mount_config": task.mount_config,
+AttributeError: 'Task' object has no attribute 'private_machine'. Did you mean: 'privateMachine'?
