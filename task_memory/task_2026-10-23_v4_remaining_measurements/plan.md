@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Close reviewed package and measurement records for handoff; no new experiment or GPU submission during closeout. |
 | 2026-10-24 | R3/R4mechanics reproduced by primary; correct semantic temporary partitions and diagnose8P0audit timeouts before full32acceptance. |
 | 2026-10-24 | Profile04 execution passed4/4/exit0/restart0; retrieve/hash-bind inputs before parallel local client, metadata and32-trace audits. |
 | 2026-10-24 | Completed submission-doc and CPU-fixture acceptance; native capture prerequisite accepted with limits, while the existing profile04 job awaits placement/runtime. |
@@ -35,6 +36,14 @@
 | 2026-10-23 | Q2a isolated data accepted after root reruns; Q2b source reviews closed; profile02 platform terminal verified and I4 begins. |
 
 ## Dependencies and ownership
+
+### Current handoff frontier — 2026-10-25
+
+- completed: R3 retained-run and R4 metadata-only acceptance; S1/S2 CPU/source acceptance. S3 mirrored package is generated once and both package reviews report No findings. Locked-image CPU and actual SDK launch-entry controls pass, without submission.
+- pending: integrate/archive the verified package and root receipts, then transfer fresh storage/quota/destination, seal and the existing single 1-H800/600-second attempt to the next session. Preserve the original package worktree because config and launcher use its absolute paths.
+- completed diagnostic only: metrics-call observation preserves the 60-second timeout. The last 1,215,919-kernel metrics call starts at 59.258 seconds and is censored; R5 remains 24/32 complete. One-global-stable-sort is an unimplemented proposal requiring a separate allocation and exact-output controls.
+- dependency: `{prepared S3 -> fresh prelaunch gates -> seal -> single S4 -> scoped S5 audit, P0 measured metrics seam -> separate correction allocation -> exact controls -> bounded affected-rank validation} -> remaining R5/R6/R7`. Full05/09/19, actual native ownership and cost/reference admission remain open. No new run is started during handoff.
+- Earlier current/next-action paragraphs below are dated execution history. The final continuation prompt and current status are maintained in [progress.md](progress.md#current-session-handoff-2026-10-25).
 
 Queue-time priority: `Q0 current ticket/dependency census -> {Q1 independent CPU slice, Q2 concrete small-H800 supplement -> source/package checks -> collection/acceptance}` runs alongside `I3 queued32-H800 -> I4 actual native profile analysis`. Root selects only evidenced, unfinished work and records each selected slice's file ownership and scope before implementation. Initial read-only owners: W128-QUEUE-CPU-TODOS (`ses_e973542d0ffe0q9pPkLWZqidhT`) and W128-QUEUE-SMALL-GPU (`ses_e9734d10dffedFg9G5IQxJ653u`). Root retains platform operations and final acceptance; neither inspection changes sources or submits jobs.
 
@@ -109,3 +118,4 @@ Read requirements.md before closure. Do not sum scope medians into serving time 
 - completed S1/S2 current: both full-range reviews close tuple/loghash findings; primary50-case replays on owner and merged sources pass with25fixtureexports/30GiB/CUDAfalse/unchanged inputs. [CPU/source acceptance](profile01/scope_lifetime/primary_acceptance.json) freezes252/179source/tests for separate S3package allocation; GPU/native ownership not accepted.
 - completed loading-GC pilot only: exact decode control plus one P0run improves loading47.129->31.384seconds and finishes1215919kernel-index rows/39useful steps, but final metrics reaches60second exit124 with no final JSON. R5 remains INCOMPLETE; isolate remaining metrics cost before any additional full-input command.
 - in-progress S3fresh mirrored package under D-V4-SCOPE-LIFETIME-PACKAGE, then independent review/root/image/SDK/storage/quota/destination checks -> seal -> existing single1H800/600s S4attempt. Actual TLS/lifetime/native ownership and R5/R6/R7 remain unaccepted; original jobs/packages are unchanged.
+- in-progress independent D-V4-P0-AUDIT-METRICS-OBSERVATION: exact decode control then one unchanged-work P0call-timing observation; preserve60second/30GiB limit and all incomplete results. S3package owner is independent and unaffected.
