@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Close frozen dbe19f53 regressions and final archive audit; JSON control is unallocated and required-shape validation is assigned. |
 | 2026-10-24 | Parent verifies frozen dbe19f53 short101/197/53/52 with27 hashes and exact46fe IDs; strict/full-unit remain running. |
 | 2026-10-24 | Integrate named-query ffb435ca/8ecb705e and auditc6b1f3b8; final124-binding guard accepts9579 global, with stepnet84 distinct from budget increment88. |
 | 2026-10-24 | Named-query code1737ce9c passes both reviews and parent125PASS/1SKIP plus19 byte comparisons; composed audit remains pending. |
@@ -119,12 +120,12 @@
   all114caps PASS,CORE4261/PRICING3954/native1350,9565source/9579global,zero
   violations. Source1737ce9c and records3d75c786 are integrated asffb435ca/8ecb705e.
   Parent final-head124-binding guard reproduces the unchanged120 non-query digest;
-  receipt runtime_model_view/parent/acceptance.json. New frozen checks are next;
+  receipt runtime_model_view/parent/acceptance.json. New frozen checks are complete below;
   see runtime_model_view/{requirements.md,plan.md,progress.md} and the amendment.
   Three archive-checker errors(header clocks twice, then wrong samples field)
   were corrected without rerunning the wave; original logs retained and final
   verification PASS. Records:runtime_model_view/{design.md,test_report_2026-10-24_runtime_model_view.md,evidence/}.
-- in-progress/frozen successor: D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS is assigned
+- completed/frozen successor: D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS was assigned
   to the previous regression owner ses_e98925887ffecetw6nTB6nD8f0, targeting accepted
   commit dbe19f53 in a new isolated integrated08 source worktree. Scope: strict77,
   canonical full-unit, required supplements, raw-ID/status comparisons to46fe/79,
@@ -133,11 +134,36 @@
   Four short suites now complete:101/197/53/52PASS,all rawexit0. Parent27 hashes
   and independent JUnit comparisons reproduce all46fe IDs/statuses, with the
   existing79metadata old/newID difference still explicit. Live frozen source/
-  tree/3dac are clean. Receipt:resumed_performance/post_named_query_regression_acceptance.json,
-  statusPASS_SHORT_SUITES_ONLY. Strict77/full-unit continue under their existing
-  execution envelopes; no unfinished output was inspected and no suite rerun.
+  tree/3dac are clean. The initial receipt
+  resumed_performance/post_named_query_regression_acceptance.json remains a
+  historical PASS_SHORT_SUITES_ONLY. Final strict77 is77/77 identical; unit raw
+  8028PASS/279FAIL/32ERROR/281SKIP,exit1. Against46fe all8612 retained IDs/statuses
+  match and8 new IDs pass. Against79 shared states/failing sets match and11 new
+  IDs pass;one approved missing old-ID remains rawFAIL, unwaived. No run remains
+  pending and no suite was rerun during final receipt/archive verification.
   An initial schema-discovery KeyError for supplement101's single-baseline field
   was corrected before validation; final parent verification passes.
+- completed/final audit and archive: D29-POST-NAMED-QUERY-FINAL-PARENT-AUDIT,
+  session ses_e95ac82fdffeSeMEUfR9SxvW03, verifies3762 file-path hashes,2755 source/
+  14input/12script inventories,124/120 bindings,451 artifacts/519 cache names per
+  strict side,9565source/9579global and zero violations. Owner0a42e56e/39f0c100
+  archivesb2a202fd/dc9440f7; auditor507234ed/03d6132e archives6771eda3/399f0d3b.
+  Primary independently verifies16 auditor artifacts against owner Git, raw
+  JUnit counts/new IDs and an empty non-task source diff from dbe19f53. Authority:
+  resumed_performance/post_named_query_final_parent/{parent_acceptance.json,archive_acceptance.json};
+  exact command and limits are in the parent regression test report.
+- completed/diagnostic: D29-RUNTIME-JSON-REUSE, primary. Registry loads fall
+  1136→976 and point dumps704→544 with208-event/proof/ledger parity,19 per-arm
+  complete-file comparisons and retained288/144/64/16 live calls. Balanced24
+  enabled-GC samples give median90.982/89.274/87.092/88.348ms; small savings and
+  GC-sensitive means do not justify production allocation. One archive-checker
+  error included real auxiliary header clocks; corrected checks retain their
+  raw hashes and compare the exact3902-byte failure body. Original failed log
+  is preserved. Evidence:runtime_json_reuse/; production/source quota unchanged.
+- in-progress/required-shape verification: D29-REQUIRED-WAVE-SHAPES, session
+  ses_e93176c15ffefHaQWQESiTHY7D, uses frozen dbe19f53 and cached fixture for P6128,
+  firstDECODE16 and BF16-layer88-90. At most three60s/30G production-path probes;
+  no fullCSV/init/CLI/GPU/source edit. Records ownership:workload_shape_validation/.
 - in-progress/independent diagnosis: D29-SNAPSHOT-COPY-CONTROL, session
   ses_e93a71d28ffendJiHmtuzK8ec6, checks whether a C-backed deep snapshot can
   preserve supported getter semantics and reduce measured copying. Read-only

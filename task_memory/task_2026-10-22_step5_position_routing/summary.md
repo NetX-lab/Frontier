@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Archive completed dbe19f53 regressions and final audit; small JSON controls are not allocated and required-shape validation continues. |
 | 2026-10-24 | Accept four frozen dbe19f53 short suites after27 parent checks; strict/full-unit remain pending. |
 | 2026-10-24 | Integrate and accept named-query ffb435ca with final9579 global audit and124-binding parent guard. |
 | 2026-10-24 | Record named-query component delivery, independent No findings and parent125PASS/1SKIP plus full-wave parity; final audit pending. |
@@ -70,16 +71,31 @@ Composed budget auditde5eeab0 is archivedc6b1f3b8; final124-binding parent guard
 confirms9579/10000 and all114caps. Step96gross, physical net84 and cumulative
 budget growth88 are distinct. Code/records are integrated asffb435ca/8ecb705e.
 Parent records are runtime_model_view/parent/.
-An independent bounded snapshot-copy diagnosis is also running without source
-allocation. Production usage is9579/10000. Fresh successor regressions and full
-CLI acceptance remain open.
+Independent bounded snapshot-copy and initialization analyses remain without
+source allocation. Production usage is9579/10000. Full CLI acceptance remains open.
 
-Frozen successor dbe19f53 now has four independent short results101/197/53/52PASS,
-all rawexit0. Parent27 artifact hashes and raw JUnit comparisons verify exact46fe
-IDs/statuses and the explicit79metadata test replacement. Strict77/full-unit and
-final guards remain in progress. Partial parent receipt is
-resumed_performance/post_named_query_regression_acceptance.json; no long-running
-or whole-workflow gate is inferred from these short results.
+Frozen successor dbe19f53 has completed all assigned regressions:strict77 is77/77
+identical;independent short results101/197/53/52PASS;raw unit8028PASS/279FAIL/
+32ERROR/281SKIP,exit1. All46fe retained states match and8 real new IDs pass.
+Against79, shared states/failing sets match and11 new IDs pass;one approved old
+hot-update ID remains missing, with raw presenceFAIL explicitly unwaived.
+Final independent audit verifies3762 file-path hashes,2755 source/14input/12script
+inventories,451 artifacts/519 cache names per strict side,124/120 bindings and
+9565source/9579global,zero violations. Owner records are mergedb2a202fd/dc9440f7
+and final audit6771eda3/399f0d3b. Primary verifies16 auditor artifacts/raw JUnit
+and an empty non-task source diff;no suite rerun. Current authority is
+resumed_performance/post_named_query_final_parent/{parent_acceptance.json,archive_acceptance.json}.
+The earlier short-only receipt remains historical. No full-workflow admission follows.
+
+Call-local JSON controls preserve the tested208-event/proof/output/error cases,
+remove160 registry loads and160 point dumps per wave, but balanced enabled-GC
+medians improve only1.7–3.9ms and means are GC-sensitive. No production allocation
+is made. Diagnostic artifacts/limits are in runtime_json_reuse/. An initial
+archive checker included real auxiliary timestamps; its failure and raw headers
+are retained, while exact3902-byte failure-body comparison passes.
+Required-shape validation is assigned to ses_e93176c15ffefHaQWQESiTHY7D with only
+three60s/30G cached-fixture production-path probes. P6128/DECODE16/BF16 event/byte
+expectations remain unmeasured until its actual results arrive.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
 Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trainerPASS,

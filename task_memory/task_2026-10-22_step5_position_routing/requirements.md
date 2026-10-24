@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Carry YC's continue request into bounded post-regression diagnostics; JSON controls receive no production allocation. |
 | 2026-10-24 | YC approves named querying and analogous in-scope performance changes; allocate100gross within unchanged CORE/global limits. |
 | 2026-10-24 | Record an unapproved named-model query proposal and its demonstrated unrelated-model error-policy difference. |
 | 2026-10-24 | Complete snapshot component and allocate the17-gross derived-key successor within unchanged PRICING/global limits. |
@@ -360,3 +361,25 @@ repairs/named_model_query_scope_amendment.json: source15/5, tests50/30,
 the two tests. All114 allocated paths and owner/global ceilings are unchanged.
 The docstring update is inside registry15. These routine implementation and
 bookkeeping decisions are covered by the approval above.
+
+## [Original Request / Execution Bounds] Continued performance diagnosis
+
+YC again requests: **“continue”**. Preserve all unfinished workflow/native work;
+the completed frozen regression does not replace the6144/1024/2400s acceptance.
+
+Primary completed the bounded call-local JSON investigation under
+`runtime_json_reuse/requirements.md`: four protected-output arms and one60s/30G
+same-process timing control. Small paired savings and GC-sensitive means do not
+justify production allocation. No owner/path allowance, output predicate or
+current-model check changes as a result.
+
+Independent snapshot-copy and initialization-local preparation analyses retain
+their original read-only ownership. The required-shape investigation is assigned
+as D29-REQUIRED-WAVE-SHAPES, session `ses_e93176c15ffefHaQWQESiTHY7D`, with records
+only under `workload_shape_validation/`. Use frozen `dbe19f53`, existing cached
+fixture setup and actual production price/emission for previously unmeasured
+P6128, first-DECODE16 and BF16-layer88-90 shapes. At most three invocations, each
+60s/30G/Python-B/single math threads. No fullCSV/trace scan, init/training/fullCLI,
+GPU/platform/network operation, source edit or numerical/proof memo is assigned.
+If the retained setup cannot reach a required shape within those bounds, report
+the exact blocker rather than substituting toy timing or extending the limit.

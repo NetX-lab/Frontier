@@ -1,0 +1,74 @@
+--- a/frontier/execution_time_predictor/prediction_model_registry.py
++++ b/frontier/execution_time_predictor/prediction_model_registry.py
+@@ -404,12 +404,14 @@
+                 isinstance(key, tuple) for key in typed_candidates
+             ):
+                 raise ValueError("native binding query requires explicit native_source")
+-            typed_candidates = {
+-                key: model for key, model in typed_candidates.items()
+-                if isinstance(key, tuple) and all(
+-                    json.loads(key[2]).get(field) == value for field, value in requested.items()
+-                )
+-            }
++            matches = {}
++            for key, model in typed_candidates.items():
++                if not isinstance(key, tuple):
++                    continue
++                binding = json.loads(key[2])
++                if all(binding.get(field) == value for field, value in requested.items()):
++                    matches[key] = model
++            typed_candidates = matches
+         legacy = (
+             self._legacy_precision_bucket(family_name, precision_key).get(model_name)
+             if precision_key is not None
+--- a/frontier/execution_time_predictor/moe_routing_workload.py
++++ b/frontier/execution_time_predictor/moe_routing_workload.py
+@@ -167,12 +167,11 @@
+             retained = (*retained[:2], retained[2].copy(), retained[3].copy())
+         return retained
+ 
+-    def _step5_plan_candidates(self, retained, phase, sizes, mode, tensors, context):
++    def _step5_plan_candidates(self, retained, phase, sizes, mode, tensors, context, shared_json, context_json):
+         from frontier.profiling.common.runtime_identity import canonical_json
+         artifact, shapes, domains, plans = retained
+         shape = (phase, sizes, mode, canonical_json(tensors))
+-        shared = canonical_json(context["native_facts"]["shared"])
+-        domain = (shape, shared)
++        domain = (shape, shared_json)
+         if domain not in domains:
+             points = {}
+             for key, value in shapes.get(shape, ()):
+@@ -182,7 +181,7 @@
+                 buffer = json.loads(value["buffer_json"])
+                 points.setdefault(canonical_json(buffer.get("compute_context")), []).append((key, value, buffer))
+             domains[domain] = points
+-        return artifact, plans, domains[domain].get(canonical_json(context), ())
++        return artifact, plans, domains[domain].get(context_json, ())
+ 
+     def _step5_position_queries(self, lane):
+         """Recover actual point facts and complete measured plans, never numerical defaults."""
+@@ -216,19 +215,21 @@
+             "moe_tensor_parallel_allreduce":"routed_tp"}
+         if self._model_config.supports_share_expert(): phases["share_expert_tensor_parallel_allreduce"] = "shared_tp"
+         mode = "full" if local.graph_mode == "FULL" else "none"
++        from frontier.profiling.common.runtime_identity import canonical_json
++        context_json = canonical_json(context)
++        shared_json = canonical_json(context["native_facts"]["shared"])
+         for name,phase in phases.items():
+             matches = {}
+             tensors = context["collective_tensors"]["dispatch" if phase == "dispatch" else "output"]
+             artifact, prepared, candidates = self._step5_plan_candidates(retained,phase,
+-                tuple(s.physical_rows for s in source.source_lanes),mode,tensors,context)
++                tuple(s.physical_rows for s in source.source_lanes),mode,tensors,context,shared_json,context_json)
+             for key,value,buffer in candidates:
+                 receipt = artifact["counts"][key]
+                 if (value["phase"] != phase or tuple(value["sizes"]) != tuple(s.physical_rows for s in source.source_lanes)
+                         or value["graph_mode"] != mode or value["tensors"] != tensors): continue
+                 measured = receipt["context"]
+                 if measured["shared"] != context["native_facts"]["shared"] or not measured.get("execution_policy"): continue
+-                from frontier.profiling.common.runtime_identity import canonical_json
+-                if canonical_json(buffer.get("compute_context")) != canonical_json(context): continue
++                if canonical_json(buffer.get("compute_context")) != context_json: continue
+                 if receipt["buffer_receipt"] != buffer: raise ValueError("Measured collective buffer/count key mismatch")
+                 if key not in prepared:
+                     plan = CollectivePlan(phase,tuple(value["sizes"]),tuple(CollectiveTensor(**t) for t in tensors),

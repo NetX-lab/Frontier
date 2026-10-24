@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Close named-query frozen regressions and archive audit; decline small JSON controls and assign required-shape verification. |
 | 2026-10-24 | Parent admits completed dbe19f53 short101/197/53/52; retain strict/full-unit/final-guard dependencies. |
 | 2026-10-24 | Close named-query integration and composed9579 audit; the accepted successor is ready for a new frozen regression pass. |
 | 2026-10-24 | Named-query component passes parent tests/wave and independent reviews; compose the budget before integration and new frozen checks. |
@@ -131,9 +132,20 @@ accepted successor dbe19f53 for required scenario/full-unit checks. Task
 D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS is assigned to the previous regression owner
 ses_e98925887ffecetw6nTB6nD8f0, with isolated records in post_named_query_regressions/.
 Keep comparisons to46fe and79 and preserve raw old-ID replacement accounting.
-Short101/197/53/52 now pass parent27 hash/ID checks. Strict77, full-unit and final
-guards are still in progress and must complete before this regression pass closes. The separate
+Short101/197/53/52 pass parent27 hash/ID checks. Strict77 and the full-unit pass
+are complete on dbe19f53:77/77 exact;raw8028PASS/279FAIL/32ERROR/281SKIP,exit1,
+all46fe retained statuses unchanged and8 newPASS IDs. The79 approved old-ID
+presence gate remains rawFAIL and is not waived. Independent final audit verifies
+3762 file-path hashes and124/120 bindings; the records-only archives are merged
+and primary16-artifact/JUnit/source-diff checks pass. The separate
 initialization-local reuse analysis remains read-only with no source allocation.
+Call-local JSON controls preserve tested output/counts but save only1.7–3.9ms in
+paired medians; GC-sensitive means do not qualify whole-wave improvement. No
+production allocation follows. Next independent edges are snapshot-copy diagnosis,
+initialization-local analysis and required-shape verification(P6128/DECODE16/BF16).
+The shape task allows at most three60s/30G cached-fixture probes, no new fullCSV,
+init/CLI/source/GPU work. Full CLI still waits for a useful reviewed repair and
+storage readiness, not another relabelled point check.
 The non-I/O identity-cache control is rejected because it did not improve timing.
 Cost-fields75404143 is now parent-verified and independently reviewed,8gross and
 zero retained growth, and merged with trace/prepared on feat/step5-preview.
@@ -173,16 +185,17 @@ change is allocated. See early_init_repro/report.md.
 | Approval, ownership and baseline | Complete; effective114 after snapshot allocation276e6520, with unchanged owner/global budgets. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
-| CORE/SOURCE49 allocated | Final union:4173/4404; unchanged cap. |
+| CORE/SOURCE49 allocated | Final union:4261/4404; unchanged cap. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Final union:3954/3956; key uses16/17gross and14/15retained. |
-| Complete integration and final freeze | Key integrated30fb6a30; source46fe83ac exactly matches verified c4e06a61 outside records. Fresh regressions assigned on46fe;gitlink3dac53c unchanged. |
-| Legacy strict77 | Fresh46fe passes77/77;owner451 artifact hashes/519 cache names per side;parent receipt/raw-output hash checks pass. |
-| Full-unit failure/error-set gate | Accepted on79:8018PASS;all8607 e41 statuses unchanged,three newPASS. Raw279FAIL/32ERROR/281SKIP remain;101 and52 environment supplements pass separately. |
+| Complete integration and final freeze | Named queryffb435ca and parentdbe19f53 accepted; fresh regressions complete on frozen dbe19f53; later archives change only task records. Gitlink3dac53c unchanged. |
+| Legacy strict77 | Freshdbe19f53 passes77/77;451 artifact hashes/519 cache names per side freshly audited. |
+| Full-unit failure/error-set gate | Accepted no new code failure on dbe19f53:raw8028PASS/279FAIL/32ERROR/281SKIP,exit1;all46fe retained states match,8 newPASS.79 old-ID raw presenceFAIL remains unwaived. |
 | Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
-| Independent source review | All accepted components including key have No findings on both axes. |
+| Independent source review | All accepted components including named query have No findings on both axes. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
-| Final per-path accounting | Accepted on46fe:114allocated/113changed,9477source/9491global,zero violations; snapshot audit + two-path delta +122 unchanged binding guard. |
+| Final per-path accounting | Accepted on dbe19f53:114allocated/113changed,9565source/9579global,zero violations;124 bindings/120 non-query guard and final frozen audit. |
+| Remaining runtime diagnosis | JSON controls closed without allocation; snapshot-copy/init analyses and required-shape cached-fixture probes remain independent. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments
