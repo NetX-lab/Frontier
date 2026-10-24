@@ -1,0 +1,25 @@
+{
+  "argv": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--quiet",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "-B",
+    "-"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package",
+  "stdin": "cpu_candidate_02.stdin.txt",
+  "returncode": 0,
+  "wall_seconds": 2.01278519583866,
+  "raw": {
+    "cpu_candidate_02.stdin.txt": "5d97b4bad35759cd6c6de9bb59c59ae4370f3d8b4240ba48cd7412be54972dfd",
+    "cpu_candidate_02.stdout.log": "c6012e870e7f7407821375c94705377860d06281cfe43f5d8807ed1b71a1df5a",
+    "cpu_candidate_02.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "command": "/data/ycfeng/envs/asyncopd-py312/bin/python -B -",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package",
+  "script": "closure_01.stdin.txt",
+  "returncode": 0,
+  "wall_seconds": 0.0953947207890451,
+  "kind": "Static inventory/equality and exact sudo cat reads only; no import/argv check or package generation",
+  "raw": {
+    "closure_01.stdin.txt": "a617e8592e05d01a6997221ee76efeca0b88cf1be1b7aab374f3903be6f19dd5",
+    "closure_01.stdout.log": "b38794cba10ca15f822acde58b74c857c115198abadb68c571a2a5cb2b1f2b53"
+  }
+}

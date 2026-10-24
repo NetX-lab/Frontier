@@ -1,0 +1,155 @@
+{
+  "task_id": "W128-SCOPE-LIFETIME-PACKAGE",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package",
+  "cpu_checks": [
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "systemd-run",
+        "--quiet",
+        "--scope",
+        "-p",
+        "MemoryMax=30G",
+        "timeout",
+        "60s",
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package",
+      "stdin": "cpu_candidate_01.stdin.txt",
+      "returncode": 1,
+      "wall_seconds": 0.10183062497526407,
+      "raw": {
+        "cpu_candidate_01.stdin.txt": "246d31ebd0e8772ddcf0adc9d30b59085383c5eba43a7410c1979e2d677595be",
+        "cpu_candidate_01.stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cpu_candidate_01.stderr.log": "af7737638f13b69e359a2a9375b8b9a05b0cb90601df3497b3263210a01b8474"
+      }
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "systemd-run",
+        "--quiet",
+        "--scope",
+        "-p",
+        "MemoryMax=30G",
+        "timeout",
+        "60s",
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package",
+      "stdin": "cpu_candidate_02.stdin.txt",
+      "returncode": 0,
+      "wall_seconds": 2.01278519583866,
+      "raw": {
+        "cpu_candidate_02.stdin.txt": "5d97b4bad35759cd6c6de9bb59c59ae4370f3d8b4240ba48cd7412be54972dfd",
+        "cpu_candidate_02.stdout.log": "c6012e870e7f7407821375c94705377860d06281cfe43f5d8807ed1b71a1df5a",
+        "cpu_candidate_02.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "generation": {
+    "argv": [
+      "/data/ycfeng/envs/asyncopd-py312/bin/python",
+      "-B",
+      "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/build_package.py"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package",
+    "returncode": 0,
+    "wall_seconds": 0.07111977599561214,
+    "generation_invocations": 1,
+    "raw": {
+      "generation_01.stdout.log": "ddea09d123f4a57768ef872b9508c87254c490ff064a9a14186567644fed1add",
+      "generation_01.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "retry_allowed": false
+  },
+  "static_inventory": {
+    "command": "/data/ycfeng/envs/asyncopd-py312/bin/python -B -",
+    "cwd": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package",
+    "script": "closure_01.stdin.txt",
+    "returncode": 0,
+    "wall_seconds": 0.0953947207890451,
+    "kind": "Static inventory/equality and exact sudo cat reads only; no import/argv check or package generation",
+    "raw": {
+      "closure_01.stdin.txt": "a617e8592e05d01a6997221ee76efeca0b88cf1be1b7aab374f3903be6f19dd5",
+      "closure_01.stdout.log": "b38794cba10ca15f822acde58b74c857c115198abadb68c571a2a5cb2b1f2b53"
+    }
+  },
+  "git_commands": [
+    [
+      "git",
+      "status",
+      "--short",
+      "--branch"
+    ],
+    [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    [
+      "git",
+      "add",
+      "-f",
+      "--",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/build_package.py",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/profile_plan.json",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/image_check.py",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01"
+    ],
+    [
+      "git",
+      "diff",
+      "--cached",
+      "--check"
+    ],
+    [
+      "git",
+      "diff",
+      "--cached",
+      "--stat"
+    ],
+    [
+      "git",
+      "commit",
+      "-m",
+      "Prepare mirrored scope lifetime diagnostic package",
+      "-m",
+      "Preserve five accepted payloads and repository-relative imports, reuse the existing single-H800 launcher, and retain image ABI and binary pins without sealing or submitting."
+    ]
+  ],
+  "diff_artifacts": {
+    "source_step.diff": [
+      "git",
+      "diff",
+      "--patch",
+      "b7641816",
+      "106779954d1e804feabe0db6bd9de3515d58b01c",
+      "--"
+    ],
+    "source_step_numstat.txt": [
+      "git",
+      "diff",
+      "--numstat",
+      "b7641816",
+      "106779954d1e804feabe0db6bd9de3515d58b01c",
+      "--"
+    ],
+    "source_step_paths.txt": [
+      "git",
+      "diff",
+      "--name-only",
+      "b7641816",
+      "106779954d1e804feabe0db6bd9de3515d58b01c",
+      "--"
+    ]
+  },
+  "static_initial_failure": "closure_initial_failure.json",
+  "limits": "Two bounded CPU candidate checks; one generation; static artifact reads after generation do not execute probe/launcher/import checks. No StepMind/GPU/image/SDK operation."
+}

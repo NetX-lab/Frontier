@@ -1,0 +1,125 @@
+{
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+  "input_count": 18,
+  "total_files": 19,
+  "total_bytes": 184495,
+  "inventory": {
+    "config.json": {
+      "sha256": "adc4e6af3f2ab4179d1722b23ee61bcd58c80f0c13fc6b21d9543c199b9e1103",
+      "bytes": 2182,
+      "lines": 37,
+      "category": "generated_json"
+    },
+    "inputs/build_package.py": {
+      "sha256": "a42524884ce480001f3cd44c2e348da94ae77b941d12a9283409926353ed7711",
+      "bytes": 8432,
+      "lines": 140,
+      "category": "copied_input"
+    },
+    "inputs/graph_image_receipt": {
+      "sha256": "da9106453b0d9b291cddb6af6fe17f004a3c6ebed4069f00df1b8b905671f32c",
+      "bytes": 999,
+      "lines": 21,
+      "category": "copied_input"
+    },
+    "inputs/graph_image_report": {
+      "sha256": "00e17cb6c58b45cdfb3f93c4947de8ad750c4ae08bd5b4ec870b258f9a529528",
+      "bytes": 9945,
+      "lines": 124,
+      "category": "copied_input"
+    },
+    "inputs/graph_manifest": {
+      "sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146",
+      "bytes": 984,
+      "lines": 17,
+      "category": "copied_input"
+    },
+    "inputs/graph_seal": {
+      "sha256": "3226e380175e5b573e30d2367b7be3130725b70e6e12a98177929e5c1985f2ca",
+      "bytes": 5833,
+      "lines": 116,
+      "category": "copied_input"
+    },
+    "inputs/image_check.py": {
+      "sha256": "002fb52b9b08c246fe01fcedefd4002d14cfea690540680de40feec481fe2639",
+      "bytes": 4102,
+      "lines": 78,
+      "category": "copied_input"
+    },
+    "inputs/launcher_template": {
+      "sha256": "2d84970c4bec06533942ceafbfd6a7a6eb729c6ee12e73fe594faaf797ee493d",
+      "bytes": 3037,
+      "lines": 65,
+      "category": "copied_input"
+    },
+    "inputs/profile_plan.json": {
+      "sha256": "90800cbed3a90453b045a5fdfbd4517be4201972e8e136e0c29187ebd85abc97",
+      "bytes": 1027,
+      "lines": 27,
+      "category": "copied_input"
+    },
+    "inputs/source_acceptance": {
+      "sha256": "f639ab3351d436e32a6e2233f0aea5a18f989bb3927e1292a1ff062a7b1562bc",
+      "bytes": 2386,
+      "lines": 42,
+      "category": "copied_input"
+    },
+    "inputs/template_config": {
+      "sha256": "6c94d88d6b24e09093dc9b90f5e2b48f41c661f0c22d858c2c0059738929d25e",
+      "bytes": 1328,
+      "lines": 25,
+      "category": "copied_input"
+    },
+    "launch.py": {
+      "sha256": "b3814788c5147f98ae60c7f023701b0291af17b1a89b94bc6ba6aaf5d6c0d71b",
+      "bytes": 3801,
+      "lines": 74,
+      "category": "generated_launcher"
+    },
+    "manifest.json": {
+      "sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+      "bytes": 2252,
+      "lines": 27,
+      "category": "generated_json"
+    },
+    "source_lock.json": {
+      "sha256": "cd6db51a0423a2b4cbb97a97db0f2954e2fdc090086da3eed1b85bf8d5e52f4b",
+      "bytes": 8251,
+      "lines": 165,
+      "category": "generated_json"
+    },
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py": {
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+      "bytes": 34078,
+      "lines": 669,
+      "category": "payload"
+    },
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": {
+      "sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+      "bytes": 13796,
+      "lines": 252,
+      "category": "payload"
+    },
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json": {
+      "sha256": "89232a9e1ee60e5d57859dd707796a85b3d99ba89ad309d98aab3c93b2ed6b0b",
+      "bytes": 2557,
+      "lines": 72,
+      "category": "payload"
+    },
+    "tests/comparison/calibration/native_full_structure.py": {
+      "sha256": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+      "bytes": 53427,
+      "lines": 1005,
+      "category": "payload"
+    },
+    "tests/comparison/calibration/native_serve_profile.py": {
+      "sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+      "bytes": 26078,
+      "lines": 515,
+      "category": "payload"
+    }
+  },
+  "source_sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+  "manifest_sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+  "source_lock_sha256": "cd6db51a0423a2b4cbb97a97db0f2954e2fdc090086da3eed1b85bf8d5e52f4b"
+}
