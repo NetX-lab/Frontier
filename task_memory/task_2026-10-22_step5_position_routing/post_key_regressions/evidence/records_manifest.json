@@ -11,8 +11,8 @@
     },
     {
       "path": "check_progress_2026-10-24_final.md",
-      "bytes": 3331,
-      "sha256": "ad5c0ab037548a20777439017d536a7c00e93a4bc5667faa1c4f1fdf3427ca0c"
+      "bytes": 3857,
+      "sha256": "b96a3949c358748f0b80d3cdb84a79aaa76cc206b3ff7e298c21e5d353e01ba4"
     },
     {
       "path": "check_progress_2026-10-24_short.md",
@@ -120,6 +120,11 @@
       "sha256": "bc2db8447d279f54068beffd977ce1375d7a37679e7fb4fbfb295f476088bded"
     },
     {
+      "path": "evidence/resume_reconciliation_2026-10-24.json",
+      "bytes": 3374,
+      "sha256": "cab847f63e3940ac7ba5c04be5e398180f4393638c828fc8f2be69c514e0a582"
+    },
+    {
       "path": "evidence/short_selections_comparison.json",
       "bytes": 4063,
       "sha256": "e80883b5f7bfeeae2c6d1e9383c205a40780c8db752cb47fe4307ea5ab81724f"
@@ -161,18 +166,18 @@
     },
     {
       "path": "progress.md",
-      "bytes": 6700,
-      "sha256": "754015f8b874021e9baed6971a7ec9905431c174903fcc69c696ffc1eeb0cec3"
+      "bytes": 8226,
+      "sha256": "9ff9f913fa87d2ba2220b0dfb77221bd0caa8bb13e66427fe2ea79c16763e8d4"
     },
     {
       "path": "requirements.md",
-      "bytes": 4386,
-      "sha256": "d7c37660a8bb9e2addca9537b2fae0debce519f84822e35397f8fc1aa5ebabf6"
+      "bytes": 5889,
+      "sha256": "0921e646b8e57461d0ccca4f8463bc3801d0c568635a84f42b510b6bd7f54b19"
     },
     {
       "path": "summary.md",
-      "bytes": 6147,
-      "sha256": "db6430e9004d84fe41c8e662706258d9d220feda58d8783a60e79d4f4dbd550c"
+      "bytes": 6987,
+      "sha256": "5cf9e117d7a22644ef55131660c01296fada26ed6fda8d6f824988ad7538558d"
     },
     {
       "path": "test_report_2026-10-24_full_unit.md",
@@ -199,5 +204,14 @@
   "all_doc_modification_histories_present": true,
   "raw_exact_ID_gate_waived": false,
   "first_environment_run_preserved": true,
-  "verification_complete": true
+  "verification_complete": true,
+  "resume_reconciliation": {
+    "previous_completed_commit": "c6ccae825cc90cac43ebdfb5f9805e38fe625168",
+    "retained_hashes_checked": 2671,
+    "missing": 0,
+    "changed": 0,
+    "new_suite_execution": false,
+    "old_ID_predicate_waived": false,
+    "primary_HEAD_index_untouched": true
+  }
 }

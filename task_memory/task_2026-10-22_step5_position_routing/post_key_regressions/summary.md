@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Revalidate completed retained outputs after interruption;2671hashes unchanged,no missing runs or reruns. |
 | 2026-10-24 | Close all regression executions/guards;report8020/279/32/281 and the single planned raw ID replacement without waiving predicates. |
 | 2026-10-24 | Complete governance52 environment supplement with identical52IDs and no binary projection. |
 | 2026-10-24 | Preserve first raw unit observation and diagnose non-baseline binary projection;canonical rerun pending. |
@@ -16,6 +17,16 @@ bbbca98802261662e02d32a59c1a4d6ab20a12e5/submodule
 3dac53c544e546574cb6e8078cd14053d0916113;source clean before/after all executions
 and final2629-file hash verification. Source worktree integrated07;records branch
 `records/d29-post-key-regressions` starts at46fe and is separate.
+
+The interruption follow-up's partial status predates completed archive
+`c6ccae825cc90cac43ebdfb5f9805e38fe625168`. Retained outputs are present and
+independently reparsed,not assumed from a successful exit. Resume verification
+checks2671file hashes withmissing0/changed0,including2629source files/13inputs/
+8script bindings. All counts and exact79deltas below remain identical. No test
+suite,baseline,CLI or qualification is rerun. The only inspector error was an
+incorrect assumed submodule path,corrected from.gitmodules;it is recorded and
+does not mean a missing/interrupted test. The named-model-query successor is not
+part of this frozen source. Resume receipt: `evidence/resume_reconciliation_2026-10-24.json`.
 
 ## Independent observed status
 

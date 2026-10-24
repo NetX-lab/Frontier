@@ -3,9 +3,15 @@
 ### Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Resume checkpoint confirms completed outputs,no pending runs and unchanged2671hashes;retain original scope and raw ID loss. |
 | 2026-10-24 | Final checkpoint after canonical exact comparisons and all source/input guards. |
 
 **汇总：** PASS 8｜BLOCKED/FAILED/SKIPPED 1｜TODO 0
+
+恢复窗口复核：已完成c6ccae82并非仅partial；实际XML再次解析，全部2671hash一致。
+没有required run缺失或中断，没有poll/rerun/新suite/source/helper/primary index操作。
+检查器路径错误已按.gitmodules纠正，不是测试失败。原plannedIDloss仍FAILED，
+其余原结论保持；named-model-query successor不进入此frozen46fe任务。
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |

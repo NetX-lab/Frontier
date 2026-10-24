@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Reconcile resumed historical partial status with completedc6ccae82;reparse retained suites and verify2671hashes without reruns. |
 | 2026-10-24 | Complete canonical8020/279/32/281 exact comparison and2629-file/13-input/8-script final guards;preserve one planned raw ID loss. |
 | 2026-10-24 | Close governance52 with same52IDs/52PASS and the restored no-binary namespace. |
 | 2026-10-24 | Diagnose first full-unit environment expansion;restore the retained no-binary namespace for canonical rerun without changing tests or gates. |
@@ -82,6 +83,26 @@
   delivery is the final Git action;its commit is returned in the final response.
 
 ## Unfinished work and next actions
+
+### Interruption reconciliation
+
+- completed: existing c6ccae825cc90cac43ebdfb5f9805e38fe625168 archive is present and
+  clean;received full-unit completion and all dependent reports were already
+  finished. No interrupted or missing required run remains. No background poll.
+- completed: source46fe/treebbb/3dac remains clean;2629source files,13fixtures/input
+  references and8script bindings rechecked. All2671selected/retained file hashes
+  unchanged,missing0/changed0. Actual XML reparsed:unit8020/279/32/281,rawexit1;
+  supplement101,metadata197,catalogue53,governance52 eachallPASS/rawexit0.
+- completed: retained79FAIL/ERROR/SKIP additions/removals0;retained common status
+  changes0;3newsource IDsallPASS and1declared oldIDloss exactly as archived.
+  strict77 audit receipt hash remains identical;no matrix/baseline rerun.
+- completed: first resume inspector used a wrong assumed submodule path and
+  returnedGit128/Python1 before writing its receipt. .gitmodules provides the
+  actual frontier/cc_backend/backends/collective-sim path;corrected inspection
+  passed without test/source/environment/gate edits. This was not a missing run.
+- completed: evidence/resume_reconciliation_2026-10-24.json records exact actual
+  status sets and source/fixture counts. Only scoped records are updated;primary
+  HEAD/index and the separate named-model-query successor are untouched.
 
 No verification or diagnosis remains unfinished. One raw ID-presence predicate
 fails only on the already-approved hot-update-to-run-fixed test replacement;this
