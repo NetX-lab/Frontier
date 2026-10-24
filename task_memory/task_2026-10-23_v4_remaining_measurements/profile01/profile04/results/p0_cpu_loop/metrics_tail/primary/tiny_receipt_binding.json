@@ -1,0 +1,47 @@
+{
+  "status": "PASS_RETAINED_FIXTURE_BINDING_WITH_RAW_RECEIPT_LIMIT",
+  "observed_utc": "2026-10-24T20:06:53.681677+00:00",
+  "original_receipt_sha256": "99a7862bd79c84f061671a62f0f3b6cdeeb217d1cec126aa7b5ad83d58aa67f9",
+  "executed_control_source_sha256": "6e6b69a9317cc6418aa7a39ec92a960e4007bf640d15b56990ce9e33e0b4c010",
+  "consistent_serialized_checks": 62,
+  "total_runtime_checks_reported_pass": 63,
+  "corrupted_serialized_row": {
+    "name": "stable_tie_order",
+    "expected": [
+      [
+        1,
+        2,
+        0,
+        3
+      ]
+    ],
+    "actual": [
+      [
+        2,
+        1,
+        0
+      ]
+    ],
+    "status": "PASS"
+  },
+  "independently_retained_stable_fixture_sorted_labels": [
+    [
+      1,
+      2,
+      0,
+      3
+    ]
+  ],
+  "last_fixture_sorted_labels": [
+    [
+      2,
+      1,
+      0
+    ]
+  ],
+  "source_explanation": "check() retains actual=orders by reference. Later orders.clear()/append() changes that one stored field. fixture_results stores copy.deepcopy(orders), preserving the stable fixture order.",
+  "original_receipt_modified": false,
+  "control_source_modified": false,
+  "new_control_invocations": 0,
+  "limit": "The raw aggregate stable_tie_order actual field is invalid. The existing deep-copied fixture record supplies its order evidence; this is not a new executed control."
+}
