@@ -1,0 +1,59 @@
+{
+  "task_id": "D29-STORAGE-READINESS",
+  "collector_session": "ses_e91ee5fefffee4jkdiQMREtWQh",
+  "status": "CLOUD_ACCESS_PASS_CLI_WRITE_PATH_PENDING",
+  "scope": "Local filesystem metadata only; no directory/data scans, cleanup, mount, upload, network, GPU or platform operation.",
+  "commands": [
+    "date -Is",
+    "df -B1 --output=source,fstype,size,used,avail,pcent,target <each named path>",
+    "findmnt -T <each named path> -o TARGET,SOURCE,FSTYPE,OPTIONS",
+    "findmnt -R /data",
+    "df -B1 -i <each filesystem>"
+  ],
+  "paths": ["/data/ycfeng/tmp", "/data/ycfeng/Frontier", "/home/brainpp", "/mnt"],
+  "measurements": [
+    {
+      "timestamp": "2026-10-24T21:20:14+08:00",
+      "data": {"source": "/dev/rbd1", "mount": "/data", "fstype": "xfs", "size_bytes": 1098974756864, "used_bytes": 868035141632, "available_bytes": 230939615232},
+      "root": {"source": "/dev/rbd0", "mount": "/", "fstype": "xfs", "size_bytes": 107321753600, "used_bytes": 47809716224, "available_bytes": 59512037376}
+    },
+    {
+      "timestamp": "2026-10-24T21:20:32+08:00",
+      "data": {"source": "/dev/rbd1", "mount": "/data", "fstype": "xfs", "size_bytes": 1098974756864, "used_bytes": 868037410816, "available_bytes": 230937346048},
+      "root": {"source": "/dev/rbd0", "mount": "/", "fstype": "xfs", "size_bytes": 107321753600, "used_bytes": 47810793472, "available_bytes": 59510960128}
+    }
+  ],
+  "pool_mapping": {"/data/ycfeng/tmp": "/dev/rbd1", "/data/ycfeng/Frontier": "/dev/rbd1", "/home/brainpp": "/dev/rbd0", "/mnt": "/dev/rbd0"},
+  "data_submounts_observed": false,
+  "xfs_project_quota_limit_verified": false,
+  "capacity_reserved": false,
+  "projection": {
+    "one_mode_bytes": 261400000000,
+    "two_mode_bytes": 522800000000,
+    "one_mode_deficit_bytes": 30462653952,
+    "two_mode_deficit_bytes": 291862653952,
+    "basis": "Retained FP8 DECODE wave sizes and source-derived multiplicity; not a measured complete output, lower bound or upper bound.",
+    "unmeasured": ["P6128/first-DECODE16/BF16 full emission sizes", "non-wave JSONL rows", "filesystem overhead", "project quota", "future shared-pool activity"]
+  },
+  "cloud": {
+    "authorized_test_storage": true,
+    "timestamp": "2026-10-24T13:27:14.046996+00:00",
+    "caller": "i-fengyicheng",
+    "personal_alias": "/mnt/ws-jfs/ycfeng",
+    "worker_path": "/mnt/codesign-exp/ycfeng",
+    "available_bytes": 38994847006720,
+    "total_bytes": 197912092999680,
+    "alias_mount_type": "virtiofs",
+    "backend_bucket_binding_independently_verified": false,
+    "frontier_parent_uid": 0,
+    "frontier_parent_mode": "0755",
+    "ordinary_user_mkdir": "PermissionError",
+    "sudo_write_read_delete": "PASS2406B",
+    "existing_permissions_changed": false,
+    "direct_cpu_host_mount": false,
+    "actual_cli_cloud_write_path_verified": false,
+    "project_quota_verified": false
+  },
+  "approvals": {"completed_owned_disposable_cleanup": true, "codesign_oss_test_storage": true, "direct_cpu_mount": false, "new_gpu_allocation": false, "additional_shape_invocation": false, "output_reduction": false},
+  "limits": "Two point-in-time observations show available space changed; no attribution to a user/process and no persistent growth rate or reserved capacity is claimed."
+}

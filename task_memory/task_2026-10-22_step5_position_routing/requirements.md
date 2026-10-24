@@ -3,6 +3,9 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Record explicit codesign OSS test-storage and timely completed-artifact cleanup authorization; shape/GPU bounds remain unchanged. |
+| 2026-10-24 | Record checkpoint follow-up continuation without extending the exhausted three-invocation ceiling or authorizing storage changes. |
+| 2026-10-24 | Recover inspections-only cancelled histories; primary takes over three bounded shape invocations and replaces the two independent records owners without source allocation. |
 | 2026-10-24 | Allocate the3-gross native-key byte component under standing authorization and unchanged owner/global limits. |
 | 2026-10-24 | Carry YC's continue request into bounded post-regression diagnostics; JSON controls receive no production allocation. |
 | 2026-10-24 | YC approves named querying and analogous in-scope performance changes; allocate100gross within unchanged CORE/global limits. |
@@ -385,6 +388,20 @@ GPU/platform/network operation, source edit or numerical/proof memo is assigned.
 If the retained setup cannot reach a required shape within those bounds, report
 the exact blocker rather than substituting toy timing or extending the limit.
 
+## [Original Request / Continuation] Cancelled Independent Investigations
+
+Runtime notifications report `Subagent cancelled` for snapshot-copy session `ses_e93a71d28ffendJiHmtuzK8ec6`,
+initialization session `ses_e93a13ad5ffe7Xk4AwrlAAdjw0`, and required-shape session
+`ses_e93176c15ffefHaQWQESiTHY7D`. Continue the unfinished assigned scope; do not
+infer new resource or source authority. Complete recovered command histories
+show inspections only and zero production-wave or artifact-write commands.
+Primary takes over `workload_shape_validation/` with the original three60s/30GiB
+invocation allowance intact. Independent replacements are D29-SNAPSHOT-COPY-FINISH
+(`ses_e92340744ffe58Yx5C7xx4qApF`) and D29-INIT-PREPARATION-FINISH
+(`ses_e92338e41ffe081mlmDNjpmxP5`), with separate records ownership and no source
+allocation. Snapshot-copy permits at most one decisive supported-contract CPU
+control; initialization remains source/retained-evidence-only.
+
 ## [Original Request / Execution Decision] D29-NATIVE-KEY-BYTES
 
 UTC date2026-10-24. YC continues: **“continue”**. Carry forward the verbatim
@@ -404,3 +421,27 @@ The CPU fixture branch does not use this expression; no CPU whole-CLI speedup
 or native admission follows from the key-only probe. Required RED/GREEN, current
 native-schema checks, canonical wave, regressions, audit and independent review
 precede integration. Snapshot-copy/init/required-shape work remains independent.
+
+## [Original Request / Follow-Up] Checkpoint Corrections
+
+YC requests **“[并行]检查”**, then **“continue”**. Apply the read-only checkpoint's
+record corrections, primary ownership of storage readiness and finite diagnostic
+outcomes. The three permitted shape invocations have all run and failed in the
+checker; retain their rawFAIL/UNVERIFIED outcomes and the checker-only correction.
+This continuation does not approve a fourth invocation, new GPU/platform work,
+cleanup, external storage/mount/upload, altered output or a new prediction hard
+gate. Keep the native-key accepted9566source/9580global union and all existing
+scope limits. A proposal to increase the shape ceiling or change storage needs
+a separate explicit decision; independent authorized source analyses continue.
+
+## [Original Request / Decision] Codesign OSS Test Storage
+
+YC: **“允许你使用codesign 的oss云盘用于存储测试。记住，你必须及时清理分析完成的文件，避免占用磁盘空间。”**
+
+Use the codesign personal cloud directory for test artifacts. All access stays
+under `/mnt/codesign-exp/ycfeng`, or its documented shai-ycfeng alias
+`/mnt/ws-jfs/ycfeng`. Clean completed disposable files promptly, preserving selected
+evidence, active inputs and other-session work. The authorization covers scoped
+test-storage writes and cleanup,not changes to existing ownership/permissions,
+new GPU allocations or a fourth required-shape invocation. Do not directly mount
+the volume on this CPU host;worker mounts retain the StepMind RJobBackend route.

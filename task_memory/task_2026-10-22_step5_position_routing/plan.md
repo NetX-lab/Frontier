@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Apply the read-only checkpoint corrections: consumed shape allowance, native-key final ledger, finite diagnosis outcomes, and primary-owned storage readiness. |
+| 2026-10-24 | Replace cancelled inspections-only owners with primary shape verification and narrowed independent copy/init analyses, keeping the original resource/source limits. |
 | 2026-10-24 | Complete native-key clean audit/integration at9580global with124 primary bindings; retain all whole-CLI/native dependencies. |
 | 2026-10-24 | Allocate native artifact-key bytes reuse in two existing PRICING paths at3gross; keep whole-CLI/native gates and independent investigations open. |
 | 2026-10-24 | Close named-query frozen regressions and archive audit; decline small JSON controls and assign required-shape verification. |
@@ -145,9 +147,27 @@ Call-local JSON controls preserve tested output/counts but save only1.7–3.9ms 
 paired medians; GC-sensitive means do not qualify whole-wave improvement. No
 production allocation follows. Next independent edges are snapshot-copy diagnosis,
 initialization-local analysis and required-shape verification(P6128/DECODE16/BF16).
-The shape task allows at most three60s/30G cached-fixture probes, no new fullCSV,
-init/CLI/source/GPU work. Full CLI still waits for a useful reviewed repair and
-storage readiness, not another relabelled point check.
+The three old sessions are cancelled with inspections-only recovered histories.
+Primary owns shape verification; separate D29-SNAPSHOT-COPY-FINISH and
+D29-INIT-PREPARATION-FINISH records owners close the narrowed independent analyses.
+The three60s/30GiB shape invocations are consumed. All raw results areFAIL because
+the primary checker rejected an unselected0.0 compatibility slot after pricing.
+Complete P6128/D16/BF16 emissions remainUNVERIFIED;BF16 reached onlylayer88.
+The checker is corrected and its five isolated controls pass, but no fourth
+production invocation is authorized. See workload_shape_validation/test_report_2026-10-24_required_shapes.md.
+Each remaining diagnosis ends with ALLOC,NO_ALLOC or BLOCKER, bounded evidence,
+and an explanation of its measured or inferred contribution to the remaining
+startup/pricing/emission/flush gap. Weight estimates by actual shape/group
+multiplicity;26.608ms is the zero-startup ceiling, not a new hard gate. ALLOC
+permits only the existing authorization/scope process, not an automatic repair.
+The actual6144/1024 CLI<=2400s per mode remains the acceptance criterion.
+Storage readiness is primary-owned. YC approves codesign OSS for tests and timely
+cleanup of completed disposable files. Personal cloud alias reports about39TB
+available;bounded write/read/delete passes after using sudo for the existing
+root-owned frontier directory,without changing its permissions. Keep selected
+evidence and ongoing inputs. This CPU host has no cloud mount and must not mount
+it directly;actual CLI write-path/runtime readiness remains separate. Worker
+mounts use the established StepMind route. No new GPU or shape quota is implied.
 The independent native-key candidate uses the existing run-fixed bytes in the
 instance-local LRU key. Apply native_collective_key_scope_amendment.json next:
 two existing PRICING paths,3gross/at most1 cumulative growth, with one unused
@@ -206,15 +226,17 @@ change is allocated. See early_init_repro/report.md.
 | Derived image and source receipts | Published and verified; runtime remains separate. |
 | CORE/SOURCE49 allocated | Final union:4261/4404; unchanged cap. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
-| PRICING46 | Final union:3954/3956; key uses16/17gross and14/15retained. |
-| Complete integration and final freeze | Named queryffb435ca and parentdbe19f53 accepted; fresh regressions complete on frozen dbe19f53; later archives change only task records. Gitlink3dac53c unchanged. |
-| Legacy strict77 | Freshdbe19f53 passes77/77;451 artifact hashes/519 cache names per side freshly audited. |
-| Full-unit failure/error-set gate | Accepted no new code failure on dbe19f53:raw8028PASS/279FAIL/32ERROR/281SKIP,exit1;all46fe retained states match,8 newPASS.79 old-ID raw presenceFAIL remains unwaived. |
+| PRICING46 | Complete native-key union:3955/3956; native-key3gross/net1, with unchanged owner cap. |
+| Complete integration and final freeze | Native-keyc668a938/parent886608ea accepted; clean candidate376983d2 regressions complete and source-equivalent after integration. Gitlink3dac53c unchanged. |
+| Legacy strict77 | Native-key frozen source passes77/77;451 artifact hashes/519 cache names per side audited. |
+| Full-unit failure/error-set gate | Native-key preserves all8620IDs/states:raw8028PASS/279FAIL/32ERROR/281SKIP,exit1;the approved one-old-ID replacement versus79f1a3fd remains raw presenceFAIL and unwaived. |
 | Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
-| Independent source review | All accepted components including named query have No findings on both axes. |
+| Independent source review | All accepted components including native-key have No findings on both axes. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
-| Final per-path accounting | Accepted on dbe19f53:114allocated/113changed,9565source/9579global,zero violations;124 bindings/120 non-query guard and final frozen audit. |
-| Remaining runtime diagnosis | JSON controls closed without allocation; snapshot-copy/init analyses and required-shape cached-fixture probes remain independent. |
+| Final per-path accounting | Accepted native-key union:114allocated/113changed,9566source/9580global,zero violations;124 bindings/122 unchanged non-key bindings and clean independent audit. |
+| Remaining runtime diagnosis | JSON closedNO_ALLOC;copy/init pending bounded ALLOC/NO_ALLOC/BLOCKER deliverables; no source allocation implied. |
+| Required P6128/D16/BF16 shapes | FAILED/UNVERIFIED;3/3 invocations consumed,checker-only5/5PASS,no fourth run authorized. |
+| Full-output storage readiness | Cloud approved;capacity/basic write-read-delete checked,personal-only cleanup enforced. CLI access/runtime/quota verification pending;local/data remains insufficient and no CPU-host mount is allowed. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments

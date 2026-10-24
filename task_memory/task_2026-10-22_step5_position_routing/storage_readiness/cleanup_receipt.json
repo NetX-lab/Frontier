@@ -1,0 +1,106 @@
+{
+  "status": "PASS_SCOPED_DUPLICATE_CLEANUP",
+  "authorization": "YC codesign OSS test-storage and analysis-complete cleanup decision on2026-10-24",
+  "files_removed": 16,
+  "bytes_removed": 298219,
+  "retained_artifacts": 16,
+  "removed": [
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/bf16.log",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/bf16.log",
+      "bytes": 2334,
+      "sha256": "e2f6393d85419bb15a1f317c28398d0430a675c56d17c12ba5b65f952c5905a4"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/bf16/failure.json",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/bf16/failure.json",
+      "bytes": 662,
+      "sha256": "a8044ec40ac96d47eec5165ff864cc2c889563be4d9c14f2cdce2560d1f5afbe"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/bf16/layer88.prof",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/bf16/layer88.prof",
+      "bytes": 94673,
+      "sha256": "fd113a4b1db6550a4895554fc281e484c7daa6b63408b24185e6edbff9383dfd"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/bf16/stage.json",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/bf16/stage.json",
+      "bytes": 849,
+      "sha256": "0bc237d5793f7c53a4419249c823698656a29d67ab51365798ba38b661713d13"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/checker_control.json",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/checker_control.json",
+      "bytes": 905,
+      "sha256": "7ee19375f861436d65ba46f4e5486e90164894887a01d8d7c29ed2b5ea92746b"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/checker_control_02.log",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/checker_control_02.log",
+      "bytes": 749,
+      "sha256": "93b40bd74a03a8c3044249dc4019743e5e2e690047c3f53a8eb328d85f735c1d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/first_decode16.log",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/first_decode16.log",
+      "bytes": 2334,
+      "sha256": "9621ff38220290911f71231d9f133e59c48cbcf85cc5e4e568d791ad0a6c2e14"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/first_decode16/failure.json",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/first_decode16/failure.json",
+      "bytes": 662,
+      "sha256": "d760a8a50b42f3e12f2e8194ca7c37fc58199efc832793dc5503df2230c5b36a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/first_decode16/layer60.prof",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/first_decode16/layer60.prof",
+      "bytes": 94788,
+      "sha256": "42086a64f5d601bacddf2a860dbceccaab99dce9ba627d8091ef3a0e967eb392"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/first_decode16/stage.json",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/first_decode16/stage.json",
+      "bytes": 874,
+      "sha256": "62c1c970cb56385b885f203e95aa38ed79483da0e61ad30d38305109f9b103d6"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/post_failure_guard.json",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/post_failure_guard.json",
+      "bytes": 331,
+      "sha256": "5636cae1de282c4f501a73b97159b654f5fcdf8be08d79c0012f7195c5d1e034"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/prefill6128.log",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/prefill6128.log",
+      "bytes": 2334,
+      "sha256": "fd203b3404fad5a3a1e5ed81d0ea644eb3bbc2a6002436a8923b568b8ff48101"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/prefill6128/failure.json",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/prefill6128/failure.json",
+      "bytes": 662,
+      "sha256": "d760a8a50b42f3e12f2e8194ca7c37fc58199efc832793dc5503df2230c5b36a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/prefill6128/layer60.prof",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/prefill6128/layer60.prof",
+      "bytes": 94785,
+      "sha256": "0b32cf57a4e23f0beeba3434553f8a54b8cf74c9f92b107a7be2440c80f566ba"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/prefill6128/stage.json",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/prefill6128/stage.json",
+      "bytes": 865,
+      "sha256": "5be5d6223ce48a22cdd320f746b9d7bec50bee35af0f3e91025d46d5e28e3c6d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_required_wave_shapes_20261024/preflight_01.json",
+      "retained_copy": "task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/evidence/raw_probe_failures/preflight_01.json",
+      "bytes": 412,
+      "sha256": "32f2fe27c66e3ea90ac7cb5cb17c1816ec4bd1135c28046443d3062398f73ffb"
+    }
+  ],
+  "limits": "Only16 exact completed shape-failure scratch duplicates; canonical failure/evidence archive, active fixture/scripts and independent-analysis inputs retained."
+}

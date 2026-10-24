@@ -1,0 +1,38 @@
+{
+  "case": "bf16",
+  "layer": 88,
+  "routing_source": {
+    "gathered_physical_rows": 2,
+    "policy_id": "position_cyclic",
+    "source_lanes": [
+      {
+        "forward_group_id": 4,
+        "gating_runtime_context": "standalone_legacy",
+        "graph_mode": "FULL",
+        "intervals": [
+          {
+            "length": 1,
+            "start": 6147
+          }
+        ],
+        "lane_id": 0,
+        "live_rows": 1,
+        "physical_rows": 1,
+        "source_batch_id": 1,
+        "source_global_id": 0
+      },
+      {
+        "forward_group_id": 4,
+        "gating_runtime_context": "standalone_legacy",
+        "graph_mode": "FULL",
+        "intervals": [],
+        "lane_id": 1,
+        "live_rows": 0,
+        "physical_rows": 1,
+        "source_batch_id": 2,
+        "source_global_id": 1
+      }
+    ]
+  },
+  "stage": "pricing"
+}

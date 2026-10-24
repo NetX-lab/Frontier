@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Synchronize failed shape attempts, exhausted quota, checker-only evidence and current local storage shortfall after the checkpoint. |
 | 2026-10-24 | Accept native-key source c668a938 and9580global union after reviews, clean audit and124-binding/33-artifact primary integration verification. |
 | 2026-10-24 | Allocate a3-gross native-key candidate; accepted9579 usage and all whole-CLI/native limits remain unchanged pending verification. |
 | 2026-10-24 | Archive completed dbe19f53 regressions and final audit; small JSON controls are not allocated and required-shape validation continues. |
@@ -96,9 +97,13 @@ medians improve only1.7–3.9ms and means are GC-sensitive. No production alloca
 is made. Diagnostic artifacts/limits are in runtime_json_reuse/. An initial
 archive checker included real auxiliary timestamps; its failure and raw headers
 are retained, while exact3902-byte failure-body comparison passes.
-Required-shape validation is assigned to ses_e93176c15ffefHaQWQESiTHY7D with only
-three60s/30G cached-fixture production-path probes. P6128/DECODE16/BF16 event/byte
-expectations remain unmeasured until its actual results arrive.
+The cancelled required-shape session used no production invocation. Primary
+subsequently consumed all three60s/30GiB attempts:rawFAIL after pricing because
+the checker rejected an unselected0.0 compatibility slot. P6128/D16 completed
+288/144/64/16 calls;BF16 completed256/128/64/16 only atlayer88. Full emissions
+and layers89/90 remainUNVERIFIED. The checker is corrected and five isolated
+controlsPASS,but no fourth production run is approved.16 raw artifacts and the
+failed driver are preserved under workload_shape_validation/evidence/.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
 The accepted native-key change replaces repeated whole-artifact encoding with
@@ -130,9 +135,20 @@ Detailed completion evidence is in run_input_snapshot/.
 Source-backed workload is90,200 waves. Expected successful-run EP-wave output
 is18,712,400 events because three BF16 layers omit input quantization; this is
 not a complete-run census. P6128/D16/BF16 emissions remain unmeasured. The
-retained FP8 emission timing exceeds the26.608ms all-costs-zero average wave
-allowance. Rough two-mode output is about520GB against approximately266GB
-currently available on /data; no storage arrangement has been approved here.
+retained FP8 emission timing exceeds the26.608ms zero-startup average wave
+ceiling. This is diagnostic evidence,not a new hard gate or impossibility proof.
+Two-mode output projects522.8GB from samples,not an upper bound. Latest local
+capacity is230,937,346,048B(/data) and59,510,960,128B(root) at21:20:32+08:00;
+even the261.4GB single-mode projection exceeds/data. YC approves codesign OSS
+test storage and timely cleanup. Personal cloud alias reports about39TB available;
+bounded2406B write/read/delete passes using sudo for the existing root-owned
+frontier directory,without changing permissions. The test file/directory and16
+exact archived local scratch duplicates are removed;selected evidence remains.
+No direct CPU-host cloud mount or new GPU/shape run occurred. Actual CLI access,
+runtime/project quota and prelaunch capacity verification remain pending.
+See storage_readiness/. Each residual diagnosis endsALLOC/NO_ALLOC/BLOCKER with
+bounded evidence and startup/shape-weighted gap attribution;actual CLI acceptance
+remains6144/1024 and<=2400s separately for offline and online.
 The counter investigation's one unauthorized2.1GB CSV scan is disclosed in
 workload_multiplicity/. Full CLI/native acceptance remains unfinished.
 

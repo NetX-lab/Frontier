@@ -1,0 +1,38 @@
+{
+  "case": "prefill6128",
+  "layer": 60,
+  "routing_source": {
+    "gathered_physical_rows": 6129,
+    "policy_id": "position_cyclic",
+    "source_lanes": [
+      {
+        "forward_group_id": 4,
+        "gating_runtime_context": "standalone_legacy",
+        "graph_mode": "NONE",
+        "intervals": [
+          {
+            "length": 6128,
+            "start": 0
+          }
+        ],
+        "lane_id": 0,
+        "live_rows": 6128,
+        "physical_rows": 6128,
+        "source_batch_id": 1,
+        "source_global_id": 0
+      },
+      {
+        "forward_group_id": 4,
+        "gating_runtime_context": "standalone_legacy",
+        "graph_mode": "NONE",
+        "intervals": [],
+        "lane_id": 1,
+        "live_rows": 0,
+        "physical_rows": 1,
+        "source_batch_id": 2,
+        "source_global_id": 1
+      }
+    ]
+  },
+  "stage": "pricing"
+}

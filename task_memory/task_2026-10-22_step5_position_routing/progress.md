@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Apply checkpoint corrections and record three failed shape attempts, exhausted quota, unchanged source/fixture guards and the new primary-owned storage blocker. |
+| 2026-10-24 | Recover all three cancelled execution histories; no production-wave allowance was used. Primary owns shape checks and fresh independent records owners close copy/init analyses. |
 | 2026-10-24 | Accept the clean9580 native-key union, integrate c668a938/9584941c and verify124 bindings plus33 retained artifacts; global workflow gates remain open. |
 | 2026-10-24 | Allocate the3-gross native artifact-key replacement under standing authority; accepted source usage stays9579 until verified integration. |
 | 2026-10-24 | Close frozen dbe19f53 regressions and final archive audit; JSON control is unallocated and required-shape validation is assigned. |
@@ -179,19 +181,47 @@
   error included real auxiliary header clocks; corrected checks retain their
   raw hashes and compare the exact3902-byte failure body. Original failed log
   is preserved. Evidence:runtime_json_reuse/; production/source quota unchanged.
-  Primary sends this source-backed timestamp/body correction to the existing
-  snapshot-copy owner for its final verification without restarting that control.
-- in-progress/required-shape verification: D29-REQUIRED-WAVE-SHAPES, session
-  ses_e93176c15ffefHaQWQESiTHY7D, uses frozen dbe19f53 and cached fixture for P6128,
-  firstDECODE16 and BF16-layer88-90. At most three60s/30G production-path probes;
-  no fullCSV/init/CLI/GPU/source edit. Records ownership:workload_shape_validation/.
-- in-progress/independent diagnosis: D29-SNAPSHOT-COPY-CONTROL, session
-  ses_e93a71d28ffendJiHmtuzK8ec6, checks whether a C-backed deep snapshot can
+  Primary sent the source-backed timestamp/body correction to the old owner.
+  Recovered cancellation history shows that owner ran no new control.
+- cancelled/original investigations: shape/copy/init sessions end with
+  `Step interrupted`; complete35/28/23-message command histories contain only
+  inspections and no production-wave or artifact-write command. Original probe
+  allowance was intact at recovery;the subsequent primary attempts consumed3/3.
+  Census:workload_shape_validation/progress.md.
+- failed/required-shape verification: D29-REQUIRED-WAVE-SHAPES, primary
+  replaces cancelled ses_e93176c15ffefHaQWQESiTHY7D, using frozen dbe19f53 for P6128,
+  firstDECODE16 and BF16-layer88-90. Three60s/30GiB attempts exit1 after production
+  pricing because the checker rejected unselected add_attn_residual=0.0.
+  P/D calls288/144/64/16,BF16layer88 calls256/128/64/16;complete emissions and
+  layers89/90 remainUNVERIFIED. The task-local checker is corrected;five isolated
+  controlsPASS without a production call.23 source hashes/262 fixture bindings
+  pass post-failure guards.3/3 used,0remaining;no fourth run is authorized.
+  Records:workload_shape_validation/test_report_2026-10-24_required_shapes.md and
+  evidence/raw_probe_failures/artifact_sha256.json(16 preserved artifacts).
+- completed/read-only checkpoint: D29-PARALLEL-PROGRESS-CHECK,
+  ses_e920d1f8dffe0CAn6jyZFw4sy3, finds no D1-D7 execution drift after reconciling
+  the explicit native-key authorization. S2 storage ownership,S4 finite diagnosis
+  outcomes and S5 stale states are corrected without changing acceptance or budgets.
+- in-progress/storage readiness: primary owns D29-STORAGE-READINESS;read-only explorer
+  ses_e91ee5fefffee4jkdiQMREtWQh reports/data230,937,346,048B and root59,510,960,128B
+  free at2026-10-24T21:20:32+08:00. Named/data paths share one pool;root paths
+  share another. Sampled261.4GB/mode does not fit/data;522.8GB both is an estimate,
+  not a bound. YC subsequently approves codesign OSS test storage and timely
+  cleanup. Personal alias/mnt/ws-jfs/ycfeng reports38,994,847,006,720B available;
+  ordinary-user mkdir fails on root-owned frontier0755. The same approved storage
+  control under sudo writes/reads/deletes2406B successfully,without chmod/chown.
+  The unique cloud test directory is removed immediately.16 exact archived
+  shape-failure scratch duplicates are removed(298,219B);selected evidence and
+  active fixture/scripts remain. No direct CPU mount,new GPU,shape run or output
+  reduction. Actual CLI cloud write-path/runtime/quota remains pending.
+  Evidence:storage_readiness/{cloud_control.json,cleanup_receipt.json,evidence.json}.
+- in-progress/independent diagnosis: D29-SNAPSHOT-COPY-FINISH, session
+  ses_e92340744ffe58Yx5C7xx4qApF, checks whether a C-backed deep snapshot can
   preserve supported getter semantics and reduce measured copying. Read-only
-  source plus bounded scratch controls; no source quota allocated. Reject any
+  source plus at most one decisive scratch control; no source quota allocated. Reject any
   supported alias/error/custom-object divergence rather than adding a fallback.
-- in-progress/independent initialization analysis: D29-INIT-PREPARATION-REUSE,
-  session ses_e93a13ad5ffe7Xk4AwrlAAdjw0, inspects remaining training-call-local
+- in-progress/independent initialization analysis: D29-INIT-PREPARATION-FINISH,
+  session ses_e92338e41ffe081mlmDNjpmxP5, inspects remaining training-call-local
   dataframe/facts/contract repetition after the accepted loader repair. Source
   and retained records only; no new CSV/model read, init run or source quota.
   Historical loader savings must not be counted again.

@@ -1,0 +1,35 @@
+# D29 Full-Output Storage Readiness
+
+## Modification History
+| Date | Change |
+| --- | --- |
+| 2026-10-24 | YC authorizes codesign OSS test storage and prompt cleanup of completed disposable files. |
+| 2026-10-24 | Assign ownership of the existing full-output storage prerequisite without authorizing external or destructive actions. |
+
+## [Original Request / Follow-Up]
+
+YC requests **“[并行]检查”**, then **“continue”**. The checkpoint identifies an
+unowned prerequisite of the existing6144/1024 CLI acceptance: retaining complete
+offline and online outputs in storage that can hold them. Primary owns the
+decision and records; D29-STORAGE-READINESS collects local read-only evidence.
+
+Do not reduce output, pool distinct filesystems arithmetically as one writable
+file, claim reserved capacity, or promote sampled byte estimates to a hard bound.
+YC subsequently authorizes codesign OSS test storage and timely cleanup of
+analysis-complete disposable files. Keep cloud operations in the personal ycfeng
+directory and preserve selected evidence,active inputs and other-session files.
+Do not change existing ownership/permissions or directly mount the cloud volume
+on this CPU host. GPU/platform allocations and production shape retries are not assigned.
+
+YC's verbatim decision: **“允许你使用codesign 的oss云盘用于存储测试。记住，你必须及时清理分析完成的文件，避免占用磁盘空间。”**
+
+## Acceptance
+
+Select an approved retention strategy and output location. Verify current
+filesystem identity, usable capacity, applicable quota and enough headroom for
+the approved full-output strategy. Account for unmeasured non-wave/shape overhead
+and shared-pool activity. Recheck before launch; a snapshot is not a reservation.
+If no eligible location fits, return BLOCKER and concrete approval options.
+
+Storage readiness does not qualify runtime, output accuracy, native admission,
+or the actual2400s per-mode CLI gate. Source analyses proceed independently.
