@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Accept YC's sufficient-quota confirmation and update the committed-but-unadmitted ledger candidate and handoff execution boundary. |
 | 2026-10-24 | Link the verified135-gross ledger allocation;implementation and worker readiness remain pending. |
 | 2026-10-24 | Record corrected storage accounting, timing boundaries and unresolved worker/memory prerequisites. |
 
@@ -10,6 +11,9 @@
 
 **BLOCKER: execution readiness is not established.** This is a static proposal,
 not a job approval, capacity reservation, throughput measurement or CLI result.
+Quota capacity itself is USER_CONFIRMED_SUFFICIENT by YC on2026-10-25; do not
+repeat quota discovery as a blocker. Worker environment, throughput and source
+admission remain separate unverified conditions.
 Read-only analysis: D29-CLI-CLOUD-WRITE-PLAN, session
 `ses_e91b47e39ffeRn6lPWVUegoZQ6`. Primary owns acceptance and subsequent allocation.
 Source inspected by that analysis: `b0277287`; accepted production usage remains
@@ -55,11 +59,13 @@ history, not current readiness calculations.
 
 ## Memory and timing are independent prerequisites
 
-Production currently retains EP lane rows until final output. `validate()` also
+Accepted production retains EP lane rows until final output. `validate()` also
 materializes the whole EP lane ledger using `read_text().splitlines()` and a
 dictionary list. Full multiplicity is 1,443,200 ledger rows per mode. This is
 unqualified growth with complete output; no actual RSS was measured and no claim
-is made that every possible machine is unable to execute it.
+is made that every possible machine is unable to execute it. The committed ledger
+candidate removes these two EP growth patterns, but is not admitted production;
+stage-batch/event-trace memory and actual whole-workload RSS remain unqualified.
 
 | Timing boundary | Contract |
 | --- | --- |
@@ -78,7 +84,8 @@ Existing evidence establishes a 2406 B write/read/delete control and a
 40,581,120 B selected-shape archive with hash-identical readback. Both use the
 personal alias from the CPU host; neither proves worker-to-volume append
 throughput. The approximately 39 TB shared free-space observation is dated,
-unreserved and does not prove personal project quota.
+unreserved and does not prove personal project quota. Quota sufficiency is settled
+instead by YC's explicit2026-10-25 decision, not by that observation.
 
 Retain selected commands, manifests, execution/validation receipts, hashes and
 decisive failure evidence. After analysis, clean only completed disposable
@@ -90,12 +97,15 @@ a successful run; completion requires terminal execution and validation receipts
 
 1. Allocation is verified in ledger_memory/ and
    repairs/ep_lane_ledger_scope_amendment.json: four CORE files,135gross,
-   116allocated paths,unchanged budgets. Implementation and acceptance remain
-   pending. Root's standing path authority is requirements.md119–134.
+    116allocated paths,unchanged budgets; amended caps36/20/65/14 in886945f3.
+    Final implementation1f6b4314/dd3b6a69 is committed and caller/focused checks
+    pass; independent audit/review/frozen admission remain pending.
+    Standing authority is requirements.md119–134.
 2. Verify supported successful output bytes/order, snapshots and failure behavior;
    re-freeze and run required regressions after any accepted source repair.
 3. Choose and authorize concrete worker resources, image and source mount; qualify
-   environment, creator, worker cloud access, quota and lifecycle before execution.
+    environment, creator, worker cloud access/append throughput and lifecycle.
+    Quota sufficiency is already user-confirmed; no worker is launched for handoff.
 4. Obtain cohesive current-source timing before another full 6144/1024 run; retain
    the unchanged per-mode 2400-second acceptance criterion and full output.
 

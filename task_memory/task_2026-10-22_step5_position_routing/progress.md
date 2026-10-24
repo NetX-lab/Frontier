@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Complete the corrected caller handoff boundary, parent39PASS/27artifact/116-cap checks and complete next-session prompt; candidate remains UNADMITTED. |
 | 2026-10-25 | YC confirms sufficient OSS quota and requests handoff; allocate the two-line zero-sum snapshot correction and retain candidate admission as pending. |
 | 2026-10-24 | Commit allocation0ca54025 and assign isolated four-file implementation;primary continues independent storage prerequisite inspection. |
 | 2026-10-24 | Parent-verify zero-history ledger paths and135-gross zero-sum allocation;close retained config profile without source allocation and separate historical projections from current gates. |
@@ -77,21 +78,52 @@
 
 ### Active handoff request (2026-10-25)
 
-- in-progress: finish the committed ledger component6c2f179c/66e50116 in
-  fix/d29-ledger-stream. Its observed48PASS/3SKIP controls and30PASS reporting
-  suites do not erase raw complete-integration62PASS/4FAIL/6SKIP.
-- in-progress: correct the existing performance save_state PicklingError by
-  its existing persistent-reference mechanism. Root reallocates metrics38->36
-  and performance12->14; four-file135 and all owner/global caps stay unchanged.
-- completed/decision: YC explicitly confirms that codesign OSS quota is enough
-  and points to ssh shai-ycfeng. This is user-confirmed capacity, not a measured
-  quota reading; worker write throughput/environment remain unverified.
-- pending: final candidate commits, focused checkout/caller verification and
-  complete continuation prompt. No new pricing/shape/fullCLI/worker run is
-  part of this handoff. Required-shape calls remain6/6used. Accepted production
-  remains source9566/global9580 until the successor's mandatory gates pass.
+- completed/code: initial6c2f179c plus corrected caller1f6b4314 in
+  `/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream`, branch
+  `fix/d29-ledger-stream`; owner records486e7072/dd3b6a69. Authorization886945f3
+  is imported as924427c0. Only the four assigned source/test paths change; final
+  follow-up changes performance only. No production integration has occurred.
+- completed/owner verification: actual committed save_state RED PicklingError is
+  retained; final actual save/load GREEN on historical counts0/3 proves fresh
+  writer/path, counts4/7, full7124B ordered output, incremental digest and unchanged
+  old output. Integration66PASS/6SKIP,EP30PASS; all93 old IDs/statuses and6skips
+  remain,9 newPASS. The ordinary local pinned3dac checkout resolves the original
+  four setupFAIL without backend/source/gitlink changes. Raw first failures remain.
+- completed/primary verification: fresh9new+30existing tests39PASS/2.91s under
+  timeout60s/configured30GiB/Python3.10.6/BLAS1. Rehash27 owner artifacts, reparse
+  raw66/6 and30JUnit, verify four source SHA/Git bindings and clean candidate/
+  pinned checkout. Caller controls are read/hash-verified, not rerun by primary.
+  Receipt:`handoff_parent.json`; exact rerun command is embedded there and in
+  `test_report_2026-10-25_handoff.md`.
+- completed/primary cap check only:116paths;CORE4377/4404,PRICING3955/3956,
+  native1350/1582,source9682/9942,global9696/10000;zero violations. Step124gross,
+  net96,cumulative budget increment116. Unchanged non-superproject usage is
+  carried from the accepted receipt;independent composed audit remains pending.
+  Accepted production is still9566source/9580global,not candidate9696.
+- completed/user decision: codesign OSS quota is USER_CONFIRMED_SUFFICIENT.
+  Do not repeat quota discovery as a blocker. Personal SSH/cloud confinement and
+  timely completed-file cleanup remain;actual worker append/environment/RSS/runtime
+  is not established by that decision. No pricing/shape/fullCLI/worker run occurs.
+- completed/record checks: maintained documents/quota JSON/current-prompt
+  precedence pass. A first metadata checker incorrectly required a `kind` key
+  absent from the two superproject amendment entries (rawKeyError retained in
+  the test report);explicit existing-path classification fixes only the checker.
+  Corrected fresh source/cap/artifact verification passes without source changes.
+- completed/cleanup: archive primary pytest log/XML/execution3files/8298B with
+  byte/hash verification in handoff_parent_evidence/ and remove only those three
+  completed duplicate scratch files. Retain the metadata failure text, active
+  checkout/caller inputs and all other-session artifacts.
+- pending/next-session: independent clean composed audit -> Standards/Spec ->
+  final frozen strict77/full-unit/101/197/53/52 -> accepted-production integration.
+  Then cohesive current-source timing/worker-cloud readiness -> complete6144/1024
+  offline/online<=2400s -> final T2/source/package -> native/G3/E2E. Copy/init
+  diagnoses below still require closure/recovery of consumed allowance. Required
+  shapes remain6/6used;new pricing/shape invocations are not authorized by handoff.
+- handoff entry:`handoff_prompt.md`. Code/records are consolidated on the
+  candidate branch for continuation; do not use the old historical handoff commands
+  as current readiness or overwrite the accepted feature source before its gates.
 
-### Current-session resumption (supersedes handoff next-session timing)
+### Prior current-session work (revision-bound history through 2026-10-24)
 
 - completed/native-key component: D29-NATIVE-KEY-BYTES source376983d2 is
   integrated as c668a938, exactly3gross/net1 in two existing PRICING paths.

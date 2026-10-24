@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Renew session handoff, record explicit sufficient-OSS-quota decision, and distinguish the committed ledger candidate from accepted production and fresh-gate requirements. |
 | 2026-10-24 | Archive verified135-gross/116-path ledger allocation and retained-config NO_ALLOC; preserve accepted9580 source usage and all workflow/cloud readiness limits. |
 | 2026-10-24 | Archive scoped supplemental shape PASS and canonical OSS output;native/fullCLI gates remain separate. |
 | 2026-10-24 | Synchronize failed shape attempts, exhausted quota, checker-only evidence and current local storage shortfall after the checkpoint. |
@@ -35,22 +36,37 @@
 | 2026-10-22 | Record six design findings and disjoint mandatory correction assignments. |
 | 2026-10-22 | Archive the first design delivery with its unclosed review and pricing scope. |
 
-## Current-session continuation
+## Current handoff boundary (2026-10-25)
 
 Current feature source includes accepted native-key c668a938 and named query
 ffb435ca, with9566source/9580global and zero audit violations. Native-key primary
 acceptance is in native_cache_key/evidence/primary_integration.json; named-query acceptance is in
 runtime_model_view/parent/acceptance.json.
 
-The complete EP ledger persistence/validation successor is allocated, not
-implemented or accepted: four CORE files135gross,116allocated paths,unchanged
-owner/source/global caps. `ledger_memory/` and its scope amendment retain the
-two zero-history baseline checks and zero-sum transfer. Config-profile inspection
-is NO_PRODUCTION_ALLOCATION. Copy/initialization diagnoses remain pending.
-The corrected sample output projection is approximately469GB/mode or938GB/two
-modes; neither total RSS nor current whole-CLI timing is measured. Worker resource,
-personal quota and worker-to-cloud throughput readiness remain unresolved, and
-the required-shape allowance stays6/6used. FullCLI/native/G3/E2E is not admitted.
+The ledger write/read component6c2f179c and corrected caller1f6b4314 are committed in
+`/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream`, branch
+`fix/d29-ledger-stream`, with final owner recordsdd3b6a69; this is not admitted
+production. Final integration66PASS/6SKIP and EP30PASS preserve93 old statuses
+and9 newPASS. Actual save/load historical counts0/3 pass complete7124B ordered
+outputs, fresh writer ownership and unchanged old files. Initial raw setupFAIL
+and committed PicklingError remain retained. Allocation886945f3 transfers two unused writer lines:
+36/20/65/14,135gross total,116paths and unchanged owner/global budgets.
+Primary rerun39PASS and27 artifact/four-source/116-cap checks pass. Step124gross,
+net96,cumulative increment116. Primary-only accounting is CORE4377/source9682/
+global9696,zero violations,with unchanged non-superproject usage carried forward;
+independent composed acceptance remains pending. `handoff_parent.json` binds the
+source and `test_report_2026-10-25_handoff.md` records exact commands/limitations.
+
+YC confirms codesign OSS quota is sufficient and requests complete handoff on
+2026-10-25. Capacity is USER_CONFIRMED, not a new quota measurement. Do not repeat
+quota discovery as a blocking prerequisite. Worker environment/append throughput,
+stage/event memory and current cohesive timing remain unverified. The corrected
+sample projection is469GB/mode or938GB/both, not a completed-file or RSS bound.
+Copy/init analyses remain unfinished; JSON/config are NO_PRODUCTION_ALLOCATION.
+All6 required-shape invocations are used. This handoff launches no additional
+shape, pricing, fullCLI or worker run. Final ledger audit, independent review,
+frozen regressions, production integration and fullCLI/native/G3/E2E remain open.
+The refreshed `handoff_prompt.md` owns continuation, not its older historical text.
 
 ## Preceding accepted checkpoints
 
@@ -153,10 +169,12 @@ Detailed completion evidence is in run_input_snapshot/.
 
 Source-backed workload is90,200 waves. Expected successful-run EP-wave output
 is18,712,400 events because three BF16 layers omit input quantization; this is
-not a complete-run census. P6128/D16/BF16 emissions remain unmeasured. The
+not a complete-run census. Supplemental P6128/D16 and ordinaryD1 BF16 emissions
+later passed; P-BF16 and D16-BF16 remain unmeasured. The
 retained FP8 emission timing exceeds the26.608ms zero-startup average wave
 ceiling. This is diagnostic evidence,not a new hard gate or impossibility proof.
-Two-mode output projects522.8GB from samples,not an upper bound. Latest local
+The older522.8GB two-mode sample projection omitted EP lane output; the corrected
+combined projection is938GB, still not a measured bound. The dated local
 capacity is230,937,346,048B(/data) and59,510,960,128B(root) at21:20:32+08:00;
 even the261.4GB single-mode projection exceeds/data. YC approves codesign OSS
 test storage and timely cleanup. Personal cloud alias reports about39TB available;
@@ -164,7 +182,8 @@ bounded2406B write/read/delete passes using sudo for the existing root-owned
 frontier directory,without changing permissions. The test file/directory and16
 exact archived local scratch duplicates are removed;selected evidence remains.
 No direct CPU-host cloud mount or new GPU/shape run occurred. Actual CLI access,
-runtime/project quota and prelaunch capacity verification remain pending.
+runtime/worker-write readiness remain pending. YC's2026-10-25 decision settles
+quota sufficiency as user-confirmed, not as an independently measured quota.
 See storage_readiness/. Each residual diagnosis endsALLOC/NO_ALLOC/BLOCKER with
 bounded evidence and startup/shape-weighted gap attribution;actual CLI acceptance
 remains6144/1024 and<=2400s separately for offline and online.
