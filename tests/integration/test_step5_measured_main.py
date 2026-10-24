@@ -80,10 +80,10 @@ def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(
     else:
         from pathlib import Path
         read_text = Path.read_text
-        def bounded_read(path, *args, **kwargs):
+        def reject_ep_ledger_read_text(path, *args, **kwargs):
             assert path.name != "frontier_ep_wave_lane_ledger.jsonl", "EP ledger materialized"
             return read_text(path, *args, **kwargs)
-        monkeypatch.setattr(Path, "read_text", bounded_read)
+        monkeypatch.setattr(Path, "read_text", reject_ep_ledger_read_text)
         assert validate(tmp_path,"offline",document)["status"] == "PASS"
 
 
