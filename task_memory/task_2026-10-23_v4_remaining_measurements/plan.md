@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Profile04 submitted once; restore the pre-existing positive fixture and synchronize submission records independently while preserving the queued job. |
 | 2026-10-24 | Selected correction-backed profile04: preserve runtime/window/RPC budget, disable only the optional CUDA statistics table and prepare a fresh reviewed package. |
 | 2026-10-24 | Native CPU timeout loop and two prefill-rank0 censuses passed; verify the existing optional CUDA-table toggle before fresh package preparation. |
 | 2026-10-24 | Profile03 failed; preserved190 outputs and opened parallel timeline, metadata and native-RPC feedback-loop diagnosis. |
@@ -49,6 +50,8 @@ Immediate dependency: `{integrated runtime1437ace6 -> reviewed package39e23132 +
 Selected diagnostic dependency: `{native timeout-loop root RED/GREEN, exact-image lazy-statistics source, P1/P0 raw-trace census} -> native CUDA-table toggle CPU RED/GREEN -> root actual-image config/export checks -> separately recorded fresh profile04 package/review -> seal and one bounded H800 validation`. The optional text table is not used for raw-kernel ownership or serving-cost admission. No timeout scaling, capture reduction, asynchronous profiler rewrite or additional mapper is selected.
 
 Profile04 preparation runs alongside the final CPU-control review: `same runtime1437ace6 + fresh plan/dump=false -> builder guard/regression/45-file package -> {Spec review, Standards review, root staged image/SDK checks} -> recorded quota/destination checks -> seal -> one32H800/3600s run -> terminal/raw-data verification`. One owner in a fresh worktree owns the two maintained source/plan paths and one existing test within160gross lines; root retains acceptance and all platform actions. This allocation supersedes the offline-only submission exclusion only for profile04; profile03's spent attempt and immutable inputs are unchanged.
+
+Current parallel work: `profile04 exp-1024-172225-512616 queued -> actual placement/runtime -> terminal/raw-data acceptance` runs alongside `{known baseline fixture diagnosis -> one-file<=60gross CPU restoration -> Spec/Standards review + root fixture-enabled verification -> integration, seven-file<=150gross submission-document synchronization -> root link/hash/scope verification -> commit}`. Root owns all platform work and primary requirements/plan/progress; owners write disjoint fixture/worktree records or the seven named documents. Original profile03, sealed profile04 inputs, native06R4 and existing calibration/admission rules remain unchanged. No second GPU attempt is selected.
 
 G2 dependencies: `{G2a native window/API evidence, driver callsite design} -> G2b one-owner implementation and CPU controls -> G2c independent Spec/Standards review and root final-source verification -> G2d concrete resource/window proposal -> YC GPU decision`. G2a/b/c are complete for source `05952396`, with seven existing non-core files and 433/750 changed lines. Both R1 reviews closed all findings; final separate suites and repaired-source matrix binding passed (`driver/primary_acceptance.json`). G2d, resource authority, fresh package/source/image checks and the diagnostic collection/audit are complete; native/operator/serving qualification remains open.
 

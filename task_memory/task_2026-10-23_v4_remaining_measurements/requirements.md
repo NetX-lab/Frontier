@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Allocated the pre-existing32-rank positive-fixture repair as independent queue-time CPU work; frozen checkers/runtime/sealed packages stay unchanged. |
 | 2026-10-24 | Actual-image native autostop/export controls passed; allocated fresh profile04 with only the existing optional CUDA-table field disabled. |
 | 2026-10-24 | Selected the existing CUDA-table toggle for bounded CPU phase controls; no timeout, capture-window or runtime change is selected. |
 | 2026-10-24 | Opened bounded offline diagnosis after profile03's launcher exit1; immutable failed-run artifacts and the original attempt remain preserved. |
@@ -165,3 +166,15 @@ One owner may create a fresh probe copy under `profile01/graph_probe/`, with at 
 ### D-V4-PROFILE03-METADATA-CENSUS-FIX — offline artifact classification
 
 - Root directly confirmed64 `torch_traces/` entries are32 `.pt.trace.json.gz` plus32 `profiler_out_*.txt`, not64 raw traces. The metadata adapter classified by directory only. Correct only this artifact census in a new pinned copy (<=4gross code lines), retain original script/output bytes in scratch, rerun the full190-file/32-rank metadata audit and distinguish32 raw traces/32 optional tables. Other output fields must remain equal apart from explicit corrected census/provenance; stale/formal/DP-count and FAILED limits stay unchanged. Update only existing `failure/{metadata_audit.json,metadata_audit.md,metadata_command.md}` (<=20gross maintained Markdown) with original/corrected hashes and exact commands. No runtime/GPU/native/package or parent-document edits.
+
+### D-V4-GROUNDTRUTH-FIXTURE — independent CPU regression restoration
+
+- [Decision — 2026-10-24] Under D-V4-QUEUE-PARALLEL-WORK and D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY, restore the known pre-existing positive-fixture failure recorded in `profile01/dp_sequence/baseline_diagnosis.*` and `profile01/integration_cpu/`. Baseline44f2ddb9 and candidate178c1123 produced identical32counter/hook dictionaries and32missing-dp_utils setup errors; integrated1437ace6 retained465PASS/1unchanged-baselineFAIL/0SKIP. Preserve all original failures.
+- One owner may edit only `tests/unit/test_native_groundtruth_check.py`,<=60gross changed lines, plus its own records under `profile01/groundtruth_fixture/`. Reuse the actual frozen R3 successor's source-backed V2 classifier/DP-dispatch stand-ins and an explicit CPU group. Do not add an empty dp_utils module, remove observed hooks, relax assertions, alter a frozen checker, edit runtime/native/C26/core files, or modify any sealed package. If the complete restoration needs more scope, return the inspected reason rather than compressing or changing behavior.
+- Acceptance: exercise the actual32-rank positive path and retained negative/oracle controls, run the complete fixture-enabled groundtruth-check suite with0failures/0errors/0skips, verify immutable checker/runtime/native/package hashes and bind the existing77-case unchanged-domain matrix. Root independently reruns affected checks and performs phase-level review before integration. Tests must use the owner-verified asyncopd Python3.12 environment and the actual existing fixture paths; no new dependency installation or fabricated reference inputs.
+- Source/test budget is separate from raw receipts/diffs and maintained task Markdown<=200lines. Owner commits verified source and records in its local worktree and stops. No GPU/platform/auth/Docker/network/control operations or further delegation; root keeps profile04's existing launcher alive and owns its actual acceptance.
+
+### D-V4-PROFILE04-STAGE-DOCS — submission milestone synchronization
+
+- One records owner may update only parent `task_2026-10-15_glm53_dsv4_vllm028_h800/{progress.md,summary.md,plan.md,tickets/05-dsv4-flash-family.md,tickets/09-predictor-bundle.md,v4_prediction_next_20261022.md}` and this task's `summary.md`,<=150gross maintained lines. Read the frozen profile04 root records atf4f4ab79; report one submitted jobexp-1024-172225-512616 and the dated Starting/four-unassigned snapshot, not runtime success. Preserve original profile03 FAILED evidence, limited callback/isolated acceptances, native06R4, full05/09/19OPEN, GLM pause and CPU-overhead-last order.
+- Check new links and immutable evidence bindings; do not edit primary requirements/plan/progress or any JSON/source/package/run output. The root-owned primary progress already records the current submission. No Git staging/commit, platform/network/credential operations or subagents. Return changed paths, gross count, verification and limitations; root owns acceptance and commit.
