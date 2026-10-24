@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-I",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/entry_r1/entry_controls.py"
+  ],
+  "cwd": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/entry_r1",
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/brainpp",
+    "LANG": "C.UTF-8",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/entry_r1",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "started_utc": "2026-10-24T08:12:48.517548+00:00",
+  "returncode": 0,
+  "script_sha256": "24fa0704603f3e392374e9d9db51f8871a9e08f1a083c14706092ce2b0f162dc",
+  "python_driver": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "cpu_only": true,
+  "submitted": false
+}

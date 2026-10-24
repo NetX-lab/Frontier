@@ -1,0 +1,238 @@
+{
+  "run_check.py": {
+    "source_path": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/cpu_evidence/run_check.py",
+    "source_sha256": "a289f991596d31f11acc7e8b9f63fb256e4796e9bd79723ec3aeca47e5740128",
+    "adapted_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/run_check.py",
+    "adapted_sha256": "a289f991596d31f11acc7e8b9f63fb256e4796e9bd79723ec3aeca47e5740128",
+    "changes": [],
+    "not_runtime_or_maintained_source": true
+  },
+  "native_profiler_controls.py": {
+    "source_path": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/cpu_evidence/native_profiler_controls.py",
+    "source_sha256": "026145686dbd25e879605fd5f44bcd5ca0ef030c3025bb7472f7c62b13bd0e9c",
+    "adapted_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/native_profiler_controls.py",
+    "adapted_sha256": "755d0d4bfce8f6d03aa54c6d14907592698d079e8e1852d997ac37c376b95079",
+    "changes": [
+      {
+        "before": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory",
+        "after": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory",
+        "count": 1
+      },
+      {
+        "before": "candidate_h800_p0_profile_03",
+        "after": "candidate_h800_p0_profile_04",
+        "count": 1
+      },
+      {
+        "before": "assert config.max_iterations == 64 and config.ignore_frontend and config.torch_profiler_use_gzip",
+        "after": "assert config.max_iterations == 64 and config.ignore_frontend and config.torch_profiler_use_gzip\nassert config.torch_profiler_dump_cuda_time_total is False\nassert namespace['ProfilerConfig']().torch_profiler_dump_cuda_time_total is True",
+        "count": 1
+      },
+      {
+        "before": "assert validated.max_iterations == count",
+        "after": "assert validated.max_iterations == count and validated.torch_profiler_dump_cuda_time_total is False",
+        "count": 1
+      }
+    ],
+    "not_runtime_or_maintained_source": true
+  },
+  "balanced_frontier_controls.py": {
+    "source_path": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/cpu_evidence/balanced_frontier_controls.py",
+    "source_sha256": "a35fac05637f68c775c85e13fc04c6243cd4655b602a07865d163da6bfbdca01",
+    "adapted_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/balanced_frontier_controls.py",
+    "adapted_sha256": "2ba0968886156ad5c98750be675fa8bb04fa1ae75bde125d7be615316ac049ad",
+    "changes": [
+      {
+        "before": "'/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run'",
+        "after": "'/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run'",
+        "count": 1
+      },
+      {
+        "before": "candidate_h800_p0_profile_03",
+        "after": "candidate_h800_p0_profile_04",
+        "count": 1
+      }
+    ],
+    "not_runtime_or_maintained_source": true
+  },
+  "entry_controls.py": {
+    "source_path": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/cpu_evidence/entry_controls.py",
+    "source_sha256": "35fb09e01e417b6ef30fd0f782e3750fd495a5edc100b3947418717bb21da4d6",
+    "adapted_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/entry_controls.py",
+    "adapted_sha256": "2cccaa84c355aceea110647a54dc9b05152bc200bc97e32e5ce2a2c3d7de4eb4",
+    "changes": [
+      {
+        "before": "'/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run'",
+        "after": "'/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run'",
+        "count": 1
+      },
+      {
+        "before": "candidate_h800_p0_profile_03",
+        "after": "candidate_h800_p0_profile_04",
+        "count": 1
+      },
+      {
+        "before": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15",
+        "after": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15",
+        "count": 1
+      },
+      {
+        "before": "INITIAL = json.loads((TASK / 'initial_delivery.json').read_text())",
+        "after": "INITIAL = json.loads((ROOT / 'prior_reference.json').read_text())",
+        "count": 1
+      },
+      {
+        "before": "        assert result.returncode == 0, result.stderr\n        assert 'FRESH_LAUNCHER_GREEN_BEFORE_WRITE_RUN_MANIFEST_BODY' in result.stdout",
+        "after": "        assert result.returncode == 0, result.stderr\n        assert 'FRESH_LAUNCHER_GREEN_BEFORE_WRITE_RUN_MANIFEST_BODY' in result.stdout\n        checked = run('launch_check_only', [PYTHON, '-I', '-B', str(copied / 'launch.py'), '--check-only'], env=env)\n        assert checked.returncode == 0 and 'INPUT_HASHES_PASS_NO_SUBMISSION' in checked.stdout",
+        "count": 1
+      },
+      {
+        "before": "    assert not (path / 'manifest.json').exists()",
+        "after": "    if path == NEW:\n        assert not (path / 'manifest.json').exists()",
+        "count": 1
+      }
+    ],
+    "not_runtime_or_maintained_source": true
+  },
+  "integrity_controls.py": {
+    "source_path": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/cpu_evidence/integrity_controls.py",
+    "source_sha256": "706e22d21a387cbb2121212f8b77bf51b50cebcbebd8d45f2872e4d80360df13",
+    "adapted_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/integrity_controls.py",
+    "adapted_sha256": "af39a6db2095dd2efe93227f461af378377c39e1f863c8dca7f3082f917c9943",
+    "changes": [
+      {
+        "before": "'/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run'",
+        "after": "'/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run'",
+        "count": 1
+      },
+      {
+        "before": "candidate_h800_p0_profile_03",
+        "after": "candidate_h800_p0_profile_04",
+        "count": 1
+      },
+      {
+        "before": "RECORDS = TASK / 'profile01/profile03'",
+        "after": "RECORDS = TASK / 'profile01/profile04'",
+        "count": 1
+      },
+      {
+        "before": "prior = json.loads((TASK / 'profile01/delivery.json').read_text())",
+        "after": "prior = json.loads((ROOT / 'prior_reference.json').read_text())",
+        "count": 1
+      },
+      {
+        "before": "if k != 'torch_profiler_dir'",
+        "after": "if k not in ('torch_profiler_dir', 'torch_profiler_dump_cuda_time_total')",
+        "count": 2
+      },
+      {
+        "before": "changed = []",
+        "after": "assert config['engine']['profiler_config']['torch_profiler_dump_cuda_time_total'] is False\nassert old_config['engine']['profiler_config'].get('torch_profiler_dump_cuda_time_total', True) is True\nchanged = []",
+        "count": 1
+      },
+      {
+        "before": "assert set(changed) == {f'tests/comparison/calibration/{name}.py' for name in (\n    'native_pd_worker', 'native_full_structure', 'native_serve_profile')}",
+        "after": "assert not changed",
+        "count": 1
+      },
+      {
+        "before": "dsv4-h800-p0-profile-20261024-03",
+        "after": "dsv4-h800-p0-profile-20261024-04",
+        "count": 1
+      },
+      {
+        "before": "inventory = json.loads((RECORDS / 'prior_hash_inventory.json').read_text())",
+        "after": "inventory = json.loads((TASK / 'profile01/profile03/prior_hash_inventory.json').read_text())",
+        "count": 1
+      },
+      {
+        "before": "unchanged_runtime_modules=10",
+        "after": "unchanged_runtime_modules=13",
+        "count": 1
+      },
+      {
+        "before": "PASS_CPU_PROFILE03_CLOSURE_AND_BINDINGS",
+        "after": "PASS_CPU_PROFILE04_CLOSURE_AND_BINDINGS",
+        "count": 1
+      }
+    ],
+    "not_runtime_or_maintained_source": true
+  },
+  "package_controls.py": {
+    "source_path": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/cpu_evidence/package_controls.py",
+    "source_sha256": "f0d84e3eb5e05efa64a9d6bd081b2dbcfdf8bc8c269608292ded065b8f6b0648",
+    "adapted_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/package_controls.py",
+    "adapted_sha256": "c905bdc5f7a752f6271664702360920548f628f5a0049faa073dc8dc294cee2e",
+    "changes": [
+      {
+        "before": "'/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run'",
+        "after": "'/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run'",
+        "count": 1
+      },
+      {
+        "before": "candidate_h800_p0_profile_03",
+        "after": "candidate_h800_p0_profile_04",
+        "count": 1
+      },
+      {
+        "before": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15",
+        "after": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15",
+        "count": 1
+      },
+      {
+        "before": "INITIAL = json.loads((TASK / 'profile01/initial_delivery.json').read_text())",
+        "after": "INITIAL = json.loads((ROOT / 'prior_reference.json').read_text())",
+        "count": 1
+      },
+      {
+        "before": "profile01/profile03/proposal_inputs.json",
+        "after": "profile01/profile04/proposal_inputs.json",
+        "count": 1
+      },
+      {
+        "before": "if k != 'torch_profiler_dir'",
+        "after": "if k not in ('torch_profiler_dir', 'torch_profiler_dump_cuda_time_total')",
+        "count": 2
+      },
+      {
+        "before": "dsv4-h800-p0-profile-20261024-03",
+        "after": "dsv4-h800-p0-profile-20261024-04",
+        "count": 1
+      },
+      {
+        "before": "    assert not (package / 'manifest.json').exists()",
+        "after": "    if package == NEW:\n        assert not (package / 'manifest.json').exists()",
+        "count": 1
+      },
+      {
+        "before": "    assert json.loads(command[command.index('--profiler-config') + 1]) == expected",
+        "after": "    assert json.loads(command[command.index('--profiler-config') + 1]) == expected\n    assert expected['torch_profiler_dump_cuda_time_total'] is False",
+        "count": 1
+      }
+    ],
+    "not_runtime_or_maintained_source": true,
+    "followup_changes": [
+      {
+        "before": "    assert not (package / 'case/runs').exists()",
+        "after": "    if package == NEW:\n        assert not (package / 'case/runs').exists()"
+      },
+      {
+        "before": "new_launcher_green/launch.py",
+        "after": "entry_r1/new_launcher_green/launch.py"
+      }
+    ]
+  },
+  "entry_controls_r1.py": {
+    "source_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/entry_initial_failed.py",
+    "source_sha256": "2cccaa84c355aceea110647a54dc9b05152bc200bc97e32e5ce2a2c3d7de4eb4",
+    "adapted_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/entry_r1/entry_controls.py",
+    "adapted_sha256": "24fa0704603f3e392374e9d9db51f8871a9e08f1a083c14706092ce2b0f162dc",
+    "reason": "Exact previous PROFILE03 was sealed/launched and already contains retained case/runs metadata. Keep full before/after hashes; absent-runs assertion applies only to new unsealed PROFILE04.",
+    "changes": [
+      {
+        "before": "    assert not (path / 'case/runs').exists()",
+        "after": "    if path == NEW:\n        assert not (path / 'case/runs').exists()"
+      }
+    ]
+  }
+}

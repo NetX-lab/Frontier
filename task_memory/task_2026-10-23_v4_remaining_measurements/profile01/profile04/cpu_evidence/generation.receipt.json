@@ -1,0 +1,29 @@
+{
+  "task_id": "W128-PROFILE04-PACKAGE",
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+    "--generation",
+    "4",
+    "--profile-plan",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/profile_plan.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run",
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/brainpp",
+    "LANG": "C.UTF-8",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "source_commit": "8cbf7ab9dc0690b537bc95f07e30ec545e40779c",
+  "source_clean_before_generation": true,
+  "started_utc": "2026-10-24T08:11:22.808285+00:00",
+  "returncode": 0,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "generation_count": 1,
+  "seal_invoked": false,
+  "submitted": false
+}

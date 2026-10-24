@@ -1,0 +1,40 @@
+{
+  "base": "53398d06",
+  "commands": {
+    "source_changes.diff": [
+      "git",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run",
+      "diff",
+      "53398d06",
+      "8cbf7ab9dc0690b537bc95f07e30ec545e40779c",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/profile_plan.json",
+      "tests/unit/test_native_pd_worker.py"
+    ],
+    "source_changes.numstat": [
+      "git",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run",
+      "diff",
+      "--numstat",
+      "53398d06",
+      "8cbf7ab9dc0690b537bc95f07e30ec545e40779c",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/profile_plan.json",
+      "tests/unit/test_native_pd_worker.py"
+    ]
+  },
+  "sha256": {
+    "source_changes.diff": "2873889d4c3ecebba3ef8f8801c45968749bbaf6847e8d0ee5afb3415e069043",
+    "source_changes.numstat": "72e477986af16406c43053e92d74bbe77b81186076e3d9d5e2721ce7d980bf6b"
+  },
+  "source_and_plan_gross": 52,
+  "source_commit": "8cbf7ab9dc0690b537bc95f07e30ec545e40779c",
+  "status": "PASS_ACTUAL_COMMIT_DIFF_MATCHES_PRECOMMIT_RECEIPT",
+  "task_id": "W128-PROFILE04-PACKAGE",
+  "test_gross": 21,
+  "total_gross": 73
+}
