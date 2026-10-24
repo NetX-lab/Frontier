@@ -1,0 +1,70 @@
+"""Read closed failed-pilot artifacts once; this is not another trace audit."""
+from datetime import datetime, timezone
+import gzip
+import hashlib
+import json
+from pathlib import Path
+import sys
+import time
+
+PREFIX = Path("/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/prefill_dp0_rank0")
+RECORDS = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary")
+
+
+def sha(path):
+    h = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+started = time.monotonic()
+receipt = json.loads(PREFIX.with_suffix(".receipt.json").read_text())
+assert receipt["returncode"] == 124 and not PREFIX.with_suffix(".json").exists()
+files = []
+for row in receipt["outputs"]:
+    path = Path(row["path"])
+    assert path.stat().st_size == row["bytes"] and sha(path) == row["sha256"]
+    dest = RECORDS / path.name
+    if path.suffix != ".gz":
+        with dest.open("xb") as target:
+            target.write(path.read_bytes())
+    files.append(dict(**row, archive_path=str(dest) if path.suffix != ".gz" else None))
+with (RECORDS / PREFIX.with_suffix(".receipt.json").name).open("xb") as target:
+    target.write(PREFIX.with_suffix(".receipt.json").read_bytes())
+index = PREFIX.with_suffix(".kernels.jsonl.gz")
+h = hashlib.sha256()
+rows = size = 0
+last = b""
+with gzip.open(index, "rb") as stream:
+    for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+        h.update(block)
+        rows += block.count(b"\n")
+        size += len(block)
+        last = block[-1:]
+assert last == b"\n"
+stages = [json.loads(v) for v in PREFIX.with_suffix(".obs.jsonl").read_text().splitlines()]
+kernels = next(v for v in stages if v["stage"] == "kernel_pass_done")
+assert rows == sum(kernels["status_rows"].values())
+batch = next(v for v in stages if v["stage"] == "DEBUG-V4-METRICS-GROUP-02:start")
+gc = [json.loads(v) for v in PREFIX.with_suffix(".gc.jsonl").read_text().splitlines()]
+assert not any(v["t"] >= batch["t"] for v in gc)
+allocation = json.loads((RECORDS / "affected_allocation.json").read_text())
+for pin in allocation["source_pins"]:
+    assert sha(pin["path"]) == pin["expected_sha256"]
+assert sha(allocation["download_inventory_path"]) == allocation["download_inventory_sha256"]
+result = dict(status="FAILED_P0_PILOT_NO_FINAL_JSON", observed_utc=datetime.now(timezone.utc).isoformat(),
+              python=sys.version, source_commit=allocation["source_commit"], allocation_sha256=sha(RECORDS / "affected_allocation.json"),
+              child_returncode=124, driver_returncode=1, enclosing_seconds=receipt["enclosing_seconds"],
+              actual_memory_limit_bytes=int(receipt["actual_cgroup"]["limits"]["memory.limit_in_bytes"]),
+              final_json_exists=False, useful_steps=None, fresh_attempts_used=1, fresh_attempt_ceiling=8,
+              remaining_seven="NOT_RUN_BLOCKED_ON_COMPLETE_PILOT", files=files, original_source_pins_unchanged=True,
+              clean_gzip_eof=True, index_rows=rows, index_decompressed_bytes=size, index_decompressed_sha256=h.hexdigest(),
+              stages=[v for v in stages if "progress" not in v["stage"]], metrics_gen2_callbacks=0,
+              metrics_end_observed=False, sort_seconds=None, union_seconds=None,
+              raw_trace_audit_invocations=0, artifact_validation_invocations=1,
+              reference_admission=False, cost_admission=False, elapsed_seconds=time.monotonic() - started)
+with (RECORDS / "pilot_failure.json").open("x") as output:
+    json.dump(result, output, indent=2)
+print(json.dumps({k: result[k] for k in ("status", "index_rows", "index_decompressed_sha256", "metrics_gen2_callbacks", "elapsed_seconds")}))

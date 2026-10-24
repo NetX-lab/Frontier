@@ -1,0 +1,15 @@
+{
+  "status": "ACCEPTED_READ_ONLY_R6_R7_PREPARATION",
+  "observed_utc": "2026-10-24T20:53:56.000129+00:00",
+  "reviewer": "primary",
+  "owner": "Ptolemy, closed",
+  "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/review_preparation/readiness_2026-10-25.md",
+  "sha256": "f8c6abfac617a8276fcf18591478ee66c881f806a302a4794e2e9a851e2ecb4f",
+  "gross_lines": 70,
+  "gross_cap": 75,
+  "frontier": "Group pilotFAILED1/8;sevenNOT_RUN/BLOCKED;segment-only diagnosticnext",
+  "new_tests_or_audits": 0,
+  "new_platform_or_gpu_operations": 0,
+  "full_R6_R7_acceptance": false,
+  "limitations": "Preparation only. Full32 output required for R5/R6/R7;no native ownership/dependency/timing/cost/reference admission."
+}

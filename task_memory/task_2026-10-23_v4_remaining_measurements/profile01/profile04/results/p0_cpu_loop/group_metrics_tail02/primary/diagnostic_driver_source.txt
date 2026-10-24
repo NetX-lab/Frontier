@@ -1,0 +1,55 @@
+"""Run the separately allocated sparse group-segment diagnosis once."""
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+REPO = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028")
+RECORDS = REPO / "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary"
+ALLOCATION = RECORDS / "diagnostic_execution_allocation.json"
+PLAN = json.loads(ALLOCATION.read_text())
+PREFIX = Path(PLAN["prefix"])
+
+
+def sha(path):
+    h = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+assert PLAN["status"] == "FROZEN_READY_ONCE_ONLY_DIAGNOSTIC"
+assert sha(__file__) == PLAN["execution_driver_sha256"]
+for pin in PLAN["source_pins"]:
+    assert sha(pin["path"]) == pin["sha256"], pin["path"]
+assert sha(PLAN["source_review_path"]) == PLAN["source_review_sha256"]
+assert sha(PLAN["tiny_receipt_path"]) == PLAN["tiny_receipt_sha256"]
+assert sha(PLAN["download_inventory_path"]) == PLAN["download_inventory_sha256"]
+for kind in ("trace", "profile", "inventory"):
+    path = Path(PLAN["input_root"]) / PLAN["input_bindings"][kind + "_path"]
+    assert path.stat().st_size == PLAN["input_bindings"][kind + "_bytes"]
+    assert sha(path) == PLAN["input_bindings"][kind + "_sha256"]
+command = PLAN["command_prefix"] + [PLAN["timing_source_path"], PLAN["input_bindings"]["trace_path"], str(PREFIX)]
+receipt = dict(status="STARTING", decision=PLAN["decision"], attempt="1/1", command=command,
+               cwd=str(REPO), python=sys.version, allocation_sha256=sha(ALLOCATION),
+               driver_sha256=sha(__file__), source_pins=PLAN["source_pins"],
+               input_bindings=PLAN["input_bindings"], start_utc=datetime.now(timezone.utc).isoformat())
+record = PREFIX.with_suffix(".receipt.json")
+with record.open("x") as stream:
+    json.dump(receipt, stream, indent=2)
+started = time.monotonic()
+with PREFIX.with_suffix(".stdout").open("x") as out, PREFIX.with_suffix(".stderr").open("x") as err:
+    result = subprocess.run(command, cwd=REPO, stdout=out, stderr=err)
+receipt.update(returncode=result.returncode, enclosing_seconds=time.monotonic() - started,
+               end_utc=datetime.now(timezone.utc).isoformat(),
+               status="COMPLETED_DIAGNOSTIC_AWAITING_INSPECTION" if result.returncode == 0 else "CENSORED_DIAGNOSTIC")
+receipt["actual_cgroup"] = json.loads(PREFIX.with_suffix(".cgroup.json").read_text())
+receipt["outputs"] = [dict(path=str(p), bytes=p.stat().st_size, sha256=sha(p))
+                      for p in sorted(PREFIX.parent.glob(PREFIX.name + ".*")) if p != record]
+record.write_text(json.dumps(receipt, indent=2) + "\n")
+print(json.dumps({k: receipt[k] for k in ("status", "returncode", "enclosing_seconds")}), flush=True)
+sys.exit(0 if result.returncode == 0 else 1)

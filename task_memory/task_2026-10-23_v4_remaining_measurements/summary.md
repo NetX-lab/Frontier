@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Preserved failed group pilot and new segment-diagnostic scope; R5 remains24/32 and conditional seven remain unstarted. |
 | 2026-10-25 | Accepted group-metrics CPU source, separate owner/primary9-test units and two complete exact controls after both independent reviews; fresh P0 remains pending. |
 | 2026-10-25 | Archived the one-shot censored construction diagnosis and separately allocated group-metrics correction; R5 remains24/32. |
 | 2026-10-25 | Archived limited S5GPU acceptance, R2review closure and failed P0pilot;R5still24/32 and new metrics-tail diagnosis is separately bounded. |
@@ -32,6 +33,8 @@
 | 2026-10-23 | Accepted G2 CPU source 05952396 and completed its proposal; GPU decision and runtime work remain open. |
 
 ## Current continuation — 2026-10-25
+
+The fresh group-metrics pilot under source8b4d6993 and frozen allocation00840389 is **FAILED_P0_PILOT_NO_FINAL_JSON**:child124/60.324082s/actual30GiB,kernel end55.532s,batch start55.992s,no batch end/final JSON/useful-step output. Complete1215919-row index and closed logs are retained in [failure](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/pilot_failure.json);no gen2 callbacks were observed during the open metrics region. Group affected1/8 is spent;remaining seven areNOT_RUN/BLOCKED,R5still24/32. A new [segment-only allocation](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/allocation.json) permits one tiny AST/equality control and one fresh60s/actual30GiB diagnostic to separate global-order/group sort/union costs. It authorizes no new correction, complete control or affected run. Accepted source/control/GPU evidence and all original failures remain unchanged.
 
 The standalone scope probe is **ACCEPTED_SINGLE_IMAGE_SCOPE_LIFETIME_WITH_LIMITS** in [primary acceptance](profile01/scope_lifetime/results/primary_acceptance.json),supported by the [GPU test report](profile01/scope_lifetime/results/test_report_2026-10-25_scope_lifetime_gpu.md). Fresh gates/seal preceded the uniqueexp-1025-021228-212042;Succeeded/Completed/exit0/restart0/launcher0 on personalcodesign1H800,gpu-h800-0158,GPU-4c9987eb-19e6-793f-0326-c502be48abcd. Allocation is spent1/1. Five cloud outputs/224883B are hash-identical. R2primary60raw checks/5direct full-ID joins/6unmatched and20execution bindings PASS;independent73scalar checks/17negative rejections close threeR1omissions. Fresh79retained bindings rehash49immutable review artifacts and18original/archive inputs in0.062230s without another audit/probe/control/GPU run.
 

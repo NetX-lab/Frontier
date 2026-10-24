@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Group pilot FAILED at60s; archived complete diagnostic index/closed logs and opened one separately bounded segment observation. |
 | 2026-10-25 | Committed accepted group source at8b4d6993 and froze new affected command/input bindings before the fresh pilot. |
 | 2026-10-25 | Rechecked accepted source/evidence bytes without execution, corrected the pilot frontier and began independent R6/R7 evidence preparation. |
 | 2026-10-25 | Accepted group-metrics CPU source, separate owner/primary9-test units and two complete exact controls after both independent reviews; fresh P0 remains pending. |
@@ -49,6 +50,9 @@
 
 ## Current continuation — 2026-10-25
 
+- failed fresh group pilot: source8b4d6993/allocation00840389,child124/driver1/60.324082s/actual32212254720bytes. Load30.072s,kernel start40.178/end55.532,metricsstart55.992 with1215919events/240groups/5331778memberships;no metricsend/final JSON/useful steps and no gen2callbacks in metrics. [Failure](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/pilot_failure.json) archives seven closed logs/receipt and complete1215919-row indexSHA678fb917;readonly archive/index inspection0.386061s/no raw audit. Affected1/8 used;sevenNOT_RUN/BLOCKED,R5still24/32.
+- completed mandatory failed-pilot self-check: [checkpoint](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/check_progress_2026-10-25_group_pilot_failure.md) applies the new segment-only route after repeated P0 failures;allD1–D7CLEAR,stale current statuses corrected. Prior closed indexSHA678fb917 matches by receipt hash only,no index/audit rerun.
+- in-progress new segment-only diagnostic: [allocation](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/allocation.json) binds failed-pilot evidence before one new tiny AST/equality control and one new60s/actual30GiB segment observation. Measure global-order and individual group sums/sorts/union;no accepted source/GC/raw/native/package edit,old driver import or new affected/control run. R6/R7 evidence preparation continues independently.
 - completed source commit8b4d6993 and new affected preflight: [allocation](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/affected_allocation.json) binds accepted source/controls, all frozen dependencies and unchanged eight input triplets. Fresh80-line driver uses exclusive receipts,60s/actual30GiB/no retries and chosen concurrency1 within max2. Affected0/8;rank0ready,sevenBLOCKED on complete primary pilot acceptance. R6/R7 compact evidence preparation is independent in review_preparation/.
 - completed resumed byte checks at HEAD4ae81052: all11owner manifest files, accepted source/test and two independent review hashes match; staged code equals disk and both whitespace checks PASS. No unit/control/trace/GPU invocation. The new [route checkpoint](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/check_progress_2026-10-25_affected_start.md) corrects the pilot TODO versus conditional-seven BLOCKED split and closed-agent ownership.
 - completed new group-metrics source/control acceptance: [decision](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/source_acceptance.json), [report](profile01/profile04/results/p0_cpu_loop/metrics_correction02/test_report_2026-10-25_group_metrics_primary.md). Frozen source80/220, tests194/200, owner Markdown100/100; owner and primary each9tests/42consistent serialized checks PASS, primaryactual30GiB. Fresh decode/prefill controls eachonce PASS: allnon-clock JSON,361/240metric groups floathex and142567/570964decompressed index rows exact. Spec/Standards bothNo findings;77matrix binding only. Units1/1each andcontrols2/2spent;affected0/8, fresh pilot next. No old experiment rerun or source/native/package change.
@@ -86,14 +90,16 @@ This live continuation record supersedes the originalb3365655 handoff and every 
 
 ### Unfinished work and numbered next actions
 
-1. Commit the verified group-metrics source/control step and bind a new affected driver to its source commit, frozen dependencies, source acceptance, complete controls and the eight original input triplets. All previous source/control/review agents are closed; no unit/control rerun.
-2. Run the one ready fresh P0rank0 pilot at60s/actual30GiB. Accept only a complete final JSON/index, exact identity/field checks and at least three useful steps. A timeout stays FAILED without automatic retry.
-3. After complete pilot acceptance, execute the remaining seven ranks once each at60s/actual30GiB/max2; these ranks are BLOCKED until that acceptance. Independently prepare R6/R7 evidence paths without declaring full-trace acceptance.
-4. Complete R5/R6/R7 only from full actual outputs. Preserve old24complete/eight originaltimeouts,failed firstpilot,all partials andUNKNOWN;no scope GPU rerun/native/cost/reference upgrade. Update reports/check-progress and commit owned files locally after each verified step.
+1. Preserve group source/control8b4d6993 and frozen affected allocation00840389. Its one fresh pilot FAILED;seven conditional ranks remainNOT_RUN/BLOCKED. No old unit/control/pilot/diagnostic rerun.
+2. Complete the new group_metrics_tail02 source/tiny AST/equality proof and primary command binding; then run its sole60s/actual30GiB segment diagnostic. Distinguish observed durations from censored regions;this allocation has no correction/complete-control/affected authority.
+3. Decide any subsequent bounded correction from the measured segment evidence, with new exact-control and affected allocations before work. The fixed60s/actual30GiB/max2,unchanged predicates/raw IDs and >=3useful-step/full-output requirements remain.
+4. Final R5/R6/R7 waits for complete actual32-rank outputs. R6/R7 compact evidence preparation may continue independently; preserve all failures and native/reference limits. Update reports/check-progress and commit only owned files locally.
 
 ### Complete continuation prompt
 
 ```text
+最新checkpoint：group source8b4d6993和affected allocation00840389已提交；group freshpilot1/8已用且FAILED124/60.324082s，no finalJSON。kernel_done55.532、batch_start55.992、metrics gen2callbacks0；完整1215919index只作诊断，其余7NOT_RUN/BLOCKED，R5仍24/32。新group_metrics_tail02/primary/allocation.json分配唯一新tiny AST/equality及唯一新60s/实际30GiB segmentdiagnostic，不包含任何新correction/completecontrols/affectedrun。必须先新source/AST proof和exact command bindings，再执行一次新segmentdiagnostic；不复跑旧scripts。不把下文历史0/8、ownerpending当current。
+
 继续/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028，feat/glm53-dsv4-vllm028，主任务task_memory/task_2026-10-23_v4_remaining_measurements/。先读AGENTS.md和主requirements/plan/progress/summary及git状态；本段及上方Current continuation是当前记录，旧current/pending是历史。
 
 已完成的fixture、capture prerequisite、S1/S2source和一次package generation不要重做。原可执行包必须保留：/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01。绝对workspace/script/NFS路径和18frozen inputs不可改；main副本是归档，launcher新增receipts不改变input集合。
