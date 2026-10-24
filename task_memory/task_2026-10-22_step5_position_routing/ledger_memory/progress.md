@@ -3,9 +3,61 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Complete actual caller and focused suites; commit124-gross UNADMITTED successor and archive27 follow-up artifacts. |
+| 2026-10-25 | Begin authorized caller follow-up; merge both record histories and apply the existing persistent-reference successor. |
 | 2026-10-25 | Commit120-gross component controls; return exact2-gross performance-cap blocker and preserve raw focused failures. |
 | 2026-10-24 | Start isolated implementation; observe both RED controls and preserve baseline/first GREEN failures. |
 | 2026-10-24 | Complete source/baseline inspection and allocate135gross; implementation and acceptance remain pending. |
+
+## Current follow-up: 2026-10-25
+
+- completed/authorization: primary886945f3 imported as924427c0. Resolve only
+  requirements/plan documentation conflicts, retaining both prior implementation
+  records and renewed handoff/cap records. Current caps36/20/65/14,total135.
+  Cherry-pick and authored Markdown checks pass; no source change in the import.
+  Initial add was rejected by the existing task-record ignore rule; explicit
+  owned-path `git add -f` completed the authorized merge.
+- completed/caller-control: actual current save_state/load_state and real
+  MetricsStore writer pass historical-count0/3 controls. The fresh restored
+  writer owns its new path and remains unopened before append, including count3.
+  Full ordered7124-byte new output matches SHA256
+  f63c0297e9dffe14d25d929fc3488d6d7c0f9eb6b1ff15393f24d49fe03e34a7 in both cases.
+  Terminal counts4/7, zero/new/later-slice digests and original file bytes pass.
+  Exact current main count/position/digest AST is exercised, not a patched proposal.
+  Raw exit0; control body wall0.054s excludes imports; effective cgroup peak unmeasured.
+- completed/checkout: local independent `git clone --local --no-hardlinks
+  --no-checkout` and detached checkout both exit0. Own destination is clean at
+  3dac53c544e546574cb6e8078cd14053d0916113; primary checkout is untouched. No
+  network, build, backend source or superproject gitlink edit. Four existing
+  constructor tests now4PASS/68deselected,exit0,2.18s through the real resolver.
+- completed/EP-suites-followup: existing four files30PASS,exit0,2.39s. Source
+  `git diff --check` passes. No tests or production code beyond performance changed.
+- completed/focused-integration: full affected file66PASS/6SKIP,exit0,50.43s.
+  With EP suites,102 IDs have96PASS/6SKIP. All93 baseline IDs and statuses match;
+  all9 new testsPASS; the four previously failing setup IDs nowPASS. Exact JUnit
+  comparison is retained; old raw failures and broad regression evidence unchanged.
+- completed/source-successor: 1f6b431478e2351e3ca6819f707cccbc3e4336e2 changes
+  performance only after the initial source. Whole repair step33/15/62/14=124/135;
+  cumulative33/56/320/14=423. Caps36/20/65/14 and36/67/325/14 all pass.
+  Current source blobs match the commit; producer, other three sources and gitlink
+  stay unchanged. Local increment116 projectsCORE4377/source9682/global9696.
+- completed/RED-capture: exact committed6c2f179c save_state is additionally executed
+  with the real nonempty writer; PicklingError traceback and native partial state
+  are archived. Harness exit0 captures expected RED; prior save_state itself fails.
+- completed/followup-evidence: evidence/caller_followup_2026-10-25/ retains27
+  byte-verified raw/native-state/output artifacts, exact commands in the follow-up
+  test report, scope and baseline ID comparison. Effective cgroup peak not measured.
+- completed/duplicate-cleanup: only four completed checkout setup raw-log/exit
+  duplicates and their two empty scratch directories removed after byte checks
+  against retained evidence. cleanup.json records hashes. Pinned checkout, caller
+  states/outputs, legacy fixture and all other-session paths remain untouched.
+- pending/record-commit: owned progress, summary, checkpoint, test report and new
+  evidence only; retain both earlier record histories and leave branch clean.
+- pending/primary-handoff-gates: independent clean composed audit, Standards/Spec,
+  final-source freeze/full regressions and accepted-production integration. Candidate
+  is UNADMITTED; fullCLI/native/G3/E2E and other root workflow items remain pending.
+
+## Historical first delivery (superseded pending actions retained as evidence)
 
 - completed/design: the real store retains complete rows until plot; actual-main
   materializes all EP rows. Selected repair preserves complete output via the
