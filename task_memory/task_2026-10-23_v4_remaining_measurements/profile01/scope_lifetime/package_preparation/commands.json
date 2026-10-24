@@ -151,5 +151,49 @@
     ]
   },
   "static_initial_failure": "closure_initial_failure.json",
-  "limits": "Two bounded CPU candidate checks; one generation; static artifact reads after generation do not execute probe/launcher/import checks. No StepMind/GPU/image/SDK operation."
+  "limits": "Two bounded CPU candidate checks; one generation; static artifact reads after generation do not execute probe/launcher/import checks. No StepMind/GPU/image/SDK operation.",
+  "archive_commands": [
+    [
+      "git",
+      "add",
+      "-f",
+      "--",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation"
+    ],
+    [
+      "git",
+      "diff",
+      "--cached",
+      "--check",
+      "--",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation",
+      ":(exclude)*.diff"
+    ],
+    [
+      "git",
+      "diff",
+      "--cached",
+      "--check",
+      "--",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation",
+      ":(exclude)*.diff",
+      ":(exclude)*.log"
+    ],
+    [
+      "git",
+      "diff",
+      "--cached",
+      "--stat"
+    ],
+    [
+      "git",
+      "commit",
+      "-m",
+      "Record scope lifetime package CPU preparation evidence",
+      "-m",
+      "Archive the bounded CPU controls, preserved verifier failures, immutable input pins, exact package inventory, review diffs, budgets and unresolved root gates."
+    ]
+  ],
+  "archive_commit": "15b1d1974e7c73440632e66976a4f8fac4cfc892",
+  "final_static_archive_checks": "Closed raw-log hashes, actual Markdown count, unchanged package manifest/payloads and maintained-to-copied source equality; no new probe/launcher/import execution."
 }

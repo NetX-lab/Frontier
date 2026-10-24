@@ -6,6 +6,7 @@
 | 2026-10-24 | Archived the CPU-prepared package and verification limits. |
 
 Prepared exactly once; source/package commit `106779954d1e804feabe0db6bd9de3515d58b01c`, branch `feat/v4-scope-lifetime-package`, base `b7641816e4db8fb4db950ada329edcc1a088fd30`.
+Records committed `15b1d197`; final checkpoint/budget/hash synchronization is records-only. Owner work is complete and stopped; downstream review and execution belong to root.
 Package: `/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01`.
 Maintained files: sibling `package_preparation/{build_package.py,profile_plan.json,image_check.py}`; all owner records are in that directory. No other source/tests/parent records changed.
 Inventory:18manifest inputs,19total files,184495bytes. Five frozen payloads total129936bytes/2513lines; source_binding is copied unchanged. Ten supporting input copies, one74-line generated launcher and three generated JSON files are counted separately.

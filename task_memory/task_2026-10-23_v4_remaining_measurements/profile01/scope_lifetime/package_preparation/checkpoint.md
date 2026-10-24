@@ -5,18 +5,19 @@
 | --- | --- |
 | 2026-10-24 | P2完成后自检；生成与提交仍待执行。 |
 | 2026-10-24 | P3单次生成与源码/package提交完成；保留静态EACCES及修正记录。 |
+| 2026-10-24 | P4记录已提交15b1d197；所有owner步骤完成，仅root下游检查未执行。 |
 
-**汇总：** PASS 3｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | P1接口/输入核对 | PASS | parent决策、模板、冻结源码已核对 |
 | P2三文件/CPU候选检查 | PASS | check2 exit0/30GiB/CUDAfalse；check1失败保留 |
 | P3单次正式生成/闭合/提交 | PASS | generation1/18inputs/静态闭合PASS；10677995 |
-| P4记录/归档/停止 | TODO | 记录与最终commit待完成 |
+| P4记录/归档/停止 | PASS | 15b1d197提交记录；无owner执行任务剩余 |
 
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
-**检测窗口：** P2完成至P3提交｜**当前前沿：** P4记录提交/停止
+**检测窗口：** P3完成至P4归档｜**当前前沿：** root下游review/image/SDK/seal
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1工具打磨 | CLEAR | 仅验收必需的闭合/import/argv核验 |
@@ -33,7 +34,7 @@
 **分支：** A：spec/tickets合理，无需改动。
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. P4：保留预算/diff/原始日志/英文summary，提交并STOP；完成标志是只含owner文件的已提交记录和clean状态。
+1. Owner STOP：仅提交本次最终checkpoint/预算更新，确认clean；不再执行import/argv/generation。
 2. Root接手dualreview/image/SDK/storage/quota/destination/seal/单次GPU；owner不代替这些检查。
 
 ## 4. 最值得关注的 3 点

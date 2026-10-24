@@ -1,49 +1,50 @@
 {
   "task_id": "W128-SCOPE-LIFETIME-PACKAGE",
   "source_package_commit": "106779954d1e804feabe0db6bd9de3515d58b01c",
+  "records_commit": "15b1d1974e7c73440632e66976a4f8fac4cfc892",
   "maintained_markdown": {
-    "requirements.md": 18,
+    "checkpoint.md": 43,
     "plan.md": 15,
-    "progress.md": 19,
-    "checkpoint.md": 42,
-    "summary.md": 19,
-    "test_report_2026-10-24_scope_lifetime_package.md": 22
+    "progress.md": 21,
+    "requirements.md": 18,
+    "summary.md": 20,
+    "test_report_2026-10-24_scope_lifetime_package.md": 23
   },
-  "maintained_markdown_total": 135,
+  "maintained_markdown_total": 140,
   "maintained_markdown_cap": 160,
-  "maintained_three_file_new_gross": 245,
+  "maintained_three_file_new_gross": {
+    "build_package.py": 140,
+    "profile_plan.json": 27,
+    "image_check.py": 78
+  },
+  "maintained_three_file_total": 245,
   "maintained_three_file_cap": 275,
   "generated_launcher": 74,
   "generated_launcher_cap": 100,
   "package_input_count": 18,
   "package_total_files": 19,
   "package_bytes": 184495,
-  "record_categories": {
-    "maintained_source_config": {
-      "files": 3,
-      "bytes": 13561,
-      "lines": 245
+  "package_categories": {
+    "payload": {
+      "files": 5,
+      "bytes": 129936,
+      "lines": 2513
     },
-    "maintained_markdown": {
-      "files": 6,
-      "bytes": 20607,
-      "lines": 135
+    "generated_launcher": {
+      "files": 1,
+      "bytes": 3801,
+      "lines": 74
     },
-    "raw_commands_logs_numstat": {
-      "files": 13,
-      "bytes": 50570,
-      "lines": 328
-    },
-    "json_receipt": {
+    "copied_input": {
       "files": 10,
-      "bytes": 54545,
-      "lines": 915
+      "bytes": 38073,
+      "lines": 655
     },
-    "raw_diff": {
+    "generated_json": {
       "files": 3,
-      "bytes": 229810,
-      "lines": 4136
+      "bytes": 12685,
+      "lines": 229
     }
   },
-  "limits": "Generated/copies/diffs/JSON/raw records are separate; no further source or package generation is included."
+  "limits": "Copied/generated/diff/JSON/raw artifacts separately accounted; final record hash inventory excludes only its own manifest."
 }
