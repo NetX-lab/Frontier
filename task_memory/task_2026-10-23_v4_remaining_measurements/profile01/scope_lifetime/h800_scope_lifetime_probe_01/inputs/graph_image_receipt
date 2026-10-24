@@ -1,0 +1,21 @@
+{
+  "status": "PASS_FROZEN_PACKAGE_IMAGE_ENTRY",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "manifest_sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146",
+  "source_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "input_count": 8,
+  "cuda_initialized": false,
+  "binaries": {
+    "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13": {
+      "resolved": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13",
+      "sha256": "e2f9ed861fe27c492b8bb52b5e3220ef5120f3edcda36312e96b7fd8a186be3e",
+      "bytes": 4152208
+    },
+    "/usr/local/cuda-13.0/compat/libcuda.so.1": {
+      "resolved": "/usr/local/cuda-13.0/compat/libcuda.so.580.95.05",
+      "sha256": "f27223c58d4c0d2ead3c2d747eb30a530c449f89c42e16b23e9bef04f3e6dc2e",
+      "bytes": 96276264
+    }
+  },
+  "limits": "Actual package dry-run and inspect-api; CPU output paths substituted. No worker/GPU callback evidence."
+}

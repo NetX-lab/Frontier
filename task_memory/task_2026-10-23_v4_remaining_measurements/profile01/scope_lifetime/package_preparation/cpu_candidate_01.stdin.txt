@@ -1,0 +1,97 @@
+
+import ast, contextlib, hashlib, importlib.util, io, json, os, pathlib, runpy, shlex, subprocess, sys, tempfile
+root = pathlib.Path.cwd()
+task = pathlib.Path('task_memory/task_2026-10-23_v4_remaining_measurements')
+records = root / task / 'profile01/scope_lifetime/package_preparation'
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+def pin(path):
+    return dict(sha256=sha(path), bytes=path.stat().st_size)
+def load(path):
+    return json.loads(path.read_text())
+spec = importlib.util.spec_from_file_location('scope_builder', records / 'build_package.py')
+builder = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(builder)
+package, files = builder.prepare()
+assert not package.exists()
+counts = {name: len((records / name).read_bytes().splitlines()) for name in ('build_package.py', 'profile_plan.json', 'image_check.py')}
+assert counts['build_package.py'] <= 155 and counts['profile_plan.json'] <= 40 and counts['image_check.py'] <= 80 and sum(counts.values()) <= 275
+compile((records / 'image_check.py').read_bytes(), str(records / 'image_check.py'), 'exec')
+originals = {}
+bindings = load(root / task / 'profile01/scope_lifetime/source_binding.json')['bindings']
+assert len(bindings) == 7
+for row in bindings:
+    path = pathlib.Path(row['path'])
+    if not path.is_absolute():
+        path = root / path
+    originals[str(path)] = pin(path)
+    assert originals[str(path)]['sha256'] == row['sha256'] and originals[str(path)]['bytes'] == row['bytes']
+seal = load(root / task / 'profile01/profile04/root_seal.json')
+old = pathlib.Path(seal['package'])
+old_manifest = load(old / 'manifest.json')
+assert sha(old / 'manifest.json') == seal['manifest_sha256']
+assert len(old_manifest['package_hashes']) == seal['inputs'] == 45
+for name, expected in old_manifest['package_hashes'].items():
+    originals[str(old / name)] = pin(old / name)
+    assert originals[str(old / name)]['sha256'] == expected
+originals[str(old / 'manifest.json')] = pin(old / 'manifest.json')
+runtime = load(old / 'source_lock.json')['committed_files']
+assert len(runtime) == 13
+for row in runtime.values():
+    path = root / row['path']
+    originals[str(path)] = pin(path)
+    assert originals[str(path)]['sha256'] == row['sha256']
+matrix = root / task / 'profile01/graph_probe/package_preparation/matrix_binding.json'
+originals[str(matrix)] = pin(matrix)
+assert load(matrix)['identical_cases'] == 77 and not load(matrix)['new_capture']
+domains = load(matrix)['unchanged_domains']
+assert not subprocess.check_output(['git','diff','b7641816','--',*domains], cwd=root)
+for name in load(root / task / 'profile01/scope_lifetime/primary_acceptance.json')['source_test_sha256']:
+    originals[str(root / name)] = pin(root / name)
+config, lock, manifest = [json.loads(files[name]) for name in ('config.json','source_lock.json','manifest.json')]
+assert len(lock['payloads']) == 5 and len(manifest['files']) == manifest['input_count'] == len(files)-1
+assert lock['argv'][2:] == ['--output-dir',config['output_dir'],'--image-digest',config['image'].split('@',1)[1],'--elements','1024','--warmup','3']
+assert config['gpu'] == config['replica'] == config['attempt_ceiling'] == 1
+assert (config['cpu'],config['mem_gb'],config['timeout_seconds'],config['preemptible'],config['charged_group'],config['positive_tags']) == (16,64,600,False,'codesign',['H800'])
+assert config['envs']['FRONTIER_GRAPH_DIAGNOSTICS_DIR'] == config['diagnostics_dir']
+assert config['cloud_mount'] == 'juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp'
+scratch = pathlib.Path(tempfile.mkdtemp(prefix='scope_package_cpu_01_', dir='/data/ycfeng/tmp/opencode-v2-tmp/opencode'))
+for name, content in files.items():
+    if name == 'manifest.json':
+        continue
+    path = scratch / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if name in ('config.json','source_lock.json'):
+        content = content.replace(str(package).encode(),str(scratch).encode())
+    path.write_bytes(content)
+manifest['files'] = {name:sha(scratch/name) for name in manifest['files']}
+(scratch/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+config = load(scratch/'config.json')
+sys.argv = [str(scratch/'launch.py')]
+with contextlib.redirect_stdout(io.StringIO()) as captured:
+    runpy.run_path(str(scratch/'launch.py'),run_name='__main__')
+dry = json.loads(captured.getvalue())
+assert dry['config'] == config and dry['submitted'] is False
+worker = ast.parse(shlex.split(dry['command'])[-1])
+assert ast.literal_eval(worker.body[-1].value.args[1].right) == load(scratch/'source_lock.json')['argv'][1:]
+assert 'exist_ok=False' in ast.unparse(worker.body[-2]) and config['diagnostics_dir'] in ast.unparse(worker.body[-2])
+os.environ.update(config['envs'])
+spec = importlib.util.spec_from_file_location('scope_cpu_package',config['script'])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+assert module.HERE.parents[3] == scratch and module.FROZEN == scratch / task / 'profile01/graph_probe/probe_diagnostic.py'
+assert module.probe.callback_abi() == lock['callback_abi']
+profile = module.serving_profile()
+assert not profile.errors and profile.read_limits() == json.loads(config['envs']['FRONTIER_NATIVE_PROFILE_LIMITS'])
+import torch
+assert not torch.cuda.is_initialized()
+cgroup = next(line.split(':',2)[2] for line in pathlib.Path('/proc/self/cgroup').read_text().splitlines() if 'memory' in line.split(':',2)[1].split(','))
+mount = next(line for line in pathlib.Path('/proc/self/mountinfo').read_text().splitlines() if ' - cgroup ' in line and 'memory' in line.split(' - ')[1].split()[2].split(','))
+parts = mount.split(' - ')[0].split()
+limit_file = pathlib.Path(parts[4]) / pathlib.Path(cgroup).relative_to(parts[3]) / 'memory.limit_in_bytes'
+assert int(limit_file.read_text()) == 30 * 2**30
+for name, expected in originals.items():
+    assert pin(pathlib.Path(name)) == expected
+result = dict(status='PASS_CPU_CANDIDATE',python=sys.version,torch_version=torch.__version__,cuda_initialized=False,memory_limit_bytes=int(limit_file.read_text()),scratch=str(scratch),budgets=counts,total_gross=sum(counts.values()),payloads=lock['payloads'],input_count=len(files)-1,launcher_lines=len(files['launch.py'].splitlines()),originals=originals,source_bindings=7,runtime_modules=13,sealed_profile04_inputs=45,matrix_cases=77,launcher_dry_run=dry,official_package_created=False,limits='Scratch config/argv relocation only; frozen payload bytes unchanged; image_check compiled but actual-image assertions not executed.')
+(records/'cpu_candidate_01.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps(result))
