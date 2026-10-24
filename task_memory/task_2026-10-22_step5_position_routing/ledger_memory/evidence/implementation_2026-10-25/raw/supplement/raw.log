@@ -1,0 +1,78 @@
+Running scope as unit: run-r84e15a3ac1f34ad3917c65f7734209de.scope
+WARNING 00:00:20 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+WARNING 00:00:20 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+WARNING 00:00:20 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  co-location
+======================================================================
+Total Clusters: 1
+Total World Size: 1
+Server count: 1
+
+Cluster Type: MONOLITHIC
+   Cluster World Size: 1
+   Num Replicas (Instances): 1
+   Replica World Size: 1
+   Configuration: PP1 × (Attn_TP1 x Attn_DP1) | (MoE_TP1 x MoE_EP1)
+   Total Expert Num: 1
+   Local Expert Num: None
+--------------------------------------------------
+======================================================================
+
+WARNING 00:00:20 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+WARNING 00:00:20 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  co-location
+======================================================================
+Total Clusters: 1
+Total World Size: 1
+Server count: 1
+
+Cluster Type: MONOLITHIC
+   Cluster World Size: 1
+   Num Replicas (Instances): 1
+   Replica World Size: 1
+   Configuration: PP1 × (Attn_TP1 x Attn_DP1) | (MoE_TP1 x MoE_EP1)
+   Total Expert Num: 1
+   Local Expert Num: None
+--------------------------------------------------
+======================================================================
+
+WARNING 00:00:20 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+WARNING 00:00:20 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  co-location
+======================================================================
+Total Clusters: 1
+Total World Size: 1
+Server count: 1
+
+Cluster Type: MONOLITHIC
+   Cluster World Size: 1
+   Num Replicas (Instances): 1
+   Replica World Size: 1
+   Configuration: PP1 × (Attn_TP1 x Attn_DP1) | (MoE_TP1 x MoE_EP1)
+   Total Expert Num: 1
+   Local Expert Num: None
+--------------------------------------------------
+======================================================================
+
+Traceback (most recent call last):
+  File "<stdin>", line 95, in <module>
+  File "/usr/lib/python3.10/pathlib.py", line 1134, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+  File "/usr/lib/python3.10/pathlib.py", line 1119, in open
+    return self._accessor.open(self, mode, buffering, encoding, errors,
+FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/run-r84e15a3ac1f34ad3917c65f7734209de.scope/memory.max'

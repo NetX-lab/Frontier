@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Own the existing performance save-state dependency and stop broad setup reruns pending primary allocation/readiness. |
 | 2026-10-24 | Allocate four-path135-gross repair and define scoped implementation, correctness and freeze gates. |
 
 ## Scope and dependencies
@@ -26,6 +27,15 @@ be met; do not hide source changes in task records or preserve history through a
 fallback/list proxy.
 
 ## Acceptance and verification
+
+The existing owned performance caller also serializes MetricsStore in save_state.
+An open TextIO writer is not serializable by its current CloudPickler. This is a
+caller blocker, not permission for a new serialization/public API or list proxy.
+Return the smallest concrete same-owner path-cap reallocation to the primary;
+retain the current12 cap until allocation changes. The new worktree's empty
+collective-sim path blocks four constructor tests; retain raw failures and let
+primary settle checkout readiness without donor/backend edits. Do not rerun the
+whole integration file merely to recheck those four known setup failures.
 
 - Watch both real retention and actual validator materialization controls go RED
   before the implementation, then GREEN afterwards.
