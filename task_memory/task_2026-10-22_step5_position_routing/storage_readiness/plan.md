@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Accept user-confirmed sufficient OSS quota and carry execution readiness, not quota discovery, into handoff. |
 | 2026-10-24 | Define a bounded read-only capacity inspection and the remaining approval-dependent readiness steps. |
 
 ## Dependency Graph
@@ -24,8 +25,11 @@ shape checks masquerading as whole-workflow validation.
 4. YC approves codesign OSS test storage and timely completed-file cleanup.
    Verify only the personal alias;use the existing sudo access for root-owned
    frontier rather than changing permissions. Remove the test immediately.
-5. Verify actual CLI access/runtime,selected location/project quota/headroom and recheck before launch.
-   Stop if capacity is unavailable; actual CLI keeps its2400s limit and full output.
+5. YC confirms OSS quota is enough on2026-10-25. Record USER_CONFIRMED capacity;
+   do not repeat quota discovery as a blocker. Verify actual execution environment,
+   worker cloud access/append throughput and memory/runtime before the full CLI.
+   Recheck actual availability/lifecycle at launch without treating old shared-df
+   bytes as a reservation. The CLI retains its2400s limit and complete output.
 
 ## Verification
 

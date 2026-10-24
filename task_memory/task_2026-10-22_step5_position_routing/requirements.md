@@ -478,8 +478,9 @@ behavior changes; no error suppression or invented success is authorized.
 
 The historical output estimate omitted the EP ledger. Sample-based combined
 projection is about469GB/mode or938GB/two modes, not a measured full file size
-or RSS bound. Worker resources, project quota and worker-to-cloud throughput
-remain unresolved. Existing configurable output_root relocation needs no CLI
+or RSS bound. Worker resources and worker-to-cloud throughput remain unresolved.
+Project quota was unresolved at allocation; YC's2026-10-25 decision below now
+confirms sufficiency. Existing configurable output_root relocation needs no CLI
 source change. The2400s subprocess cap remains unchanged and unpassed; its
 post-run validator is outside that cap. No required-shape or new worker/GPU
 invocation is added by this allocation. Retained warm configuration inspection

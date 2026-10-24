@@ -1,0 +1,23 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29_ledger_handoff_parent_20261025/pytest.log",
+    "retained_path": "task_memory/task_2026-10-22_step5_position_routing/handoff_parent_evidence/pytest.log",
+    "bytes": 166,
+    "sha256": "158c49f1c97788d7c05727ebb3096fee27309d0233713c23756e31ce6a3125d4",
+    "duplicate_removed": true
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_ledger_handoff_parent_20261025/pytest.xml",
+    "retained_path": "task_memory/task_2026-10-22_step5_position_routing/handoff_parent_evidence/pytest.xml",
+    "bytes": 6353,
+    "sha256": "7a8e7b7c2733c087e8a99c085064ee92ca2eb0b3f53603c0c635d3c4f9c86f1f",
+    "duplicate_removed": true
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_ledger_handoff_parent_20261025/execution.json",
+    "retained_path": "task_memory/task_2026-10-22_step5_position_routing/handoff_parent_evidence/execution.json",
+    "bytes": 1779,
+    "sha256": "02f338d74af6df5500984fb8da4861efadbf29e6ea712397f43da943a80bfefd",
+    "duplicate_removed": true
+  }
+]

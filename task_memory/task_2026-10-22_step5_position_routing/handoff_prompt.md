@@ -3,11 +3,138 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Renew the complete next-session prompt for the committed ledger candidate, explicit sufficient-quota decision and unfinished admission/workflow gates. |
 | 2026-10-23 | YC deferred handoff;current-session progress now owns execution and this prompt is historical. |
 | 2026-10-23 | Deliver reviewed code/records and exact continuation command after the bounded CLI repair. |
 
-交接暂不执行：YC 已要求继续当前 session。请以 progress.md 的 Current-session
-resumption 为准；下面是保留的交付时点提示，不代表任务仍在等待新 session。
+## 当前交接提示（2026-10-25）
+
+继续 Frontier Step D29 position routing 当前任务，不要从头重新实现，也不要把
+旧版回归结果当作新 ledger 候选的验收。YC 已要求在新 session 继续执行。
+
+### 工作目录和必须先读的文件
+
+优先进入候选工作树：
+`/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream`，
+分支 `fix/d29-ledger-stream`。已验收主线在
+`/data/ycfeng/Frontier/.worktrees/step5-preview`，分支 `feat/step5-preview`。
+最新代码/文档已提交；先用 `git status --short --branch` 和 `git log -6 --oneline`
+核实实际 HEAD，不要重置、覆盖或删除其他 session 的文件。
+
+任务目录是 `task_memory/task_2026-10-22_step5_position_routing/`。先读：
+1. 本工作树 `AGENTS.md`、`GLOSSARY.md`；
+2. 任务的 `requirements.md`、`plan.md`、`progress.md`、`summary.md`；
+3. `ledger_memory/{requirements.md,design.md,plan.md,progress.md,summary.md}`、
+   `repairs/ep_lane_ledger_scope_amendment.json`、
+   `ledger_memory/test_report_2026-10-25_implementation_controls.md` 和后续 caller 报告；
+4. `handoff_parent.json` 和 `test_report_2026-10-25_handoff.md`，读取最终候选 commit、
+   父端核验和未完成项。当前段落优先于本文件后面的2026-10-23历史提示。
+
+### 任务行为和当前交付
+
+位置路由是 `(logical_token_position * top_k + slot) % num_experts`。
+原生 Step P/D 范围保持 PP1、TP8/DP2/EP16，无 SP/MTP；完整 CPU-fixture actual-main
+workload 保持6144/1024、offline/online 每模式 `frontier.main` 子进程最多2400秒。
+完整输出、全部逐点数值查询、实际层 proof、计数与 source 校验不得删减或缓存替代。
+collective profiling input 已明确按单次 Simulator run 固定，新 run 才加载更新。
+
+主线已验收 named query `ffb435ca` 和 native-key `c668a938`，累计 source9566/9942、
+global9580/10000，零违规。最新 ledger 修复在候选分支，**尚未正式合入已验收主线**：
+状态是 **UNADMITTED**：independent composed audit、Standards/Spec 和 fresh frozen
+regressions 仍未完成，以下 focused PASS 不能替代这些验收。
+- 真实 MetricsStore 的 EP lane ledger 改为完整逐行写入，不保留历史 row 对象；
+- actual-main validator 流式读 EP JSONL，仍执行全部 conservation/source/proof 检查；
+- 现有 performance reader 读取新增文件字节，save/load 使用既有 persistent-reference
+  机制绑定 writer，不 pickle 旧 stream，也不保留历史 row 列表。
+最终源码是 `1f6b431478e2351e3ca6819f707cccbc3e4336e2`，owner记录
+`dd3b6a69a17365b994a51ea7641197e768c8a237`。`handoff_parent.json` 绑定该源码；
+不要将初版 `6c2f179c` 当作已完成 caller 修复的最终版本。
+
+额度：116 allocated paths，CORE51。四文件 step caps 为36/20/65/14，总≤135gross；
+对应 metrics_store / actual-main runner / integration test / actual06 performance。
+cumulative caps 为36/67/325/14。两条新入册路径在1aee0af基线上历史增量为0，
+所有正向 allowance 均由未编辑 CORE donor 零和抵扣。CORE4404、PRICING3956、
+native1582、source9942、global10000上限不变；step gross、net 和累计预算增量分开记。
+实际 step124gross/net96，累计预算+116；父端cap check为CORE4377、source9682、
+global9696、零违规，但不是独立composed audit或accepted production。
+类似必要 repair/test-path 调整已有 YC 常设授权，不必反复询问，但不得扩大预算或放宽 gate。
+
+### 已有证据及不能外推的结论
+
+初版 ledger controls 是48PASS/3SKIP，四个 EP/reporting suites 是30PASS。
+原始 complete integration62PASS/4FAIL/6SKIP 是隔离 checkout 缺 collective-sim，
+原始 save_state PicklingError 也必须保留；最终修复和后续重验见 caller/parent 报告。
+最终 integration66PASS/6SKIP、EP30PASS，93个旧ID/status保留，9个新增PASS。
+实际save/load历史count0/3、新writer/path、7124B完整有序输出与旧文件不变全部GREEN。
+父端另跑9个新增和30个现有测试得到39PASS，并核验27个owner artifacts和4个源码绑定；
+结果重叠，不能把上述数字相加。父端没有补跑实际caller或完整integration文件。
+这是 synthetic CPU persistence/validator/caller 验证，不是完整 workload RSS bound、
+native timing 或2400秒 CLI通过。
+
+之前已验收 native-key 冻结版 strict77 为77/77 identical；全量单测 raw
+8028PASS/279FAIL/32ERROR/281SKIP、exit1，全部旧 IDs/status 保留。这不是 all-green，
+也不是新 ledger 源码的 fresh regression。单独101/197/53/52 suites 不得相加。
+79f1a3fd 对比中1个已批准的旧 hot-update test ID 缺失仍是 raw presenceFAIL，不得豁免。
+
+required shapes 的6/6调用额度已用完：冻结dbe19f53上P6128、首轮D16各208events，
+普通D1 BF16 layers88/89/90各192events，合计992events/80lane rows一致。
+3份原始 checker FAIL保留。**不得自动追加形状调用**；P-BF16/D16-BF16、native/fullCLI
+仍未验证。`workload_shape_validation/evidence/supplemental/` 是证据入口。
+
+main08在79f1a3fd上两模式均2400秒 timeout，只完成4个 decode tokens；完整CLI从未通过。
+旧计时来自不同 trees/arms，不能相加为当前波耗时。先测当前源码同一环境下的
+pricing+emission+flush；469GB/mode、938GB两模式只是含 EP ledger 的样本投影，不是边界。
+stage-batch ledger/event trace memory 仍未测量，不得宣称整个模拟器已经有界。
+
+### OSS、资源和清理权限
+
+YC明确确认 quota 足够，并允许 `ssh shai-ycfeng` 快速访问 OSS。**不要再把 quota
+发现当阻塞**；记为USER_CONFIRMED，不编造实测 quota。云访问仅限个人目录：
+worker `/mnt/codesign-exp/ycfeng`，SSH alias `/mnt/ws-jfs/ycfeng`。
+分析完成的一次性本任务输出要及时清理；先保留选择证据/hash/receipts，保留 active/cited
+inputs 和其他 session 文件，不广泛删除工作树、cache、旧失败证据或别人的目录。
+CPU host 不直接挂云盘。现有 `--output-root` 能直接指向已挂载的云路径，无需新增输出模式。
+worker→cloud append throughput、镜像/解释器兼容性、资源形状、实际 RSS/lifecycle 尚未验证。
+
+现有 H800/codesign task-required RJob常设授权仍有效，不重复申请同类资源权限，但先满足
+source/workflow/package readiness并检查真实quota/capacity。当前 handoff未启动新 worker/GPU。
+未来 StepMind操作先读 `/data/ycfeng/stepfun-env-handbook/stepmind-python-rjob.md`；
+custom/openai provider由主代理本地直接使用个人i-fengyicheng的Python RJobBackend，
+不得调用stepmind-helper、brainctl/rlaunch/jlaunch/rjob CLI，不启用claude-sdk provider。
+设置STEPMIND_BACKEND=rjob，保留本地 launcher到worker终态，按手册挂本地source与个人云卷。
+停止worker使用 `/data/ycfeng/steptron/playground/users/ycfeng/tools/rjob_stop.sh`。
+
+### 下一步按顺序执行
+
+1. 核实候选commit/完整输出/Caller GREEN和全部 retained failure记录；先读 parent receipt。
+   完成独立 clean composed scope audit、Standards和Spec reviews。不要把 local四路径
+   accounting或这次handoff父端检查替代正式审计/复审。
+2. 在独立 clean冻结工作树绑定该最终源码，运行 strict77、full-unit和原101/197/53/52
+   supplements；复用 `post_named_query_regressions/`、`native_cache_key/` 的既有recipes和
+   raw ID/status比较，保留canonical binary-absence namespace，不改判据。
+   strict77 audit要在实际generated cache namespace中跑，baseline以manifest原绝对路径只读
+   暴露；先前审计失败保留。新test必须PASS，旧FAIL/ERROR/SKIP不能新增或默默丢失。
+3. 所有mandatory gate通过后才把候选code+records合入feat/step5-preview并复核exact source。
+   继续 copy/init 两项尚未交付的有限诊断，按ALLOC/NO_ALLOC/BLOCKER收口；先恢复已落盘
+   证据和已消耗次数，避免重做或超额。Root progress记录两个owner session和范围。
+4. 验证当前同环境完整波耗时、worker/cloud执行路径及剩余内存风险；再跑完整offline/online
+   CLI。复用 `/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json`，
+   Python `/data/ycfeng/envs/frontier-py310/bin/python`，3.10.6、-B、单BLAS/OpenMP线程。
+   在验证过的执行环境调用 `tests/integration/run_step5_measured_main.py`，使用fresh personal
+   OSS output root、`--mode all`，保留2400秒子进程cap；旧outer5100秒和post-run validate
+   位于cap外。读summary、两模式execution/validation、business metrics、logs和完整输出，
+   不能仅凭exit0通过；失败先找真实cause，禁止缩短workload、减少输出或延长cap。
+5. workflow通过后重绑最终T2源码/target staging/seal/package；旧a886466c的63checksum/
+   26file只是79版本静态证据，不是新源码ready。保留engine limits7168/8192/128和published
+   image/source pins；旧日期seal不得充当fresh launch receipt。之后才进行native/G3和各E2E
+   指标≤10%验收，native CPU-gap work最后。G3原判据不能放宽。
+
+所有步骤持续更新requirements/plan/progress，写dated test reports，分步验证后commit；
+不push/publish或删除分支/工作树，除非另有明确授权。未归属 `.cortexkit/`、`.pi/` 保留且不stage。
+
+## 2026-10-23历史交接（保留，不作为当前执行指令）
+
+当时 YC 延后了交接；以下仅保留旧版本的源码/命令/失败快照。2026-10-25的当前提示优先。
 
 原交接内容：
 

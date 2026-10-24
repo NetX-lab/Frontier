@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Record USER_CONFIRMED_SUFFICIENT OSS quota; source admission and worker execution readiness remain separate handoff dependencies. |
 | 2026-10-24 | Correct current projection to include EP ledger; record static worker proposal and memory/readback blockers without a job or source allocation. |
 | 2026-10-24 | Record current local capacity and mark storage BLOCKED without authorizing cleanup or external staging. |
 
@@ -14,13 +15,17 @@
 - blocked/current readiness: older261GB/mode accounting omitted EP lane ledger.
   Representative historical scaling is approximately469GB/mode and938GB/both,
   excluding other outputs and without any RSS/full-file/throughput measurement.
-  Production retains all ledger rows;the validator materializes the entire file.
-  Worker resources/image/mount,quota,append throughput and cohesive current timing
-  remain unresolved. See execution_proposal.md;no worker or source repair allocated.
-- in-progress/ledger design and scope: primary reviews the bounded write/read
-  proposal; D29-LEDGER-SCOPE-BASIS,ses_e91a0552fffeM34Rv3FXfozhYu, verifies exact
-  cumulative baseline costs before allocation. Standing repair-path authority
-  permits necessary path amendments within unchanged owner/global budgets.
+   Accepted production still retains all ledger rows/materializes the file; a
+   committed bounded write/read candidate exists but is not admitted. Worker
+   resources/image/mount,append throughput and cohesive timing remain unresolved.
+   No worker was launched. See execution_proposal.md and ledger_memory/.
+- completed/quota decision: YC explicitly confirms sufficient codesign OSS quota
+   on2026-10-25 and points to ssh shai-ycfeng. Capacity is USER_CONFIRMED, not an
+   independent quota measurement; further quota discovery is not a blocker.
+- completed/ledger focused candidate: allocation886945f3 is36/20/65/14,
+   still135gross. Final source1f6b4314/recordsdd3b6a69 passes caller,66/6integration,
+   EP30 andprimary39. Independent composed audit/reviews/final admission remain; no worker/shape
+   allowance is extended. Final candidate records are carried into handoff.
 
 ## Dated local capacity and access evidence
 
@@ -43,9 +48,10 @@
 - completed/cleanup:16 exact completed scratch duplicates(298,219B) removed only
  after verifying their retained archive hashes. Active fixture/scripts,other
  investigations and selected failure evidence are unchanged.
-- pending/CLI access/runtime/location quota/headroom/prelaunch check: XFS project limits are not
- measured;filesystem free space may exceed usable project capacity. Capacity is
- shared,variable and unreserved. No full CLI or GPU/platform operation was run.
+- pending/execution environment/worker append/runtime/prelaunch check: local XFS
+  project limits are not measured, and local shared capacity is unreserved. OSS
+  quota sufficiency is now user-confirmed; this is distinct from proving worker
+  write performance. No full CLI or GPU/platform operation was run for handoff.
 
 The CPU host has no cloud mount;the handbook prohibits directly mounting it.
 Actual workload access is not proved by the small remote storage control.

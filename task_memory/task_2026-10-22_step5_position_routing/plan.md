@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Renew the handoff boundary, record user-confirmed OSS quota, and retain final ledger admission/regressions as explicit next-session work. |
 | 2026-10-24 | Allocate135-gross complete EP ledger write/read repair at116paths; close retained config hypothesis without allocation and correct storage/runtime boundaries. |
 | 2026-10-24 | Close supplemental CPU shapes at3PASS/6total calls;retain exact selected OSS evidence and clean local duplicates. |
 | 2026-10-24 | Apply the read-only checkpoint corrections: consumed shape allowance, native-key final ledger, finite diagnosis outcomes, and primary-owned storage readiness. |
@@ -46,7 +47,32 @@
 | 2026-10-22 | Assign six review findings and three disjoint mandatory design streams; remove unrelated new-policy scope. |
 | 2026-10-22 | Record review and complete-scope dependencies after the first design delivery. |
 
-## Current acceptance route
+## Current handoff boundary (2026-10-25)
+
+YC requests code/document commits and a complete prompt for another session.
+The existing ledger snapshot caller and bounded focused checks are complete on
+`fix/d29-ledger-stream`; consolidate handoff records on that candidate branch.
+Final source1f6b4314/owner recordsdd3b6a69 remain UNADMITTED. Root allocation
+886945f3 moves two unused metrics lines to performance:36/20/65/14, still135gross.
+Accepted production on feat/step5-preview remains9566source/9580global.
+Owner integration66PASS/6SKIP and EP30PASS retain93 old statuses and9 newPASS.
+Primary rerun39PASS,27 artifact hashes, four source bindings and116 caps pass.
+Primary-only accounting is CORE4377/source9682/global9696,zero violations;
+this carries unchanged non-superproject usage and is not the independent composed
+audit. Step124gross/net96/cumulative increment116 are different quantities.
+
+`caller correction -> focused source/checkout verification -> committed candidate
++ complete handoff records -> next-session clean composed audit + independent
+Standards/Spec -> frozen strict77/full-unit/supplements -> production integration
+-> cohesive timing/cloud execution readiness -> full6144/1024 CLI -> final T2
+source binding/package -> native/G3/E2E`.
+No long regression, pricing wave, required-shape or worker run is added by this
+handoff. OSS quota is USER_CONFIRMED_SUFFICIENT; do not repeat quota discovery as
+a blocker. Actual worker environment/throughput and runtime remain unverified.
+Copy/init analyses are independent unfinished work; recover landed evidence and
+consumed allowance before any continuation rather than restarting them.
+
+## Acceptance route and revision-bound history
 
 The three implementation streams have delivered their source work. CORE/registry
 and joint producer reviews are closed; PRICING's selected prepare metadata P2 also
@@ -226,23 +252,23 @@ change is allocated. See early_init_repro/report.md.
 
 | Actionable subtask | Recorded state / completion condition |
 | --- | --- |
-| Approval, ownership and baseline | Accepted114-path source; new EP ledger allocation116paths/135gross under standing authority, with unchanged owner/global budgets. |
+| Approval, ownership and baseline | Accepted114-path source; ledger candidate allocation116paths/135gross, caps36/20/65/14 under standing authority; owner/global budgets unchanged. |
 | Native19 and T2 engine limits | Source/CPU complete; runtime remains separate. |
 | Derived image and source receipts | Published and verified; runtime remains separate. |
 | CORE/SOURCE | Accepted4261/4404; new51-path allocation reserves135gross by zero-sum transfer, actual/source unchanged until acceptance. |
 | Registry multiple bindings | Source review and mixed-view repair complete. |
 | PRICING46 | Complete native-key union:3955/3956; native-key3gross/net1, with unchanged owner cap. |
-| Complete integration and final freeze | Native-keyc668a938/parent886608ea accepted; clean candidate376983d2 regressions complete and source-equivalent after integration. Gitlink3dac53c unchanged. |
+| Complete integration and final freeze | Native-keyc668a938/parent886608ea remains accepted. Ledger branch is a committed unadmitted candidate; its final freeze/regressions and production integration are next-session work. Gitlink3dac53c stays fixed. |
 | Legacy strict77 | Native-key frozen source passes77/77;451 artifact hashes/519 cache names per side audited. |
 | Full-unit failure/error-set gate | Native-key preserves all8620IDs/states:raw8028PASS/279FAIL/32ERROR/281SKIP,exit1;the approved one-old-ID replacement versus79f1a3fd remains raw presenceFAIL and unwaived. |
 | Fresh fixture and full CLI | main08 offline/online both FAIL by2400s timeout;both reach four emitted decode tokens. Residual diagnosis is active;all9 launch input hashes match main07. |
 | Independent source review | All accepted components including native-key have No findings on both axes. |
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
 | Final per-path accounting | Accepted native-key union:114allocated/113changed,9566source/9580global,zero violations;124 bindings/122 unchanged non-key bindings and clean independent audit. |
-| Remaining runtime diagnosis | JSON/config closedNO_ALLOC;copy/init pending finite ALLOC/NO_ALLOC/BLOCKER deliverables. Separate necessary EP persistence repair is allocated135gross. |
-| Complete EP ledger persistence/validation | Four-file135-gross allocation in ledger_memory/;RED/GREEN, full bytes/error/caller checks, clean audit, reviews and final freeze remain pending. |
+| Remaining runtime diagnosis | JSON/config closedNO_ALLOC;copy/init still need finite ALLOC/NO_ALLOC/BLOCKER closure. Do not restart unknown-consumption controls. Necessary ledger component is committed separately from the runtime gate. |
+| Complete EP ledger persistence/validation | Final source1f6b4314/recordsdd3b6a69: caller counts0/3 and7124B ordered outputs pass;66PASS/6SKIP integration,30PASS EP, primary39PASS. Step124/135. Independent composed audit/reviews/final frozen gates remain pending. |
 | Required P6128/D16/BF16 shapes | PASS_CPU_FIXTURE;YC-approved supplemental3/3PASS,total6/6used.992events/80ledger rows match;native/fullCLI and untested shapes remain separate. |
-| Full-output storage readiness | BLOCKED; sample projection includes EP ledger at469GB/mode. Storage approval/basic integrity are not worker readiness: write/read repair, resources, project quota and worker-to-cloud throughput remain pending. No CPU-host mount. |
+| Full-output storage readiness | OSS capacity USER_CONFIRMED_SUFFICIENT by YC on2026-10-25. Overall execution readiness remains BLOCKED on source admission, resources/environment and worker-to-cloud throughput; sample projection469GB/mode is not a measured bound. No CPU-host mount. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 
 D30 remains integrated4ec5b23. repairs/repair_plan.md owns detailed assignments
