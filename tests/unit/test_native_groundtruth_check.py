@@ -19,6 +19,7 @@ import yaml
 from tests.comparison.calibration.native_pd_worker import node_plan
 from tests.comparison.calibration.pd_replay import canonical_workload, instance_env, kv_transfer_config
 from tests.comparison.dp_placement_pp.vllm_replay import V028_IMAGE, V028_SOURCE, server_command
+from tests.unit.test_native_v2_serving_inventory import DPGroup, dispatch_checker
 
 
 def original_checkout_root(repo):
@@ -363,8 +364,16 @@ def serving_counters(tmp_path, monkeypatch, request):
         resources=dict(gpus=2 * 8 * dp, gpu_type=gpu_type))
     dispatch, captured = None, None
     if v2:
-        checker = load_checker(CHECKER)
-        retained = REPO / 'task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02'
+        checker = dispatch_checker()
+        native_oracle = checker.native_dispatch_oracle
+        def cpu_oracle(manifest, manager):
+            native = native_oracle(manifest, manager)
+            native['get_dp_group'] = lambda: SimpleNamespace(cpu_group=DPGroup())
+            return native
+        checker.native_dispatch_oracle = cpu_oracle
+        config['expected_source_hashes'].update({name: digest(source / name) for name in checker.SOURCE_PINS})
+        retained = Path(os.environ.get('NATIVE_CHECKER_C26_FIXTURE', str(REPO /
+            'task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02')))
         if not (retained / 'overlay_model.py').is_file():
             pytest.skip('Approved C26 source fixture is unavailable')
         engine.pop('compilation_config')
@@ -396,6 +405,7 @@ def serving_counters(tmp_path, monkeypatch, request):
         write(stage / 'manifest.json', dict(fixture_only=True, files={
             name: digest(stage / name) for name in ('overlay.json', 'overlay_model.py', 'source_lock.json', 'config.json')}))
         dispatch, captured = checker.native_v2_graph_dispatch(manifest, engine)
+        cpu_torch = checker.native_dispatch_oracle(manifest, dispatch)['torch']
     write(run / "run_manifest.json", manifest)
     workload, formal, warmup = canonical_workload(TRACE)
     records = [dict(request_id=workload["repetitions"]["runtime_request_id_rule"].format(
@@ -483,8 +493,10 @@ def serving_counters(tmp_path, monkeypatch, request):
                         self.input_buffers = SimpleNamespace(input_ids=Tensor(8192), positions=Tensor(8192))
 
                     def execute_model(self, scheduler_output, dummy_run=False, is_profile=False):
-                        desc = dispatch.dispatch(1, state.tokens, 1 if state.tokens == 1 else None, 0,
-                                                 max_query_len=1 if state.tokens == 1 else None)
+                        module = sys.modules[V2Runner.__module__]
+                        uniform = module.get_uniform_decode_token_count(1, state.tokens, state.tokens, role == 'prefill')
+                        desc, _ = module.dispatch_cg_and_sync_dp(dispatch, 1, state.tokens, uniform,
+                            dp, owner, max_query_len=state.tokens, need_eager=is_profile)
                         if state.mode == 'FULL':
                             return self.cudagraph_manager.run_fullgraph(desc)
                         inputs = dict(input_ids=Tensor(state.tokens), positions=Tensor(state.tokens), inputs_embeds=None)
@@ -548,6 +560,19 @@ def serving_counters(tmp_path, monkeypatch, request):
                                       ('vllm.v1.worker.gpu.cudagraph_utils', ModelCudaGraphManager)):
                         patch.setitem(sys.modules, name, ModuleType(name))
                         setattr(sys.modules[name], cls.__name__, cls)
+                    native = checker.native_dispatch_oracle(manifest, dispatch)
+                    native['torch'] = cpu_torch
+                    cpu_group = native['get_dp_group']().cpu_group
+                    native['get_dp_group'] = lambda: SimpleNamespace(cpu_group=cpu_group)
+                    def cpu_reduce(tensor, *, group):
+                        assert group is cpu_group
+                        tensor.copy_(tensor[:, owner:owner + 1].expand_as(tensor).clone())
+                        group.sequence += 1
+                    dp_module = ModuleType('vllm.v1.worker.gpu.dp_utils')
+                    native['dist'] = dp_module.dist = SimpleNamespace(all_reduce=cpu_reduce)
+                    patch.setitem(sys.modules, dp_module.__name__, dp_module)
+                    for name in ('get_uniform_decode_token_count', 'dispatch_cg_and_sync_dp'):
+                        setattr(sys.modules[V2Runner.__module__], name, native[name])
                 sys.modules["torch"].cuda = SimpleNamespace(CUDAGraph=CUDAGraph,
                      get_device_properties=lambda device: SimpleNamespace(name=f"NVIDIA {gpu_type}", uuid=f"GPU-fixture-{host}-{rank}"),
                     get_device_capability=lambda device: (9, 0))
@@ -557,6 +582,8 @@ def serving_counters(tmp_path, monkeypatch, request):
                 observer = collector._install_native_serving_inventory()
                 worker = Worker()
                 worker.load_model()
+                if v2:
+                    native['dist'] = dp_module.dist
                 worker.compile_or_warm_up_model()
                 state.mode, state.tokens, state.replay = ("NONE", 6144, False) if role == "prefill" else (decode_mode, 1, True)
                 descriptor.num_tokens = state.tokens
@@ -574,7 +601,7 @@ def serving_counters(tmp_path, monkeypatch, request):
                 assert observer.forwards == state.native_calls
                 assert observer.replays == state.native_replays
                 emitted.append(directory / "serving" / f"rank{rank}.json")
-    return SimpleNamespace(checker=load_checker(CHECKER), run=run, nodes=nodes, manifest=manifest,
+    return SimpleNamespace(checker=checker if v2 else load_checker(CHECKER), run=run, nodes=nodes, manifest=manifest,
                            engine=engine, workload=workload, records=records, config=config, paths=emitted, decode_mode=decode_mode)
 
 
