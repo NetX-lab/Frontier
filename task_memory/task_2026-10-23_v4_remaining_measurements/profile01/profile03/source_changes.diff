@@ -1,0 +1,107 @@
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py
+index 46720f56..955d560b 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py
+@@ -47,7 +47,7 @@ def main(generation='06', profile_plan=None):
+     if plan is None:
+         assert generation == '06', 'Only the root-selected fresh native06 generation is authorized'
+     else:
+-        assert generation == '02' and plan['generation'] == generation
++        assert generation == '03' and plan['generation'] == generation
+         assert plan['diagnostic_only'] and not plan['e2e_reference_admission']
+         assert profile_plan.resolve().is_relative_to(REPO / 'task_memory')
+     PACKAGE = HERE / f'candidate_h800_p0_{"profile_" if plan else ""}{generation}'
+@@ -65,9 +65,17 @@ def main(generation='06', profile_plan=None):
+         freeze = json.loads((REPO / inputs['freeze_path']).read_text())
+         assert sha((REPO / inputs['freeze_path']).read_bytes()) == inputs['freeze_sha256']
+         assert inputs['source_commit'] == accepted
++        assert freeze['source_revision'] == accepted
++        assert set(freeze['runtime_modules']) == set(modules)
++        for name in modules:
++            assert freeze['runtime_modules'][name]['commit'] == accepted
++            assert freeze['runtime_modules'][name]['sha256'] == sha(subprocess.check_output(
++                ['git', '-C', str(REPO), 'show', f'{accepted}:{name}'])), name
+         acceptance = json.loads((REPO / plan['primary_acceptance']).read_text())
+-        assert acceptance['status'] == 'ACCEPTED_CPU_PROFILE_DRIVER_COMPONENT'
+-        assert acceptance['source_commit'] == accepted
++        assert acceptance['status'] == 'ACCEPTED_CPU_DIAGNOSTIC_COLLECTION_REPAIRS'
++        assert acceptance['source_revision'] == accepted
++        for name in set(modules) & acceptance['source_hashes'].keys():
++            assert acceptance['source_hashes'][name] == freeze['runtime_modules'][name]['sha256'], name
+     native_commit = git(NATIVE, 'rev-parse', 'HEAD').decode()
+     assert native_commit == '2cf0a6915ce544dc493a0990f2ea38d81601128a'
+     assert not git(NATIVE, 'status', '--short'), 'The original native snapshot must remain clean'
+@@ -108,7 +116,8 @@ def main(generation='06', profile_plan=None):
+         output = Path(plan['cloud_root']) / 'case/runs/groundtruth_clean' / plan['run_tag']
+         config.update(run_tag=plan['run_tag'], job_tag=plan['run_tag'], output_dir=str(output),
+             diagnostic_only=True, e2e_reference_admission=False,
+-            serving_profile_limits=plan['serving_profile_limits'])
++            serving_profile_limits=plan['serving_profile_limits'],
++            role_profiler_max_iterations=plan['role_profiler_max_iterations'])
+         engine.update(worker_extension_cls=plan['worker_extension_cls'],
+             profiler_config=plan['profiler_config'] | {'torch_profiler_dir': str(output / 'torch_traces')})
+         lock.update(accepted_runtime_commit=accepted, diagnostic_only=True,
+@@ -253,7 +262,7 @@ def main(generation='06', profile_plan=None):
+             formal64_requires_same_model_same_hardware32_all_four_errors_at_most=0.30))
+     if plan:
+         case.update(case_id='dsv4-h800-p0-profile-fixed128-qps1',
+-            run_generation=f'v4-native-v028-h800-p0-profile-20261023-{generation}',
++            run_generation=plan['run_generation'],
+             purpose='Diagnostic native serving profile; no E2E or reference admission',
+             diagnostic_only=True, e2e_reference_admission=False,
+             profile_plan=lock['profile_plan'], accepted_runtime_commit=accepted,
+diff --git a/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/profile_plan.json b/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/profile_plan.json
+new file mode 100644
+index 00000000..22eae7db
+--- /dev/null
++++ b/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/profile_plan.json
+@@ -0,0 +1,49 @@
++{
++  "generation": "03",
++  "diagnostic_only": true,
++  "e2e_reference_admission": false,
++  "accepted_runtime_commit": "1437ace6f4a438c1bb879d904e2bede0c777303c",
++  "primary_acceptance": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/primary_integration_acceptance.json",
++  "proposal_inputs": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/proposal_inputs.json",
++  "run_tag": "dsv4-h800-p0-profile-20261024-03",
++  "run_generation": "v4-native-v028-h800-p0-profile-20261024-03",
++  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024",
++  "worker_extension_cls": "native_serve_profile.NativeServeProfile",
++  "window": "First formal repetition through its existing drain; one window only",
++  "role_profiler_max_iterations": {
++    "prefill": 512,
++    "decode": 64
++  },
++  "serving_profile_limits": {
++    "records": 600000,
++    "bytes": 268435456
++  },
++  "profiler_config": {
++    "profiler": "torch",
++    "max_iterations": 64,
++    "delay_iterations": 0,
++    "warmup_iterations": 0,
++    "wait_iterations": 0,
++    "ignore_frontend": true,
++    "torch_profiler_use_gzip": true,
++    "torch_profiler_with_stack": false,
++    "torch_profiler_record_shapes": false,
++    "torch_profiler_with_flops": false,
++    "torch_profiler_with_memory": false
++  },
++  "native_profile_source_pins": [
++    "vllm/config/profiler.py",
++    "vllm/profiler/wrapper.py",
++    "vllm/entrypoints/serve/profile/api_router.py",
++    "vllm/v1/engine/async_llm.py",
++    "vllm/v1/executor/abstract.py",
++    "vllm/distributed/utils.py",
++    "vllm/utils/multi_stream_utils.py",
++    "vllm/v1/worker/gpu/model_states/default.py",
++    "vllm/models/common/ops/fused_qk_rmsnorm.py",
++    "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
++    "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
++    "vllm/model_executor/layers/vocab_parallel_embedding.py",
++    "vllm/model_executor/layers/layernorm.py"
++  ]
++}

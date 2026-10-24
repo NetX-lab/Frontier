@@ -1,0 +1,70 @@
+{
+  "base_commit": "1437ace6f4a438c1bb879d904e2bede0c777303c",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run",
+  "diff_bytes": 6281,
+  "diff_command": [
+    "git",
+    "--no-optional-locks",
+    "diff",
+    "--no-ext-diff",
+    "--no-textconv",
+    "1437ace6f4a438c1bb879d904e2bede0c777303c",
+    "9946771815903f6cd6de8147765fd41395deee21",
+    "--",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/profile_plan.json"
+  ],
+  "diff_path": "source_changes.diff",
+  "diff_sha256": "a79b660b99c17c14ecdb6e62a2c0f812efccf155712ace02162f7506a96515f3",
+  "files": [
+    {
+      "additions": 14,
+      "deletions": 5,
+      "gross": 19,
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py"
+    },
+    {
+      "additions": 49,
+      "deletions": 0,
+      "gross": 49,
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/profile_plan.json"
+    }
+  ],
+  "followup_markdown": {
+    "additions": 13,
+    "deletions": 1,
+    "gross": 14,
+    "limit": 25,
+    "raw_numstat": "3\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/plan.md\n3\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/progress.md\n3\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/requirements.md\n4\t1\ttask_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/test_report_2026-10-24_profile03_package.md\n"
+  },
+  "generated_package_separately_accounted": {
+    "artifact_lines": 280064,
+    "bytes": 6983474,
+    "files": 45
+  },
+  "historical_profile02_gross_separate": 152,
+  "maintained_gross": 68,
+  "maintained_limit": 140,
+  "numstat_command": [
+    "git",
+    "--no-optional-locks",
+    "diff",
+    "--no-ext-diff",
+    "--no-textconv",
+    "--numstat",
+    "1437ace6f4a438c1bb879d904e2bede0c777303c",
+    "9946771815903f6cd6de8147765fd41395deee21",
+    "--",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/profile_plan.json"
+  ],
+  "numstat_path": "source_changes.numstat",
+  "numstat_sha256": "3e226b9bbc11df3d8b280b4e64c61ad597b455a85ed88fcd968c1d5f3713e6c7",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "raw_numstat": "14\t5\ttask_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py\n49\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/profile_plan.json\n",
+  "source_and_package_changed": false,
+  "source_commit": "9946771815903f6cd6de8147765fd41395deee21",
+  "status": "PASS_FIXED_BASE_MAINTAINED_SOURCE_BUDGET",
+  "task_id": "W128-PROFILE03-PACKAGE",
+  "timestamp_utc": "2026-10-24T05:51:54.046625+00:00"
+}
