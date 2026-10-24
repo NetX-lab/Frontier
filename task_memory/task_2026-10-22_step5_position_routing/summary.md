@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Archive scoped supplemental shape PASS and canonical OSS output;native/fullCLI gates remain separate. |
 | 2026-10-24 | Synchronize failed shape attempts, exhausted quota, checker-only evidence and current local storage shortfall after the checkpoint. |
 | 2026-10-24 | Accept native-key source c668a938 and9580global union after reviews, clean audit and124-binding/33-artifact primary integration verification. |
 | 2026-10-24 | Allocate a3-gross native-key candidate; accepted9579 usage and all whole-CLI/native limits remain unchanged pending verification. |
@@ -97,13 +98,17 @@ medians improve only1.7–3.9ms and means are GC-sensitive. No production alloca
 is made. Diagnostic artifacts/limits are in runtime_json_reuse/. An initial
 archive checker included real auxiliary timestamps; its failure and raw headers
 are retained, while exact3902-byte failure-body comparison passes.
-The cancelled required-shape session used no production invocation. Primary
-subsequently consumed all three60s/30GiB attempts:rawFAIL after pricing because
-the checker rejected an unselected0.0 compatibility slot. P6128/D16 completed
-288/144/64/16 calls;BF16 completed256/128/64/16 only atlayer88. Full emissions
-and layers89/90 remainUNVERIFIED. The checker is corrected and five isolated
-controlsPASS,but no fourth production run is approved.16 raw artifacts and the
-failed driver are preserved under workload_shape_validation/evidence/.
+The cancelled required-shape session used no production invocation. Initial
+three60s/30GiB attempts failed in the primary checker on an unselected0.0 slot.
+After the correction and five isolated controls,YC explicitly approves three
+supplemental calls. All pass:P6128/D16 each208events,BF16layers88/89/90 each192,
+with no standalone input quantizer.992events/80lane-ledger rows match full costs,
+proofs,keys andorder. FP8 calls288/144/64/16,BF16each256/128/64/16 remain live.
+All6 allowed calls are used. The16 original failure artifacts remain. Selected
+23-file full outputs are hash-identically archived in personal OSS;27 local
+completed duplicates(81,114,685B) are cleaned. This qualifies frozenCPU-fixture
+layer60 P/D16 andordinaryD1 BF16 only,not native/fullCLI or every workload shape.
+See workload_shape_validation/evidence/supplemental/.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
 The accepted native-key change replaces repeated whole-artifact encoding with

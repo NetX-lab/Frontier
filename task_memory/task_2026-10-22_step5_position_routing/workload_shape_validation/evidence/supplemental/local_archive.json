@@ -1,0 +1,9 @@
+{
+  "status": "PASS_EXACT_SELECTED_ARCHIVE",
+  "files": 23,
+  "selected_bytes": 40533562,
+  "archive_path": "/data/ycfeng/tmp/d29_required_wave_shapes_retry_20261024/selected_shapes_01.tar",
+  "archive_bytes": 40581120,
+  "archive_sha256": "566e9327bbdf71df15bbd11eecaef4ea10e48ea791aa71ab7bc62dafce84ecdd",
+  "limits": "Uncompressed exact files;no dataset/model/source copy or extra production invocation."
+}

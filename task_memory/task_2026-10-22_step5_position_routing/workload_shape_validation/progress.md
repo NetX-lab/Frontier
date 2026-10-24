@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | YC approves three supplemental calls;all shapes pass,6/6 used;retain canonical OSS evidence and clean local duplicates. |
 | 2026-10-24 | Record3/3 failed attempts, completed static finding, corrected checker-only5/5 controls and no authorized retry. |
 | 2026-10-24 | Recover cancelled-session commands; primary owns the unchanged bounded shape scope. |
 
@@ -40,14 +41,26 @@
 - completed/evidence archive:16 exact artifacts in evidence/raw_probe_failures/,
   plus the failed driver in evidence/failed_run_case.py. Post-failure23source/
   262fixture bindingsPASS. See test_report_2026-10-24_required_shapes.md.
-- blocked/further shape qualification:3/3 used,0remaining. No fourth invocation
-  is authorized. P6128/D16/BF16 remainUNVERIFIED pending an explicit quota decision.
+- completed/supplemental qualification:YC selects追加3次;all3 additional calls
+  pass with unchanged corrected driver/frozen fixture. P6128,D16each208events/
+  16ledger lanes;BF16layers88/89/90 each192,total576events/48lanes.992events/
+  80lane-ledger rows match all values/proofs/keys/order. FP8 numerical/proof/
+  collective/point calls288/144/64/16;BF16each256/128/64/16. Source23hashes and
+  fixture262metadata bindings remain unchanged. Total6/6 used,0remaining.
+- completed/OSS archive and cleanup:23 exact selected files,40,581,120B tar,
+  SHA256566e9327bbdf71df15bbd11eecaef4ea10e48ea791aa71ab7bc62dafce84ecdd,
+  under the personal cloud task directory.27 verified local completed
+  duplicates/negative-control copies(81,114,685B) removed;canonical evidence,
+  source,active fixture/scripts and other investigations remain.
+  Receipts:evidence/supplemental/{results_summary.json,cloud_archive.json,cleanup_receipt.json}.
 
 ## Invocation Ledger
 
 | Category | Previously used | New used | Limit | State |
 | --- | ---: | ---: | ---: | --- |
-| All production-path shape invocations | 0 | 3 | 3 | Exhausted;0remaining,no retry |
+| Original production-path shape invocations | 0 | 3 | 3 | RawFAIL retained |
+| Supplemental production-path shape invocations | 0 | 3 | 3 | AllPASS,no further retry |
+| Total production-path shape invocations | 0 | 6 | 6 | 0remaining,no further automatic retry |
 
 ## Inspection Error and Resolution
 

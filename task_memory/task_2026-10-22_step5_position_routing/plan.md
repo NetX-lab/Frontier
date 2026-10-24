@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Close supplemental CPU shapes at3PASS/6total calls;retain exact selected OSS evidence and clean local duplicates. |
 | 2026-10-24 | Apply the read-only checkpoint corrections: consumed shape allowance, native-key final ledger, finite diagnosis outcomes, and primary-owned storage readiness. |
 | 2026-10-24 | Replace cancelled inspections-only owners with primary shape verification and narrowed independent copy/init analyses, keeping the original resource/source limits. |
 | 2026-10-24 | Complete native-key clean audit/integration at9580global with124 primary bindings; retain all whole-CLI/native dependencies. |
@@ -150,11 +151,14 @@ initialization-local analysis and required-shape verification(P6128/DECODE16/BF1
 The three old sessions are cancelled with inspections-only recovered histories.
 Primary owns shape verification; separate D29-SNAPSHOT-COPY-FINISH and
 D29-INIT-PREPARATION-FINISH records owners close the narrowed independent analyses.
-The three60s/30GiB shape invocations are consumed. All raw results areFAIL because
-the primary checker rejected an unselected0.0 compatibility slot after pricing.
-Complete P6128/D16/BF16 emissions remainUNVERIFIED;BF16 reached onlylayer88.
-The checker is corrected and its five isolated controls pass, but no fourth
-production invocation is authorized. See workload_shape_validation/test_report_2026-10-24_required_shapes.md.
+The initial three60s/30GiB calls failed because the primary checker rejected
+an unselected0.0 slot. YC explicitly approved three supplemental invocations.
+All three pass on the same frozen CPU fixture:P6128/D16 each208events;BF16
+layers88/89/90 each192events,without input quantize. Full costs/proofs/keys/order
+and80lane-ledger rows match across992events. Total6/6 used,0remaining;no further
+automatic retry. Selected full outputs are hash-identically archived in personal
+OSS;local completed duplicates are cleaned. Native/fullCLI remain separate.
+See workload_shape_validation/test_report_2026-10-24_required_shapes.md.
 Each remaining diagnosis ends with ALLOC,NO_ALLOC or BLOCKER, bounded evidence,
 and an explanation of its measured or inferred contribution to the remaining
 startup/pricing/emission/flush gap. Weight estimates by actual shape/group
@@ -235,7 +239,7 @@ change is allocated. See early_init_repro/report.md.
 | T2 final-source binding | a886466c binds79/integrated06;parent63 checksums and26 full-file comparisons PASS. H800 authority recorded;staging/seal follows CLI completion. |
 | Final per-path accounting | Accepted native-key union:114allocated/113changed,9566source/9580global,zero violations;124 bindings/122 unchanged non-key bindings and clean independent audit. |
 | Remaining runtime diagnosis | JSON closedNO_ALLOC;copy/init pending bounded ALLOC/NO_ALLOC/BLOCKER deliverables; no source allocation implied. |
-| Required P6128/D16/BF16 shapes | FAILED/UNVERIFIED;3/3 invocations consumed,checker-only5/5PASS,no fourth run authorized. |
+| Required P6128/D16/BF16 shapes | PASS_CPU_FIXTURE;YC-approved supplemental3/3PASS,total6/6used.992events/80ledger rows match;native/fullCLI and untested shapes remain separate. |
 | Full-output storage readiness | Cloud approved;capacity/basic write-read-delete checked,personal-only cleanup enforced. CLI access/runtime/quota verification pending;local/data remains insufficient and no CPU-host mount is allowed. |
 | Package/GPU/G3/E2E | Blocked by workflow/package readiness;task-required H800 allocation authority is already granted. Original qualification gates remain. |
 

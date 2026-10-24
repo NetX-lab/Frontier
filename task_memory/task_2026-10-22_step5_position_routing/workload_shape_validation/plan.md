@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Apply YC's three-call supplement;record observed five-wave results and exact cloud retention/cleanup. |
 | 2026-10-24 | Record primary takeover, recovered invocation census, and three bounded independent shape checks. |
 
 ## Dependency Graph
@@ -28,6 +29,14 @@ worktrees; neither is a dependency of these shape checks.
    rows, native-context labels, complete keys, event/ledger identity and proofs.
 5. Archive selected evidence, commands, limits, hashes, errors and case verdicts.
    Re-read requirements before closure. No production repair is assigned.
+
+The initial three calls are retained as rawFAIL. YC explicitly permits three
+supplemental calls after the checker correction. These are complete with all3
+PASS,total6/6 consumed. P6128/D16 each inspect layer60;BF16 inspects88/89/90 on
+ordinaryD1. Exact selected full outputs are archived under personal OSS,with
+task-local result/log summaries and manifests;completed local duplicates are
+removed only after cloud hash verification. Do not run further shapes under
+this exhausted allowance or broaden the result to native/fullCLI qualification.
 
 ## Verification
 

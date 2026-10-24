@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Record the separate three-call shape supplement;total ceiling6,with no further automatic retry. |
 | 2026-10-24 | Record explicit codesign OSS test-storage and timely completed-artifact cleanup authorization; shape/GPU bounds remain unchanged. |
 | 2026-10-24 | Record checkpoint follow-up continuation without extending the exhausted three-invocation ceiling or authorizing storage changes. |
 | 2026-10-24 | Recover inspections-only cancelled histories; primary takes over three bounded shape invocations and replaces the two independent records owners without source allocation. |
@@ -445,3 +446,12 @@ evidence, active inputs and other-session work. The authorization covers scoped
 test-storage writes and cleanup,not changes to existing ownership/permissions,
 new GPU allocations or a fourth required-shape invocation. Do not directly mount
 the volume on this CPU host;worker mounts retain the StepMind RJobBackend route.
+
+## [Original Request / Decision] Additional Required-Shape Invocations
+
+Primary asks whether to add at most three CPU invocations,one each for P6128,
+first-DECODE16 and BF16,using the corrected checker. Preserve the original three
+rawFAIL results and the60s/30GiB/single-math-thread limits;no GPU or full CLI.
+YC selects **“追加3次 (Recommended)”**. Total permitted production-path
+invocations increase from3 to6. This is a separate explicit decision,not an
+effect of the OSS permission. No further automatic retry is authorized.

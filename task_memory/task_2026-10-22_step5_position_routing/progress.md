@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Accept all three supplemental CPU shapes,992events/80ledger lanes;record cloud archive and27-file cleanup. |
 | 2026-10-24 | Apply checkpoint corrections and record three failed shape attempts, exhausted quota, unchanged source/fixture guards and the new primary-owned storage blocker. |
 | 2026-10-24 | Recover all three cancelled execution histories; no production-wave allowance was used. Primary owns shape checks and fresh independent records owners close copy/init analyses. |
 | 2026-10-24 | Accept the clean9580 native-key union, integrate c668a938/9584941c and verify124 bindings plus33 retained artifacts; global workflow gates remain open. |
@@ -188,16 +189,24 @@
   inspections and no production-wave or artifact-write command. Original probe
   allowance was intact at recovery;the subsequent primary attempts consumed3/3.
   Census:workload_shape_validation/progress.md.
-- failed/required-shape verification: D29-REQUIRED-WAVE-SHAPES, primary
+- completed/required-shape verification: D29-REQUIRED-WAVE-SHAPES, primary
   replaces cancelled ses_e93176c15ffefHaQWQESiTHY7D, using frozen dbe19f53 for P6128,
   firstDECODE16 and BF16-layer88-90. Three60s/30GiB attempts exit1 after production
   pricing because the checker rejected unselected add_attn_residual=0.0.
   P/D calls288/144/64/16,BF16layer88 calls256/128/64/16;complete emissions and
-  layers89/90 remainUNVERIFIED. The task-local checker is corrected;five isolated
+  layers89/90 wereUNVERIFIED. The task-local checker is corrected;five isolated
   controlsPASS without a production call.23 source hashes/262 fixture bindings
-  pass post-failure guards.3/3 used,0remaining;no fourth run is authorized.
+  pass post-failure guards. YC then explicitly approves three supplemental
+  invocations. All pass:P6128/D16 each208events/16ledger rows;BF16layers88/89/90
+  each192events,total576events/48ledger rows.992events and80ledger rows match
+  full values/proofs/keys/order. FP8 calls288/144/64/16;BF16each256/128/64/16.
+  All runs retain60s/30GiB/Python3.10.6/single math threads. Total6/6 used,
+  0remaining. No native/fullCLI run. Cloud23-file exact archive40,581,120B
+  is hash-verified;27 completed local duplicates(81,114,685B) are removed.
+  Scope:layer60 only forP/D16;ordinaryD1 only forBF16,not all workload shapes.
   Records:workload_shape_validation/test_report_2026-10-24_required_shapes.md and
-  evidence/raw_probe_failures/artifact_sha256.json(16 preserved artifacts).
+   evidence/raw_probe_failures/artifact_sha256.json(16 preserved artifacts) and
+   evidence/supplemental/{results_summary.json,cloud_archive.json,cleanup_receipt.json}.
 - completed/read-only checkpoint: D29-PARALLEL-PROGRESS-CHECK,
   ses_e920d1f8dffe0CAn6jyZFw4sy3, finds no D1-D7 execution drift after reconciling
   the explicit native-key authorization. S2 storage ownership,S4 finite diagnosis
