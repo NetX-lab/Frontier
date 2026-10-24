@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-I",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/balanced_frontier_controls.py"
+  ],
+  "cwd": "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128",
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/brainpp",
+    "LANG": "C.UTF-8",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "started_utc": "2026-10-24T05:38:27.137266+00:00",
+  "returncode": 0,
+  "script_sha256": "a35fac05637f68c775c85e13fc04c6243cd4655b602a07865d163da6bfbdca01",
+  "python_driver": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "cpu_only": true,
+  "submitted": false
+}
