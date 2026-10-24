@@ -1,0 +1,25 @@
+{
+  "original_review_manifest_sha256": "c3f3574754cef229fe88af42ebefc778bc8a24ead00bb2185f3204bb273327be",
+  "original_tiny_failure_sha256": "2216990134aac3b12729fcd26a7a9cc75ebe38ac19a187bd107027a707089ac7",
+  "new_repair_allocation_sha256": "fc5bd32b8ce55e13b8a213483c753597a2237427b7ef916992dbc2115103251d",
+  "active_files": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+      "sha256": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426",
+      "bytes": 5041
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control02.py",
+      "sha256": "dabfdc8199ea3e6e17ea9c7ef96656801c5c8b973b29c02ca13a6096c0580650",
+      "bytes": 7364
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_inputs02.json",
+      "sha256": "df1c94280684d4c604644c4171b04316228868b4f5991f0d511c09c487f9a8a2",
+      "bytes": 7306
+    }
+  ],
+  "full_active_source_diff02_sha256": "ff134c407db68d1b7f686f2fdb99630bf2f3481bb369c570022567aa8a63caca",
+  "fixed_point": "947da5ee9ebb279f7978e2cf5e1883622734b654",
+  "method": "Full new active source/control/input files versus /dev/null; original failed files preserved separately."
+}

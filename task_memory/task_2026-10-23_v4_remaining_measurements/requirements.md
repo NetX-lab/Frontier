@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Accepted the112-line segment source and114-line fresh tiny after32 exact checks and both reviews; froze the original once-only diagnostic command. |
+| 2026-10-25 | Preserved the pre-AST cgroup sensor failure and allocated one fresh sensor-corrected tiny control using the existing v1 mapping. |
 | 2026-10-25 | Recorded primary takeover and a 115-line tiny cap before the unchanged once-only segment diagnosis. |
 | 2026-10-25 | Preserved the failed group pilot and allocated one sparse segment diagnosis without another correction, control or affected run. |
 | 2026-10-25 | Accepted group-metrics CPU source, separate owner/primary9-test units and two complete exact controls after both independent reviews; fresh P0 remains pending. |
@@ -298,3 +300,8 @@ One owner may create a fresh probe copy under `profile01/graph_probe/`, with at 
 
 - [Decision — before either new invocation] Carver stopped with only112-line timing source,107-line tiny control and input fixtures; both invocation counts remain0. Primary owns these unverified files and their records. Preserve the original allocation byte pin and use `group_metrics_tail02/primary/takeover_allocation.json` to raise the tiny gross cap from100 to115 for clear code, exact command/cgroup/source bindings and membership telemetry checks. Source remains<=140 and owner Markdown<=100. Add `members=len(members)` only at six sparse group boundaries; no original computation changes.
 - Tiny1/1 and segment diagnostic1/1 are the same previously allocated invocations; no new controls or affected runs. Record hashes before execution, retain failures without retry, and freeze primary AST/evidence review before the full diagnostic.
+
+### D-V4-P0-GROUP-SEGMENTS-TINY-CGROUP-REPAIR
+
+- [Observed failure] The original segment tiny1/1 returnedFAIL with zero checks in0.000708s because new primary code assumed a nonexistent memory.max path. The local memory controller isv1; existing observe_gc.py already maps its controller/mount root and reads memory.limit_in_bytes. Preserve the original tiny/source/input/result/launch receipt; never run/import that spent control again.
+- [Decision — measured ordinary in-scope repair] Allocate one fresh `group_metrics_tail02/owner/tiny_control02.py`<=115gross lines and copied tiny_inputs02/result02; reuse the four existing v1 sensor expressions and strengthen exact six-row membership telemetry comparison. Timer112-line/hash9f456317 and all existing computation remain unchanged. One separately bound fresh tiny invocation is permitted,60s/actual30GiB/selectedconcurrency1/no retry; zero complete-controls/affected. The originally allocated segment diagnostic remains0/1 and may start only after the new proof and primary/review bindings.
