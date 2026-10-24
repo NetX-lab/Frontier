@@ -3,8 +3,13 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-25 | Complete the authorized caller successor and focused verification; retain an UNADMITTED handoff target. |
 | 2026-10-25 | Archive a partial component delivery and the exact caller allocation blocker. |
+
+## Production source admission (2026-10-24 UTC / 2026-10-25 HKT)
+
+Final1461573d passes independent review/audit and the mandatory frozen regressions, preserving canonical8028PASS/279FAIL/32ERROR/281SKIP and all8620 IDs/statuses. It is integrated as2ca5e571 on feat/step5-preview. Fresh parent audit verifies116 paths/114 predecessor rows/18 overlays/native patch and126 source/image bindings, all identical to146,at9682source/9696global with no violations. Step124gross/net96/cumulative increment116 are distinct. Evidence: evidence/production_integration_2026-10-25/acceptance.json and test_report_2026-10-25_production_integration.md. FullCLI/worker/RSS/T2/package/native/G3/E2E remain open; no new invocation or resource is claimed.
 
 ## Overview
 

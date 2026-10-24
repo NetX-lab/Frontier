@@ -812,5 +812,46 @@
     "Git ancestry is metadata, not independent source admission.",
     "Historical component disposition comes from recovered task records; final source checks remain separate.",
     "No worktree/branch deletion, checkout mutation, external action or code edit."
-  ]
+  ],
+  "latest_verified_source_checkpoint": {
+    "created_utc": "2026-10-24T19:09:32.002739+00:00",
+    "source": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "status": "ACCEPTED_PRODUCTION_SOURCE_ONLY",
+    "source_actual": 9682,
+    "global_actual": 9696,
+    "production_binding_count": 126,
+    "selected_active_worktrees": [
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+        "head": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+        "branch": "feat/step5-preview",
+        "role": "Final production code and consolidated records"
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+        "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+        "branch": "fix/d29-ledger-stream",
+        "role": "Admitted ledger component and owner records"
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+        "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+        "branch": "",
+        "role": "Readonly source used by completed mandatory regressions"
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+        "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+        "branch": "d29-snapshot-copy-finish",
+        "role": "Snapshot-copy diagnosis records; collect final receipt before integration"
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+        "head": "886608ea574dd2107d0b30771d63d8057d23cac6",
+        "branch": "d29-init-preparation-finish",
+        "role": "Initialization diagnosis records; original read-only scope"
+      }
+    ],
+    "scope": "Only five current responsibilities refreshed; original89-row recovery census retained unchanged."
+  }
 }

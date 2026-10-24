@@ -1,0 +1,60 @@
+{
+  "status": "PASS_FULL_COMPOSED_SCOPE_BINDINGS",
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "allocation": {
+    "paths": 116,
+    "owner_paths": {
+      "core_source": 51,
+      "pricing": 46,
+      "native": 19
+    },
+    "owner_caps": {
+      "core_source": 4404,
+      "pricing": 3956,
+      "native": 1582
+    },
+    "source_cap": 9942
+  },
+  "owner_actual": {
+    "pricing": 3955,
+    "core_source": 4377,
+    "native": 1350
+  },
+  "source_actual": 9682,
+  "global_actual": 9696,
+  "step": {
+    "gross": 124,
+    "net": 96,
+    "cap": 135,
+    "paths": {
+      "frontier/metrics/metrics_store.py": {
+        "added": 26,
+        "deleted": 7,
+        "gross": 33,
+        "net": 19
+      },
+      "tests/integration/run_step5_measured_main.py": {
+        "added": 12,
+        "deleted": 3,
+        "gross": 15,
+        "net": 9
+      },
+      "tests/integration/test_step5_measured_main.py": {
+        "added": 61,
+        "deleted": 1,
+        "gross": 62,
+        "net": 60
+      },
+      "tests/performance/step5_actual06_iteration.py": {
+        "added": 11,
+        "deleted": 3,
+        "gross": 14,
+        "net": 8
+      }
+    },
+    "cumulative_increment": 116
+  },
+  "bindings_count": 126,
+  "prior_actual_rows_independently_recomputed": 114,
+  "duration_s": 2.1133906762115657
+}

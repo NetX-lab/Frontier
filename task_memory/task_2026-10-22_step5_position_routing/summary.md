@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
 | 2026-10-24 (UTC) | Record resumed complete candidate audit and review frontier without changing accepted production or workflow status. |
@@ -46,7 +47,7 @@ Final ledger candidate1461573de388b72450189bc0c1b88b4ac32491f0,tree447a285aa403a
 
 All mandatory suites ran once on this clean final source. Strict77 is77/77 identical; original auditor verifies451 artifacts/519 cache names per side. Canonical unit is raw8028PASS/279FAIL/32ERROR/281SKIP,exit1,with all8620 actual IDs/statuses, failure/error/skip sets and versions exactly matching accepted native-key376983d2. Separate101/197/53/52 supplements preserve their IDs/statuses and environments. Counts overlap and are not summed. The prior approved hot-update ID absence remains raw presenceFAIL and unwaived.
 
-Evidence is archived at ledger_memory/evidence/frozen_regressions_2026-10-25/:64 exact files/7126759B plus archive command/log. The comparator's initial field-reading error, its corrected exact predicate and both raw logs remain retained; no suite was rerun. The candidate is still UNADMITTED until the authorized integration and parent source/budget/binding guard. Production at this pre-merge record remains9566source/9580global.
+Evidence is archived at ledger_memory/evidence/frozen_regressions_2026-10-25/:64 exact files/7126759B plus archive command/log. The comparator's initial field-reading error, its corrected exact predicate and both raw logs remain retained; no suite was rerun. Production now includes the ledger at2ca5e57113b0bc99ab84e926e5bb492b3670072e. All non-task files equal the tested146 source. Six task-record conflicts preserve both owners’ evidence; no source conflict. The fresh parent guard recomputes116 paths/114 predecessor rows/18 overlays/native patch and passes all126 bindings, exactly matching146. Accepted production is9682source/9696global with zero violations; this is source admission only. Integration evidence is ledger_memory/evidence/production_integration_2026-10-25/acceptance.json.
 
 Snapshot-copy and initialization diagnoses continue under their original separate records ownership; final receipts and consumed counts are collected before integration or further invocation. Current pricing+emission+flush, worker environment/append throughput/full-workload memory, completeCLI<=2400s per main process, finalT2/package/native/G3/E2E remain open. OSS sufficiency is user-confirmed and required-shape allowance remains6/6 used. This archive makes no new resource, fullCLI, native or RSS claim.
 

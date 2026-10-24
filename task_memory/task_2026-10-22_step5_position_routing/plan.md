@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
 | 2026-10-24 (UTC) | Resume source admission with a clean frozen checkout and independent composed audit; retain long gates and diagnoses. |
@@ -57,9 +58,9 @@ Final candidate1461573de388b72450189bc0c1b88b4ac32491f0 is clean in the ledger a
 
 All final-source mandatory regressions have finished without rerunning suites. Strict77 is77/77 identical; the original auditor rehashes451 artifacts/519 cache names per side. Canonical unit is raw8028PASS/279FAIL/32ERROR/281SKIP,exit1; the comparator passes exact equality of all8620 IDs/statuses, failure/error/skip sets and versions against the accepted native-key baseline. Separate101/197/53/52 supplements have identical IDs/statuses and environments. The historical approved hot-update ID absence remains raw presenceFAIL and unwaived.
 
-`audit + reviews + mandatory regressions + archive PASS -> production integration and parent source/budget/binding guard -> current pricing+emission+flush + worker/cloud readiness -> complete6144/1024 offline/online CLI<=2400s per main subprocess -> final T2/source/package -> native/G3/E2E`.
+`audit + reviews + mandatory regressions + archive + production integration/parent guard PASS -> {copy/init finite closure, current pricing+emission+flush + worker/cloud readiness} -> complete6144/1024 offline/online CLI<=2400s per main subprocess -> final T2/source/package -> native/G3/E2E`.
 
-Archive: ledger_memory/evidence/frozen_regressions_2026-10-25/;64 exact files/7126759B plus archive command/log. The ledger candidate remains UNADMITTED until integration and the parent guard; accepted production is still9566source/9580global at this record. Stop the old merge-tree preview troubleshooting and perform the authorized merge after this evidence commit.
+Archive: ledger_memory/evidence/frozen_regressions_2026-10-25/;64 exact files/7126759B plus archive command/log. The ledger is now admitted as production source2ca5e571 after the merge and fresh parent guard: all116 paths/native patch recomputed,126 bindings exactly equal to146,9682source/9696global,zero violations. Evidence is ledger_memory/evidence/production_integration_2026-10-25/. Six task-record conflicts preserve latest parent outcomes and candidate owner records; four source files merge unchanged. Old merge-tree preview troubleshooting remains stopped.
 
 In parallel, collect final snapshot-copy and initialization receipts from their existing dedicated worktrees. Reconcile actual consumed counts and commits before integration or further action. No new diagnostic invocation follows from missing notifications. Required-shape6/6 is exhausted; OSS quota is USER_CONFIRMED_SUFFICIENT. Current timing, worker environment/append throughput/full-workload memory, finalCLI and native gates remain open.
 

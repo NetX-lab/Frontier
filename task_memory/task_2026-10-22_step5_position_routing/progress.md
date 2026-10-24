@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Complete and archive final146 mandatory regressions; retain canonical raw failures and queue verified production integration. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
 | 2026-10-24 (UTC) | Recover worktree/source state and complete fresh116-path/126-binding audit; start independent review. |
@@ -92,7 +93,7 @@
 - corrected/preparation: Git2.34.1 does not support merge-tree --write-tree; legacy preview prints binary task records and a subsequent UTF8 capture fails. No Git/source/index mutation occurs. After the third preview problem, check_progress_2026-10-25_merge_preparation.md records D2 and stops preview work; actual authorized merge waits for mandatory gates. No suite or diagnostic control is restarted.
 - completed/frozen regression execution (historical launch): strict77,unit,supplement101,metadata197,catalogue53,governance52 launch at18:26:55UTC, supervisor tool73779. Exact commands/versions, source-before/after and raw exits are under /data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/. Reuse retained recipes/predicates with final pins/fresh outputs,30GiB configured scopes,single math threads and canonical binary absence. Native accepted baseline generated cache is read-only at its recorded absolute path. The later actual outcomes and archive above determine this gate.
 - in-progress/parallel diagnoses: existing available agents continue snapshot-copy and init in their original separate886608ea worktrees with records-only scopes. Recover prior reads first; snapshot<=1control,init=0newbenchmarks,no new CSV/model/wave/fullCLI/GPU operations.
-- in-progress/production: mandatory source gates and archivePASS; candidate remainsUNADMITTED until the authorized merge and parent guard; accepted production source9566/global9580 is unchanged. Current cohesive timing,worker/cloud execution readiness,complete6144/1024CLI<=2400s/mode and finalT2/native/G3/E2E remain unfinished. OSS quota isUSER_CONFIRMED_SUFFICIENT;shape6/6 remains exhausted.
+- completed/production source: merge2ca5e571 integrates candidate146 code and records after mandatory gates. Six document conflicts retain parent final-state evidence and candidate delegated-owner additions; no source conflict. All non-task files equal146. Fresh parent auditexit0,2.113390676s,recomputes116paths/114priorrows/18overlays/native patch/126bindings; all126 exactly equal frozen146,CORE4377/PRICING3955/native1350,source9682/global9696,zero violations. Source isACCEPTED_PRODUCTION_SOURCE_ONLY; production evidence/acceptance.json preserves commands/conflicts/guard. Unrelated.cortexkit/.pi remain untouched.  Current cohesive timing,worker/cloud execution readiness,complete6144/1024CLI<=2400s/mode and finalT2/native/G3/E2E remain unfinished. OSS quota isUSER_CONFIRMED_SUFFICIENT;shape6/6 remains exhausted.
 
 ## Previous session handoff and revision-bound history
 

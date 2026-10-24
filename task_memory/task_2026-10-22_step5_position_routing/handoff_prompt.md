@@ -3,12 +3,43 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Record verified production integration2ca5e571 and completed mandatory regressions; earlier candidate prompt becomes historical. |
 | 2026-10-25 | Add late copy/init analyzer failures, full read-only history recovery and original unconsumed control limits. |
 | 2026-10-25 | Renew the complete next-session prompt for the committed ledger candidate, explicit sufficient-quota decision and unfinished admission/workflow gates. |
 | 2026-10-23 | YC deferred handoff;current-session progress now owns execution and this prompt is historical. |
 | 2026-10-23 | Deliver reviewed code/records and exact continuation command after the bounded CLI repair. |
 
-## 当前交接提示（2026-10-25）
+## Current continuation checkpoint (2026-10-24 UTC / 2026-10-25 HKT)
+
+继续当前主线 `/data/ycfeng/Frontier/.worktrees/step5-preview`，分支 `feat/step5-preview`。
+Ledger源码已合入2ca5e57113b0bc99ab84e926e5bb492b3670072e；records HEAD可能随后前进，
+应核验非task_memory源码仍与该提交/冻结1461573d一致。候选分支及冻结树146保留，不删除。
+
+已完成独立composed audit、Standards/Spec、final146全部mandatory回归和归档；不重复执行。
+Strict77=77/77 identical；原auditor每侧451 artifacts/519 cache names。
+Canonical full-unit=8028PASS/279FAIL/32ERROR/281SKIP、rawexit1；全部8620真实IDs/status及失败集合
+与已验收native-key376983d2完全相同，comparator exit0。独立101/197/53/52补充套件通过，不能相加。
+原approved旧hot-update ID缺失仍是rawpresenceFAIL，未豁免。
+
+生产父端guard重新计算116路径、114前任用量、18overlays、native patch及126bindings；
+全部126与冻结146一致。已验收CORE4377/4404、PRICING3955/3956、native1350/1582、
+source9682/9942、global9696/10000，零违规。Step124gross/net96/累计增量116分开记。
+证据：ledger_memory/evidence/{frozen_regressions_2026-10-25,production_integration_2026-10-25}/。
+6个真实任务记录冲突已保留双方意图解决，代码无冲突；停止旧merge-tree预览排查。
+
+下一前沿：
+1. 收取并整合snapshot-copy/init两个现有诊断分支的最终回执、consumed count及commit；不重跑control。
+2. 取得当前同源码同环境pricing+emission+flush实测，落实worker镜像/解释器、lifecycle、append吞吐和全workload内存条件。
+3. 之后完整6144/1024 offline/online CLI，每模式frontier.main子进程<=2400s，全部输出/proof/key/顺序/逐点校验保留。
+4. 再完成最终T2/source/package、native/G3和各E2E<=10%；这些仍pending。
+
+OSS quota为USER_CONFIRMED_SUFFICIENT，不重复quota发现作为阻塞；云访问仅个人目录。
+Required-shape6/6已耗尽，resume不追加旧pricing control/shape或GPU额度。当前主线尚未跑新完整CLI/worker。
+先读root requirements/plan/progress/summary及上述验收报告，以实际Git和最新progress为准。
+下面的候选交接及2026-10-23提示保留历史用途，不再规定当前准入前沿。
+
+## Earlier candidate handoff (2026-10-25; historical)
+
 
 继续 Frontier Step D29 position routing 当前任务，不要从头重新实现，也不要把
 旧版回归结果当作新 ledger 候选的验收。YC 已要求在新 session 继续执行。
