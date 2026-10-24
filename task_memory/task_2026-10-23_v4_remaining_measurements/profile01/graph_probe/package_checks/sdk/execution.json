@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/graph_package_sdk_check_20261024.py",
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01",
+    "/data/ycfeng/tmp/glm53_dsv4/graph_payload_sdk_kcwqlml7/receipt.json"
+  ],
+  "returncode": 0,
+  "start_utc": "2026-10-24T05:39:07.022609+00:00",
+  "end_utc": "2026-10-24T05:39:11.847127+00:00",
+  "script_sha256": "3096ba21f13ddd8409a37965c7d2f0a041bc3529c546b0e3f0cb374eb6cc8f3b",
+  "output": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_sdk_kcwqlml7"
+}

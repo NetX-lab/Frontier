@@ -1,0 +1,55 @@
+{
+  "status": "PASS_RUN_EXECUTION",
+  "job": "exp-1024-134447-148581",
+  "creator": "i-fengyicheng",
+  "charged_group": "codesign",
+  "preemptible": "no",
+  "worker_seconds": 12.0,
+  "worker_exit_code": 0,
+  "restarts": 0,
+  "nfs_source": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01:/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01",
+  "worker_gpu": "NVIDIA H800",
+  "manifest_sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146",
+  "package_unchanged": true,
+  "raw_files": 4,
+  "raw_bytes": 53146,
+  "records": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/execution/platform.json",
+      "sha256": "da31a23522e314a8df870a09ccdf4826149bed5fa14653f03ca9f58cab3abd45"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/execution/worker.log",
+      "sha256": "31ce7cdb3f67da948781d4c26021aae322a5f9a3655fa9c37f8f3ced07be1220"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/execution/download_receipt.json",
+      "sha256": "07faefb9b3130a64c8a8268ab49c935dbc3ea972899c6bb3600c8c40c377f020"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/execution/launcher_started.json",
+      "sha256": "45e390f777fa0d88cb0ea660b5779de8769daa783355580769fad097827a4733"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/execution/launcher_result.json",
+      "sha256": "f1c8e76f550666701e7dcd56ed83a40fd637edef6e78e445463dd86f4a2a2ac7"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/raw/diagnostics/fault.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/raw/diagnostics/stages.jsonl",
+      "sha256": "cb6e471d5c817f403b9361dbe0310d4f4d778cde83b82b9afa9b809cd0b13e32"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/raw/probe/probe_report.json",
+      "sha256": "68f79e9b8eac14d3b4f45d39b1664a776483ce413aeaa8ab3749b10f537c7ae8"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/raw/probe/replay_trace.json",
+      "sha256": "53e9456ba603e0ef9ffa761272ed97b41d8fe2b6dd1446f497b8e912c547897d"
+    }
+  ],
+  "limits": "Platform/bootstrap warnings retained; actual worker binary bytes were not separately rehashed."
+}

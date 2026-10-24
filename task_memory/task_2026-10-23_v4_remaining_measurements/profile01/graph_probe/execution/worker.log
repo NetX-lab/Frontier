@@ -1,0 +1,31 @@
+ERROR: driverInitFileInfo 531 result=1ERROR: init 608 result=1ERROR: init 250 result=1ERROR: driverInitFileInfo 531 result=1ERROR: init 608 result=1ERROR: init 250 result=1{"@caller":"gitlab.basemind.com/basemind/brainpp/projects/kubebrain/cmd/worker-init/app/options.(*Options).Run","@file":"projects/kubebrain/cmd/worker-init/app/options/options.go:80","@level":"info","@msg":"SSHD not enabled","@timestamp":"2026-10-24T05:44:58.550Z"}
+2026-10-24 05:44:58: DEBUG: Calling worker_init, DISTRIBUTED_JOB_ENVS_INITIALIZED=
+2026-10-24 05:44:58: DEBUG: worker_init() function called
+2026-10-24 05:44:58: DEBUG: SCRIPT_PATH=/jobutils/scripts, BASE_DIR=/jobutils
+SOCKET_IP=10.191.4.22
+0 reranked to 0
+MASTER_NODE_NAME=gpu-h800-0406.host.platform.shaipower.com, LAST_NODE_NAME=gpu-h800-0406.host.platform.shaipower.com
+MASTER_SOCKET_ADDR=10.191.4.22, LAST_SOCKET_ADDR=10.191.4.22
+NODE_NAME=gpu-h800-0406.host.platform.shaipower.com
+GPU_TYPE=H800
+GPU_VENDOR=NVIDIA
+NODE_RANK=0
+NODE_COUNT=1
+MASTER_ADDR=10.191.4.22
+PROC_PER_NODE=1
+JOB_ID=exp-1024-134447-148581
+2026-10-24 05:45:02: [replica_labels] 2026-10-24 05:45:01.946 | WARNING  | utils:<module>:21 - clickhouse_connect 模块未安装，ClickHouse 功能将不可用。p2p_ping 等不需要 ClickHouse 的功能仍可正常使用。
+RDMA_NETWORK_LINK_TYPE=RoCE
+[33mWarning: Not a full machine job, skipped IB HCA auto detection[0m
+NCCL_SOCKET_IFNAME=ens47f0np0
+NVSHMEM_BOOTSTRAP_UID_SOCK_IFNAME=ens47f0np0
+NCCL_IB_HCA=
+NCCL_IB_GID_INDEX=
+NVSHMEM_HCA_PE_MAPPING=
+2026-10-24 05:45:02: Ready to go.
+2026/10/24 05:45:02 [DEBUG] packaging-url , packaging-dir /workdir/src/rjob, Starting packaging server
+GPU 0: NVIDIA H800 (UUID: GPU-917766be-8cfd-87b2-f88b-b8a5896a48d7)
+2026-10-24 05:45:05: [replica_labels] 2026-10-24 05:45:05.350 | WARNING  | utils:<module>:21 - clickhouse_connect 模块未安装，ClickHouse 功能将不可用。p2p_ping 等不需要 ClickHouse 的功能仍可正常使用。
+USDT:2026-10-24 05:45:10 152:152 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-24 05:45:10 152:152 SyncActivityProfilerHandler.cpp:59] profiler_stop
+{"report": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/graph_payload_probe/1aa1e4a5_h800_20261024_01/probe/probe_report.json", "U1": "PASS", "U2": "PASS", "U3": "PASS", "U4": "PASS"}

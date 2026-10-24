@@ -1,0 +1,11 @@
+{"sequence": 1, "event": "copy.enter", "result": null, "pid": 1, "monotonic_ns": 3284891976846083}
+{"sequence": 2, "event": "import_torch.enter", "result": null, "pid": 1, "monotonic_ns": 3284892018761839}
+{"sequence": 3, "event": "import_torch.exit", "result": null, "pid": 1, "monotonic_ns": 3284895470051335}
+{"sequence": 4, "event": "import_cuda.enter", "result": null, "pid": 1, "monotonic_ns": 3284895661569478}
+{"sequence": 5, "event": "import_cuda.exit", "result": null, "pid": 1, "monotonic_ns": 3284895766888577}
+{"sequence": 6, "event": "output_mkdir.enter", "result": null, "pid": 1, "monotonic_ns": 3284895789756611}
+{"sequence": 7, "event": "output_mkdir.exit", "result": null, "pid": 1, "monotonic_ns": 3284895800268162}
+{"sequence": 8, "event": "api_inspection.enter", "result": null, "pid": 1, "monotonic_ns": 3284895819281070}
+{"sequence": 9, "event": "api_inspection.exit", "result": null, "pid": 1, "monotonic_ns": 3284895856695232}
+{"sequence": 10, "event": "report_write.enter", "result": null, "pid": 1, "monotonic_ns": 3284895887604481}
+{"sequence": 11, "event": "report_write.exit", "result": null, "pid": 1, "monotonic_ns": 3284895899910684}

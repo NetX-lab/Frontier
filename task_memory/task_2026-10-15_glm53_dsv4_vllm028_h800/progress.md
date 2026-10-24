@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | W128-OCT24-REPAIR-DOCS: synchronized integrated collection repairs, sealed graph-probe launcher-start receipt and delivered unsealed profile03; native/cost/calibration gates unchanged. |
 | 2026-10-24 | W128-STREAM-ACCEPTANCE-DOCS: synchronized limited GPU stream/restart acceptance, CPU counter control and the active diagnostic DP slice; native coverage/graph/full-ticket gaps remain open. |
 | 2026-10-24 | W128-OCT24-DATA-DOCS: accepted diagnostic profile02 audit and isolated MoE data synchronized; full05/09/19 OPEN and bounded collection-gap design/CPU repairs are next. |
 | 2026-10-23 | W128-BALANCED-DECODE-STAGE-DOCS acceptance: root ACCEPTED_ISOLATED_DATA after no-finding review/exact fresh raw and trace reruns; prior pending checkpoints historical, full05/09/19 and consumer/native qualifications remain open. |
@@ -191,8 +192,56 @@
 - completed: [Primary acceptance](../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json) is ACCEPTED_GPU_STREAM_IDENTITY_WITH_LIMITS, probe source `5f7d0950`, CUPTI repair `0d745706`. Actual 1-H800 job `exp-1024-020317-012085` Succeeded, 23 container seconds/exit0/restart0. [Root complete audit](../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/root_verification.json) passed 162/162 checks, byte-identical with no exclusions; independent [review](../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/review.md) reported No findings.
 - observed: 8 eager + 16 priming joins, 16 stable stream snapshot rows and all 28 raw kernels. Torch IDs0/3 differ from CUPTI/trace IDs7/13. Two complete native-profiler cycles were observed; captured per-op graph ownership remains UNKNOWN despite successful capture and both synchronized replays. Startup capture alone did not close ownership. Cycle2 version-metadata loss, runtime API13030 versus trace13000 and telemetry-only binary/inner-profiler identity limits remain; no serving/operator cost, GPU dependency or native-reference admission.
 - completed CPU control: exact-image WS2 Gloo counters1..6 match on both ranks; [root verification](../task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence_cpu/root_verification.json) rederived all 12 matrices and source/hash bindings, not a new Docker run. This proves only the measured CPU group, not native DP pairing.
-- in-progress source slice: `W128-DP-SEQUENCE-IMPLEMENTATION`, worktree `/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record`, session `ses_e95f3ea82ffenerOUFcb2XWVDm`; four existing non-core files/180 gross lines. Optional `steps[].dp_post_all_reduce_sequence` uses the existing post-all-reduce hook/thread-local state, preserving exact frozen base dispatch/hook schemas. Not yet delivered, reviewed, merged or run; [allocation and controls](../task_2026-10-23_v4_remaining_measurements/requirements.md#diagnostic-dp-sequence-allocation).
-- pending: fresh native coverage, DP pairing, shutdown and graph attribution. Require at least 3 useful steps per lane; profile02 prefillDP1 retains its 2/64 gap and all 192 old null stream maps remain missing, not retroactive PASS. Native06 R4, Q2a/901ef960 and local-MoE isolated acceptance are unchanged; full05/09/19 OPEN, GLM paused and CPU-overhead last. Earlier dated checkpoints below retain their historical scope.
+- completed source/CPU components: DP `bb50186e` and coverage/shutdown `20660f4c` integrated at `1437ace6`, each with Standards/Spec No findings. [Primary acceptance](../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json) records twelve separate suites:465PASS/1known-baselineFAIL/0SKIP and46 source/result/record checks PASS; [report](../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_report_2026-10-24_integration.md). Existing77-case evidence is bound, not a fresh capture.
+- preserved failure: the32-rank fixture fails identically at baseline44f2ddb9/candidate178c1123, with all32 counter/hook dictionaries equal ([diagnosis](../task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_diagnosis.json)); FAIL is not counted as PASS. Optional raw DP counters also annotate direct dummy execution with `step=null`; sampling uses the detached step's counter, not newer thread-local state. Frozen dispatch/hook schemas remain unchanged; actual cross-DP pairing, useful-step coverage and shutdown order remain UNVERIFIED.
+- completed callback CPU correction: `1aa1e4a5`,26/80 probe lines, dual reviews No findings; [root acceptance](../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/primary_acceptance.json) records87CPU PASS+2expected old-source RED and actual-image Python3.12.3 entry/ABI/bytecode PASS without CUDA initialization. Graph payload/correspondence and the old crash cause remain UNKNOWN, not proven by the corrected indirection.
+- graph package `6f84a88b`/records2264 merged4add627d, source/package dual reviews No findings. [Root seal](../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json) at2026-10-24T05:43:50Z binds8inputs+manifest `ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146`. [Submission receipt](../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json) records LAUNCHER_STARTED at05:44:43Z/PID3103656, not an evidenced job name, Running state or GPU result; one1H800/600s attempt only.
+- delivered profile03 `9946771`/records882b25ae in `v4-native-profile03-run`: [delivery](../../../v4-native-profile03-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/delivery.json),45files/13runtime modules matching1437ace6/87native and20binary pins preserved,68/140 maintained gross lines. Source/package independent review is pending; NOT sealed/submitted. D-V4-PROFILE03-PACKAGE fixes P512/D64,600000records/268435456bytes; next actual-image/SDK/package acceptance -> root seal/32H800 run -> audit, not more DP/worker implementation.
+- authority: YC approved the fresh callback and similar bounded requests under [D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY](../task_2026-10-23_v4_remaining_measurements/requirements.md#callback-payload-correction-and-similar-diagnostic-authority). Historical3/3 failures remain; no blind automatic retry. Fresh runtime must prove >=3 useful steps per role/lane, no unintended drops, raw DP pairing/stream joins/post-stop evidence; graph ownership is independent. Native06 R4, Q2a/901ef960, MoE limits, full05/09/19 OPEN, GLM pause, CPU-overhead last and official mean/30%/10% predicates remain unchanged. Earlier dated execution snapshots are history.
+
+### 1. 规划完成情况 — W128-OCT24-REPAIR-DOCS
+
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 0（仅本次六文件文档子任务）
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| 六文件当前事实同步 | PASS | integrated1437、graph launcher-start 与 unsealed profile03 分开记录；历史和完整验收条件保留 |
+| 只读证据与文档核验 | PASS | Python3.10.6、335/335 checks，37 个新增本地链接、receipt/source/package hashes、checklists/history PASS |
+
+Command: `GIT_OPTIONAL_LOCKS=0 python3 -B - <<'PY' ... PY`; exact stdin and PASS output are retained in this task's execution transcript. Scoped `git diff --check --` the six owned paths PASS;59/160 gross lines before this checkpoint. Local HEAD observed4add627d, owned index empty. No source tests, new matrix capture, actual-image/SDK execution, platform/network operation, delegation or Git write. The two sibling-worktree delivery links were corrected before verification; no artifact changed.
+
+### 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** W128-OCT24-REPAIR-DOCS 派发至六文件核验｜**当前前沿：** root profile03 package gates ‖ graph launcher/platform/data checks
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | 仅直接核验请求中的文档和小型本地证据 |
+| D2 细节反复重试 | CLEAR | 本次最终核验一次 PASS；未重跑失败 workload |
+| D3 支线问题修补 | CLEAR | 仅六个明确授权文件 |
+| D4 可并行任务停滞 | CLEAR | root 的独立 package/run 工作不依赖文档同步 |
+| D5 超范围镀金 | CLEAR | 无 source、接口、资源或验收扩展 |
+| D6 分析空转 | CLEAR | 证据读取直接完成文档交付 |
+| D7 路线违背 | CLEAR | baseline FAIL 不计 PASS；launcher-start 不写成 Running；旧3/3保持历史 |
+
+**文档检查：** S1–S4/S6 在本次范围无明显缺陷；S5 原六文件 current DP 未交付/未合并与实际1437、root seal/submission 和 profile03 delivery 冲突，已在 current block 更正；dated history 未改。
+**归因：** 无执行偏离。
+
+### 3. 纠正建议
+
+**分支：** B：旧 current 状态失效，本次先完成六文件事实修正。
+**文档更新（先执行）：** 六文件 current block/Modification History 已更新，未改变 spec、checklists、approval 或验收条件（可直接执行，已完成）。
+**需停止的偏离行为：** 无。
+**接下去的路线：**
+1. Root profile03：独立 review/actual-image/SDK/package gates -> seal/32H800 run -> audit；完成标志：原 >=3 useful steps、无 unintended drops、raw DP/stream/post-stop 证据满足各自范围。
+2. 并行 graph probe：保留05:44:43Z LAUNCHER_STARTED snapshot，取得实际平台与输出证据；完成标志：严格原 correspondence predicates 的实际 verdict，失败/未知不冒充 PASS。
+
+### 4. 最值得关注的 3 点
+
+1. 十二套为465PASS/1known-baselineFAIL/0SKIP；实际 DP pairing/coverage/shutdown 未验证。
+2. Graph 已 seal/launcher-start，未据此宣称 job/Running；profile03 已 delivered，尚未 sealed/submitted。
+3. Native06 R4/Q2a/MoE 原边界保留；full05/09/19 OPEN、GLM paused、CPU-overhead last、mean/30%/10%不变。
 
 ## Profile02 and local-MoE acceptance — current (2026-10-24)
 
@@ -200,7 +249,7 @@
 - corrected historical erroneous two-headless claim: ONLY decodeDP1 shutdown error; prefillDP1 true stop-order/errors empty. Cross-host wall timestamps are not clock-aligned proof of actual order. [Archive receipt](../task_2026-10-23_v4_remaining_measurements/profile01/results/archive_receipt.json) pins46files/86211102bytes/full53441663-byte audit/32indices outside immutable run artifacts; Git retains compact receipts. Native06 R4 remains the reference, not replaced by profile02.
 - completed Q2b: [MoE acceptance](../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json) ACCEPTED_ISOLATED_KERNEL_DATA_WITH_LIMITS after independent No findings/[root exact rerun](../task_2026-10-23_v4_remaining_measurements/moe/results/root_verification.json). Source737b6311/docfix941a4450 mergedbe067bb5,204/300lines; actual-image440/20/1003 and SDK PASS. [Terminal receipt](../task_2026-10-23_v4_remaining_measurements/moe/root_run_check.json): exp-1023-235250-540507 Succeeded15:54:35Z,1H800/16CPU/mem_gb128/non-preemptible/1800s ceiling,92container seconds/exit0/restart0. First guessed-label inspector false negative preserved; actual codesign/no and normal launcher completion verified.
 - isolated MoE19outputs/3261347bytes/two four-row tables/12traces/112statistics/delta0;20record_function grouped calls/M,7kernels/call. Rank0 KERNEL_ONLY means(ms) M16/32/6152/12288=0.1017937/0.1022997/0.7557434/1.29869045. No CUDA_EVENT raw durations/grouped count, other EP ranks/TP8/communication/graph/serving/weights equivalence or native-tuple cost consumption; M6152 conditional dummy-peer only.
-- next: bounded source-backed collection-gap design/CPU repairs -> fresh package/run under standing H800 authority; proper native tuple/rank/dependency admission before cost consumers. Q2a ACCEPTED_ISOLATED_DATA/901ef960 stays accepted; decoder consumption pending. Full05/09/19 OPEN, GLM paused, CPU-overhead last and mean/30%/10%/native-C26 limits unchanged. All dated pending/current snapshots below are history.
+- next: source repairs are integrated; complete profile03 review/actual-image/SDK/package gates ->32H800 run/audit, alongside the sealed graph probe's launcher/platform/data checks. Proper native tuple/rank/dependency admission precedes costs. Q2a ACCEPTED_ISOLATED_DATA/901ef960 stays accepted; decoder consumption pending. Full05/09/19 OPEN, GLM paused, CPU-overhead last and mean/30%/10%/native-C26 limits unchanged; dated snapshots below are history.
 
 ## Routing milestone — current (2026-10-23)
 

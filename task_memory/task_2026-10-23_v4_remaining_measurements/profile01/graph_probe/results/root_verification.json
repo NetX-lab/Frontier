@@ -1,0 +1,16 @@
+{
+  "status": "PASS_FRESH_INDEPENDENT_ROOT_RERUN",
+  "command": [
+    "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_graph_payload_data_audit.py"
+  ],
+  "processes": 2,
+  "result_sha256": "1a56bb00bd7fa8bde329f2c9e9933e97fc237b2d70232659edc1021281235905",
+  "source_sha256": "34b25b87148ad404d1f1361b6c1a4e060b1f00feb2fe76c6f51261195cc8bb04",
+  "data_audit_sha256": "3b7c57a32d090b4494a4e35cc81e3173974bde117159a82e6a3f92b40d9c100c",
+  "checks": 31,
+  "negative_fixtures": 6,
+  "output": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_audit_sq2de5ee",
+  "limits": "Full local-data reproduction; no general native/serving/price/crash-cause admission."
+}
