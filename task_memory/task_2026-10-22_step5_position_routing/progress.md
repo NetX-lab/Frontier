@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | YC confirms sufficient OSS quota and requests handoff; allocate the two-line zero-sum snapshot correction and retain candidate admission as pending. |
+| 2026-10-24 | Commit allocation0ca54025 and assign isolated four-file implementation;primary continues independent storage prerequisite inspection. |
 | 2026-10-24 | Parent-verify zero-history ledger paths and135-gross zero-sum allocation;close retained config profile without source allocation and separate historical projections from current gates. |
 | 2026-10-24 | Accept all three supplemental CPU shapes,992events/80ledger lanes;record cloud archive and27-file cleanup. |
 | 2026-10-24 | Apply checkpoint corrections and record three failed shape attempts, exhausted quota, unchanged source/fixture guards and the new primary-owned storage blocker. |
@@ -72,6 +74,22 @@
 | 2026-10-22 | Receive the first design and request independent scope/correctness review. |
 
 ## Current frontier and session handoff
+
+### Active handoff request (2026-10-25)
+
+- in-progress: finish the committed ledger component6c2f179c/66e50116 in
+  fix/d29-ledger-stream. Its observed48PASS/3SKIP controls and30PASS reporting
+  suites do not erase raw complete-integration62PASS/4FAIL/6SKIP.
+- in-progress: correct the existing performance save_state PicklingError by
+  its existing persistent-reference mechanism. Root reallocates metrics38->36
+  and performance12->14; four-file135 and all owner/global caps stay unchanged.
+- completed/decision: YC explicitly confirms that codesign OSS quota is enough
+  and points to ssh shai-ycfeng. This is user-confirmed capacity, not a measured
+  quota reading; worker write throughput/environment remain unverified.
+- pending: final candidate commits, focused checkout/caller verification and
+  complete continuation prompt. No new pricing/shape/fullCLI/worker run is
+  part of this handoff. Required-shape calls remain6/6used. Accepted production
+  remains source9566/global9580 until the successor's mandatory gates pass.
 
 ### Current-session resumption (supersedes handoff next-session timing)
 
@@ -249,6 +267,12 @@
   JSON receipts; remove their completed disposable scratch copies (4696B).
   ledger_memory/evidence/completed_duplicate_cleanup.json owns exact hashes and
   paths. No source,fixture,other-session file or cloud object was deleted.
+- in-progress/implementation: D29-EP-LANE-LEDGER-IMPLEMENTATION, session
+  ses_e91675a86ffegKCQdHRPQFOypp, base0ca54025, isolated owned worktree
+  /data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream. Four files135gross;
+  focused synthetic/reporting RED/GREEN and caller checks only. No pricing wave,
+  required-shape/fullCLI/worker invocation. Primary owns clean audit,independent
+  reviews,final frozen regressions,integration and separate storage readiness.
 - completed/read-only: D29-DETACHED-EMISSION-OWNERSHIP, session
   ses_e96a5c1c7ffeoPBK7V08CMas7v, inspects existing profiles and private ownership
   after required getter snapshots. Records3020a885/82b0e311 archived as

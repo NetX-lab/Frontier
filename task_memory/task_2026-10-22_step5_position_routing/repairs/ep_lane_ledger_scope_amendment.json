@@ -20,14 +20,14 @@
     "tests/performance/step5_actual06_iteration.py"
   ],
   "path_step_ceilings": {
-    "frontier/metrics/metrics_store.py": 38,
+    "frontier/metrics/metrics_store.py": 36,
     "tests/integration/run_step5_measured_main.py": 20,
     "tests/integration/test_step5_measured_main.py": 65,
-    "tests/performance/step5_actual06_iteration.py": 12
+    "tests/performance/step5_actual06_iteration.py": 14
   },
   "new_paths": [
-    {"path": "frontier/metrics/metrics_store.py", "owner": "core_source", "ceiling": 38, "baseline_actual": 0, "reason": "Replace end-of-run EP lane retention/rewrite with complete write-through output at the existing owner seam."},
-    {"path": "tests/performance/step5_actual06_iteration.py", "owner": "core_source", "ceiling": 12, "baseline_actual": 0, "reason": "Read complete persisted row slices instead of requiring the real MetricsStore to retain historical rows."}
+    {"path": "frontier/metrics/metrics_store.py", "owner": "core_source", "ceiling": 36, "baseline_actual": 0, "reason": "Replace end-of-run EP lane retention/rewrite with complete write-through output at the existing owner seam; two unused allowance lines finance the existing snapshot caller."},
+    {"path": "tests/performance/step5_actual06_iteration.py", "owner": "core_source", "ceiling": 14, "baseline_actual": 0, "reason": "Read complete persisted row slices and bind the non-serializable writer through existing save/load persistent references, without retaining historical rows."}
   ],
   "path_ceiling_adjustments": [
     {"path": "tests/integration/run_step5_measured_main.py", "before": 47, "delta": 20, "after": 67},

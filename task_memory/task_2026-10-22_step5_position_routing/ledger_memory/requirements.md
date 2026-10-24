@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Reallocate two unused writer lines to the existing snapshot caller; close the active repair for handoff without claiming final workflow admission. |
 | 2026-10-24 | Allocate bounded complete-output retention and reader repair under standing path/performance authority. |
 
 ## Execution decision and authority
@@ -40,3 +41,19 @@ untouched. Accepted production remains9566source/9580global before integration.
 This is a complete-output capability repair, not a measured RSS bound or a fix
 for the separate2400-second CLI timeout. Stage ledger/event-trace memory, total
 write volume, current cohesive timing and worker readiness remain unqualified.
+
+## Caller correction and handoff boundary
+
+The initial component is committed as6c2f179c, with records66e50116; its complete
+integration remains rawFAIL because the isolated checkout lacks collective-sim.
+The open writer also raises PicklingError in the existing performance save_state.
+Transfer two unused metrics allowance lines,38->36, to performance,12->14.
+The four-file135 total, cumulative baseline and donor/owner/global budgets stay
+unchanged. Bind the writer using the existing persistent-reference mechanism and
+verify restored count, fresh output path, complete new rows and incremental digest.
+
+YC requests code/document commits and a full continuation prompt on2026-10-25.
+Commit the repaired candidate and consolidate its records for handoff. If final
+frozen regressions and independent acceptance are unfinished, retain the candidate
+as unadmitted rather than merging it into accepted production or relabeling old
+regression evidence as fresh. No production-wave or worker invocation is added.

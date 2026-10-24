@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Reallocate writer/performance caps to36/14; finish bounded caller verification and prepare an explicitly unadmitted handoff candidate. |
 | 2026-10-24 | Allocate four-path135-gross repair and define scoped implementation, correctness and freeze gates. |
 
 ## Scope and dependencies
@@ -14,10 +15,10 @@ dependent on its own source, resource, cloud-path and runtime readiness.
 
 | Owned path | Step gross cap | Cumulative cap |
 | --- | ---: | ---: |
-| frontier/metrics/metrics_store.py | 38 | 38 |
+| frontier/metrics/metrics_store.py | 36 | 36 |
 | tests/integration/run_step5_measured_main.py | 20 | 67 |
 | tests/integration/test_step5_measured_main.py | 65 | 325 |
-| tests/performance/step5_actual06_iteration.py | 12 | 12 |
+| tests/performance/step5_actual06_iteration.py | 14 | 14 |
 
 Baseline is1aee0af, accepted sourceb0277287. New paths have zero existing
 cumulative delta. Amendment donors are frozen and unedited; no other source/test
@@ -46,3 +47,12 @@ Default CPU verification envelope:60s per focused command, configured30GiB
 systemd scope, Python3.10.6, single BLAS/OpenMP threads, /data/ycfeng/tmp caches.
 Retain raw failures. If the configured cap cannot start, do not silently run
 uncapped commands or add retries/limits to pricing invocation ceilings.
+
+## Current handoff work
+
+`two-line zero-sum reallocation -> existing persistent-reference caller repair ->
+bounded RED/GREEN + focused checkout verification -> code/record commits ->
+complete handoff prompt`.
+Final clean composed audit, independent review and frozen regression gates remain
+mandatory before accepted-production integration. They may remain next-session
+work at the user's handoff boundary; report their exact state and source target.

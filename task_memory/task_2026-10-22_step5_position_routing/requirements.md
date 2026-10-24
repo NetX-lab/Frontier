@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Record YC's sufficient-OSS-quota confirmation and renewed handoff request; transfer two unused writer allowance lines to the existing snapshot caller without increasing any budget. |
 | 2026-10-24 | Allocate the four-file135-gross EP ledger persistence/validation repair under standing path/performance authority; retain all runtime/resource limits. |
 | 2026-10-24 | Record the separate three-call shape supplement;total ceiling6,with no further automatic retry. |
 | 2026-10-24 | Record explicit codesign OSS test-storage and timely completed-artifact cleanup authorization; shape/GPU bounds remain unchanged. |
@@ -484,3 +485,31 @@ post-run validator is outside that cap. No required-shape or new worker/GPU
 invocation is added by this allocation. Retained warm configuration inspection
 closes NO_PRODUCTION_ALLOCATION in `runtime_config_scan/`; copy/init diagnoses
 remain independent.
+
+## [Original Request / Decision] D29-OSS-QUOTA-AND-HANDOFF-20261025
+
+YC requests:
+
+> 该quota的配额足够（你可以通过 ssh shai-ycfeng快速访问到该oss云盘）。现在，请你进行docs和codes的更新和commits，进行handoff工作，生成一段完整的handoff prompts，我将在其他session继续执行当前task。
+
+Treat sufficient codesign OSS quota as an explicit user-confirmed prerequisite,
+not an independently measured project-quota reading. Do not block continuation
+on another quota-discovery exercise. The personal alias remains
+`ssh shai-ycfeng` with cloud access confined to `/mnt/ws-jfs/ycfeng`; workers use
+`/mnt/codesign-exp/ycfeng`. Earlier cleanup authority remains binding.
+Worker environment, append throughput, lifecycle and full-workload memory/runtime
+are separate unverified conditions. No worker or required-shape invocation is
+requested for this handoff.
+
+Finish the active bounded ledger repair at a verified code/document commit
+boundary and provide a complete continuation prompt. Preserve failed receipts
+and identify every unfinished acceptance step; do not turn component controls
+into full D29 workflow admission. This request supersedes the earlier
+current-session deferral of handoff.
+
+The delivered caller exposes a concrete `save_state()` PicklingError for the open
+EP writer. Under standing repair authority, transfer two unused writer allowance
+lines to that existing caller: metrics36 / runner20 / tests65 / performance14,
+still135 step gross and unchanged owner/source/global ceilings. Reuse its existing
+persistent-reference save/load mechanism, preserve fresh output ownership and
+cumulative counts, and verify continuation bytes/digest without a pricing wave.
