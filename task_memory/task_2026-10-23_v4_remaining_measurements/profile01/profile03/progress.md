@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Addressed the Standards P3 record reference and supplied exact fixed-base diff/budget evidence; package bytes remain unchanged. |
 | 2026-10-24 | Read current root acceptance and created the isolated worktree; began owned source/binding preparation. |
 
 ## Status
@@ -28,3 +29,5 @@ All accepted CPU command lines, interpreter versions, sanitized environments, ti
 ## Final record commit and stop
 
 Final verification command: inline `/data/ycfeng/envs/frontier-py310/bin/python -B -`, rehashing delivery.json package/receipt maps, hash_inventory.json selected evidence, source/config/plan/freeze/proposal pins,5passing command receipts/1preserved failure and the68-line incremental budget. Expected exact equality; observed PASS_FINAL_CPU_DELIVERY_HASHES. Package map SHA f39041d2e3f379c0165d17b55a7d9fee0be051dbccd36ca714dc6bf2d230b9de; prospective manifest SHA4e827ca74e26abfba5816b61f6bac095ca1da326957b80d0f5e4d5c0c59423b7. Final commands stage only the new profile03 area and candidate03, inspect cached whitespace/scope, commit, then read-only confirm clean tree and identical45hashes. Root gates are listed in delivery.json and remain explicitly unverified.
+
+Review follow-up: Spec reported no actionable findings; Standards P3 correctly identified that integrity_controls.py does not repeat the gross-budget check. Corrected only the report reference and added exact source_changes.diff/source_changes.numstat/source_budget.receipt.json for1437ace6→99467718 maintained builder/plan. The receipt records raw14/5+49/0=68/140, excluding generated content and prior profile02's152. Review follow-up hash checks and self-check are in review_followup_verification.json; historical receipts remain immutable. Root reviewer closure and actual image/SDK/seal remain outside this owner; STOP after the record-only commit and clean-tree confirmation.

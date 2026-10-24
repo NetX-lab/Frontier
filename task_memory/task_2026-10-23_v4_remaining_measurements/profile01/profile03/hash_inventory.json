@@ -1,4 +1,17 @@
 {
+  "review_followup_evidence": {
+    "task_id": "W128-PROFILE03-PACKAGE",
+    "scope": "Records-only Standards P3 reference correction and fixed-base source diff",
+    "previous_inventory_commit": "882b25ae28348673a147c9c2db5e370d47828c36",
+    "previous_inventory_sha256": "4798b60c346a8d447ac9e4a290f898a976784176a2a91512d73c2904ceb0305e",
+    "files": {
+      "source_changes.diff": "a79b660b99c17c14ecdb6e62a2c0f812efccf155712ace02162f7506a96515f3",
+      "source_changes.numstat": "3e226b9bbc11df3d8b280b4e64c61ad597b455a85ed88fcd968c1d5f3713e6c7",
+      "source_budget.receipt.json": "4145d045cdb5c7c032030494282eaca4f6366bb07b5c54b0b3bd336554fa2442"
+    },
+    "verification_path": "review_followup_verification.json",
+    "historical_cpu_receipts_unchanged": true
+  },
   "binary_pins": {
     "/usr/local/cuda-13.0/compat/libcuda.so.580.95.05": "f27223c58d4c0d2ead3c2d747eb30a530c449f89c42e16b23e9bef04f3e6dc2e",
     "/usr/local/lib/python3.12/dist-packages/nvidia/nccl/lib/libnccl.so.2": "618968ee277041751512e619190132a9bdf351c3ce7129c73484f6ef441ad692",

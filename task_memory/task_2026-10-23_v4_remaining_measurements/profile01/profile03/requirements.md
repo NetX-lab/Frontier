@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Recorded the bounded records-only review follow-up and unchanged package boundary. |
 | 2026-10-24 | Recorded the delegated package-only allocation and explicit stopping boundary. |
 
 ## Original request and authority
@@ -19,5 +20,7 @@
 [Original Request] Verify13 runtime identities,87native/20binary pins, manifest closure, four node plans with512/64 and600k, actual staged launcher/bootstrap CPU entries using existing checks and explicitly safe stand-ins. Bind existing77-case comparison/domain identity rather than capturing again; preserve prior sealed hashes. No Docker/GPU/StepMind/network/auth/cloud access or local `/mnt` writes. Root owns actual-image/SDK/launch checks. Keep soft diagnostics, add no auxiliary hard gates, and claim no runtime/cost/reference qualification. Logs/caches belong under `/data/ycfeng/tmp`. Commit only owned files, deliver source+records SHAs/package/hash inventory/CPU receipts/root gates, then STOP.
 
 ## Acceptance limits
+
+[Original Request — review follow-up] Correct Standards P3's budget-check reference, retain Native06 AST reference, add exact1437ace6-to99467718 diff/numstat for builder and new plan, verify68/140 separately from generated/profile02history, update record inventory/history, and rehash unchanged45package inputs/prospective manifest/old pins. Ownership only profile03records;<=25gross maintained Markdown lines, rawdiff/JSONevidence separate. No builder/config/package/regeneration/platform/network/SDK/native changes. Commit only fix records, report taskID/SHA/files/gross/hash checks, then STOP; root owns reviewer closure/image/SDK/seal.
 
 CPU package acceptance does not settle >=3 useful steps per role/lane, unintended drops, raw cross-DP pairing, stream joins, post-stop order or captured per-op ownership. Captured ownership remains UNKNOWN. The one known baseline failure stays explicit and is not relabeled PASS. Resource authority does not authorize this package owner to operate the platform.

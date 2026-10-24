@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Added the records-only P3 correction, fixed-base diff and unchanged-input rehash follow-up. |
 | 2026-10-24 | Defined the source, generation, CPU verification and stop milestones. |
 
 ## Dependency and ownership
@@ -21,5 +22,7 @@ No subagents. Root image/SDK/review/seal/launch work is outside this slice, not 
 | E | Exact commands, counts, source/records SHAs, budgets, receipts, hash inventory and root gates retained under profile03; owned-only commit, clean tree, STOP. |
 
 ## Verification
+
+Review follow-up: `P3 reference correction -> exact1437-to99467718 maintained-two-file diff/numstat -> unchanged package/manifest/prior-pin rehash -> record-only commit -> STOP`;<=25gross Markdown lines, rawdiff/JSONevidence separate. No source/package operation or new qualification; root closes reviews and performs actual image/SDK/seal checks.
 
 Use existing CPU interpreters and prior package entry/config check mechanisms. Launcher executes only on a disposable copy with a clearly marked test-only manifest and tracing that exits before write_run_manifest's body. Bootstrap executes only against explicitly labeled fake installed-source/binary/PathFinder stand-ins and a fresh child import. No real credentials, platform modules, cloud access, native constructors, GPU or network. Raw logs and disposable scripts stay under `/data/ycfeng/tmp`; selected receipts/scripts are retained here for reproducibility. Validate actual installed image/binary files only by root later.

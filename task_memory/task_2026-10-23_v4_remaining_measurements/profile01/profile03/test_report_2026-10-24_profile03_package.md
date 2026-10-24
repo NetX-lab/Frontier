@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Corrected the budget-check reference and added fixed-base source diff/numstat evidence after the Standards P3 finding. |
 | 2026-10-24 | Recorded immutable generation, five accepted CPU checks, one corrected checker assertion and remaining root gates. |
 
 ## Source and environment
@@ -33,7 +34,7 @@ git commit -m "Prepare PROFILE03 limits and bind integrated diagnostic runtime"
 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/run_check.py balanced /data/ycfeng/envs/frontier-py310/bin/python balanced_frontier_controls.py
 ```
 
-Generation ran through an inline CPU-only subprocess receipt wrapper, exactly the builder argv displayed above; the receipt includes stdout/stderr and clean source SHA. Preparation used inline Python3.10 `-B -` to derive bindings from Git and existing immutable inputs. Native06-elided AST and incremental gross-budget verification are repeated in retained integrity_controls.py, not inferred from a successful build.
+Generation ran through an inline CPU-only subprocess receipt wrapper, exactly the builder argv displayed above; the receipt includes stdout/stderr and clean source SHA. Preparation used inline Python3.10 `-B -` to derive bindings from Git and existing immutable inputs. Native06-elided AST/source/closure checks are repeated in retained integrity_controls.py. The68/140budget was verified by the inline git-numstat/plan-line command recorded in progress.md; the fixed-base follow-up command and raw results are retained in source_budget.receipt.json.
 
 ## Expectations and observations
 
@@ -60,5 +61,7 @@ Initial integrity command exited1 at line82 because the disposable checker incor
 ## Budget, inventory and limits
 
 Incremental maintained change against1437: builder14add/5del=19gross plus new plan49add=68/140gross. Prior profile02 historical152gross remains separate. Immutable generated candidate:45files/6,983,474bytes/280,064 artifact lines including inherited model/tokenizer and runtime bytes, not charged to the maintained-change allocation. Detailed module/native/binary/tool/model/package/evidence inventories and map digests are in hash_inventory.json and delivery.json.
+
+Fixed-base review artifact: source_changes.diff is the exact `git diff 1437ace6f4a438c1bb879d904e2bede0c777303c 9946771815903f6cd6de8147765fd41395deee21 -- <builder> <profile_plan>` output; source_changes.numstat is the same command with `--numstat`. Both full argv and SHA256 values are in source_budget.receipt.json. Observed14add/5del plus49add/0del=68gross; generated artifacts and historical profile02 are excluded. Historical CPU receipts remain unchanged.
 
 No runtime/native-reference/operator-cost/E2E qualification. Root still owns independent source/package reviews, exact-image87source/23tool/20binary and fresh bootstrap checks, actual SDK/RDMA/NFS/non-preemptible checks, personal auth/quota/destination, seal/submission and actual retained-data acceptance. Actual >=3 useful steps per role/lane, zero unintended drops, raw cross-DP pairing, stream joins and post-stop evidence remain unverified; captured per-op ownership remains UNKNOWN. Existing soft diagnostics remain unchanged.
