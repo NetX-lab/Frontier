@@ -1,0 +1,161 @@
+{
+  "status": "ACCEPTED_CPU_DIAGNOSTIC_COLLECTION_REPAIRS",
+  "source_revision": "1437ace6f4a438c1bb879d904e2bede0c777303c",
+  "dp_source_revision": "bb50186e417f99080d71948b38f6006e954a8c41",
+  "collection_source_revision": "20660f4c0776ddd75dc211f1f0819266b48ba23c",
+  "verification_checks": 46,
+  "counts": {
+    "tests": 466,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "passed": 465,
+  "unchanged_baseline_failures": 1,
+  "independent_reviews": {
+    "dp_spec": "NO_FINDINGS",
+    "dp_standards": "NO_FINDINGS",
+    "collection_spec": "NO_FINDINGS",
+    "collection_standards": "NO_FINDINGS"
+  },
+  "actual_pairing": "UNVERIFIED",
+  "actual_coverage": "UNVERIFIED",
+  "actual_shutdown_order": "UNVERIFIED",
+  "matrix_cases": 77,
+  "new_matrix_capture": false,
+  "source_hashes": {
+    "tests/comparison/calibration/native_full_structure.py": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+    "tests/comparison/calibration/native_serve_profile.py": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+    "tests/unit/test_native_serve_profile.py": "e733a174815b3b8ee0d0ca6fbf6a79a3f379c3054711462f20d647fe41c6159d",
+    "tests/unit/test_native_v2_serving_inventory.py": "26fd11feb1f5eac213590a7dca0b1fd4534b062f4768402cb51e04b0731a12fd",
+    "tests/comparison/calibration/native_pd_worker.py": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b",
+    "tests/unit/test_native_pd_worker.py": "84fa7a4be7a8a957eb62671e652d6e00ff48d153c92671bea7a53fe6528cea4c"
+  },
+  "files": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/receipt.json",
+      "sha256": "667a7b366066c2a985fa9dcd341f1151d9f12d70187f58626161459eaa81da9d",
+      "bytes": 33769
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_worker.log",
+      "sha256": "3484e0efcb0c6f5356c43fdeba2e96ad948b092babae63f5b4da37e27465a0a3",
+      "bytes": 99
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_worker.xml",
+      "sha256": "ede794d2df8422200da3c7fb23d2758683f5e3c463659637a044153f4fae1faa",
+      "bytes": 6167
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_manifest.log",
+      "sha256": "57c4aff7f5e0e73a86f54b4785433c53f17339e4cac3df21cd6929a458fdfd7a",
+      "bytes": 99
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_manifest.xml",
+      "sha256": "4e0332c094e7a0276fa4fca27206c634fc84867ca5e7ed9b6e2bfea1fd647807",
+      "bytes": 2353
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serve_profile.log",
+      "sha256": "628bfe088f647ebad5b777f068494b44787900e65c5f9a4cdd5d01bc9a23d9ff",
+      "bytes": 99
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serve_profile.xml",
+      "sha256": "89f3f19965c82fa1246818e3c6eb8439b0815f990405ed4f5da2ce8d308f14fc",
+      "bytes": 5669
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_streaming_replay.log",
+      "sha256": "6427faa562c97b8ed304392e7e3aea65eb0dc0e5245bb8b50bb178d7c118dca5",
+      "bytes": 100
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_streaming_replay.xml",
+      "sha256": "44788c3eff98ed7879a3f900deeef5b8f84f64af5625b481d13db4c37f1a4a9f",
+      "bytes": 6331
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_cold_start.log",
+      "sha256": "b4c55d0ae0e4b343f4800e8b3595fc133e340a4bcfdc14750f2badb7cfd69d5e",
+      "bytes": 100
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_cold_start.xml",
+      "sha256": "f2e59d1dfd753f6b05f8bbe8f401b69cacc27073f73ede8ca01f931988f59305",
+      "bytes": 2816
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_canonical_http.log",
+      "sha256": "e6d816a7ccde803d2bd48ef6937c5c896883d80f13ea14b4dc764514ca236b27",
+      "bytes": 98
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_pd_canonical_http.xml",
+      "sha256": "c75c955f1071e54f9f3a5638047a422675a8331e010d039b446b2610a69240bb",
+      "bytes": 406
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_calibration_pd_harness.log",
+      "sha256": "d53febb04ee30227d973b983cf2c5538f9575b06d0839df1a2340d52da3e6b9b",
+      "bytes": 99
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_calibration_pd_harness.xml",
+      "sha256": "e1c030bfdf8ea09fb47fdc4f4c6194b00ac2893d5ce7f447f6db4b2599a5c805",
+      "bytes": 11332
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_dp_placement_harness.log",
+      "sha256": "4950d7c811d0331be7ec79f15dd9d3c3a0f496512ddd6c66b60b267932a9c29f",
+      "bytes": 179
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_dp_placement_harness.xml",
+      "sha256": "d19efb58e2e3df290e74930172de42ef70c0b251b38bb5138b56137fc74d643d",
+      "bytes": 11336
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_v2_serving_inventory.log",
+      "sha256": "29ae57972f1bf856ec2632a0f48c3e990fbf5bc80f3fe7905657c282dda32cf0",
+      "bytes": 99
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_v2_serving_inventory.xml",
+      "sha256": "1850f1435bb4ee37efcc4022ad98097de2341df081d6f519c9dea9079f01a2dd",
+      "bytes": 7419
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serving_inventory.log",
+      "sha256": "545dee8316363da67c90edb7a1a8490db87e7881554aae4634020e0f28cc1214",
+      "bytes": 99
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_serving_inventory.xml",
+      "sha256": "188abf2bb1c6d76f69db297e4d9703fb036d43c23fc3a80aff6540ae1dfbf314",
+      "bytes": 4500
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_groundtruth_check.log",
+      "sha256": "0523dc6d0f66b96de368b0b5c8083595fb5de2b20148d23254956e55bda5d61f",
+      "bytes": 4917
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_groundtruth_check.xml",
+      "sha256": "2d5d3670f2417ff4e21bdeda00151dda2412914fc310e2b1b6db457ae294d2c9",
+      "bytes": 16998
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_full_structure.log",
+      "sha256": "389b2de15809d6b3041bc69be2d06bb2172d19cc33e633b6e3d5e4d4e41f2c0d",
+      "bytes": 98
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_native_full_structure.xml",
+      "sha256": "410fc767a8c31c132dedb2fae52bae517db5d92f32839a72ecf847530570fb31",
+      "bytes": 1127
+    }
+  ]
+}
