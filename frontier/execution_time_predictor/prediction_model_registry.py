@@ -516,17 +516,21 @@ class PredictionModelRegistry:
         self,
         family_name: str,
         cluster_type: Optional[ClusterType] = None,
+        *, model_name: Optional[str] = None,
     ) -> Dict[str, BaseEstimator]:
-        """Project legacy names and enumerate every native binding by its cache hash."""
+        """Project legacy names and native hash labels, optionally for one registry name."""
 
-        names = set(self._legacy_model_registry(family_name))
+        names = {name for name in self._legacy_model_registry(family_name)
+                 if model_name is None or name == model_name}
         names.update(
-            model_name
-            for model_name, identity in self._contract_model_registry(family_name)
-            if not isinstance(identity, tuple)
+            name
+            for name, identity in self._contract_model_registry(family_name)
+            if not isinstance(identity, tuple) and (model_name is None or name == model_name)
         )
         models: Dict[str, BaseEstimator] = {}
         for (name, identity), model in self._contract_model_registry(family_name).items():
+            if model_name is not None and name != model_name:
+                continue
             if isinstance(identity, tuple) and not self._is_ffn_typed_model_for_cluster(cluster_type, name):
                 label = f"{name}:{model._frontier_model_hash}"
                 if (label in models

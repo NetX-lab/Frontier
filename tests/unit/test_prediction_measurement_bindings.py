@@ -297,3 +297,52 @@ def test_mixed_native_non_native_views_keep_both_insert_orders(bound, tmp_path, 
         manager.get_model(name, "FP32")
     binding = manager._native_measurement_binding(manager._measurement_identity(native))
     assert manager.get_model(name, "FP32", native_binding=binding) is native
+    selected = manager._models_view_for_family("kernel_only", model_name=name)
+    assert list(selected) == [f"{name}:{native._frontier_model_hash}", name]
+    assert selected == manager.get_models()["kernel_only"]
+    assert all(selected[key] is model for key, model in expected.items())
+
+
+def test_named_native_view_keeps_selected_objects_and_unfiltered_order(bound):
+    manager, _, _, _, _ = bound
+    full = manager._models_view_for_family("kernel_only")
+    expected = {key: model for key, model in full.items()
+                if model._frontier_cache_model_name == "moe_grouped_gemm"}
+    selected = manager._models_view_for_family("kernel_only", model_name="moe_grouped_gemm")
+    assert len(selected) == 2 and list(selected) == list(expected)
+    assert all(selected[key] is model for key, model in expected.items())
+    again = manager._models_view_for_family("kernel_only", model_name=None)
+    assert list(again) == list(full) and all(again[key] is model for key, model in full.items())
+    assert manager._models_view_for_family("kernel_only", model_name="absent") == {}
+    assert all(model._frontier_cache_model_name != "moe_grouped_gemm_kernel_count" for model in selected.values())
+    manager._cluster_configs[ClusterType.DECODE_ATTN] = manager._cluster_configs[ClusterType.MONOLITHIC]
+    assert manager._models_view_for_family("kernel_only", ClusterType.DECODE_ATTN,
+        model_name="moe_grouped_gemm") == {}
+
+
+@pytest.mark.parametrize("case", ["ambiguity", "conflict", "missing", "decode_attn"])
+def test_named_typed_view_preserves_contract_errors_and_role_exclusion(tmp_path, case):
+    from tests.unit.test_profiling_governance_minimal_red import _bare_manager, _dense_contract, _step3_config
+    manager = _bare_manager(tmp_path)
+    name = "mlp_up_proj"
+    manager._store_model_precision(name, "BF16", SimpleNamespace(), layer_contract=_dense_contract(tp_size=4))
+    role = None
+    if case == "ambiguity":
+        manager._store_model_precision(name, "BF16", SimpleNamespace(), layer_contract=_dense_contract())
+    elif case == "conflict":
+        manager._store_model_precision(name, "BF16", SimpleNamespace())
+    else:
+        role = ClusterType.DECODE_ATTN if case == "decode_attn" else ClusterType.PREFILL
+        replica = SimpleNamespace(model_config=_step3_config(), model_name="step-moe-noquant",
+            device="h200", attn_tensor_parallel_size=8, moe_tensor_parallel_size=1, moe_expert_parallel_size=8)
+        manager._cluster_configs = {role: SimpleNamespace(replica_config=replica)}
+    if case == "decode_attn":
+        assert manager._models_view_for_family("eager", role, model_name=name) == {}
+        assert manager._models_view_for_family("eager", role) == {}
+    else:
+        message = "No trained model" if case == "missing" else "multiple layer contracts"
+        with pytest.raises(ValueError, match=message) as full:
+            manager._models_view_for_family("eager", role)
+        with pytest.raises(ValueError, match=message) as selected:
+            manager._models_view_for_family("eager", role, model_name=name)
+        assert str(selected.value) == str(full.value)

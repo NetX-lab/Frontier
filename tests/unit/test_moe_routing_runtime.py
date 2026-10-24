@@ -146,3 +146,33 @@ def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path, f
     with pytest.raises(ValueError,match="unique measured"):new_predictor()._step5_position_queries(lane)
     model._frontier_moe_physical_rows=()
     with pytest.raises(ValueError,match="actual source/native point"):p._step5_position_queries(lane)
+
+
+@pytest.mark.parametrize("name", ["moe_gating_linear", "moe_grouped_gemm", "cache_name"])
+def test_named_point_keeps_selected_collision_and_cache_name_guard(bound, tmp_path, name):
+    from copy import copy
+    import json
+    from tests.unit.test_prediction_measurement_bindings import SimpleNamespace, _predictor, fixture
+    from tests.unit.test_moe_position_routing import source, materialize
+    manager, replica, _, paths, _ = bound
+    p = _predictor(replica.model_config, manager)
+    p._replica_config = replica
+    path = fixture.position_collective_costs(tmp_path, paths[1], device=replica.device)
+    p._cc_backend = SimpleNamespace(collective_profile_bytes=lambda raw=path.read_bytes(): raw)
+    lane = materialize(source(padding=16)).lane(0)
+    with p._step5_measured_layer(3):
+        normal = p._step5_position_queries(lane)
+        model, precision = p._step5_ffn_model("moe_grouped_gemm" if name == "cache_name" else name, context=normal[0])
+        if name == "cache_name":
+            model._frontier_cache_model_name = "moe_grouped_gemm_kernel_count"
+            with pytest.raises(ValueError, match="actual source/native point"): p._step5_position_queries(lane)
+            return
+        alternate = copy(model)
+        alternate._frontier_measurement_identity = json.dumps({**manager._measurement_identity(model),
+            "native_source": {"source_receipt": "OTHER_CPU_FIXTURE_NOT_NATIVE"}}, sort_keys=True)
+        manager._store_model_precision(name, precision.name, alternate)
+        with pytest.raises(ValueError, match="Conflicting native model artifacts"): manager.get_models()
+        if name == "moe_gating_linear":
+            assert p._step5_position_queries(lane) == normal
+        else:
+            with pytest.raises(ValueError, match="Conflicting native model artifacts"): p._step5_position_queries(lane)

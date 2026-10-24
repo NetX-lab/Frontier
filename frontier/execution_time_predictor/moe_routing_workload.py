@@ -191,7 +191,8 @@ class MoeRoutingWorkload:
         source = lane.routing_source
         group = self._step5_routed_layer_group(self._step5_layer_metadata.attention_spec.global_layer_id)
         family = self._measurement_family_name(self._active_measurement_type)
-        models = self._model_manager._models_view_for_family(family, self._cluster_type)
+        models = self._model_manager._models_view_for_family(family, self._cluster_type,
+            model_name="moe_grouped_gemm")
         frames = tuple(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),
             tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context) for s in source.source_lanes)
         contexts = {}
