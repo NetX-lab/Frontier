@@ -1,0 +1,36 @@
+Running scope as unit: run-r12e17f37146b478fbf14b8705e15a7f4.scope
+{
+  "task_id": "D29-EP-LANE-LEDGER-IMPLEMENTATION",
+  "status": "PASS_STATIC_BYTE_AND_MINIMUM_CAP_PROPOSAL",
+  "proposal_applied": false,
+  "step_added": 11,
+  "step_deleted": 3,
+  "minimum_performance_gross": 14,
+  "current_performance_cap": 12,
+  "minimum_extra_path_cap": 2,
+  "zero_sum_option": {
+    "metrics_store": {
+      "before": 38,
+      "after": 36
+    },
+    "performance": {
+      "before": 12,
+      "after": 14
+    }
+  },
+  "legacy_bytes": 3528,
+  "legacy_sha256": "409f50bf63b7a37c7324d1abcc7a16842c9ef3e1bfacb4716c3b01bc8b7afaf0",
+  "current_successful_prefix_byte_equal": true,
+  "semantic_row_body_ast_identical": true,
+  "producer_byte_identical": true,
+  "configured_memory_max_bytes": 32212254720,
+  "measured_cgroup_peak_bytes": null,
+  "measured_python_max_rss_kib": 17532,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "limitations": [
+    "Previous caller proposal executed actual save_state failure, proposed load/count/digest/source-byte checks, then its incorrect16-gross accounting assertion failed; retain raw exit1",
+    "No production snapshot fix has been applied",
+    "No native/fullCLI/runtime/RSS/E2E admission"
+  ]
+}

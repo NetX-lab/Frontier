@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="1.855" timestamp="2026-10-24T23:55:48.934535+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.integration.test_step5_measured_main" name="test_corrected_shapes_fit_and_match_actual_agreed_batch_keys[KERNEL_ONLY]" time="0.135"><failure message="ModuleNotFoundError: No module named 'test_execution_time_op_times'">tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_baseline_import/pytest/test_corrected_shapes_fit_and_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fb9c8369390&gt;
+method_name = 'KERNEL_ONLY'
+
+    @pytest.mark.parametrize("method_name", ["KERNEL_ONLY", "CUDA_EVENT"])
+    def test_corrected_shapes_fit_and_match_actual_agreed_batch_keys(tmp_path, monkeypatch, method_name):
+        from frontier.config import global_vars, RandomForrestExecutionTimePredictorConfig
+        from frontier.entities import Batch, Request
+        from frontier.entities.batch import DummyForwardBatch
+        from frontier.execution_time_predictor.step5 import STEP5_FEATURE_COLUMNS
+        from frontier.execution_time_predictor.step5_cost import step5_batch_features, predict_step5_attention_time
+        from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
+        from frontier.types import ClusterType, MeasurementType
+&gt;       from tests.unit.test_step5_measured_replay import _predictor
+
+tests/integration/test_step5_measured_main.py:487: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../envs/frontier-py310/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+    exec(co, module.__dict__)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Actual shared fit/cache/bundle/cost replay on explicitly unadmitted CPU rows."""
+    
+    from collections import defaultdict
+    import json
+    from pathlib import Path
+    from types import SimpleNamespace
+    
+    import pytest
+    
+    from frontier.attention.step5 import describe_step5_layer
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.entities import DummyForwardBatch, ExecutionTime
+    from frontier.execution_time_predictor.step5 import STEP5_FEATURE_COLUMNS, step5_row_features
+    from frontier.execution_time_predictor.step5_cost import (
+        predict_step5_attention_time, step5_batch_features, step5_predictions,
+    )
+    from frontier.types import ClusterType, MeasurementType
+&gt;   from test_execution_time_op_times import _base_execution_kwargs
+E   ModuleNotFoundError: No module named 'test_execution_time_op_times'
+
+tests/unit/test_step5_measured_replay.py:18: ModuleNotFoundError</failure></testcase><testcase classname="tests.integration.test_step5_measured_main" name="test_corrected_shapes_fit_and_match_actual_agreed_batch_keys[CUDA_EVENT]" time="0.023"><failure message="ModuleNotFoundError: No module named 'test_execution_time_op_times'">tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_baseline_import/pytest/test_corrected_shapes_fit_and_1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fb9c8283ca0&gt;
+method_name = 'CUDA_EVENT'
+
+    @pytest.mark.parametrize("method_name", ["KERNEL_ONLY", "CUDA_EVENT"])
+    def test_corrected_shapes_fit_and_match_actual_agreed_batch_keys(tmp_path, monkeypatch, method_name):
+        from frontier.config import global_vars, RandomForrestExecutionTimePredictorConfig
+        from frontier.entities import Batch, Request
+        from frontier.entities.batch import DummyForwardBatch
+        from frontier.execution_time_predictor.step5 import STEP5_FEATURE_COLUMNS
+        from frontier.execution_time_predictor.step5_cost import step5_batch_features, predict_step5_attention_time
+        from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
+        from frontier.types import ClusterType, MeasurementType
+&gt;       from tests.unit.test_step5_measured_replay import _predictor
+
+tests/integration/test_step5_measured_main.py:487: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../envs/frontier-py310/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+    exec(co, module.__dict__)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Actual shared fit/cache/bundle/cost replay on explicitly unadmitted CPU rows."""
+    
+    from collections import defaultdict
+    import json
+    from pathlib import Path
+    from types import SimpleNamespace
+    
+    import pytest
+    
+    from frontier.attention.step5 import describe_step5_layer
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.entities import DummyForwardBatch, ExecutionTime
+    from frontier.execution_time_predictor.step5 import STEP5_FEATURE_COLUMNS, step5_row_features
+    from frontier.execution_time_predictor.step5_cost import (
+        predict_step5_attention_time, step5_batch_features, step5_predictions,
+    )
+    from frontier.types import ClusterType, MeasurementType
+&gt;   from test_execution_time_op_times import _base_execution_kwargs
+E   ModuleNotFoundError: No module named 'test_execution_time_op_times'
+
+tests/unit/test_step5_measured_replay.py:18: ModuleNotFoundError</failure></testcase></testsuite></testsuites>

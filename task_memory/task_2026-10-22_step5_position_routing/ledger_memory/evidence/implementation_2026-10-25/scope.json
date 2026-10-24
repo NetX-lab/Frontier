@@ -1,0 +1,110 @@
+{
+  "task_id": "D29-EP-LANE-LEDGER-IMPLEMENTATION",
+  "session_id": "ses_e91675a86ffegKCQdHRPQFOypp",
+  "status": "PASS_FOUR_PATH_LOCAL_ACCOUNTING_NOT_INDEPENDENT_COMPOSED_ACCEPTANCE",
+  "branch": "fix/d29-ledger-stream",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+  "baseline": "1aee0af11cd58691e64603b99eca0ac459a5b350",
+  "accepted_source": "b02772872d0c99ceb5ebb31a8e041926f12f7676",
+  "allocation": "0ca540251ae1c2bdbe436a2884d48adf29ed955a",
+  "code_commit": "6c2f179c9117256bb7086441b0c11a1459f48674",
+  "paths": [
+    {
+      "path": "frontier/metrics/metrics_store.py",
+      "step_cap": 38,
+      "cumulative_cap": 38,
+      "step": {
+        "added": 26,
+        "deleted": 7,
+        "gross": 33
+      },
+      "cumulative": {
+        "added": 26,
+        "deleted": 7,
+        "gross": 33
+      },
+      "previous": {
+        "added": 0,
+        "deleted": 0,
+        "gross": 0
+      },
+      "sha256": "f2418bb9c977ed5bb1dfe992734d04143beef5c76338980b1dcd4b3ffbbfc81d"
+    },
+    {
+      "path": "tests/integration/run_step5_measured_main.py",
+      "step_cap": 20,
+      "cumulative_cap": 67,
+      "step": {
+        "added": 12,
+        "deleted": 3,
+        "gross": 15
+      },
+      "cumulative": {
+        "added": 52,
+        "deleted": 4,
+        "gross": 56
+      },
+      "previous": {
+        "added": 43,
+        "deleted": 4,
+        "gross": 47
+      },
+      "sha256": "bbb3d995206ae500b3255dedc3fb4793dd6708f7330ecc8ed938ae07e40ad4b1"
+    },
+    {
+      "path": "tests/integration/test_step5_measured_main.py",
+      "step_cap": 65,
+      "cumulative_cap": 325,
+      "step": {
+        "added": 61,
+        "deleted": 1,
+        "gross": 62
+      },
+      "cumulative": {
+        "added": 320,
+        "deleted": 0,
+        "gross": 320
+      },
+      "previous": {
+        "added": 260,
+        "deleted": 0,
+        "gross": 260
+      },
+      "sha256": "82042b33eef76e96f0c22fec5f2aeb6a3d286694e72b38b0c9084b833b7a3910"
+    },
+    {
+      "path": "tests/performance/step5_actual06_iteration.py",
+      "step_cap": 12,
+      "cumulative_cap": 12,
+      "step": {
+        "added": 7,
+        "deleted": 3,
+        "gross": 10
+      },
+      "cumulative": {
+        "added": 7,
+        "deleted": 3,
+        "gross": 10
+      },
+      "previous": {
+        "added": 0,
+        "deleted": 0,
+        "gross": 0
+      },
+      "sha256": "909c706e35429341a7552d407e102504223ecb614dac4b486fffd24454b1df7a"
+    }
+  ],
+  "step_gross": 120,
+  "step_cap": 135,
+  "four_path_cumulative_gross": 419,
+  "cumulative_increment": 112,
+  "projected_owner_core": 4373,
+  "owner_core_cap": 4404,
+  "projected_source": 9678,
+  "source_cap": 9942,
+  "projected_global": 9692,
+  "global_cap": 10000,
+  "other_source_changed": false,
+  "independent_composed_acceptance": false,
+  "snapshot_blocker": true
+}

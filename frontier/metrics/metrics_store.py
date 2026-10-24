@@ -263,6 +263,28 @@ def _iter_mla_attention_operation_metrics(execution_time: ExecutionTime):
     )
 
 
+class _EPLaneLedger:
+    def __init__(self, path: str) -> None:
+        self._path = path
+        self._stream = None
+        self._count = 0
+
+    def append(self, row: dict[str, Any]) -> None:
+        if self._stream is None:
+            os.makedirs(os.path.dirname(self._path), exist_ok=True)
+            self._stream = open(self._path, "w", encoding="utf-8")
+        self._stream.write(json.dumps(row, sort_keys=True) + "\n")
+        self._stream.flush()
+        self._count += 1
+
+    def __len__(self) -> int:
+        return self._count
+
+    def close(self) -> None:
+        if self._stream is not None:
+            self._stream.close()
+
+
 class MetricsStore:
     def __init__(
         self,
@@ -377,7 +399,9 @@ class MetricsStore:
             tuple[str, int, int | None, int, int], dict[str, Any]
         ] = {}
         self._frontier_stage_batch_ledger_rows: list[dict[str, Any]] = []
-        self._frontier_ep_wave_lane_ledger_rows: list[dict[str, Any]] = []
+        self._frontier_ep_wave_lane_ledger_rows = _EPLaneLedger(
+            os.path.join(self._config.output_dir, "frontier_ep_wave_lane_ledger.jsonl")
+        )
         self._frontier_stage_batch_ledger_summary = (
             self._new_frontier_stage_batch_ledger_summary()
         )
@@ -4993,12 +5017,7 @@ class MetricsStore:
         return summary
 
     def _write_frontier_stage_batch_ledger(self) -> None:
-        if self._frontier_ep_wave_lane_ledger_rows:
-            os.makedirs(self._config.output_dir, exist_ok=True)
-            path = os.path.join(self._config.output_dir, "frontier_ep_wave_lane_ledger.jsonl")
-            with open(path, "w", encoding="utf-8") as handle:
-                for row in self._frontier_ep_wave_lane_ledger_rows:
-                    handle.write(json.dumps(row, sort_keys=True) + "\n")
+        self._frontier_ep_wave_lane_ledger_rows.close()
         if (
             not self._frontier_stage_batch_ledger_rows
             and self._frontier_stage_batch_ledger_summary["total_rows"] == 0

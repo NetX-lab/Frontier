@@ -1,0 +1,51 @@
+Running scope as unit: run-r6420c0ba9cc6425398b716f1ef66efb5.scope
+WARNING 00:03:22 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+WARNING 00:03:22 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+WARNING 00:03:22 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  co-location
+======================================================================
+Total Clusters: 1
+Total World Size: 1
+Server count: 1
+
+Cluster Type: MONOLITHIC
+   Cluster World Size: 1
+   Num Replicas (Instances): 1
+   Replica World Size: 1
+   Configuration: PP1 × (Attn_TP1 x Attn_DP1) | (MoE_TP1 x MoE_EP1)
+   Total Expert Num: 1
+   Local Expert Num: None
+--------------------------------------------------
+======================================================================
+
+WARNING 00:03:22 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+WARNING 00:03:22 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  co-location
+======================================================================
+Total Clusters: 1
+Total World Size: 1
+Server count: 1
+
+Cluster Type: MONOLITHIC
+   Cluster World Size: 1
+   Num Replicas (Instances): 1
+   Replica World Size: 1
+   Configuration: PP1 × (Attn_TP1 x Attn_DP1) | (MoE_TP1 x MoE_EP1)
+   Total Expert Num: 1
+   Local Expert Num: None
+--------------------------------------------------
+======================================================================
+
+Traceback (most recent call last):
+  File "<stdin>", line 51, in <module>
+AssertionError

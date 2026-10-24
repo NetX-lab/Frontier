@@ -54,7 +54,7 @@ def _completed_position_validator_inputs(root, quant, deferred=False):
 
 @pytest.mark.parametrize("quant,deferred", [(None,False),("float8_e4m3fn",False),("float8_e4m3fn",True)])
 @pytest.mark.parametrize("damage", [None,"gate","router","prepare","all","operator","zero_operator","peer_only","duration","count","norm","inapplicable","mismatch","fractional"])
-def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, quant, deferred, damage):
+def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, monkeypatch, quant, deferred, damage):
     from tests.integration.run_step5_measured_main import validate
     run,document,lanes=_completed_position_validator_inputs(tmp_path,quant,deferred)
     source=lanes[1]["phases"]["pre_dispatch"]
@@ -78,7 +78,67 @@ def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(
         with pytest.raises(AssertionError,match="compute|source"):
             validate(tmp_path,"offline",document)
     else:
+        from pathlib import Path
+        read_text = Path.read_text
+        def reject_ep_ledger_read_text(path, *args, **kwargs):
+            assert path.name != "frontier_ep_wave_lane_ledger.jsonl", "EP ledger materialized"
+            return read_text(path, *args, **kwargs)
+        monkeypatch.setattr(Path, "read_text", reject_ep_ledger_read_text)
         assert validate(tmp_path,"offline",document)["status"] == "PASS"
+
+
+def test_real_ep_lane_ledger_releases_rows_and_preserves_bytes(tmp_path, monkeypatch):
+    import weakref
+    from pathlib import Path
+    from frontier.config import global_vars
+    for name, value in vars(global_vars).copy().items():
+        if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+    from tests.unit.test_stage_reporting_contract import _store
+    _, _, lanes = _completed_position_validator_inputs(tmp_path / "source", None)
+    store, _ = _store(tmp_path / "output", enable_op_level_tracing=False, store_frontier_stage_batch_ledger=True)
+    ledger = store._frontier_ep_wave_lane_ledger_rows
+    path = Path(store._config.output_dir) / "frontier_ep_wave_lane_ledger.jsonl"
+    assert len(ledger) == 0 and not path.exists()
+    store._write_frontier_stage_batch_ledger()
+    assert not path.exists()
+    class Row(dict):
+        pass
+    expected = b""
+    for index in range(32):
+        row = Row(lanes[index % 2])
+        released = weakref.ref(row)
+        expected += (json.dumps(row, sort_keys=True) + "\n").encode()
+        ledger.append(row)
+        del row
+        assert released() is None, "Real MetricsStore retained an old EP row"
+        assert len(ledger) == index + 1 and path.read_bytes() == expected
+    store._write_frontier_stage_batch_ledger()
+    store._write_frontier_stage_batch_ledger()
+    assert len(ledger) == 32 and path.read_bytes() == expected
+
+
+@pytest.mark.parametrize("damage,exception,message", [
+    ("missing", FileNotFoundError, "frontier_ep_wave_lane_ledger"),
+    ("empty", AssertionError, "Missing actual position source census"),
+    ("malformed", json.JSONDecodeError, "Expecting"),
+    ("source", AssertionError, "Missing actual position source census"),
+    ("null", TypeError, "not iterable"),
+    ("null_source", TypeError, "not subscriptable"),
+    ("proof", AssertionError, "Missing exact positive compute pair"),
+    ("precedence", AssertionError, "Missing exact positive compute pair"),
+])
+def test_completed_position_ep_ledger_stream_failures(tmp_path, damage, exception, message):
+    from tests.integration.run_step5_measured_main import validate
+    run, document, lanes = _completed_position_validator_inputs(tmp_path, None)
+    if damage == "null_source": lanes[0]["routing_source"] = None
+    if damage in ("proof", "precedence"):
+        lanes[0]["phases"]["pre_dispatch"]["compute_proofs"]["moe_gating_linear"]["exact_lookup"] = False
+    text = "".join(json.dumps(row) + "\n" for row in lanes)
+    text = {"empty": "", "malformed": "{\n", "source": "{}\n", "null": "null\n"}.get(damage, text)
+    if damage == "precedence": text += "{\n"
+    if damage != "missing": (run / "frontier_ep_wave_lane_ledger.jsonl").write_text(text)
+    with pytest.raises(exception, match=message):
+        validate(tmp_path, "offline", document)
 
 
 @pytest.mark.parametrize("quant,deferred", [(None, False), ("float8_e4m3fn", False), ("float8_e4m3fn", True)])
