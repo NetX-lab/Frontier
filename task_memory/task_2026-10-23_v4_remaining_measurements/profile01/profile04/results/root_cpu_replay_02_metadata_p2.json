@@ -1,0 +1,72 @@
+{
+  "status": "PASS_PRIMARY_CORRECTED_METADATA_REPLAY",
+  "python": "3.10.6",
+  "root": "/data/ycfeng/tmp/glm53_dsv4/profile04_p2_root_hd64j8yz",
+  "commands": {
+    "metadata": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile04_p2_root_hd64j8yz/profile04_metadata_audit.py",
+        "run",
+        "/data/ycfeng/tmp/glm53_dsv4/profile04_p2_root_hd64j8yz/metadata.json"
+      ],
+      "started": "2026-10-24T13:03:56.077066+00:00",
+      "finished": "2026-10-24T13:06:22.209971+00:00",
+      "exit": 0
+    },
+    "semantic": {
+      "command": [
+        "sudo",
+        "-n",
+        "systemd-run",
+        "--scope",
+        "-p",
+        "MemoryMax=30G",
+        "timeout",
+        "60s",
+        "/usr/bin/python3",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile04_p2_root_hd64j8yz/profile04_metadata_p2_check.py",
+        "compare",
+        "/data/ycfeng/tmp/glm53_dsv4/profile04_p2_root_hd64j8yz/metadata.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/metadata_audit.json"
+      ],
+      "started": "2026-10-24T13:06:22.210307+00:00",
+      "finished": "2026-10-24T13:06:22.586245+00:00",
+      "exit": 0
+    }
+  },
+  "rank_commands": 32,
+  "metadata_sha256": "8ba69802bdbef62f1dd8cd6e5c979cbf4a60f1a1eb317c84f060b5399712a587",
+  "semantic": {
+    "adapter_sha256": "9c386b93ac39480a904b7be3e03964c2a404fd4abd66a691d59216d50b4009bf",
+    "before_inventory_sha256": "d105e8748870e3248b7b480f6bcbb78aec9bbce38838cf08fe518b1c9bc25431",
+    "byte_identical": true,
+    "corrected_file_sha256": "8ba69802bdbef62f1dd8cd6e5c979cbf4a60f1a1eb317c84f060b5399712a587",
+    "limits": "No R3/R4/full32-trace/reference/cost acceptance; primary review remains pending",
+    "package_files": 45,
+    "protected_hashes_preserved": 77,
+    "raw_files": 202,
+    "remaining_observations_equal": true,
+    "removed_categories": 48,
+    "sampling_rows": 1320,
+    "shared_vector_joins": 80,
+    "status": "PASS_SEMANTIC_P2_OWNER_VERIFICATION",
+    "task_id": "W128-PROFILE04-METADATA-P2",
+    "temporary_categories": 0,
+    "temporary_evidence": 0
+  },
+  "protected_unchanged": true,
+  "method": "Byte-identical coordinator; existing 21-line semantic checker changes only its output path. No aggregate timeout; each rank uses 60seconds/30G, max2 concurrent.",
+  "source_bindings": {
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_metadata_audit.py": "9c386b93ac39480a904b7be3e03964c2a404fd4abd66a691d59216d50b4009bf",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_metadata_p2_check.py": "a8a0fe597b371f516569d15a6ef2eab391b2a88a210d0a59029342c761362a6f",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/metadata_audit.json": "8ba69802bdbef62f1dd8cd6e5c979cbf4a60f1a1eb317c84f060b5399712a587",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/metadata_p2/semantic_equality.json": "fa07ce08eaadd6ead7c39c806543471bde2a031c16fa8f76f9fa5983712e0797"
+  },
+  "script_sha256": "b5dfe5bc0e86b82cd873aee4c4ac2c344bac4d5da4bd53586c9a69bd2f4a0291",
+  "control_original_sha256": "a8a0fe597b371f516569d15a6ef2eab391b2a88a210d0a59029342c761362a6f",
+  "control_copy_sha256": "a1971eacd68b305252a073a34401c811ed0b7b94ec49fbc7c74f38ed328f9cd8",
+  "limits": "Corrected run metadata only; partial DP joins do not imply whole alignment, actual kernel streams, dependencies, captured ownership or cost/reference admission."
+}

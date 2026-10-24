@@ -1,0 +1,70 @@
+{
+  "status": "ACCEPTED_PROFILE04_RUN_METADATA_WITH_LIMITS",
+  "observed_at_utc": "2026-10-24T14:23:37.421661+00:00",
+  "job": "exp-1024-172225-512616",
+  "decision_owner": "primary",
+  "reference_admission": false,
+  "cost_admission": false,
+  "R3": {
+    "status": "ACCEPTED_RETAINED_RUN_DATA_ONLY",
+    "requests": {
+      "completed": 432,
+      "failed": 0,
+      "not_submitted": 0,
+      "planned": 432,
+      "rows": 432,
+      "submitted": 432
+    },
+    "checks": 193,
+    "input_bindings": 99,
+    "child_sigkill_counts": [
+      4,
+      1,
+      3,
+      5
+    ],
+    "natural_child_exit": false
+  },
+  "R4": {
+    "status": "ACCEPTED_METADATA_LANE_ONLY",
+    "ranks": 32,
+    "closed_formal_windows": 32,
+    "collector_stream_entries": 192,
+    "formal_sync_rows": 160960,
+    "retention_drops": 0,
+    "observation_errors": 0,
+    "raw_dp_group_count": 16,
+    "temporary_categories": 0,
+    "temporary_evidence": 0,
+    "direct_decode_vector_joins": 80,
+    "sampling_rows": 1320,
+    "whole_dp_alignment": false,
+    "actual_trace_id_correlation": false
+  },
+  "R5": {
+    "status": "INCOMPLETE",
+    "completed_ranks": 24,
+    "total_ranks": 32,
+    "p0_timeout_ranks": 8
+  },
+  "independent_review": {
+    "original": "W128-PROFILE04-RUN-METADATA-REVIEW: R3 supported; R4 P2",
+    "correction": "W128-PROFILE04-METADATA-P2-REVIEW: P2 CLOSED, no new in-scope findings"
+  },
+  "evidence": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_audit.json": "0268a7dd8eccc65909df8c22ddbfb5d654cb76a56a51daae22bc68dacc19dde0",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/metadata_audit.json": "8ba69802bdbef62f1dd8cd6e5c979cbf4a60f1a1eb317c84f060b5399712a587",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/root_cpu_replay_01.json": "397d933623070bf9144c631a6704bb5e55001b46cee2e7378e8f346ecb39a623",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/root_cpu_replay_02_metadata_p2.json": "f2a2ad602813b5eb19811ec7e46e1d1b1d9fcddf6a718c32e18bcedc5b454982",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/metadata_p2/semantic_equality.json": "fa07ce08eaadd6ead7c39c806543471bde2a031c16fa8f76f9fa5983712e0797"
+  },
+  "script_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_primary_metadata_record_20261024.py",
+  "script_sha256": "c2647133093c04e3efac957b79e666f24a8d3704ef204ecaf24760db041b6d13",
+  "limitations": [
+    "Partial joins do not prove whole-window DP alignment or actual trace-ID correlation.",
+    "Top-level exit0 and drain markers do not prove natural exit of all children; 13 SIGKILLs remain.",
+    "P0 trace audit is incomplete; captured operator ownership, dependencies and useful kernel coverage remain unaccepted.",
+    "Actual NET/IB and NET/Socket, cross-host clock ordering and worker binary rehash remain UNKNOWN.",
+    "No reference/cost/consumer admission, no new GPU job and no sealed-package or native-runtime change."
+  ]
+}

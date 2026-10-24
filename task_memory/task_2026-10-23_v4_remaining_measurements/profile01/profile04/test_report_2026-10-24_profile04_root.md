@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Primary accepted run-data and corrected metadata lanes after independent review and byte-identical P2 replay; full trace/profile/cost gates remain open. |
 | 2026-10-24 | Recorded independent193-check/all32metadata CPU replay, semantic reviewP2 and24complete/8timeout trace boundary without final data admission. |
 | 2026-10-24 | RecordedSucceeded4/4/exit0/restart0, immutable202-file download/45-host-input/40-runtime-manifest bindings and opened local data audits. |
 | 2026-10-24 | Archived primary CPU/image/source checks, the corrected launch environment, and a queued platform snapshot. |
@@ -55,6 +56,8 @@ Download command: `sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brain
 Primary inline Python rehashed the45sealed host inputs againstmanifest25bc61be...d58f and the40run_manifest input entries against either downloadedcase-relative files or exact absolute package files: allPASS ([host_package_check.json](results/host_package_check.json), [download_input_check.json](results/download_input_check.json)). The four generation/role/lane joins match, diagnostic_only=true/reference_admission=false, and32trace/32profile-stop files exist. Content checks are separate. A first harness attempt incorrectly read result.json.status and raisedKeyError; [preserved failure](results/first_input_check_failure.json) and inspectedqualification_verified/observation_errors replace that mistaken lookup, not the native behavior. Local run, metadata and trace owners are now auditing disjoint files; independent review/reproduction and limited data acceptance remain unfinished.
 
 ## Independent data replay and current limits (2026-10-24)
+
+**Current limited decision:** [run/metadata acceptance](results/run_metadata_acceptance.json) and [review](results/review_2026-10-24_run_metadata.md) accept R3 retained run-data and R4 metadata-lane evidence after the independent P2 re-review and corrected primary replay. The pre-fix replay below remains history, not the current metadata verdict. R5 is still incomplete24/32; actual kernel streams, captured ownership, whole DP alignment, natural child exit and cost/reference admission are not accepted.
 
 Primary ran `sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- /usr/bin/python3 -B /data/ycfeng/tmp/glm53_dsv4/profile04_root_data_o2_qhawu/verify.py`. The script, per-case exact commands/stdout/stderr and [receipt](results/root_cpu_replay_01.json) retain Python3.10.6/pandas2.0.1,193checks/99bindings PASS, expected token-count negative exit1,32metadata outputs byte-equal24b45c44..., and unchanged selected sources/results. Metadata workers retain60seconds/30G/concurrency2; coordinator has no aggregate timeout. A byte-identical coordinator copy redirects only fresh harness-log paths, not logic. R3owner's original bare/user-systemd permission failures remain preserved; primary's actualsudo-systemd commands both executed and matched expected results.
 
