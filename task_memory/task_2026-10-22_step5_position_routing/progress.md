@@ -123,6 +123,12 @@
   Three archive-checker errors(header clocks twice, then wrong samples field)
   were corrected without rerunning the wave; original logs retained and final
   verification PASS. Records:runtime_model_view/{design.md,test_report_2026-10-24_runtime_model_view.md,evidence/}.
+- in-progress/frozen successor: D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS is assigned
+  to the previous regression owner ses_e98925887ffecetw6nTB6nD8f0, targeting accepted
+  commit dbe19f53 in a new isolated integrated08 source worktree. Scope: strict77,
+  canonical full-unit, required supplements, raw-ID/status comparisons to46fe/79,
+  and source/input/script guards. Records ownership is only
+  `post_named_query_regressions/`; no full CLI or GPU/native run is assigned.
 - in-progress/independent diagnosis: D29-SNAPSHOT-COPY-CONTROL, session
   ses_e93a71d28ffendJiHmtuzK8ec6, checks whether a C-backed deep snapshot can
   preserve supported getter semantics and reduce measured copying. Read-only

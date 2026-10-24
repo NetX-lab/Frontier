@@ -126,7 +126,10 @@ Named-query delivery1737ce9c/3d75c786 passes both independent reviews and
 parent125PASS/1existingSKIP plus19 full wave-file comparisons. Composed114-path
 audit de5eeab0/c6b1f3b8 and parent124-binding final-head guard accept9579global,
 zero violations. Code/records are integrated asffb435ca/8ecb705e. Freeze this
-accepted successor for required scenario/full-unit checks. The separate
+accepted successor dbe19f53 for required scenario/full-unit checks. Task
+D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS is assigned to the previous regression owner
+ses_e98925887ffecetw6nTB6nD8f0, with isolated records in post_named_query_regressions/.
+Keep comparisons to46fe and79 and preserve raw old-ID replacement accounting. The separate
 initialization-local reuse analysis remains read-only with no source allocation.
 The non-I/O identity-cache control is rejected because it did not improve timing.
 Cost-fields75404143 is now parent-verified and independently reviewed,8gross and
