@@ -1,0 +1,72 @@
+{
+  "status": "RECORDED_SOURCE_ALLOCATION_ONLY",
+  "observed_at_utc": "2026-10-24T12:43:34.368093+00:00",
+  "bindings": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py",
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+      "bytes": 34078
+    },
+    {
+      "path": "tests/comparison/calibration/native_serve_profile.py",
+      "sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+      "bytes": 26078
+    },
+    {
+      "path": "tests/comparison/calibration/native_full_structure.py",
+      "sha256": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+      "bytes": 53427
+    },
+    {
+      "path": "/data/ycfeng/tmp/cupti13_sample_src/cuda_cupti-linux-x86_64-13.0.85-archive/include/cupti_callbacks.h",
+      "sha256": "b2f82221fb03ecb2b2a27afa2d64284babdf49fee1a3a2811258d473285e1105",
+      "bytes": 34092
+    },
+    {
+      "path": "/data/ycfeng/tmp/cupti13_sample_src/cuda_cupti-linux-x86_64-13.0.85-archive/samples/cuda_graphs_trace/cuda_graphs_trace.cu",
+      "sha256": "0458254b6d8ada6c6db82492f14f6bf029f70cafaf97a07dfc6168c95dc312f8",
+      "bytes": 10411
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/native_capture_scope_acceptance.json",
+      "sha256": "dc137cd56b8401ad6462ed4505f13d2eb94528a3adbde753e504c2fcfd9e782d",
+      "bytes": 11994
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "sha256": "fe8519d1ed439a84ac3f70a4f37e6297fbf5e6e82a4ac00a1d851810ba573ff7",
+      "bytes": 2438
+    }
+  ],
+  "real_scope_method": {
+    "path": "tests/comparison/calibration/native_serve_profile.py",
+    "class_name": "ServingProfile",
+    "method": "range",
+    "lines": [
+      175,
+      206
+    ]
+  },
+  "source_caps": {
+    "new_module_gross": 250,
+    "new_cpu_controls_gross": 160
+  },
+  "native_integration_allocated": false,
+  "package_allocated": false,
+  "submitted": false,
+  "runtime_ceiling": {
+    "gpus": 1,
+    "gpu_type": "H800",
+    "charged_group": "codesign",
+    "preemptible": false,
+    "cpu": 16,
+    "mem_gb": 64,
+    "seconds": 600,
+    "attempts": 1
+  },
+  "limits": [
+    "No implementation, package or runtime acceptance follows from this input binding.",
+    "Frozen shared sources and sealed profile04 must remain byte-exact.",
+    "Native defaultFalse is installed-source/docstring evidence, not a measured lifetime."
+  ]
+}
