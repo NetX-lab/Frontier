@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Prepare current-source joint and zero-GPU worker scripts; verify static full-output controls without extending calls or source budgets. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Record copied-runtime local/image CPU import acceptance; preserve original failures and unchanged invocation/source limits. |
 | 2026-10-25 HKT | Consolidate both finite diagnoses and parent evidence; no source or measured runtime change. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
@@ -56,6 +57,10 @@ Both finite diagnoses are complete and consolidated on the primary branch. Snaps
 Current pricing+emission+flush, worker environment/append throughput/full-workload memory, completeCLI<=2400s per main process, finalT2/package/native/G3/E2E remain open. Define the next joint execution without extending old diagnostic controls or required-shape6/6. OSS sufficiency is user-confirmed. The init recommendation has no patch/allowance; no resource, fullCLI, native or RSS claim follows from this records completion.
 
 CPU runtime preparation now passes the original strict probe locally and in the pinned published image, with Python3.10.6 and unchanged canonical package versions. A separate copied base prefix fixes Debian site-packages discovery; original copy timeout and both import failures remain retained. Evidence: `resumed_execution/evidence/execution_preparation_2026-10-25/` and the dated runtime report. Local/image probe wall times are1.857779s/2.892711s, with probe-only peak RSS178,016,256B/183,410,688B. No production source, pricing-wave, required-shape, fullCLI or StepMind operation changes. Worker/cloud/RSS and joint execution remain open.
+
+### Prepared current-source executions
+
+`resumed_execution/execution_plan_2026-10-25.md` and `evidence/execution_preparation_2026-10-25/{joint_timing.py,joint_setup.py,joint_wave.py,joint_bindings.json,worker_plan.json,worker_entry.py,worker_append.py,launch_worker.py,run_worker.sh}` now provide concrete reviewable timing and worker executions. Static02 passes source/input/AST/syntax, exact16/208 reference JSONL, seven corruption rejections and a no-operation worker dry run in2.363082259s. Original system-scope authentication failure remains retained; the corrected invocation uses the existing sudo/runuser30GiB recipe. No production source, pricing, shape, runtime import or platform operation is added. Two ordinary pricing calls remain a finite unapproved proposal; worker execution, completeCLI/RSS and finalT2/native/G3/E2E remain open.
 
 ## Previous handoff boundary (2026-10-25; historical)
 

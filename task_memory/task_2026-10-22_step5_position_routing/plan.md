@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Prepare current-source joint and zero-GPU worker scripts; verify static full-output controls without extending calls or source budgets. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Record copied-runtime local/image CPU import acceptance; preserve original failures and unchanged invocation/source limits. |
 | 2026-10-25 HKT | Complete finite copy/init record integration; advance to current cohesive timing and worker/cloud execution conditions. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
@@ -69,6 +70,10 @@ Finite diagnoses are complete and consolidated: snapshot-copyb061f884/merge52831
 Next define a current-source joint pricing/emission/flush execution from existing actual inputs without rerunning the old5-wave/15-emission controls or adding required-shape calls. In parallel, qualify worker interpreter/image, source mount, lifecycle and personal-volume append; full-workload memory/runtime must be measured during the unchanged complete workload. This preparation needs no new simulator output mode. Required-shape6/6 is exhausted; OSS quota is USER_CONFIRMED_SUFFICIENT. FullCLI/T2/native/G3/E2E remain open. A future init patch requires the existing bounded allocation/review/freeze process; the recommendation itself allocates nothing.
 
 The worker CPU interpreter/image import prerequisite is now PASS: retain the copied dependency/base prefixes and the unchanged strict probe's local/image receipts. Prepare the current-source joint script and finite pricing-call proposal in parallel with source-mount/lifecycle/append preparation. The runtime probe does not qualify actual worker throughput or full-workload memory. Existing diagnostic ceilings remain unchanged; a new label or a resume request supplies no extra pricing calls.
+
+### Prepared current executions
+
+The joint driver and worker plan/scripts now exist and pass static source/input/AST checks, seven checker corruption controls and a no-operation worker dry run. `resumed_execution/execution_plan_2026-10-25.md` records exact commands, resource/mount/lifecycle/cleanup bounds and the next fullCLI path. This closes script preparation only. Two new ordinary captured D1/layer60 pricing calls await a separate finite decision; no new label extends prior controls. In parallel, the existing H800 task-resource authority covers one zero-GPU readiness worker after prepared-script review, without new GPU/native allocation. Actual timing/worker/RSS/fullCLI/T2/native/G3/E2E remain open.
 
 ## Previous handoff boundary (2026-10-25; historical)
 

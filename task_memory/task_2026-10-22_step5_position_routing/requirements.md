@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Prepare current-source joint and zero-GPU worker scripts; verify static full-output controls without extending calls or source budgets. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Record copied-runtime local/image CPU import acceptance; preserve original failures and unchanged invocation/source limits. |
 | 2026-10-25 HKT | Record finite copy/init closure and unchanged production source/budgets; ALLOC is recommendation only. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Integrate verified ledger source2ca5e571 and pass production116-path/126-binding audit at9682source/9696global; full workflow remains open. |
@@ -34,6 +35,12 @@
 | 2026-10-23 | Root selects the existing constructor seam for explicit T2 engine limits within the approved scope. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; begin phased implementation. |
 | 2026-10-22 | Bind the design artifact to the approved parent decision and complete workflow scope. |
+
+## [Execution Proposal / Not Approved] D29-CURRENT-JOINT-TIMING-TWO-CALLS
+
+Current-source execution scripts are prepared under `resumed_execution/evidence/execution_preparation_2026-10-25/`. Propose at most two new ordinary captured D1/layer60 CPU pricing calls, cold/warm once each, in one60s/30GiB execution. Use real MetricsStore, unchanged5000-event trace threshold, complete output/proofs/keys/order and per-point checks; fresh phases/plan and actual allocated destination IDs each time. No warmup, profiling call, automatic retry or new required-shape call. Existing required-shape6/6 and old-control ceilings do not change. This is a pending finite execution proposal, not an approval or source allocation.
+
+One independent4CPU/0GPU/64mem_gb codesign/H800 readiness worker is concretely prepared under the existing H800 task-resource authority. It uses the original local personal Python RJobBackend, exact current-machine NFS source and personal cloud path, unchanged runtime import probe and one30s/1GiB serialized-reference append control. It performs no pricing, shape, fullCLI or native run. Source/workflow/native package criteria are not bypassed; actual worker readiness remains unperformed at this preparation checkpoint.
 
 ## [Original Request] D29-RESUME-MULTI-WORKTREE-20261024
 

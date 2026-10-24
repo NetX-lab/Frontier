@@ -1,0 +1,118 @@
+{
+  "task_id": "D29-WORKER-READINESS",
+  "state": "PREPARED_NOT_SUBMITTED",
+  "resource_authority": "D29 H800 resource authority in root requirements.md; zero-GPU preparation uses no new GPU allocation",
+  "submitted_from": "kun-workspace-vgen2",
+  "principal": "i-fengyicheng",
+  "charged_group": "codesign",
+  "resource": {
+    "cpu": 4,
+    "gpu": 0,
+    "mem_gb": 64,
+    "replica": 1,
+    "positive_tags": [
+      "H800"
+    ],
+    "custom_resources": [],
+    "extra_requirements": [],
+    "preemptible": false,
+    "command": "{COMMAND}",
+    "task_specs": {
+      "default": {
+        "is_critical": true
+      }
+    }
+  },
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "local_mount_source": "/data/ycfeng",
+  "local_mount_target": "/data/ycfeng",
+  "local_mount_server": "resolve current hostname immediately before spawn_tasks",
+  "mounts": [
+    "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+  ],
+  "cloud_personal_root": "/mnt/codesign-exp/ycfeng",
+  "cloud_test_root": "/mnt/codesign-exp/ycfeng/frontier_d29/worker_readiness_20261025_01",
+  "local_output_root": "/data/ycfeng/tmp/d29_worker_readiness_20261025_01",
+  "experiment_id": "frontier-d29-worker-readiness-20261025-01",
+  "python": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+  "runtime_base_prefix": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025",
+  "launcher_python": "/data/ycfeng/tmp/stepmind-env/bin/python",
+  "steptron_root": "/data/ycfeng/steptron",
+  "source_root": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "joint_bindings": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_bindings.json",
+  "runtime_probe": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_probe.py",
+  "runtime_probe_sha256": "5669d6b0f64b40abbff96efbd431305983cb8e3db81c3e87f0f962b81b37e350",
+  "math_thread_env": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1"
+  },
+  "append": {
+    "deadline_s": 30,
+    "max_bytes": 1073741824,
+    "trace_buffer_events": 5000,
+    "child_timeout_s": 60,
+    "child_address_space_bytes": 32212254720,
+    "reference_ledger": {
+      "path": "/data/ycfeng/tmp/d29_named_model_query01/candidate/accepted-output/candidate/ledger.json",
+      "sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf"
+    },
+    "reference_operators": {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-candidate02/op_traces.jsonl",
+      "sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+      "skip_header_lines": 1,
+      "record_count": 208,
+      "bytes": 2889655
+    },
+    "cleanup_complete_test_files": true
+  },
+  "sample_projection": {
+    "bytes_per_mode": 469000000000,
+    "kind": "historical approximate sample projection, not measured workload bytes",
+    "main_subprocess_cap_s": 2400
+  },
+  "lifecycle": {
+    "api": "spawn_tasks -> original RJobBackend",
+    "keep_local_launcher_alive_until_terminal": true,
+    "automatic_retries": 0,
+    "job_limit": 1,
+    "stop_script": "/data/ycfeng/steptron/playground/users/ycfeng/tools/rjob_stop.sh"
+  },
+  "workload_in_this_job": {
+    "import_probe": 1,
+    "serialized_reference_append_controls": 1,
+    "pricing_calls": 0,
+    "required_shape_calls": 0,
+    "full_cli": false,
+    "native": false
+  },
+  "full_cli_next_command": [
+    "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/tests/integration/run_step5_measured_main.py",
+    "--fixture-manifest",
+    "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json",
+    "--output-root",
+    "/mnt/codesign-exp/ycfeng/frontier_d29/main09_current_source",
+    "--mode",
+    "all"
+  ],
+  "full_cli_next_state": "NOT_LAUNCHED; retain source/workflow prerequisites and2400s main-only timeout; post-run validation outside main cap",
+  "verification_limits": [
+    "Resource memory is a request, not measured full-workload RSS.",
+    "Append throughput replays serialized reference bytes and excludes pricing and emitter serialization.",
+    "No native, G3, T2/package or E2E qualification follows from readiness.",
+    "Use the current-machine NFS source; no remote submission or substitute mounts.",
+    "The append timing includes reference replay and incremental digest updates; it is not an isolated storage bandwidth result."
+  ],
+  "scripts": {
+    "worker_append.py": "4e479de4d3d2eec607d48f5a240f6f547197ca9a76e717433308a893d988a97c",
+    "worker_entry.py": "f45f805e700813ff50bed646ca42778aa013d3afc71e3fff31efa8ae6d520b04",
+    "launch_worker.py": "f2160d50844763340795ebb8089de7c973ea46a26fc7b1819e67d531fb3fa121",
+    "run_worker.sh": "1d41bb75bf775da667ea641f7f3556af954d9a8243891dce789c79c5a40bbdfb"
+  },
+  "inspection_request_timeout_s": 25,
+  "joint_bindings_sha256": "a33370c9704113c15d753c011542ff1d0ba8f7fdea258dcecbce97623ac992f0"
+}

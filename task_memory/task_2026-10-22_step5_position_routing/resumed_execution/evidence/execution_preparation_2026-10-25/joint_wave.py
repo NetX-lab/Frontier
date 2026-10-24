@@ -1,0 +1,1 @@
+phases = predict_ep_wave_phase_times(layer_workload=workload, source_batch=batch, stage_id=0, layer_id=layer_id, cluster_type=role, predictor=predictor, lane_builder=lane_builder, phase_getter=get_ep_phase_times_ms, workload_logger=noop, trace_identity=None, batch_id=7052, capture_lane_timings=True)
