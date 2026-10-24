@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Append approved named query after the key overlay: four CORE paths100gross,65 zero-sum transfer and unchanged totals. |
 | 2026-10-23 | Close three performance steps after parent checks/No findings;freeze79 and run final gates with9254 measured gross. |
 | 2026-10-23 | Append disjoint performance-repair allocations and final-source review/freeze dependency. |
 | 2026-10-23 | Close40/65 CLI repair and deliver reviewed code for session handoff;final workflow qualification remains pending. |
@@ -24,6 +25,15 @@ in this directory binds the approval and analysis. Native19 design remains at
 (commit c9e9274); the other three designs are in this task.
 
 ## Sole-writer assignments
+
+Latest active step: D29-NAMED-MODEL-QUERY, after accepted key union9491. The exact
+answer and standing similar-work permission are in`../requirements.md`. Apply
+named_model_query_scope_amendment.json after the key overlay: two CORE source
+and two existing CORE test paths,100gross(20/80),65 allowance lines transferred
+within CORE,114paths and unchanged ceilings. The implementation owner edits
+only these four paths in an isolated worktree. Parent handles allocation,
+reviews, final audit/integration and fresh regressions. Read
+`../runtime_model_view/{requirements.md,plan.md,design.md}` for the contract.
 
 Current residual repairs: model_group_reuse_scope_amendment.json (CORE105),
 init_validation_scope_amendment.json (CORE45), then

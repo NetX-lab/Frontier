@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | YC approves named querying and analogous in-scope changes; allocate100gross across four existing CORE paths with65 zero-sum transfer. |
 | 2026-10-24 | Complete the two-arm control and eleven contract groups; hold implementation for the unrelated-model error-policy decision. |
 | 2026-10-24 | Primary resumes the cancelled design task and selects one bounded registry-view control. |
 
@@ -10,7 +11,8 @@
 
 Parent requirements and the existing repair authority remain authoritative.
 The read-only remaining-runtime design worker was cancelled without delivering
-a proposal. Primary resumes the investigation; no production allocation exists.
+a proposal. Primary completed the investigation; D29-NAMED-MODEL-QUERY now
+approves implementation under the allocation below.
 Source is the accepted key union `46fe83ac` / `30fb6a30`.
 
 `moe_routing_workload.py:194` requests a whole family view on every lane, then
@@ -52,19 +54,21 @@ remain visible; no numerical result, whole proof or model view is retained.
    Separately inspect supported estimator/row/identity/config/error behavior.
    In particular, skipping incidental checks of unrelated models may change
    error timing; do not treat normal-wave parity as proof this is acceptable.
-4. Allocate nothing until the measured gain and supported negative cases settle
-   the interface. A required behavioral change goes to YC before implementation.
+4. The measured gain and explicit negative establish the approved interface.
+   Complete filtered mixed/typed-role tests before accepting implementation.
 
 Tentative production paths are `prediction_model_registry.py` and
 `moe_routing_workload.py`, with existing binding/runtime tests and any directly
 affected stubs. The measured scratch method diff is14 gross / +4 retained
 (registry12, point caller2). This supersedes the initial40–70 source estimate.
-Propose a100-gross ceiling, source20/tests80, entirely within CORE's231 lines
-of retained headroom; PRICING has2 and would not fund this change. This is not
-an allocation. Actual path caps and complete mixed-view/selected-error tests
-are required after the behavior decision.
+Allocate100gross(source20/tests80) within CORE's231 lines of retained headroom.
+Registry/workload step caps are15/5; binding/runtime tests50/30. Registry/workload
+total caps stay120/223; test caps increase311→353 and128→151. Six unedited CORE
+donors transfer65 allowance lines; see`../repairs/named_model_query_scope_amendment.json`.
+All114 paths and owner/global limits remain unchanged. Keep code readable;
+report measured deltas instead of compressing tests. No method stubs need adaptation.
 
-## Measured result and open decision
+## Measured result and approved decision
 
 Warm pricing median is0.122211→0.089447 seconds (three samples per arm,
 −26.81%). The same38-entry unfiltered view yields the same two selected GEMM
@@ -82,13 +86,13 @@ registry's flattened-view errors are not necessarily the same as the errors
 from a context-qualified numerical lookup; do not promise that all removed
 unrelated-view errors will be raised by that later lookup.
 
-YC decision required: permit the GEMM point selector to validate only its named
-model, keeping initialization/public unfiltered views complete, or retain the
-existing every-point whole-view error behavior. Current-model checks and live
-selection remain required in either case. Known trainer writers register by
+YC approved the GEMM point selector validating only its named model, keeping
+initialization/public unfiltered views complete. Current-model checks and live
+selection remain required. Known trainer writers register by
 the logical cache name; publication rejects name divergence. The real manager
 control asserts that invariant and retains the selector's cache-name guard.
-No new writer invariant or error policy has yet been approved.
+Keep that writer behavior and cache-name guard; arbitrary private-registry
+mutation does not become a supported writer because of this approval.
 
 Evidence and remaining tests are in
 `test_report_2026-10-24_runtime_model_view.md` and `evidence/verification.json`.

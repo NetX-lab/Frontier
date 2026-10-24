@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | YC approves named querying and similar in-scope changes; allocate four CORE paths100gross with65 zero-sum transfer. |
 | 2026-10-24 | Qualify the named-model control at−26.81% pricing; require an error-policy decision before any100-line CORE allocation. |
 | 2026-10-24 | Accept fresh46fe strict77/77 and separate101/197/53 checks; full-unit and its closing guards remain pending. |
 | 2026-10-24 | Accept key component and final9491 union on46fe83ac; assign frozen regressions and remaining-runtime design investigation. |
@@ -104,10 +105,12 @@ remains UNQUALIFIED, public fields conversion is rejected, and private encoding
 remains unallocated. All actual-point validation and full output stay required.
 The cancelled remaining-runtime design task is replaced by primary's completed
 runtime_model_view control:384 unrelated contract derivations→0 and warm
-0.122211→0.089447s, with full208-event byte parity. Its next dependency is YC's
-unrelated-model error-policy decision -> detailed100-gross(source20/tests80)
-CORE allocation -> selected/mixed/public-view regressions and independent
-review -> a new final freeze. This is a proposal, not an active source allocation.
+0.122211→0.089447s, with full208-event byte parity. YC's D29-NAMED-MODEL-QUERY
+approval completes the policy dependency. Apply named_model_query_scope_amendment.json
+after the key overlay: registry15/workload5/bindings50/runtime30,65 same-owner
+allowance transfer,114 paths and unchanged owner/global limits. Next: scoped
+implementation -> selected/mixed/public-view regressions and independent review
+-> final freeze. See runtime_model_view/{requirements.md,plan.md}.
 The10 matching contract groups and one demonstrated error-surface difference
 are recorded separately. Existing full-unit work proceeds independently.
 The non-I/O identity-cache control is rejected because it did not improve timing.

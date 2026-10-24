@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | YC approves named querying and analogous optimizations; allocate100gross and resume frozen regression completion. |
 | 2026-10-24 | Complete named-model control:−26.81%,208-event byte parity,23 source bindings and one explicit error-policy difference; allocation waits for YC. |
 | 2026-10-24 | Cancelled design worker has no delivery; primary resumes with a bounded whole-view versus named-model query control and separate contract inspection. |
 | 2026-10-24 | Verify post-key strict77/77 and separate101/197/53 results with27 parent hash checks; retain the approved metadata-ID replacement and pending full-unit. |
@@ -84,7 +85,7 @@
   primary:resumed_performance/post_key_regression_acceptance.json.
 - cancelled/no delivery: D29-REMAINING-RUNTIME-DESIGN, session
   ses_e9577903effeYhkEtAPQt7g228. Primary resumes the design investigation.
-- completed/control, pending/policy: D29-RUNTIME-MODEL-VIEW, primary. One bounded
+- completed/control and approval: D29-RUNTIME-MODEL-VIEW, primary. One bounded
   baseline/candidate wave and contract probe ran under60s/30G per command.
   Warm0.122211→0.089447s(−26.81%);384 contract derivations→0;288 numerical,
   144 fresh proof,64 collective and16 point calls unchanged. Full208-event
@@ -94,7 +95,10 @@
   Current-model failures and live selection remain effective. All23 final
   source bindings and262 fixture/cache metadata entries match. Independent
   inspection:ses_e951e411cffenineDsU35LlI6M; source was not edited. Source scratch
-  diff14/+4; proposed100gross(source20/tests80) remains unallocated pending YC.
+  diff14/+4. YC approves100gross(source20/tests80) and analogous in-scope changes.
+  Primary assigns registry15/workload5/bindings50/runtime30 and65 zero-sum CORE
+  allowance transfer with no donor edits. Four-path implementation is next;
+  see runtime_model_view/{requirements.md,plan.md,progress.md} and the amendment.
   Three archive-checker errors(header clocks twice, then wrong samples field)
   were corrected without rerunning the wave; original logs retained and final
   verification PASS. Records:runtime_model_view/{design.md,test_report_2026-10-24_runtime_model_view.md,evidence/}.

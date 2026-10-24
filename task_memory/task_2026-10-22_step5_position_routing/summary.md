@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Record YC's approval/preauthorization and the four-path100-gross named-query allocation. |
 | 2026-10-24 | Complete the bounded named-model view control; archive−26.81% pricing and its unapproved unrelated-model error-surface change. |
 | 2026-10-24 | Accept fresh46fe strict77/77 and separate101/197/53 checks; full-unit/final guards remain pending. |
 | 2026-10-24 | Integrate accepted key30fb6a30, verify9491 final union, and assign fresh frozen regressions; full workflow remains open. |
@@ -44,9 +45,11 @@ ledger parity, live288/144/64/16 numerical/proof/collective/point calls preserve
 The23 final source bindings and262 fixture/cache metadata entries match.
 Ten contract groups match; one proves a real error-policy change for an
 unrelated native-label collision. Current-model failures remain effective.
-Evidence is in runtime_model_view/. A100-gross CORE proposal(source20/tests80)
-is pending YC's policy decision and path allocation. No further production
-source or full CLI acceptance is implied; current accounting stays9491/10000.
+Evidence is in runtime_model_view/. YC approved the100-gross CORE change and
+preauthorized analogous in-scope performance work. Primary allocates four paths
+(15/5source,50/30tests) through65 zero-sum CORE allowance lines; donor code stays
+unchanged. Implementation and review are next. Production usage stays9491/10000
+until measured changes land; full CLI acceptance remains open.
 
 Earlier accepted byte/snapshot db581ff6 was integrated at64c83ac4.
 Snapshot uses212/340 gross(73source/139tests),net86. Parent82PASS, separate2trainerPASS,

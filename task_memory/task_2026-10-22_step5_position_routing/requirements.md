@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | YC approves named querying and analogous in-scope performance changes; allocate100gross within unchanged CORE/global limits. |
 | 2026-10-24 | Record an unapproved named-model query proposal and its demonstrated unrelated-model error-policy difference. |
 | 2026-10-24 | Complete snapshot component and allocate the17-gross derived-key successor within unchanged PRICING/global limits. |
 | 2026-10-24 | Allocate shared run-input ownership across ten paths,114 effective paths, with unchanged owner/global caps and the new lifetime checks. |
@@ -313,7 +314,7 @@ strings; public dictionaries, numerical lookups and actual-layer proofs stay
 fresh. No to_dict/deepcopy/private-encoder/native-backend-key change is allocated.
 See plan_key_reuse/requirements.md and plan.md for verification and dependencies.
 
-## [Open Decision — Not Authorization] D29-RUNTIME-MODEL-VIEW
+## [Proposal History] D29-RUNTIME-MODEL-VIEW
 
 After the remaining-runtime design worker was cancelled, primary measured a
 named-model query on the accepted key source:0.122211→0.089447s warm pricing,
@@ -333,3 +334,29 @@ existing CORE owner/global limits; scratch source is14 gross/+4. No path-cap
 amendment or implementation is authorized by this proposal. The existing
 2400s cap, full output and actual-point checks remain. Evidence and undecided
 options are in runtime_model_view/design.md and its test report.
+
+## [Original Request / Decision] D29-NAMED-MODEL-QUERY
+
+UTC date:2026-10-24. Requesting user and reviewer:YC.
+
+Question: “boss YC，是否允许 GEMM 输入选择只查询当前模型？原型单波定价从 0.122 降到 0.089 秒（快26.8%），完整输出一致。变化是：运行中其他模型出现全量视图冲突时，不再由当前 GEMM 查询提前报错；初始化和显式全量查询仍保留原检查。完整 CLI 验收仍未通过。”
+
+Options presented:
+1. “只查当前模型 (Recommended)” — “接受该变化；在现有 CORE 额度内按最多100行（source20/tests80）分配、实现、验证并复审，保留当前模型全部逐点校验。”
+2. “保留每次全量查询” — “维持现有错误触发规则，不采用这个收窄查询候选，继续其他性能分析。”
+
+YC's verbatim answer: **“批准，类似请求无需申请权限，皆授权”**.
+
+The query and its stated error-surface change are approved. Analogous in-scope
+performance changes do not require repeated permission requests. Keep complete
+output, current-model actual-point/freshness validation and owner/global budgets.
+Retain the6144/1024 workload and2400s gate, unfiltered view behavior and live
+family/estimator/row/identity selection. No numerical/proof/view cache is added.
+Existing task records are the issue; no new tickets are created.
+
+Primary allocates the four existing CORE paths in
+repairs/named_model_query_scope_amendment.json: source15/5, tests50/30,
+100gross total. Transfer65 allowance lines from six unedited CORE donors to
+the two tests. All114 allocated paths and owner/global ceilings are unchanged.
+The docstring update is inside registry15. These routine implementation and
+bookkeeping decisions are covered by the approval above.
