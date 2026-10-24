@@ -1,0 +1,40 @@
+{
+  "decision": "D-V4-P0-GROUP-METRICS-SEGMENTS-PRIMARY-TAKEOVER",
+  "recorded_utc": "2026-10-24T21:15:18.677699+00:00",
+  "base_allocation_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/allocation.json",
+  "base_allocation_sha256": "51bcae18fc96b97315b3891041191f43701080e2c9382f64251cab5b1868b5cf",
+  "prior_owner": "Carver / 01a16fad-e4e1-7ea2-b1b6-34a592cb2faf",
+  "prior_owner_closed": true,
+  "new_owner": "primary",
+  "partial_before_edit": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+      "sha256": "79c767455547dcec469be0372e5e89aac77e1d1db324015c29ad0486fe9208ad",
+      "lines": 112
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py",
+      "sha256": "0d11b9ea7701603475bd9c6dc91c5c68fc235f0dd51fcb6922c756a827c9a609",
+      "lines": 107
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_inputs.json",
+      "sha256": "368d696caa27dd7f0ddb11f1bfb9c6727df5ebb45d2d5a711e02f75d7ecfa908",
+      "lines": 32
+    }
+  ],
+  "tiny_used_before": 0,
+  "diagnostic_used_before": 0,
+  "tiny_gross_cap_before": 100,
+  "tiny_gross_cap": 115,
+  "source_gross_cap": 140,
+  "owner_markdown_gross_cap": 100,
+  "tiny_invocation_ceiling": 1,
+  "segment_diagnostic_invocation_ceiling": 1,
+  "complete_control_invocation_ceiling": 0,
+  "affected_invocation_ceiling": 0,
+  "timeout_seconds": 60,
+  "actual_memory_limit_bytes": 32212254720,
+  "selected_concurrency": 1,
+  "reason": "Retain the clear 107-line partial tiny control, add copied membership telemetry checks and exact execution bindings before its sole invocation; do not compress or rerun accepted controls. Add len(members) only to six sparse group observations."
+}

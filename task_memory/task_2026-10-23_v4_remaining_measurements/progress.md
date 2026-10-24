@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Resumed from947da5ee, preserved stopped-owner partials and retained24 binding; no new tiny or diagnostic invocation yet. |
 | 2026-10-25 | Group pilot FAILED at60s; archived complete diagnostic index/closed logs and opened one separately bounded segment observation. |
 | 2026-10-25 | Committed accepted group source at8b4d6993 and froze new affected command/input bindings before the fresh pilot. |
 | 2026-10-25 | Rechecked accepted source/evidence bytes without execution, corrected the pilot frontier and began independent R6/R7 evidence preparation. |
@@ -50,6 +51,9 @@
 
 ## Current continuation — 2026-10-25
 
+- in-progress primary takeover: resumed actualHEAD947da5ee/branchfeat/glm53-dsv4-vllm028; Carver closed with tiny/diagnostic0/1. The112-line timer and107-line tiny partials were unverified. [Supplement](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/takeover_allocation.json) records115tiny/140source caps before membership-only telemetry and command/hash/cgroup proof. Retained24 binding is preserved; no old source/control/GPU run. Shell has no `python`; use `/usr/bin/python3` rather than changing the environment.
+
+- completed independent R6preparation: [retained24binding](profile01/profile04/results/review_preparation/retained24_binding.json) rehashes closed24final JSON/index/command/status/log artifacts and reads their existing final JSON in0.959941s;7758672kernels/102248exact annotations/usefulP1-D0-D1=4/61/61 and allrecorded30GiB. No raw trace, decomp index, audit/control invocation or newP0output;R5remains24/32 and fullR6/R7BLOCKED.
 - failed fresh group pilot: source8b4d6993/allocation00840389,child124/driver1/60.324082s/actual32212254720bytes. Load30.072s,kernel start40.178/end55.532,metricsstart55.992 with1215919events/240groups/5331778memberships;no metricsend/final JSON/useful steps and no gen2callbacks in metrics. [Failure](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/pilot_failure.json) archives seven closed logs/receipt and complete1215919-row indexSHA678fb917;readonly archive/index inspection0.386061s/no raw audit. Affected1/8 used;sevenNOT_RUN/BLOCKED,R5still24/32.
 - completed mandatory failed-pilot self-check: [checkpoint](profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/check_progress_2026-10-25_group_pilot_failure.md) applies the new segment-only route after repeated P0 failures;allD1–D7CLEAR,stale current statuses corrected. Prior closed indexSHA678fb917 matches by receipt hash only,no index/audit rerun.
 - in-progress new segment-only diagnostic: [allocation](profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/allocation.json) binds failed-pilot evidence before one new tiny AST/equality control and one new60s/actual30GiB segment observation. Measure global-order and individual group sums/sorts/union;no accepted source/GC/raw/native/package edit,old driver import or new affected/control run. R6/R7 evidence preparation continues independently.

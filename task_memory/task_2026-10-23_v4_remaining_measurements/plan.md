@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Primary took over the unrun segment source/tiny control; retained24 readiness is complete and the diagnostic remains pending. |
 | 2026-10-25 | Group pilot remainsFAILED; hold seven ranks and measure only the new metrics segments under a separate once-only allocation. |
 | 2026-10-25 | Corrected active ownership and separated the ready fresh pilot from its seven conditional ranks; R6 preparation remains independent. |
 | 2026-10-25 | Accepted group-metrics CPU source, separate owner/primary9-test units and two complete exact controls after both independent reviews; fresh P0 remains pending. |
@@ -52,7 +53,7 @@
 5. **New diagnostic frontier:** failed group pilot -> one new sparse segment source/tiny AST control -> primary source/command binding -> one60s/actual30GiB diagnostic -> measured completed/censored global-order/group regions. No new correction/control/affected invocation follows from this allocation. R6 evidence preparation remains parallel with these local diagnostic steps.
 6. Dependency: complete actual32-rank outputs -> R5trace acceptance -> R6full review/primary synthesis -> R7limited diagnostic archive. Scoped GPU result can inform only its own P1–P6claims;neither line supplies native serving ownership,dependencies or costs. R3/R4metadata,S1/S2,Native06R4 and original failures remain accepted/preserved within their limits.
 
-Primary owns requirements/plan/progress/summary, metrics_correction02/primary/ command binding, affected-rank execution and final acceptance. All source/control/review agents from the accepted milestone are closed. The source, timer, controls and diagnostic files stay frozen. The fresh group rank0 pilot is FAILED; its remaining seven are BLOCKED. Primary owns the new group_metrics_tail02/primary/ diagnosis; the new source owner writes only its timing file and group_metrics_tail02/owner/. R6 evidence preparation may run in parallel in its own review_preparation/ file; final synthesis remains dependent on R5. A complete final JSON/index, exact fields and at least three useful steps remain necessary for each affected rank.
+Primary owns requirements/plan/progress/summary, metrics_correction02/primary/ command binding, affected-rank execution and final acceptance. All source/control/review agents from the accepted milestone are closed. The source, timer, controls and diagnostic files stay frozen. The fresh group rank0 pilot is FAILED; its remaining seven are BLOCKED. Carver is closed with unrun partial files. Primary owns the new group_metrics_tail02 timing source, tiny control and primary/ diagnosis under the115-line tiny takeover supplement. Tiny and diagnostic remain0/1 until recorded execution. Retained24 evidence preparation is complete. R6 evidence preparation may run in parallel in its own review_preparation/ file; final synthesis remains dependent on R5. A complete final JSON/index, exact fields and at least three useful steps remain necessary for each affected rank.
 
 ### Historical handoff frontier — 2026-10-25, before fresh gates
 

@@ -1,0 +1,3235 @@
+{
+  "status": "PASS_READ_ONLY_RETAINED24_HASH_BINDING",
+  "observed_utc": "2026-10-24T20:55:12.597459+00:00",
+  "reviewer": "primary",
+  "original_trace_audit_sha256": "78376357cec6b374f2343e73bac6e1da1bb58c6dcc296eef34054d917783d5e0",
+  "original_scope": "24complete outputs/eight originalP0timeouts,unchanged",
+  "new_trace_or_control_invocations": 0,
+  "new_P0_complete_outputs": 0,
+  "R5_complete_ranks": 24,
+  "method": "Hash closed output/index/command/status/log artifacts;read final24 JSON only,no raw trace parse or decompressed index read. This binds prior accepted domain for later fresh32manifest.",
+  "ranks": [
+    {
+      "key": [
+        "decode",
+        0,
+        0
+      ],
+      "host": "gpu-h800-0187.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank0.json",
+      "output_sha256": "f4d06e6185d6d9150f73358f2bb8a81a029fbb43ba45e30afc0f869b0ec1c65c",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank0.kernels.jsonl.gz",
+      "kernel_index_sha256": "ddc6cc55b7a3361d4ad7b9a3df2f385b55813e49b87d9c5b4d378139af8fcf6c",
+      "kernel_count": 256303,
+      "exact_annotations": 848,
+      "useful_steps": [
+        2195,
+        2196,
+        2197,
+        2198,
+        2199,
+        2200,
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210,
+        2211,
+        2212,
+        2213,
+        2214,
+        2215,
+        2216,
+        2217,
+        2218,
+        2219,
+        2220,
+        2221,
+        2222,
+        2223,
+        2224,
+        2225,
+        2226,
+        2227,
+        2228,
+        2229,
+        2230,
+        2231,
+        2232,
+        2233,
+        2234,
+        2235,
+        2236,
+        2237,
+        2238,
+        2239,
+        2240,
+        2241,
+        2242,
+        2243,
+        2244,
+        2245,
+        2246,
+        2247,
+        2248,
+        2249,
+        2250,
+        2251,
+        2252,
+        2253,
+        2254,
+        2255
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0187.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "7943164f54c19ba3ac33f660fb1cfc6ff3d2a286ed57e48a2bc58d11709a87ee",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "be1878be535209bbedd4d6f09734c7c400e32ad9ce86297b86cee9bf9cf8e6f0",
+        "profile": "673a0eb17c1d7224a013984ef8accf7e38e949fac76338ff5621be1dfa6cfaea",
+        "inventory": "346bfe0039feb4afbd0f64acb93da3bd8daf08dc132905fc88022b5efebfe980"
+      },
+      "scope_sha256": "6439505845948db6f3eedae50443564e0f6a79623903d0f71b72441d3d1e743e",
+      "command_sha256": "dbd97c2698a972d8b991498b21dadb55360f076efdcd6d669ec638006d621752",
+      "status_sha256": "5b01b1550adbb94b04eec031f5412e05ee9b5bcff549f211387f147a47112b7d",
+      "log_sha256": "cfc717951ce7d52037bfc1cbf9afbe275692d65b846a199e51cf5ee2db28e4b5"
+    },
+    {
+      "key": [
+        "decode",
+        0,
+        1
+      ],
+      "host": "gpu-h800-0187.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank1.json",
+      "output_sha256": "d57837a4ce6310274bf6cedde09ccf4d827a471d24008d8782107dac028c9278",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank1.kernels.jsonl.gz",
+      "kernel_index_sha256": "7b9fb7e82b24d36d2ccd4090caa2d0c52bedb5768948f2b584c8db43ec82e5d5",
+      "kernel_count": 256303,
+      "exact_annotations": 848,
+      "useful_steps": [
+        2195,
+        2196,
+        2197,
+        2198,
+        2199,
+        2200,
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210,
+        2211,
+        2212,
+        2213,
+        2214,
+        2215,
+        2216,
+        2217,
+        2218,
+        2219,
+        2220,
+        2221,
+        2222,
+        2223,
+        2224,
+        2225,
+        2226,
+        2227,
+        2228,
+        2229,
+        2230,
+        2231,
+        2232,
+        2233,
+        2234,
+        2235,
+        2236,
+        2237,
+        2238,
+        2239,
+        2240,
+        2241,
+        2242,
+        2243,
+        2244,
+        2245,
+        2246,
+        2247,
+        2248,
+        2249,
+        2250,
+        2251,
+        2252,
+        2253,
+        2254,
+        2255
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0187.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "7943164f54c19ba3ac33f660fb1cfc6ff3d2a286ed57e48a2bc58d11709a87ee",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "967f5338443a3fc71107378f69703f4e181aa9768efdd2a4ec2411aa5583e4f3",
+        "profile": "cd02185b33cdf0352c53ed0ee72b119411c5a6b14b434131c68c47eebf11e7b2",
+        "inventory": "f17afab72d6b03f3aa9ed34550ad700d1f3ccc24f23d1bff5ad1d95c66593bb9"
+      },
+      "scope_sha256": "10c8020ee828636e7d5008a86754fed4794cc90bd938ec854d64e99cfee24041",
+      "command_sha256": "22bc1aafec156e1cc5de1e4be24f732d27136e59d86a2e13bdf5492bcb1319e0",
+      "status_sha256": "91de23b62c93782216d939bb161f0093f0e0dc809fc29e113642a70cb2bcf10c",
+      "log_sha256": "61628e2703cbadaa756e966b0c352515457c491f513a4a30f53961b07d8a4beb"
+    },
+    {
+      "key": [
+        "decode",
+        0,
+        2
+      ],
+      "host": "gpu-h800-0187.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank2.json",
+      "output_sha256": "96b2d80dbf3b75a158ef513e9753a94b1b982d8953cc33a891d413c208671b84",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank2.kernels.jsonl.gz",
+      "kernel_index_sha256": "f6f600e133b61dc1e516e4f5c3e4292d763875cfdec1272f5a58e58dfabc9dcb",
+      "kernel_count": 256303,
+      "exact_annotations": 848,
+      "useful_steps": [
+        2195,
+        2196,
+        2197,
+        2198,
+        2199,
+        2200,
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210,
+        2211,
+        2212,
+        2213,
+        2214,
+        2215,
+        2216,
+        2217,
+        2218,
+        2219,
+        2220,
+        2221,
+        2222,
+        2223,
+        2224,
+        2225,
+        2226,
+        2227,
+        2228,
+        2229,
+        2230,
+        2231,
+        2232,
+        2233,
+        2234,
+        2235,
+        2236,
+        2237,
+        2238,
+        2239,
+        2240,
+        2241,
+        2242,
+        2243,
+        2244,
+        2245,
+        2246,
+        2247,
+        2248,
+        2249,
+        2250,
+        2251,
+        2252,
+        2253,
+        2254,
+        2255
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0187.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "7943164f54c19ba3ac33f660fb1cfc6ff3d2a286ed57e48a2bc58d11709a87ee",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "96f7173c6c63110999bec3e63b2c16f86e326748239bf659f6772e5bb6caf32c",
+        "profile": "ebdfca6b5a9de3bf388718f83e2f8fa0a2fdb3112d6451cf310468db0ca81da2",
+        "inventory": "50ae7e3954fed9fdc84ed35c6b7c5c16f982465d410fe00be3cf4610620bfb06"
+      },
+      "scope_sha256": "fa38dfde73de9c6e4ef9ec22a604fb5b002da76b0529b7da7e432cfe3115a590",
+      "command_sha256": "cc3c3bb3aac24df290fcfc35b6de960fd8f539dbce133a9ad07ae64ad30069af",
+      "status_sha256": "8d934282a01a49ca6edb8c341107122600d4d8c59955f9f7ee68ce21c7f961fb",
+      "log_sha256": "5dd09e3033a85467a13c5c3895c4bf77c56f6e419423c97fc174b8a74ae0d27d"
+    },
+    {
+      "key": [
+        "decode",
+        0,
+        3
+      ],
+      "host": "gpu-h800-0187.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank3.json",
+      "output_sha256": "a44fcde667e72ca3a7f66b2b44c21f77e4c0806265b9a1e6c4679d809642af4f",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank3.kernels.jsonl.gz",
+      "kernel_index_sha256": "21c2a189e45d97f02e93aefbbc928fc1dcf3df984be68214f231a52b6f9b7afa",
+      "kernel_count": 256303,
+      "exact_annotations": 848,
+      "useful_steps": [
+        2195,
+        2196,
+        2197,
+        2198,
+        2199,
+        2200,
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210,
+        2211,
+        2212,
+        2213,
+        2214,
+        2215,
+        2216,
+        2217,
+        2218,
+        2219,
+        2220,
+        2221,
+        2222,
+        2223,
+        2224,
+        2225,
+        2226,
+        2227,
+        2228,
+        2229,
+        2230,
+        2231,
+        2232,
+        2233,
+        2234,
+        2235,
+        2236,
+        2237,
+        2238,
+        2239,
+        2240,
+        2241,
+        2242,
+        2243,
+        2244,
+        2245,
+        2246,
+        2247,
+        2248,
+        2249,
+        2250,
+        2251,
+        2252,
+        2253,
+        2254,
+        2255
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0187.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "7943164f54c19ba3ac33f660fb1cfc6ff3d2a286ed57e48a2bc58d11709a87ee",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "2c08312b8981b1f7e3f6567ec44ae5a7d35258b12a31cf6bbea8be5854b7eb1b",
+        "profile": "207010abaa94d7c8d447d49ff944b874ff65c926b5c38f11e880fc255ca1ec5c",
+        "inventory": "3c11eca6dd5ca4233d4fabe2967eb9daf204fccdb20b3dd324f4db92194584fb"
+      },
+      "scope_sha256": "917cc993338e013d0bf388fda950747dea4f59221d401a58c72517b8eebdee33",
+      "command_sha256": "13013ea8545b23c505f328200b2a619e6e3d284513965da8a9ea2f624aa27114",
+      "status_sha256": "f6dffe0482fecb25021e8c5fb9460afee0f1d0f5220e13c2284d8e3a1843896f",
+      "log_sha256": "4692c772592ff83759a5f22584a4aaeedf763b10bfd29a4ace4dc039d5905ee2"
+    },
+    {
+      "key": [
+        "decode",
+        0,
+        4
+      ],
+      "host": "gpu-h800-0187.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank4.json",
+      "output_sha256": "a2f5bf6cd5cfd2c5d7883f1440035622aab3a88443e15e509183ee51b9fe4fb7",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank4.kernels.jsonl.gz",
+      "kernel_index_sha256": "bfed2e9bfca0479ed3af1517400bb3225da0fcc5c14ca091ee8fccff3467522d",
+      "kernel_count": 256303,
+      "exact_annotations": 848,
+      "useful_steps": [
+        2195,
+        2196,
+        2197,
+        2198,
+        2199,
+        2200,
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210,
+        2211,
+        2212,
+        2213,
+        2214,
+        2215,
+        2216,
+        2217,
+        2218,
+        2219,
+        2220,
+        2221,
+        2222,
+        2223,
+        2224,
+        2225,
+        2226,
+        2227,
+        2228,
+        2229,
+        2230,
+        2231,
+        2232,
+        2233,
+        2234,
+        2235,
+        2236,
+        2237,
+        2238,
+        2239,
+        2240,
+        2241,
+        2242,
+        2243,
+        2244,
+        2245,
+        2246,
+        2247,
+        2248,
+        2249,
+        2250,
+        2251,
+        2252,
+        2253,
+        2254,
+        2255
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0187.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "7943164f54c19ba3ac33f660fb1cfc6ff3d2a286ed57e48a2bc58d11709a87ee",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "687edac1a4baea35c1f73c9f2fad6981548b6d2fe47504427bb05c20f5ab9f8d",
+        "profile": "489413480a626def503b4ea8e73d53a52cc430dde176df38c990114492fcb506",
+        "inventory": "31c4fb6efb0aaf259c30f4b782cb3460ffa310692d77f1d30cbac1ca7e407dcd"
+      },
+      "scope_sha256": "b332807ae15aa54926b2204f25a7f421970b6e8190c5a3e086995c38481aac7e",
+      "command_sha256": "55f80444a9f6ae698aeda3958993e24f13f700edf8f432b66ca56dce5fddd6f0",
+      "status_sha256": "516a480231bcdca274d341f591eeb18855a33a6a698bc879b0d52266055e2b5e",
+      "log_sha256": "fe802faac8eb1f777e0cbb84a17fae24d9386ad4f2383db959f861c86e92ec4e"
+    },
+    {
+      "key": [
+        "decode",
+        0,
+        5
+      ],
+      "host": "gpu-h800-0187.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank5.json",
+      "output_sha256": "b995e355f9c93d4a70c80aa164299abb26098e48f05afebebfcfc7eb752d66da",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank5.kernels.jsonl.gz",
+      "kernel_index_sha256": "c154a3a13893e2d9393d4caee69721e522faa9a67ee04e9aa61a4069f6751cfb",
+      "kernel_count": 256303,
+      "exact_annotations": 848,
+      "useful_steps": [
+        2195,
+        2196,
+        2197,
+        2198,
+        2199,
+        2200,
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210,
+        2211,
+        2212,
+        2213,
+        2214,
+        2215,
+        2216,
+        2217,
+        2218,
+        2219,
+        2220,
+        2221,
+        2222,
+        2223,
+        2224,
+        2225,
+        2226,
+        2227,
+        2228,
+        2229,
+        2230,
+        2231,
+        2232,
+        2233,
+        2234,
+        2235,
+        2236,
+        2237,
+        2238,
+        2239,
+        2240,
+        2241,
+        2242,
+        2243,
+        2244,
+        2245,
+        2246,
+        2247,
+        2248,
+        2249,
+        2250,
+        2251,
+        2252,
+        2253,
+        2254,
+        2255
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0187.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "7943164f54c19ba3ac33f660fb1cfc6ff3d2a286ed57e48a2bc58d11709a87ee",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "1e84e459d14422fd0fb6ae731ab0f882798e5d830e68bd4780c15856a15789fd",
+        "profile": "0f364d0dbd8979efa0fde193b9966705547f56d9c9b366a69de140018aa45c55",
+        "inventory": "82974718593cb9b2cab0e1d9d550f328fd6a43cf0c5c26ab42ba9e5c69840781"
+      },
+      "scope_sha256": "9ac2810321b561afc2e6eb1aa61b7661a6c5367196d59a20b5bbf72afe696b58",
+      "command_sha256": "9b48b062a7ebddf28a742cda2d0ee3bdf682237b3a21d033cd5a95d72262f2a1",
+      "status_sha256": "650221ef81210b074335655333c8f32ced7bae50b486e7e5cb7eb6bf6896ac64",
+      "log_sha256": "461f81383f24617eaba8db2af4a9f2a0e5d4dba20313a42eafbee811e3d2ce9c"
+    },
+    {
+      "key": [
+        "decode",
+        0,
+        6
+      ],
+      "host": "gpu-h800-0187.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank6.json",
+      "output_sha256": "e5e1f3c47e319bcaacec5417e63a52615685d04637c8391ecbbc44aad670f5ba",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank6.kernels.jsonl.gz",
+      "kernel_index_sha256": "9b7ff32d2d5b1d344f3de1ccce06e6f294f0737db99581dbe2bb2596d4810547",
+      "kernel_count": 256303,
+      "exact_annotations": 848,
+      "useful_steps": [
+        2195,
+        2196,
+        2197,
+        2198,
+        2199,
+        2200,
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210,
+        2211,
+        2212,
+        2213,
+        2214,
+        2215,
+        2216,
+        2217,
+        2218,
+        2219,
+        2220,
+        2221,
+        2222,
+        2223,
+        2224,
+        2225,
+        2226,
+        2227,
+        2228,
+        2229,
+        2230,
+        2231,
+        2232,
+        2233,
+        2234,
+        2235,
+        2236,
+        2237,
+        2238,
+        2239,
+        2240,
+        2241,
+        2242,
+        2243,
+        2244,
+        2245,
+        2246,
+        2247,
+        2248,
+        2249,
+        2250,
+        2251,
+        2252,
+        2253,
+        2254,
+        2255
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0187.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "7943164f54c19ba3ac33f660fb1cfc6ff3d2a286ed57e48a2bc58d11709a87ee",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "51075bf77b0aa2886f3a8c6c10d8dc897401b928a94f34fedb60b1b1b72ea71d",
+        "profile": "71896274969cc4760618f9e62d417720c35b3e4b525aebd16e38bae4f119ff1e",
+        "inventory": "4884127f43c581659fc3af436ee54e3191545d8fdacb146b8237803a2fb4332b"
+      },
+      "scope_sha256": "2bec742693c805a9dd37f2848bb8e0b103a07baf76e7d921d87d5e1781b6f781",
+      "command_sha256": "e4ae375caf037aa3c9f3c0bcbf812094006b0d937e8153b5260eb48d861429cc",
+      "status_sha256": "7f5bf7d801dccbb804a98a486ce58f462cb7ebf6fdf8f915bbe4d35e6b35c71c",
+      "log_sha256": "d9558a4b07e6b85883954b016ccd0bae05c49268d19fc36de83f36ffd6cb5123"
+    },
+    {
+      "key": [
+        "decode",
+        0,
+        7
+      ],
+      "host": "gpu-h800-0187.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank7.json",
+      "output_sha256": "a557443f2c13587d8d16f021358d5199e129378d6a3bd1fdc6deec5c341be84a",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp0_rank7.kernels.jsonl.gz",
+      "kernel_index_sha256": "5dc7c4650a94d071f1ff4745891a85f73265c06d025181b556027803443e0268",
+      "kernel_count": 256303,
+      "exact_annotations": 848,
+      "useful_steps": [
+        2195,
+        2196,
+        2197,
+        2198,
+        2199,
+        2200,
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210,
+        2211,
+        2212,
+        2213,
+        2214,
+        2215,
+        2216,
+        2217,
+        2218,
+        2219,
+        2220,
+        2221,
+        2222,
+        2223,
+        2224,
+        2225,
+        2226,
+        2227,
+        2228,
+        2229,
+        2230,
+        2231,
+        2232,
+        2233,
+        2234,
+        2235,
+        2236,
+        2237,
+        2238,
+        2239,
+        2240,
+        2241,
+        2242,
+        2243,
+        2244,
+        2245,
+        2246,
+        2247,
+        2248,
+        2249,
+        2250,
+        2251,
+        2252,
+        2253,
+        2254,
+        2255
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0187.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "7943164f54c19ba3ac33f660fb1cfc6ff3d2a286ed57e48a2bc58d11709a87ee",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "730da7f972e443b122c5eb08ce1e5379005833ca5cb50ec48a231d8aeefa22cd",
+        "profile": "cbdd589b9c631bf093a1ef37b8ea0ad80d8b95a24bc6d9113513ae37630d0b42",
+        "inventory": "4537e5387a5afff5f188088908fc2434e3a2547417d748196e07cfbdce1f2f59"
+      },
+      "scope_sha256": "15f53b1d3f6b12b03d6ab29e4063e10253fa627f0d69815585e2a2103daf842b",
+      "command_sha256": "26a0d521779876c56e24ff3039e1449aecbafa30bbdf6c2dbeda2126b7ccb7e7",
+      "status_sha256": "066ab494fb65c799f94e7415e2b4aaa714b5334239d50e6fec11ea303eff7bb6",
+      "log_sha256": "35839b2c0ac63560c059ed2450d14665e67e5d963cf06690426481e0d7bb964a"
+    },
+    {
+      "key": [
+        "decode",
+        1,
+        0
+      ],
+      "host": "gpu-h800-0574.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.json",
+      "output_sha256": "fd5f94dc2aa14ded6e9694237b966148163bb79a84e52d2778a90b316ddb380d",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.kernels.jsonl.gz",
+      "kernel_index_sha256": "12abf8644255d59215d2bfebec74ae0b23ee86a8d082c0d333d0861cf33c7de5",
+      "kernel_count": 142567,
+      "exact_annotations": 485,
+      "useful_steps": [
+        1128,
+        1129,
+        1130,
+        1131,
+        1132,
+        1133,
+        1134,
+        1135,
+        1136,
+        1137,
+        1138,
+        1139,
+        1140,
+        1141,
+        1142,
+        1143,
+        1144,
+        1145,
+        1146,
+        1147,
+        1148,
+        1149,
+        1150,
+        1151,
+        1152,
+        1153,
+        1154,
+        1155,
+        1156,
+        1157,
+        1158,
+        1159,
+        1160,
+        1161,
+        1162,
+        1163,
+        1164,
+        1165,
+        1166,
+        1167,
+        1168,
+        1169,
+        1170,
+        1171,
+        1172,
+        1173,
+        1174,
+        1175,
+        1176,
+        1177,
+        1178,
+        1179,
+        1180,
+        1181,
+        1182,
+        1183,
+        1184,
+        1185,
+        1186,
+        1187,
+        1188
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "58a24e3da21a1c0617a1628edfe5f11b627ba04f0c2ad1761469d42c1ef5bc05",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "f74ee4b7d9ed36e91c26bd9042fc04152fc4fda5293cc8f8c1cca535b90b2f1e",
+        "profile": "272879bfa3fd5c8f4273835f2b7e5e49ff1ac796760c4c440facaf4026401f37",
+        "inventory": "c005bf58930bc9dd54421da6d61a30978fce51e68ae08b7e2ede8dbd5daf5678"
+      },
+      "scope_sha256": "ec12b7ed2a9839e439a189dd7134ec1bb906cd9cb11fb24b72824d91cb10f5c9",
+      "command_sha256": "1a153b1f8a6fd76e8aed209e466b8be5cb66b61870fb7a75938e67b62361c2c0",
+      "status_sha256": "44925611ec65054a7a4d699b87cb748c81a2f830dab528d163e36c0f82ab153c",
+      "log_sha256": "586afd11057866ea23d7bffe40f5f8749986c8055bb0f7a76e42100b0d0775ae"
+    },
+    {
+      "key": [
+        "decode",
+        1,
+        1
+      ],
+      "host": "gpu-h800-0574.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank1.json",
+      "output_sha256": "cf762960eaa1bb433146722d5a7e44bbb119e4ca399042715ab1227fc22093e6",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank1.kernels.jsonl.gz",
+      "kernel_index_sha256": "94ddcc484e547912747ce24a2f09b0bd5b49b3dea5caac86e97b3f4fe5fbb8a5",
+      "kernel_count": 142567,
+      "exact_annotations": 485,
+      "useful_steps": [
+        1128,
+        1129,
+        1130,
+        1131,
+        1132,
+        1133,
+        1134,
+        1135,
+        1136,
+        1137,
+        1138,
+        1139,
+        1140,
+        1141,
+        1142,
+        1143,
+        1144,
+        1145,
+        1146,
+        1147,
+        1148,
+        1149,
+        1150,
+        1151,
+        1152,
+        1153,
+        1154,
+        1155,
+        1156,
+        1157,
+        1158,
+        1159,
+        1160,
+        1161,
+        1162,
+        1163,
+        1164,
+        1165,
+        1166,
+        1167,
+        1168,
+        1169,
+        1170,
+        1171,
+        1172,
+        1173,
+        1174,
+        1175,
+        1176,
+        1177,
+        1178,
+        1179,
+        1180,
+        1181,
+        1182,
+        1183,
+        1184,
+        1185,
+        1186,
+        1187,
+        1188
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "58a24e3da21a1c0617a1628edfe5f11b627ba04f0c2ad1761469d42c1ef5bc05",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "d09fcf631dc966f11ccac882aa7446bc3b0e497bdd974bb16dabed4ad1ff4fcd",
+        "profile": "678d8e95a062ebae6387933aa1532398cc60310019144dbad49912a49fa0c86c",
+        "inventory": "3461a161db6c3a17f9704fbc35d2bb256d17f84abae362108c5ec142d5c80fe8"
+      },
+      "scope_sha256": "3a453198a4c364aec99fe1ddd53e199bbb92c672876e10d0e461480d1f91a75b",
+      "command_sha256": "432ee33d1c216a22e1ebbfcfee508701a5a357c6b5cab0d2bb0640c25afc240b",
+      "status_sha256": "3f28798aec16958521c40ca2c630d8c8671980e35ba753514d1cccfec5072a3a",
+      "log_sha256": "680c76ebdd582309f9b2e60b95ae44c99c478dcd9711f93be926c5eda57405c1"
+    },
+    {
+      "key": [
+        "decode",
+        1,
+        2
+      ],
+      "host": "gpu-h800-0574.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank2.json",
+      "output_sha256": "c9cafb1b514df6cdc72a1805e6a498acb52aaa3035eae5bdc60cb3a4361c50e5",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank2.kernels.jsonl.gz",
+      "kernel_index_sha256": "987703599ce1a01fd4292ab6807c352982dd48851d771ef6952a60cbe53f2ef2",
+      "kernel_count": 142567,
+      "exact_annotations": 485,
+      "useful_steps": [
+        1128,
+        1129,
+        1130,
+        1131,
+        1132,
+        1133,
+        1134,
+        1135,
+        1136,
+        1137,
+        1138,
+        1139,
+        1140,
+        1141,
+        1142,
+        1143,
+        1144,
+        1145,
+        1146,
+        1147,
+        1148,
+        1149,
+        1150,
+        1151,
+        1152,
+        1153,
+        1154,
+        1155,
+        1156,
+        1157,
+        1158,
+        1159,
+        1160,
+        1161,
+        1162,
+        1163,
+        1164,
+        1165,
+        1166,
+        1167,
+        1168,
+        1169,
+        1170,
+        1171,
+        1172,
+        1173,
+        1174,
+        1175,
+        1176,
+        1177,
+        1178,
+        1179,
+        1180,
+        1181,
+        1182,
+        1183,
+        1184,
+        1185,
+        1186,
+        1187,
+        1188
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "58a24e3da21a1c0617a1628edfe5f11b627ba04f0c2ad1761469d42c1ef5bc05",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "fc87830e4dd7c9be6e8441189b90cef2cb92595b50ba762d1b60b54c2e0d614c",
+        "profile": "ed3895972213cc6c7e4ac4c63d5440c2b9648ec342fcd568f36bcd1930688267",
+        "inventory": "476f14ee71b017d693cac807000defc472ca2fc3e5513ce583e07aac4aa02db6"
+      },
+      "scope_sha256": "3ab537ea4701c8cd3171261daf15202b2b0710c692be057dceea2f9041083808",
+      "command_sha256": "90aaa6a6e0998f2f3b2fd0edc5b49cf0a4931cf55ad39adb70900a93d99c05b6",
+      "status_sha256": "cc6659f43d5c3d13c8e0bd4c947f9e88e75e74591ba0a35d0e85188219be0642",
+      "log_sha256": "07016b992295998cca7bb28b85e87e3eaab6276d32d66dd12de6c2e74c45bc48"
+    },
+    {
+      "key": [
+        "decode",
+        1,
+        3
+      ],
+      "host": "gpu-h800-0574.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank3.json",
+      "output_sha256": "7ec3d2275d94c505a15df166426c900ac8511c934c84a96c321a0d63eeecb138",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank3.kernels.jsonl.gz",
+      "kernel_index_sha256": "385fa387345428846698e244fd10a2301801664c0a2d1dd18a14fb997f091529",
+      "kernel_count": 142567,
+      "exact_annotations": 485,
+      "useful_steps": [
+        1128,
+        1129,
+        1130,
+        1131,
+        1132,
+        1133,
+        1134,
+        1135,
+        1136,
+        1137,
+        1138,
+        1139,
+        1140,
+        1141,
+        1142,
+        1143,
+        1144,
+        1145,
+        1146,
+        1147,
+        1148,
+        1149,
+        1150,
+        1151,
+        1152,
+        1153,
+        1154,
+        1155,
+        1156,
+        1157,
+        1158,
+        1159,
+        1160,
+        1161,
+        1162,
+        1163,
+        1164,
+        1165,
+        1166,
+        1167,
+        1168,
+        1169,
+        1170,
+        1171,
+        1172,
+        1173,
+        1174,
+        1175,
+        1176,
+        1177,
+        1178,
+        1179,
+        1180,
+        1181,
+        1182,
+        1183,
+        1184,
+        1185,
+        1186,
+        1187,
+        1188
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "58a24e3da21a1c0617a1628edfe5f11b627ba04f0c2ad1761469d42c1ef5bc05",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "0d8eb79cdaca7868b0ddc786f947b648272f362cce9a22819a857f641753d460",
+        "profile": "170c5db99424d9f0b3a81f1a8535f15370b78df087409747b099e70c5f5c778f",
+        "inventory": "6ac81a42b3668ab2114489384be8ff184f28d6eab8ab29feb2eeb77bd4f8a73d"
+      },
+      "scope_sha256": "65232ee1e64a930094f96b0509ad847fcc36b3a8c248b6c7838ae43f3d7f6363",
+      "command_sha256": "7069c7d5d6213ba0d7d27b88f8e3a511a304d9e60f376a7c724cc6a6759105de",
+      "status_sha256": "583f0a3ab4d12ad8fa28195cbff8194ad694d0fb778563ed32f284dd2ef51af0",
+      "log_sha256": "23ce343db4a35f315e5ad70d79ada67a4325383b94d1efce381c83fd06c1a944"
+    },
+    {
+      "key": [
+        "decode",
+        1,
+        4
+      ],
+      "host": "gpu-h800-0574.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank4.json",
+      "output_sha256": "1ec0592c1ccbf6b1b89b25170ec91021ca8a8761c41edb4992c862599132cc2f",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank4.kernels.jsonl.gz",
+      "kernel_index_sha256": "2f669fa6e441a135ba8841e51748ba920688d27f544666cd7c487376f3b6ca2e",
+      "kernel_count": 142567,
+      "exact_annotations": 485,
+      "useful_steps": [
+        1128,
+        1129,
+        1130,
+        1131,
+        1132,
+        1133,
+        1134,
+        1135,
+        1136,
+        1137,
+        1138,
+        1139,
+        1140,
+        1141,
+        1142,
+        1143,
+        1144,
+        1145,
+        1146,
+        1147,
+        1148,
+        1149,
+        1150,
+        1151,
+        1152,
+        1153,
+        1154,
+        1155,
+        1156,
+        1157,
+        1158,
+        1159,
+        1160,
+        1161,
+        1162,
+        1163,
+        1164,
+        1165,
+        1166,
+        1167,
+        1168,
+        1169,
+        1170,
+        1171,
+        1172,
+        1173,
+        1174,
+        1175,
+        1176,
+        1177,
+        1178,
+        1179,
+        1180,
+        1181,
+        1182,
+        1183,
+        1184,
+        1185,
+        1186,
+        1187,
+        1188
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "58a24e3da21a1c0617a1628edfe5f11b627ba04f0c2ad1761469d42c1ef5bc05",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "552f9befdf6b6549cc8a3e4478684a8611bb426c9cacb6962f7b06ad55b88555",
+        "profile": "530c74dc1191bd78a2ced2029962de826d993af6de0d15c17bd34fd65b1769a8",
+        "inventory": "0201328c92b15d3de5115acf29f6a30ac2c3b8a634a9d2b437296a432fa3cefa"
+      },
+      "scope_sha256": "98da1e081d682344a4ac8f4dac3d8342126676004707c7430d59ff1d6509ece8",
+      "command_sha256": "c5285f78e19b89ff8cf166580f2c6f52593cd03c903caf53011d34a5880c22dd",
+      "status_sha256": "ba063e543702dedb15a50435d19d86da7036aea42dedcb8d68adcc5a24856264",
+      "log_sha256": "05ac7ecaa9c806a96f45ed4d216627c495b77e47fed600a2f32d91d4dcb5b3de"
+    },
+    {
+      "key": [
+        "decode",
+        1,
+        5
+      ],
+      "host": "gpu-h800-0574.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank5.json",
+      "output_sha256": "73c4ec300b1fff08d45e80aa8448e9f61cefc821b2dafb14d36c44a6159f266f",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank5.kernels.jsonl.gz",
+      "kernel_index_sha256": "18178806418579943b3a1761620ecc45a9f1e261fdc12da2153fd149dac54352",
+      "kernel_count": 142567,
+      "exact_annotations": 485,
+      "useful_steps": [
+        1128,
+        1129,
+        1130,
+        1131,
+        1132,
+        1133,
+        1134,
+        1135,
+        1136,
+        1137,
+        1138,
+        1139,
+        1140,
+        1141,
+        1142,
+        1143,
+        1144,
+        1145,
+        1146,
+        1147,
+        1148,
+        1149,
+        1150,
+        1151,
+        1152,
+        1153,
+        1154,
+        1155,
+        1156,
+        1157,
+        1158,
+        1159,
+        1160,
+        1161,
+        1162,
+        1163,
+        1164,
+        1165,
+        1166,
+        1167,
+        1168,
+        1169,
+        1170,
+        1171,
+        1172,
+        1173,
+        1174,
+        1175,
+        1176,
+        1177,
+        1178,
+        1179,
+        1180,
+        1181,
+        1182,
+        1183,
+        1184,
+        1185,
+        1186,
+        1187,
+        1188
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "58a24e3da21a1c0617a1628edfe5f11b627ba04f0c2ad1761469d42c1ef5bc05",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "5682ee455c0a78b5cc878dd698d3df63f0188a8fcb8ecc53240c8a9573bf4c68",
+        "profile": "bfee47b245e4cf6b9986792ac0307910832c139ff3020d76f90990e3076c75a9",
+        "inventory": "8bd4622cf237fea0fab284044fb115c43939053af910dd516b2917aaa2837468"
+      },
+      "scope_sha256": "ffc5fff5912bcef89b310c3d197f7204eec2a85601ada52fe39bb573b23abdbc",
+      "command_sha256": "1e836d498504e324d4b3495f960198727425a380b58f0ca667eb1721dc10bff7",
+      "status_sha256": "33b004fc59eba3674f4e5936cd00453fcd2dfd444a80b45736a5b7ca43c8140c",
+      "log_sha256": "b7773e638cab279a0720ecb905914d26cca6627bbde565585387579bfec990ef"
+    },
+    {
+      "key": [
+        "decode",
+        1,
+        6
+      ],
+      "host": "gpu-h800-0574.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank6.json",
+      "output_sha256": "3451c316ea8ea71a6571c616dc8149dae55066cbac8a4368e45a2588a70acf85",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank6.kernels.jsonl.gz",
+      "kernel_index_sha256": "9f0d886741be57497acae766ba716f5e88fd99d4d623de3d5e69b44a1beb1e6d",
+      "kernel_count": 142567,
+      "exact_annotations": 485,
+      "useful_steps": [
+        1128,
+        1129,
+        1130,
+        1131,
+        1132,
+        1133,
+        1134,
+        1135,
+        1136,
+        1137,
+        1138,
+        1139,
+        1140,
+        1141,
+        1142,
+        1143,
+        1144,
+        1145,
+        1146,
+        1147,
+        1148,
+        1149,
+        1150,
+        1151,
+        1152,
+        1153,
+        1154,
+        1155,
+        1156,
+        1157,
+        1158,
+        1159,
+        1160,
+        1161,
+        1162,
+        1163,
+        1164,
+        1165,
+        1166,
+        1167,
+        1168,
+        1169,
+        1170,
+        1171,
+        1172,
+        1173,
+        1174,
+        1175,
+        1176,
+        1177,
+        1178,
+        1179,
+        1180,
+        1181,
+        1182,
+        1183,
+        1184,
+        1185,
+        1186,
+        1187,
+        1188
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "58a24e3da21a1c0617a1628edfe5f11b627ba04f0c2ad1761469d42c1ef5bc05",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "f7c93b7391264aea3e4dfe683dbe7813ea6a6e0e354894b9792320c5ff1af962",
+        "profile": "72072785df1b6167e3a86698c58cde853d5d33c12d11c7973f938dc23db70ff0",
+        "inventory": "3051474f685340bfdc6807a9cdb075a24721041f32c52ce3bf31160e2a17a41d"
+      },
+      "scope_sha256": "3ad7a780ce776990dccfc2e71cf5230376368a91495ff7dc0a6c2e6cbee7af95",
+      "command_sha256": "6e80046cba8cc613ee79287f7a866d396f7efa6ddc79f0375d05a87469b0902b",
+      "status_sha256": "53e2e3bb7319625ce46f45d6d6697ee73799fdc9d545f71d76d7c53f5c4868fd",
+      "log_sha256": "3a852dba476c3e71b0ad5c2146d213e8b084b414240da714867f1f0b78ef05ac"
+    },
+    {
+      "key": [
+        "decode",
+        1,
+        7
+      ],
+      "host": "gpu-h800-0574.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank7.json",
+      "output_sha256": "04d5fa651f8527e669ce53743d4e4f4b1533ad0d75e4c555fd18a9ab269f6fdc",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank7.kernels.jsonl.gz",
+      "kernel_index_sha256": "ff2bb17100c7b94c25c35675232c23a4aca2c323250612e7a2479969cbce4cbe",
+      "kernel_count": 142567,
+      "exact_annotations": 485,
+      "useful_steps": [
+        1128,
+        1129,
+        1130,
+        1131,
+        1132,
+        1133,
+        1134,
+        1135,
+        1136,
+        1137,
+        1138,
+        1139,
+        1140,
+        1141,
+        1142,
+        1143,
+        1144,
+        1145,
+        1146,
+        1147,
+        1148,
+        1149,
+        1150,
+        1151,
+        1152,
+        1153,
+        1154,
+        1155,
+        1156,
+        1157,
+        1158,
+        1159,
+        1160,
+        1161,
+        1162,
+        1163,
+        1164,
+        1165,
+        1166,
+        1167,
+        1168,
+        1169,
+        1170,
+        1171,
+        1172,
+        1173,
+        1174,
+        1175,
+        1176,
+        1177,
+        1178,
+        1179,
+        1180,
+        1181,
+        1182,
+        1183,
+        1184,
+        1185,
+        1186,
+        1187,
+        1188
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "58a24e3da21a1c0617a1628edfe5f11b627ba04f0c2ad1761469d42c1ef5bc05",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "d9fc182184d69d9accc57ec1a1c7d133dd3dba0df1ebeb145edf70196ca7b16b",
+        "profile": "f59c00bcd90b992928440ca48b61db119b4ee3e68ab98b9feba4b717f24a19b5",
+        "inventory": "36cd80111dd8cd68ba83713dbd04c31df1e01a4c65507d901217d23ccec2e0b2"
+      },
+      "scope_sha256": "8d99715efd6622640718449675b2c8936a031c22d2fce996de9459b1b171b802",
+      "command_sha256": "88015094a7c2b56b95d85d748c8a7b00c7e33824bb84efe0f80d29208d14a5ef",
+      "status_sha256": "88dd8fdb82b9a65a1fe4461ad4c9bda5daeab3baeee5de8b445d63b76f584dec",
+      "log_sha256": "dad3cd3e210363237a2b1024c2561772478942f6978bd0f1558f614dbf8ddbbf"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        0
+      ],
+      "host": "gpu-h800-0158.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank0.json",
+      "output_sha256": "668aef53e51bd42bb3186453f9d3a7e6745d845fd3e13839fb79cb5f195df10b",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank0.kernels.jsonl.gz",
+      "kernel_index_sha256": "3c04ef2d3b6ad161c58819dc2e6c918fc172971848e38b87a0aa97c039846c5b",
+      "kernel_count": 570964,
+      "exact_annotations": 11448,
+      "useful_steps": [
+        23,
+        29,
+        243,
+        502
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "5b23dc96e186080bbd42dfd9b0d8e5a4e2fc1a8329acea73a9567d8739860228",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "56f904bbf0da55413a682bbfb29d2ecf62569593fc1d4643354777fbf43cbf51",
+        "profile": "5b06829dfd1ddcf7759104d773ed44fc913e620368d2cd80284be4e43c562012",
+        "inventory": "a7216c84b192b2b3d67a2b97fb723ec4642618a2d21572a262a3d6e6ba7dd422"
+      },
+      "scope_sha256": "55d364784e6cdcd62327c087030972a929c23bc7032260a53c84a9b6a197485d",
+      "command_sha256": "1b913bb3eb7231f3abee899f4e1ea1ec0622eb81ec3eff41536e216a161cc2fc",
+      "status_sha256": "a7d4af269c985546faedeb4a55abe60776e01641cdfb846ed13803080f0b8926",
+      "log_sha256": "c37ca34a959edcceb10c534be613c24e697418cff82d8228481969a5a7a0355d"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        1
+      ],
+      "host": "gpu-h800-0158.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank1.json",
+      "output_sha256": "96cd7c4a0ec0e2116acc76cc4cbd4d6acd9535eeb51dad158506ca9428a3a03b",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank1.kernels.jsonl.gz",
+      "kernel_index_sha256": "2b645f2d28a6fad77cf32b49fa8c067a062849efd3de3a7fa324ece4e2e22d53",
+      "kernel_count": 570964,
+      "exact_annotations": 11448,
+      "useful_steps": [
+        23,
+        29,
+        243,
+        502
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "5b23dc96e186080bbd42dfd9b0d8e5a4e2fc1a8329acea73a9567d8739860228",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "f5e1a1b59faa0d43f96a98ff44ffa11b8ddd6dfe0720a197d3e0e751a979e618",
+        "profile": "0f81d960b163d68fc9d34c2cd2fbee648afa4886e46ad7a335e49a41d77992a2",
+        "inventory": "9f61d9851c67fa508043af49baa8642465ae5981a05eeaddc24954309b6bb9b0"
+      },
+      "scope_sha256": "741cec9a72254508b5f47473e9ce672163c62911819c8c1e59026208a7be12a2",
+      "command_sha256": "0b6137b52cd118dae4abc1a9f4af7174ca3eb46004878a4bf05f7dd96b758de8",
+      "status_sha256": "7f79bd67079f3dade2f88702c5f749dae4cb89d606faa81dd0b4461a53e62ae6",
+      "log_sha256": "4789621acd33124cda2e6159af219215baf991b7527fda842bef4f5dcd527c95"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        2
+      ],
+      "host": "gpu-h800-0158.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank2.json",
+      "output_sha256": "06a378187dede031610a18210f07e3e700424f60416bd129702c6e965a9f8bbe",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank2.kernels.jsonl.gz",
+      "kernel_index_sha256": "e5fa3feb890c213e100a17eec951b4a15aa858f5675c586b23f708bbb7133e7f",
+      "kernel_count": 570964,
+      "exact_annotations": 11448,
+      "useful_steps": [
+        23,
+        29,
+        243,
+        502
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "5b23dc96e186080bbd42dfd9b0d8e5a4e2fc1a8329acea73a9567d8739860228",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "197f1764d6c6d9ce4c3ac237471ed1c107175cb8b7c96201dd25651ad85245a6",
+        "profile": "18d1a99c5ea609ba7cf20570231dbb7c85ef5d90219832a666d0a7a0b6fa99e5",
+        "inventory": "661132fb09f76078746a8162f8a51efcd2b5cd6b617bebbeddae346758d403c4"
+      },
+      "scope_sha256": "ae7770ddc47edb7ed7ff2e4031e30f972f61e564d87a2fcd387845f165727a55",
+      "command_sha256": "9d808648197387e6d809898729b53500a9faf2bd393bd01f82667483d71b13a5",
+      "status_sha256": "5f0b997cdfa858ed6ff0b6979d275d09624428d56226b6cc67136c143449b811",
+      "log_sha256": "e21a1f2562f9f8fe42eb8317fe7f8e3645f2213c0278523fafbd057072aac9dc"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        3
+      ],
+      "host": "gpu-h800-0158.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank3.json",
+      "output_sha256": "3089450ac4bd346de7bd62dab13e86d4ead6a239d1237127101309e518d65214",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank3.kernels.jsonl.gz",
+      "kernel_index_sha256": "03cd28a2bdf04764127c358adc31976e4010aae335922d654e7ea4db401b51ec",
+      "kernel_count": 570964,
+      "exact_annotations": 11448,
+      "useful_steps": [
+        23,
+        29,
+        243,
+        502
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "5b23dc96e186080bbd42dfd9b0d8e5a4e2fc1a8329acea73a9567d8739860228",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "d625ede327ce4f800463b09673b03c9d8fb1e8f08fa51846b8ffb3ec861701b2",
+        "profile": "6cf9efc837375552f460c10b46e4ff77ed3748aa5b94e21076f92b6f4e8dcbcf",
+        "inventory": "25e0b0e280f74b544abd53e3ef0c46629ae83b0b2aa2e921e784439951bda139"
+      },
+      "scope_sha256": "1efefe787965964f2cb7784aea5450648f47b4db83c83bfe1100f03cd540249a",
+      "command_sha256": "e45626815719da5c3c29598d67ce75af51b0512bdb81ab83cbccdb0d469a8551",
+      "status_sha256": "d943b461e9e3579cef71d02c0ea5fa9997611bf57155d7e1360190a549d4be00",
+      "log_sha256": "33f46693a35b3b775bd5db24afaac0f805efeb68afb553e658dd636915fbc8fb"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        4
+      ],
+      "host": "gpu-h800-0158.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank4.json",
+      "output_sha256": "545db064ce286f26a02bdc420719e28457fa80a53ac593ad4459fe405ceeb038",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank4.kernels.jsonl.gz",
+      "kernel_index_sha256": "4264180c6dafbbf67312f1ecf8c49eb099c161ad4ce5505daba5594a026f9b4a",
+      "kernel_count": 570964,
+      "exact_annotations": 11448,
+      "useful_steps": [
+        23,
+        29,
+        243,
+        502
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "5b23dc96e186080bbd42dfd9b0d8e5a4e2fc1a8329acea73a9567d8739860228",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "42fc6914de7a91799482c0d3092c39792248739dede3687e2dc44778bee15648",
+        "profile": "2439f169f9299bfde92cd422c80ca0f0af7bec6579e751db8f57104dd40a106a",
+        "inventory": "091d61578829995c0db5b9cc476c1fb1571182466e39ed80a34ffb42fee29f45"
+      },
+      "scope_sha256": "317da2fa801284a43e46142287facd602b75d3a31cbe77cfa781929f64df39e2",
+      "command_sha256": "d49227b9ee0ffb422f917f6e779b1357b08402ba01e1b3ebeefdd6a497d4e426",
+      "status_sha256": "3069c8f9ac427318c595d7bc14ff23b94136917e50160a4851473a4c49279cca",
+      "log_sha256": "9970b8f55de9b6a8f39185653b73612ae9cf08688f4456c4a0ccd51bbbc54264"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        5
+      ],
+      "host": "gpu-h800-0158.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank5.json",
+      "output_sha256": "c4ec18e92fd24508ba0e112d21f8097388d593e629136d547ab2f4585dd70379",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank5.kernels.jsonl.gz",
+      "kernel_index_sha256": "7645ee4a495bb5c52e1b3f28ce4620f3bb8e54dafeebbbe8696c05b0bb59deb1",
+      "kernel_count": 570964,
+      "exact_annotations": 11448,
+      "useful_steps": [
+        23,
+        29,
+        243,
+        502
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "5b23dc96e186080bbd42dfd9b0d8e5a4e2fc1a8329acea73a9567d8739860228",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "320e85ab3af0a2573fe44c7113e7553cfbe275b2ad304248c62255900fb35885",
+        "profile": "f90821575ade7766fcc3920bccbc181463bf01c34d0233686fd80a93225eee1f",
+        "inventory": "7b527d4ef5575e732962d6581faf18a04b6f1b4723902bc4dfbd7bab518e1ace"
+      },
+      "scope_sha256": "0d9767bb9a80bb7a42bb835f07fdf329e095de723ab7be4308a976c60cead1ba",
+      "command_sha256": "222cca78b3bcd8f38b4813dcf190015433589f61419e8a3ee1e345c4e72c8c33",
+      "status_sha256": "43ebc1d4bed9c715b38832920071939cbf9fc754727848b21620526b4c2a9e70",
+      "log_sha256": "228219b534661369a6fe4ea6f83abecce2a1d5a6b30b36011604d2433cc22029"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        6
+      ],
+      "host": "gpu-h800-0158.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank6.json",
+      "output_sha256": "ae89950cfcf318314ce7be73458fc258517bb702b93fe0c88d409a965e0cb0b0",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank6.kernels.jsonl.gz",
+      "kernel_index_sha256": "1d247c80f4a08d489470ca569e0bdeca01c1eaf7c229ac1ded59f4ef18ad9b38",
+      "kernel_count": 570964,
+      "exact_annotations": 11448,
+      "useful_steps": [
+        23,
+        29,
+        243,
+        502
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "5b23dc96e186080bbd42dfd9b0d8e5a4e2fc1a8329acea73a9567d8739860228",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "3b0adb7f3e97141032453a68279dbd37510a57122343f3f9c8dabb67d70e19cf",
+        "profile": "7c0cf54e38a86280ee7836f94e50f78806eb7cd2a0a7654f0e6be61e65512cea",
+        "inventory": "84fcb96c37002a91e4adfd56e253ac19b59fd040d410bd1171859eef5d80fac5"
+      },
+      "scope_sha256": "ce44895da160b16a33a1fd016b64094da3f11310e5e71f80500868f33b144faf",
+      "command_sha256": "588d3446d10eeb4022a6d992d5c9b924de28c08d8253608d314a548f49085da7",
+      "status_sha256": "11aaa9a7cd2ae5151210aee8499f5fa5cf801da6dba80e6f8f11885028305445",
+      "log_sha256": "c90919ed3bd3646c40417e961753ad176c4771ce5eed22d4caaafd9c409d3450"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        7
+      ],
+      "host": "gpu-h800-0158.host.platform.shaipower.com",
+      "output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank7.json",
+      "output_sha256": "4e01149ffae61b094c8d7b5d5b4df675d3880dcc1d458702f3ba0ce0633d2463",
+      "kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank7.kernels.jsonl.gz",
+      "kernel_index_sha256": "5d10f3ee9983bbf7c79bd56df568326ec27c9d3fd4bdaa95ff808a340fa757f7",
+      "kernel_count": 570964,
+      "exact_annotations": 11448,
+      "useful_steps": [
+        23,
+        29,
+        243,
+        502
+      ],
+      "actual_memory_limit_bytes": 32212254720,
+      "source_join": {
+        "node_result_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/result.json",
+        "node_result_sha256": "5b23dc96e186080bbd42dfd9b0d8e5a4e2fc1a8329acea73a9567d8739860228",
+        "native_source_hashes_equal_pinned87": true,
+        "generation_equal": true,
+        "inventory_identity_equal": true,
+        "collector_module_sha_equal": true,
+        "all_profile_source_modules_pinned": true,
+        "profile_source_module_pins": {
+          "vllm.models.common.ops.fused_qk_rmsnorm": {
+            "path": "vllm/models/common/ops/fused_qk_rmsnorm.py",
+            "sha256": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/fused_qk_rmsnorm.py"
+          },
+          "vllm.models.deepseek_v4.attention": {
+            "path": "vllm/models/deepseek_v4/attention.py",
+            "sha256": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/attention.py"
+          },
+          "vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant": {
+            "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+            "sha256": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py"
+          },
+          "vllm.models.deepseek_v4.compressor": {
+            "path": "vllm/models/deepseek_v4/compressor.py",
+            "sha256": "231c5c3da8f7ff4fb7c7bcde6f102ef09d16ae97d9ac122af887e9255fffb6bc",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/compressor.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.flashmla": {
+            "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+            "sha256": "44b02779a641ed7bfcd97e04a27bef1086632629f5079cd13a71ce7943051bb6",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/flashmla.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.model": {
+            "path": "vllm/models/deepseek_v4/nvidia/model.py",
+            "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/model.py"
+          },
+          "vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl": {
+            "path": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+            "sha256": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
+          },
+          "vllm.v1.worker.gpu.block_table": {
+            "path": "vllm/v1/worker/gpu/block_table.py",
+            "sha256": "da4e6011514c883dbb6bf0f59675294e6a6e76cfcd0e4b534bc575cb4d7adfc5",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/block_table.py"
+          },
+          "vllm.v1.worker.gpu.cudagraph_utils": {
+            "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+            "sha256": "ee1f6eb37bc2f456a3e7e9142d5a53455afed2250a57f52780546cf1aef27e2c",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/cudagraph_utils.py"
+          },
+          "vllm.v1.worker.gpu.model_runner": {
+            "path": "vllm/v1/worker/gpu/model_runner.py",
+            "sha256": "fb08762e3a025fdc55ab8d2605a96a57d1fad7efae0fbb605cc4fe2973028aca",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py"
+          },
+          "vllm.v1.worker.gpu.model_states.default": {
+            "path": "vllm/v1/worker/gpu/model_states/default.py",
+            "sha256": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1",
+            "origin": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_states/default.py"
+          }
+        }
+      },
+      "input_triplet_sha256": {
+        "trace": "c339c270ea986c7ec0c3d5cc8df97b54a6cad03a9a98f3471d5ed970e48243ad",
+        "profile": "a35523282df8493120059f1c486f6a594af1e2a0e0acac397681f7d68c66ba9e",
+        "inventory": "0888f27f519dc9b431b0e892649541c79bd21ef0b8e3f8fbc17aec6a066d746d"
+      },
+      "scope_sha256": "8ccdfcc75d81b5ca8203f195ead30765278d9c1eba4fc09824e32250ff79ad4b",
+      "command_sha256": "3179fb83c7932bc6f0ddc7f134f2893876b6f5711220567a434f87de972a1263",
+      "status_sha256": "e1f606de9be24171fe1cc92e56e5afe432dd061a90d8b2bb7d311cf1d1120c0f",
+      "log_sha256": "fd5045094d0f519b6be93cfe87f0015c1d8fbe1b30621cf2691e21ad15a7ca73"
+    }
+  ],
+  "kernels": 7758672,
+  "exact_annotations": 102248,
+  "elapsed_seconds": 0.9599414258264005,
+  "full_R6_R7_acceptance": false,
+  "reference_admission": false,
+  "cost_admission": false
+}
