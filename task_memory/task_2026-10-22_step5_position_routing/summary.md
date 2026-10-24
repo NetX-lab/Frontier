@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
+| 2026-10-24 (UTC) | Record resumed complete candidate audit and review frontier without changing accepted production or workflow status. |
 | 2026-10-25 | Append recovered late analyzer failures for copy/init; preserve partial inspections and unchanged control/source budgets. |
 | 2026-10-25 | Renew session handoff, record explicit sufficient-OSS-quota decision, and distinguish the committed ledger candidate from accepted production and fresh-gate requirements. |
 | 2026-10-24 | Archive verified135-gross/116-path ledger allocation and retained-config NO_ALLOC; preserve accepted9580 source usage and all workflow/cloud readiness limits. |
@@ -36,6 +38,16 @@
 | 2026-10-23 | Archive consolidated source/records and closed CLI placement repair;keep whole-workflow and GPU acceptance explicitly open. |
 | 2026-10-22 | Record six design findings and disjoint mandatory correction assignments. |
 | 2026-10-22 | Archive the first design delivery with its unclosed review and pricing scope. |
+
+## Current resumed execution (2026-10-24 UTC / 2026-10-25 local)
+
+The clean final ledger candidate is1461573de388b72450189bc0c1b88b4ac32491f0, tree447a285aa403af747f838a3bf404b2b17e2eacf7. It remains UNADMITTED. A single test-local naming finding is fixed with two symbol changes;39PASS/3 existingSKIP preserve all42 selected IDs/statuses. Both independent review axes have No findings on this source.
+
+The refreshed independent composed audit recomputes all116 allocated paths,114 predecessor rows,18 zero-sum overlays,126 source/native/image bindings and the actual native patch: CORE4377/4404,PRICING3955/3956,native1350/1582,source9682/9942,global9696/10000,zero violations. Step124gross/net96/cumulative increment116 are distinct. Evidence is under ledger_memory/evidence/composed_scope_2026-10-25/; the prior source1f6 audit remains intact.
+
+Required fresh strict77,canonical unit and101/197/53/52 supplements are running from this frozen readonly source with separate generated caches and native binary absent. Their raw outcomes and ID comparisons remain pending. Accepted production stays9566source/9580global until verified integration.
+
+Snapshot-copy and initialization source analyses resume in their dedicated worktrees under original bounded records ownership. No new required-shape, pricing, GPU or fullCLI run occurs. Whole-workload timing/storage/RSS and finalT2/package/native/G3/E2E remain unfinished; personal OSS sufficiency is user-confirmed.
 
 ## Current handoff boundary (2026-10-25)
 

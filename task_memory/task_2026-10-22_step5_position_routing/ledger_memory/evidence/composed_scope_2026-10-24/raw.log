@@ -1,0 +1,7 @@
+Running scope as unit: run-rccf4a6a5c45a4be1803ef316f0d03292.scope
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/d29_ledger_composed_20261024/audit.py", line 85, in <module>
+    before = {"candidate": state(ROOT, True), "primary": state(PRIMARY), "submodule": state(ROOT / SUB, True)}
+  File "/data/ycfeng/tmp/d29_ledger_composed_20261024/audit.py", line 50, in state
+    assert not status, (repo, status)
+AssertionError: (PosixPath('/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream'), 'M task_memory/task_2026-10-22_step5_position_routing/handoff_prompt.md\n M task_memory/task_2026-10-22_step5_position_routing/plan.md\n M task_memory/task_2026-10-22_step5_position_routing/progress.md\n M task_memory/task_2026-10-22_step5_position_routing/summary.md')

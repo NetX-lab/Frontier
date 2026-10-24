@@ -1,0 +1,48 @@
+{
+  "files": [
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/composed_audit/adaptation.json",
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/adaptation.json",
+      "sha256": "6ea4164ee760d9c71def8574e84f150d474bb84df33dda67c10fe3d5f6f822dd",
+      "bytes": 578
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/composed_audit/audit.py",
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/audit.py",
+      "sha256": "235f6bd71c2fbe92740278c438a88e97a2b7ec44110993e9ff3b8cc52404f714",
+      "bytes": 15320
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/composed_audit/execution.json",
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/execution.json",
+      "sha256": "bfdad00327509cb822d9476d2de449a682b4af0cd52033a4d2c01e86743e41e9",
+      "bytes": 1019
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/composed_audit/exit.txt",
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/exit.txt",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/composed_audit/paths.tsv",
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv",
+      "sha256": "0513d330e25b0ba72be1a11d53d650cea89431d842e108ba73a759f8c2745743",
+      "bytes": 9258
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/composed_audit/raw.log",
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/raw.log",
+      "sha256": "4a2747dd5d456dc562060c5918d84d0a90c726819d3c3ddce17c76ef294dd96e",
+      "bytes": 1387
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/composed_audit/receipt.json",
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/receipt.json",
+      "sha256": "7709d1fe0f350b6aadf0702ba85967c6b608ce38746f708da91454c936dd6956",
+      "bytes": 439968
+    }
+  ],
+  "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "archive_verified": true
+}

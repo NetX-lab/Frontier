@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
+| 2026-10-24 (UTC) | Resume the current multi-worktree D29 task under existing decisions and limits. |
 | 2026-10-25 | Record YC's sufficient-OSS-quota confirmation and renewed handoff request; transfer two unused writer allowance lines to the existing snapshot caller without increasing any budget. |
 | 2026-10-24 | Allocate the four-file135-gross EP ledger persistence/validation repair under standing path/performance authority; retain all runtime/resource limits. |
 | 2026-10-24 | Record the separate three-call shape supplement;total ceiling6,with no further automatic retry. |
@@ -28,6 +30,15 @@
 | 2026-10-23 | Root selects the existing constructor seam for explicit T2 engine limits within the approved scope. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; begin phased implementation. |
 | 2026-10-22 | Bind the design artifact to the approved parent decision and complete workflow scope. |
+
+## [Original Request] D29-RESUME-MULTI-WORKTREE-20261024
+
+UTC date2026-10-24; local date2026-10-25. YC requests:
+
+> resume current task (it now has mutiple worktree branch, make sure 梳理任务执行情况)。以下是之前session给出的handoff信息（仅供参考）：请继续 Frontier 的 D29 / Step-5 position-routing 任务。先恢复现场和已有证据，不要从头重做。
+
+Continue all unfinished work under the already approved scope and authority. The supplied handoff is reference evidence; actual Git, task artifacts and later notifications determine state. No new required-shape/pricing invocation ceiling, numerical source, gate relaxation or GPU allocation follows from resuming. Task-required H800 authority and personal OSS test storage/cleanup authority already recorded remain in force. Preserve concurrent handoff-record edits and all unrelated files.
+
 
 ## [Original Request]
 

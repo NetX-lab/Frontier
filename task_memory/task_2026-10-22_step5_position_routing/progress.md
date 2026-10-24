@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
+| 2026-10-24 (UTC) | Recover worktree/source state and complete fresh116-path/126-binding audit; start independent review. |
 | 2026-10-25 | Recover both late failed analyzer sessions; preserve read-only evidence, permission rejections and unconsumed controls without restarting either diagnosis. |
 | 2026-10-25 | Complete the corrected caller handoff boundary, parent39PASS/27artifact/116-cap checks and complete next-session prompt; candidate remains UNADMITTED. |
 | 2026-10-25 | YC confirms sufficient OSS quota and requests handoff; allocate the two-line zero-sum snapshot correction and retain candidate admission as pending. |
@@ -74,6 +76,17 @@
 | 2026-10-22 | Receive profile-source and revised core subtotals; require explicit adapter ownership and output-frame protocol. |
 | 2026-10-22 | Receive six design findings and start disjoint core, pricing and profile-source corrections. |
 | 2026-10-22 | Receive the first design and request independent scope/correctness review. |
+
+## Current resumed execution (2026-10-24 UTC / 2026-10-25 local)
+
+- completed/recovery: original primaryd13108ae/candidate97ae8d9b match the supplied handoff. Late copy/init failures are independently recovered and land as primary8e7ac28c/candidate17fd799e; source unchanged. Census `resumed_execution/worktrees.json` records89 relevant attachments and six active responsibilities. Primary.cortexkit/.pi and the unused managed checkout remain untouched.
+- completed/initial audit: clean frozen97ae8d9b/source1f6b4314 recomputes116paths/114predecessor rows/18overlays/126bindings,9682source/9696global. The concurrent-record and JSON-Path failures are retained with the corrected PASS under ledger_memory/evidence/composed_scope_2026-10-24/.
+- completed/review repair: Standards identifies only the prohibited test-local name bounded_read. Candidate1461573d renames its definition and registration to reject_ep_ledger_read_text; the body and assertions stay unchanged.39PASS/3existingSKIP,2.71s,42actualIDs/statuses preserved. No new wave or quota consumption;124gross/net96/increment116 remain distinct.
+- completed/final review: Standards01a16f1d-148d-7eb3-8c0b-dbddd59d7909 and Spec01a16f1d-682d-7212-98d6-519505b4c544 both return No findings on1461573d after independent read-only evidence inspection. ledger_memory/review.md and evidence/review_followup_2026-10-25/ retain findings, raw checks and closure.
+- completed/final audit: existing frozen worktree switches normally to1461573d, tree447a285aa403af747f838a3bf404b2b17e2eacf7, clean with original3dac checkout and no binary build. All116paths/114oldrows/18overlays/126bindings freshly pass,CORE4377/PRICING3955/native1350,source9682/global9696,zero violations;2.163204807s,exit0. evidence/composed_scope_2026-10-25/ binds this source; old audit is not re-signed.
+- in-progress/frozen regressions: strict77,unit,supplement101,metadata197,catalogue53,governance52 launch at18:26:55UTC, supervisor tool73779. Exact commands/versions, source-before/after and raw exits are under /data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/. Reuse retained recipes/predicates with final pins/fresh outputs,30GiB configured scopes,single math threads and canonical binary absence. Native accepted baseline generated cache is read-only at its recorded absolute path. No gate is admitted from launch alone.
+- in-progress/parallel diagnoses: existing available agents continue snapshot-copy and init in their original separate886608ea worktrees with records-only scopes. Recover prior reads first; snapshot<=1control,init=0newbenchmarks,no new CSV/model/wave/fullCLI/GPU operations.
+- pending/production: candidate remainsUNADMITTED; accepted production source9566/global9580 is unchanged. Current cohesive timing,worker/cloud execution readiness,complete6144/1024CLI<=2400s/mode and finalT2/native/G3/E2E remain unfinished. OSS quota isUSER_CONFIRMED_SUFFICIENT;shape6/6 remains exhausted.
 
 ## Current frontier and session handoff
 

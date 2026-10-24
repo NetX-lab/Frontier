@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-24 UTC / 2026-10-25 HKT | Bind final ledger source1461573d after the naming review repair; fresh composed audit and both reviews PASS, required frozen regressions running. |
+| 2026-10-24 (UTC) | Resume source admission with a clean frozen checkout and independent composed audit; retain long gates and diagnoses. |
 | 2026-10-25 | Mark copy/init owners failed after late notifications and complete history recovery; continuation remains pending within the original limits. |
 | 2026-10-25 | Renew the handoff boundary, record user-confirmed OSS quota, and retain final ledger admission/regressions as explicit next-session work. |
 | 2026-10-24 | Allocate135-gross complete EP ledger write/read repair at116paths; close retained config hypothesis without allocation and correct storage/runtime boundaries. |
@@ -47,6 +49,16 @@
 | 2026-10-22 | Require an explicit communication-model decision if measured-plan lookup would replace the retained simulator approach. |
 | 2026-10-22 | Assign six review findings and three disjoint mandatory design streams; remove unrelated new-policy scope. |
 | 2026-10-22 | Record review and complete-scope dependencies after the first design delivery. |
+
+## Current resumed execution (2026-10-24 UTC / 2026-10-25 local)
+
+Final candidate1461573de388b72450189bc0c1b88b4ac32491f0 is clean in the existing project-local frozen worktree `d29-ledger-final-1f6b4314`. The latest repair renames two test-local symbols only;39PASS/3 existingSKIP preserve42 IDs/statuses. Standards and Spec both return No findings on this final source.
+
+The refreshed independent audit recomputes116 current paths,114 predecessor rows,18 overlays and126 bindings: CORE4377,PRICING3955,native1350,source9682/global9696,zero violations. The prior1f6 audit remains historical. Accepted production remains9566source/9580global until regressions and integration.
+
+`final audit + reviews PASS -> {strict77, canonical full-unit,101/197/53/52} -> production integration -> current cohesive timing + worker/cloud readiness -> full CLI -> final T2/source/package/native/G3/E2E`. Required suites start at2026-10-24T18:26:55UTC in separate readonly-source/generated-cache namespaces; no native binary is projected. Their raw outcomes are pending.
+
+In parallel, the two completed reviewers continue the original snapshot-copy and initialization diagnoses in their dedicated clean886608ea worktrees, owning only runtime_snapshot_copy/ and init_preparation_reuse/ records. Snapshot control ceiling remains1,currently0used; init permits source/small retained evidence only. Required-shape6/6 is exhausted. The unavailable analyzer and provider/configuration state are not changed.
 
 ## Current handoff boundary (2026-10-25)
 

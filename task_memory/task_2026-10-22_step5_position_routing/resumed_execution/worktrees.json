@@ -1,0 +1,816 @@
+{
+  "task_id": "D29-RESUMED-MULTI-WORKTREE-STATE",
+  "created_utc": "2026-10-24T18:17:00.971Z",
+  "primary_head": "8e7ac28c588a9b16593f0e777ddf56fc1b20ca1f",
+  "source_under_review": "1f6b431478e2351e3ca6819f707cccbc3e4336e2",
+  "scope": "Frontier worktrees whose path contains step5 or d29; unrelated calibration worktrees excluded",
+  "raw_git_worktree_list": "worktree /data/ycfeng/Frontier\nHEAD e4b949f1b6b60503c5d5f9bd0221210059b35db4\nbranch refs/heads/main\n\nworktree /data/ycfeng/Frontier/.worktrees/baseline-bfa82de\nHEAD bfa82de80413b5f4b38e4990a80b5108f9521f50\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/c33-dp-baseline-20261019\nHEAD 005d5cfa2ee2cf63aeeefc6688b05b7c4c4953c3\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/c33-dp-candidate-20261019\nHEAD 563dfffd1ee30b136ae76e03df306b26418e476c\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/c35-base-20261019\nHEAD da13911b35f82282521503f06599451a2a22b43a\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/c35-candidate-20261019\nHEAD 8d479ef5b232f198035059441afc33bd88e9fc68\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-fidelity-9974acdb\nHEAD 9974acdb88f5c47166fee28dec564b7cc782ca1a\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-init-cache-records\nHEAD ccd9b728463d0fffe4e2ec869a4d49e7a550b381\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish\nHEAD 886608ea574dd2107d0b30771d63d8057d23cac6\nbranch refs/heads/d29-init-preparation-finish\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314\nHEAD 97ae8d9b64f4728ba3d3c9af0647832e83ee0335\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-native-key-scope-audit\nHEAD 65a2766dda3df7c0c5d2ad30c3dcee0f55b27d88\nbranch refs/heads/d29-native-key-scope-audit\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-plan-preparation-records\nHEAD d2e6ca69e6eb914ed879b9877ce064bb51c14b1e\nbranch refs/heads/records/d29-plan-preparation\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-post-key-regressions\nHEAD 0c6f8d999f0bae2fa83aa33da4fdec6d5f13c0fc\nbranch refs/heads/records/d29-post-key-regressions\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-post-named-query-final-parent-audit\nHEAD 03d6132e97d6bd9dc0b125795b6021cc0d43fec4\nbranch refs/heads/d29-post-named-query-final-parent-audit\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions\nHEAD 39f0c1000a96c10f186cabe5f77dfc3058f86549\nbranch refs/heads/records/d29-post-named-query-regressions\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish\nHEAD 886608ea574dd2107d0b30771d63d8057d23cac6\nbranch refs/heads/d29-snapshot-copy-finish\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-snapshot-scope-audit\nHEAD de5eeab05a2f312da415a9e6557847ab583b4990\nbranch refs/heads/d29-snapshot-scope-audit\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-trace-encoding\nHEAD 82b0e31163631d1532a52e317bb23245992892ae\nbranch refs/heads/records/d29-trace-encoding\n\nworktree /data/ycfeng/Frontier/.worktrees/d29-workload-multiplicity\nHEAD 58636d06c5c5068af6df336f9b2968def095dd85\nbranch refs/heads/d29-workload-multiplicity\n\nworktree /data/ycfeng/Frontier/.worktrees/d30-baseline-b8be287\nHEAD b8be2871f5f8e2ea762b7471599240dcfff5fa97\nbranch refs/heads/verify/d30-baseline-b8be287\n\nworktree /data/ycfeng/Frontier/.worktrees/d30-fidelity-713e6a8\nHEAD 713e6a81708e87b86cf91fd89f3b1f954bdcbead\nbranch refs/heads/verify/d30-fidelity-713e6a8\n\nworktree /data/ycfeng/Frontier/.worktrees/d30-unit-713e6a8\nHEAD 713e6a81708e87b86cf91fd89f3b1f954bdcbead\nbranch refs/heads/verify/d30-unit-713e6a8\n\nworktree /data/ycfeng/Frontier/.worktrees/d5-ttft-baseline-8585748\nHEAD 858574873b4a61bcad66b0ab90dbe1c04788652d\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/d5-ttft-placement-baseline-d65a4b9\nHEAD d65a4b99eb5c1ad963de1635694a59a398fd8bf4\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsa-extend-profiles\nHEAD 0660717b4d402101ed04ca08f7ba60ccf1f6a116\nbranch refs/heads/dsa-extend-profiles\n\nworktree /data/ycfeng/Frontier/.worktrees/dsa-full-dummy-consumer\nHEAD 69281ec6a2c776856a6e9c1814a5b066fb3d1e7a\nbranch refs/heads/dsa-full-dummy-consumer\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c07-clean-validation-20261018\nHEAD 9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c07-validation-20261018\nHEAD 9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c08-clean-validation-20261018\nHEAD 9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c08-validation-20261018\nHEAD 9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c09-clean-validation-20261018\nHEAD 9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c10-clean-validation-20261018\nHEAD dc3912c8ac48b65a98e56b4b0208d156e1b15574\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c12-clean-validation-20261018\nHEAD ba482200769828fdbc381eb298630f4753f48206\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c13-clean-validation-20261018\nHEAD 7626b3f301b7483632c75352cd48c670d4e6fe52\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c14-clean-validation-20261019\nHEAD d3d4229b38273c7910e1edac80851ef81e2e2a10\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c15-clean-validation-20261019\nHEAD 596451a4550be8edd912a026cea8a357b66dfb48\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c17-combined-validation-20261019\nHEAD 91d169757e11dfa54aae439643508504117946e8\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c17-r3-validation-20261019\nHEAD 2da11c8b6d319eca989fd3c9b5c997824667ff63\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c20-boundaries-validation-20261019\nHEAD dc7f382700218280980b923ba7fe9128091aaf1a\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/dsv4-c23-zero-validation-20261019\nHEAD b5120e6b39f44a79245b04de71e0ed95d8bb34a6\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-baseline-0cdd6cb\nHEAD 0cdd6cb483faae436b50f15d88f2b529bf747dc0\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-baseline-9dcd876\nHEAD 9dcd876a609e0ad55ff543c7e3fdbd3bcb6e6d18\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-102c0c9\nHEAD 102c0c9e503548640e86e18be8374faac7f06917\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-145a2f5\nHEAD 145a2f577642c43702cd9e0b1e24d3af6ba66822\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-1a65e49\nHEAD 1a65e4985091f5c85c14830f86385800a614e4e6\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-26db654\nHEAD 26db654cbbb38b361990aa1aa8ae1dad5db8e000\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-282cb11\nHEAD 282cb110800b5641e9ab21d51ecf77dba601e233\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-2a84c58\nHEAD 2a84c58ac7643bed9f2522d48ebce0eef67847bd\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-32fb934\nHEAD 32fb934bafcd5d422555f23534b99609d03d540b\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-5428bd7\nHEAD 5428bd7803137cac1de5c691409534af1e68888e\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-5af7638\nHEAD 5af7638ddb73374c2ba2ca055687dd36a10dc98c\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-5bb8ea4\nHEAD 5bb8ea4f03cc2eabff927a8700695f7c91c4cc3a\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-621b198\nHEAD 621b198476c677ae32464387149402c1c4952c9c\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-631250b\nHEAD 631250bd86b93b154d98bc148b72a78a62ba7884\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3\nHEAD 7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-936f913\nHEAD 936f9130749f9ec532b4c7e7480d67700818458e\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-947961d\nHEAD 947961d8cb58f9a20b9303b8ebb73b875de1e704\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-9d3df65\nHEAD 9d3df65e8796ccfb4f0d9b08c2b2f46b73616fd1\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-b862e57\nHEAD b862e57906862e1e21aa6b21e8f862368ed96923\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-d2878ed\nHEAD d2878ed90ef4aecc1d2d80b597381b813420e2a8\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-e3ce166\nHEAD e3ce1660ccb58579980540b1eadce356c75da3aa\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-f15ab39\nHEAD f15ab394a8c3dd51fa7cc9d02dfd59c962cd3269\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/fidelity-candidate-fa5bae2\nHEAD 2bd8afebe165351fcd3a674354666286bf42d5ac\nbranch refs/heads/verify/fidelity-candidate-fa5bae2\n\nworktree /data/ycfeng/Frontier/.worktrees/frontier-calibration-skill\nHEAD af3f9e7ff95c9206714ca86db33805e6f3369ed0\nbranch refs/heads/docs/frontier-calibration-skill\n\nworktree /data/ycfeng/Frontier/.worktrees/glm-c11-clean-validation-20261018\nHEAD af5533ed69f2669b72e2a5525a35a047177925d4\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/glm-c16-clean-validation-20261019\nHEAD 91d169757e11dfa54aae439643508504117946e8\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/glm-c16-r2-clean-validation-20261019\nHEAD 91d169757e11dfa54aae439643508504117946e8\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/glm-c19-harness-validation-20261019\nHEAD dc7f382700218280980b923ba7fe9128091aaf1a\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/glm-full-dummy-h200\nHEAD e4b23c90d2c9d170daa030ab05ceceaadc6ea6f0\nbranch refs/heads/glm-full-dummy-h200\n\nworktree /data/ycfeng/Frontier/.worktrees/glm-full-path\nHEAD 60150783c203c61a14e0c7bfee67158d64e7c271\nbranch refs/heads/glm-full-path\n\nworktree /data/ycfeng/Frontier/.worktrees/glm-h5-integration\nHEAD f09c9b2a18a55162053b303a6c0337e13808b4da\nbranch refs/heads/glm-h5-integration\n\nworktree /data/ycfeng/Frontier/.worktrees/glm-p0-launch-fix\nHEAD 9c54f663da0b20ce7fe2dfe60319d7153b469dce\nbranch refs/heads/glm-p0-launch-fix\n\nworktree /data/ycfeng/Frontier/.worktrees/glm-p0-ready-timeout\nHEAD 7c1b888a0b8b1758d474d6d7c97561ee2e48b310\nbranch refs/heads/glm-p0-ready-timeout\n\nworktree /data/ycfeng/Frontier/.worktrees/glm53-c04-validation-20261018\nHEAD 9c63e6b687e3307ad66208574cda661ffb7612bf\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/glm53-c05-validation-20261018\nHEAD b49a4a0074e78f91a70acca33dc0c569a1c7dd74\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/glm53-c06-validation-20261018\nHEAD cd3d3537f6c71535fcee7a1fdfda852c866bc745\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/glm53-contract-validation-20261018\nHEAD 9e9aca866484de993410f78bf6bf481bbbbaed1c\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028\nHEAD 0f2fb6cdffbbe86f2fdc06e5141e3e80c227c2b9\nbranch refs/heads/feat/glm53-dsv4-vllm028\n\nworktree /data/ycfeng/Frontier/.worktrees/glm53-h200-verified\nHEAD 9f58dbe8618322c85848945b6cc04bb2e1c6ec6a\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/glm53-model-capacity-validation-20261018\nHEAD 9e9aca866484de993410f78bf6bf481bbbbaed1c\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/m2-decode-lane-placement\nHEAD 6b9ce8040f0a5a78af6a6e54ad2224fcf258586e\nbranch refs/heads/m2-decode-lane-placement\n\nworktree /data/ycfeng/Frontier/.worktrees/native-cold-start\nHEAD 359b771ffb418e8ef583abba72532e02dd4ac2ff\nbranch refs/heads/native-cold-start\n\nworktree /data/ycfeng/Frontier/.worktrees/native-independent-connections\nHEAD 1f4075b4ed591406521391fee03a2f35173064dc\nbranch refs/heads/native-independent-connections\n\nworktree /data/ycfeng/Frontier/.worktrees/p0-comm-root-evidence\nHEAD f968d74f108bc5ec9987042f1f83919b32df9c3b\nbranch refs/heads/p0-comm-root-evidence\n\nworktree /data/ycfeng/Frontier/.worktrees/p0-input-binding\nHEAD 83e571fa0ae4b2c2201009ae68c38c4d0ec381cd\nbranch refs/heads/p0-input-binding\n\nworktree /data/ycfeng/Frontier/.worktrees/q1-window-warmup\nHEAD 5bb8ea4f03cc2eabff927a8700695f7c91c4cc3a\nbranch refs/heads/q1-window-warmup\n\nworktree /data/ycfeng/Frontier/.worktrees/q10-client-metrics\nHEAD 1400f12515b8e4f9af8b702b1c0ee9a4c688af35\nbranch refs/heads/q10-client-metrics\n\nworktree /data/ycfeng/Frontier/.worktrees/q10-client-metrics-base4dcd6\nHEAD 4dcd6c4f593f9e887be169b1a50f452b87f7a503\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/q10-nixl-context\nHEAD 6cc09dc8f1f83a5486bbb61ad8c7b01ff6e54d7b\nbranch refs/heads/q10-nixl-context\n\nworktree /data/ycfeng/Frontier/.worktrees/remove-legacy-run-outputs\nHEAD a686f4936661c61864764d8ec5a76097cc90edb3\nbranch refs/heads/cleanup/remove-legacy-run-outputs\n\nworktree /data/ycfeng/Frontier/.worktrees/stage-admission-ordering\nHEAD 4d08c5d1c13850e42e5cb474721875507f8f99f5\nbranch refs/heads/fix/stage-admission-ordering\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-canonical-g3\nHEAD a7d67082bae9a70d193494141390fa9150156b52\nbranch refs/heads/feat/step5-canonical-g3\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-cli-placement-repair\nHEAD d8a087226de870bf3d67cfd724cde4563cb19f47\nbranch refs/heads/feat/step5-cli-placement-repair\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-client-metrics\nHEAD 15a3958b0dd8fb8396c72b0cf927b7fa1c2f8fb6\nbranch refs/heads/feat/step5-client-metrics\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-comm\nHEAD 6a9cedc7e468fee396ca5c2a9c5987bab76dd9ac\nbranch refs/heads/feat/step5-comm\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-comm-baseline-00ed846\nHEAD 00ed8467917954680ed99bb339c56e0ca0bb9227\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-comm-candidate-b1f032d\nHEAD b1f032d83ab77fc90ee307ab3f2bfeee6aafd0b7\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-core-review-fixes\nHEAD fe88a3a877988cfb94102efe2fac495b132204e4\nbranch refs/heads/feat/step5-core-review-fixes\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d20-baseline-b65609b\nHEAD b65609b5e1afb329f9fd51c87493da4c2c08b910\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d20-integration\nHEAD acc3a88d336a656fdde62c5a72160c7f6dd19317\nbranch refs/heads/feat/step5-d20-integration\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d24-stage\nHEAD c9e92740ffe17d6ef9e6cdc671ceb3b465b3081c\nbranch refs/heads/feat/step5-d24-stage\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d25-native-e998210\nHEAD e998210d1ba75a30c88f66a1c6c9f278c4c8853e\nbranch refs/heads/feat/step5-d25-native\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes\nHEAD 56529fcd19e7e209e577c5aac3c581b4c5df8b6a\nbranch refs/heads/fix/d29-artifact-bytes\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-artifact-parse\nHEAD 0fa22e49417b80ee315518f9ea6843b77663fe09\nbranch refs/heads/feat/step5-d29-artifact-parse\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields\nHEAD 7540414341d5b81a86b18b9562d1506c0ba74285\nbranch refs/heads/feat/step5-d29-cost-fields\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse\nHEAD 37c7832ee5ee2e9588ba6fed411a9e9894949ab8\nbranch refs/heads/feat/step5-d29-group-reuse\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-input-snapshot\nHEAD 6c7121d819e679054285bb3be5cb117a7e77bc4e\nbranch refs/heads/step5-d29-input-snapshot\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream\nHEAD 17fd799ef1163b49585640219493fef9d746b129\nbranch refs/heads/fix/d29-ledger-stream\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-legacy-output\nHEAD bbd39fe3f591bd819b126ea094bfe39aa49e9fbe\nbranch refs/heads/feat/step5-d29-legacy-output\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-loader-family\nHEAD 35d2f74ed60855e48e5af4ea97c49721b9aba7ea\nbranch refs/heads/feat/step5-d29-loader-family\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-named-query\nHEAD 3d75c786781802ad2753cbdd81d989c9b694660c\nbranch refs/heads/step5-d29-named-query\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-native-cache-key\nHEAD 376983d2ecc441d1e0a8cb8b943e65a2dcb217b5\nbranch refs/heads/fix/d29-native-cache-key\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-plan-key\nHEAD d1e2fb8c0162c58e7e694fab2d3a900638f0d50a\nbranch refs/heads/fix/d29-plan-key\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-post-prepared-pricing\nHEAD 7344627b50fdb559ef50390fc8ae3ea3c18b40b8\nbranch refs/heads/diagnose/step5-d29-post-prepared-pricing\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-prepared-archive\nHEAD ba585c03b0c58bf960952509eddc23b6b03e3621\nbranch refs/heads/docs/step5-d29-prepared-archive\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-prepared-point\nHEAD b476907e9afe865476e0a3a6720f8eb4e3290c40\nbranch refs/heads/feat/step5-d29-prepared-point\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-t2-e41\nHEAD d7d6ad8ca9a9d4762a4c6439ebcc75cc7fa98f89\nbranch refs/heads/docs/step5-d29-t2-e41\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-t2-final\nHEAD 2c0f9bd79e67b2fa15d6f68c0726accffab52813\nbranch refs/heads/docs/step5-d29-t2-final\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-t2-performance\nHEAD a886466c92342b9cea4ec13f9e57d29492c9a97b\nbranch refs/heads/docs/step5-d29-t2-performance\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-d29-trace-serialization\nHEAD 012a3df452c9aa75cf1a5e00bce9af15603aee23\nbranch refs/heads/feat/step5-d29-trace-serialization\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-finish-sync\nHEAD 3d6744f53feb12db0399f267e62af8f76e4a466a\nbranch refs/heads/feat/step5-finish-sync\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-g3-review-e14e7df\nHEAD e14e7dff27f13d0a101fd46c792d9d91c7425f81\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-http-capture\nHEAD 42fb46ced193182037cda0ace90652a6ffff3206\nbranch refs/heads/feat/step5-http-capture\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-measured-compute\nHEAD 1afc0dc7815e62e65d6e186072b5ed1cc1ddb0d5\nbranch refs/heads/feat/step5-measured-compute\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-measured-pd\nHEAD d4b2401e1b384fa300a43a6af881eba1c3c259df\nbranch refs/heads/feat/step5-measured-pd\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-mrv2-forward\nHEAD ef476fe8ede333cdb43278c984bc6eb4637d4e78\nbranch refs/heads/feat/step5-mrv2-forward\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-mrv2-inputs\nHEAD 5c2319cd8a08d42269c55adeac100f6361cb4b63\nbranch refs/heads/feat/step5-mrv2-inputs\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-mrv2-load\nHEAD dfb6c96fc6f27bb5ea297145ea56c52ac9c09b44\nbranch refs/heads/feat/step5-mrv2-load\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-mrv2-main\nHEAD 26db654cbbb38b361990aa1aa8ae1dad5db8e000\nbranch refs/heads/feat/step5-mrv2-main\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-mrv2-perf\nHEAD 3ece1ce9ffea09e9f22b4642223186721182161a\nbranch refs/heads/feat/step5-mrv2-perf\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-native-pd\nHEAD f3f407e34f1387a9b4ba7147a8de29772dcbb58e\nbranch refs/heads/feat/step5-native-pd\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-p0-profiles\nHEAD 82f445248f61783401d7a1d9a34a76db78825487\nbranch refs/heads/feat/step5-p0-profiles\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-pd-structural\nHEAD f055a695f3a200e9144690bf31fd1aa0bf706e89\nbranch refs/heads/feat/step5-pd-structural\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-position-core\nHEAD 5c1413398ed2381038f84f39518173341733bfac\nbranch refs/heads/feat/step5-position-core\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-position-native\nHEAD 4a7adb70b226f943f88a1f21165294f5b756aea2\nbranch refs/heads/feat/step5-position-native\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-position-pricing\nHEAD a7e2a3ca6a12367a6955b905a9e061494766106d\nbranch refs/heads/feat/step5-position-pricing\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-prefill-target\nHEAD c86fca616a7c1bbbdef5a05bd7b26b5d3a40defa\nbranch refs/heads/feat/step5-prefill-target\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-pressure-capacity\nHEAD 8a4df4fd46e22aeea3ba63a40bf8f05dccf593ba\nbranch refs/heads/feat/step5-pressure-capacity\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-preview\nHEAD 8e7ac28c588a9b16593f0e777ddf56fc1b20ca1f\nbranch refs/heads/feat/step5-preview\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-priority-runs\nHEAD 6246baa912e1830d075c136b7d02a845dadfb0e9\nbranch refs/heads/feat/step5-priority-runs\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-profile-integration\nHEAD 3cdc9966011d10ec363db28d8f6088344632a368\nbranch refs/heads/feat/step5-profile-integration\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-profiling\nHEAD 2a4db975d4b3feb996a380fdb7cd4eb469d6be7b\nbranch refs/heads/feat/step5-profiling\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-r2-correction\nHEAD b6ba7e512d20a9d568cb5f91a5a9aed5a2d75bee\nbranch refs/heads/feat/step5-r2-correction\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-reconcile\nHEAD c8b8c06a468e0279441394b9eb24dd7bcd4b966a\nbranch refs/heads/feat/step5-reconcile\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-reference-values\nHEAD 4393201f51a1e4983de62f88fb8adb06eca7072c\nbranch refs/heads/feat/step5-reference-values\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-registry-bindings\nHEAD a5189e199208022a341b377b0fb8c542030907f3\nbranch refs/heads/feat/step5-registry-bindings\n\nworktree /data/ycfeng/Frontier/.worktrees/step5-root-metrics\nHEAD 85552ed3dd3bfafb526e667fa453477a3ee7ddd7\nbranch refs/heads/feat/step5-root-metrics\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-attention-c26\nHEAD 5e051e4f87222cacec838fe6bb208426074d3ad1\nbranch refs/heads/v4-attention-c26\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-attention-input\nHEAD 04a72b08e43f05cb334b28bc76e5b98f1fc8d760\nbranch refs/heads/feat/v4-attention-input\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-balanced-binding\nHEAD 0832200e68b0880dc31af227b93835d60b6af371\nbranch refs/heads/feat/v4-balanced-binding\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-balanced-callers\nHEAD 186dfef5503ecb5329bd0fa96f9e978cc813276a\nbranch refs/heads/feat/v4-balanced-callers\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run\nHEAD 9fb4bd7e57a67246114300f0d03d1fce8aefe6a2\nbranch refs/heads/feat/v4-balanced-decode-run\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model\nHEAD b62c155abd981a71e12e62aa0c0fe3990741d2f8\nbranch refs/heads/feat/v4-balanced-native-model\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-balanced-native-run\nHEAD e9e79d496d58941bf3e95dbc4f374e5c1159851f\nbranch refs/heads/feat/v4-balanced-native-run\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run\nHEAD 39b2bf8088dff40dc8b695b6927d6e6322c337e9\nbranch refs/heads/feat/v4-balanced-prefill-run\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-balanced-routing\nHEAD 410f06299aab38800ba023ce939e9fcf4f2b7cc4\nbranch refs/heads/feat/v4-balanced-routing\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-balanced-verify-6ca6777\nHEAD 6ca6777b5eabb0685ed755db8e88deae2103d6c6\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-decode-attention\nHEAD b36c2b977ab3aa006c6f74bcc6ea2b1ef0963207\nbranch refs/heads/v4-decode-attention\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline\nHEAD 44f2ddb9736f0abaaf6a52a5fb768519996b7da3\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record\nHEAD 178c1123ee736fe040d8f1a12a443e8f18ce3a76\nbranch refs/heads/feat/v4-dp-sequence-record\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-graph-measured\nHEAD 9dce3c36bc2155fc7ca8c355dc73703ad54f04a7\nbranch refs/heads/v4-graph-measured\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-graph-payload-package\nHEAD 2264f213dd8ae09a3541011213adcecd4c6a0851\nbranch refs/heads/v4-graph-payload-package\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe\nHEAD a2c4ad87f231a113f0d4d543050e3697a208dcba\nbranch refs/heads/v4-graph-payload-probe\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture\nHEAD 0d5b0d6e5b9f6a3913bfce9eedbc73096c81674c\nbranch refs/heads/v4-groundtruth-fixture\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-grouped-nixl\nHEAD fc0918cc814b18ecf5c35d25ca6cfe0d0f561b5b\nbranch refs/heads/v4-grouped-nixl\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-h200-admission\nHEAD 1145b40d956e9e63a17f7bdeeb8c49846263d935\nbranch refs/heads/v4-h200-admission\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-h800-prefill\nHEAD b9b90e18869eec82628b0182e3eae0d8677408c1\nbranch refs/heads/v4-h800-prefill\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-isolated-decode\nHEAD 7e4b5535c6e13856991598940b63685ec4c2f8e7\nbranch refs/heads/v4-isolated-decode\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-moe-local-run\nHEAD 941a4450dfe6c74ead086cb4629eb193b6071d7a\nbranch refs/heads/feat/v4-moe-local-run\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-native-dispatch\nHEAD 6549842209dd80a37896cddb3de1eecef38745a7\nbranch refs/heads/feat/v4-native-dispatch\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-native-profile-run\nHEAD a90c9dbbee53e2cabbfac73ba8490ffb958ce8eb\nbranch refs/heads/feat/v4-native-profile-run\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-native-profile03-run\nHEAD 438ddfc4918945b3c1bb12af586b31ef07d19773\nbranch refs/heads/v4-native-profile03-run\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-native-profile04-run\nHEAD 6ec96b4c4ee133aa41a3794391c6253d4ebb3fa3\nbranch refs/heads/v4-native-profile04-run\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-native-routing-reader\nHEAD 99d5d338670b2a00823bfa35f79a1a2a67a53bf3\nbranch refs/heads/fix/v4-native-routing-reader\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-native-serve-profile\nHEAD 313c8167af0289d058b625bda19282e851b950cf\nbranch refs/heads/feat/v4-native-serve-profile\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-p0-native\nHEAD 7c1b888a0b8b1758d474d6d7c97561ee2e48b310\nbranch refs/heads/v4-p0-native\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-prefill-contract\nHEAD b8bfedea7858f10c8ee3e76511abfeb11d703ee0\nbranch refs/heads/feat/v4-prefill-contract\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-profile03-collection\nHEAD db092fd54d0fdf7bc9e7dc279f0e435315b21a66\nbranch refs/heads/v4-profile03-collection\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-q1-warm-remeasure\nHEAD dc86fad4859091298a00a9a5dc0896dcfb7aef54\nbranch refs/heads/v4-q1-warm-remeasure\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package\nHEAD 0243b415852f6ef8bd4f9eca0c50574fffe037bc\nbranch refs/heads/feat/v4-scope-lifetime-package\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-probe\nHEAD e081d5e80218b2dd57c995cdc6b298d9d833f6c3\nbranch refs/heads/feat/v4-scope-lifetime-probe\n\nworktree /data/ycfeng/Frontier/.worktrees/v4-serving-context\nHEAD 794c8919a52afdb598df93ac41937d4c3be992e1\nbranch refs/heads/v4-serving-context\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-core-closure-01\nHEAD 19a356300089b318476fa0feea1764ed01a2589a\nbranch refs/heads/verify/step5-core-closure-01\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-core-delivery-01\nHEAD fdbd044cc1be498d5b597e2a3521258c7c10167e\nbranch refs/heads/verify-step5-core-delivery-01\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-01\nHEAD 9974acdb88f5c47166fee28dec564b7cc782ca1a\nbranch refs/heads/verify/step5-d29-integrated-01\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02\nHEAD 60ba4c7569b7c9fd4c8f9f43a16f92249fa76181\nbranch refs/heads/verify/step5-d29-integrated-02\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-03\nHEAD ca135d89310384ae3fac8072708811985f01d515\nbranch refs/heads/verify/step5-d29-integrated-03\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04\nHEAD 1be91bad431d3bd886de7f5d80c19bd7e6c54a25\nbranch refs/heads/verify/step5-d29-integrated-04\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05\nHEAD e41abc073500d61f224eda4fca1123e74e40544d\nbranch refs/heads/verify/step5-d29-integrated-05\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06\nHEAD 79f1a3fd35d42b751cd1520c764ddac717b923d9\nbranch refs/heads/verify/step5-d29-integrated-06\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07\nHEAD 46fe83ac55876c10f6dd8ff792705e87efd1905f\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08\nHEAD dbe19f531ff68d9edafc480418e8927c40eb1c60\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-position-contracts-01\nHEAD f3a25feb8682f195174ae3874093e0c77dbdee7c\nbranch refs/heads/verify-step5-position-contracts-01\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-pricing-01\nHEAD 36a4b9c93d2d65ad5a6d0bc0d31d070101975263\nbranch refs/heads/verify-step5-pricing-01\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-pricing-02\nHEAD 7c7471ffd2a0bcff23a1c88d993d719977df24c4\nbranch refs/heads/verify-step5-pricing-02\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-pricing-03\nHEAD 5c1fca7c626911ea92248e42c86f67bad134d190\nbranch refs/heads/verify-step5-pricing-03\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-pricing-04\nHEAD 44415f7b4f3d1bfb2fb015ede4f3ba4ad81256ad\nbranch refs/heads/verify-step5-pricing-04\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-pricing-05\nHEAD 38fb370c21e61a1721568a2792d0bb323f80884c\nbranch refs/heads/verify-step5-pricing-05\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-pricing-06\nHEAD 4b334b1628ff94bc6bf06421f031c71a62b34cf1\nbranch refs/heads/verify-step5-pricing-06\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-registry-01\nHEAD 43c5bcbcd427268cde513a739e15d7b2ac7ab479\nbranch refs/heads/verify-step5-registry-01\n\nworktree /data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01\nHEAD 94244bc47149f84175b62df0475c527fba2e48d7\nbranch refs/heads/verify-step5-t2-limits-01\n\nworktree /data/ycfeng/Frontier/.worktrees/w128-baseline-4e64f2b\nHEAD 4e64f2be0404cfa820f14b0da4ee50566885743f\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/w128-dsa-native-profile\nHEAD 722cd03723d489ee4d6fe2c31741e46aca8d4001\nbranch refs/heads/w128-dsa-native-profile\n\nworktree /data/ycfeng/Frontier/.worktrees/w128-dsv4-c26-profile\nHEAD 6d88700d5a01448041575ba5ae49940c80fd40b4\nbranch refs/heads/w128-dsv4-c26-profile\n\nworktree /data/ycfeng/Frontier/.worktrees/w128-native-client\nHEAD 2c9bebde6566d701d7eeb82d320c8a0ea069794f\nbranch refs/heads/w128-native-client\n\nworktree /data/ycfeng/Frontier/.worktrees/w3-base-8a64123\nHEAD 8a64123d8d27d1d23a278b5c230bacbed429154d\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/w3-h1-9dec8d1\nHEAD 9dec8d198b910acd4772663a679f900f10304329\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/w3-m1-5ad40e0\nHEAD 0a8cc8e76cb61814ad9d644dcf229468171baa07\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/w3-review-fixes-20261020\nHEAD 7e49a808095f0c4bf5a11715e3aa86330e6027e3\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/w3-unit-7311c17\nHEAD 7311c17ee6201ccd0689e2523127a3139aad1f1d\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/w4-fp8-shared-unit-20261020\nHEAD 0fa2633d1493eed58c99d81f1691e026d5aaf4c3\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/w4-fp8-shared-validation-20261020\nHEAD 0fa2633d1493eed58c99d81f1691e026d5aaf4c3\ndetached\n\nworktree /data/ycfeng/Frontier/.worktrees/w7a-dsa\nHEAD 4d2a01801a4c4c6b970eebc0b72f2a6a14286763\nbranch refs/heads/w7a-dsa\n\nworktree /data/ycfeng/Frontier/.worktrees/w7a-sp-moe\nHEAD 69fee0cda4cbc89cbffeed3fe67bbc7d978e5116\nbranch refs/heads/w7a-sp-moe\n\nworktree /data/ycfeng/Frontier/.worktrees/w7b-measured-cc\nHEAD b53c69c596f882edfac64a8420ba6af8c055a0bb\nbranch refs/heads/w7b-measured-cc\n\nworktree /data/ycfeng/Frontier/.worktrees/w7b-sp-collectives\nHEAD 30a77b50b73eb067020ce7230c83e126bae65f2c\nbranch refs/heads/w7b-sp-collectives\n\nworktree /data/ycfeng/stepcode-codex-home/.stepcode/codex/worktrees/f366/step5-preview\nHEAD 97ae8d9b64f4728ba3d3c9af0647832e83ee0335\ndetached\n\nworktree /data/ycfeng/tmp/review_glm_20261019/base\nHEAD bfa82de80413b5f4b38e4990a80b5108f9521f50\ndetached\n\n",
+  "rows": [
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-fidelity-9974acdb",
+      "HEAD": "9974acdb88f5c47166fee28dec564b7cc782ca1a",
+      "detached": true,
+      "name": "d29-fidelity-9974acdb",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "0\t164"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-init-cache-records",
+      "HEAD": "ccd9b728463d0fffe4e2ec869a4d49e7a550b381",
+      "detached": true,
+      "name": "d29-init-cache-records",
+      "disposition": "COMPLETED_HISTORICAL_INIT_MULTIPLICITY_REPORT_ADOPTED",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "0\t68"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+      "HEAD": "886608ea574dd2107d0b30771d63d8057d23cac6",
+      "branch": "refs/heads/d29-init-preparation-finish",
+      "name": "d29-init-preparation-finish",
+      "disposition": "FAILED_ANALYZER_DIAGNOSIS_UNFINISHED_SOURCE_AND_RETAINED_EVIDENCE_ONLY",
+      "git_status": "## d29-init-preparation-finish",
+      "commits_exclusive_to_worktree_and_primary": "0\t6"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "HEAD": "97ae8d9b64f4728ba3d3c9af0647832e83ee0335",
+      "detached": true,
+      "name": "d29-ledger-final-1f6b4314",
+      "disposition": "CLEAN_FROZEN_LEDGER_AUDIT_AND_REGRESSION_CHECKOUT",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "7\t3"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-native-key-scope-audit",
+      "HEAD": "65a2766dda3df7c0c5d2ad30c3dcee0f55b27d88",
+      "branch": "refs/heads/d29-native-key-scope-audit",
+      "name": "d29-native-key-scope-audit",
+      "disposition": "COMPLETED_NATIVE_KEY_SCOPE_RECORDS_ARCHIVED_ON_PRIMARY",
+      "git_status": "## d29-native-key-scope-audit",
+      "commits_exclusive_to_worktree_and_primary": "3\t11"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-plan-preparation-records",
+      "HEAD": "d2e6ca69e6eb914ed879b9877ce064bb51c14b1e",
+      "branch": "refs/heads/records/d29-plan-preparation",
+      "name": "d29-plan-preparation-records",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## records/d29-plan-preparation",
+      "commits_exclusive_to_worktree_and_primary": "2\t56"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions",
+      "HEAD": "0c6f8d999f0bae2fa83aa33da4fdec6d5f13c0fc",
+      "branch": "refs/heads/records/d29-post-key-regressions",
+      "name": "d29-post-key-regressions",
+      "disposition": "COMPLETED_46fe_FROZEN_REGRESSIONS_ARCHIVED_ON_PRIMARY",
+      "git_status": "## records/d29-post-key-regressions",
+      "commits_exclusive_to_worktree_and_primary": "2\t31"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-final-parent-audit",
+      "HEAD": "03d6132e97d6bd9dc0b125795b6021cc0d43fec4",
+      "branch": "refs/heads/d29-post-named-query-final-parent-audit",
+      "name": "d29-post-named-query-final-parent-audit",
+      "disposition": "COMPLETED_dbe19_FINAL_AUDIT_ARCHIVED_ON_PRIMARY",
+      "git_status": "## d29-post-named-query-final-parent-audit",
+      "commits_exclusive_to_worktree_and_primary": "2\t17"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions",
+      "HEAD": "39f0c1000a96c10f186cabe5f77dfc3058f86549",
+      "branch": "refs/heads/records/d29-post-named-query-regressions",
+      "name": "d29-post-named-query-regressions",
+      "disposition": "COMPLETED_dbe19_FROZEN_REGRESSIONS_ARCHIVED_ON_PRIMARY",
+      "git_status": "## records/d29-post-named-query-regressions",
+      "commits_exclusive_to_worktree_and_primary": "2\t19"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+      "HEAD": "886608ea574dd2107d0b30771d63d8057d23cac6",
+      "branch": "refs/heads/d29-snapshot-copy-finish",
+      "name": "d29-snapshot-copy-finish",
+      "disposition": "FAILED_ANALYZER_DIAGNOSIS_UNFINISHED_ONE_CONTROL_UNCONSUMED",
+      "git_status": "## d29-snapshot-copy-finish",
+      "commits_exclusive_to_worktree_and_primary": "0\t6"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-scope-audit",
+      "HEAD": "de5eeab05a2f312da415a9e6557847ab583b4990",
+      "branch": "refs/heads/d29-snapshot-scope-audit",
+      "name": "d29-snapshot-scope-audit",
+      "disposition": "COMPLETED_SNAPSHOT_KEY_AND_NAMED_QUERY_SCOPE_RECORDS_ARCHIVED_ON_PRIMARY",
+      "git_status": "## d29-snapshot-scope-audit",
+      "commits_exclusive_to_worktree_and_primary": "3\t38"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-trace-encoding",
+      "HEAD": "82b0e31163631d1532a52e317bb23245992892ae",
+      "branch": "refs/heads/records/d29-trace-encoding",
+      "name": "d29-trace-encoding",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## records/d29-trace-encoding",
+      "commits_exclusive_to_worktree_and_primary": "5\t64"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-workload-multiplicity",
+      "HEAD": "58636d06c5c5068af6df336f9b2968def095dd85",
+      "branch": "refs/heads/d29-workload-multiplicity",
+      "name": "d29-workload-multiplicity",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## d29-workload-multiplicity\n M task_memory/task_2026-10-22_step5_position_routing/workload_multiplicity/evidence.json\n M task_memory/task_2026-10-22_step5_position_routing/workload_multiplicity/progress.md\n M task_memory/task_2026-10-22_step5_position_routing/workload_multiplicity/report.md",
+      "commits_exclusive_to_worktree_and_primary": "1\t65"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-canonical-g3",
+      "HEAD": "a7d67082bae9a70d193494141390fa9150156b52",
+      "branch": "refs/heads/feat/step5-canonical-g3",
+      "name": "step5-canonical-g3",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-canonical-g3",
+      "commits_exclusive_to_worktree_and_primary": "0\t370"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-cli-placement-repair",
+      "HEAD": "d8a087226de870bf3d67cfd724cde4563cb19f47",
+      "branch": "refs/heads/feat/step5-cli-placement-repair",
+      "name": "step5-cli-placement-repair",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-cli-placement-repair",
+      "commits_exclusive_to_worktree_and_primary": "1\t120"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-client-metrics",
+      "HEAD": "15a3958b0dd8fb8396c72b0cf927b7fa1c2f8fb6",
+      "branch": "refs/heads/feat/step5-client-metrics",
+      "name": "step5-client-metrics",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-client-metrics",
+      "commits_exclusive_to_worktree_and_primary": "0\t396"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-comm",
+      "HEAD": "6a9cedc7e468fee396ca5c2a9c5987bab76dd9ac",
+      "branch": "refs/heads/feat/step5-comm",
+      "name": "step5-comm",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-comm",
+      "commits_exclusive_to_worktree_and_primary": "0\t430"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-comm-baseline-00ed846",
+      "HEAD": "00ed8467917954680ed99bb339c56e0ca0bb9227",
+      "detached": true,
+      "name": "step5-comm-baseline-00ed846",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "0\t440"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-comm-candidate-b1f032d",
+      "HEAD": "b1f032d83ab77fc90ee307ab3f2bfeee6aafd0b7",
+      "detached": true,
+      "name": "step5-comm-candidate-b1f032d",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "0\t429"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-core-review-fixes",
+      "HEAD": "fe88a3a877988cfb94102efe2fac495b132204e4",
+      "branch": "refs/heads/feat/step5-core-review-fixes",
+      "name": "step5-core-review-fixes",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-core-review-fixes\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "0\t168"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d20-baseline-b65609b",
+      "HEAD": "b65609b5e1afb329f9fd51c87493da4c2c08b910",
+      "detached": true,
+      "name": "step5-d20-baseline-b65609b",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "0\t390"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d20-integration",
+      "HEAD": "acc3a88d336a656fdde62c5a72160c7f6dd19317",
+      "branch": "refs/heads/feat/step5-d20-integration",
+      "name": "step5-d20-integration",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d20-integration\n M task_memory/task_2026-10-21_step5_d20_integration/actual_main/progress.md\n M tests/integration/run_step5_measured_main.py\n M tests/integration/step5_measured_compute_fixture.py\n M tests/integration/test_step5_measured_main.py",
+      "commits_exclusive_to_worktree_and_primary": "0\t372"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d24-stage",
+      "HEAD": "c9e92740ffe17d6ef9e6cdc671ceb3b465b3081c",
+      "branch": "refs/heads/feat/step5-d24-stage",
+      "name": "step5-d24-stage",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d24-stage",
+      "commits_exclusive_to_worktree_and_primary": "0\t267"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d25-native-e998210",
+      "HEAD": "e998210d1ba75a30c88f66a1c6c9f278c4c8853e",
+      "branch": "refs/heads/feat/step5-d25-native",
+      "name": "step5-d25-native-e998210",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d25-native",
+      "commits_exclusive_to_worktree_and_primary": "0\t329"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+      "HEAD": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+      "branch": "refs/heads/fix/d29-artifact-bytes",
+      "name": "step5-d29-artifact-bytes",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## fix/d29-artifact-bytes",
+      "commits_exclusive_to_worktree_and_primary": "2\t59"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-parse",
+      "HEAD": "0fa22e49417b80ee315518f9ea6843b77663fe09",
+      "branch": "refs/heads/feat/step5-d29-artifact-parse",
+      "name": "step5-d29-artifact-parse",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d29-artifact-parse",
+      "commits_exclusive_to_worktree_and_primary": "0\t93"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields",
+      "HEAD": "7540414341d5b81a86b18b9562d1506c0ba74285",
+      "branch": "refs/heads/feat/step5-d29-cost-fields",
+      "name": "step5-d29-cost-fields",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d29-cost-fields",
+      "commits_exclusive_to_worktree_and_primary": "0\t64"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse",
+      "HEAD": "37c7832ee5ee2e9588ba6fed411a9e9894949ab8",
+      "branch": "refs/heads/feat/step5-d29-group-reuse",
+      "name": "step5-d29-group-reuse",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d29-group-reuse",
+      "commits_exclusive_to_worktree_and_primary": "0\t103"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-input-snapshot",
+      "HEAD": "6c7121d819e679054285bb3be5cb117a7e77bc4e",
+      "branch": "refs/heads/step5-d29-input-snapshot",
+      "name": "step5-d29-input-snapshot",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## step5-d29-input-snapshot",
+      "commits_exclusive_to_worktree_and_primary": "0\t52"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+      "HEAD": "17fd799ef1163b49585640219493fef9d746b129",
+      "branch": "refs/heads/fix/d29-ledger-stream",
+      "name": "step5-d29-ledger-stream",
+      "disposition": "UNADMITTED_CANDIDATE_SOURCE_1f6b4314_WITH_CONCURRENT_HANDOFF_RECORDS",
+      "git_status": "## fix/d29-ledger-stream",
+      "commits_exclusive_to_worktree_and_primary": "8\t3"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-legacy-output",
+      "HEAD": "bbd39fe3f591bd819b126ea094bfe39aa49e9fbe",
+      "branch": "refs/heads/feat/step5-d29-legacy-output",
+      "name": "step5-d29-legacy-output",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d29-legacy-output",
+      "commits_exclusive_to_worktree_and_primary": "0\t157"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-loader-family",
+      "HEAD": "35d2f74ed60855e48e5af4ea97c49721b9aba7ea",
+      "branch": "refs/heads/feat/step5-d29-loader-family",
+      "name": "step5-d29-loader-family",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d29-loader-family",
+      "commits_exclusive_to_worktree_and_primary": "0\t93"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-named-query",
+      "HEAD": "3d75c786781802ad2753cbdd81d989c9b694660c",
+      "branch": "refs/heads/step5-d29-named-query",
+      "name": "step5-d29-named-query",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## step5-d29-named-query",
+      "commits_exclusive_to_worktree_and_primary": "2\t27"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-native-cache-key",
+      "HEAD": "376983d2ecc441d1e0a8cb8b943e65a2dcb217b5",
+      "branch": "refs/heads/fix/d29-native-cache-key",
+      "name": "step5-d29-native-cache-key",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## fix/d29-native-cache-key",
+      "commits_exclusive_to_worktree_and_primary": "1\t11"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-plan-key",
+      "HEAD": "d1e2fb8c0162c58e7e694fab2d3a900638f0d50a",
+      "branch": "refs/heads/fix/d29-plan-key",
+      "name": "step5-d29-plan-key",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## fix/d29-plan-key",
+      "commits_exclusive_to_worktree_and_primary": "2\t41"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-post-prepared-pricing",
+      "HEAD": "7344627b50fdb559ef50390fc8ae3ea3c18b40b8",
+      "branch": "refs/heads/diagnose/step5-d29-post-prepared-pricing",
+      "name": "step5-d29-post-prepared-pricing",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## diagnose/step5-d29-post-prepared-pricing",
+      "commits_exclusive_to_worktree_and_primary": "0\t68"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-prepared-archive",
+      "HEAD": "ba585c03b0c58bf960952509eddc23b6b03e3621",
+      "branch": "refs/heads/docs/step5-d29-prepared-archive",
+      "name": "step5-d29-prepared-archive",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## docs/step5-d29-prepared-archive",
+      "commits_exclusive_to_worktree_and_primary": "0\t68"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-prepared-point",
+      "HEAD": "b476907e9afe865476e0a3a6720f8eb4e3290c40",
+      "branch": "refs/heads/feat/step5-d29-prepared-point",
+      "name": "step5-d29-prepared-point",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d29-prepared-point",
+      "commits_exclusive_to_worktree_and_primary": "0\t74"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-t2-e41",
+      "HEAD": "d7d6ad8ca9a9d4762a4c6439ebcc75cc7fa98f89",
+      "branch": "refs/heads/docs/step5-d29-t2-e41",
+      "name": "step5-d29-t2-e41",
+      "disposition": "COMPLETED_HISTORICAL_T2_RECORDS_FINAL_SOURCE_STAGING_PENDING",
+      "git_status": "## docs/step5-d29-t2-e41",
+      "commits_exclusive_to_worktree_and_primary": "2\t106"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-t2-final",
+      "HEAD": "2c0f9bd79e67b2fa15d6f68c0726accffab52813",
+      "branch": "refs/heads/docs/step5-d29-t2-final",
+      "name": "step5-d29-t2-final",
+      "disposition": "COMPLETED_HISTORICAL_T2_RECORDS_FINAL_SOURCE_STAGING_PENDING",
+      "git_status": "## docs/step5-d29-t2-final",
+      "commits_exclusive_to_worktree_and_primary": "0\t131"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-t2-performance",
+      "HEAD": "a886466c92342b9cea4ec13f9e57d29492c9a97b",
+      "branch": "refs/heads/docs/step5-d29-t2-performance",
+      "name": "step5-d29-t2-performance",
+      "disposition": "COMPLETED_79_STATIC_T2_RECORDS_FINAL_SOURCE_STAGING_PENDING",
+      "git_status": "## docs/step5-d29-t2-performance",
+      "commits_exclusive_to_worktree_and_primary": "2\t85"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-trace-serialization",
+      "HEAD": "012a3df452c9aa75cf1a5e00bce9af15603aee23",
+      "branch": "refs/heads/feat/step5-d29-trace-serialization",
+      "name": "step5-d29-trace-serialization",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-d29-trace-serialization",
+      "commits_exclusive_to_worktree_and_primary": "1\t75"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-finish-sync",
+      "HEAD": "3d6744f53feb12db0399f267e62af8f76e4a466a",
+      "branch": "refs/heads/feat/step5-finish-sync",
+      "name": "step5-finish-sync",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-finish-sync",
+      "commits_exclusive_to_worktree_and_primary": "0\t248"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-g3-review-e14e7df",
+      "HEAD": "e14e7dff27f13d0a101fd46c792d9d91c7425f81",
+      "detached": true,
+      "name": "step5-g3-review-e14e7df",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "0\t373"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-http-capture",
+      "HEAD": "42fb46ced193182037cda0ace90652a6ffff3206",
+      "branch": "refs/heads/feat/step5-http-capture",
+      "name": "step5-http-capture",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-http-capture",
+      "commits_exclusive_to_worktree_and_primary": "0\t338"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-measured-compute",
+      "HEAD": "1afc0dc7815e62e65d6e186072b5ed1cc1ddb0d5",
+      "branch": "refs/heads/feat/step5-measured-compute",
+      "name": "step5-measured-compute",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-measured-compute",
+      "commits_exclusive_to_worktree_and_primary": "0\t397"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-measured-pd",
+      "HEAD": "d4b2401e1b384fa300a43a6af881eba1c3c259df",
+      "branch": "refs/heads/feat/step5-measured-pd",
+      "name": "step5-measured-pd",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-measured-pd",
+      "commits_exclusive_to_worktree_and_primary": "0\t396"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-forward",
+      "HEAD": "ef476fe8ede333cdb43278c984bc6eb4637d4e78",
+      "branch": "refs/heads/feat/step5-mrv2-forward",
+      "name": "step5-mrv2-forward",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-mrv2-forward",
+      "commits_exclusive_to_worktree_and_primary": "0\t333"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-inputs",
+      "HEAD": "5c2319cd8a08d42269c55adeac100f6361cb4b63",
+      "branch": "refs/heads/feat/step5-mrv2-inputs",
+      "name": "step5-mrv2-inputs",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-mrv2-inputs",
+      "commits_exclusive_to_worktree_and_primary": "0\t338"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load",
+      "HEAD": "dfb6c96fc6f27bb5ea297145ea56c52ac9c09b44",
+      "branch": "refs/heads/feat/step5-mrv2-load",
+      "name": "step5-mrv2-load",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-mrv2-load",
+      "commits_exclusive_to_worktree_and_primary": "0\t300"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-main",
+      "HEAD": "26db654cbbb38b361990aa1aa8ae1dad5db8e000",
+      "branch": "refs/heads/feat/step5-mrv2-main",
+      "name": "step5-mrv2-main",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-mrv2-main",
+      "commits_exclusive_to_worktree_and_primary": "0\t306"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-perf",
+      "HEAD": "3ece1ce9ffea09e9f22b4642223186721182161a",
+      "branch": "refs/heads/feat/step5-mrv2-perf",
+      "name": "step5-mrv2-perf",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-mrv2-perf",
+      "commits_exclusive_to_worktree_and_primary": "0\t287"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-native-pd",
+      "HEAD": "f3f407e34f1387a9b4ba7147a8de29772dcbb58e",
+      "branch": "refs/heads/feat/step5-native-pd",
+      "name": "step5-native-pd",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-native-pd",
+      "commits_exclusive_to_worktree_and_primary": "0\t430"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-p0-profiles",
+      "HEAD": "82f445248f61783401d7a1d9a34a76db78825487",
+      "branch": "refs/heads/feat/step5-p0-profiles",
+      "name": "step5-p0-profiles",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-p0-profiles",
+      "commits_exclusive_to_worktree_and_primary": "0\t352"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-pd-structural",
+      "HEAD": "f055a695f3a200e9144690bf31fd1aa0bf706e89",
+      "branch": "refs/heads/feat/step5-pd-structural",
+      "name": "step5-pd-structural",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-pd-structural",
+      "commits_exclusive_to_worktree_and_primary": "0\t453"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-position-core",
+      "HEAD": "5c1413398ed2381038f84f39518173341733bfac",
+      "branch": "refs/heads/feat/step5-position-core",
+      "name": "step5-position-core",
+      "disposition": "CORE_COMPONENT_DELIVERED_AND_CORRECTED_ON_PRIMARY",
+      "git_status": "## feat/step5-position-core\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "1\t187"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-position-native",
+      "HEAD": "4a7adb70b226f943f88a1f21165294f5b756aea2",
+      "branch": "refs/heads/feat/step5-position-native",
+      "name": "step5-position-native",
+      "disposition": "SOURCE_AND_CPU_COMPONENT_DELIVERED_NATIVE_RUNTIME_PENDING",
+      "git_status": "## feat/step5-position-native",
+      "commits_exclusive_to_worktree_and_primary": "0\t224"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-position-pricing",
+      "HEAD": "a7e2a3ca6a12367a6955b905a9e061494766106d",
+      "branch": "refs/heads/feat/step5-position-pricing",
+      "name": "step5-position-pricing",
+      "disposition": "PRICING_COMPONENT_DELIVERED_AND_CORRECTED_ON_PRIMARY",
+      "git_status": "## feat/step5-position-pricing\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "0\t201"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-prefill-target",
+      "HEAD": "c86fca616a7c1bbbdef5a05bd7b26b5d3a40defa",
+      "branch": "refs/heads/feat/step5-prefill-target",
+      "name": "step5-prefill-target",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-prefill-target",
+      "commits_exclusive_to_worktree_and_primary": "0\t282"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-pressure-capacity",
+      "HEAD": "8a4df4fd46e22aeea3ba63a40bf8f05dccf593ba",
+      "branch": "refs/heads/feat/step5-pressure-capacity",
+      "name": "step5-pressure-capacity",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-pressure-capacity",
+      "commits_exclusive_to_worktree_and_primary": "2\t287"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "HEAD": "8e7ac28c588a9b16593f0e777ddf56fc1b20ca1f",
+      "branch": "refs/heads/feat/step5-preview",
+      "name": "step5-preview",
+      "disposition": "ACCEPTED_PRODUCTION_SOURCE_9566_GLOBAL_9580",
+      "git_status": "## feat/step5-preview...origin/feat/step5-preview [ahead 340]\n M task_memory/task_2026-10-22_step5_position_routing/plan.md\n M task_memory/task_2026-10-22_step5_position_routing/progress.md\n M task_memory/task_2026-10-22_step5_position_routing/requirements.md\n M task_memory/task_2026-10-22_step5_position_routing/summary.md\n?? .cortexkit/\n?? .pi/",
+      "commits_exclusive_to_worktree_and_primary": "0\t0"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-priority-runs",
+      "HEAD": "6246baa912e1830d075c136b7d02a845dadfb0e9",
+      "branch": "refs/heads/feat/step5-priority-runs",
+      "name": "step5-priority-runs",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-priority-runs",
+      "commits_exclusive_to_worktree_and_primary": "0\t384"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-profile-integration",
+      "HEAD": "3cdc9966011d10ec363db28d8f6088344632a368",
+      "branch": "refs/heads/feat/step5-profile-integration",
+      "name": "step5-profile-integration",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-profile-integration",
+      "commits_exclusive_to_worktree_and_primary": "0\t415"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-profiling",
+      "HEAD": "2a4db975d4b3feb996a380fdb7cd4eb469d6be7b",
+      "branch": "refs/heads/feat/step5-profiling",
+      "name": "step5-profiling",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-profiling",
+      "commits_exclusive_to_worktree_and_primary": "0\t427"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-r2-correction",
+      "HEAD": "b6ba7e512d20a9d568cb5f91a5a9aed5a2d75bee",
+      "branch": "refs/heads/feat/step5-r2-correction",
+      "name": "step5-r2-correction",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-r2-correction",
+      "commits_exclusive_to_worktree_and_primary": "8\t434"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-reconcile",
+      "HEAD": "c8b8c06a468e0279441394b9eb24dd7bcd4b966a",
+      "branch": "refs/heads/feat/step5-reconcile",
+      "name": "step5-reconcile",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-reconcile",
+      "commits_exclusive_to_worktree_and_primary": "0\t449"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-reference-values",
+      "HEAD": "4393201f51a1e4983de62f88fb8adb06eca7072c",
+      "branch": "refs/heads/feat/step5-reference-values",
+      "name": "step5-reference-values",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-reference-values",
+      "commits_exclusive_to_worktree_and_primary": "0\t334"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-registry-bindings",
+      "HEAD": "a5189e199208022a341b377b0fb8c542030907f3",
+      "branch": "refs/heads/feat/step5-registry-bindings",
+      "name": "step5-registry-bindings",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-registry-bindings\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "0\t184"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-root-metrics",
+      "HEAD": "85552ed3dd3bfafb526e667fa453477a3ee7ddd7",
+      "branch": "refs/heads/feat/step5-root-metrics",
+      "name": "step5-root-metrics",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## feat/step5-root-metrics",
+      "commits_exclusive_to_worktree_and_primary": "0\t314"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-core-closure-01",
+      "HEAD": "19a356300089b318476fa0feea1764ed01a2589a",
+      "branch": "refs/heads/verify/step5-core-closure-01",
+      "name": "verify-step5-core-closure-01",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify/step5-core-closure-01\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "0\t169"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-core-delivery-01",
+      "HEAD": "fdbd044cc1be498d5b597e2a3521258c7c10167e",
+      "branch": "refs/heads/verify-step5-core-delivery-01",
+      "name": "verify-step5-core-delivery-01",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-core-delivery-01\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "1\t187"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-01",
+      "HEAD": "9974acdb88f5c47166fee28dec564b7cc782ca1a",
+      "branch": "refs/heads/verify/step5-d29-integrated-01",
+      "name": "verify-step5-d29-integrated-01",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify/step5-d29-integrated-01",
+      "commits_exclusive_to_worktree_and_primary": "0\t164"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-02",
+      "HEAD": "60ba4c7569b7c9fd4c8f9f43a16f92249fa76181",
+      "branch": "refs/heads/verify/step5-d29-integrated-02",
+      "name": "verify-step5-d29-integrated-02",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify/step5-d29-integrated-02",
+      "commits_exclusive_to_worktree_and_primary": "0\t136"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-03",
+      "HEAD": "ca135d89310384ae3fac8072708811985f01d515",
+      "branch": "refs/heads/verify/step5-d29-integrated-03",
+      "name": "verify-step5-d29-integrated-03",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify/step5-d29-integrated-03",
+      "commits_exclusive_to_worktree_and_primary": "0\t128"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
+      "HEAD": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+      "branch": "refs/heads/verify/step5-d29-integrated-04",
+      "name": "verify-step5-d29-integrated-04",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify/step5-d29-integrated-04",
+      "commits_exclusive_to_worktree_and_primary": "0\t122"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05",
+      "HEAD": "e41abc073500d61f224eda4fca1123e74e40544d",
+      "branch": "refs/heads/verify/step5-d29-integrated-05",
+      "name": "verify-step5-d29-integrated-05",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify/step5-d29-integrated-05",
+      "commits_exclusive_to_worktree_and_primary": "0\t106"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06",
+      "HEAD": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+      "branch": "refs/heads/verify/step5-d29-integrated-06",
+      "name": "verify-step5-d29-integrated-06",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify/step5-d29-integrated-06",
+      "commits_exclusive_to_worktree_and_primary": "0\t85"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07",
+      "HEAD": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+      "detached": true,
+      "name": "verify-step5-d29-integrated-07",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "0\t31"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+      "HEAD": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+      "detached": true,
+      "name": "verify-step5-d29-integrated-08",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "0\t19"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-position-contracts-01",
+      "HEAD": "f3a25feb8682f195174ae3874093e0c77dbdee7c",
+      "branch": "refs/heads/verify-step5-position-contracts-01",
+      "name": "verify-step5-position-contracts-01",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-position-contracts-01",
+      "commits_exclusive_to_worktree_and_primary": "3\t232"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-pricing-01",
+      "HEAD": "36a4b9c93d2d65ad5a6d0bc0d31d070101975263",
+      "branch": "refs/heads/verify-step5-pricing-01",
+      "name": "verify-step5-pricing-01",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-pricing-01\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "2\t214"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-pricing-02",
+      "HEAD": "7c7471ffd2a0bcff23a1c88d993d719977df24c4",
+      "branch": "refs/heads/verify-step5-pricing-02",
+      "name": "verify-step5-pricing-02",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-pricing-02\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "2\t211"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-pricing-03",
+      "HEAD": "5c1fca7c626911ea92248e42c86f67bad134d190",
+      "branch": "refs/heads/verify-step5-pricing-03",
+      "name": "verify-step5-pricing-03",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-pricing-03\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "1\t209"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-pricing-04",
+      "HEAD": "44415f7b4f3d1bfb2fb015ede4f3ba4ad81256ad",
+      "branch": "refs/heads/verify-step5-pricing-04",
+      "name": "verify-step5-pricing-04",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-pricing-04\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "2\t207"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-pricing-05",
+      "HEAD": "38fb370c21e61a1721568a2792d0bb323f80884c",
+      "branch": "refs/heads/verify-step5-pricing-05",
+      "name": "verify-step5-pricing-05",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-pricing-05\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "2\t203"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-pricing-06",
+      "HEAD": "4b334b1628ff94bc6bf06421f031c71a62b34cf1",
+      "branch": "refs/heads/verify-step5-pricing-06",
+      "name": "verify-step5-pricing-06",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-pricing-06\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "1\t201"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-registry-01",
+      "HEAD": "43c5bcbcd427268cde513a739e15d7b2ac7ab479",
+      "branch": "refs/heads/verify-step5-registry-01",
+      "name": "verify-step5-registry-01",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-registry-01\n M frontier/cc_backend/backends/collective-sim",
+      "commits_exclusive_to_worktree_and_primary": "2\t185"
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01",
+      "HEAD": "94244bc47149f84175b62df0475c527fba2e48d7",
+      "branch": "refs/heads/verify-step5-t2-limits-01",
+      "name": "verify-step5-t2-limits-01",
+      "disposition": "HISTORICAL_TASK_WORKTREE_SEE_PINNED_COMPONENT_RECORDS",
+      "git_status": "## verify-step5-t2-limits-01",
+      "commits_exclusive_to_worktree_and_primary": "0\t222"
+    },
+    {
+      "worktree": "/data/ycfeng/stepcode-codex-home/.stepcode/codex/worktrees/f366/step5-preview",
+      "HEAD": "97ae8d9b64f4728ba3d3c9af0647832e83ee0335",
+      "detached": true,
+      "name": "step5-preview",
+      "disposition": "UNUSED_MANAGED_CHECKOUT_RETAINED_UNCHANGED",
+      "git_status": "## HEAD (no branch)",
+      "commits_exclusive_to_worktree_and_primary": "7\t3"
+    }
+  ],
+  "limits": [
+    "Git ancestry is metadata, not independent source admission.",
+    "Historical component disposition comes from recovered task records; final source checks remain separate.",
+    "No worktree/branch deletion, checkout mutation, external action or code edit."
+  ]
+}
