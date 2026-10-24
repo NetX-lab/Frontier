@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: next dependency is the single submitted profile04 attempt's actual runtime/data verification; dated Starting only, prior failures and Sections1–8 unchanged. |
 | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current dependency is FAILED profile03/offline synthesis, not Starting monitoring; accepted captures, prior annotations and Sections1–8 unchanged. |
 | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: next dependency is Starting profile03 runtime/coverage audit after limited graph acceptance and merged/sealed package; Sections1–8 unchanged. |
 | 2026-10-24 | W128-OCT24-REPAIR-DOCS: next route is delivered profile03 package validation/run/audit alongside sealed graph-probe launcher checks; integrated source and historical Sections1–8 remain distinct. |
@@ -28,7 +29,14 @@ Current recorded milestones: [limited stream acceptance and active DP slice](pro
 
 ## GPU stream acceptance and active DP slice — current (2026-10-24)
 
-### Profile03 FAILED and offline diagnosis — current (2026-10-24)
+### Profile04 submission milestone — 2026-10-24
+
+Root records f4f4ab79 bind source8cbf7ab9/records6ec96b4c/mergedf0eafafb and unchanged accepted runtime1437ace6. Existing optional native CUDA statistics=false; raw export,300-second RPC,P512/D64 and record limits unchanged. [Review](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md)/[root report](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md):55tests/five image/153source-Git-package checks PASS. [Seal](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json):45inputs/manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f.
+Local launch1 AUTHORIZATION KeyError created NO job, original receipt/log unchanged. Local launch2 exported existing authorization and [submitted](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json) exactly one GPU attempt1/1 exp-1024-172225-512616. [Snapshot](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json)2026-10-24T09:49:36Z Starting/four unassigned; requested4×8H800/codesign/non-preemptible/64CPU/500Gi each/3600s/RDMA1-8/exact local NFS. [80-check archive](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json) PASS observed launcher3950111 alive09:52:22Z; no fresh reading here.
+Next root: retain launcher -> actual placement/runtime -> terminal/raw-data acceptance -> tuple/rank/dependency-qualified KERNEL_ONLY costs. Preferred-versus-required affinity encoding unresolved; actual hosts/GPU/RDMA/client432successes/formal coverage/raw DP/stream/post-stop UNVERIFIED. No automatic retry, numeric ID remap, overlapping scope sum, unexplained CPU gap or consumer/serving admission; optional text statistics intentionally absent, export can still exceed300seconds.
+Profile03 remains FAILED137complete/7failed/288unsubmitted of432rows/original190files. Native06R4, isolated datasets and tiny graph correspondence retain their limits; full05/09/19 OPEN, GLM paused, balanced routing/workflow-GPU-operator-gap before CPU-overhead last/official gates unchanged. Earlier current/next-action checkpoints below are dated history; original Sections1–8 remain byte-for-byte unchanged. [Detailed milestone](progress.md#profile04-submission-milestone--2026-10-24).
+
+### Profile03 FAILED and offline diagnosis — historical checkpoint (2026-10-24)
 
 Profile03 exp-1024-141341-669621 FAILED2026-10-24T07:06:45Z, platform1Failed/3Stopped, launcher exit1. [Timeline](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md)/[JSON](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json): four distinct hosts0108/0329/0422/0618,32 distinct H800 UUIDs; P1 execute_model TimeoutError/P0 EngineDeadError share07:06:27 wall-log label. Cross-host ordering, hard-affinity enforcement, NET/IB/NIXL transport and threeStopped exit codes remain unverified.
 432 client rows:144 submitted,137 completed(16 warmup+121 formal),7 failed,288 not submitted. [Full-copy receipt](/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json):190 files/8208668144 bytes hash-identical; not successful-run/reference/cost admission.

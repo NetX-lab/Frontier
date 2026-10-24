@@ -1,0 +1,39 @@
+{
+  "status": "ACCEPTED_SUBMISSION_DOCUMENTATION_WITH_LIMITS",
+  "task_id": "W128-PROFILE04-STAGE-DOCS",
+  "date": "2026-10-24",
+  "base_revision": "c4b59b65f177619223c7e0c8466bf852ee9c8083",
+  "pre_acceptance_root_revision": "5959cd4e13178a9dc72b549ae8b299a9c2c8eb1d",
+  "paths": [
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md"
+  ],
+  "gross_lines": 77,
+  "gross_limit": 150,
+  "independent_root_checks": 229,
+  "new_local_links": 47,
+  "full_diff_lines": 213,
+  "review": {
+    "task": "W128-PROFILE04-STAGE-DOCS-REVIEW",
+    "session": "ses_e929ee618ffeg5nhA0ydcfm25W",
+    "status": "NO_FINDINGS_FULL_DIFF_GAP_CLOSED",
+    "scope": "All seven per-file diffs read in full; reviewer did not execute checks or rehash files."
+  },
+  "files": {
+    "root_receipt.json": "97b6019fc447e10e1cc6030c1085eb729418ffb0578b9fc80572627558789f51",
+    "verification.json": "959403ca133111c9aa1f10b626371af304d1db22ea6770750fabbf509615937f",
+    "source.diff": "5143a67b9c6a2b1ef9fdc9d7339d22eb2e77fd0ee7d7bb1f2c59cea16c7d337d",
+    "diff_manifest.json": "6306bf8d7c26e5eaa4a90777e9025846fb71ced8f445724cf7ca915b6465be2a"
+  },
+  "limitations": [
+    "Submission documentation only; dated Starting/unassigned snapshot remains distinct from runtime acceptance.",
+    "No new platform reads or submission/control operations.",
+    "Fixture integration and general native captured ownership remain separate and unaccepted.",
+    "Original profile03 FAILED and all native/cost/consumer/calibration boundaries remain unchanged."
+  ]
+}

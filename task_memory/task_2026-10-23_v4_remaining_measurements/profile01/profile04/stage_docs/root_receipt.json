@@ -1,0 +1,26 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_root_b13xw9ia/verify.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "OPENCODE_SESSION_ID": "unset for the independent root execution"
+  },
+  "returncode": 0,
+  "copied_input_sha256": {
+    "verify.py": "1f6912706c47ea374b3b73abd914905cc1e3fe2cfcce1294489ad67db8f3cce1",
+    "starting_snapshot.json": "7d0a0dd4419f9ee8ae588e1129272abee623001bab6f9be89abc14052142def4",
+    "test_report_2026-10-24_profile04_stage_docs.md": "ff6e698e1f4508b6e479ba1a7194b51add0e41eef51d9df45a7b7da05ac694a4"
+  },
+  "owner_receipt_sha256": "a67b525eb266d1817e3b46521216b468ae3c636a954a33e65edc7d45b0ac3d4b",
+  "status": "PASS_INDEPENDENT_DOCUMENT_VERIFICATION",
+  "checks_passed": 229,
+  "gross_lines": 77,
+  "new_links": 47,
+  "matched_fields": "all validation, scope, evidence and document fields; execution identity and copied scratch input paths remain explicit"
+}

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: archived one submitted profile04 attempt and dated Starting/unassigned snapshot without runtime success or cost admission; original failed run and full-ticket gates retained. |
 | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: archived current profile03 FAILED and limited offline diagnosis; preserved Starting checkpoints, accepted captures and full05/09/19 OPEN. |
 | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: archived limited graph correspondence acceptance and merged/sealed profile03 Starting; runtime, placement, transport and full-ticket gates remain open. |
 | 2026-10-24 | W128-OCT24-REPAIR-DOCS: archived integrated CPU collection repairs, sealed graph-probe launcher start and delivered unsealed profile03 without native/cost/calibration admission. |
@@ -82,11 +83,19 @@
 
 ## Final state — current (2026-10-24)
 
-Active acceptance remains DSV4 only; GLM remains PAUSED_PENDING_USER_APPROVAL. Official mean client TTFT/TPOT/E2E, total THPT and30% promotion/10% final gates are unchanged. Current execution pointer: [Routing milestone — current (2026-10-23)](progress.md#routing-milestone--current-2026-10-23).
+Active acceptance remains DSV4 only; GLM remains PAUSED_PENDING_USER_APPROVAL. Official mean client TTFT/TPOT/E2E, total THPT and30% promotion/10% final gates are unchanged. Current execution pointer: [Profile04 submission milestone](progress.md#profile04-submission-milestone--2026-10-24).
 
 ### GPU stream acceptance and active DP slice — current (2026-10-24)
 
-#### Profile03 FAILED and offline diagnosis — current (2026-10-24)
+#### Profile04 submission milestone — 2026-10-24
+
+Root records f4f4ab79 bind source8cbf7ab9/records6ec96b4c/mergedf0eafafb and unchanged accepted runtime1437ace6. The existing optional native CUDA statistics table is false; raw export,300-second RPC,512/64 windows and record limits remain fixed. [Review](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md)/[root report](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md):55tests/five actual-image checks/153source-Git-package checks PASS, adopted evidence only.
+[Seal](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json):45inputs, manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f. Local launch1 `KeyError: 'AUTHORIZATION'` created NO platform job; original receipt/log unchanged. Local launch2 exported existing authorization and [submitted](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json) exactly one GPU attempt1/1, exp-1024-172225-512616.
+[Snapshot](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json)2026-10-24T09:49:36Z: Starting/four unassigned replicas, i-fengyicheng/codesign/non-preemptible, requested4×8H800/64CPU/500Gi each/3600s, RDMA1/8/exact owner-package local NFS100.96.128.195. [80-check archive](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json) PASS observed launcher3950111 alive09:52:22Z; no fresh platform/process reading here.
+Affinity preferred-versus-required encoding is unresolved; actual hosts/GPU/RDMA/client432successes/formal coverage/raw DP/stream/post-stop remain UNVERIFIED. Root retains the launcher through runtime/terminal/raw-data verification; no automatic retry. Optional text statistics are intentionally absent; synchronous export can still exceed300seconds.
+Profile03 remains FAILED,137complete/7failed/288unsubmitted of432rows/original190files preserved. Native06R4, isolated datasets and tiny graph correspondence keep their limits; no generic ownership/cost admission/numeric ID remap. Full05/09/19 OPEN, GLM paused, balanced routing/workflow-GPU-operator-gap before CPU-overhead last and soft gates unchanged. Earlier current/next-action text below is dated history, not current submission status.
+
+#### Profile03 FAILED and offline diagnosis — historical checkpoint (2026-10-24)
 
 Profile03 exp-1024-141341-669621 FAILED2026-10-24T07:06:45Z, platform1Failed/3Stopped, launcher exit1. [Timeline](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md)/[JSON](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json): four distinct hosts0108/0329/0422/0618,32 distinct H800 UUIDs; P1 execute_model TimeoutError/P0 EngineDeadError share07:06:27 wall-log label, cross-host ordering unverified. Hard-affinity enforcement, NET/IB/NIXL transport and threeStopped exit codes are not proved.
 432 client rows:144 submitted,137 completed(16 warmup+121 formal),7 failed,288 not submitted. [Full-copy receipt](/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json):190 files/8208668144 bytes hash-identical, not successful-run/reference/cost evidence.

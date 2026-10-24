@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: archived reviewed/sealed profile04 and one submitted attempt with dated Starting/unassigned snapshot; runtime/data/cost gates and original failed-run evidence retained. |
 | 2026-10-24 | Selected the existing optional-table correction after native CPU/image controls; profile04 prepare-only work starts, with the original failed run and admission limits preserved. |
 | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current profile03 FAILED/offline mechanism and metadata limits archived; Starting checkpoints and earlier accepted captures preserved. |
 | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: archived limited graph correspondence acceptance and merged/sealed profile03 Starting; runtime, placement, transport and full-ticket gates remain open. |
@@ -24,7 +25,15 @@
 
 ## GPU stream acceptance and active DP slice — current (2026-10-24)
 
-### Existing optional-table correction and fresh profile04 — current
+### Profile04 submission milestone — 2026-10-24
+
+Frozen root records f4f4ab79: source8cbf7ab9/records6ec96b4c mergedf0eafafb; accepted runtime1437ace6 unchanged. Existing optional native `torch_profiler_dump_cuda_time_total=false` omits only the text statistics table; synchronous raw export, native300-second RPC, P512/D64 and600000records/268435456bytes remain fixed. [Review](profile01/profile04/review.md)/[root report](profile01/profile04/test_report_2026-10-24_profile04_root.md) record55tests PASS, five actual-image checks PASS and153source/Git/package checks PASS, adopted executions only.
+[Seal](profile01/profile04/root_seal.json):45inputs, manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f. Local launch1 `KeyError: 'AUTHORIZATION'` created NO platform job; original receipt/log unchanged. Local launch2 exported existing authorization and [submitted](profile01/profile04/root_submission.json) exactly one GPU attempt1/1 exp-1024-172225-512616.
+[Snapshot](profile01/profile04/root_run_check.json)2026-10-24T09:49:36Z: Starting/four unassigned replicas, i-fengyicheng/codesign/non-preemptible. Requested4×8H800/64CPU/500Gi each (SDK512mem_gb)/3600s, RDMA1/8 and exact owner-package local NFS100.96.128.195. [80-check submission archive](profile01/profile04/root_archive_verification.json) PASS observed launcher3950111 alive09:52:22Z; this owner performed no fresh platform/process reading.
+Preferred-versus-required affinity encoding unresolved; actual hosts/32H800/RDMA/client432successes/formal coverage/raw DP/stream/post-stop remain UNVERIFIED. Root next: retain existing launcher -> actual placement/runtime -> terminal/raw-data acceptance, no duplicate/automatic retry. Text tables intentionally absent; raw traces/metadata still required and export can still exceed300seconds.
+Profile03 remains FAILED137complete/7failed/288unsubmitted of432rows/original190files. Native06 ACCEPTED_NATIVE_REFERENCE_R4, isolated datasets and tiny graph correspondence retain their limits; no generic captured ownership/cost admission/numeric ID remap. Full05/09/19 OPEN, GLM paused, balanced routing/workflow-GPU-operator-gap before CPU-overhead last/official mean-total THPT/30%/10% and soft gates unchanged. Independent one-file CPU fixture restoration remains pending review/root acceptance, not integrated or accepted. Earlier current/next-action checkpoints below are dated history, superseded only for current execution.
+
+### Existing optional-table correction and fresh profile04 — historical preparation checkpoint
 
 Exact-image native constructor/autostop [receipt](/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_image_g8m3pvpv/receipt.json) exported both CPU control traces with eight payload annotations. `torch_profiler_dump_cuda_time_total=true` called statistics/lazy-event materialization once; false called neither and omitted only the optional text table. CUDA stayed uninitialized; this is CPU branch/export verification, not GPU timing or CUDA trace equivalence.
 [Native statistics controls](profile01/profile03/failure/statistics_control.md) preserve export with true-table RED/false-table GREEN for the same explicit virtual phase costs. Export-too-slow and CPU-only automatic tables remain RED; native300-second timeout,512/64 capture caps and runtime/native/C26 bytes are not changed. The [root failure report](profile01/profile03/failure/test_report_2026-10-24_profiler_rpc_failure.md) distinguishes file-mtime/source evidence from the original unproved pending-reply schedule.

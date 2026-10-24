@@ -1,0 +1,566 @@
+{
+  "task_id": "W128-PROFILE04-STAGE-DOCS",
+  "session_id": null,
+  "status": "PASS_DOCUMENT_AND_LOCAL_BINDING_ONLY",
+  "python": "3.10.6",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "base": "c4b59b65f177619223c7e0c8466bf852ee9c8083",
+  "root_records": "f4f4ab79d4a6928b9d6831d1d373c09aacadab3f",
+  "checks_passed": 229,
+  "gross_lines": 77,
+  "numstat": [
+    [
+      "7",
+      "2",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md"
+    ],
+    [
+      "13",
+      "1",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md"
+    ],
+    [
+      "11",
+      "2",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md"
+    ],
+    [
+      "9",
+      "1",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md"
+    ],
+    [
+      "9",
+      "1",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md"
+    ],
+    [
+      "9",
+      "1",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md"
+    ],
+    [
+      "10",
+      "1",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md"
+    ]
+  ],
+  "new_local_links": [
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/verification.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/test_report_2026-10-24_profile04_stage_docs.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "progress.md#profile04-submission-milestone--2026-10-24"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "progress.md#profile04-submission-milestone--2026-10-24"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../progress.md#profile04-submission-milestone--2026-10-24"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../progress.md#profile04-submission-milestone--2026-10-24"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "progress.md#profile04-submission-milestone--2026-10-24"
+    },
+    {
+      "source": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/review.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "source": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/root_seal.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/root_submission.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/root_run_check.json"
+    },
+    {
+      "source": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/root_archive_verification.json"
+    }
+  ],
+  "checks": [
+    "fixed_root_record:review.md",
+    "fixed_root_record:root_seal.json",
+    "fixed_root_record:root_submission.json",
+    "fixed_root_record:root_run_check.json",
+    "fixed_root_record:root_archive_verification.json",
+    "fixed_root_record:test_report_2026-10-24_profile04_root.md",
+    "fixed_root_record:root_launch_01_presubmission_failure.json",
+    "protected_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md",
+    "protected_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+    "root_owned_committed_progress",
+    "protected_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+    "protected_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+    "protected_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+    "protected_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+    "protected_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+    "protected_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+    "protected_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_launch_01_presubmission_failure.json",
+    "runtime_pin",
+    "source_pin",
+    "merged_pin",
+    "records_pin",
+    "submission_seal_binding",
+    "manifest_bindings",
+    "seal_receipts_count",
+    "seal_receipt_hash:tests",
+    "seal_receipt_hash:image",
+    "seal_receipt_hash:sdk",
+    "seal_receipt_hash:source_git",
+    "seal_receipt_hash:metadata",
+    "seal_receipt_hash:statistics",
+    "seal_receipt_hash:prelaunch",
+    "seal_receipt_hash:review.md",
+    "seal_receipt_hash:source_changes.diff",
+    "seal_receipt_hash:source_budget.receipt.json",
+    "seal_receipt_hash:matrix_binding.json",
+    "archive_record_hash:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+    "archive_record_hash:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+    "archive_record_hash:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_launch_01_presubmission_failure.json",
+    "archive_record_hash:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+    "archive_record_hash:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+    "submission_receipt_hash:platform",
+    "submission_receipt_hash:prelaunch",
+    "submission_receipt_hash:prior_launch",
+    "submission_receipt_hash:latest_platform",
+    "55_tests_receipt",
+    "55_tests_xml",
+    "test_source_hash:tests/unit/test_native_pd_worker.py",
+    "test_source_hash:tests/unit/test_native_pd_manifest.py",
+    "five_image_cases",
+    "five_image_pass",
+    "153_source_checks",
+    "13_runtime_modules",
+    "80_archive_checks",
+    "dated_launcher_observation",
+    "single_attempt",
+    "authorization_export",
+    "first_launch_no_job",
+    "first_launch_original_log",
+    "exact_dated_snapshot",
+    "starting_four_unassigned",
+    "personal_identity",
+    "requested_resources",
+    "requested_memory_rdma_nfs",
+    "affinity_unresolved",
+    "runtime_not_admitted",
+    "runtime_fields_unverified",
+    "package_is_owner_source",
+    "package_manifest_hash",
+    "45_package_inputs",
+    "immutable_package_hash:case/inputs/engine.json",
+    "immutable_package_hash:case/inputs/frontier.json",
+    "immutable_package_hash:case/inputs/native_config.json",
+    "immutable_package_hash:case/inputs/trace/SHA256SUMS",
+    "immutable_package_hash:case/inputs/trace/manifest.json",
+    "immutable_package_hash:case/inputs/trace/request_ids.json",
+    "immutable_package_hash:case/inputs/trace/trace.csv",
+    "immutable_package_hash:case/inputs/trace/warmup_pool.csv",
+    "immutable_package_hash:case/manifest.yaml",
+    "immutable_package_hash:config.json",
+    "immutable_package_hash:engine.json",
+    "immutable_package_hash:evidence_readiness.json",
+    "immutable_package_hash:launch.py",
+    "immutable_package_hash:model/config.json",
+    "immutable_package_hash:model/generation_config.json",
+    "immutable_package_hash:model/tokenizer.json",
+    "immutable_package_hash:model/tokenizer_config.json",
+    "immutable_package_hash:native_dummy_bootstrap.py",
+    "immutable_package_hash:native_pd_worker.py",
+    "immutable_package_hash:overlay.json",
+    "immutable_package_hash:overlay_model.py",
+    "immutable_package_hash:probe_nixl_read.py",
+    "immutable_package_hash:probe_runtime_inventory.py",
+    "immutable_package_hash:profile_plan.json",
+    "immutable_package_hash:seal.py",
+    "immutable_package_hash:serve_observers.json",
+    "immutable_package_hash:source_lock.json",
+    "immutable_package_hash:submit_native_diagnostic.py",
+    "immutable_package_hash:tests/comparison/calibration/balanced_routing.py",
+    "immutable_package_hash:tests/comparison/calibration/client_metrics.py",
+    "immutable_package_hash:tests/comparison/calibration/e2e_metrics_gap.py",
+    "immutable_package_hash:tests/comparison/calibration/native_dummy_initialization.py",
+    "immutable_package_hash:tests/comparison/calibration/native_full_structure.py",
+    "immutable_package_hash:tests/comparison/calibration/native_serve_profile.py",
+    "immutable_package_hash:tests/comparison/calibration/pd_metrics.py",
+    "immutable_package_hash:tests/comparison/calibration/pd_proxy.py",
+    "immutable_package_hash:tests/comparison/calibration/pd_replay.py",
+    "immutable_package_hash:tests/comparison/dp_placement_pp/vllm_replay.py",
+    "immutable_package_hash:tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+    "immutable_package_hash:tests/integration/native_extension_startup_probe.py",
+    "immutable_package_hash:trace/SHA256SUMS",
+    "immutable_package_hash:trace/manifest.json",
+    "immutable_package_hash:trace/request_ids.json",
+    "immutable_package_hash:trace/trace.csv",
+    "immutable_package_hash:trace/warmup_pool.csv",
+    "false_optional_table",
+    "unchanged_window_limits",
+    "diagnostic_only",
+    "runtime_source_lock",
+    "seven_uncommitted_paths_only",
+    "owned_index_empty",
+    "150_gross_budget",
+    "history_rows_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "new_history_row:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "checklists_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "raw_requests_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "current_submission_block:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "only_stale_checkpoint_replacements:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md:/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/verification.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md:/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/test_report_2026-10-24_profile04_stage_docs.md",
+    "history_rows_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "new_history_row:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "checklists_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "raw_requests_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "current_submission_block:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "only_stale_checkpoint_replacements:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md:progress.md#profile04-submission-milestone--2026-10-24",
+    "new_local_anchor:progress.md#profile04-submission-milestone--2026-10-24",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+    "history_rows_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "new_history_row:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "checklists_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "raw_requests_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "current_submission_block:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "only_stale_checkpoint_replacements:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md:progress.md#profile04-submission-milestone--2026-10-24",
+    "new_local_anchor:progress.md#profile04-submission-milestone--2026-10-24",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md",
+    "history_rows_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "new_history_row:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "checklists_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "raw_requests_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "current_submission_block:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "only_stale_checkpoint_replacements:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md:../progress.md#profile04-submission-milestone--2026-10-24",
+    "new_local_anchor:../progress.md#profile04-submission-milestone--2026-10-24",
+    "history_rows_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "new_history_row:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "checklists_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "raw_requests_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "current_submission_block:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "only_stale_checkpoint_replacements:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md:../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md:../progress.md#profile04-submission-milestone--2026-10-24",
+    "new_local_anchor:../progress.md#profile04-submission-milestone--2026-10-24",
+    "history_rows_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "new_history_row:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "checklists_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "raw_requests_preserved:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "current_submission_block:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "only_stale_checkpoint_replacements:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md:../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+    "new_local_link:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md:progress.md#profile04-submission-milestone--2026-10-24",
+    "new_local_anchor:progress.md#profile04-submission-milestone--2026-10-24",
+    "history_rows_preserved:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+    "new_history_row:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+    "checklists_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+    "raw_requests_preserved:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+    "current_submission_block:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+    "only_stale_checkpoint_replacements:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+    "new_local_link:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md:profile01/profile04/review.md",
+    "new_local_link:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md:profile01/profile04/test_report_2026-10-24_profile04_root.md",
+    "new_local_link:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md:profile01/profile04/root_seal.json",
+    "new_local_link:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md:profile01/profile04/root_submission.json",
+    "new_local_link:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md:profile01/profile04/root_run_check.json",
+    "new_local_link:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md:profile01/profile04/root_archive_verification.json",
+    "original_prediction_sections_1_8",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "historical_tail_unchanged:task_memory/task_2026-10-23_v4_remaining_measurements/summary.md"
+  ],
+  "sha256": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md": "d46003ad93426c564e5ea3f5a4ac1655d5c97ef333c405c0dabbf30db3586a26",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/plan.md": "3330b945e9122779157b2e02537a47fe8e08cee382a159e7f28639989d8e33bc",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/progress.md": "f0c1187bb6fbe5bfa2b55847050b50fcc627d50f7289d7f6ee29f8c0703aeee3",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md": "5d47d53f0e8ccbcd0f8366c30b43df5ec9f454783d738670e20b7713c684e548",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json": "de66faae79b94d749214412d46c6f8b9f06d71ae3d3481bdf34306979bd79259",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json": "db3ce856b8761fbad615eb17b08159c98fc2c6da258e83a2f1780b563c2616ee",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json": "b97f54cacbef3567ca3fb67799c03b9b06ca23dfea899d6d884f92e30cbde293",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json": "954cc38958e009955157d134028bc6576d4870515d4088d53e3dfb32ef44a760",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md": "a2b9d12f2c855204b2cd84921ff8baa1ebdba5e5687ff88f8ca62d2a4001c59e",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_launch_01_presubmission_failure.json": "aa51a969c9befc10c52c7d365ae09b9ed75ab9e0d1a1fabe23b79de4738b4d87",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_root_tests_g2vtrw1t/receipt.json": "2a77ce36802782e242d290ba799971b1b088487f784ca9ef92e4f867eaccfca2",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_root_image_egwpqxbz/receipt.json": "ec90d07e1cca983ab9536ffa02a20130e7687365ae34775ac65b4d73cdfcdb7f",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_root_sdk_09unc5v7/receipt.json": "2aa61fc43f0faaa4b0ff3dc9147ce7435141eaaea950a41ee80373ca092de8e4",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_root_final_0esz0v_h/receipt.json": "f456f9e56c4329f1a6ee3a737a820224c28331bc95c74a6d40f25f4308a9ed78",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_metadata_root_final_ipb_iyt3/receipt.json": "2f2cf5866cf56479f774f7dca6b183fcdd576e8eeb7402b2f68541b4b231c497",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_root_final_4sfx78oy/receipt.json": "90450f1f5837df11c3d2392a473ea494409beb1e24b30b704189c23e94840cda",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_prelaunch_72xjgp4d/receipt.json": "bcb035900c38058b648c6bd2dfa1ba446517f0ba947248bf933083522fac28e4",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/source_changes.diff": "2873889d4c3ecebba3ef8f8801c45968749bbaf6847e8d0ee5afb3415e069043",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/source_budget.receipt.json": "8d30378aae4faa3ba7612b6576013fea7b182274ab4e2586a7fd695cfbc313ff",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/matrix_binding.json": "e90c4709ecfdbf5acbdd7f248e2e5de020dc46b8ad706cef40729456003fed2e",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_platform_e1jpb7ap/receipt.json": "cfbd7e74f5ed833ebb9b8c80e6224096ed8f21e151c3450fde3ce330034edef9",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_prelaunch_env_omcv47c3/receipt.json": "db5f50aea60c78c7f1c2cc08cb653c9b8c2e8d36997b6c95336f13c1bd54f1be",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_platform_o35jf2yk/receipt.json": "5283ea3ec6c46809f5bfdf1893e41307e0c4bf1ae151bc3cedae7e645ebd2261",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/unit/test_native_pd_worker.py": "0d6f7f94abd8cb2a061661a66a2f0dc9c23ba73a28c04caa609c659db0dfc104",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/tests/unit/test_native_pd_manifest.py": "934b65da2f01e04e2725e69369e30752a39810ba9d055926ac0a373a61221792",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_launch_20261024.log": "9208257174a8f6a8a5c231ffd5b8dd7323d06b60071f758a33a8941412d9aa8e",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/manifest.json": "25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/engine.json": "473fe10fb1aaa35996e147f8f3b6d8b4508ac1bd645f789ae74b48b0335c6fb1",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/frontier.json": "747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/native_config.json": "9761d3e53ccadeba8536f4c358d1913c6821661c9b420d5103800da95dbe9d10",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/SHA256SUMS": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/manifest.json": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/request_ids.json": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/trace.csv": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/inputs/trace/warmup_pool.csv": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/case/manifest.yaml": "ec93153eb0112bb45c7f6b3c8e3c10874c9f96f20ca0de11ba10fdb45cb710a1",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/config.json": "9761d3e53ccadeba8536f4c358d1913c6821661c9b420d5103800da95dbe9d10",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/engine.json": "473fe10fb1aaa35996e147f8f3b6d8b4508ac1bd645f789ae74b48b0335c6fb1",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/evidence_readiness.json": "09a47be359960415d0e5534ccbd451861ee632baf18266bec26e91db8017f610",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/launch.py": "bee2ca673e613e4acf4a83b04feb2194509a838dfd516f9ebc6a040fd05e907b",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/config.json": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/generation_config.json": "5fccff80f55a4d455bbe516bdd552edf3e9623df95e99fbf2a3c3389fdf91af0",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/tokenizer.json": "8f9f37ca37fdc4f5fd36d5cf4d3b0e8392edb4e894fd10cc0d70b4957c8633cf",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/model/tokenizer_config.json": "6ac8c8dc065ed118161d02dd532749ae3f52c243deac27872134fae2f50d8547",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/native_dummy_bootstrap.py": "74cf0dec1c0b4d271abf2291252b9ca3cd6f6ce889a9f1f6485983eecb4393ec",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/native_pd_worker.py": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/overlay.json": "ca88a5031edcd6b5d866bf3461e0487d24f000ca9a5bf52f7a39b77ebfe1a5a2",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/overlay_model.py": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/probe_nixl_read.py": "22995e66121122adb3924502ec4c763a500c88e90fc6fba5b340a832098ac997",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/probe_runtime_inventory.py": "929498b5ba4db72f0d2aef8abf3f73d6c625c439bbe8c4a74774719602bdafa6",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/profile_plan.json": "5eb6d8bbb450fb88aeb9e11b503a4c0b0839348fb81b8a7aa2ea90d3d2cd6bd5",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/seal.py": "851ff85b03c5684613f4ea2f4536796bfa971497556f94a6f6bb04a46b761619",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/serve_observers.json": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/source_lock.json": "07f9a087a9bf965e6d6737dbbb9fca0c94baf571fe251166775654dc2a8e7265",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/submit_native_diagnostic.py": "80effbbb5f0315b54ecdb2f3bb979dc33e00e94f8a10bcf416cc590d02424359",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/balanced_routing.py": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/client_metrics.py": "ca91383caa9c5f60f5d942f5a561e2a90862e8c25451eff04f1f439b9776309d",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/e2e_metrics_gap.py": "2785c1f0580032bc2d6ed49aaa74f9d55cfbb73022f883597c450b6173c1bd3f",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/native_dummy_initialization.py": "118b5feb8b3fb15f72f3736fbf0af166eaeebe99cba46245b2ddf5ddc2b6a8ca",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/native_full_structure.py": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/native_serve_profile.py": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/pd_proxy.py": "ebc8d3c6f171368f85ac22e21e2bb6829eef670c6f6fe0d24615c657c11bd942",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/calibration/pd_replay.py": "65ec81721ebe1d02a4028388521bc25d57888bb39a721bc59c21dc6f0a3ed0ae",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/dp_placement_pp/vllm_replay.py": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/tests/integration/native_extension_startup_probe.py": "8c04aad06417ddde7e33f11b41959b3330404f0a4106756318c95ff1700227a3",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/SHA256SUMS": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/manifest.json": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/request_ids.json": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/trace.csv": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/trace/warmup_pool.csv": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md": "d9070b158bf077e3fc702bdaf91bd8df3900af4b339bf2207e1549a2c6cf8623",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md": "9a1ec41f36fa820d9d897c94f7e58ca8d5b436861d97cab8e033102af6fa6122",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md": "637f6125259169eaf478b4506ccb4540a41c3c89284c1506a75bc7345898a32a",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md": "f55a3d4f700d425922522cffefef82d6d746e3c343a320c5f8043b5346645c4a",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md": "ecc6408fbea8ee4d21c21126975c884603c0ba7d86773fb18d453368108a0ab0",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md": "7b04135a2b49ee52493b8cc79f2551735a8fc0e5f0cab0a7256c31c2a7012a7a",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/summary.md": "7621027d96dfe49715d63d2b779cb4045d66b7c821ca496375ce446b10aa7714",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_root_b13xw9ia/verify.py": "1f6912706c47ea374b3b73abd914905cc1e3fe2cfcce1294489ad67db8f3cce1",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_root_b13xw9ia/starting_snapshot.json": "7d0a0dd4419f9ee8ae588e1129272abee623001bab6f9be89abc14052142def4",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_root_b13xw9ia/test_report_2026-10-24_profile04_stage_docs.md": "ff6e698e1f4508b6e479ba1a7194b51add0e41eef51d9df45a7b7da05ac694a4"
+  },
+  "concurrent_root_records": {
+    "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md": {
+      "starting_sha256": "11fe17bb62e6cf08b9727c0c8bd2240a219f020ec2dbedbafd4eacca60fb537c",
+      "current_sha256": "f0c1187bb6fbe5bfa2b55847050b50fcc627d50f7289d7f6ee29f8c0703aeee3",
+      "head": "5959cd4e13178a9dc72b549ae8b299a9c2c8eb1d"
+    }
+  },
+  "limits": [
+    "No platform/process observation, operation, credentials access, Docker/GPU/control, or delegation.",
+    "CPU/image/SDK and 153/80-check executions are adopted receipts, not reruns.",
+    "45 sealed local package inputs rehashed; original 190 failed-run outputs were not rehashed.",
+    "Root owns final acceptance/link/hash checks and commit."
+  ]
+}

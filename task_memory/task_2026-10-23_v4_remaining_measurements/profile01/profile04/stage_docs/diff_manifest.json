@@ -1,0 +1,113 @@
+{
+  "base": "c4b59b65f177619223c7e0c8466bf852ee9c8083",
+  "entries": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_full_diff_75be62p6/01.diff",
+      "command": [
+        "git",
+        "diff",
+        "c4b59b65",
+        "--",
+        "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md"
+      ],
+      "bytes": 6256,
+      "lines": 32,
+      "diff_sha256": "eaf2011e84785218045cb05e12af8467c683ffe1c7ea95cb5f8e79e3799e7106",
+      "file_sha256": "d9070b158bf077e3fc702bdaf91bd8df3900af4b339bf2207e1549a2c6cf8623"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_full_diff_75be62p6/02.diff",
+      "command": [
+        "git",
+        "diff",
+        "c4b59b65",
+        "--",
+        "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md"
+      ],
+      "bytes": 5259,
+      "lines": 34,
+      "diff_sha256": "2e1d7d4c8a21af299553f774f09b248eb5915a5be3ed768fc3e84138f32eba27",
+      "file_sha256": "9a1ec41f36fa820d9d897c94f7e58ca8d5b436861d97cab8e033102af6fa6122"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_full_diff_75be62p6/03.diff",
+      "command": [
+        "git",
+        "diff",
+        "c4b59b65",
+        "--",
+        "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md"
+      ],
+      "bytes": 10166,
+      "lines": 34,
+      "diff_sha256": "d3da5c911cdd120c26569c18df5c96b7968ef81e3e9cd53da1f7792318ce48c4",
+      "file_sha256": "637f6125259169eaf478b4506ccb4540a41c3c89284c1506a75bc7345898a32a"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_full_diff_75be62p6/04.diff",
+      "command": [
+        "git",
+        "diff",
+        "c4b59b65",
+        "--",
+        "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md"
+      ],
+      "bytes": 4485,
+      "lines": 28,
+      "diff_sha256": "e47014af95a5a18598e6b7a2402e5e5404ef03a0a16f428cbcfb2b3976be24bf",
+      "file_sha256": "f55a3d4f700d425922522cffefef82d6d746e3c343a320c5f8043b5346645c4a"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_full_diff_75be62p6/05.diff",
+      "command": [
+        "git",
+        "diff",
+        "c4b59b65",
+        "--",
+        "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md"
+      ],
+      "bytes": 4498,
+      "lines": 28,
+      "diff_sha256": "55beb66abf6bcb46702fe6758635ab689ac624014a8eaaa6b156ed8e88cfeff3",
+      "file_sha256": "ecc6408fbea8ee4d21c21126975c884603c0ba7d86773fb18d453368108a0ab0"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_full_diff_75be62p6/06.diff",
+      "command": [
+        "git",
+        "diff",
+        "c4b59b65",
+        "--",
+        "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md"
+      ],
+      "bytes": 4811,
+      "lines": 28,
+      "diff_sha256": "007c3870db3efba8f89bf777d63775d029a2d74a88c67991d17b4c0c7cc16a8d",
+      "file_sha256": "7b04135a2b49ee52493b8cc79f2551735a8fc0e5f0cab0a7256c31c2a7012a7a"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_full_diff_75be62p6/07.diff",
+      "command": [
+        "git",
+        "diff",
+        "c4b59b65",
+        "--",
+        "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md"
+      ],
+      "bytes": 4884,
+      "lines": 29,
+      "diff_sha256": "d07e9a98b1287a477f7ab684c556ba870c3c6a981c095951af7072156db8568e",
+      "file_sha256": "7621027d96dfe49715d63d2b779cb4045d66b7c821ca496375ce446b10aa7714"
+    }
+  ],
+  "combined_sha256": "5143a67b9c6a2b1ef9fdc9d7339d22eb2e77fd0ee7d7bb1f2c59cea16c7d337d",
+  "combined_bytes": 40359,
+  "combined_lines": 213
+}

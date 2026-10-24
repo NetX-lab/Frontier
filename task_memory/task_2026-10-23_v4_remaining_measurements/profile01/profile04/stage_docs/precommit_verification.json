@@ -1,0 +1,92 @@
+{
+  "status": "PASS_DOCUMENT_PRECOMMIT",
+  "bound_hash_checks": 19,
+  "owned_paths": [
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/acceptance.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/root_receipt.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/verification.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/diff_manifest.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/source.diff",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/precommit_order_failure.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/test_report_2026-10-24_stage_docs.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/precommit_verification.json"
+  ],
+  "per_file_diff_commands": [
+    [
+      "git",
+      "diff",
+      "c4b59b65",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md"
+    ],
+    [
+      "git",
+      "diff",
+      "c4b59b65",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md"
+    ],
+    [
+      "git",
+      "diff",
+      "c4b59b65",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md"
+    ],
+    [
+      "git",
+      "diff",
+      "c4b59b65",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md"
+    ],
+    [
+      "git",
+      "diff",
+      "c4b59b65",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md"
+    ],
+    [
+      "git",
+      "diff",
+      "c4b59b65",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md"
+    ],
+    [
+      "git",
+      "diff",
+      "c4b59b65",
+      "--",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md"
+    ]
+  ],
+  "concatenation": "manifest entry order",
+  "source_diff_sha256": "5143a67b9c6a2b1ef9fdc9d7339d22eb2e77fd0ee7d7bb1f2c59cea16c7d337d",
+  "whitespace_paths": [
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/acceptance.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/root_receipt.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/verification.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/diff_manifest.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/precommit_order_failure.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/stage_docs/test_report_2026-10-24_stage_docs.md"
+  ],
+  "scope": "Documentation only; no package/runtime/source mutation."
+}
