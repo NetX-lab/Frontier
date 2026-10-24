@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Committed verified source/tests as1aa1e4a5, confirmed clean worktree and closed local work. |
 | 2026-10-24 | Completed safe old-source RED, candidate/inherited GREEN, source/ABI/worker/matrix binding and frozen-byte checks. |
 | 2026-10-24 | Recorded inspected authority, source hypothesis, environment and CPU-test reuse boundaries. |
 
@@ -20,7 +21,9 @@ Task ID: `W128-GRAPH-PAYLOAD-PROBE`.
 - completed D: worker3.12.3 and image identity are bound by root's existing source receipt. Retained fault line197 statically names the original-node query (candidate219); local3.12.13 CALL offsets516/574 have lines196/197. An initially incorrect positional image-field extraction was corrected to the receipt's exact image before acceptance. Worker bytecode was not rerun and native decode/crash cause remain unproven. `fault_source_mapping.json` records these limits.
 - completed D: all37 existing historical byte pins verified unchanged. Existing matrix comparison has77 identical cases/complete comparison/no mismatches and its exact recorded hash; unchanged-domain diff against44f2ddb is empty. `frozen_input_verification.json` and `matrix_binding.json` retain evidence; no new matrix capture.
 - completed E pre-commit inspection: all12 frozen attempt3 manifest files also match their exact hashes. Whole staged `git diff --check` reports only trailing spaces preserved verbatim in pytest RED log/XML and unified-diff empty-context lines; retain those evidence bytes and check source/docs/JSON separately rather than alter raw artifacts.
-- in-progress E: task records and final scope/requirements check, then commit and clean handoff. No GPU/platform, package/launcher or other excluded operation performed; no further delegation.
+- completed E: requirements re-read, source/docs/JSON whitespace check passed, and verified source/test/records committed as `1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077`. `git status --porcelain` was empty after that commit; unchanged-domain diff44f2ddb..1aa1e4a5 was also empty. Final archive/hash records are committed separately; no further implementation, diagnosis or runtime operation is selected.
+
+The final checkpoint marks A–E complete. Artifact hashes and final clean status are returned with the archival commit. No GPU/platform, package/launcher or other excluded operation was performed; no further delegation.
 
 ## Root-only remaining work
 

@@ -4,11 +4,13 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-24 | Bound verified source/test commit1aa1e4a5 and final artifact inventory; local scope complete. |
 | 2026-10-24 | Archived the verified CPU/source-only correction and root runtime handoff limits. |
 
 Task ID: `W128-GRAPH-PAYLOAD-PROBE`.
 Worktree/branch: `/data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe`, `v4-graph-payload-probe`.
 Base: `44f2ddb9736f0abaaf6a52a5fb768519996b7da3`.
+Verified source/test commit: `1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077`; final archive commit returned to root separately.
 
 ## Outcome
 
@@ -32,11 +34,12 @@ All task paths below are relative to `task_memory/task_2026-10-23_v4_remaining_m
 - `fault_source_mapping.json`: retained actual worker3.12.3/root-image/fault bytes, static original-node query mapping and explicitly local3.12.13 bytecode evidence.
 - `frozen_input_verification.json`: unchanged37 historical byte pins and referenced source/test hashes.
 - `matrix_binding.json`: explicit existing77-case comparison binding, exact comparison hash and unchanged-domain diff; no new capture.
+- `owner_cpu_acceptance.json`, `artifact_hashes.json`: scoped owner acceptance and exact per-file SHA256/byte/line inventory; root runtime acceptance remains separate.
 - `requirements.md`, `plan.md`, `progress.md`, `checkpoint.md`, `test_report_2026-10-24_graph_resource_payload.md`, this archive: scope, route and verification records.
 
 ## Validation
 
-New candidate controls16PASS. Compatible original suite71PASS/5deselected,71 source loads redirected to candidate through its unchanged loader. Those five old bare-GraphData/exact-ABI cases are explicitly replaced by the new controls, not changed. Safe old-source RED:2 expected assertion failures/exit1 using allocated padded envelopes and fake ID functions only. C++ syntax-only official-header ABI assertions passed; all37 historical byte pins matched. Existing77-case matrix is complete/identical with unchanged simulator domains.
+New candidate controls16PASS. Compatible original suite71PASS/5deselected,71 source loads redirected to candidate through its unchanged loader. Those five old bare-GraphData/exact-ABI cases are explicitly replaced by the new controls, not changed. Safe old-source RED:2 expected assertion failures/exit1 using allocated padded envelopes and fake ID functions only. C++ syntax-only official-header ABI assertions passed; all37 historical byte pins and12 attempt3 manifest files matched. Existing77-case matrix is complete/identical with unchanged simulator domains. Source commit1aa1e4a5 passed a clean `git status --porcelain` and empty unchanged-domain diff; source/docs/JSON whitespace checks passed, while verbatim raw pytest/diff formatting was preserved.
 
 ## Root handoff and limitations
 

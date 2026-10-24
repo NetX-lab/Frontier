@@ -1,0 +1,155 @@
+{
+  "task_id": "W128-GRAPH-PAYLOAD-PROBE",
+  "verified_source_commit": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+  "scope": "Final exact artifact inventory; excludes this manifest itself.",
+  "probe_budget": {
+    "inherited_frozen_bytes": 32887,
+    "inherited_frozen_lines": 647,
+    "unchanged_inherited_bytes": 32705,
+    "unchanged_inherited_lines": 645,
+    "added_lines": 24,
+    "deleted_lines": 2,
+    "gross_changed_lines": 26,
+    "limit": 80
+  },
+  "cpu_controls_budget": {
+    "new_unit_file_lines": 154,
+    "compiler_stdin_lines": 5,
+    "gross_lines": 159,
+    "limit": 160
+  },
+  "files": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/abi_source_binding.json",
+      "sha256": "738ea43f7d9b78024f786b89f125d78b7222a9505108aab59776f8b0b6f9aa39",
+      "bytes": 2656,
+      "lines": 70
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/checkpoint.md",
+      "sha256": "de53b8c4bff822433584f447624a5cfcceaf41236f792d3b4587db287535f33f",
+      "bytes": 2772,
+      "lines": 52
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/cpu_green.log",
+      "sha256": "d8801bae6559019a0a1679a355f602b67dbf530166df2374d6890fc2d1117341",
+      "bytes": 99,
+      "lines": 2
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/cpu_green.xml",
+      "sha256": "f9dc291a316919d0a10400aacb2caab6ee8454b464232c2a88a6b52924314df1",
+      "bytes": 2543,
+      "lines": 1
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/cpu_inherited.log",
+      "sha256": "6ab6b91ef222ba0264e8c0ef20e01a7d964c605487bbddecf66baa45dbd41133",
+      "bytes": 160,
+      "lines": 4
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/cpu_inherited.xml",
+      "sha256": "4b2196b719abdcffbb527dbc963ff97bf3e0f2a0cceebe907840edfba947ece0",
+      "bytes": 11491,
+      "lines": 1
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/cpu_receipts.json",
+      "sha256": "874e4439e37e531890ad01acbb4e79f55b2064c886aa98c5944a44681ede2a4a",
+      "bytes": 4840,
+      "lines": 121
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/cpu_red.log",
+      "sha256": "5139842d1a9570fea6bbf87fbc478125107e1d2ceda51def4fc159215ddc3638",
+      "bytes": 4015,
+      "lines": 54
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/cpu_red.xml",
+      "sha256": "5d086f8bede6a7f708c0e07a8df4509b04560b15498bb7b88a6a1bf9b542d88f",
+      "bytes": 4412,
+      "lines": 43
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/fault_source_mapping.json",
+      "sha256": "5e9672a805f014712856c8251822498190e699e075d557c19412f6ddfdcc404f",
+      "bytes": 3422,
+      "lines": 49
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/frozen_input_verification.json",
+      "sha256": "7acd7634213177f41f0e40f1d06529c93744cd899c273d7df002f522993a401b",
+      "bytes": 14334,
+      "lines": 210
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/matrix_binding.json",
+      "sha256": "8b697ae0596ce2f2a1d4febc863a6e9f18ed66af90648e6160b106b660eb2cde",
+      "bytes": 1227,
+      "lines": 25
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/owner_cpu_acceptance.json",
+      "sha256": "4d2cf47f95215791219adb69aeb519e46d623b2a5482c070a0ac631cd2f76b6e",
+      "bytes": 1267,
+      "lines": 28
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/plan.md",
+      "sha256": "e7739e20fc7556faed63be0ce81af251ce5a7d60e1a2dac0ef2c9649aa948312",
+      "bytes": 2122,
+      "lines": 23
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py",
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+      "bytes": 34078,
+      "lines": 669
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/progress.md",
+      "sha256": "c6ad90fac24d1227e54729e15cb35f350205b806a27e946728efbc96a8208b2a",
+      "bytes": 5061,
+      "lines": 30
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/requirements.md",
+      "sha256": "2b1e920be2eb2a992afaeedc62746d1fa536e99848c779049a007d9a7c8e368d",
+      "bytes": 3350,
+      "lines": 27
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/source_delta.diff",
+      "sha256": "5ed1345cbceea6a99511f2a10d704b2686ad36477364bdc14568e34dc45d8992",
+      "bytes": 2706,
+      "lines": 49
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/source_verification.json",
+      "sha256": "9bb9c00e8eaff1d24ed3b636a520124152c02ed8f478e2aa6a931044ca97bab3",
+      "bytes": 1468,
+      "lines": 46
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/summary.md",
+      "sha256": "ab38428c86cdac2ebec6240773488feaa90d6c238ccd6ecdbfba3fbcf0d2d5ce",
+      "bytes": 4771,
+      "lines": 48
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/test_report_2026-10-24_graph_resource_payload.md",
+      "sha256": "a0bcf0143b3bcaa126a9fdca8586082d2f71ee4d4ceddecab7f19b596185f115",
+      "bytes": 7599,
+      "lines": 75
+    },
+    {
+      "path": "tests/unit/test_cupti_graph_resource_payload.py",
+      "sha256": "b8077244a04978f5e11c76ee8dd9a8fd3da8cfd04c44b7f271054bae8cb74c5d",
+      "bytes": 6849,
+      "lines": 154
+    }
+  ]
+}

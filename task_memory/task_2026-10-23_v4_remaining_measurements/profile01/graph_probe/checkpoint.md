@@ -4,11 +4,11 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-24 | Applied check-progress after verified CPU/source deliverables; commit/handoff remains the only local step. |
+| 2026-10-24 | Final check-progress: source/test commit1aa1e4a5 and clean worktree verified; all local steps closed. |
 
 ## 1. 规划完成情况
 
-**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO1
+**汇总：** PASS5｜BLOCKED/FAILED/SKIPPED0｜TODO0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -16,12 +16,12 @@
 | B 安全旧源 RED | PASS | cpu_red.xml：2 个预期断言失败，不调用真实 CUPTI。 |
 | C 最小新副本 | PASS | source_verification.json：26/80 gross lines，既有逻辑不变。 |
 | D CPU 与证据绑定 | PASS | 16+71PASS、ABI 编译、37 pins、77-case 绑定。 |
-| E 提交与干净交付 | TODO | 仅剩记录复核、commit 和最终 status。 |
+| E 提交与干净交付 | PASS | commit1aa1e4a5；git status 与 unchanged-domain diff 均为空。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 任务开始至 CPU 里程碑｜**当前前沿：** E 提交与交付
+**检测窗口：** CPU 里程碑至源码提交｜**当前前沿：** 无本地未完成事项，仅归档并返回 root
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -42,7 +42,7 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. E：复读 requirements，核对仅有归属文件与预算，提交源码/测试/记录 → 完成标志：commit 与干净 worktree。
+1. 本 agent：提交最终归档/hash records，返回 commits、artifacts 和 clean status，然后停止。
 2. root：review/实际 image 与 package checks 后最多一次1H800/600s；本 agent 不执行、不等待此工作。
 
 ## 4. 最值得关注的 3 点
