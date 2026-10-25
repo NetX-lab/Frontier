@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-25 UTC / HKT | Archive the initial preflight and affected repair checks without platform/workload calls; independent follow-up pending. |
+| 2026-10-25 UTC / HKT | Archive the initial preflight and affected repair checks without platform/workload calls; independent follow-up on8e3d5088 closes both axes with No findings. |
 
 The complete CPU-fixture worker is prepared, with two independently reported evidence defects repaired. The complete CLI has not been submitted. Production remains `2ca5e57113b0bc99ab84e926e5bb492b3670072e`, equal to frozen `1461573d` outside task_memory; existing source budgets, joint2/2 and required-shape6/6 remain unchanged.
 
@@ -40,7 +40,7 @@ The retained initial preflight command used the identical scope/environment with
 
 Fault-check script wall is 0.267910046s; outer scope wall is 0.422564383s. Affected preflight script wall is 3.872275814s; outer scope wall is 4.461541410s. These are distinct timing scopes.
 
-Final plan SHA is `4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e`. Independent Standards/Spec follow-up is pending. The initial axes report Standards1 (P2), Spec2 (P1/P2); overlap is preserved.
+Final plan SHA is `4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e`. Independent Standards/Spec follow-up on8e3d5088 is complete: P2/P1-P2 CLOSED, No findings on both axes. The initial axes report Standards1 (P2), Spec2 (P1/P2); overlap is preserved.
 
 ## Evidence and limits
 
@@ -49,3 +49,5 @@ Exact evidence lives under `resumed_execution/evidence/complete_cli_2026-10-25/`
 All five current worktrees were directly inspected: the four satellite heads1461573d/1461573d/b061f884/6335f581 remain clean mainline ancestors. Collective-sim remains clean pinned `3dac53c544e546574cb6e8078cd14053d0916113`. No composed audit, source regression, readiness, pricing or shape check is rerun.
 
 Existing source admission remains strict77=77/77 and canonical full-unit raw8028PASS/279FAIL/32ERROR/281SKIP,exit1, all8620IDs/statuses unchanged. Independent101/197/53/52 supplements overlap. Current preparation never qualifies full6144/1024CLI, effective full-workload memory, finalT2/package/native/G3/E2E or the complete D29 task.
+
+The personal cloud output directory and four local output/capture paths were directly checked absent before launch. Existing credentials were checked only for presence/private permissions. This is path preparation, not a platform, quota, throughput, memory or workload measurement. Exact review and path evidence are review_followup.json and launch_path_readiness.json; the unique worker is still unsubmitted at this report checkpoint.

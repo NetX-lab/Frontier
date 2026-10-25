@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Close fixed8e3d5088 complete-CLI follow-up on both axes; freeze task records and proceed to the single authorized worker with unchanged source and limits. |
 | 2026-10-25 UTC / HKT | Collect complete-CLI Standards/Spec findings; preserve submitted-job identity and both failure stages, with affected static and fault-injection checks PASS. |
 | 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Recover complete-CLI drafts and current five-tree state; correct input/resource/lifecycle checks before no-operation verification and independent review. |
@@ -168,7 +169,8 @@ Current checkpoint: the single worker and its parent evidence verification are c
 - completed/initial review collection: Standards Tesla reports1P2; Spec Poincare reportsP1/P2 onfixed0dca7f83/candidate0eded7cf. P1 loses submitted-job identity if worker startup fails before its receipt; P2 overwrites initial error evidence on later query/check failure. Separate axes are retained in resumed_execution/review_complete_cli_2026-10-25.md and evidence/complete_cli_2026-10-25/review_initial.json.
 - completed/task-only repairs: synchronously record the hash-bound original SDK Job Create identity before unchanged spawn_tasks wait; remove worker-start fallback,verify returned identity,retain launch_error/original log and later error/separate followup log. No SDK/production/resource/output/gate change. Original launcher/preflight bytes remain retained.
 - completed/affected verification: review_fault_injection.py reproduces2 original defects and passes3 corrected fake-API scenarios,rawexit0,outer0.422564383s. preflight_review_followup.py passes syntax/bash-n/no-operation dry-run/25source/sixinput/262metadata/original SDK objects,rawexit0,outer4.461541410s. Both60s/configured30GiB/Python3.10.6/-B/single math threads;0 real platform/workload/pricing/shape calls. Final planSHA4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e. Formal report:resumed_execution/test_report_2026-10-25_complete_cli_preparation.md.
-- pending/follow-up: commit this tested task-only repair,collect independent review on the fixed repaired commit,finish check-progress/records freeze,then submit the already-authorized single completeCLI worker. Do not repeat any old control, source regression, readiness or exhausted joint/shape execution.
+- completed/follow-up: repaired commit8e3d5088ed82855b16aebdc868032a5624cc71c6 has independent StandardsP2 CLOSED and SpecP1/P2 CLOSED,No findings on both axes; no reviewer test/client/platform/workload calls. Exact archive:review_followup.json. Personal cloud main09 and local worker/capture outputs checked absent; credentials present/private with values omitted.
+- completed/check-progress and next execution: current preparation checkpoint now25PASS/3BLOCKED-or-FAILED,allD1-D7/S1-S6CLEAR. Freeze this task-only records commit,invoke the unique completeCLI shell entry once,and hold HEAD through terminal state. Source2ca/146,SDK/runtime/resources/full-output/2400s and exhausted joint2/2/shape6/6 remain unchanged; no old control,regression or readiness is rerun.
 
 ### Approved finite current-source joint execution (2026-10-25 UTC / HKT)
 

@@ -1003,5 +1003,47 @@
     ],
     "source_budget_audit_repeated": false,
     "original_recovery_census_rows": 89
+  },
+  "complete_cli_preparation_checkpoint": {
+    "collected_utc": "2026-10-25T04:34:14.224980+00:00",
+    "records_head": "8e3d5088ed82855b16aebdc868032a5624cc71c6",
+    "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "execution_branch": "feat/step5-preview",
+    "satellites": [
+      {
+        "worktree": "step5-d29-ledger-stream",
+        "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+        "clean": true,
+        "ancestor_of_execution_branch": true,
+        "responsibility": "Delivered and integrated; retained without remerge/deletion."
+      },
+      {
+        "worktree": "d29-ledger-final-1f6b4314",
+        "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+        "clean": true,
+        "ancestor_of_execution_branch": true,
+        "responsibility": "Delivered and integrated; retained without remerge/deletion."
+      },
+      {
+        "worktree": "d29-snapshot-copy-finish",
+        "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+        "clean": true,
+        "ancestor_of_execution_branch": true,
+        "responsibility": "Delivered and integrated; retained without remerge/deletion."
+      },
+      {
+        "worktree": "d29-init-preparation-finish",
+        "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+        "clean": true,
+        "ancestor_of_execution_branch": true,
+        "responsibility": "Delivered and integrated; retained without remerge/deletion."
+      }
+    ],
+    "source_status": "Non-task source equals admitted2ca and frozen146; collective-sim clean pinned3dac.",
+    "complete_cli_worker": "Not submitted; final task-only records commit is the next freeze.",
+    "unrelated_paths": [
+      ".cortexkit/",
+      ".pi/"
+    ]
   }
 }

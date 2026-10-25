@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Close fixed8e3d5088 complete-CLI follow-up on both axes; freeze task records and proceed to the single authorized worker with unchanged source and limits. |
 | 2026-10-25 UTC / HKT | Collect complete-CLI Standards/Spec findings; preserve submitted-job identity and both failure stages, with affected static and fault-injection checks PASS. |
 | 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
@@ -47,7 +48,7 @@
 
 Independent initial Standards/Spec reviews on0eded7cf report1/2 findings, with the traceback P2 shared across axes. Preserve their separate reports. The submitted worker can fail before worker_started.json; source-inspected original SDK Job Create logging now records its actual identity synchronously before the unchanged blocking wait. Original and later exceptions keep separate logs and receipt fields. Only task scripts/records change; no SDK, production, resources, input payload or gate changes.
 
-The real SDK controller log statement with fake APIs reproduces both original defects and passes3 corrected scenarios,rawexit0,0.422564383s outer. Affected original SDK/static/dry-run check passes rawexit0,4.461541410s,using60s/configured30GiB/Python3.10.6/-B/single math threads. Both checks perform0 real client/platform/workload/pricing/shape calls. Existing initial preflight and original launcher bytes remain exact evidence. Independent follow-up and records freeze still precede the one authorized complete-CLI worker.
+The real SDK controller log statement with fake APIs reproduces both original defects and passes3 corrected scenarios,rawexit0,0.422564383s outer. Affected original SDK/static/dry-run check passes rawexit0,4.461541410s,using60s/configured30GiB/Python3.10.6/-B/single math threads. Both checks perform0 real client/platform/workload/pricing/shape calls. Existing initial preflight and original launcher bytes remain exact evidence. Independent follow-up on8e3d5088ed82855b16aebdc868032a5624cc71c6 now closes StandardsP2 and SpecP1/P2 with No findings on both axes. Freeze this task-only record update, then execute the one already-authorized complete-CLI worker; no pending permission remains for that run. Hold records HEAD until platform/container/business terminal evidence is collected. The cloud/local output paths were checked absent; no worker is submitted at this freeze checkpoint.
 
 ## [Original Request / Continuation] D29-COMPLETE-CLI-PREPARATION-20261025
 

@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-25 UTC / HKT | Collect both independent axes, reproduce two defects and verify the task-only repairs; follow-up review pending. |
+| 2026-10-25 UTC / HKT | Collect both independent axes, reproduce two defects, verify repairs and close fixed8e3d5088 follow-up with No findings on both axes. |
 
 Fixed point: `0dca7f83ea62f18fef3f6c400db27ccc45260d39`. Initial candidate: `0eded7cf380d68da9c647c775af0b89b16c2d478`.
 
@@ -36,4 +36,14 @@ The initial failure remains `launch_error` plus `launcher.failure.log`; a later 
 
 Affected original-SDK/static/dry-run check passes with raw exit 0, outer wall 4.461541410s; syntax, exact command, 25 source/six inputs/262 metadata bindings, 4CPU/0GPU/64000Mi, one replica, fixed image/current NFS and unchanged mounts all match. Original preflight evidence remains unchanged. Final plan SHA: `4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e`.
 
-Independent follow-up remains pending. Initial counts stay separate: Standards 1 finding (P2); Spec 2 findings (P1/P2). The repairs and CPU checks do not declare fullCLI/RSS or D29 acceptance.
+Independent follow-up on `8e3d5088ed82855b16aebdc868032a5624cc71c6` is complete with No findings on both axes. Initial counts stay separate: Standards 1 finding (P2); Spec 2 findings (P1/P2). The repairs and CPU checks do not declare fullCLI/RSS or D29 acceptance.
+
+## Standards follow-up
+
+Reviewer: Tesla, `01a17149-b68d-7422-a9e3-28209ce1ea2f`. Candidate: `8e3d5088ed82855b16aebdc868032a5624cc71c6`. P2 CLOSED; **No findings**. The original and follow-up traceback/error fields are independently retained. The original SDK log sink is narrow and removed in finally; source/plan hashes and archived fault/static controls match. No new documented breach or separate heuristic smell. The reviewer remains read-only and runs no test/client/platform/workload.
+
+## Spec follow-up
+
+Reviewer: Poincare, `01a17149-b789-7cf3-9310-0cdf739db657`. Candidate: `8e3d5088ed82855b16aebdc868032a5624cc71c6`. P1 and P2 CLOSED; **No findings**. Actual SDK creation identity is saved before wait and independently of worker startup; returned identity is checked, and the failed job/replica read remains reachable. Both exception stages survive. Original SDK/wait/atexit, complete workload, resources, outputs and invocation limits stay unchanged. The reviewer remains read-only and runs no test/client/platform/workload.
+
+Final counts: Standards0 / Spec0; initial Standards1(P2) and Spec2(P1/P2) remain recorded separately with their closure. This closes preparation review only; actual complete CLI/RSS and D29 qualification remain open.
