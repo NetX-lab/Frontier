@@ -11,6 +11,7 @@ native evidence and19 owns both the promotion receipt and final metric gate.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Checked the five h4a_p0_diagnostic items (DIAGNOSTIC result in test_report_2026-10-25_h4a_p0_diagnostic.md); next is the YC checkpoint. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added milestone h4a_p0_diagnostic as the next P0 step, pointed the status to the mainline handoff, and closed the P0 binding and native-reference items with native06 R4 evidence. |
 | 2026-10-22 | W128-V4-S5-STATUS: relabelled obsolete execution snapshots and linked current main progress/05/18; H800 milestones and gates unchanged. |
 | 2026-10-22 | Final checkpoint: GLM pause confirmed;warm-q1 corrected one-H800 job Running/business pending;native04 immutable sealed/unadmitted,05 unsealed pending versioned full-checker repair. |
@@ -30,25 +31,28 @@ native evidence and19 owns both the promotion receipt and final metric gate.
 
 Use the [mainline handoff](../progress.md#current-session-handoff--2026-10-25-mainline-correction)
 and the [current route](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25).
-The next P0 step is `h4a_p0_diagnostic` below. The snapshots below are historical
+The P0 step `h4a_p0_diagnostic` below is done; the next step is the YC checkpoint. The snapshots below are historical
 evidence, not current execution status or P0 admission.
 
-### h4a_p0_diagnostic (DSV4 only, next)
+### h4a_p0_diagnostic (DSV4 only, done 2026-10-25)
 
 First Frontier prediction of the P0 case, labelled DIAGNOSTIC. It does not count
 toward the 30% promotion or the 10% final gate. Steps and criteria are in the
-[plan H4a section](../plan.md#h4a--first-diagnostic-p0-prediction).
-- [ ] H4a-1: `design.md` section with cost slots, step-cost definition,
+[plan H4a section](../plan.md#h4a--first-diagnostic-p0-prediction). Result: TTFT 17.35%,
+TPOT 2.50%, E2E 2.10%, THPT 0.54% against the mean of native06 R4
+([test report](../test_report_2026-10-25_h4a_p0_diagnostic.md)); substitutions
+S1-S5 replace profile04 with profile02 and are listed in the report.
+- [x] H4a-1: `design.md` section with cost slots, step-cost definition,
   profiler-perturbation check, out-of-range rule, KV capacity binding, file list
   and line estimate; inputs copied out of `/data/ycfeng/tmp`.
-- [ ] H4a-2: V4 PREFILL and unified DECODE execution with grouped NIXL, through
+- [x] H4a-2: V4 PREFILL and unified DECODE execution with grouped NIXL, through
   existing boundaries (owned by tickets 05 and 07).
-- [ ] H4a-3: decode and prefill step-cost tables from the complete profile04
+- [x] H4a-3: decode and prefill step-cost tables from the complete profile04
   outputs (owned by ticket 09).
-- [ ] H4a-4: P0 run of 16 warmups plus 128 formal requests per repetition; four
+- [x] H4a-4: P0 run of 16 warmups plus 128 formal requests per repetition; four
   errors from the `tests/comparison/e2e_gate/` client gate against each native06
-  R4 round and their mean.
-- [ ] H4a-5: TTFT/TPOT error attribution, substitution list, test report and YC
+  R4 round and their mean. Departure: one formal replay without warmups.
+- [x] H4a-5: TTFT/TPOT error attribution, substitution list, test report and YC
   checkpoint.
 
 ### Historical execution snapshot — superseded (2026-10-22)

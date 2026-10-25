@@ -8,10 +8,12 @@ TTFT, per formal request, in ms:
 The native P service is compared with Frontier's P parts and the native handoff with Frontier's
 KV and D parts. TPOT is explained by the step table, profile02's measured decode steps by batch
 size, profile02's own client TPOT, and the number of requests decoding at once over time.
+profile02's traced k=1 steps split its own handoffs into the part before D's k=1 step and the rest.
 
 Inputs are the persisted copies in inputs/ and the step-cost table; the Frontier run is argv[1].
 Usage: h4a5_attribution.py <frontier run dir> <output json>
 """
+import gzip
 import json
 import statistics
 import sys
@@ -23,7 +25,7 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 sys.path.insert(0, str(REPO))
-from tests.comparison.calibration.prepare_dsv4_step_cost import DECODE_TRACES, decode_steps  # noqa: E402
+from tests.comparison.calibration.prepare_dsv4_step_cost import DECODE_TRACES, STEP, decode_steps  # noqa: E402
 
 NATIVE = HERE / "inputs/native06/run"
 PROFILE02 = HERE / "inputs/profile02"
@@ -112,7 +114,40 @@ def profile02_steps():
     tpot = {f"repeat{repeat:02d}{' (profiled)' if repeat == profiled else ''}":
             statistics.fmean(r["tpot_ms"] for r in client if r["repeat"] == repeat)
             for repeat in sorted({r["repeat"] for r in client})}
-    return {"steps": steps, "client_tpot_mean_ms": tpot}
+    return {"steps": steps, "client_tpot_mean_ms": tpot, "handoff_samples": profile02_handoff()}
+
+
+def profile02_handoff():
+    """Place each traced D step that computes a request's last prompt token (k=1) inside that
+    request's proxy handoff. Kineto ts is microseconds after baseTimeNanoseconds on the D host;
+    the proxy records time.time() on its own host, so the split carries the two hosts' clock offset.
+    longest_lane_pause_ms is the longest interval between consecutive traced steps of the lane
+    that overlaps the wait from prefill response to the k=1 step (null: no traced step before it)."""
+    proxy = read_jsonl(PROFILE02 / "run/proxy_requests.jsonl")
+    samples = []
+    for name in DECODE_TRACES:
+        trace = json.load(gzip.open(PROFILE02 / name))
+        base = trace["baseTimeNanoseconds"] / 1e9
+        annotations = {cat: sorted((base + e["ts"] / 1e6, e["name"]) for e in trace["traceEvents"]
+                                   if e.get("cat") == cat and e["name"].startswith("execute_context"))
+                       for cat in ("gpu_user_annotation", "user_annotation")}
+        gpu = annotations["gpu_user_annotation"]
+        for (start, step), (following, _) in zip(gpu, gpu[1:]):
+            if STEP.fullmatch(step).group(1) != "1":
+                continue
+            [p] = [p for p in proxy if p["prefill_response_time"] < start < p["decode_first_byte_time"]]
+            cpu_start = max(t for t, n in annotations["user_annotation"] if n == step and t <= start)
+            pauses = [b - a for (a, _), (b, _) in zip(gpu, gpu[1:]) if a < start and b > p["prefill_response_time"]]
+            samples.append({
+                "trace": name.split("/")[2], "request_id": p["request_id"], "step": step,
+                "handoff_ms": (p["decode_first_byte_time"] - p["prefill_response_time"]) * 1e3,
+                "prefill_response_to_k1_cpu_start_ms": (cpu_start - p["prefill_response_time"]) * 1e3,
+                "k1_cpu_start_to_gpu_start_ms": (start - cpu_start) * 1e3,
+                "k1_gpu_step_ms": (following - start) * 1e3,
+                "next_step_start_to_first_byte_ms": (p["decode_first_byte_time"] - following) * 1e3,
+                "longest_lane_pause_ms": max(pauses) * 1e3 if pauses else None,
+            })
+    return samples
 
 
 def main():

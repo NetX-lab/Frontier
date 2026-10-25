@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded the H4a-4 result and the H4a-5 attribution (test report 2026-10-25); H4a completed, next is the YC checkpoint. |
 | 2026-10-25 | Recorded H4a-4 input, overrides, KV and graph-mode findings, runs and gate layout; H4a-4 run5 in progress. |
 | 2026-10-25 | Recorded H4a-2 (commit d6ea9661, probe, TTFT-definition finding, regression) and moved the next actions to H4a-4. |
 | 2026-10-25 | Recorded the completed worktree cleanup (D-WORKTREE-CLEANUP) and the commit of the stopped session's last records. |
@@ -207,16 +208,16 @@
 | --- | --- | --- |
 | H1 P0 case binding | completed | ticket 17 P0-scoped items; `canonical_case_20261021/p0_binding/` |
 | H5 P0 native reference | completed | native06 R4: TTFT 403.31/393.22/399.95 ms, TPOT 19.031/19.017/18.981 ms, E2E 19872/19847/19817 ms, THPT 6273.3/6273.1/6269.8 tok/s; `native06_acceptance_20261023/` |
-| H4a first diagnostic P0 prediction | in-progress: H4a-1, H4a-2 and H4a-3 completed; H4a-4 running | [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md); records below |
-| H3r targeted cost refinement | pending | needs the H4a attribution |
+| H4a first diagnostic P0 prediction | completed (DIAGNOSTIC): TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54% | [test_report_2026-10-25_h4a_p0_diagnostic.md](test_report_2026-10-25_h4a_p0_diagnostic.md); records below |
+| H3r targeted cost refinement | pending | waits for YC's checkpoint decision; the leading TTFT source is a D-side handoff modeling gap, not a cost slot |
 | H4 / H6 P0 qualified path and acceptance | pending | needs H4a and YC's decision on step-level costs |
 | P1b H800-64 basic native validation | pending, parallel | ticket 10 p1 list |
 | profile04 R5 trace audit | stopped at 24/32 | prefill DP0 ranks 0-7 deferred, see [future.md](future.md) |
 | scope-lifetime S4/S5 package | stopped, unsealed, 0 GPU jobs | package path preserved in the historical pointer below |
 
 **Next actions.**
-1. H4a-4: finish the P0 run from `h4a_p0_diagnostic/h4a4_driver.py`; compute the four errors with the `tests/comparison/e2e_gate/` client gate against native06.
-2. H4a-5: error attribution, test report, checkpoint to YC.
+1. YC checkpoint: decide whether step-level costs may support formal gates (recommendation: not yet) and choose among options (a) native D-handoff measurement, (b) D-side remote-KV lifecycle modeling, (c) step-cost path speed fix, (d) P1b scheduling ([test report section 9](test_report_2026-10-25_h4a_p0_diagnostic.md#9-recommendation-step-level-costs-for-formal-gates)). Recommended: (a) then (b), (c) early, (d) in parallel.
+2. No GPU job, no core change and no new H4a run before YC's decision.
 3. P1b preparation in parallel at lower priority.
 
 **H4a-1 and H4a-3 record (2026-10-25).** Design: [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md).
@@ -247,7 +248,18 @@
 - observation — warmups. The Frontier trace replays the 128 formal rows once. The workload contract drains each warmup segment (both roles idle, request-owned KV released) before the formal origin, and native06's own Frontier input has no warmup rows; on the step-cost path no state crosses that drain. The one formal replay is compared with each native repetition.
 - Runs. run1 `KeyError (0, 0)` (decode replica id is 1; the driver now iterates the schedulers); run2 KV `MISMATCH` exit (changed to the recorded comparison above); run3 the graph-mode stop above; run4 stopped by me at the 7200 s timeout estimate (about 50 s wall per simulated second, CPU-bound, 250 MB RSS); run5 relaunched with `timeout 21600`, started 07:52 UTC:
   `(ulimit -v 62914560; PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 timeout 21600 /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4a_p0_diagnostic/h4a4_driver.py /data/ycfeng/tmp/glm53_dsv4/h4a4/run5)`.
+- finding — simulator speed. run5 takes about 55 s wall per simulated second (about 0.5 s per lane step), so one P0 replay takes about 2.4 h. cProfile of the first 180 s (scratch `/data/ycfeng/tmp/glm53_dsv4/h4a4/profile_speed/profile_run.py`, output `profile.txt` beside it): 168 of 180 s are in the per-layer EP wave (`sync_entry.enter_layer_sync` → `ep_wave_schedule.schedule_layer_wave` → `expert_parallel.predict_ep_wave_phase_times`), whose FFN and EP costs are all 0 on the step-cost path. Each step runs one wave per layer (6594 waves), and each wave builds 16 EP lane batches with request copies (1.69 M `Request.__init__` calls). The table lookup itself is 26 s. A single per-step sync for table-priced steps would remove most of this; it changes core scheduler modules and goes to YC, not into H4a.
 - Gate layout. `h4a4_gate.py` rebuilds the native side from persisted copies only: run files from `inputs/native06/` (SHA-256 checked against `inputs/manifest.json`, mtimes kept) and the R4 run-check result from `native06_acceptance_20261023/frozen_r4_result.json` (`71bc110b…`, pinned by `primary_acceptance_r4.json`), placed where `run_gate.py` binds a run check to its run directory. The task-local matrix has one `client` cell, routing `NOT_APPLICABLE` with its reason (whole native steps are priced; Frontier's routing model does not enter). Dry run against the unfinished run: native rows and run-check binding PASS (8/8 checks, bound), Frontier side rejected as expected (`No completed simulator client records`).
+
+- completed — run5 finished: `status FINISHED`, 128 of 128 formal requests, 0 preemptions, `run_wall_s` 8094.8. Evidence copied to `h4a_p0_diagnostic/results/run5/` (receipt `88e25a6f…`, system metrics `1845fe17…`, request metrics `977c4d5a…`, ground truth `4fee9488…`, config, run log).
+- completed — client gate: `(ulimit -v 62914560; PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4a_p0_diagnostic/h4a4_gate.py /data/ycfeng/tmp/glm53_dsv4/h4a4/run5 /data/ycfeng/tmp/glm53_dsv4/h4a4/gate)`. Mean of r1-r3: TTFT 398.822 → 329.630 ms (17.35%, FAIL), TPOT 19.0094 → 19.4849 ms (2.50%), E2E 19845.49 → 20262.73 ms (2.10%), THPT 6272.08 → 6238.11 tok/s (0.54%); verdict FAIL, DIAGNOSTIC. Per repeat TTFT 18.27/16.17/17.58%, TPOT 2.38/2.46/2.66%, E2E 1.97/2.09/2.25%, THPT 0.56/0.56/0.50%. Copied to `h4a_p0_diagnostic/results/gate/` (matrix `2ee29730…`, reading `625272e0…`, rows). Expected before the run: TTFT −18% to −22%, TPOT +2% to +3%, E2E/THPT within a few percent; observed matches, TTFT just under the low end.
+
+**H4a-5 record (2026-10-25).** Report: [test_report_2026-10-25_h4a_p0_diagnostic.md](test_report_2026-10-25_h4a_p0_diagnostic.md).
+- completed — attribution, `h4a5_attribution.py` (output `h4a_p0_diagnostic/results/h4a5_attribution.json`, `0e720c1f…`). Change: added the profile02 handoff split from the traced k=1 steps. Reason: place the native handoff time before and after D's first step. TTFT gap −69.19 ms = P side +12.69 ms (S2's 287.354 ms against native06's mean P service 274.67 ms) + handoff −81.22 ms (Frontier 2.57 + 39.71 = 42.28 ms against native 123.49 ms) + client edges −0.66 ms.
+- completed — handoff split. Idle-lane samples (profile02 and the read-only profile04 cross-check `probes/handoff_probe_profile04.py`): native P response → D k=1 GPU start 72.0/102.0 ms (profile02) and 82.9/105.5 ms (profile04), against Frontier's 2.57 ms (idle lane) and about 12.4 ms in steady state (KV 2.57 + mean step-boundary wait 9.81 ms). Inference: about −75 ms of the handoff gap lies before D's k=1 step and about −5.5 ms in output processing that Frontier does not model. The leading error source is the D-side handoff, a modeling gap, not a step cost.
+- completed — TPOT: +2.50% is inferred to be +4.4% (profile02's environment against native06) − 1.8% (S5's m 1-2 step cost below the cost at about 8.5 requests per lane). E2E +417 ms = −69 ms TTFT + 486 ms TPOT × 1023. THPT −0.54% from a 0.8 s longer window.
+- decision proposed to YC — step-level costs should not yet support formal gates (profiler perturbation, m coverage 1-2, single-sample k=1 entries, S2 proxy overhead, S3 GLM link, and the TTFT gap is outside the cost model). Options (a)-(d) in the report section 9.
+- H4a criteria: 1 PASS for the 128 formal requests with warmups not replayed (recorded departure); 2, 3, 4 PASS; 5 PASS with this commit.
 
 **Rules for this route.** D-MAINLINE-LOOP-CAP-DSV4 (more than 3 GPU jobs or about 6 hours of GPU or CPU work on one milestone without movement stops the work and goes to YC). Every checkpoint first states which milestone moved.
 

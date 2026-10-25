@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | H4a done (DIAGNOSTIC): H4a-2 code d6ea9661, H4a-4 four errors and H4a-5 attribution in test_report_2026-10-25_h4a_p0_diagnostic.md; next is the YC checkpoint. |
 | 2026-10-25 | H4a-1 and H4a-3 done: linked the H4a design and recorded that the H4a-2 file list exceeds D-H4A-CODE-SCOPE and waits for YC. |
 | 2026-10-25 | Applied D-DSV4-H800-MAINLINE-CORRECTION: added the current route with milestone H4a (first diagnostic P0 comparison), moved the trace-audit route to history, and deferred the H200 rows. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: linked the next-session handoff after package CPU acceptance; preserved dated routes and remaining gates. |
@@ -147,7 +148,7 @@
 | --- | --- | --- | --- |
 | H1 | P0 case and workload binding | 17 | DONE for P0 (ticket 17, P0-scoped items). P1 binding pending. |
 | H5 | Native reference | 18 | DONE for P0: native06 R4, `native06_acceptance_20261023/`. P1 pending. |
-| **H4a** | **First diagnostic P0 prediction** | 05, 07, 10, 19 | **IN PROGRESS.** H4a-1 and H4a-3 done; H4a-2 waits for YC's scope decision. Done when the H4a criteria below all hold. |
+| **H4a** | **First diagnostic P0 prediction** | 05, 07, 10, 19 | **DONE 2026-10-25 (DIAGNOSTIC).** TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54% against the mean of native06 R4; [test report](test_report_2026-10-25_h4a_p0_diagnostic.md). Next: YC checkpoint. |
 | H3r | Targeted cost refinement | 05, 06, 09 | Only for the cost slots that the H4a attribution names as leading error sources. |
 | H4 | Qualified non-dummy P0 path | 05, 07-09 | H4a path with qualified inputs, under YC's decision on step-level cost admission. |
 | H6 | P0 compare, promote and accept | 19 | All four errors <=30% (promotion to P1 formal), then <=10% (final). |
@@ -182,9 +183,9 @@ Use the existing grouped NIXL transfer and KV allocation (`frontier/events/kv_ca
 - per repetition, 16 warmups, then 128 formal requests at QPS 1;
 - the native feature set: online P/D, MTP off, prefix caching, chunked prefill and thinking off, balanced routing, P graph NONE and D PIECEWISE+FULL.
 
-Compute the four metrics with the existing `tests/comparison/e2e_gate/` normalize/gate CLI, `gate: client`. Report `abs(frontier - native) / abs(native)` against each of the three native06 R4 rounds and against their mean.
+Compute the four metrics with the existing `tests/comparison/e2e_gate/` normalize/gate CLI, `gate: client`. Report `abs(frontier - native) / abs(native)` against each of the three native06 R4 rounds and against their mean. **Done 2026-10-25:** run5 with `h4a_p0_diagnostic/h4a4_driver.py` and `h4a4_gate.py`; the 128 formal rows are replayed once without warmups (the workload drains each warmup segment), and `decode_cuda_graph_mode` is none (recorded override). Results in the [test report](test_report_2026-10-25_h4a_p0_diagnostic.md#6-four-errors-client-gate).
 
-**H4a-5 Error attribution and checkpoint.** Split TTFT into P queue wait, prefill compute, KV transfer and D first step. Split TPOT into decode step cost and per-lane batch size over time. Compare each part with native evidence where it exists (profile04 traces, native06 logs). Write `test_report_2026-10-2X_h4a_p0_diagnostic.md` with commands, inputs, the substitution list, the four errors and the attribution. Then report to YC: milestone moved, four errors, leading error source, and the decision on whether step-level costs may support formal gates.
+**H4a-5 Error attribution and checkpoint.** Split TTFT into P queue wait, prefill compute, KV transfer and D first step. Split TPOT into decode step cost and per-lane batch size over time. Compare each part with native evidence where it exists (profile04 traces, native06 logs). Write `test_report_2026-10-2X_h4a_p0_diagnostic.md` with commands, inputs, the substitution list, the four errors and the attribution. Then report to YC: milestone moved, four errors, leading error source, and the decision on whether step-level costs may support formal gates. **Done 2026-10-25:** [test_report_2026-10-25_h4a_p0_diagnostic.md](test_report_2026-10-25_h4a_p0_diagnostic.md); the leading source is the D-side handoff before D's first step (about −81 ms of the −69 ms TTFT gap), a modeling gap rather than a step cost.
 
 **H4a criteria.**
 1. The simulation completes every warmup and formal request at the P0 topology, without dummy mode or silent fallbacks.
