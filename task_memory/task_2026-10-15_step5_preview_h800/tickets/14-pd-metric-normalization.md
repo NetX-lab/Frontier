@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-21 | D21: retain the single comparator/four10% gates across four tracks; paired32 release30 is a scheduling prerequisite, not a new final tolerance. |
 | 2026-10-21 | D20-CLIENT executable normalizer/gate merged at e2be122 after parent183/148 passing checks and review closure; native/whole-ticket acceptance remains open. |
 | 2026-10-21 | D20 explicitly approves shared client-metrics reuse and Step source/runtime adaptation under one owner; native validation remains open. |
@@ -22,6 +23,8 @@
 **External prerequisites:** Tooling preparation may use03, the existing normalizer/gate and fixed metric definitions. Whole-ticket validation still requires07/08 native evidence and PD-specific pairing. Native metric tooling has no GLM simulator barrier. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
 
 **Status:** in-progress (D5 T1 endpoint and D20-CLIENT executable normalizer/gate complete); qualified native normalization and whole-ticket gate validation remain blocked
+
+**D31 status (2026-10-25):** Active within plan steps E and G: the existing normalizer and metric scripts produce the comparison metrics.
 
 **Current D21 metric use:** preserve client TTFT, TPOT, prompt-plus-output THPT and per-request E2E independently for each hardware/scale and each of three clean complete-population repetitions. Final acceptance remains four errors<=10%;32 all-four<=30% evidence releases only the corresponding64 formal work. Equality passes; no averaging across metrics/hardware/repetitions hides an error. Basic64 runtime has no30% prerequisite, and H20032 has no H800 accuracy edge. Reuse the existing normalize/gate path; do not relax its10% final gate or create another comparator. P0 H80032 comes first. `../plan.md` defines per-track readiness, manifests and resource policy; native pairing/admission is not waived. Targeted D5 diagnosis now belongs to28, not retired24.
 

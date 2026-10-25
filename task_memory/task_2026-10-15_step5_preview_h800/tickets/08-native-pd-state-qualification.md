@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-22 | Record D28 pressure candidate and D29 routing prerequisite; no native qualification. |
 | 2026-10-22 | G3/reference/state/MRv2 implementation integrated;685 primary checks pass; case-aligned P0 capture Succeeded, native judgment pending. |
 | 2026-10-21 | Verify the canonical capture/abort partial slice and select existing-D independent full-local execution within the locked native reference. |
@@ -30,6 +31,8 @@
 **External prerequisites:** Accepted `06.simulation_scope` evidence and the locked native reference are required. Native PD evidence may precede D-PD/D-ASYNC/D-DP-PD dispositions and has no GLM simulator barrier. A different native functional reference requires the applicable conditional decision. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
 
 **Status:** in progress (R1/D5 evidence complete; R2 collector P1 correction/review closed; canonical content/readiness/lifetime and independent reference qualification remain open).
+
+**D31 status (2026-10-25):** Paused by D31.4. Native PD state qualification is not needed for the E2E comparison.
 
 **Current D24/D28/D29:** capture01 judgment is NOT QUALIFIED. Capture02 retains
 approved bounded values/HTTP/startup observers. D28 capture03 is sealed with

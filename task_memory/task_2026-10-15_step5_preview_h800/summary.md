@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Add the current status and document index after the D31 mainline reset. |
 | 2026-10-22 | D25 full H80032/64 workloads complete, both432/432 verified; p90/throughput and remaining decode instability archived. |
 | 2026-10-22 | Consolidated clean145a2f5 passes77/77 exact fidelity; P0 G3 capture finishesSucceeded4/4, native judgment pending. Four-track8-request diagnostic p90/throughput independently recomputed. |
 | 2026-10-22 | Integrated G3/reference1171ab6 and MRv2 producer82f4452 at145a2f5; parent merged suites685/465PASS. Submitted32-H800 capture exp-1021-235955-532667; native judgment and consumer alignment pending. |
@@ -84,6 +85,66 @@
 | 2026-10-16 | Added82planned G1 CPU/source reference cases and local mathematical/source verification; phase review is pending. |
 | 2026-10-16 | Archived the passing CUDA forward-compatibility rerun and the process-start launch requirement for native work. |
 
+
+## Current status and document index — 2026-10-25 (D31)
+
+This directory, on branch `feat/step5-preview`, is the main document index for the Step-5-Preview
+task. Read these first:
+
+- `requirements.md`: decisions, newest first. The current one is D31.
+- `plan.md`: the top section "Current plan — D31 mainline reset" is the active plan.
+- `review_2026-10-25_mainline_reset.md`: why the plan was reset, and the review of the completed
+  tickets.
+- `progress.md`: the newest entries are at the top.
+
+### Status in plain words
+
+- **Native reference results.** The D25 H800 32-GPU and 64-GPU workload runs exist
+  (`../task_2026-10-22_step5_full_workload/`). They used the original router, so they cannot be
+  compared with the current `position_cyclic` Frontier configuration. No H200 workload run exists
+  yet.
+- **Frontier.** The Step-5 model, PD handoff (D26, D27), finish sync (D30), DP placement and
+  `position_cyclic` routing are merged. Frontier has not yet completed a workload run. The last
+  attempt, main09, timed out on one request because of diagnostic output volume.
+- **Operator profiles.** The profiler code exists in `frontier/profiling/step5/`. No measured
+  Step-5 profile has been admitted yet.
+- **Next.** Plan steps B, C and D run in parallel: fast E2E runs, the H200 32-GPU native workload
+  and the H200 operator profiles.
+
+### Sub-task directories (`task_memory/`)
+
+| Directory | Content | State |
+| --- | --- | --- |
+| `task_2026-10-22_step5_full_workload` | D25 native H800 32/64 workload runs and metrics | Done (original router) |
+| `task_2026-10-22_step5_position_routing` | D29 `position_cyclic` in Frontier, collective pricing, main09 attempt | Parked by D31; the merged code stays |
+| `task_2026-10-22_step5_d29_native_balanced` | D29 native patch and derived image `f037d958` | Image published, never run on a GPU |
+| `task_2026-10-22_step5_finish_sync` | D30 finish synchronization | Merged |
+| `task_2026-10-22_step5_prefill_target` | D26: P computes 6128 tokens, D computes the 16-token tail | Merged |
+| `task_2026-10-22_step5_swa_pages` | D27 effective SWA transfer pages | Merged |
+| `task_2026-10-22_step5_workflow_fidelity` | Legacy-scenario fidelity after the Step changes | Done |
+| `task_2026-10-22_step5_mrv2_{forward,inputs,load,main,perf}` | D23 first-prediction agreement and actual-main diagnosis | Merged or archived |
+| `task_2026-10-22_step5_root_metrics` | D23 root metrics | Done |
+| `task_2026-10-22_step5_reference_values`, `task_2026-10-22_step5_d24_stage`, `task_2026-10-22_step5_d28_d24_pressure_stage` | D24 and D28 native state diagnostics | Parked by D31.4 |
+| `task_2026-10-22_step5_http_capture`, `task_2026-10-21_step5_client_metrics`, `task_2026-10-20_pd_client_ttft` | Client-side metrics and TTFT definition | Done |
+| `task_2026-10-22_exact_prefill_cap` | Exact prefill engine cap | Done |
+| `task_2026-10-21_step5_priority_runs` | D21 stager for the four hardware and scale cases | Done; reused by steps C and F |
+| `task_2026-10-21_step5_measured_compute`, `task_2026-10-21_step5_measured_pd`, `task_2026-10-21_step5_d20_integration` | D20 measured compute and PD consumer code, with CPU fixtures | Merged |
+| `task_2026-10-21_step5_profile_integration`, `task_2026-10-21_step5_p0_profiles`, `task_2026-10-21_step5_d22_timing` | Profiler code and profiling admission attempts | Code merged; reused by step D |
+
+### Unmerged worktree branches
+
+There are 101 Step-5-related worktrees under `/data/ycfeng/Frontier/.worktrees/`. All except 30
+are merged into `feat/step5-preview`. Of those 30:
+
+- 28 hold D29 or D30 records, older candidates of code that was merged later, or verification
+  records. Examples are `records/d29-*`, `verify-step5-pricing-0[1-6]`, `fix/d29-plan-key` and
+  `step5-d29-named-query`. They are parked and are not needed for the D31 plan.
+- 2 are detached `fidelity-candidate-*` worktrees from an older line, about 300 commits each, with
+  merge base `71cde5eb`.
+- `feat/step5-pressure-capacity` and `feat/step5-r2-correction` change only test-integration
+  helpers for the parked D28 and R2 work.
+
+No worktree is deleted without the user's approval (D31.8).
 
 ## D25 full H800 workload completion — 2026-10-22
 

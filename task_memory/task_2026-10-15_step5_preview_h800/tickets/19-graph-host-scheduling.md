@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-23 | D30 source/CPU slice integrated4ec5b23; full ticket and fresh native counters remain open. |
 | 2026-10-22 | Add approved D30 finish-sync source/observation slice independent of full mixed-arrival acceptance. |
 | 2026-10-22 | Apply D29 workflow/GPU-first order and defer CPU-gap measurement. |
@@ -19,6 +20,8 @@ Expose expected versus actual request progress and cost ownership for long-prefi
 Record distinguishing native evidence and reuse sufficiency in the existing D-* record. Routine incremental changes proceed under standing execution authority; only a demonstrated material core refactor or materially unresolved semantics/acceptance requires explicit approval.
 
 **Status:** full mixed-arrival acceptance blocked;19.finish_sync source/CPU slice integrated at4ec5b23, fresh native observation pending.
+
+**D31 status (2026-10-25):** The finish_sync slice is integrated. Mixed-arrival acceptance moves into plan step E.
 
 **D30 immediate slice:** current pinned Step synchronizes on wave step1 and
 each16 steps; Frontier legacy policy uses32 without the first sync. YC approved

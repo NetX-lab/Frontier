@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-22 | YC approved position_cyclic and native/image implementation; retain independent-statistics prerequisites. |
 | 2026-10-22 | D29 adds immediate routing-policy alignment and supersedes old no-balancing criteria for current calibration. |
 | 2026-10-20 | Changed the native prerequisite to `06.simulation_scope` (decision D2). |
@@ -22,6 +23,8 @@ run identities. A necessary native implementation/reference change requires
 its evidence-backed decision before code or GPU execution.
 
 **Status:** statistics blocked;11.routing_policy has approved semantics and active implementation design under D29.
+
+**D31 status (2026-10-25):** Paused. While both systems use `position_cyclic` routing (D29, D31.3), native routing statistics are not needed.
 
 **Current routing-policy scope:** compare effective Frontier/native assignment,
 DP aggregation, EP ownership, integer remainders, padding and independent

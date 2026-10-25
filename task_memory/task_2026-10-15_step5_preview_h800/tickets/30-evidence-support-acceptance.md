@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-21 | D21: final support requires four separate hardware/scale10% results and traceable paired32 release30 evidence, not the obsolete single-H20064 case. |
 | 2026-10-21 | Decision D15: THPT in the four-metric contract is prompt-plus-output tokens per second; any support statement that sets this result beside the GLM-5.3/DeepSeek-V4-Flash result carries the communication-backend caveat. |
 | 2026-10-21 | Aligned acceptance with the canonical 64-H200 case (decisions D9–D14); the retired H800 matrix and holdouts are no longer requirements. |
@@ -19,6 +20,8 @@ Close overall acceptance only when the required outcomes are demonstrated, with 
 No hardware waiver, external publication, push, destructive merge/history changes, or an unqualified support claim is implied by ticket completion or queue status.
 
 **Status:** blocked
+
+**D31 status (2026-10-25):** Waits for plan step G.
 
 Implementation remains active under `../requirements.md` D20/D21; this docs slice performs no GPU/platform action. P0 H80032 is highest priority, P1 H80064 follows its own readiness and H80032 release30, P2 H20032 is independent of H800, and equal-priority P2 H20064 follows its own readiness and H20032 release30. Basic64 runtime may proceed now. Both H800 tracks are non-preemptible `codesign`; H20032 is non-preemptible within the global32 cap, H20064 is wholly preemptible. Every extra H200 job is preemptible; count all personal nonterminal reservations across sessions, including queued jobs. Lower-priority H800 work cannot starve P0.
 

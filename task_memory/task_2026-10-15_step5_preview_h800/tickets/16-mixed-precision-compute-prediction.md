@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-21 | Full compute83af0a7 delivered and274 combined parent checks passed; actual CLI graph-policy mapping remains the implementation blocker. |
 | 2026-10-21 | D21: P0-first CPU delivery with separate hardware/scale profile identities; historical H200-only coverage and implementation-wait wording are superseded. |
 | 2026-10-21 | D20 releases CPU implementation; measured consumption code is assigned to the compute/bundle owner while actual profile/native acceptance stays blocked. |
@@ -20,6 +21,8 @@ Demonstrate actual computation-cost composition from physical scopes to request 
 Shared-contract sufficiency and any necessary material-change decision are recorded under the existing C/D owners; preparation may proceed independently.
 
 **Status:** in-progress (D20 CPU implementation); qualified measured and whole-ticket acceptance blocked
+
+**D31 status (2026-10-25):** Active within plan step E: Frontier consumes the step-D H200 profiles through the merged measured-compute path.
 
 **Execution receipt:** full shared-manager fit/cache/bundle/lookup/Stage code is delivered in83af0a7; four synthetic CPU bundles were generated through the public fixture, each with34 artifacts. Parent274 combined checks pass. Actual offline/online `frontier.main` reaches the production path but rejects `full_decode_only` at the phase-profile boundary; fix that mapping and rerun the real CLI before marking integrated execution complete. No qualified timing or four-metric result follows from fixture data.
 

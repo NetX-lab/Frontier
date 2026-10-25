@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31: mainline reset after review; H200 32/64 first with at most 64 non-preemptible H200 GPUs; stop native qualification and D29 process rules; diagnostics off in E2E runs; independent-median profiling rule becomes a diagnostic. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; additional collection runs remain readiness decisions. |
 | 2026-10-23 | Approve D30's eighth test path for the observed13-source contract, retaining the750-line total ceiling. |
 | 2026-10-22 | Record explicit D30 independent seven-file/750-line expansion approval. |
@@ -96,6 +97,52 @@
 | 2026-10-16 | Recorded the parallel two-step request: native Grok G1 implementation checkpoint plus a primary multi-GPU NCCL/P2P diagnostic. |
 | 2026-10-16 | Recorded the user's `/grok-implement` command for checkpoint 04A and option a for the queued eight-GPU job. |
 
+
+## [Original Request / Decision] D31 — mainline reset and H200-first execution — 2026-10-25
+
+> 请你充分 review 当前的任务的执行路线，修正docs，并继续执行：
+> /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800，review的核心为：
+> 1. 任务现在的推进执行过程是否偏离了规划的 ** 为 frontier 添加对 step5-preview 的模拟支持能力，并完成精度矫正**？是否反复循环在部分bugs或者与主线任务关系不大的问题上？如果有，请你指出问题，并给出下一步的执行建议。
+> 2. 请你对进行完成的tickets进行review，查找是否存在严重错误、遗漏。
+> 3. 根据你的review结果首先修正docs，然后继续执行（采纳你的推荐，无需grill-me）；如果当前task分散到了大量worktree branch上，请确保当前branch的/task_2026-10-15_step5_preview_h800是主doc menu。
+> 4. 由于h800集群quota存在限制，先进行h200的32卡/64卡的测试验证。允许当前session使用64卡内的h200 gpus（不可抢占rjob）
+
+The review is in `review_2026-10-25_mainline_reset.md`. The user told the session to adopt its
+recommendations without a grilling round. The decisions below override earlier decisions where
+they conflict. Earlier decisions that are not mentioned stay in force, including D7 (Thinking Mode
+off), D17/D18 (fixed workload), D26, D27, D29 (routing and calibration order) and D30.
+
+- **D31.1 Goal and acceptance.** The mainline is the Frontier-versus-vLLM comparison of TTFT,
+  TPOT, E2E latency and throughput (prompt plus output tokens) on the frozen workload. That
+  workload is 6144 input tokens, 1024 output tokens, 128 requests at QPS 1, 16 warmups and three
+  repetitions. Each metric is compared as a mean, and p90 is reported as well. The 32-GPU result
+  must be within 30% before the matching 64-GPU calibration starts (D21). The final gate is 10%.
+- **D31.2 Hardware order and resources.** H200 comes first: H200 32-GPU, then H200 64-GPU, on the
+  `step_main` quota. This session may use at most 64 H200 GPUs at the same time, and every job must
+  be non-preemptible. The `h200_64` entry in `tests/integration/step5_pd/priority_cases.json`
+  changes from preemptible to non-preemptible. H800 work waits for quota.
+- **D31.3 Routing.** The native run uses the derived image
+  `hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee`
+  with `VLLM_MOE_ROUTING_SIMULATION_STRATEGY=position_cyclic`. Frontier uses the same
+  `position_cyclic` policy (D29). The first GPU run of that image must show in its log that the
+  strategy was active. If the image fails for a reason inside its patch, diagnose it once, record
+  the cause and report to the user. Do not start a new qualification campaign.
+- **D31.4 Stop native qualification.** No new work on G1/G2/G3 levels, exact-byte KV checks,
+  observer validation or census data (tickets 04–08, and the native parts of 12 and 13). A piece is
+  reopened only when a measured E2E error needs it as an explanation.
+- **D31.5 Profiling admission.** A profile row is admitted when its within-run coefficient of
+  variation is at most 5%. Agreement with an independent second median is logged as a diagnostic
+  and no longer blocks admission.
+- **D31.6 Frontier diagnostics.** E2E comparison runs do not write the expert-parallel wave
+  ledger with collective proofs, operator-level traces or JSON traces. These stay available as
+  opt-in flags for short diagnostic runs.
+- **D31.7 Process.** D29's call quotas, line budgets, hash binding chains and double reviews of
+  task-only scripts no longer apply. Core Frontier changes get one ordinary review and the
+  existing regression checks. Task records use plain language.
+- **D31.8 Documentation hub.** This directory on branch `feat/step5-preview` is the main document
+  index. `summary.md` lists the sub-task directories and the unmerged worktree branches. The
+  unmerged D29 record and candidate branches stay parked and unmerged. Deleting any worktree needs
+  the user's approval.
 
 ## [Original Request] Continue execution — 2026-10-21
 

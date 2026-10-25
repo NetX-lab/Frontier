@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-21 | D21: H20032 diagnostic ended Succeeded, quality/admission pending; four track-specific inputs and global H200 non-preemptible cap32. |
 | 2026-10-21 | H20001 startup SIGPIPE fixed in6a9cedc/b68ce4d;101 parent tests pass, unchanged32-GPU case resubmitted under96/130 reservations. |
 | 2026-10-21 | D18-COMM merged at b1f032d with 482 CPU passes/70 skips and 77/77 clean fidelity; submitted a 32-H200 first-prefill diagnostic after source/resource/personal-cap checks. Native results pending. |
@@ -23,6 +24,8 @@
 **External prerequisites:** Use complete 06 and15.controlled_structural_path; existing environment NCCL/NIXL probes do not establish workload-specific TP/EP cost coverage. Raw measurement remains separate from predictor21. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
 
 **Status:** in progress (S1/S2 collection, identity, native module placement/schema and node RDMA pass; selected queue cells fail, and stable/isolated curves, per-DP transport attribution, independent held-outs and cost admission remain open).
+
+**D31 status (2026-10-25):** Native measurement parts paused by D31.4. Plan step E takes H200 communication inputs from the existing H200 collective-sim profile or from the analytical backend.
 
 **Current D21 scope:** communication inputs serve P0 H80032 first, then P1 H80064 and equal-priority P2 H20032/H20064. Per-role32/64 is TP8/DP2/EP16/PP1 or TP8/DP4/EP32/PP1. Reuse S2/S1/H200 artifacts only where native group/payload/transport, coverage and timing quality match; no scaling or automatic admission. Basic/profile preparation may proceed now; formal64 needs own readiness and matching32 four clean errors<=30%, with final10% unchanged and no H800-to-H200 accuracy dependency. Count all personal nonterminal reservations across sessions including queued: H200 non-preemptible<=32; every additional job preemptible even below obsolete80/130. H20064 is wholly preemptible; H800 codesign non-preemptible must preserve ready P0 capacity.
 

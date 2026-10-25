@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 mainline reset: new current plan for H200 32/64 E2E comparison; all sections below it become historical. |
 | 2026-10-23 | YC approves D29-SCOPE-107-10000; execute three sole-writer streams, then integrated evidence and readiness decisions. |
 | 2026-10-23 | D30 code scope merged4ec5b23; D29 complete reviewed model and107-path union move to the independent user decision. |
 | 2026-10-22 | Record mergedfa5bae2 strict77 and approved D29 position policy/D30 finish-sync parallel paths. |
@@ -115,6 +116,44 @@
 | 2026-10-16 | Added82planned G1 CPU/source cases and mathematical references; local verification passed and preparation-phase review is in progress. |
 | 2026-10-16 | CUDA forward-compatibility rerun passed on one H800; recorded the process-start launch requirement for native work. Ticket04's native work now waits only on the G1 implementation checkpoint. |
 
+
+## Current plan — D31 mainline reset (2026-10-25)
+
+This section replaces every plan section below it. The older sections are kept only as history.
+The reasons are in `review_2026-10-25_mainline_reset.md`, and the decisions are D31 in
+`requirements.md`.
+
+**Goal.** Frontier simulates Step-5-Preview in PD disaggregation and is compared with the native
+vLLM run on TTFT, TPOT, E2E latency and throughput. The workload is the frozen fixed-length one:
+6144 input tokens, 1024 output tokens, 128 requests at QPS 1, 16 warmups and three repetitions.
+The 32-GPU gate is 30%, and it releases the 64-GPU calibration. The final gate is 10%.
+
+**Topologies.**
+- H200 32-GPU: P16 and D16, each TP8/DP2/EP16/PP1.
+- H200 64-GPU: P32 and D32, each TP8/DP4/EP32/PP1.
+
+**Routing.** `position_cyclic` in both systems (D29, D31.3).
+
+**Resources.** At most 64 H200 GPUs at a time, all non-preemptible, on `step_main` (D31.2).
+
+| Step | Work | Acceptance | Depends on | GPUs |
+| --- | --- | --- | --- | --- |
+| A | Fix the documents | Review, D31, this plan, the progress entry, the summary index and the ticket statuses are committed. | — | 0 |
+| B | Fast Frontier E2E runs | E2E runs leave the proof ledger, operator traces and JSON trace off. The single-request wall time is measured locally, and the full-workload wall time is measured or projected from a measured prefix. Request-level results of a short run match the diagnostic run exactly. | A | 0 |
+| C | H200 32-GPU native workload | The job succeeds and all requests complete in each repetition. The log shows `position_cyclic` active. `num_gpu_blocks` for each P and D lane is recorded. Metrics come from `tests/integration/step5_pd/workload_metrics.py`. | A | 32 |
+| D | H200 Step-5 operator profiles | The existing `frontier/profiling/step5` profiler runs on H200. It covers the P prefill shapes, D decode batch sizes with contexts 6144–7168, and the EP-local MoE shapes for EP16 and EP32. Each admitted row has a coefficient of variation ≤ 5%. The tables are placed where Frontier's predictor reads them. | A | 1–8 |
+| E | Frontier H200 32-GPU comparison | Frontier runs the workload with the step-D profiles, H200 communication inputs and the KV capacity from step C. The four-metric error table is recorded. Calibration follows workflow first, then GPU operators and gaps, then CPU overhead. | B, C, D | 0 |
+| F | H200 64-GPU native workload | Same checks as C. Submitted only after C has released its GPUs. | C | 64 |
+| G | Frontier H200 64-GPU comparison | Same as E for 64 GPUs. Formal calibration starts after E is within 30%. | E, F | 0 |
+
+Dependency graph: `A -> {B, C, D}`; `{B, C, D} -> E`; `C -> F`; `{E, F} -> G`.
+B, C and D run in parallel. F needs C's GPUs released, because 32 + 64 GPUs exceeds the limit.
+
+Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2
+and G3, exact-byte KV checks, observer validation, census data and the D29 scope ledger.
+
+H800 work resumes when quota allows. It needs a new H800 native collection with the routing image,
+because the D25 H800 results used the original router.
 
 ## Current D21/D23/D24/D25 execution contract — 2026-10-22
 

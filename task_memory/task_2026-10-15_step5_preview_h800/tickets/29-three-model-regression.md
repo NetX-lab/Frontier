@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-21 | D21: final Step regressions bind all four track results to the common HEAD; no smaller/hardware PASS substitution or retired matrix prerequisite. |
 | 2026-10-19 | Completed source/design preparation and scoped parent verification; implementation/native/finalacceptance remains blocked by existing gates. |
 | 2026-10-19 | Reconciled active implementation and early contract-regression preparation authority; whole-ticket, native and common-HEAD acceptance remains blocked. |
@@ -19,6 +20,8 @@ Deliver measured fidelity and simulator-performance outcomes without promoting a
 Existing GLM-before-DS ordering and shared decision authority remain effective; this regression does not create unrelated native campaigns; scoped commits and routine integration use current task authority, while destructive history changes and external publication remain separately governed.
 
 **Status:** blocked
+
+**D31 status (2026-10-25):** Waits for plan step G.
 
 **Current D21 completion boundary:** preparation remains eligible, but final Step evidence comes from all four current28 tracks: P0 H80032, P1 H80064, P2 H20032 and P2 H20064, each four metrics<=10% at the applicable final source.32 release30 is not final support; each64 formal start must trace own readiness and corresponding32 release. H20032 is independent of H800 and both P2 labels are equal priority. Retired24–27/W1–W6 are not regression prerequisites. Each hardware/scale/profile identity stays separate; no timing scaling or cross-track/model PASS substitution. D20 CPU implementation continues P0-first without pretending the external GLM acceptance milestone is complete. GPU reruns follow `../plan.md` D21 caps/preemptibility, never historical64/70/130 allowances.
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-21 | D21: preserve common workload bytes and freeze four distinct hardware/scale manifests, basic/formal eligibility and paired32 release conditions. |
 | 2026-10-21 | Native consumer/stage02 integrated and verified585 PASS; configured runtime/metric windows recorded, effective native qualification remains open. |
 | 2026-10-21 | D18: lock GLM/V4 package 68f891b via Step 958d81a, close common-artifact adoption, and start Step consumer/runtime preparation. |
@@ -21,6 +22,8 @@
 **External prerequisites:** Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed by freezing the manifest. Use existing shared contracts and record their sufficiency.
 
 **Status:** in progress — common68f891b artifacts adopted as958d81a; native consumer integrated as db5c99f with585 parent passes and both stage02 packages independently verified. Manifest SHA-256 `5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3`; SHA256SUMS-file `594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9`. Configured7168/8192/128, graph ceiling256, Step utilization0.92 and actual MRv2 source bindings are frozen in `../d18_native_20261021/stage_handoff.md`; effective native runtime/occupancy/replay remain unqualified. The real HTTP tests cover all432 requests, three repeats/idle boundaries, complete-population metrics and both nongate diagnostics. Final metric admission/mapping still depends on14. D17's independent package remains historical.
+
+**D31 status (2026-10-25):** The frozen fixed workload is used unchanged for the H200 runs.
 
 ## Current D21 track freeze
 

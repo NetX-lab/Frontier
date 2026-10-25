@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-22 | Record approved D26/D27 source delivery and pending integrated workflow acceptance. |
 | 2026-10-21 | D20 authorizes measured-mode PD CPU implementation through existing lifecycle owners; native tail/readiness and whole-ticket acceptance remain open. |
 | 2026-10-20 | Completed D5 T1 simulator endpoint code/tests in 6db2cd9, verified Step/GLM/DeepSeek and exact legacy values; T2/native criteria stay open. |
@@ -25,6 +26,8 @@ Use controlled durations to prove the complete lifecycle without requiring the c
 Record distinguishing native evidence and reuse sufficiency in the existing D-* record. Routine incremental changes proceed under standing execution authority; only a demonstrated material core refactor or materially unresolved semantics/acceptance requires explicit approval.
 
 **Status:** in-progress (D20 measured PD CPU implementation); native-matched and trained-predictor acceptance blocked
+
+**D31 status (2026-10-25):** Active within plan step E: the merged PD handoff (D26, D27) is checked at workload scale.
 
 **Current D26/D27:** user approved complete P-scoped lifecycle/ownership/transfer
 and separate Step live-SWA payload correction. D26 delivered e8d9c6c/d56f2dd/

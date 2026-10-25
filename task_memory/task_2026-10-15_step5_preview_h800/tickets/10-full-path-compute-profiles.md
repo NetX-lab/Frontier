@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-21 | Assign step5-p0-profiles native request-free/P0 producer implementation after D22 PASS; keep quality and formal admission separate. |
 | 2026-10-21 | D22 independent reference implemented and parent-verified; unchanged full probe submitted on one preemptible H200. |
 | 2026-10-21 | D21: profile coverage/quality is hardware/scale-specific across four tracks; prioritize P0 and preserve failed/unadmitted measurements. |
@@ -23,6 +24,8 @@
 **External prerequisites:** Measure the represented path after G2 and observer validation. Consume05.coverage_disposition, not complete 05 acceptance; independently measure/admit every missing required row. Native profiling has no GLM trained-integration barrier. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
 
 **Status:** in-progress; D22 approved small-probe step complete. Source74df010 is integrated,873 author checks and264 overlapping parent checks pass. New18-event/4-GPU-active probe `exp-1021-201658-886733` Succeeded on one preemptible H200:18/18 strict candidates,22/22 output/cache and18/18 prefix comparisons PASS. Full per-track profiles and linear quality remain open; historical six-cell SWA FAIL receipts remain unchanged. Exact report: `../../task_2026-10-21_step5_d22_timing/test_report_2026-10-21_d22_native.md`.
+
+**D31 status (2026-10-25):** Active as plan step D. A profile row is admitted when its within-run coefficient of variation is at most 5%. Agreement with an independent median is logged only (D31.5).
 
 **Current D21 scope:** serve P0 H80032 first, then P1 H80064 and equal-priority P2 H20032/H20064.32 uses P16/D16 TP8/DP2/EP16/PP1;64 uses P32/D32 TP8/DP4/EP32/PP1. Each requires actual hardware/scale/runtime/physical-scope-compatible measurements; inspect existing artifacts before repeating, never rescale times or promote failed rows. Profile/basic preparation has no30% gate;64 formal calibration needs own readiness and matching32 four clean errors<=30%. Final10% remains. Use `../plan.md` policy: H800 codesign non-preemptible; all personal nonterminal H200 non-preemptible reservations across sessions<=32, every additional job preemptible, H20064 wholly preemptible. Lower-priority H800 work cannot starve P0. D20 CPU compute/bundle implementation continues while native admission stays open. Dated D18/D20 probes below are historical, not a single-H20064-only instruction.
 

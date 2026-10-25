@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 mainline reset: review written, documents corrected, steps B/C/D of the new plan started. |
 | 2026-10-23 | YC approves D29-SCOPE-107-10000 and the fixed finite model; begin three sole-writer implementation streams. |
 | 2026-10-23 | D30 integrated4ec5b23 after all code-scope gates; D29 design reviews complete and full107-path scope awaits decision. |
 | 2026-10-22 | D30 repair600 lines/review clear; parent420 checks, strict77 and902 artifact hashes PASS; full-unit delta pending. |
@@ -187,6 +188,33 @@
 | 2026-10-16 | Derived82planned G1 cases; verified mathematical references, source compact lengths and five corruption controls without GPU work. |
 | 2026-10-16 | User selected the CUDA forward-compatibility switch; one-H800 rerun exp-1016-132434-466356 passed all five compute checks with the compatibility path set at process start. |
 | 2026-10-16 | Parallel two-step request: wrote the G1 04A Grok spec (dispatch blocked: the tool requires the user's `/grok-implement` command) and submitted the 8-H800 NCCL/P2P diagnostic. |
+
+## D31 mainline reset — 2026-10-25
+
+State of the D31 plan steps (see the top section of `plan.md`):
+
+- completed — A. Document fixes: `review_2026-10-25_mainline_reset.md`, D31 in
+  `requirements.md`, the new current plan, this entry, the summary index and the ticket status
+  notes.
+- in-progress — B. Fast Frontier E2E runs.
+- in-progress — C. H200 32-GPU native workload with the routing image.
+- in-progress — D. H200 Step-5 operator profiles.
+- pending — E, F, G.
+
+Evidence behind the reset:
+
+- The main09 attempt, job `exp-1025-123506-624501`, simulated one request with a synthetic CPU
+  fixture. Both modes timed out at 2400 s. The offline mode completed 109 of 1024 decode
+  iterations, at about 14 s per iteration, with a 57 GB memory peak.
+- `cleanup_receipt.json` in
+  `../task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/terminal/`
+  records the output sizes for each mode:
+  - EP wave ledger: 22,475,183,484 bytes (offline) and 22,323,215,845 bytes (online).
+  - `op_traces.jsonl`: 28,294,078,529 bytes (offline) and 28,122,982,003 bytes (online).
+- The first ledger record is 145,010 bytes. Its four `collective_proofs` fields are about
+  35 KB each.
+
+Decision: D31, recorded in `requirements.md`.
 
 ## Current D21/D23/D24/D25 handoff — 2026-10-22
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-21 | D21: four existing-ticket track milestones;32 clean comparisons release matching64 formal calibration at30%, with final10% unchanged. |
 | 2026-10-21 | D20 authorizes executable Step client-normalizer/gate integration alongside measured compute/PD code; real comparison remains evidence-blocked. |
 | 2026-10-21 | D19 assigns CPU Frontier/gate command and native-input mapping preparation; actual comparison retains22/23/native prerequisites. |
@@ -21,6 +22,8 @@
 **External prerequisites:** Actual hardware/scale-specific native/profile identities, resolved official image and qualified inputs; no hardware timing scaling or cross-track substitution. Use personal local StepMind Python RJobBackend/current host rules and the existing producer/publisher/`tests/comparison/e2e_gate`. No second comparator, release framework or tolerance change is authorized.
 
 **Status:** in-progress (D20 comparison-code implementation); formal comparison blocked
+
+**D31 status (2026-10-25):** Active as plan steps E and G: the H200 32-GPU and 64-GPU comparisons.
 
 ## Current D21 track milestones
 

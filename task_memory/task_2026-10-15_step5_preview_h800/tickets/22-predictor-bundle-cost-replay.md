@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D31 status note added. |
 | 2026-10-22 | Record actual06 failure, verified identity reuse and D26 new-fixture integration dependency. |
 | 2026-10-21 | Measured integrationbc8ae27 passes323 combined/197 profiling parent checks; complete CLI acceptance remains active. |
 | 2026-10-21 | Four public-manager bundles generated; actual-main mapping correction and final integration remain open after274 parent checks. |
@@ -23,6 +24,8 @@ Demonstrate coverage, host/communication ownership, and cross-model cold/warm id
 Record reuse sufficiency and evidence-backed changes through the existing C01/C04 owners and D-* records. Routine incremental changes use standing execution authority. Explicit approval is required only for a demonstrated material core refactor or materially unresolved semantics/acceptance; no duplicate decision authority is created.
 
 **Status:** in-progress (D20 CPU implementation); formal bundle and whole-ticket acceptance blocked
+
+**D31 status (2026-10-25):** Active within plan step E: predictor bundles built from the step-D profiles.
 
 **Current acceptance:** actual06 still timed out after357/362 outputs. Fixed
 identity source7e98e5c passes parent96 checks and complete source/ledger audit;
