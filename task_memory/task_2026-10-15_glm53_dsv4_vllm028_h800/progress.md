@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded D-H4A-CHECKPOINT and D-GPU-SHORTAGE-REPORT, added H4b and H4c to the milestone table, and started the H4b-(a) record (design, quota snapshot, platform access through the runtime proxy). |
 | 2026-10-25 | Recorded the H4a-4 result and the H4a-5 attribution (test report 2026-10-25); H4a completed, next is the YC checkpoint. |
 | 2026-10-25 | Recorded H4a-4 input, overrides, KV and graph-mode findings, runs and gate layout; H4a-4 run5 in progress. |
 | 2026-10-25 | Recorded H4a-2 (commit d6ea9661, probe, TTFT-definition finding, regression) and moved the next actions to H4a-4. |
@@ -209,16 +210,21 @@
 | H1 P0 case binding | completed | ticket 17 P0-scoped items; `canonical_case_20261021/p0_binding/` |
 | H5 P0 native reference | completed | native06 R4: TTFT 403.31/393.22/399.95 ms, TPOT 19.031/19.017/18.981 ms, E2E 19872/19847/19817 ms, THPT 6273.3/6273.1/6269.8 tok/s; `native06_acceptance_20261023/` |
 | H4a first diagnostic P0 prediction | completed (DIAGNOSTIC): TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54% | [test_report_2026-10-25_h4a_p0_diagnostic.md](test_report_2026-10-25_h4a_p0_diagnostic.md); records below |
-| H3r targeted cost refinement | pending | waits for YC's checkpoint decision; the leading TTFT source is a D-side handoff modeling gap, not a cost slot |
-| H4 / H6 P0 qualified path and acceptance | pending | needs H4a and YC's decision on step-level costs |
-| P1b H800-64 basic native validation | pending, parallel | ticket 10 p1 list |
+| H4b-(a) native D-side handoff measurement | in-progress: design written; harness, package and submission pending | [h4b_lifecycle_measurement/design.md](h4b_lifecycle_measurement/design.md); record below |
+| H4b-(b) Frontier D-side remote-KV lifecycle | pending | needs H4b-(a) results |
+| H4c step-cost path speed | pending; design while the H4b-(a) job queues | H4a speed profile in the H4a-4 record |
+| H3r targeted cost refinement | pending | after H4b-(b) and H4c (D-H4A-CHECKPOINT) |
+| H4 / H6 P0 qualified path and acceptance | pending | step-level costs do not yet support formal gates (D-H4A-CHECKPOINT) |
+| P1b H800-64 basic native validation | pending, parallel, lower priority | ticket 10 p1 list |
 | profile04 R5 trace audit | stopped at 24/32 | prefill DP0 ranks 0-7 deferred, see [future.md](future.md) |
 | scope-lifetime S4/S5 package | stopped, unsealed, 0 GPU jobs | package path preserved in the historical pointer below |
 
-**Next actions.**
-1. YC checkpoint: decide whether step-level costs may support formal gates (recommendation: not yet) and choose among options (a) native D-handoff measurement, (b) D-side remote-KV lifecycle modeling, (c) step-cost path speed fix, (d) P1b scheduling ([test report section 9](test_report_2026-10-25_h4a_p0_diagnostic.md#9-recommendation-step-level-costs-for-formal-gates)). Recommended: (a) then (b), (c) early, (d) in parallel.
-2. No GPU job, no core change and no new H4a run before YC's decision.
-3. P1b preparation in parallel at lower priority.
+**Next actions** (D-H4A-CHECKPOINT order).
+1. H4b-(a): create the `h4b-lifecycle-harness` worktree at `b62c155a`, implement the observer and the `scheduler_cls` passthrough, run the CPU check, commit.
+2. H4b-(a): build, seal and check `package_01`; read the quota again; submit; keep the launcher alive; report a queue delay to YC at once (D-GPU-SHORTAGE-REPORT).
+3. H4c design and implementation while the job queues and runs.
+4. H4b-(b) design from the measured parts.
+5. P1b preparation in parallel at lower priority.
 
 **H4a-1 and H4a-3 record (2026-10-25).** Design: [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md).
 - completed — input persistence (D-INPUT-PERSISTENCE). `h4a_p0_diagnostic/copy_inputs.py` copied 10 native06, 11 profile02 and 9 profile04 files into `h4a_p0_diagnostic/inputs/` (38 MB; manifest with source, cloud origin, size and SHA-256 per file). Each copied cloud inventory matches its receipt digest (profile02 `33ed03ea…`, profile04 `85b0ef23…`). The two profile02 decode traces (36 MB) stay out of git; their cloud originals are recorded.
@@ -260,6 +266,13 @@
 - completed — TPOT: +2.50% is inferred to be +4.4% (profile02's environment against native06) − 1.8% (S5's m 1-2 step cost below the cost at about 8.5 requests per lane). E2E +417 ms = −69 ms TTFT + 486 ms TPOT × 1023. THPT −0.54% from a 0.8 s longer window.
 - decision proposed to YC — step-level costs should not yet support formal gates (profiler perturbation, m coverage 1-2, single-sample k=1 entries, S2 proxy overhead, S3 GLM link, and the TTFT gap is outside the cost model). Options (a)-(d) in the report section 9.
 - H4a criteria: 1 PASS for the 128 formal requests with warmups not replayed (recorded departure); 2, 3, 4 PASS; 5 PASS with this commit.
+
+**H4b-(a) record (2026-10-25).** YC adopted the H4a checkpoint recommendation ("采纳你的推荐，继续"; D-H4A-CHECKPOINT) and asked to hear at once about any GPU shortage that delays the route (D-GPU-SHORTAGE-REPORT).
+- completed — design: [h4b_lifecycle_measurement/design.md](h4b_lifecycle_measurement/design.md). A subclass of vLLM's `AsyncScheduler`, selected through `scheduler_cls`, records add, schedule and update events per engine core on P and D. No `frontier/` file changes.
+- completed — source identity for the CPU check: the local `oneshot-opd-py312` wheel (vllm 0.28.0) matches NATIVE `2cf0a69` byte for byte for the scheduler, engine-core, NIXL and outputs files (scratch `/data/ycfeng/tmp/glm53_dsv4/h4b/wheel_vs_native.txt`).
+- finding — vLLM stats flow: the worker attaches `kv_connector_stats` after `clone_and_reset`, and `Scheduler.update_from_output` aggregates the scheduler connector's stats into that same object in place (`scheduler.py:2067-2080`). The observer copies the worker stats before calling `super()` and never calls `connector.get_kv_connector_stats()`.
+- finding — platform access from this sandbox: `/etc/resolv.conf` has no company DNS, so `curl --noproxy '*' http://deploy.i.shaipower.com/httpproxy` fails with `Could not resolve host`, and `ssh shai-ycfeng` fails the same way. The inherited runtime proxy (`HTTP(S)_PROXY`) reaches the platform; the quota read uses it without `--noproxy`. Scratch wrapper `/data/ycfeng/tmp/glm53_dsv4/h4b/run_quota.sh`.
+- completed — read-only quota snapshot, `h4b_lifecycle_measurement/prelaunch/read_quota.py` (copied from the profile03 prelaunch check; only the output path became an argument), output `prelaunch/quota_20261025T112642Z.json`: `codesign` H800 total 128, non-preemptible use 108, 20 free; no node with 8 free GPUs. One personal live job, `exp-1025-192336-120831` (step_main, 8 GPUs, Running), was not created by this session and is left untouched. The H4b-(a) job needs 32 GPUs; reported to YC at once. Per the handbook the job will be submitted when the package is ready and queued by the platform; the quota is read again just before submission.
 
 **Rules for this route.** D-MAINLINE-LOOP-CAP-DSV4 (more than 3 GPU jobs or about 6 hours of GPU or CPU work on one milestone without movement stops the work and goes to YC). Every checkpoint first states which milestone moved.
 

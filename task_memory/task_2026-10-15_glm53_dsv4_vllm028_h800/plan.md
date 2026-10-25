@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Applied D-H4A-CHECKPOINT: added milestones H4b (native D-side handoff measurement, then Frontier modeling) and H4c (step-cost path speed) with their order and bounds. |
 | 2026-10-25 | H4a done (DIAGNOSTIC): H4a-2 code d6ea9661, H4a-4 four errors and H4a-5 attribution in test_report_2026-10-25_h4a_p0_diagnostic.md; next is the YC checkpoint. |
 | 2026-10-25 | H4a-1 and H4a-3 done: linked the H4a design and recorded that the H4a-2 file list exceeds D-H4A-CODE-SCOPE and waits for YC. |
 | 2026-10-25 | Applied D-DSV4-H800-MAINLINE-CORRECTION: added the current route with milestone H4a (first diagnostic P0 comparison), moved the trace-audit route to history, and deferred the H200 rows. |
@@ -148,14 +149,16 @@
 | --- | --- | --- | --- |
 | H1 | P0 case and workload binding | 17 | DONE for P0 (ticket 17, P0-scoped items). P1 binding pending. |
 | H5 | Native reference | 18 | DONE for P0: native06 R4, `native06_acceptance_20261023/`. P1 pending. |
-| **H4a** | **First diagnostic P0 prediction** | 05, 07, 10, 19 | **DONE 2026-10-25 (DIAGNOSTIC).** TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54% against the mean of native06 R4; [test report](test_report_2026-10-25_h4a_p0_diagnostic.md). Next: YC checkpoint. |
+| **H4a** | **First diagnostic P0 prediction** | 05, 07, 10, 19 | **DONE 2026-10-25 (DIAGNOSTIC).** TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54% against the mean of native06 R4; [test report](test_report_2026-10-25_h4a_p0_diagnostic.md). Checkpoint decided: D-H4A-CHECKPOINT. |
+| **H4b** | **D-side handoff** | 07, 18, 19 | (a) one native P0 measurement job that times the D-side states between the P response and D's first decode step; (b) Frontier models the D-side asynchronous remote-KV lifecycle from those inputs, with no constant fitted to native06. Done when (b) is merged and the P0 diagnostic rerun reports the new TTFT error. |
+| **H4c** | **Step-cost path speed** | 05, 07 | A table-priced step is priced once per step instead of through the per-layer EP waves. Done when results are identical to H4a run5 and the existing regressions, and the wall-time change is measured. |
 | H3r | Targeted cost refinement | 05, 06, 09 | Only for the cost slots that the H4a attribution names as leading error sources. |
-| H4 | Qualified non-dummy P0 path | 05, 07-09 | H4a path with qualified inputs, under YC's decision on step-level cost admission. |
+| H4 | Qualified non-dummy P0 path | 05, 07-09 | H4a path with qualified inputs. Step-level costs do not yet support the formal gates (D-H4A-CHECKPOINT). |
 | H6 | P0 compare, promote and accept | 19 | All four errors <=30% (promotion to P1 formal), then <=10% (final). |
-| P1b | P1 H800-64 basic native validation | 10, 18 | Runs in parallel with everything above, at lower priority than H4a. |
+| P1b | P1 H800-64 basic native validation | 10, 18 | Runs in parallel with everything above, at lower priority than H4b and H4c. |
 | P1f | P1 formal reference, comparison and acceptance | 10, 18, 19 | Needs P1b and the P0 30% promotion. |
 
-Dependency: `H4a-1 -> {H4a-2, H4a-3} -> H4a-4 -> H4a-5 -> YC checkpoint -> {H3r, H4} -> H6(P0) -> P1f`; `P1b` runs in parallel and `{P1b, H6 promotion} -> P1f`. Accepted data from H1, H2 and H5 is reused, not redone.
+Dependency: `H4a -> D-H4A-CHECKPOINT -> H4b-(a) -> H4b-(b)`; `H4c` runs while the H4b-(a) job queues and runs; `{H4b-(b), H4c} -> {H3r, H4} -> H6(P0) -> P1f`; `P1b` runs in parallel and `{P1b, H6 promotion} -> P1f`. Accepted data from H1, H2 and H5 is reused, not redone.
 
 ### H4a — first diagnostic P0 prediction
 
@@ -193,6 +196,16 @@ Compute the four metrics with the existing `tests/comparison/e2e_gate/` normaliz
 3. Every substituted input is listed with its source.
 4. Existing behavior is unchanged: the current unit tests, `tests/unit/test_e2e_gate.py`, `bash examples/architecture/run_dummy_smoke_matrix.sh`, and the task's existing fidelity regression (`fidelity_regression/`) produce the same results as before the change.
 5. The change is committed on this branch.
+
+### H4b — D-side handoff
+
+**H4b-(a) Native measurement.** [h4b_lifecycle_measurement/design.md](h4b_lifecycle_measurement/design.md). A scheduler observer (`LifecycleObservedScheduler`, a subclass of vLLM's `AsyncScheduler` selected through `scheduler_cls`) records each request's engine-core states on P and D. It runs once on the native06 case and workload, as one 32-H800 job. The harness change lives on branch `h4b-lifecycle-harness`, created at native06's harness commit `b62c155a`. No `frontier/` file changes. Steps: design -> observer and CPU check -> package build, seal and `--check-only` -> quota check and submission -> monitoring -> copying results and analysis. Acceptance is in design section 8.
+
+**H4b-(b) Frontier modeling.** After H4b-(a). Its design section, file list and line estimate come from the measured parts before any core edit, within the D-H4A-CHECKPOINT bounds.
+
+### H4c — step-cost path speed
+
+Design section with file list and line estimate before the core edit. The hot path is `sync_entry.enter_layer_sync` -> `ep_wave_schedule.schedule_layer_wave` -> `expert_parallel.predict_ep_wave_phase_times` (168 of 180 s in the H4a speed profile, with 6,594 waves and 1.69 M `Request.__init__` calls; [progress.md](progress.md) H4a records). Criteria: H4a run5's four metrics and per-request outputs unchanged; fidelity regression 77/77, the unit tests, `tests/unit/test_e2e_gate.py` and the dummy smoke matrix unchanged; the wall-time change measured.
 
 **Stop rules.** D-MAINLINE-LOOP-CAP-DSV4 applies to every step. A step that fails gets one root-cause fix. A second failure of the same step is reported to YC with options; it does not start a new diagnostic chain.
 

@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded YC's instruction to report a GPU shortage that delays the route at once (D-GPU-SHORTAGE-REPORT). |
+| 2026-10-25 | Recorded YC's adoption of the H4a checkpoint recommendation: step-level costs do not yet support formal gates, and the route H4b (D-side handoff measurement, then modeling), H4c (step-cost path speed) and P1b in parallel (D-H4A-CHECKPOINT). |
 | 2026-10-25 | Recorded YC's adoption of the H4a-2 option A scope and of substitutions S1 and S2 (D-H4A2-SCOPE-A). |
 | 2026-10-25 | Recorded YC's worktree-cleanup approval (D-WORKTREE-CLEANUP) and the start of H4a (D-H4A-START). |
 | 2026-10-25 | Recorded D-DSV4-H800-MAINLINE-CORRECTION: this directory is the single mainline, scope is DSV4 on H800-32/64, the trace-audit route stops, and the first diagnostic P0 comparison (H4a) is the next milestone. |
@@ -151,6 +153,24 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - Substitution S1 is accepted: profile02 (`dsv4-h800-p0-profile-20261023-02`) replaces profile04 as the step-cost source named in D-V4-STEP-COST-FIRST-PASS; profile04 is a cross-check.
     - Substitution S2 is accepted: the P step uses the profile02 R2/R3 proxy P service time (median 287.354 ms), because the profile04 P1 prefill steps lie in the profiled repeat.
     - All other H4a rules are unchanged: DIAGNOSTIC label, D-MAINLINE-LOOP-CAP-DSV4, and identical GLM, co-location, existing PDD and PD-AF results.
+
+[Original Request] Follow-up, 2026-10-25, after the H4a checkpoint (commit `ad448575`, [test report section 9](test_report_2026-10-25_h4a_p0_diagnostic.md#9-recommendation-step-level-costs-for-formal-gates)) that recommended against step-level costs for formal gates and proposed options (a)-(d):
+
+> 采纳你的推荐，继续
+
+14. **D-H4A-CHECKPOINT.** YC adopted the recommendation:
+    - Step-level costs do not yet support the formal 30% or 10% gates. D-V4-STEP-COST-FIRST-PASS stays limited to diagnostic runs.
+    - **H4b, D-side handoff.** First (a): one native P0 measurement job on 32 H800 (same case and workload as native06) that times the D-side states between the P response and D's first decode step. Then (b): Frontier models the D-side asynchronous remote-KV lifecycle from those measured inputs, with no constant fitted to native06.
+    - **H4c, step-cost path speed.** Option (c), early: price a table-priced step once per step instead of through the per-layer EP waves, with identical results.
+    - **P1b** (option (d)) continues in parallel at lower priority under D-P1-BASIC-PARALLEL.
+    - Order: H4b-(a) is prepared and submitted first; H4c runs while the job queues and runs; H4b-(b) follows the measurement.
+    - Each code item gets a design section with its file list and line estimate before core edits. More than 5 `frontier/` files or about 200 changed lines, a new shared config or schema field, or a registry mechanism change returns to YC. D-MAINLINE-LOOP-CAP-DSV4 and the DIAGNOSTIC label apply; GLM, co-location, existing PDD and PD-AF results must stay identical.
+
+[Original Request] Follow-up, 2026-10-25, during H4b-(a) preparation:
+
+> [补充]如果存在卡数不足够（影响任务推进的）的情况，请第一时间反馈给我
+
+15. **D-GPU-SHORTAGE-REPORT.** When available GPU quota is not enough for a planned job and this delays the route, report it to YC at once, with the job, the GPUs it needs, the quota observed and the time of the check. Do not wait for the next checkpoint.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
