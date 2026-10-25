@@ -342,7 +342,8 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
         for name in ("attention_backend", "quantization", "shutdown_timeout",
                       "distributed_executor_backend", "data_parallel_size_local",
                       "data_parallel_start_rank", "data_parallel_address", "data_parallel_rpc_port",
-                      "num_gpu_blocks_override", "worker_extension_cls", "kv_cache_dtype"):
+                      "num_gpu_blocks_override", "worker_extension_cls", "scheduler_cls",
+                      "kv_cache_dtype"):
             if name in engine:
                 command += ["--" + name.replace("_", "-"), str(engine[name])]
         if "async_scheduling" in engine:
