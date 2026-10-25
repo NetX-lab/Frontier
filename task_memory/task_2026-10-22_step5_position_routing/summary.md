@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect complete-CLI Standards/Spec findings; preserve submitted-job identity and both failure stages, with affected static and fault-injection checks PASS. |
 | 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
@@ -65,6 +66,8 @@ The single approved current-source joint pricing, emission and flush execution h
 CPU runtime preparation now passes the original strict probe locally and in the pinned published image, with Python3.10.6 and unchanged canonical package versions. A separate copied base prefix fixes Debian site-packages discovery; original copy timeout and both import failures remain retained. Evidence: `resumed_execution/evidence/execution_preparation_2026-10-25/` and the dated runtime report. Local/image probe wall times are1.857779s/2.892711s, with probe-only peak RSS178,016,256B/183,410,688B. No production source, pricing-wave, required-shape, fullCLI or StepMind operation changes. The actual worker and joint results are recorded below; full-workload RSS and completeCLI remain open.
 
 ### Current complete CLI preparation
+
+Initial independent review is collected: Standards1P2,Spec2(P1/P2). The task-only launcher records the original SDK Job Create identity before its unchanged wait and preserves both exception stages. Both original defects are reproduced;3 repaired fake scenarios and affected static/dry-run/original SDK checks pass with rawexit0,0.422564383/4.461541410s outer. Final planSHA4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e. No real client/platform/workload/pricing/shape call occurs. Follow-up review and task records freeze remain the immediate prerequisite; source2ca/146, budgets, full6144/1024/2400s and exhausted joint2/2/shape6/6 are unchanged.
 
 The recovered complete_cli_2026-10-25 scripts and plan pass Python syntax, bash-n, no-operation dry run, existing source/input bindings and original SDK task materialization. The exact new command preserves6144/1024/offline+online,2400s per main child, complete validation and no outer timeout. No client/platform/workload call or source allocation occurs. Preflight rawexit0,4.695963354s; the independent Standards/Spec reviews remain pending before a task-only records freeze and the single4CPU/0GPU/64000Mi codesign worker. Input hashes and terminal resources/source/container checks now have executed preparation controls. Six archived joint-output duplicates totaling11,695,428B have been removed after exact decompression/hash checks; the complete798,661B archive and active inputs remain.
 

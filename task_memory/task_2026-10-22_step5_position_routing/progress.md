@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect complete-CLI Standards/Spec findings; preserve submitted-job identity and both failure stages, with affected static and fault-injection checks PASS. |
 | 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Recover complete-CLI drafts and current five-tree state; correct input/resource/lifecycle checks before no-operation verification and independent review. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
@@ -163,6 +164,11 @@ Current checkpoint: the single worker and its parent evidence verification are c
 - completed/preflight: preflight.py compiles both scripts, runs bash-n/no-operation dry run, verifies existing25source/sixinput/262metadata bindings and materializes the original SDK task objects. All template/container resources4CPU/0GPU/64000Mi,one critical/default replica,H800,f037d958,currentNFS and requested+documented implicit mounts match; the SDK leaves the plan unchanged. Rawexit0,4.695963354s,Python3.10.6/-B/single math thread,60s/configured30GiB; no client, auth, platform or workload call. Exact command/log/receipt/preflight.json and dry_run.stdout are in the complete_cli evidence directory. PlanSHAfafd6776f36e68db9e4a925564245ad1a34c5c0168a0206b7843eadb49793303.
 - completed/scoped cleanup: joint_timing_2026-10-25/cleanup.json verifies all six complete gzip/archive/original byte counts and hashes, then removes only the six completed11,695,428B scratch-output duplicates. The lossless798,661B archive, original execution receipts, active inputs and other-session files remain; zero runtime/platform calls.
 - pending/review and execution: independent Standards/Spec review of the new command and task-only freeze precede the unique complete worker. Current recovery/preflight performs0 new pricing/shape/fullCLI/platform calls. Existing joint2/2 and required-shape6/6 remain exhausted; old acceptance controls are not rerun.
+
+- completed/initial review collection: Standards Tesla reports1P2; Spec Poincare reportsP1/P2 onfixed0dca7f83/candidate0eded7cf. P1 loses submitted-job identity if worker startup fails before its receipt; P2 overwrites initial error evidence on later query/check failure. Separate axes are retained in resumed_execution/review_complete_cli_2026-10-25.md and evidence/complete_cli_2026-10-25/review_initial.json.
+- completed/task-only repairs: synchronously record the hash-bound original SDK Job Create identity before unchanged spawn_tasks wait; remove worker-start fallback,verify returned identity,retain launch_error/original log and later error/separate followup log. No SDK/production/resource/output/gate change. Original launcher/preflight bytes remain retained.
+- completed/affected verification: review_fault_injection.py reproduces2 original defects and passes3 corrected fake-API scenarios,rawexit0,outer0.422564383s. preflight_review_followup.py passes syntax/bash-n/no-operation dry-run/25source/sixinput/262metadata/original SDK objects,rawexit0,outer4.461541410s. Both60s/configured30GiB/Python3.10.6/-B/single math threads;0 real platform/workload/pricing/shape calls. Final planSHA4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e. Formal report:resumed_execution/test_report_2026-10-25_complete_cli_preparation.md.
+- pending/follow-up: commit this tested task-only repair,collect independent review on the fixed repaired commit,finish check-progress/records freeze,then submit the already-authorized single completeCLI worker. Do not repeat any old control, source regression, readiness or exhausted joint/shape execution.
 
 ### Approved finite current-source joint execution (2026-10-25 UTC / HKT)
 

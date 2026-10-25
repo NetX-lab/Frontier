@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect complete-CLI Standards/Spec findings; preserve submitted-job identity and both failure stages, with affected static and fault-injection checks PASS. |
 | 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | YC answers continue to the finite two-call execution question; run the existing joint script once before the full-workload gate. |
@@ -79,6 +80,8 @@ The current-source joint pricing, emission and flush execution has completed at6
 The worker CPU interpreter/image prerequisite and the single joint/readiness executions are complete; retain their exact evidence. Current complete-CLI static preparation is PASS and its independent review is next. The earlier import and reference-append observations do not qualify full-workload memory. Existing joint2/2, required-shape6/6 and old diagnostic ceilings remain exhausted.
 
 ### Current complete CLI preparation (2026-10-25 UTC / HKT)
+
+Initial independent review is collected: Standards1P2,Spec2(P1/P2). The task-only launcher records the original SDK Job Create identity before its unchanged wait and preserves both exception stages. Both original defects are reproduced;3 repaired fake scenarios and affected static/dry-run/original SDK checks pass with rawexit0,0.422564383/4.461541410s outer. Final planSHA4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e. No real client/platform/workload/pricing/shape call occurs. Follow-up review and task records freeze remain the immediate prerequisite; source2ca/146, budgets, full6144/1024/2400s and exhausted joint2/2/shape6/6 are unchanged.
 
 The four recovered drafts in resumed_execution/evidence/complete_cli_2026-10-25/ now pass the new command's required no-operation verification. Shared read_plan checks the manifest/bindings/Git/script hashes, admitted source, unchanged two-mode command and finite limits. The worker compares source/plan/NFS with the local launcher and samples actual memory; the launcher requires exact quota/resource/replica/container state. Original SDK materialization confirms4CPU/0GPU/64000Mi/1replica,H800,imagef037d958,current local NFS and only the requested personal mount plus the known SDK default. No client, platform or workload call occurs.
 

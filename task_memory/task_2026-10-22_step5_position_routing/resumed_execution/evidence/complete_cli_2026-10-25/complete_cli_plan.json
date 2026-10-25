@@ -95,8 +95,8 @@
   ],
   "cleanup": "After analysis, preserve selected exact evidence and active inputs; remove only completed disposable outputs of this specific job.",
   "scripts": {
-    "complete_cli_worker.py": "a17fb5ae8e395e16ec38b4d0c4e1067cc433e7177ec86384f165482f038d7c2a",
-    "launch_complete_cli.py": "cf445af8bd1cdf9561ab5bf3835c3d9c74820e00171eb43622629a98126fb661",
+    "complete_cli_worker.py": "634c2878a00a4464a9db9ef797911df1599a351f018e12a088e554accd8b12c3",
+    "launch_complete_cli.py": "d039d636d7a51ec50c32490345bb81a8e8ad869a6537e79dab3fe3ee79425e17",
     "run_complete_cli.sh": "93a9084d9fbec1aefe2c68b2318d4ba6fe3941941e919171f2d0a8eb48cb7a4a"
   },
   "fixture_manifest_sha256": "ed0491872ea1b726b3d0aeb5a6dd45d54c5ccab5af53f0f79160bb867c32e9d2",
@@ -109,5 +109,11 @@
     "source_sha256": "0fc88ea9fd70ad08f69d76637f4e05c65309f80ce81b4ff933c3b0d0320d4d37",
     "function": "ResourceConfig.__iter__",
     "behavior": "The original SDK appends its mandatory tenant mount to every yielded task. The complete CLI never reads or writes that mount; all task cloud access stays in the personal codesign directory."
+  },
+  "sdk_submission_observation": {
+    "source": "/data/ycfeng/steptron/steptron/utils/stepmind.py",
+    "source_sha256": "bb691868e93b85748af02e5255204f3706ec56382457beb9612e66189574f647",
+    "function": "RJobController.submit",
+    "behavior": "The original SDK emits its exact Job Create record after successful submission and before spawn_tasks waits. The launcher records that identity synchronously without replacing SDK submission or wait behavior."
   }
 }

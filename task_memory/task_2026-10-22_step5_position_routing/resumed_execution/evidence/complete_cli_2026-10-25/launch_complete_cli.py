@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import shlex
 import socket
 import sys
@@ -52,21 +53,34 @@ def main():
         sys.path.insert(0, plan["steptron_root"])
         from steptron.exp.base_exp import ResourceConfig
         from steptron.utils.stepmind import get_rjob_client, spawn_tasks
+        from loguru import logger
         os.environ["EXP_ID"] = plan["experiment_id"]
         os.chdir(plan["local_mount_source"])
         config = ResourceConfig(**plan["resource"], image=plan["image"], mounts=list(plan["mounts"]),
             envs={"DISTRIBUTED_JOB": "false", "PYTHONDONTWRITEBYTECODE": "1", **plan["math_thread_env"]})
+        def record_created_job(message):
+            match = re.fullmatch(r"Job Create: .+\(([^()]+)\)", message.record["message"])
+            if match is None:
+                raise AssertionError("The original SDK creation record changed")
+            receipt["job_name"] = match.group(1)
+            receipt["created_job_record"] = message.record["message"]
+            (output/"launcher.json").write_text(json.dumps(receipt, indent=2)+"\n")
+
+        sink = logger.add(record_created_job, catch=False, filter=lambda record:
+            record["name"] == "steptron.utils.stepmind" and record["function"] == "submit"
+            and record["message"].startswith("Job Create: "))
         try:
             workers = spawn_tasks(config, command=command, charged_group=plan["charged_group"],
                 use_image=True, code_mount_point=plan["local_mount_target"])
-            receipt["job_name"] = workers.rjob.meta.name
+            if receipt.get("job_name") != workers.rjob.meta.name:
+                raise AssertionError("The returned job differs from the original SDK creation record")
             receipt["final_poll"] = workers.poll()
         except Exception as error:
             launch_error = error
+            receipt["launch_error"] = f"{type(error).__name__}: {error}"
             (output/"launcher.failure.log").write_text(traceback.format_exc())
-            start_record = output/"worker/worker_started.json"
-            if start_record.exists():
-                receipt["job_name"] = json.loads(start_record.read_bytes())["job_name"]
+        finally:
+            logger.remove(sink)
         if receipt.get("job_name"):
             client = get_rjob_client()
             job = client.api.get_namespaced_custom_object(group=client.group, version=client.version,
@@ -135,7 +149,7 @@ def main():
     except BaseException as error:
         receipt["status"] = "FAIL"
         receipt["error"] = f"{type(error).__name__}: {error}"
-        (output/"launcher.failure.log").write_text(traceback.format_exc())
+        (output/"launcher.followup.failure.log").write_text(traceback.format_exc())
         raise
     finally:
         receipt["finished_utc"] = datetime.now(timezone.utc).isoformat()

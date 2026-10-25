@@ -27,7 +27,8 @@ def read_plan(path):
         if hashlib.sha256((directory / name).read_bytes()).hexdigest() != expected:
             raise AssertionError(f"Complete CLI script changed: {name}")
     assets = {plan["fixture_manifest"]: plan["fixture_manifest_sha256"],
-              plan["joint_bindings"]: plan["joint_bindings_sha256"], **plan["git"]["files"]}
+              plan["joint_bindings"]: plan["joint_bindings_sha256"], **plan["git"]["files"],
+              plan["sdk_submission_observation"]["source"]: plan["sdk_submission_observation"]["source_sha256"]}
     for filename, expected in assets.items():
         if hashlib.sha256(Path(filename).read_bytes()).hexdigest() != expected:
             raise AssertionError(f"Complete CLI input changed: {filename}")

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect complete-CLI Standards/Spec findings; preserve submitted-job identity and both failure stages, with affected static and fault-injection checks PASS. |
 | 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | YC’s direct continue answer approves exactly this two-call command; no warmup, profiling, retry or required-shape extension. |
@@ -94,6 +95,9 @@ Record real full-workload RSS and memory/controller evidence while that unchange
 Business and outer receipts confirm exactly2/2 attempts, no retry and unchanged before/after source/input bindings. Cold/warm complete pricing output,16 sorted ledger rows,208 trace operators and144 compute proofs pass. The timing includes production pricing/emission/native row flush/final trace+ledger close; MetricsStore construction/header initialization and validation are outside the wave interval. Cached-fixture setup3.806491587s is not full-main initialization. Process ru_maxrss1,315,135,488B is observed separately from configuredMemoryMax32,212,254,720B; no effective cgroup peak was captured.
 
 The exact finite execution is complete and must not be rerun. Required-shape remains6/6 and joint allowance is2/2 exhausted. Next prepare one complete-CLI worker using the existing original local RJobBackend and verified4CPU/0GPU/64000Mi resource, current local NFS, copied runtime and personal cloud path. Record actual workload RSS/controller readings without changing simulator classes or validation. Keep records HEAD stable through both modes. No outer timeout may truncate post-run validation.
+
+
+最新review接续：初始Standards1P2/Spec2(P1/P2)已收集；task-only launcher已同步保留原SDK创建job记录，并分别保留原失败和后续查询失败。两个旧缺陷已复现，3个修复fake场景与受影响static/dry-run/原SDK检查PASS；rawexit0，outer0.422564383/4.461541410s。新planSHA=4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e。原preflight/launcher证据保留，follow-up review与task-only冻结仍pending；之后只执行已授权的完整CLI一次。生产/SDK/环境/预算/输出/gate和joint2/2、shape6/6均不变，未创建真实client/job。
 
 ## Current complete CLI command preparation
 

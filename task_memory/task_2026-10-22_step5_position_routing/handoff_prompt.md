@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect complete-CLI Standards/Spec findings; preserve submitted-job identity and both failure stages, with affected static and fault-injection checks PASS. |
 | 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Recover the complete-CLI drafts and record remaining static/review checks before the unique worker; no new runtime call. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
@@ -44,6 +45,9 @@ Worker原runtime probe PASS，Python3.10.6，2.771702s，RSS176,275,456B。完�
 父端脚本已运行一次，exit0、1.423269s；25source/6inputs/262metadata/9scripts/Git assets、五树/source与保留完整参考digest核验通过。16份screened小证据21,528B和parent script/receipt/command capture在resumed_execution/evidence/worker_readiness_2026-10-25/；报告为resumed_execution/test_report_2026-10-25_worker_readiness.md。Raw launcher logs保留在本地restricted目录。原session87306和41640已收集exit0，不再轮询；没有活跃worker/fullCLI/GPU job，不重提readiness。原backend atexit Job Stop在Succeeded后记录，无手工stop。该worker自身pricing/shape/fullCLI/native/GPU allocation均0。后续YC直接continue已批准唯一两次普通joint执行，见下段；不重提readiness。
 
 完整CLI准备状态（本次接续）：四份草稿已恢复于resumed_execution/evidence/complete_cli_2026-10-25/。Manifest/bindings/script/Git hash、exact command、worker/local NFS及terminal resource/replica/container检查已补齐；syntax/bash-n、no-operation dry run、原SDK对象核验PASS，rawexit0、4.695963354s。两轴review仍pending，未提交worker；先完成review和task-only记录冻结，再执行唯一完整CLI。六份已归档的完整joint输出重复文件已按精确byte/hash核验后删除，保留完整lossless gzip和原回执/active inputs。
+
+
+最新review接续：初始Standards1P2/Spec2(P1/P2)已收集；task-only launcher已同步保留原SDK创建job记录，并分别保留原失败和后续查询失败。两个旧缺陷已复现，3个修复fake场景与受影响static/dry-run/原SDK检查PASS；rawexit0，outer0.422564383/4.461541410s。新planSHA=4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e。原preflight/launcher证据保留，follow-up review与task-only冻结仍pending；之后只执行已授权的完整CLI一次。生产/SDK/环境/预算/输出/gate和joint2/2、shape6/6均不变，未创建真实client/job。
 
 下一前沿：
 1. Copy/init已收口并整合：copyb061f884/52831c6e为静态NO_ALLOC，control0/1且launch0；init6335f581/c6b3da15为ALLOC建议，control0、source allocation0。Parent25copy/13init bindings及14旧回执全部通过，见resumed_execution/evidence/diagnosis_closeout_2026-10-25/。两工作树干净保留、agents已关闭，不重开诊断或control。126.58s只是旧测量推算，不是当前startup收益。
