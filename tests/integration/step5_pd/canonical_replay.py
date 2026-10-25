@@ -290,7 +290,8 @@ async def run(args):
     from aiohttp import web
 
     engine = json.loads(args.engine_config.read_text())
-    if runtime_version(engine) != "step5" or args.mode != "clean":
+    # The position-routing image reuses the Step adapter under its own label.
+    if runtime_version(engine) not in ("step5", "step5_position_cyclic") or args.mode != "clean":
         raise ValueError("The Step canonical consumer requires the locked clean Step adapter")
     settings = json.loads((args.trace_dir / "replay_plan.json").read_text())
     workload = canonical_workload(args.trace_dir / "workload")

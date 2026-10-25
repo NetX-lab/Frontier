@@ -201,6 +201,44 @@ State of the D31 plan steps (see the top section of `plan.md`):
 - in-progress — D. H200 Step-5 operator profiles.
 - pending — E, F, G.
 
+Step C submission (2026-10-25 19:15 UTC):
+
+- Source: `f6772339`, checked out clean at `/data/ycfeng/Frontier/.worktrees/step5-d31-native-f677233`.
+  Stager: `tests/integration/step5_pd/canonical_stage.py build --kind workload --case h200_32`;
+  `verify` and the StepMind dry run passed before submission.
+- Workspace: `/data/ycfeng/tmp/step5_d31_workload_20261025/h200_32_workload01/` (`build.log`,
+  `verify.log`, `stepmind_dry_run.log`, `launcher.log`, `stage/launcher/submission_attempt.json`).
+- Job `exp-1026-031533-077730`: 4 replicas × 8 H200, `step_main`, non-preemptible, the routing
+  image `sha256:f037d958…`, worker timeout 5400 s. Cloud output:
+  `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_32_workload01`.
+- Submitted by Pi through `/ds4-exec`, label `d31-h200-32-submit-1025a`, prompt
+  `/data/ycfeng/tmp/ds4_runs/prompts/d31-h200-32-submit-1025a.md`. Launcher PID 3729412 on HOST.
+  Phase `Starting` at 19:16 UTC (the image is being pulled for the first time on this cluster).
+- Note for status reads on HOST: export `KUBEBRAIN_CLUSTER_ENTRY`, `KUBEBRAIN_NAMESPACE` and
+  `KUBEBRAIN_WORKSPACE_NAME` before sourcing `stepmind_env.sh`; otherwise the client exits 127.
+
+Step C result of workload01: failed at 19:25:29 UTC, before any request was sent.
+
+- Observed (Pi status run `d31-h200-32-status-1025b`, worker logs under
+  `/data/ycfeng/tmp/ds4_runs/d31-h200-32-status-1025b/scratch/`):
+  - All vLLM servers started.
+  - The worker logs confirm `position_cyclic` routing was active.
+  - Each decode DP engine reported a KV cache of 1,028,438 tokens.
+  - The replay client then raised "The Step canonical consumer requires the locked clean Step
+    adapter".
+- Cause: in `tests/integration/step5_pd/canonical_replay.py`, the guard in `run()` compared the
+  runtime label with the literal `"step5"`. The routing image is registered under its own label,
+  `step5_position_cyclic`. Its runtime adapter is the `step5` adapter plus the image binding fields
+  (`tests/comparison/dp_placement_pp/vllm_replay.py`, `RUNTIME_ADAPTERS`).
+- Fix: the guard accepts both labels. The new test
+  `test_workload_consumer_accepts_both_step_runtime_labels` covers both labels and one rejected
+  label. `tests/unit/test_step5_canonical_native.py`: 38 passed
+  (`/data/ycfeng/envs/asyncopd-py312/bin/python`; the Frontier runtime environment has no
+  `aiohttp`).
+- The platform's node-to-node ping check failed for every node pair, but the servers started and
+  the failure happened later in the replay client. It is not the cause. Watch it on the rerun.
+- Next: rerun as `h200_32_workload02` from a clean checkout of the fix commit.
+
 Evidence behind the reset:
 
 - The main09 attempt, job `exp-1025-123506-624501`, simulated one request with a synthetic CPU

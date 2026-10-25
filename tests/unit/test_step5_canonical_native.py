@@ -377,3 +377,18 @@ def test_canonical_stage_is_full_h200_topology_without_r2_hooks(tmp_path):
         assert not any("PD_STATE" in key for key in row["server_env_set"])
     for name, expected in config["tool_hashes"].items():
         assert hashlib.sha256((stage / name).read_bytes()).hexdigest() == expected
+
+
+@pytest.mark.parametrize("label, error", [("step5", FileNotFoundError),
+                                          ("step5_position_cyclic", FileNotFoundError),
+                                          ("0.10.2", ValueError)])
+def test_workload_consumer_accepts_both_step_runtime_labels(tmp_path, monkeypatch, label, error):
+    """The routing image must pass the adapter guard and reach the replay plan read."""
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(cr, "runtime_version", lambda engine: label)
+    engine = tmp_path / "engine.json"
+    engine.write_text("{}")
+    args = SimpleNamespace(engine_config=engine, mode="clean", trace_dir=tmp_path / "missing_trace")
+    with pytest.raises(error):
+        asyncio.run(cr.run(args))
