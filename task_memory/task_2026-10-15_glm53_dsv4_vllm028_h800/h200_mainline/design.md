@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded the P2-32 lifecycle result (section 8): Succeeded, R4 FAIL on the shutdown order only, observer acceptance PASS, parts a-g. |
 | 2026-10-25 | Created: purpose, cases, resources and waves, package changes, checks, acceptance and limitations. |
 | 2026-10-25 | Recorded the package names actually built: P2-32p uses `package_02` after an incomplete `package_01` build; `launch.py` is a changed retained file for profile packages. |
 | 2026-10-25 | Recorded the failed first lifecycle launch from `package_01` (no job created) and the submission from `package_02` with the platform environment on the launch command. |
@@ -125,3 +126,14 @@ P2-64p's profiler window (64 iterations from the start of repeat 1) holds steps 
 The first start, from `package_01`, failed before any job existed: the Pi HOST environment has neither `KUBEBRAIN_CLUSTER_ENTRY` nor `KUBEBRAIN_NAMESPACE`, and `brainpp` `RJobClient` accepts only the kubebrain type, which needs both (`brainpp/rjob/client.py:654-662`, raise at `:78`). The launcher had already written the run manifest, and `write_run_manifest` creates the run directory with `exist_ok=False` (`native_pd_worker.py:93`), so `package_01` cannot start again. It stays as the record of that attempt. `package_02` is the same build into a new directory (record `p2_32_lifecycle/package_02_build.json`, `manifest.json` `a572066c…af50`, the same changes as `package_01`). Its wrapper `launch_p2_32_lifecycle_02.sh` differs only in the package path, and the start command sets `KUBEBRAIN_CLUSTER_ENTRY=https://platform.shaipower.com KUBEBRAIN_NAMESPACE=shai-core KUBEBRAIN_WORKSPACE_NAME=kun-workspace-vgen2`, as the quota and status tools already do on that host.
 
 **Acceptance.** The H4b-(a) acceptance items 1-5 (H4b design section 8), with P2-32r in the place of native06: R4 PASS on a local copy; observer files for all 4 engine cores with no `error` record and a full timeline for every formal D request; client metrics compared with P2-32r r1-r3 and reported, not gated; parts a-g from `analyze_lifecycle.py <run copy> <P2-32r copy> <output>`; results copied into the task directory.
+
+**Result** (2026-10-25, [test report](../test_report_2026-10-25_h200_h4b_lifecycle.md)). `exp-1026-031327-540424` Succeeded on `gpu-h200-0043/0628/0705/1191`; the copy is hash-identical (70 files).
+1. R4: FAIL on `native_workers` and `native_lifecycle`, both on decode headless 1191. Every serving-window check passes. The decode head 0705 began its shutdown 120 s after the drain, while the four earlier runs took 2-19 s. The headless node waits only 90 s (`stop_timeout_s`), so it stopped first and recorded `Head shutdown marker missing`. The delay lies in the head's once-per-second poll of the drained markers on the cloud volume; its cause is not determined.
+2. Observer: PASS. 4 engine cores, 0 `error` records, 384 of 384 complete timelines, every READ in WAITING_FOR_REMOTE_KVS, every promotion k=1.
+3. Client metrics, run mean against P2-32r: TTFT +9.1%, TPOT +2.7%, E2E +2.8%, THPT −0.3%, proxy handoff +8.6%. All are outside the P2-32r range, on different hosts; reported as a possible observer effect.
+4. Parts on decoding lanes (mean ms): a 0.96, b 13.61, c 0.06, d 77.94, e 0.19, f 42.05, g 3.67. Engine c..f is 120.24 and the remainder a+b+g 18.23, for a proxy handoff of 138.47.
+   - d is about 2 decode steps (39.6 ms) plus the maximum READ transfer time over the 8 handles. That maximum is quantized at the step size: 1.9 ms when every handle finishes within the first step, and about 20 ms more per further step.
+   - f is one iteration of about 2 steps.
+5. Persisted: inputs `diagnostic/inputs/p2_32l/` (21 files; the 4 lifecycle files stay out of Git with their hashes in `manifest.json`), results `diagnostic/results/p2_32l/`.
+
+The run is DIAGNOSTIC evidence for H4b-(b) only. It is not an R4-accepted reference.

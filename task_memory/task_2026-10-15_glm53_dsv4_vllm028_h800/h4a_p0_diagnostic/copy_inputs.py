@@ -1,7 +1,7 @@
 """Copy the small native inputs of one input set out of /data/ycfeng/tmp (D-INPUT-PERSISTENCE).
 
     python copy_inputs.py h800_p0    # H4a: native06, profile02, profile04 -> inputs/
-    python copy_inputs.py h200_p2    # H200 mainline: P2-32/P2-64 references and profiles -> ../h200_mainline/diagnostic/inputs/
+    python copy_inputs.py h200_p2    # H200 mainline: P2-32/P2-64 references and profiles, P2-32 lifecycle -> ../h200_mainline/diagnostic/inputs/
 
 Copies, never moves, and never overwrites: an existing copy must match its source. shutil.copy2 keeps each file's mtime, which
 client_metrics.native_client_rows checks (run files must be newer than run_manifest.json).
@@ -48,9 +48,9 @@ H800_P0 = {
 
 
 
-def h200_reference(case, tag):
+def h200_reference(case, tag, node_files=()):
     root = H200 / "cases" / case / "runs/groundtruth_clean" / tag
-    return dict(root=root, files=RUN_FILES + ["launcher_receipt.json", "platform_terminal_receipt.json"],
+    return dict(root=root, files=RUN_FILES + ["launcher_receipt.json", "platform_terminal_receipt.json"] + list(node_files),
                 extra={"run_check_status.groundtruth_clean.json":
                        H200 / "cases" / case / "analysis/run_check_status.groundtruth_clean.json",
                        "download_receipt.json": H200 / "downloads" / tag / "download_receipt.json",
@@ -74,6 +74,16 @@ H200_P2 = {
         "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792942680280151453.pt.trace.json.gz",
     ]),
     "p2_64r": h200_reference("p2_64r_case_20261025", "dsv4-h200-p2-64-canonical-20261025-01"),
+    # H4b-(a) on H200: the 4 engine-core lifecycle files, and the stop markers and the decode headless node's result,
+    # which hold the shutdown-order evidence behind its R4 verdict.
+    "p2_32l": h200_reference("p2_32l_case_20261025", "dsv4-h200-p2-lifecycle-20261025-01", [
+        "nodes/gpu-h200-0043.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1418.jsonl",
+        "nodes/gpu-h200-0628.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1277.jsonl",
+        "nodes/gpu-h200-0705.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1419.jsonl",
+        "nodes/gpu-h200-1191.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1358.jsonl",
+        *(f"nodes/gpu-h200-{host}.lgcm.sh.istep.fun/native_stopped.json" for host in ("0043", "0628", "0705", "1191")),
+        "nodes/gpu-h200-1191.lgcm.sh.istep.fun/result.json",
+    ]),
     "p2_64p": h200_profile("dsv4-h200-p2-64-profile-20261025-01", [
         "torch_traces/decode/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792946239761662380.pt.trace.json.gz",
         "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792946280760554510.pt.trace.json.gz",

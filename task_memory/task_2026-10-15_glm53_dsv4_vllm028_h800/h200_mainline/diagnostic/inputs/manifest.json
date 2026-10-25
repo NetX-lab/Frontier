@@ -227,6 +227,138 @@
    }
   ]
  },
+ "p2_32l": {
+  "source_root": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01",
+  "cloud_origin": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_lifecycle_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01",
+  "files": [
+   {
+    "path": "run_manifest.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/run_manifest.json",
+    "bytes": 11234,
+    "sha256": "55724edf7a25e52b27dacbff90688d04d6207cef6ed11f51f0ee72d1d7b51b1d"
+   },
+   {
+    "path": "replay_finished.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/replay_finished.json",
+    "bytes": 22,
+    "sha256": "1e3f6691f455051e8adb15d961e4bf3c7a17e83dd88b2afdd13315cc288250bb"
+   },
+   {
+    "path": "run/canonical_repetitions.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/run/canonical_repetitions.json",
+    "bytes": 15890,
+    "sha256": "98decacf3b69633260514bfb97b4ad9d30ea67f6f2bbabe1aa89924f6097a916"
+   },
+   {
+    "path": "run/client_requests.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/run/client_requests.jsonl",
+    "bytes": 368443,
+    "sha256": "685888cdb7d38f6fe7255b497bf9b3df9750655816fc191376ceacc7e4a26362"
+   },
+   {
+    "path": "run/proxy.log",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/run/proxy.log",
+    "bytes": 74,
+    "sha256": "b3aa8b076c425cf27f0853c83e999a8b3005a6cf5adb9a4d348f9cade8ea614d"
+   },
+   {
+    "path": "run/proxy_requests.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/run/proxy_requests.jsonl",
+    "bytes": 553566,
+    "sha256": "899f713b23ea693e076bdfbe3740bc5eff8d7be41dee650fc8e1722b7126df01"
+   },
+   {
+    "path": "run/replay_summary.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/run/replay_summary.json",
+    "bytes": 21145,
+    "sha256": "96801e7b2beacca6c269191847b02df784e047a905c89def4f9e604e65a7283e"
+   },
+   {
+    "path": "launcher_receipt.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/launcher_receipt.json",
+    "bytes": 359,
+    "sha256": "b00310041493d49595871778c0c59c00f3d8de5ee11e66c464995f19108dd143"
+   },
+   {
+    "path": "platform_terminal_receipt.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/platform_terminal_receipt.json",
+    "bytes": 3384,
+    "sha256": "e2ce6d19d757f9e33897a3f06136ce5478f61c561c3d3daea539fe0a15a8ceaa"
+   },
+   {
+    "path": "nodes/gpu-h200-0043.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1418.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/nodes/gpu-h200-0043.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1418.jsonl",
+    "bytes": 1594266,
+    "sha256": "6f6974c7e8450733d129b852209c80a76513f90da231b39055b5c22a3c5f926a"
+   },
+   {
+    "path": "nodes/gpu-h200-0628.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1277.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/nodes/gpu-h200-0628.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1277.jsonl",
+    "bytes": 1397184,
+    "sha256": "36e777316bcfd80911c5f493c67bb7ad9006d1dcdef95957c76d3f344f3e0b12"
+   },
+   {
+    "path": "nodes/gpu-h200-0705.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1419.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/nodes/gpu-h200-0705.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1419.jsonl",
+    "bytes": 7030226,
+    "sha256": "aae1a3aee5c2db06e840f872819b0affb6788acdee5d53f289087ac9f5222778"
+   },
+   {
+    "path": "nodes/gpu-h200-1191.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1358.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/nodes/gpu-h200-1191.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1358.jsonl",
+    "bytes": 7291064,
+    "sha256": "33282073621dfd026e2005142cb535b15480c0a5325cdefaf9ea3a8843e2e1eb"
+   },
+   {
+    "path": "nodes/gpu-h200-0043.lgcm.sh.istep.fun/native_stopped.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/nodes/gpu-h200-0043.lgcm.sh.istep.fun/native_stopped.json",
+    "bytes": 369,
+    "sha256": "93c86acf079ec07eedbf57bd170c5a6463d7421b5e9564b99be94129ed0b806c"
+   },
+   {
+    "path": "nodes/gpu-h200-0628.lgcm.sh.istep.fun/native_stopped.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/nodes/gpu-h200-0628.lgcm.sh.istep.fun/native_stopped.json",
+    "bytes": 248,
+    "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc"
+   },
+   {
+    "path": "nodes/gpu-h200-0705.lgcm.sh.istep.fun/native_stopped.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/nodes/gpu-h200-0705.lgcm.sh.istep.fun/native_stopped.json",
+    "bytes": 369,
+    "sha256": "93c86acf079ec07eedbf57bd170c5a6463d7421b5e9564b99be94129ed0b806c"
+   },
+   {
+    "path": "nodes/gpu-h200-1191.lgcm.sh.istep.fun/native_stopped.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/nodes/gpu-h200-1191.lgcm.sh.istep.fun/native_stopped.json",
+    "bytes": 249,
+    "sha256": "445f7d05baf2dfc79d0e9bb9a9956b465394235b7e103029503794c164e6c0b0"
+   },
+   {
+    "path": "nodes/gpu-h200-1191.lgcm.sh.istep.fun/result.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/nodes/gpu-h200-1191.lgcm.sh.istep.fun/result.json",
+    "bytes": 16633,
+    "sha256": "f78aca3ea55944ece4f9d92863728e8ac3733c892ff72e3810398c36d728a499"
+   },
+   {
+    "path": "run_check_status.groundtruth_clean.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_32l_case_20261025/analysis/run_check_status.groundtruth_clean.json",
+    "bytes": 15633,
+    "sha256": "a8f9fa3700f94fd79018ed97da621dcf02b46bd8fe75bea794ff5a5283dc1a73"
+   },
+   {
+    "path": "download_receipt.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/download_receipt.json",
+    "bytes": 2238,
+    "sha256": "1e0ba434ed513c957d832d0100f0e20e9f669d1e4238d25a7689731c6fa56008"
+   },
+   {
+    "path": "cloud_inventory.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/cloud_inventory.json",
+    "bytes": 11342,
+    "sha256": "a684038f271a1228f841971b27bc77e6c61471225af8e957be5d9f251767fe9e"
+   }
+  ]
+ },
  "p2_64p": {
   "source_root": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts",
   "cloud_origin": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-profile-20261025-01",

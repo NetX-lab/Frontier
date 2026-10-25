@@ -4,7 +4,8 @@
 
 Both run roots are local copies of ``case/runs/groundtruth_clean/<run tag>``;
 the engine config is read from the case inputs three levels above. The
-reference is native06, used for acceptance item 3 and the proxy handoff.
+reference (native06 on H800, P2-32r on H200) is used for acceptance item 3
+and the proxy handoff.
 
 Per formal request, joined through ``kv_transfer_params.remote_request_id``:
 - c, d, e, f on the D engine host's monotonic clock: ``add`` -> schedule that
@@ -22,7 +23,8 @@ from pathlib import Path
 
 import numpy
 
-PARTS = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'engine_ms', 'remainder_ms', 'proxy_handoff_ms', 'iterations')
+PARTS = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'engine_ms', 'remainder_ms', 'proxy_handoff_ms', 'iterations',
+         'd_iterations', 'read_transfer_max_ms')
 CLIENT_METRICS = ('ttft_ms', 'tpot_ms', 'e2e_ms')
 
 
@@ -62,8 +64,12 @@ def load_cores(run_root, problems):
 
 
 def decode_timelines(rows):
-    """Per D request: its add, READ, finished_recving, promotion and first-token records."""
-    requests, active, schedule_monos, decoding = {}, set(), [], False
+    """Per D request: its add, READ, finished_recving, promotion and first-token records.
+
+    The worker-side NIXL stats are not keyed by request. Each READ collects the stats of every update in its window
+    (READ schedule, finished_recving update]; ``read_window_shared`` marks a window that overlaps another READ.
+    """
+    requests, active, reading, schedule_monos, decoding = {}, set(), set(), [], False
     for row in rows:
         event = row['event']
         if event == 'add':
@@ -74,14 +80,21 @@ def decode_timelines(rows):
             schedule_monos.append(row['mono'])
             decoding = 'tokens' in row
             for request_id in row.get('recv', ()):
-                requests[request_id].setdefault('read', row)
+                if 'read' not in requests[request_id]:
+                    requests[request_id].update(read=row, read_stats=[], read_window_shared=False)
+                    reading.add(request_id)
             for request_id, computed, scheduled in row.get('new', ()):
                 if request_id in requests and 'promotion' not in requests[request_id]:
                     requests[request_id].update(promotion=row, promotion_tokens=[computed, scheduled])
             active.difference_update(row.get('finished', ()))
         elif event == 'update':
+            if 'kv_stats' in row:
+                for request_id in reading:
+                    requests[request_id]['read_stats'].append(row['kv_stats'])
+                    requests[request_id]['read_window_shared'] |= len(reading) > 1
             for request_id in row.get('finished_recving', ()):
                 requests[request_id].setdefault('received', row)
+                reading.discard(request_id)
             for request_id in row.get('first_token', ()):
                 requests[request_id].setdefault('first', row)
             active.difference_update(row.get('done', ()))
@@ -90,6 +103,10 @@ def decode_timelines(rows):
             # Engine iterations from the arrival through the promotion step.
             timeline['iterations'] = (bisect_right(schedule_monos, timeline['promotion']['mono'])
                                       - bisect_left(schedule_monos, timeline['add']['mono']))
+        if 'received' in timeline:
+            # Engine iterations scheduled after the READ step, up to the finished_recving update.
+            timeline['d_iterations'] = (bisect_right(schedule_monos, timeline['received']['mono'])
+                                        - bisect_right(schedule_monos, timeline['read']['mono']))
     return requests
 
 
@@ -108,7 +125,7 @@ def request_row(client, proxy, timeline, core_key, core):
         return row
     read, received, promotion, first = (timeline[name] for name in ('read', 'received', 'promotion', 'first'))
     first_returned_wall = first['t'] + first['dur_ms'] / 1e3
-    stats = received.get('kv_stats', {})
+    transfers = [value * 1e3 for stats in timeline['read_stats'] for value in stats.get('transfer_duration', ())]
     row.update(
         a=(add['arrival_time'] - proxy['prefill_response_time']) * 1e3,
         b=(add['t'] - add['arrival_time']) * 1e3,
@@ -119,10 +136,14 @@ def request_row(client, proxy, timeline, core_key, core):
         g=(proxy['decode_first_byte_time'] - first_returned_wall) * 1e3,
         engine_ms=(returned(first) - add['mono']) * 1e3,
         iterations=timeline['iterations'],
+        d_iterations=timeline['d_iterations'],
         read_waiting_remote_kv=add['request_id'] in read.get('waiting_remote_kv', ()),
         promotion_tokens=timeline['promotion_tokens'],
         received_with=len(received['finished_recving']),
-        read_transfer_duration_ms=[value * 1e3 for value in stats.get('transfer_duration', ())])
+        read_window_shared=timeline['read_window_shared'],
+        read_transfer_duration_ms=transfers,
+        read_transfer_max_ms=max(transfers, default=None),
+        read_bytes=sum(value for stats in timeline['read_stats'] for value in stats.get('bytes_transferred', ())))
     row['remainder_ms'] = row['proxy_handoff_ms'] - row['engine_ms']
     return row
 
