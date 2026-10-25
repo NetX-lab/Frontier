@@ -59,8 +59,11 @@ def _planner(replica_config, role=ClusterType.MONOLITHIC):
 
 
 def _predictor(replica_config, tmp_path, *, dummy_mode=True):
+    # The attention input path lies in tmp_path, so no V4 step-cost table binds.
     return RandomForrestExecutionTimePredictor(
-        RandomForrestExecutionTimePredictorConfig(enable_dummy_mode=dummy_mode),
+        RandomForrestExecutionTimePredictorConfig(
+            enable_dummy_mode=dummy_mode, atten_input_file=str(tmp_path / "attention.csv"),
+        ),
         replica_config, VllmV1SchedulerConfig(block_size=256),
         MetricsConfig(cache_dir=str(tmp_path / "cache"), output_dir=str(tmp_path / "outputs")),
     )

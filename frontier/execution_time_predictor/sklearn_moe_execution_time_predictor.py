@@ -92,10 +92,16 @@ class SklearnMoEExecutionTimePredictor(
             self, batch, layer_id, tp_rank, **source_context,
         )
 
-    def _predict_dsv4_dummy_structural_execution(
+    def _predict_dsv4_structural_execution(
         self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
     ) -> ExecutionTime:
-        """Query explicit synthetic V4 timing without enabling measured serving."""
+        """Price one V4 layer from the measured step table or explicit synthetic timing."""
+        if self._dsv4_step_costs is not None:
+            from frontier.execution_time_predictor.deepseek_v4 import predict_step_cost_execution
+
+            return predict_step_cost_execution(
+                self, batch, layer_id, tp_rank, **source_context,
+            )
         if not self._enable_dummy_mode:
             from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
 
@@ -1382,7 +1388,7 @@ class SklearnMoEExecutionTimePredictor(
                 raise ValueError(
                     "V4 serving FFN requires the source-qualified synthetic EP wave"
                 )
-            return self._predict_dsv4_dummy_structural_execution(
+            return self._predict_dsv4_structural_execution(
                 batch, layer_id, 0, include_attention=True, include_ffn=False,
                 include_stage_owned=include_stage_owned,
                 **serving_context(self, batch, layer_id),

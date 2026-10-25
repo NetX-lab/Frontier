@@ -75,7 +75,7 @@ def test_source_sp_uses_descriptor_then_tp_padding_and_real_cc(predictor):
 
 def test_layer0_embedding_collective_uses_pre_sp_graph_width(predictor):
     batch = graph_batch([17], [0], padded=40)
-    result = predictor._predict_dsv4_dummy_structural_execution(
+    result = predictor._predict_dsv4_structural_execution(
         batch, 0, 0, include_ffn=False,
         execution_mode="cuda_graph", has_attention_metadata=True,
         prefix_caching=False, decode_context_parallel_size=1,
@@ -107,7 +107,7 @@ def test_pd_guard_message_is_independent_of_dummy_mode(monkeypatch, dummy):
 
     monkeypatch.setattr(global_vars, "KV_CONNECTOR", "nixl")
     with pytest.raises(NotImplementedError, match="V4 predictor PD phase/graph equivalence remains unqualified"):
-        serving_context(SimpleNamespace(_enable_dummy_mode=dummy), None, 0)
+        serving_context(SimpleNamespace(_enable_dummy_mode=dummy, _dsv4_step_costs=None), None, 0)
 
 
 def test_h800_tp8_dp2_ep16_reuses_source_geometry_not_h200_capacity(predictor):

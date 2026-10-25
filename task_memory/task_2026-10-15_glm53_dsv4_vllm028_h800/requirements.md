@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded YC's adoption of the H4a-2 option A scope and of substitutions S1 and S2 (D-H4A2-SCOPE-A). |
 | 2026-10-25 | Recorded YC's worktree-cleanup approval (D-WORKTREE-CLEANUP) and the start of H4a (D-H4A-START). |
 | 2026-10-25 | Recorded D-DSV4-H800-MAINLINE-CORRECTION: this directory is the single mainline, scope is DSV4 on H800-32/64, the trace-audit route stops, and the first diagnostic P0 comparison (H4a) is the next milestone. |
 | 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: native06 P0 reference accepted by frozen R4/merged d278659, D-Q10 integrated e89b45d; approvals, historical R3/native05 verdicts and full-calibration limits unchanged. |
@@ -140,6 +141,16 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 
 11. **D-WORKTREE-CLEANUP.** YC stopped the concurrent session and approved worktree cleanup. Scope: the worktrees of this task (DSV4/GLM53 and their validation, fidelity and native-run worktrees). The step5, `verify-step5*`, `d29*`, `d30*` and `d5-ttft*` worktrees of the Step-5-Preview task, the main checkout, and `frontier-calibration-skill`, `remove-legacy-run-outputs` and `stage-admission-ordering` are outside this approval and stay. Before removal: task records under the git-ignored `task_memory/` that the mainline worktree lacks are copied to the same relative path in the mainline worktree; records that differ from the mainline copy are kept under `worktree_cleanup_20261025/`; uncommitted changes and unreachable HEADs are kept as `refs/archive/worktrees/<name>`. Branches are not deleted. Record: `worktree_cleanup_20261025/`.
 12. **D-H4A-START.** YC approved the next actions of the [mainline handoff](progress.md#current-session-handoff--2026-10-25-mainline-correction), starting with H4a-1, within D-H4A-CODE-SCOPE and D-MAINLINE-LOOP-CAP-DSV4.
+
+[Original Request] Follow-up, 2026-10-25, after the H4a-1/H4a-3 checkpoint (commit `e7c42bb8`) that asked YC to choose the H4a-2 scope (A/B/C) and to accept substitutions S1 and S2:
+
+> 采纳你的推荐，继续
+
+13. **D-H4A2-SCOPE-A.** YC adopted the recommendations of the [H4a design](h4a_p0_diagnostic/design.md):
+    - H4a-2 scope is option A: the file list in design section 7, 10-11 `frontier/` files and about 200-250 changed lines, including the rename of `_predict_dsv4_dummy_structural_execution`. This replaces the ~8-file bound of D-H4A-CODE-SCOPE for H4a-2 only; a new shared config or schema field, a registry change, or files beyond that list still return to YC.
+    - Substitution S1 is accepted: profile02 (`dsv4-h800-p0-profile-20261023-02`) replaces profile04 as the step-cost source named in D-V4-STEP-COST-FIRST-PASS; profile04 is a cross-check.
+    - Substitution S2 is accepted: the P step uses the profile02 R2/R3 proxy P service time (median 287.354 ms), because the profile04 P1 prefill steps lie in the profiled repeat.
+    - All other H4a rules are unchanged: DIAGNOSTIC label, D-MAINLINE-LOOP-CAP-DSV4, and identical GLM, co-location, existing PDD and PD-AF results.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

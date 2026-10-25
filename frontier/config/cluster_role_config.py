@@ -123,6 +123,9 @@ class ClusterRoleConfigBuilder:
             network_device=get_field_value("network_device"),
             cluster_prefix=cluster_prefix,
             speculative_decoding_config=main_config.speculative_decoding_config,
+            attention_backend=main_config.attention_backend,
+            kv_cache_dtype=main_config.kv_cache_dtype,
+            indexer_kv_cache_dtype=main_config.indexer_kv_cache_dtype,
         )
 
     def get_cluster_configs_for_disaggregation(

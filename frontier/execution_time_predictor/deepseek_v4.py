@@ -408,6 +408,54 @@ def predict_structural_execution(
     return timing
 
 
+def predict_step_cost_execution(
+    predictor, batch, layer_id, tp_rank, *, lane_workload=None,
+    include_attention=True, include_ffn=True, include_stage_owned=False,
+    **source_context,
+):
+    """Spread one measured lane step evenly over the layers of its forward.
+
+    Each layer's attention call carries the step's per-layer share, so the
+    per-layer EP synchronization prices the attention-DP cohort at its slowest
+    lane. FFN, EP-wave, idle-forward and CPU work add nothing: the measured
+    step already contains them.
+    """
+    from types import MappingProxyType
+
+    from frontier.entities import ExecutionTime
+
+    times, workloads = {}, {}
+    if include_attention and not isinstance(batch, DummyForwardBatch):
+        table = predictor._dsv4_step_costs
+        step_ms = table.step_time_ms(predictor._cluster_type.name, batch)
+        times["dsv4_sparse_attention"] = step_ms / predictor._model_config.num_layers
+        workloads["dsv4_sparse_attention"] = {
+            "cost_scope": "measured native lane step divided evenly over the layers; "
+                          "covers the whole layer, not sparse attention alone",
+            "step_cost_table": table.path,
+        }
+    spec = predictor._model_config.get_layer_attention_spec(layer_id)
+    timing = ExecutionTime(
+        num_layers_per_pipeline_stage=1,
+        attention_rope_execution_time=0.0,
+        attention_kv_cache_save_execution_time=0.0,
+        attention_decode_execution_time=0.0, attention_prefill_execution_time=0.0,
+        attention_layer_pre_proj_execution_time=0.0,
+        attention_layer_post_proj_execution_time=0.0,
+        attn_norm_time=0.0, mlp_norm_time=0.0, add_time=0.0,
+        tensor_parallel_communication_time=0.0,
+        pipeline_parallel_communication_time=0.0,
+        expert_parallel_communication_time=0.0,
+        moe_gating_time=0.0, moe_shuffling_time=0.0,
+        schedule_time=0.0, sampler_e2e_time=0.0, prepare_inputs_e2e_time=0.0,
+        process_model_outputs_time=0.0, ray_comm_time=0.0, is_moe=True,
+        op_times=times, global_layer_id=layer_id,
+        attention_family_id=spec.family_id, attention_variant_id=spec.variant_id,
+    )
+    timing._dsv4_workloads = MappingProxyType(workloads)
+    return timing
+
+
 def operator_trace_metadata(op_name, op_type, context):
     """Publish source tensor contracts without converting weight precision to IO dtype."""
     from frontier.config import get_quantization_manager
@@ -454,7 +502,7 @@ def serving_context(predictor, batch, layer_id):
     """Use actual graph state, not the process-wide compilation configuration."""
     from frontier.config import global_vars
 
-    if global_vars.KV_CONNECTOR != "none":
+    if global_vars.KV_CONNECTOR != "none" and predictor._dsv4_step_costs is None:
         raise NotImplementedError("V4 predictor PD phase/graph equivalence remains unqualified")
     compute_rows(batch)
     return dict(

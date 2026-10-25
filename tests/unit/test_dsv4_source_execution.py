@@ -37,6 +37,7 @@ def predictor():
     )
     result._cluster_type = ClusterType.MONOLITHIC
     result._enable_dummy_mode = True
+    result._dsv4_step_costs = None
     result._dummy_execution_time = 2.0
     result._cc_backend = RecordingCCBackend()
     return result

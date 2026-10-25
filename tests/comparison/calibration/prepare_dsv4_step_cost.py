@@ -19,9 +19,9 @@ import statistics
 from collections import defaultdict
 from pathlib import Path
 
+from frontier.execution_time_predictor.dsv4_step_cost_input import QUALIFICATION, SCHEMA
 
-SCHEMA = "dsv4_step_cost.v1"
-QUALIFICATION = "diagnostic_step_cost"
+
 STEP = re.compile(r"execute_context_(\d+)\((\d+)\)_generation_(\d+)\((\d+)\)")
 DECODE_TRACES = ("torch_traces/decode/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792766820606124725.pt.trace.json.gz",
                  "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792766798163291423.pt.trace.json.gz")

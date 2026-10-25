@@ -172,3 +172,26 @@ The runtime import allowlist explicitly permits V4 to reuse only the existing
 CPU-only row schema, composite scope plan and identity format. It still forbids
 profiling runners and native main modules. This avoids a second runtime copy of
 the producer's scope ownership or fingerprint algorithm.
+
+## V4 diagnostic step-cost dispatch, 2026-10-25
+
+The diagnostic V4 step-cost table (`dsv4_step_cost.json`, read by
+`execution_time_predictor/dsv4_step_cost_input.py`) touches two modules above
+the limit:
+
+- `sklearn_disaggregation_execution_time_predictor.py` grows from 3,050 to
+  3,060 lines. Its `predict_stage_execution_time` sends V4 `PREFILL` and
+  unified `DECODE` stages to the MoE parent, which owns the V4 layer path. The
+  disaggregated layer path has no V4 branch and would otherwise price V4
+  through GLM-shaped sequence-parallel operators.
+- `sklearn_execution_time_predictor.py` grows from 8,661 to 8,666 lines. Its
+  model loading and profiling-metadata registration are skipped for a replica
+  that the table prices, because no per-operator profiling CSV exists for it.
+
+Cleanup inspection found no redundant code at either boundary. The table
+lookup, its checks and the per-layer split live in the new reader and in
+`execution_time_predictor/deepseek_v4.py`; neither large module gains
+prediction state. The exception covers only this routing check and these two
+gates. The planned splits above are unchanged. Acceptance requires the V4 unit
+tests, the PDD step-cost probe, and unchanged GLM, co-location, PDD and PD-AF
+results.

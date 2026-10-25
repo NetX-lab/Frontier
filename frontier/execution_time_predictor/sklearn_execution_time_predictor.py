@@ -611,7 +611,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             )
         self._active_measurement_type = self._get_default_measurement_type_for_cluster()
 
-        if not self._enable_dummy_mode:
+        if not self._enable_dummy_mode and self._dsv4_step_costs is None:
             if model_manager is not None:
                 logger.info(
                     f"Using shared execution time prediction models from ExecutionTimePredictionModelManager for cluster {cluster_type}"
@@ -653,12 +653,17 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             self._predictions_kernel_only = self._predict_from_models_for_family(
                 MeasurementType.KERNEL_ONLY, self._models_kernel_only
             )
+        elif self._dsv4_step_costs is not None:
+            logger.info(
+                "Cluster %s prices V4 steps from %s; skipped ML model training",
+                cluster_type, self._dsv4_step_costs.path,
+            )
         else:
             logger.info(
                 "Skipped ML model training and prediction cache generation in dummy mode"
             )
 
-        if not self._enable_dummy_mode and model_manager is not None:
+        if not self._enable_dummy_mode and self._dsv4_step_costs is None and model_manager is not None:
             self._register_profiling_metadata_from_files()
 
         from collections import defaultdict

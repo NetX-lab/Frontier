@@ -332,7 +332,7 @@ def test_other_grouped_pd_connectors_remain_unsupported(monkeypatch, role, conne
 
 @pytest.mark.parametrize("dummy", [False, True])
 def test_grouped_transport_does_not_admit_v4_execution(dummy):
-    predictor = SimpleNamespace(_enable_dummy_mode=dummy)
+    predictor = SimpleNamespace(_enable_dummy_mode=dummy, _dsv4_step_costs=None)
     with pytest.raises(NotImplementedError, match="V4 predictor PD phase/graph equivalence remains unqualified"):
         serving_context(predictor, None, 0)
 

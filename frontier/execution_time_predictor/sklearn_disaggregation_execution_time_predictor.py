@@ -1404,6 +1404,16 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError("num_layers must be a positive int")
         if (
+            cluster_type in (ClusterType.PREFILL, ClusterType.DECODE)
+            and self._model_config.get_model_architecture_profile().profile_id == "deepseek_v4"
+        ):
+            # V4 PREFILL and unified DECODE lanes take the co-location V4 layer path.
+            return super().predict_stage_execution_time(
+                batch, stage_id, cluster_type, num_layers=num_layers, layer_id=layer_id,
+                include_moe=include_moe, include_ffn=include_ffn,
+                include_attention=include_attention,
+            )
+        if (
             not self._model_config.is_moe
             and include_moe is not True
             and self._model_config.get_num_gdn_layers() == 0

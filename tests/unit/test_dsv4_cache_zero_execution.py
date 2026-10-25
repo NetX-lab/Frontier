@@ -48,7 +48,7 @@ def test_real_allocation_has_one_before_forward_scope_per_worker(predictor, tp_r
     scheduler.add_request(Request(0.0, 190, 3))
     batch, = scheduler.on_schedule(0.0)
     metadata = batch.cache_block_zeroing
-    layers = [predictor._predict_dsv4_dummy_structural_execution(
+    layers = [predictor._predict_dsv4_structural_execution(
         batch, layer, tp_rank, include_ffn=False, include_stage_owned=layer == 0,
         **serving_context(predictor, batch, layer),
     ) for layer in range(43)]
@@ -65,7 +65,7 @@ def test_real_allocation_has_one_before_forward_scope_per_worker(predictor, tp_r
     assert calls["physical_reservation_extent_bytes"] == 79176960
     assert calls["native_store_traffic_bytes"] == "UNKNOWN"
     assert calls["native_h2d_cost"] == "UNKNOWN"
-    repeated = predictor._predict_dsv4_dummy_structural_execution(
+    repeated = predictor._predict_dsv4_structural_execution(
         batch, 0, tp_rank, include_ffn=False, include_stage_owned=True,
         **serving_context(predictor, batch, 0),
     )
@@ -83,7 +83,7 @@ def test_compression_page_growth_is_new_work_but_retention_is_not(predictor):
         batch, = scheduler.on_schedule(float(step * 2))
         metadata = batch.cache_block_zeroing
         assert (() if metadata is None else metadata.block_ids) == expected
-        timing = predictor._predict_dsv4_dummy_structural_execution(
+        timing = predictor._predict_dsv4_structural_execution(
             batch, 0, 0, include_ffn=False,
             **serving_context(predictor, batch, 0),
         )
@@ -154,7 +154,7 @@ def test_request_free_dp_peer_does_not_inherit_cache_zero_work(predictor):
     assert active_batch.cache_block_zeroing is not None
     assert isinstance(idle_batch, DummyForwardBatch)
     assert idle_batch.cache_block_zeroing is None
-    timing = predictor._predict_dsv4_dummy_structural_execution(
+    timing = predictor._predict_dsv4_structural_execution(
         idle_batch, 0, 0, include_ffn=False,
         **serving_context(predictor, idle_batch, 0),
     )
@@ -194,7 +194,7 @@ def test_real_stage_trace_places_cache_zero_before_embedding(predictor, tmp_path
     sink = SimpleNamespace(events=[])
     sink.log_event = sink.events.append
     store = MetricsStore(config, {ClusterType.MONOLITHIC: cluster}, sink)
-    layers = [predictor._predict_dsv4_dummy_structural_execution(
+    layers = [predictor._predict_dsv4_structural_execution(
         batch, layer, 0, include_ffn=False, include_stage_owned=layer == 0,
         **serving_context(predictor, batch, layer),
     ) for layer in range(43)]

@@ -224,7 +224,7 @@ def test_physical_scopes_conserve_attention_and_five_ep_phases():
 def test_source_and_destination_timing_use_distinct_physical_rows(predictor):
     predictor._replica_config.router_topk = 6
     predictor._replica_config.total_expert_num = 256
-    result = predictor._predict_dsv4_dummy_structural_execution(
+    result = predictor._predict_dsv4_structural_execution(
         source_batch(), 0, 0, lane_workload=destination(),
         execution_mode="eager", has_attention_metadata=True,
         prefix_caching=False, decode_context_parallel_size=1,
@@ -248,7 +248,7 @@ def test_full_43_layer_stage_preserves_every_canonical_physical_scope(predictor)
 
     predictor._replica_config.router_topk = 6
     predictor._replica_config.total_expert_num = 256
-    layers = [predictor._predict_dsv4_dummy_structural_execution(
+    layers = [predictor._predict_dsv4_structural_execution(
         source_batch(), layer, 0, lane_workload=destination(layer),
         include_stage_owned=layer == 0,
         execution_mode="eager", has_attention_metadata=True,
@@ -330,7 +330,7 @@ def test_idle_geometry_has_no_request_rows_or_lm_head(predictor):
     predictor._replica_config.router_topk = 6
     predictor._replica_config.total_expert_num = 256
     dummy = DummyForwardBatch(0, 0, 0)
-    result = predictor._predict_dsv4_dummy_structural_execution(
+    result = predictor._predict_dsv4_structural_execution(
         dummy, 42, 0, lane_workload=destination(42),
         execution_mode="eager", has_attention_metadata=False,
         prefix_caching=False, decode_context_parallel_size=1,
@@ -378,7 +378,7 @@ def test_real_stage_trace_preserves_physical_scope_and_source_metadata(predictor
     sink.log_event = sink.events.append
     store = MetricsStore(config, {ClusterType.MONOLITHIC: cluster}, sink)
     batch = source_batch()
-    layers = [predictor._predict_dsv4_dummy_structural_execution(
+    layers = [predictor._predict_dsv4_structural_execution(
         batch, layer, 0, include_ffn=False, include_stage_owned=layer == 0,
         **serving_context(predictor, batch, layer),
     ) for layer in range(43)]
