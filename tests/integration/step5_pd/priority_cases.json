@@ -2,5 +2,5 @@
  "h800_32": {"priority": "P0", "gpu_type": "H800", "charged_group": "codesign", "replica": 4, "gpu": 8, "preemptible": false, "data_parallel_size": 2, "formal_dependency": null},
  "h800_64": {"priority": "P1", "gpu_type": "H800", "charged_group": "codesign", "replica": 8, "gpu": 8, "preemptible": false, "data_parallel_size": 4, "formal_dependency": "h800_32"},
  "h200_32": {"priority": "P2", "gpu_type": "H200", "charged_group": "step_main", "replica": 4, "gpu": 8, "preemptible": false, "data_parallel_size": 2, "formal_dependency": null},
- "h200_64": {"priority": "P2", "gpu_type": "H200", "charged_group": "step_main", "replica": 8, "gpu": 8, "preemptible": true, "data_parallel_size": 4, "formal_dependency": "h200_32"}
+ "h200_64": {"priority": "P2", "gpu_type": "H200", "charged_group": "step_main", "replica": 8, "gpu": 8, "preemptible": false, "data_parallel_size": 4, "formal_dependency": "h200_32"}
 }
