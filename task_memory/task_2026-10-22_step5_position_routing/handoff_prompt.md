@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
+| 2026-10-25 UTC / HKT | Recover the complete-CLI drafts and record remaining static/review checks before the unique worker; no new runtime call. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
@@ -40,6 +42,8 @@ source9682/9942、global9696/10000，零违规。Step124gross/net96/累计增量
 Worker原runtime probe PASS，Python3.10.6，2.771702s，RSS176,275,456B。完整reference append206波，共1,071,031,904B、3296 ledger rows、42848 operators。Append+close3.249062s、fsync0.038647s、read-back1.325742s；含fsync325.77MB/s，append RSS29,085,696B。两文件完整digest/read-back PASS；worker已清理这两份完成的个人云测试文件和空子目录。测量排除production pricing/emitter serialization，不证明全workload RSS或2400s门槛；0GPU请求和不可用nvidia-smi不证明GPU runtime。
 
 父端脚本已运行一次，exit0、1.423269s；25source/6inputs/262metadata/9scripts/Git assets、五树/source与保留完整参考digest核验通过。16份screened小证据21,528B和parent script/receipt/command capture在resumed_execution/evidence/worker_readiness_2026-10-25/；报告为resumed_execution/test_report_2026-10-25_worker_readiness.md。Raw launcher logs保留在本地restricted目录。原session87306和41640已收集exit0，不再轮询；没有活跃worker/fullCLI/GPU job，不重提readiness。原backend atexit Job Stop在Succeeded后记录，无手工stop。该worker自身pricing/shape/fullCLI/native/GPU allocation均0。后续YC直接continue已批准唯一两次普通joint执行，见下段；不重提readiness。
+
+完整CLI准备状态（本次接续）：四份草稿已恢复于resumed_execution/evidence/complete_cli_2026-10-25/。Manifest/bindings/script/Git hash、exact command、worker/local NFS及terminal resource/replica/container检查已补齐；syntax/bash-n、no-operation dry run、原SDK对象核验PASS，rawexit0、4.695963354s。两轴review仍pending，未提交worker；先完成review和task-only记录冻结，再执行唯一完整CLI。六份已归档的完整joint输出重复文件已按精确byte/hash核验后删除，保留完整lossless gzip和原回执/active inputs。
 
 下一前沿：
 1. Copy/init已收口并整合：copyb061f884/52831c6e为静态NO_ALLOC，control0/1且launch0；init6335f581/c6b3da15为ALLOC建议，control0、source allocation0。Parent25copy/13init bindings及14旧回执全部通过，见resumed_execution/evidence/diagnosis_closeout_2026-10-25/。两工作树干净保留、agents已关闭，不重开诊断或control。126.58s只是旧测量推算，不是当前startup收益。

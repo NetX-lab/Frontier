@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | Record YC’s direct continue answer to the finite two-call joint-pricing question; all other invocation and acceptance bounds remain. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree/workflow status without new pricing or shape calls. |
@@ -40,6 +41,14 @@
 | 2026-10-23 | Root selects the existing constructor seam for explicit T2 engine limits within the approved scope. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; begin phased implementation. |
 | 2026-10-22 | Bind the design artifact to the approved parent decision and complete workflow scope. |
+
+## [Original Request / Continuation] D29-COMPLETE-CLI-PREPARATION-20261025
+
+YC continues the same task: **continue**. Recover existing worktrees, records and the four unverified complete-CLI drafts; do not restart completed source acceptance or finite diagnostics. This is continuation under the existing complete6144/1024 offline/online workflow and H800 task-resource authority, not a new source, shape, joint-pricing or gate decision.
+
+The concrete next execution is one4CPU/0GPU/64mem_gb codesign worker with the existing f037d958 image, local/data/ycfeng NFS source, copied Python3.10.6 and personal/mnt/codesign-exp/ycfeng output. Use unchanged tests/integration/run_step5_measured_main.py --mode all,2400s per frontier.main child, full outputs/proofs/keys/order/point validation and no outer timeout. The local launcher must stay alive through the platform and container terminal state; no automatic submission or workload retry is selected.
+
+Static preparation is now PASS: Python compile of the two new scripts, bash-n, no-operation dry run, existing source/input bindings and exact original SDK resources/mounts/command. Input SHA checks and terminal resource/replica/container checks correct the unverified drafts only. Existing joint2/2 and required-shape6/6 remain exhausted. This preparation changes no production source, SDK, runtime/image or allocation. Independent Standards/Spec review and a task-record freeze precede the unique worker. Actual fullCLI/RSS and finalT2/package/native/G3/E2E remain unperformed.
 
 ## [Original Request / Execution Decision] D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025
 

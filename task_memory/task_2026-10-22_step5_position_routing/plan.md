@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | YC answers continue to the finite two-call execution question; run the existing joint script once before the full-workload gate. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
@@ -75,7 +76,15 @@ Finite diagnoses are complete and consolidated: snapshot-copyb061f884/merge52831
 
 The current-source joint pricing, emission and flush execution has completed at6a15009e under D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025. Exactly2/2 attempts pass complete16-lane/208-operator/144-proof output parity; cold/warm joint0.928821139/0.279684300s, process ru_maxrss1,315,135,488B. MetricsStore/header construction and validation are outside each joint interval. Exact receipts/full lossless outputs are archived under resumed_execution/evidence/joint_timing_2026-10-25/. This closes only cohesive fixture timing; complete CLI and actual workload memory are next. The single worker import, reference append and lifecycle execution has completed below. Full-workload memory and runtime must be observed during the unchanged complete workload. Required-shape 6/6 and old control ceilings do not increase. OSS quota is USER_CONFIRMED_SUFFICIENT. FullCLI/T2/native/G3/E2E remain open; the init recommendation itself allocates no patch.
 
-The worker CPU interpreter/image import prerequisite is now PASS: retain the copied dependency/base prefixes and the unchanged strict probe's local/image receipts. Prepare the current-source joint script and finite pricing-call proposal in parallel with source-mount/lifecycle/append preparation. The runtime probe does not qualify actual worker throughput or full-workload memory. Existing diagnostic ceilings remain unchanged; a new label or a resume request supplies no extra pricing calls.
+The worker CPU interpreter/image prerequisite and the single joint/readiness executions are complete; retain their exact evidence. Current complete-CLI static preparation is PASS and its independent review is next. The earlier import and reference-append observations do not qualify full-workload memory. Existing joint2/2, required-shape6/6 and old diagnostic ceilings remain exhausted.
+
+### Current complete CLI preparation (2026-10-25 UTC / HKT)
+
+The four recovered drafts in resumed_execution/evidence/complete_cli_2026-10-25/ now pass the new command's required no-operation verification. Shared read_plan checks the manifest/bindings/Git/script hashes, admitted source, unchanged two-mode command and finite limits. The worker compares source/plan/NFS with the local launcher and samples actual memory; the launcher requires exact quota/resource/replica/container state. Original SDK materialization confirms4CPU/0GPU/64000Mi/1replica,H800,imagef037d958,current local NFS and only the requested personal mount plus the known SDK default. No client, platform or workload call occurs.
+
+`complete CLI static/dry-run/SDK PASS -> independent Standards and Spec reviews in parallel -> task-only records commit/freeze -> one unchanged complete CLI worker + actual memory observations -> terminal business/platform evidence and full validation -> finalT2/source/package -> native/G3/E2E`.
+
+The static command is recorded in preflight.execution.json: rawexit0,4.695963354s,60s/configured30GiB,Python3.10.6/-B/single math thread. The two-axis review remains pending. Stop preparation expansion once review closes; do not repeat old controls, source regressions or readiness. Six completed local joint-output duplicates have been removed after their complete lossless archive bytes/hashes were checked; retained receipts, active inputs and other-session files stay intact.
 
 ### Prepared current executions (historical preparation)
 

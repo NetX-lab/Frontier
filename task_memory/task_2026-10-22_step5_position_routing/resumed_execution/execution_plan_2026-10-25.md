@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | YC’s direct continue answer approves exactly this two-call command; no warmup, profiling, retry or required-shape extension. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
@@ -93,3 +94,11 @@ Record real full-workload RSS and memory/controller evidence while that unchange
 Business and outer receipts confirm exactly2/2 attempts, no retry and unchanged before/after source/input bindings. Cold/warm complete pricing output,16 sorted ledger rows,208 trace operators and144 compute proofs pass. The timing includes production pricing/emission/native row flush/final trace+ledger close; MetricsStore construction/header initialization and validation are outside the wave interval. Cached-fixture setup3.806491587s is not full-main initialization. Process ru_maxrss1,315,135,488B is observed separately from configuredMemoryMax32,212,254,720B; no effective cgroup peak was captured.
 
 The exact finite execution is complete and must not be rerun. Required-shape remains6/6 and joint allowance is2/2 exhausted. Next prepare one complete-CLI worker using the existing original local RJobBackend and verified4CPU/0GPU/64000Mi resource, current local NFS, copied runtime and personal cloud path. Record actual workload RSS/controller readings without changing simulator classes or validation. Keep records HEAD stable through both modes. No outer timeout may truncate post-run validation.
+
+## Current complete CLI command preparation
+
+The recovered plan and scripts are evidence/complete_cli_2026-10-25/{complete_cli_plan.json,complete_cli_worker.py,launch_complete_cli.py,run_complete_cli.sh}. Preflight has passed the new command's syntax, no-operation dry run, existing source/input binding and original SDK object checks,rawexit0,4.695963354s. It creates no client/job or workload output. The plan hash isfafd6776f36e68db9e4a925564245ad1a34c5c0168a0206b7843eadb49793303; independent Standards/Spec review is next.
+
+One original local personal RJobBackend worker uses4CPU/0GPU/64mem_gb (SDK64000Mi),one critical replica,codesign,H800 placement,imagef037d958,unchanged local/data/ycfeng NFS and copied runtime. The worker compares source/plan/NFS with the local launcher, runs unchanged tests/integration/run_step5_measured_main.py --mode all, and samples cgroup/process memory every5s. Actual memory fields retain their scopes; no automatic full-workload qualification is inferred. The launcher keeps the original blocking wait and requires exact creator/quota/resources/image/source and replica/container terminal evidence.
+
+Output root:/mnt/codesign-exp/ycfeng/frontier_d29/main09_current_source. Local worker receipts:/data/ycfeng/tmp/d29_main09_worker_20261025_01. Every main child remains capped2400s; there is no outer timeout and post-run validation retains its complete checks. No old joint/shape/control or readiness run is repeated. Review/freeze must finish before invoking run_complete_cli.sh once; keep that records HEAD through both modes. Any raw workload, validation, memory or platform failure remains explicit evidence and triggers diagnosis rather than an automatic retry or reduced workload/output.

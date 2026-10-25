@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Verify the complete-CLI command, syntax, dry run and original SDK objects; preserve exhausted calls, source budgets and the next independent review. |
+| 2026-10-25 UTC / HKT | Recover complete-CLI drafts and current five-tree state; correct input/resource/lifecycle checks before no-operation verification and independent review. |
 | 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | Record the finite joint-pricing execution decision; prepare one unchanged two-call run with exact capture and no retry. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Recover the pending worker records commit; verify five worktrees and unchanged production source without repeating any control. |
@@ -152,6 +154,15 @@ Current checkpoint: the single worker and its parent evidence verification are c
 - completed/preparation follow-up: both original reviewers inspect the final Git assets and passing affected checks; Standards reports0 documented findings/0 baseline smells, Spec reports0 findings. All original3 hard issues and1 optional observation are closed. Both reviewers are closed after collection. See resumed_execution/review_execution_preparation_2026-10-25.md.
 - completed/final metadata and cleanup: preparation_review_followup.json rechecks all5 current worktrees, both non-task source comparisons, final script/Git hashes and the passing Git04/static06 receipts. Record6 completed static04/05/06 reference-copy hashes, then remove exactly those6files/15603024B; preparation_review_cleanup.json retains paths/bytes/SHA256. Original active/cited inputs and all selected reports/logs/receipts remain.
 - in-progress/next: commit the verified task scripts/evidence before one zero-GPU readiness worker; keep the resulting records HEAD stable until both binding calls and platform/business terminal checks finish. Source2ca, all budgets and required-shape6/6 remain unchanged. New pricing0/shape0/fullCLI0/platform0. Current joint timing remains blocked only on the pending finite two-call decision.
+
+### Complete CLI worker recovery and preparation (2026-10-25 UTC / HKT)
+
+- in-progress/recovery: actual HEAD0dca7f83 matches the preceding checkpoint. Non-task files equal admitted2ca5e571/frozen146; collective-sim remains clean3dac53c. All four current satellite worktrees are clean mainline ancestors; no merge or deletion is needed. Other-session.cortexkit/.pi remain untouched.
+- in-progress/complete CLI preparation: recover the four previously unverified drafts in resumed_execution/evidence/complete_cli_2026-10-25/. The unchanged runner still uses6144/1024 offline/online,2400s per main child and full validation outside that limit. One4CPU/0GPU/64mem_gb codesign worker, copied runtime/local NFS/personal cloud output, no outer timeout or automatic retry, remains the existing route.
+- in-progress/necessary draft corrections: the original draft declared but did not execute fixture-manifest/joint-bindings hashes and recorded platform resources without verifying them. Use one shared plan reader in the two task scripts, enforce the exact unchanged command and finite limits, compare worker source/plan/local NFS with the launcher receipt, and require terminal resources/quota/replica/container evidence. No production module, SDK, input or source budget is changed.
+- completed/preflight: preflight.py compiles both scripts, runs bash-n/no-operation dry run, verifies existing25source/sixinput/262metadata bindings and materializes the original SDK task objects. All template/container resources4CPU/0GPU/64000Mi,one critical/default replica,H800,f037d958,currentNFS and requested+documented implicit mounts match; the SDK leaves the plan unchanged. Rawexit0,4.695963354s,Python3.10.6/-B/single math thread,60s/configured30GiB; no client, auth, platform or workload call. Exact command/log/receipt/preflight.json and dry_run.stdout are in the complete_cli evidence directory. PlanSHAfafd6776f36e68db9e4a925564245ad1a34c5c0168a0206b7843eadb49793303.
+- completed/scoped cleanup: joint_timing_2026-10-25/cleanup.json verifies all six complete gzip/archive/original byte counts and hashes, then removes only the six completed11,695,428B scratch-output duplicates. The lossless798,661B archive, original execution receipts, active inputs and other-session files remain; zero runtime/platform calls.
+- pending/review and execution: independent Standards/Spec review of the new command and task-only freeze precede the unique complete worker. Current recovery/preflight performs0 new pricing/shape/fullCLI/platform calls. Existing joint2/2 and required-shape6/6 remain exhausted; old acceptance controls are not rerun.
 
 ### Approved finite current-source joint execution (2026-10-25 UTC / HKT)
 

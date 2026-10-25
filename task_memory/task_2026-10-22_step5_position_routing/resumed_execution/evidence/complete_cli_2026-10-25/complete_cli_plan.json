@@ -1,0 +1,113 @@
+{
+  "submitted_from": "kun-workspace-vgen2",
+  "principal": "i-fengyicheng",
+  "charged_group": "codesign",
+  "resource": {
+    "cpu": 4,
+    "gpu": 0,
+    "mem_gb": 64,
+    "replica": 1,
+    "positive_tags": [
+      "H800"
+    ],
+    "custom_resources": [],
+    "extra_requirements": [],
+    "preemptible": false,
+    "command": "{COMMAND}",
+    "task_specs": {
+      "default": {
+        "is_critical": true
+      }
+    }
+  },
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "local_mount_source": "/data/ycfeng",
+  "local_mount_target": "/data/ycfeng",
+  "mounts": [
+    "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+  ],
+  "cloud_personal_root": "/mnt/codesign-exp/ycfeng",
+  "python": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+  "launcher_python": "/data/ycfeng/tmp/stepmind-env/bin/python",
+  "steptron_root": "/data/ycfeng/steptron",
+  "source_root": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "joint_bindings": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_bindings.json",
+  "math_thread_env": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1"
+  },
+  "git": {
+    "path": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/git",
+    "version": "git version 2.34.1",
+    "config": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/gitconfig_d29_worker",
+    "files": {
+      "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/git": "06c1cfb4848572479bd3bbf678c224432d262732049957884dd9be2457185ad7",
+      "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/gitconfig_d29_worker": "672995b50f25e01b216a981ac1f08eebee28b0713b4bb6c53aecfedad0bff6d4"
+    },
+    "scope": "Persistent copied-runtime Git; protected configuration file trusts exactly the two owned task repositories. No host/image global Git configuration is written."
+  },
+  "inspection_request_timeout_s": 25,
+  "task_id": "D29-MAIN09-COMPLETE-CPU-FIXTURE-CLI",
+  "state": "PREPARED_NOT_SUBMITTED",
+  "resource_authority": "Existing D29 H800 task-required RJob authority and personal codesign test-storage approval; unchanged complete workload follows approved joint execution.",
+  "preparation_directory": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25",
+  "cloud_output_root": "/mnt/codesign-exp/ycfeng/frontier_d29/main09_current_source",
+  "local_output_root": "/data/ycfeng/tmp/d29_main09_worker_20261025_01",
+  "experiment_id": "frontier-d29-main09-current-source-20261025-01",
+  "worker_tmp_root": "/var/tmp/frontier_d29_main09_20261025_01",
+  "job_limit": 1,
+  "automatic_retries": 0,
+  "memory_sample_period_s": 5,
+  "outer_timeout_s": null,
+  "main_child_timeout_s": 2400,
+  "fixture_manifest": "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json",
+  "command": [
+    "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/tests/integration/run_step5_measured_main.py",
+    "--fixture-manifest",
+    "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json",
+    "--output-root",
+    "/mnt/codesign-exp/ycfeng/frontier_d29/main09_current_source",
+    "--mode",
+    "all"
+  ],
+  "workload": {
+    "prefill_tokens": 6144,
+    "decode_tokens": 1024,
+    "modes": [
+      "offline",
+      "online"
+    ],
+    "use_unchanged_runner_and_validation": true,
+    "simulator_class_patching": false,
+    "ordinary_joint_controls": 0,
+    "required_shape_controls": 0,
+    "native_collections": 0
+  },
+  "memory_evidence_limits": [
+    "Requested64000Mi is not an observed peak.",
+    "Controller peak includes charged cache and container lifetime; sampled main VmHWM is a lower bound on final VmHWM.",
+    "Completed descendant ru_maxrss includes the runner and post-run validation; failed runs qualify only partial workload memory."
+  ],
+  "cleanup": "After analysis, preserve selected exact evidence and active inputs; remove only completed disposable outputs of this specific job.",
+  "scripts": {
+    "complete_cli_worker.py": "a17fb5ae8e395e16ec38b4d0c4e1067cc433e7177ec86384f165482f038d7c2a",
+    "launch_complete_cli.py": "cf445af8bd1cdf9561ab5bf3835c3d9c74820e00171eb43622629a98126fb661",
+    "run_complete_cli.sh": "93a9084d9fbec1aefe2c68b2318d4ba6fe3941941e919171f2d0a8eb48cb7a4a"
+  },
+  "fixture_manifest_sha256": "ed0491872ea1b726b3d0aeb5a6dd45d54c5ccab5af53f0f79160bb867c32e9d2",
+  "joint_bindings_sha256": "88e24bd3b7f15adfe8499135eafe838b9d7995eb0834c57817c0c3cca2ba56fa",
+  "sdk_implicit_mounts": [
+    "juicefs+s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant"
+  ],
+  "sdk_implicit_mount_observation": {
+    "source": "/data/ycfeng/steptron/steptron/exp/base_exp.py",
+    "source_sha256": "0fc88ea9fd70ad08f69d76637f4e05c65309f80ce81b4ff933c3b0d0320d4d37",
+    "function": "ResourceConfig.__iter__",
+    "behavior": "The original SDK appends its mandatory tenant mount to every yielded task. The complete CLI never reads or writes that mount; all task cloud access stays in the personal codesign directory."
+  }
+}
