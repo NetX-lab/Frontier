@@ -1,0 +1,36 @@
+{
+  "accepted_runtime_commit": "05952396b0b8e5a794c53e10f9a21213beb5193d",
+  "cost": {
+    "h800_measured_startup_or_timing": false,
+    "max_payload_gpu_hours": 64.0,
+    "minimum_schedule_gpu_hours": 7.573333333333333,
+    "payload_guard_seconds": 3600,
+    "scheduled_arrival_span_seconds": 426
+  },
+  "diagnostic_only": true,
+  "e2e_reference_admission": false,
+  "native_limits": [
+    "All32 rank receipts and actual source/model/layout/routing identity",
+    "Actual first-formal start/stop/drain outcomes and retained request IDs",
+    "Startup archive, window snapshot, final inventory and raw torch traces",
+    "Coverage, graph ownership and stream/event/PDL proof remain runtime gates"
+  ],
+  "primary_review": [
+    "Unsealed diagnostic package; root source/image checks pending",
+    "Ineligible for E2E or native/reference admission"
+  ],
+  "profile_plan": {
+    "commit": "d87f4c74b9d5c0eec0958ba2b7351e76b04acf14",
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile_plan.json",
+    "sha256": "d3532643af32d8ed511cf1da789a67061b7ac1dab0d7ca2ec5a532db9208bc0c",
+    "staged_path": "profile_plan.json"
+  },
+  "reused_h200_evidence": "Source/bootstrap/native dtype and geometry functions only; no H800 memory/timing claim",
+  "runtime": "native2cf base + accepted C26 one-file bootstrap; binaries unchanged",
+  "runtime_qualified": false,
+  "source_instrumentation": "NativeServeProfile with accepted driver/collector runtime bytes",
+  "status": "UNSEALED_REVIEW_CANDIDATE",
+  "submitted": false,
+  "target": "H200/step_main64 nonpreemptible; P32+D32 TP8/DP4/EP32/PP1",
+  "purpose": "Diagnostic native serving profile on H200-64; source of the H200-64 step-cost table; no E2E or reference admission"
+}
