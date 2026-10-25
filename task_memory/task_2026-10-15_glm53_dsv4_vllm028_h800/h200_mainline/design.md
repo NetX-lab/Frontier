@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-25 | Created: purpose, cases, resources and waves, package changes, checks, acceptance and limitations. |
 | 2026-10-25 | Recorded the package names actually built: P2-32p uses `package_02` after an incomplete `package_01` build; `launch.py` is a changed retained file for profile packages. |
+| 2026-10-25 | Recorded where the two H200 step-cost tables live, the same-table substitution for P2-64 (D-H200-STEP-COST-SUBSTITUTION), and the driver, gate and attribution cases. |
 
 **Authority.** D-H200-TEMP-MAINLINE in [requirements.md](../requirements.md) (window 15:00 UTC 2026-10-25 to 03:00 UTC 2026-10-26; at most 64 H200 for this session, running plus queued, `step_main`, non-preemptible). The other rules it keeps are named there: DIAGNOSTIC label, no cross-hardware qualification, D-GPU-SHORTAGE-REPORT, D-INPUT-PERSISTENCE, D-MAINLINE-LOOP-CAP-DSV4 and the D-H4A-CHECKPOINT code bounds.
 
@@ -89,6 +90,17 @@ Built packages: P2-32r `p2_32_reference/package_01`; P2-32p `p2_32_profile/packa
 - **P2-32r and P2-64r.** R4 (`task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py`, as accepted for native06) PASSes all 8 predicates on a local copy of the case. R4 reads the GPU type, replicas and DP from the run's own config, so it applies to H200 without change. A predicate that fails only because of the H200 or DP4 layout, with the run itself correct, goes to YC; the checker is not changed without approval.
 - **P2-32p and P2-64p.** Job Succeeded; one TP0 decode trace per decode DP lane under `torch_traces/decode/dp{d}/`; `prepare_dsv4_step_cost.py --device h200` builds `data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json` from them. The builder currently names profile02's two trace files; it is changed to find the TP0 trace of each decode lane in the run (one small change in `tests/`, no `frontier/` change).
 - **P2-32d and P2-64d.** The Frontier run completes every request without dummy mode; the canonical client gate gives the four errors against each round and the mean of the H200 reference. The result is DIAGNOSTIC.
+
+**Step-cost tables.** The loader reads `dsv4_step_cost.json` beside the resolved CUDA_EVENT attention input and requires the table's topology to equal the replica's, so one directory holds one topology.
+
+| Case | Table | Built from | How the driver selects it |
+| --- | --- | --- | --- |
+| P2-32d | `data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json` (`attn_dp` 2, EP16) | P2-32p | the default path for device h200 |
+| P2-64d | `h200_mainline/diagnostic/step_cost_attn_dp4/dsv4_step_cost.json` (`attn_dp` 4, EP32) | P2-64p | `random_forrest_execution_time_predictor_config_atten_input_file` points into that directory; no `attention.csv` is read on the step-cost path |
+
+P2-64p's profiler window (64 iterations from the start of repeat 1) holds steps with k = 1 and k = 9 newly arrived requests only with 0 decode requests. Under D-H200-STEP-COST-SUBSTITUTION the builder prices those compositions with 1 to 128 decode requests from the same measured step, and the table lists each such entry (`samples` 0, `substituted_from_num_decode_requests`). The H800 and P2-32 tables have no such gap and rebuild byte-identical.
+
+**Runs.** `h4a_p0_diagnostic/h4a4_driver.py`, `h4a4_gate.py` and `h4a5_attribution.py` take the case name (`native06`, `p2_32` or `p2_64`). Each case pins its retained Frontier input, its table, the reference's `num_blocks` and logged maximum concurrency, and its persisted R4 result. The native06 case reproduces the H4a results byte-identically.
 
 ## 7. Limitations
 

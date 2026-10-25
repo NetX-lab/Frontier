@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded YC's adoption of the SSH route, the Pi retry that copied all four H200 runs, and YC's choice of the same-table substitution for the P2-64 step-cost gap (D-H200-STEP-COST-SUBSTITUTION). |
 | 2026-10-25 | Recorded YC's `/ds4-exec` request to reach `shai-ycfeng` through the Pi executor and its blocked outcome. |
 | 2026-10-25 | Recorded YC's temporary promotion of DSV4 on H200-32 and H200-64 to the mainline for 12 hours, with at most 64 non-preemptible H200 for this session (D-H200-TEMP-MAINLINE). |
 | 2026-10-25 | Recorded YC's instruction to report a GPU shortage that delays the route at once (D-GPU-SHORTAGE-REPORT). |
@@ -191,6 +192,26 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 > 请你尝试通过吩咐ds4（pi）进行ssh shai-ycfeng 的访问、结果检查和对比（或者是数据拷贝）
 
 - **Copy route attempt (2026-10-25).** YC asked that the Pi executor try `ssh shai-ycfeng` for the H200 run checks and the copy. Outcome in progress.md (H200 record, "blocked — copying the runs"): the Pi model endpoint is unreachable from this runtime, and this session's permission control refused the SSH connection test as a containment escape. The route stays YC's decision.
+
+[Original Request] Follow-up, 2026-10-25, about 17:10 UTC:
+
+> 采纳方案1，请你执行权限设置的修改
+
+- **SSH route (option 1).** YC adopted the read-only `ssh shai-ycfeng` route. This session's permission control refused the settings edit as self-modification, so YC made the change.
+
+[Original Request] Follow-up, 2026-10-25, about 17:49 UTC, invoking `/ds4-exec`:
+
+> 我已修复ssh问题和pi的网络问题。请你再次尝试。
+
+- **Copy route result.** The Pi executor (label `h200-ssh-copy-1025c`) copied all four H200 runs read-only from `shai-ycfeng` with hash-identical receipts (progress.md, H200 record).
+
+[Original Request] Follow-up, 2026-10-25, about 18:17 UTC. Lead's question: "P2-64 的 step-cost 表缺少“1 个刚收到 KV 的请求 + 至少 1 个 decode 请求”这种步，P2-64d 因此无法运行。怎么处理？" Options: same-table substitution (recommended), a new P2-64 profile with a changed profiler window, or delivering P2-32d only. YC chose:
+
+> 同表替代 (Recommended)
+
+17. **D-H200-STEP-COST-SUBSTITUTION.** When the step-cost builder finds a prefill composition (`num_prefill_requests`, `num_prefill_tokens`) measured only in steps with 0 decode requests, it also prices that composition for 1 to `max_num_seqs` decode requests with the same measured time. The added entry has `samples` 0, an empty `measured_num_decode_requests`, and `substituted_from_num_decode_requests` {min 0, max 0}, so every substitution is listed in the table.
+    - **Scope.** The rule is in `tests/comparison/calibration/prepare_dsv4_step_cost.py`; `frontier/` is unchanged. The H800 and P2-32 tables have no such gap and stay byte-identical. The P2-64 table gains two substituted entries.
+    - **Expected effect.** On H800 and P2-32 the measured (1, 1, m≥1) step is about 9 ms slower than (1, 1, m=0) (one sample each), and each request causes such a step about once per lane. The estimate is about 0.2% on TPOT and E2E and none on TTFT. Results using the rule stay DIAGNOSTIC.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

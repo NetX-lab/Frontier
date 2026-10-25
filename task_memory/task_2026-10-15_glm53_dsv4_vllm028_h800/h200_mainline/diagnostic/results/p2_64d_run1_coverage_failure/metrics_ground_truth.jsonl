@@ -1,0 +1,5 @@
+{"arrived_at": 0.0, "arrived_at_ms": 0.0, "cluster_type": "PREFILL", "event_type": "request_arrival", "num_decode_tokens": 1024, "num_prefill_tokens": 6144, "request_id": 0, "time_ms": 0.0, "time_s": 0.0}
+{"arrived_at": 1.0, "arrived_at_ms": 1000.0, "cluster_type": "PREFILL", "event_type": "request_arrival", "num_decode_tokens": 1024, "num_prefill_tokens": 6144, "request_id": 1, "time_ms": 1000.0, "time_s": 1.0}
+{"arrived_at": 2.0, "arrived_at_ms": 2000.0, "cluster_type": "PREFILL", "event_type": "request_arrival", "num_decode_tokens": 1024, "num_prefill_tokens": 6144, "request_id": 2, "time_ms": 2000.0, "time_s": 2.0}
+{"arrived_at": 3.0, "arrived_at_ms": 3000.0, "cluster_type": "PREFILL", "event_type": "request_arrival", "num_decode_tokens": 1024, "num_prefill_tokens": 6144, "request_id": 3, "time_ms": 3000.0, "time_s": 3.0}
+{"arrived_at": 4.0, "arrived_at_ms": 4000.0, "cluster_type": "PREFILL", "event_type": "request_arrival", "num_decode_tokens": 1024, "num_prefill_tokens": 6144, "request_id": 4, "time_ms": 4000.0, "time_s": 4.0}
