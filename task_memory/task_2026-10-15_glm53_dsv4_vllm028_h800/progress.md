@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded the completed worktree cleanup (D-WORKTREE-CLEANUP) and the commit of the stopped session's last records. |
 | 2026-10-25 | Applied D-DSV4-H800-MAINLINE-CORRECTION: added the mainline handoff with H4a as the next milestone; the sub-task handoff and the trace-audit route are historical. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: recorded accepted package preparation and canonical next-session gates; dated evidence remains historical. |
 | 2026-10-24 | Recorded accepted scope/lifetime CPU-source and incomplete loading-GC pilot without GPU/native admission. |
@@ -220,7 +221,9 @@
 
 **Rules for this route.** D-MAINLINE-LOOP-CAP-DSV4 (more than 3 GPU jobs or about 6 hours of GPU or CPU work on one milestone without movement stops the work and goes to YC). Every checkpoint first states which milestone moved.
 
-**Concurrent session.** At 2026-10-25 another session was still editing `task_memory/task_2026-10-23_v4_remaining_measurements/` (uncommitted plan/progress/requirements/summary and `p0_cpu_loop/prefill_fault04/`). That work belongs to the stopped trace-audit route. Its evidence is kept; it does not set the route.
+**Concurrent session.** YC stopped the other session on 2026-10-25. Its last uncommitted records (one DP1 observation archive in `task_memory/task_2026-10-23_v4_remaining_measurements/`) were committed unchanged in `ed29e8cc`. That work belongs to the stopped trace-audit route and does not set the route.
+
+**Worktree cleanup (D-WORKTREE-CLEANUP), completed 2026-10-25.** 107 of this task's 110 worktrees were removed after their records were preserved. 6,049 missing task_memory files were copied to the mainline at the same relative path, 62 divergent files were archived, and 27 `refs/archive/worktrees/<name>` refs were created. `v4-p0-native`, `v4-balanced-native-model` and `v4-balanced-callers` were restored, because tracked provenance tests read them by absolute path. No branch was deleted. Absolute paths under removed worktrees in older records now resolve under this worktree. Details and verification: [worktree_cleanup_20261025/report.md](worktree_cleanup_20261025/report.md).
 
 ## Historical parent-task pointer — 2026-10-25 (superseded by D-DSV4-H800-MAINLINE-CORRECTION)
 

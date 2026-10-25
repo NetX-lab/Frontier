@@ -780,7 +780,7 @@ def test_preparation_refuses_existing_output_and_unsupported_acceptance(accepted
     # Original acceptance paths resolve to retained files in their source tree.
     original = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/"
         "task_2026-10-22_v4_balanced_routing/prefill_results/primary_acceptance.json")
-    package = Path("/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/"
+    package = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/"
         "task_2026-10-22_v4_h800_prefill/h800_prefill_balanced")
     with pytest.raises(FileExistsError):
         prepare_attention_input(original, package, sidecar.parent)

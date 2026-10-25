@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded YC's worktree-cleanup approval (D-WORKTREE-CLEANUP) and the start of H4a (D-H4A-START). |
 | 2026-10-25 | Recorded D-DSV4-H800-MAINLINE-CORRECTION: this directory is the single mainline, scope is DSV4 on H800-32/64, the trace-audit route stops, and the first diagnostic P0 comparison (H4a) is the next milestone. |
 | 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: native06 P0 reference accepted by frozen R4/merged d278659, D-Q10 integrated e89b45d; approvals, historical R3/native05 verdicts and full-calibration limits unchanged. |
 | 2026-10-23 | Root recorded the bounded non-core native06 owner-reader correction under existing delegated authority. |
@@ -132,6 +133,13 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 8. **D-P1-BASIC-PARALLEL.** P1 H800-64 basic native validation (ticket 10 `p1_h800_64.basic_validation`) may start in parallel under D-V4-H800-RJOB-AUTHORITY, at lower priority than H4a. Its purpose, resources and acceptance are recorded before submission.
 9. **D-INPUT-PERSISTENCE.** No input that H4a consumes may exist only under `/data/ycfeng/tmp`. Copy, never move: tables read through Frontier's default profiling path go to `data/profiling/compute/h800/deepseek-ai/DeepSeek-V4-Flash/`; derived task tables go to this task directory; large raw traces go to the cloud volume under `/mnt/codesign-exp/ycfeng`.
 10. **D-RECORD-PER-MILESTONE.** Reaffirms the record-keeping rule of D-MAINLINE-LOOP-CAP: `progress.md` and `summary.md` change per milestone, not per slice, and add no per-slice Modification History rows. A superseded current section is renamed to a dated historical section.
+
+[Original Request] Follow-up, 2026-10-25, after the doc correction commit `e16a6d49`:
+
+> 我已经停止其他session，允许你清理worktree；批准下一步，开始执行
+
+11. **D-WORKTREE-CLEANUP.** YC stopped the concurrent session and approved worktree cleanup. Scope: the worktrees of this task (DSV4/GLM53 and their validation, fidelity and native-run worktrees). The step5, `verify-step5*`, `d29*`, `d30*` and `d5-ttft*` worktrees of the Step-5-Preview task, the main checkout, and `frontier-calibration-skill`, `remove-legacy-run-outputs` and `stage-admission-ordering` are outside this approval and stay. Before removal: task records under the git-ignored `task_memory/` that the mainline worktree lacks are copied to the same relative path in the mainline worktree; records that differ from the mainline copy are kept under `worktree_cleanup_20261025/`; uncommitted changes and unreachable HEADs are kept as `refs/archive/worktrees/<name>`. Branches are not deleted. Record: `worktree_cleanup_20261025/`.
+12. **D-H4A-START.** YC approved the next actions of the [mainline handoff](progress.md#current-session-handoff--2026-10-25-mainline-correction), starting with H4a-1, within D-H4A-CODE-SCOPE and D-MAINLINE-LOOP-CAP-DSV4.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
