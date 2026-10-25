@@ -1,9 +1,10 @@
-# Plan: active DSV4 H800-32/64 simulation support and calibration; H200 deferred; GLM paused
+# Plan: active DSV4 H800-32/64 simulation support and calibration; H200-32/64 temporary mainline until 03:00 UTC 2026-10-26; GLM paused
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Applied D-H200-TEMP-MAINLINE: added the H200 temporary route (milestones P2-32r/32p/32d/64r/64p/64d, waves and dependency); wave 1 submitted. |
 | 2026-10-25 | P1b: linked the design and recorded that `package_01` passed its CPU checks; submission waits for H4b-(a) and 64 free H800. |
 | 2026-10-25 | H4c: linked the design and recorded the implemented option B (commit cefbbc9d) and its results; option A stays with YC. |
 | 2026-10-25 | Applied D-H4A-CHECKPOINT: added milestones H4b (native D-side handoff measurement, then Frontier modeling) and H4c (step-cost path speed) with their order and bounds. |
@@ -141,7 +142,7 @@
 
 **Mainline location.** Task directory `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/`, branch `feat/glm53-dsv4-vllm028`, worktree `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`. Work done in another worktree merges back to this branch before it counts.
 
-**Scope.** DSV4 only, H800 only. P0 = H800-32, P16+D16, TP8/DP2/EP16/PP1 per role. P1 = H800-64, P32+D32, TP8/DP4/EP32/PP1 per role. The H200 P2 cases are deferred. GLM is paused.
+**Scope.** DSV4 only. P0 = H800-32, P16+D16, TP8/DP2/EP16/PP1 per role. P1 = H800-64, P32+D32, TP8/DP4/EP32/PP1 per role. From 15:00 UTC 2026-10-25 to 03:00 UTC 2026-10-26 the H200 P2 cases are the temporary mainline ([H200 temporary route](#h200-temporary-route--d-h200-temp-mainline-2026-10-25)); the H800 jobs keep their queue places. GLM is paused.
 
 **Goal.** Frontier simulates the P0 case without dummy mode and matches native06 R4 within 10% on each of mean client TTFT, mean TPOT, mean E2E and THPT; then the same for P1.
 
@@ -161,6 +162,21 @@
 | P1f | P1 formal reference, comparison and acceptance | 10, 18, 19 | Needs P1b and the P0 30% promotion. |
 
 Dependency: `H4a -> D-H4A-CHECKPOINT -> H4b-(a) -> H4b-(b)`; `H4c` runs while the H4b-(a) job queues and runs; `{H4b-(b), H4c} -> {H3r, H4} -> H6(P0) -> P1f`; `P1b` runs in parallel and `{P1b, H6 promotion} -> P1f`. Accepted data from H1, H2 and H5 is reused, not redone.
+
+### H200 temporary route — D-H200-TEMP-MAINLINE (2026-10-25)
+
+**Authority.** [D-H200-TEMP-MAINLINE](requirements.md) item 16: until 03:00 UTC 2026-10-26, at most 64 H200 for this session (running plus queued), `step_main`, non-preemptible. Design: [h200_mainline/design.md](h200_mainline/design.md). The H800 packages and tools are reused; only hardware, identity and, for 64, the DP4/EP32 layout change.
+
+| ID | Work | State / done condition |
+| --- | --- | --- |
+| P2-32r | H200-32 clean native reference from the native06 package | Submitted 15:23 UTC as `exp-1025-152327-225209`. Done when R4 PASSes on a local copy |
+| P2-32p | H200-32 native serving profile from the profile02 package | Submitted 15:23 UTC as `exp-1025-152329-181604` (`package_02`; `package_01` is an incomplete build that stopped at the preflight import). Done when the H200 step-cost table is built from its traces |
+| P2-32d | Frontier H200-32 DIAGNOSTIC comparison | H4a/H4c driver with device h200 and the H200 table; four errors against the mean of P2-32r |
+| P2-64r | H200-64 clean native reference (also the DP4 basic validation) | After wave 1; R4 PASS |
+| P2-64p | H200-64 native serving profile | After P2-64r, if the window allows |
+| P2-64d | Frontier H200-64 DIAGNOSTIC comparison | Needs P2-64r and P2-64p |
+
+Waves (at most 64 H200 at any time): wave 1 = `{P2-32r, P2-32p}`; wave 2 = `P2-64r`; wave 3 = `P2-64p`. Dependency: `{P2-32r, P2-32p} -> P2-32d`; `wave 1 -> P2-64r -> P2-64p -> P2-64d`; P2-32d runs on CPU during wave 2. Each wave starts only after a `step_main` quota read. H200 results do not qualify H800 cells.
 
 ### H4a — first diagnostic P0 prediction
 
@@ -216,7 +232,7 @@ Design section with file list and line estimate before the core edit. The hot pa
 
 **Stop rules.** D-MAINLINE-LOOP-CAP-DSV4 applies to every step. A step that fails gets one root-cause fix. A second failure of the same step is reported to YC with options; it does not start a new diagnostic chain.
 
-**Not on the current route.** The profile04 R5/R6/R7 trace audit, the CPU metrics loop for the profile04 prefill DP0 ranks (`p0_cpu_loop`), the scope-lifetime S4/S5 package, CUPTI graph/stream/TLS probes, H200, GLM, and CPU-overhead modeling (which stays last). Their evidence is preserved; [future.md](future.md) records the restart condition for R5.
+**Not on the current route.** The profile04 R5/R6/R7 trace audit, the CPU metrics loop for the profile04 prefill DP0 ranks (`p0_cpu_loop`), the scope-lifetime S4/S5 package, CUPTI graph/stream/TLS probes, H200 outside the temporary route above, GLM, and CPU-overhead modeling (which stays last). Their evidence is preserved; [future.md](future.md) records the restart condition for R5.
 
 ## Historical trace-audit route — 2026-10-25 (superseded by D-DSV4-H800-MAINLINE-CORRECTION)
 

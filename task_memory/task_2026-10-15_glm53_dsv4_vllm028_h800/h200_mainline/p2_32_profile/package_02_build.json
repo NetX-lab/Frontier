@@ -1,0 +1,232 @@
+{
+  "case": "p2_32_profile",
+  "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02",
+  "harness": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run",
+  "harness_commit": "a90c9dbbee53e2cabbfac73ba8490ffb958ce8eb",
+  "native_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02",
+  "manifest_sha256": "690bd7d753df114ad0e6d99c1680a4575d3be02164cc64cf57e5c26e8c51315d",
+  "sealed": {
+    "sealed_files": 45
+  },
+  "changes": {
+    "case/inputs/engine.json": [
+      "profiler_config.torch_profiler_dir"
+    ],
+    "case/inputs/frontier.json": [
+      "cluster_config_decode_replica_config_device",
+      "cluster_config_prefill_replica_config_device"
+    ],
+    "case/inputs/native_config.json": [
+      "charged_group",
+      "engine.profiler_config.torch_profiler_dir",
+      "gpu_type",
+      "job_tag",
+      "output_dir",
+      "retained_files.case/inputs/frontier.json",
+      "retained_files.launch.py",
+      "retained_files.overlay.json",
+      "run_tag",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/case/inputs/frontier.json",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/launch.py",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/overlay.json"
+    ],
+    "case/manifest.yaml": [
+      "case_id",
+      "policy.charged_group",
+      "policy.gpu_type",
+      "policy.priority",
+      "purpose",
+      "run_generation",
+      "runtime_source_overlay.sha256"
+    ],
+    "config.json": [
+      "charged_group",
+      "engine.profiler_config.torch_profiler_dir",
+      "gpu_type",
+      "job_tag",
+      "output_dir",
+      "retained_files.case/inputs/frontier.json",
+      "retained_files.launch.py",
+      "retained_files.overlay.json",
+      "run_tag",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/case/inputs/frontier.json",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/launch.py",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/overlay.json"
+    ],
+    "engine.json": [
+      "profiler_config.torch_profiler_dir"
+    ],
+    "evidence_readiness.json": [
+      "purpose",
+      "target"
+    ],
+    "launch.py": [
+      "-assert (config['gpu_type'], config['charged_group'], config['gpu'], config['replica']) == ('H800', 'codesign', 8, 4)",
+      "+assert (config['gpu_type'], config['charged_group'], config['gpu'], config['replica']) == ('H200', 'step_main', 8, 4)"
+    ],
+    "overlay.json": [],
+    "source_lock.json": [
+      "retained_files.case/inputs/frontier.json.changed",
+      "retained_files.case/inputs/frontier.json.sha256",
+      "retained_files.case/inputs/frontier.json.source",
+      "retained_files.case/inputs/frontier.json.source_sha256",
+      "retained_files.launch.py.changed",
+      "retained_files.launch.py.sha256",
+      "retained_files.launch.py.source",
+      "retained_files.launch.py.source_sha256",
+      "retained_files.launch.py.staged_sha256"
+    ]
+  },
+  "changed_retained_files": [
+    "case/inputs/frontier.json",
+    "launch.py",
+    "overlay.json"
+  ],
+  "preflight_scratch": "/data/ycfeng/tmp/glm53_dsv4/h200/p2_32_profile_preflight_k2uyxp8p",
+  "frontier_roles": {
+    "prefill": {
+      "attn_tensor_parallel_size": 8,
+      "device": "h200",
+      "moe_tensor_parallel_size": 1,
+      "moe_expert_parallel_size": 16,
+      "num_pipeline_stages": 1,
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+      "moe_routing_distribution_type": "balanced",
+      "moe_gating_routing_runtime_path": "balanced_topk",
+      "attn_dp": 2,
+      "world_size": 16
+    },
+    "decode": {
+      "attn_tensor_parallel_size": 8,
+      "device": "h200",
+      "moe_tensor_parallel_size": 1,
+      "moe_expert_parallel_size": 16,
+      "num_pipeline_stages": 1,
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+      "moe_routing_distribution_type": "balanced",
+      "moe_gating_routing_runtime_path": "balanced_topk",
+      "attn_dp": 2,
+      "world_size": 16
+    }
+  },
+  "launch_path": {
+    "h0": {
+      "role": "prefill",
+      "lane": 0,
+      "headless": false,
+      "data_parallel_size": "2",
+      "data_parallel_start_rank": null,
+      "data_parallel_address": "10.0.0.1",
+      "data_parallel_rpc_port": "24471",
+      "profiler_config": {
+        "delay_iterations": 0,
+        "ignore_frontend": true,
+        "max_iterations": 64,
+        "profiler": "torch",
+        "torch_profiler_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-profile-20261025-01/torch_traces/prefill/dp0",
+        "torch_profiler_record_shapes": false,
+        "torch_profiler_use_gzip": true,
+        "torch_profiler_with_flops": false,
+        "torch_profiler_with_memory": false,
+        "torch_profiler_with_stack": false,
+        "wait_iterations": 0,
+        "warmup_iterations": 0
+      },
+      "kv_transfer_config": {
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_producer",
+        "kv_buffer_device": "cuda",
+        "kv_load_failure_policy": "fail"
+      }
+    },
+    "h1": {
+      "role": "prefill",
+      "lane": 1,
+      "headless": true,
+      "data_parallel_size": "2",
+      "data_parallel_start_rank": "1",
+      "data_parallel_address": "10.0.0.1",
+      "data_parallel_rpc_port": "24471",
+      "profiler_config": {
+        "delay_iterations": 0,
+        "ignore_frontend": true,
+        "max_iterations": 64,
+        "profiler": "torch",
+        "torch_profiler_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-profile-20261025-01/torch_traces/prefill/dp1",
+        "torch_profiler_record_shapes": false,
+        "torch_profiler_use_gzip": true,
+        "torch_profiler_with_flops": false,
+        "torch_profiler_with_memory": false,
+        "torch_profiler_with_stack": false,
+        "wait_iterations": 0,
+        "warmup_iterations": 0
+      },
+      "kv_transfer_config": {
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_producer",
+        "kv_buffer_device": "cuda",
+        "kv_load_failure_policy": "fail"
+      }
+    },
+    "h2": {
+      "role": "decode",
+      "lane": 0,
+      "headless": false,
+      "data_parallel_size": "2",
+      "data_parallel_start_rank": null,
+      "data_parallel_address": "10.0.0.3",
+      "data_parallel_rpc_port": "24571",
+      "profiler_config": {
+        "delay_iterations": 0,
+        "ignore_frontend": true,
+        "max_iterations": 64,
+        "profiler": "torch",
+        "torch_profiler_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-profile-20261025-01/torch_traces/decode/dp0",
+        "torch_profiler_record_shapes": false,
+        "torch_profiler_use_gzip": true,
+        "torch_profiler_with_flops": false,
+        "torch_profiler_with_memory": false,
+        "torch_profiler_with_stack": false,
+        "wait_iterations": 0,
+        "warmup_iterations": 0
+      },
+      "kv_transfer_config": {
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_consumer",
+        "kv_buffer_device": "cuda",
+        "kv_load_failure_policy": "fail"
+      }
+    },
+    "h3": {
+      "role": "decode",
+      "lane": 1,
+      "headless": true,
+      "data_parallel_size": "2",
+      "data_parallel_start_rank": "1",
+      "data_parallel_address": "10.0.0.3",
+      "data_parallel_rpc_port": "24571",
+      "profiler_config": {
+        "delay_iterations": 0,
+        "ignore_frontend": true,
+        "max_iterations": 64,
+        "profiler": "torch",
+        "torch_profiler_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-profile-20261025-01/torch_traces/decode/dp1",
+        "torch_profiler_record_shapes": false,
+        "torch_profiler_use_gzip": true,
+        "torch_profiler_with_flops": false,
+        "torch_profiler_with_memory": false,
+        "torch_profiler_with_stack": false,
+        "wait_iterations": 0,
+        "warmup_iterations": 0
+      },
+      "kv_transfer_config": {
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_consumer",
+        "kv_buffer_device": "cuda",
+        "kv_load_failure_policy": "fail"
+      }
+    }
+  },
+  "check_only": "INPUT_HASHES_PASS_NO_SUBMISSION"
+}

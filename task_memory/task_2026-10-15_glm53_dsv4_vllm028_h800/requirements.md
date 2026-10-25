@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded YC's temporary promotion of DSV4 on H200-32 and H200-64 to the mainline for 12 hours, with at most 64 non-preemptible H200 for this session (D-H200-TEMP-MAINLINE). |
 | 2026-10-25 | Recorded YC's instruction to report a GPU shortage that delays the route at once (D-GPU-SHORTAGE-REPORT). |
 | 2026-10-25 | Recorded YC's adoption of the H4a checkpoint recommendation: step-level costs do not yet support formal gates, and the route H4b (D-side handoff measurement, then modeling), H4c (step-cost path speed) and P1b in parallel (D-H4A-CHECKPOINT). |
 | 2026-10-25 | Recorded YC's adoption of the H4a-2 option A scope and of substitutions S1 and S2 (D-H4A2-SCOPE-A). |
@@ -171,6 +172,18 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 > [补充]如果存在卡数不足够（影响任务推进的）的情况，请第一时间反馈给我
 
 15. **D-GPU-SHORTAGE-REPORT.** When available GPU quota is not enough for a planned job and this delays the route, report it to YC at once, with the job, the GPUs it needs, the quota observed and the time of the check. Do not wait for the next checkpoint.
+
+[Original Request] Follow-up, 2026-10-25, about 15:00 UTC, while H4b-(a) was still Pending for H800 quota:
+
+> 由于当前h800的quota紧张，允许你将h200的32卡64卡ds-v4暂时提升为主线展开（尽可能复用已有h800的suits），在接下去12小时内，允许当前session对h200集群的可用gpus数量在64卡内（rjob可以 不允许抢占模式提交）
+
+16. **D-H200-TEMP-MAINLINE.** Because H800 quota is short, DSV4 on H200 becomes the temporary mainline.
+    - **Window.** 12 hours, from 2026-10-25 15:00 UTC to 2026-10-26 03:00 UTC. No new H200 submission after the window without a new YC decision. A job still running at the end of the window is reported to YC.
+    - **Cases.** P2-H200-32 (P16+D16, TP8/DP2/EP16/PP1 per role) and P2-H200-64 (P32+D32, TP8/DP4/EP32/PP1 per role), with the 68f891b workload unchanged.
+    - **Reuse.** The H800 suites are reused as far as possible: the native06 and profile02 packages, the R4 run checker, the step-cost builder, the H4a/H4c Frontier driver and the analysis tools. Package changes are limited to the hardware identity (`gpu_type` H200, `charged_group` `step_main`, Frontier `device` h200), the case identity, and the DP4/EP32 layout for 64 GPUs.
+    - **Resources.** This session's H200 jobs, running plus queued, use at most 64 GPUs in total, all in `step_main` and all non-preemptible (`preemptible=False`). YC's other jobs do not count against this limit and are not touched. For the window this supersedes the personal 32-H200 non-preemptible ceiling and the preemptible H200-64 class of D-CALIBRATION-PRIORITIES, and the deferral of the P2 rows in D-SCOPE-H800-DSV4.
+    - **H800.** H4b-(a) `exp-1025-121318-827142` stays queued; P1b keeps its submission condition. H800 work resumes when quota allows.
+    - **Unchanged.** H200 evidence never qualifies H800 cells, and H800 evidence never qualifies H200 cells. Frontier comparisons stay DIAGNOSTIC under D-H4A-CHECKPOINT. The 30% promotion before a formal 64-GPU reference, D-MAINLINE-LOOP-CAP-DSV4, D-GPU-SHORTAGE-REPORT, D-INPUT-PERSISTENCE (H200 tables go to `data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/`), the code-scope bounds of D-H4A-CHECKPOINT and the GLM pause all stay in force.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

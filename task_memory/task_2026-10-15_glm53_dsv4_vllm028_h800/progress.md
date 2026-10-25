@@ -1,10 +1,11 @@
-# Progress: active DSV4 H800-32/64 simulation support and calibration; H200 deferred; GLM paused
+# Progress: active DSV4 H800-32/64 simulation support and calibration; H200-32/64 temporary mainline until 03:00 UTC 2026-10-26; GLM paused
 
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded D-H200-TEMP-MAINLINE: H200 design, package builder, P2-32r/P2-32p package CPU checks and the wave 1 submission. |
 | 2026-10-25 | Recorded the H4b-(a) analysis script and its CPU checks; H4b-(a) still Pending at 14:43 UTC with 4 free H800. |
 | 2026-10-25 | Recorded the P1b design and the `package_01` CPU checks (test report 2026-10-25 p1b); P1b and H4b-(a) both wait for H800 quota. |
 | 2026-10-25 | Recorded H4c (commit cefbbc9d, option B): per-wave equivalence, P0 replay identity, 10.7× faster replay, regressions and the post-change profile; H4b-(a) still Pending for quota. |
@@ -220,15 +221,34 @@
 | H3r targeted cost refinement | pending | after H4b-(b) and H4c (D-H4A-CHECKPOINT) |
 | H4 / H6 P0 qualified path and acceptance | pending | step-level costs do not yet support formal gates (D-H4A-CHECKPOINT) |
 | P1b H800-64 basic native validation | in-progress: design and `package_01` CPU checks completed; not submitted (needs H4b-(a) Running or finished and 64 free H800) | [p1b_basic_validation/design.md](p1b_basic_validation/design.md); [test_report_2026-10-25_p1b_package_preparation.md](test_report_2026-10-25_p1b_package_preparation.md); record below |
+| P2-32r H200-32 native reference | in-progress: `package_01` CPU checks passed; `exp-1025-152327-225209` submitted 15:23 UTC | [h200_mainline/design.md](h200_mainline/design.md); record below |
+| P2-32p H200-32 native serving profile | in-progress: `package_02` CPU checks passed; `exp-1025-152329-181604` submitted 15:23 UTC | record below |
+| P2-32d / P2-64r / P2-64p / P2-64d | pending | [plan.md H200 route](plan.md#h200-temporary-route--d-h200-temp-mainline-2026-10-25) |
 | profile04 R5 trace audit | stopped at 24/32 | prefill DP0 ranks 0-7 deferred, see [future.md](future.md) |
 | scope-lifetime S4/S5 package | stopped, unsealed, 0 GPU jobs | package path preserved in the historical pointer below |
 
-**Next actions** (D-H4A-CHECKPOINT order).
+**Next actions.** H200 temporary mainline first (D-H200-TEMP-MAINLINE, until 03:00 UTC 2026-10-26):
+1. Keep the wave 1 launchers alive (pids 503808 and 503908); watch both jobs to their end; verify creator, H200, `step_main`, preemptible `no`, worker `nvidia-smi` and terminal status.
+2. P2-32r: copy the run, run R4 on the local copy. P2-32p: copy the run and its decode TP0 traces, generalize the trace lookup in `prepare_dsv4_step_cost.py`, build the H200 table with `--device h200`.
+3. P2-32d: run the H4a/H4c driver with device h200 and the H200 table; client gate against P2-32r.
+4. Build and submit P2-64r after wave 1 ends (quota read first); then P2-64p and P2-64d if the window allows.
+
+H800 actions (D-H4A-CHECKPOINT order):
 1. H4b-(a): keep the launcher (pid 348050) alive; watch `exp-1025-121318-827142` until it runs and finishes; tell YC when it leaves the queue.
 2. H4b-(a): after the run, copy the results, run the R4 checker, run `h4b_lifecycle_measurement/analyze_lifecycle.py` on the local copy against native06, merge `h4b-lifecycle-harness` into the mainline.
 3. H4c: completed. Option A and the smaller per-step `ExecutionTime` reuse are left to YC (test report section 4).
 4. H4b-(b) design from the measured parts.
 5. P1b: submit `p1b_basic_validation/package_01` only when H4b-(a) is Running or finished and a quota read shows at least 64 free H800; then run the R4 checker (design section 6).
+
+**H200 temporary mainline record (2026-10-25).** YC: "由于当前h800的quota紧张，允许你将h200的32卡64卡ds-v4暂时提升为主线展开（尽可能复用已有h800的suits），在接下去12小时内，允许当前session对h200集群的可用gpus数量在64卡内（rjob可以 不允许抢占模式提交）" (D-H200-TEMP-MAINLINE in [requirements.md](requirements.md)).
+- completed — read-only quota at 15:10 and 15:22 UTC (`/data/ycfeng/tmp/glm53_dsv4/h200/monitor/read_quota.py`, a copy of the H4b prelaunch reader with `step_main`/H200 added; outputs `quota_2026*.json` beside it). 15:22 UTC: `step_main` H200 total 512, non-preemptible use 218, 291 usable GPUs on nodes, 35 nodes with 8 usable GPUs; `codesign` H800 127 of 128 used. Node shape (`node_shape.py step_main`): 192 CPUs, about 2 TB memory, 8 GPUs per node, so cpu 64 / mem 512 GB fit.
+- completed — design [h200_mainline/design.md](h200_mainline/design.md). Earlier evidence that this image runs DSV4 on 4 × 8 H200 in `step_main` with the same `cuda_compat_path` and cloud mount: `h200_dsv4_g0b_20261021` (launcher exit 0, 2026-10-20). R2/R3/R4 read GPU type, group, replicas and DP from the run's own config (`check_groundtruth_run_successor_r2.py:597,1016,1044,1120,1196`; R3 `:43`).
+- completed — recreated the profile02 harness worktree `/data/ycfeng/Frontier/.worktrees/v4-native-profile-run` with `git worktree add` on the existing branch `feat/v4-native-profile-run` (`a90c9dbb`, the commit in profile02's run manifest). It is clean. native06's harness `v4-balanced-native-model` is clean at `b62c155a`.
+- completed — builder `h200_mainline/build_package.py <case> [--package NAME]`, adapted from the P1b builder. Command: `(ulimit -v 31457280; PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp timeout 900 /usr/bin/python3 build_package.py <case> [--package package_02])`, `/usr/bin/python3` 3.10.6, logs `/data/ycfeng/tmp/glm53_dsv4/h200/build_*.log`.
+  - `p2_32_reference/package_01`: PASS. Changes exactly design section 4 (record `p2_32_reference/package_01_build.json`); 43 sealed files, `manifest.json` `9640996d…1055`; preflight run manifest harness `b62c155a`, NATIVE `2cf0a69`, clean trees, H200/`step_main`/32 GPUs; R3 reconstruction both roles device h200, TP8, `attn_dp` 2, EP16, PP1, world 16; launch path hosts 0-1 P lanes 0-1, 2-3 D lanes 0-1; `--check-only` `INPUT_HASHES_PASS_NO_SUBMISSION`.
+  - `p2_32_profile/package_01`: incomplete. Build, comparison and seal ran; the preflight stopped with `ModuleNotFoundError: No module named 'vllm_replay'` because profile02's worker imports `vllm_replay` at module level and the builder had not put `tests/comparison/dp_placement_pp` on `sys.path` as `launch.py` does. Fixed in the builder. The directory is left in place, unused (deleting it needs YC's approval).
+  - `p2_32_profile/package_02`: PASS. Changes exactly design section 4 plus `launch.py` as a changed retained file (profile02 hashes it in `retained_files`, `tool_hashes` and the source lock); 45 sealed files; preflight harness `a90c9dbb`; R3 as above; every host's `--profiler-config` names `<output_dir>/torch_traces/<role>/dp<lane>`; `--check-only` PASS. Record `p2_32_profile/package_02_build.json`.
+- in-progress — wave 1 submitted 15:23 UTC from this host (wrappers `/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_32_{reference,profile}.sh`: handbook proxy, `STEPMIND_BACKEND=rjob`, AUTHORIZATION citing D-H200-TEMP-MAINLINE; launchers under `setsid nohup`, pids 503808 and 503908; logs beside the wrappers). P2-32r `exp-1025-152327-225209`, P2-32p `exp-1025-152329-181604`. Status at 15:25 UTC (`/data/ycfeng/tmp/glm53_dsv4/h200/monitor/status_1.json`): both creator `i-fengyicheng`, preemptible `no`, queue `step-main-default`, 4 replicas, NFS source the package on this host, phase Starting. 64 H200 in use by this session. H4b-(a) still Pending (queue remaining H800=1).
 
 **H4a-1 and H4a-3 record (2026-10-25).** Design: [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md).
 - completed — input persistence (D-INPUT-PERSISTENCE). `h4a_p0_diagnostic/copy_inputs.py` copied 10 native06, 11 profile02 and 9 profile04 files into `h4a_p0_diagnostic/inputs/` (38 MB; manifest with source, cloud origin, size and SHA-256 per file). Each copied cloud inventory matches its receipt digest (profile02 `33ed03ea…`, profile04 `85b0ef23…`). The two profile02 decode traces (36 MB) stay out of git; their cloud originals are recorded.
