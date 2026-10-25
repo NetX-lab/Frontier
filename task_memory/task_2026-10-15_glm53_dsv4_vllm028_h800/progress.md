@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | YC adopted the SSH route (option 1); the settings edit was refused as self-modification and is left to YC. |
 | 2026-10-25 | P2-64p Succeeded (terminal receipt kept); the Pi SSH retry was refused by the permission control before launch. |
 | 2026-10-25 | P2-64r Succeeded (terminal receipt kept); submitted P2-64p `exp-1025-162315-604618` (64 H200). |
 | 2026-10-25 | Recorded the Pi executor attempt at the `shai-ycfeng` copy route: Pi cannot reach its model endpoint here, and the SSH test was refused by the permission control. |
@@ -270,6 +271,7 @@ H800 actions (D-H4A-CHECKPOINT order):
   - Correction to the earlier record: `~/.ssh/id_ed25519_shai_ycfeng` exists (mode 0600); an earlier listing was cut short by `head`.
   - A fresh SSH connection test from the lead shell (direct, and a CONNECT tunnel through the local proxy) was refused by this session's permission control as a containment escape. Per that refusal the SSH route is not pursued through Pi, another tool or a later turn; it is YC's decision.
   - Retry (YC, `/ds4-exec`, about 16:50 UTC: "我已经修复pi(ds4）的调用，请重试"). The launcher now starts Pi inside this runtime's boundary with the runtime proxy (`run_ds4.sh:15-25`). Writing the revised Pi assignment (all four runs, plain configured `ssh shai-ycfeng` only) was refused by this session's permission control as a containment escape, so Pi was not launched. The SSH route needs YC to allow it in the permission settings, or another route.
+  - YC adopted option 1 ("采纳方案1，请你执行权限设置的修改", about 17:00 UTC): allow read-only `ssh shai-ycfeng` in the permission settings. Editing the settings from this session was refused by the permission control as self-modification, so YC adds the rule. The runtime still has no DNS for the `shai-ycfeng` host, so the rule alone may not make SSH work.
 
 **H4a-1 and H4a-3 record (2026-10-25).** Design: [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md).
 - completed — input persistence (D-INPUT-PERSISTENCE). `h4a_p0_diagnostic/copy_inputs.py` copied 10 native06, 11 profile02 and 9 profile04 files into `h4a_p0_diagnostic/inputs/` (38 MB; manifest with source, cloud origin, size and SHA-256 per file). Each copied cloud inventory matches its receipt digest (profile02 `33ed03ea…`, profile04 `85b0ef23…`). The two profile02 decode traces (36 MB) stay out of git; their cloud originals are recorded.
