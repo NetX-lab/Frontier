@@ -1,0 +1,51 @@
+{
+  "status": "HASH_IDENTICAL_DOWNLOAD",
+  "start_utc": "2026-10-25T17:54:09.687783+00:00",
+  "end_utc": "2026-10-25T17:57:28.315931+00:00",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-profile-20261025-01",
+  "remote_root": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-profile-20261025-01",
+  "local_root": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts",
+  "files": 442,
+  "bytes": 9146245823,
+  "inventory_sha256": "ba00fc8b1161929a90c8f717f7de1ef3b572c20e667fef6ea81cbca372cbb92d",
+  "mismatched": [],
+  "commands": [
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "shai-ycfeng",
+        "sudo -n timeout 900s python3 - /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-profile-20261025-01"
+      ],
+      "stdin": "from pathlib import Path\nimport hashlib,json,sys\nr=Path(sys.argv[1]); files=[]\nfor p in sorted(r.rglob('*')):\n if not p.is_file(): continue\n assert p.resolve().is_relative_to(r.resolve()),str(p)\n h=hashlib.sha256()\n with p.open('rb') as f:\n  for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)\n files.append({'path':str(p.relative_to(r)),'bytes':p.stat().st_size,'sha256':h.hexdigest()})\nprint(json.dumps({'root':str(r),'files':files}))\n",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "shai-ycfeng",
+        "sudo -n tar -C /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-profile-20261025-01 -cf - ."
+      ],
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "tar",
+        "--no-same-owner",
+        "--no-same-permissions",
+        "-xf",
+        "-",
+        "-C",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts"
+      ],
+      "returncode": 0
+    }
+  ]
+}
