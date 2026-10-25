@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-25 | Created: P2-32r and P2-32p package builds, CPU checks, quota read and the wave 1 submission. |
+| 2026-10-25 | Added the P2-64p terminal state. |
 | 2026-10-25 | Added the P2-64r terminal state and the P2-64p submission. |
 | 2026-10-25 | Added the wave 1 terminal state, the P2-64r and P2-64p package builds, the 15:53 UTC quota read and the P2-64r submission. |
 
@@ -71,4 +72,4 @@ Commands as above with `p2_64_reference` and `p2_64_profile`; logs `/data/ycfeng
 | 6 | Quota read before submission (`monitor/quota_20261025T155348Z.json`) | at least 64 free non-preemptible H200 | `step_main` H200 total 512, non-preemptible use 220; 289 usable GPUs, 35 nodes with 8 usable | — | PASS |
 | 6b | Quota read before the P2-64p submission (`monitor/quota_20261025T162153Z.json`) | at least 64 free non-preemptible H200; this session's other H200 jobs ended | — | `step_main` H200 non-preemptible use 404 of 512 (108 free); 102 usable GPUs on nodes, 12 nodes with 8 usable; session H200 use 0 | PASS |
 | 7 | Platform state after submission (`monitor/status_w2_1.json`, `monitor/status_w2_p64p_1.json`) | creator `i-fengyicheng`, preemptible `no`, `step-main-default`, 8 replicas, the locked image, NFS mount of the package | `exp-1025-155441-668927` submitted 15:54:41 UTC, launcher pid 532621; all as expected; Starting, then Running at 15:57 UTC | `exp-1025-162315-604618` submitted 16:23:16 UTC, launcher pid 552856; all as expected; Running at 16:24 UTC | PASS so far |
-| 8 | P2-64r terminal state (platform terminal receipt beside the run's `run_manifest.json`; launcher log) | phase Succeeded; creator `i-fengyicheng`; `step_main`; preemptible `no`; 8 replicas Succeeded; every container exit 0, restart 0, the locked image; `FINAL_STATUS succeeded` | Succeeded 16:19:44 UTC; all as expected; hosts `gpu-h200-0968/0040/0760/0722/0938/0710/0543/0716`; 1304-1473 s per container; 24.32 container GPU-hours; launcher exit 0 | pending | PASS (P2-64r) |
+| 8 | Terminal state (platform terminal receipt beside the run's `run_manifest.json`; launcher log) | phase Succeeded; creator `i-fengyicheng`; `step_main`; preemptible `no`; 8 replicas Succeeded; every container exit 0, restart 0, the locked image; `FINAL_STATUS succeeded` | Succeeded 16:19:44 UTC; all as expected; hosts `gpu-h200-0968/0040/0760/0722/0938/0710/0543/0716`; 1304-1473 s per container; 24.32 container GPU-hours; launcher exit 0 | Succeeded 16:47:02 UTC; all as expected; hosts `gpu-h200-0938/0146/0040/0968/0722/0710/0760/0543`; 1368-1398 s per container; 24.54 container GPU-hours; launcher `FINAL_STATUS succeeded` | PASS |
