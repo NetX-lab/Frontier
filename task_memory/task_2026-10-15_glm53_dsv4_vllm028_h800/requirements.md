@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded YC's instruction to continue without pausing for decisions and to adopt the lead's recommendations by default (D-NO-INTERRUPT). |
+| 2026-10-25 | Recorded YC's adoption of one H200 run of H4b-(a) on the P2-32 layout before the H800 run (D-H200-H4B-LIFECYCLE). |
 | 2026-10-25 | Recorded YC's adoption of the SSH route, the Pi retry that copied all four H200 runs, and YC's choice of the same-table substitution for the P2-64 step-cost gap (D-H200-STEP-COST-SUBSTITUTION). |
 | 2026-10-25 | Recorded YC's `/ds4-exec` request to reach `shai-ycfeng` through the Pi executor and its blocked outcome. |
 | 2026-10-25 | Recorded YC's temporary promotion of DSV4 on H200-32 and H200-64 to the mainline for 12 hours, with at most 64 non-preemptible H200 for this session (D-H200-TEMP-MAINLINE). |
@@ -212,6 +214,21 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 17. **D-H200-STEP-COST-SUBSTITUTION.** When the step-cost builder finds a prefill composition (`num_prefill_requests`, `num_prefill_tokens`) measured only in steps with 0 decode requests, it also prices that composition for 1 to `max_num_seqs` decode requests with the same measured time. The added entry has `samples` 0, an empty `measured_num_decode_requests`, and `substituted_from_num_decode_requests` {min 0, max 0}, so every substitution is listed in the table.
     - **Scope.** The rule is in `tests/comparison/calibration/prepare_dsv4_step_cost.py`; `frontier/` is unchanged. The H800 and P2-32 tables have no such gap and stay byte-identical. The P2-64 table gains two substituted entries.
     - **Expected effect.** On H800 and P2-32 the measured (1, 1, m≥1) step is about 9 ms slower than (1, 1, m=0) (one sample each), and each request causes such a step about once per lane. The estimate is about 0.2% on TPOT and E2E and none on TTFT. Results using the rule stay DIAGNOSTIC.
+
+[Original Request] Follow-up, 2026-10-25, about 18:56 UTC. The lead's recommendation after the H200 P2 report: "在 H200 上跑一次 H4b-(a) 的 handoff 测量（32 张 H200，按 P2 包的方式只改 device 字段）。这样可以先推进 H4b-(b) 的设计，H800 那份继续排队，作为 H800 的正式证据。" YC answered:
+
+> 采纳你的方案，继续
+
+18. **D-H200-H4B-LIFECYCLE.** H4b-(a) runs once on H200 as a DIAGNOSTIC case, P2-32 lifecycle, before the H800 run.
+    - **Package.** The H4b-(a) `package_01` (native06 plus the scheduler lifecycle observer, harness `h4b-lifecycle-harness` at `7ac25c74`) gets the H200 package changes of D-H200-TEMP-MAINLINE and nothing else: hardware identity, case identity, run tag and output path. The layout is P2-32 (P16+D16, TP8/DP2/EP16/PP1), the workload is 68f891b.
+    - **Resources.** 32 H200 in `step_main`, non-preemptible, one job, submitted inside the D-H200-TEMP-MAINLINE window (until 03:00 UTC 2026-10-26). This is also within the global limit of 32 non-preemptible `step_main` H200. Submission, monitoring, log reads and stops go through the Pi executor (`/ds4-exec`).
+    - **Use.** Its scheduler records and handoff parts feed the H4b-(b) design. Its client metrics are compared with P2-32r and enter no gate. H200 evidence never qualifies H800 cells: the H800 H4b-(a) job `exp-1025-121318-827142` stays queued and remains the H800 evidence. D-MAINLINE-LOOP-CAP-DSV4 counts this job.
+
+[Original Request] Follow-up, 2026-10-25, about 19:10 UTC:
+
+> [补充]接下去的执行中不要中断，不要进行grill-me；默认采纳你推荐的方案。
+
+19. **D-NO-INTERRUPT.** From here on the lead does not pause for decisions and does not run `grill-me`. Where a choice comes up, the lead's recommended option is adopted, recorded with its reason in progress.md, and reported. Authorization limits stay as recorded: destructive actions, new external actions and resources beyond the recorded decisions still need YC's approval, and D-GPU-SHORTAGE-REPORT still applies.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

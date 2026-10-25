@@ -1,0 +1,8 @@
+{
+  "start_utc": "2026-10-25T19:07:45.134572+00:00",
+  "launcher_pid": 3659651,
+  "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_lifecycle/package_01/config.json",
+  "exception_type": "RuntimeError",
+  "exit_code": 1,
+  "end_utc": "2026-10-25T19:07:48.703209+00:00"
+}

@@ -22,7 +22,6 @@ import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-PACKAGES = HERE.parent / 'v4_p0_native_20261021'
 WORKTREES = Path('/data/ycfeng/Frontier/.worktrees')
 NATIVE = Path('/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69')
 NATIVE_COMMIT = '2cf0a6915ce544dc493a0990f2ea38d81601128a'
@@ -31,32 +30,41 @@ R3_CHECKER = Path('/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memo
 SCRATCH = Path('/data/ycfeng/tmp/glm53_dsv4/h200')
 CLOUD = '/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18'
 HARDWARE = dict(gpu_type='H200', charged_group='step_main')
-PACKAGE_DIR = 'task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/'
-# The source packages ran from their harness worktrees; their configs carry
-# these directories in every path field.
+TASK_DIR = 'task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800'
+# Each source package path is relative to the task directory. A source config carries the
+# package directory inside the worktree it was built in (`built_in`) in every path field.
 SOURCES = {
-    'reference': dict(package='candidate_h800_p0_06', harness='v4-balanced-native-model',
-                      harness_commit='b62c155abd981a71e12e62aa0c0fe3990741d2f8'),
-    'profile': dict(package='candidate_h800_p0_profile_02', harness='v4-native-profile-run',
-                    harness_commit='a90c9dbbee53e2cabbfac73ba8490ffb958ce8eb'),
+    'reference': dict(package='v4_p0_native_20261021/candidate_h800_p0_06', built_in='v4-balanced-native-model',
+                      harness='v4-balanced-native-model', harness_commit='b62c155abd981a71e12e62aa0c0fe3990741d2f8'),
+    'profile': dict(package='v4_p0_native_20261021/candidate_h800_p0_profile_02', built_in='v4-native-profile-run',
+                    harness='v4-native-profile-run', harness_commit='a90c9dbbee53e2cabbfac73ba8490ffb958ce8eb'),
+    # H4b-(a): native06 plus the engine-core scheduler lifecycle observer.
+    'lifecycle': dict(package='h4b_lifecycle_measurement/package_01', built_in='glm53-dsv4-vllm028',
+                      harness='h4b-lifecycle-harness', harness_commit='7ac25c7471fc2ae73657fc529a89bc651c3326ba'),
 }
+# h200_limit: the session's non-preemptible H200 limit, running plus queued, when the case was built.
 CASES = {
-    'p2_32_reference': dict(source='reference', dp=2, case_id='dsv4-h200-p2-canonical-fixed128-qps1',
+    'p2_32_reference': dict(source='reference', dp=2, h200_limit=64, case_id='dsv4-h200-p2-canonical-fixed128-qps1',
                             run_tag='dsv4-h200-p2-canonical-20261025-01',
                             purpose='P2 H200-32 native reference for DSV4 under D-H200-TEMP-MAINLINE; '
                                     'Frontier comparisons against it are DIAGNOSTIC'),
-    'p2_32_profile': dict(source='profile', dp=2, case_id='dsv4-h200-p2-profile-fixed128-qps1',
+    'p2_32_profile': dict(source='profile', dp=2, h200_limit=64, case_id='dsv4-h200-p2-profile-fixed128-qps1',
                           run_tag='dsv4-h200-p2-profile-20261025-01',
                           purpose='Diagnostic native serving profile on H200-32; source of the H200 step-cost '
                                   'table; no E2E or reference admission'),
-    'p2_64_reference': dict(source='reference', dp=4, case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
+    'p2_64_reference': dict(source='reference', dp=4, h200_limit=64, case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
                             run_tag='dsv4-h200-p2-64-canonical-20261025-01',
                             purpose='P2 H200-64 native reference and basic validation for DSV4 under '
                                     'D-H200-TEMP-MAINLINE; Frontier comparisons against it are DIAGNOSTIC'),
-    'p2_64_profile': dict(source='profile', dp=4, case_id='dsv4-h200-p2-64-profile-fixed128-qps1',
+    'p2_64_profile': dict(source='profile', dp=4, h200_limit=64, case_id='dsv4-h200-p2-64-profile-fixed128-qps1',
                           run_tag='dsv4-h200-p2-64-profile-20261025-01',
                           purpose='Diagnostic native serving profile on H200-64; source of the H200-64 '
                                   'step-cost table; no E2E or reference admission'),
+    'p2_32_lifecycle': dict(source='lifecycle', dp=2, h200_limit=32, case_id='dsv4-h200-p2-lifecycle-fixed128-qps1',
+                            run_tag='dsv4-h200-p2-lifecycle-20261025-01',
+                            purpose='DIAGNOSTIC H4b-(a) D-side handoff measurement on H200-32 under '
+                                    'D-H200-H4B-LIFECYCLE; P2-32 case and workload plus the engine-core scheduler '
+                                    'lifecycle observer; not an E2E reference; never qualifies H800 cells'),
 }
 FRONTIER_INPUT = 'case/inputs/frontier.json'
 ROLE_KEY = 'cluster_config_{}_replica_config_{}'
@@ -72,13 +80,13 @@ class Case:
     def __init__(self, name, package):
         case = CASES[name]
         source = SOURCES[case['source']]
-        self.name, self.profile, self.dp = name, case['source'] == 'profile', case['dp']
+        self.name, self.profile, self.dp, self.h200_limit = name, case['source'] == 'profile', case['dp'], case['h200_limit']
         self.replicas = 2 * self.dp
         self.case_id, self.run_tag, self.purpose = case['case_id'], case['run_tag'], case['purpose']
-        self.source = PACKAGES / source['package']
+        self.source = HERE.parent / source['package']
         self.harness = WORKTREES / source['harness']
         self.harness_commit = source['harness_commit']
-        self.source_root = str(self.harness / PACKAGE_DIR / source['package'])
+        self.source_root = str(WORKTREES / source['built_in'] / TASK_DIR / source['package'])
         self.target = HERE / name / package
         self.output_dir = f"{CLOUD}/{self.run_tag.replace('-', '_')}/case/runs/groundtruth_clean/{self.run_tag}"
         self.launch_lines = [
@@ -166,9 +174,10 @@ def manifest_lines(case, config):
         ('  priority: P0', '  priority: P2', 1),
         ('  gpu_type: H800', f"  gpu_type: {HARDWARE['gpu_type']}", 1),
         ('  charged_group: codesign', f"  charged_group: {HARDWARE['charged_group']}", 1)]
-    if '  H200_nonpreemptible_running_plus_queued_limit: 32' in lines:
-        replacements.append(('  H200_nonpreemptible_running_plus_queued_limit: 32',
-                             '  H200_nonpreemptible_running_plus_queued_limit: 64', 1))
+    limit = '  H200_nonpreemptible_running_plus_queued_limit: '
+    old_limit = next((line for line in lines if line.startswith(limit)), None)
+    if old_limit is not None and old_limit != f'{limit}{case.h200_limit}':
+        replacements.append((old_limit, f'{limit}{case.h200_limit}', 1))
     if case.dp != 2:
         replacements += [('      dp: 2', f'      dp: {case.dp}', 2), ('      ep: 16', f'      ep: {8 * case.dp}', 2)]
     return replacements
@@ -280,7 +289,8 @@ def compare(case, config, changed_retained):
             changed = set(leaf_differences(yaml.safe_load(old), yaml.safe_load(new)))
             expected = {('case_id',), ('run_generation',), ('purpose',), ('runtime_source_overlay', 'sha256'),
                         ('policy', 'priority'), ('policy', 'gpu_type'), ('policy', 'charged_group')}
-            if 'H200_nonpreemptible_running_plus_queued_limit' in yaml.safe_load(old)['policy']:
+            old_limit = yaml.safe_load(old)['policy'].get('H200_nonpreemptible_running_plus_queued_limit')
+            if old_limit not in (None, case.h200_limit):
                 expected.add(('policy', 'H200_nonpreemptible_running_plus_queued_limit'))
             if dp_changed:
                 expected |= {('topology', 'vllm', role, key) for role in ROLES for key in ('dp', 'ep')}
@@ -352,10 +362,12 @@ def launch_path(case, config):
                    data_parallel_address=value('--data-parallel-address'),
                    data_parallel_rpc_port=value('--data-parallel-rpc-port'),
                    profiler_config=json.loads(value('--profiler-config')) if value('--profiler-config') else None,
+                   scheduler_cls=value('--scheduler-cls'),
                    kv_transfer_config=json.loads(value('--kv-transfer-config')))
         trace_dir = f'{case.output_dir}/torch_traces/{role}/dp{lane}' if case.profile else None
         if (row['role'] != role or row['lane'] != lane or row['headless'] != (lane != 0)
                 or (row['profiler_config'] or {}).get('torch_profiler_dir') != trace_dir
+                or row['scheduler_cls'] != config['engine'].get('scheduler_cls')
                 or row['data_parallel_size'] != str(case.dp)
                 or row['data_parallel_start_rank'] != (str(lane) if lane else None)
                 or row['data_parallel_address'] != peers[case.dp * (index // case.dp)]['ip']):

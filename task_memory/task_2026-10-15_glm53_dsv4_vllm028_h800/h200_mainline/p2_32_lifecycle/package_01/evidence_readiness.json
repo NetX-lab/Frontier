@@ -1,0 +1,40 @@
+{
+  "cost": {
+    "h800_measured_startup_or_timing": false,
+    "max_payload_gpu_hours": 32,
+    "minimum_schedule_gpu_hours": 3.7866666666666666,
+    "payload_guard_seconds": 3600,
+    "scheduled_arrival_span_seconds": 426
+  },
+  "native_limits": [
+    "H800 grouped memory and actual allocation",
+    "native HMA P/D transfer",
+    "all32rank forwards/replays with conditional NONE semantics",
+    "ordered shutdown",
+    "complete 3x(16+128) client records",
+    "four calibration errors<=10percent"
+  ],
+  "primary_review": [
+    "Unsealed candidate",
+    "Existing checker V4/V2/schema/C26 binding"
+  ],
+  "reused_h200_evidence": "Source/bootstrap/native dtype and geometry functions only; no H800 memory/timing claim",
+  "runtime": "native2cf base + accepted C26 one-file bootstrap; binaries unchanged",
+  "runtime_qualified": false,
+  "source_instrumentation": "Existing NativeServingInventory; V1 and supported V2 actual calls",
+  "status": "UNSEALED_REVIEW_CANDIDATE",
+  "submitted": false,
+  "target": "H200/step_main32 nonpreemptible; P16+D16 TP8/DP2/EP16/PP1",
+  "purpose": "DIAGNOSTIC H4b-(a) D-side handoff measurement on H200-32 under D-H200-H4B-LIFECYCLE; P2-32 case and workload plus the engine-core scheduler lifecycle observer; not an E2E reference; never qualifies H800 cells",
+  "harness_commit": "7ac25c7471fc2ae73657fc529a89bc651c3326ba",
+  "added_source_pins": [
+    "vllm/config/scheduler.py",
+    "vllm/v1/core/sched/async_scheduler.py",
+    "vllm/v1/outputs.py"
+  ],
+  "scheduler_observer": {
+    "scheduler_cls": "native_scheduler_lifecycle.LifecycleObservedScheduler",
+    "module": "tests/comparison/calibration/native_scheduler_lifecycle.py",
+    "sha256": "24478fb37ab271d3214ffd06188df4c41c629a9ea2124b5658bedb7ed02e24b3"
+  }
+}
