@@ -5,6 +5,8 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-25 | Created: question, trace findings, scheduler observer, records, soft gate, harness base, package changes, CPU check, cost, acceptance and limitations. |
+| 2026-10-25 | Matched the implementation (commits `dffde73c`, `7ac25c74`): buffer written when the scheduler drains and at `shutdown()`, no interpreter-exit hook, no `external_req_id`, `base_scheduler` field, cross-host note for dp1, actual failure injection and timing, CPU check result; acceptance names the R4 run checker. |
+| 2026-10-25 | Section 7 matched the builder: relocated overlay hash, manifest `purpose`, launch outputs not copied, preflight, build result and offline launch-path check. |
 
 **Authority.** D-H4A-CHECKPOINT (H4b-(a) first), D-GPU-SHORTAGE-REPORT, D-INPUT-PERSISTENCE and D-MAINLINE-LOOP-CAP-DSV4 in [requirements.md](../requirements.md). The run is DIAGNOSTIC. It does not replace native06 as the P0 reference, and its client metrics do not enter any gate.
 
@@ -40,13 +42,13 @@ vLLM 0.28 builds the engine-core scheduler from `SchedulerConfig.get_scheduler_c
 - `add_request(request)`: calls `super()`, then records the request.
 - `schedule(*args, **kwargs)`: times the `super()` call, then records the step from the returned `SchedulerOutput`.
 - `update_from_output(scheduler_output, model_runner_output)`: copies the worker-side KV connector fields first, because the scheduler later aggregates its own connector stats into the same object. It then times the `super()` call and records the step's results from the returned outputs.
-- `shutdown()`: calls `super()`, then flushes and closes the file.
+- `shutdown()`: calls `super()`, then writes a `stop` record and closes the file.
 
 Each override passes its arguments unchanged and returns `super()`'s result unchanged. Exceptions from `super()` propagate unchanged. Only the observation code runs inside `try/except`. The observer never calls a scheduler or connector method that changes state. In particular it does not call `connector.get_kv_connector_stats()`, which resets the scheduler-side stats.
 
 **Activation.** The engine config gains `scheduler_cls: "native_scheduler_lifecycle.LifecycleObservedScheduler"`. `vllm_replay.server_command` passes it as `--scheduler-cls`. The module is importable in every engine-core process, because `pd_replay.instance_env` already puts the staged `tests/comparison/calibration/` directory on `PYTHONPATH` for the `native_full_structure.FullModelInventory` worker extension, and engine-core processes inherit the server environment. The observer applies to both roles, that is 4 engine cores: P dp0, P dp1, D dp0, D dp1.
 
-**Output.** The observer reads the existing `FRONTIER_NATIVE_SERVING_EVIDENCE_DIR` (the node directory on the cloud volume) and `FRONTIER_NATIVE_ROLE`, which `native_pd_worker.run` already sets for this worker extension. It writes `<node>/scheduler_lifecycle/dp{rank}_pid{pid}.jsonl`. If the directory variable is missing, it records nothing, as `native_full_structure._install_native_serving_inventory` does. Writes are buffered. The file is flushed after at most 2 s, in `shutdown()` and at interpreter exit.
+**Output.** The observer reads the existing `FRONTIER_NATIVE_SERVING_EVIDENCE_DIR` (the node directory on the cloud volume) and `FRONTIER_NATIVE_ROLE`, which `native_pd_worker.run` already sets for this worker extension. It writes `<node>/scheduler_lifecycle/dp{rank}_pid{pid}.jsonl`. If the directory variable is missing, it records nothing, as `native_full_structure._install_native_serving_inventory` does. Writes are buffered. The buffer is written when a record arrives at least 2 s after the last write, when an update leaves the scheduler with no requests, and in `shutdown()`. The drain write matters because `EngineCore.shutdown()` reaches `scheduler.shutdown()` only after `model_executor.shutdown()`, and earlier native logs show the process manager force-killing the engine core during executor shutdown (`runtime_lock/observed/g0a/g0a_latest03.json`, `runtime_lock/observed/g0b_startup_memory_01/review_20261018/review_transcript.json`). The engine-core process exits with `os._exit`, so an interpreter-exit hook would not run. Every repetition ends with drained schedulers, so a kill at the end loses at most the `stop` record.
 
 ## 3. Records
 
@@ -54,11 +56,12 @@ One JSON object per line. `t` is `time.time()` and `mono` is `time.monotonic()` 
 
 | `event` | Fields |
 | --- | --- |
-| `start` | `schema` (`native_scheduler_lifecycle.v1`), `role`, `dp_rank`, `host`, `pid`, `t`, `mono`, scheduler class, `async_scheduling`, connector name |
-| `add` | `t`, `mono`, `request_id`, `external_req_id`, `arrival_time` (set by the API server on its host), `prompt_tokens`, `max_tokens`, `do_remote_prefill`, `do_remote_decode`, `remote_request_id` from `kv_transfer_params` |
+| `start` | `schema` (`native_scheduler_lifecycle.v1`), `role`, `dp_rank`, `host`, `pid`, `t`, `mono`, `base_scheduler` (the `AsyncScheduler` qualname), `async_scheduling`, `connector` (connector name) |
+| `add` | `t`, `mono`, `request_id` (the engine id `<external id>-<8 hex>`), `arrival_time` (set by the API server on its host), `prompt_tokens`, `max_tokens`, `do_remote_prefill`, `do_remote_decode`, `remote_request_id` from `kv_transfer_params` |
 | `schedule` | `step` (`current_step`), `t`, `mono`, `dur_ms`, `tokens` (total scheduled), `new` (`[request_id, num_computed_tokens, num_scheduled_tokens]` per new request), `cached` (number of cached requests), `waiting_remote_kv` (request ids in WAITING_FOR_REMOTE_KVS after the call), `recv` and `send` (request ids in the NIXL metadata `reqs_to_recv` and `reqs_to_send`), `finished` (`finished_req_ids`), `preempted` |
 | `update` | `step` of the scheduler output (mapped from the output object's identity at `schedule`), `t`, `mono`, `dur_ms`, `tokens` (scheduled in that step), `finished_recving`, `finished_sending`, `kv_stats` (copy of the worker-side `kv_connector_stats.data`: `transfer_duration`, `post_duration`, `bytes_transferred`, `num_descriptors` and the failure counters), `first_token` (request ids whose first output token is in this update), `done` (request ids finished in this update) |
-| `error` | the first 5 observer tracebacks, then only a count |
+| `error` | `where`, `count`, `traceback`: the first 5 observer tracebacks, then only the count in `stop` |
+| `stop` | `t`, `mono`, `records`, `errors`; written by `shutdown()` |
 
 `first_token` is derived from the returned `EngineCoreOutputs`: a request whose output carries new token ids and that has not emitted before. The observer keeps one set of emitted request ids and removes an id when its request finishes.
 
@@ -71,7 +74,7 @@ One JSON object per line. `t` is `time.time()` and `mono` is `time.monotonic()` 
 Per formal D request, joined to the proxy record through `remote_request_id` (and `request_id` as a cross-check):
 - **Single engine-host clock:** c, d, e and f from `mono`, together with the number of engine iterations in c-e, and the NIXL `transfer_duration` of the request's READ against d.
 - **Clock-free remainder:** `(decode_first_byte_monotonic − prefill_response_monotonic)` on the proxy host minus `(first-token update − add)` on the engine host gives a + b + g without any cross-host clock.
-- **Cross-host split:** a, b and g from the `t` fields against the proxy's wall times. This split depends on host clock synchronization. The sign of `arrival_time − prefill_response_time` bounds the offset between the proxy host and the D head host in one direction.
+- **Cross-host split:** a, b and g from the `t` fields against the proxy's wall times. This split depends on host clock synchronization. The sign of `arrival_time − prefill_response_time` bounds the offset between the proxy host and the D head host in one direction. Each DP lane is its own node (`data_parallel_size_local` 1): the D head node runs the API server and dp0, and a second node runs the headless dp1. For a dp1 request, `arrival_time` comes from the head host and `add` from the dp1 host, so b also crosses hosts. The single-host intervals c-f and the clock-free remainder are unaffected.
 - **Lane state:** whether the request's lane was idle or decoding when it arrived, because the idle-lane cadence and the busy-lane cadence differ.
 
 By-product, not part of H4b-(a) acceptance: unprofiled step intervals per composition (k, m) on all four engine cores. They can later replace the profiled-repeat decode samples (substitutions S4 and S5) in H3r.
@@ -82,9 +85,11 @@ native06 ran harness commit `b62c155a` from the worktree `v4-balanced-native-mod
 
 | File | Change | Lines |
 | --- | --- | ---: |
-| new `tests/comparison/calibration/native_scheduler_lifecycle.py` | the observer class (sections 2 and 3) | ~170 |
-| `tests/comparison/dp_placement_pp/vllm_replay.py` | add `"scheduler_cls"` to the v0.28 `server_command` passthrough tuple | 1 |
-| new `tests/comparison/calibration/check_native_scheduler_lifecycle.py` | CPU check (section 6), run in the vLLM 0.28 environment | ~120 |
+| new `tests/comparison/calibration/native_scheduler_lifecycle.py` | the observer class (sections 2 and 3) | 202 |
+| `tests/comparison/dp_placement_pp/vllm_replay.py` | add `"scheduler_cls"` to the v0.28 `server_command` passthrough tuple | +2 −1 |
+| new `tests/comparison/calibration/check_native_scheduler_lifecycle.py` | CPU check (section 6), run in the vLLM 0.28 environment | 282 |
+
+Branch commits: `dffde73c` (observer, passthrough, CPU check) and `7ac25c74` (write the buffer when the scheduler drains).
 
 No `frontier/` file changes. Simulator behavior, including GLM, co-location, PDD and PD-AF results, is unaffected. After the run, the branch is merged into `feat/glm53-dsv4-vllm028`. `b62c155a` is an ancestor of the mainline, and the mainline's `vllm_replay.py` changes touch other lines, so the merge is expected to be clean.
 
@@ -93,9 +98,11 @@ No `frontier/` file changes. Simulator behavior, including GLM, co-location, PDD
 `check_native_scheduler_lifecycle.py` runs with `/data/ycfeng/envs/oneshot-opd-py312/bin/python` (vllm 0.28.0). The installed wheel matches NATIVE `2cf0a69` byte for byte for the scheduler, engine-core, NIXL and outputs files (`/data/ycfeng/tmp/glm53_dsv4/h4b/wheel_vs_native.txt`). The check uses the vLLM unit-test helpers from the NATIVE checkout (`tests/v1/kv_connector/unit/utils.py`):
 1. Drive the remote-prefill lifecycle of `test_remote_prefill_lifecycle.py::test_basic_lifecycle` (add, schedule into WAITING_FOR_REMOTE_KVS, `finished_recving`, promotion, the k=1 step, the first token, finish) once on `AsyncScheduler` and once on `LifecycleObservedScheduler`. Every `SchedulerOutput` and every returned `EngineCoreOutputs` must compare equal.
 2. Drive one remote-decode (P-side) lifecycle the same way, with `finished_sending`.
-3. Check the JSONL file: a `start` record, `add`, the WAITING_FOR_REMOTE_KVS step with the request in `recv`, the `finished_recving` update, the promotion step with `[id, num_tokens − 1, 1]`, `first_token`, `done`, and no `error` record.
-4. Inject an observer failure (an unserializable field) and check that scheduler results are unchanged and one `error` record is written.
-5. Time 10,000 `schedule` + `update` pairs with and without the observer on the same inputs and report the per-step difference.
+3. Check the JSONL file: a `start` record, `add`, the WAITING_FOR_REMOTE_KVS step with the request in `recv`, the `finished_recving` update with the copied `transfer_duration`, the promotion step with `[id, num_tokens − 1, 1]`, `first_token`, `done`, matched `step` numbers, and no `error` record. The file is also read before `shutdown()`: every `update` record must already be on disk.
+4. Replace the observer's `_record_add` and `_transfer_fields` on the scheduler instance with functions that raise. Scheduler results must stay identical, `error` records for `add` and `transfer` must be written, and `update` records must still follow.
+5. Time steady decode: 8 requests of 8 prompt tokens, 2,000 `schedule` + `update` pairs per round, 3 rounds, with and without the observer, and report the median per-pair difference.
+
+**Result** (2026-10-25, `cpu_check/check_result.json`; raw output `/data/ycfeng/tmp/glm53_dsv4/h4b/cpu_check/run2/`): PASS, all 27 checks on vllm 0.28.0 (Python 3.12.13). The median per-pair time is 212.1 µs native and 257.0 µs observed, so the observer adds 44.9 µs per step. Against D steps of 10 ms or more, this is under 0.5%.
 
 ## 7. Package
 
@@ -110,10 +117,15 @@ No `frontier/` file changes. Simulator behavior, including GLM, co-location, PDD
 | `config.json` `run_tag`, `job_tag`, `output_dir` | `dsv4-h800-p0-lifecycle-20261025-01`; `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_lifecycle_20261025/case/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01` |
 | `engine.json`, `case/inputs/engine.json`, `case/inputs/native_config.json` | `scheduler_cls` added; nothing else |
 | `overlay.json` | `staged_dir` and the leaf source path point into `package_01/` |
-| `case/manifest.yaml` | `case_id` `dsv4-h800-p0-lifecycle-fixed128-qps1`, new `run_generation`, `diagnostic_only` true, `e2e_reference_admission` false |
+| `config.json` `retained_files.overlay.json` | rehashed, because the relocated `overlay.json` paths change its bytes |
+| `case/manifest.yaml` | `case_id` `dsv4-h800-p0-lifecycle-fixed128-qps1`, new `run_generation`, a diagnostic `purpose`, `diagnostic_only` true, `e2e_reference_admission` false, and `runtime_source_overlay.sha256` (the relocated `overlay.json`) |
 | `source_lock.json`, `evidence_readiness.json` | the harness commit, the new pins and the diagnostic purpose |
 
-The builder then compares every file of `package_01/` with native06 and fails unless the only differences are the ones listed above. It runs the package's own `seal.py`, then `launch.py --check-only`, which must print `INPUT_HASHES_PASS_NO_SUBMISSION`. `launch.py`, `submit_native_diagnostic.py`, `native_dummy_bootstrap.py`, the workload trace, the model metadata, the image digest and every timeout stay identical.
+native06's launch outputs (`launcher_started.json`, `launcher_exit.json`, `manifest.json`) and its `case/runs/` directory are not copied; `seal.py` and `launch.py` write them for the new run.
+
+The builder then compares every file of `package_01/` with native06 and fails unless the only differences are the ones listed above. It runs the package's own `seal.py`, then a preflight: on a scratch copy of the case directory it calls `native_pd_worker.write_run_manifest` exactly as the worker does at launch, so the checks for the clean harness worktree, the pinned NATIVE checkout, the staged harness files and the input hashes run before submission. Last, `launch.py --check-only` must print `INPUT_HASHES_PASS_NO_SUBMISSION`. `launch.py`, `submit_native_diagnostic.py`, `native_dummy_bootstrap.py`, the workload trace, the model metadata, the image digest and every timeout stay identical. The builder writes its record to `package_01_build.json`.
+
+**Result** (2026-10-25, build log `/data/ycfeng/tmp/glm53_dsv4/h4b/build_package_01.log`): PASS. 44 sealed files; `manifest.json` SHA-256 `67bb7e6e6786639c85071e87f3749c1e5b09001bc46aca6ebc1050b493d70aa4`; harness commit `7ac25c74`; every difference from native06 is in the table above; the preflight run manifest was written; `launch.py --check-only` printed `INPUT_HASHES_PASS_NO_SUBMISSION`. A separate offline check in the vLLM 0.28 environment (`prelaunch/offline_launch_path.py`, output `prelaunch/offline_launch_path.json`) built the node plan for 4 hosts from the package config: all 4 engine commands carry `--scheduler-cls native_scheduler_lifecycle.LifecycleObservedScheduler` and `--async-scheduling`, the overlay sources and tool hashes match, and the observer module is in the staged harness directory.
 
 ## 8. Cost, submission and acceptance
 
@@ -122,7 +134,7 @@ The builder then compares every file of `package_01/` with native06 and fails un
 **Submission.** Read-only quota check at 2026-10-25T11:26:44Z (`prelaunch/quota_20261025T112642Z.json`): `codesign` total 128 H800, non-preemptible use 108, so 20 free, and no node with 8 free GPUs. Per the handbook, the job is submitted when the package is ready and the platform queues it. The quota is read again just before submission. If the queue delays the route, YC is told at once (D-GPU-SHORTAGE-REPORT). The launcher stays alive until the job is terminal. Stopping uses `rjob_stop.sh`.
 
 **Acceptance.**
-1. Platform status Succeeded on all 4 replicas. The existing run checks (`run_check_status.groundtruth_clean.json`) pass as they did for native06: 3 repetitions × 128 formal requests complete with HTTP 200 and full outputs.
+1. Platform status Succeeded on all 4 replicas. The run checker that accepted native06 (R4, `native06_acceptance_20261023/primary_acceptance_r4.json`, checker SHA-256 `67f31923…`) passes on this run as it did for native06: 3 repetitions × 128 formal requests complete with HTTP 200 and full outputs. `case/manifest.yaml` keeps native06's `groundtruth_checker_path` unchanged; the R4 checker is named here.
 2. Observer files exist for all 4 engine cores. Each has a `start` record and no `error` record. Every formal D request has `add`, a WAITING_FOR_REMOTE_KVS step, a `finished_recving` update, a promotion step and a `first_token` record.
 3. The run's client TTFT, TPOT, E2E and THPT are computed with the canonical client tools and compared with native06 r1-r3 and their spread. This comparison is reported, not gated. If a metric falls outside native06's range, the report states it as a possible observer effect.
 4. The parts a-g and the iteration counts are reported per lane state, with the clock-free remainder and its cross-host split (section 4).

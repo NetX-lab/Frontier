@@ -1,0 +1,56 @@
+{
+  "checks": {
+    "remote_decode.identical_results": true,
+    "remote_decode.injected.errors_recorded": true,
+    "remote_decode.injected.identical_results": true,
+    "remote_decode.native_records_absent": true,
+    "remote_decode.records.add": true,
+    "remote_decode.records.finished": true,
+    "remote_decode.records.finished_sending": true,
+    "remote_decode.records.first_token_and_done": true,
+    "remote_decode.records.no_errors": true,
+    "remote_decode.records.prefill": true,
+    "remote_decode.records.send": true,
+    "remote_decode.records.start": true,
+    "remote_decode.records.updates_written_before_shutdown": true,
+    "remote_prefill.identical_results": true,
+    "remote_prefill.injected.errors_recorded": true,
+    "remote_prefill.injected.identical_results": true,
+    "remote_prefill.native_records_absent": true,
+    "remote_prefill.records.add": true,
+    "remote_prefill.records.done": true,
+    "remote_prefill.records.finished_recving": true,
+    "remote_prefill.records.first_token": true,
+    "remote_prefill.records.no_errors": true,
+    "remote_prefill.records.promotion_k1": true,
+    "remote_prefill.records.start": true,
+    "remote_prefill.records.steps_matched": true,
+    "remote_prefill.records.updates_written_before_shutdown": true,
+    "remote_prefill.records.waiting_remote_kv": true
+  },
+  "helpers": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/tests/v1/kv_connector/unit/utils.py",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "timing": {
+    "median_added_us": 44.889300828799605,
+    "median_native_us": 212.12454908527434,
+    "median_observed_us": 257.01384991407394,
+    "per_step_us": {
+      "native": [
+        215.20011685788631,
+        211.03135915473104,
+        212.12454908527434
+      ],
+      "observed": [
+        255.28390868566933,
+        257.6212580315769,
+        257.01384991407394
+      ]
+    },
+    "requests": 8,
+    "rounds": 3,
+    "steps": 2000
+  },
+  "verdict": "PASS",
+  "vllm": "0.28.0",
+  "vllm_file": "/data/ycfeng/envs/oneshot-opd-py312/lib/python3.12/site-packages/vllm/__init__.py"
+}

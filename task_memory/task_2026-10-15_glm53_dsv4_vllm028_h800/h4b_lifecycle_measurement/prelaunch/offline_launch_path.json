@@ -1,0 +1,37 @@
+{
+ "staged_is_package": true,
+ "tool_hashes_ok": true,
+ "overlay_source_ok": true,
+ "v4_pin_ok": true,
+ "observer_in_harness_dir": true,
+ "workspace": true,
+ "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_lifecycle_20261025/case/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01",
+ "h0": {
+  "role": "prefill",
+  "lane": 0,
+  "headless": false,
+  "scheduler_cls": "native_scheduler_lifecycle.LifecycleObservedScheduler",
+  "async_flag": true
+ },
+ "h1": {
+  "role": "prefill",
+  "lane": 1,
+  "headless": true,
+  "scheduler_cls": "native_scheduler_lifecycle.LifecycleObservedScheduler",
+  "async_flag": true
+ },
+ "h2": {
+  "role": "decode",
+  "lane": 0,
+  "headless": false,
+  "scheduler_cls": "native_scheduler_lifecycle.LifecycleObservedScheduler",
+  "async_flag": true
+ },
+ "h3": {
+  "role": "decode",
+  "lane": 1,
+  "headless": true,
+  "scheduler_cls": "native_scheduler_lifecycle.LifecycleObservedScheduler",
+  "async_flag": true
+ }
+}

@@ -1,0 +1,86 @@
+{
+  "harness_commit": "7ac25c7471fc2ae73657fc529a89bc651c3326ba",
+  "native_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4b_lifecycle_measurement/package_01",
+  "manifest_sha256": "67bb7e6e6786639c85071e87f3749c1e5b09001bc46aca6ebc1050b493d70aa4",
+  "sealed": {
+    "sealed_files": 44
+  },
+  "added_pins": {
+    "vllm/v1/core/sched/async_scheduler.py": "e586a0ef3c6778be56a93e7f9bb712d4de9de6e7d7fe7e3e1d51dae83ecfc508",
+    "vllm/config/scheduler.py": "3cf5d41a5d662ab0eada6f3128e2538abc0a250d6aef82acab7df7dd84e498bc",
+    "vllm/v1/outputs.py": "1d255ca30fa2db85ce80033e0d38ce7faecbff794a42899bc84bd420d2a68f39"
+  },
+  "changes": {
+    "case/inputs/engine.json": [
+      "scheduler_cls"
+    ],
+    "case/inputs/native_config.json": [
+      "engine.scheduler_cls",
+      "expected_source_hashes.vllm/config/scheduler.py",
+      "expected_source_hashes.vllm/v1/core/sched/async_scheduler.py",
+      "expected_source_hashes.vllm/v1/outputs.py",
+      "harness_files.tests/comparison/calibration/native_scheduler_lifecycle.py",
+      "harness_worktree",
+      "job_tag",
+      "output_dir",
+      "retained_files.overlay.json",
+      "run_tag",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4b_lifecycle_measurement/package_01/tests/comparison/calibration/native_scheduler_lifecycle.py",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4b_lifecycle_measurement/package_01/tests/comparison/dp_placement_pp/vllm_replay.py"
+    ],
+    "case/manifest.yaml": [
+      "case_id",
+      "diagnostic_only",
+      "e2e_reference_admission",
+      "purpose",
+      "run_generation",
+      "runtime_source_overlay.sha256"
+    ],
+    "config.json": [
+      "engine.scheduler_cls",
+      "expected_source_hashes.vllm/config/scheduler.py",
+      "expected_source_hashes.vllm/v1/core/sched/async_scheduler.py",
+      "expected_source_hashes.vllm/v1/outputs.py",
+      "harness_files.tests/comparison/calibration/native_scheduler_lifecycle.py",
+      "harness_worktree",
+      "job_tag",
+      "output_dir",
+      "retained_files.overlay.json",
+      "run_tag",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4b_lifecycle_measurement/package_01/tests/comparison/calibration/native_scheduler_lifecycle.py",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4b_lifecycle_measurement/package_01/tests/comparison/dp_placement_pp/vllm_replay.py"
+    ],
+    "engine.json": [
+      "scheduler_cls"
+    ],
+    "evidence_readiness.json": [
+      "added_source_pins",
+      "harness_commit",
+      "purpose",
+      "scheduler_observer"
+    ],
+    "overlay.json": [],
+    "source_lock.json": [
+      "added_source_pins",
+      "committed_files.native_pd_worker.py.commit",
+      "committed_files.tests/comparison/calibration/balanced_routing.py.commit",
+      "committed_files.tests/comparison/calibration/client_metrics.py.commit",
+      "committed_files.tests/comparison/calibration/e2e_metrics_gap.py.commit",
+      "committed_files.tests/comparison/calibration/native_dummy_initialization.py.commit",
+      "committed_files.tests/comparison/calibration/native_full_structure.py.commit",
+      "committed_files.tests/comparison/calibration/native_scheduler_lifecycle.py",
+      "committed_files.tests/comparison/calibration/pd_metrics.py.commit",
+      "committed_files.tests/comparison/calibration/pd_proxy.py.commit",
+      "committed_files.tests/comparison/calibration/pd_replay.py.commit",
+      "committed_files.tests/comparison/dp_placement_pp/vllm_replay.py.commit",
+      "committed_files.tests/comparison/dp_placement_pp/vllm_replay.py.sha256",
+      "committed_files.tests/comparison/stage_admission_pp/vllm_burst_driver.py.commit",
+      "committed_files.tests/integration/native_extension_startup_probe.py.commit",
+      "harness_commit"
+    ],
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "restaged from the harness commit"
+  },
+  "preflight_scratch": "/data/ycfeng/tmp/glm53_dsv4/h4b/package_01_preflight_pp608g53",
+  "check_only": "INPUT_HASHES_PASS_NO_SUBMISSION"
+}
