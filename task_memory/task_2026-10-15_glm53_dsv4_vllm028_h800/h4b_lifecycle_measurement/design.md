@@ -7,6 +7,7 @@
 | 2026-10-25 | Created: question, trace findings, scheduler observer, records, soft gate, harness base, package changes, CPU check, cost, acceptance and limitations. |
 | 2026-10-25 | Matched the implementation (commits `dffde73c`, `7ac25c74`): buffer written when the scheduler drains and at `shutdown()`, no interpreter-exit hook, no `external_req_id`, `base_scheduler` field, cross-host note for dp1, actual failure injection and timing, CPU check result; acceptance names the R4 run checker. |
 | 2026-10-25 | Section 7 matched the builder: relocated overlay hash, manifest `purpose`, launch outputs not copied, preflight, build result and offline launch-path check. |
+| 2026-10-25 | Section 4 names the analysis script and how it defines the parts and the lane state. |
 
 **Authority.** D-H4A-CHECKPOINT (H4b-(a) first), D-GPU-SHORTAGE-REPORT, D-INPUT-PERSISTENCE and D-MAINLINE-LOOP-CAP-DSV4 in [requirements.md](../requirements.md). The run is DIAGNOSTIC. It does not replace native06 as the P0 reference, and its client metrics do not enter any gate.
 
@@ -76,6 +77,14 @@ Per formal D request, joined to the proxy record through `remote_request_id` (an
 - **Clock-free remainder:** `(decode_first_byte_monotonic − prefill_response_monotonic)` on the proxy host minus `(first-token update − add)` on the engine host gives a + b + g without any cross-host clock.
 - **Cross-host split:** a, b and g from the `t` fields against the proxy's wall times. This split depends on host clock synchronization. The sign of `arrival_time − prefill_response_time` bounds the offset between the proxy host and the D head host in one direction. Each DP lane is its own node (`data_parallel_size_local` 1): the D head node runs the API server and dp0, and a second node runs the headless dp1. For a dp1 request, `arrival_time` comes from the head host and `add` from the dp1 host, so b also crosses hosts. The single-host intervals c-f and the clock-free remainder are unaffected.
 - **Lane state:** whether the request's lane was idle or decoding when it arrived, because the idle-lane cadence and the busy-lane cadence differ.
+
+**Script.** `analyze_lifecycle.py <run_root> <native06 run_root> <output_dir>` computes acceptance items 2-4 on a local copy of the run. Each part is measured between these records:
+- c: `add` to the schedule whose connector metadata requests the READ (`recv`);
+- d: to the update that reports it in `finished_recving`;
+- e: to the schedule that promotes the request (`new`);
+- f: to the return of the update that emits its first token (`mono + dur_ms`).
+
+The iteration count is the number of schedules from `add` through the promotion. The lane is `decoding` when its last schedule before `add` ran tokens, and `idle` otherwise. Acceptance item 3 reads the per-repetition client metrics from `run/canonical_repetitions.json`, which the harness's client reader writes. Outputs: `lifecycle_requests.jsonl` (one row per formal request) and `lifecycle_summary.json`.
 
 By-product, not part of H4b-(a) acceptance: unprofiled step intervals per composition (k, m) on all four engine cores. They can later replace the profiled-repeat decode samples (substitutions S4 and S5) in H3r.
 
