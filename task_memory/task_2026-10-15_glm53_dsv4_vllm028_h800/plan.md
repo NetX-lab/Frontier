@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | P1b: linked the design and recorded that `package_01` passed its CPU checks; submission waits for H4b-(a) and 64 free H800. |
 | 2026-10-25 | H4c: linked the design and recorded the implemented option B (commit cefbbc9d) and its results; option A stays with YC. |
 | 2026-10-25 | Applied D-H4A-CHECKPOINT: added milestones H4b (native D-side handoff measurement, then Frontier modeling) and H4c (step-cost path speed) with their order and bounds. |
 | 2026-10-25 | H4a done (DIAGNOSTIC): H4a-2 code d6ea9661, H4a-4 four errors and H4a-5 attribution in test_report_2026-10-25_h4a_p0_diagnostic.md; next is the YC checkpoint. |
@@ -156,7 +157,7 @@
 | H3r | Targeted cost refinement | 05, 06, 09 | Only for the cost slots that the H4a attribution names as leading error sources. |
 | H4 | Qualified non-dummy P0 path | 05, 07-09 | H4a path with qualified inputs. Step-level costs do not yet support the formal gates (D-H4A-CHECKPOINT). |
 | H6 | P0 compare, promote and accept | 19 | All four errors <=30% (promotion to P1 formal), then <=10% (final). |
-| P1b | P1 H800-64 basic native validation | 10, 18 | Runs in parallel with everything above, at lower priority than H4b and H4c. |
+| P1b | P1 H800-64 basic native validation | 10, 18 | Runs in parallel with everything above, at lower priority than H4b and H4c. [Design](p1b_basic_validation/design.md); `package_01` passed its CPU checks ([test report](test_report_2026-10-25_p1b_package_preparation.md)); submitted only after H4b-(a) is Running or finished and 64 H800 are free. |
 | P1f | P1 formal reference, comparison and acceptance | 10, 18, 19 | Needs P1b and the P0 30% promotion. |
 
 Dependency: `H4a -> D-H4A-CHECKPOINT -> H4b-(a) -> H4b-(b)`; `H4c` runs while the H4b-(a) job queues and runs; `{H4b-(b), H4c} -> {H3r, H4} -> H6(P0) -> P1f`; `P1b` runs in parallel and `{P1b, H6 promotion} -> P1f`. Accepted data from H1, H2 and H5 is reused, not redone.

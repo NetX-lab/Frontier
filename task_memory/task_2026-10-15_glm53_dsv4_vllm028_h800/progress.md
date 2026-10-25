@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded the P1b design and the `package_01` CPU checks (test report 2026-10-25 p1b); P1b and H4b-(a) both wait for H800 quota. |
 | 2026-10-25 | Recorded H4c (commit cefbbc9d, option B): per-wave equivalence, P0 replay identity, 10.7× faster replay, regressions and the post-change profile; H4b-(a) still Pending for quota. |
 | 2026-10-25 | Recorded the H4b-(a) harness commits, CPU check and `package_01` build; disclosed one unapproved `rm -rf` of a crashed scratch output; next is submission. |
 | 2026-10-25 | Recorded D-H4A-CHECKPOINT and D-GPU-SHORTAGE-REPORT, added H4b and H4c to the milestone table, and started the H4b-(a) record (design, quota snapshot, platform access through the runtime proxy). |
@@ -212,12 +213,12 @@
 | H1 P0 case binding | completed | ticket 17 P0-scoped items; `canonical_case_20261021/p0_binding/` |
 | H5 P0 native reference | completed | native06 R4: TTFT 403.31/393.22/399.95 ms, TPOT 19.031/19.017/18.981 ms, E2E 19872/19847/19817 ms, THPT 6273.3/6273.1/6269.8 tok/s; `native06_acceptance_20261023/` |
 | H4a first diagnostic P0 prediction | completed (DIAGNOSTIC): TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54% | [test_report_2026-10-25_h4a_p0_diagnostic.md](test_report_2026-10-25_h4a_p0_diagnostic.md); records below |
-| H4b-(a) native D-side handoff measurement | in-progress: design, harness (`7ac25c74`), CPU check and `package_01` completed; job `exp-1025-121318-827142` submitted 12:13 UTC, Pending for quota (20 of 32 H800 free) | [h4b_lifecycle_measurement/design.md](h4b_lifecycle_measurement/design.md); record below |
+| H4b-(a) native D-side handoff measurement | in-progress: design, harness (`7ac25c74`), CPU check and `package_01` completed; job `exp-1025-121318-827142` submitted 12:13 UTC, still Pending for quota at 13:32 UTC (21 of 32 H800 free) | [h4b_lifecycle_measurement/design.md](h4b_lifecycle_measurement/design.md); record below |
 | H4b-(b) Frontier D-side remote-KV lifecycle | pending | needs H4b-(a) results |
 | H4c step-cost path speed | completed (DIAGNOSTIC), commit `cefbbc9d`: P0 replay byte-identical to H4a run5, 8,094.8 → 758.2 s wall time; unit suite, e2e gate, smoke matrix and 77-case fidelity unchanged | [test_report_2026-10-25_h4c_step_cost_speed.md](test_report_2026-10-25_h4c_step_cost_speed.md); record below |
 | H3r targeted cost refinement | pending | after H4b-(b) and H4c (D-H4A-CHECKPOINT) |
 | H4 / H6 P0 qualified path and acceptance | pending | step-level costs do not yet support formal gates (D-H4A-CHECKPOINT) |
-| P1b H800-64 basic native validation | pending, parallel, lower priority | ticket 10 p1 list |
+| P1b H800-64 basic native validation | in-progress: design and `package_01` CPU checks completed; not submitted (needs H4b-(a) Running or finished and 64 free H800) | [p1b_basic_validation/design.md](p1b_basic_validation/design.md); [test_report_2026-10-25_p1b_package_preparation.md](test_report_2026-10-25_p1b_package_preparation.md); record below |
 | profile04 R5 trace audit | stopped at 24/32 | prefill DP0 ranks 0-7 deferred, see [future.md](future.md) |
 | scope-lifetime S4/S5 package | stopped, unsealed, 0 GPU jobs | package path preserved in the historical pointer below |
 
@@ -226,7 +227,7 @@
 2. H4b-(a): after the run, copy the results, run the R4 checker, analyze parts a-g per lane state, merge `h4b-lifecycle-harness` into the mainline.
 3. H4c: completed. Option A and the smaller per-step `ExecutionTime` reuse are left to YC (test report section 4).
 4. H4b-(b) design from the measured parts.
-5. P1b preparation in parallel at lower priority.
+5. P1b: submit `p1b_basic_validation/package_01` only when H4b-(a) is Running or finished and a quota read shows at least 64 free H800; then run the R4 checker (design section 6).
 
 **H4a-1 and H4a-3 record (2026-10-25).** Design: [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md).
 - completed — input persistence (D-INPUT-PERSISTENCE). `h4a_p0_diagnostic/copy_inputs.py` copied 10 native06, 11 profile02 and 9 profile04 files into `h4a_p0_diagnostic/inputs/` (38 MB; manifest with source, cloud origin, size and SHA-256 per file). Each copied cloud inventory matches its receipt digest (profile02 `33ed03ea…`, profile04 `85b0ef23…`). The two profile02 decode traces (36 MB) stay out of git; their cloud originals are recorded.
@@ -290,6 +291,12 @@
 - completed — regressions on the change: full unit suite 134 failed / 6,114 passed / 208 skipped / 108 errors, test-by-test equal to the H4a-2 result (0 regressed, 0 fixed); `test_e2e_gate.py` 40 passed; smoke matrix 12/12. The first unit run lacked `--continue-on-collection-errors` and stopped at collection; the H4a-2 command above also omits that flag. Inference: the H4a-2 run used it, because its log shows the same collection errors and still ran 6,114 passing tests.
 - completed — 77-case fidelity from clean worktree `.worktrees/fidelity-candidate-cefbbc9d` (`run_matrix.py run ... --jobs 8 --clean-cache --continue-on-failure`, then `compare` against the t00 baseline; `PYTHONPATH` must be set to the worktree): 77/77 identical, 0 mismatched, 0 failures. Report `/data/ycfeng/tmp/glm53_dsv4/h4c/fidelity/comparison.json`, copied to `h4c_step_cost_speed/results/fidelity_comparison.json`. GLM, co-location, PDD and PD-AF results unchanged. PASS.
 - completed — profile after the change: 180 s now cover 19.06 simulated seconds instead of 2.02 s. The EP wave plan takes 17.3 s. What remains is mostly the per-layer attention prediction of each lane (53.5 s, of which `ExecutionTime.__init__` takes 48.5 s), `enter_layer_sync` (37.5 s) and idle-lane forwards (22.1 s).
+
+**P1b record (2026-10-25).** Authority: D-P1-BASIC-PARALLEL and D-H4A-CHECKPOINT (parallel, lower priority than H4b and H4c).
+- completed — design: [p1b_basic_validation/design.md](p1b_basic_validation/design.md). P32+D32, TP8/DP4/EP32/PP1 per role, 8 hosts; native06's harness, image, NATIVE source and 68f891b workload unchanged; DIAGNOSTIC `basic_validation`, not the P1 formal reference. Reason: ticket 10 asks for basic 64-rank native evidence before the P1 formal campaign. Finding from code reading: the harness and the R2/R3/R4 checks read DP size and host count from the config, so only package inputs change.
+- completed — `package_01`: `p1b_basic_validation/build_package.py` copied native06's package and applied the design section 4 changes; comparison with native06, `seal.py` (43 files, `manifest.json` `b77768b6…3570`), run-manifest preflight, R3 Frontier reconstruction (both roles attn_dp 4, EP32, world size 32), offline launch path for 8 hosts (heads 0 and 4, headless start ranks 1-3, `--data-parallel-size 4`, KV transfer config accepted) and `launch.py --check-only` passed. Record `p1b_basic_validation/package_01_build.json`; report [test_report_2026-10-25_p1b_package_preparation.md](test_report_2026-10-25_p1b_package_preparation.md).
+- finding — design section 2 overstated the `pd_replay` port check (it checks only the NIXL side-channel windows against the HTTP and DP RPC ports); corrected in the design, and the launch-path check now runs `kv_transfer_config`.
+- pending — submission. At 13:32 UTC H4b-(a) was still Pending with 21 free H800 (`/data/ycfeng/tmp/glm53_dsv4/h4b/monitor/status_7.json`); P1b needs 64. Already reported to YC under D-GPU-SHORTAGE-REPORT.
 
 **Rules for this route.** D-MAINLINE-LOOP-CAP-DSV4 (more than 3 GPU jobs or about 6 hours of GPU or CPU work on one milestone without movement stops the work and goes to YC). Every checkpoint first states which milestone moved.
 

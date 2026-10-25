@@ -1,0 +1,84 @@
+{
+ "arrivals": {
+  "first_arrival_s": 0.0,
+  "inter_arrival_s": 1.0,
+  "last_arrival_s": 127.0,
+  "realized_mean_qps": 1.0,
+  "realized_span_s": 127.0,
+  "rule": "arrived_at = row index in seconds; fixed spacing, not Poisson or retimed gaps",
+  "target_qps": 1.0
+ },
+ "frontier_replay": {
+  "decode_scale_factor": 1.0,
+  "loader": "TraceReplayRequestGenerator",
+  "minimum_max_tokens": 7168,
+  "prefill_scale_factor": 1.0,
+  "request_id_binding": "frontier_request_id is the row ordinal; the harness records the actual runtime ID mapping",
+  "time_scale_factor": 1.0,
+  "trace_file": "trace.csv"
+ },
+ "lengths": {
+  "formal_output_tokens": 131072,
+  "formal_prompt_tokens": 786432,
+  "formal_total_tokens": 917504,
+  "output_tokens_per_request": 1024,
+  "prompt_tokens_per_request": 6144,
+  "total_tokens_per_request": 7168
+ },
+ "measurement": {
+  "arrival_end_s": 127.0,
+  "e2e": "per-request client issue to last output token; not workload makespan",
+  "origin": "first formal request issue after warmup drain; independent clock origin per repetition",
+  "population": "formal rows only, separately for each clean repetition; never warmup IDs",
+  "statistic": "mean for TTFT, TPOT and per-request E2E; p50/p95 diagnostic only",
+  "thpt": "917504 formal prompt-plus-output tokens / the formal measurement window duration in seconds",
+  "tpot": "per-request (E2E - TTFT) / (actual output tokens - 1)",
+  "ttft": "per-request client issue to first output token; internal prefill completion is diagnostic only",
+  "window_end": "last formal client output token; not last arrival or the later idle/KV-release check",
+  "window_start": "first formal client request issue"
+ },
+ "namespace": "fixed-6144-1024-req128-qps1",
+ "native_request_contract": "One /v1/completions request per row at its phase-relative arrived_at; construct exactly num_prefill_tokens deterministic valid prompt token IDs from the stable template request_id and the model vocabulary in the native harness; repeat-qualified transport IDs must not change prompt content. Do not tokenize text, download weights, truncate, or add BOS/EOS tokens. Use max_tokens = min_tokens = num_decode_tokens and ignore_eos; runtime evidence must confirm actual prompt and output counts.",
+ "repetitions": {
+  "clean_repetitions": 3,
+  "repeat_indices": [
+   1,
+   2,
+   3
+  ],
+  "request_id_binding": "the harness qualifies every formal and warmup template ID with repeat=1,2,3 before dispatch",
+  "runtime_request_id_rule": "{request_id}-repeat{repeat:02d}",
+  "sequence": "warmup -> both roles idle and request-owned KV released -> formal -> both roles idle and request-owned KV released; repeat three times"
+ },
+ "reproducibility": {
+  "builder": "tests/integration/canonical_case/build_fixed_manifest.py",
+  "builder_sha256": "78bec396f8176861221fc8557d0d476369b8ebb2f4d451d6218ae15cf3678983",
+  "command": "python3 tests/integration/canonical_case/build_fixed_manifest.py --output-dir data/processed_traces/canonical_fixed_6144_1024_req128_qps1",
+  "rule": "fixed integers, ordered rows, UTF-8, LF, sorted JSON keys; no timestamps, absolute paths, or external inputs",
+  "seed": null
+ },
+ "schema": "frontier.canonical_fixed_workload.v1",
+ "selection": {
+  "num_formal_requests": 128,
+  "rule": "all 128 deterministic formal rows, in row order, in every repetition"
+ },
+ "source": {
+  "kind": "synthetic_fixed_token_counts",
+  "rule": "k = 1024 tokens; 6k prompt and 1k output per request",
+  "sharedgpt": "deferred; historical frozen SharedGPT artifacts are unchanged"
+ },
+ "warmup": {
+  "coverage_limit": "sixteen aggregate warmup completions do not prove all-lane CUDA Graph replay; runtime evidence must establish coverage on every required lane/rank",
+  "end": "last warmup output plus observed PREFILL/DECODE idle and all request-owned KV released before the first formal request",
+  "first_arrival_s": 0.0,
+  "included_in_metrics": false,
+  "inter_arrival_s": 1.0,
+  "last_arrival_s": 15.0,
+  "num_requests_per_repetition": 16,
+  "origin": "separate warmup origin before each repetition; not the formal origin",
+  "output_tokens_per_request": 1024,
+  "prompt_tokens_per_request": 6144,
+  "target_qps": 1.0,
+  "trace_file": "warmup_pool.csv"
+ }
+}
