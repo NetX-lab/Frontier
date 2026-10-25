@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Preserved new prefill control SIGSEGV and allocated one DP1rank0 native-stop observation; controls2/2spent, affected/GPU0. |
 | 2026-10-25 | Allocated a separate interval representation correction from measured159-group sort/union evidence; affected/GPU allowance stays zero. |
 | 2026-10-25 | Archived censored once-only GDB observation and measured group segments; native detection stack remains unmeasured and R5 remains24/32. |
 | 2026-10-25 | Accepted file-based native control02 after127 primary checks; preserved stale launcher hash receipt and bound current source without rerunning controls. |
@@ -348,3 +349,8 @@ One owner may create a fresh probe copy under `profile01/graph_probe/`, with at 
 
 - [Decision — measured ordinary repair] `metrics_correction03/primary/allocation.json` separately allocates new adapter160gross/newtests260/notes80/primarydriver150 lines. Cache global interval columns and integer group positions; reuse full sorted sequence by identity. Preserve count/sum trace order, original exact union recurrence, allduplicate memberships/grouping/substitutions/pipeline/GC/loading/rawIDs/runtime and60s/30GiB/max2(selected1). Frozen accepted sources remain unchanged.
 - [Invocation budget] Freshownerunit1/primaryunit1, one synthetic scale pair and two complete output controls, each frozen before execution/no retry. Exact non-clock/count/sum/union/hierarchy/leaf/per-stream fields and index rows against retained baseline outputs are required with independent review. Newaffected/GPU0; allocate affected only after accepted source/control evidence. Original corruption writer remainsUNKNOWN; no native diagnosis rerun or cure claim.
+
+### D-V4-PREFILL-CONTROL-SIGSEGV-NATIVE-OBSERVATION
+
+- [Observed failure] New interval decode control is exactPASS; prefillDP1rank0 childSIGSEGV/-11,parent1,enclosing20.366353s/actual30GiB,lastkernel_progress19.943/no metrics/no finalJSON. Both controls2/2spent. Source reviewsNo findings do not close complete-control acceptance; R5still24/32.
+- [Decision — ordinary measured CPU diagnosis] `prefill_fault04/primary/allocation.json` separately allocates one90-lineGDB source and100-linecontroller with one native observation, no new synthetic/complete/affected/GPU invocation. Same originalPython/allocator/GC/loader/candidate/fullDP1trace; new SIGSEGV-stop question rather than the spentP0group-timing diagnostic. Reuse acceptedGDB signal/capture AST exactly, addSIGSEGVstop/nopass, static/read-only review before execution. Preserve60s/actual30GiB/max2(selected1)/no retry. Signal/native detection frame may be observed; writerUNKNOWN and no cure/source-control acceptance follows.

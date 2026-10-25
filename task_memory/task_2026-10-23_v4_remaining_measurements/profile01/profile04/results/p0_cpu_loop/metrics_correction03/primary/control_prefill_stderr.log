@@ -1,0 +1,9 @@
+Running scope as unit: run-r3e87d298b6bd46f7936b66edf49785b3.scope
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/verify_interval.py", line 140, in <module>
+    receipt['result'] = control_check() if MODE.startswith('control') else metrics_check()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/verify_interval.py", line 98, in control_check
+    check('control-returncode', result.returncode, 0)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/verify_interval.py", line 35, in check
+    assert actual == expected, label
+AssertionError: control-returncode

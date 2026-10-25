@@ -1,0 +1,24 @@
+{
+  "status": "NO_SOURCE_FINDINGS_CONTROL_ACCEPTANCE_BLOCKED",
+  "reviews": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/review_spec.md",
+      "sha256": "633b3931bdc60faf558c49281c901d8bc491dcf2fab6353c942bc65f9814e556",
+      "gross_lines": 74,
+      "scope": "source review only; full control acceptance blocked"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/review_standards.md",
+      "sha256": "5c38d304c10656698bab31da5f1f7b31245d7321e2069f4ad740a3d4eca06aa4",
+      "gross_lines": 76,
+      "scope": "source review only; full control acceptance blocked"
+    }
+  ],
+  "source_sha256": "33fee81fbaad80f89f9c971acf81870c6c6ac78f8e1bbe0d81a6de361f1a17f6",
+  "unit_result_sha256": "82e28106a57d167de2ab862eebefa7bd9980769ba017c84b85c018cda147a1a7",
+  "scale_result_sha256": "32d4266d4bfbb2b4987872b2519abca394821f83dff76ad19047e161fb824a06",
+  "decode_result_sha256": "2f1bda47290745e4d9545fa8aa96a7479fffae5466ef97427948b4e2fb48004b",
+  "prefill_failure_sha256": "a9cfe02175f62edbd9078a917dba96facacbccbdd7151ef6c991518485957c35",
+  "affected_allowance": 0,
+  "GPU_allowance": 0
+}
