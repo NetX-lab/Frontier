@@ -27,7 +27,7 @@ def compact(record):
 
 
 class LifecycleLog:
-    """Buffered JSONL file of one engine core, flushed at most every FLUSH_INTERVAL_S."""
+    """Buffered JSONL file of one engine core, written at most every FLUSH_INTERVAL_S."""
 
     def __init__(self, path):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -196,3 +196,7 @@ class LifecycleObservedScheduler(AsyncScheduler):
             first_token=first, done=done)
         record.update(transfer or {})
         self._lifecycle.write(compact(record), end)
+        # The process manager can kill the engine core before shutdown() reaches
+        # the scheduler, so each repetition's records are written once it drains.
+        if not self.requests:
+            self._lifecycle.flush(end)

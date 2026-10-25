@@ -143,8 +143,10 @@ def run_drive(drive, scheduler_cls, helpers, model_dir, directory, role, failure
                 raise RuntimeError(f'injected observer failure in {name}')
             setattr(scheduler, name, fail)
         result = drive(scheduler, helpers)
+        # Records on disk before shutdown(), which a killed engine core never reaches.
+        written = records(directory) if directory.exists() else None
         scheduler.shutdown()
-        return result
+        return result, written
     finally:
         del os.environ['FRONTIER_NATIVE_SERVING_EVIDENCE_DIR'], os.environ['FRONTIER_NATIVE_ROLE']
 
@@ -236,15 +238,19 @@ def main():
     for name, drive, verify, role in (
             ('remote_prefill', remote_prefill, check_prefill_records, 'decode'),
             ('remote_decode', remote_decode, check_decode_records, 'prefill')):
-        native = run_drive(drive, AsyncScheduler, helpers, model_dir, args.output / f'{name}_native', role)
-        observed = run_drive(drive, LifecycleObservedScheduler, helpers, model_dir,
+        native, _ = run_drive(drive, AsyncScheduler, helpers, model_dir, args.output / f'{name}_native', role)
+        observed, written = run_drive(drive, LifecycleObservedScheduler, helpers, model_dir,
             args.output / f'{name}_observed', role)
-        injected = run_drive(drive, LifecycleObservedScheduler, helpers, model_dir,
+        injected, _ = run_drive(drive, LifecycleObservedScheduler, helpers, model_dir,
             args.output / f'{name}_injected', role, failures=('_record_add', '_transfer_fields'))
         checks[f'{name}.identical_results'] = observed == native
         checks[f'{name}.native_records_absent'] = not (args.output / f'{name}_native').exists()
-        for item, passed in verify(records(args.output / f'{name}_observed'), native[0]).items():
+        rows = records(args.output / f'{name}_observed')
+        for item, passed in verify(rows, native[0]).items():
             checks[f'{name}.records.{item}'] = passed
+        updates = lambda lines: [row for row in lines if row['event'] == 'update']
+        checks[f'{name}.records.updates_written_before_shutdown'] = (
+            written == rows[:len(written)] and updates(written) == updates(rows))
         rows = records(args.output / f'{name}_injected')
         errors = [row for row in rows if row['event'] == 'error']
         checks[f'{name}.injected.identical_results'] = injected == native
@@ -257,7 +263,7 @@ def main():
     for round_index in range(TIMING_ROUNDS):
         for label, scheduler_cls in (('native', AsyncScheduler), ('observed', LifecycleObservedScheduler)):
             directory = args.output / f'timing_{label}_{round_index}'
-            seconds = run_drive(lambda scheduler, helpers: steady_decode(scheduler, helpers, TIMING_STEPS),
+            seconds, _ = run_drive(lambda scheduler, helpers: steady_decode(scheduler, helpers, TIMING_STEPS),
                 scheduler_cls, helpers, model_dir, directory, 'decode')
             timing[label].append(seconds * 1e6)
     native_us, observed_us = statistics.median(timing['native']), statistics.median(timing['observed'])
