@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | H4b-(a) still Pending at 18:54 UTC (18 free H800, 32 needed). |
 | 2026-10-25 | Recorded the Pi SSH copy of all four H200 runs, R4 PASS on both references, the H200 step-cost tables, D-H200-STEP-COST-SUBSTITUTION, and the P2-32d and P2-64d diagnostic results (test report 2026-10-25 h200 p2 diagnostic). |
 | 2026-10-25 | YC adopted the SSH route (option 1); the settings edit was refused as self-modification and is left to YC. |
 | 2026-10-25 | P2-64p Succeeded (terminal receipt kept); the Pi SSH retry was refused by the permission control before launch. |
@@ -222,7 +223,7 @@
 | H1 P0 case binding | completed | ticket 17 P0-scoped items; `canonical_case_20261021/p0_binding/` |
 | H5 P0 native reference | completed | native06 R4: TTFT 403.31/393.22/399.95 ms, TPOT 19.031/19.017/18.981 ms, E2E 19872/19847/19817 ms, THPT 6273.3/6273.1/6269.8 tok/s; `native06_acceptance_20261023/` |
 | H4a first diagnostic P0 prediction | completed (DIAGNOSTIC): TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54% | [test_report_2026-10-25_h4a_p0_diagnostic.md](test_report_2026-10-25_h4a_p0_diagnostic.md); records below |
-| H4b-(a) native D-side handoff measurement | in-progress: design, harness (`7ac25c74`), CPU check and `package_01` completed; job `exp-1025-121318-827142` submitted 12:13 UTC, still Pending for quota at 14:43 UTC (4 H800 free in the queue, 32 needed); analysis script ready | [h4b_lifecycle_measurement/design.md](h4b_lifecycle_measurement/design.md); record below |
+| H4b-(a) native D-side handoff measurement | in-progress: design, harness (`7ac25c74`), CPU check and `package_01` completed; job `exp-1025-121318-827142` submitted 12:13 UTC, still Pending for quota at 18:54 UTC (`codesign` H800 110 of 128 used, 18 free, 32 needed; `h4b/monitor/status_9.json`, `h200/monitor/quota_20261025T185429Z.json`); launcher pid 348050 alive; analysis script ready | [h4b_lifecycle_measurement/design.md](h4b_lifecycle_measurement/design.md); record below |
 | H4b-(b) Frontier D-side remote-KV lifecycle | pending | needs H4b-(a) results |
 | H4c step-cost path speed | completed (DIAGNOSTIC), commit `cefbbc9d`: P0 replay byte-identical to H4a run5, 8,094.8 → 758.2 s wall time; unit suite, e2e gate, smoke matrix and 77-case fidelity unchanged | [test_report_2026-10-25_h4c_step_cost_speed.md](test_report_2026-10-25_h4c_step_cost_speed.md); record below |
 | H3r targeted cost refinement | pending | after H4b-(b) and H4c (D-H4A-CHECKPOINT) |
