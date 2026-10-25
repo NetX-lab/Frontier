@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | Record the finite joint-pricing execution decision; prepare one unchanged two-call run with exact capture and no retry. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Recover the pending worker records commit; verify five worktrees and unchanged production source without repeating any control. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
@@ -90,7 +91,7 @@
 
 ## Current resumed execution (2026-10-24 UTC / 2026-10-25 local)
 
-Current checkpoint: the single worker and its parent evidence verification are complete at production source `2ca5e571` and observed records HEAD `dfe603ed`. YC’s direct continue answer on2026-10-25 approves the prepared two-call ordinary joint execution; actual observations remain pending. Worker import and reference append do not establish full-workload RSS or the 2400s acceptance criterion. Earlier preparation and Starting observations below retain their historical meaning.
+Current checkpoint: the single worker and its parent evidence verification are complete at production source `2ca5e571` and observed records HEAD `dfe603ed`. The unique approved two-call ordinary joint execution is now collected:2/2 attempts, rawexit0, complete output parity PASS, cold/warm joint0.928821139/0.279684300s. Current-source complete CLI and actual workload RSS are next. Worker import and reference append do not establish full-workload RSS or the 2400s acceptance criterion. Earlier preparation and Starting observations below retain their historical meaning.
 
 - completed/runtime recovery: reuse original environment copy timeout124 and completion receipts (11,371files/386,015,193B). Both copied-prefix imports failed numpy because Debian site.py only selected dist-packages when base/dependency prefixes were equal. Preserve both raw failures and the original strict probeSHA5669d6b0 unchanged.
 - completed/runtime repair: add one identical CPython binary under a separate base prefix, one shared-stdlib symlink, and the standard pyvenv.cfg; original environment/packages and copied file bytes remain unchanged. Configuration commandexit0,0.109191s; its base-prefix assertion passes before configuration.
@@ -155,7 +156,10 @@ Current checkpoint: the single worker and its parent evidence verification are c
 ### Approved finite current-source joint execution (2026-10-25 UTC / HKT)
 
 - completed/decision: YC answers continue directly to the prior permission question. D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025 authorizes only the concrete cold/warm two-call execution, one60s/configured30GiB process, no warmup/profiling/retry; required-shape6/6 and all existing source/workload/numerical gates remain.
-- in-progress/execution: use unchanged reviewed joint_timing.py and joint_bindings.json with fresh /data/ycfeng/tmp/d29_current_joint_20261025_01 and separate exact outer command capture. The directories do not exist before execution. Production source remains2ca5e571/frozen146; no source edit or worker operation occurs while recording this decision. Commit the decision before the before/after source binding checks and keep HEAD stable during this one run.
+- completed/execution: unique tool session77681 is collected exit0. Exact command runs once at6a15009e,2026-10-25T03:57:26.692272Z through03:57:32.852978Z, wall6.160573354s. Business PASS_TWO_COHESIVE_CPU_FIXTURE_WAVES, exactly2/2 pricing attempts, warmups0/profiling0/automatic_retries0/required_shape0. Before/after records/source/input bindings remain equal. Do not restart the completed session or script.
+- completed/cohesive timing: cold pricing0.844966512/plan0.000020486/emission+ledger-flush0.060888903/final-close0.022945238s, joint0.928821139s; warm0.088767464/0.000709893/0.165885018/0.024321925s, joint0.279684300s. Full16lane/208operator/144proof sorted ledger and trace bytes, pricing, proofs/keys/order and actual new destination IDs PASS on both. Header/store construction and validation are outside joint timing; setup3.806491587s is only cached-fixture setup. Process ru_maxrss1,315,135,488B is observed; configured30GiB is separate, effective cgroup peak unavailable. No full-workload or2400s inference.
+- completed/archive: one no-runtime archive command uses timeout60s/configuredMemoryMax30GiB/Python3.10.6/-B/single math threads. Archive wall1.005787683s, rawexit0. Exact business/outer receipts/stdout/stderr and six full lossless gzip outputs retain11,695,428 original bytes in798,661 compressed bytes; decompressed sizes/hashes and original pricing-reference hashes all match. Source2ca/146 and five current worktree heads/ancestry are checked without repeating composed audit, worker, source regressions or control calls. Evidence:resumed_execution/evidence/joint_timing_2026-10-25/; report:test_report_2026-10-25_current_joint_timing.md.
+- in-progress/next: prepare and execute unchanged complete6144/1024offline/onlineCLI on one personal codesign zero-GPU worker through original local RJobBackend. Each main child remains<=2400s, all outputs and per-point checks retained, post-run validation outside child cap. Capture real workload memory/controller evidence; no5100s outer timeout or additional joint/shape controls. FinalT2/source/package/native/G3/E2E remain dependent. Required-shape6/6, joint2/2 and admitted source budgets unchanged.
 
 ### One authorized readiness worker (2026-10-24 UTC / 2026-10-25 HKT)
 

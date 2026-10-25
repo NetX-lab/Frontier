@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | YC answers continue to the finite two-call execution question; run the existing joint script once before the full-workload gate. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
@@ -72,11 +73,11 @@ Archive: ledger_memory/evidence/frozen_regressions_2026-10-25/;64 exact files/71
 
 Finite diagnoses are complete and consolidated: snapshot-copyb061f884/merge52831c6e is NO_ALLOC_STATIC_DIAGNOSIS with0/1 controls and0 launches; init6335f581/mergec6b3da15 is ALLOC_RECOMMENDATION_ONLY with0 controls and0 allocated lines. Parent verifies25 copy source bindings,13 init bindings and14 retained receipts, with unchanged2ca5e571 source. Init126.58s is historical inference and no present startup saving or new source allocation. Both clean diagnosis worktrees remain retained.
 
-The current-source joint pricing, emission and flush driver is prepared and reviewed. YC’s direct continue answer now approves its two ordinary D1/layer60 calls under D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025; actual execution is next. The single worker import, reference append and lifecycle execution has completed below. Full-workload memory and runtime must be observed during the unchanged complete workload. Required-shape 6/6 and old control ceilings do not increase. OSS quota is USER_CONFIRMED_SUFFICIENT. FullCLI/T2/native/G3/E2E remain open; the init recommendation itself allocates no patch.
+The current-source joint pricing, emission and flush execution has completed at6a15009e under D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025. Exactly2/2 attempts pass complete16-lane/208-operator/144-proof output parity; cold/warm joint0.928821139/0.279684300s, process ru_maxrss1,315,135,488B. MetricsStore/header construction and validation are outside each joint interval. Exact receipts/full lossless outputs are archived under resumed_execution/evidence/joint_timing_2026-10-25/. This closes only cohesive fixture timing; complete CLI and actual workload memory are next. The single worker import, reference append and lifecycle execution has completed below. Full-workload memory and runtime must be observed during the unchanged complete workload. Required-shape 6/6 and old control ceilings do not increase. OSS quota is USER_CONFIRMED_SUFFICIENT. FullCLI/T2/native/G3/E2E remain open; the init recommendation itself allocates no patch.
 
 The worker CPU interpreter/image import prerequisite is now PASS: retain the copied dependency/base prefixes and the unchanged strict probe's local/image receipts. Prepare the current-source joint script and finite pricing-call proposal in parallel with source-mount/lifecycle/append preparation. The runtime probe does not qualify actual worker throughput or full-workload memory. Existing diagnostic ceilings remain unchanged; a new label or a resume request supplies no extra pricing calls.
 
-### Prepared current executions
+### Prepared current executions (historical preparation)
 
 The joint driver and worker plan/scripts now exist and pass static source/input/AST checks, seven checker corruption controls and a no-operation worker dry run. `resumed_execution/execution_plan_2026-10-25.md` records exact commands, resource/mount/lifecycle/cleanup bounds and the next fullCLI path. This closes script preparation only. Two new ordinary captured D1/layer60 pricing calls await a separate finite decision; no new label extends prior controls. In parallel, the existing H800 task-resource authority covers one zero-GPU readiness worker after prepared-script review, without new GPU/native allocation. Actual joint timing, workload RSS, fullCLI/T2/native/G3/E2E remain open; the completed worker result is recorded below.
 

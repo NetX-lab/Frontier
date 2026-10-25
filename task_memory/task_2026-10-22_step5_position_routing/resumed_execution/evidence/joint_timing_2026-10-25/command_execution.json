@@ -1,0 +1,60 @@
+{
+  "task_id": "D29-CURRENT-JOINT-TIMING",
+  "decision_id": "D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025",
+  "status": "PASS_COMMAND_EXIT",
+  "command": [
+    "timeout",
+    "60s",
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "runuser",
+    "-u",
+    "brainpp",
+    "--",
+    "env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "TMPDIR=/data/ycfeng/tmp",
+    "OMP_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "MKL_NUM_THREADS=1",
+    "NUMEXPR_NUM_THREADS=1",
+    "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+    "-B",
+    "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_timing.py",
+    "--bindings",
+    "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_bindings.json",
+    "--output-root",
+    "/data/ycfeng/tmp/d29_current_joint_20261025_01"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "records_head": "6a15009e1684d12501f99487e301d66cea1d96df",
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "started_utc": "2026-10-25T03:57:26.692272+00:00",
+  "output_root": "/data/ycfeng/tmp/d29_current_joint_20261025_01",
+  "configured_memory_max_bytes": 32212254720,
+  "whole_process_timeout_s": 60,
+  "warmups": 0,
+  "profiling_calls": 0,
+  "automatic_retries": 0,
+  "required_shape_calls": 0,
+  "exit_code": 0,
+  "finished_utc": "2026-10-25T03:57:32.852978+00:00",
+  "wall_s": 6.160573353990912,
+  "records_head_after": "6a15009e1684d12501f99487e301d66cea1d96df",
+  "artifacts": {
+    "stdout": {
+      "bytes": 1867,
+      "sha256": "e4cd61429e49fae0bbd088485187b826102bc87b92dbe971a8d75d87067e8c19"
+    },
+    "stderr": {
+      "bytes": 67,
+      "sha256": "3659e44cd1bedfc21cbc3e7de1a326dd07790feb69e733fda35e8ce1ffce225c"
+    }
+  },
+  "pricing_attempts": 2,
+  "business_status": "PASS_TWO_COHESIVE_CPU_FIXTURE_WAVES"
+}

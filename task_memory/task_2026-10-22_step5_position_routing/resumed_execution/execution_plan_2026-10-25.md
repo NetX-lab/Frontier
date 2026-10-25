@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | YC’s direct continue answer approves exactly this two-call command; no warmup, profiling, retry or required-shape extension. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
@@ -17,7 +18,7 @@ Preparation has two independent branches:
 
 `source admission + existing runtime PASS -> {joint script + finite pricing decision, worker scripts + original H800/resource authority} -> current-wave and worker observations -> unchanged complete6144/1024 CLI -> final T2/source/package -> native/G3/E2E`.
 
-The first two preparation deliverables and the single authorized job `exp-1025-050336-389487` for worker import, reference append and lifecycle are complete. Actual joint timing remains unperformed; YC’s direct continue answer now approves the finite two-call execution below. See test_report_2026-10-25_worker_readiness.md and evidence/worker_readiness_2026-10-25/. Do not rerun source regressions, local/image probes, copy/init diagnoses, old five-pricing/fifteen-emission controls, exhausted required-shape6/6 or the completed readiness job.
+The first two preparation deliverables and the single authorized job `exp-1025-050336-389487` for worker import, reference append and lifecycle are complete. Actual joint timing has completed once at6a15009e under YC’s direct continue answer:2/2 attempts, cold/warm joint0.928821139/0.279684300s, complete16lane/208operator/144proof output parity and fixture-process ru_maxrss1,315,135,488B. The receipts and full lossless outputs are archived in evidence/joint_timing_2026-10-25/. This does not qualify whole-CLI/runtime/memory; proceed to the unchanged complete workload. See test_report_2026-10-25_worker_readiness.md and evidence/worker_readiness_2026-10-25/. Do not rerun source regressions, local/image probes, copy/init diagnoses, old five-pricing/fifteen-emission controls, exhausted required-shape6/6 or the completed readiness job.
 
 ## Joint timing: two-call execution (approved 2026-10-25)
 
@@ -34,7 +35,7 @@ Validation follows the timed interval. It compares all208 operators,144 compute 
 
 Execution authority: **at most two new ordinary captured D1/layer60 CPU pricing calls**, one cold and one warm, under one60s/30GiB execution. YC’s direct continue answer to the prior permission question is recorded as D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025 in requirements.md. Required-shape calls remain0; the already consumed6/6 ceiling is unchanged. Run this existing command once with no warmup, profiling or automatic retry; each attempted pricing call consumes the finite allowance.
 
-Exact proposed command, with an unused output directory:
+Exact executed command (single completed attempt; do not rerun):
 
 ```bash
 timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G \
@@ -73,7 +74,7 @@ This entry was not run during preparation; its single authorized execution has n
 
 Preparation follow-up repairs full trace-header identity and frozen cache-name handling without pricing. Finalstatic05 verifies10 expected output corruptions; finalworker_spec03 verifies the exact original SDK objects without client creation. The first field error and intermediate mutation-tainted mount check remain raw evidence.
 
-The original ResourceConfig.__iter__ appends juicefs+s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant for every task. The requested mount list is copied, and the checker verifies the requested codesign mount plus only this documented SDK default and an unchanged plan. The worker reads/writes no tenant data; all task cloud reads/writes remain under /mnt/codesign-exp/ycfeng. This records original SDK behavior and changes no SDK, submitted mount request or task scope. Follow-up review closes before the one readiness submission; the two new ordinary pricing calls remain unapproved.
+The original ResourceConfig.__iter__ appends juicefs+s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant for every task. The requested mount list is copied, and the checker verifies the requested codesign mount plus only this documented SDK default and an unchanged plan. The worker reads/writes no tenant data; all task cloud reads/writes remain under /mnt/codesign-exp/ycfeng. This records original SDK behavior and changes no SDK, submitted mount request or task scope. This historical preparation precedes the completed readiness worker and the later approved two-call execution; both are now complete.
 
 ## Final copied-runtime Git verification
 
@@ -86,3 +87,9 @@ worker_git_preflight04 passes these exact assets/configuration and two real chec
 Use the existing `tests/integration/run_step5_measured_main.py` with the unchanged fixture and one fresh personal cloud output root. Its own `frontier.main` child remains capped at2400s for each offline/online mode; complete outputs and all validation checks remain required. The current runner validates after each child, outside that child's cap. Keep the local launcher alive throughout; do not reuse a5100s outer timeout that could terminate large post-run validation.
 
 Record real full-workload RSS and memory/controller evidence while that unchanged workload runs. The64 `mem_gb` readiness resource is a requested allocation only; import/append RSS cannot establish the full-workload bound. Stage/event ledger retention remains part of actual workload validation. Final T2/source/package, native/G3 and each E2E error<=10% remain unfinished and keep their original requirements.
+
+## Completed joint execution and next launch
+
+Business and outer receipts confirm exactly2/2 attempts, no retry and unchanged before/after source/input bindings. Cold/warm complete pricing output,16 sorted ledger rows,208 trace operators and144 compute proofs pass. The timing includes production pricing/emission/native row flush/final trace+ledger close; MetricsStore construction/header initialization and validation are outside the wave interval. Cached-fixture setup3.806491587s is not full-main initialization. Process ru_maxrss1,315,135,488B is observed separately from configuredMemoryMax32,212,254,720B; no effective cgroup peak was captured.
+
+The exact finite execution is complete and must not be rerun. Required-shape remains6/6 and joint allowance is2/2 exhausted. Next prepare one complete-CLI worker using the existing original local RJobBackend and verified4CPU/0GPU/64000Mi resource, current local NFS, copied runtime and personal cloud path. Record actual workload RSS/controller readings without changing simulator classes or validation. Keep records HEAD stable through both modes. No outer timeout may truncate post-run validation.

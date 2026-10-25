@@ -945,5 +945,63 @@
       6,
       6
     ]
+  },
+  "joint_timing_checkpoint": {
+    "collected_utc": "2026-10-25T04:02:59.119276+00:00",
+    "records_head_at_execution": "6a15009e1684d12501f99487e301d66cea1d96df",
+    "production_source_unchanged": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "status": "PASS_TWO_COHESIVE_CPU_FIXTURE_WAVES",
+    "pricing_used_and_ceiling": [
+      2,
+      2
+    ],
+    "required_shape_used_and_ceiling": [
+      6,
+      6
+    ],
+    "selected_active_worktrees": [
+      {
+        "name": "step5-preview",
+        "path": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+        "head": "6a15009e1684d12501f99487e301d66cea1d96df",
+        "status": "?? .cortexkit/\n?? .pi/",
+        "ancestor_of_primary": true
+      },
+      {
+        "name": "step5-d29-ledger-stream",
+        "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+        "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+        "status": "",
+        "ancestor_of_primary": true
+      },
+      {
+        "name": "d29-ledger-final-1f6b4314",
+        "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+        "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+        "status": "",
+        "ancestor_of_primary": true
+      },
+      {
+        "name": "d29-snapshot-copy-finish",
+        "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+        "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+        "status": "",
+        "ancestor_of_primary": true
+      },
+      {
+        "name": "d29-init-preparation-finish",
+        "path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+        "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+        "status": "",
+        "ancestor_of_primary": true
+      }
+    ],
+    "remaining": [
+      "Complete6144/1024offline/onlineCLI<=2400s per main child",
+      "Actual full-workload RSS/controller evidence",
+      "FreshT2/source/package/native/G3/E2E"
+    ],
+    "source_budget_audit_repeated": false,
+    "original_recovery_census_rows": 89
   }
 }

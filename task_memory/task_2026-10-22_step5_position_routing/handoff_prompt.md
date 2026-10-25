@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
@@ -14,7 +15,7 @@
 | 2026-10-23 | YC deferred handoff;current-session progress now owns execution and this prompt is historical. |
 | 2026-10-23 | Deliver reviewed code/records and exact continuation command after the bounded CLI repair. |
 
-## Current continuation checkpoint (2026-10-24 UTC / 2026-10-25 HKT)
+## Current continuation checkpoint (2026-10-25 UTC / HKT)
 
 继续当前主线 `/data/ycfeng/Frontier/.worktrees/step5-preview`，分支 `feat/step5-preview`。
 Ledger源码已合入2ca5e57113b0bc99ab84e926e5bb492b3670072e；records HEAD可能随后前进，
@@ -38,11 +39,11 @@ source9682/9942、global9696/10000，零违规。Step124gross/net96/累计增量
 
 Worker原runtime probe PASS，Python3.10.6，2.771702s，RSS176,275,456B。完整reference append206波，共1,071,031,904B、3296 ledger rows、42848 operators。Append+close3.249062s、fsync0.038647s、read-back1.325742s；含fsync325.77MB/s，append RSS29,085,696B。两文件完整digest/read-back PASS；worker已清理这两份完成的个人云测试文件和空子目录。测量排除production pricing/emitter serialization，不证明全workload RSS或2400s门槛；0GPU请求和不可用nvidia-smi不证明GPU runtime。
 
-父端脚本已运行一次，exit0、1.423269s；25source/6inputs/262metadata/9scripts/Git assets、五树/source与保留完整参考digest核验通过。16份screened小证据21,528B和parent script/receipt/command capture在resumed_execution/evidence/worker_readiness_2026-10-25/；报告为resumed_execution/test_report_2026-10-25_worker_readiness.md。Raw launcher logs保留在本地restricted目录。原session87306和41640已收集exit0，不再轮询；没有活跃worker/fullCLI/GPU job，不重提readiness。原backend atexit Job Stop在Succeeded后记录，无手工stop。新pricing/shape/fullCLI/native/GPU allocation均0；两次普通D1/layer60 joint pricing仍Not Approved。
+父端脚本已运行一次，exit0、1.423269s；25source/6inputs/262metadata/9scripts/Git assets、五树/source与保留完整参考digest核验通过。16份screened小证据21,528B和parent script/receipt/command capture在resumed_execution/evidence/worker_readiness_2026-10-25/；报告为resumed_execution/test_report_2026-10-25_worker_readiness.md。Raw launcher logs保留在本地restricted目录。原session87306和41640已收集exit0，不再轮询；没有活跃worker/fullCLI/GPU job，不重提readiness。原backend atexit Job Stop在Succeeded后记录，无手工stop。该worker自身pricing/shape/fullCLI/native/GPU allocation均0。后续YC直接continue已批准唯一两次普通joint执行，见下段；不重提readiness。
 
 下一前沿：
 1. Copy/init已收口并整合：copyb061f884/52831c6e为静态NO_ALLOC，control0/1且launch0；init6335f581/c6b3da15为ALLOC建议，control0、source allocation0。Parent25copy/13init bindings及14旧回执全部通过，见resumed_execution/evidence/diagnosis_closeout_2026-10-25/。两工作树干净保留、agents已关闭，不重开诊断或control。126.58s只是旧测量推算，不是当前startup收益。
-2. 已准备的两次普通D1/layer60 joint pricing仍未批准。先取得最多2次cold/warm、一个60s/30GiB、无warmup/profiling/retry的有限决定，再按execution_plan运行原joint_timing.py并检查16 lanes、208 operators、144 proofs和全部pricing bytes。Worker import/reference-append/lifecycle已完成，不重跑旧5-wave/15-emission或required-shape6/6。
+2. YC直接continue已批准并完成唯一两次普通joint执行：session77681已收集exit0，records6a15009e，pricing2/2已耗尽。Cold/warm joint0.928821139/0.279684300s；各16lanes/208operators/144proofs和全部pricing/ledger/trace bytes、proof/key/order、新分配destinationIDs通过。观察process ru_maxrss1,315,135,488B，MemoryMax仅配置；header/store构造与validation在joint计时外。精确回执及六份完整lossless gzip输出在resumed_execution/evidence/joint_timing_2026-10-25/，decompress/hash已通过；不得重跑这个script/session、readiness或旧controls。
 3. 之后完整6144/1024 offline/online CLI，每模式frontier.main子进程<=2400s，全部输出/proof/key/顺序/逐点校验保留。
 4. 再完成最终T2/source/package、native/G3和各E2E<=10%；这些仍pending。
 

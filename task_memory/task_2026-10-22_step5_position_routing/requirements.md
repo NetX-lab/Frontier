@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Collect the single two-call joint execution and losslessly archive complete outputs; close2/2 calls and advance to unchanged complete CLI/RSS. |
 | 2026-10-25 UTC / HKT | Record YC’s direct continue answer to the finite two-call joint-pricing question; all other invocation and acceptance bounds remain. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree/workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
@@ -56,6 +57,16 @@ This direct answer authorizes the concrete two-call proposal and command in resu
 
 Keep the existing2ca5e571 production source, frozen146 identity, reviewed scripts and hash-bound inputs unchanged. This execution decision allocates no source change, GPU or native collection and changes no workload, numerical policy or gate. Existing H800 task-resource and personal-cloud authority continues. Following the observations, proceed through the existing full6144/1024offline/onlineCLI<=2400s per main child, actual workload RSS, freshT2/source/package and native/G3/E2E route. The earlier Not Approved proposal below is historical and superseded only by this finite execution answer.
 
+## [Execution Observation] Completed finite current-source joint timing (2026-10-25 UTC / HKT)
+
+The unique execution at records HEAD6a15009e1684d12501f99487e301d66cea1d96df completed with rawexit0 and PASS_TWO_COHESIVE_CPU_FIXTURE_WAVES. Both before/after source/input bindings remain equal. Exactly2/2 ordinary captured D1/layer60 pricing attempts ran, cold/warm once each, with no warmup, profiling, retry or required-shape call. Required-shape remains6/6.
+
+Cold pricing0.844966512s, plan/timing0.000020486s, emission with real ledger flush0.060888903s and final trace/ledger close0.022945238s give joint0.928821139s. Warm components0.088767464/0.000709893/0.165885018/0.024321925s give joint0.279684300s. Both complete outputs pass16 lanes/208 operators/144 compute proofs, exact pricing bytes, sorted full ledger rows, trace header, proof/key/order and freshly allocated destination identities. MetricsStore construction/header setup and validation are outside each joint interval. Setup3.806491587s is retained cached-fixture setup, not full-main initialization.
+
+The Python process reports ru_maxrss1,315,135,488B; configured MemoryMax32,212,254,720B is a separate limit and no effective cgroup peak was captured. This observation does not qualify complete CLI duration, actual full-workload RSS, native timing or E2E. The outer command wall is6.160573354s. Exact receipts/logs and lossless gzip copies of all six full outputs are retained at resumed_execution/evidence/joint_timing_2026-10-25/:11,695,428B original output,798,661B compressed, decompressed bytes and hashes verified. The archive performs zero new runtime/platform calls.
+
+Production source2ca5e571 and non-task frozen146 identity remain unchanged; the four satellite worktrees remain clean and integrated. Continue the existing complete6144/1024 offline/online CLI route with each frontier.main child<=2400s and all outputs/checks, measure actual workload memory, then freshT2/source/package/native/G3/E2E. No further ordinary joint or required-shape control is authorized by this completed execution.
+
 ## [Execution Observation] Completed D29 worker readiness (2026-10-24 UTC / 2026-10-25 HKT)
 
 The single already-authorized readiness worker exp-1025-050336-389487 is complete. Original local personal RJobBackend submission used creator i-fengyicheng, codesign, one replica with requests/limits4CPU/0GPU/64000Mi, fixed f037d958 image and NFS100.96.128.195:/data/ycfeng:/data/ycfeng. The worker reports the actual local NFS and JuiceFS mounts. RJob/replica Succeeded, container Completed/exit0/restart0; the independent Pod read's403Forbidden is preserved. The replica CR supplies the terminal container state; no permission change or resubmission follows.
@@ -64,7 +75,7 @@ The unchanged runtime probe passes on worker Python3.10.6 in2.771702s with176,27
 
 Parent verification runs once at records HEADdfe603ed,exit0,1.423269s in the existing60s/configured30GiB/Python3.10.6/-B/single-thread scope. It verifies25source/sixinputs/262fixture metadata/nine reviewed scripts/Git assets, source identity before/after, five current worktrees and the retained full reference digests. Sixteen screened small business/platform/log artifacts totaling21,528B plus parent script/receipt/capture are archived at resumed_execution/evidence/worker_readiness_2026-10-25/. Raw launcher logs remain permission-restricted locally. No new runtime/platform call is performed by this parent check; no new pricing/required-shape/fullCLI/native/GPU allocation occurs.
 
-This closes only the planned worker import/reference-append/lifecycle deliverable. Production remains2ca5e571/frozen146 with the accepted116-path/126-binding budgets. Required-shape6/6 stays exhausted. The D29-CURRENT-JOINT-TIMING-TWO-CALLS proposal below remains Not Approved; workflow/fullCLI/RSS/finalT2/package/native/G3/E2E remain unfinished.
+This closes only the planned worker import/reference-append/lifecycle deliverable. Production remains2ca5e571/frozen146 with the accepted116-path/126-binding budgets. Required-shape6/6 stays exhausted. At this worker checkpoint the two-call proposal was Not Approved; the later execution decision and completed observation above supersede that state. Workflow/fullCLI/RSS/finalT2/package/native/G3/E2E remain unfinished.
 
 ## [Execution Proposal / Not Approved] D29-CURRENT-JOINT-TIMING-TWO-CALLS (historical; execution approved above)
 
