@@ -1,17 +1,18 @@
 """H4a-5: split the H4a-4 TTFT and TPOT into parts and compare each part with native evidence.
 
 TTFT, per formal request, in ms:
-  native06   client -> proxy, proxy P service (proxy arrival -> prefill response),
+  native     client -> proxy, proxy P service (proxy arrival -> prefill response),
              handoff (prefill response -> decode first byte), decode first byte -> client token;
   Frontier   P queue wait, P compute, P residual, KV wait, KV transfer, D first step
              (KV transfer end -> first output token, including the wait for a D step boundary).
 The native P service is compared with Frontier's P parts and the native handoff with Frontier's
-KV and D parts. TPOT is explained by the step table, profile02's measured decode steps by batch
-size, profile02's own client TPOT, and the number of requests decoding at once over time.
-profile02's traced k=1 steps split its own handoffs into the part before D's k=1 step and the rest.
+KV and D parts. TPOT is explained by the step table, the profile run's measured decode steps by
+batch size, the profile run's own client TPOT, and the number of requests decoding at once over time.
+The profile run's traced k=1 steps split its own handoffs into the part before D's k=1 step and
+the rest; a k=1 step that falls inside more than one handoff cannot be assigned and is counted.
 
-Inputs are the persisted copies in inputs/ and the step-cost table; the Frontier run is argv[1].
-Usage: h4a5_attribution.py <frontier run dir> <output json>
+Inputs are the persisted copies of the case's native and profile runs and its step-cost table.
+Usage: h4a5_attribution.py <case> <frontier run dir> <output json>     # case: native06, p2_32 or p2_64
 """
 import gzip
 import json
@@ -27,10 +28,16 @@ REPO = HERE.parents[2]
 sys.path.insert(0, str(REPO))
 from tests.comparison.calibration.prepare_dsv4_step_cost import STEP, decode_steps, decode_traces  # noqa: E402
 
-NATIVE = HERE / "inputs/native06/run"
-PROFILE02 = HERE / "inputs/profile02"
-TABLE = REPO / "data/profiling/compute/h800/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json"
-PROFILE02_TRACES = decode_traces(PROFILE02, json.loads(TABLE.read_text())["topology"]["attn_dp"])
+H200_INPUTS = HERE.parent / "h200_mainline/diagnostic/inputs"
+TABLES = REPO / "data/profiling/compute"
+CASES = {
+    "native06": dict(native=HERE / "inputs/native06/run", profile=HERE / "inputs/profile02",
+                     table=TABLES / "h800/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json"),
+    "p2_32": dict(native=H200_INPUTS / "p2_32r/run", profile=H200_INPUTS / "p2_32p",
+                  table=TABLES / "h200/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json"),
+    "p2_64": dict(native=H200_INPUTS / "p2_64r/run", profile=H200_INPUTS / "p2_64p",
+                  table=HERE.parent / "h200_mainline/diagnostic/step_cost_attn_dp4/dsv4_step_cost.json"),
+}
 
 
 def read_jsonl(path):
@@ -54,9 +61,9 @@ def decoding_at_once(intervals):
         sum(1 for start, end in intervals if start <= t < end) for t, _ in edges)}
 
 
-def native_parts():
-    client = {r["request_id"]: r for r in read_jsonl(NATIVE / "client_requests.jsonl") if r["segment"] == "formal"}
-    proxy = {r["request_id"]: r for r in read_jsonl(NATIVE / "proxy_requests.jsonl")}
+def native_parts(native):
+    client = {r["request_id"]: r for r in read_jsonl(native / "client_requests.jsonl") if r["segment"] == "formal"}
+    proxy = {r["request_id"]: r for r in read_jsonl(native / "proxy_requests.jsonl")}
     repeats = defaultdict(list)
     for request_id, c in client.items():
         p = proxy[request_id]
@@ -101,33 +108,35 @@ def frontier_parts(run_dir):
     return result
 
 
-def profile02_steps():
-    """Measured decode step interval by number of decode requests, both lanes pooled."""
+def profile_steps(profile, traces):
+    """Measured decode step interval by number of decode requests, all lanes pooled."""
     groups = defaultdict(list)
-    for name in PROFILE02_TRACES:
-        for (k, _, m, _), interval, _ in decode_steps(PROFILE02 / name):
+    for name in traces:
+        for (k, _, m, _), interval, _ in decode_steps(profile / name):
             groups[("decode_only" if k == 0 else "first_step_after_kv", m)].append(interval)
     steps = defaultdict(dict)
     for (kind, m), intervals in sorted(groups.items()):
         steps[kind][m] = {"median_ms": statistics.median(intervals), "samples": len(intervals)}
-    client = [r for r in read_jsonl(PROFILE02 / "run/client_requests.jsonl") if r["segment"] == "formal"]
-    profiled = json.loads((PROFILE02 / "run/replay_summary.json").read_text())["canonical_repetitions"]["profiling"]["repeat"]
+    client = [r for r in read_jsonl(profile / "run/client_requests.jsonl") if r["segment"] == "formal"]
+    profiled = json.loads((profile / "run/replay_summary.json").read_text())["canonical_repetitions"]["profiling"]["repeat"]
     tpot = {f"repeat{repeat:02d}{' (profiled)' if repeat == profiled else ''}":
             statistics.fmean(r["tpot_ms"] for r in client if r["repeat"] == repeat)
             for repeat in sorted({r["repeat"] for r in client})}
-    return {"steps": steps, "client_tpot_mean_ms": tpot, "handoff_samples": profile02_handoff()}
+    samples, unassigned = profile_handoff(profile, traces)
+    return {"steps": steps, "client_tpot_mean_ms": tpot, "handoff_samples": samples,
+            "unassigned_k1_steps": unassigned}
 
 
-def profile02_handoff():
+def profile_handoff(profile, traces):
     """Place each traced D step that computes a request's last prompt token (k=1) inside that
     request's proxy handoff. Kineto ts is microseconds after baseTimeNanoseconds on the D host;
     the proxy records time.time() on its own host, so the split carries the two hosts' clock offset.
     longest_lane_pause_ms is the longest interval between consecutive traced steps of the lane
     that overlaps the wait from prefill response to the k=1 step (null: no traced step before it)."""
-    proxy = read_jsonl(PROFILE02 / "run/proxy_requests.jsonl")
-    samples = []
-    for name in PROFILE02_TRACES:
-        trace = json.load(gzip.open(PROFILE02 / name))
+    proxy = read_jsonl(profile / "run/proxy_requests.jsonl")
+    samples, unassigned = [], 0
+    for name in traces:
+        trace = json.load(gzip.open(profile / name))
         base = trace["baseTimeNanoseconds"] / 1e9
         annotations = {cat: sorted((base + e["ts"] / 1e6, e["name"]) for e in trace["traceEvents"]
                                    if e.get("cat") == cat and e["name"].startswith("execute_context"))
@@ -136,7 +145,12 @@ def profile02_handoff():
         for (start, step), (following, _) in zip(gpu, gpu[1:]):
             if STEP.fullmatch(step).group(1) != "1":
                 continue
-            [p] = [p for p in proxy if p["prefill_response_time"] < start < p["decode_first_byte_time"]]
+            # The proxy does not record the decode lane, so concurrent handoffs on other lanes can overlap.
+            candidates = [p for p in proxy if p["prefill_response_time"] < start < p["decode_first_byte_time"]]
+            if len(candidates) != 1:
+                unassigned += 1
+                continue
+            [p] = candidates
             cpu_start = max(t for t, n in annotations["user_annotation"] if n == step and t <= start)
             pauses = [b - a for (a, _), (b, _) in zip(gpu, gpu[1:]) if a < start and b > p["prefill_response_time"]]
             samples.append({
@@ -148,13 +162,14 @@ def profile02_handoff():
                 "next_step_start_to_first_byte_ms": (p["decode_first_byte_time"] - following) * 1e3,
                 "longest_lane_pause_ms": max(pauses) * 1e3 if pauses else None,
             })
-    return samples
+    return samples, unassigned
 
 
-def main():
-    run_dir, output = Path(sys.argv[1]), Path(sys.argv[2])
-    table = json.loads(TABLE.read_text())
-    native, frontier = native_parts(), frontier_parts(run_dir)
+def main(name, run_dir, output):
+    case = CASES[name]
+    table = json.loads(case["table"].read_text())
+    traces = decode_traces(case["profile"], table["topology"]["attn_dp"])
+    native, frontier = native_parts(case["native"]), frontier_parts(run_dir)
     pooled = {name: statistics.fmean(native[r][name]["mean"] for r in native)
               for name in ("client_to_proxy", "p_service", "handoff", "decode_byte_to_client", "ttft", "tpot")}
     frontier_p = sum(frontier[k]["mean"] for k in ("p_wait", "p_compute", "p_residual"))
@@ -168,17 +183,19 @@ def main():
         "tpot_gap_ms": frontier["tpot"]["mean"] - pooled["tpot"],
     }
     result = {
-        "label": "DIAGNOSTIC", "frontier_run": str(run_dir),
+        "label": "DIAGNOSTIC", "case": name, "frontier_run": str(run_dir),
         "step_table": {role: [{k: e[k] for k in ("num_prefill_requests", "num_prefill_tokens",
                                                    "num_decode_requests", "time_ms")} for e in entries]
                        for role, entries in table["roles"].items()},
-        "native06": native, "native06_mean_of_repeats": pooled, "frontier": frontier,
-        "comparison": comparison, "profile02": profile02_steps(),
+        "native": native, "native_mean_of_repeats": pooled, "frontier": frontier,
+        "comparison": comparison, "profile": profile_steps(case["profile"], traces),
     }
     output.write_text(json.dumps(result, indent=1) + "\n")
-    for name, value in comparison.items():
-        print(f"{name:22s} {value:+9.3f}")
+    for part, value in comparison.items():
+        print(f"{part:22s} {value:+9.3f}")
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 4 or sys.argv[1] not in CASES:
+        raise SystemExit(__doc__)
+    main(sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3]))
