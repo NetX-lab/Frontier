@@ -1,0 +1,199 @@
+{
+  "decision": "D-V4-P0-AUDIT-INTERVAL-REPRESENTATION-CORRECTION",
+  "recorded_utc": "2026-10-25T04:23:46.403276+00:00",
+  "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_interval_metrics.py",
+  "auditor": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+  "repo": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "pins": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+      "sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+      "sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+      "sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+      "sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+      "sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py",
+      "sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py",
+      "sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py",
+      "sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+      "sha256": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/primary_source_inspection.json",
+      "sha256": "86e9ca795567c55ed076b63c174868ba14ae1550824274f6f62574e003669097"
+    },
+    {
+      "path": "/usr/bin/python3.10",
+      "sha256": "dbb04ace02303fa5cb3a6d1aa0e7a180d8dd23d3257cc6a0b155d0ee219432a2"
+    },
+    {
+      "path": "/usr/bin/gdb",
+      "sha256": "2a2f167b5f9c9053732f79a0f4418ed75c211e00275da6090ab64a05b81a12e0"
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libc.so.6",
+      "sha256": "568740b06a8afa26db4874f8cf61985ecbc6dd127f4229416fe95da8f9ec13fb"
+    },
+    {
+      "path": "/usr/lib/debug/.build-id/69/389d485a9793dbe873f0ea2c93e02efaa9aa3d.debug",
+      "sha256": "0e50c8edfdc06a29bdce9f787686db39e245a622fdabd1a1b9a430f30d5cf618"
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libz.so.1",
+      "sha256": "64c206f0146cc58bbddc4f22054436f4ff278f5a554aa3ce6921ddf7e9133370"
+    },
+    {
+      "path": "/usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so",
+      "sha256": "c97effb6e762e78af6eb451950283ebce4f6da82968ed53d51b8f5c252e77faf"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_interval_metrics.py",
+      "sha256": "33fee81fbaad80f89f9c971acf81870c6c6ac78f8e1bbe0d81a6de361f1a17f6"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/verify_interval.py",
+      "sha256": "3fca9965b085d898ea2c190dbce634de08ef06f3083d07c2038a5e362bb794d0"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842735368033988.pt.trace.json.gz",
+      "sha256": "f74ee4b7d9ed36e91c26bd9042fc04152fc4fda5293cc8f8c1cca535b90b2f1e"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+      "sha256": "272879bfa3fd5c8f4273835f2b7e5e49ff1ac796760c4c440facaf4026401f37"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/serving/rank0.json",
+      "sha256": "c005bf58930bc9dd54421da6d61a30978fce51e68ae08b7e2ede8dbd5daf5678"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.json",
+      "sha256": "fd5f94dc2aa14ded6e9694237b966148163bb79a84e52d2778a90b316ddb380d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.kernels.jsonl.gz",
+      "sha256": "12abf8644255d59215d2bfebec74ae0b23ee86a8d082c0d333d0861cf33c7de5"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/unit_result.json",
+      "sha256": "82e28106a57d167de2ab862eebefa7bd9980769ba017c84b85c018cda147a1a7"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/scale_result.json",
+      "sha256": "32d4266d4bfbb2b4987872b2519abca394821f83dff76ad19047e161fb824a06"
+    }
+  ],
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "environment": {
+    "PYTHONPATH": null,
+    "PYTHONHOME": null,
+    "PYTHONMALLOC": null,
+    "PYTHONMALLOCSTATS": null,
+    "PYTHONFAULTHANDLER": null,
+    "LD_PRELOAD": null,
+    "LD_LIBRARY_PATH": "/usr/local/nvidia/lib64",
+    "MALLOC_CHECK_": null,
+    "GLIBC_TUNABLES": null,
+    "MALLOC_PERTURB_": null,
+    "MALLOC_ARENA_MAX": null
+  },
+  "timeout_seconds": 60,
+  "actual_memory_limit_bytes": 32212254720,
+  "selected_concurrency": 1,
+  "max_concurrency": 2,
+  "used": 0,
+  "ceiling": 1,
+  "automatic_retry": false,
+  "mode": "control_decode",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/verify_interval.py",
+    "control_decode"
+  ],
+  "control": {
+    "key": [
+      "decode",
+      1,
+      0
+    ],
+    "attempt_ceiling": 1,
+    "input_root": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04",
+    "input_bindings": {
+      "trace_path": "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842735368033988.pt.trace.json.gz",
+      "trace_sha256": "f74ee4b7d9ed36e91c26bd9042fc04152fc4fda5293cc8f8c1cca535b90b2f1e",
+      "profile_path": "nodes/gpu-h800-0574.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+      "profile_sha256": "272879bfa3fd5c8f4273835f2b7e5e49ff1ac796760c4c440facaf4026401f37",
+      "inventory_path": "nodes/gpu-h800-0574.host.platform.shaipower.com/serving/rank0.json",
+      "inventory_sha256": "c005bf58930bc9dd54421da6d61a30978fce51e68ae08b7e2ede8dbd5daf5678",
+      "reader_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+      "trace_bytes": 12794369,
+      "profile_bytes": 312934,
+      "inventory_bytes": 1227897
+    },
+    "retained_output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.json",
+    "retained_output_sha256": "fd5f94dc2aa14ded6e9694237b966148163bb79a84e52d2778a90b316ddb380d",
+    "retained_kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.kernels.jsonl.gz",
+    "retained_kernel_index_sha256": "12abf8644255d59215d2bfebec74ae0b23ee86a8d082c0d333d0861cf33c7de5",
+    "expected_kernel_total": {
+      "count": 142567,
+      "sum_ms": 1377.599441999903,
+      "union_ms": 1215.560419921875
+    },
+    "expected_useful_steps": 61,
+    "old_receipt_sha256": "55934da94e0d454ce3b9bdfeb48298acf9198e7999f8d27b18cf2f55a36b29e5",
+    "new_invocation_status": "NOT_RUN"
+  },
+  "prefix": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_decode_dp1_rank0",
+  "prerequisites": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/unit_result.json",
+      "sha256": "82e28106a57d167de2ab862eebefa7bd9980769ba017c84b85c018cda147a1a7"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/scale_result.json",
+      "sha256": "32d4266d4bfbb2b4987872b2519abca394821f83dff76ad19047e161fb824a06"
+    }
+  ],
+  "projection_exclusions": [
+    "elapsed_seconds",
+    "maxrss_kib",
+    "kernel_sample_index.path",
+    "kernel_sample_index.sha256"
+  ],
+  "acceptance": "All other JSON fields with every float hex, original key/list order, complete streamed decompressed index bytes through clean EOF; fresh excluded fields checked independently",
+  "control_child_ceiling": 1,
+  "artifact_comparison_ceiling": 1
+}

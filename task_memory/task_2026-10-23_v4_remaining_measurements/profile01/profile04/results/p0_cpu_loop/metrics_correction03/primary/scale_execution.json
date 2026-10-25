@@ -1,0 +1,24 @@
+{
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/verify_interval.py",
+    "scale"
+  ],
+  "allocation_sha256": "c6164b5a659235906b4fe1dc7dfa9e5cae4d48ed48b95accbc705cf6c02893bc",
+  "started_utc": "2026-10-25T04:22:54.500537+00:00",
+  "returncode": 0,
+  "enclosing_seconds": 27.75818860018626,
+  "used": 1,
+  "ceiling": 1,
+  "automatic_retry": false
+}

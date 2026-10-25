@@ -1,0 +1,109 @@
+{
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_interval_metrics.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "allocation_sha256": "3d145640dfe664366957bcaa83b5c88d4cb8f56725d8fbb72f60c7da97ab4375",
+  "started_utc": "2026-10-25T04:18:19.329383+00:00",
+  "finished_utc": "2026-10-25T04:18:20.042801+00:00",
+  "returncode": 0,
+  "enclosing_seconds": 0.6788410861045122,
+  "used": 1,
+  "ceiling": 1,
+  "automatic_retry": false,
+  "actual_memory_limit_bytes": 32212254720,
+  "unit_result": {
+    "tests_run": 9,
+    "failures": [],
+    "errors": [],
+    "success": true,
+    "capture_error": null,
+    "seconds": 0.5969840628094971,
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "executable": "/usr/bin/python3",
+    "environment": {
+      "PYTHONPATH": null,
+      "PYTHONHOME": null,
+      "PYTHONMALLOC": null,
+      "PYTHONMALLOCSTATS": null,
+      "PYTHONFAULTHANDLER": null,
+      "LD_PRELOAD": null,
+      "LD_LIBRARY_PATH": "/usr/local/nvidia/lib64",
+      "MALLOC_CHECK_": null,
+      "GLIBC_TUNABLES": null,
+      "MALLOC_PERTURB_": null,
+      "MALLOC_ARENA_MAX": null
+    },
+    "assertion_count": 90,
+    "used": 1,
+    "ceiling": 1
+  },
+  "reviewed_files_unchanged": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_interval_metrics.py": true,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_interval_metrics.py": true,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py": true,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py": true,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py": true,
+    "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py": true,
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py": true,
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py": true,
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py": true,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py": true,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py": true,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/primary_source_inspection.json": true,
+    "/usr/bin/python3.10": true,
+    "/usr/bin/gdb": true,
+    "/lib/x86_64-linux-gnu/libc.so.6": true,
+    "/usr/lib/debug/.build-id/69/389d485a9793dbe873f0ea2c93e02efaa9aa3d.debug": true,
+    "/lib/x86_64-linux-gnu/libz.so.1": true,
+    "/usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so": true
+  },
+  "artifacts": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/owner/unit_stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/owner/unit_stderr.log",
+      "bytes": 931,
+      "sha256": "47b867eb8d92561b33afd1e1ea1309eeb70d6282e2e0e700a8ef44e9532f6f7c"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/owner/unit_invocation.json",
+      "bytes": 427,
+      "sha256": "0b46124bd1a2aa5c211196ad1e843f241cb0f984f1a380b1a857625da2e16ff8"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/owner/unit_cgroup.json",
+      "bytes": 1947,
+      "sha256": "5651350a7ede264eaefc24d1603bcbe7611461392db035baf62b1fd0258a4087"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/owner/unit_assertions.json",
+      "bytes": 1007687,
+      "sha256": "cffa30667c60455e5f4569d095f86c2887c9c37808315a21e81c3c358545c39b"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/owner/unit_result.json",
+      "bytes": 635,
+      "sha256": "b5b6c3d65640b80975d1157bc937d7f9cc1f2a47b8fcb704dbb335d7cdbc4612"
+    }
+  ],
+  "limitations": [
+    "synthetic unit only",
+    "no performance/control/raw-trace execution",
+    "primary acceptance pending"
+  ]
+}

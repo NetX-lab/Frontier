@@ -1,0 +1,23 @@
+{
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_interval_metrics.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "started_utc": "2026-10-25T04:18:19.329383+00:00",
+  "allocation_sha256": "3d145640dfe664366957bcaa83b5c88d4cb8f56725d8fbb72f60c7da97ab4375",
+  "controller_pid": 2858140,
+  "used": 1,
+  "ceiling": 1,
+  "automatic_retry": false
+}

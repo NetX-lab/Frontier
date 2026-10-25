@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Verified interval owner/primary units and one exact synthetic pair; froze two new controls with source reviews in parallel. |
 | 2026-10-25 | Allocated a separate interval representation correction from measured159-group sort/union evidence; affected/GPU allowance stays zero. |
 | 2026-10-25 | Archived censored once-only GDB observation and measured group segments; native detection stack remains unmeasured and R5 remains24/32. |
 | 2026-10-25 | Accepted file-based native control02 after127 primary checks; preserved stale launcher hash receipt and bound current source without rerunning controls. |
@@ -61,7 +62,9 @@
 
 ## Current continuation — 2026-10-25
 
-- in-progress separate interval correction: [allocation](profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/allocation.json) records160source/260tests/80notes/150driver, ownerunit1/primaryunit1/syntheticpair1/completecontrols2 before work; affected/GPU0. Preserve originalcount/sum and exactunionrecurrence, use primitive positions/cached columns and full-list identity reuse. Newowner writes only newadapter/tests/ownernotes/ownerunitoutputs; primary owns execution/report/four mainrecords. Allinvocations NOT_RUN;corruptionwriterUNKNOWN.
+- completed interval unit/scale milestone: source81/160/tests243/260; owner9tests/90consistent assertions and17delivery hashes PASS. Primary independent4fixtures/36checks PASS, actual30GiB/enclosing0.241901s. One synthetic pair1215919events/240groups/5331778memberships exact,24checks PASS; accepted14.027236s -> candidate12.577457s (10.34% observed), enclosing27.758189s. Units andscale eachspent1/1; two new controls frozen/decode in-progress, independent reviews parallel; affected/GPU0 andR5still24/32. [Report](profile01/profile04/results/p0_cpu_loop/metrics_correction03/test_report_2026-10-25_interval_metrics.md), [checkpoint](profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/check_progress_2026-10-25_units_scale.md).
+
+- in-progress separate interval correction: [allocation](profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/allocation.json) records160source/260tests/80notes/150driver, ownerunit1/primaryunit1/syntheticpair1/completecontrols2 before work; affected/GPU0. Preserve originalcount/sum and exactunionrecurrence, use primitive positions/cached columns and full-list identity reuse. Newowner writes only newadapter/tests/ownernotes/ownerunitoutputs; primary owns execution/report/four mainrecords. Ownerunit andprimaryunit andscale eachPASS/spent1/1;controls/reviews pending;corruptionwriterUNKNOWN.
 
 - completed once-only native diagnostic archive; execution CENSORED124/controller1/60.463309s,actual30GiB,full1/1 spent. [Result](profile01/profile04/results/p0_cpu_loop/native_stack03/primary/diagnostic_result.json) records58primary checks and1038observations; no native marker/SIGABRT line/detectionstack/finalJSON/useful-step output. Inferior natural/signal exit UNOBSERVED;corruptionwriter UNKNOWN. Metricsstart52.729,global sort0.941/order0.459;160count_sum1.069s,159sort1.475s/union2.945s completed;firsthierarchy sortopen59.649. [Selectedarchive](profile01/profile04/results/p0_cpu_loop/native_stack03/primary/diagnostic_archive.json) preserves seven exact smalloutputs plus compressedindex hash without decoding/EOF claim. Full/source/control evidence stays frozen;no rerun.
 
@@ -129,13 +132,13 @@ This live continuation record supersedes the originalb3365655 handoff and every 
 
 1. Preserve accepted group source/control8b4d6993 and affected allocation00840389; failedpilot1/8/sevenconditionalBLOCKED and original24complete outputs stay unchanged. R5still24/32.
 2. Native source/control acceptance0d72782b remains valid. Original inlinecontrolFAILED/spent1/1; filecontrol02PASS/spent1/1; fullGDBdiagnosticCENSORED124/spent1/1. No old source/control/diagnostic is run or imported.
-3. Detectionstack/corruptionwriter remainUNMEASURED/UNKNOWN. The newGDBrun reached metrics and supports a separate measured interval representation correction only;record exact code/control/benchmark/invocation budgets before implementation. Preserve originalsumorder and exact union recurrence, allgrouping/substitutions/pipeline/rawIDs and60s/30GiB/max2.
+3. Interval correction is allocated and implemented at81source/243tests. Ownerunit9tests/90checks andprimaryunit4fixtures/36checks PASS;unique scale24checks/exact output and10.34% observed reduction. Two new completecontrols are frozen, reviews parallel, affected/GPU0 until finalsource/control acceptance. Detectionstack/corruptionwriter remainUNMEASURED/UNKNOWN. Preserve originalsumorder and exact union recurrence, allgrouping/substitutions/pipeline/rawIDs and60s/30GiB/max2.
 4. R6/R7retained24 preparation is complete;final review/archive waits for actualcomplete32 outputs. Native06R4/full05/09/19OPEN/GLMPAUSED/CPU-overheadlast and ownership/dependency/cost/ref boundaries remain. Verify,update check-progress/reports,commit ownedfiles locally.
 
 ### Complete continuation prompt
 
 ```text
-最新checkpoint：0d72782b已提交native source/control验收及fullfreeze。唯一GDBfull已CENSORED124/controller1/60.463309s/实际30GiB，1/1用满，no native marker/SIGABRT line/detectionstack/finalJSON/useful-step。不能声称自然exit/allocatorcure，writerUNKNOWN。1038obs测到metricsstart52.729、globalsort0.941/order0.459；160countsum1.069s、159sort1.475s/union2.945s完成，firsthierarchysort59.649open。权威native_stack03/primary/diagnostic_result.json、diagnostic_segments.json、diagnostic_archive.json，七selectedoutputs完全归档，compressedindex只hash不decode/EOFclaim。接下来仅依据新measurement另行分配representationcorrection/control/benchmark和后续affected额度，保持原sum顺序和unionrecurrence及所有60s/30GiB/max2。已验收GPU1/1不重做；group原failedpilot1/8与七conditionalBLOCKED保持，R5仍24/32。
+最新checkpoint：8ecc3f93已提交interval correction allocation；新source81/tests243已交付，ownerunit9tests/90checks、primaryunit4fixtures/36checks、synthetic24checks/exact PASS，each1/1用满；old14.027s/new12.577s只是一组synthetic观测。完整controls已新冻结，source双审进行中，新affected/GPU0，R5仍24/32。原0d72782b已提交native source/control验收及fullfreeze。唯一GDBfull已CENSORED124/controller1/60.463309s/实际30GiB，1/1用满，no native marker/SIGABRT line/detectionstack/finalJSON/useful-step。不能声称自然exit/allocatorcure，writerUNKNOWN。1038obs测到metricsstart52.729、globalsort0.941/order0.459；160countsum1.069s、159sort1.475s/union2.945s完成，firsthierarchysort59.649open。权威native_stack03/primary/diagnostic_result.json、diagnostic_segments.json、diagnostic_archive.json，七selectedoutputs完全归档，compressedindex只hash不decode/EOFclaim。接下来仅依据新measurement另行分配representationcorrection/control/benchmark和后续affected额度，保持原sum顺序和unionrecurrence及所有60s/30GiB/max2。已验收GPU1/1不重做；group原failedpilot1/8与七conditionalBLOCKED保持，R5仍24/32。
 
 继续/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028，feat/glm53-dsv4-vllm028，主任务task_memory/task_2026-10-23_v4_remaining_measurements/。先读AGENTS.md和主requirements/plan/progress/summary及git状态；本段及上方Current continuation是当前记录，旧current/pending是历史。
 

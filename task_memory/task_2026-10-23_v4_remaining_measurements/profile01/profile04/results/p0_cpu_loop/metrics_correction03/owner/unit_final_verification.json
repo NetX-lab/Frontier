@@ -1,0 +1,86 @@
+{
+  "recorded_utc": "2026-10-25T04:19:03.749196+00:00",
+  "checks": {
+    "resource-command-exact": true,
+    "allocation-frozen-before-command": true,
+    "once-only-1-of-1": true,
+    "returncode-expected-0": true,
+    "tests-expected-9": true,
+    "no-failures-errors-capture-error": true,
+    "unit-success": true,
+    "90-saved-assertions-all-pass": true,
+    "actual-30GiB": true,
+    "cgroup-identifies-scope-in-log": true,
+    "no-memory-failure": true,
+    "original-Python": true,
+    "original-environment": true,
+    "unit-log-results": true,
+    "complete-before-60-second-limit": true,
+    "retained-artifact:unit_stdout.log": true,
+    "retained-artifact:unit_stderr.log": true,
+    "retained-artifact:unit_invocation.json": true,
+    "retained-artifact:unit_cgroup.json": true,
+    "retained-artifact:unit_assertions.json": true,
+    "retained-artifact:unit_result.json": true,
+    "frozen-pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_interval_metrics.py": true,
+    "frozen-pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_interval_metrics.py": true,
+    "frozen-pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py": true,
+    "frozen-pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py": true,
+    "frozen-pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py": true,
+    "frozen-pin:/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py": true,
+    "frozen-pin:/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py": true,
+    "frozen-pin:/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py": true,
+    "frozen-pin:/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py": true,
+    "frozen-pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py": true,
+    "frozen-pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py": true,
+    "frozen-pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/primary_source_inspection.json": true,
+    "frozen-pin:/usr/bin/python3.10": true,
+    "frozen-pin:/usr/bin/gdb": true,
+    "frozen-pin:/lib/x86_64-linux-gnu/libc.so.6": true,
+    "frozen-pin:/usr/lib/debug/.build-id/69/389d485a9793dbe873f0ea2c93e02efaa9aa3d.debug": true,
+    "frozen-pin:/lib/x86_64-linux-gnu/libz.so.1": true,
+    "frozen-pin:/usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so": true,
+    "owner-recorded-pin-results": true,
+    "cap:v4_trace_audit_interval_metrics.py": true,
+    "cap:test_v4_trace_audit_interval_metrics.py": true,
+    "cap:source_notes.md": true,
+    "total-owner-maintained-markdown-within-80": true
+  },
+  "checks_passed": 44,
+  "checks_total": 44,
+  "status": "PASS",
+  "kind": "read-only retained evidence verification; no test or harness execution",
+  "line_caps": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_interval_metrics.py",
+      "gross_lines": 81,
+      "cap": 160,
+      "sha256": "33fee81fbaad80f89f9c971acf81870c6c6ac78f8e1bbe0d81a6de361f1a17f6"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_interval_metrics.py",
+      "gross_lines": 243,
+      "cap": 260,
+      "sha256": "642ab9a4c41c37a94dc3472401dd8fb312e81ada60a35c6a321747ffb601f00b"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/owner/source_notes.md",
+      "gross_lines": 25,
+      "cap": 80,
+      "sha256": "e4e4282f725ef129359df4ff8d0e227dfd3a8f6b1515194927ff1120e85a81b6"
+    }
+  ],
+  "observations": {
+    "tests": 9,
+    "assertions": 90,
+    "unit_seconds": 0.5969840628094971,
+    "enclosing_seconds": 0.6788410861045122,
+    "actual_memory_limit_bytes": 32212254720
+  },
+  "limitations": [
+    "small synthetic cases only",
+    "no measured speedup",
+    "primary unit/scale/whole controls/reviews/acceptance pending",
+    "corruption writer UNKNOWN; no allocator cure or R5 admission"
+  ]
+}
