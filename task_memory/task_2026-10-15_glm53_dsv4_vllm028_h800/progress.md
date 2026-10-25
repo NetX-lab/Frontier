@@ -5,6 +5,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded H4a-4 input, overrides, KV and graph-mode findings, runs and gate layout; H4a-4 run5 in progress. |
+| 2026-10-25 | Recorded H4a-2 (commit d6ea9661, probe, TTFT-definition finding, regression) and moved the next actions to H4a-4. |
 | 2026-10-25 | Recorded the completed worktree cleanup (D-WORKTREE-CLEANUP) and the commit of the stopped session's last records. |
 | 2026-10-25 | Applied D-DSV4-H800-MAINLINE-CORRECTION: added the mainline handoff with H4a as the next milestone; the sub-task handoff and the trace-audit route are historical. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: recorded accepted package preparation and canonical next-session gates; dated evidence remains historical. |
@@ -205,7 +207,7 @@
 | --- | --- | --- |
 | H1 P0 case binding | completed | ticket 17 P0-scoped items; `canonical_case_20261021/p0_binding/` |
 | H5 P0 native reference | completed | native06 R4: TTFT 403.31/393.22/399.95 ms, TPOT 19.031/19.017/18.981 ms, E2E 19872/19847/19817 ms, THPT 6273.3/6273.1/6269.8 tok/s; `native06_acceptance_20261023/` |
-| H4a first diagnostic P0 prediction | in-progress: H4a-1 and H4a-3 completed; H4a-2 waits for YC's scope decision | [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md); record below |
+| H4a first diagnostic P0 prediction | in-progress: H4a-1, H4a-2 and H4a-3 completed; H4a-4 running | [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md); records below |
 | H3r targeted cost refinement | pending | needs the H4a attribution |
 | H4 / H6 P0 qualified path and acceptance | pending | needs H4a and YC's decision on step-level costs |
 | P1b H800-64 basic native validation | pending, parallel | ticket 10 p1 list |
@@ -213,11 +215,9 @@
 | scope-lifetime S4/S5 package | stopped, unsealed, 0 GPU jobs | package path preserved in the historical pointer below |
 
 **Next actions.**
-1. YC decides the H4a-2 scope: option A (10-11 `frontier/` files, about 200-250 lines, recommended), B (no rename) or C (separate registered predictor, not recommended); and accepts or rejects substitutions S1 (profile02 instead of profile04) and S2 (proxy P service time as the P step). See [design section 7](h4a_p0_diagnostic/design.md#7-h4a-2-hook-design). No `frontier/` core edit before this decision.
-2. H4a-2 after approval: V4 PREFILL/DECODE execution through the step-cost table; close the three probe failures; check that grouped admission gives 18.59x at 7168 tokens and that existing non-dummy V4 h800 tests keep their behavior.
-3. H4a-4: P0 driver from `v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/frontier.json` with `num_blocks_mode explicit` and 54740 blocks; compute the four errors with the `tests/comparison/e2e_gate/` client gate.
-4. H4a-5: error attribution, test report, checkpoint to YC.
-5. P1b preparation in parallel at lower priority.
+1. H4a-4: finish the P0 run from `h4a_p0_diagnostic/h4a4_driver.py`; compute the four errors with the `tests/comparison/e2e_gate/` client gate against native06.
+2. H4a-5: error attribution, test report, checkpoint to YC.
+3. P1b preparation in parallel at lower priority.
 
 **H4a-1 and H4a-3 record (2026-10-25).** Design: [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md).
 - completed — input persistence (D-INPUT-PERSISTENCE). `h4a_p0_diagnostic/copy_inputs.py` copied 10 native06, 11 profile02 and 9 profile04 files into `h4a_p0_diagnostic/inputs/` (38 MB; manifest with source, cloud origin, size and SHA-256 per file). Each copied cloud inventory matches its receipt digest (profile02 `33ed03ea…`, profile04 `85b0ef23…`). The two profile02 decode traces (36 MB) stay out of git; their cloud originals are recorded.
@@ -227,6 +227,27 @@
 - completed — PD probes without repository edits (`h4a_p0_diagnostic/probes/probe_v4_pd.py`, logs beside it). Three blockers for H4a-2: role configs do not inherit the V4 storage fields; `sp_moe_attention_reduce_scatter` has no phase owner; the measured run tries to train sklearn models (`linear_op.csv` not found).
 - finding — H4a-2 needs 10-11 `frontier/` files, about 200-250 lines, above the ~8 files of D-H4A-CODE-SCOPE. Escalated to YC with options A/B/C; no core file was edited.
 - expectation written before any run (not a fit): TTFT about −18% to −22% (native P response to D first byte is about 120 ms), TPOT about +2% to +3%, E2E and THPT within a few percent.
+
+**H4a-2 record (2026-10-25).** YC adopted option A and substitutions S1 and S2 ("采纳你的推荐，继续"; D-H4A2-SCOPE-A in [requirements.md](requirements.md)).
+- completed — commit `d6ea9661` (22 files, +326/−25). Reason: V4 PD runs need table-priced steps because no qualified per-operator V4 model exists. Method: new `frontier/execution_time_predictor/dsv4_step_cost_input.py` binds `dsv4_step_cost.json` next to the resolved CUDA_EVENT attention input, only for the V4 profile with dummy mode off, and checks schema, qualification, model, device and topology. `deepseek_v4.predict_step_cost_execution` spreads the lane step over the layers as one attention operator; FFN, EP waves, idle forwards and CPU work cost 0. V4 PREFILL and unified DECODE use the co-location V4 layer path; table-priced clusters skip sklearn training; role configs inherit `attention_backend` and the two KV-cache dtypes. Rename `_predict_dsv4_dummy_structural_execution` → `_predict_dsv4_structural_execution`. This closes the three probe blockers.
+- completed — probe on the committed code (`h4a_p0_diagnostic/probes/probe_v4_pd_step_cost.py measured <dir>`, 3 requests of 6144/4, `decode_cuda_graph_mode none`, analytical backend). Request 0 client-equivalent TTFT 311.716 ms = P step 287.354 + KV 3.262 + D first step 21.101; later decode steps 19.299 ms. Every value equals its table entry. Expected and observed: PASS.
+- finding — TTFT definition. Frontier `request_metrics.csv` `ttft` ends at P completion; the native client TTFT ends at the first output token. The client gate (Q10) already compares like with like: Frontier `first_decode_token_completed_at − arrived_at` from `metrics_ground_truth.jsonl` against native client first token. H4a-4 uses the client gate.
+- finding — the per-step stage-batch ledger is 64 MB for 3 requests of 4 tokens; H4a-4 turns it off (`--no-metrics_config_store_frontier_stage_batch_ledger`).
+- completed — regression, Python 3.10.6 `/data/ycfeng/envs/frontier-py310/bin/python`, `PYTHONPATH=$PWD`:
+  - full unit suite (`pytest tests/unit -p no:cacheprovider -p no:logging`): 134 failed / 6114 passed / 208 skipped / 108 errors against the baseline 134 / 6112 / 208 / 108; no test fails that passed before; the +2 are the new `tests/unit/test_dsv4_step_cost_input.py` tests. Log `/data/ycfeng/tmp/glm53_dsv4/h4a2/unit_full/unit.log`. PASS.
+  - `pytest tests/unit/test_e2e_gate.py`: 40 passed. PASS.
+  - `PYTHON_BIN=/data/ycfeng/envs/frontier-py310/bin/python bash examples/architecture/run_dummy_smoke_matrix.sh`: 12/12, exit 0. PASS.
+  - 77-case refactor-fidelity matrix from the clean worktree `.worktrees/fidelity-candidate-d6ea9661` (`tests/e2e/refactor_fidelity/run_matrix.py run`, then `compare --baseline-label /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline --candidate-label candidate_d6ea9661`): 77/77 identical, 0 mismatched, 0 failures. Report `/data/ycfeng/tmp/glm53_dsv4/h4a2/fidelity/comparison.json`. GLM, co-location, PDD and PD-AF results unchanged. PASS.
+
+**H4a-4 record (2026-10-25).** Scripts: `h4a_p0_diagnostic/h4a4_driver.py` (run), `h4a_p0_diagnostic/h4a4_gate.py` (client gate), `h4a_p0_diagnostic/h4a5_attribution.py` (H4a-5 split).
+- Input. The driver rebuilds `SimulationConfig` from native06's retained flat config `v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/frontier.json` (SHA-256 `747a08e5…`, 775 fields) through `create_flat_dataclass`. The current code removes no field and adds none (`added_fields {}` in the receipt).
+- Overrides, each with its reason, in `receipt.json` `override_diff`: KV binding `vllm_v1_scheduler_config_num_blocks_mode` memory_planner_profiled → explicit and `num_blocks` 0 → 54740 (design section 5); `attention_backend` FLASHMLA_SPARSE_DSV4 and both KV-cache dtypes fp8 (the H4a-2 role inheritance); stage-batch ledger off (64 MB per 3 short requests); `decode_cuda_graph_mode` full_decode_only → none; four new output paths. Nothing else differs from native06's input.
+- finding — graph mode. With `full_decode_only`, run3 stopped at `NotImplementedError: V4 idle forward requires ordinary eager co-location` (`frontier/attention/deepseek_v4.py` `validate_deepseek_v4_dummy_forward`, reached from the EP-wave idle forward). On the step-cost path the graph mode is not a pricing input: the decode entries were measured on native graph steps, and idle forwards, sklearn models and kernel-only tables are not used. The guard was not changed (outside the approved file list); the override is listed.
+- finding — KV admission. Both decode lanes have 54740 blocks and 2940 admission blocks per 7168-token request, i.e. 18.619x; vLLM's two-decimal 18.59x corresponds to 2944-2945 blocks. The 4-5 block (0.16%) difference cannot bind here: about 8-9 requests decode per lane against 18. Recorded as `DIFFERS` in the receipt, not a stop; preemption is checked after the run.
+- observation — warmups. The Frontier trace replays the 128 formal rows once. The workload contract drains each warmup segment (both roles idle, request-owned KV released) before the formal origin, and native06's own Frontier input has no warmup rows; on the step-cost path no state crosses that drain. The one formal replay is compared with each native repetition.
+- Runs. run1 `KeyError (0, 0)` (decode replica id is 1; the driver now iterates the schedulers); run2 KV `MISMATCH` exit (changed to the recorded comparison above); run3 the graph-mode stop above; run4 stopped by me at the 7200 s timeout estimate (about 50 s wall per simulated second, CPU-bound, 250 MB RSS); run5 relaunched with `timeout 21600`, started 07:52 UTC:
+  `(ulimit -v 62914560; PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 timeout 21600 /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4a_p0_diagnostic/h4a4_driver.py /data/ycfeng/tmp/glm53_dsv4/h4a4/run5)`.
+- Gate layout. `h4a4_gate.py` rebuilds the native side from persisted copies only: run files from `inputs/native06/` (SHA-256 checked against `inputs/manifest.json`, mtimes kept) and the R4 run-check result from `native06_acceptance_20261023/frozen_r4_result.json` (`71bc110b…`, pinned by `primary_acceptance_r4.json`), placed where `run_gate.py` binds a run check to its run directory. The task-local matrix has one `client` cell, routing `NOT_APPLICABLE` with its reason (whole native steps are priced; Frontier's routing model does not enter). Dry run against the unfinished run: native rows and run-check binding PASS (8/8 checks, bound), Frontier side rejected as expected (`No completed simulator client records`).
 
 **Rules for this route.** D-MAINLINE-LOOP-CAP-DSV4 (more than 3 GPU jobs or about 6 hours of GPU or CPU work on one milestone without movement stops the work and goes to YC). Every checkpoint first states which milestone moved.
 
