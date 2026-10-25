@@ -6,6 +6,7 @@ from typing import Any, Callable, NamedTuple
 
 from frontier.scheduler.utils.ep_wave_inputs import prepare_ep_wave_inputs
 from frontier.scheduler.utils.expert_parallel import (
+    EPWavePhaseTimes,
     calculate_ep_wave_timing,
     predict_ep_wave_phase_times,
 )
@@ -16,6 +17,7 @@ class EPWavePlan(NamedTuple):
 
     wave_inputs: Any
     layer_workload: Any
+    participant_ep_ids: tuple[int, ...]
     phase_times: Any
     timing: Any
     trace_identity: Any
@@ -122,12 +124,6 @@ def prepare_moe_wave_from_inputs(
             )
             sp_token_widths = widths
             physical_rows["routing_token_count"] = widths.gathered_tokens
-    layer_workload = materialize_workload(
-        batch=aggregate_batch,
-        target_replica_id=replica_id,
-        global_layer_id=layer_id,
-        **physical_rows,
-    )
     trace_identity = trace_identity_builder(
         batch=sample_batch,
         replica_id=replica_id,
@@ -135,32 +131,47 @@ def prepare_moe_wave_from_inputs(
         operation_id=int(cohort_id),
         operation_kind="ep_ffn",
     )
-    conservation_logger(
-        cluster_type=cluster_type,
-        batch_id=int(cohort_id),
-        layer_id=layer_id,
-        routing_token_count=int(layer_workload.routing_token_count),
-        router_topk=int(layer_workload.router_topk),
-        total_routed_assignments=int(layer_workload.total_routed_assignments),
-        per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
-        trace_identity=trace_identity,
-    )
-    phase_times = predict_ep_wave_phase_times(
-        layer_workload=layer_workload,
-        source_batch=aggregate_batch,
-        stage_id=stage_id,
-        layer_id=layer_id,
-        cluster_type=cluster_type,
-        predictor=predictor,
-        lane_builder=lane_builder,
-        phase_getter=phase_getter,
-        workload_logger=workload_logger,
-        trace_identity=trace_identity,
-        batch_id=int(cohort_id),
-        capture_lane_timings=capture_lane_timings,
-        source_batches=wave_inputs.source_batches if v4 else None,
-        sp_token_widths=sp_token_widths,
-    )
+    if v4 and predictor._dsv4_step_costs is not None and not capture_lane_timings:
+        # The measured lane step already contains this layer's FFN and EP work
+        # (predict_step_cost_execution), so every participant's phases are zero.
+        layer_workload = None
+        participant_ep_ids = tuple(range(predictor._replica_config.moe_expert_parallel_size))
+        zeros = (0.0,) * len(participant_ep_ids)
+        phase_times = EPWavePhaseTimes(zeros, zeros, zeros, zeros, zeros, zeros)
+    else:
+        layer_workload = materialize_workload(
+            batch=aggregate_batch,
+            target_replica_id=replica_id,
+            global_layer_id=layer_id,
+            **physical_rows,
+        )
+        participant_ep_ids = tuple(layer_workload.participant_ep_ids)
+        conservation_logger(
+            cluster_type=cluster_type,
+            batch_id=int(cohort_id),
+            layer_id=layer_id,
+            routing_token_count=int(layer_workload.routing_token_count),
+            router_topk=int(layer_workload.router_topk),
+            total_routed_assignments=int(layer_workload.total_routed_assignments),
+            per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
+            trace_identity=trace_identity,
+        )
+        phase_times = predict_ep_wave_phase_times(
+            layer_workload=layer_workload,
+            source_batch=aggregate_batch,
+            stage_id=stage_id,
+            layer_id=layer_id,
+            cluster_type=cluster_type,
+            predictor=predictor,
+            lane_builder=lane_builder,
+            phase_getter=phase_getter,
+            workload_logger=workload_logger,
+            trace_identity=trace_identity,
+            batch_id=int(cohort_id),
+            capture_lane_timings=capture_lane_timings,
+            source_batches=wave_inputs.source_batches if v4 else None,
+            sp_token_widths=sp_token_widths,
+        )
     timing = calculate_ep_wave_timing(
         start_time_s=float(time),
         phases=phase_times,
@@ -169,12 +180,13 @@ def prepare_moe_wave_from_inputs(
         cluster_type=cluster_type,
         batch_id=int(cohort_id),
         layer_id=layer_id,
-        participant_ep_ids=tuple(layer_workload.participant_ep_ids),
+        participant_ep_ids=participant_ep_ids,
         trace_identity=trace_identity,
     )
     return EPWavePlan(
         wave_inputs=wave_inputs,
         layer_workload=layer_workload,
+        participant_ep_ids=participant_ep_ids,
         phase_times=phase_times,
         timing=timing,
         trace_identity=trace_identity,
