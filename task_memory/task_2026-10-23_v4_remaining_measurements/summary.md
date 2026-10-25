@@ -7,6 +7,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-25 | Marked this directory as an evidence record; the route moved to the mainline task under D-DSV4-H800-MAINLINE-CORRECTION. |
+| 2026-10-25 | Archived the once-only DP1 GDB observation: natural exit0/no fault reproduced; native1/1spent and failed complete-control gap stays open. |
 | 2026-10-25 | Preserved new prefill control SIGSEGV and allocated one DP1rank0 native-stop observation; controls2/2spent, affected/GPU0. |
 | 2026-10-25 | Verified interval owner/primary units and one exact synthetic pair; controls/reviews remain pending and affected/GPU0. |
 | 2026-10-25 | Allocated a separate interval representation correction from measured159-group sort/union evidence; affected/GPU allowance stays zero. |
@@ -48,6 +49,8 @@
 | 2026-10-23 | Accepted G2 CPU source 05952396 and completed its proposal; GPU decision and runtime work remain open. |
 
 ## Current continuation — 2026-10-25
+
+NewDP1native observation is completed,1/1spent: [62-checkresult/archive](profile01/profile04/results/p0_cpu_loop/prefill_fault04/primary/diagnostic_result.json) observes controller0/27.721293s,GDB0/27.419248s,naturalinferiorexit0/actual30GiB/no native fault. PC/stackUNOBSERVED/writerUNKNOWN;diagnosticfinalJSON570964kernels/4useful, no fullJSON/indexequality or EOFverification. Originalprefillcontrol remainsFAILED_SIGSEGV/-11;bothcontrols2/2spent. No allocatorcure/replacementcontrol/sourceacceptance/affected/R5claim;R5still24/32,affected/GPU0. Next requires a source-backed separately bounded nativefailure diagnosis;no additionalinvocation or behavior change is allocated.
 
 Interval decode controlPASS/exact142567rows/37checks/cleanEOF; prefillDP1rank0SIGSEGV/-11 beforemetrics at20.366353s/actual30GiB/no finalJSON. Dualsource reviewsNo findings but source/control acceptanceBLOCKED, controls2/2spent; [failure](profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_prefill_failure.json) and12selectedoutputs archived. New [DP1native-stop observation](profile01/profile04/results/p0_cpu_loop/prefill_fault04/primary/allocation.json) separatelyallocates90GDB/100controller/oneobservation beforecode; allNOT_RUN, sameenvironment/input/60s/30GiB/no retry. OldP0GDBspent1/1, newaffected/GPU0; R5still24/32.
 

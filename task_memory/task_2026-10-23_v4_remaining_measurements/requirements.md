@@ -7,6 +7,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-25 | Marked this directory as an evidence record; the route moved to the mainline task under D-DSV4-H800-MAINLINE-CORRECTION. |
+| 2026-10-25 | Archived the once-only DP1 GDB observation: natural exit0/no fault reproduced; native1/1spent and failed complete-control gap stays open. |
 | 2026-10-25 | Preserved new prefill control SIGSEGV and allocated one DP1rank0 native-stop observation; controls2/2spent, affected/GPU0. |
 | 2026-10-25 | Allocated a separate interval representation correction from measured159-group sort/union evidence; affected/GPU allowance stays zero. |
 | 2026-10-25 | Archived censored once-only GDB observation and measured group segments; native detection stack remains unmeasured and R5 remains24/32. |
@@ -357,3 +358,7 @@ One owner may create a fresh probe copy under `profile01/graph_probe/`, with at 
 
 - [Observed failure] New interval decode control is exactPASS; prefillDP1rank0 childSIGSEGV/-11,parent1,enclosing20.366353s/actual30GiB,lastkernel_progress19.943/no metrics/no finalJSON. Both controls2/2spent. Source reviewsNo findings do not close complete-control acceptance; R5still24/32.
 - [Decision — ordinary measured CPU diagnosis] `prefill_fault04/primary/allocation.json` separately allocates one90-lineGDB source and100-linecontroller with one native observation, no new synthetic/complete/affected/GPU invocation. Same originalPython/allocator/GC/loader/candidate/fullDP1trace; new SIGSEGV-stop question rather than the spentP0group-timing diagnostic. Reuse acceptedGDB signal/capture AST exactly, addSIGSEGVstop/nopass, static/read-only review before execution. Preserve60s/actual30GiB/max2(selected1)/no retry. Signal/native detection frame may be observed; writerUNKNOWN and no cure/source-control acceptance follows.
+
+### DP1 native observation result — 2026-10-25
+
+- [Observed result] NewDP1native observation used1/1: controller/GDB/naturalinferior exit0 at27.721293/27.419248s,actual30GiB,no native stop/error/PC/stack. DiagnosticJSON570964kernels/4usefulsteps;wholeJSON/decompressedindexequality notrun andEOFunverified. Primary62checks/27frozenpins plus selectedarchivePASS. Does not replace originalFAILEDprefillcontrol or prove allocatorcure; controls2/2spent,source/controlacceptanceBLOCKED,affected/GPU0,R5still24/32. FaultwriterUNKNOWN;no additionalbehaviorchange/invocation selected from the no-reproduction result.
