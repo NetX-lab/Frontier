@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    import\
+           ^
+SyntaxError: unexpected EOF while parsing

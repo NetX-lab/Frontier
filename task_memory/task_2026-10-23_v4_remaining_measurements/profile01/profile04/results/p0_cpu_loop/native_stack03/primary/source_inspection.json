@@ -1,0 +1,84 @@
+{
+  "status": "PRIMARY_NATIVE_SOURCE_STATIC_PASS",
+  "observed_utc": "2026-10-24T21:59:42.054580+00:00",
+  "checks": {
+    "gdb_runs_once": true,
+    "gdb_no_network_or_user_autoload": true,
+    "gdb_preserves_aslr_and_direct_startup": true,
+    "gdb_no_inferior_function_calls": true,
+    "gdb_observes_stop_without_delivery": true,
+    "gdb_bounded_stack_and_map": true,
+    "gdb_marker_once": true,
+    "gdb_core_limit_read_only_live": true,
+    "control_two_synthetic_cases": true,
+    "control_exclusive_writes": true,
+    "control_exact_command_binding": true,
+    "control_actual_memory_check": true,
+    "control_no_task_import_or_trace": true,
+    "driver_single_subprocess": true,
+    "driver_schema_matches_gdb": true,
+    "caps": true
+  },
+  "source_pins": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.gdb",
+      "sha256": "4d0b05a1c1aa4125d5e8faf93da0dbd0f8955e83a75446f88aff6eb0707217b3",
+      "gross_lines": 77
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control.py",
+      "sha256": "d867c9e15a05ae581cb592a24ea0e309d2f26d04f610de094c00f97f6f1a2c14",
+      "gross_lines": 118
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.py",
+      "sha256": "7289592b767038234b989f4b854a4e771b54ae980649235db9769439e0603cd2",
+      "gross_lines": 74
+    }
+  ],
+  "frozen_dependencies": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+      "sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+      "sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+      "sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+      "sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+      "sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py",
+      "sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py",
+      "sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py",
+      "sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+      "sha256": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/primary_source_inspection.json",
+      "sha256": "86e9ca795567c55ed076b63c174868ba14ae1550824274f6f62574e003669097"
+    }
+  ],
+  "new_control_used": 0,
+  "new_diagnostic_used": 0,
+  "limits": "Source/AST inspection only; the fresh GDB exit/signal/cgroup control remains required."
+}

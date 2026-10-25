@@ -1,0 +1,41 @@
+{
+  "gdb_returncode": 0,
+  "inferior_metadata": {
+    "allocator": {
+      "GLIBC_TUNABLES": null,
+      "LD_LIBRARY_PATH": "/usr/local/nvidia/lib64",
+      "LD_PRELOAD": null,
+      "MALLOC_ARENA_MAX": null,
+      "MALLOC_CHECK_": null,
+      "MALLOC_PERTURB_": null,
+      "PYTHONMALLOC": null,
+      "PYTHONMALLOCSTATS": null
+    },
+    "cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n0::/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n",
+    "gc_enabled": true,
+    "gc_thresholds": [
+      700,
+      10,
+      10
+    ],
+    "group": "/sys/fs/cgroup/memory/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope",
+    "memory_limit_bytes": 32212254720,
+    "memory_mount_root": "/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c",
+    "pid": 2755755,
+    "python_executable": "/usr/bin/python3",
+    "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]"
+  },
+  "native_status": {
+    "batch_quit_action": "none",
+    "capture_commands": [],
+    "capture_errors": {},
+    "inferior_exit_code": 0,
+    "inferior_exited": true,
+    "inferior_state": "exited",
+    "observed_pid": 2755755,
+    "observed_stop_signal": null,
+    "run_error": null,
+    "stop_kind": null
+  },
+  "verdict": "PASS"
+}

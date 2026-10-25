@@ -1,0 +1,5 @@
+{
+  "error": "AssertionError: ('V4_SYNTHETIC_META ', 0)",
+  "gdb_returncode": 1,
+  "verdict": "FAIL"
+}

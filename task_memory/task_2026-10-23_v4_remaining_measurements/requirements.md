@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Accepted file-based native control02 after127 primary checks; preserved stale launcher hash receipt and bound current source without rerunning controls. |
+| 2026-10-25 | Preserved failed native control argv transport and allocated one file-based control repair with identical synthetic source. |
+| 2026-10-25 | Primary retained late worker partials, aligned77/118/74-line native-stack sources and froze the fresh control without any execution. |
 | 2026-10-25 | Accepted bounded allocator runtime inventory and separately allocated one native-stack control/diagnostic without changing the runtime or metrics. |
 | 2026-10-25 | Archived the unique segment diagnostic SIGABRT before metrics; allthree timing hypotheses remain unmeasured and only read-only abort RCA is allocated. |
 | 2026-10-25 | Accepted the112-line segment source and114-line fresh tiny after32 exact checks and both reviews; froze the original once-only diagnostic command. |
@@ -318,3 +321,18 @@ One owner may create a fresh probe copy under `profile01/graph_probe/`, with at 
 - [Decision — evidence-backed primary allocation] The read-only allocator inventory is accepted in `group_metrics_tail02/primary/abort_inventory_acceptance.json`:84/100 lines, eight sidecar metadata queries, existing GDB/matching glibc symbols and unchanged Python3.10.6. Corruption origin remains UNKNOWN. Distinct Python versions are not qualified for exact float sums.
 - Select a single GDB observation of the same accepted group timing source with original interpreter/allocator/GC/loader and full retained P0rank0 input. Allocate one GDB command source<=90gross lines, a fresh exit0/SIGABRT/cgroup control<=140gross lines, primary driver<=110gross lines and owner notes<=70 maintained lines, with disjoint writes in `native_stack03/primary/allocation.json`. Worker implements only; primary executes the new control once and full diagnosis once after source/pin/control acceptance. No old driver/control is run or imported.
 - Keep60seconds/actual30GiB/max2(selected1). Record inferior exit or observed signal separately from GDB/driver returncodes; retain native stack/library-map observations on SIGABRT without evaluating inferior functions. A stopped inferior is not a natural exit. No automatic retry, allocator/debug-hook/tracemalloc/interpreter change, core dump, environment install, metric correction, complete control, affected rank or GPU invocation is granted. The three recorded hypotheses distinguish detection paths or non-reproduction; no clean diagnostic establishes a cure or R5 admission.
+
+### D-V4-P0-NATIVE-STACK-PRIMARY-TAKEOVER
+
+- [Decision] Worker closed after two critical-path waits; three source files were found immediately afterward. Preserve all original70/118/37-line partial bytes and hashes. Primary owns their original90/140/70 caps; no invocation or scope increase. The exclusive-source check prevented overwriting a late file and was not a control/diagnostic attempt. Align only the GDB/launcher schema, preserve ASLR/direct startup, hold SIGABRT without delivery and read Linux limits/cgroup only while the stopped inferior is alive. Fresh control0/1 and full diagnostic0/1 stay the originally allocated invocations.
+
+### D-V4-P0-NATIVE-STACK-CONTROL-ARGV-REPAIR
+
+- [Observed failure] Original native control1/1 FAILED in1.702556s,actual parent30GiB. Both synthetic inferiors exited1 with Python SyntaxError on import\ before metadata; expected exit0/SIGABRT behavior remains unmeasured. Preserve original sources/inputs/commands/results/logs; never run/import the spent control.
+- [Decision] Separately allocate one owner02/control.py<=140gross-line repair and one fresh control invocation at60s/actual30GiB/selected1/max2/no retry. Write the identical synthetic source to exclusive .inferior.py files and invoke those files, matching the full diagnostic command shape. Metadata and synthetic-source expression AST must remain exact; GDB/Python/allocator/GC/audit/source/input unchanged. Freeze command/input/source hashes before execution. Existing full diagnostic remains0/1; no new full-trace, affected, complete-control or GPU invocation.
+
+### Native-stack control02 acceptance — 2026-10-25
+
+- [Observed result] The separately allocated file-based control02 used1/1 and passed both synthetic cases in0.706326s. Primary `native_stack03/primary/control_acceptance02.json` checks127 assertions/45 file bindings: original interpreter/allocator/GC, parent and both child30GiB, exact argv/source/metadata/markers, observed natural exit0 versus stopped SIGABRT and successful stack/library/maps. Missing glibc source-text warning is retained; capture errors are empty. Original inline control remains FAILED/spent1/1.
+- [Observed record conflict] `launcher_static_inspection.json` has the stale68f0d6dd pin. Actual74-line launcher7289592b matches the later `source_inspection.json`. Read-only binding failed closed, then `launcher_current_inspection.json` accepted10 current static checks; neither source nor original receipt changed.
+- [Decision already allocated] Freeze the original one full native-stack diagnostic command and accepted control/current-launcher bindings before execution. Full diagnostic remains0/1; no runtime/algorithm or affected-rank expansion. Synthetic proof establishes only the observation seam.
