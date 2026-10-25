@@ -1,0 +1,239 @@
+{
+  "status": "CENSORED_NATIVE_STACK_DIAGNOSTIC_NO_ABORT_OBSERVED",
+  "observed_utc": "2026-10-25T04:10:36.523776+00:00",
+  "execution_source_commit": "0d72782b",
+  "controller_returncode": 1,
+  "resource_GDB_command_returncode": 124,
+  "enclosing_seconds": 60.46330882422626,
+  "native_status_markers": [],
+  "inferior_natural_exit": "UNOBSERVED",
+  "inferior_signal_exit": "UNOBSERVED",
+  "SIGABRT_observed": false,
+  "native_detection_stack": "UNMEASURED",
+  "corruption_writer": "UNKNOWN",
+  "failed_child_library_map": "UNRECORDED",
+  "full_diagnostic_used": 1,
+  "full_diagnostic_ceiling": 1,
+  "actual_memory_limit_bytes": 32212254720,
+  "checks": {
+    "allocation_hash": true,
+    "command_and_cwd": true,
+    "attempt": true,
+    "timeout_result": true,
+    "no_native_marker": true,
+    "actual_30GiB": true,
+    "cgroup_from_child": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py": true,
+    "pin:/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py": true,
+    "pin:/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py": true,
+    "pin:/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py": true,
+    "pin:/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/primary_source_inspection.json": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.py": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/control.py": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/launcher_current_inspection.json": true,
+    "pin:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/native_source_sidecar_review.json": true,
+    "pin:/usr/bin/python3.10": true,
+    "pin:/usr/bin/gdb": true,
+    "pin:/lib/x86_64-linux-gnu/libc.so.6": true,
+    "pin:/usr/lib/debug/.build-id/69/389d485a9793dbe873f0ea2c93e02efaa9aa3d.debug": true,
+    "pin:/lib/x86_64-linux-gnu/libz.so.1": true,
+    "pin:/usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.cgroup.json": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.cgroup.json": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.gc.jsonl": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.gc.jsonl": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.hb.log": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.hb.log": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.kernels.jsonl.gz": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.kernels.jsonl.gz": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.obs.jsonl": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.obs.jsonl": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.stderr": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.stderr": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.stdout": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.stdout": true,
+    "no_SIGABRT_line": true,
+    "timeout_interruption_retained": true,
+    "no_final_JSON": true,
+    "monotonic_observations": true,
+    "metrics_end_absent": true,
+    "tail_outputs_absent": true,
+    "original_kernel_counts": true,
+    "membership_counts": true,
+    "155_streams_and_status_total": true,
+    "count_sum:unique_markers": true,
+    "count_sum:paired_end": true,
+    "sort:unique_markers": true,
+    "sort:paired_end": true,
+    "union:unique_markers": true,
+    "union:paired_end": true,
+    "no_metrics_GC": true,
+    "no_active_inferior_command": true
+  },
+  "checks_passed": 58,
+  "closed_files": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.cgroup.json",
+      "bytes": 1948,
+      "sha256": "013e61f92e17d55d50001ed689d6bb83e4d06ddd45d557f0cb17b1cf4f60f218"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.gc.jsonl",
+      "bytes": 2873,
+      "sha256": "787f00deddae4cb37d1fdad6cde624568263e468b6aecba27c234fdd7b60d26e"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.hb.log",
+      "bytes": 10744,
+      "sha256": "7f500f2146a669774fd9d5dfb96cced1f2d28c73f10214bc31f4ea7867fc6365"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.kernels.jsonl.gz",
+      "bytes": 5383865,
+      "sha256": "aa83c66a13eeaab727f4b5b5d48888b19bc9f1632ddffa6229612b7e42ba761c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.obs.jsonl",
+      "bytes": 152055,
+      "sha256": "bf11db54f54724f8cabb8bcc5c38484a12ea62db522bf087fe00d875afd8e8cc"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.stderr",
+      "bytes": 141,
+      "sha256": "dcafa6429d5ed112732c1600d51fa4d14f20e9b2f9d96554de8c3d819fdc9347"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.stdout",
+      "bytes": 163,
+      "sha256": "aca4e0fdedc6cdb80b304a91a9506cf928c9e3d533b4d0bef5d5d79896af5521"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.receipt.json",
+      "bytes": 10239,
+      "sha256": "52066624424c298e5e9e6106d49d000078f3f76224f50a2b5aebd41381fb662c"
+    }
+  ],
+  "observations": {
+    "rows": 1038,
+    "load_seconds": 31.373,
+    "kernel_start": 41.742,
+    "kernel_done": 52.302,
+    "metrics_start": 52.729,
+    "global_sort_seconds": 0.941,
+    "global_order_seconds": 0.459,
+    "segments": {
+      "count_sum": {
+        "started": 160,
+        "completed": 160,
+        "completed_seconds_sum": 1.069,
+        "completed_members": 3678843,
+        "open_groups": [],
+        "largest": [
+          {
+            "group": "('total', None)",
+            "members": 1215919,
+            "start": 54.13,
+            "end": 54.412,
+            "seconds": 0.282
+          },
+          {
+            "group": "('status', 'captured_segment_unknown')",
+            "members": 1066400,
+            "start": 58.269,
+            "end": 58.482,
+            "seconds": 0.213
+          },
+          {
+            "group": "('per_stream', '23')",
+            "members": 156868,
+            "start": 55.778,
+            "end": 55.845,
+            "seconds": 0.067
+          }
+        ]
+      },
+      "sort": {
+        "started": 160,
+        "completed": 159,
+        "completed_seconds_sum": 1.475,
+        "completed_members": 3647757,
+        "open_groups": [
+          "('hierarchy', 'metadata|attention_metadata')"
+        ],
+        "largest": [
+          {
+            "group": "('total', None)",
+            "members": 1215919,
+            "start": 54.412,
+            "end": 54.853,
+            "seconds": 0.441
+          },
+          {
+            "group": "('status', 'captured_segment_unknown')",
+            "members": 1066400,
+            "start": 58.482,
+            "end": 58.834,
+            "seconds": 0.352
+          },
+          {
+            "group": "('per_stream', '23')",
+            "members": 156868,
+            "start": 55.845,
+            "end": 55.926,
+            "seconds": 0.081
+          }
+        ]
+      },
+      "union": {
+        "started": 159,
+        "completed": 159,
+        "completed_seconds_sum": 2.945,
+        "completed_members": 3647757,
+        "open_groups": [],
+        "largest": [
+          {
+            "group": "('total', None)",
+            "members": 1215919,
+            "start": 54.853,
+            "end": 55.778,
+            "seconds": 0.925
+          },
+          {
+            "group": "('status', 'captured_segment_unknown')",
+            "members": 1066400,
+            "start": 58.834,
+            "end": 59.626,
+            "seconds": 0.792
+          },
+          {
+            "group": "('per_stream', '23')",
+            "members": 156868,
+            "start": 55.926,
+            "end": 56.082,
+            "seconds": 0.156
+          }
+        ]
+      }
+    },
+    "last": {
+      "t": 59.649,
+      "stage": "DEBUG-V4-GROUP-METRICS-SEGMENTS-01:group_sort_start",
+      "rss_mb": 6511.3,
+      "group": "('hierarchy', 'metadata|attention_metadata')",
+      "members": 31086
+    },
+    "metrics_GC_callbacks": 0,
+    "max_observed_rss_mb": 6511.3
+  },
+  "final_JSON": false,
+  "R5_complete_ranks": 24,
+  "R5_total_ranks": 32,
+  "active_inferior_commands": [],
+  "inspection_seconds": 0.05825706198811531,
+  "limits": "Once-only GDB observation was censored; no SIGABRT line/marker is present, not a proof of absence/cure. GDB plus sparse logging perturbs timing; measurements are descriptive only. Compressed kernel index closed hash is retained without decompression/EOF or exact row-count claim. No useful-step/final metrics/affected rank or native ownership/cost/reference admission."
+}

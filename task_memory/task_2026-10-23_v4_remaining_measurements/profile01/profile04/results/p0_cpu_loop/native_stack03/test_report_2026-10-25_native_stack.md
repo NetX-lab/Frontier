@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Archived censored once-only GDB observation and measured group segments; native detection stack remains unmeasured and R5 remains24/32. |
 | 2026-10-25 | Accepted file-based native control02 after127 primary checks; preserved stale launcher hash receipt and bound current source without rerunning controls. |
 | 2026-10-25 | Archived failed inline synthetic argv transport and froze a separate identical-source file-based control. |
 | 2026-10-25 | Retained late worker partials, verified77/118/74-line candidate sources and froze one fresh control before execution. |
@@ -53,3 +54,19 @@ Exact resource/GDB command (JSON argv is authoritative):
 This freezes existing diagnostic0/1, not a new invocation allocation. Early `-iex` disables remote symbols and auto-load before file load.
 
 The staged all-file whitespace check reported five trailing-space lines in immutable GDB `owner02/sigabrt.stdout` anonymous mappings (42/49/51/57/76). Raw bytes stay unchanged; the maintained-file check excludes that exact raw log only. This is a retained-output formatting result, not a control failure.
+
+Full native observation executed exactly once after local commit0d72782b at2026-10-25T04:07:51.603634Z; resource command returned124 at04:08:52.067372Z (12:08:52 Hong Kong). Controller returned1; enclosing60.46330882422626s includes teardown. Actual memory.limit_in_bytes32212254720. GDB stderr retains KeyboardInterrupt at timeout, stdout contains only thread startup. There is no native status marker or SIGABRT line. Inferior natural/signal exit and loaded native library map remain UNOBSERVED/UNRECORDED. This is CENSORED, not a successful stack capture or allocator cure.
+
+`primary/diagnostic_result.json` records58 primary command/hash/limit/output checks and `primary/diagnostic_segments.json` pairs measured boundaries. Seven selected output files are byte-exact in primary/retained_native.*; compressed5,383,865-byte kernel index remains in the original scratch withSHAaa83c66a13eeaab727f4b5b5d48888b19bc9f1632ddffa6229612b7e42ba761c. It was not decompressed or counted; no EOF/full-index acceptance is claimed. No active inferior command remained on inspection.
+
+| Measured region | Observed result | Limit |
+| --- | --- | --- |
+| Loading |31.373s |GDB timing only |
+| Kernel pass |41.742→52.302s;155streams/status totals1215919 |Closed compressed hash only |
+| Metrics batch |52.729s;240groups/5331778memberships |No end marker/finalJSON |
+| Global sort/order |0.941s/0.459s |Descriptive, not non-perturbation proof |
+| Group count/sum |160completed;1.069s |Partial240-group batch |
+| Group sort/union |159completed;1.475s/2.945s |Firsthierarchy sortopen59.649s |
+| Metrics GC |0callbacks |Priorpre-metrics scans remain retained |
+
+The first two native detection-path hypotheses remain unmeasured. The non-reproduction branch is censored: no SIGABRT was observed before timeout, not proof it could not occur later. The global sort/construction and per-group sort/union hypotheses now have partial measured evidence in this distinct run; the aborted original run stays unmeasured. FinalJSON, per-stream tail, sync/steps and useful-step counts are absent. R5 remains24/32; no automatic retry, runtime/algorithm change or affected admission occurred.

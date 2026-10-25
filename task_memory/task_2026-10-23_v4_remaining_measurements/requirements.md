@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Allocated a separate interval representation correction from measured159-group sort/union evidence; affected/GPU allowance stays zero. |
+| 2026-10-25 | Archived censored once-only GDB observation and measured group segments; native detection stack remains unmeasured and R5 remains24/32. |
 | 2026-10-25 | Accepted file-based native control02 after127 primary checks; preserved stale launcher hash receipt and bound current source without rerunning controls. |
 | 2026-10-25 | Preserved failed native control argv transport and allocated one file-based control repair with identical synthetic source. |
 | 2026-10-25 | Primary retained late worker partials, aligned77/118/74-line native-stack sources and froze the fresh control without any execution. |
@@ -336,3 +338,13 @@ One owner may create a fresh probe copy under `profile01/graph_probe/`, with at 
 - [Observed result] The separately allocated file-based control02 used1/1 and passed both synthetic cases in0.706326s. Primary `native_stack03/primary/control_acceptance02.json` checks127 assertions/45 file bindings: original interpreter/allocator/GC, parent and both child30GiB, exact argv/source/metadata/markers, observed natural exit0 versus stopped SIGABRT and successful stack/library/maps. Missing glibc source-text warning is retained; capture errors are empty. Original inline control remains FAILED/spent1/1.
 - [Observed record conflict] `launcher_static_inspection.json` has the stale68f0d6dd pin. Actual74-line launcher7289592b matches the later `source_inspection.json`. Read-only binding failed closed, then `launcher_current_inspection.json` accepted10 current static checks; neither source nor original receipt changed.
 - [Decision already allocated] Freeze the original one full native-stack diagnostic command and accepted control/current-launcher bindings before execution. Full diagnostic remains0/1; no runtime/algorithm or affected-rank expansion. Synthetic proof establishes only the observation seam.
+
+### Native-stack full observation result — 2026-10-25
+
+- [Observed result] Full diagnostic used1/1 after source/control acceptance at0d72782b. Resource/GDB command124/controller1/enclosing60.463309s; actual memory32212254720bytes. No native marker, SIGABRT line, detection stack, finalJSON or useful-step output was retained. Inferior natural/signal exit is UNOBSERVED. Earlier allocator corruption writer remains UNKNOWN; no cure/exact performance/R5 admission.
+- [Measured segments] `native_stack03/primary/diagnostic_result.json` and `diagnostic_segments.json` bind1038 rows: load31.373s; kernel pass41.742→52.302; metrics starts52.729; global sort0.941s/order0.459s. Before timeout160count/sums complete(1.069s),159sorts(1.475s)/unions(2.945s) complete; firsthierarchy sort remains open at59.649. All240groups/5331778memberships are retained in inputs, not all processed before timeout. MetricsGCcallbacks0. GDB/logging perturbation prevents timing-equivalence claims; these measured segments support only a separately allocated representation correction. Full and both native control allowances are spent.
+
+### D-V4-P0-AUDIT-INTERVAL-REPRESENTATION-CORRECTION
+
+- [Decision — measured ordinary repair] `metrics_correction03/primary/allocation.json` separately allocates new adapter160gross/newtests260/notes80/primarydriver150 lines. Cache global interval columns and integer group positions; reuse full sorted sequence by identity. Preserve count/sum trace order, original exact union recurrence, allduplicate memberships/grouping/substitutions/pipeline/GC/loading/rawIDs/runtime and60s/30GiB/max2(selected1). Frozen accepted sources remain unchanged.
+- [Invocation budget] Freshownerunit1/primaryunit1, one synthetic scale pair and two complete output controls, each frozen before execution/no retry. Exact non-clock/count/sum/union/hierarchy/leaf/per-stream fields and index rows against retained baseline outputs are required with independent review. Newaffected/GPU0; allocate affected only after accepted source/control evidence. Original corruption writer remainsUNKNOWN; no native diagnosis rerun or cure claim.

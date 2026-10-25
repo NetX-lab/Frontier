@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Allocated a separate interval representation correction from measured159-group sort/union evidence; affected/GPU allowance stays zero. |
+| 2026-10-25 | Archived censored once-only GDB observation and measured group segments; native detection stack remains unmeasured and R5 remains24/32. |
 | 2026-10-25 | Accepted file-based native control02 after127 primary checks; preserved stale launcher hash receipt and bound current source without rerunning controls. |
 | 2026-10-25 | Preserved failed native control argv transport and allocated one file-based control repair with identical synthetic source. |
 | 2026-10-25 | Primary retained late worker partials, aligned77/118/74-line native-stack sources and froze the fresh control without any execution. |
@@ -58,6 +60,10 @@
 | 2026-10-23 | Accepted Q1 P0 workload/metric binding after root independently reproduced the owner command; Q2 preparation remains active. |
 
 ## Current continuation — 2026-10-25
+
+- in-progress separate interval correction: [allocation](profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/allocation.json) records160source/260tests/80notes/150driver, ownerunit1/primaryunit1/syntheticpair1/completecontrols2 before work; affected/GPU0. Preserve originalcount/sum and exactunionrecurrence, use primitive positions/cached columns and full-list identity reuse. Newowner writes only newadapter/tests/ownernotes/ownerunitoutputs; primary owns execution/report/four mainrecords. Allinvocations NOT_RUN;corruptionwriterUNKNOWN.
+
+- completed once-only native diagnostic archive; execution CENSORED124/controller1/60.463309s,actual30GiB,full1/1 spent. [Result](profile01/profile04/results/p0_cpu_loop/native_stack03/primary/diagnostic_result.json) records58primary checks and1038observations; no native marker/SIGABRT line/detectionstack/finalJSON/useful-step output. Inferior natural/signal exit UNOBSERVED;corruptionwriter UNKNOWN. Metricsstart52.729,global sort0.941/order0.459;160count_sum1.069s,159sort1.475s/union2.945s completed;firsthierarchy sortopen59.649. [Selectedarchive](profile01/profile04/results/p0_cpu_loop/native_stack03/primary/diagnostic_archive.json) preserves seven exact smalloutputs plus compressedindex hash without decoding/EOF claim. Full/source/control evidence stays frozen;no rerun.
 
 - completed full native diagnostic preflight: [frozen allocation](profile01/profile04/results/p0_cpu_loop/native_stack03/primary/diagnostic_execution_allocation.json) binds original10source/6runtime pins and inputtriplet plus acceptedcontrol02/currentlauncher/sidecar; no active rank process or existing prefix. Full diagnostic remains0/1, command ready once. [Sidecar](profile01/profile04/results/p0_cpu_loop/native_stack03/primary/native_source_sidecar_review.json) has no findings within scope; reviewer closed.
 
@@ -121,15 +127,15 @@ This live continuation record supersedes the originalb3365655 handoff and every 
 
 ### Unfinished work and numbered next actions
 
-1. Preserve group source/control8b4d6993 and frozen affected allocation00840389. Its one fresh pilot FAILED;seven conditional ranks remainNOT_RUN/BLOCKED. No old unit/control/pilot/diagnostic rerun.
-2. Original segment tiny FAILED/spent1/1, freshcontrol02 PASS/spent1/1, source/two reviews accepted and original full diagnostic FAILED_SIGABRT/spent1/1 remain frozen. Read-only allocator inventory is complete at47e7eaaf; allthree metrics timing hypotheses remain unmeasured. Continue only the new native_stack03 source/control/diagnostic allocation: primary launcher74/110lines/static9checks PASS, GDB77/90 stays frozen; original control118/140 isFAILED/spent1/1. Fresh file-based control02 is121/140/AST exact and PASS/spent1/1 after127checks/45bindings. Current unchanged launcher7289592b is statically accepted; freeze the exact full execution allocation next. Full diagnostic0/1. Do not run/import old drivers or either spent tiny.
-3. The allocator corruption origin is UNKNOWN. New native_stack03/primary/allocation.json keeps original Python3.10.6/allocator/GC/loader/timing/source/input and observes one native detection stack under GDB. The fresh exit0/SIGABRT/cgroup control has PASS/spent1/1; freeze its accepted proof/current launcher/full command before the full diagnostic. Record inferior exit/signal separately from GDB/driver status. No allocator/debug-hook/interpreter/algorithm change or affected-rank allowance is selected. Keep60s/actual30GiB/max2(selected1), unchanged raw IDs and >=3useful-step/full-output requirements.
-4. Final R5/R6/R7 waits for complete actual32-rank outputs. R6/R7 retained24 preparation is complete and must not be rerun; preserve all failures and native/reference limits. Update reports/check-progress and commit only owned files locally.
+1. Preserve accepted group source/control8b4d6993 and affected allocation00840389; failedpilot1/8/sevenconditionalBLOCKED and original24complete outputs stay unchanged. R5still24/32.
+2. Native source/control acceptance0d72782b remains valid. Original inlinecontrolFAILED/spent1/1; filecontrol02PASS/spent1/1; fullGDBdiagnosticCENSORED124/spent1/1. No old source/control/diagnostic is run or imported.
+3. Detectionstack/corruptionwriter remainUNMEASURED/UNKNOWN. The newGDBrun reached metrics and supports a separate measured interval representation correction only;record exact code/control/benchmark/invocation budgets before implementation. Preserve originalsumorder and exact union recurrence, allgrouping/substitutions/pipeline/rawIDs and60s/30GiB/max2.
+4. R6/R7retained24 preparation is complete;final review/archive waits for actualcomplete32 outputs. Native06R4/full05/09/19OPEN/GLMPAUSED/CPU-overheadlast and ownership/dependency/cost/ref boundaries remain. Verify,update check-progress/reports,commit ownedfiles locally.
 
 ### Complete continuation prompt
 
 ```text
-最新checkpoint：HEAD47e7eaaf接续；group source8b4d6993/affected allocation00840389保持，group pilotFAILED124/60.324082s/no finalJSON、1/8用满，其余7BLOCKED，R5仍24/32。原segment tinyFAILED/spent1/1、fresh tinycontrol02PASS/spent1/1、原segment diagnosticFAILED_SIGABRT/spent1/1都不复跑。Read-only inventory已完成47e7eaaf。Native_stack03 original inline controlFAILED/spent1/1；fresh file-control02已PASS/spent1/1，127primary checks/45bindings、actual parent和两child30GiB、0.706326s。GDB77/90、control02 121/140、launcher74/110保持。早期launcher_static_inspection pin68f0冲突保留；当前launcher7289592b匹配后续source_inspection，current static10checks PASS。下一步冻结full command/acceptedcontrol/currentlauncher/evidence pins后执行原分配的唯一full diagnostic0/1；无allocator/interpreter/GC/loader/algorithm/affected/completecontrol/GPU新额度。ScopeGPU1/1用满且已验收，不重做。
+最新checkpoint：0d72782b已提交native source/control验收及fullfreeze。唯一GDBfull已CENSORED124/controller1/60.463309s/实际30GiB，1/1用满，no native marker/SIGABRT line/detectionstack/finalJSON/useful-step。不能声称自然exit/allocatorcure，writerUNKNOWN。1038obs测到metricsstart52.729、globalsort0.941/order0.459；160countsum1.069s、159sort1.475s/union2.945s完成，firsthierarchysort59.649open。权威native_stack03/primary/diagnostic_result.json、diagnostic_segments.json、diagnostic_archive.json，七selectedoutputs完全归档，compressedindex只hash不decode/EOFclaim。接下来仅依据新measurement另行分配representationcorrection/control/benchmark和后续affected额度，保持原sum顺序和unionrecurrence及所有60s/30GiB/max2。已验收GPU1/1不重做；group原failedpilot1/8与七conditionalBLOCKED保持，R5仍24/32。
 
 继续/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028，feat/glm53-dsv4-vllm028，主任务task_memory/task_2026-10-23_v4_remaining_measurements/。先读AGENTS.md和主requirements/plan/progress/summary及git状态；本段及上方Current continuation是当前记录，旧current/pending是历史。
 
