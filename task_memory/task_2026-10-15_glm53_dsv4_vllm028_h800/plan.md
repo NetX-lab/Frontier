@@ -1,9 +1,10 @@
-# Plan: active DSV4 prioritized H800/H200 calibration; GLM paused
+# Plan: active DSV4 H800-32/64 simulation support and calibration; H200 deferred; GLM paused
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Applied D-DSV4-H800-MAINLINE-CORRECTION: added the current route with milestone H4a (first diagnostic P0 comparison), moved the trace-audit route to history, and deferred the H200 rows. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: linked the next-session handoff after package CPU acceptance; preserved dated routes and remaining gates. |
 | 2026-10-24 | Advanced current pointers to scope/lifetime CPU-source acceptance and separate mirrored-package allocation; R5 remains incomplete. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
@@ -129,7 +130,73 @@
 | 2026-10-18 | Approved controlled CUTLASS fixture and renewed parallel ticket02 coverage/ticket03 cache preparation under unchanged gates. |
 
 
-## Final execution route — current (2026-10-25)
+## Current execution route — DSV4 H800 mainline (2026-10-25)
+
+**Authority.** [D-DSV4-H800-MAINLINE-CORRECTION](requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). This section and the [progress.md handoff](progress.md#current-session-handoff--2026-10-25-mainline-correction) are the only route entry points. Next-action lists in sub-task directories and in older "current" sections of tickets do not set the route.
+
+**Mainline location.** Task directory `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/`, branch `feat/glm53-dsv4-vllm028`, worktree `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`. Work done in another worktree merges back to this branch before it counts.
+
+**Scope.** DSV4 only, H800 only. P0 = H800-32, P16+D16, TP8/DP2/EP16/PP1 per role. P1 = H800-64, P32+D32, TP8/DP4/EP32/PP1 per role. The H200 P2 cases are deferred. GLM is paused.
+
+**Goal.** Frontier simulates the P0 case without dummy mode and matches native06 R4 within 10% on each of mean client TTFT, mean TPOT, mean E2E and THPT; then the same for P1.
+
+### Milestones
+
+| ID | Work | Tickets | State / done condition |
+| --- | --- | --- | --- |
+| H1 | P0 case and workload binding | 17 | DONE for P0 (ticket 17, P0-scoped items). P1 binding pending. |
+| H5 | Native reference | 18 | DONE for P0: native06 R4, `native06_acceptance_20261023/`. P1 pending. |
+| **H4a** | **First diagnostic P0 prediction** | 05, 07, 10, 19 | **NEXT.** Done when the H4a criteria below all hold. |
+| H3r | Targeted cost refinement | 05, 06, 09 | Only for the cost slots that the H4a attribution names as leading error sources. |
+| H4 | Qualified non-dummy P0 path | 05, 07-09 | H4a path with qualified inputs, under YC's decision on step-level cost admission. |
+| H6 | P0 compare, promote and accept | 19 | All four errors <=30% (promotion to P1 formal), then <=10% (final). |
+| P1b | P1 H800-64 basic native validation | 10, 18 | Runs in parallel with everything above, at lower priority than H4a. |
+| P1f | P1 formal reference, comparison and acceptance | 10, 18, 19 | Needs P1b and the P0 30% promotion. |
+
+Dependency: `H4a-1 -> {H4a-2, H4a-3} -> H4a-4 -> H4a-5 -> YC checkpoint -> {H3r, H4} -> H6(P0) -> P1f`; `P1b` runs in parallel and `{P1b, H6 promotion} -> P1f`. Accepted data from H1, H2 and H5 is reused, not redone.
+
+### H4a — first diagnostic P0 prediction
+
+H4a is a DIAGNOSTIC result. It does not count toward the 30% or 10% gates. Its purpose is to obtain the first error numbers and to find which cost slot produces most of the error.
+
+**H4a-1 Inputs and design (CPU only).** Add a `design.md` section "H4a P0 diagnostic path" before any core edit. It must contain:
+- A table of cost slots for one P0 request, with the source, measured scope and coverage range for each: P-side prefill step (6144 tokens), KV transfer (grouped NIXL), D-side first step, D-side decode step (batch of n requests at context 6143-7167), and scheduling/queueing.
+- The step-cost definition taken from the 24 complete profile04 outputs ([retained24 binding](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/review_preparation/retained24_binding.json): useful steps P1/D0/D1 = 4/61/61 per rank). D0/D1 supply decode steps. P1 has only 4 useful steps per rank; state whether they cover the 6144-token prefill slot, and list any other prefill source as a substitution. State whether a step cost is the GPU span or the step-to-step interval. The interval includes host time that CPU-overhead modeling would otherwise cover; record the choice, and keep CPU-overhead modeling last.
+- The profiler-perturbation check: compute profile04's own four client metrics from its `client_requests.jsonl` with the canonical client gate and record the difference from native06 R4. This bounds how much of any H4a error can come from profiler overhead.
+- How step costs are keyed (requests per step, context range) and what happens outside the measured range: a typed error, or an explicitly listed substitution. No extrapolation rule is used unless it is written here first.
+- KV capacity binding: the native grouped block count recorded in ticket 17, through Frontier's existing `explicit` memory mode.
+- The file list and estimated changed lines for H4a-2 and H4a-3, within D-H4A-CODE-SCOPE (about 8 `frontier/` files).
+- Copy the inputs named in the table to persistent storage, per D-INPUT-PERSISTENCE. The profile04 complete per-rank outputs and the client records currently live under `/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/` and `/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/`.
+
+**H4a-2 Frontier V4 PD execution (code).** Enable V4 in the PREFILL and unified DECODE roles through explicit configuration. Existing guards to replace with the new contract:
+- `frontier/attention/families.py:646-650` (`execution_enabled=False`);
+- `frontier/attention/deepseek_v4.py:101-102` (co-location only). The `:38-39` guard rejects PD-AF stage metadata and stays, because PD-AF is out of scope;
+- `frontier/execution_time_predictor/deepseek_v4.py:457-458` (`KV_CONNECTOR != "none"`) and `:638-649` (graph mode and single-request limits, replaced by the step-cost reader for these steps).
+
+Use the existing grouped NIXL transfer and KV allocation (`frontier/events/kv_cache_transfer_start_event.py`, `frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py`, `frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py`). Update `tests/unit/test_dsv4_structural_pd.py::test_grouped_transport_does_not_admit_v4_execution` to the new contract. States without an input keep a typed error. Update the `runtime_limitations` text at `frontier/model_architectures.py:702` to the new contract in the same change.
+
+**H4a-3 Step-cost tables (CPU).** Build the decode and prefill step-cost tables from the complete profile04 lanes, following the design. Store them per D-INPUT-PERSISTENCE, with their source hashes.
+
+**H4a-4 P0 run and comparison.** Add a P0 driver/config that runs the 68f891b workload at the P0 topology:
+- per repetition, 16 warmups, then 128 formal requests at QPS 1;
+- the native feature set: online P/D, MTP off, prefix caching, chunked prefill and thinking off, balanced routing, P graph NONE and D PIECEWISE+FULL.
+
+Compute the four metrics with the existing `tests/comparison/e2e_gate/` normalize/gate CLI, `gate: client`. Report `abs(frontier - native) / abs(native)` against each of the three native06 R4 rounds and against their mean.
+
+**H4a-5 Error attribution and checkpoint.** Split TTFT into P queue wait, prefill compute, KV transfer and D first step. Split TPOT into decode step cost and per-lane batch size over time. Compare each part with native evidence where it exists (profile04 traces, native06 logs). Write `test_report_2026-10-2X_h4a_p0_diagnostic.md` with commands, inputs, the substitution list, the four errors and the attribution. Then report to YC: milestone moved, four errors, leading error source, and the decision on whether step-level costs may support formal gates.
+
+**H4a criteria.**
+1. The simulation completes every warmup and formal request at the P0 topology, without dummy mode or silent fallbacks.
+2. The four metrics and errors are computed by the canonical client gate.
+3. Every substituted input is listed with its source.
+4. Existing behavior is unchanged: the current unit tests, `tests/unit/test_e2e_gate.py`, `bash examples/architecture/run_dummy_smoke_matrix.sh`, and the task's existing fidelity regression (`fidelity_regression/`) produce the same results as before the change.
+5. The change is committed on this branch.
+
+**Stop rules.** D-MAINLINE-LOOP-CAP-DSV4 applies to every step. A step that fails gets one root-cause fix. A second failure of the same step is reported to YC with options; it does not start a new diagnostic chain.
+
+**Not on the current route.** The profile04 R5/R6/R7 trace audit, the CPU metrics loop for the profile04 prefill DP0 ranks (`p0_cpu_loop`), the scope-lifetime S4/S5 package, CUPTI graph/stream/TLS probes, H200, GLM, and CPU-overhead modeling (which stays last). Their evidence is preserved; [future.md](future.md) records the restart condition for R5.
+
+## Historical trace-audit route — 2026-10-25 (superseded by D-DSV4-H800-MAINLINE-CORRECTION)
 
 Resume from the [canonical next-session handoff](../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25); experiments/submissions stop in this session. S1/S2 CPU-source acceptance84a66948 and the single S3 generation/package reviews are complete, not pending prerequisites.
 [Package CPU preparation accepted](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json) at merge08b389052e6249776a16f152163da81ff90d4229; UNSEALED/UNSUBMITTED, GPU submissions0/1. Root merged hashes/67pins, locked-image CPU and intercepted actual-SDK launch entry PASS; both reviews No findings within declared static coverage. Preserve the original executable owner package named in that receipt.
@@ -274,6 +341,8 @@ remain binding,but their earlier owner/launch/freeze snapshot is historical.
    pushed;public docs and other task records remain outside this subagent's ownership.
 
 ## DSV4-only scope/dependency contract — earlier execution snapshot (2026-10-22)
+
+Superseded for milestone order by the [current route](#current-execution-route--dsv4-h800-mainline-2026-10-25). The P2 H200 rows below are deferred by D-SCOPE-H800-DSV4.
 
 **Authority and acceptance.** The new explicit decision in requirements.md
 supersedes dual-model activity. Current correction,simulation,tests,calibration

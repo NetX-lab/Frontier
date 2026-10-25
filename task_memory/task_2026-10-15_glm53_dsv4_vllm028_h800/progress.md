@@ -1,10 +1,11 @@
-# Progress: active DSV4 H800/H200 calibration; GLM paused
+# Progress: active DSV4 H800-32/64 simulation support and calibration; H200 deferred; GLM paused
 
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Applied D-DSV4-H800-MAINLINE-CORRECTION: added the mainline handoff with H4a as the next milestone; the sub-task handoff and the trace-audit route are historical. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: recorded accepted package preparation and canonical next-session gates; dated evidence remains historical. |
 | 2026-10-24 | Recorded accepted scope/lifetime CPU-source and incomplete loading-GC pilot without GPU/native admission. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
@@ -193,7 +194,35 @@
 | 2026-10-18 | Started approved controlled fixture checks/review beside dependency-aware ticket02 coverage and ticket03 cache preparation. |
 
 
-## Current parent-task pointer — 2026-10-25
+## Current session handoff — 2026-10-25 mainline correction
+
+**Authority.** [D-DSV4-H800-MAINLINE-CORRECTION](requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority) and the [current route in plan.md](plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25). Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). This handoff replaces the [sub-task handoff](../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25), which is now an evidence record.
+
+**Milestone state.**
+
+| Milestone | State | Evidence |
+| --- | --- | --- |
+| H1 P0 case binding | completed | ticket 17 P0-scoped items; `canonical_case_20261021/p0_binding/` |
+| H5 P0 native reference | completed | native06 R4: TTFT 403.31/393.22/399.95 ms, TPOT 19.031/19.017/18.981 ms, E2E 19872/19847/19817 ms, THPT 6273.3/6273.1/6269.8 tok/s; `native06_acceptance_20261023/` |
+| H4a first diagnostic P0 prediction | pending, next | plan.md H4a-1 to H4a-5 |
+| H3r targeted cost refinement | pending | needs the H4a attribution |
+| H4 / H6 P0 qualified path and acceptance | pending | needs H4a and YC's decision on step-level costs |
+| P1b H800-64 basic native validation | pending, parallel | ticket 10 p1 list |
+| profile04 R5 trace audit | stopped at 24/32 | prefill DP0 ranks 0-7 deferred, see [future.md](future.md) |
+| scope-lifetime S4/S5 package | stopped, unsealed, 0 GPU jobs | package path preserved in the historical pointer below |
+
+**Next actions.**
+1. H4a-1: write the `design.md` section "H4a P0 diagnostic path" with the cost-slot table, the step-cost definition, the profiler-perturbation check (profile04 client metrics against native06 R4), the out-of-range rule, the KV capacity binding, and the file list with line estimates. Copy the profile04 complete D0/D1/P1 per-rank outputs and client records out of `/data/ycfeng/tmp` per D-INPUT-PERSISTENCE.
+2. H4a-2 and H4a-3 in parallel, with separate file ownership: V4 PREFILL/DECODE enablement in `frontier/`, and the step-cost tables.
+3. H4a-4: P0 driver and run; compute the four errors with the `tests/comparison/e2e_gate/` client gate.
+4. H4a-5: error attribution, test report, checkpoint to YC.
+5. P1b preparation in parallel at lower priority.
+
+**Rules for this route.** D-MAINLINE-LOOP-CAP-DSV4 (more than 3 GPU jobs or about 6 hours of GPU or CPU work on one milestone without movement stops the work and goes to YC). Every checkpoint first states which milestone moved.
+
+**Concurrent session.** At 2026-10-25 another session was still editing `task_memory/task_2026-10-23_v4_remaining_measurements/` (uncommitted plan/progress/requirements/summary and `p0_cpu_loop/prefill_fault04/`). That work belongs to the stopped trace-audit route. Its evidence is kept; it does not set the route.
+
+## Historical parent-task pointer — 2026-10-25 (superseded by D-DSV4-H800-MAINLINE-CORRECTION)
 
 [Canonical next-session handoff](../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25) controls resumption; experiments/submissions stop now. S1/S2 CPU-source acceptance84a66948 and S3 generation/reviews are complete. [Package acceptance](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json): merge08b389052e6249776a16f152163da81ff90d4229, one generation/18inputs/19files/184495B, manifest9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e; source140/27/78=245/275, launcher74/100.
 Preserve the executable owner package: `/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01`. [Root verification](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/root_archive_verification.json) confirms merged hashes/67pins unchanged, locked-image CPU5.324804s/CUDAfalse and intercepted actual-SDK launch-entry PASS; both package reviews No findings within declared static coverage.

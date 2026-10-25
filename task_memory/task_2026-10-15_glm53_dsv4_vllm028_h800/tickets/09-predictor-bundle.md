@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block; this ticket owns the H4a-3 diagnostic step-cost tables, and the trace-audit state is historical. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: linked accepted package preparation and next-session gates; full09 and historical checklists unchanged. |
 | 2026-10-24 | Recorded CPU-source acceptance and mirrored-package next step without predictor/cost admission. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
@@ -51,7 +52,16 @@
 | 2026-10-15 | Re-review fix R1: `14[DSV4]` is a decision and does not wait for `full_frontier_path[GLM]`. |
 
 
-## Final execution state — current (2026-10-25)
+## Current route — DSV4 H800 mainline (2026-10-25)
+
+Authority: D-DSV4-H800-MAINLINE-CORRECTION in [requirements](../requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). Route: [plan.md](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25). Handoff: [progress.md](../progress.md#current-session-handoff--2026-10-25-mainline-correction).
+
+- This ticket owns H4a-3: decode and prefill step-cost tables built from the 24 complete profile04 outputs (D-V4-STEP-COST-FIRST-PASS). They feed only the DIAGNOSTIC H4a run.
+- These tables do not satisfy `predictor_bundle`, `cost_replay` or `coverage` below. Whether step-level costs may support the formal gates is YC's decision after H4a.
+- No GLM milestone is a predecessor of any DSV4 item in this ticket. `Retained full_frontier_path (GLM)` stays paused.
+- The trace-audit state in the section below (R5/R6/R7, prefill DP0 CPU loop, scope-lifetime S4/S5) is stopped. Its evidence is kept.
+
+## Historical execution state — 2026-10-25 trace-audit route (superseded)
 
 **Bundle/full-path acceptance remains OPEN.** DSV4 alone is active, GLM remains PAUSED_PENDING_USER_APPROVAL and official mean/30%/10% gates are unchanged. Resume from the [canonical next-session handoff](../../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25); experiments/submissions stop in this session.
 [Package CPU preparation accepted](../../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json) at merge08b389052e6249776a16f152163da81ff90d4229: S1/S2 and one S3 generation/reviews complete; both reviews No findings within declared static coverage, root merged hashes/67pins/image/SDK PASS. Original executable owner package preserved; UNSEALED/UNSUBMITTED,0/1 GPU submissions.

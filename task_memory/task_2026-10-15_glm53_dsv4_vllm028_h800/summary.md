@@ -1,9 +1,10 @@
-# Task archive: active DeepSeek-V4-Flash; GLM-5.3 paused
+# Task archive: active DeepSeek-V4-Flash on H800-32/64; H200 deferred; GLM-5.3 paused
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Archived D-DSV4-H800-MAINLINE-CORRECTION: this directory is the single mainline, H4a is the next milestone, and the trace-audit state is historical. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: archived package CPU acceptance and next-session pointer without sealing/submission or full-ticket admission. |
 | 2026-10-24 | Archived CPU-source acceptance and mirrored-package frontier; complete trace/native ownership remains open. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
@@ -84,7 +85,18 @@
 | 2026-10-18 | Earlier pause archive retained completed preparations and incomplete/unapplied A2; no model completion was claimed. |
 
 
-## Final state — current (2026-10-25)
+## Current state — DSV4 H800 mainline (2026-10-25)
+
+Overview: D-DSV4-H800-MAINLINE-CORRECTION ([requirements](requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority), [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md)) makes this task directory the single route authority. Scope is DeepSeek-V4-Flash on H800-32 (P0) and H800-64 (P1). H200 is deferred and GLM is paused. The gates are unchanged: mean client TTFT, TPOT, E2E and total THPT, at 30% for promotion and 10% for final acceptance.
+
+Deliverables so far:
+- P0 case binding: ticket 17 P0-scoped items, `canonical_case_20261021/p0_binding/`.
+- P0 native reference: native06 R4, `native06_acceptance_20261023/client_report.md`.
+- profile04 32-H800 profiling run at the P0 topology: 24 of 32 per-rank trace outputs complete (P1, D0, D1), see `../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/`.
+
+Open: H4a first diagnostic P0 prediction (next), then H3r/H4/H6 and P1. No Frontier prediction of the P0 case exists yet. Route: [plan.md](plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25); handoff: [progress.md](progress.md#current-session-handoff--2026-10-25-mainline-correction).
+
+## Historical final state — 2026-10-25 trace-audit route (superseded)
 
 Active acceptance remains DSV4 only; GLM remains PAUSED_PENDING_USER_APPROVAL. Official mean client TTFT/TPOT/E2E, total THPT and30% promotion/10% final gates are unchanged. Resume from the [canonical next-session handoff](../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25); experiments/submissions stop in this session.
 [Package CPU preparation accepted](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json) at merge08b389052e6249776a16f152163da81ff90d4229: S1/S2 and one S3 generation/reviews complete, both reviews No findings within declared static coverage; merged hashes/67pins, locked-image CPU and intercepted actual-SDK checks PASS. Preserve the receipt's original executable owner package; UNSEALED/UNSUBMITTED,0/1 GPU submissions.

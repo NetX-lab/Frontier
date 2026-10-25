@@ -1,9 +1,12 @@
 # V4 kernel-only attention costs
 
+> **Route superseded (2026-10-25).** This directory is an evidence record and no longer sets the route. The mainline is `../task_2026-10-15_glm53_dsv4_vllm028_h800/` under D-DSV4-H800-MAINLINE-CORRECTION: route in [plan.md](../task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25), handoff in [progress.md](../task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md#current-session-handoff--2026-10-25-mainline-correction). The trace-audit route recorded here (R5/R6/R7, the prefill DP0 CPU loop under `profile01/profile04/results/p0_cpu_loop/`, and the scope-lifetime S4/S5 package) is stopped; do not start its next actions. Its evidence stays in place and may be cited.
+
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Marked this directory as an evidence record; the route moved to the mainline task under D-DSV4-H800-MAINLINE-CORRECTION. |
 | 2026-10-25 | Preserved new prefill control SIGSEGV and allocated one DP1rank0 native-stop observation; controls2/2spent, affected/GPU0. |
 | 2026-10-25 | Allocated a separate interval representation correction from measured159-group sort/union evidence; affected/GPU allowance stays zero. |
 | 2026-10-25 | Archived censored once-only GDB observation and measured group segments; native detection stack remains unmeasured and R5 remains24/32. |

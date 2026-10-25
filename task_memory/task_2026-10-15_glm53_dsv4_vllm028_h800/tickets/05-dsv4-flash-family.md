@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block, moved V4 PD (M4) from the GLM dependency to H4a-2, and stated how explicit balanced_topk selection relates to the hash-layer routing rule. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: advanced current pointer past completed package preparation; full05 and historical checklists unchanged. |
 | 2026-10-24 | Advanced bounded scope/lifetime CPU-source frontier, preserving full ticket and trace/ownership gates. |
 | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
@@ -74,7 +75,16 @@
 
 
 
-## Final execution state — current (2026-10-25)
+## Current route — DSV4 H800 mainline (2026-10-25)
+
+Authority: D-DSV4-H800-MAINLINE-CORRECTION in [requirements](../requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). Route: [plan.md](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25). Handoff: [progress.md](../progress.md#current-session-handoff--2026-10-25-mainline-correction).
+
+- This ticket owns H4a-2: V4 execution in the PREFILL and unified DECODE roles (milestone `pd_support` below, P0 scope), together with ticket 07 for grouped NIXL.
+- M4 no longer follows `09.full_frontier_path[GLM]`. GLM is paused and is not a predecessor of V4 PD.
+- For H4a, graph decode and serving prefill use profile04 step-level costs (D-V4-STEP-COST-FIRST-PASS). The isolated-scope reader stays for the shapes it already covers. KERNEL_ONLY completeness is not an H4a prerequisite.
+- The trace-audit route in the section below (R5/R6/R7, prefill DP0 CPU loop, scope-lifetime S4/S5) is stopped. Its evidence is kept.
+
+## Historical execution state — 2026-10-25 trace-audit route (superseded)
 
 **Status: PARTIAL measured family; native06 P0 reference acceptedR4, full05 cost/predictor qualification OPEN.** DSV4-only, GLM PAUSED_PENDING_USER_APPROVAL and official mean/30%/10% gates unchanged. Resume from the [canonical next-session handoff](../../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25); experiments/submissions stop in this session.
 [Package CPU preparation accepted](../../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json) at merge08b389052e6249776a16f152163da81ff90d4229: S1/S2 and one S3 generation/reviews complete; both reviews No findings within declared static coverage, root merged hashes/67pins/image/SDK PASS. Original executable owner package preserved; UNSEALED/UNSUBMITTED,0/1 GPU submissions.
@@ -439,6 +449,7 @@ Remaining execution order after C15: connect the accepted local source component
 
 ### pd_support (per M4, model-specific qualified prerequisites)
 - [ ] Define and implement V4 structural PD on the existing transfer owners: grouped-cache transfer payload, compressed/sliding state handoff and D-side reservation; explicit errors for unsupported states.
+  - Current scope (H4a-2): P0 PREFILL and unified DECODE with grouped NIXL, using the existing transfer and KV allocation owners; see the [plan H4a section](../plan.md#h4a--first-diagnostic-p0-prediction).
 
 ### primitive_profiles
 - [ ] Complete matching hardware/scale coverage for17 and10/11, H80032 first,
@@ -455,6 +466,7 @@ Remaining execution order after C15: connect the accepted local source component
 - [ ] Complete the DSV4 operator/importer/trainer/predictor chain using accepted
   per-layer timing,MoE workload and backend adapters;no new04/GLM work needed.
 - [ ] Hash-layer routing uses the input and verified auxiliary state; the gate load is never silently replaced by balanced.
+  - The native reference runs with `balanced_topk`. Selecting it through the per-case runtime selector (D-V4-BALANCED-RUNTIME-SELECTOR) is an explicit, recorded choice and does not violate this rule. This rule applies to the default path and to any case that does not select `balanced_topk`.
 - [ ] Run compression-boundary and window-rollover tests, held-out shapes, identity failures, and the fidelity comparison.
 
 ## Acceptance

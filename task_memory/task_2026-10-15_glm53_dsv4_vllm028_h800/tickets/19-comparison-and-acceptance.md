@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: pointed the status to the mainline handoff, added the H4a diagnostic comparison milestone, and deferred the H200 cases. |
 | 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: admitted18 P0 native06 referenceR4 and integrated D-Q10 remove those pending pointers; full19 costs/prediction/four-metric gates remain unfinished. |
 | 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS final delta: terminal Succeeded/frozen identity FAIL leaves18 unadmitted; D-Q10 isolated prerequisite accepted, full costs/four-error comparison still open. |
 | 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS: native06 is launched/Running, independent D-Q10 source checks/review complete with matrix running; no admitted18/full costs/four-error result. |
@@ -20,10 +21,11 @@
 
 ## Current execution status
 
-Use [Routing milestone — current (2026-10-23)](../progress.md#routing-milestone--current-2026-10-23)
-and current execution sections in tickets [05](05-dsv4-flash-family.md) and
-[18](18-native-ground-truth-h200.md). The snapshots below are historical evidence,
-not current execution status or measured acceptance.
+Use the [mainline handoff](../progress.md#current-session-handoff--2026-10-25-mainline-correction)
+and the [current route](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25)
+(D-DSV4-H800-MAINLINE-CORRECTION). The next comparison work is
+`h4a_diagnostic_comparison` below. The P2 H200 cases are deferred. The snapshots
+below are historical evidence, not current execution status or measured acceptance.
 
 A accepted/merged292c489; all three B/C P2s CLOSED. C merged84c806f/final39b2bf8 has184/184tests,A/C26PASS,strict77/77/451artifacts and sealed package/image checks. Its already-spent approved1H800 supplement exp-1023-023708-916112 Succeeded500s/0.138889GPUh, root ACCEPTED_ISOLATED_DATA (`../../task_2026-10-22_v4_balanced_routing/prefill_results/primary_acceptance.json`): both6-row CSVs6144/C0/7168/8192/configured+effective128, physicalTP1/eager/six-layer/TP8-local dimensions,1engine/6steps/282calls, byte-identical Python3.12/pandas2.3.3 rebuilds, all8 cloud/local hashes match including7,702,607B trace. Retain anomalies; no independent expert histogram, steady-state, TP8-PD, graph, serving or E2E admission. Historical unbalanced q1 cannot qualify balanced decode.
 
@@ -80,6 +82,19 @@ mean latency/total THPT definitions and thresholds below stay unchanged.
 
 ### canonical_metric_binding
 - [x] Reuse simulator ground-truth `first_decode_token_completed_at` and native streamed first/last-token records through the existing normalize/gate CLI with `gate: client`. Preserve public CSV/internal TTFT semantics and all four definitions. Bind the actual native manifest to its pinned receipt's producer origin; verify frozen formal/warmup IDs and scheduled arrivals while preserving actual native dispatch jitter. Implementation1400f12 merged/pushed as9f58dbe after P1/P2 re-review, primary153 merged checks and strict77-case equality. [Verification](../q10_client_metrics_20261021/test_report_2026-10-21_client_metrics.md). This is a prerequisite, not native qualification or an accuracy result.
+
+### h4a_diagnostic_comparison (P0 H800-32, DIAGNOSTIC, next)
+
+This milestone does not satisfy `frontier_reference_run` or
+`comparison_and_calibration`, and it does not count toward the 30% or 10% gates.
+Its inputs may include profile04 step-level costs and other listed substitutions
+(D-V4-STEP-COST-FIRST-PASS). YC decides after H4a whether step-level costs may
+support the formal gates.
+- [ ] Run the P0 case through the existing normalize/gate CLI with `gate: client`
+  and report the four errors against each native06 R4 round and their mean.
+- [ ] Attribute the TTFT error (P queue wait, prefill compute, KV transfer, D first
+  step) and the TPOT error (decode step cost, per-lane batch size over time).
+- [ ] List every substituted input with its source in the H4a test report.
 
 ### frontier_reference_run
 - [ ] Run the exact68f891b workload on each eligible priority case with measured

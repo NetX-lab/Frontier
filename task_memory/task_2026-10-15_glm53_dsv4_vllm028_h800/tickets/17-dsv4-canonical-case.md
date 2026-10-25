@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block; stated which checklist applies to P0, mapped the two open P0 items to H4a, and deferred the H200 rows. |
 | 2026-10-23 | W128-V4-P0-CASE-BINDING: closed explicit P0 workload/client subitems from unchanged native06 R4; retained all-case checkboxes, memory-budget and10%/30% gates open. |
 | 2026-10-22 | D-DSV4-ONLY-GLM-PAUSED: DSV4 directly reuses accepted shared68f891b workload; removed unfinished GLM16 completion dependency and retained all four V4 cases/mean gates. |
 | 2026-10-21 | Bound V4 scope to the four priority cases, explicit32/64 layouts and promotion/resource rules; retained hardware-specific qualification limits. |
@@ -34,6 +35,15 @@ published at2a84c58/2ffd2cb, not native/full-serving acceptance. Graph/measured
 consumption and decode profiling now prioritize the H80032 P0 case. No formal
 four-metric or30% promotion receipt exists for V4. H200 costs/capacity are not
 H800 qualification, and earlier single-role G0-B does not prove all P/D cases.
+
+## Current route — DSV4 H800 mainline (2026-10-25)
+
+Authority: D-DSV4-H800-MAINLINE-CORRECTION in [requirements](../requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). Route: [plan.md](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25).
+
+- For P0-H800-32, the `[x] P0 only` items below are the binding record; milestone H1 is done for P0. The original `## Milestones` checkboxes stay open because they cover all cases. They are closed per case only when that case has its own evidence.
+- `P0 remaining: ... grouped54740-block allocation ...`: H4a-1 binds the native block count through Frontier's existing `explicit` memory mode for the DIAGNOSTIC run. The full non-KV memory reconciliation stays open for formal acceptance.
+- `P0 remaining: qualified operator/graph/physicalTP8 costs ...`: H4a-2 to H4a-5 produce the first diagnostic prediction; formal closure stays with H4/H6 and ticket 19.
+- The P1-H800-64 row is next after P0 promotion. The two P2-H200 rows are deferred (D-SCOPE-H800-DSV4).
 
 ## P0-scoped binding checkpoint — 2026-10-23
 
