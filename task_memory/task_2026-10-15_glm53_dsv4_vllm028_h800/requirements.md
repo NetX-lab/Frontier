@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded YC's `/ds4-exec` request to reach `shai-ycfeng` through the Pi executor and its blocked outcome. |
 | 2026-10-25 | Recorded YC's temporary promotion of DSV4 on H200-32 and H200-64 to the mainline for 12 hours, with at most 64 non-preemptible H200 for this session (D-H200-TEMP-MAINLINE). |
 | 2026-10-25 | Recorded YC's instruction to report a GPU shortage that delays the route at once (D-GPU-SHORTAGE-REPORT). |
 | 2026-10-25 | Recorded YC's adoption of the H4a checkpoint recommendation: step-level costs do not yet support formal gates, and the route H4b (D-side handoff measurement, then modeling), H4c (step-cost path speed) and P1b in parallel (D-H4A-CHECKPOINT). |
@@ -184,6 +185,12 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - **Resources.** This session's H200 jobs, running plus queued, use at most 64 GPUs in total, all in `step_main` and all non-preemptible (`preemptible=False`). YC's other jobs do not count against this limit and are not touched. For the window this supersedes the personal 32-H200 non-preemptible ceiling and the preemptible H200-64 class of D-CALIBRATION-PRIORITIES, and the deferral of the P2 rows in D-SCOPE-H800-DSV4.
     - **H800.** H4b-(a) `exp-1025-121318-827142` stays queued; P1b keeps its submission condition. H800 work resumes when quota allows.
     - **Unchanged.** H200 evidence never qualifies H800 cells, and H800 evidence never qualifies H200 cells. Frontier comparisons stay DIAGNOSTIC under D-H4A-CHECKPOINT. The 30% promotion before a formal 64-GPU reference, D-MAINLINE-LOOP-CAP-DSV4, D-GPU-SHORTAGE-REPORT, D-INPUT-PERSISTENCE (H200 tables go to `data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/`), the code-scope bounds of D-H4A-CHECKPOINT and the GLM pause all stay in force.
+
+[Original Request] Follow-up, 2026-10-25, about 16:05 UTC, invoking `/ds4-exec`:
+
+> 请你尝试通过吩咐ds4（pi）进行ssh shai-ycfeng 的访问、结果检查和对比（或者是数据拷贝）
+
+- **Copy route attempt (2026-10-25).** YC asked that the Pi executor try `ssh shai-ycfeng` for the H200 run checks and the copy. Outcome in progress.md (H200 record, "blocked — copying the runs"): the Pi model endpoint is unreachable from this runtime, and this session's permission control refused the SSH connection test as a containment escape. The route stays YC's decision.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
