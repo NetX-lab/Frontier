@@ -90,7 +90,11 @@ def decode_steps(trace_path):
 
 
 def decode_entries(run, traces, max_num_seqs):
-    """Pool all lanes; a decode request count above the measured ones is a listed substitution."""
+    """Pool all lanes; a decode request count above the measured ones is a listed substitution.
+
+    A prefill composition measured only without decode requests also prices that composition with
+    decode requests, from the same measured step (listed substitution D-H200-STEP-COST-SUBSTITUTION).
+    """
     groups = defaultdict(list)
     for name in traces:
         for (k, k_tokens, m, m_tokens), interval, span in decode_steps(run / name):
@@ -107,6 +111,13 @@ def decode_entries(run, traces, max_num_seqs):
             "median_gpu_span_ms": statistics.median(span for _, _, span in samples),
             "max_interval_minus_gpu_span_ms": max(interval - span for _, interval, span in samples),
         })
+        if not decoding and (k, k_tokens, True) not in groups:
+            entries.append({
+                "num_prefill_requests": k, "num_prefill_tokens": k_tokens,
+                "num_decode_requests": {"min": 1, "max": max_num_seqs},
+                "time_ms": entries[-1]["time_ms"], "samples": 0, "measured_num_decode_requests": [],
+                "substituted_from_num_decode_requests": {"min": 0, "max": 0},
+            })
     return entries
 
 
