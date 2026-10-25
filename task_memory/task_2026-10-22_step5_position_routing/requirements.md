@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Record YC’s direct continue answer to the finite two-call joint-pricing question; all other invocation and acceptance bounds remain. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree/workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Repair preparation review findings and the SDK field/mount checker; retain original failures and zero runtime calls. |
@@ -39,6 +40,22 @@
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; begin phased implementation. |
 | 2026-10-22 | Bind the design artifact to the approved parent decision and complete workflow scope. |
 
+## [Original Request / Execution Decision] D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025
+
+UTC and HKT date: 2026-10-25. Requesting user: YC.
+
+The immediately preceding permission question was:
+
+> 是否批准按现有执行方案执行这两次 joint pricing：cold/warm 各一次，一个 60s/30GiB 执行，无 warmup、profiling 或 retry？
+
+YC's verbatim answer:
+
+> continue
+
+This direct answer authorizes the concrete two-call proposal and command in resumed_execution/execution_plan_2026-10-25.md. Execute the existing reviewed joint_timing.py once, with at most two ordinary captured D1/layer60 pricing calls, cold/warm once each, one 60s/configured30GiB process, unchanged complete16-lane/208-operator/144-proof output, keys, order, byte comparisons and all per-point checks. There is no warmup, profiling call or automatic retry. Any attempted call counts against this finite two-call ceiling; required-shape stays6/6 and receives no additional call.
+
+Keep the existing2ca5e571 production source, frozen146 identity, reviewed scripts and hash-bound inputs unchanged. This execution decision allocates no source change, GPU or native collection and changes no workload, numerical policy or gate. Existing H800 task-resource and personal-cloud authority continues. Following the observations, proceed through the existing full6144/1024offline/onlineCLI<=2400s per main child, actual workload RSS, freshT2/source/package and native/G3/E2E route. The earlier Not Approved proposal below is historical and superseded only by this finite execution answer.
+
 ## [Execution Observation] Completed D29 worker readiness (2026-10-24 UTC / 2026-10-25 HKT)
 
 The single already-authorized readiness worker exp-1025-050336-389487 is complete. Original local personal RJobBackend submission used creator i-fengyicheng, codesign, one replica with requests/limits4CPU/0GPU/64000Mi, fixed f037d958 image and NFS100.96.128.195:/data/ycfeng:/data/ycfeng. The worker reports the actual local NFS and JuiceFS mounts. RJob/replica Succeeded, container Completed/exit0/restart0; the independent Pod read's403Forbidden is preserved. The replica CR supplies the terminal container state; no permission change or resubmission follows.
@@ -49,7 +66,7 @@ Parent verification runs once at records HEADdfe603ed,exit0,1.423269s in the exi
 
 This closes only the planned worker import/reference-append/lifecycle deliverable. Production remains2ca5e571/frozen146 with the accepted116-path/126-binding budgets. Required-shape6/6 stays exhausted. The D29-CURRENT-JOINT-TIMING-TWO-CALLS proposal below remains Not Approved; workflow/fullCLI/RSS/finalT2/package/native/G3/E2E remain unfinished.
 
-## [Execution Proposal / Not Approved] D29-CURRENT-JOINT-TIMING-TWO-CALLS
+## [Execution Proposal / Not Approved] D29-CURRENT-JOINT-TIMING-TWO-CALLS (historical; execution approved above)
 
 Current-source execution scripts are prepared under `resumed_execution/evidence/execution_preparation_2026-10-25/`. Propose at most two new ordinary captured D1/layer60 CPU pricing calls, cold/warm once each, in one60s/30GiB execution. Use real MetricsStore, unchanged5000-event trace threshold, complete output/proofs/keys/order and per-point checks; fresh phases/plan and actual allocated destination IDs each time. No warmup, profiling call, automatic retry or new required-shape call. Existing required-shape6/6 and old-control ceilings do not change. This is a pending finite execution proposal, not an approval or source allocation.
 

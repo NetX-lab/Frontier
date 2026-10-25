@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | YC answers continue to the finite two-call execution question; run the existing joint script once before the full-workload gate. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
@@ -71,7 +72,7 @@ Archive: ledger_memory/evidence/frozen_regressions_2026-10-25/;64 exact files/71
 
 Finite diagnoses are complete and consolidated: snapshot-copyb061f884/merge52831c6e is NO_ALLOC_STATIC_DIAGNOSIS with0/1 controls and0 launches; init6335f581/mergec6b3da15 is ALLOC_RECOMMENDATION_ONLY with0 controls and0 allocated lines. Parent verifies25 copy source bindings,13 init bindings and14 retained receipts, with unchanged2ca5e571 source. Init126.58s is historical inference and no present startup saving or new source allocation. Both clean diagnosis worktrees remain retained.
 
-The current-source joint pricing, emission and flush driver is prepared and reviewed. Its two ordinary D1/layer60 calls await the explicit finite decision. The single worker import, reference append and lifecycle execution has completed below. Full-workload memory and runtime must be observed during the unchanged complete workload. Required-shape 6/6 and old control ceilings do not increase. OSS quota is USER_CONFIRMED_SUFFICIENT. FullCLI/T2/native/G3/E2E remain open; the init recommendation itself allocates no patch.
+The current-source joint pricing, emission and flush driver is prepared and reviewed. YC’s direct continue answer now approves its two ordinary D1/layer60 calls under D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025; actual execution is next. The single worker import, reference append and lifecycle execution has completed below. Full-workload memory and runtime must be observed during the unchanged complete workload. Required-shape 6/6 and old control ceilings do not increase. OSS quota is USER_CONFIRMED_SUFFICIENT. FullCLI/T2/native/G3/E2E remain open; the init recommendation itself allocates no patch.
 
 The worker CPU interpreter/image import prerequisite is now PASS: retain the copied dependency/base prefixes and the unchanged strict probe's local/image receipts. Prepare the current-source joint script and finite pricing-call proposal in parallel with source-mount/lifecycle/append preparation. The runtime probe does not qualify actual worker throughput or full-workload memory. Existing diagnostic ceilings remain unchanged; a new label or a resume request supplies no extra pricing calls.
 
@@ -101,7 +102,7 @@ Parent verification runs once at records HEAD `dfe603ed`, exit 0, wall 1.423269s
 
 The four current satellite worktrees are clean and ancestors of the sole execution branch `feat/step5-preview`. Non-task files equal admitted production `2ca5e571` and frozen `1461573d`. The original 89-row recovery census is historical; `resumed_execution/worktrees.json` appends this five-worktree checkpoint. Existing source budgets, mandatory regressions, both review axes and finite copy/init outcomes remain accepted without reruns.
 
-The prepared two-call ordinary D1/layer60 cold/warm joint pricing proposal remains Not Approved. After its finite decision and current-source pricing, emission and flush observations, proceed to the complete 6144/1024 offline/online CLI with every output and validation check, at most 2400s per `frontier.main` child. Measure actual full-workload RSS during that execution. Fresh T2/source/package, native/G3/E2E remain subsequent requirements. Required-shape 6/6 is exhausted; no old control, new source allocation or gate change follows from this worker result.
+The prepared two-call ordinary D1/layer60 cold/warm joint pricing execution is now approved by YC’s direct continue answer on2026-10-25, within the original proposed bounds. After its finite decision and current-source pricing, emission and flush observations, proceed to the complete 6144/1024 offline/online CLI with every output and validation check, at most 2400s per `frontier.main` child. Measure actual full-workload RSS during that execution. Fresh T2/source/package, native/G3/E2E remain subsequent requirements. Required-shape 6/6 is exhausted; no old control, new source allocation or gate change follows from this worker result.
 
 ## Previous handoff boundary (2026-10-25; historical)
 

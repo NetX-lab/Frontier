@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | Record the finite joint-pricing execution decision; prepare one unchanged two-call run with exact capture and no retry. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Recover the pending worker records commit; verify five worktrees and unchanged production source without repeating any control. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
@@ -89,7 +90,7 @@
 
 ## Current resumed execution (2026-10-24 UTC / 2026-10-25 local)
 
-Current checkpoint: the single worker and its parent evidence verification are complete at production source `2ca5e571` and observed records HEAD `dfe603ed`. The prepared two-call ordinary joint pricing proposal still requires its finite decision. Worker import and reference append do not establish full-workload RSS or the 2400s acceptance criterion. Earlier preparation and Starting observations below retain their historical meaning.
+Current checkpoint: the single worker and its parent evidence verification are complete at production source `2ca5e571` and observed records HEAD `dfe603ed`. YC’s direct continue answer on2026-10-25 approves the prepared two-call ordinary joint execution; actual observations remain pending. Worker import and reference append do not establish full-workload RSS or the 2400s acceptance criterion. Earlier preparation and Starting observations below retain their historical meaning.
 
 - completed/runtime recovery: reuse original environment copy timeout124 and completion receipts (11,371files/386,015,193B). Both copied-prefix imports failed numpy because Debian site.py only selected dist-packages when base/dependency prefixes were equal. Preserve both raw failures and the original strict probeSHA5669d6b0 unchanged.
 - completed/runtime repair: add one identical CPython binary under a separate base prefix, one shared-stdlib symlink, and the standard pyvenv.cfg; original environment/packages and copied file bytes remain unchanged. Configuration commandexit0,0.109191s; its base-prefix assertion passes before configuration.
@@ -150,6 +151,11 @@ Current checkpoint: the single worker and its parent evidence verification are c
 - completed/preparation follow-up: both original reviewers inspect the final Git assets and passing affected checks; Standards reports0 documented findings/0 baseline smells, Spec reports0 findings. All original3 hard issues and1 optional observation are closed. Both reviewers are closed after collection. See resumed_execution/review_execution_preparation_2026-10-25.md.
 - completed/final metadata and cleanup: preparation_review_followup.json rechecks all5 current worktrees, both non-task source comparisons, final script/Git hashes and the passing Git04/static06 receipts. Record6 completed static04/05/06 reference-copy hashes, then remove exactly those6files/15603024B; preparation_review_cleanup.json retains paths/bytes/SHA256. Original active/cited inputs and all selected reports/logs/receipts remain.
 - in-progress/next: commit the verified task scripts/evidence before one zero-GPU readiness worker; keep the resulting records HEAD stable until both binding calls and platform/business terminal checks finish. Source2ca, all budgets and required-shape6/6 remain unchanged. New pricing0/shape0/fullCLI0/platform0. Current joint timing remains blocked only on the pending finite two-call decision.
+
+### Approved finite current-source joint execution (2026-10-25 UTC / HKT)
+
+- completed/decision: YC answers continue directly to the prior permission question. D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025 authorizes only the concrete cold/warm two-call execution, one60s/configured30GiB process, no warmup/profiling/retry; required-shape6/6 and all existing source/workload/numerical gates remain.
+- in-progress/execution: use unchanged reviewed joint_timing.py and joint_bindings.json with fresh /data/ycfeng/tmp/d29_current_joint_20261025_01 and separate exact outer command capture. The directories do not exist before execution. Production source remains2ca5e571/frozen146; no source edit or worker operation occurs while recording this decision. Commit the decision before the before/after source binding checks and keep HEAD stable during this one run.
 
 ### One authorized readiness worker (2026-10-24 UTC / 2026-10-25 HKT)
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 UTC / HKT | YC’s direct continue answer approves exactly this two-call command; no warmup, profiling, retry or required-shape extension. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Archive the completed single readiness worker and exact parent verification; refresh current worktree and workflow status without new pricing or shape calls. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Close preparation Standards/Spec follow-ups with No findings; freeze task-only scripts before one readiness worker. |
 | 2026-10-24 UTC / 2026-10-25 HKT | Verify the final copied Git and task-scoped configuration in the fixed image; preserve prior failures and affected static06 controls. |
@@ -16,9 +17,9 @@ Preparation has two independent branches:
 
 `source admission + existing runtime PASS -> {joint script + finite pricing decision, worker scripts + original H800/resource authority} -> current-wave and worker observations -> unchanged complete6144/1024 CLI -> final T2/source/package -> native/G3/E2E`.
 
-The first two preparation deliverables and the single authorized job `exp-1025-050336-389487` for worker import, reference append and lifecycle are complete. Actual joint timing remains unperformed pending its finite decision. See test_report_2026-10-25_worker_readiness.md and evidence/worker_readiness_2026-10-25/. Do not rerun source regressions, local/image probes, copy/init diagnoses, old five-pricing/fifteen-emission controls, exhausted required-shape6/6 or the completed readiness job.
+The first two preparation deliverables and the single authorized job `exp-1025-050336-389487` for worker import, reference append and lifecycle are complete. Actual joint timing remains unperformed; YC’s direct continue answer now approves the finite two-call execution below. See test_report_2026-10-25_worker_readiness.md and evidence/worker_readiness_2026-10-25/. Do not rerun source regressions, local/image probes, copy/init diagnoses, old five-pricing/fifteen-emission controls, exhausted required-shape6/6 or the completed readiness job.
 
-## Joint timing: two-call proposal
+## Joint timing: two-call execution (approved 2026-10-25)
 
 The scripts live under `evidence/execution_preparation_2026-10-25/`:
 
@@ -31,7 +32,7 @@ Each wave gets new phases, timing, plan, MetricsStore and output writer. The tim
 
 Validation follows the timed interval. It compares all208 operators,144 compute proofs, complete pricing bytes and all16 ledger rows with exact values, keys, proof content and order. New ledger framing is independently required to be sorted JSONL. Newly allocated EP batch IDs and synthetic destination request IDs must follow the original contiguous allocation and bind to each current lane record; captured source batches, routing identities and all other fields remain exact. It rejects stale cold-plan reporting, dropped rows, reordered lanes, changed proofs, changed durations, extra events and changed captured source IDs.
 
-Proposed authority: **at most two new ordinary captured D1/layer60 CPU pricing calls**, one cold and one warm, under one60s/30GiB execution. Required-shape calls remain0; the already consumed6/6 ceiling is unchanged. The task's root plan expressly states that a new label or resume grants no extra pricing calls. The proposal therefore remains unexecuted until a separate finite decision is recorded.
+Execution authority: **at most two new ordinary captured D1/layer60 CPU pricing calls**, one cold and one warm, under one60s/30GiB execution. YC’s direct continue answer to the prior permission question is recorded as D29-CURRENT-JOINT-TIMING-TWO-CALLS-EXECUTE-20261025 in requirements.md. Required-shape calls remain0; the already consumed6/6 ceiling is unchanged. Run this existing command once with no warmup, profiling or automatic retry; each attempted pricing call consumes the finite allowance.
 
 Exact proposed command, with an unused output directory:
 
