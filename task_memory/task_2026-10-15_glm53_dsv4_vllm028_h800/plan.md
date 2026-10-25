@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | H4c: linked the design and recorded the implemented option B (commit cefbbc9d) and its results; option A stays with YC. |
 | 2026-10-25 | Applied D-H4A-CHECKPOINT: added milestones H4b (native D-side handoff measurement, then Frontier modeling) and H4c (step-cost path speed) with their order and bounds. |
 | 2026-10-25 | H4a done (DIAGNOSTIC): H4a-2 code d6ea9661, H4a-4 four errors and H4a-5 attribution in test_report_2026-10-25_h4a_p0_diagnostic.md; next is the YC checkpoint. |
 | 2026-10-25 | H4a-1 and H4a-3 done: linked the H4a design and recorded that the H4a-2 file list exceeds D-H4A-CODE-SCOPE and waits for YC. |
@@ -206,6 +207,11 @@ Compute the four metrics with the existing `tests/comparison/e2e_gate/` normaliz
 ### H4c — step-cost path speed
 
 Design section with file list and line estimate before the core edit. The hot path is `sync_entry.enter_layer_sync` -> `ep_wave_schedule.schedule_layer_wave` -> `expert_parallel.predict_ep_wave_phase_times` (168 of 180 s in the H4a speed profile, with 6,594 waves and 1.69 M `Request.__init__` calls; [progress.md](progress.md) H4a records). Criteria: H4a run5's four metrics and per-request outputs unchanged; fidelity regression 77/77, the unit tests, `tests/unit/test_e2e_gate.py` and the dummy smoke matrix unchanged; the wall-time change measured.
+
+**Outcome.** Design: [h4c_step_cost_speed/design.md](h4c_step_cost_speed/design.md); report: [test_report_2026-10-25_h4c_step_cost_speed.md](test_report_2026-10-25_h4c_step_cost_speed.md).
+- Implemented option B, commit `cefbbc9d` (2 files). The per-layer events stay; a table-priced EP wave is built from zero phases without lane predictions. This is narrower than the milestone row's "once per step". Option A, one computation per step, is outside the bounds above and is not identical by construction (design section 2).
+- Results: the P0 replay is byte-identical to run5 in every metrics file; only the internal `batch_id` values in the transfer ledger change, in the same order. Wall time 8,094.8 → 758.2 s.
+- What is left after B and what option A would still gain: report section 4. Whether to do more is YC's decision.
 
 **Stop rules.** D-MAINLINE-LOOP-CAP-DSV4 applies to every step. A step that fails gets one root-cause fix. A second failure of the same step is reported to YC with options; it does not start a new diagnostic chain.
 

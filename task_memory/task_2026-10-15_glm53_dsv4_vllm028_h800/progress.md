@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | Recorded H4c (commit cefbbc9d, option B): per-wave equivalence, P0 replay identity, 10.7× faster replay, regressions and the post-change profile; H4b-(a) still Pending for quota. |
 | 2026-10-25 | Recorded the H4b-(a) harness commits, CPU check and `package_01` build; disclosed one unapproved `rm -rf` of a crashed scratch output; next is submission. |
 | 2026-10-25 | Recorded D-H4A-CHECKPOINT and D-GPU-SHORTAGE-REPORT, added H4b and H4c to the milestone table, and started the H4b-(a) record (design, quota snapshot, platform access through the runtime proxy). |
 | 2026-10-25 | Recorded the H4a-4 result and the H4a-5 attribution (test report 2026-10-25); H4a completed, next is the YC checkpoint. |
@@ -213,7 +214,7 @@
 | H4a first diagnostic P0 prediction | completed (DIAGNOSTIC): TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54% | [test_report_2026-10-25_h4a_p0_diagnostic.md](test_report_2026-10-25_h4a_p0_diagnostic.md); records below |
 | H4b-(a) native D-side handoff measurement | in-progress: design, harness (`7ac25c74`), CPU check and `package_01` completed; job `exp-1025-121318-827142` submitted 12:13 UTC, Pending for quota (20 of 32 H800 free) | [h4b_lifecycle_measurement/design.md](h4b_lifecycle_measurement/design.md); record below |
 | H4b-(b) Frontier D-side remote-KV lifecycle | pending | needs H4b-(a) results |
-| H4c step-cost path speed | pending; design while the H4b-(a) job queues | H4a speed profile in the H4a-4 record |
+| H4c step-cost path speed | completed (DIAGNOSTIC), commit `cefbbc9d`: P0 replay byte-identical to H4a run5, 8,094.8 → 758.2 s wall time; unit suite, e2e gate, smoke matrix and 77-case fidelity unchanged | [test_report_2026-10-25_h4c_step_cost_speed.md](test_report_2026-10-25_h4c_step_cost_speed.md); record below |
 | H3r targeted cost refinement | pending | after H4b-(b) and H4c (D-H4A-CHECKPOINT) |
 | H4 / H6 P0 qualified path and acceptance | pending | step-level costs do not yet support formal gates (D-H4A-CHECKPOINT) |
 | P1b H800-64 basic native validation | pending, parallel, lower priority | ticket 10 p1 list |
@@ -223,7 +224,7 @@
 **Next actions** (D-H4A-CHECKPOINT order).
 1. H4b-(a): keep the launcher (pid 348050) alive; watch `exp-1025-121318-827142` until it runs and finishes; tell YC when it leaves the queue.
 2. H4b-(a): after the run, copy the results, run the R4 checker, analyze parts a-g per lane state, merge `h4b-lifecycle-harness` into the mainline.
-3. H4c design and implementation while the job queues and runs.
+3. H4c: completed. Option A and the smaller per-step `ExecutionTime` reuse are left to YC (test report section 4).
 4. H4b-(b) design from the measured parts.
 5. P1b preparation in parallel at lower priority.
 
@@ -279,6 +280,16 @@
 - completed — `package_01`, design section 7: `h4b_lifecycle_measurement/build_package.py` copied native06's package and applied only the listed changes; the comparison against native06, `seal.py` (44 files, `manifest.json` `67bb7e6e…`), the run-manifest preflight and `launch.py --check-only` (`INPUT_HASHES_PASS_NO_SUBMISSION`) passed. Record `h4b_lifecycle_measurement/package_01_build.json`. Offline launch-path check `prelaunch/offline_launch_path.py`: all 4 engine commands carry `--scheduler-cls native_scheduler_lifecycle.LifecycleObservedScheduler` and `--async-scheduling`. Test report: [test_report_2026-10-25_h4b_lifecycle_preparation.md](test_report_2026-10-25_h4b_lifecycle_preparation.md).
 - completed — quota read again at 2026-10-25T12:09:54Z (`prelaunch/quota_20261025T120952Z.json`): `codesign` H800 non-preemptible use 108 of 128, 20 free; the only personal live job is still YC's `exp-1025-192336-120831`.
 - in-progress — submitted 2026-10-25 12:13:19 UTC from this host through `package_01/launch.py` (wrapper `/data/ycfeng/tmp/glm53_dsv4/h4b/launch_package_01.sh`: handbook proxy, `STEPMIND_BACKEND=rjob`, AUTHORIZATION citing D-H4A-CHECKPOINT; launcher pid 348050 kept alive under `setsid nohup`; log `/data/ycfeng/tmp/glm53_dsv4/h4b/launch_package_01.log`). Run manifest written. Job `exp-1025-121318-827142`: creator `i-fengyicheng`, non-preemptible, queue `codesign-default`, 4 replicas, image `vllm-openai@sha256:2286e853…6635`, NFS source `package_01` on this host. Status at 12:15 UTC: Pending, `Insufficient GPU quota … 32 GPU (H800). Queue remaining: H800=20.` Reported to YC at once (D-GPU-SHORTAGE-REPORT). Read-only status script `/data/ycfeng/tmp/glm53_dsv4/h4b/monitor/job_status.py`.
+
+**H4c record (2026-10-25).** Design: [h4c_step_cost_speed/design.md](h4c_step_cost_speed/design.md). Report: [test_report_2026-10-25_h4c_step_cost_speed.md](test_report_2026-10-25_h4c_step_cost_speed.md).
+- completed — design. The H4a profile shows that 166 of 180 s are spent in the EP wave plan, which only produces zero FFN and EP phases on the step-cost path. Option A (one computation per step) is outside the D-H4A-CHECKPOINT bounds (more than 5 files and 200 lines; the per-layer state transitions and the tie order of `BatchStageEndEvent` make identity not guaranteed by construction). Option B was chosen: keep the per-layer events and build table-priced waves from zero phases.
+- completed — commit `cefbbc9d`, 2 files, +46/−34. Reason: remove the wasted lane predictions. Expectation: identical results, about 12× faster. Method: `prepare_moe_wave_from_inputs` returns zero phases for EP participants `0..EP-1` when the V4 profile prices steps from the table and no lane timings are requested; `EPWavePlan` carries `participant_ep_ids`. Result below.
+- completed — per-wave equivalence (scratch `/data/ycfeng/tmp/glm53_dsv4/h4c/wave_equivalence.py`, kept as `h4c_step_cost_speed/wave_equivalence.py`): 63,376 waves of the first 17.8 simulated seconds, each recomputed on the full path; 0 mismatches in participants, phases and barrier timing. PASS.
+- completed — P0 replay `/data/ycfeng/tmp/glm53_dsv4/h4c/replay_b1` (`h4a4_driver.py`): `request_metrics.csv`, `metrics_ground_truth.jsonl`, `system_metrics.json` and `op_precision_metadata.csv` byte-identical to run5; gate `reading.json` byte-identical (TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54%). `run_wall_s` 758.2 against 8,094.8 (10.7×). PASS.
+- finding — `frontier_transfer_ledger.jsonl` differs only in `batch_id`: the skipped lane batches no longer take ids from the shared `Batch` counter, so later ids are smaller, in the same order. The design had not anticipated this; design section 2 now records it.
+- completed — regressions on the change: full unit suite 134 failed / 6,114 passed / 208 skipped / 108 errors, test-by-test equal to the H4a-2 result (0 regressed, 0 fixed); `test_e2e_gate.py` 40 passed; smoke matrix 12/12. The first unit run lacked `--continue-on-collection-errors` and stopped at collection; the H4a-2 command above also omits that flag. Inference: the H4a-2 run used it, because its log shows the same collection errors and still ran 6,114 passing tests.
+- completed — 77-case fidelity from clean worktree `.worktrees/fidelity-candidate-cefbbc9d` (`run_matrix.py run ... --jobs 8 --clean-cache --continue-on-failure`, then `compare` against the t00 baseline; `PYTHONPATH` must be set to the worktree): 77/77 identical, 0 mismatched, 0 failures. Report `/data/ycfeng/tmp/glm53_dsv4/h4c/fidelity/comparison.json`, copied to `h4c_step_cost_speed/results/fidelity_comparison.json`. GLM, co-location, PDD and PD-AF results unchanged. PASS.
+- completed — profile after the change: 180 s now cover 19.06 simulated seconds instead of 2.02 s. The EP wave plan takes 17.3 s. What remains is mostly the per-layer attention prediction of each lane (53.5 s, of which `ExecutionTime.__init__` takes 48.5 s), `enter_layer_sync` (37.5 s) and idle-lane forwards (22.1 s).
 
 **Rules for this route.** D-MAINLINE-LOOP-CAP-DSV4 (more than 3 GPU jobs or about 6 hours of GPU or CPU work on one milestone without movement stops the work and goes to YC). Every checkpoint first states which milestone moved.
 
