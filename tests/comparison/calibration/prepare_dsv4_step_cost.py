@@ -23,8 +23,7 @@ from frontier.execution_time_predictor.dsv4_step_cost_input import QUALIFICATION
 
 
 STEP = re.compile(r"execute_context_(\d+)\((\d+)\)_generation_(\d+)\((\d+)\)")
-DECODE_TRACES = ("torch_traces/decode/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792766820606124725.pt.trace.json.gz",
-                 "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792766798163291423.pt.trace.json.gz")
+DECODE_TRACE = re.compile(r"torch_traces/decode/dp(\d+)/dp\1_pp0_tp0_[^/]+\.pt\.trace\.json\.gz")
 RUN_FILES = ("run/client_requests.jsonl", "run/proxy_requests.jsonl")
 
 
@@ -48,6 +47,18 @@ def pinned_files(run, names):
         _require(sha256(run / name) == inventory[name], f"local copy differs from cloud original: {name}")
         pins[name] = inventory[name]
     return receipt["cloud_root"], pins
+
+
+def decode_traces(run, dp_size):
+    """The TP0 trace of each decode DP lane, in lane order, as listed in the run's cloud inventory."""
+    lanes = defaultdict(list)
+    for row in json.loads((run / "cloud_inventory.json").read_text())["files"]:
+        match = DECODE_TRACE.fullmatch(row["path"])
+        if match:
+            lanes[int(match.group(1))].append(row["path"])
+    _require(sorted(lanes) == list(range(dp_size)) and all(len(paths) == 1 for paths in lanes.values()),
+             f"one TP0 decode trace per DP lane: {dict(lanes)}")
+    return [lanes[lane][0] for lane in range(dp_size)]
 
 
 def topology(engine_path, manifest):
@@ -78,10 +89,10 @@ def decode_steps(trace_path):
     return rows
 
 
-def decode_entries(run, max_num_seqs):
-    """Pool both lanes; a decode request count above the measured ones is a listed substitution."""
+def decode_entries(run, traces, max_num_seqs):
+    """Pool all lanes; a decode request count above the measured ones is a listed substitution."""
     groups = defaultdict(list)
-    for name in DECODE_TRACES:
+    for name in traces:
         for (k, k_tokens, m, m_tokens), interval, span in decode_steps(run / name):
             _require(m_tokens == m and k_tokens >= k, f"unexpected step composition {k, k_tokens, m, m_tokens}")
             groups[(k, k_tokens, m > 0)].append((m, interval, span))
@@ -117,7 +128,8 @@ def prepare_step_cost(run, engine_path, device, output):
     manifest = json.loads((run / "run_manifest.json").read_text())
     _require(manifest["mode"] == "clean" and manifest["groundtruth_tree_dirty"] is False, "clean native run")
     engine, layout = topology(Path(engine_path), manifest)
-    cloud_root, pins = pinned_files(run, RUN_FILES + DECODE_TRACES)
+    traces = decode_traces(run, engine["data_parallel_size"])
+    cloud_root, pins = pinned_files(run, RUN_FILES + tuple(traces))
     workload = json.loads((run / "run/replay_summary.json").read_text())["canonical_repetitions"]
     profiled_repeat = workload["profiling"]["repeat"]
     repeats = [r["repeat"] for r in workload["repetitions"] if r["repeat"] != profiled_repeat]
@@ -129,7 +141,7 @@ def prepare_step_cost(run, engine_path, device, output):
         "model_name": engine["model_name"], "device": device, "topology": layout,
         "limits": {name: engine[name] for name in ("max_model_len", "max_num_batched_tokens", "max_num_seqs")},
         "roles": {"PREFILL": [prefill_entry(run, prompt_tokens.pop(), repeats)],
-                  "DECODE": decode_entries(run, engine["max_num_seqs"])},
+                  "DECODE": decode_entries(run, traces, engine["max_num_seqs"])},
         "sources": {"run_tag": manifest["run_tag"], "cloud_root": cloud_root,
                     "engine_config_sha256": sha256(engine_path), "files_sha256": pins,
                     "profiled_repeat": profiled_repeat, "prefill_repeats": repeats},

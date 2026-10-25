@@ -25,11 +25,12 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 sys.path.insert(0, str(REPO))
-from tests.comparison.calibration.prepare_dsv4_step_cost import DECODE_TRACES, STEP, decode_steps  # noqa: E402
+from tests.comparison.calibration.prepare_dsv4_step_cost import STEP, decode_steps, decode_traces  # noqa: E402
 
 NATIVE = HERE / "inputs/native06/run"
 PROFILE02 = HERE / "inputs/profile02"
 TABLE = REPO / "data/profiling/compute/h800/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json"
+PROFILE02_TRACES = decode_traces(PROFILE02, json.loads(TABLE.read_text())["topology"]["attn_dp"])
 
 
 def read_jsonl(path):
@@ -103,7 +104,7 @@ def frontier_parts(run_dir):
 def profile02_steps():
     """Measured decode step interval by number of decode requests, both lanes pooled."""
     groups = defaultdict(list)
-    for name in DECODE_TRACES:
+    for name in PROFILE02_TRACES:
         for (k, _, m, _), interval, _ in decode_steps(PROFILE02 / name):
             groups[("decode_only" if k == 0 else "first_step_after_kv", m)].append(interval)
     steps = defaultdict(dict)
@@ -125,7 +126,7 @@ def profile02_handoff():
     that overlaps the wait from prefill response to the k=1 step (null: no traced step before it)."""
     proxy = read_jsonl(PROFILE02 / "run/proxy_requests.jsonl")
     samples = []
-    for name in DECODE_TRACES:
+    for name in PROFILE02_TRACES:
         trace = json.load(gzip.open(PROFILE02 / name))
         base = trace["baseTimeNanoseconds"] / 1e9
         annotations = {cat: sorted((base + e["ts"] / 1e6, e["name"]) for e in trace["traceEvents"]
