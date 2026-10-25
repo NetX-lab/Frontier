@@ -205,7 +205,7 @@
 | --- | --- | --- |
 | H1 P0 case binding | completed | ticket 17 P0-scoped items; `canonical_case_20261021/p0_binding/` |
 | H5 P0 native reference | completed | native06 R4: TTFT 403.31/393.22/399.95 ms, TPOT 19.031/19.017/18.981 ms, E2E 19872/19847/19817 ms, THPT 6273.3/6273.1/6269.8 tok/s; `native06_acceptance_20261023/` |
-| H4a first diagnostic P0 prediction | pending, next | plan.md H4a-1 to H4a-5 |
+| H4a first diagnostic P0 prediction | in-progress: H4a-1 and H4a-3 completed; H4a-2 waits for YC's scope decision | [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md); record below |
 | H3r targeted cost refinement | pending | needs the H4a attribution |
 | H4 / H6 P0 qualified path and acceptance | pending | needs H4a and YC's decision on step-level costs |
 | P1b H800-64 basic native validation | pending, parallel | ticket 10 p1 list |
@@ -213,11 +213,20 @@
 | scope-lifetime S4/S5 package | stopped, unsealed, 0 GPU jobs | package path preserved in the historical pointer below |
 
 **Next actions.**
-1. H4a-1: write the `design.md` section "H4a P0 diagnostic path" with the cost-slot table, the step-cost definition, the profiler-perturbation check (profile04 client metrics against native06 R4), the out-of-range rule, the KV capacity binding, and the file list with line estimates. Copy the profile04 complete D0/D1/P1 per-rank outputs and client records out of `/data/ycfeng/tmp` per D-INPUT-PERSISTENCE.
-2. H4a-2 and H4a-3 in parallel, with separate file ownership: V4 PREFILL/DECODE enablement in `frontier/`, and the step-cost tables.
-3. H4a-4: P0 driver and run; compute the four errors with the `tests/comparison/e2e_gate/` client gate.
+1. YC decides the H4a-2 scope: option A (10-11 `frontier/` files, about 200-250 lines, recommended), B (no rename) or C (separate registered predictor, not recommended); and accepts or rejects substitutions S1 (profile02 instead of profile04) and S2 (proxy P service time as the P step). See [design section 7](h4a_p0_diagnostic/design.md#7-h4a-2-hook-design). No `frontier/` core edit before this decision.
+2. H4a-2 after approval: V4 PREFILL/DECODE execution through the step-cost table; close the three probe failures; check that grouped admission gives 18.59x at 7168 tokens and that existing non-dummy V4 h800 tests keep their behavior.
+3. H4a-4: P0 driver from `v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/frontier.json` with `num_blocks_mode explicit` and 54740 blocks; compute the four errors with the `tests/comparison/e2e_gate/` client gate.
 4. H4a-5: error attribution, test report, checkpoint to YC.
 5. P1b preparation in parallel at lower priority.
+
+**H4a-1 and H4a-3 record (2026-10-25).** Design: [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md).
+- completed — input persistence (D-INPUT-PERSISTENCE). `h4a_p0_diagnostic/copy_inputs.py` copied 10 native06, 11 profile02 and 9 profile04 files into `h4a_p0_diagnostic/inputs/` (38 MB; manifest with source, cloud origin, size and SHA-256 per file). Each copied cloud inventory matches its receipt digest (profile02 `33ed03ea…`, profile04 `85b0ef23…`). The two profile02 decode traces (36 MB) stay out of git; their cloud originals are recorded.
+- completed — profiler-perturbation check. `/data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4a_p0_diagnostic/perturbation_check.py` (Python 3.10.6, `PYTHONPATH=$PWD`). Against native06 in the same repeat, TPOT: profile02 R2/R3 +4.37%/+4.45%; profile04 R2/R3 +12.52%/+22.70%. R1 is the profiled repeat in both runs and is unusable (TTFT about +15000%). Decision: profile02 is the step-cost source (substitution S1), profile04 a cross-check.
+- completed — profile04 P1 prefill steps. The 4 useful steps of `['prefill', 1, 0]` are all (1 request, 6144 tokens, 0 decode), so they cover the 6144-token slot. They lie in the profiled repeat: CPU annotations 329.8-334.9 ms, contiguous kernel spans 378.1-445.9 ms, against a native06 P service mean of 268-278 ms. Not used (`h4a_p0_diagnostic/probes/p04_prefill_span.py`).
+- completed — H4a-3 table. `tests/comparison/calibration/prepare_dsv4_step_cost.py` built `data/profiling/compute/h800/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json`: PREFILL (1, 6144, m 0) 287.354 ms from 256 proxy samples; DECODE (0, 0, m 1-128) 19.299 ms from 117 steps; (1, 1, m 0) 21.101 ms from 2; (1, 1, m 1-128) 30.146 ms from 1. Two builds were byte-identical. Command in [design section 8](h4a_p0_diagnostic/design.md#8-h4a-3-builder).
+- completed — PD probes without repository edits (`h4a_p0_diagnostic/probes/probe_v4_pd.py`, logs beside it). Three blockers for H4a-2: role configs do not inherit the V4 storage fields; `sp_moe_attention_reduce_scatter` has no phase owner; the measured run tries to train sklearn models (`linear_op.csv` not found).
+- finding — H4a-2 needs 10-11 `frontier/` files, about 200-250 lines, above the ~8 files of D-H4A-CODE-SCOPE. Escalated to YC with options A/B/C; no core file was edited.
+- expectation written before any run (not a fit): TTFT about −18% to −22% (native P response to D first byte is about 120 ms), TPOT about +2% to +3%, E2E and THPT within a few percent.
 
 **Rules for this route.** D-MAINLINE-LOOP-CAP-DSV4 (more than 3 GPU jobs or about 6 hours of GPU or CPU work on one milestone without movement stops the work and goes to YC). Every checkpoint first states which milestone moved.
 

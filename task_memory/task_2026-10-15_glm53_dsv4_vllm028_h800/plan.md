@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-25 | H4a-1 and H4a-3 done: linked the H4a design and recorded that the H4a-2 file list exceeds D-H4A-CODE-SCOPE and waits for YC. |
 | 2026-10-25 | Applied D-DSV4-H800-MAINLINE-CORRECTION: added the current route with milestone H4a (first diagnostic P0 comparison), moved the trace-audit route to history, and deferred the H200 rows. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: linked the next-session handoff after package CPU acceptance; preserved dated routes and remaining gates. |
 | 2026-10-24 | Advanced current pointers to scope/lifetime CPU-source acceptance and separate mirrored-package allocation; R5 remains incomplete. |
@@ -146,7 +147,7 @@
 | --- | --- | --- | --- |
 | H1 | P0 case and workload binding | 17 | DONE for P0 (ticket 17, P0-scoped items). P1 binding pending. |
 | H5 | Native reference | 18 | DONE for P0: native06 R4, `native06_acceptance_20261023/`. P1 pending. |
-| **H4a** | **First diagnostic P0 prediction** | 05, 07, 10, 19 | **NEXT.** Done when the H4a criteria below all hold. |
+| **H4a** | **First diagnostic P0 prediction** | 05, 07, 10, 19 | **IN PROGRESS.** H4a-1 and H4a-3 done; H4a-2 waits for YC's scope decision. Done when the H4a criteria below all hold. |
 | H3r | Targeted cost refinement | 05, 06, 09 | Only for the cost slots that the H4a attribution names as leading error sources. |
 | H4 | Qualified non-dummy P0 path | 05, 07-09 | H4a path with qualified inputs, under YC's decision on step-level cost admission. |
 | H6 | P0 compare, promote and accept | 19 | All four errors <=30% (promotion to P1 formal), then <=10% (final). |
@@ -159,7 +160,7 @@ Dependency: `H4a-1 -> {H4a-2, H4a-3} -> H4a-4 -> H4a-5 -> YC checkpoint -> {H3r,
 
 H4a is a DIAGNOSTIC result. It does not count toward the 30% or 10% gates. Its purpose is to obtain the first error numbers and to find which cost slot produces most of the error.
 
-**H4a-1 Inputs and design (CPU only).** Add a `design.md` section "H4a P0 diagnostic path" before any core edit. It must contain:
+**H4a-1 Inputs and design (CPU only).** Add a `design.md` section "H4a P0 diagnostic path" before any core edit. **Done 2026-10-25:** [h4a_p0_diagnostic/design.md](h4a_p0_diagnostic/design.md), with a pointer section in [design.md](design.md#h4a-p0-diagnostic-path). Two listed substitutions depart from this text: profile02 replaces profile04 as the step-cost source (profile04 is 13-23% slower than native06 in its non-profiled repeats), and the P step uses the proxy P service time because the P1 prefill steps lie in the profiled repeat. The H4a-2 file list is 10-11 `frontier/` files, above the ~8 of D-H4A-CODE-SCOPE, and goes to YC. It must contain:
 - A table of cost slots for one P0 request, with the source, measured scope and coverage range for each: P-side prefill step (6144 tokens), KV transfer (grouped NIXL), D-side first step, D-side decode step (batch of n requests at context 6143-7167), and scheduling/queueing.
 - The step-cost definition taken from the 24 complete profile04 outputs ([retained24 binding](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/review_preparation/retained24_binding.json): useful steps P1/D0/D1 = 4/61/61 per rank). D0/D1 supply decode steps. P1 has only 4 useful steps per rank; state whether they cover the 6144-token prefill slot, and list any other prefill source as a substitution. State whether a step cost is the GPU span or the step-to-step interval. The interval includes host time that CPU-overhead modeling would otherwise cover; record the choice, and keep CPU-overhead modeling last.
 - The profiler-perturbation check: compute profile04's own four client metrics from its `client_requests.jsonl` with the canonical client gate and record the difference from native06 R4. This bounds how much of any H4a error can come from profiler overhead.
@@ -175,7 +176,7 @@ H4a is a DIAGNOSTIC result. It does not count toward the 30% or 10% gates. Its p
 
 Use the existing grouped NIXL transfer and KV allocation (`frontier/events/kv_cache_transfer_start_event.py`, `frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py`, `frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py`). Update `tests/unit/test_dsv4_structural_pd.py::test_grouped_transport_does_not_admit_v4_execution` to the new contract. States without an input keep a typed error. Update the `runtime_limitations` text at `frontier/model_architectures.py:702` to the new contract in the same change.
 
-**H4a-3 Step-cost tables (CPU).** Build the decode and prefill step-cost tables from the complete profile04 lanes, following the design. Store them per D-INPUT-PERSISTENCE, with their source hashes.
+**H4a-3 Step-cost tables (CPU).** Build the decode and prefill step-cost tables from the complete profile04 lanes, following the design. Store them per D-INPUT-PERSISTENCE, with their source hashes. **Done 2026-10-25** from profile02 (substitution S1 in the design): `data/profiling/compute/h800/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json`, built by `tests/comparison/calibration/prepare_dsv4_step_cost.py`.
 
 **H4a-4 P0 run and comparison.** Add a P0 driver/config that runs the 68f891b workload at the P0 topology:
 - per repetition, 16 warmups, then 128 formal requests at QPS 1;

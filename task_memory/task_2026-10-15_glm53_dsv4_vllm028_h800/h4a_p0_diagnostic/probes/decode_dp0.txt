@@ -1,0 +1,6 @@
+/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts/torch_traces/decode/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792766820606124725.pt.trace.json.gz 64 cpu steps 61 gpu steps
+composition [((0, 0, 2, 2), 46), ((0, 0, 1, 1), 13), ((1, 1, 0, 0), 1), ((1, 1, 1, 1), 1)]
+(0, 1) n 13 interval_ms med 19.361 span_ms med 19.357 busy_ms med 20.643 kernels med 2317
+(0, 2) n 46 interval_ms med 19.355 span_ms med 19.357 busy_ms med 20.924 kernels med 2319.0
+(1, 0) n 1 interval_ms med 21.148 span_ms med 21.14 busy_ms med 21.408 kernels med 2322
+(1, 1) n 1 interval_ms med 30.146 span_ms med 30.136 busy_ms med 38.924 kernels med 2323
