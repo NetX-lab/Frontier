@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Recorded YC's questions on the repriced entry and on H3r after `d485f570`, and the instruction not to start other modeling for now (D-NO-NEW-MODELING). |
 | 2026-10-26 | Recorded YC's adoption of the lead's recommendations for next actions 1-6 after `6dff7547` (D-H4B-K1-REPRICE) and YC's question on `max_tokens = 1` on P. |
 | 2026-10-26 | Recorded YC's approval of the lead's next actions after item 2 (D-H4B-AFTER-ITEM2): the item 3 design, the first-D-step investigation and the removal of three fidelity worktrees. |
 | 2026-10-26 | Recorded YC's approval of H4b-(b) item 2 as designed in section 10 (D-H4B-ITEM2). |
@@ -277,6 +278,14 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     6. **Late-handle measurement.** Not planned.
     - **Question.** YC asked how to read "P 端 max_tokens=1" in design section 11.1, point 4. Answered in the reply; design section 11.1 now states it, and corrects point 2: on vLLM 0.28.0 the proxy sets `max_tokens = 1` and removes `min_tokens`.
     - **Unchanged.** Results stay DIAGNOSTIC (D-H4A-CHECKPOINT); D-NO-INTERRUPT, D-H200-MAINLINE-CONTINUE, D-GPU-SHORTAGE-REPORT and D-MAINLINE-LOOP-CAP-DSV4 apply. These actions need no GPU job.
+
+[Original Request] Follow-up, 2026-10-26, after the report of commit `d485f570`:
+
+> “重新定价的 entry ” 是指什么？这个是哪部分的时间开销（cpu 还是gpu，具体是什么含义，如何理解）？暂不启动其他建模；你描述的 “ H3r（定向成本细化）”具体指的是什么？
+
+25. **D-NO-NEW-MODELING.** Do not start other modeling work for now. This covers H3r, any new Frontier mechanism (READ side, ingress, PREFILL depth 2) and any change to the step-cost tables under `data/profiling/`. Work restarts only on a new YC decision. Existing records, commits and DIAGNOSTIC results stay as they are.
+    - **Question 1, the repriced entry.** It is the DECODE row of the diagnostic step-cost table keyed by 1 prefill request of 1 token and 1-128 decode requests. Frontier uses it as the time of one whole forward step of one attention-DP lane (`frontier/execution_time_predictor/dsv4_step_cost_input.py:3-4, 37-53`): the step in which a request whose KV was just read from P computes its last prompt token and samples its first output token, while the other requests on the lane each decode one token. The old value is the GPU kernel span of one step in a profiled run (30.14 ms on H800). The new value is the median wall-clock step period that the engine core observes in an unprofiled run, from the scheduler records: GPU execution plus the return of the sampled tokens, with CPU scheduling overlapped by async scheduling. On decode-only steps the two methods agree within 0.3-1.8 ms. Answered in the reply.
+    - **Question 2, H3r.** Plan milestone H3r ("Targeted cost refinement", tickets 05, 06, 09): refine only those measured cost inputs that the attribution names as leading error sources, with no broad re-profiling. Its candidates are the H4a substitutions S1-S5 (test report 2026-10-25 h4a p0 diagnostic, sections 3 and 9). The k=1 repricing (D-H4B-K1-REPRICE) was a DIAGNOSTIC version of S4. The lead's earlier mention of the P2-32 TPOT error was a proposal for its first target, not part of the definition. Not started (this item).
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
