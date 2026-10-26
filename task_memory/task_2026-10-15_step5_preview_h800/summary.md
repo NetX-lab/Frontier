@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-26 | Update the current status: H200 64-GPU native done. |
+| 2026-10-26 | Add the merged calibration items 1 and 2a and the running E and G runs to the current status. |
 | 2026-10-26 | Update the current status: H200 32-GPU native done, H200 profiles merged, step E running. |
 | 2026-10-25 | Add the current status and document index after the D31 mainline reset. |
 | 2026-10-22 | D25 full H80032/64 workloads complete, both432/432 verified; p90/throughput and remaining decode instability archived. |
@@ -114,6 +115,15 @@ Status as of 2026-10-26:
     they are not comparison targets.
 - **Frontier.** The full dummy-timing workload completes in 49 minutes (step B). Step E runs the
   `h200_32` workload with the measured H200 tables.
+- **Calibration items merged into `feat/step5-preview` (2026-10-26).**
+  - Item 1, workflow (`2acbf30a`): DECODE keeps two batches in flight (vLLM async scheduling),
+    and NIXL READs complete at DECODE engine steps.
+  - Item 2a, collectives (`b3fa995a`): the opt-in vLLM `allgather_reducescatter` MoE path priced
+    from measured H200 TP8/DP2 and TP8/DP4 collective curves (`frontier_workload.py run
+    --measured-collectives`), and an exact EP-lane prediction cache (1.7× faster).
+  - Running from `.worktrees/run-e-b3fa995`: the step E candidate with both items
+    (`/data/ycfeng/tmp/d31_comb_run/h200_32_comb_h200`), 8-request prefix runs, and the first
+    step G run (`h200_64_comb_h200`).
 - **Operator profiles.** The H200 profile tables for both roles are measured and merged (run 03,
   `test_report_2026-10-26_h200_profiles.md`). The first runs on them found five defects in the
   profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,
