@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import json
 from frontier.execution_time_predictor.prediction_model_registry import PredictionModelRegistry
 
@@ -12,7 +12,9 @@ from frontier.attention.step5_inputs import (
     MRV2_DUMMY_ROW_IDENTITY, step5_input_kind, step5_workload_kind, step5_workload_label,
 )
 from frontier.entities.time_components import AttentionOperatorTimes, AttentionTime, OperatorCost
+from frontier.attention.families import STEP5_ATTENTION_FAMILY
 from frontier.execution_time_predictor.step5 import (
+    STEP5_CATEGORY_COLUMNS,
     STEP5_FEATURE_COLUMNS,
     STEP5_DURATION_STATISTICS,
     STEP5_OPERATOR_NAMES,
@@ -249,13 +251,74 @@ def step5_batch_features(predictor, batch, layer_id):
     return step5_row_features(row), workload
 
 
+def step5_attention_signature(metadata):
+    """The physical attention block of a layer, without the layer's position in the model.
+
+    Input normalization and the residual add sit outside the measured attention root.
+    """
+    operators = {op.name for op in STEP5_ATTENTION_FAMILY.profiling_ops()}
+    spec = metadata.attention_spec
+    producer = spec.index_producer_layer_id
+    return (
+        spec.family_id, spec.variant_id, None if producer is None else producer == spec.global_layer_id,
+        metadata.geometry, metadata.rope_theta, metadata.rotary_dim, metadata.use_rope,
+        metadata.model_precision, metadata.norm_precision, metadata.fused_qkv_gate,
+        metadata.indexer_norm_precision, metadata.indexer_query_precision,
+        metadata.indexer_key_precision, metadata.indexer_weight_precision,
+        tuple(replace(projection, module_prefix="", quantization_prefix="")
+              for projection in metadata.projections if projection.operator_name in operators),
+    )
+
+
+def step5_measured_attention_layer(predictor, layer_id, measured_layers):
+    """Price a layer by the first measured layer with the same physical attention block."""
+    if layer_id in measured_layers:
+        return layer_id
+    mapping = getattr(predictor, "_step5_measured_attention_layers", None)
+    if mapping is None:
+        mapping = predictor._step5_measured_attention_layers = {}
+    key = (layer_id, measured_layers)
+    if key not in mapping:
+        signature = step5_attention_signature(step5_layer_metadata(predictor, layer_id))
+        matches = [layer for layer in measured_layers
+                   if step5_attention_signature(step5_layer_metadata(predictor, layer)) == signature]
+        if not matches:
+            raise ValueError(
+                f"Step layer {layer_id} has no measured layer with the same attention block; "
+                f"measured layers: {list(measured_layers)}"
+            )
+        mapping[key] = matches[0]
+    return mapping[key]
+
+
+def step5_measured_ranges(predictor, model):
+    """Per-feature range of the rows that trained `model`, for each measured category."""
+    cache = getattr(predictor, "_step5_measured_ranges", None)
+    if cache is None:
+        cache = predictor._step5_measured_ranges = {}
+    coverage = model._frontier_step5_coverage
+    entry = cache.get(id(model))
+    if entry is None or entry[1] is not coverage:
+        positions = [STEP5_FEATURE_COLUMNS.index(name) for name in STEP5_CATEGORY_COLUMNS]
+        ranges = {}
+        for key in coverage:
+            category = tuple(key[index] for index in positions)
+            low, high = ranges.get(category, (key, key))
+            ranges[category] = (tuple(map(min, low, key)), tuple(map(max, high, key)))
+        entry = cache[id(model)] = (model, coverage, ranges)
+    return entry[2]
+
+
 def predict_step5_attention_time(predictor, batch, layer_id):
-    """Charge the inclusive physical root once; child scopes are diagnostics only."""
+    """Charge the inclusive physical root once; child scopes are diagnostics only.
+
+    A query must fall in a measured category and inside that category's measured range
+    of every feature; the fitted model interpolates between measured rows.
+    """
     features, workload = step5_batch_features(predictor, batch, layer_id)
     measurement = step5_measurement_type(workload.graph_mode)
     if measurement is MeasurementType.KERNEL_ONLY and predictor._kernel_gap_ms is None:
         raise ValueError("Step GPU-active attention needs measured kernel_gap.csv coverage")
-    key = tuple(features[name] for name in STEP5_FEATURE_COLUMNS)
     root = STEP5_OPERATOR_NAMES[0]
     with predictor._temporary_measurement_type(measurement):
         names = (root, f"{root}_kernel_count")
@@ -263,11 +326,21 @@ def predict_step5_attention_time(predictor, batch, layer_id):
         if missing:
             raise ValueError(f"Step measured attention model coverage is unavailable: {missing}")
         models = [predictor._predictions[name]["_model"] for name in names]
+        measured_layers = tuple(int(layer) for layer in models[0]._frontier_step5_domains["global_layer_id"])
+        features["global_layer_id"] = float(step5_measured_attention_layer(predictor, layer_id, measured_layers))
+        key = tuple(features[name] for name in STEP5_FEATURE_COLUMNS)
+        category = tuple(features[name] for name in STEP5_CATEGORY_COLUMNS)
         for name, model in zip(names, models):
-            if key not in model._frontier_step5_coverage:
+            ranges = step5_measured_ranges(predictor, model).get(category)
+            if ranges is None:
                 raise ValueError(
                     f"Step measured attention coverage is unavailable for {name}: {features}"
                 )
+            outside = [f"{column}={value} not in [{low}, {high}]"
+                       for column, value, low, high in zip(STEP5_FEATURE_COLUMNS, key, *ranges)
+                       if not low <= value <= high]
+            if outside:
+                raise ValueError(f"Step attention query is outside the measured range of {name}: {outside}")
         if models[0]._frontier_measurement_identity != models[1]._frontier_measurement_identity:
             raise ValueError("Step duration and kernel-count measurement identities differ")
         identity = PredictionModelRegistry._measurement_identity(models[0])

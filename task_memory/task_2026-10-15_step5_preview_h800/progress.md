@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step D(a) done (attention priced within its measured category); step F waits for account GPU room; census abandoned. |
 | 2026-10-26 | D31: step C done (H200 32-GPU native workload, metrics and KV capacity recorded). |
 | 2026-10-26 | D31: step B done (full dummy workload in 2933 s); workload02 submitted after Pi recovered; D31.9 balanced routing for Frontier. |
 | 2026-10-25 | D31 mainline reset: review written, documents corrected, steps B/C/D of the new plan started. |
@@ -199,9 +200,53 @@ State of the D31 plan steps (see the top section of `plan.md`):
   `requirements.md`, the new current plan, this entry, the summary index and the ticket status
   notes.
 - completed — B. Fast Frontier E2E runs (2026-10-26, details below).
-- in-progress — C. H200 32-GPU native workload with the routing image (workload02 running).
-- in-progress — D. H200 Step-5 operator profiles.
-- pending — E, F, G.
+- completed — C. H200 32-GPU native workload with the routing image (workload02, details below).
+- in-progress — D. H200 Step-5 operator profiles. D(a) is committed; D(b)–D(g) follow (details
+  below).
+- waiting — F. H200 64-GPU native workload. The stage is built; launch waits until the account's
+  other H200 jobs leave room (details below).
+- pending — E, G.
+
+Step D progress (2026-10-26):
+
+- D(a) done: measured Step attention is priced within its measured category. A layer that was
+  not profiled uses the first measured layer with the same attention block, and a query outside
+  the measured feature range of its category raises instead of extrapolating. One SWA layer
+  (layer 0) and one DSA layer (layer 3) therefore cover all 92 layers. Report
+  `test_report_2026-10-26_measured_attention_category.md`: fidelity 77/77 identical; of the 133
+  unit-test failures, 132 also fail on the baseline `e275c83`, and the one caused by this change
+  was a test asserting the old exact-layer rule; it now checks the block rule.
+- Abandoned: an attention-shape census (`tests/integration/step5_pd/attention_census.py`,
+  untracked) that patched four Frontier methods to record the dummy-run shapes. The patched run
+  hung, and the census duplicated what the D side's native shape rules already define. The file
+  stays untracked; deleting it needs approval.
+- Shape findings for the profile grid, from the vLLM MRv2 sources exported under this task:
+  - Frontier asks the attention model for mixed batches (decodes plus one prompt tail) and for
+    rows padded to a CUDA Graph capture size. Both are model features (`phase_code`,
+    `batch_num_prefill_tokens`, `batch_num_decode_tokens`, `padded_tokens`), and the profiler
+    could not produce either: `Step5ProfileInput` allowed only prefill or decode, and
+    `choose_graph_mode` rejected padded rows.
+  - Native padding: FULL graphs pad requests and tokens (padded requests have one token,
+    sequence length 0, block-table row 0 and slot `PAD_SLOT_ID`); PIECEWISE graphs pad only the
+    hidden rows, and attention sees the real request and token counts.
+  - Decodes come first in a native batch, then the other requests by ascending length.
+- Next: D(b)/(c) add the mixed phase and padded rows to the profiler inputs, rows and vLLM
+  wrapper; D(d) writes the H200 profile plan and inputs; D(e) generalizes the H800 literals in
+  `frontier/profiling/step5/job.py`; D(f) adds the kernel-gap and H200 NIXL read profiles; D(g)
+  runs the profile job and wires the tables into the predictor options.
+
+Step F status (2026-10-26):
+
+- The stage is built and verified: `/data/ycfeng/tmp/step5_d31_workload_20261025/h200_64_workload01/stage`
+  (8 replicas × 8 H200, TP8/DP4/EP32, cloud output
+  `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_64_workload01`).
+- Pi run `d31-h200-64-submit-1026a` stopped before submission at 04:32 UTC. The step C job had
+  finished, but 11 other nonterminal H200 jobs of `i-fengyicheng` had been created between 04:27
+  and 04:31 UTC; 4 of them were non-preemptible (32 GPUs). Submitting 64 more would exceed the
+  64-GPU non-preemptible limit (D31.2). Evidence:
+  `/data/ycfeng/tmp/ds4_runs/d31-h200-64-submit-1026a/scratch/precondition_1c_nonterminal_jobs.json`.
+- Next: re-check the listing through Pi and launch exactly once when the account's
+  non-preemptible H200 usage is 0.
 
 Step C submission (2026-10-25 19:15 UTC):
 

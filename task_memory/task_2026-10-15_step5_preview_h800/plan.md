@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step D row rewritten as sub-steps (a)–(g); (a) done. |
 | 2026-10-26 | D31: step B done; Frontier routing set to `balanced` (D31.9); step D scope made concrete. |
 | 2026-10-25 | D31 mainline reset: new current plan for H200 32/64 E2E comparison; all sections below it become historical. |
 | 2026-10-23 | YC approves D29-SCOPE-107-10000; execute three sole-writer streams, then integrated evidence and readiness decisions. |
@@ -143,7 +144,7 @@ The 32-GPU gate is 30%, and it releases the 64-GPU calibration. The final gate i
 | A | Fix the documents | Review, D31, this plan, the progress entry, the summary index and the ticket statuses are committed. | — | 0 |
 | B | Fast Frontier E2E runs | E2E runs leave the proof ledger, operator traces and JSON trace off. The single-request wall time is measured locally, and the full-workload wall time is measured or projected from a measured prefix. Request-level results of a short run match the diagnostic run exactly. | A | 0 |
 | C | H200 32-GPU native workload | The job succeeds and all requests complete in each repetition. The log shows `position_cyclic` active. `num_gpu_blocks` for each P and D lane is recorded. Metrics come from `tests/integration/step5_pd/workload_metrics.py`. | A | 32 |
-| D | H200 Step-5 operator profiles | The existing `frontier/profiling/step5` profiler runs on H200. It covers the P prefill shapes, D decode batch sizes with contexts 6144–7168, and the EP-local MoE shapes for EP16 and EP32. Each admitted row has a coefficient of variation ≤ 5%. The tables are placed where Frontier's predictor reads them. | A | 1–8 |
+| D | H200 Step-5 operator profiles | (a) Attention is priced within its measured category: one measured layer per attention block, and queries outside the measured feature range raise. (b, c) The profiler measures mixed batches (decodes plus one prompt tail) and rows padded to a CUDA Graph capture size, with native FULL/PIECEWISE padding semantics. (d) An H200 plan covers the P prefill shapes (6128-token tail, dummies), D decode batch sizes up to 128 padded to capture sizes at contexts 6144–7167, mixed and PIECEWISE batches, on SWA layer 0 and DSA layer 3, and linear/MoE tokens over the capture sizes with EP16 and EP32. (e) The profile job takes the device, GPU tag and quota group from the plan. (f) Kernel-gap and H200 NIXL read tables exist. (g) Each admitted row has a coefficient of variation ≤ 5%, and the tables are wired into the predictor options of the step-B runner. | A | 1–8 |
 | E | Frontier H200 32-GPU comparison | Frontier runs the workload with the step-D profiles, H200 communication inputs and the KV capacity from step C. The four-metric error table is recorded. Calibration follows workflow first, then GPU operators and gaps, then CPU overhead. | B, C, D | 0 |
 | F | H200 64-GPU native workload | Same checks as C. Submitted only after C has released its GPUs. | C | 64 |
 | G | Frontier H200 64-GPU comparison | Same as E for 64 GPUs. Formal calibration starts after E is within 30%. | E, F | 0 |

@@ -130,15 +130,38 @@ def test_missing_native_shape_or_gap_never_gets_a_fixture_default(tmp_path):
     runtime, _ = step5_batch_features(predictor, _batch(), 0)
     assert runtime["block_table_columns"] == 512
     assert step5_row_features(_row(model))["block_table_columns"] == 258
-    with pytest.raises(ValueError, match="coverage is unavailable"):
+    with pytest.raises(ValueError, match="block_table_columns=512.0 not in"):
         predict_step5_attention_time(predictor, _batch(), 0)
-    with pytest.raises(ValueError, match="coverage is unavailable"):
+    with pytest.raises(ValueError, match="valid_tokens=32.0 not in"):
         predict_step5_attention_time(predictor, _batch(query=32), 0)
-    with pytest.raises(ValueError, match="coverage is unavailable"):
+    with pytest.raises(ValueError, match="no measured layer with the same attention block"):
         predict_step5_attention_time(predictor, _batch(), 3)
     predictor._kernel_gap_ms = None
     with pytest.raises(ValueError, match="kernel_gap.csv coverage"):
         predict_step5_attention_time(predictor, _batch(), 0)
+
+
+def test_unmeasured_layers_and_shapes_are_priced_within_the_measured_category(tmp_path):
+    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    contexts = (4104, 8184)
+    rows = [_row(model, layer, query=1, context=context, graph_mode="full", phase="decode",
+                 block_table_columns=512) for layer in (0, 3) for context in contexts]
+    method = MeasurementType.CUDA_EVENT
+    models = _train(_manager(tmp_path / "cache", method), model, _write(tmp_path, rows, method))
+    predictor = _predictor(model, models, method)
+    # Layers 4 and 7 have the attention blocks of the measured layers 0 and 3.
+    for measured, layer in ((0, 4), (3, 7)):
+        for context in (*contexts, 6000):
+            batch = _batch(query=1, context=context, graph="full")
+            expected = predict_step5_attention_time(predictor, batch, measured)
+            actual = predict_step5_attention_time(predictor, batch, layer)
+            assert actual.total_time() == expected.total_time() > 0
+            assert actual.operator_costs["step5_layer_e2e"].exact_lookup == (context in contexts)
+    with pytest.raises(ValueError, match="max_context_len=8190.0 not in"):
+        predict_step5_attention_time(predictor, _batch(query=1, context=8190, graph="full"), 4)
+    # Eager prompt tails were not measured.
+    with pytest.raises(ValueError, match="coverage is unavailable"):
+        predict_step5_attention_time(predictor, _batch(query=16, context=4104), 4)
 
 
 @pytest.mark.parametrize("layer_id", [0, 3])

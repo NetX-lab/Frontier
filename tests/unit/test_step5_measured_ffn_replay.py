@@ -215,7 +215,7 @@ def test_gpu_active_runtime_rejects_a_missing_count_model(fitted, monkeypatch):
         )
 
 
-def test_attention_cache_preserves_proof_and_does_not_invent_layer_coverage(fitted, tmp_path):
+def test_attention_cache_preserves_proof_and_does_not_invent_block_coverage(fitted, tmp_path):
     from tests.unit.test_step5_measured_training import _row, _train, _write
     from frontier.execution_time_predictor.step5_cost import step5_predictions
 
@@ -237,9 +237,13 @@ def test_attention_cache_preserves_proof_and_does_not_invent_layer_coverage(fitt
     )
     assert first.operator_costs == cached.operator_costs
     assert cached.operator_costs["step5_layer_e2e"].evidence_kind == "cpu_fixture"
-    with pytest.raises(ValueError, match="coverage is unavailable"):
+    same_block = predictor._predict_attention_layer_time_with_query_cache(
+        batch=batch, layer_id=1, cluster_type=ClusterType.MONOLITHIC, cache=cache,
+    )
+    assert same_block.operator_costs == first.operator_costs
+    with pytest.raises(ValueError, match="no measured layer with the same attention block"):
         predictor._predict_attention_layer_time_with_query_cache(
-            batch=batch, layer_id=1, cluster_type=ClusterType.MONOLITHIC, cache=cache,
+            batch=batch, layer_id=3, cluster_type=ClusterType.MONOLITHIC, cache=cache,
         )
 
 

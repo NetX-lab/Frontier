@@ -52,9 +52,10 @@ def _scheduler():
 
 
 def _row(model, layer_id=0, *, query=16, context=4104, graph_mode="none", phase="prefill",
-         has_attention_metadata=True):
+         has_attention_metadata=True, block_table_columns=None):
     cell = Step5ProfileInput(layer_id, (query,), (context,), phase, graph_mode=graph_mode,
-                             has_attention_metadata=has_attention_metadata)
+                             has_attention_metadata=has_attention_metadata,
+                             block_table_columns=block_table_columns)
     metadata = describe_step5_layer(model, layer_id, attention_tp_size=8, moe_tp_size=1,
                                    expert_parallel_size=1)
     workload = cell.workload(model, block_size=16, max_model_len=8192)

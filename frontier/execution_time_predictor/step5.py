@@ -50,6 +50,11 @@ STEP5_VARIANTS = {
     name: index for index, name in enumerate(STEP5_ATTENTION_FAMILY.supported_variants)
 }
 STEP5_PHASES = {phase.value: index for index, phase in enumerate(AttentionPhase)}
+# Measured rows are only comparable within one value of each of these columns.
+STEP5_CATEGORY_COLUMNS = (
+    "global_layer_id", "attention_variant_code", "phase_code", "graph_mode_code",
+    "has_attention_metadata", "native_workload_code",
+)
 STEP5_IDENTITY_COLUMNS = (
     "measurement_type", "attention_backend", "model_architecture_profile",
     "quant_signature", "model_dtype", "norm_dtype", "residual_dtype",
@@ -453,8 +458,7 @@ def set_step5_model_coverage(model, frame: pd.DataFrame) -> None:
     }
     model._frontier_step5_domains = {
         name: tuple(sorted(float(value) for value in frame[name].unique()))
-        for name in ("global_layer_id", "attention_variant_code", "phase_code", "graph_mode_code",
-                     "has_attention_metadata", "native_workload_code")
+        for name in STEP5_CATEGORY_COLUMNS
     }
 
 
