@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Recorded YC's restoration of the Pi budget, the approval of H4b-(b) item 1 (D-H4B-ITEM1, option B) and the continued H200-32/64 mainline with at most 64 non-preemptible H200 (D-H200-MAINLINE-CONTINUE). |
 | 2026-10-25 | Recorded YC's instruction to continue without pausing for decisions and to adopt the lead's recommendations by default (D-NO-INTERRUPT). |
 | 2026-10-25 | Recorded YC's adoption of one H200 run of H4b-(a) on the P2-32 layout before the H800 run (D-H200-H4B-LIFECYCLE). |
 | 2026-10-25 | Recorded YC's adoption of the SSH route, the Pi retry that copied all four H200 runs, and YC's choice of the same-table substitution for the P2-64 step-cost gap (D-H200-STEP-COST-SUBSTITUTION). |
@@ -229,6 +230,19 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 > [补充]接下去的执行中不要中断，不要进行grill-me；默认采纳你推荐的方案。
 
 19. **D-NO-INTERRUPT.** From here on the lead does not pause for decisions and does not run `grill-me`. Where a choice comes up, the lead's recommended option is adopted, recorded with its reason in progress.md, and reported. Authorization limits stay as recorded: destructive actions, new external actions and resources beyond the recorded decisions still need YC's approval, and D-GPU-SHORTAGE-REPORT still applies.
+
+[Original Request] Follow-up, 2026-10-26, after the H4b-(b) design report (`h4b_d_side_model/design.md`, approval items in its section 9):
+
+> 我已经恢复pi的预算，继续；批准第一项；继续以h200 32卡和64卡为主线，继续推进（允许提交64卡内的 不可抢占rjobs）。
+
+20. **D-H4B-ITEM1.** H4b-(b) item 1 (READ completion at engine steps, design sections 4-5) is approved for implementation in `frontier/`, with its 7-8 files, about 160-210 lines and the new shared KV-transfer config field.
+    - **Option.** YC approved the item without choosing between A and B, so the lead's recommendation B applies (D-NO-INTERRUPT): the new field `nixl_read_completion` with default `transfer_end` (today's path, GLM, co-location, PDD and PD-AF identical) and `engine_step` (item 1). DSV4 diagnostics opt in.
+    - **Not approved yet.** Item 2 (DECODE batch queue depth 2 with output placeholders) needs its own design section and approval. The ingress delay field stays deferred.
+    - **Unchanged.** Results stay DIAGNOSTIC (D-H4A-CHECKPOINT); no constant is fitted to native06; D-MAINLINE-LOOP-CAP-DSV4 applies.
+21. **D-H200-MAINLINE-CONTINUE.** DSV4 on H200-32 and H200-64 stays the mainline. It replaces the 12-hour window of D-H200-TEMP-MAINLINE; YC gave no end time.
+    - **Resources.** This session's H200 RJobs, running plus queued, use at most 64 GPUs in total, all non-preemptible (`preemptible=False`) in `step_main`. YC's explicit decision supersedes the personal 32-GPU non-preemptible `step_main` ceiling for these jobs. YC's other jobs do not count and are not touched.
+    - **Unchanged.** All other terms of D-H200-TEMP-MAINLINE: cases, reuse, H200 evidence never qualifies H800 cells and the reverse, DIAGNOSTIC labels, D-MAINLINE-LOOP-CAP-DSV4, D-GPU-SHORTAGE-REPORT, D-INPUT-PERSISTENCE, the Pi route for platform and cloud-volume operations, and soft gates for runs of 32 or more GPUs.
+    - **Pi.** YC restored the Pi model budget; the H800 lifecycle receipt and copy (`h800-lifecycle-copy-1025d`) resume.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
