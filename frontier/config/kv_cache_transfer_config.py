@@ -86,7 +86,7 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
             "is ready when the wire time ends) or engine_step (the DECODE engine posts the READ at "
             "its next step, a later step finds it complete, and that step's output reports it, as "
             "vLLM's start_load_kv / get_finished / finished_recving do). engine_step requires "
-            "kv_connector=nixl and a DECODE batch queue of depth 1."
+            "kv_connector=nixl."
         },
     )
 

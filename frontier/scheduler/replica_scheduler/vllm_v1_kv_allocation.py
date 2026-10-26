@@ -51,11 +51,14 @@ class KvBlockAllocation:
         peak_context_tokens = int(request.num_prefill_tokens)
         if self._cluster_type != ClusterType.PREFILL:
             peak_context_tokens += int(request.num_decode_tokens) - 1
+        # vLLM bounds the tokens in flight by max_concurrent_batches x
+        # max_num_batched_tokens (config/vllm.py).
         return int(
             self._kv_cache_manager.get_num_admission_blocks(
                 peak_context_tokens,
                 max_model_len=int(self._max_model_len),
-                max_in_flight_tokens=int(self._config.max_tokens_in_batch),
+                max_in_flight_tokens=int(self._max_concurrent_batches)
+                * int(self._config.max_tokens_in_batch),
             )
         )
 
@@ -532,7 +535,10 @@ class KvBlockAllocation:
                 raise ValueError(
                     "grouped cache allocation does not accept computed prefix blocks"
                 )
-            if self._is_request_active_in_batch(request):
+            if (
+                not self._uses_output_placeholders
+                and self._is_request_active_in_batch(request)
+            ):
                 return False
             if request.id in self._allocation_map:
                 self._kv_cache_manager.reclaim_skipped_blocks(
@@ -639,9 +645,13 @@ class KvBlockAllocation:
                 raise ValueError(
                     "grouped cache allocation does not accept prefix-cache inputs"
                 )
-            if self._is_request_active_in_batch(request):
+            if (
+                not self._uses_output_placeholders
+                and self._is_request_active_in_batch(request)
+            ):
                 raise RuntimeError(
-                    "grouped cache allocation allows one in-flight batch per PP1 lane"
+                    "grouped cache allocation allows one in-flight batch per PP1 "
+                    "lane without output placeholders"
                 )
             frontier = (
                 self._get_scheduler_num_computed_tokens(request)

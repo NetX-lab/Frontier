@@ -31,8 +31,13 @@ def _lane(*, depth: int = 1) -> VLLMv1EngineReplicaScheduler:
     lane._preempted_requests = []
     lane._waiting_requests = []
     lane._nixl_reads_requested = []
+    lane._nixl_reads_claimed = {}
+    lane._nixl_reads_unposted = []
     lane._nixl_reads_posted = []
-    lane._nixl_reads_found = []
+    lane._nixl_reads_found_by_batch = {}
+    lane._nixl_reads_found_by_dummy_forward = []
+    lane._nixl_reads_reported = []
+    lane._uses_output_placeholders = False
     lane._has_engine_batch_queue = True
     lane._runs_dp_dummy_passes = False
     lane._blocking_batch_id = None
@@ -48,6 +53,10 @@ def _lane(*, depth: int = 1) -> VLLMv1EngineReplicaScheduler:
 
 def _read(request_id: int, transfer_time_ms: float) -> SimpleNamespace:
     return SimpleNamespace(request_id=request_id, transfer_time_ms=transfer_time_ms)
+
+
+def _batch(batch_id: int) -> SimpleNamespace:
+    return SimpleNamespace(id=batch_id)
 
 
 class _Cluster:
@@ -102,17 +111,22 @@ def test_step_that_posts_a_read_never_finds_it_and_a_later_step_does():
     first, second = _read(1, 2.0), _read(2, 5.0)
     lane.register_nixl_read(first)
     assert lane.has_unfinished_requests
+    # A requested READ waits for a schedule pass to claim it.
+    lane.on_engine_step_start(0.5)
     assert lane.next_nixl_read_end is None
 
+    lane._claim_nixl_reads([])
     lane.on_engine_step_start(1.0)
     assert lane.consume_found_nixl_reads() == []
     assert lane.next_nixl_read_end == 1.0 + 2.0e-3
 
     lane.register_nixl_read(second)
+    lane._claim_nixl_reads([])
     lane.on_engine_step_start(1.001)
     assert lane.consume_found_nixl_reads() == []
     assert lane._nixl_reads_posted == [(1.0 + 2.0e-3, first), (1.001 + 5.0e-3, second)]
 
+    # A connector-only step reports what it finds at once.
     lane.on_engine_step_start(1.0 + 2.0e-3)
     assert lane.has_unfinished_requests
     assert lane.consume_found_nixl_reads() == [first]
@@ -124,9 +138,47 @@ def test_step_that_posts_a_read_never_finds_it_and_a_later_step_does():
     assert not lane.has_unfinished_requests
 
 
-def test_engine_step_reads_require_a_depth_one_decode_batch_queue():
-    with pytest.raises(NotImplementedError, match="depth 1"):
-        _lane(depth=2).register_nixl_read(_read(1, 2.0))
+def test_depth_two_read_rides_its_pass_batch_and_reports_with_the_finding_batch_output():
+    lane = _lane(depth=2)
+    read = _read(1, 2.0)
+    lane.register_nixl_read(read)
+    # The pass at 1.0 forms batch 11 while batch 10 is in flight.
+    lane._claim_nixl_reads([_batch(11), _batch(12)])
+    assert lane._nixl_reads_requested == []
+
+    # Batch 10's own step started earlier; batch 11's start posts the READ.
+    lane.on_engine_step_start(1.001, _batch(11))
+    assert lane.next_nixl_read_end == 1.001 + 2.0e-3
+    lane._report_nixl_reads_of_batch(_batch(10))
+    assert lane.consume_found_nixl_reads() == []
+
+    # Batch 12 starts before the wire ends, batch 13 after it.
+    lane.on_engine_step_start(1.002, _batch(12))
+    lane.on_engine_step_start(1.004, _batch(13))
+    assert lane.next_nixl_read_end is None
+    lane._report_nixl_reads_of_batch(_batch(11))
+    lane._report_nixl_reads_of_batch(_batch(12))
+    assert lane.consume_found_nixl_reads() == []
+    assert lane.has_unfinished_requests
+
+    lane._report_nixl_reads_of_batch(_batch(13))
+    assert lane.consume_found_nixl_reads() == [read]
+    assert not lane.has_unfinished_requests
+
+
+def test_pass_that_forms_no_batch_leaves_its_reads_to_the_next_step_of_any_kind():
+    lane = _lane(depth=2)
+    early, late = _read(1, 2.0), _read(2, 3.0)
+    lane.register_nixl_read(early)
+    lane._claim_nixl_reads([])
+    lane.register_nixl_read(late)
+    lane._claim_nixl_reads([_batch(21)])
+
+    # Batch 20 did not claim either READ, yet its start posts the unclaimed one.
+    lane.on_engine_step_start(1.0, _batch(20))
+    assert lane._nixl_reads_posted == [(1.0 + 2.0e-3, early)]
+    lane.on_engine_step_start(1.001, _batch(21))
+    assert lane._nixl_reads_posted == [(1.0 + 2.0e-3, early), (1.001 + 3.0e-3, late)]
 
 
 def test_idle_lane_posts_at_once_and_reports_when_its_wake_up_finds_the_read(reported):
@@ -169,9 +221,14 @@ def test_decode_step_start_posts_and_checks_the_lane_reads(monkeypatch):
             logging.getLogger(__name__),
         )
 
+    lane._claim_nixl_reads([])
     assert start(2.0) == ["dummy-start"]
     assert lane._nixl_reads_posted == [(2.0 + 2.0e-3, read)]
     assert start(2.02) == ["dummy-start"]
+    # The dummy forward's step reports the READ when it ends.
+    assert lane.consume_found_nixl_reads() == []
+    lane._dummy_forwards_in_flight = 1
+    assert lane.on_dummy_forward_end(2.03)
     assert lane.consume_found_nixl_reads() == [read]
 
 
@@ -210,9 +267,9 @@ def test_dp_group_with_only_posted_reads_starts_its_next_pass_at_the_earliest_wi
 def test_dp_group_with_a_request_to_schedule_starts_its_next_pass_at_once():
     first, second = _dp_group()
     first._nixl_reads_posted = [(1.006, _read(1, 6.0))]
-    second._nixl_reads_found = [_read(2, 4.0)]
+    second._nixl_reads_found_by_dummy_forward = [_read(2, 4.0)]
     assert first.next_pass_start(1.0) == 1.0
-    second._nixl_reads_found = []
+    second._nixl_reads_found_by_dummy_forward = []
     second._nixl_reads_requested = [_read(3, 4.0)]
     assert first.next_pass_start(1.0) == 1.0
     second._nixl_reads_requested = []

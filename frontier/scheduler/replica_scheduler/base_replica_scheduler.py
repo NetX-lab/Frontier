@@ -501,6 +501,7 @@ class BaseReplicaScheduler(ABC):
         requests: List[Request],
         num_tokens: List[int],
         num_context_tokens: Optional[List[int]] = None,
+        num_output_placeholders: Optional[List[int]] = None,
     ) -> Batch:
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name if self._cluster_type else None)
@@ -511,6 +512,7 @@ class BaseReplicaScheduler(ABC):
             num_tokens,
             is_moe=self._replica_is_moe,
             num_context_tokens=num_context_tokens,
+            num_output_placeholders=num_output_placeholders,
         )
         self._assign_lane_identity(batch, self._batch_creation_counter)
         self._batch_creation_counter += 1

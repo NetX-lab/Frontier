@@ -476,6 +476,7 @@ class Batch(BaseEntity):
         is_moe: bool = None,
         num_context_tokens: Optional[List[int]] = None,
         request_is_decoding: Optional[List[bool]] = None,
+        num_output_placeholders: Optional[List[int]] = None,
     ) -> None:
         if is_moe is None:
             raise ValueError("Batch.is_moe must be explicitly set")
@@ -520,6 +521,14 @@ class Batch(BaseEntity):
             [request.is_decoding for request in requests]
             if request_is_decoding is None
             else request_is_decoding
+        )
+        # Outputs of each request's earlier steps still in flight when this
+        # batch is scheduled (vLLM's num_output_placeholders). They advance the
+        # request's decode-token index before this batch's output arrives.
+        self._num_output_placeholders: List[int] = (
+            [0] * len(requests)
+            if num_output_placeholders is None
+            else num_output_placeholders
         )
         self._total_num_tokens: int = sum(num_tokens)
         self._num_prefill_tokens = sum(
@@ -573,7 +582,10 @@ class Batch(BaseEntity):
             self._get_thinking_round_start_time(request) for request in self._requests
         ]
         self._request_mutation_signatures = [
-            self._get_request_mutation_signature(request) for request in self._requests
+            self._get_request_mutation_signature(request, num_placeholders)
+            for request, num_placeholders in zip(
+                self._requests, self._num_output_placeholders
+            )
         ]
 
         # AFD stage metadata for StepFun-vLLM alignment
@@ -605,15 +617,22 @@ class Batch(BaseEntity):
         return request.execution_signature
 
     @staticmethod
-    def _get_request_mutation_signature(request: Request) -> tuple[int, int, int, int]:
+    def _get_request_mutation_signature(
+        request: Request, num_output_placeholders: int = 0
+    ) -> tuple[int, int, int, int]:
         """Capture decode-step progress for stale batch-end mutation checks.
 
         The decode-token cursor advances once per committed decode iteration and
         cleanly distinguishes stale same-round decode callbacks without being
-        perturbed by prefix-cache hits or chunked-prefill bookkeeping.
+        perturbed by prefix-cache hits or chunked-prefill bookkeeping. A batch
+        expects the cursor its request reaches once the outputs of the
+        `num_output_placeholders` steps in flight ahead of it are applied.
         """
         execution_signature = Batch._get_request_execution_signature(request)
-        return (*execution_signature, request.current_decode_token_index)
+        return (
+            *execution_signature,
+            request.current_decode_token_index + num_output_placeholders,
+        )
 
     def add_spec_terminal_completion_delay(
         self,
@@ -1085,7 +1104,10 @@ class Batch(BaseEntity):
             self._get_thinking_round_start_time(request) for request in self._requests
         ]
         self._request_mutation_signatures = [
-            self._get_request_mutation_signature(request) for request in self._requests
+            self._get_request_mutation_signature(request, num_placeholders)
+            for request, num_placeholders in zip(
+                self._requests, self._num_output_placeholders
+            )
         ]
 
         for request in self._requests:
