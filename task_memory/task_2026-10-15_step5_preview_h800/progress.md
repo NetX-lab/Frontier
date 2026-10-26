@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: workflow-port run wf02 (TTFT −37.4%, TPOT −57.0%); calibration item 3 renumbered 2b to match `plan.md`; item 2b native decode device-timeline diagnostic (harness `26d51a30`, analyzer `a31e3616`), H200 32-GPU job `exp-1027-062510-683917` running. |
 | 2026-10-26 | D31: step E base run result (TPOT −57%); calibration item 3 opened: the small-batch decode step matches native (31.0 vs 30.5 ms), and the native step grows about 0.7 ms per request per engine; native stall shares quantified. |
 | 2026-10-26 | D31: the MoE profiler measures a chosen EP rank (`1fbc99c5`, `4a93f30d`); H200 job 04 measured the partly filled ranks (EP16/EP32 loads as computed); merged04 built; step G rerun started. |
 | 2026-10-26 | D31: prefix runs attribute the workflow port (TTFT +80 ms) and measured collectives (TPOT +10.8 ms); step E/G runs stopped on an order-dependent spread feature (fixed `2beb09b3`, E rerun) and an EP32 partly filled lane below the MoE profile range (profile the partly filled rank). |
@@ -219,8 +220,9 @@ State of the D31 plan steps (see the top section of `plan.md`):
   `test_report_2026-10-26_h200_profiles.md`).
 - in-progress — E. Frontier `h200_32` on the measured tables. The base run `h200_32_run01`
   (merged03, analytical collectives) finished: TTFT −45.0%, TPOT −57.0%, E2E −56.8%, total
-  throughput +14.7% (calibration item 3 below). The rerun `h200_32_comb_h200` (workflow port and
-  measured collectives) has been running since 19:34 UTC.
+  throughput +14.7% (calibration item 2b below). The workflow-port run `h200_32_wf02` finished:
+  TTFT −37.4%, TPOT −57.0%. The rerun `h200_32_comb_h200` (workflow port and measured
+  collectives) has been running since 19:34 UTC.
 - completed — F. H200 64-GPU native workload, job `exp-1026-201417-791460` (report
   `test_report_2026-10-26_h200_64_native_workload.md`).
 - in-progress — G. Frontier `h200_64` rerun `h200_64_g01` (merged04, measured collectives),
@@ -683,8 +685,9 @@ Calibration item 2a, collective communication (2026-10-26, `in-progress`):
     (`9125bcb1`), started 20:17 UTC with `--measured-collectives` and the merged04 options;
     output `/data/ycfeng/tmp/d31_merged04_run/h200_64_g01/`.
 
-Calibration item 3, decode step time against batch size (2026-10-26, `in-progress`). Native step
-times and token gaps here are diagnostic only (D31.10); no Frontier cost is derived from them.
+Calibration item 2b, decode step time against batch size (2026-10-26, `in-progress`; numbered 3
+before the plan entry was added). Native step times and token gaps here are diagnostic only
+(D31.10); no Frontier cost is derived from them.
 
 - Step E base run `h200_32_run01` (`7dce66c0`, merged03, analytical collectives, wall 32,590 s):
 
@@ -735,6 +738,42 @@ times and token gaps here are diagnostic only (D31.10); no Frontier cost is deri
   (`/data/ycfeng/tmp/d31_diag/step_curve/curve/`, 84 requests at 0.2 s spacing, 6,144/1,024
   tokens, `--time_limit 30`, started 21:45 UTC; scripts `build.py`, `run.sh`, `analyze.py` in the
   parent directory).
+- Workflow-port run `h200_32_wf02` (`6dd29176`, merged03, analytical collectives, wall 32,554 s)
+  finished at 22:25 UTC. Against native: TTFT mean −37.4% (p90 −47.2%), TPOT mean −57.0%
+  (p90 −62.4%), E2E mean −56.6%, total throughput +14.6% (PASS). The port adds 83 ms to the
+  TTFT mean (595.6 → 678.6 ms), as the prefix runs predicted, and does not change TPOT. Output
+  `/data/ycfeng/tmp/d31_wf/h200_32_wf02/compare.json`.
+- Native decode device timeline, a diagnostic run to split the native step growth into device
+  busy time per kernel category and device idle time (host waits, DP synchronization). The
+  traces are diagnostic only (D31.10) and the profiler windows perturb native timing, so the run
+  is never a reference.
+  - `26d51a30`: run kind `device_timeline` in the native P/D harness. The decode servers start
+    with `--profiler-config` (torch profiler, CPU and CUDA activities, no stacks,
+    `torch_profiler_dump_cuda_time_total=false` to avoid the table-writing stall,
+    `ignore_frontend`, gzip, worker-local trace directory). The replay client opens profiler
+    windows on the decode server during the formal phase of the first repeat; a profiler
+    request error is recorded in the replay summary and never stops the replay. The worker
+    copies the traces into the node evidence (`torch_trace/`). `verify` rejects a profiler on
+    the prefill servers and any profiler setting outside this run kind.
+  - `a31e3616`: `tests/integration/step5_pd/native_decode_timeline.py` reduces each trace to
+    iterations (one `execute_context_*_generation_*` annotation to the next on the same
+    thread): step period, `execute_model` host time, device busy and span of the work that
+    thread launched, idle time split into host wait and other, device time per kernel category,
+    and the device busy time of the whole trace inside the period. Its summary groups
+    decode-only iterations by window, DP engine and decode requests.
+  - Tests: `tests/unit/test_dp_placement_harness.py`, `tests/unit/test_step5_priority_runs.py`,
+    `tests/unit/test_step5_canonical_native.py` and related harness tests, 485 passed and 11
+    skipped (`asyncopd-py312` with `FRONTIER_SIMULATOR_PYTHON` set to the Frontier runtime,
+    proxy variables unset for the localhost HTTP tests); `tests/unit/test_native_decode_timeline.py`
+    1 passed.
+  - Windows (seconds after the first formal dispatch, at most 30 iterations each, chosen from
+    the native load curve): `load_t016` at 16 s (about 7–8 requests per decode engine),
+    `load_t040` at 40 s (about 20) and `load_t088` at 88 s (about 42).
+  - Stage `/data/ycfeng/tmp/step5_d31_devtl_20261026/h200_32_devtl01` (built from the clean
+    worktree `.worktrees/step5-d31-native-26d51a3`; `verify` and the StepMind dry run passed).
+    Pi run `d31-h200-devtl-submit-1026e`: job `exp-1027-062510-683917`, 4 replicas × 8 H200,
+    `step_main`, non-preemptible, creator `i-fengyicheng`, created 22:25:10 UTC, `Running` at
+    22:27 UTC. With it this session holds 32 H200 GPUs.
 
 Step F status (2026-10-26):
 

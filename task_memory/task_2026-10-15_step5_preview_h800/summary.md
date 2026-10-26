@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Update the current status: step E results so far, the running E/G reruns, calibration item 2b. |
 | 2026-10-26 | Update the current status: H200 64-GPU native done. |
 | 2026-10-26 | Add the merged calibration items 1 and 2a and the running E and G runs to the current status. |
 | 2026-10-26 | Update the current status: H200 32-GPU native done, H200 profiles merged, step E running. |
@@ -121,17 +122,28 @@ Status as of 2026-10-26:
   - Item 2a, collectives (`b3fa995a`): the opt-in vLLM `allgather_reducescatter` MoE path priced
     from measured H200 TP8/DP2 and TP8/DP4 collective curves (`frontier_workload.py run
     --measured-collectives`), and an exact EP-lane prediction cache (1.7× faster).
-  - Running from `.worktrees/run-e-b3fa995`: the step E candidate with both items
-    (`/data/ycfeng/tmp/d31_comb_run/h200_32_comb_h200`), 8-request prefix runs, and the first
-    step G run (`h200_64_comb_h200`).
+- **Step E results so far** (`h200_32`, against the native means; gate 30%).
+  - Base run `h200_32_run01` (merged03 tables, analytical collectives): TTFT −45.0%, TPOT
+    −57.0%, E2E −56.8%, total throughput +14.7%.
+  - Workflow port alone (`h200_32_wf02`): TTFT −37.4%, TPOT −57.0%, E2E −56.6%, total throughput
+    +14.6%.
+  - Running: the E rerun with items 1 and 2a (`h200_32_comb_h200`, from `.worktrees/run-e-2beb09b`)
+    and the G rerun on merged04 (`h200_64_g01`, from `.worktrees/run-g-9125bcb`).
+- **Calibration item 2b, decode step growth.** The native decode step grows about 0.7 ms per
+  request per DP engine (30.5 ms → 59 ms from 0 to 40 requests); Frontier's step matches at one
+  request (31.0 ms) but stays almost flat. A diagnostic native run with decode torch-profiler
+  windows (job `exp-1027-062510-683917`, 32 H200) is splitting that growth into device and host
+  time. Diagnostic only (D31.10).
 - **Operator profiles.** The H200 profile tables for both roles are measured and merged (run 03,
   `test_report_2026-10-26_h200_profiles.md`). The first runs on them found five defects in the
   profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,
   `d034202c`).
 - **Next.**
-  1. Record the step E error table against native.
-  2. Calibrate in order: workflow, then operators, then CPU overhead.
-  3. Run the Frontier `h200_64` workload (step G) after step E is within 30%.
+  1. Record the error table of the combined E rerun against native.
+  2. Find the cause of the decode step growth (item 2b) and price it from op profiling, or from
+     the CPU-overhead model if it is host time.
+  3. Calibrate the rest in order: workflow, then operators, then CPU overhead.
+  4. Run the Frontier `h200_64` workload (step G) after step E is within 30%.
 
 ### Sub-task directories (`task_memory/`)
 

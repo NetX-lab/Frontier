@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: calibration item 2b (decode step growth with batch size) added; wf02 result in item 1. |
 | 2026-10-26 | D31: E rerun after the spread fix; step G rerun on merged04 after profiling the partly filled EP ranks. |
 | 2026-10-26 | D31: item 2a step 1 done, EP-lane prediction cache added; items 1 and 2a merged; combined E run and the first G run started. |
 | 2026-10-26 | D31: item 2a status line added (steps 2–4 done, step 1 running, step 5 checks done before rerunning E). |
@@ -177,8 +178,8 @@ Calibration order for E, after the first error table:
    worktree under `.worktrees/` before porting them.
    Status: ported on `feat/step5-d31-workflow` and merged into `feat/step5-preview` (`2acbf30a`)
    after the unit, dummy-smoke and 77-case fidelity checks. The full 32-GPU run with the workflow
-   port alone (`h200_32_wf02`) and the run with items 1 and 2a together (`h200_32_comb_h200`) are
-   running.
+   port alone (`h200_32_wf02`) finished: TTFT −37.4% (−45.0% before the port), TPOT −57.0%
+   (unchanged). The run with items 1 and 2a together (`h200_32_comb_h200`) is running.
 2. GPU operators and gaps. Replace the kernel-gap proxy and the FP8 metadata if the operator
    trace shows a measurable gap. Candidate found on 2026-10-26: in an EP wave the shared expert
    is priced on the merged token count of all DP lanes, while the native shared expert runs on
@@ -210,6 +211,20 @@ Calibration order for E, after the first error table:
    prefix run for an early comparison. The EP-lane prediction cache `eddb9bf5` makes runs 1.7×
    faster with identical results (fidelity 77/77 identical). Merged into `feat/step5-preview`
    (`b3fa995a`).
+   2b. Decode step growth with batch size (opened 2026-10-26; evidence in `progress.md`). The
+   native decode step grows from 30.5 ms at 0–1 requests per DP engine to about 59 ms at 40,
+   about 0.7 ms per request; Frontier's step is 31.0 ms at one request and stays almost flat, so
+   this growth is most of the TPOT gap. The FULL-graph attention rows explain only about 1 ms of
+   it. Steps:
+   1. Diagnose with a native decode device timeline (run kind `device_timeline`, 32 H200 GPUs,
+      three torch-profiler windows at about 8, 20 and 42 requests per engine) and split the
+      growth into device busy time per kernel category and device idle time (host waits, DP
+      synchronization). Diagnostic only (D31.10).
+   2. Compare with Frontier's own step curve from the stage-batch and EP-wave ledgers of a
+      diagnostic run, phase by phase.
+   3. Fix the cause where it belongs: a missing or underpriced operator or collective is
+      profiled and priced from op profiling (item 2); a host-side cost goes to item 3. No table of
+      measured step times is used for prediction.
 3. CPU overhead, which is not modelled now.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2
