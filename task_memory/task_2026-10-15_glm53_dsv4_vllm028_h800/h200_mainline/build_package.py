@@ -65,6 +65,11 @@ CASES = {
                             purpose='DIAGNOSTIC H4b-(a) D-side handoff measurement on H200-32 under '
                                     'D-H200-H4B-LIFECYCLE; P2-32 case and workload plus the engine-core scheduler '
                                     'lifecycle observer; not an E2E reference; never qualifies H800 cells'),
+    'p2_64_lifecycle': dict(source='lifecycle', dp=4, h200_limit=64, case_id='dsv4-h200-p2-64-lifecycle-fixed128-qps1',
+                            run_tag='dsv4-h200-p2-64-lifecycle-20261026-01',
+                            purpose='DIAGNOSTIC H4b-(a) D-side handoff measurement on H200-64 under '
+                                    'D-H200-MAINLINE-CONTINUE; P2-64 case and workload plus the engine-core '
+                                    'scheduler lifecycle observer; not an E2E reference; never qualifies H800 cells'),
 }
 FRONTIER_INPUT = 'case/inputs/frontier.json'
 ROLE_KEY = 'cluster_config_{}_replica_config_{}'
