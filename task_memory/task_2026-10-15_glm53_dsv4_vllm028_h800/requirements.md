@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Recorded YC's approval of the lead's next actions after item 2 (D-H4B-AFTER-ITEM2): the item 3 design, the first-D-step investigation and the removal of three fidelity worktrees. |
 | 2026-10-26 | Recorded YC's approval of H4b-(b) item 2 as designed in section 10 (D-H4B-ITEM2). |
 | 2026-10-26 | Recorded YC's restoration of the Pi budget, the approval of H4b-(b) item 1 (D-H4B-ITEM1, option B) and the continued H200-32/64 mainline with at most 64 non-preemptible H200 (D-H200-MAINLINE-CONTINUE). |
 | 2026-10-25 | Recorded YC's instruction to continue without pausing for decisions and to adopt the lead's recommendations by default (D-NO-INTERRUPT). |
@@ -251,6 +252,16 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 
 22. **D-H4B-ITEM2.** H4b-(b) item 2 (DECODE batch queue depth 2 with output placeholders, design section 10) is approved for implementation in `frontier/` as designed: 8 files (1 new, `vllm_v1_nixl_reads.py`), about 140-190 changed lines plus tests, and the DECODE role field `decode_replica_scheduler_config_max_concurrent_batches`.
     - **Unchanged.** Results stay DIAGNOSTIC (D-H4A-CHECKPOINT); no constant is fitted to native06; the default path stays identical; D-MAINLINE-LOOP-CAP-DSV4 applies. The ingress field and candidate item 3 (PREFILL depth 2) are not approved.
+
+[Original Request] Follow-up, 2026-10-26, after the item 2 report (`test_report_2026-10-26_h4b_item2_decode_depth2.md`) and its numbered next actions:
+
+> 批准你的推荐，继续
+
+23. **D-H4B-AFTER-ITEM2.** YC approved the lead's recommended next actions from the item 2 report:
+    - **Item 3 design.** Write the design of candidate item 3 (PREFILL batch queue depth 2; the P engines also run `--async-scheduling`) from vLLM 0.28 code and the recorded evidence. The recommendation was to write the design after approval, so this approves the design. A `frontier/` implementation that adds a config field or exceeds the item 1/item 2 bounds goes back to YC with the design, as for items 1 and 2.
+    - **First D step investigation.** A CPU-only reading of the depth-2 traces to explain why the first D step takes 2.05-2.80 Frontier steps against the rule's 2.
+    - **Worktree removal.** Remove `.worktrees/fidelity-candidate-5f907f66`, `-96d9c1ef` and `-item2` after checking that each holds nothing that is not committed or kept elsewhere.
+    - **Unchanged.** The ingress field stays deferred: the report asked YC to decide it and gave no recommendation. Results stay DIAGNOSTIC (D-H4A-CHECKPOINT); D-NO-INTERRUPT, D-H200-MAINLINE-CONTINUE, D-GPU-SHORTAGE-REPORT and D-MAINLINE-LOOP-CAP-DSV4 apply. These actions need no GPU job.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

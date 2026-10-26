@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Added section 7.1: the first D step is the step-cost table's k=1 price, and native lifecycle steps measure that entry 8.76 / 12.53 / 0.77 ms lower. Corrected section 10: PREFILL depth 2 does not explain the P2-32 P-side gap (design section 11). |
 | 2026-10-26 | Created: the change and its size, default-path identity, the defects found during implementation, depth-1 identity, the new unit tests, the three depth-2 diagnostics against the design section 10.8 expectations, the part comparison with the three lifecycle runs, persistence, deviations from the design and limitations. |
 
 **Authority.** D-H4B-ITEM2 (requirements item 22), D-H200-MAINLINE-CONTINUE (item 21), D-H4A-CHECKPOINT (item 14) and D-NO-INTERRUPT (item 19). Label DIAGNOSTIC: no result here qualifies a cell, no constant is fitted to native06, and H200 and H800 evidence never qualify each other's cells. Design: [h4b_d_side_model/design.md](h4b_d_side_model/design.md) section 10. No GPU job was used; this session holds 0 H200.
@@ -192,13 +193,68 @@ Tool: [h4b_d_side_model/results/item2_part_comparison.py](h4b_d_side_model/resul
 Observed:
 - Each of the two Frontier parts rose by the same amount, about 0.97 S_F. This matches the design: one step more from P end to the READ report and one step more from the report to the first D token.
 - From P end to the report now takes about 3.4 Frontier steps on all three cases, against about 2.45 at depth 1. Design 10.8 expected "d about 3 Frontier steps from the claiming pass". The P-end-to-claim wait adds about half a step to that.
-- The first D step is now 2.05-2.80 Frontier steps; the design expected about 2. The excess over the rule is the same as at depth 1 (1.08-1.83 for a rule of 1), so item 2 did not add it. Its cause is not investigated.
+- The first D step is now 2.05-2.80 Frontier steps; the design expected about 2. The excess over the rule is the same as at depth 1 (1.08-1.83 for a rule of 1), so item 2 did not add it. Section 7.1 traces it to the k=1 entry of the step-cost table.
 - On native06 and P2-32, Frontier's first D step is now longer than native f (+7.20, +10.14 ms), while the part before the report is shorter than native b + c + d + e (−12.50, −28.14 ms).
 
 Inference about the remaining handoff gap, not measured separately:
 - Against the lifecycle runs it is −10.20, −22.62 and −23.66 ms.
 - On the READ side, the late READ handles (design section 6.2, estimated at 16.6 ms on H200-32) and the ingress (section 6.3, about 8.6 ms on H200-32) are still not modeled. Their sum is about the P2-32 gap.
 - The P2-64 target is another 28.10 ms above its lifecycle run: about 16.5 ms from the repetition 1 first-contact READs and 11.6 ms of run-to-run difference (item 1 report, section 6).
+
+### 7.1 The first D step (added 2026-10-26)
+
+Approved as a CPU-only investigation (D-H4B-AFTER-ITEM2, requirements item 23). Tools, all reading persisted copies:
+- [first_d_step.py](h4b_d_side_model/results/first_d_step.py), output [first_d_step.txt](h4b_d_side_model/results/first_d_step.txt): Frontier's first D step per request, from the persisted depth-1 and depth-2 runs, against the DECODE entries of the case's step-cost table;
+- [native_k1_step.py](h4b_d_side_model/results/native_k1_step.py), output [native_k1_step.txt](h4b_d_side_model/results/native_k1_step.txt): native D step durations from the scheduler records of the three lifecycle runs. The k=1 step is the step whose schedule promotes a formal request (6143 computed + 1 scheduled token).
+
+```bash
+# ulimit -v 31457280, timeout 600-900; Python 3.10.6 (/data/ycfeng/envs/frontier-py310/bin/python)
+python h4b_d_side_model/results/first_d_step.py .
+python h4b_d_side_model/results/native_k1_step.py .
+python h4b_d_side_model/results/native_p_service.py .   # used by design section 11
+```
+
+A second run of all three scripts reproduced each `.txt` byte for byte, with empty stderr. SHA-256:
+
+| File | SHA-256 |
+| --- | --- |
+| `first_d_step.py` | `719771f014a191606457898425e7e26e1973ae6c01ac28c0bc7c0e976eb7799a` |
+| `first_d_step.txt` | `65fc58d80555dd30be07b0a14338a8e8d6cba5dfb41daa9512a954f53c9cd07b` |
+| `native_k1_step.py` | `0c35c2138027e366ec56cb0f8110d998e54da0ff720f3452292f8926c8af4610` |
+| `native_k1_step.txt` | `0f77b535892a8120f4755b35dae024d46b73f9a11b595df977e959c9efab7fd1` |
+| `native_p_service.py` | `40cbae482cf98de0c4d1be42805150454572193e141f136e824d3283972709b8` |
+| `native_p_service.txt` | `60202fd3489441eace5e6a84c18707a5c9c903293599f50a9b979a021064a98b` |
+
+Frontier's first D step against the table (ms):
+
+| Case | Table: k=1 alone | k=1 with decodes | decode-only | Depth 1: p50 (mean) | Expected | Depth 2: p50 (mean) | Expected |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| native06 | 21.10 | 30.15 | 19.30 | 30.15 (30.01) | 30.15 | 49.45 (49.00) | 49.45 |
+| P2-32 | 25.28 | 34.25 | 18.37 | 34.25 (34.11) | 34.25 | 52.62 (52.19) | 52.62 |
+| P2-64 | 26.76 | 26.76 | 24.72 | 26.76 (26.76) | 26.76 | 51.48 (50.71) | 51.48 |
+
+Expected values: at depth 1 the k=1 step with decodes; at depth 2 the decode-only step of the batch already in flight, then the k=1 step with decodes.
+
+Observed:
+- On all six runs the median first D step equals the expected value. The minimum equals the k=1-alone entry: a request on a lane with no other decoding request. That is why the means are slightly lower.
+- So the scheduling adds exactly the designed steps. The excess over 1 or 2 TPOT is the k=1-with-decodes entry being 10.85, 15.88 and 2.04 ms above the decode-only entry.
+- That entry comes from 1 traced step on native06 and P2-32, with 1 decode request, in the profiled repetition 1. Its client TPOT is 22.86 and 22.84 ms, against 19.83-19.85 and 19.08-19.09 ms in the unprofiled repetitions. On P2-64 it is the listed substitution from the k=1-alone entry (D-H200-STEP-COST-SUBSTITUTION).
+
+Native k=1 step in the unprofiled lifecycle runs (ms, `native_k1_step.txt`):
+
+| Run | k=1 step with decodes: n, median | Decode-only step: median | Table k=1 with decodes | Table − native |
+| --- | --- | --- | --- | --- |
+| H800l | 378, 21.39 | 19.83 | 30.15 | +8.76 |
+| P2-32l | 378, 21.72 | 20.17 | 34.25 | +12.53 |
+| P2-64l | 372, 25.99 | 24.45 | 26.76 | +0.77 |
+
+- Natively the k=1 step with decodes is 1.54-1.56 ms longer than a decode-only step on all three runs.
+- The table's excess over the native step (+8.76, +12.53, +0.77 ms) has the sign and about the size of Frontier's d_first_step − f above (+7.20, +10.14, −0.82 ms).
+- The 6, 6 and 12 k=1 steps alone take 61-69 ms (median); they are the idle-lane requests and are not analyzed further.
+
+Conclusion: the first-D-step excess is the price of one step-cost table entry, measured from a single profiled step. The scheduling model is not its cause. Whether profiling or the single sample's composition inflates that step is not measured.
+
+Not done: the table is not repriced. Pricing that entry from the lifecycle runs (native, unprofiled, not the comparison target) would change a DSV4 measured input. That needs YC's decision (progress.md, next actions).
 
 ## 8. Persistence (D-INPUT-PERSISTENCE)
 
@@ -232,7 +288,7 @@ Digests:
 | `h4b_d_side_model/results/fidelity_comparison_item2.json` | `43453b006ab3a7896a66f32a5085d4b6bfe433b6bbfc050a4b2e105127042735` |
 | `h4b_d_side_model/results/item2_part_comparison.txt` | `0fca856f1063c088d7dd0afc4ea360f994cf60a96217d9316761fe95a27ccf56` |
 
-The depth-1 reruns are byte-identical to the persisted item 1 results (section 4), so they are not persisted again. The scratch runs, logs and the fidelity worktree `.worktrees/fidelity-candidate-item2` are left in place. Removing the worktree needs YC's approval.
+The depth-1 reruns are byte-identical to the persisted item 1 results (section 4), so they are not persisted again. The scratch runs, logs and the fidelity worktree `.worktrees/fidelity-candidate-item2` are left in place. Removing the worktree needs YC's approval. YC approved the removal (D-H4B-AFTER-ITEM2); it was removed on 2026-10-26 after its tracked files were checked identical to `82390e10` (progress.md).
 
 ## 9. Deviations from design section 10
 
@@ -255,7 +311,8 @@ Adopted under D-NO-INTERRUPT; each follows the lead's recommendation.
 - DIAGNOSTIC only. One Frontier run per case, against one reference run each.
 - The deferred block free of vLLM (design 10.1, point 6) is not modeled, so a preempted victim's blocks return at most one step early. The DSV4 runs have no preemption.
 - `Request.on_batch_schedule` keeps only the latest schedule time. At depth 2, per-iteration service-time metrics derived from it are understated; TTFT, TPOT and E2E are unaffected.
-- PREFILL depth 2 is not modeled; the P engines also run `--async-scheduling`. It is the unapproved candidate item 3 and may explain part of the P2-32 P-side +45.92 ms.
+- PREFILL depth 2 is not modeled; the P engines also run `--async-scheduling`. It is item 3 ([design](h4b_d_side_model/design.md) section 11). It has no effect on the three cases and does not explain the P2-32 P-side +45.92 ms. That gap is the run-to-run difference in native P service between the profile run and the reference run (design section 11.4). Corrected 2026-10-26: this line earlier said item 3 may explain part of the gap.
+- The k=1-with-decodes entry of the native06 and P2-32 tables is 8.76 and 12.53 ms above the native lifecycle measurement (section 7.1).
 - MONOLITHIC capacity 2 keeps its skip semantics (design 10.2, option C).
 - The late READ handles and the ingress are still not modeled. The P2-64 repetition 1 first-contact READs are not modeled either.
 - The P2-32 TTFT error of +9.13% comes from the P side.

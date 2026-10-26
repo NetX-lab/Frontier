@@ -4,12 +4,13 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Added section 11, the item 3 design (PREFILL batch queue depth 2): native behavior, Frontier today, no effect on the three DSV4 cases, the P2-32 P-side gap as run-to-run native P service, recommendation not to implement now. Withdrew the statement in section 10.10 that item 3 may explain the P2-32 P-side gap; updated the status and section 9. |
 | 2026-10-26 | Updated the status: item 2 approved (D-H4B-ITEM2), implemented in `82390e10` and verified as DIAGNOSTIC; section 10.11 lists the deviations from sections 10.2-10.9. |
 | 2026-10-26 | Added section 10, the item 2 design (DECODE role override of `max_concurrent_batches`, output placeholders, grouped in-flight allocation, preemption with one batch in flight, READ claim per step, 8 files); section 6.1 points to it; section 9 item 2 updated. |
 | 2026-10-26 | Updated the status and inputs: item 1 approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified; the H800 and H200-64 lifecycle runs are copied and analyzed. |
 | 2026-10-25 | Created: measured native mechanism, Frontier's current path, item 1 (READ completion at engine steps), item 2 (DECODE batch queue depth 2), gating options, expected effects, deferred parts, verification plan and approval items. |
 
-**Status.** Item 1 is approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item1_engine_step.md)). Item 2 is approved (D-H4B-ITEM2), implemented in `82390e10` and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item2_decode_depth2.md)); section 10.11 lists where the implementation differs from section 10. The ingress field stays deferred.
+**Status.** Item 1 is approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item1_engine_step.md)). Item 2 is approved (D-H4B-ITEM2), implemented in `82390e10` and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item2_decode_depth2.md)); section 10.11 lists where the implementation differs from section 10. Item 3 (PREFILL depth 2) is designed in section 11 (D-H4B-AFTER-ITEM2), with the recommendation not to implement it now. The ingress field stays deferred.
 
 **Authority.** D-H4A-CHECKPOINT ("Frontier models the D-side asynchronous remote-KV lifecycle from those measured inputs, with no constant fitted to native06"), D-MAINLINE-LOOP-CAP-DSV4, D-NO-INTERRUPT and the DIAGNOSTIC label in [requirements.md](../requirements.md). GLM, co-location, existing PDD and PD-AF results must stay identical.
 
@@ -154,6 +155,7 @@ Notes:
 1. Item 1 with option B: the new KV-transfer config field `nixl_read_completion` (default `transfer_end`), 7-8 `frontier/` files, about 160-210 lines. Or option A, which changes GLM NIXL results.
 2. Item 2 (DECODE depth 2 with placeholders; approved as D-H4B-ITEM2, implemented in `82390e10`), section 10: the DECODE role override `decode_replica_scheduler_config_max_concurrent_batches` through the existing override registry, the placeholder rescheduling and last-token guard, grouped in-flight allocation, preemption through the existing one-batch path, the per-step READ claim (also at depth 1), and the move of the READ table to `vllm_v1_nixl_reads.py`. 8 `frontier/` files (1 new), about 140-190 lines plus tests.
 3. Ingress field: deferred until the H800 parts are known.
+4. Item 3 (PREFILL depth 2), section 11: recommended not to implement now; it has no effect on the three DSV4 cases and needs a PREFILL role field. Decision needed only when a workload of section 11.5 enters the matrix.
 
 ## 10. Item 2: DECODE batch queue depth 2 with output placeholders
 
@@ -253,7 +255,7 @@ Total: 8 `frontier/` files (1 new), about 140-190 changed lines plus about 230 t
 ### 10.8 Expected effects (inference)
 
 - TTFT rises by about 2·S_F over item 1 (item 1 test report, section 6): native06 404.03 ms (+1.3%), P2-32 398.38 ms (+9.4%), P2-64 697.09 ms (−6.0%).
-- The P2-32 overshoot comes from the P side, which is already 45.92 ms too long.
+- The P2-32 overshoot comes from the P side, which is already 45.92 ms too long (section 11.4: run-to-run native P service).
 - TPOT is nearly unchanged: each step still gives each request one token, with one more context token on the second in-flight batch.
 - d is about 3 Frontier steps from the claiming pass, and f about 2.
 
@@ -269,7 +271,7 @@ Total: 8 `frontier/` files (1 new), about 140-190 changed lines plus about 230 t
 
 - `Request.on_batch_schedule` keeps only the latest schedule time (`frontier/entities/request.py:1238`). At depth 2, per-iteration service-time metrics derived from it are understated. TTFT, TPOT and E2E come from completion times and are unaffected.
 - MONOLITHIC capacity 2 keeps its skip semantics (option C).
-- PREFILL depth 2 is not modeled; the P engines also run `--async-scheduling`. It is a candidate item 3 and may explain part of the P2-32 P-side +45.92 ms.
+- PREFILL depth 2 is not modeled; the P engines also run `--async-scheduling`. It is item 3, section 11. It has no effect on the three DSV4 cases and does not explain the P2-32 P-side +45.92 ms (corrected 2026-10-26; the earlier text said it may).
 - Late READ handles (section 6.2) and ingress (section 6.3) are unchanged.
 
 ### 10.11 Deviations in the implementation
@@ -285,3 +287,76 @@ Adopted under D-NO-INTERRUPT; details and evidence in the item 2 [test report](.
 | 10.7 | Field without `omit_if_none`; 8 files, about 140-190 lines | `omit_if_none`; 11 files (1 new), +236 / −65 | `config.json` of other runs stays unchanged; the extra files are the `Batch` fix and a help text |
 | 10.6 | One possible depth-1 difference | Two, (a) a same-time registration after a pass and (b) a READ found at a DP dummy-forward start | Neither occurred in the three depth-1 reruns |
 | 10.9 | `--decode_replica_scheduler_config_max_concurrent_batches` | `cluster_config_decode_replica_scheduler_config_max_concurrent_batches` | The flat CLI name; the driver rejects the shorthand |
+
+## 11. Item 3: PREFILL batch queue depth 2
+
+Status: design only (D-H4B-AFTER-ITEM2, requirements item 23). Recommendation: do not implement it now (section 11.6). The analysis below was made under D-NO-INTERRUPT and is the lead's recommendation.
+
+### 11.1 Native behavior
+
+vLLM 0.28.0, same local copy as section 2.
+
+1. **Depth 2 on P.** The persisted engine config of native06, P2-32r and P2-64r (`run/replay_summary.json`, `engine_config`) has `async_scheduling` true, chunked prefill off, `max_num_batched_tokens` 8192 and `max_model_len` 7168. The scheduler start records of the three lifecycle runs (`nodes/<host>/scheduler_lifecycle/`) show `async_scheduling` true on every prefill and decode core. With PP 1 the P batch queue therefore has depth 2 (`config/vllm.py:550-560`).
+2. **One output token on P.** The proxy sends each request to P with `max_tokens = min_tokens = 1` (`tests/comparison/calibration/pd_proxy.py:103-114`).
+3. **Engine loop** (`v1/engine/core.py:624-713`). A schedule that runs tokens returns without blocking while the queue has a free slot (`:681-686`). The next call schedules again. When the queue is full or nothing more can be scheduled, the engine blocks on the oldest batch (`:695`) and applies its output.
+4. **A lone request.** The first schedule runs the whole 6144-token prompt in one step (chunked prefill is off and 6144 ≤ 8192) and gives the request one output placeholder (`async_scheduler.py:19-49`). The second schedule skips the request by the last-token guard (`scheduler.py:530-544`: num_computed_tokens + 2 − placeholders = prompt + 1 ≥ prompt + max_tokens). That entry is empty, the queue is full, and the engine blocks on the prefill batch. The prefill output is applied when the prefill step ends, as at depth 1. The empty entry's CPU work overlaps the GPU prefill.
+5. **When depth 2 changes P timing.** Only when a P engine has more work during a prefill:
+   - a second waiting request, whose prefill goes into the second entry and starts right after the first, without the CPU scheduling gap between the two steps;
+   - the next chunk of a multi-chunk prefill: a prefill chunk gets no placeholder (`async_scheduler.py:28-29`), so the next chunk is scheduled while the previous one runs.
+6. **Preemption on P differs from D.** P is a KV producer, so a preempted request's in-flight output is dropped (`drop_stale_output` from `requires_kv_delivery`, `kv_connector/v1/base.py:194`; section 10.1, point 5). An item 3 implementation could not reuse the D-side rule of section 10.5.
+
+### 11.2 Frontier today
+
+- PREFILL capacity is `num_stages` = 1. An explicit `max_concurrent_batches` on PREFILL raises `NotImplementedError` (`frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:406-420`).
+- On the three cases, every prefill is one table step. The PREFILL entry has 1 request and 6144 tokens and costs 287.35 ms (native06), 281.42 ms (P2-32) and 559.46 ms (P2-64). p_wait and p_residual are 0 for all 128 requests (`frontier` in the depth-2 `h4a5_attribution.json` files).
+- CPU-overhead modeling is off by default (`skip_cpu_overhead_modeling=True`), so consecutive Frontier PREFILL steps already start back to back.
+
+### 11.3 Evidence and expected effect
+
+Observed ([native_p_service.py](results/native_p_service.py), output [native_p_service.txt](results/native_p_service.txt)): in the unprofiled repetitions of all nine persisted native runs, proxy arrivals are at least 992.6 ms apart. The longest P service is 826.2 ms, and no request reaches the proxy while an earlier one of its repetition is still in P service. The profiled repetition 1 of the three profile runs queues (122-123 such arrivals) and is not used for the tables.
+
+Inference:
+- No native P engine holds two requests, and no prompt is split into chunks. So the only depth-2 difference on these runs is the empty second entry of 11.1, point 4. It does not move the P response.
+- Item 3 would leave Frontier's P parts unchanged on native06, P2-32 and P2-64. Expected effect on the three cases: zero.
+- With queueing or chunked prefills, the native gain of depth 2 is the CPU gap between consecutive steps (11.1, point 5). Frontier does not model that gap when CPU-overhead modeling is off. So item 3 changes Frontier timing only together with CPU-overhead modeling.
+
+### 11.4 The P2-32 P-side gap
+
+Section 10.10 and the item 2 report said that PREFILL depth 2 may explain part of the P2-32 P-side gap of +45.92 ms. Section 11.3 shows that it cannot; the earlier statement is withdrawn.
+
+Observed native P service (proxy arrival → P response; mean over repetitions, profile runs over repetitions 2-3), from the same output:
+
+| Hardware | Reference run | Lifecycle run | Profile run (source of the PREFILL entry) | Spread | Frontier PREFILL entry | Entry − reference |
+| --- | --- | --- | --- | --- | --- | --- |
+| H800 | native06 274.67 | H800l 249.29 | profile02 281.95 | 32.66 | 287.35 | +12.68 |
+| H200-32 | P2-32r 235.50 | P2-32l 257.51 | P2-32p 277.10 | 41.60 | 281.42 | +45.92 |
+| H200-64 | P2-64r 552.63 | P2-64l 575.93 | P2-64p 557.90 | 23.30 | 559.46 | +6.83 |
+
+- Each entry is within 5.4 ms of the mean of its own profile run. The entry is a median, so this is the median-mean difference.
+- The three runs of one hardware differ in P service by 23-42 ms. The P2-32 reference run is the fastest of its three.
+- The hosts are listed in the output. P2-32r and P2-32p share no host and differ by 41.60 ms. P2-64r and P2-64p share 7 of 8 hosts and differ by 5.27 ms. native06 and profile02 share no host and differ by 7.28 ms.
+- The profile run is slower than the reference run on all three hardware cases (+7.28, +41.60, +5.27 ms). The lifecycle run is the fastest on H800 and the slowest on H200-64. Three cases do not establish an offset of profile runs.
+
+Inference: the P2-32 P-side gap is the run-to-run difference in native P service between the profile run and the reference run, not a Frontier modeling error. The host pattern is consistent with a dependence on the host set but does not prove it. Only the lifecycle runs record which hosts ran P: P2-32l ran P on 0043 and 0628, the two hosts it shares with P2-32p, and its P service is still 19.59 ms below P2-32p. Whether P2-32p ran P on those hosts is not recorded, so this is not checked further.
+
+Options:
+1. **Accept it as a limitation (recommended).** Record that a single-run PREFILL entry carries the run-to-run spread of native P service, observed at 23-42 ms on these cases. No cost.
+2. **A repeat P2-32 profile run** (32 H200, YC's approval). It adds a fourth sample of the spread, but it still prices the table from one run on other hosts, so it does not remove the gap.
+
+Pricing the entry from the reference run is not an option: the reference is the comparison target, and that would be fitting the table to it.
+
+### 11.5 When item 3 is worth implementing
+
+On a workload where a P engine holds more than one request or runs multi-chunk prefills: per-lane P service longer than the per-lane arrival interval, or prompts above `max_num_batched_tokens` with chunked prefill on. Its design would need:
+- a PREFILL role override of `max_concurrent_batches`, a config schema change that needs YC;
+- the P-side preemption rule of 11.1, point 6;
+- CPU-overhead terms that depth 2 hides (11.3).
+
+### 11.6 Recommendation
+
+Do not implement item 3 now:
+- It has no effect on the three DSV4 cases (11.3).
+- It needs a PREFILL role field, which is a config schema change.
+- In Frontier it matters only together with CPU-overhead modeling.
+
+Revisit it when a workload from 11.5 enters the comparison matrix.

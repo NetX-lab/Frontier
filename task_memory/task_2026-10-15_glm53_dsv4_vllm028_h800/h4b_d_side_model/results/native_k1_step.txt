@@ -1,0 +1,12 @@
+== H800l: problems []
+  k=1 step with decodes: n 378  median 21.39  mean 21.79
+  k=1 step alone:        n 6  median 61.15  mean 66.01
+  decode-only step:      n 48434  median 19.83  mean 19.87
+== P2-32l: problems []
+  k=1 step with decodes: n 378  median 21.72  mean 21.76
+  k=1 step alone:        n 6  median 69.47  mean 94.20
+  decode-only step:      n 47662  median 20.17  mean 20.19
+== P2-64l: problems []
+  k=1 step with decodes: n 372  median 25.99  mean 26.59
+  k=1 step alone:        n 12  median 69.23  mean 79.63
+  decode-only step:      n 78664  median 24.45  mean 24.93

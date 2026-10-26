@@ -1,0 +1,9 @@
+== native06: table k=1 alone 21.10  k=1 with decodes 30.15  decode-only 19.30
+  depth 1: n 128  first step mean 30.01  p50 30.15  min 21.10  max 30.15  expected 30.15  ratio to own TPOT p50 1.546
+  depth 2: n 128  first step mean 49.00  p50 49.45  min 21.10  max 49.45  expected 49.45  ratio to own TPOT p50 2.536
+== p2_32: table k=1 alone 25.28  k=1 with decodes 34.25  decode-only 18.37
+  depth 1: n 128  first step mean 34.11  p50 34.25  min 25.28  max 34.25  expected 34.25  ratio to own TPOT p50 1.835
+  depth 2: n 128  first step mean 52.19  p50 52.62  min 25.28  max 52.62  expected 52.62  ratio to own TPOT p50 2.819
+== p2_64: table k=1 alone 26.76  k=1 with decodes 26.76  decode-only 24.72
+  depth 1: n 128  first step mean 26.76  p50 26.76  min 26.76  max 26.76  expected 26.76  ratio to own TPOT p50 1.080
+  depth 2: n 128  first step mean 50.71  p50 51.48  min 26.76  max 51.48  expected 51.48  ratio to own TPOT p50 2.078
