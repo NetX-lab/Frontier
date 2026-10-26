@@ -121,7 +121,9 @@ class NativeBoundary:
         self.active_graph = None
         self.torch = SimpleNamespace(
             device=self.make_device,
-            cuda=SimpleNamespace(CUDAGraph=self.new_graph, graph=self.cuda_graph),
+            cuda=SimpleNamespace(CUDAGraph=self.new_graph, graph=self.cuda_graph,
+                                 synchronize=lambda: self.calls.append("cuda:synchronize")),
+            accelerator=SimpleNamespace(empty_host_cache=lambda: self.calls.append("host_cache:empty")),
         )
         self.offloader = SimpleNamespace(
             sync_prev_onload=lambda: self.calls.append("offloader:sync"),
@@ -240,6 +242,7 @@ class NativeBoundary:
 @pytest.fixture
 def boundary(monkeypatch):
     native = NativeBoundary()
+    monkeypatch.setattr(replay.gc, "collect", lambda: native.calls.append("gc:collect"))
     modules = {}
     exports = {
         "vllm.config": {"CUDAGraphMode": native.mode},
@@ -288,10 +291,12 @@ def test_full_uses_native_capture_order_runtime_none_and_output_reference(bounda
 
 def test_piecewise_uses_only_native_wrapper_with_stable_inputs_and_runtime(boundary):
     b = boundary
-    torch = SimpleNamespace(device=b.make_device, cuda=object())
+    torch = SimpleNamespace(device=b.make_device, accelerator=b.torch.accelerator,
+                            cuda=SimpleNamespace(synchronize=b.torch.cuda.synchronize))
     run = capture_native_replay(torch, b.native, b.layer, b.forward, "piecewise")
+    # Dropped graphs are collected before the host cache is emptied for the shared pool id.
     assert b.calls == [
-        "breakable:new", "device:cuda", "graph_capture:enter", "forward:piecewise",
+        "gc:collect", "cuda:synchronize", "host_cache:empty", "breakable:new", "device:cuda", "graph_capture:enter", "forward:piecewise",
         "breakable:capture", "layer", "graph_capture:exit",
     ]
     assert b.stream is b.default_stream
@@ -338,4 +343,5 @@ def test_capture_failure_propagates_without_replay_or_retry(boundary, mode):
     if mode == "full":
         assert b.calls[-3:] == ["cuda_graph:exit", "pool:exit", "graph_capture:exit"]
     else:
-        assert b.calls == ["breakable:new", "device:cuda", "graph_capture:enter", "graph_capture:exit"]
+        assert b.calls == ["gc:collect", "cuda:synchronize", "host_cache:empty", "breakable:new",
+                           "device:cuda", "graph_capture:enter", "graph_capture:exit"]

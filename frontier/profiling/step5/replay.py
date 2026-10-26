@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+import gc
 
 
 def _capture_sizes(capture_sizes: Sequence[int]) -> tuple[int, ...]:
@@ -72,6 +73,13 @@ def capture_native_replay(
         from vllm.config import CUDAGraphMode
         from vllm.distributed.parallel_state import graph_capture
 
+        # vLLM keeps its graphs for the process lifetime; the profiler drops them per capture.
+        # A dropped graph leaves the global pool id freeable in the pinned-host allocator, and
+        # a new capture into that id fails its use-count assert until the host cache is
+        # emptied. torch.cuda.graph does this before capture; the breakable wrapper does not.
+        gc.collect()
+        torch.cuda.synchronize()
+        torch.accelerator.empty_host_cache()
         wrapped = BreakableCUDAGraphWrapper(
             layer, native, runtime_mode=CUDAGraphMode.PIECEWISE,
         )
