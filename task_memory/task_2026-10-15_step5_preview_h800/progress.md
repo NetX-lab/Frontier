@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: item 2a steps 2–4 done (measured backend `b9cbda0d`, allgather_reducescatter pricing `0349c1c6`); checks pass with fidelity 77/77; H200 collective jobs submitted. |
 | 2026-10-26 | D31: calibration item 2a opened; one-request breakdown shows underpriced and missing collectives (about 11.7 ms per DECODE step). |
 | 2026-10-26 | D31: port checks recorded (test report); shared-expert DP token count sized at about 0.09% of TPOT (low priority); FP8 approximation warning shown to change no Step-5 time; simulator cost profile. |
 | 2026-10-26 | D31: calibration item 1 (workflow port) in progress; measured NIXL check fixed for engine-step completion; shared-expert DP token-count candidate recorded. |
@@ -446,6 +447,77 @@ Calibration item 2a, collective communication (2026-10-26, `in-progress`):
   as DP-group all-gather/reduce-scatter with native payloads, add the two missing TP all-reduces,
   then rerun E. Measured collective curves are operator-level communication profiles, so D31.10
   allows them.
+- Worktree `/data/ycfeng/Frontier/.worktrees/step5-d31-measured-comm`, branch
+  `feat/step5-d31-measured-comm` from `feat/step5-preview` `7dce66c0`.
+- Step 1 (H200 curves), submitted 2026-10-26 16:45 UTC:
+  - The first Pi run `d31-h200-comm-submit-1026a` stopped with a model-service error before
+    launching anything. Nothing was submitted.
+  - Pi run `d31-h200-comm-submit-1026b` submitted both stages once:
+    - S2: `exp-1027-004502-180474`, TP8/DP2/EP16, 2 × 8 H200, launcher PID 826530.
+    - S1: `exp-1027-004515-758552`, TP8/DP4/EP32, 4 × 8 H200, launcher PID 828690.
+  - Both jobs: `step_main`, non-preemptible, creator `i-fengyicheng`, local NFS source
+    `step5-d31-h200-comm`. Status files are `<stage>/status_1.json` under
+    `task_memory/step5_comm/` of that worktree.
+  - This session holds 48 GPUs. The account also holds 4 non-preemptible 1 × 8 jobs of other
+    sessions, which are not counted.
+- Step 2 done, `b9cbda0d`:
+  - The glm53 measured backend is ported, with the H800 TP8/DP2 and TP8/DP4 curves.
+  - DP curves are keyed by row layout, graph mode and row pattern.
+  - Unequal rows are priced from the measured uneven rows: all gathered rows set the
+    AllGatherV time, and all but the smallest rank's rows set the per-root Reduce time.
+    This also completes step 4.
+- Step 3 done, `0349c1c6`. Design decisions:
+  - The new replica field `moe_all2all_backend` mirrors vLLM's `all2all_backend`. It is opt-in
+    with value `allgather_reducescatter`; with the field unset, Frontier prices exactly as
+    before.
+    - It is a serving choice, not a model property, so it is not part of the model profile.
+    - PD-AF roles reject it.
+  - The new path is Step-5-only and needs `--cc_backend_config_type measured`:
+    - the dispatch payload comes from the Step layer metadata (FP8 routed layers 3–87: 4,288 B
+      per row; BF16 layers 88–90: 8,256 B per row);
+    - only the measured backend prices DP rows (`predict_dp_rows`).
+  - The EP wave carries each DP rank's forward width (vLLM `num_tokens_across_dp`; under CUDA
+    Graph every rank is padded to the largest). Each EP lane runs its pre-routing work on its
+    own DP rank's tokens (vLLM EP rank = `dp_rank × TP + tp_rank`). On this path this also
+    fixes the merged-token shared-expert count from calibration item 2.
+  - The routed TP8 all-reduce is priced after the combine. A separate shared-expert TP8
+    all-reduce is added only at DP > 1; at DP1, vLLM fuses both into one all-reduce.
+  - The D29 position path is not reused. It is fixed to 16 ranks with DP2 receipts and the
+    collective_sim plan.
+- Step 5 checks on `0349c1c6`:
+  - Unit tests: 539 passed, 2 skipped, across 17 affected files, including the new
+    `tests/unit/test_moe_all2all_backend.py`. One fixture in `test_step5_mrv2_forward.py` gained
+    the new field.
+  - Dummy smoke matrix: 12/12 cases completed.
+  - Fidelity: 77/77 identical between `7dce66c0` and `0349c1c6`.
+    - Both sides ran in new detached worktrees with empty caches. Predictor cache file names
+      have zero differences.
+    - Output: `/data/ycfeng/tmp/d31_agrs_fidelity`.
+- Deferred:
+  - On the default path, these gaps remain:
+    - the EP-lane `mlp` all-reduce is 0;
+    - the shared-expert all-reduce is missing;
+    - pre-routing work uses the merged token count.
+  - The D29 compute/communication overlap.
+  - Caching EP-lane predictions with identical workloads.
+- Simulator cost:
+  - Step E (`h200_32_run01`) has run for 5 h 37 min without finishing.
+  - The 8-request prefix (`/data/ycfeng/tmp/d31_e_run/prefix8_base`, `7dce66c0`) took 6,566 s
+    for a 32.6 s simulated window: TTFT 590.7 ms and TPOT 24.7 ms.
+  - Diagnostics of the new path therefore start on short traces.
+- Short-trace diagnostic (2 requests × 6,144 prompt + 32 output tokens, `h200_32`, H800 curves in
+  place of H200; `/data/ycfeng/tmp/d31_agrs_diag/`):
+  - analytical default: TTFT 580.3 ms, TPOT 20.07 ms, 577.5 s wall;
+  - allgather_reducescatter with the measured backend: TTFT 874.0 ms, TPOT 32.24 ms, 594.1 s
+    wall, no out-of-range collective.
+  - The added ~12 ms per decode step matches 88 MoE layers × (dispatch + combine + two TP
+    all-reduces) at 30–40 µs per small call.
+  - The new path costs about 3% more wall time; 437 of 593 s go to per-lane EP-wave prediction
+    (111,746 single-layer lane predictions at about 3.3 ms each).
+  - Report: `test_report_2026-10-26_agrs_collectives.md`.
+- Step 1 result: both H200 jobs succeeded (S2 at 16:55 UTC, S1 at 16:59 UTC). Pi run
+  `d31-h200-comm-copy-1026c` copies both cloud output directories to
+  `/data/ycfeng/tmp/step5_d31_comm_20261026/downloads/` with hash checks.
 
 Step F status (2026-10-26):
 
