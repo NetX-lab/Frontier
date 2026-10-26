@@ -3,10 +3,11 @@
 Frontier's measured predictor reads one table per family and measurement type for both P/D
 roles. Each role package measures its own cells, so the merged table is the union of the role
 rows; rows of both roles at the same operator key are averaged by the predictor's exact lookup.
+A role may have several packages, for example a later package that adds MoE rows.
 The script also writes the predictor options that select the merged tables, the kernel gap and
 the NIXL READ profile.
 
-Usage: merge_role_profiles.py --prefill <dir> --decode <dir> --output <dir>
+Usage: merge_role_profiles.py --prefill <dir>... --decode <dir>... --output <dir>
            --kernel-gap <csv> --nixl-read-profile <json>
 """
 
@@ -33,13 +34,19 @@ def role_table(root: Path, family: str, name: str) -> pd.DataFrame | None:
     paths = sorted((root / family).rglob(name))
     if len(paths) > 1:
         raise ValueError(f"{root / family} holds {len(paths)} tables named {name}")
-    return pd.read_csv(paths[0]) if paths else None
+    if not paths:
+        return None
+    frame = pd.read_csv(paths[0])
+    # The MoE profiler measured EP rank 0 before it recorded the rank of generated routing.
+    if family == "moe" and "moe_ep_rank" not in frame:
+        frame["moe_ep_rank"] = 0
+    return frame
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--prefill", type=Path, required=True)
-    parser.add_argument("--decode", type=Path, required=True)
+    parser.add_argument("--prefill", type=Path, nargs="+", required=True)
+    parser.add_argument("--decode", type=Path, nargs="+", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--kernel-gap", type=Path, required=True)
     parser.add_argument("--nixl-read-profile", type=Path, required=True)
@@ -51,18 +58,17 @@ def main() -> int:
                    nixl_read_profile=str(args.nixl_read_profile.resolve()))
     counts = {}
     for option, (family, name) in TABLES.items():
-        frames = {role: role_table(root, family, name)
-                  for role, root in (("PREFILL", args.prefill), ("DECODE", args.decode))}
-        frames = {role: frame for role, frame in frames.items() if frame is not None}
+        frames = [(role, frame) for role, roots in (("PREFILL", args.prefill), ("DECODE", args.decode))
+                  for root in roots if (frame := role_table(root, family, name)) is not None]
         if not frames:
             raise ValueError(f"Neither role produced {family}/{name}")
-        columns = {tuple(frame.columns) for frame in frames.values()}
+        columns = {frozenset(frame.columns) for _, frame in frames}
         if len(columns) != 1:
             raise ValueError(f"The role tables {family}/{name} have different columns")
         path = args.output / name
-        pd.concat(frames.values(), ignore_index=True).to_csv(path, index=False)
+        pd.concat([frame for _, frame in frames], ignore_index=True).to_csv(path, index=False)
         options[option] = str(path.resolve())
-        counts[name] = {role: len(frame) for role, frame in frames.items()}
+        counts[name] = [[role, len(frame)] for role, frame in frames]
     (args.output / "predictor_options.json").write_text(json.dumps(options, indent=2) + "\n")
     print(json.dumps(counts))
     return 0

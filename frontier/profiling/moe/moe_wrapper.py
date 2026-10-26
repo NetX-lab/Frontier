@@ -1079,7 +1079,7 @@ class MoEWrapper:
         # Combine all stats (including load imbalance features from grouped_gemm_stats)
         stats = self._build_profile_result(combined_time_stats, num_tokens=num_tokens)
         stats["moe_gating_linear_backend"] = gating_stats["moe_gating_linear_backend"]
-        stats["ep_rank"] = routing_inputs["ep_rank"]
+        stats["moe_ep_rank"] = routing_inputs["ep_rank"]
 
         # Add load imbalance features from grouped_gemm_stats (if present)
         # These are added by profile_grouped_gemm when load imbalance is enabled
