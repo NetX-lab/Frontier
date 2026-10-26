@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: E rerun after the spread fix; step G rerun on merged04 after profiling the partly filled EP ranks. |
 | 2026-10-26 | D31: item 2a step 1 done, EP-lane prediction cache added; items 1 and 2a merged; combined E run and the first G run started. |
 | 2026-10-26 | D31: item 2a status line added (steps 2–4 done, step 1 running, step 5 checks done before rerunning E). |
 | 2026-10-26 | D31: calibration item 2a (collective communication) added with its five steps. |
@@ -160,8 +161,13 @@ Dependency graph: `A -> {B, C, D}`; `{B, C, D} -> E`; `C -> F`; `{E, F} -> G`.
 B, C and D run in parallel. F needs C's GPUs released, because 32 + 64 GPUs exceeds the limit.
 
 Status (2026-10-26): A–D and F are done (D(g) evidence in `test_report_2026-10-26_h200_profiles.md`,
-F in `test_report_2026-10-26_h200_64_native_workload.md`); E is running; G's first run
-(`h200_64_comb_h200`, both calibration items 1 and 2a) started on 2026-10-26 17:55 UTC.
+F in `test_report_2026-10-26_h200_64_native_workload.md`). The first combined E and G runs
+stopped on two input-range errors: an order-dependent query-length spread (fixed in `2beb09b3`;
+E rerun `h200_32_comb_h200` started 19:34 UTC) and EP32 decode lanes with fewer routed tokens
+than the MoE profile measured. The profiler now measures the partly filled EP rank
+(`--profiled_ep_rank last_routed`); H200 job 04 added those rows, the tables are merged04, and
+the G rerun `h200_64_g01` started 20:17 UTC. Formal 64-GPU calibration still waits for E within
+30%.
 
 Calibration order for E, after the first error table:
 1. Workflow. The D-side first-token handoff (about two decode steps plus the READ plus the
