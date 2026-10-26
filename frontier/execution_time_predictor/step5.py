@@ -149,10 +149,12 @@ def step5_row_features(row) -> dict[str, float]:
         )
     except KeyError as exc:
         raise ValueError(f"Unsupported Step variant/phase/graph label: {exc}") from exc
-    mean_query = sum(queries) / len(queries)
+    # Exact integer moments make the value independent of the request order, so a runtime
+    # batch and a measured row with the same query lengths get the same feature.
+    total_query = sum(queries)
     features.update(
         min_query_len=float(min(queries)), max_query_len=float(max(queries)),
-        query_len_cv=math.sqrt(sum((q - mean_query) ** 2 for q in queries) / len(queries)) / mean_query,
+        query_len_cv=math.sqrt(len(queries) * sum(q * q for q in queries) - total_query ** 2) / total_query,
         min_context_len=float(min(contexts)), max_context_len=float(max(contexts)),
         mean_context_len=sum(contexts) / len(contexts),
         max_sequence_len=float(max(workload.sequence_lengths)),

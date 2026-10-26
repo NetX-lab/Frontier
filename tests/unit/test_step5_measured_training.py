@@ -53,7 +53,10 @@ def _scheduler():
 
 def _row(model, layer_id=0, *, query=16, context=4104, graph_mode="none", phase="prefill",
          has_attention_metadata=True, block_table_columns=None):
-    cell = Step5ProfileInput(layer_id, (query,), (context,), phase, graph_mode=graph_mode,
+    # One request by default; tuples give one entry per request.
+    queries = query if isinstance(query, tuple) else (query,)
+    contexts = context if isinstance(context, tuple) else (context,)
+    cell = Step5ProfileInput(layer_id, queries, contexts, phase, graph_mode=graph_mode,
                              has_attention_metadata=has_attention_metadata,
                              block_table_columns=block_table_columns)
     metadata = describe_step5_layer(model, layer_id, attention_tp_size=8, moe_tp_size=1,
@@ -63,7 +66,7 @@ def _row(model, layer_id=0, *, query=16, context=4104, graph_mode="none", phase=
     active = {name for name, _ in scopes}
     stats = {}
     for index, name in enumerate((*STEP5_SCOPE_NAMES, *STEP5_OPERATOR_NAMES), start=1):
-        value = index / 10 + query / 1000 if name in active or name == "step5_layer_e2e" else 0.
+        value = index / 10 + sum(queries) / 1000 if name in active or name == "step5_layer_e2e" else 0.
         stats[name] = dict(min=value, max=value, mean=value, median=value, std=0., count=10)
         if name == "step5_layer_e2e":
             stats[name]["kernel_count"] = FIXTURE_ROOT_KERNEL_COUNT
@@ -165,6 +168,15 @@ def test_step_loader_derives_precision_and_context_features(model, tmp_path):
     assert len(STEP5_SCOPE_NAMES) == 9
     assert set(STEP5_SCOPE_NAMES) == {op.name for op in STEP5_ATTENTION_FAMILY.e2e_trace_ops()}
     assert not set(STEP5_OPERATOR_NAMES) & set(STEP5_SCOPE_NAMES)
+
+
+def test_query_length_spread_does_not_depend_on_request_order(model):
+    # The profiler lists decodes first; a runtime batch can list its prefill chunk first.
+    measured = _row(model, 3, query=(1,) * 16 + (16,), context=(4104,) * 17,
+                    phase="mixed", graph_mode="piecewise")
+    runtime = dict(measured, query_lens=(16,) + (1,) * 16)
+    assert step5_row_features(runtime)["query_len_cv"] == 1.875
+    assert step5_row_features(measured)["query_len_cv"] == 1.875
 
 
 def test_step_loader_derives_validated_features_once_per_source_row(model, tmp_path, monkeypatch):
