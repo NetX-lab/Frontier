@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step B done (full dummy workload in 2933 s); workload02 submitted after Pi recovered; D31.9 balanced routing for Frontier. |
 | 2026-10-25 | D31 mainline reset: review written, documents corrected, steps B/C/D of the new plan started. |
 | 2026-10-23 | YC approves D29-SCOPE-107-10000 and the fixed finite model; begin three sole-writer implementation streams. |
 | 2026-10-23 | D30 integrated4ec5b23 after all code-scope gates; D29 design reviews complete and full107-path scope awaits decision. |
@@ -196,8 +197,8 @@ State of the D31 plan steps (see the top section of `plan.md`):
 - completed — A. Document fixes: `review_2026-10-25_mainline_reset.md`, D31 in
   `requirements.md`, the new current plan, this entry, the summary index and the ticket status
   notes.
-- in-progress — B. Fast Frontier E2E runs.
-- in-progress — C. H200 32-GPU native workload with the routing image.
+- completed — B. Fast Frontier E2E runs (2026-10-26, details below).
+- in-progress — C. H200 32-GPU native workload with the routing image (workload02 running).
 - in-progress — D. H200 Step-5 operator profiles.
 - pending — E, F, G.
 
@@ -238,6 +239,47 @@ Step C result of workload01: failed at 19:25:29 UTC, before any request was sent
 - The platform's node-to-node ping check failed for every node pair, but the servers started and
   the failure happened later in the replay client. It is not the cause. Watch it on the rerun.
 - Next: rerun as `h200_32_workload02` from a clean checkout of the fix commit.
+
+Step C workload02 submission (2026-10-26 04:01 UTC):
+
+- Three submission attempts on 2026-10-25 (Pi labels `d31-h200-32-submit-1025c`, `-1025d`,
+  `-1025e`) stopped before submission: Pi's model service returned "402 insufficient_quota".
+  Nothing was submitted. The user restored Pi, and `d31-h200-32-submit-1026a` succeeded.
+- Source: the replay-label fix `e275c83a`. Workspace:
+  `/data/ycfeng/tmp/step5_d31_workload_20261025/h200_32_workload02/` (`build.log`, `verify.log`,
+  `stepmind_dry_run.log`, `launcher.log`, `status_1.json`).
+- Job `exp-1026-120141-290449`: 4 replicas × 8 H200, `step_main`, non-preemptible, creator
+  `i-fengyicheng`, the routing image `sha256:f037d958…`, worker timeout 5400 s. The launcher runs
+  in the Pi HOST service (PID 3265024 in that service's process space); it must stay alive.
+- Pi noted that the stage's `run_input.json` still describes the older 8-replica DP4/EP32
+  template, while the worker reads `config.json`, which is the 4-replica DP2 version. The record
+  file is not used by the worker; the stager's template should be aligned before the 64-GPU run.
+
+Step B result (2026-10-26): Frontier runs the full workload in 49 minutes in dummy mode.
+
+- Runner: `tests/integration/step5_pd/frontier_workload.py`. `run` builds the Frontier command
+  from the native run definition (`canonical_run_h200.json`) and topology (`priority_cases.json`),
+  runs it with all diagnostic outputs off, and applies the native `formal_metrics` to the request
+  results. `compare` reports each metric's error against `workload_metrics.py` output.
+  `tests/integration/run_step5_measured_main.py` is superseded for E2E runs; deleting it needs
+  approval and is deferred.
+- Full workload, `h200_32`, dummy predictor: 128 of 128 requests complete, return code 0,
+  wall time 2933 s. Output: `/data/ycfeng/tmp/d31_frontier_b/full_dummy_h200_32/`.
+  The dummy predictor's latencies are not meaningful for accuracy.
+- Short runs (`/data/ycfeng/tmp/d31_frontier_b/`): 1 request × 64 output tokens in 147 s;
+  32 requests × 16 output tokens in 121 s.
+- With and without the stage-batch ledger, the 1 × 64 run's `request_metrics.csv` is
+  byte-identical (SHA-256 prefix `3a714ead6aba3aa7`, runs `prof1`, `prof2` and `w1x64`), so
+  turning the diagnostics off does not change request results. Under cProfile the same run took
+  366 s with the ledger on and 248 s with it off.
+- The cost of the old main09 attempt (one request did not finish in 2400 s) came from the
+  diagnostics and the synthetic fixture, not from the simulator core.
+
+Decision D31.9 (2026-10-26): Frontier E2E runs use `balanced` routing; the native run keeps
+`position_cyclic`. Frontier's `position_cyclic` path requires TP8/DP2/EP16 and collective inputs,
+so it cannot serve the 64-GPU topology, and the native counts are near-uniform (each expert gets
+`floor(tokens × 8 / 352)` tokens, plus at most one). Small decode batches can still differ per EP
+rank; this is a known difference to check if decode error appears.
 
 Evidence behind the reset:
 

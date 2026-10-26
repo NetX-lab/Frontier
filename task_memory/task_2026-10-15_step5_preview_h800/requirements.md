@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31.9: Frontier E2E runs use `balanced` routing; the native run keeps `position_cyclic`. |
 | 2026-10-25 | D31: mainline reset after review; H200 32/64 first with at most 64 non-preemptible H200 GPUs; stop native qualification and D29 process rules; diagnostics off in E2E runs; independent-median profiling rule becomes a diagnostic. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; additional collection runs remain readiness decisions. |
 | 2026-10-23 | Approve D30's eighth test path for the observed13-source contract, retaining the750-line total ceiling. |
@@ -143,6 +144,19 @@ off), D17/D18 (fixed workload), D26, D27, D29 (routing and calibration order) an
   index. `summary.md` lists the sub-task directories and the unmerged worktree branches. The
   unmerged D29 record and candidate branches stay parked and unmerged. Deleting any worktree needs
   the user's approval.
+- **D31.9 Frontier routing in E2E runs (adopted 2026-10-25 under D31's "adopt the
+  recommendations" instruction).** Frontier E2E runs use `balanced` routing, not `position_cyclic`.
+  Reasons:
+  - Frontier's `position_cyclic` path is admitted only for TP8/DP2 with the `collective_sim`
+    backend and qualified collective inputs (`validate_position_routing_scope`). No H200
+    collective inputs exist, and H200 64-GPU needs DP4.
+  - The native `position_cyclic` counts (`position_cyclic_expert_counts`) give every expert
+    `floor(tokens x 8 / 352)` assignments per request interval plus at most one more, so the
+    counts are near-uniform. `balanced` gives every expert the same ratio.
+  - Known difference: in small decode batches the native residues can put more tokens on some EP
+    ranks than `balanced` does. Revisit this only if the TPOT error points to expert-parallel
+    load.
+  The native run keeps `position_cyclic` (D31.3).
 
 ## [Original Request] Continue execution — 2026-10-21
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step B done; Frontier routing set to `balanced` (D31.9); step D scope made concrete. |
 | 2026-10-25 | D31 mainline reset: new current plan for H200 32/64 E2E comparison; all sections below it become historical. |
 | 2026-10-23 | YC approves D29-SCOPE-107-10000; execute three sole-writer streams, then integrated evidence and readiness decisions. |
 | 2026-10-23 | D30 code scope merged4ec5b23; D29 complete reviewed model and107-path union move to the independent user decision. |
@@ -132,7 +133,8 @@ The 32-GPU gate is 30%, and it releases the 64-GPU calibration. The final gate i
 - H200 32-GPU: P16 and D16, each TP8/DP2/EP16/PP1.
 - H200 64-GPU: P32 and D32, each TP8/DP4/EP32/PP1.
 
-**Routing.** `position_cyclic` in both systems (D29, D31.3).
+**Routing.** The native run uses `position_cyclic` (D31.3). Frontier E2E runs use `balanced`
+(D31.9), because Frontier's `position_cyclic` path is limited to TP8/DP2/EP16 with collective inputs.
 
 **Resources.** At most 64 H200 GPUs at a time, all non-preemptible, on `step_main` (D31.2).
 
