@@ -921,8 +921,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 return MeasurementType.KERNEL_ONLY
             return event_measurement_type
 
-        if self._should_enable_measurement_family(MeasurementType.KERNEL_ONLY) and not (
-            self._should_enable_measurement_family(event_measurement_type)
+        if self._should_enable_compute_measurement_family(MeasurementType.KERNEL_ONLY) and not (
+            self._should_enable_compute_measurement_family(event_measurement_type)
         ):
             if self._is_kernel_only_measurement_enabled_for_cluster():
                 return MeasurementType.KERNEL_ONLY
@@ -939,6 +939,16 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 self._cluster_type, global_vars.get_decode_cuda_graph_mode(),
             ):
                 return True
+        return self._should_enable_compute_measurement_family(measurement_type)
+
+    def _should_enable_compute_measurement_family(
+        self, measurement_type: MeasurementType
+    ) -> bool:
+        """Families that price a step's non-attention operators.
+
+        Step attention selects its own family per graph mode, so the families it
+        adds do not choose the step family of the other operators.
+        """
         event_measurement_type = self._event_measurement_type_for_replica()
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if self._cluster_type == ClusterType.DECODE_ATTN:
