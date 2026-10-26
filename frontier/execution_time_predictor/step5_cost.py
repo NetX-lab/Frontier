@@ -26,6 +26,11 @@ from frontier.operators.binding import bind_operator_query
 from frontier.types import ClusterType, MeasurementType
 from frontier.config.precision_type import PrecisionType
 
+# Repeated DSA timing needs region-aligned contexts, so the measured DSA contexts
+# may stop up to region_block_size - 1 tokens below the serving contexts. A context
+# in that last score region is priced at the highest measured context.
+STEP5_DSA_ALIGNED_COLUMNS = ("min_context_len", "max_context_len", "mean_context_len", "max_sequence_len")
+
 
 def step5_layer_metadata(predictor, layer_id):
     """Reuse source geometry for a predictor's fixed model and parallel groups."""
@@ -330,6 +335,9 @@ def predict_step5_attention_time(predictor, batch, layer_id):
         features["global_layer_id"] = float(step5_measured_attention_layer(predictor, layer_id, measured_layers))
         key = tuple(features[name] for name in STEP5_FEATURE_COLUMNS)
         category = tuple(features[name] for name in STEP5_CATEGORY_COLUMNS)
+        dsa = step5_layer_metadata(predictor, layer_id).attention_spec.variant_id == "sparse_gqa"
+        aligned = STEP5_DSA_ALIGNED_COLUMNS if dsa else ()
+        priced = dict(features)
         for name, model in zip(names, models):
             ranges = step5_measured_ranges(predictor, model).get(category)
             if ranges is None:
@@ -338,9 +346,11 @@ def predict_step5_attention_time(predictor, batch, layer_id):
                 )
             outside = [f"{column}={value} not in [{low}, {high}]"
                        for column, value, low, high in zip(STEP5_FEATURE_COLUMNS, key, *ranges)
-                       if not low <= value <= high]
+                       if not low <= value <= high + (features["region_block_size"] - 1) * (column in aligned)]
             if outside:
                 raise ValueError(f"Step attention query is outside the measured range of {name}: {outside}")
+            for column in aligned:
+                priced[column] = min(priced[column], ranges[1][STEP5_FEATURE_COLUMNS.index(column)])
         if models[0]._frontier_measurement_identity != models[1]._frontier_measurement_identity:
             raise ValueError("Step duration and kernel-count measurement identities differ")
         identity = PredictionModelRegistry._measurement_identity(models[0])
@@ -360,8 +370,8 @@ def predict_step5_attention_time(predictor, batch, layer_id):
         targets = (f"time_stats.{root}.{expected['duration_statistic']}", f"time_stats.{root}.kernel_count")
         if tuple(model._frontier_target_col for model in models) != targets:
             raise ValueError("Step measurement target policy conflicts with fitted model")
-        duration = predictor._get_on_demand_prediction(root, features)
-        count = predictor._get_on_demand_prediction(names[1], features)
+        duration = predictor._get_on_demand_prediction(root, priced)
+        count = predictor._get_on_demand_prediction(names[1], priced)
         proof = OperatorCost(
             duration, count, measurement, models[0]._frontier_model_hash,
             models[1]._frontier_model_hash, identity.get("evidence_kind"),

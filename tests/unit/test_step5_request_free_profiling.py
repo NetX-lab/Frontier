@@ -243,7 +243,7 @@ def test_p0_packages_are_independent_h800_role_measurements(tmp_path, config):
         assert manifest["expected_attention_gpu_active_rows"] == gpu_rows
         assert len(manifest["producer_commands"]) == 5
         assert "--expert_parallel_sizes 16" in manifest["worker_command"]
-        assert manifest["measurement_plan"]["serving_topology_per_role"]["attention_dp"] == 2
+        assert manifest["measurement_plan"]["serving_topologies_per_role"]["h800_32"]["attention_dp"] == 2
         cells = read_profile_inputs(Path(manifest["attention_arguments"][
             manifest["attention_arguments"].index("--input-file") + 1]),
             cudagraph_capture_sizes=manifest["measurement_plan"]["cudagraph_capture_sizes"])
@@ -253,6 +253,31 @@ def test_p0_packages_are_independent_h800_role_measurements(tmp_path, config):
             workload = cell.workload(config, block_size=16, max_model_len=7168)
             assert workload.block_table_columns == (448 if cell.has_attention_metadata else 0)
         assert not manifest["admitted"] and manifest["blocks"]
+
+
+def test_h200_packages_cover_both_topologies_from_one_plan(tmp_path, config):
+    from pathlib import Path
+    from frontier.profiling.step5.job import REPO_ROOT, describe_p0_profiles
+
+    plan = REPO_ROOT / "frontier/profiling/step5/h200_profile_plan.json"
+    for role, rows, gpu_rows, dummies in (("PREFILL", 6, 6, 2), ("DECODE", 160, 0, 44)):
+        manifest = describe_p0_profiles(tmp_path / role, "h200_" + role.lower(), role=role, profile_plan=plan)
+        assert (manifest["gpu_tag"], manifest["charged_group"], manifest["gpus"], manifest["preemptible"]) == (
+            "H200", "step_main", 1, False)
+        assert "native_binding" not in manifest
+        assert (manifest["expected_attention_event_rows"], manifest["expected_attention_gpu_active_rows"]) == (
+            rows, gpu_rows)
+        # Attention runs last, after the linear and MoE tables are written.
+        assert [command["family"] for command in manifest["producer_commands"]] == [
+            "linear", "moe", "linear", "moe", "attention"]
+        assert "--expert_parallel_sizes 16 32 " in manifest["worker_command"]
+        assert "h800" not in manifest["worker_command"]
+        assert manifest["attention_arguments"][manifest["attention_arguments"].index("--device") + 1] == "h200"
+        cells = read_profile_inputs(Path(REPO_ROOT / manifest["attention_arguments"][
+            manifest["attention_arguments"].index("--input-file") + 1]),
+            cudagraph_capture_sizes=manifest["measurement_plan"]["cudagraph_capture_sizes"])
+        assert sum(cell.dummy_descriptor is not None for cell in cells) == dummies
+        assert {cell.global_layer_id for cell in cells} == {0, 3}
 
 
 @pytest.mark.parametrize("flag,value", [("--max-num-seqs", "1"), ("--max-num-batched-tokens", "1")])

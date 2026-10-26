@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step D(d)/(e) done (H200 profile plan for both topologies, DP-lowered graph mode, DSA last-region pricing); step F still blocked. |
 | 2026-10-26 | D31: step D(b)/(c) done (profiler produces mixed batches and graph-padded rows). |
 | 2026-10-26 | D31: step D(a) done (attention priced within its measured category); step F waits for account GPU room; census abandoned. |
 | 2026-10-26 | D31: step C done (H200 32-GPU native workload, metrics and KV capacity recorded). |
@@ -202,7 +203,7 @@ State of the D31 plan steps (see the top section of `plan.md`):
   notes.
 - completed — B. Fast Frontier E2E runs (2026-10-26, details below).
 - completed — C. H200 32-GPU native workload with the routing image (workload02, details below).
-- in-progress — D. H200 Step-5 operator profiles. D(a) and D(b)/(c) are committed; D(d)–D(g)
+- in-progress — D. H200 Step-5 operator profiles. D(a)–D(e) are committed; D(f) and D(g)
   follow (details below).
 - waiting — F. H200 64-GPU native workload. The stage is built; launch waits until the account's
   other H200 jobs leave room (details below).
@@ -237,9 +238,25 @@ Step D progress (2026-10-26):
   identical against `e275c83`; the unit run found 2 new failures, both fixed (a module-level
   import broke the stdlib-only smoke judge, and one dry-run test lacked the new field). The
   native padding is first exercised by the D(g) profile job.
-- Next: D(d) writes the H200 profile plan and inputs; D(e) generalizes the H800 literals in
-  `frontier/profiling/step5/job.py`; D(f) adds the kernel-gap and H200 NIXL read profiles; D(g)
-  runs the profile job and wires the tables into the predictor options.
+- D(d)/(e) done. Report `test_report_2026-10-26_h200_profile_plan.md`.
+  - `frontier/profiling/step5/h200_profile_plan.json` covers `h200_32` (TP8/DP2/EP16) and `h200_64`
+    (TP8/DP4/EP32) in one package per role: attention at TP8, MoE at EP 16 and 32. Inputs: PREFILL
+    6 cells, DECODE 160 cells, written by `tests/integration/step5_profiling/h200_profile_inputs.py`.
+  - The role package builder takes device, attention TP and EP sizes from the plan. The plan key
+    `serving_topology_per_role` is renamed `serving_topologies_per_role` (keyed by case); older
+    plans with the old key no longer load.
+  - The profiler accepts an explicit graph mode lower than native dispatch: the DP forward-start
+    agreement runs a decode lane PIECEWISE when another lane holds a prompt tail.
+  - DSA contexts are measured only at multiples of 8 (highest 7160). A DSA context in the last score
+    region (up to 7167) is priced at the highest measured context. Relaxing only the range check was
+    not enough: the fitted model's own feature maximum still rejected the query.
+  - CPU coverage check (`tests/integration/step5_profiling/h200_profile_coverage.py`): every
+    reachable lane state with at most 3 prompt tails per step lies in the planned ranges (48,364
+    checks). With 4 tails it does not; Frontier raises a range error if a run reaches that.
+  - Unit tests 387 passed; the 5 failures are all on the known baseline list. Fidelity 77/77
+    identical against `e275c83`.
+- Next: D(f) adds the kernel-gap and H200 NIXL read inputs; D(g) runs the profile jobs and wires
+  the tables into the predictor options.
 
 Step F status (2026-10-26):
 
@@ -251,6 +268,10 @@ Step F status (2026-10-26):
   and 04:31 UTC; 4 of them were non-preemptible (32 GPUs). Submitting 64 more would exceed the
   64-GPU non-preemptible limit (D31.2). Evidence:
   `/data/ycfeng/tmp/ds4_runs/d31-h200-64-submit-1026a/scratch/precondition_1c_nonterminal_jobs.json`.
+- Pi run `d31-h200-64-submit-1026b` (05:31 UTC) stopped at the same check: the 4 non-preemptible
+  stepcast jobs of another session (32 H200 GPUs, running since 04:27–04:31 UTC) were still running.
+  Nothing was submitted. Evidence:
+  `/data/ycfeng/tmp/ds4_runs/d31-h200-64-submit-1026b/scratch/precondition_1c_nonterminal_jobs.json`.
 - Next: re-check the listing through Pi and launch exactly once when the account's
   non-preemptible H200 usage is 0.
 

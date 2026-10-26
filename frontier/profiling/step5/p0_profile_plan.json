@@ -1,7 +1,8 @@
 {
   "case_id": "h800_32",
   "model": "stepfun-ai/Step-5-Preview",
-  "serving_topology_per_role": {"gpus": 16, "attention_tp": 8, "attention_dp": 2, "expert_parallel": 16, "pipeline_parallel": 1},
+  "serving_topologies_per_role": {"h800_32": {"gpus": 16, "attention_tp": 8, "attention_dp": 2, "expert_parallel": 16, "pipeline_parallel": 1}},
+  "device": "h800",
   "gpu_tag": "H800",
   "charged_group": "codesign",
   "preemptible": false,

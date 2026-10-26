@@ -164,12 +164,22 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1, profile_plan=None):
     from frontier.profiling.step5.inputs import read_profile_inputs
 
     if gpus != 1:
-        raise ValueError("P0 compute profiling measures one isolated TP-local rank per role package")
+        raise ValueError("Role compute profiling measures one isolated TP-local rank per role package")
     plan = json.loads((REPO_ROOT / "frontier/profiling/step5/p0_profile_plan.json" if profile_plan is None else Path(profile_plan)).read_text())
-    binding = None if profile_plan is None else profile_native_binding(plan, run_id, REPO_ROOT)
+    # Only a plan that names a native generation binds to its derived image and receipts.
+    binding = profile_native_binding(plan, run_id, REPO_ROOT) if "native_reference" in plan else None
     if role not in plan["roles"]:
-        raise ValueError("P0 measurement role must be PREFILL or DECODE")
+        raise ValueError(f"Measurement role must be one of the plan roles {sorted(plan['roles'])}")
     selected = plan["roles"][role]
+    # One package measures every topology of the plan: all share one attention TP,
+    # and the MoE profile covers each expert-parallel size.
+    topologies = plan["serving_topologies_per_role"].values()
+    attention_tp = {topology["attention_tp"] for topology in topologies}
+    if len(attention_tp) != 1:
+        raise ValueError("Profile plan topologies must share one attention TP size")
+    attention_tp = attention_tp.pop()
+    expert_parallel_sizes = sorted({topology["expert_parallel"] for topology in topologies})
+    device = plan["device"]
     describe_job(stage, run_id, worker_command="", gpus=gpus)
     output = CLOUD_ROOT / run_id
     temporary = Path("/data/ycfeng/tmp/step5_p0_profiles") / run_id
@@ -179,8 +189,8 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1, profile_plan=None):
     for cell in cells:
         cell.workload(config, block_size=plan["block_size"], max_model_len=plan["max_model_len"])
     attention_args = [
-        "--model-path", str(temporary / "model"), "--device", "h800", "--role", role,
-        "--tensor-parallel-size", str(plan["serving_topology_per_role"]["attention_tp"]),
+        "--model-path", str(temporary / "model"), "--device", device, "--role", role,
+        "--tensor-parallel-size", str(attention_tp),
         "--block-size", str(plan["block_size"]), "--max-model-len", str(plan["max_model_len"]),
         "--max-num-seqs", str(plan["max_num_seqs"]),
         "--max-num-batched-tokens", str(plan["max_num_batched_tokens"]),
@@ -189,20 +199,23 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1, profile_plan=None):
         "--warmup-iterations", "3", "--profile-iterations", "10", "--max-time-cv", "0.05",
         "--min-timing-window-ms", "0.5", "--seed", "0", "--output-dir", str(output / "attention"),
     ]
-    commands = [{"family": "attention", "method": "both_native_families",
-                 "arguments": ["-m", "frontier.profiling.step5.main", *attention_args]}]
+    commands = []
     for method in METHODS:
         commands.append({"family": "linear", "method": method, "arguments": [
             "-m", "frontier.profiling.linear_op.main", *profile_arguments(
-                output / "linear", method, tokens=selected["linear_tokens"], device="h800")]})
+                output / "linear", method, tokens=selected["linear_tokens"], device=device)]})
         commands.append({"family": "moe", "method": method, "arguments": [
             "-m", "frontier.profiling.moe.main", "--disable_ray", "--num_gpus", "1",
             "--models", plan["model"], "--num_tensor_parallel_workers", "1",
-            "--expert_parallel_sizes", str(plan["serving_topology_per_role"]["expert_parallel"]),
+            "--expert_parallel_sizes", *map(str, expert_parallel_sizes),
             "--num_tokens_list", *map(str, selected["moe_tokens"]),
             "--max_tokens", str(max(selected["moe_tokens"])), "--precision", "BF16",
-            "--profile_method", method, "--device", "h800", "--load_distributions", "uniform",
+            "--profile_method", method, "--device", device, "--load_distributions", "uniform",
             "--routing_runtime_path", "standard_fused_topk", "--output_dir", str(output / "moe"), "--yes"]})
+    # Attention runs last: a failed native attention cell then leaves the
+    # completed linear and MoE tables in place.
+    commands.append({"family": "attention", "method": "both_native_families",
+                     "arguments": ["-m", "frontier.profiling.step5.main", *attention_args]})
     if binding is not None:
         for command in commands:
             if command["family"] in ("linear", "moe"):
@@ -250,14 +263,14 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1, profile_plan=None):
             "expected_attention_event_rows": len(cells),
             "expected_attention_gpu_active_rows": sum(c.graph_mode == "none" for c in cells),
             "expected_attention_candidates": len(cells),
-            "linear_plan": planned_profile(output / "linear", tokens=selected["linear_tokens"], device="h800"),
+            "linear_plan": planned_profile(output / "linear", tokens=selected["linear_tokens"], device=device),
             "admitted": False, "blocks": plan["coverage_limits"]}
 
 
 def stage_p0_profiles(stage, run_id, *, role, dependency_site, gpus=1, profile_plan=None):
     manifest = describe_p0_profiles(stage, run_id, role=role, gpus=gpus, profile_plan=profile_plan)
     paths, files = (WORKLOAD,), ()
-    if profile_plan is not None:
+    if "native_binding" in manifest:
         plan = manifest["measurement_plan"]
         paths += ("tests/comparison/dp_placement_pp/vllm_replay.py", "tests/comparison/stage_admission_pp/vllm_burst_driver.py")
         files = tuple((plan[key], "profile_artifacts/" + name) for key, name in (
@@ -275,7 +288,7 @@ def main():
     parser.add_argument("--dependency-site", type=Path)
     parser.add_argument("--fixed-workload-probe", action="store_true")
     parser.add_argument("--p0-role", choices=("PREFILL", "DECODE"),
-                         help="Prepare an independent bounded H800 P0 role profile package")
+                         help="Prepare an independent role profile package on the profile plan's hardware")
     parser.add_argument("--profile-plan", type=Path)
     parser.add_argument("--preemptible", action="store_true",
                         help="Use a preemptible H200 fixed-workload probe under the D21 reservation policy")
@@ -285,7 +298,7 @@ def main():
     if args.profile_plan is not None and not args.p0_role:
         parser.error("--profile-plan requires --p0-role")
     if args.p0_role and (args.fixed_workload_probe or args.preemptible):
-        parser.error("P0 role profiles are H800 non-preemptible and distinct from the fixed H200 probe")
+        parser.error("Role profile packages take their resources from the profile plan, not the fixed H200 probe flags")
     if args.preemptible and not args.fixed_workload_probe:
         parser.error("--preemptible requires --fixed-workload-probe")
     resources = {"gpus": args.gpus}

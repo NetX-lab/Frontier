@@ -159,6 +159,15 @@ def test_unmeasured_layers_and_shapes_are_priced_within_the_measured_category(tm
             assert actual.operator_costs["step5_layer_e2e"].exact_lookup == (context in contexts)
     with pytest.raises(ValueError, match="max_context_len=8190.0 not in"):
         predict_step5_attention_time(predictor, _batch(query=1, context=8190, graph="full"), 4)
+    # Measured DSA contexts are region-aligned, so a DSA context up to one region
+    # above the highest measured context is priced at that context; the lower
+    # bound stays exact.
+    beyond = predict_step5_attention_time(predictor, _batch(query=1, context=8190, graph="full"), 7)
+    boundary = predict_step5_attention_time(predictor, _batch(query=1, context=8184, graph="full"), 7)
+    assert beyond.total_time() == boundary.total_time() > 0
+    assert not beyond.operator_costs["step5_layer_e2e"].exact_lookup
+    with pytest.raises(ValueError, match="min_context_len=4096.0 not in"):
+        predict_step5_attention_time(predictor, _batch(query=1, context=4096, graph="full"), 7)
     # Eager prompt tails were not measured.
     with pytest.raises(ValueError, match="coverage is unavailable"):
         predict_step5_attention_time(predictor, _batch(query=16, context=4104), 4)

@@ -106,6 +106,13 @@ def test_explicit_inputs_take_native_padding_or_a_larger_agreed_capture_width(tm
         with pytest.raises(ValueError, match="captured width that holds the tokens"):
             read(query_lens=[1] * 3, phase="decode", physical_query_rows=rows,
                  **({"graph_mode": mode} if mode else {}))
+    # A decode lane runs PIECEWISE when another DP lane holds a prompt tail.
+    lowered = read(query_lens=[1] * 3, phase="decode", graph_mode="piecewise", physical_query_rows=16)
+    assert (lowered.graph_mode, lowered.physical_query_rows) == ("piecewise", 16)
+    for record in ({"query_lens": [1, 16], "phase": "mixed", "graph_mode": "full"},
+                   {"query_lens": [32], "phase": "prefill", "graph_mode": "piecewise"}):
+        with pytest.raises(ValueError, match="cannot exceed native dispatch"):
+            read(**record)
 
 
 def fake_stats():

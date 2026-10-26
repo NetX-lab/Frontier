@@ -34,11 +34,13 @@ def verify(stage):
         raise ValueError("Staged file inventory differs from manifest")
     p0 = manifest["purpose"] == "P0_ROLE_COMPUTE_PROFILES_NOT_COMPLETE_ADMISSION"
     assert p0 or manifest["purpose"] == "SMALL_OPERATOR_PROBE_ONLY_NOT_CANONICAL_SERVING_QUALIFICATION"
+    plan = manifest["measurement_plan"] if p0 else None
     assert (manifest["gpu_tag"], manifest["charged_group"], manifest["gpus"]) == (
-        ("H800", "codesign", 1) if p0 else ("H200", "step_main", 1))
+        (plan["gpu_tag"], plan["charged_group"], 1) if p0 else ("H200", "step_main", 1))
     if p0:
         assert manifest["preemptible"] is False
-    assert type(manifest["preemptible"]) is bool and manifest["timeout_seconds"] == 3600
+    assert type(manifest["preemptible"]) is bool
+    assert manifest["timeout_seconds"] == (plan["timeout_seconds"] if p0 else 3600)
     assert ("--preemptible" in shlex.split(manifest["submission_command"])) == manifest["preemptible"]
     assert manifest["cloud_output"].startswith("/mnt/codesign-exp/ycfeng/")
     assert manifest["source_mount"] == str(stage)
@@ -124,7 +126,8 @@ def verify(stage):
             assert sorted(result["num_tokens"]) == sorted(expected["moe_tokens"])
             model = result["models"]["stepfun-ai/Step-5-Preview"]
             assert model["tensor_parallel_sizes"] == [1]
-            assert set(model["local_experts_by_expert_parallel_size"]) == {"16"}
+            assert set(model["local_experts_by_expert_parallel_size"]) == {
+                str(topology["expert_parallel"]) for topology in plan["serving_topologies_per_role"].values()}
             assert len(model["routed_layer_groups"]) == 2
             moe_runs[command["method"]] = {"status": "PASS", "profiled_steps": model["profiled_steps"],
                                              "routed_layer_groups": model["routed_layer_groups"]}

@@ -10,6 +10,7 @@ from pathlib import Path
 
 from frontier.attention.step5 import Step5AttentionWorkload
 from frontier.attention.step5_inputs import MRv2DummyDescriptor
+from frontier.config.graph_policy import GRAPH_MODE_ORDER
 from frontier.profiling.step5.replay import choose_graph_mode, padded_rows
 
 
@@ -158,12 +159,17 @@ def read_profile_inputs(path, *, cudagraph_capture_sizes):
             mode = values["dummy_descriptor"].graph_mode
             if mode != "none" and sum(values["query_lens"]) not in cudagraph_capture_sizes:
                 raise ValueError("Explicit MRv2 descriptor width must be a configured captured width")
+            if values.get("graph_mode", mode) != mode:
+                raise ValueError("Explicit graph mode must match the MRv2 dummy descriptor")
         else:
-            mode = (choose_graph_mode(values["phase"], sum(values["query_lens"]), cudagraph_capture_sizes)
-                    if values.get("has_attention_metadata", True) and values.get("graph_mode") != "none"
-                    else "none")
-        if "graph_mode" in values and values["graph_mode"] != mode:
-            raise ValueError("Explicit graph mode must match native dispatch, or request independent eager work")
+            native = (choose_graph_mode(values["phase"], sum(values["query_lens"]), cudagraph_capture_sizes)
+                      if values.get("has_attention_metadata", True) else "none")
+            # The DP forward-start agreement runs every lane at the lowest lane mode,
+            # so a decode lane may run PIECEWISE beside a lane with a prompt tail.
+            mode = values.get("graph_mode", native)
+            if (not isinstance(mode, str) or mode.upper() not in GRAPH_MODE_ORDER
+                    or GRAPH_MODE_ORDER[mode.upper()] > GRAPH_MODE_ORDER[native.upper()]):
+                raise ValueError("Explicit graph mode cannot exceed native dispatch")
         values["graph_mode"] = mode
         tokens = sum(values["query_lens"])
         rows = padded_rows(tokens, cudagraph_capture_sizes) if mode != "none" else tokens
