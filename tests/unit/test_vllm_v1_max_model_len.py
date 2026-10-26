@@ -110,9 +110,9 @@ def _build_scheduler(
     )
 
 
+# Unified DECODE accepts an explicit capacity (test_decode_output_placeholders.py).
 @pytest.mark.parametrize("cluster_type", [
-    ClusterType.PREFILL, ClusterType.DECODE,
-    ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN,
+    ClusterType.PREFILL, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN,
 ])
 def test_explicit_queue_capacity_rejects_disaggregated_roles(cluster_type):
     with pytest.raises(NotImplementedError, match="Explicit queue capacity requires"):

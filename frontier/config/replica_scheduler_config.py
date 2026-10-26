@@ -99,8 +99,9 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
         default=None,
         metadata={
             "help": "Optional EngineCore queue capacity. Explicit 2 supports "
-            "ordinary-cache MONOLITHIC PP1/DP1 admission only; None retains "
-            "the pipeline-stage capacity.",
+            "ordinary-cache MONOLITHIC PP1/DP1 admission, and on unified "
+            "DECODE PP1 vLLM's async scheduling with output placeholders; "
+            "None retains the pipeline-stage capacity.",
             "omit_if_none": True,
         },
     )

@@ -38,6 +38,7 @@ _OVERRIDE_FIELDS = (
     "num_blocks",
     "block_size",
     "watermark_blocks_fraction",
+    "max_concurrent_batches",
 )
 
 

@@ -138,6 +138,8 @@ def _scheduler(*, blocks: int = 400, watermark: int = 3):
     scheduler._request_queue = []
     scheduler._preempted_requests = []
     scheduler._waiting_requests = []
+    scheduler._max_concurrent_batches = 1
+    scheduler._uses_output_placeholders = False
     return scheduler
 
 
