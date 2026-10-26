@@ -1,0 +1,21 @@
+== native06: lifecycle repetitions [1, 2, 3], 378 requests, lane states ['decoding']
+  native lifecycle: a+g 4.90  b 13.31  c+d+e 65.89  f 41.80  remainder 18.21  handoff 125.91  READ transfer max 27.25
+  frontier default    : kv_transfer 2.57  d_first_step 39.71  handoff 42.28  tpot 19.48  kv_transfer/tpot 0.13  d_first_step/tpot 2.04
+  frontier engine_step: kv_transfer 47.70  d_first_step 30.01  handoff 77.71  tpot 19.48  kv_transfer/tpot 2.45  d_first_step/tpot 1.54
+  target handoff (reference mean of repeats) 123.49; engine_step handoff gap -45.79; P-side gap +12.69
+  engine_step minus lifecycle: handoff -48.20  (b+c+d+e) vs kv_transfer -31.50  f vs d_first_step -11.80  a+g -4.90
+  lifecycle minus target handoff +2.41
+== p2_32: lifecycle repetitions [1, 2, 3], 378 requests, lane states ['decoding']
+  native lifecycle: a+g 4.63  b 13.61  c+d+e 78.19  f 42.05  remainder 18.23  handoff 138.47  READ transfer max 38.32
+  frontier default    : kv_transfer 2.57  d_first_step 43.24  handoff 45.81  tpot 18.64  kv_transfer/tpot 0.14  d_first_step/tpot 2.32
+  frontier engine_step: kv_transfer 45.57  d_first_step 34.11  handoff 79.68  tpot 18.64  kv_transfer/tpot 2.44  d_first_step/tpot 1.83
+  target handoff (reference mean of repeats) 127.92; engine_step handoff gap -48.24; P-side gap +45.92
+  engine_step minus lifecycle: handoff -58.79  (b+c+d+e) vs kv_transfer -46.22  f vs d_first_step -7.94  a+g -4.63
+  lifecycle minus target handoff +10.55
+== p2_64: lifecycle repetitions [2, 3], 248 requests, lane states ['decoding']
+  native lifecycle: a+g 3.95  b 18.04  c+d+e 86.13  f 51.53  remainder 22.00  handoff 159.66  READ transfer max 37.49
+  frontier default    : kv_transfer 2.57  d_first_step 38.98  handoff 41.55  tpot 24.77  kv_transfer/tpot 0.10  d_first_step/tpot 1.57
+  frontier engine_step: kv_transfer 61.34  d_first_step 26.76  handoff 88.10  tpot 24.77  kv_transfer/tpot 2.48  d_first_step/tpot 1.08
+  target handoff (reference mean of repeats) 187.76; engine_step handoff gap -99.67; P-side gap +6.82
+  engine_step minus lifecycle: handoff -71.56  (b+c+d+e) vs kv_transfer -42.84  f vs d_first_step -24.77  a+g -3.95
+  lifecycle minus target handoff -28.10
