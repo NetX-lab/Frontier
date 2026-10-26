@@ -120,6 +120,16 @@ class ReplicaConfig:
             "help": "Explicit native indexer KV cache dtype.", "omit_if_none": True,
         },
     )
+    moe_all2all_backend: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "vLLM all2all_backend of MoE expert parallelism. None prices "
+            "Frontier's EP all-to-all; 'allgather_reducescatter' prices vLLM's "
+            "attention-DP AllGatherV dispatch and ReduceScatterV combine with the "
+            "tensor-parallel reductions of the MoE outputs (Step5 only).",
+            "omit_if_none": True,
+        },
+    )
     network_device: str = field(
         default="a100_pairwise_nvlink",
         metadata={"help": "Network device."},
@@ -143,6 +153,16 @@ class ReplicaConfig:
         if self.cluster_prefix == "decode_attn" and self.attn_dp != 1:
             raise ValueError(
                 "DECODE_ATTN requires attn_dp=1 because it is the PD-AF attention role"
+            )
+        if self.moe_all2all_backend not in (None, "allgather_reducescatter"):
+            raise ValueError(
+                "moe_all2all_backend must be None or 'allgather_reducescatter', "
+                f"got {self.moe_all2all_backend!r}"
+            )
+        if self.moe_all2all_backend is not None and self.cluster_prefix in ("decode_attn", "decode_ffn"):
+            raise ValueError(
+                "moe_all2all_backend is not modeled for PD-AF roles, which move "
+                "activations with M2N transfers"
             )
         # Load model and device configs first (needed for validation)
         self.model_config: BaseModelConfig = BaseModelConfig.create_from_name(

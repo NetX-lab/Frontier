@@ -1439,6 +1439,9 @@ class EPBatchGroup(Batch):
         # expert tokens; predictor lookups must not collapse to a zero-token
         # stage in that case.
         self._moe_pre_routing_effective_total_tokens: Optional[int] = None
+        # Per-DP-rank forward widths for DP-group MoE collectives
+        # (moe_all2all_backend='allgather_reducescatter'); None otherwise.
+        self.dp_forward_shape = None
         self._decode_ffn_execution_time_recorded_stage_ids: set[int] = set()
         self.activation_bytes: int = 0
     

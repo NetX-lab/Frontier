@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Any, Callable, Mapping, NamedTuple
 
 from frontier.entities import Batch, DummyForwardBatch
@@ -17,6 +17,35 @@ class EPWaveInputs(NamedTuple):
     aggregate_batch: Batch
     total_step_tokens: int
     total_step_prefill_tokens: int
+    lane_compute_tokens: dict[int, int]
+    cuda_graph: bool
+
+
+@dataclass(frozen=True)
+class DPForwardShape:
+    """Tokens each attention-DP rank runs in one forward (vLLM num_tokens_across_dp)."""
+
+    num_tokens_across_dp: tuple[int, ...]
+    cuda_graph: bool
+
+
+def dp_forward_shape(wave_inputs: EPWaveInputs, attn_dp: int) -> DPForwardShape:
+    """Return the per-DP-rank forward widths of one EP wave.
+
+    Every DP rank joins each step's MoE collectives, an idle rank through a
+    dummy forward, so the wave must carry one source batch per DP lane.
+    """
+
+    lanes = sorted(wave_inputs.lane_compute_tokens)
+    if lanes != list(range(attn_dp)):
+        raise ValueError(
+            "DP-group MoE collectives need one source batch per attention-DP "
+            f"lane 0..{attn_dp - 1}, got lanes {lanes}"
+        )
+    return DPForwardShape(
+        tuple(wave_inputs.lane_compute_tokens[lane] for lane in lanes),
+        wave_inputs.cuda_graph,
+    )
 
 
 def prepare_ep_wave_inputs(
@@ -101,4 +130,6 @@ def prepare_ep_wave_inputs(
         aggregate_batch=aggregate_batch,
         total_step_tokens=total_tokens,
         total_step_prefill_tokens=total_prefill_tokens,
+        lane_compute_tokens=dict(zip(normalized, lane_compute_tokens)),
+        cuda_graph=shared_padding,
     )

@@ -60,6 +60,25 @@ def _ceil_div(a: int, b: int) -> int:
     return -(-a // b)
 
 
+def bytes_per_row(columns: Iterable[int], dtypes: Iterable[str]) -> int:
+    return sum(c * DTYPE_BYTES[d] for c, d in zip(columns, dtypes))
+
+
+def step5_dispatch_row(hidden_size: int, num_experts_per_tok: int,
+                       activation_dtype: str, fp8_group_size: int | None):
+    """Columns and dtypes of one row of Step5's DP dispatch AllGatherV.
+
+    FP8 routed layers quantize activations before the gather and send one
+    float32 scale per fp8_group_size columns (naive_dp_ep.py:prepare); BF16
+    layers send activations. Both send the top-k weights and ids.
+    """
+    k = num_experts_per_tok
+    if fp8_group_size is None:
+        return (hidden_size, k, k), (activation_dtype, TOPK_WEIGHTS_DTYPE, TOPK_IDS_DTYPE)
+    return ((hidden_size, k, k, _ceil_div(hidden_size, fp8_group_size)),
+            ("float8_e4m3fn", TOPK_WEIGHTS_DTYPE, TOPK_IDS_DTYPE, "float32"))
+
+
 def _layer_indices(value: str | Iterable[int] | None) -> tuple[int, ...] | None:
     if value is None:
         return None
@@ -270,7 +289,7 @@ class CollectiveCall:
     captured: bool = False
 
     def row_bytes(self) -> int:
-        return sum(c * DTYPE_BYTES[d] for c, d in zip(self.columns, self.dtypes))
+        return bytes_per_row(self.columns, self.dtypes)
 
 
 def group_members(parallel: ServingParallelism, group: str, rank: int) -> list[int]:
@@ -411,13 +430,12 @@ def _step5_collectives(model: ModelShape, parallel: ServingParallelism,
                 raise ValueError("FP8 dispatch requires the activation group size")
             calls.append(CollectiveCall(
                 "moe_dispatch_all_gatherv_fp8", "all_gatherv", "dp", 0,
-                (hidden, k, k, _ceil_div(hidden, model.fp8_group_size)),
-                ("float8_e4m3fn", TOPK_WEIGHTS_DTYPE, TOPK_IDS_DTYPE, "float32"),
+                *step5_dispatch_row(hidden, k, act, model.fp8_group_size),
                 dp_tokens, n_fp8, "naive_dp_ep.py:prepare; all2all.py:AgRsAll2AllManager.dispatch"))
         if n_moe - n_fp8:
             calls.append(CollectiveCall(
-                "moe_dispatch_all_gatherv_bf16", "all_gatherv", "dp", 0, (hidden, k, k),
-                (act, TOPK_WEIGHTS_DTYPE, TOPK_IDS_DTYPE), dp_tokens, n_moe - n_fp8,
+                "moe_dispatch_all_gatherv_bf16", "all_gatherv", "dp", 0,
+                *step5_dispatch_row(hidden, k, act, None), dp_tokens, n_moe - n_fp8,
                 "naive_dp_ep.py:prepare; all2all.py:AgRsAll2AllManager.dispatch"))
         calls += [
             CollectiveCall("moe_combine_reduce_scatterv", "reduce_scatterv_into_output" if into_output else "reduce_scatterv", "dp", 0,

@@ -37,7 +37,21 @@ def capture_sizes(max_size: int) -> list[int]:
             if size <= max_size]
 
 
-def command(case: str, engine: dict, trace: Path, output_dir: Path, predictor_options: dict) -> list[str]:
+def collective_args(network_device: str, tp: int, dp: int, measured: bool) -> list[str]:
+    """Analytical collectives, or vLLM's allgather_reducescatter MoE path priced from the
+    measured curves of this network device and TP/DP layout."""
+    if not measured:
+        return ["--cc_backend_config_type", "analytical"]
+    curves = REPO / f"data/profiling/network/{network_device}/step5_tp{tp}_dp{dp}/summary.csv"
+    if not curves.is_file():
+        raise FileNotFoundError(f"No measured collective curves for {network_device} TP{tp}/DP{dp}: {curves}")
+    return ["--cc_backend_config_type", "measured",
+            "--measured_cc_backend_config_summary_csv_path", str(curves),
+            "--replica_config_moe_all2all_backend", "allgather_reducescatter"]
+
+
+def command(case: str, engine: dict, trace: Path, output_dir: Path, predictor_options: dict,
+            measured_collectives: bool = False) -> list[str]:
     from frontier.config import ReplicaConfig
 
     topology = CASES[case]
@@ -57,7 +71,7 @@ def command(case: str, engine: dict, trace: Path, output_dir: Path, predictor_op
         "--no-speculative_decoding_config_enabled", "--no-use_cuda_graph",
         "--decode_cuda_graph_mode", compilation["cudagraph_mode"].lower(),
         "--cudagraph_capture_sizes", *map(str, capture_sizes(compilation["max_cudagraph_capture_size"])),
-        "--cc_backend_config_type", "analytical",
+        *collective_args(network_device, tp, dp, measured_collectives),
         "--cluster_scheduler_config_type", "vllm_load_balancing",
         "--vllm_load_balancing_cluster_scheduler_config_policy_version", "v0.28.0",
         "--cluster_config_prefill_cluster_num_replicas", "1",
@@ -176,6 +190,9 @@ def main() -> int:
     run.add_argument("--output-dir", type=Path, required=True)
     run.add_argument("--predictor-options", type=Path,
                      help="JSON object of execution-time predictor options; omit for dummy mode")
+    run.add_argument("--measured-collectives", action="store_true",
+                     help="Run vLLM's allgather_reducescatter MoE path and price collectives from "
+                          "data/profiling/network/<network_device>/step5_tp<TP>_dp<DP>/summary.csv")
     check = commands.add_parser("compare")
     check.add_argument("--frontier", type=Path, required=True, help="frontier_summary.json from `run`")
     check.add_argument("--native", type=Path, required=True, help="workload_metrics.py output")
@@ -198,7 +215,7 @@ def main() -> int:
     engine = json.loads(args.run_definition.read_text())["engine"]
     options = ({"enable_dummy_mode": True} if args.predictor_options is None
                else json.loads(args.predictor_options.read_text()))
-    argv = command(args.case, engine, args.trace.resolve(), output_dir, options)
+    argv = command(args.case, engine, args.trace.resolve(), output_dir, options, args.measured_collectives)
     (output_dir / "command.json").write_text(json.dumps(argv, indent=1) + "\n")
     env = {**os.environ, "PYTHONPATH": str(REPO), "PYTHONDONTWRITEBYTECODE": "1", "OMP_NUM_THREADS": "1",
            "WANDB_DISABLED": "true", "VIDUR_DISABLE_WANDB": "1"}

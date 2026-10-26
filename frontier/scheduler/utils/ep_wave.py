@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, NamedTuple
 
-from frontier.scheduler.utils.ep_wave_inputs import prepare_ep_wave_inputs
+from frontier.scheduler.utils.ep_wave_inputs import dp_forward_shape, prepare_ep_wave_inputs
 from frontier.scheduler.utils.expert_parallel import (
     calculate_ep_wave_timing,
     predict_ep_wave_phase_times,
@@ -106,6 +106,10 @@ def prepare_moe_wave_from_inputs(
         from frontier.execution_time_predictor.deepseek_v4 import source_physical_rows
 
         physical_rows["routing_token_count"] = source_physical_rows(predictor, wave_inputs.source_batches)
+    replica_config = getattr(predictor, "_replica_config", None)
+    dp_shape = None
+    if replica_config is not None and replica_config.moe_all2all_backend == "allgather_reducescatter":
+        dp_shape = dp_forward_shape(wave_inputs, replica_config.attn_dp)
     layer_workload = materialize_workload(
         batch=aggregate_batch,
         target_replica_id=replica_id,
@@ -148,6 +152,7 @@ def prepare_moe_wave_from_inputs(
         batch_id=int(cohort_id),
         capture_lane_timings=capture_lane_timings,
         source_batches=wave_inputs.source_batches if v4 else None,
+        dp_forward_shape=dp_shape,
     )
     timing = calculate_ep_wave_timing(
         start_time_s=float(time),

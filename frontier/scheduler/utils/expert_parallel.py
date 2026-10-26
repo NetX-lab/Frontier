@@ -102,10 +102,22 @@ def predict_ep_wave_phase_times(
     batch_id: int,
     capture_lane_timings: bool = False,
     source_batches: dict[int, Batch] | None = None,
+    dp_forward_shape: Any = None,
 ) -> EPWavePhaseTimes:
-    """Predict each EP lane and emit workload traces in participant order."""
+    """Predict each EP lane and emit workload traces in participant order.
+
+    With a DP forward shape, each lane runs its pre-routing work and TP
+    reductions on its own DP rank's tokens, as vLLM's AllGatherV dispatch
+    gathers rows only for the routed experts.
+
+    Lanes of one wave share the source batch and layer, so two lanes with the
+    same local expert loads and pre-routing tokens have the same prediction,
+    which is computed once. Lanes with a native routing source read their own
+    source rows and are always predicted.
+    """
     values = [[] for _ in range(6)]
     lane_records = [] if capture_lane_timings else None
+    lane_predictions = {}
     for ep_id in layer_workload.participant_ep_ids:
         lane_batch = lane_builder(
             source_batch=source_batch,
@@ -113,11 +125,20 @@ def predict_ep_wave_phase_times(
             ep_id=ep_id,
             layer_workload=layer_workload,
         )
+        if dp_forward_shape is not None:
+            # vLLM EP rank = dp_rank * attn_tp + tp_rank.
+            dp_rank = ep_id // predictor._replica_config.attn_tensor_parallel_size
+            lane_batch.dp_forward_shape = dp_forward_shape
+            lane_batch.moe_pre_routing_effective_total_tokens = dp_forward_shape.num_tokens_across_dp[dp_rank]
         if source_batches is None:
-            execution_time = predictor.predict_stage_execution_time(
-                lane_batch, stage_id, cluster_type=cluster_type, num_layers=1,
-                layer_id=layer_id, include_attention=False,
-            )
+            lane = lane_batch.lane_workload
+            key = (lane.local_token_counts, lane_batch.moe_pre_routing_effective_total_tokens)
+            if lane.routing_source is not None or key not in lane_predictions:
+                lane_predictions[key] = predictor.predict_stage_execution_time(
+                    lane_batch, stage_id, cluster_type=cluster_type, num_layers=1,
+                    layer_id=layer_id, include_attention=False,
+                )
+            execution_time = lane_predictions[key]
         else:
             from frontier.execution_time_predictor.deepseek_v4 import serving_context
 
