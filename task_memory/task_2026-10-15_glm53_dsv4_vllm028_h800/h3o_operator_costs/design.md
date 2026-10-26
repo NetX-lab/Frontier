@@ -4,15 +4,16 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Revision 2b after YC's decisions (requirements items 29-31): H200 first (D6); D2-D5 decided as recommended; D1 open with (a) as the working choice. Routing identity with native `balanced_topk` (D-V4-ROUTING-IDENTITY): the routing algorithm, expert counts and per-rank counts already match; the routed row count does not in 1.7-5.4% of decode forwards because Frontier does not DP-synchronize real V4 lanes. Added §3.7 (DP-synchronized forward descriptor for every V4 lane), gate A13, files 20-23 and the deferred non-V4 gap. |
 | 2026-10-26 | Revision 2a: the retained H200 native profiled runs (P2-32, 32 traces; P2-64, 64 traces) show the same FULL-graph decode structure, so the runtime census R1 covers all three cases on CPU and the 32-GPU H200 job R1h is removed; H200 pilot P1h (1 GPU) added; caps and time updated. Codex round 2 (`55d630bb-…`) failed with HTTP 429 before any report. |
 | 2026-10-26 | Revision 2 after Codex review round 1 (`codex-review-9c8b2435-…/review.md`, verdict `changes_required`, P1 × 5, P2 × 3). Agreed changes: per-operator composition with a source-defined stream graph instead of a layer union; runtime-mode census and pilots before the grids; full once-only ledger with PDD admission, endpoint collectives, block zeroing and pre-forward preparation; unequal-combine binding; EP rank classes; `balanced_topk` scope; workload-owner features and joint coverage; structural acceptance gates; recomputed files, GPU jobs and time; decisions for YC. Per-finding positions are in `review.md`. |
 | 2026-10-26 | Created: CPU-only proposal under D-OPERATOR-LEVEL-ROUTE (requirements item 27). Nothing in it is implemented or submitted. |
 
 ## 1. Goal, scope and acceptance
 
-Goal: Frontier prices every DSV4 forward of the P0 (H800) and P2-32 / P2-64 (H200) cases by composing operator costs for the batch being priced. Device costs come from operator profiling CSVs through trained predictors and from the measured communication backend. The step-cost table (`dsv4_step_cost.json`) is only a diagnostic cross-check of the composed time (D-NO-STEP-COST-SHORTCUT, ADR 0002). No cost, factor or residual is derived from it, or from any other measured whole step.
+Goal: Frontier prices every DSV4 forward of the P2-32 / P2-64 (H200, mainline) and P0 (H800, after H200) cases by composing operator costs for the batch being priced. Device costs come from operator profiling CSVs through trained predictors and from the measured communication backend. The step-cost table (`dsv4_step_cost.json`) is only a diagnostic cross-check of the composed time (D-NO-STEP-COST-SHORTCUT, ADR 0002). No cost, factor or residual is derived from it, or from any other measured whole step.
 
-Runtime scope, as the three cases are configured: PD disaggregation with `PREFILL` and unified `DECODE` roles; `balanced_topk` routing on all 43 layers (every router is `RoutingSimulatorRouter`, `native_config.json:42`); speculative decoding / MTP off; prefix caching off. Real score or hash routing (ticket 14) and PD-AF are out of scope. A run whose runtime path differs from this scope stops with a typed error.
+Runtime scope, as the three cases are configured: PD disaggregation with `PREFILL` and unified `DECODE` roles; `balanced_topk` routing on all 43 layers (every router is `RoutingSimulatorRouter`, `native_config.json:42`); speculative decoding / MTP off; prefix caching off. Real score or hash routing (ticket 14) and PD-AF are out of scope. A run whose runtime path differs from this scope stops with a typed error. Frontier's routing must be identical to the native one (D-V4-ROUTING-IDENTITY): `balanced` routing on every layer, the same per-expert and per-EP-rank counts, and the same routed row count per forward after vLLM's DP synchronization (§3.7).
 
 H3o-(b) is complete when all of the following hold:
 
@@ -21,7 +22,7 @@ H3o-(b) is complete when all of the following hold:
 | A1 | No dummy values, no default step table | A non-dummy V4 run reads no `predictor._dummy_execution_time` (a test makes any read raise) and binds no step-cost table unless a diagnostic driver selects one explicitly |
 | A2 | Kernel ownership | In every pilot and grid window, each kernel belongs to exactly one operator scope; unowned kernels are listed and fail the window; an outer scope and its child scopes are never both charged |
 | A3 | Once-only ledger | With sentinel costs, each operator is charged the number of times in §4 per forward (for example `dsv4_mhc_first_pre` × 1, `dsv4_mhc_ffn_post_attn_pre` × 42, `dsv4_mhc_attn_post_ffn_pre` × 43) and in its owning phase |
-| A4 | Composition check | Pilot P1: the composed time of one attention layer (critical path over the stream graph of §3.2) against the stream-joined elapsed of the same call. Median ≤ 5%, p90 ≤ 10%. A failure stops the route and is reported; no factor is introduced |
+| A4 | Composition check | Pilot P1h (H200), and P1 on H800 later: the composed time of one attention layer (critical path over the stream graph of §3.2) against the stream-joined elapsed of the same call. Median ≤ 5%, p90 ≤ 10%. A failure stops the route and is reported; no factor is introduced |
 | A5 | Typed coverage | Coverage is admitted jointly per workload group (mode, planner role, phase, layer variant, rows), not by independent min/max bounds. Outside it, a typed `DeepSeekV4CoverageError` names the operator and the missing coordinate. Collision tests: planner versus reuse layer, equal aggregates with different compressed writes, swapped active DP owner, unmeasured ordered SP vector |
 | A6 | Predictor accuracy | Held out by complete workload group: per scope, median relative error ≤ 5% and p90 ≤ 10%. Scopes that are legally zero or no-op are checked for exact zero instead (no relative error with a zero denominator) |
 | A7 | EP rank admission | Every EP lane of the target replays binds to a measured rank class (§3.5); the per-rank costs and their critical-path maximum are checked, not only rank 0 |
@@ -30,6 +31,7 @@ H3o-(b) is complete when all of the following hold:
 | A10 | End-to-end runs | P0, P2-32 and P2-64 replay end to end on the operator path, each on its own hardware's data only |
 | A11 | Diagnostic cross-check reported, not a gate | Composed versus native time per step class (decode-only by batch size, first tail alone, first tail with decodes, prefill) and per phase. It never feeds a cost |
 | A12 | Other paths unchanged | GLM, co-location, PDD and PD-AF keep identical results: 77-case fidelity regression, dummy smoke matrix and unit tests pass |
+| A13 | Routing identity with native vLLM | (a) The DP-synchronization rule of §3.7, applied to the recorded local sizes and desired modes, reproduces the recorded descriptor mode and `num_tokens_across_dp` of every serving and dummy forward of every PREFILL and DECODE node of P2-32, P2-64 and P0. (b) Native `balanced_topk` and native `determine_expert_map`, executed from the pinned vLLM source on the synchronized SP-local sizes, give the same per-expert and per-EP-rank counts as Frontier for DP2 / EP16 and DP4 / EP32 widths. (c) In a Frontier V4 forward, every lane, real and dummy, is priced with the synchronized mode and width, and the routed row count equals the sum over lanes of `TP × ceil(width / TP)` |
 
 The formal accuracy gates (the four metrics against native vLLM) belong to H4/H6 and come after H3o.
 
@@ -57,7 +59,7 @@ The unit is one operator scope, or one native fused scope that vLLM executes as 
 ### 3.2 Device stream composition
 
 - **Across phases**: serial, in the phase order of `timing_operator_times` (`deepseek_v4.py:17-63`), with the shared expert in `pre_dispatch` as the code has it.
-- **Inside an attention layer**: the compressor and indexer scopes run on auxiliary streams. The layer time is the critical path through a fork/join graph of scopes. The graph is taken from the vLLM V4 attention source (stream switches and event waits), recorded once per layer variant, and checked against the retained kernel intervals of pilot P1 and the native traces. Edge weights are the predicted scope costs. This keeps approved Option A (`task_2026-10-23_v4_remaining_measurements/proposal.md:23-55`): per-operator costs plus an explicit dependency account.
+- **Inside an attention layer**: the compressor and indexer scopes run on auxiliary streams. The layer time is the critical path through a fork/join graph of scopes. The graph is taken from the vLLM V4 attention source (stream switches and event waits), recorded once per layer variant, and checked against the retained kernel intervals of pilot P1h (P1 on H800) and the native traces. Edge weights are the predicted scope costs. This keeps approved Option A (`task_2026-10-23_v4_remaining_measurements/proposal.md:23-55`): per-operator costs plus an explicit dependency account.
 - **Shared expert versus routed path**: serial. The native traces measure any overlap, as a diagnostic. If it is material, a later change models it explicitly.
 
 ### 3.3 Runtime modes and the time between kernels
@@ -89,6 +91,33 @@ The V4 stage-owned CPU fields (`deepseek_v4.py:360-375`, currently dummy) are bo
 
 Attention features come from the existing V4 workload owner (`attention/deepseek_v4.py:161-192, 215-250`): mode (FULL / PIECEWISE / eager), planner role (`plans_tile_schedule`), scheduled, effective, local and gathered rows, phase (decode, prefill tail, first tail), compressed writes per request at the compression boundaries, and window, compressed and selected key lengths, each defined before and after the query. The model key is (scope, layer variant, planner role, mode, measurement type). The validations of `read_isolated_scope` (`deepseek_v4.py:665-827`: input hash, runtime and backend identity, layout, ownership, typed contracts) move into the new loader before `read_isolated_scope` is deleted.
 
+### 3.7 Routing identity and the DP-synchronized forward descriptor
+
+What already matches native vLLM (checked 2026-10-26, evidence in `evidence/routing/`):
+
+- **Algorithm.** Native `balanced_topk` assigns row `i` of EP rank `r` to experts `((offset_r + i) × k + j) mod E`, with `offset_r` the sum of the SP-local sizes of the ranks before `r`, and weights `1/k`. Over all ranks this gives expert `e` the count `floor(M × k / E) + [e < (M × k) mod E]`. Frontier's `balanced` ratios with Hamilton apportionment and expert-ID tie order (`moe_ep_workload.py:773-808`) give the same counts.
+- **Placement.** Native linear placement (`expert_map_manager.py:determine_expert_map`, no EPLB configured) and Frontier's `build_contiguous_expert_ownership` assign the same contiguous expert blocks to each EP rank.
+- **Test.** `tests/unit/test_balanced_routing.py` executes native `balanced_topk`, `_compute_sp_num_tokens` / `DPMetadata` and `determine_expert_map` from the pinned source and compares per-expert and per-EP-rank counts with Frontier. With the DP2 / EP16 and DP4 / EP32 widths added: 102 passed.
+
+What does not match: the routed row count `M` in some decode forwards. vLLM synchronizes each forward across the DP group (`v1/worker/gpu/dp_utils.py:16-75`, `sync_cudagraph_and_dp_padding`): every lane takes the minimum of the lanes' desired graph modes (NONE < PIECEWISE < FULL); if that mode is a graph, every lane is padded to the capture size of the widest lane, otherwise each lane keeps its own width. The native branch for lanes that disagree on the uniform token count is not reached in the three cases: MTP is off and every decode lane has one token per request. Frontier applies this rule only to dummy forwards (`dp_dummy_forward.py:105-136`). Real V4 lanes keep their own mode and capture size (`vllm_v1_engine_replica_scheduler.py:468-470`, `vllm_v1_iteration_policy.py:100-112`), and `source_physical_rows` sums those lane-local widths (`deepseek_v4.py:535-547`). The retained native counters show the effect:
+
+| Case, decode role | Recorded forwards | Forwards whose `M` differs under lane-local widths | Typical pattern |
+| --- | --- | --- | --- |
+| P2-32 (H200) | 24,134 | 842 (3.5%) | local (11, 8): lane-local (16, 8), native (16, 16) |
+| P2-64 (H200) | 19,014 | 1,029 (5.4%) | local (32, 31, 34, 31): lane-local (32, 32, 40, 32), native (40, 40, 40, 40) |
+| P0 (H800) | 23,622 | 398 (1.7%) | local (8, 9): lane-local (8, 16), native (16, 16) |
+
+All differences are widths under FULL graphs; no forward with a mode difference was recorded, and the PREFILL roles show none. The same descriptor also sets the attention, shared-expert and graph widths of the narrower lane, so those costs differ in the same forwards.
+
+The rule itself is checked: applied to the recorded local sizes and desired modes, it reproduces the recorded descriptor mode and `num_tokens_across_dp` of all 3,588 serving and dummy counter rows (245,088 forwards) on every PREFILL and DECODE node of the three cases, with no mismatch (`evidence/routing/dp_sync_rule_check.txt`).
+
+Change (V4 only; files 20-22):
+
+1. The DP-synchronized descriptor becomes one function of the lanes of a forward: synchronized mode and per-lane width, as above. It replaces the body of `resolve_dummy_forward_inputs`, which already uses the same minimum-mode and maximum-width rule for dummies.
+2. A real V4 lane keeps its host preparation time from its own batch, as in vLLM, where input preparation runs before the DP all-reduce. Its first-layer device pricing waits for the stage's first pre_moe room, the same deferral dummies use today (`dp_dummy_forward.py:82-97`, `sync_entry.py:110-112`). There every lane, real and dummy, in PREFILL, unified DECODE and MONOLITHIC roles, receives the synchronized descriptor in its `decode_cuda_graph_metadata` before its first layer is priced; later layers of the forward read the same metadata.
+3. `source_physical_rows` and the per-lane SP widths of `predict_source_execution` then read the synchronized widths through `compute_rows`; their formulas do not change.
+4. Non-V4 models keep their current path (A12). Their own gap is deferred (§10).
+
 ## 4. Operator inventory and once-only ledger (per forward of one role)
 
 | Phase | Operators | Count per forward | Owner family | Data |
@@ -113,13 +142,13 @@ Attention features come from the existing V4 workload owner (`attention/deepseek
 
 | Stage | Content | Stop condition |
 | --- | --- | --- |
-| 0. CPU only | **R1** runtime census of the retained native traces of all three cases (H800 P0, H200 P2-32, H200 P2-64): mode per step class, segments, eager kernels, graph launches, aux-stream fork/join, gaps by segment class, first-tail steps. **C1** coverage matrix: the actual workload vectors of the three cases (batch per DP lane, attention features, SP rows, EP gathered M and rank classes, collective payloads and ordered vectors) against existing data, giving the exact missing coordinates that size G1-G5. **S1** stream graph of each attention variant from the vLLM source | — |
-| 1. Pilots | **P1** (H800, 1 GPU): reduced engine with retained kernel intervals; checks A2 and A4, and kernel identity (names, grids) of the reduced TP1 engine against the native TP8 traces. **P1h** (H200, 1 GPU): the same identity check against the H200 native traces | A4 fails, or kernel identity differs: stop and report to YC |
-| 2. Producers and grids | Producer changes (§6, files 13-17), then G1-G5 / G1h-G5h sized by C1 | — |
-| 3. Simulator | Files 1-12 (§6). Unit-tested on W6 and q1 rows while the grids run | — |
-| 4. Validation | Training, group-held-out accuracy, A1-A12, P0 / P2 replays, diagnostic cross-check | A6 or A10 fails: report with the failing scopes |
+| 0. CPU only | **R0** routing identity, A13 (a) and (b): done 2026-10-26, no mismatch (§3.7). **R1** runtime census of the retained native traces of all three cases (H200 P2-32, H200 P2-64, H800 P0): mode per step class, segments, eager kernels, graph launches, aux-stream fork/join, gaps by segment class, first-tail steps. **C1** coverage matrix: the actual workload vectors of the three cases (batch per DP lane, attention features, SP rows, EP gathered M and rank classes, collective payloads and ordered vectors) against existing data, giving the exact missing coordinates that size G1h-G5h and G1-G5. **S1** stream graph of each attention variant from the vLLM source | — |
+| 1. Pilots | **P1h** (H200, 1 GPU): reduced engine with retained kernel intervals; checks A2 and A4, and kernel identity (names, grids) of the reduced TP1 engine against the H200 native TP8 traces. **P1** (H800, 1 GPU, after the H200 milestone): the same checks against the H800 native traces | A4 fails, or kernel identity differs: stop and report to YC |
+| 2. Producers and grids | Producer changes (§6, files 13-17), then G1h-G5h sized by C1; G1-G5 after the H200 milestone | — |
+| 3. Simulator | Files 20-23 first (§3.7; they need neither D1 nor GPU data), then files 1-12 (§6). Unit-tested on W6 and q1 rows while the grids run | A13 (c) fails: fix before the replays |
+| 4. Validation | Training, group-held-out accuracy, A1-A13, P2-32 / P2-64 replays, then P0; diagnostic cross-check | A6 or A10 fails: report with the failing scopes |
 
-Order of cases: H800 P0 first, because its network curves partly exist and its GPU jobs are 1-GPU jobs plus one 16-GPU network job; then H200 P2-32 and P2-64 with the same code. If H800 1-GPU jobs cannot start within one day, the order switches and the shortage is reported at once (D-GPU-SHORTAGE-REPORT).
+Order of cases (D6, decided): H200 P2-32 and P2-64 first, as the mainline; H800 P0 testing and calibration follow with the same code. H200 has no collective curves, so G5h is on the critical path of the H200 milestone. If an H200 job cannot start within one day, the shortage is reported at once (D-GPU-SHORTAGE-REPORT); H800 evidence never substitutes for H200 evidence, and CPU and simulator work continues meanwhile.
 
 ## 6. Frontier file list (H3o-(b))
 
@@ -144,8 +173,12 @@ Order of cases: H800 P0 first, because its network curves partly exist and its G
 | 17 | `frontier/profiling/kernel_gap/main.py` | V4 graph-replay sampling on the reduced engine with segment classification; per-segment first kernels included at seams | ~100 |
 | 18 | `tests/analysis/v4_runtime_census.py` (new) | Stage-0 R1 reducer over native traces, streaming and memory-limited | ~200 |
 | 19 | Tests | `test_dsv4_predictor.py`, `test_dsv4_composition.py` (new); V4 dispatch, payload, unequal binding, EP gap, ledger sentinel and collision tests; migrated `read_isolated_scope` cases; V4 cases in the fidelity regression | ~600 |
+| 20 | `frontier/scheduler/utils/dp_dummy_forward.py` | The DP-synchronized descriptor of §3.7 as one function over all lanes of a forward, replacing the dummy-only body of `resolve_dummy_forward_inputs` | +40 / −20 |
+| 21 | `frontier/events/replica_stage_schedule_event.py` | V4 real lanes keep host preparation from their own batch and defer first-layer device pricing to the first pre_moe room, in the PREFILL path (lines 222-300) and the DECODE / MONOLITHIC path (lines 520-600) | ~40 |
+| 22 | `frontier/scheduler/utils/sync_entry.py` | Apply the descriptor to every lane of the first room before pricing (line 110-112) | ~10 |
+| 23 | Tests | `test_balanced_routing.py`: DP2 / EP16 and DP4 / EP32 widths and per-EP-rank counts against native `determine_expert_map` (done, 102 passed). `test_dsv4_dp_sync.py` (new): A13 (a) on the 685 distinct (desired modes, local sizes, synchronized mode, synchronized widths) tuples of the three cases' native counters, kept as `tests/fixtures/dsv4_native_dp_sync_rows.json` (about 33 KB), and A13 (c) on two-lane and four-lane V4 forwards with unequal capture sizes and with one eager lane. `test_dp_dummy_forward_pricing.py` extended to real lanes | ~150 |
 
-Total: about 19 files, about 2,500 lines added and 270 deleted. This is far above the D-H4A-CHECKPOINT limit of 5 files and about 200 lines (decision D3).
+Total: about 23 files, about 2,740 lines added and 290 deleted. This is far above the D-H4A-CHECKPOINT limit of 5 files and about 200 lines (decision D3).
 
 - **No new config field.** V4 attention rows use the attention input; V4 operator rows use `linear_op.csv` with typed contracts; gating and routed MoE use `moe.csv`; collectives use the measured backend's `summary.csv`; gaps use `kernel_gap.csv`; host costs use the CPU-overhead inputs and `skip_cpu_overhead_modeling`. If implementation finds a binding that these cannot express, it stops and asks YC.
 - **Module sizes.** All touched modules except `sklearn_execution_time_predictor.py` stay below 2,000 lines; that module gets only registration and routing lines.
@@ -156,17 +189,17 @@ All jobs go through the StepMind Python `RJobBackend` with `i-fengyicheng` auth,
 
 | Job | GPUs | Content | Cap (GPU-hours) |
 | --- | --- | --- | --- |
-| P1 (H800) | 1 | Composition and identity pilot (stage 1) | 1 |
+| P1h (H200, first) | 1 | Composition and identity pilot against the H200 native traces (stage 1) | 1 |
+| G1h-G4h (H200) | 1 each | Same content as G1-G4 below; decode batch up to 40; rank classes for EP16 and EP32 (8 local experts); M grid includes M6168 and M24576 for DP4 | 7 |
+| G5h (H200) | 16, then 32 | Uniform curves and unequal vectors for TP8, EP16 and EP32 | 36 |
+| R2h (H200, only if R1 shows eager host time is material) | 32 | Native P2-32 with the CPU probe, for `forward_launch` rows | 32 |
+| P1 (H800, after H200) | 1 | Composition and identity pilot against the H800 traces | 1 |
 | G1 (H800) | 1 | Attention serving window from C1; KERNEL_ONLY with intervals, CUDA_EVENT for validation | 3 |
 | G2 (H800) | 1 | V4 operators of §4 over decode rows 1-64, SP prefill rows, 6144 | 1.5 |
 | G3 (H800) | 1 | MoE rank classes for EP16 and gate `L` grid | 2 |
 | G4 (H800) | 1 | V4 graph-replay `kernel_gap.csv` | 0.5 |
 | G5 (H800) | 16 | Small payload points (TP8, EP16) and the ordered unequal vectors from C1, with `vllm_forward_collectives.py` | 12 |
 | R2 (H800, only if R1 shows eager host time is material) | 32 | Native P0 with the CPU probe, for `forward_launch` rows | 32 |
-| P1h (H200) | 1 | Identity pilot against the H200 native traces | 1 |
-| G1h-G4h (H200) | 1 each | As G1-G4; decode batch up to 40; rank classes for EP16 and EP32 (8 local experts); M grid includes M6168 and M24576 for DP4 | 7 |
-| G5h (H200) | 16, then 32 | Uniform curves and unequal vectors for TP8, EP16 and EP32 | 36 |
-| R2h (H200, only if needed) | 32 | As R2 | 32 |
 
 Caps: H800 20 GPU-hours, plus 32 if R2 runs; H200 44, plus 32 if R2h runs. No H200 runtime-census job is needed: the retained native traces cover it.
 
@@ -175,11 +208,11 @@ Caps: H800 20 GPU-hours, plus 32 if R2 runs; H200 44, plus 32 if R2h runs. No H2
 | Stage | Days |
 | --- | --- |
 | 0. R1, C1, S1 (CPU) | 2 |
-| 1. Pilots P1 and P1h (1 GPU each, queue-bound) | 1 |
-| 2. Producers (files 13-17), then G1-G5 / G1h-G5h | 3 (grids run in parallel with stage 3) |
-| 3. Simulator files 1-12 and tests | 4 |
-| 4. Training, A1-A12, replays, cross-check | 2 |
-| **Total** | **about 12-14**; the H800 P0 milestone at about 9 |
+| 1. Pilot P1h (1 GPU, queue-bound); P1 later | 1 |
+| 2. Producers (files 13-17), then G1h-G5h | 3 (grids run in parallel with stage 3) |
+| 3. Simulator files 20-23, then 1-12, and tests | 4.5 |
+| 4. Training, A1-A13, replays, cross-check | 2 |
+| **Total** | **about 13-14.5**; the H200 P2-32 / P2-64 milestone at about 10, H800 P0 about 3 days later (P1, G1-G5, replay) |
 
 Main schedule risks: GPU queues, image or runtime failures (earlier V4 profiling jobs needed several attempts), and a failed pilot.
 
@@ -187,12 +220,12 @@ Main schedule risks: GPU queues, image or runtime failures (earlier V4 profiling
 
 | # | Decision | Options | Recommendation |
 | --- | --- | --- | --- |
-| D1 | Attention layer cost | (a) Option A: per-scope costs and a critical path over the source stream graph, checked by P1. (b) A measured layer composite (elapsed of the whole layer, shape-aware) with scopes for attribution only; this changes approved Option A | (a) |
-| D2 | Host time of eager steps and eager segments | (a) The existing CPU-overhead `forward_launch` rows (measured host launch time per forward, keyed by batch features), used only for the host stream; the device stream stays operator-composed. (b) A per-kernel launch cost times the kernel count, which is new modeling. (c) Leave host time out and state the limit | Decide after R1: if eager host time is not material, (c) with an explicit zero; if it is, (a). (a) is a measured per-forward host time, so YC should confirm that it is compatible with D-NO-STEP-COST-SHORTCUT |
-| D3 | Size | About 19 files and 2,500 lines, above D-H4A-CHECKPOINT | Approve, staged as §5 |
-| D4 | GPU budget | Caps of §7; R2 / R2h (32 GPUs each) only if R1 shows eager host time is material | Approve the caps; exact grids are reported after C1 |
-| D5 | Reduced TP1 engine for per-operator device time | (a) Reduced TP1 with per-rank TP8 shapes, qualified by kernel identity against the native TP8 traces (P1). (b) Per-operator profiling inside full native serving | (a) |
-| D6 | Order | H800 P0 first, or H200 first | H800 P0 first; switch if H800 jobs cannot start within one day |
+| D1 | Attention layer cost | (a) Option A: per-scope costs and a critical path over the source stream graph, checked by P1h. (b) A measured layer composite (elapsed of the whole layer, shape-aware) with scopes for attribution only; this changes approved Option A | **Open.** YC asked how (a) and (b) differ; (a) is the working choice |
+| D2 | Host time of eager steps and eager segments | (a) The existing CPU-overhead `forward_launch` rows (measured host launch time per forward, keyed by batch features), used only for the host stream; the device stream stays operator-composed. (b) A per-kernel launch cost times the kernel count, which is new modeling. (c) Leave host time out and state the limit | **Decided (as recommended):** after R1, (c) with an explicit zero if eager host time is not material, otherwise (a) for the host stream only |
+| D3 | Size | About 19 files and 2,500 lines at the decision (23 files and about 2,740 lines with §3.7), above D-H4A-CHECKPOINT | **Decided:** approved, staged as §5 |
+| D4 | GPU budget | Caps of §7; R2 / R2h (32 GPUs each) only if R1 shows eager host time is material | **Decided:** caps approved; exact grids are reported after C1 |
+| D5 | Reduced TP1 engine for per-operator device time | (a) Reduced TP1 with per-rank TP8 shapes, qualified by kernel identity against the native TP8 traces (P1h, P1). (b) Per-operator profiling inside full native serving | **Decided:** (a) |
+| D6 | Order | H800 P0 first, or H200 first | **Decided:** H200 first (P2-32 and P2-64 mainline); H800 P0 after H200 |
 
 ## 10. Risks
 
@@ -200,4 +233,7 @@ Main schedule risks: GPU queues, image or runtime failures (earlier V4 profiling
 2. **Pilot failure.** If the critical-path composition misses the joined elapsed (A4), the route stops for a decision; no factor is added.
 3. **Single layer versus 43 layers.** Rows sample one layer. L2 and stream effects across 43 layers are not proven additive; the cross-check shows their size and nothing corrects them.
 4. **Profiler overhead.** R1 host times are upper bounds. Host costs come only from unprofiled measurements (R2 / R2h).
-5. **Routing.** Balanced routing and dummy weights only; real router imbalance belongs to ticket 14.
+5. **Routing.** Balanced routing and dummy weights only; real router imbalance belongs to ticket 14. Identity with native balanced routing is gate A13.
+6. **Diagnostic step-cost replays.** After files 20-22, the narrower lane of a synchronized forward is looked up at the synchronized width, so the diagnostic step-cost replays (H4a, H4b, P2-32d, P2-64d) can change or meet coverage errors. They stay diagnostic and are rerun only for the cross-check (A11).
+
+Deferred (not in H3o): the non-V4 paths have the same kind of gap. Their real-lane attention keeps lane-local widths, and their EP width rule (`ep_wave_inputs.py:31-43`) pads every lane to the widest one whenever any lane has graph metadata, instead of using the minimum mode. Changing it would change GLM results, which A12 forbids without YC's approval.

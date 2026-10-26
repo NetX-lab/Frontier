@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Recorded the `/codex-review` request on H3o-(a) (D-H3O-CODEX-REVIEW), YC's decisions D2-D6 with D1 open (D-H3O-DECISIONS), the routing identity rule (D-V4-ROUTING-IDENTITY) and the approval of review round 2. |
 | 2026-10-26 | Recorded YC's standing rule against the whole-step table as a cost model, with the method correction it orders (D-NO-STEP-COST-SHORTCUT), and the operator-level DSV4 cost route as the next route (D-OPERATOR-LEVEL-ROUTE). |
 | 2026-10-26 | Recorded YC's question whether the step-cost table is a measured shortcut instead of operator-level costs, and the answer. |
 | 2026-10-26 | Recorded YC's questions on the repriced entry and on H3r after `d485f570`, and the instruction not to start other modeling for now (D-NO-NEW-MODELING). |
@@ -310,6 +311,26 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - **Method correction ordered by YC.** `load_step_cost_table` bound a table found beside the default attention input to every non-dummy V4 run. With the tables in `data/profiling/compute/{h800,h200}/deepseek-ai/DeepSeek-V4-Flash/`, the whole-step lookup was the default V4 cost path, and it skipped operator model training without any explicit choice. The tables move to task directories, as byte-identical copies checked by digest. The drivers select them through the attention input field, as the P2-64 and k=1 cases already do. A V4 run on the default path then fails with a typed coverage error until operator-level costs exist.
     - **Repository record.** `docs/adr/0002-operator-costs-not-measured-step-tables.md`.
 27. **D-OPERATOR-LEVEL-ROUTE.** The next route is the lead's recommendation 2 under Question 3: DSV4 costs per operator (D-V4-KERNEL-ONLY-GPU-COST; tickets 05 and 09), composed for each batch, with the step-cost table used only as a diagnostic cross-check of the composed step time. The first step is CPU only: a proposal with the scope, the file list, the GPU jobs and a time estimate, which YC reviews before any implementation or GPU job. This replaces D-NO-NEW-MODELING (item 25) for the planning of this route only. Other modeling stays stopped.
+
+[Original Request] `/codex-review`, 2026-10-26, on the H3o-(a) proposal:
+
+> 将上述方案交给gpt审阅，并与其探讨意见，将达成一致的最终版本再输出给我决策
+
+28. **D-H3O-CODEX-REVIEW.** The H3o-(a) proposal (`h3o_operator_costs/design.md`) goes to Codex review. The lead discusses each finding, revises the design to a version both sides agree on, and presents it to YC for decision. Review records: `h3o_operator_costs/review.md`.
+
+[Original Request] Follow-up, 2026-10-26, after review round 1 and the round-2 failure (HTTP 429):
+
+> d1:如何理解这2个方式的区别？后者会引入什么问题？d6：当前任务优先h200，h800的测试校准放在h200之后（以h200 为主线）；其他d采纳你的方；f004是否探讨的是moe routing问题？请你控制frontier与vllm的routing distribution完全一致（统一为均分策略）。 批准第二轮审阅
+
+29. **D-H3O-DECISIONS.** Decisions on `design.md` §9:
+    - D1 (attention layer cost) stays open. YC asked how options (a) and (b) differ and what (b) would cause; the lead answers in the report. The working choice is (a).
+    - D2: adopt the lead's recommendation. Decide after the R1 census: an explicit zero if eager host time is not material, otherwise the existing `forward_launch` rows for the host stream only.
+    - D3: approve the size (about 19 files, about 2,500 lines), staged as designed.
+    - D4: approve the GPU caps. Exact grids are reported after the C1 coverage matrix.
+    - D5: the reduced TP1 engine, qualified by kernel identity against the native TP8 traces.
+    - D6: H200 first. P2-32 and P2-64 are the mainline. H800 P0 testing and calibration come after H200.
+30. **D-V4-ROUTING-IDENTITY.** Frontier's MoE routing for V4 must be identical to native vLLM's, using the balanced strategy (`balanced_topk` in vLLM, `balanced` in Frontier) on every layer. Identity covers the per-expert token counts, the per-EP-rank counts under native linear placement, and the routed row count of each forward. The row count includes vLLM's DP synchronization: every lane takes the minimum graph mode of the DP group, and with a graph mode every lane is padded to the widest lane's capture size. Frontier applies this rule to real V4 lanes, not only to dummy forwards. The GLM and other non-V4 paths are unchanged (gate A12); their own DP-synchronization gap is recorded as deferred work.
+31. **Round 2 of the review is approved:** one resubmission covering revisions 2a and 2b, without automatic retries.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
