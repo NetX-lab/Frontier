@@ -255,7 +255,7 @@
 2. Whether the repriced k=1 entry should replace the entry in the profiling-derived tables (`data/profiling/...` and the P2-64 DP4 table) for later DIAGNOSTIC runs needs YC: it changes a DSV4 measured input. The lead recommends keeping the repriced tables as separate DIAGNOSTIC inputs (as now) and pricing that entry from unprofiled scheduler records in the next profile run instead, so that every entry of one table comes from one run.
 3. P2-64 target (decided, D-H4B-K1-REPRICE sub-item 4): the gate verdict stays the one over all three repetitions; repetitions 2-3 are read as a supplementary DIAGNOSTIC (`repetition_reading.py`); the warmup is added only to a later P2-64 run that is needed for another reason.
 4. Decided and recorded (D-H4B-K1-REPRICE): the P2-32 P-side gap is a limitation; item 3 is not implemented; the ingress field stays deferred; the late-handle measurement is not planned.
-5. H3r (targeted cost refinement of the H4a substitutions S1-S5 that the attribution names as leading error sources) is not started: YC instructed that no other modeling starts for now (D-NO-NEW-MODELING, requirements item 25). Items 1 and 2 above also wait for a new YC decision.
+5. H3r (targeted cost refinement of the H4a substitutions S1-S5 that the attribution names as leading error sources) is not started: YC instructed that no other modeling starts for now (D-NO-NEW-MODELING, requirements item 25). Items 1 and 2 above also wait for a new YC decision. Also waiting for YC: whether operator-level DSV4 costs (tickets 05 and 09) replace the step-cost table as the next cost work (requirements item 25, Question 3; the lead recommends it).
 
 H800 actions (D-H4A-CHECKPOINT order):
 1. H4b-(a): completed (record below).

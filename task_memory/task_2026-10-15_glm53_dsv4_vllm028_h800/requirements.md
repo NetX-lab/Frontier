@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Recorded YC's question whether the step-cost table is a measured shortcut instead of operator-level costs, and the answer. |
 | 2026-10-26 | Recorded YC's questions on the repriced entry and on H3r after `d485f570`, and the instruction not to start other modeling for now (D-NO-NEW-MODELING). |
 | 2026-10-26 | Recorded YC's adoption of the lead's recommendations for next actions 1-6 after `6dff7547` (D-H4B-K1-REPRICE) and YC's question on `max_tokens = 1` on P. |
 | 2026-10-26 | Recorded YC's approval of the lead's next actions after item 2 (D-H4B-AFTER-ITEM2): the item 3 design, the first-D-step investigation and the removal of three fidelity worktrees. |
@@ -286,6 +287,15 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 25. **D-NO-NEW-MODELING.** Do not start other modeling work for now. This covers H3r, any new Frontier mechanism (READ side, ingress, PREFILL depth 2) and any change to the step-cost tables under `data/profiling/`. Work restarts only on a new YC decision. Existing records, commits and DIAGNOSTIC results stay as they are.
     - **Question 1, the repriced entry.** It is the DECODE row of the diagnostic step-cost table keyed by 1 prefill request of 1 token and 1-128 decode requests. Frontier uses it as the time of one whole forward step of one attention-DP lane (`frontier/execution_time_predictor/dsv4_step_cost_input.py:3-4, 37-53`): the step in which a request whose KV was just read from P computes its last prompt token and samples its first output token, while the other requests on the lane each decode one token. The old value is the GPU kernel span of one step in a profiled run (30.14 ms on H800). The new value is the median wall-clock step period that the engine core observes in an unprofiled run, from the scheduler records: GPU execution plus the return of the sampled tokens, with CPU scheduling overlapped by async scheduling. On decode-only steps the two methods agree within 0.3-1.8 ms. Answered in the reply.
     - **Question 2, H3r.** Plan milestone H3r ("Targeted cost refinement", tickets 05, 06, 09): refine only those measured cost inputs that the attribution names as leading error sources, with no broad re-profiling. Its candidates are the H4a substitutions S1-S5 (test report 2026-10-25 h4a p0 diagnostic, sections 3 and 9). The k=1 repricing (D-H4B-K1-REPRICE) was a DIAGNOSTIC version of S4. The lead's earlier mention of the P2-32 TPOT error was a proposal for its first target, not part of the definition. Not started (this item).
+
+[Original Request] Follow-up, 2026-10-26, after the answers recorded in item 25:
+
+> 我对 "每步耗时表" 感到质疑。这是否可以理解为一个测量得到的 single decode step 耗时？ 难道我们不应该根据 batch 对应到 op profiling csv，然后计算得到这个信息吗？当前引入 entry 岂不是在通过 简单的测量来抄近道？
+
+- **Question 3, the step-cost table as a shortcut. Answer: yes.** The table looks up whole steps measured in native runs of the same workload and topology. It does not compose operator costs from profiling CSVs, which is Frontier's standard path. D-V4-STEP-COST-FIRST-PASS (item 5 of D-DSV4-H800-MAINLINE-CORRECTION) introduced it for the H4a diagnostic only. D-H4A-CHECKPOINT keeps it out of the formal gates, and the code marks it as not a qualified per-operator model (`frontier/execution_time_predictor/dsv4_step_cost_input.py:1-7`).
+  - Reason. DSV4 has no operator-level serving path. `data/profiling/compute/h800/deepseek-ai/DeepSeek-V4-Flash/` holds only the step-cost table. The existing per-operator reader takes only isolated single-request eager measurements, and it rejects PD batches, CUDA Graph steps and mixed batches (`frontier/execution_time_predictor/deepseek_v4.py:686-697`). Ticket 05 milestones `primitive_profiles` and `family_predictor_integration` are open.
+  - Limits. The table cannot predict other batch sizes, context lengths, topologies or hardware; the decode entry is one value for 1-128 requests. Because it is measured on the same workload, a comparison mainly tests the scheduling, transfer and lane-synchronization parts of Frontier, not its cost model. The k=1 repricing, taken from native lifecycle runs of the same workload, has this property most strongly; its only use is to separate the k=1 step from the remaining READ-side error.
+  - Lead's recommendation, waiting for YC under item 25. Stop extending the table. Make operator-level DSV4 costs (D-V4-KERNEL-ONLY-GPU-COST; tickets 05 and 09) the next cost work instead of the slot refinement in H3r, and keep the table as a cross-check of the composed step time. This needs GPU profiling jobs and more `frontier/` changes than the D-H4A-CHECKPOINT bounds, so it needs YC's approval before it starts.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
