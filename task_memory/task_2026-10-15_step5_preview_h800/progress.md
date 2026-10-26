@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-26 | D31: item 2a step 1 done (H200 curves `946595cd`), runner option `1c125189`, E rerun with the H200 curves started; lane prediction cache `eddb9bf5` (exact, 2.84× faster). |
+| 2026-10-26 | D31: item 2a step 1 done (H200 curves `946595cd`), runner option `1c125189`, E rerun with the H200 curves started; lane prediction cache `eddb9bf5` (exact, 1.7× faster). |
 | 2026-10-26 | D31: item 2a steps 2–4 done (measured backend `b9cbda0d`, allgather_reducescatter pricing `0349c1c6`); checks pass with fidelity 77/77; H200 collective jobs submitted. |
 | 2026-10-26 | D31: calibration item 2a opened; one-request breakdown shows underpriced and missing collectives (about 11.7 ms per DECODE step). |
 | 2026-10-26 | D31: port checks recorded (test report); shared-expert DP token count sized at about 0.09% of TPOT (low priority); FP8 approximation warning shown to change no Step-5 time; simulator cost profile. |
@@ -557,16 +557,40 @@ Calibration item 2a, collective communication (2026-10-26, `in-progress`):
     12,144 (allgather_reducescatter), 13% of the lanes.
   - The short-trace `request_metrics.csv` and `system_metrics.json` equal the pre-cache results
     of `/data/ycfeng/tmp/d31_agrs_diag/tiny_{base,agrs_h800}` exactly.
-  - Wall time: 577.5 → 203.1 s (analytical) and 594.1 → 209.4 s (allgather_reducescatter),
-    2.84× faster.
+  - Wall time, both versions side by side without a profiler: 329.6 → 195.7 s (analytical,
+    1.68×) and 342.6 → 196.7 s (allgather_reducescatter, 1.74×). The 2.84× in the commit message
+    compared a cProfile run with a run without the profiler and overstates the gain.
   - Unit tests (the 17 files of `test_report_2026-10-26_agrs_collectives.md` §1): 540 passed,
     2 skipped. The new test `test_ep_wave_predicts_lanes_with_equal_inputs_once` covers equal
     inputs, different loads, different pre-routing tokens and a native routing source.
   - Fidelity matrix: `eddb9bf5` (worktree `.worktrees/fidelity-candidate-eddb9bf`, label
-    `candidate_memo`) against the `7dce66c0` baseline in `/data/ycfeng/tmp/d31_agrs_fidelity`,
-    running.
+    `candidate_memo`) against the `7dce66c0` baseline: 77/77 identical, 0 failures, 0 differing
+    predictor cache file names (`/data/ycfeng/tmp/d31_agrs_fidelity/comparison_memo.json`).
   - The two runs above started before this commit and use the uncached code. The cache changed
-    no result on the short traces, so they are not restarted; they only take longer.
+    no result on the short traces, so they keep running and only take longer. (Stopping them
+    was not permitted by the session's permission check.)
+- Merge into `feat/step5-preview` (2026-10-26 17:42 UTC): `2acbf30a` merges
+  `feat/step5-d31-workflow` (calibration item 1) and `b3fa995a` merges
+  `feat/step5-d31-measured-comm`. No conflicts. Unit tests on `b3fa995a` (the 17 item 2a files
+  plus the six workflow files): 680 passed, 2 skipped. The step5-preview task directory stays the
+  main document directory; the two branch worktrees keep their own copies only as history.
+- Note on step E `h200_32_run01`: it was launched from the `step5-preview` worktree at `7dce66c0`
+  and loaded that code at start. `frontier_workload.py run` writes `git rev-parse HEAD` when the
+  run ends, so its `frontier_summary.json` will name the later head. The code that ran is
+  `7dce66c0`.
+- Runs started 2026-10-26 17:43 UTC from the detached worktree `.worktrees/run-e-b3fa995`
+  (`b3fa995a`: workflow port, measured collectives and lane cache). Output
+  `/data/ycfeng/tmp/d31_comb_run/<label>/`:
+  - `prefix8_wf`: the 8-request prefix with the workflow port only (analytical collectives);
+  - `prefix8_comb_h200`: the 8-request prefix with the workflow port and `--measured-collectives`
+    (H200 DP2 curves);
+  - `h200_32_comb_h200`: the full workload with both, the step E candidate;
+  - `h200_64_comb_h200` (17:55 UTC): the first step G run, `--case h200_64 --measured-collectives`
+    (H200 DP4 curves) with
+    `/data/ycfeng/tmp/step5_d31_profiles_20261026/merged03/predictor_options_h200_64.json`, which
+    differs from the 32-GPU options only in `nixl_read_profile`
+    (`evidence/d31_h200_64_nixl_read_cost.json`). The merged03 MoE tables have EP16 and EP32
+    rows (156 each). Formal 64-GPU calibration still waits for E within 30%.
 
 Step F status (2026-10-26):
 

@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-26 | D31: item 2a step 1 done, E rerun with the H200 curves started, EP-lane prediction cache added. |
+| 2026-10-26 | D31: item 2a step 1 done, EP-lane prediction cache added; items 1 and 2a merged; combined E run and the first G run started. |
 | 2026-10-26 | D31: item 2a status line added (steps 2–4 done, step 1 running, step 5 checks done before rerunning E). |
 | 2026-10-26 | D31: calibration item 2a (collective communication) added with its five steps. |
 | 2026-10-26 | D31: shared-expert DP token count sized and moved to low priority; D31.10 rule added to calibration item 2. |
@@ -160,7 +160,8 @@ Dependency graph: `A -> {B, C, D}`; `{B, C, D} -> E`; `C -> F`; `{E, F} -> G`.
 B, C and D run in parallel. F needs C's GPUs released, because 32 + 64 GPUs exceeds the limit.
 
 Status (2026-10-26): A–D and F are done (D(g) evidence in `test_report_2026-10-26_h200_profiles.md`,
-F in `test_report_2026-10-26_h200_64_native_workload.md`); E is running; G is pending.
+F in `test_report_2026-10-26_h200_64_native_workload.md`); E is running; G's first run
+(`h200_64_comb_h200`, both calibration items 1 and 2a) started on 2026-10-26 17:55 UTC.
 
 Calibration order for E, after the first error table:
 1. Workflow. The D-side first-token handoff (about two decode steps plus the READ plus the
@@ -168,9 +169,10 @@ Calibration order for E, after the first error table:
    number of DECODE batches in flight. The `feat/glm53-dsv4-vllm028` branch has candidate
    commits for these (`5f907f66`, `96d9c1ef`, `82390e10`). Test cherry-picks in a separate
    worktree under `.worktrees/` before porting them.
-   Status: ported on `feat/step5-d31-workflow` (`.worktrees/step5-d31-workflow`); the full
-   32-GPU run with the new workflow is running. Merge into `feat/step5-preview` after the unit,
-   dummy-smoke and 77-case fidelity checks.
+   Status: ported on `feat/step5-d31-workflow` and merged into `feat/step5-preview` (`2acbf30a`)
+   after the unit, dummy-smoke and 77-case fidelity checks. The full 32-GPU run with the workflow
+   port alone (`h200_32_wf02`) and the run with items 1 and 2a together (`h200_32_comb_h200`) are
+   running.
 2. GPU operators and gaps. Replace the kernel-gap proxy and the FP8 metadata if the operator
    trace shows a measurable gap. Candidate found on 2026-10-26: in an EP wave the shared expert
    is priced on the merged token count of all DP lanes, while the native shared expert runs on
@@ -199,8 +201,9 @@ Calibration order for E, after the first error table:
    Step 5's checks pass (unit, dummy smoke, fidelity 77/77). Step 1 done: the H200 curves are
    committed (`946595cd`), and `frontier_workload.py run --measured-collectives` selects them
    (`1c125189`). The E rerun with the H200 DP2 curves started at 17:20 UTC, with an 8-request
-   prefix run for an early comparison. The EP-lane prediction cache `eddb9bf5` makes runs 2.84×
-   faster with identical results; its fidelity matrix is running.
+   prefix run for an early comparison. The EP-lane prediction cache `eddb9bf5` makes runs 1.7×
+   faster with identical results (fidelity 77/77 identical). Merged into `feat/step5-preview`
+   (`b3fa995a`).
 3. CPU overhead, which is not modelled now.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2

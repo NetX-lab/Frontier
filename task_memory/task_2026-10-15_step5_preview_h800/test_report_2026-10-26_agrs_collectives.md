@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-26 | Unit, dummy smoke and fidelity checks of `0349c1c6`; short-trace diagnostic with the H800 curves. |
+| 2026-10-26 | EP-lane prediction cache checks (`eddb9bf5`, 1.7× faster measured without cProfile) and the merge into `feat/step5-preview`. |
 
 ## Scope
 
@@ -116,6 +117,58 @@ The cProfile output (`tiny_agrs_h800.prof`) shows the following:
 
 The full `h200_32` workload (step E) had run for more than 5 h 47 min at 17:07 UTC without
 finishing. Simulator speed therefore limits how fast calibration can iterate.
+
+## 5. EP-lane prediction cache (`eddb9bf5`)
+
+Change: `predict_ep_wave_phase_times` predicts each distinct `(local expert loads, pre-routing
+token count)` pair of a wave once. Lanes with a native routing source are still predicted one by
+one; the DSV4 per-lane source path is unchanged.
+
+Exactness check: `/data/ycfeng/tmp/d31_lane_memo/check_memo.py` wraps the wave function, predicts
+every lane again without the cache and compares the six phase times exactly. It ran on the two
+short traces of section 4 (commands `/data/ycfeng/tmp/d31_lane_memo/tiny_*_check.command.json`).
+
+| Trace | Waves | Lanes | Distinct predictions | Mismatches |
+| --- | --- | --- | --- | --- |
+| `tiny_base` | 5,808 | 92,928 | 11,968 | 0 |
+| `tiny_agrs_h800` | 5,808 | 92,928 | 12,144 | 0 |
+
+Result equality (`/data/ycfeng/tmp/d31_lane_memo/compare_exact.py`): the cached runs'
+`request_metrics.csv` and every section of `system_metrics.json` equal the section 4 results of
+both traces.
+
+Wall time. The section 4 runs ran under cProfile, so they are not a fair baseline. Both versions
+were therefore run side by side without a profiler (`/data/ycfeng/tmp/d31_lane_memo/launch_timing.py`;
+uncached `1c125189` in `.worktrees/run-agrs-1c125189`, cached `eddb9bf5`). The cached and uncached
+results are equal again.
+
+| Trace | Uncached (s) | Cached (s) | Speedup |
+| --- | --- | --- | --- |
+| `tiny_base` | 329.6 | 195.7 | 1.68× |
+| `tiny_agrs_h800` | 342.6 | 196.7 | 1.74× |
+
+The commit message of `eddb9bf5` compares 577.5/594.1 s (under cProfile) with 203.1/209.4 s
+(without). That 2.84× overstates the gain; the table above is the correct measurement.
+
+Unit tests: the section 1 command on `eddb9bf5`: `540 passed, 2 skipped`. The new
+`test_ep_wave_predicts_lanes_with_equal_inputs_once` covers equal inputs, a different load, a
+different pre-routing count and a native routing source. **PASS**.
+
+Fidelity: `run_matrix.py run --repo-root /data/ycfeng/Frontier/.worktrees/fidelity-candidate-eddb9bf
+--label candidate_memo --output-root /data/ycfeng/tmp/d31_agrs_fidelity --jobs 8 --clean-cache`,
+then `compare --baseline-label baseline --candidate-label candidate_memo` against the section 3
+baseline (`7dce66c0`). Result: 77/77 identical, 0 mismatched, 0 failures, 0 differing predictor
+cache file names. Report `/data/ycfeng/tmp/d31_agrs_fidelity/comparison_memo.json`. **PASS**.
+
+## 6. Merge into `feat/step5-preview`
+
+`2acbf30a` merges `feat/step5-d31-workflow` (calibration item 1) and `b3fa995a` merges
+`feat/step5-d31-measured-comm` (item 2a with the H200 curves, the runner option and the cache).
+Both merges had no conflicts. Unit tests on `b3fa995a`, the section 1 files plus the workflow
+files (`test_nixl_read_completion.py`, `test_decode_output_placeholders.py`,
+`test_vllm_v1_max_model_len.py`, `test_grouped_kv_cache_scheduler.py`,
+`test_pdaf_decode_attn_online_cohort.py`, `test_module_split_boundaries.py`):
+`680 passed, 2 skipped`. **PASS**.
 
 ## Verification limits
 
