@@ -9,6 +9,28 @@ if TYPE_CHECKING:
     from frontier.scheduler import BaseGlobalScheduler
 
 
+def report_nixl_reads(
+    scheduler: "BaseGlobalScheduler",
+    metrics_store: "MetricsStore",
+    replica_scheduler,
+    time: float,
+) -> List[BaseEvent]:
+    """Complete the NIXL READs that a DECODE engine step's output reports (`finished_recving`).
+
+    The transfer end runs inline at the output pop: at equal times the
+    engine's next pass (REPLICA_SCHEDULE) runs before a KV_CACHE_TRANSFER_END
+    event, and that pass must find the requests ready.
+    """
+    if not hasattr(replica_scheduler, "consume_found_nixl_reads"):
+        return []
+    events: List[BaseEvent] = []
+    for transfer_info in replica_scheduler.consume_found_nixl_reads():
+        events.extend(
+            KVCacheTransferEndEvent(time, transfer_info).handle_event(scheduler, metrics_store)
+        )
+    return events
+
+
 class KVCacheTransferEndEvent(BaseEvent):
     """Event emitted when a KV cache transfer completes."""
 

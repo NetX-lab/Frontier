@@ -106,6 +106,8 @@ class KVCacheTransferStartEvent(BaseEvent):
         from frontier.entities.kv_cache_transfer_info import KVCacheTransferInfo
         from frontier.events.kv_cache_transfer_end_event import KVCacheTransferEndEvent
 
+        # The DECODE lane whose engine steps complete the READ, in engine_step mode.
+        read_lane = None
         if self._kv_connector == "nixl":
             if self._started:
                 raise RuntimeError(
@@ -220,6 +222,8 @@ class KVCacheTransferStartEvent(BaseEvent):
                 self._target_reserved_common_blocks = None
                 self._target_group_block_ids = None
                 raise
+            if predictor._config.nixl_read_completion == "engine_step":
+                read_lane = target_replica_scheduler
 
         transfer_info = KVCacheTransferInfo(
             batch=self._batch,
@@ -260,6 +264,19 @@ class KVCacheTransferStartEvent(BaseEvent):
         for request in self._batch.requests:
             request.on_kv_cache_transfer_start(self.time)
 
+        if read_lane is not None:
+            from frontier.events.replica_schedule_event import ReplicaScheduleEvent
+
+            # The lane's next engine step posts the READ.
+            read_lane.register_nixl_read(transfer_info)
+            return [
+                ReplicaScheduleEvent(
+                    self.time,
+                    self._target_replica_id,
+                    self._target_cluster_type,
+                    self._target_replica_local_id,
+                )
+            ]
         transfer_end_time = self.time + self._transfer_time_ms * 1e-3
         return [KVCacheTransferEndEvent(transfer_end_time, transfer_info)]
 

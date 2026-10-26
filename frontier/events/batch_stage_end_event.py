@@ -167,6 +167,13 @@ class BatchStageEndEvent(BaseEvent):
                 self._replica_id, self._replica_local_id
             )
             if replica_scheduler.on_dummy_forward_end(self.time):
+                from frontier.events.kv_cache_transfer_end_event import report_nixl_reads
+
+                # The engine takes the dummy step's output, which reports the
+                # NIXL READs that step found.
+                next_events.extend(
+                    report_nixl_reads(scheduler, metrics_store, replica_scheduler, self.time)
+                )
                 next_events.append(
                     ReplicaScheduleEvent(
                         self.time,

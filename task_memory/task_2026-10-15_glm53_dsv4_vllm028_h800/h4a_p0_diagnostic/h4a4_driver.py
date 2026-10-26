@@ -1,6 +1,7 @@
 """H4a-4: run a native reference's Frontier input on the step-cost path and record what was changed.
 
-    python h4a4_driver.py <case> <output root>     # case: native06 (H800 P0), p2_32 or p2_64 (H200 P2)
+    python h4a4_driver.py <case> <output root> [field=value ...]
+    # case: native06 (H800 P0), p2_32 or p2_64 (H200 P2); each field=value sets one flat field (JSON or string)
 
 The input is the reference's retained flat config (case/inputs/frontier.json, digest pinned in CASES).
 The driver rebuilds SimulationConfig from it through the existing flat dataclass, applies only
@@ -66,7 +67,7 @@ def outputs(root, name):
     }
 
 
-def build_config(name, case, root):
+def build_config(name, case, root, fields):
     from frontier.config import SimulationConfig
     from frontier.config.flat_dataclass import create_flat_dataclass
 
@@ -89,9 +90,13 @@ def build_config(name, case, root):
         else:
             raise SystemExit(f"required field {field_name} is not in the {name} input")
     overrides = {**BINDING, "vllm_v1_scheduler_config_num_blocks": case["num_blocks"], **case["overrides"],
-                 **outputs(root, name)}
-    diff = {field_name: {"input": values[field_name], "h4a4": value} for field_name, value in overrides.items()
-            if values[field_name] != value}
+                 **outputs(root, name), **fields}
+    unknown = sorted(set(fields) - set(current))
+    if unknown:
+        raise SystemExit(f"fields not in SimulationConfig: {unknown}")
+    base = {**added, **values}
+    diff = {field_name: {"input": base[field_name], "h4a4": value} for field_name, value in overrides.items()
+            if base[field_name] != value}
     flat = flat_cls(**{**added, **values, **overrides})
     config = flat.reconstruct_original_dataclass()
     config.__flat_config__ = flat
@@ -120,12 +125,20 @@ def kv_admission(simulator, native_max_concurrency):
             "status": "MATCH" if demand in native else "DIFFERS"}
 
 
-def main(name, root):
+def parse_field(argument):
+    field_name, _, text = argument.partition("=")
+    try:
+        return field_name, json.loads(text)
+    except json.JSONDecodeError:
+        return field_name, text
+
+
+def main(name, root, fields):
     case = CASES[name]
     root.mkdir(parents=True, exist_ok=True)
     from frontier.utils.random import set_seeds
 
-    config, changes = build_config(name, case, root)
+    config, changes = build_config(name, case, root, fields)
     receipt = {
         "status": "STARTED", "label": "DIAGNOSTIC", "case": name,
         "source_commit": subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"],
@@ -153,6 +166,6 @@ def main(name, root):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] not in CASES:
+    if len(sys.argv) < 3 or sys.argv[1] not in CASES or not all("=" in a for a in sys.argv[3:]):
         raise SystemExit(__doc__)
-    main(sys.argv[1], Path(sys.argv[2]))
+    main(sys.argv[1], Path(sys.argv[2]), dict(parse_field(a) for a in sys.argv[3:]))
