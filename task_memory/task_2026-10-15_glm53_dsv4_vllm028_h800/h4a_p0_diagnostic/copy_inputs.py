@@ -2,6 +2,7 @@
 
     python copy_inputs.py h800_p0    # H4a: native06, profile02, profile04 -> inputs/
     python copy_inputs.py h200_p2    # H200 mainline: P2-32/P2-64 references and profiles, P2-32 lifecycle -> ../h200_mainline/diagnostic/inputs/
+    python copy_inputs.py h800_lifecycle    # H4b-(a) on H800: the P0 lifecycle run -> ../h4b_lifecycle_measurement/inputs/
 
 Copies, never moves, and never overwrites: an existing copy must match its source. shutil.copy2 keeps each file's mtime, which
 client_metrics.native_client_rows checks (run files must be newer than run_manifest.json).
@@ -91,8 +92,28 @@ H200_P2 = {
         "torch_traces/decode/dp3/dp3_pp0_tp0_dcp0_ep24_rank0.1792946205265552185.pt.trace.json.gz",
     ]),
 }
+H800_LIFECYCLE_TAG = "dsv4-h800-p0-lifecycle-20261025-01"
+H800_LIFECYCLE_CASE = TMP / "h4b/cases/h800_lifecycle_case_20261025"
+# The run files come from the R4 evaluation case, as for the H200 references; the lifecycle files and stop markers as for p2_32l.
+H800_LIFECYCLE = {
+    "h800l": dict(
+        root=H800_LIFECYCLE_CASE / "runs/groundtruth_clean" / H800_LIFECYCLE_TAG,
+        files=RUN_FILES + ["launcher_receipt.json", "platform_terminal_receipt.json",
+                           "nodes/gpu-h800-0133.host.platform.shaipower.com/scheduler_lifecycle/dp0_pid1588.jsonl",
+                           "nodes/gpu-h800-0179.host.platform.shaipower.com/scheduler_lifecycle/dp1_pid1448.jsonl",
+                           "nodes/gpu-h800-0209.host.platform.shaipower.com/scheduler_lifecycle/dp0_pid1587.jsonl",
+                           "nodes/gpu-h800-0339.host.platform.shaipower.com/scheduler_lifecycle/dp1_pid1448.jsonl",
+                           *(f"nodes/gpu-h800-{host}.host.platform.shaipower.com/native_stopped.json"
+                             for host in ("0133", "0179", "0209", "0339"))],
+        extra={"run_check_status.groundtruth_clean.json":
+               H800_LIFECYCLE_CASE / "analysis/run_check_status.groundtruth_clean.json",
+               "download_receipt.json": TMP / "h4b/downloads" / H800_LIFECYCLE_TAG / "download_receipt.json",
+               "cloud_inventory.json": TMP / "h4b/downloads" / H800_LIFECYCLE_TAG / "cloud_inventory.json"},
+        cloud_origin=f"{T18}/dsv4_h800_p0_lifecycle_20261025/case/runs/groundtruth_clean/{H800_LIFECYCLE_TAG}"),
+}
 INPUT_SETS = {"h800_p0": (HERE / "inputs", H800_P0),
-              "h200_p2": (HERE.parent / "h200_mainline" / "diagnostic" / "inputs", H200_P2)}
+              "h200_p2": (HERE.parent / "h200_mainline" / "diagnostic" / "inputs", H200_P2),
+              "h800_lifecycle": (HERE.parent / "h4b_lifecycle_measurement" / "inputs", H800_LIFECYCLE)}
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
