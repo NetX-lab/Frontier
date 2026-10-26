@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Update the current status: H200 64-GPU native done. |
 | 2026-10-26 | Update the current status: H200 32-GPU native done, H200 profiles merged, step E running. |
 | 2026-10-25 | Add the current status and document index after the D31 mainline reset. |
 | 2026-10-22 | D25 full H80032/64 workloads complete, both432/432 verified; p90/throughput and remaining decode instability archived. |
@@ -105,7 +106,10 @@ Status as of 2026-10-26:
 - **Native reference results.**
   - H200 32 GPUs (step C, routing image): TTFT 1,083.7 ms, TPOT 61.7 ms, E2E 64.25 s, total
     throughput 5,214.6 tok/s (`evidence/d31_h200_32_native_metrics.json`).
-  - H200 64 GPUs (step F): staged; waiting for GPU room.
+  - H200 64 GPUs (step F): TTFT 1,381.3 ms, TPOT 69.6 ms, E2E 72.6 s, total throughput
+    5,005.5 tok/s (`evidence/d31_h200_64_native_metrics.json`,
+    `test_report_2026-10-26_h200_64_native_workload.md`). NIXL READ cost 56.55 ms
+    (`evidence/d31_h200_64_nixl_read_cost.json`).
   - The D25 H800 runs (`../task_2026-10-22_step5_full_workload/`) used the original router, so
     they are not comparison targets.
 - **Frontier.** The full dummy-timing workload completes in 49 minutes (step B). Step E runs the
@@ -117,7 +121,7 @@ Status as of 2026-10-26:
 - **Next.**
   1. Record the step E error table against native.
   2. Calibrate in order: workflow, then operators, then CPU overhead.
-  3. Run step F when GPUs allow.
+  3. Run the Frontier `h200_64` workload (step G) after step E is within 30%.
 
 ### Sub-task directories (`task_memory/`)
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step F done; status line updated. |
 | 2026-10-26 | D31: step D done, step E running; calibration order for E recorded. |
 | 2026-10-26 | D31: step D row rewritten as sub-steps (a)–(g); (a) done. |
 | 2026-10-26 | D31: step B done; Frontier routing set to `balanced` (D31.9); step D scope made concrete. |
@@ -153,8 +154,8 @@ The 32-GPU gate is 30%, and it releases the 64-GPU calibration. The final gate i
 Dependency graph: `A -> {B, C, D}`; `{B, C, D} -> E`; `C -> F`; `{E, F} -> G`.
 B, C and D run in parallel. F needs C's GPUs released, because 32 + 64 GPUs exceeds the limit.
 
-Status (2026-10-26): A–D are done (D(g) evidence in `test_report_2026-10-26_h200_profiles.md`);
-E is running; F waits for GPU room; G is pending.
+Status (2026-10-26): A–D and F are done (D(g) evidence in `test_report_2026-10-26_h200_profiles.md`,
+F in `test_report_2026-10-26_h200_64_native_workload.md`); E is running; G is pending.
 
 Calibration order for E, after the first error table:
 1. Workflow. The D-side first-token handoff (about two decode steps plus the READ plus the

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step F done (H200 64-GPU native workload succeeded; metrics and the 64-GPU NIXL READ cost archived). |
 | 2026-10-26 | D31: step D done (run 03 tables merged after four profiler/predictor fixes and the DECODE measurement-family fix d034202c); step E started. |
 | 2026-10-26 | D31: D(g) PREFILL tables complete; DECODE run 01 failed at the first PIECEWISE capture (host graph pool assert), fixed in 688eb32b, run 02 submitted. |
 | 2026-10-26 | D31: step D(f) done (H200 NIXL READ profile from native logs, kernel-gap proxy); D(g) profile jobs submitted. |
@@ -209,8 +210,8 @@ State of the D31 plan steps (see the top section of `plan.md`):
 - completed — D. H200 Step-5 operator profiles (run 03 tables merged; report
   `test_report_2026-10-26_h200_profiles.md`).
 - in-progress — E. Frontier `h200_32` run on the measured tables (started 11:19 UTC).
-- waiting — F. H200 64-GPU native workload. The stage is built; launch waits until the account's
-  other H200 jobs leave room (details below).
+- completed — F. H200 64-GPU native workload, job `exp-1026-201417-791460` (report
+  `test_report_2026-10-26_h200_64_native_workload.md`).
 - pending — G.
 
 Step D progress (2026-10-26):
@@ -370,8 +371,22 @@ Step F status (2026-10-26):
   stepcast jobs of another session (32 H200 GPUs, running since 04:27–04:31 UTC) were still running.
   Nothing was submitted. Evidence:
   `/data/ycfeng/tmp/ds4_runs/d31-h200-64-submit-1026b/scratch/precondition_1c_nonterminal_jobs.json`.
-- Next: re-check the listing through Pi and launch exactly once when the account's
-  non-preemptible H200 usage is 0.
+- Pi run `d31-h200-64-submit-1026c`, turn 1 (12:10 UTC): the same 4 stepcast jobs (32
+  non-preemptible GPUs, running since 04:27 UTC) and 2 preemptible jobs of other sessions were
+  still running.
+- The account-level condition above was stricter than D31.2, which limits this session's own
+  usage to 64 GPUs. This session held 0 H200 GPUs. Turn 2 therefore launched once.
+  - Job `exp-1026-201417-791460`, created 12:14:17 UTC; 8 replicas × 8 H200, `step_main`,
+    non-preemptible, creator `i-fengyicheng`; phase `Starting` at the first read.
+  - The launcher (PID 2973409 in Pi's HOST service) must stay alive.
+  - Evidence: `/data/ycfeng/tmp/step5_d31_workload_20261025/h200_64_workload01/{launcher.log,status_1.json}`.
+  - With the other session's jobs, the account holds 96 non-preemptible H200 GPUs while this job
+    runs.
+- Result: `FINAL_STATUS succeeded` at 12:36:41 UTC; all 8 nodes finished with workload return
+  code 0. Native means: TTFT 1381.3 ms, TPOT 69.6 ms, E2E 72.6 s, total throughput 5005.5 tok/s.
+  The 64-GPU run is slower than the 32-GPU run (TTFT +27%, TPOT +13%). Evidence:
+  `evidence/d31_h200_64_native_metrics.json`, and the 64-GPU NIXL READ cost (56.55 ms)
+  `evidence/d31_h200_64_nixl_read_cost.json` for step G.
 
 Step C submission (2026-10-25 19:15 UTC):
 
