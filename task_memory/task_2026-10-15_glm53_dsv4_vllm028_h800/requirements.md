@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Recorded the lead's working decisions for H3o-(a) revision 2c after review round 2 (D-H3O-REVISION-2C), including the source DP synchronization rule that refines item 30 and D7. |
 | 2026-10-26 | Recorded the `/codex-review` request on H3o-(a) (D-H3O-CODEX-REVIEW), YC's decisions D2-D6 with D1 open (D-H3O-DECISIONS), the routing identity rule (D-V4-ROUTING-IDENTITY) and the approval of review round 2. |
 | 2026-10-26 | Recorded YC's standing rule against the whole-step table as a cost model, with the method correction it orders (D-NO-STEP-COST-SHORTCUT), and the operator-level DSV4 cost route as the next route (D-OPERATOR-LEVEL-ROUTE). |
 | 2026-10-26 | Recorded YC's question whether the step-cost table is a measured shortcut instead of operator-level costs, and the answer. |
@@ -331,6 +332,12 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - D6: H200 first. P2-32 and P2-64 are the mainline. H800 P0 testing and calibration come after H200.
 30. **D-V4-ROUTING-IDENTITY.** Frontier's MoE routing for V4 must be identical to native vLLM's, using the balanced strategy (`balanced_topk` in vLLM, `balanced` in Frontier) on every layer. Identity covers the per-expert token counts, the per-EP-rank counts under native linear placement, and the routed row count of each forward. The row count includes vLLM's DP synchronization: every lane takes the minimum graph mode of the DP group, and with a graph mode every lane is padded to the widest lane's capture size. Frontier applies this rule to real V4 lanes, not only to dummy forwards. The GLM and other non-V4 paths are unchanged (gate A12); their own DP-synchronization gap is recorded as deferred work.
 31. **Round 2 of the review is approved:** one resubmission covering revisions 2a and 2b, without automatic retries.
+32. **D-H3O-REVISION-2C.** Lead's working decisions under D-NO-INTERRUPT after review round 2 (request `4678dfdc-…`, verdict `changes_required`, F009-F015, all accepted; records in `h3o_operator_costs/review.md`):
+    - The DP synchronization of item 30 is the source rule of the pinned V2 runner (`vllm/v1/worker/gpu/dp_utils.py:16-95`): if any lane wants eager, every lane runs eager at its own width; otherwise the descriptor is dispatched again on the widest lane's tokens, the common uniform token count (none when lanes disagree) and the largest max query length, and every lane is padded to it. Under the native `FULL_AND_PIECEWISE` local dispatch, a forward with a one-token first tail on any lane therefore runs PIECEWISE on every lane. This states item 30's rule exactly; it does not change YC's requirement.
+    - D7, working choice (a): a new value `full_and_piecewise` of the existing `decode_cuda_graph_mode` field reproduces the native local dispatch, for V4 only in H3o.
+    - The DP rendezvous comes before post-DP preparation and first-layer device work; DP dummies use the V2 dummy workload; the composed attention elapsed is what the events consume.
+    - Growth since D3 and D4, reported to YC: 28 file entries, about +3,310 / −330 lines; caps H200 45 and H800 21 GPU-hours, plus 32 each only if R2h / R2 run; about 15-16.5 working days, H200 milestone at about 11.5.
+    - A third review round needs YC's approval.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
