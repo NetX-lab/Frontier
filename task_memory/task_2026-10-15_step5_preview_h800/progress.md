@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step D(f) done (H200 NIXL READ profile from native logs, kernel-gap proxy); D(g) profile jobs submitted. |
 | 2026-10-26 | D31: step D(d)/(e) done (H200 profile plan for both topologies, DP-lowered graph mode, DSA last-region pricing); step F still blocked. |
 | 2026-10-26 | D31: step D(b)/(c) done (profiler produces mixed batches and graph-padded rows). |
 | 2026-10-26 | D31: step D(a) done (attention priced within its measured category); step F waits for account GPU room; census abandoned. |
@@ -203,8 +204,8 @@ State of the D31 plan steps (see the top section of `plan.md`):
   notes.
 - completed — B. Fast Frontier E2E runs (2026-10-26, details below).
 - completed — C. H200 32-GPU native workload with the routing image (workload02, details below).
-- in-progress — D. H200 Step-5 operator profiles. D(a)–D(e) are committed; D(f) and D(g)
-  follow (details below).
+- in-progress — D. H200 Step-5 operator profiles. D(a)–D(f) are committed; the D(g) profile
+  jobs are running (details below).
 - waiting — F. H200 64-GPU native workload. The stage is built; launch waits until the account's
   other H200 jobs leave room (details below).
 - pending — E, G.
@@ -255,8 +256,41 @@ Step D progress (2026-10-26):
     checks). With 4 tails it does not; Frontier raises a range error if a run reaches that.
   - Unit tests 387 passed; the 5 failures are all on the known baseline list. Fidelity 77/77
     identical against `e275c83`.
-- Next: D(f) adds the kernel-gap and H200 NIXL read inputs; D(g) runs the profile jobs and wires
-  the tables into the predictor options.
+- D(f) done: the two remaining H200 inputs of the measured predictor.
+  - NIXL READ cost: `evidence/d31_h200_nixl_read_cost.json`, written by
+    `tests/integration/step5_pd/nixl_read_profile.py` from the decode-side vLLM "KV Transfer metrics"
+    lines in the step C workload02 server logs
+    (`/data/ycfeng/tmp/step5_d31_workload_20261025/h200_32_workload02/stage/evidence/nodes/*/server.log`).
+    94 logging intervals, 3,447 per-rank READs (3 repetitions × 144 requests × 8 ranks = 3,456; the
+    last interval of the run is not logged), no failed transfers. Every interval logs 133.407 MiB
+    per READ, which equals Frontier's reserved per-rank payload (139,887,104 B for the 6,128-token
+    prefix). Transfer-weighted mean NIXL duration: **51.37 ms** (interval means 13.9–117.1 ms; mean
+    post time 5.2 ms, not included). The earlier estimate of 3–10 ms was wrong: the READ moves
+    about 16,000–20,000 descriptors at about 2.6 GB/s per rank. 51 ms is 4.7% of the native TTFT,
+    so the profile matters.
+  - Kernel gap: `evidence/d31_h200_step5_kernel_gap_proxy.csv` holds the two TP8 rows of
+    `data/profiling/compute/h200/Qwen3-235B-A22B/kernel_gap.csv` unchanged (eager 1.238 µs,
+    CUDA Graph 0.430 µs per kernel; the `chain` column names the source). It is a proxy: Step-5
+    has no kernel-gap measurement, and the gap is a per-kernel launch property of the GPU and
+    runtime more than of the model. It affects only eager (KERNEL_ONLY) steps.
+  - Both files load through `NixlReadCost.from_file` and `read_kernel_gap_ms(path, 8)`.
+  - Limits: the NIXL time is the mean under the native QPS-1 load, not an uncontended READ; it
+    is used for `h200_64` as well, whose payload per rank is the same. The kernel-gap proxy was
+    measured with torch 2.8/CUDA 12.8, while the Step image uses CUDA 13.
+- D(g) submitted (2026-10-26 06:47 UTC) through Pi run `d31-h200-profiles-submit-1026a`:
+  - Packages: `/data/ycfeng/tmp/step5_d31_profiles_20261026/{prefill,decode}_stage01`, staged by
+    `frontier.profiling.step5.job --p0-role {PREFILL,DECODE} --profile-plan
+    frontier/profiling/step5/h200_profile_plan.json`; offline preflight
+    (`verify_fixed_probe.py`) PASS for both (`*_package_preflight01.json`: PREFILL 6 attention
+    rows plus 6 GPU-active rows, DECODE 160 rows; linear and MoE dry runs PASS).
+  - Jobs: PREFILL `exp-1026-144712-650202`, DECODE `exp-1026-144726-883624`; 1 H200 each,
+    `step_main`, non-preemptible, creator `i-fengyicheng`, worker timeout 14400 s. Launchers run in
+    Pi's HOST service (PIDs 399138 and 401263) and must stay alive. Cloud outputs:
+    `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/d31_h200_{prefill,decode}_20261026_01`.
+  - At submission the account held 32 non-preemptible H200 GPUs (the 4 stepcast jobs, still
+    running), so step F stays blocked.
+- Next: when the jobs end, copy the tables, judge stability (`judge_attention_smoke.py`, CV ≤ 5%),
+  and write the predictor options for step E.
 
 Step F status (2026-10-26):
 
