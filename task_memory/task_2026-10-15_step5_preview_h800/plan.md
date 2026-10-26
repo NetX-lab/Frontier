@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: item 2a step 1 done, E rerun with the H200 curves started, EP-lane prediction cache added. |
 | 2026-10-26 | D31: item 2a status line added (steps 2–4 done, step 1 running, step 5 checks done before rerunning E). |
 | 2026-10-26 | D31: calibration item 2a (collective communication) added with its five steps. |
 | 2026-10-26 | D31: shared-expert DP token count sized and moved to low priority; D31.10 rule added to calibration item 2. |
@@ -195,9 +196,11 @@ Calibration order for E, after the first error table:
    Step G needs the TP8/DP4 curves from step 1.
    Status: steps 2–4 done on `feat/step5-d31-measured-comm` (`b9cbda0d`, `0349c1c6`, opt-in
    `--replica_config_moe_all2all_backend allgather_reducescatter` with the measured backend).
-   Step 5's checks pass (unit, dummy smoke, fidelity 77/77). Step 1's H200 jobs were submitted at
-   16:45 UTC. E is rerun with the H200 curves once they are installed; short diagnostic runs use
-   the H800 curves as a proxy.
+   Step 5's checks pass (unit, dummy smoke, fidelity 77/77). Step 1 done: the H200 curves are
+   committed (`946595cd`), and `frontier_workload.py run --measured-collectives` selects them
+   (`1c125189`). The E rerun with the H200 DP2 curves started at 17:20 UTC, with an 8-request
+   prefix run for an early comparison. The EP-lane prediction cache `eddb9bf5` makes runs 2.84×
+   faster with identical results; its fidelity matrix is running.
 3. CPU overhead, which is not modelled now.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2

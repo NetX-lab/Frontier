@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: item 2a step 1 done (H200 curves `946595cd`), runner option `1c125189`, E rerun with the H200 curves started; lane prediction cache `eddb9bf5` (exact, 2.84× faster). |
 | 2026-10-26 | D31: item 2a steps 2–4 done (measured backend `b9cbda0d`, allgather_reducescatter pricing `0349c1c6`); checks pass with fidelity 77/77; H200 collective jobs submitted. |
 | 2026-10-26 | D31: calibration item 2a opened; one-request breakdown shows underpriced and missing collectives (about 11.7 ms per DECODE step). |
 | 2026-10-26 | D31: port checks recorded (test report); shared-expert DP token count sized at about 0.09% of TPOT (low priority); FP8 approximation warning shown to change no Step-5 time; simulator cost profile. |
@@ -499,7 +500,7 @@ Calibration item 2a, collective communication (2026-10-26, `in-progress`):
     - the shared-expert all-reduce is missing;
     - pre-routing work uses the merged token count.
   - The D29 compute/communication overlap.
-  - Caching EP-lane predictions with identical workloads.
+  - Caching EP-lane predictions with identical workloads (done later, `eddb9bf5`, below).
 - Simulator cost:
   - Step E (`h200_32_run01`) has run for 5 h 37 min without finishing.
   - The 8-request prefix (`/data/ycfeng/tmp/d31_e_run/prefix8_base`, `7dce66c0`) took 6,566 s
@@ -518,6 +519,54 @@ Calibration item 2a, collective communication (2026-10-26, `in-progress`):
 - Step 1 result: both H200 jobs succeeded (S2 at 16:55 UTC, S1 at 16:59 UTC). Pi run
   `d31-h200-comm-copy-1026c` copies both cloud output directories to
   `/data/ycfeng/tmp/step5_d31_comm_20261026/downloads/` with hash checks.
+- Step 1 done, `946595cd`: the two H200 `summary.csv` files are copied unchanged to
+  `data/profiling/network/h200_dgx/step5_tp8_dp{2,4}/` (cloud runs `d31_h200_s2_20261026_01` and
+  `d31_h200_s1_20261026_01` under `/mnt/codesign-exp/ycfeng/frontier/step5_comm/`).
+  - The advisory validator reports UNVERIFIED. Every identity, schema, native dispatch-match and
+    container-exit check passes. Two checks fail:
+    - `queue_held`: three small all-reduce cells (7.7–17.1 µs) out of 1,296 (DP2) and 1,440 (DP4);
+    - `actual_rdma_transport`: the worker logs carry no NCCL channel lines, so the transport
+      cannot be read from them.
+  - The medians rule out a socket fallback. H200 is faster than H800 on every collective: TP8
+    all-reduce about 0.58–0.60× (0.53× at 4 MB or more), DP combine 0.73×, BF16 dispatch 0.91×,
+    FP8 dispatch 0.95× (DP2; DP4 is similar). This is consistent with NVLink and RDMA.
+  - Both files load in `MeasuredCCBackend` with the same curve keys as H800, plus the
+    `eager_*_t6144` scenarios (20 extra rows on DP2, 40 on DP4). Check:
+    `/data/ycfeng/tmp/d31_h200_curves/{load.py,load.txt}`.
+- Runner option, `1c125189`: `frontier_workload.py run --measured-collectives` selects the measured
+  backend with `data/profiling/network/<network device>/step5_tp<TP>_dp<DP>/summary.csv` and
+  `--replica_config_moe_all2all_backend allgather_reducescatter`. A missing curve file fails.
+  Without the flag the command is unchanged (`/data/ycfeng/tmp/d31_h200_curves/cmd_check.py`).
+- Runs started 2026-10-26 17:20 UTC from the detached worktree
+  `/data/ycfeng/Frontier/.worktrees/run-agrs-1c125189` with the merged03 predictor options and
+  the H200 DP2 curves:
+  - `prefix8_agrs_h200` (the 8-request prefix trace `/data/ycfeng/tmp/d31_e_run/trace_prefix8.csv`),
+    compared with `prefix8_base` (TTFT 590.7 ms, TPOT 24.7 ms);
+  - `h200_32_agrs_h200` (the full workload, the rerun of step E).
+  - Output: `/data/ycfeng/tmp/d31_agrs_run/<label>/`.
+- Lane prediction cache, `eddb9bf5` ("Predict each distinct EP-wave lane once"):
+  - Reason: the EP wave predicts every EP lane on its own (16 per wave on `h200_32`), and this
+    took about 74% of the short-trace wall time.
+  - Method: the lanes of one wave share the source batch and layer, and the prediction reads only
+    the lane's local expert loads and pre-routing token count. Lanes with the same pair share one
+    prediction. Lanes with a native routing source are still predicted one by one, and the DSV4
+    source path is unchanged.
+  - Exactness check (`/data/ycfeng/tmp/d31_lane_memo/check_memo.py`, which re-predicts every
+    lane without the cache and compares the six phase times exactly): 92,928 lanes in 5,808
+    waves, 0 mismatches on both short traces. Distinct predictions: 11,968 (analytical) and
+    12,144 (allgather_reducescatter), 13% of the lanes.
+  - The short-trace `request_metrics.csv` and `system_metrics.json` equal the pre-cache results
+    of `/data/ycfeng/tmp/d31_agrs_diag/tiny_{base,agrs_h800}` exactly.
+  - Wall time: 577.5 → 203.1 s (analytical) and 594.1 → 209.4 s (allgather_reducescatter),
+    2.84× faster.
+  - Unit tests (the 17 files of `test_report_2026-10-26_agrs_collectives.md` §1): 540 passed,
+    2 skipped. The new test `test_ep_wave_predicts_lanes_with_equal_inputs_once` covers equal
+    inputs, different loads, different pre-routing tokens and a native routing source.
+  - Fidelity matrix: `eddb9bf5` (worktree `.worktrees/fidelity-candidate-eddb9bf`, label
+    `candidate_memo`) against the `7dce66c0` baseline in `/data/ycfeng/tmp/d31_agrs_fidelity`,
+    running.
+  - The two runs above started before this commit and use the uncached code. The cache changed
+    no result on the short traces, so they are not restarted; they only take longer.
 
 Step F status (2026-10-26):
 
