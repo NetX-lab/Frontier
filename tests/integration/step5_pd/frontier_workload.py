@@ -82,6 +82,10 @@ def command(case: str, engine: dict, trace: Path, output_dir: Path, predictor_op
         "--vllm_v1_scheduler_config_num_blocks_mode", "memory_planner",
         "--no-vllm_v1_scheduler_config_enable_runtime_non_kv_cache_overhead_profiling",
         "--analytical_kv_cache_transfer_config_kv_connector", "nixl",
+        # The native engines run vLLM's async scheduling with the NIXL connector: a DECODE
+        # engine keeps two batches in flight, and its engine steps post, find and report READs.
+        "--analytical_kv_cache_transfer_config_nixl_read_completion", "engine_step",
+        "--cluster_config_decode_replica_scheduler_config_max_concurrent_batches", "2",
         "--request_generator_config_type", "trace_replay",
         "--trace_request_generator_config_trace_file", str(trace),
         "--trace_request_generator_config_max_tokens", str(engine["max_num_batched_tokens"]),
