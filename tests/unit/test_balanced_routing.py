@@ -17,8 +17,10 @@ import pytest
 torch = pytest.importorskip("torch")
 
 from frontier.moe_ep_workload import (
+    build_contiguous_expert_ownership,
     generate_moe_routing_ratios,
     materialize_expert_token_counts,
+    materialize_layer_ep_workload,
 )
 from frontier.profiling.moe.balanced_routing import balanced_topk, register_balanced_topk
 
@@ -26,12 +28,26 @@ ROOT = Path(__file__).resolve().parents[2]
 MODEL = json.loads((ROOT / "data/config/models/deepseek-ai__DeepSeek-V4-Flash.json").read_text())
 
 
-@pytest.fixture
-def native(monkeypatch):
+def _pinned_source():
     source_root = os.environ.get("VLLM_BS_SOURCE_ROOT")
     if source_root is None:
         pytest.skip("Set VLLM_BS_SOURCE_ROOT for the pinned native registry checks")
-    source = Path(source_root) / "vllm"
+    return Path(source_root) / "vllm"
+
+
+@pytest.fixture
+def native_expert_map():
+    path = _pinned_source() / "model_executor/layers/fused_moe/expert_map_manager.py"
+    nodes = [node for node in ast.parse(path.read_text()).body
+             if getattr(node, "name", None) == "determine_expert_map"]
+    namespace = dict(torch=torch, ExpertPlacementStrategy=str)
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), str(path), "exec"), namespace)
+    return namespace["determine_expert_map"]
+
+
+@pytest.fixture
+def native(monkeypatch):
+    source = _pinned_source()
     router = ast.parse((source / "model_executor/layers/fused_moe/router/routing_simulator_router.py").read_text())
     context = ast.parse((source / "forward_context.py").read_text())
     names = {"RoutingStrategy", "DistributionBasedRouting", "RoutingSimulator", "_compute_sp_num_tokens", "DPMetadata"}
@@ -62,10 +78,16 @@ def native(monkeypatch):
 
 @pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16, torch.float32])
 @pytest.mark.parametrize("indices_type", [None, torch.int32, torch.int64])
+# DP2 / EP16 and DP4 / EP32 widths include DP-synchronized graph widths of the
+# retained P0, P2-32 and P2-64 native runs.
 @pytest.mark.parametrize("widths,sp,mode", [([6144], 1, "NONE"), ([9, 25], 8, "NONE"),
                                          ([0, 9], 8, "NONE"), ([8, 8], 8, "FULL"),
-                                         ([24, 24], 8, "PIECEWISE")])
-def test_native_chunks_match_frontier(native, dtype, indices_type, widths, sp, mode):
+                                         ([24, 24], 8, "PIECEWISE"), ([16, 16], 8, "FULL"),
+                                         ([16, 16, 16, 16], 8, "FULL"),
+                                         ([40, 40, 40, 40], 8, "FULL"),
+                                         ([32, 31, 34, 31], 8, "NONE")])
+def test_native_chunks_match_frontier(native, native_expert_map, dtype, indices_type,
+                                      widths, sp, mode):
     simulator, metadata_type, group, ctx = native
     metadata = metadata_type(torch.tensor(widths, dtype=torch.int32))
     group.world_size = len(widths) * sp
@@ -90,13 +112,24 @@ def test_native_chunks_match_frontier(native, dtype, indices_type, widths, sp, m
     assert metadata.local_sizes is None
     ids = torch.cat(chunks)
     counts = torch.bincount(ids.flatten(), minlength=experts).tolist()
+    ratios = generate_moe_routing_ratios(total_expert_num=experts, distribution_type="balanced",
+                                         seed=0, layer_id=0)
     expected = materialize_expert_token_counts(
-        routing_ratios=generate_moe_routing_ratios(total_expert_num=experts,
-                                                  distribution_type="balanced", seed=0, layer_id=0),
-        total_routed_assignments=sum(sizes) * top_k, total_expert_num=experts,
+        routing_ratios=ratios, total_routed_assignments=sum(sizes) * top_k,
+        total_expert_num=experts,
     )
     assert counts == list(expected.values())
     assert sum(counts) == sum(sizes) * top_k
+    ep = group.world_size
+    workload = materialize_layer_ep_workload(
+        routing_ratios=ratios, target_replica_id=0, global_layer_id=0,
+        routing_token_count=sum(sizes), router_topk=top_k, total_expert_num=experts,
+        moe_expert_parallel_size=ep, expert_to_ep=build_contiguous_expert_ownership(experts, ep),
+    )
+    for rank in range(ep):
+        _, expert_map, _ = native_expert_map(ep, rank, experts, "linear")
+        owned = range(experts) if expert_map is None else (expert_map >= 0).nonzero().flatten().tolist()
+        assert sum(counts[expert] for expert in owned) == workload.per_ep_routed_tokens[rank]
     _, unchunked = balanced_topk(torch.empty(sum(sizes), 1), torch.empty(sum(sizes), experts), top_k)
     torch.testing.assert_close(ids, unchunked)
     if widths == [6144]:
