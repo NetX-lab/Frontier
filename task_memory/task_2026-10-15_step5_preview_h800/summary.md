@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Update the current status: H200 32-GPU native done, H200 profiles merged, step E running. |
 | 2026-10-25 | Add the current status and document index after the D31 mainline reset. |
 | 2026-10-22 | D25 full H80032/64 workloads complete, both432/432 verified; p90/throughput and remaining decode instability archived. |
 | 2026-10-22 | Consolidated clean145a2f5 passes77/77 exact fidelity; P0 G3 capture finishesSucceeded4/4, native judgment pending. Four-track8-request diagnostic p90/throughput independently recomputed. |
@@ -99,17 +100,24 @@ task. Read these first:
 
 ### Status in plain words
 
-- **Native reference results.** The D25 H800 32-GPU and 64-GPU workload runs exist
-  (`../task_2026-10-22_step5_full_workload/`). They used the original router, so they cannot be
-  compared with the current `position_cyclic` Frontier configuration. No H200 workload run exists
-  yet.
-- **Frontier.** The Step-5 model, PD handoff (D26, D27), finish sync (D30), DP placement and
-  `position_cyclic` routing are merged. Frontier has not yet completed a workload run. The last
-  attempt, main09, timed out on one request because of diagnostic output volume.
-- **Operator profiles.** The profiler code exists in `frontier/profiling/step5/`. No measured
-  Step-5 profile has been admitted yet.
-- **Next.** Plan steps B, C and D run in parallel: fast E2E runs, the H200 32-GPU native workload
-  and the H200 operator profiles.
+Status as of 2026-10-26:
+
+- **Native reference results.**
+  - H200 32 GPUs (step C, routing image): TTFT 1,083.7 ms, TPOT 61.7 ms, E2E 64.25 s, total
+    throughput 5,214.6 tok/s (`evidence/d31_h200_32_native_metrics.json`).
+  - H200 64 GPUs (step F): staged; waiting for GPU room.
+  - The D25 H800 runs (`../task_2026-10-22_step5_full_workload/`) used the original router, so
+    they are not comparison targets.
+- **Frontier.** The full dummy-timing workload completes in 49 minutes (step B). Step E runs the
+  `h200_32` workload with the measured H200 tables.
+- **Operator profiles.** The H200 profile tables for both roles are measured and merged (run 03,
+  `test_report_2026-10-26_h200_profiles.md`). The first runs on them found five defects in the
+  profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,
+  `d034202c`).
+- **Next.**
+  1. Record the step E error table against native.
+  2. Calibrate in order: workflow, then operators, then CPU overhead.
+  3. Run step F when GPUs allow.
 
 ### Sub-task directories (`task_memory/`)
 

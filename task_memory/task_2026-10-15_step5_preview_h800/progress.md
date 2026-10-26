@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step D done (run 03 tables merged after four profiler/predictor fixes and the DECODE measurement-family fix d034202c); step E started. |
 | 2026-10-26 | D31: D(g) PREFILL tables complete; DECODE run 01 failed at the first PIECEWISE capture (host graph pool assert), fixed in 688eb32b, run 02 submitted. |
 | 2026-10-26 | D31: step D(f) done (H200 NIXL READ profile from native logs, kernel-gap proxy); D(g) profile jobs submitted. |
 | 2026-10-26 | D31: step D(d)/(e) done (H200 profile plan for both topologies, DP-lowered graph mode, DSA last-region pricing); step F still blocked. |
@@ -205,11 +206,12 @@ State of the D31 plan steps (see the top section of `plan.md`):
   notes.
 - completed — B. Fast Frontier E2E runs (2026-10-26, details below).
 - completed — C. H200 32-GPU native workload with the routing image (workload02, details below).
-- in-progress — D. H200 Step-5 operator profiles. D(a)–D(f) are committed; in D(g) the PREFILL
-  tables are complete and the DECODE job runs again after a profiler fix (details below).
+- completed — D. H200 Step-5 operator profiles (run 03 tables merged; report
+  `test_report_2026-10-26_h200_profiles.md`).
+- in-progress — E. Frontier `h200_32` run on the measured tables (started 11:19 UTC).
 - waiting — F. H200 64-GPU native workload. The stage is built; launch waits until the account's
   other H200 jobs leave room (details below).
-- pending — E, G.
+- pending — G.
 
 Step D progress (2026-10-26):
 
@@ -323,8 +325,36 @@ Step D progress (2026-10-26):
   1 H200, `step_main`, non-preemptible, creator `i-fengyicheng`; cloud output
   `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/d31_h200_decode_20261026_02`. At submission
   the account held 32 non-preemptible H200 GPUs (the 4 stepcast jobs).
-- Next: copy the run 02 tables, check 160/160 attention rows and `stability_pass`, merge the
-  role tables and run step E.
+- D(g) run 02 and run 03, and the smoke runs on the measured tables (full evidence in
+  `test_report_2026-10-26_h200_profiles.md`):
+  - Run 02 (DECODE, 901 s) wrote all 160 attention rows. Its MoE table used the `uniform` load
+    distribution, while Frontier prices Step MoE with `balanced` routing (D31.9). This was a
+    planning error in the D(g) ticket: no check compared the profiled load with Frontier's
+    routing.
+  - Four Frontier smoke runs (4 requests × 8 output tokens) each stopped at a defect:
+    - `ae4c9312`: only KERNEL_ONLY tables need kernel counts.
+    - `39a82403`: profile the `input_cast` and `final_residual` stage boundaries.
+    - `dd1f37dc`: one measurement-identity builder for the linear, MoE and attention profilers.
+    - `6790f110`: profile the `balanced` MoE distribution.
+    - The fourth run stopped because run 02's attention rows were not merged yet.
+  - Run 03 (PREFILL `exp-1026-183852-975984`, 417 s; DECODE `exp-1026-183852-950646`, 978 s;
+    Pi run `d31-h200-profiles03-submit-copy-1026c`): all tables complete and hash-identical.
+    155/160 DECODE and 11/12 PREFILL attention rows have a priced-target (`step5_layer_e2e`)
+    CV and median disagreement ≤ 5%. The rest are ≤ 5.7%. Run 02's 39.6% outlier did not
+    recur. Merged inputs: `/data/ycfeng/tmp/step5_d31_profiles_20261026/merged03/predictor_options.json`.
+  - Pi deviation in this run: a relative path after `stepmind_env.sh` changed the working
+    directory wrote `/data/ycfeng/steptron/status_{prefill,decode}_3_terminal.json` outside the
+    run directory. Deleting the two files needs approval.
+  - Smoke run05 (3259a06a) completed with TPOT 94 ms for 4 requests. An operator trace showed
+    that PD DECODE priced MoE, linear and EP communication from CUDA_EVENT tables under CUDA
+    Graph modes. The cause: the families that Step attention adds also chose the step's
+    family. Fix `d034202c`; one-request TPOT 93.94 → 14.77 ms, TTFT unchanged.
+  - `d034202c` unit evidence: 143 failures, and the same 143 IDs fail on a `git archive` export
+    of `431e5bd4`. Most need `torch`, `aiohttp` or `plotly`. The rest are stale tests, for
+    example ones that assert Step attention is disabled.
+- Step E started 2026-10-26 11:19 UTC:
+  `frontier_workload.py run --case h200_32 --predictor-options .../merged03/predictor_options.json
+  --output-dir /data/ycfeng/tmp/d31_e_run/h200_32_run01` (log `/data/ycfeng/tmp/d31_e_run/h200_32_run01.log`).
 
 Step F status (2026-10-26):
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step D done, step E running; calibration order for E recorded. |
 | 2026-10-26 | D31: step D row rewritten as sub-steps (a)–(g); (a) done. |
 | 2026-10-26 | D31: step B done; Frontier routing set to `balanced` (D31.9); step D scope made concrete. |
 | 2026-10-25 | D31 mainline reset: new current plan for H200 32/64 E2E comparison; all sections below it become historical. |
@@ -151,6 +152,19 @@ The 32-GPU gate is 30%, and it releases the 64-GPU calibration. The final gate i
 
 Dependency graph: `A -> {B, C, D}`; `{B, C, D} -> E`; `C -> F`; `{E, F} -> G`.
 B, C and D run in parallel. F needs C's GPUs released, because 32 + 64 GPUs exceeds the limit.
+
+Status (2026-10-26): A–D are done (D(g) evidence in `test_report_2026-10-26_h200_profiles.md`);
+E is running; F waits for GPU room; G is pending.
+
+Calibration order for E, after the first error table:
+1. Workflow. The D-side first-token handoff (about two decode steps plus the READ plus the
+   first-token iteration in the native logs), the timing of the NIXL read completion, and the
+   number of DECODE batches in flight. The `feat/glm53-dsv4-vllm028` branch has candidate
+   commits for these (`5f907f66`, `96d9c1ef`, `82390e10`). Test cherry-picks in a separate
+   worktree under `.worktrees/` before porting them.
+2. GPU operators and gaps. Replace the kernel-gap proxy and the FP8 metadata if the operator
+   trace shows a measurable gap.
+3. CPU overhead, which is not modelled now.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2
 and G3, exact-byte KV checks, observer validation, census data and the D29 scope ledger.
