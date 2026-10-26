@@ -181,6 +181,33 @@ def test_native_pd_node_capacity_reaches_only_its_selected_role(tmp_path, block_
     assert json.dumps(config, sort_keys=True) == before
 
 
+@pytest.mark.parametrize("profilers", [{}, {"decode": {"profiler": "torch", "torch_profiler_dir": "/trace"}},
+                                       {"decode": {"profiler": "torch", "torch_profiler_dir": "trace"}},
+                                       {"other": {"profiler": "torch", "torch_profiler_dir": "/trace"}}, []])
+def test_native_pd_profiler_reaches_only_its_selected_role(tmp_path, profilers):
+    from tests.comparison.calibration.native_pd_worker import node_plan
+
+    (tmp_path / "config.json").write_text(json.dumps({
+        "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
+    }))
+    config = {"engine": native_engine() | {"kv_transfer": {}}, "data_parallel_size_local": 1,
+              "dp_rpc_ports": {"prefill": 24471, "decode": 24571},
+              "http_ports": {"prefill": 8100, "decode": 8200},
+              "role_profiler_config": profilers}
+    peers = [{"host": f"node{index}", "ip": f"192.0.2.{10 + index}"} for index in range(4)]
+    for peer in peers:
+        if profilers not in ({}, {"decode": {"profiler": "torch", "torch_profiler_dir": "/trace"}}):
+            with pytest.raises(ValueError, match="absolute worker-local trace directory"):
+                node_plan(config, peers, peer["host"], [str(n) for n in range(8)])
+            continue
+        plan = node_plan(config, peers, peer["host"], [str(n) for n in range(8)])
+        command = server_command(plan["engine"], tmp_path, config["http_ports"][plan["role"]])
+        if plan["role"] in profilers:
+            assert json.loads(command[command.index("--profiler-config") + 1]) == profilers["decode"]
+        else:
+            assert "--profiler-config" not in command
+
+
 @pytest.mark.parametrize("fault", ["version", "source", "image", "mode", "no_observer",
                                   "clean_light", "capacity", "ranks", "role", "output",
                                   "observer_source", "startup", "routing", "weights",
@@ -247,6 +274,43 @@ def test_replay_keeps_client_identity_and_only_legacy_internal_id_contract(versi
         assert records[0]["engine_request_id"] == "cmpl-request-7-0"
     else:
         assert "engine_request_id" not in records[0]
+
+
+def test_replay_profiles_the_named_server_and_survives_a_profiler_failure():
+    from aiohttp import web
+    from aiohttp.test_utils import TestServer
+
+    calls = []
+
+    async def exercise():
+        async def complete(request):
+            return web.json_response({"choices": [{"finish_reason": "length"}], "usage": {}})
+
+        async def start_profile(request):
+            calls.append(("start_profile", await request.json()))
+            raise web.HTTPInternalServerError()
+
+        async def stop_profile(request):
+            calls.append(("stop_profile", None))
+            return web.json_response({})
+
+        serving, profiled = web.Application(), web.Application()
+        serving.router.add_post("/v1/completions", complete)
+        profiled.router.add_post("/start_profile", start_profile)
+        profiled.router.add_post("/stop_profile", stop_profile)
+        async with TestServer(serving) as server, TestServer(profiled) as profiler:
+            return await vllm_replay.replay([
+                {"request_id": "request-7", "segment": "formal", "role": "formal",
+                 "arrived_at": 0.0, "num_prefill_tokens": 3, "num_decode_tokens": 1},
+            ], server.port, 1024, 0.0,
+                [{"start_s": 0.0, "stop_s": 0.05, "request": {"profile_prefix": "load", "max_iterations": 3}}],
+                vllm_version="0.28.0", profile_url=f"http://127.0.0.1:{profiler.port}")
+
+    clock, records = asyncio.run(exercise())
+    assert records[0]["http_status"] == 200
+    assert calls == [("start_profile", {"profile_prefix": "load", "max_iterations": 3}), ("stop_profile", None)]
+    [marks] = clock["profile_marks"]
+    assert "500" in marks["start_profile"]["error"] and "error" not in marks["stop_profile"]
 
 
 def native_replay_inputs(tmp_path, engine, observer=None):

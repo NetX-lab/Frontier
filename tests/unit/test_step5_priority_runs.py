@@ -18,7 +18,8 @@ from tests.unit.test_canonical_client_metrics import native, simulator, TRACE
 
 
 @pytest.mark.parametrize("case_id,kind", [
-    ("h200_32", "qualification"), ("h800_32", "workload"), ("h800_64", "workload")])
+    ("h200_32", "qualification"), ("h800_32", "workload"), ("h800_64", "workload"),
+    ("h200_32", "device_timeline")])
 def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, case_id, kind):
     inputs = stage_inputs(tmp_path)
     model_path = inputs["model_dir"] / "config.json"
@@ -27,6 +28,10 @@ def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, 
     model_path.write_text(json.dumps(model))
     definition = json.loads((canonical_stage.REPO / "tests/integration/step5_pd/canonical_run_h200.json").read_text())
     definition["probe_helpers"] = inputs["definition"]["probe_helpers"]
+    profiler = {"profiler": "torch", "torch_profiler_dir": "/tmp/decode_trace"}
+    if kind == "device_timeline":
+        definition["role_profiler_config"] = {"decode": profiler}
+        definition["canonical_replay"]["decode_profile_windows"] = [{"start_s": 16, "stop_s": 22}]
     definition_path = tmp_path / "definition.json"
     definition_path.write_text(json.dumps(definition))
     runtime = tmp_path / "runtime"
@@ -60,6 +65,21 @@ def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, 
     config = json.loads((stage / "config.json").read_text())
     assert config["canonical_replay"]["kind"] == kind
     assert formal_release.validate(config)["status"] == "NOT_REQUIRED"
+    rows = json.loads((stage / "preflight.json").read_text())
+    assert {row["role"] for row in rows if "--profiler-config" in row["server_command"]} == (
+        {"decode"} if kind == "device_timeline" else set())
+    if kind == "device_timeline":
+        assert json.loads((stage / "trace/replay_plan.json").read_text())["decode_profile_windows"] == [
+            {"start_s": 16, "stop_s": 22}]
+        for drift in ({"decode": profiler, "prefill": profiler}, None):
+            changed = copy.deepcopy(config)
+            if drift is None:
+                del changed["role_profiler_config"]
+            else:
+                changed["role_profiler_config"] = drift
+            (stage / "config.json").write_text(json.dumps(changed))
+            with pytest.raises(ValueError, match="Only device_timeline runs profile"):
+                canonical_stage.verify(stage)
     if kind == "workload":
         assert config["timeout_seconds"] == 5400
         assert json.loads((stage / "trace/replay_plan.json").read_text())["kind"] == "workload"

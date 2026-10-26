@@ -101,7 +101,8 @@ def stage_canonical(definition: dict, stage: Path) -> None:
     canonical_workload(workload)
     shutil.copytree(workload, stage / "trace/workload")
     plan = {key: settings[key] for key in (
-        "kind", "idle_timeout_s", "idle_poll_s", "concurrent_requests")}
+        "kind", "idle_timeout_s", "idle_poll_s", "concurrent_requests", "decode_profile_windows")
+        if key in settings}
     plan["dp_size"] = definition["engine"]["data_parallel_size"]
     (stage / "trace/replay_plan.json").write_text(json.dumps(plan, indent=1))
     relative = "tests/integration/step5_pd/canonical_replay.py"
@@ -208,6 +209,8 @@ def build(definition: dict, *, stage: Path, workspace: Path, output_dir: Path, m
             "weight_suffixes")},
         **resources,
     }
+    if "role_profiler_config" in definition:
+        config["role_profiler_config"] = definition["role_profiler_config"]
     if "pd_state_observation" in definition:
         from tests.integration.step5_pd.r2_stage import stage_observation
         stage_observation(config, definition, stage, model_dir)

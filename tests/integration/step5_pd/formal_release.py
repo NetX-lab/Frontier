@@ -19,6 +19,7 @@ DEPENDENCY_ERROR_LIMIT = .30
 COLLECTION_KINDS = {
     "qualification": "Basic qualification has no accuracy dependency",
     "workload": "Full native workload collection; calibration readiness and accuracy remain unverified",
+    "device_timeline": "Diagnostic decode device timeline; profiler windows perturb native timing, never a reference",
 }
 
 

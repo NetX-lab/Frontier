@@ -46,6 +46,7 @@ RUNTIME_SOURCES = (
     "v1/core/sched/scheduler.py", "v1/engine/core.py", "v1/engine/__init__.py",
     "v1/engine/async_llm.py", "v1/metrics/stats.py", "v1/metrics/loggers.py",
     "compilation/cuda_graph.py", "envs.py",
+    "config/profiler.py", "profiler/wrapper.py", "entrypoints/serve/profile/api_router.py",
     "models/step5/nvidia/model.py", "models/step5/nvidia/sparse_attention.py",
     "distributed/kv_transfer/kv_connector/v1/base.py",
 )
@@ -79,6 +80,10 @@ def verify(stage: Path) -> dict:
     if ("pd_state_observation" in config or "serve_observers" in config
             or "role_num_gpu_blocks_override" in config or (stage / "r2_bootstrap").exists()):
         raise ValueError("Clean serving contains diagnostic hooks or block limits")
+    timeline = plan["kind"] == "device_timeline"
+    if (timeline != ("role_profiler_config" in config) or timeline != ("decode_profile_windows" in plan)
+            or set(config.get("role_profiler_config", {})) - {"decode"}):
+        raise ValueError("Only device_timeline runs profile, and only the decode servers")
     for key, expected in {"max_model_len": 7168, "max_num_batched_tokens": 8192, "max_num_seqs": 128,
                           "tensor_parallel_size": 8, "data_parallel_size": dp, "pipeline_parallel_size": 1,
                           "enable_expert_parallel": True, "enforce_eager": False,
@@ -123,6 +128,9 @@ def build(args) -> dict:
         definition["replay_timeout_s"] = 1200
     elif args.kind == "workload":
         definition["description"] += " D25 full native workload collection: three repeats of 16 warmups and 128 requests; calibration readiness and accuracy unverified."
+    elif args.kind == "device_timeline":
+        definition["description"] += (" D31 diagnostic decode device timeline: the full workload with torch-profiler"
+                                      " windows on the decode servers in the first formal repeat; never a reference.")
     workspace = args.workspace.resolve()
     workspace.mkdir(parents=True, exist_ok=True)
     model = workspace / "reference_inputs"

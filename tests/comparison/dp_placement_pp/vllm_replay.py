@@ -453,6 +453,8 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
             if type(engine["cudagraph_metrics"]) is not bool:
                 raise ValueError("cudagraph_metrics must be boolean")
             command += ["--cudagraph-metrics" if engine["cudagraph_metrics"] else "--no-cudagraph-metrics"]
+        if "profiler_config" in engine:
+            command += ["--profiler-config", json.dumps(engine["profiler_config"])]
         if "api_server_count" in engine and not engine.get("headless"):
             command += ["--api-server-count", str(engine["api_server_count"])]
         if engine.get("headless"):
@@ -586,11 +588,15 @@ async def read_completion_stream(response, *, cancel_after_first_content: bool =
 
 
 async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float,
-                  profile_window_s: tuple[float, float] | None = None, *,
+                  profile_windows: list[dict] = (), *,
                   vllm_version: str = "0.10.2", records: list[dict] | None = None,
-                  checkpoint=None, completion_url: str | None = None) -> tuple[dict, list[dict]]:
-    """Post every row at its arrival offset; with profile_window_s, also open and
-    close the server's torch profiler at those two offsets of the same clock.
+                  checkpoint=None, completion_url: str | None = None,
+                  profile_url: str | None = None) -> tuple[dict, list[dict]]:
+    """Post every row at its arrival offset; for each profile window, also open and
+    close the server's torch profiler at its ``start_s`` and ``stop_s`` offsets of the
+    same clock. A window's optional ``request`` is the ``/start_profile`` JSON body;
+    ``profile_url`` (default: the replay server) names the server to profile. A failed
+    profiler call is recorded in its mark and never stops the replay.
     An optional prompt_id repeats identical token IDs under distinct request IDs.
     Rows with stream=true opt into client first-content timing and final usage events;
     rows without it keep the existing nonstreaming body and record format."""
@@ -708,16 +714,20 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                 record["error"] = payload
             records.append(record)
 
-        profile_marks: dict = {}
+        profile_marks = [{} for _ in profile_windows]
+        server = profile_url or f"http://127.0.0.1:{port}"
 
-        async def profile(start_s: float, stop_s: float) -> None:
-            for endpoint, at in (("start_profile", start_s), ("stop_profile", stop_s)):
+        async def profile(window: dict, marks: dict) -> None:
+            for endpoint, at, body in (("start_profile", window["start_s"], window.get("request")),
+                                       ("stop_profile", window["stop_s"], None)):
                 await asyncio.sleep(max(0.0, origin + at - time.monotonic()))
-                requested = time.monotonic()
-                async with session.post(f"http://127.0.0.1:{port}/{endpoint}") as response:
-                    response.raise_for_status()
-                profile_marks[endpoint] = {"requested_monotonic": requested,
-                                           "returned_monotonic": time.monotonic()}
+                mark = marks[endpoint] = {"requested_monotonic": time.monotonic()}
+                try:
+                    async with session.post(f"{server}/{endpoint}", json=body) as response:
+                        response.raise_for_status()
+                except Exception as error:  # A profiler failure never stops the replay.
+                    mark["error"] = f"{type(error).__name__}: {error}"
+                mark["returned_monotonic"] = time.monotonic()
 
         async def heartbeat() -> None:
             # Linux lets a timed wait overshoot by up to about 0.1% of its
@@ -727,13 +737,12 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                 await asyncio.sleep(HEARTBEAT_S)
 
         posts = [post(row) for row in rows]
-        if profile_window_s is not None:
-            posts.append(profile(*profile_window_s))
+        posts += [profile(window, marks) for window, marks in zip(profile_windows, profile_marks)]
         beat = asyncio.ensure_future(heartbeat())
         await asyncio.gather(*posts)
         beat.cancel()
     clock = {"origin_monotonic": origin, "origin_wall": origin_wall}
-    if profile_window_s is not None:
+    if profile_windows:
         clock["profile_marks"] = profile_marks
     return clock, records
 
@@ -835,7 +844,8 @@ def main(argv: list[str] | None = None) -> int:
             summary["startup_s"] = wait_until_ready(server, args.port, args.startup_timeout_s)
             clock, records = asyncio.run(replay(
                 request_ids["rows"], args.port, int(model_config["vocab_size"]), args.origin_lead_s,
-                profile_window_s, vllm_version=version,
+                [] if profile_window_s is None else [dict(zip(("start_s", "stop_s"), profile_window_s))],
+                vllm_version=version,
             ))
             summary.update(clock)
             time.sleep(args.drain_s)

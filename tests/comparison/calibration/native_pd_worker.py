@@ -4,7 +4,9 @@ Optional config keys: `mode` (default `light`) selects the serving mode, `serve_
 (absent for clean native runs) holds the per-role recorder inputs, `replay_script` (default
 `pd_replay.py` in `harness_dir`) is the client driver started on the prefill head with the
 pd_replay arguments, and `evidence_dir` names a task-local directory that receives a copy of
-each node's small records and the replay outputs after the run.
+each node's small records and the replay outputs after the run. `role_profiler_config` maps a
+role to the vLLM `--profiler-config` of its servers; each node copies its worker-local
+`torch_profiler_dir` into `torch_trace/` of its node record after its server stops.
 """
 
 import argparse
@@ -44,6 +46,13 @@ def node_plan(config, peers, host, devices):
         raise ValueError('Role GPU block overrides require positive integer counts')
     if role in block_counts:
         engine['num_gpu_blocks_override'] = block_counts[role]
+    profilers = config.get('role_profiler_config', {})
+    if (type(profilers) is not dict or set(profilers) - {'prefill', 'decode'}
+            or any(not Path(value.get('torch_profiler_dir', '')).is_absolute()
+                   for value in profilers.values())):
+        raise ValueError('Role profiler configs require an absolute worker-local trace directory')
+    if role in profilers:
+        engine['profiler_config'] = profilers[role]
     lane = position % nodes_per_role * local
     heads = dict(zip(('prefill', 'decode'), (peers[0], peers[nodes_per_role])))
     engine.update(host=peers[position]['ip'], data_parallel_size_local=local,
@@ -233,6 +242,14 @@ def run(config):
             if result['server_stop']['returncode'] != 0:
                 exit_code = 1
             write_json(node / 'native_stopped.json', result['server_stop'])
+            if 'profiler_config' in plan['engine']:
+                try:
+                    shutil.copytree(plan['engine']['profiler_config']['torch_profiler_dir'],
+                                    node / 'torch_trace')
+                except Exception:
+                    error = traceback.format_exc()
+                    result['observation_errors'].append(error)
+                    print('NATIVE_PD_OBSERVATION_ERROR', error, flush=True)
         try:
             result['weight_audit'] = weight_candidates([scratch / 'hf', model],
                                                         tuple(config['weight_suffixes']))

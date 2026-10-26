@@ -224,10 +224,13 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, se
                 records.extend(phase_records[copied:])
                 copied = len(phase_records)
 
+            # Diagnostic device-timeline runs profile the decode servers during the first formal phase.
+            windows = (settings.get("decode_profile_windows", [])
+                       if phase == "formal" and repeat == repeats[0] else [])
             try:
-                clock, _ = await replay(rows, port, vocab_size, origin_lead_s, vllm_version="step5",
+                clock, _ = await replay(rows, port, vocab_size, origin_lead_s, windows, vllm_version="step5",
                                         records=phase_records,
-                                        checkpoint=lambda: persist_phase())
+                                        checkpoint=lambda: persist_phase(), profile_url=urls["decode"])
             finally:
                 persist_phase()
                 persist()
