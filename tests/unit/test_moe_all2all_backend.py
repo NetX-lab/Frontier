@@ -44,7 +44,8 @@ def test_dp_forward_shape_orders_ranks_and_requires_every_lane():
 
 def test_lanes_run_pre_routing_work_on_their_dp_rank_tokens():
     shape = DPForwardShape((5, 2), False)
-    lanes = {ep_id: SimpleNamespace(ep_id=ep_id, lane_workload=object()) for ep_id in range(4)}
+    load = SimpleNamespace(local_token_counts=(2, 0), routing_source=None)
+    lanes = {ep_id: SimpleNamespace(ep_id=ep_id, lane_workload=load) for ep_id in range(4)}
     predictor = Mock()
     predictor._replica_config = SimpleNamespace(attn_tensor_parallel_size=2)
     predictor.predict_stage_execution_time.return_value = None
@@ -57,6 +58,8 @@ def test_lanes_run_pre_routing_work_on_their_dp_rank_tokens():
     )
     assert [lanes[e].moe_pre_routing_effective_total_tokens for e in range(4)] == [5, 5, 2, 2]
     assert all(lanes[e].dp_forward_shape is shape for e in range(4))
+    # Equal expert loads are still priced once per DP rank, whose tokens differ.
+    assert [call.args[0].ep_id for call in predictor.predict_stage_execution_time.call_args_list] == [0, 2]
 
 
 def _pricer(layer_id, attn_dp=2):

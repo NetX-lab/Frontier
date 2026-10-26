@@ -200,7 +200,7 @@ def test_ep_wave_retains_actual_predictions_only_when_requested(capture_lane_tim
         }),))
         for ep_id in (0, 1)
     }
-    batches = {ep_id: SimpleNamespace(ep_id=ep_id, lane_workload=object()) for ep_id in (0, 1)}
+    batches = {ep_id: _lane_batch(ep_id, (ep_id, 1)) for ep_id in (0, 1)}
     predictor = Mock()
     predictor.predict_stage_execution_time.side_effect = lambda batch, *args, **kwargs: stages[batch.ep_id]
 
@@ -223,6 +223,42 @@ def test_ep_wave_retains_actual_predictions_only_when_requested(capture_lane_tim
             assert record.batch is batches[record.ep_id]
     else:
         assert phases.lane_records == ()
+
+
+def _lane_batch(ep_id, local_token_counts, pre_routing_tokens=4, routing_source=None):
+    return SimpleNamespace(
+        ep_id=ep_id, moe_pre_routing_effective_total_tokens=pre_routing_tokens,
+        lane_workload=SimpleNamespace(local_token_counts=local_token_counts, routing_source=routing_source),
+    )
+
+
+def test_ep_wave_predicts_lanes_with_equal_inputs_once():
+    batches = {
+        0: _lane_batch(0, (2, 1)),
+        1: _lane_batch(1, (2, 1)),
+        2: _lane_batch(2, (1, 2)),
+        3: _lane_batch(3, (2, 1), pre_routing_tokens=3),
+        4: _lane_batch(4, (2, 1), routing_source=object()),
+    }
+    predictor = Mock()
+    predictor.predict_stage_execution_time.side_effect = lambda batch, *args, **kwargs: StageExecutionTime(
+        (_layer(7, is_moe=True, op_times={
+            "moe_grouped_gemm": 5.0 + batch.ep_id,
+            "expert_parallel_alltoall_dispatch": 3.0,
+            "expert_parallel_alltoall_combine": 4.0,
+        }),))
+
+    phases = predict_ep_wave_phase_times(
+        layer_workload=SimpleNamespace(participant_ep_ids=tuple(batches)), source_batch=object(),
+        stage_id=2, layer_id=7, cluster_type=ClusterType.PREFILL,
+        predictor=predictor, lane_builder=lambda **kwargs: batches[kwargs["ep_id"]],
+        phase_getter=get_ep_phase_times_ms, workload_logger=Mock(),
+        trace_identity={}, batch_id=73, capture_lane_timings=True,
+    )
+
+    assert [call.args[0].ep_id for call in predictor.predict_stage_execution_time.call_args_list] == [0, 2, 3, 4]
+    assert phases.routed_compute_times_ms == (5.0, 5.0, 7.0, 8.0, 9.0)
+    assert [record.batch for record in phases.lane_records] == list(batches.values())
 
 
 def test_ledger_projects_every_family_and_charges_owner_once(tmp_path):
