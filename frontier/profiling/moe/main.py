@@ -349,6 +349,16 @@ def parse_args():
     parser.add_argument("--routing_input_file", type=Path,
                         help="Explicit source/census routing inputs for position_cyclic profiling")
     parser.add_argument(
+        "--profiled_ep_rank",
+        default="first",
+        choices=["first", "last_routed"],
+        help=(
+            "EP rank whose local experts are measured: rank 0, or the rank of the "
+            "highest routed expert. With balanced routing, last_routed measures the "
+            "partly filled rank of a step whose tokens do not reach every rank."
+        ),
+    )
+    parser.add_argument(
         "--gating_runtime_context",
         type=str,
         default=DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
@@ -378,6 +388,8 @@ def parse_args():
         parser.error("--source_revision and --model_config_revision must be given together")
     if (args.routing_runtime_path == "position_cyclic") != (args.routing_input_file is not None):
         parser.error("position_cyclic requires --routing_input_file; other routing paths cannot consume it")
+    if args.routing_input_file is not None and args.profiled_ep_rank != "first":
+        parser.error("position_cyclic cells name their EP rank; --profiled_ep_rank applies to generated routing")
     args.profile_method = normalize_profile_method(args.profile_method)
 
     return args, args.enable_load_imbalance
@@ -836,10 +848,12 @@ def profile_model(
                                 "num_tokens": num_tokens,
                                 "load_distribution": load_dist,
                                 "seed": seed,
+                                "profiled_ep_rank": args.profiled_ep_rank,
                             })
             else:
                 test_cases = [
-                    {"num_tokens": num_tokens, "load_distribution": "uniform", "seed": None}
+                    {"num_tokens": num_tokens, "load_distribution": "uniform", "seed": None,
+                     "profiled_ep_rank": args.profiled_ep_rank}
                     for num_tokens in num_tokens_to_profile
                 ]
 
@@ -1086,6 +1100,7 @@ def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict
         ),
         "cases_per_parallel_point": cases_per_parallel_point,
         "num_tokens": list(num_tokens_to_profile),
+        "profiled_ep_rank": args.profiled_ep_rank,
         "models": models,
     }
 

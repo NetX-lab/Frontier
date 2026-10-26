@@ -317,10 +317,6 @@ class MoEWrapper:
             )
         return prefix_hidden_states
 
-    def _get_profiling_ep_rank(self) -> int:
-        """Use a fixed representative EP rank for deterministic profiling rows."""
-        return self._position_ep_rank if getattr(self, "routing_runtime_path", None) == "position_cyclic" else 0
-
     def _profile_cell_callable(self, run, operator_names):
         """Replay the same physical callable for paired duration/kernel counts."""
         store = self.timer_stats_store
@@ -358,7 +354,7 @@ class MoEWrapper:
             store.profile_method = original_method
             store.clear_stats()
 
-    def _build_local_expert_map(self, device: torch.device) -> torch.Tensor:
+    def _build_local_expert_map(self, device: torch.device, ep_rank: int) -> torch.Tensor:
         if self.expert_parallel_size <= 1:
             raise ValueError("Local expert map is only valid when expert_parallel_size > 1")
         if self.num_experts % self.expert_parallel_size != 0:
@@ -367,7 +363,6 @@ class MoEWrapper:
             )
 
         local_num_experts = self.num_experts_per_device
-        ep_rank = self._get_profiling_ep_rank()
         start_idx = ep_rank * local_num_experts
         expert_map = torch.full(
             (self.num_experts,),
@@ -382,11 +377,11 @@ class MoEWrapper:
         )
         return expert_map
 
-    def _compute_local_expert_token_counts(self, global_topk_ids: torch.Tensor) -> List[int]:
+    def _compute_local_expert_token_counts(self, global_topk_ids: torch.Tensor, ep_rank: int) -> List[int]:
         if self.expert_parallel_size <= 1:
             raise ValueError("Local expert token counting is only valid when expert_parallel_size > 1")
 
-        expert_map = self._build_local_expert_map(global_topk_ids.device)
+        expert_map = self._build_local_expert_map(global_topk_ids.device, ep_rank)
         valid_global_ids = global_topk_ids[global_topk_ids >= 0]
         local_ids = expert_map[valid_global_ids.long()]
         valid_local_ids = local_ids[local_ids >= 0]
@@ -404,7 +399,13 @@ class MoEWrapper:
         load_distribution: str = "uniform",
         seed: Optional[int] = None,
         expert_token_counts: Optional[List[int]] = None,
+        profiled_ep_rank: str = "first",
     ) -> dict:
+        """``profiled_ep_rank`` selects the EP rank whose local experts run:
+        ``first`` is rank 0, ``last_routed`` the rank of the highest routed
+        expert. When routing fills experts from the lowest ID, that rank is the
+        least filled rank that receives tokens.
+        """
         from frontier.profiling.moe.load_distribution import (
             compute_expert_token_counts,
             generate_expert_routing,
@@ -412,6 +413,7 @@ class MoEWrapper:
 
         profiling_global_num_experts: Optional[int] = None
         profiling_expert_map: Optional[torch.Tensor] = None
+        ep_rank = 0
 
         if self.expert_parallel_size > 1:
             topk_weights, topk_ids = generate_expert_routing(
@@ -421,11 +423,13 @@ class MoEWrapper:
                 load_distribution=load_distribution,
                 seed=seed,
             )
+            if profiled_ep_rank == "last_routed":
+                ep_rank = int(topk_ids.max()) // self.num_experts_per_device
             generated_expert_token_counts = self._compute_local_expert_token_counts(
-                topk_ids
+                topk_ids, ep_rank
             )
             profiling_global_num_experts = self.num_experts
-            profiling_expert_map = self._build_local_expert_map(topk_ids.device)
+            profiling_expert_map = self._build_local_expert_map(topk_ids.device, ep_rank)
         else:
             topk_weights, topk_ids = generate_expert_routing(
                 num_tokens=num_tokens,
@@ -491,6 +495,7 @@ class MoEWrapper:
             "expert_token_counts": expert_token_counts,
             "global_num_experts": profiling_global_num_experts,
             "expert_map": profiling_expert_map,
+            "ep_rank": ep_rank,
         }
     
     @torch.inference_mode()
@@ -932,7 +937,6 @@ class MoEWrapper:
         cell = routing_profile_cell(cell)
         frames = cell.routing_input.source_frames
         ep_rank = 0 if cell.ep_id is None else cell.ep_id
-        self._position_ep_rank = ep_rank
         experts = get_native_routed_experts(quantization_mode=self.quantization_mode,
             activation=self.activation, num_local_experts=self.num_experts_per_device,
             global_num_experts=self.num_experts, hidden_dim=self.hidden_dim,
@@ -955,7 +959,7 @@ class MoEWrapper:
         gathered = torch.cat(activations)
         gathered_scales = None if scales[0] is None else torch.cat(scales)
         gathered_ids, gathered_weights = torch.cat(ids), torch.cat(weights)
-        expert_map = self._build_local_expert_map(gathered.device)
+        expert_map = self._build_local_expert_map(gathered.device, ep_rank)
         context = experts.prepared_context(gathered, gathered_scales, topk_ids=gathered_ids,
             expert_map=expert_map, source_tensors=(activations[selected], scales[selected]))
         context.update(model_architecture_profile=self.model_config.get_model_architecture_profile().profile_id,
@@ -988,7 +992,7 @@ class MoEWrapper:
                     experts.apply_prepared(gathered, gathered_scales, gathered_weights,
                         gathered_ids, expert_map, in_dtype=self._dtype)
             physical, live = cell.routing_input.gathered_physical_rows, sum(frame.live_rows for frame in frames)
-            counts = self._compute_local_expert_token_counts(gathered_ids)
+            counts = self._compute_local_expert_token_counts(gathered_ids, ep_rank)
             features = step5_native_expert_features(context, physical_rows=physical, live_assignments=sum(counts))
             features["expert_token_counts"] = json.dumps(counts)
         stats = self._profile_cell_callable(run, [spec.profiling_name() for spec in operators])
@@ -1021,6 +1025,7 @@ class MoEWrapper:
         seed: Optional[int] = None,
         *,
         routing_cell=None,
+        profiled_ep_rank: str = "first",
     ):
         """
         Main profiling entry point that profiles all MoE operations.
@@ -1032,6 +1037,7 @@ class MoEWrapper:
             num_tokens: Number of input tokens
             load_distribution: Load distribution type for grouped_gemm (uniform/balanced/skewed/extremely_skewed)
             seed: Random seed for reproducibility
+            profiled_ep_rank: EP rank whose local experts run, ``first`` or ``last_routed``
 
         Returns:
             dict with combined timing statistics and parameters
@@ -1047,6 +1053,7 @@ class MoEWrapper:
             num_tokens=num_tokens,
             load_distribution=load_distribution,
             seed=seed,
+            profiled_ep_rank=profiled_ep_rank,
         )
         gating_stats = self.profile_gating(num_tokens)
         shuffling_stats = self.profile_shuffling(
@@ -1072,6 +1079,7 @@ class MoEWrapper:
         # Combine all stats (including load imbalance features from grouped_gemm_stats)
         stats = self._build_profile_result(combined_time_stats, num_tokens=num_tokens)
         stats["moe_gating_linear_backend"] = gating_stats["moe_gating_linear_backend"]
+        stats["ep_rank"] = routing_inputs["ep_rank"]
 
         # Add load imbalance features from grouped_gemm_stats (if present)
         # These are added by profile_grouped_gemm when load imbalance is enabled

@@ -588,7 +588,7 @@ def test_position_row_preserves_full_point_diagnostics_outside_stable_context(in
     wrapper.gating=SimpleNamespace(native_facts=stable,linear_backend="cpu_fixture",bind_source_frame=lambda *a,**kw:None)
     wrapper._materialize_gating_hidden_states=lambda rows:torch.zeros(rows,4,dtype=torch.bfloat16)
     wrapper._run_gating_with_runtime_context=lambda x,**kw:(torch.zeros(len(x),8),torch.zeros(len(x),8,dtype=torch.int32))
-    wrapper._build_local_expert_map=lambda device:None
+    wrapper._build_local_expert_map=lambda device,ep_rank:None
     wrapper._profile_cell_callable=lambda run,names:{name:dict(median=1.,kernel_count=3) for name in names}
     wrapper._build_profile_result=lambda stats,**kwargs:dict(time_stats=stats)
     cell=MoERoutingProfileCell(MoERoutingProfileInput("point",(MoESourceFrame(0,(16,),(6128,),16,"standalone_legacy"),
@@ -609,10 +609,27 @@ def test_masked_expert_sentinel_is_filtered_before_local_map_and_bincount():
     from frontier.profiling.moe.moe_wrapper import MoEWrapper
     wrapper = object.__new__(MoEWrapper)
     wrapper.num_experts, wrapper.num_experts_per_device, wrapper.expert_parallel_size = 4, 2, 2
-    wrapper._get_profiling_ep_rank = lambda: 1
     ids = torch.tensor([[-1, -1], [2, 3]], dtype=torch.int32)
-    assert wrapper._compute_local_expert_token_counts(ids) == [1, 1]
+    assert wrapper._compute_local_expert_token_counts(ids, 1) == [1, 1]
     assert compute_expert_token_counts(ids, 4) == [0, 0, 1, 1]
+
+
+@pytest.mark.parametrize("profiled_ep_rank,ep_rank,counts", [
+    ("first", 0, [1, 1, 1]),
+    # Balanced routing fills experts 0-7: ranks 0 and 1 are full, rank 2 holds experts 6 and 7.
+    ("last_routed", 2, [1, 1, 0]),
+])
+def test_balanced_routing_measures_the_selected_ep_rank(profiled_ep_rank, ep_rank, counts):
+    torch = pytest.importorskip("torch")
+    from frontier.profiling.moe.moe_wrapper import MoEWrapper
+    wrapper = object.__new__(MoEWrapper)
+    wrapper.num_experts, wrapper.num_experts_per_device, wrapper.expert_parallel_size = 12, 3, 4
+    wrapper.router_topk = 2
+    routing = wrapper._prepare_routing_inputs(num_tokens=4, load_distribution="balanced",
+                                              profiled_ep_rank=profiled_ep_rank)
+    assert routing["ep_rank"] == ep_rank and routing["expert_token_counts"] == counts
+    local = list(range(3 * ep_rank, 3 * ep_rank + 3))
+    assert routing["expert_map"].tolist() == [local.index(e) if e in local else -1 for e in range(12)]
 
 
 @pytest.mark.parametrize("module_name", ["vllm.models.step5.nvidia.layernorm",
