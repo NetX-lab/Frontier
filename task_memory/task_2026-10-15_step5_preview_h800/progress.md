@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: the MoE profiler measures a chosen EP rank (`1fbc99c5`, `4a93f30d`); H200 job 04 measured the partly filled ranks (EP16/EP32 loads as computed); merged04 built; step G rerun started. |
 | 2026-10-26 | D31: prefix runs attribute the workflow port (TTFT +80 ms) and measured collectives (TPOT +10.8 ms); step E/G runs stopped on an order-dependent spread feature (fixed `2beb09b3`, E rerun) and an EP32 partly filled lane below the MoE profile range (profile the partly filled rank). |
 | 2026-10-26 | D31: item 2a step 1 done (H200 curves `946595cd`), runner option `1c125189`, E rerun with the H200 curves started; lane prediction cache `eddb9bf5` (exact, 1.7× faster). |
 | 2026-10-26 | D31: item 2a steps 2–4 done (measured backend `b9cbda0d`, allgather_reducescatter pricing `0349c1c6`); checks pass with fidelity 77/77; H200 collective jobs submitted. |
@@ -643,6 +644,39 @@ Calibration item 2a, collective communication (2026-10-26, `in-progress`):
     `/data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/`.
   - `h200_32_run01` (base) and `h200_32_wf02` (workflow port) still run on the code before the fix
     and can stop at the same spread check.
+- Partly filled EP rank profile (2026-10-26 19:40–20:17 UTC):
+  - `1fbc99c5`: `frontier.profiling.moe.main --profiled_ep_rank {first,last_routed}`. With
+    `last_routed` the profiler measures the EP rank of the highest routed expert
+    (`max(topk_ids) // experts_per_rank`) instead of rank 0. `position_cyclic` cells keep the rank
+    named by their cell, so the option is rejected with `--routing_input_file`. New test
+    `test_balanced_routing_measures_the_selected_ep_rank` (12 experts, EP4: `first` measures rank
+    0 with counts [1, 1, 1], `last_routed` rank 2 with [1, 1, 0]); 4 passed.
+  - `4a93f30d`: the profiled rank is written to the existing column `moe_ep_rank`.
+    `merge_role_profiles.py` takes several packages per role and writes `moe_ep_rank=0` for MoE
+    tables profiled before the column existed (those runs measured rank 0). Rebuilding merged03
+    with the new script gives identical tables apart from the added column.
+  - `9125bcb1`: `tests/integration/step5_profiling/stage_moe_profile.py` stages a MoE-only package
+    with the resources of `h200_profile_plan.json`.
+  - Job 04: stage `/data/ycfeng/tmp/step5_d31_profiles_20261026/moe_last_routed_stage04`, Pi run
+    `d31-h200-moe04-submit-copy-1026d`, job `exp-1027-035449-642457` (1 H200, `step_main`,
+    non-preemptible, creator `i-fengyicheng`), 19:54:49–19:59:41 UTC, `FINAL_STATUS succeeded`.
+    Cloud output `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/d31_h200_moe_last_routed_20261026_04`,
+    copied to `downloads/d31_h200_moe_last_routed_20261026_04/` (89 files, 22,859,454 B,
+    `HASH_IDENTICAL_DOWNLOAD`).
+  - EP16 and EP32 were both measured at 2, 4, 8, 16, 24, 32 and 40 tokens. EP16 lanes were inside
+    the measured range but not at measured points, so they were priced by the fitted model.
+  - Rows: 28 per table (2 EP sizes × 7 token counts × 2 routed layer groups). The routed tokens of
+    the measured rank equal the expected values in every row: EP32 5, 10, 9, 7, 5, 3, 1 and EP16
+    16, 10, 20, 18, 16, 14, 12. The FP8 group's KERNEL_ONLY grouped GEMM falls with load on
+    EP32 (0.103 ms at 10 routed tokens, 0.076 ms at 1). The CUDA_EVENT grouped GEMM stays at
+    0.63–0.66 ms for every load, so it is launch-bound at these sizes.
+  - merged04 (`/data/ycfeng/tmp/step5_d31_profiles_20261026/merged04/`): PREFILL03 + DECODE03 +
+    job 04, MoE rows 44 + 268 + 28 per table; `predictor_options_h200_64.json` differs from
+    `predictor_options.json` only in `nixl_read_profile`
+    (`evidence/d31_h200_64_nixl_read_cost.json`).
+  - Step G rerun: `h200_64_g01` from the detached worktree `.worktrees/run-g-9125bcb`
+    (`9125bcb1`), started 20:17 UTC with `--measured-collectives` and the merged04 options;
+    output `/data/ycfeng/tmp/d31_merged04_run/h200_64_g01/`.
 
 Step F status (2026-10-26):
 
