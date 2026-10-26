@@ -83,10 +83,14 @@ class KVCacheTransferEndEvent(BaseEvent):
                 **transfer_args, coverage=expected_coverage,
                 cost_provider=source_cluster_scheduler._predictor,
             )
-            if (
-                self._transfer_info.transfer_time_ms != expected_time_ms
-                or self.time != self._transfer_info.transfer_start_time + expected_time_ms * 1e-3
-            ):
+            wire_end = self._transfer_info.transfer_start_time + expected_time_ms * 1e-3
+            # In engine_step mode a later DECODE step posts the READ and another step reports it.
+            ready_time_matches = (
+                self.time >= wire_end
+                if predictor._config.nixl_read_completion == "engine_step"
+                else self.time == wire_end
+            )
+            if self._transfer_info.transfer_time_ms != expected_time_ms or not ready_time_matches:
                 raise RuntimeError("Measured NIXL READ-to-ready duration changed")
         if (
             self._transfer_info.transfer_payload != expected_payload
