@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step C done (H200 32-GPU native workload, metrics and KV capacity recorded). |
 | 2026-10-26 | D31: step B done (full dummy workload in 2933 s); workload02 submitted after Pi recovered; D31.9 balanced routing for Frontier. |
 | 2026-10-25 | D31 mainline reset: review written, documents corrected, steps B/C/D of the new plan started. |
 | 2026-10-23 | YC approves D29-SCOPE-107-10000 and the fixed finite model; begin three sole-writer implementation streams. |
@@ -254,6 +255,16 @@ Step C workload02 submission (2026-10-26 04:01 UTC):
 - Pi noted that the stage's `run_input.json` still describes the older 8-replica DP4/EP32
   template, while the worker reads `config.json`, which is the 4-replica DP2 version. The record
   file is not used by the worker; the stager's template should be aligned before the 64-GPU run.
+
+Step C result (2026-10-26): completed. Report `test_report_2026-10-26_h200_32_native_workload.md`.
+
+- The job succeeded at 04:23 UTC; 3 repetitions × (16 warmups + 128 formal) requests completed
+  and `workload_metrics.py` strict checks passed. Every node logged `position_cyclic`.
+- Each P and D lane: 81.98 GiB KV memory, 1,028,438 tokens. Peak in-flight is 85 requests, so KV
+  capacity does not limit this workload.
+- Native mean over repetitions: TTFT 1083.7 ms, TPOT 61.7 ms, E2E 64.25 s, total throughput
+  5214.6 tokens/s, output throughput 744.9 tokens/s. TPOT varies 57.2–67.7 ms between
+  repetitions. Metrics: `evidence/d31_h200_32_native_metrics.json`.
 
 Step B result (2026-10-26): Frontier runs the full workload in 49 minutes in dummy mode.
 
