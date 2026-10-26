@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: port checks recorded (test report); shared-expert DP token count sized at about 0.09% of TPOT (low priority); FP8 approximation warning shown to change no Step-5 time; simulator cost profile. |
 | 2026-10-26 | D31: calibration item 1 (workflow port) in progress; measured NIXL check fixed for engine-step completion; shared-expert DP token-count candidate recorded. |
 | 2026-10-26 | D31: step F done (H200 64-GPU native workload succeeded; metrics and the 64-GPU NIXL READ cost archived). |
 | 2026-10-26 | D31: step D done (run 03 tables merged after four profiler/predictor fixes and the DECODE measurement-family fix d034202c); step E started. |
@@ -392,8 +393,24 @@ Calibration item 1, workflow port (2026-10-26, `in-progress`):
   (`build_ep_lane_batch`, `moe_pre_routing_effective_total_tokens`), while the native shared
   expert runs on each DP rank's own tokens (2026-10-20 operation census below: its down
   projection all-reduce is `T x 8,192` B with the same `T` as `o_proj`).
-- Running: full port run `/data/ycfeng/tmp/d31_wf/h200_32_wf02` (log `h200_32_wf02.log`), and the
-  full unit suite on base and port (`/data/ycfeng/tmp/d31_wf/unit/{base,cand}.log`).
+- Size of that finding on this workload (from the merged03 `linear_op_kernel_only.csv`, which
+  prices CUDA Graph DECODE steps): the three shared-expert operators take 10.35 µs per layer at
+  32 tokens and 10.95 µs at 64. Pricing a 32-token lane on 64 merged tokens adds about 0.6 µs per
+  layer, about 0.05 ms per step over 88 MoE layers, which is about 0.09% of the native 61.7 ms
+  TPOT. In PREFILL the canonical trace rarely puts two prompts in one wave, and when it does the
+  query exceeds the profiled range and the run stops instead of returning a wrong time.
+  Decision: low priority; not fixed unless a measured error points at it.
+- Port checks: `test_report_2026-10-26_workflow_port.md`. Unit suite base 279 failed / port 325
+  failed, the 46 new failures all from the uninitialized collective-sim submodule in the new
+  worktree; dummy smoke 12/12; fidelity 77/77 with only the new config field differing.
+- Simulator cost (cProfile, 1 request × 64 output tokens, 575 s): 5,720 EP waves take 368.7 s of
+  535.4 s because each wave prices all 16 EP lanes (104,321 stage predictions, 3.75 ms each).
+  A full run takes about 3 hours. Deferred: caching lane predictions with identical workloads.
+- Run-log warning checked: "approximation factor=0.500" for `attn_pre_proj`, `attn_post_proj` and
+  `moe_grouped_gemm` (model config FP8, profile files BF16) changes no Step-5 time. The factor is
+  applied only by `QuantizationManager.adjust_compute_time` on the dense layer path, which made 0
+  calls in the profiled run; Step-5 takes operator precision from `step5_operator_binding`.
+- Running: full port run `/data/ycfeng/tmp/d31_wf/h200_32_wf02` (log `h200_32_wf02.log`).
 
 Step F status (2026-10-26):
 

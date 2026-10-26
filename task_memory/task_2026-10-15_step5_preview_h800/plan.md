@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: shared-expert DP token count sized and moved to low priority; D31.10 rule added to calibration item 2. |
 | 2026-10-26 | D31: step F done; status line updated. |
 | 2026-10-26 | D31: workflow port status and the shared-expert DP token-count candidate added to the calibration order. |
 | 2026-10-26 | D31: step D done, step E running; calibration order for E recorded. |
@@ -171,7 +172,9 @@ Calibration order for E, after the first error table:
    trace shows a measurable gap. Candidate found on 2026-10-26: in an EP wave the shared expert
    is priced on the merged token count of all DP lanes, while the native shared expert runs on
    each DP rank's own tokens (operation census, `progress.md`, 2026-10-20). Every DECODE step
-   at DP > 1 is affected.
+   at DP > 1 is affected, but by about 0.05 ms per step (about 0.09% of TPOT) on this workload,
+   so it is low priority. Operator changes follow D31.10: prices come from op profiling, never
+   from a table of measured step times.
 3. CPU overhead, which is not modelled now.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2
