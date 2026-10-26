@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-26 | D31: calibration item 2b (decode step growth with batch size) added; wf02 result in item 1. |
+| 2026-10-26 | D31: calibration item 2b (decode step growth with batch size) added with Frontier's own step curve; wf02 result in item 1. |
 | 2026-10-26 | D31: E rerun after the spread fix; step G rerun on merged04 after profiling the partly filled EP ranks. |
 | 2026-10-26 | D31: item 2a step 1 done, EP-lane prediction cache added; items 1 and 2a merged; combined E run and the first G run started. |
 | 2026-10-26 | D31: item 2a status line added (steps 2–4 done, step 1 running, step 5 checks done before rerunning E). |
@@ -213,15 +213,15 @@ Calibration order for E, after the first error table:
    (`b3fa995a`).
    2b. Decode step growth with batch size (opened 2026-10-26; evidence in `progress.md`). The
    native decode step grows from 30.5 ms at 0–1 requests per DP engine to about 59 ms at 40,
-   about 0.7 ms per request; Frontier's step is 31.0 ms at one request and stays almost flat, so
-   this growth is most of the TPOT gap. The FULL-graph attention rows explain only about 1 ms of
-   it. Steps:
+   about 0.7 ms per request. Frontier's step (merged04, measured collectives) matches at one
+   request (31.0 ms) and also grows, but more slowly: −10% at 16 requests, −17% at 31. The
+   FULL-graph attention rows explain only about 1 ms of the native growth. Steps:
    1. Diagnose with a native decode device timeline (run kind `device_timeline`, 32 H200 GPUs,
       three torch-profiler windows at about 8, 20 and 42 requests per engine) and split the
       growth into device busy time per kernel category and device idle time (host waits, DP
       synchronization). Diagnostic only (D31.10).
    2. Compare with Frontier's own step curve from the stage-batch and EP-wave ledgers of a
-      diagnostic run, phase by phase.
+      diagnostic run, phase by phase (curve done, `progress.md`).
    3. Fix the cause where it belongs: a missing or underpriced operator or collective is
       profiled and priced from op profiling (item 2); a host-side cost goes to item 3. No table of
       measured step times is used for prediction.

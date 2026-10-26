@@ -130,10 +130,10 @@ Status as of 2026-10-26:
   - Running: the E rerun with items 1 and 2a (`h200_32_comb_h200`, from `.worktrees/run-e-2beb09b`)
     and the G rerun on merged04 (`h200_64_g01`, from `.worktrees/run-g-9125bcb`).
 - **Calibration item 2b, decode step growth.** The native decode step grows about 0.7 ms per
-  request per DP engine (30.5 ms → 59 ms from 0 to 40 requests); Frontier's step matches at one
-  request (31.0 ms) but stays almost flat. A diagnostic native run with decode torch-profiler
-  windows (job `exp-1027-062510-683917`, 32 H200) is splitting that growth into device and host
-  time. Diagnostic only (D31.10).
+  request per DP engine (30.5 ms → 59 ms from 0 to 40 requests). Frontier's step matches at one
+  request (31.0 ms) and grows more slowly: −10% at 16 requests per engine, −17% at 31. A
+  diagnostic native run with decode torch-profiler windows (job `exp-1027-062510-683917`,
+  32 H200) is splitting the native growth into device and host time. Diagnostic only (D31.10).
 - **Operator profiles.** The H200 profile tables for both roles are measured and merged (run 03,
   `test_report_2026-10-26_h200_profiles.md`). The first runs on them found five defects in the
   profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,

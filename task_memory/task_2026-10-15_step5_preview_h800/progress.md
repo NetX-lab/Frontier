@@ -724,8 +724,8 @@ before the plan entry was added). Native step times and token gaps here are diag
   31.01 ms per step against native 30.5 ms. Stage part 4.68 ms; EP wave 26.33 ms (pre-dispatch
   3.49, dispatch 5.69, routed compute 13.26 of which grouped GEMM 12.78, combine 3.06,
   post-combine 0.87). A PIECEWISE step with one request takes 55.7 ms.
-- So the small-batch step agrees and the main TPOT gap is the growth of the step with batch
-  size: native +28.7 ms from 0 to 40 requests per engine, about 0.7 ms per request.
+- So the small-batch step agrees. Native grows +28.7 ms from 0 to 40 requests per engine, about
+  0.7 ms per request.
 - The merged04 FULL-graph attention rows do not explain it. Per layer at context 6,656: SWA
   0.0347 ms (8 requests), 0.0407 (32), 0.0507 (64), 0.0588 (128); DSA 0.0677 (8), 0.0897 (32),
   0.172 (128). Over 69 SWA and 23 DSA layers, 8 → 32 requests adds about 1 ms per step.
@@ -733,11 +733,35 @@ before the plan entry was added). Native step times and token gaps here are diag
   beside the FULL graph replay on a separate stream (seen in the glm53 DSV4 H200 traces), the DP
   synchronization before each forward, and per-request host work in the Step model runner (KV
   side storage).
-- Running: a Frontier diagnostic run with the stage-batch and EP-wave ledgers on, to get
-  Frontier's own step time against batch size and its phase split
-  (`/data/ycfeng/tmp/d31_diag/step_curve/curve/`, 84 requests at 0.2 s spacing, 6,144/1,024
-  tokens, `--time_limit 30`, started 21:45 UTC; scripts `build.py`, `run.sh`, `analyze.py` in the
-  parent directory).
+- Frontier's own step curve (correction, 22:40 UTC): Frontier's step is not flat. The
+  diagnostic run with the stage-batch and EP-wave ledgers on (`/data/ycfeng/tmp/d31_diag/step_curve/curve/`,
+  84 requests at 0.2 s spacing, 6,144/1,024 tokens, `--time_limit 30`, merged04 and the H200 DP2
+  curves; Frontier code as `1ef82e4d`; wall 3,002 s) gives a step that rises in stairs at the
+  CUDA Graph capture sizes. Medians per FULL step, from
+  `/data/ycfeng/tmp/d31_diag/step_curve/analyze_window.py` (EP waves joined to a step by time;
+  output `analyze_window.txt`):
+
+  | Requests per engine | Frontier step | Native step | Error |
+  | --- | --- | --- | --- |
+  | 1 | 31.0 ms | 30.5 ms (0–1) | +2% |
+  | 8 | 38.4 ms | 39.8 ms | −4% |
+  | 16 | 43.0 ms | 48 ms | −10% |
+  | 23 | 46.0 ms | 54 ms | −15% |
+  | 31 | 47.5 ms | 57 ms | −17% |
+  | 33–36 | 49.8 ms | 58.8 ms (35) | −15% |
+
+  From 1 to 32 requests Frontier adds 18.8 ms: routed grouped GEMM 12.8 → 18.0, dispatch
+  5.7 → 10.3, combine 3.1 → 6.1, pre-dispatch 3.5 → 6.2 (of which gating linear 0.20 → 1.75), and
+  the stage part (attention and its all-reduce) 4.7 → 7.1 ms. Between 8 and 31 requests Frontier
+  adds 9.1 ms and native 17.2 ms.
+  - The earlier reading that Frontier stays flat came from the narrow TPOT spread of run01. That
+    spread only shows that every request saw a similar mix of batch sizes; run01 also used
+    analytical collectives (about 11.7 ms per step missing).
+  - `moe_gating_linear` jumps from 0.46 ms at 16 requests to 1.75 ms at 32 (88 layers); to be
+    checked against its profile rows.
+  - The first `analyze.py` joined EP waves to steps by batch id; both DP lanes share one wave
+    that carries one lane's batch id, so half of the steps got no phases. `analyze_window.py`
+    joins by time and replaces it.
 - Workflow-port run `h200_32_wf02` (`6dd29176`, merged03, analytical collectives, wall 32,554 s)
   finished at 22:25 UTC. Against native: TTFT mean −37.4% (p90 −47.2%), TPOT mean −57.0%
   (p90 −62.4%), E2E mean −56.6%, total throughput +14.6% (PASS). The port adds 83 ms to the
