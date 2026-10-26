@@ -21,6 +21,7 @@ TASK = Path(__file__).resolve().parents[1]
 REPO = TASK.parents[1]
 H200 = TASK / "h200_mainline"
 DP4_TABLE = H200 / "diagnostic/step_cost_attn_dp4/dsv4_step_cost.json"
+ATTENTION_FIELD = "random_forrest_execution_time_predictor_config_atten_input_file"
 # num_blocks and max_concurrency are the reference's vLLM values: serving/rank*.json inventory.cache.num_blocks and
 # "Maximum concurrency for 7,168 tokens per request: X" in server.log, equal on every node of both roles.
 CASES = {
@@ -40,7 +41,7 @@ CASES = {
         table=DP4_TABLE, num_blocks=112914, max_concurrency=38.35,
         # The loader reads the table beside the resolved attention input and accepts one topology per directory;
         # the attn_dp=4 table therefore has a directory of its own.
-        overrides={"random_forrest_execution_time_predictor_config_atten_input_file": str(DP4_TABLE.parent / "attention.csv")}),
+        overrides={ATTENTION_FIELD: str(DP4_TABLE.parent / "attention.csv")}),
 }
 
 # Design section 5 (KV binding) and the H4a-2 role inheritance; output paths are new.
@@ -125,6 +126,12 @@ def kv_admission(simulator, native_max_concurrency):
             "status": "MATCH" if demand in native else "DIFFERS"}
 
 
+def step_cost_table(case, fields):
+    """The table the loader reads: dsv4_step_cost.json beside the attention input, when that input is set."""
+    attention = {**case["overrides"], **fields}.get(ATTENTION_FIELD)
+    return Path(attention).parent / "dsv4_step_cost.json" if attention else case["table"]
+
+
 def parse_field(argument):
     field_name, _, text = argument.partition("=")
     try:
@@ -139,6 +146,7 @@ def main(name, root, fields):
     from frontier.utils.random import set_seeds
 
     config, changes = build_config(name, case, root, fields)
+    table = step_cost_table(case, fields)
     receipt = {
         "status": "STARTED", "label": "DIAGNOSTIC", "case": name,
         "source_commit": subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"],
@@ -146,8 +154,8 @@ def main(name, root, fields):
         "source_dirty_paths": subprocess.run(["git", "-C", str(REPO), "status", "--porcelain", "--", "frontier", "data"],
                                              capture_output=True, text=True, check=True).stdout.splitlines(),
         "input": str(case["input"]), "input_sha256": case["input_sha256"],
-        "step_cost_table": str(case["table"]),
-        "step_cost_table_sha256": hashlib.sha256(case["table"].read_bytes()).hexdigest(),
+        "step_cost_table": str(table),
+        "step_cost_table_sha256": hashlib.sha256(table.read_bytes()).hexdigest(),
         "python": sys.version.split()[0], **changes,
     }
     write = lambda: (root / "receipt.json").write_text(json.dumps(receipt, indent=1, default=str) + "\n")

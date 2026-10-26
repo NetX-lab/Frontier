@@ -1,0 +1,141 @@
+{
+ "schema_version": "dsv4_step_cost.v1",
+ "qualification": "diagnostic_step_cost",
+ "formal_gate_admission": false,
+ "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+ "device": "h200",
+ "topology": {
+  "attn_tensor_parallel_size": 8,
+  "attn_dp": 2,
+  "moe_tensor_parallel_size": 1,
+  "moe_expert_parallel_size": 16,
+  "num_pipeline_stages": 1
+ },
+ "limits": {
+  "max_model_len": 7168,
+  "max_num_batched_tokens": 8192,
+  "max_num_seqs": 128
+ },
+ "roles": {
+  "PREFILL": [
+   {
+    "num_prefill_requests": 1,
+    "num_prefill_tokens": 6144,
+    "num_decode_requests": {
+     "min": 0,
+     "max": 0
+    },
+    "time_ms": 281.4170033670962,
+    "samples": 256,
+    "measured_num_decode_requests": [
+     0
+    ],
+    "min_ms": 227.45102690532804,
+    "max_ms": 349.19351898133755
+   }
+  ],
+  "DECODE": [
+   {
+    "num_prefill_requests": 0,
+    "num_prefill_tokens": 0,
+    "num_decode_requests": {
+     "min": 1,
+     "max": 128
+    },
+    "time_ms": 18.36976416015625,
+    "samples": 115,
+    "measured_num_decode_requests": [
+     1,
+     2
+    ],
+    "median_gpu_span_ms": 18.360835205078125,
+    "max_interval_minus_gpu_span_ms": 19076.063432861327
+   },
+   {
+    "num_prefill_requests": 1,
+    "num_prefill_tokens": 1,
+    "num_decode_requests": {
+     "min": 0,
+     "max": 0
+    },
+    "time_ms": 25.28460852050781,
+    "samples": 2,
+    "measured_num_decode_requests": [
+     0
+    ],
+    "median_gpu_span_ms": 25.274817016601563,
+    "max_interval_minus_gpu_span_ms": 0.010559814453124261
+   },
+   {
+    "num_prefill_requests": 1,
+    "num_prefill_tokens": 1,
+    "num_decode_requests": {
+     "min": 1,
+     "max": 128
+    },
+    "time_ms": 21.72357076779008,
+    "samples": 378,
+    "measured_num_decode_requests": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "measurement": "native D engine step from the scheduler records of the lifecycle run (native_k1_step.py)",
+    "replaced_entry": {
+     "num_prefill_requests": 1,
+     "num_prefill_tokens": 1,
+     "num_decode_requests": {
+      "min": 1,
+      "max": 128
+     },
+     "time_ms": 34.247385986328126,
+     "samples": 1,
+     "measured_num_decode_requests": [
+      1
+     ],
+     "median_gpu_span_ms": 34.241051025390625,
+     "max_interval_minus_gpu_span_ms": 0.006334960937500966
+    }
+   }
+  ]
+ },
+ "sources": {
+  "run_tag": "dsv4-h200-p2-profile-20261025-01",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_profile_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-profile-20261025-01",
+  "engine_config_sha256": "0379835410107f17a262930f5a97c022f8b4a19b8a808086afa6eca7b6bd1e22",
+  "files_sha256": {
+   "run/client_requests.jsonl": "7de76228b7063b076001314bf065663fe187cca84445e19b27dd4fba09df9c81",
+   "run/proxy_requests.jsonl": "e9bde7b9e28761e6f6093e709f7570ee1868ba511616efcf2d0fa34255f31f12",
+   "torch_traces/decode/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792942701901162313.pt.trace.json.gz": "643e6c4ce2113a2d6ca4c9fe75fe14a308efbe0107018b82af55d3508225d3fa",
+   "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792942680280151453.pt.trace.json.gz": "52b324cdff006cd3d325980fb6dbdb3f6942c5cd45525c09686321019cc56287"
+  },
+  "profiled_repeat": 1,
+  "prefill_repeats": [
+   2,
+   3
+  ],
+  "k1_with_decodes_entry": {
+   "decision": "D-H4B-K1-REPRICE",
+   "source_table": "data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json",
+   "source_table_sha256": "cdf7d1162bab16280c842fc45c93e88d6478e7f4c83db86f66db5bc067ce850d",
+   "lifecycle_input": "h200_mainline/diagnostic/inputs/p2_32l",
+   "run_tag": "dsv4-h200-p2-lifecycle-20261025-01",
+   "files_sha256": {
+    "run_manifest.json": "55724edf7a25e52b27dacbff90688d04d6207cef6ed11f51f0ee72d1d7b51b1d",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1418.jsonl": "6f6974c7e8450733d129b852209c80a76513f90da231b39055b5c22a3c5f926a",
+    "nodes/gpu-h200-0628.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1277.jsonl": "36e777316bcfd80911c5f493c67bb7ad9006d1dcdef95957c76d3f344f3e0b12",
+    "nodes/gpu-h200-0705.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1419.jsonl": "aae1a3aee5c2db06e840f872819b0affb6788acdee5d53f289087ac9f5222778",
+    "nodes/gpu-h200-1191.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1358.jsonl": "33282073621dfd026e2005142cb535b15480c0a5325cdefaf9ea3a8843e2e1eb"
+   }
+  }
+ }
+}

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Recorded YC's adoption of the lead's recommendations for next actions 1-6 after `6dff7547` (D-H4B-K1-REPRICE) and YC's question on `max_tokens = 1` on P. |
 | 2026-10-26 | Recorded YC's approval of the lead's next actions after item 2 (D-H4B-AFTER-ITEM2): the item 3 design, the first-D-step investigation and the removal of three fidelity worktrees. |
 | 2026-10-26 | Recorded YC's approval of H4b-(b) item 2 as designed in section 10 (D-H4B-ITEM2). |
 | 2026-10-26 | Recorded YC's restoration of the Pi budget, the approval of H4b-(b) item 1 (D-H4B-ITEM1, option B) and the continued H200-32/64 mainline with at most 64 non-preemptible H200 (D-H200-MAINLINE-CONTINUE). |
@@ -262,6 +263,20 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - **First D step investigation.** A CPU-only reading of the depth-2 traces to explain why the first D step takes 2.05-2.80 Frontier steps against the rule's 2.
     - **Worktree removal.** Remove `.worktrees/fidelity-candidate-5f907f66`, `-96d9c1ef` and `-item2` after checking that each holds nothing that is not committed or kept elsewhere.
     - **Unchanged.** The ingress field stays deferred: the report asked YC to decide it and gave no recommendation. Results stay DIAGNOSTIC (D-H4A-CHECKPOINT); D-NO-INTERRUPT, D-H200-MAINLINE-CONTINUE, D-GPU-SHORTAGE-REPORT and D-MAINLINE-LOOP-CAP-DSV4 apply. These actions need no GPU job.
+
+[Original Request] Follow-up, 2026-10-26, after the report of commit `6dff7547` and its next actions 1-6:
+
+> 上述1-6下一步都采纳你的推荐方案。另外请你回答：P 端 max_tokens=1，所以 depth 2 下的第二次 schedule 是空的 中 max_token=1该如何理解？
+
+24. **D-H4B-K1-REPRICE.** YC adopted the lead's recommendation for each of next actions 1-6:
+    1. **k=1-with-decodes entry.** Price the DECODE entry with 1 prefill request of 1 token and 1-128 decode requests from the native unprofiled k=1 steps of the case's lifecycle run (native06 from H800l, P2-32 from P2-32l, P2-64 from P2-64l) and evaluate it as a DIAGNOSTIC. The lifecycle runs are not the comparison targets, so no constant is fitted to a reference. The repriced tables are diagnostic inputs in the task directory; the checked-in tables under `data/profiling/` stay unchanged.
+    2. **P2-32 P-side gap.** Accepted as a limitation: a single-run PREFILL entry carries the run-to-run spread of native P service (23-42 ms on these cases). No repeat profile run.
+    3. **Item 3.** Not implemented. Revisit when a workload of design section 11.5 enters the comparison matrix.
+    4. **P2-64 comparison target.** The report listed two options without a recommendation. The lead's recommendation (D-NO-INTERRUPT): keep the full three-repetition target and its gate verdict, and add a supplementary DIAGNOSTIC reading against repetitions 2-3 that separates the first-contact READs of repetition 1. Reason: choosing repetitions 2-3 as the target would turn a failing repetition into a passing gate by a target choice; the supplementary reading costs no GPU. The warmup on each lane pair goes into a later P2-64 native run only if one is needed for another reason.
+    5. **Ingress field.** Stays deferred.
+    6. **Late-handle measurement.** Not planned.
+    - **Question.** YC asked how to read "P 端 max_tokens=1" in design section 11.1, point 4. Answered in the reply; design section 11.1 now states it, and corrects point 2: on vLLM 0.28.0 the proxy sets `max_tokens = 1` and removes `min_tokens`.
+    - **Unchanged.** Results stay DIAGNOSTIC (D-H4A-CHECKPOINT); D-NO-INTERRUPT, D-H200-MAINLINE-CONTINUE, D-GPU-SHORTAGE-REPORT and D-MAINLINE-LOOP-CAP-DSV4 apply. These actions need no GPU job.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

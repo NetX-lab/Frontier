@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Section 7.1: updated the `native_k1_step.py` digest after its refactor for D-H4B-K1-REPRICE; its output is byte-identical. The repricing itself is in [test_report_2026-10-26_h4b_k1_reprice.md](test_report_2026-10-26_h4b_k1_reprice.md). |
 | 2026-10-26 | Added section 7.1: the first D step is the step-cost table's k=1 price, and native lifecycle steps measure that entry 8.76 / 12.53 / 0.77 ms lower. Corrected section 10: PREFILL depth 2 does not explain the P2-32 P-side gap (design section 11). |
 | 2026-10-26 | Created: the change and its size, default-path identity, the defects found during implementation, depth-1 identity, the new unit tests, the three depth-2 diagnostics against the design section 10.8 expectations, the part comparison with the three lifecycle runs, persistence, deviations from the design and limitations. |
 
@@ -220,7 +221,7 @@ A second run of all three scripts reproduced each `.txt` byte for byte, with emp
 | --- | --- |
 | `first_d_step.py` | `719771f014a191606457898425e7e26e1973ae6c01ac28c0bc7c0e976eb7799a` |
 | `first_d_step.txt` | `65fc58d80555dd30be07b0a14338a8e8d6cba5dfb41daa9512a954f53c9cd07b` |
-| `native_k1_step.py` | `0c35c2138027e366ec56cb0f8110d998e54da0ff720f3452292f8926c8af4610` |
+| `native_k1_step.py` | `7030c117124288702c54ec37d0d27734bfdbc872f086e948571131f12adf9f0c` (refactored for D-H4B-K1-REPRICE; output unchanged; the 7.1 version was `0c35c213…`) |
 | `native_k1_step.txt` | `0f77b535892a8120f4755b35dae024d46b73f9a11b595df977e959c9efab7fd1` |
 | `native_p_service.py` | `40cbae482cf98de0c4d1be42805150454572193e141f136e824d3283972709b8` |
 | `native_p_service.txt` | `60202fd3489441eace5e6a84c18707a5c9c903293599f50a9b979a021064a98b` |

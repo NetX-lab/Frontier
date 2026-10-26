@@ -1,0 +1,182 @@
+{
+  "simulation_metadata": {
+    "total_requests": 128,
+    "completed_requests": 128,
+    "system_architecture": "pd-disaggregation",
+    "prefill_server_count": 2,
+    "decode_server_count": 2
+  },
+  "quantization_config": {
+    "config_path": "model_config",
+    "default_precision": "BF16",
+    "custom_operation_count": 41,
+    "config_hash": "9acd58e904f154db1903831d410a0136cb96926c2dbd2759267300b56895138c"
+  },
+  "ttft_statistics": {
+    "count": 128,
+    "mean": 287.35362365851654,
+    "median": 287.35362365854564,
+    "std": 1.4541717752335223e-10,
+    "min": 287.3536236583547,
+    "max": 287.35362365866024,
+    "p50": 287.35362365854564,
+    "p90": 287.35362365866024,
+    "p95": 287.35362365866024,
+    "p99": 287.35362365866024,
+    "unit": "ms"
+  },
+  "tpot_statistics": {
+    "count": 128,
+    "mean": 19.33506244104388,
+    "median": 19.338096551605187,
+    "std": 0.008444028791788733,
+    "min": 19.299288085960583,
+    "max": 19.338096551610864,
+    "p50": 19.338096551605187,
+    "p90": 19.338096551610864,
+    "p95": 19.338096551610864,
+    "p99": 19.338096551610864,
+    "unit": "ms",
+    "note": "TPOT is only computed for requests with num_decode_tokens > 1. Computed from 128 out of 128 requests."
+  },
+  "request_e2e_time_statistics": {
+    "count": 128,
+    "mean": 20174.427190762333,
+    "median": 20177.10491923208,
+    "std": 13.19405579133645,
+    "min": 20093.609308711046,
+    "max": 20188.08689379982,
+    "p50": 20177.10491923208,
+    "p90": 20185.81783149402,
+    "p95": 20187.061392237163,
+    "p99": 20187.8818504901,
+    "unit": "ms"
+  },
+  "throughput_metrics": {
+    "total_duration_ms": 147134.90050674404,
+    "total_duration_seconds": 147.13490050674403,
+    "requests_per_second": 0.869949954491817,
+    "total_tokens_processed": 917504,
+    "total_decode_tokens_generated": 131072,
+    "tokens_per_second": 6235.801273797345,
+    "decode_tokens_per_second": 890.8287533996206
+  },
+  "spec_decode_statistics": {
+    "total_iterations": 0,
+    "total_accepted_drafts": 0,
+    "total_rejected_drafts": 0,
+    "total_committed_tokens": 0,
+    "acceptance_ratio": 0.0,
+    "avg_committed_tokens_per_iteration": 0.0
+  },
+  "kv_cache_transfer_statistics": {
+    "total_transfers": 128,
+    "total_data_transferred_bytes": 5058772992,
+    "total_transfer_time_ms": 8566.097300455185,
+    "transfer_time_stats": {
+      "count": 128,
+      "mean": 66.92263515980616,
+      "median": 67.44202242332608,
+      "std": 8.172509124982865,
+      "min": 2.570035277337568,
+      "max": 77.17239218479222,
+      "p50": 67.44202242332608,
+      "p90": 75.28284048328544,
+      "p95": 76.3083420451963,
+      "p99": 76.96734887173419,
+      "unit": "ms"
+    }
+  },
+  "kv_cache_transfer_total_bytes": 5058772992,
+  "preemption_statistics": {
+    "total_preemption_events": 0,
+    "total_preempted_requests": 0,
+    "preemption_rate": 0.0,
+    "by_cluster_type": {}
+  },
+  "model_weight_memory": {
+    "PREFILL": {
+      "total_parameters": 19906798831,
+      "total_memory_bytes": 12393714140,
+      "total_memory_gb": 11.542545761913061,
+      "memory_utilization_percent": 14.428182202391326,
+      "breakdown": {
+        "attention_parameters": 1298858968,
+        "attention_memory_bytes": 1612866432,
+        "attention_memory_gb": 1.5020989179611206,
+        "ffn_parameters": 18441316352,
+        "ffn_memory_bytes": 10379831808,
+        "ffn_memory_gb": 9.666971683502197,
+        "other_parameters": 166623511,
+        "other_memory_bytes": 401015900
+      },
+      "device_info": {
+        "device_type": "H800",
+        "total_device_memory_gb": 80.0,
+        "num_replicas": 1,
+        "expert_parallel_size": 16,
+        "moe_tensor_parallel_size": 1
+      },
+      "memory_accounting": "source-defined weight storage estimate; native allocation unverified",
+      "conditional_mhc_broadcast_memory_bytes": 393216,
+      "conditional_mhc_broadcast_native_verified": false
+    },
+    "DECODE": {
+      "total_parameters": 19906798831,
+      "total_memory_bytes": 12393714140,
+      "total_memory_gb": 11.542545761913061,
+      "memory_utilization_percent": 14.428182202391326,
+      "breakdown": {
+        "attention_parameters": 1298858968,
+        "attention_memory_bytes": 1612866432,
+        "attention_memory_gb": 1.5020989179611206,
+        "ffn_parameters": 18441316352,
+        "ffn_memory_bytes": 10379831808,
+        "ffn_memory_gb": 9.666971683502197,
+        "other_parameters": 166623511,
+        "other_memory_bytes": 401015900
+      },
+      "device_info": {
+        "device_type": "H800",
+        "total_device_memory_gb": 80.0,
+        "num_replicas": 1,
+        "expert_parallel_size": 16,
+        "moe_tensor_parallel_size": 1
+      },
+      "memory_accounting": "source-defined weight storage estimate; native allocation unverified",
+      "conditional_mhc_broadcast_memory_bytes": 393216,
+      "conditional_mhc_broadcast_native_verified": false
+    }
+  },
+  "memory_utilization_percent": {
+    "PREFILL": 14.428182202391326,
+    "DECODE": 14.428182202391326
+  },
+  "system_architecture_info": {
+    "system_architecture": "pd-disaggregation",
+    "cluster_configurations": {
+      "PREFILL": {
+        "num_replicas": 1,
+        "parallel_parameters": {
+          "PP": 1,
+          "ATTN_TP": 8,
+          "MOE_TP": 1,
+          "MOE_EP": 16
+        },
+        "device_type": "H800",
+        "model_name": "deepseek-ai/DeepSeek-V4-Flash"
+      },
+      "DECODE": {
+        "num_replicas": 1,
+        "parallel_parameters": {
+          "PP": 1,
+          "ATTN_TP": 8,
+          "MOE_TP": 1,
+          "MOE_EP": 16
+        },
+        "device_type": "H800",
+        "model_name": "deepseek-ai/DeepSeek-V4-Flash"
+      }
+    }
+  }
+}

@@ -11,10 +11,12 @@ batch size, the profile run's own client TPOT, and the number of requests decodi
 The profile run's traced k=1 steps split its own handoffs into the part before D's k=1 step and
 the rest; a k=1 step that falls inside more than one handoff cannot be assigned and is counted.
 
-Inputs are the persisted copies of the case's native and profile runs and its step-cost table.
+Inputs are the persisted copies of the case's native and profile runs, and the step-cost table
+that the Frontier run's receipt.json names, checked against the digest the receipt records.
 Usage: h4a5_attribution.py <case> <frontier run dir> <output json>     # case: native06, p2_32 or p2_64
 """
 import gzip
+import hashlib
 import json
 import statistics
 import sys
@@ -29,14 +31,10 @@ sys.path.insert(0, str(REPO))
 from tests.comparison.calibration.prepare_dsv4_step_cost import STEP, decode_steps, decode_traces  # noqa: E402
 
 H200_INPUTS = HERE.parent / "h200_mainline/diagnostic/inputs"
-TABLES = REPO / "data/profiling/compute"
 CASES = {
-    "native06": dict(native=HERE / "inputs/native06/run", profile=HERE / "inputs/profile02",
-                     table=TABLES / "h800/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json"),
-    "p2_32": dict(native=H200_INPUTS / "p2_32r/run", profile=H200_INPUTS / "p2_32p",
-                  table=TABLES / "h200/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json"),
-    "p2_64": dict(native=H200_INPUTS / "p2_64r/run", profile=H200_INPUTS / "p2_64p",
-                  table=HERE.parent / "h200_mainline/diagnostic/step_cost_attn_dp4/dsv4_step_cost.json"),
+    "native06": dict(native=HERE / "inputs/native06/run", profile=HERE / "inputs/profile02"),
+    "p2_32": dict(native=H200_INPUTS / "p2_32r/run", profile=H200_INPUTS / "p2_32p"),
+    "p2_64": dict(native=H200_INPUTS / "p2_64r/run", profile=H200_INPUTS / "p2_64p"),
 }
 
 
@@ -165,9 +163,17 @@ def profile_handoff(profile, traces):
     return samples, unassigned
 
 
+def run_table(run_dir):
+    receipt = json.loads((run_dir / "receipt.json").read_text())
+    path = Path(receipt["step_cost_table"])
+    if hashlib.sha256(path.read_bytes()).hexdigest() != receipt["step_cost_table_sha256"]:
+        raise SystemExit(f"{path} differs from the digest in {run_dir / 'receipt.json'}")
+    return json.loads(path.read_text())
+
+
 def main(name, run_dir, output):
     case = CASES[name]
-    table = json.loads(case["table"].read_text())
+    table = run_table(run_dir)
     traces = decode_traces(case["profile"], table["topology"]["attn_dp"])
     native, frontier = native_parts(case["native"]), frontier_parts(run_dir)
     pooled = {name: statistics.fmean(native[r][name]["mean"] for r in native)

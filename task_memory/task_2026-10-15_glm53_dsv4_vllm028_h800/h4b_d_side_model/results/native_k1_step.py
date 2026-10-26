@@ -37,7 +37,25 @@ def step_durations(rows):
     return steps
 
 
-def describe(values):
+def classify_steps(cores):
+    """(duration, cached request count) of the k=1 steps with decodes, alone, and the decode-only steps."""
+    k1_mixed, k1_alone, decode_only = [], [], []
+    for (role, _), core in sorted(cores.items()):
+        if role != "decode":
+            continue
+        steps = step_durations(core["rows"])
+        formal = [step for step, (_, promoted, _) in steps.items() if any(FORMAL in r for r in promoted)]
+        window = range(min(formal), max(formal) + 1)
+        for step, (duration, promoted, cached) in steps.items():
+            if promoted and all(FORMAL in r for r in promoted):
+                (k1_mixed if cached else k1_alone).append((duration, cached))
+            elif not promoted and cached and step in window:
+                decode_only.append((duration, cached))
+    return k1_mixed, k1_alone, decode_only
+
+
+def describe(samples):
+    values = [duration for duration, _ in samples]
     return (f"n {len(values)}  median {statistics.median(values):.2f}  mean {statistics.fmean(values):.2f}"
             if values else "n 0")
 
@@ -49,19 +67,7 @@ def main() -> None:
 
     for name, relative in RUNS:
         problems = []
-        cores = analyze_lifecycle.load_cores(root / relative, problems)
-        k1_mixed, k1_alone, decode_only = [], [], []
-        for (role, _), core in sorted(cores.items()):
-            if role != "decode":
-                continue
-            steps = step_durations(core["rows"])
-            formal = [step for step, (_, promoted, _) in steps.items() if any(FORMAL in r for r in promoted)]
-            window = range(min(formal), max(formal) + 1)
-            for step, (duration, promoted, cached) in steps.items():
-                if promoted and all(FORMAL in r for r in promoted):
-                    (k1_mixed if cached else k1_alone).append(duration)
-                elif not promoted and cached and step in window:
-                    decode_only.append(duration)
+        k1_mixed, k1_alone, decode_only = classify_steps(analyze_lifecycle.load_cores(root / relative, problems))
         print(f"== {name}: problems {problems}")
         print(f"  k=1 step with decodes: {describe(k1_mixed)}")
         print(f"  k=1 step alone:        {describe(k1_alone)}")
