@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Recorded YC's approval of H4b-(b) item 2 as designed in section 10 (D-H4B-ITEM2). |
 | 2026-10-26 | Recorded YC's restoration of the Pi budget, the approval of H4b-(b) item 1 (D-H4B-ITEM1, option B) and the continued H200-32/64 mainline with at most 64 non-preemptible H200 (D-H200-MAINLINE-CONTINUE). |
 | 2026-10-25 | Recorded YC's instruction to continue without pausing for decisions and to adopt the lead's recommendations by default (D-NO-INTERRUPT). |
 | 2026-10-25 | Recorded YC's adoption of one H200 run of H4b-(a) on the P2-32 layout before the H800 run (D-H200-H4B-LIFECYCLE). |
@@ -243,6 +244,13 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - **Resources.** This session's H200 RJobs, running plus queued, use at most 64 GPUs in total, all non-preemptible (`preemptible=False`) in `step_main`. YC's explicit decision supersedes the personal 32-GPU non-preemptible `step_main` ceiling for these jobs. YC's other jobs do not count and are not touched.
     - **Unchanged.** All other terms of D-H200-TEMP-MAINLINE: cases, reuse, H200 evidence never qualifies H800 cells and the reverse, DIAGNOSTIC labels, D-MAINLINE-LOOP-CAP-DSV4, D-GPU-SHORTAGE-REPORT, D-INPUT-PERSISTENCE, the Pi route for platform and cloud-volume operations, and soft gates for runs of 32 or more GPUs.
     - **Pi.** YC restored the Pi model budget; the H800 lifecycle receipt and copy (`h800-lifecycle-copy-1025d`) resume.
+
+[Original Request] Follow-up, 2026-10-26, after the item 2 design report (`h4b_d_side_model/design.md` section 10, approval item 2 in its section 9):
+
+> 批准，继续
+
+22. **D-H4B-ITEM2.** H4b-(b) item 2 (DECODE batch queue depth 2 with output placeholders, design section 10) is approved for implementation in `frontier/` as designed: 8 files (1 new, `vllm_v1_nixl_reads.py`), about 140-190 changed lines plus tests, and the DECODE role field `decode_replica_scheduler_config_max_concurrent_batches`.
+    - **Unchanged.** Results stay DIAGNOSTIC (D-H4A-CHECKPOINT); no constant is fitted to native06; the default path stays identical; D-MAINLINE-LOOP-CAP-DSV4 applies. The ingress field and candidate item 3 (PREFILL depth 2) are not approved.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

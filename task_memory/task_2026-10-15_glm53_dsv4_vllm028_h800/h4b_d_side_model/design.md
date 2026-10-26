@@ -4,11 +4,12 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Updated the status: item 2 approved (D-H4B-ITEM2), implemented in `82390e10` and verified as DIAGNOSTIC; section 10.11 lists the deviations from sections 10.2-10.9. |
 | 2026-10-26 | Added section 10, the item 2 design (DECODE role override of `max_concurrent_batches`, output placeholders, grouped in-flight allocation, preemption with one batch in flight, READ claim per step, 8 files); section 6.1 points to it; section 9 item 2 updated. |
 | 2026-10-26 | Updated the status and inputs: item 1 approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified; the H800 and H200-64 lifecycle runs are copied and analyzed. |
 | 2026-10-25 | Created: measured native mechanism, Frontier's current path, item 1 (READ completion at engine steps), item 2 (DECODE batch queue depth 2), gating options, expected effects, deferred parts, verification plan and approval items. |
 
-**Status.** Item 1 is approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item1_engine_step.md)). Item 2 has its design in section 10 and waits for YC's approval before any core edit. The ingress field stays deferred.
+**Status.** Item 1 is approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item1_engine_step.md)). Item 2 is approved (D-H4B-ITEM2), implemented in `82390e10` and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item2_decode_depth2.md)); section 10.11 lists where the implementation differs from section 10. The ingress field stays deferred.
 
 **Authority.** D-H4A-CHECKPOINT ("Frontier models the D-side asynchronous remote-KV lifecycle from those measured inputs, with no constant fitted to native06"), D-MAINLINE-LOOP-CAP-DSV4, D-NO-INTERRUPT and the DIAGNOSTIC label in [requirements.md](../requirements.md). GLM, co-location, existing PDD and PD-AF results must stay identical.
 
@@ -151,12 +152,12 @@ Notes:
 ## 9. Approval items for YC
 
 1. Item 1 with option B: the new KV-transfer config field `nixl_read_completion` (default `transfer_end`), 7-8 `frontier/` files, about 160-210 lines. Or option A, which changes GLM NIXL results.
-2. Item 2 (DECODE depth 2 with placeholders), section 10: the DECODE role override `decode_replica_scheduler_config_max_concurrent_batches` through the existing override registry, the placeholder rescheduling and last-token guard, grouped in-flight allocation, preemption through the existing one-batch path, the per-step READ claim (also at depth 1), and the move of the READ table to `vllm_v1_nixl_reads.py`. 8 `frontier/` files (1 new), about 140-190 lines plus tests.
+2. Item 2 (DECODE depth 2 with placeholders; approved as D-H4B-ITEM2, implemented in `82390e10`), section 10: the DECODE role override `decode_replica_scheduler_config_max_concurrent_batches` through the existing override registry, the placeholder rescheduling and last-token guard, grouped in-flight allocation, preemption through the existing one-batch path, the per-step READ claim (also at depth 1), and the move of the READ table to `vllm_v1_nixl_reads.py`. 8 `frontier/` files (1 new), about 140-190 lines plus tests.
 3. Ingress field: deferred until the H800 parts are known.
 
 ## 10. Item 2: DECODE batch queue depth 2 with output placeholders
 
-Status: proposal (2026-10-26). No `frontier/` edit before YC approves it (section 9, item 2). The choices below were made under D-NO-INTERRUPT and are the lead's recommendations.
+Status: approved (D-H4B-ITEM2) and implemented in `82390e10` (2026-10-26); verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item2_decode_depth2.md)). The choices below were made under D-NO-INTERRUPT and are the lead's recommendations; section 10.11 records where the implementation differs.
 
 ### 10.1 Native behavior to reproduce
 
@@ -270,3 +271,17 @@ Total: 8 `frontier/` files (1 new), about 140-190 changed lines plus about 230 t
 - MONOLITHIC capacity 2 keeps its skip semantics (option C).
 - PREFILL depth 2 is not modeled; the P engines also run `--async-scheduling`. It is a candidate item 3 and may explain part of the P2-32 P-side +45.92 ms.
 - Late READ handles (section 6.2) and ingress (section 6.3) are unchanged.
+
+### 10.11 Deviations in the implementation
+
+Adopted under D-NO-INTERRUPT; details and evidence in the item 2 [test report](../test_report_2026-10-26_h4b_item2_decode_depth2.md), sections 3 and 9.
+
+| Section | Design | Implemented | Reason |
+| --- | --- | --- | --- |
+| 10.6 | `Batch` is unchanged | `Batch` and `BaseReplicaScheduler._create_batch` take `num_output_placeholders`; the stale check expects the index after the outputs in flight ahead | Without it the second in-flight batch is dropped as stale |
+| 10.2 | DECODE validation includes no prefix caching | No prefix-caching check | Unified DECODE has no prefix-caching manager, so the check cannot fail |
+| 10.2, 10.5 | No scheduling-policy condition | FCFS required | Under FCFS the victim is the running tail, in at most one in-flight batch; a priority victim may already be in a batch of the same pass |
+| 10.4 | Admission formula on placeholder lanes | Applied on every lane | Grouped allocation is PP1-only, so every other lane has capacity 1 and the value is unchanged |
+| 10.7 | Field without `omit_if_none`; 8 files, about 140-190 lines | `omit_if_none`; 11 files (1 new), +236 / −65 | `config.json` of other runs stays unchanged; the extra files are the `Batch` fix and a help text |
+| 10.6 | One possible depth-1 difference | Two, (a) a same-time registration after a pass and (b) a READ found at a DP dummy-forward start | Neither occurred in the three depth-1 reruns |
+| 10.9 | `--decode_replica_scheduler_config_max_concurrent_batches` | `cluster_config_decode_replica_scheduler_config_max_concurrent_batches` | The flat CLI name; the driver rejects the shorthand |
