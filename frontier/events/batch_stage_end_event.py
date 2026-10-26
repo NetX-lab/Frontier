@@ -176,7 +176,7 @@ class BatchStageEndEvent(BaseEvent):
                 )
                 next_events.append(
                     ReplicaScheduleEvent(
-                        self.time,
+                        replica_scheduler.next_pass_start(self.time),
                         self._replica_id,
                         self._cluster_type,
                         self._replica_local_id,
