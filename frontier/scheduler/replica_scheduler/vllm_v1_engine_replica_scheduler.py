@@ -753,10 +753,8 @@ class VLLMv1EngineReplicaScheduler(
     def next_pass_start(self, time: float) -> float:
         """Start of the engine's next pass after its dummy forward ended at `time`.
 
-        An execution path may price an idle forward at zero
-        (`predict_step_cost_execution`), so a group whose forwards are all
-        dummy forwards spins at no simulated cost, and such a dummy forward
-        ends when it starts. While no engine of the group then has a request
+        A dummy forward priced at zero ends when it starts, so a group whose
+        forwards are all dummy forwards spins at no simulated cost. While no engine of the group then has a request
         to schedule and some wait for posted NIXL READs, no pass changes
         anything until the earliest READ's wire ends; the pass that starts
         then finds it (`get_finished`), as the next step of an idle engine
