@@ -72,6 +72,8 @@ def verify(stage: Path) -> dict:
             or plan["kind"] != config["canonical_replay"]["kind"]
             or plan["dp_size"] != expected_engine["data_parallel_size"]):
         raise ValueError("Staged replay kind/topology differs from the frozen run definition")
+    if plan["kind"] == "qualification" and "length_sweep" in plan:
+        raise ValueError("A qualification run replays no length sweep")
     case = CASES[config["case_id"]]
     if any(config.get(key) != case[key] for key in (
             "gpu_type", "charged_group", "replica", "gpu", "preemptible")):
@@ -131,6 +133,9 @@ def build(args) -> dict:
     elif args.kind == "device_timeline":
         definition["description"] += (" D31 diagnostic decode device timeline: the full workload with torch-profiler"
                                       " windows on the decode servers in the first formal repeat; never a reference.")
+    if "length_sweep" in definition["canonical_replay"]:
+        definition["description"] += (" A length sweep before the first repeat compiles every DSA scoring-kernel"
+                                      " variant the formal phases reach; its requests are never measured.")
     workspace = args.workspace.resolve()
     workspace.mkdir(parents=True, exist_ok=True)
     model = workspace / "reference_inputs"

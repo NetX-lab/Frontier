@@ -149,6 +149,32 @@ def test_step_raw_schema_rejects_population_count_clock_failures(step_native, fa
         native_client_rows(root, WORKLOAD, IDS, "step5")
 
 
+@pytest.mark.parametrize("fault", [None, "uncovered", "count", "summary", "boundary", "unverified"])
+def test_step_length_sweep_is_counted_but_never_measured(step_native, fault):
+    root, records, summary = step_native
+    baseline = native_client_rows(root, WORKLOAD, IDS, "step5")
+    swept = [dict(request_id=f"length-sweep-short-{index:05d}", segment="length_sweep", role="diagnostic",
+                  repeat=0, status="completed") for index in range(3)]
+    summary["length_sweep"] = dict(planned_requests=3, recorded_requests=3, failed_request_ids=[],
+                                   coverage_verified=True)
+    summary["idle_boundaries"].insert(1, dict(boundary="after_length_sweep", verified=True))
+    if fault == "uncovered":  # A soft gate: a failed sweep request never rejects the repetitions.
+        swept[0]["status"] = "failed"
+        summary["length_sweep"].update(failed_request_ids=[swept[0]["request_id"]], coverage_verified=False)
+    if fault == "count": swept.pop()
+    if fault == "summary": summary.pop("length_sweep")
+    if fault == "boundary": summary["idle_boundaries"].pop(1)
+    if fault == "unverified": summary["idle_boundaries"][1]["verified"] = False
+    write_jsonl(root / "replay/client_requests.jsonl", swept + records)
+    (root / "replay/canonical_summary.json").write_text(json.dumps(summary))
+    if fault in (None, "uncovered"):
+        rows = native_client_rows(root, WORKLOAD, IDS, "step5")
+        assert rows.keys() == baseline.keys() and all(rows[key].equals(baseline[key]) for key in rows)
+    else:
+        with pytest.raises(ValueError):
+            native_client_rows(root, WORKLOAD, IDS, "step5")
+
+
 @pytest.mark.parametrize("fault", ["missing_check", "other_origin", "runtime", "image", "source", "artifact", "node", "declaration", "runtime_receipt", "node_version", "node_role", "stage_image"])
 def test_step_unverified_real_provenance_cannot_be_admitted(tmp_path, step_native, simulator, fault):
     root, _, _ = step_native

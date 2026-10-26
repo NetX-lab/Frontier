@@ -17,10 +17,14 @@ from tests.unit.test_step5_client_metrics import step_native, synthetic_step_che
 from tests.unit.test_canonical_client_metrics import native, simulator, TRACE
 
 
-@pytest.mark.parametrize("case_id,kind", [
-    ("h200_32", "qualification"), ("h800_32", "workload"), ("h800_64", "workload"),
-    ("h200_32", "device_timeline")])
-def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, case_id, kind):
+SWEEP = {"long_requests_per_lane": 2, "lane_interval_s": .15, "duration_s": 240,
+         "short_prompt_tokens": 64, "short_output_tokens": 2}
+
+
+@pytest.mark.parametrize("case_id,kind,sweep", [
+    ("h200_32", "qualification", False), ("h800_32", "workload", False), ("h800_64", "workload", False),
+    ("h200_32", "device_timeline", False), ("h200_32", "workload", True), ("h200_32", "qualification", True)])
+def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, case_id, kind, sweep):
     inputs = stage_inputs(tmp_path)
     model_path = inputs["model_dir"] / "config.json"
     model = json.loads(model_path.read_text())
@@ -32,6 +36,8 @@ def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, 
     if kind == "device_timeline":
         definition["role_profiler_config"] = {"decode": profiler}
         definition["canonical_replay"]["decode_profile_windows"] = [{"start_s": 16, "stop_s": 22}]
+    if sweep:
+        definition["canonical_replay"]["length_sweep"] = SWEEP
     definition_path = tmp_path / "definition.json"
     definition_path.write_text(json.dumps(definition))
     runtime = tmp_path / "runtime"
@@ -46,12 +52,17 @@ def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, 
     launcher.write_text("# Not invoked by the dry-run\n")
     monkeypatch.setattr(build_stage, "committed_source", lambda: {"commit": "cpu-fixture"})
     stage = tmp_path / "workspace/stage"
-    canonical_stage.build(SimpleNamespace(
+    arguments = SimpleNamespace(
         run_definition=definition_path, case=case_id, kind=kind,
         workspace=stage.parent, stage_dir=stage,
         output_dir=Path("/mnt/codesign-exp/ycfeng/d21_test"),
         runtime_source_root=runtime, launcher_scope=launcher, job_tag="fixture", formal_inputs=None,
-        **{key: value for key, value in inputs.items() if key != "definition"}))
+        **{key: value for key, value in inputs.items() if key != "definition"})
+    if sweep and kind == "qualification":
+        with pytest.raises(ValueError, match="A qualification run replays no length sweep"):
+            canonical_stage.build(arguments)
+        return
+    canonical_stage.build(arguments)
     installed = tmp_path / "installed/tests"
     installed.mkdir(parents=True)
     (installed / "__init__.py").write_text("# An unrelated installed tests package\n")
@@ -80,9 +91,11 @@ def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, 
             (stage / "config.json").write_text(json.dumps(changed))
             with pytest.raises(ValueError, match="Only device_timeline runs profile"):
                 canonical_stage.verify(stage)
+    plan = json.loads((stage / "trace/replay_plan.json").read_text())
+    assert plan.get("length_sweep") == (SWEEP if sweep else None)
     if kind == "workload":
         assert config["timeout_seconds"] == 5400
-        assert json.loads((stage / "trace/replay_plan.json").read_text())["kind"] == "workload"
+        assert plan["kind"] == "workload"
         config["canonical_replay"]["kind"] = "canonical"
         with pytest.raises(ValueError, match="readiness"):
             formal_release.validate(config)

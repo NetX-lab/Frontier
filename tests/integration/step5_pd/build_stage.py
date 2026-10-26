@@ -101,7 +101,7 @@ def stage_canonical(definition: dict, stage: Path) -> None:
     canonical_workload(workload)
     shutil.copytree(workload, stage / "trace/workload")
     plan = {key: settings[key] for key in (
-        "kind", "idle_timeout_s", "idle_poll_s", "concurrent_requests", "decode_profile_windows")
+        "kind", "idle_timeout_s", "idle_poll_s", "concurrent_requests", "decode_profile_windows", "length_sweep")
         if key in settings}
     plan["dp_size"] = definition["engine"]["data_parallel_size"]
     (stage / "trace/replay_plan.json").write_text(json.dumps(plan, indent=1))

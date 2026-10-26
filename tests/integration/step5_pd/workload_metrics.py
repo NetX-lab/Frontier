@@ -37,6 +37,9 @@ def summarize(stage: Path) -> dict:
     assert len(by_id) == len(proxy) == len(records)
     assert set(by_id) == {row["request_id"] for row in records}
     summary = json.loads((root / "replay/canonical_summary.json").read_text())
+    # native_client_rows has counted the length-sweep records; they carry no template prompt.
+    swept = [row for row in records if row["segment"] == "length_sweep"]
+    records = [row for row in records if row["segment"] != "length_sweep"]
     for row in records:
         assert row["prompt_id"] == row["template_request_id"]
         assert row["accepted_prompt_sha256"] == row["prompt_sha256"] == prompt_hashes[row["prompt_id"]]
@@ -86,6 +89,7 @@ def summarize(stage: Path) -> dict:
         "runtime_qualification": summary["runtime_qualification"],
         "reference_admission": summary["reference_admission"],
         "requests": len(records), "warmups": len(records) - len(measured), "measured": len(measured),
+        "length_sweep_requests": len(swept),
         "verified_boundaries": len(summary["idle_boundaries"]), "peak_client_inflight": peak,
         "max_dispatch_lateness_s": max(row["dispatch_lateness_s"] for row in measured),
         "pooled_latencies": pooled, "repetitions": repeats,

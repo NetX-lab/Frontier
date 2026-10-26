@@ -69,6 +69,43 @@ def test_native_workload_p90_uses_nearest_rank_and_keeps_mean():
     assert result["e2e_ms"]["p90"] == 348
 
 
+SWEEP = {"long_requests_per_lane": 2, "lane_interval_s": .15, "duration_s": 240,
+         "short_prompt_tokens": 64, "short_output_tokens": 2}
+
+
+def test_length_sweep_spreads_longest_formal_requests_and_paces_short_ones_per_lane():
+    _, formal, _ = cr.canonical_workload(WORKLOAD)
+    rows = cr.length_sweep_rows(formal, {"dp_size": 2, "length_sweep": SWEEP})
+    long = [row for row in rows if row["request_id"].startswith(cr.LONG_SWEEP_PREFIX)]
+    short = [row for row in rows if row["request_id"].startswith(cr.SHORT_SWEEP_PREFIX)]
+    assert len(rows) == len({row["request_id"] for row in rows}) == len(long) + len(short)
+    assert [(row["arrived_at"], row["num_prefill_tokens"], row["num_decode_tokens"]) for row in long] == [
+        (0.0, 6144, 1024)] * 4
+    assert len(short) == 3200 and short[-1]["arrived_at"] == pytest.approx(239.925)
+    assert all(row["num_prefill_tokens"] == 64 and row["num_decode_tokens"] == 2 for row in short)
+    assert [row["arrived_at"] for row in short[:3]] == [0.0, .075, .15]
+    assert all(row["segment"] == "length_sweep" and row["role"] == "diagnostic" and row["stream"]
+               and row["return_token_ids"] and "template_request_id" not in row for row in rows)
+
+
+@pytest.mark.parametrize("fault", [None, "short_stream_ends_early", "long_failed"])
+def test_length_sweep_covers_the_formal_range_only_until_every_long_request_ended(fault):
+    records = [{"request_id": f"{cr.LONG_SWEEP_PREFIX}00", "status": "completed", "last_token_monotonic": 50.0},
+               {"request_id": f"{cr.LONG_SWEEP_PREFIX}01", "status": "completed", "last_token_monotonic": 60.0}]
+    records += [{"request_id": f"{cr.SHORT_SWEEP_PREFIX}{index:05d}", "status": "completed",
+                 "dispatch_monotonic": 10.0 + index * .5} for index in range(110)]
+    records.append({"request_id": f"{cr.SHORT_SWEEP_PREFIX}99999", "status": "failed", "dispatch_monotonic": None})
+    if fault == "short_stream_ends_early":
+        records = records[:80]
+    if fault == "long_failed":
+        records[1]["status"] = "failed"
+    coverage = cr.length_sweep_coverage(records)
+    assert coverage["coverage_verified"] is (fault is None)
+    if fault is None:
+        assert coverage["max_short_dispatch_gap_s"] == pytest.approx(.5)
+        assert coverage["last_short_dispatch_monotonic"] == pytest.approx(64.5)
+
+
 @pytest.mark.parametrize("member", ["manifest.json", "SHA256SUMS", "trace.csv", "request_ids.json", "warmup_pool.csv"])
 def test_modified_common_member_is_rejected(tmp_path, member):
     directory = tmp_path / "workload"
@@ -82,11 +119,13 @@ def test_modified_common_member_is_rejected(tmp_path, member):
 @pytest.mark.parametrize("kind,fault", [("canonical", fault) for fault in (
     None, "one_http_failure", "idle_failure", "checkpoint_failure", "bad_usage", "text_only")]
     + [("qualification", None), ("qualification", "startup_missing"),
-       ("workload", None), ("workload", "one_http_failure")])
+       ("workload", None), ("workload", "one_http_failure"), ("workload", "length_sweep")])
 @pytest.mark.parametrize("dp", [2, 4])
 def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path, monkeypatch, kind, fault, dp):
     workload = cr.canonical_workload(WORKLOAD)
-    failure_id = workload[1][0]["request_id"] + "-repeat01"
+    # A failed sweep request must never touch the client workload verdict.
+    failure_id = (cr.LONG_SWEEP_PREFIX + "00" if fault == "length_sweep"
+                  else workload[1][0]["request_id"] + "-repeat01")
     bodies = {role: {} for role in cr.ROLES}
     phase_calls = []
     checkpoint_counts = []
@@ -133,12 +172,12 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                         "kv_transfer_params": {"transfer_mode": "pull", "do_remote_prefill": True,
                             "do_remote_decode": False, "remote_engine_id": "p0", "remote_request_id": rid,
                             "remote_host": "10.0.0.1", "remote_port": 5600, "remote_block_ids": [[0, 1]]}})
-                if fault == "one_http_failure" and rid == failure_id:
+                if fault in ("one_http_failure", "length_sweep") and rid == failure_id:
                     return web.json_response({"error": "native failure"}, status=500)
                 response = web.StreamResponse(headers={"Content-Type": "text/event-stream"})
                 await response.prepare(request)
                 for index in range(2):
-                    choice = {"index": 0, "text": "", "token_ids": [index + 200] * 512,
+                    choice = {"index": 0, "text": "", "token_ids": [index + 200] * (body["max_tokens"] // 2),
                               "finish_reason": "length" if index else None}
                     if fault == "text_only" and rid == failure_id:
                         choice.update(text="not a token-ID delta", token_ids=[])
@@ -147,7 +186,8 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                     await response.write(("data: " + json.dumps({"choices": [choice]}) + "\n\n").encode())
                 await asyncio.sleep(.001)
                 await response.write(("data: " + json.dumps({"choices": [], "usage": {
-                    "prompt_tokens": 6144, "completion_tokens": 1023 if fault == "bad_usage" and rid == failure_id else 1024}})
+                    "prompt_tokens": len(body["prompt"]),
+                    "completion_tokens": body["max_tokens"] - (fault == "bad_usage" and rid == failure_id)}})
                     + "\n\ndata: [DONE]\n\n").encode())
                 await response.write_eof()
                 return response
@@ -182,14 +222,29 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                     if fault == "checkpoint_failure":
                         raise OSError("injected auxiliary write failure")
 
+                sweep = ({"length_sweep": {"long_requests_per_lane": 1, "lane_interval_s": .05, "duration_s": .5,
+                                           "short_prompt_tokens": 64, "short_output_tokens": 2}}
+                         if fault == "length_sweep" else {})
                 return await cr.replay_repetitions(workload, proxy.port, 128896, 0, urls,
                     {"dp_size": dp, "kind": kind, "idle_timeout_s": .1,
-                     "idle_poll_s": .001, "concurrent_requests": 8}, checkpoint=checkpoint)
+                     "idle_poll_s": .001, "concurrent_requests": 8, **sweep}, checkpoint=checkpoint)
 
     result, records = asyncio.run(exercise())
     assert result["replay_kind"] == kind
+    swept = 0
+    if fault == "length_sweep":
+        swept = dp + 10 * dp
+        assert [row["segment"] for row in phase_calls.pop(0)] == ["length_sweep"] * swept
+        assert result["length_sweep"]["recorded_requests"] == swept
+        assert result["length_sweep"]["failed_request_ids"] == [failure_id]
+        assert result["length_sweep"]["coverage_verified"] is False
+        boundary = result["idle_boundaries"].pop(0)
+        assert boundary["boundary"] == "after_length_sweep" and boundary["verified"]
+        assert all(row["completed_requests"] == swept for row in boundary["observations"][-1]["roles"].values())
+        assert all(record["repeat"] == 0 for record in records[:swept])
+        records = records[swept:]
     expected_count = 24 if kind == "qualification" else 432
-    assert len(records) == len(bodies["prefill"]) == len(bodies["decode"]) == expected_count
+    assert len(records) + swept == len(bodies["prefill"]) == len(bodies["decode"]) == expected_count + swept
     assert [len(rows) for rows in phase_calls] == ([16, 8] if kind == "qualification" else [16, 128] * 3)
     for rows in phase_calls:
         expected = [0.0] * 8 if rows[0]["segment"] == "concurrent" else list(range(len(rows)))
@@ -218,7 +273,7 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
         assert result["repetitions"][-1]["metrics"]["formal_requests"] == 128
     else:
         assert not failures
-        assert result["client_workload_verified"] is (fault in (None, "startup_missing"))
+        assert result["client_workload_verified"] is (fault in (None, "startup_missing", "length_sweep"))
     prompts = {}
     for record in records:
         body = bodies["decode"][record["request_id"]]
@@ -251,7 +306,7 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
             assert actual["request_thpt_requests_s"] == 128 / actual["window_s"]
         else:
             assert actual is None
-    assert max(checkpoint_counts) == expected_count
+    assert max(checkpoint_counts) == expected_count + swept
 
 
 def test_actual_qualification02_startup_snapshot_is_diagnostic_but_warmed_idle_is_strict():

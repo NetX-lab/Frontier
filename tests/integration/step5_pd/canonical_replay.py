@@ -3,6 +3,14 @@
 This driver owns phase boundaries and admission diagnostics, not another HTTP replay
 client. Auxiliary observations are soft gates: failed diagnostics invalidate reference
 admission, but never cancel healthy requests or prevent later repetitions.
+
+An optional length sweep runs once before the first repetition. A native decode step that
+mixes decodes with a new request's prompt tail plans the DSA scoring kernel for
+``(longest sequence + 7) // 8`` regions, a compile-time constant of the Triton kernel. The
+native warm-up compiles only one region count, so the first mixed step at each new longest
+length compiles a variant on the critical path (about 0.4 s, stalling every request of the
+engine). The sweep makes each DP engine compile every variant the formal phases reach, so the
+repetitions measure steady-state serving.
 """
 
 from __future__ import annotations
@@ -28,6 +36,8 @@ MANIFEST_SHA256 = "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c5
 SUMS_SHA256 = "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9"
 ROLES = ("prefill", "decode")
 GAUGES = ("num_requests_running", "num_requests_waiting", "kv_cache_usage_perc")
+LONG_SWEEP_PREFIX = "length-sweep-long-"
+SHORT_SWEEP_PREFIX = "length-sweep-short-"
 
 
 def canonical_workload(directory: Path) -> tuple[dict, list[dict], list[dict]]:
@@ -44,6 +54,46 @@ def phase_rows(manifest: dict, templates: list[dict], repeat: int, phase: str) -
                        request_id=row["request_id"], repeat=repeat),
                    "repeat": repeat, "segment": phase, "stream": True, "return_token_ids": True}
             for row in templates]
+
+
+def length_sweep_rows(formal: list[dict], settings: dict) -> list[dict]:
+    """Long requests of the longest formal shape and a stream of short requests.
+
+    ``long_requests_per_lane`` long requests per DP lane arrive together, so the native DP load
+    balancer spreads them over the lanes, and the longest sequence of every lane grows through
+    the formal range. A region count lasts eight decode steps; short requests, one per
+    ``lane_interval_s / dp_size`` for ``duration_s``, give every lane a mixed step within that
+    window as long as ``lane_interval_s`` is shorter than eight decode steps.
+    """
+    sweep, lanes = settings["length_sweep"], settings["dp_size"]
+    longest = max(formal, key=lambda row: row["num_prefill_tokens"] + row["num_decode_tokens"])
+    common = {"segment": "length_sweep", "role": "diagnostic", "repeat": 0, "stream": True,
+              "return_token_ids": True}
+    rows = [common | {"request_id": f"{LONG_SWEEP_PREFIX}{index:02d}", "arrived_at": 0.0,
+                      "num_prefill_tokens": longest["num_prefill_tokens"],
+                      "num_decode_tokens": longest["num_decode_tokens"]}
+            for index in range(sweep["long_requests_per_lane"] * lanes)]
+    interval = sweep["lane_interval_s"] / lanes
+    return rows + [common | {"request_id": f"{SHORT_SWEEP_PREFIX}{index:05d}",
+                             "arrived_at": round(index * interval, 6),
+                             "num_prefill_tokens": sweep["short_prompt_tokens"],
+                             "num_decode_tokens": sweep["short_output_tokens"]}
+                   for index in range(math.ceil(sweep["duration_s"] / interval))]
+
+
+def length_sweep_coverage(records: list[dict]) -> dict:
+    """The sweep covers the formal range when short requests keep arriving until every long
+    request has produced its last token."""
+    long = [record for record in records if record["request_id"].startswith(LONG_SWEEP_PREFIX)]
+    dispatches = sorted(record["dispatch_monotonic"] for record in records
+                        if record["request_id"].startswith(SHORT_SWEEP_PREFIX)
+                        and record["dispatch_monotonic"] is not None)
+    if not long or any(record["status"] != "completed" for record in long) or len(dispatches) < 2:
+        return {"coverage_verified": False}
+    last_token = max(record["last_token_monotonic"] for record in long)
+    return {"last_long_token_monotonic": last_token, "last_short_dispatch_monotonic": dispatches[-1],
+            "max_short_dispatch_gap_s": max(later - earlier for earlier, later in zip(dispatches, dispatches[1:])),
+            "coverage_verified": dispatches[-1] >= last_token}
 
 
 def validate_record(record: dict) -> list[str]:
@@ -193,6 +243,36 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, se
         persist()
         return observed
 
+    async def run_phase(rows, windows=()):
+        """Replay one phase; return its summary, records and record validation errors."""
+        phase_records = []
+        copied = 0
+
+        def persist_phase():
+            nonlocal copied
+            records.extend(phase_records[copied:])
+            copied = len(phase_records)
+
+        try:
+            clock, _ = await replay(rows, port, vocab_size, origin_lead_s, windows, vllm_version="step5",
+                                    records=phase_records,
+                                    checkpoint=lambda: persist_phase(), profile_url=urls["decode"])
+        finally:
+            persist_phase()
+            persist()
+        errors = []
+        for record in phase_records:
+            try:
+                errors.extend(validate_record(record))
+            except Exception as error:
+                message = f"record validation: {type(error).__name__}: {error}"
+                record.update(status="failed", validation_errors=[message])
+                errors.append(message)
+        summary = clock | {"planned_requests": len(rows), "recorded_requests": len(phase_records),
+                           "failed_request_ids": [row["request_id"] for row in phase_records
+                                                  if row["status"] != "completed"]}
+        return summary, phase_records, errors
+
     # Native mostrecent gauges may not exist before the first scheduler update.
     # Retain one truthful startup snapshot, never infer idle from missing series.
     try:
@@ -206,8 +286,23 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, se
     completed = {role: 0 for role in ROLES}
     qualification = settings["kind"] == "qualification"
     repeats = [1] if qualification else manifest["repetitions"]["repeat_indices"]
+    if "length_sweep" in settings:
+        # A soft gate: the sweep only prepares the engines, and its verdict never touches the
+        # client workload verdict. Later boundaries count completions from the observed ones.
+        summary, sweep_records, _ = await run_phase(length_sweep_rows(formal, settings))
+        result["length_sweep"] = summary | length_sweep_coverage(sweep_records)
+        if not result["length_sweep"]["coverage_verified"] or summary["failed_request_ids"]:
+            print("NATIVE_PD_AUXILIARY_UNVERIFIED length_sweep coverage",
+                  result["length_sweep"]["coverage_verified"], "failed", len(summary["failed_request_ids"]),
+                  flush=True)
+        idle = await boundary("after_length_sweep")
+        completed = ({role: idle["observations"][-1]["roles"][role]["completed_requests"] for role in ROLES}
+                     if idle["verified"] else None)
     for repeat in repeats:
-        current = {"repeat": repeat, "phases": {}, "client_workload_verified": repeat == 1 or idle["verified"]}
+        # Only the startup observation, which precedes the first repetition without a sweep, may be
+        # diagnostic; every other boundary must have been verified idle.
+        current = {"repeat": repeat, "phases": {},
+                   "client_workload_verified": idle.get("diagnostic_only", False) or idle["verified"]}
         result["repetitions"].append(current)
         phases = (("warmup", warmup), ("concurrent", formal[:settings["concurrent_requests"]])) if qualification else (
             ("warmup", warmup), ("formal", formal))
@@ -216,36 +311,10 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, se
             if qualification:
                 rows = [row | {"request_id": "qualification-" + row["request_id"], "role": "diagnostic",
                                **({"arrived_at": 0.0} if phase == "concurrent" else {})} for row in rows]
-            phase_records = []
-            copied = 0
-
-            def persist_phase():
-                nonlocal copied
-                records.extend(phase_records[copied:])
-                copied = len(phase_records)
-
             # Diagnostic device-timeline runs profile the decode servers during the first formal phase.
             windows = (settings.get("decode_profile_windows", [])
                        if phase == "formal" and repeat == repeats[0] else [])
-            try:
-                clock, _ = await replay(rows, port, vocab_size, origin_lead_s, windows, vllm_version="step5",
-                                        records=phase_records,
-                                        checkpoint=lambda: persist_phase(), profile_url=urls["decode"])
-            finally:
-                persist_phase()
-                persist()
-            errors = []
-            for record in phase_records:
-                try:
-                    errors.extend(validate_record(record))
-                except Exception as error:
-                    message = f"record validation: {type(error).__name__}: {error}"
-                    record.update(status="failed", validation_errors=[message])
-                    errors.append(message)
-            current["phases"][phase] = clock | {"planned_requests": len(rows),
-                                               "recorded_requests": len(phase_records),
-                                               "failed_request_ids": [row["request_id"] for row in phase_records
-                                                                      if row["status"] != "completed"]}
+            current["phases"][phase], phase_records, errors = await run_phase(rows, windows)
             current["client_workload_verified"] &= not errors and len(phase_records) == len(rows)
             if phase == "formal":
                 try:

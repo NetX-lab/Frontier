@@ -67,8 +67,15 @@ def native_client_rows(run_dir: Path, workload: tuple, request_ids: dict, source
     rule = workload["repetitions"]["runtime_request_id_rule"]
     if len({r["request_id"] for r in records}) != len(records):
         raise ValueError("Duplicate native transport IDs")
+    # A Step length sweep only prepares the engines before the first repetition; its records
+    # are counted, never measured.
+    sweep = repetitions.get("length_sweep") if source["provenance"] == "image" else None
+    swept = [r for r in records if r["segment"] == "length_sweep"]
+    if len(swept) != (sweep["recorded_requests"] if sweep else 0):
+        raise ValueError("Native length-sweep population mismatch")
+    records = [r for r in records if r["segment"] != "length_sweep"]
     boundaries = repetitions["idle_boundaries"]
-    expected_boundaries = ["before_repeat01_warmup"] + [
+    expected_boundaries = ["before_repeat01_warmup"] + (["after_length_sweep"] if sweep else []) + [
         f"after_repeat{repeat:02d}_{phase}" for repeat in repeats for phase in ("warmup", "formal")]
     if source["provenance"] == "image" and "startup_observation" in repetitions:
         if repetitions["startup_observation"].get("diagnostic_only") is not True:
