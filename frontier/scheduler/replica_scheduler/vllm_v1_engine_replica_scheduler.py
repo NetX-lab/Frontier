@@ -184,6 +184,13 @@ class VLLMv1EngineReplicaScheduler(
         # a batch, a batch output, or a dummy forward. None before the first.
         # Only the batch-queue roles run vLLM's engine loop.
         self._last_iteration_end: Optional[float] = None
+        # NIXL READs this DECODE lane pulls when engine steps complete them
+        # (nixl_read_completion='engine_step'): requested at P end, posted
+        # with their wire end at the lane's next step start, and found
+        # complete at a later step start, whose output reports them.
+        self._nixl_reads_requested: List = []
+        self._nixl_reads_posted: List[Tuple[float, object]] = []
+        self._nixl_reads_found: List = []
 
         # Configuration mapping from vLLM v1 parameters
         self._max_num_running_reqs = self._config.batch_size_cap
@@ -529,6 +536,10 @@ class VLLMv1EngineReplicaScheduler(
         if self._in_flight_batch_ids:
             self._blocking_batch_id = self._in_flight_batch_ids[0]
             self._clear_followup_polls()
+        else:
+            # An iteration that schedules nothing still runs the KV connector
+            # (`kv_connector_no_forward`).
+            self.on_engine_step_start(time)
         return batches
 
     def _run_dp_iterations(self, time: float) -> List[Batch]:
@@ -643,8 +654,15 @@ class VLLMv1EngineReplicaScheduler(
 
     @property
     def has_unfinished_requests(self) -> bool:
-        """vLLM's `Scheduler.has_unfinished_requests`: a waiting or running request."""
-        return bool(self._running_requests) or any(self._waiting_queues())
+        """vLLM's `Scheduler.has_unfinished_requests`: a waiting or running request.
+
+        A request whose NIXL READ is pending waits as `WAITING_FOR_REMOTE_KVS`.
+        """
+        return (
+            bool(self._running_requests)
+            or any(self._waiting_queues())
+            or bool(self._nixl_reads_requested or self._nixl_reads_posted or self._nixl_reads_found)
+        )
 
     @property
     def engine_loop_idle(self) -> bool:
@@ -908,6 +926,45 @@ class VLLMv1EngineReplicaScheduler(
             event.set_capacity_retry_time(time)
             ready_events.append(event)
         self._popped_output_events.extend(ready_events)
+
+    def register_nixl_read(self, transfer_info) -> None:
+        """Request the NIXL READ of one reserved request; the lane's next engine step posts it."""
+        if self._max_concurrent_batches != 1:
+            raise NotImplementedError(
+                "nixl_read_completion='engine_step' models a DECODE batch queue of depth 1; "
+                f"this lane runs up to {self._max_concurrent_batches} batches"
+            )
+        self._nixl_reads_requested.append(transfer_info)
+
+    def on_engine_step_start(self, time: float) -> None:
+        """Run the KV connector part of an engine step that starts at `time`.
+
+        The step first finds the posted READs whose wire time has ended
+        (`get_finished`), then posts the requested ones (`start_load_kv`), so
+        the step that posts a READ never finds it.
+        """
+        posted = []
+        for wire_end, transfer_info in self._nixl_reads_posted:
+            if wire_end <= time:
+                self._nixl_reads_found.append(transfer_info)
+            else:
+                posted.append((wire_end, transfer_info))
+        posted.extend(
+            (time + transfer_info.transfer_time_ms * 1e-3, transfer_info)
+            for transfer_info in self._nixl_reads_requested
+        )
+        self._nixl_reads_posted = posted
+        self._nixl_reads_requested = []
+
+    def consume_found_nixl_reads(self) -> List:
+        """READs found by the step whose output the engine takes now (`finished_recving`)."""
+        found, self._nixl_reads_found = self._nixl_reads_found, []
+        return found
+
+    @property
+    def next_nixl_read_end(self) -> Optional[float]:
+        """Earliest wire end of a posted READ, or None."""
+        return min((wire_end for wire_end, _ in self._nixl_reads_posted), default=None)
 
     def _waiting_queues(self) -> Tuple[List[Request], List[Request], List[Request]]:
         # Preemption inserts a victim into `_request_queue`, or into

@@ -134,6 +134,7 @@ class GlobalBatchEndEvent(BaseEvent):
 
         apply_output = functools.partial(
             self._apply_output,
+            scheduler=scheduler,
             cluster_scheduler=cluster_scheduler,
             replica_scheduler=replica_scheduler,
             metrics_store=metrics_store,
@@ -168,6 +169,7 @@ class GlobalBatchEndEvent(BaseEvent):
         self,
         time: float,
         *,
+        scheduler: BaseGlobalScheduler,
         cluster_scheduler: BaseClusterScheduler,
         replica_scheduler: BaseReplicaScheduler,
         metrics_store: MetricsStore,
@@ -176,8 +178,11 @@ class GlobalBatchEndEvent(BaseEvent):
 
         `time` is when the engine pops the output: the batch end, or a later
         pass for an output held at the DP sync. Return the requeue events of
-        the thinking rounds that stopped.
+        the thinking rounds that stopped, and the events of the NIXL READs
+        that the output reports.
         """
+        from frontier.events.kv_cache_transfer_end_event import report_nixl_reads
+
         logger = get_cluster_logger(__name__, self._cluster_type.name)
 
         def _current_request_entries() -> list[tuple[int, object]]:
@@ -315,7 +320,9 @@ class GlobalBatchEndEvent(BaseEvent):
                 continue
             metrics_store._on_request_end(time, request)
 
-        return thinking_requeue_events
+        return thinking_requeue_events + report_nixl_reads(
+            scheduler, metrics_store, replica_scheduler, time
+        )
 
     def get_target_cluster(self) -> ClusterType:
         # Processed by DECODE_ATTN cluster

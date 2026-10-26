@@ -959,12 +959,13 @@ def run_case(
         return events
 
     def observed_apply_output(
-        self, time, *, cluster_scheduler, replica_scheduler, metrics_store
+        self, time, *, scheduler, cluster_scheduler, replica_scheduler, metrics_store
     ):
         before = row_states(replica_scheduler, self._batch, metrics_store)
         events = original_apply_output(
             self,
             time,
+            scheduler=scheduler,
             cluster_scheduler=cluster_scheduler,
             replica_scheduler=replica_scheduler,
             metrics_store=metrics_store,
