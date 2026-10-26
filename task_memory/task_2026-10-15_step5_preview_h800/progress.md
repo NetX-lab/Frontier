@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: D(g) PREFILL tables complete; DECODE run 01 failed at the first PIECEWISE capture (host graph pool assert), fixed in 688eb32b, run 02 submitted. |
 | 2026-10-26 | D31: step D(f) done (H200 NIXL READ profile from native logs, kernel-gap proxy); D(g) profile jobs submitted. |
 | 2026-10-26 | D31: step D(d)/(e) done (H200 profile plan for both topologies, DP-lowered graph mode, DSA last-region pricing); step F still blocked. |
 | 2026-10-26 | D31: step D(b)/(c) done (profiler produces mixed batches and graph-padded rows). |
@@ -204,8 +205,8 @@ State of the D31 plan steps (see the top section of `plan.md`):
   notes.
 - completed — B. Fast Frontier E2E runs (2026-10-26, details below).
 - completed — C. H200 32-GPU native workload with the routing image (workload02, details below).
-- in-progress — D. H200 Step-5 operator profiles. D(a)–D(f) are committed; the D(g) profile
-  jobs are running (details below).
+- in-progress — D. H200 Step-5 operator profiles. D(a)–D(f) are committed; in D(g) the PREFILL
+  tables are complete and the DECODE job runs again after a profiler fix (details below).
 - waiting — F. H200 64-GPU native workload. The stage is built; launch waits until the account's
   other H200 jobs leave room (details below).
 - pending — E, G.
@@ -289,8 +290,41 @@ Step D progress (2026-10-26):
     `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/d31_h200_{prefill,decode}_20261026_01`.
   - At submission the account held 32 non-preemptible H200 GPUs (the 4 stepcast jobs, still
     running), so step F stays blocked.
-- Next: when the jobs end, copy the tables, judge stability (`judge_attention_smoke.py`, CV ≤ 5%),
-  and write the predictor options for step E.
+- D(g) results of run 01 (Pi run `d31-h200-profiles-copy-1026a`; hash-identical copies under
+  `/data/ycfeng/tmp/step5_d31_profiles_20261026/downloads/d31_h200_{prefill,decode}_20261026_01/`):
+  - PREFILL succeeded: linear, MoE and all 6 attention cells, each in both measurement types.
+    Of the 6 KERNEL_ONLY attention rows, 5 pass `stability_pass`; the layer 3 decode dummy cell
+    fails only the 5% median agreement of `step5_qkv_projection` (5.14%, CV 0.28%). The
+    CUDA_EVENT rows of eager cells are diagnostics (`calibration_candidate` false) and are not
+    priced.
+  - `judge_attention_smoke.py` does not fit these packages: it expects `summary.json` next to
+    the CSV, infers FULL for the explicit-descriptor dummy cells, and checks coverage against the
+    old smoke grid. Acceptance therefore uses row completeness and the row-level
+    `stability_pass` flag; the judge output is kept in `/data/ycfeng/tmp/d31_judge_prefill.json`.
+  - DECODE failed: linear and MoE tables are complete, attention stopped after the 38 FULL cells
+    at the first PIECEWISE capture with `it->second->use_count > 0 INTERNAL ASSERT FAILED at
+    CachingHostAllocator.h:815`. This was the first GPU run of PIECEWISE Step attention: the
+    829 earlier attention CSVs hold only `full` and `none` rows.
+  - Cause: vLLM keeps its graphs for the process lifetime; the profiler drops each capture's
+    graphs. A dropped graph releases its pool in the pinned-host allocator, which leaves the pool
+    id in `graph_pools_freeable_` until the host cache is emptied. `torch.cuda.graph` empties the
+    host cache before capture, so FULL cells were unaffected. vLLM's
+    `BreakableCUDAGraphWrapper` empties only the device cache and then captures into the same
+    global pool id, which trips the use-count assert.
+  - Fix 688eb32b (`frontier/profiling/step5/replay.py`): before a breakable capture the profiler
+    runs `gc.collect()`, `torch.cuda.synchronize()` and `torch.accelerator.empty_host_cache()`.
+    The replay unit test checks the call order.
+  - `tests/integration/step5_profiling/merge_role_profiles.py` concatenates the PREFILL and
+    DECODE tables per family and writes `predictor_options.json` (merged tables, kernel gap,
+    NIXL READ profile). Test on run 01: exit 0; rows linear 10+70, MoE 132+804, attention 6+38.
+- D(g) DECODE run 02 submitted (2026-10-26 07:16 UTC) through Pi run
+  `d31-h200-decode02-submit-copy-1026b`: package `decode_stage02` with the fix (preflight
+  `decode_package_preflight02.json` PASS, 160 attention rows), job `exp-1026-151616-591957`,
+  1 H200, `step_main`, non-preemptible, creator `i-fengyicheng`; cloud output
+  `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/d31_h200_decode_20261026_02`. At submission
+  the account held 32 non-preemptible H200 GPUs (the 4 stepcast jobs).
+- Next: copy the run 02 tables, check 160/160 attention rows and `stability_pass`, merge the
+  role tables and run step E.
 
 Step F status (2026-10-26):
 
