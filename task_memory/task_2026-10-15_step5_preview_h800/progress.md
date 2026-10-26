@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: prefix runs attribute the workflow port (TTFT +80 ms) and measured collectives (TPOT +10.8 ms); step E/G runs stopped on an order-dependent spread feature (fixed `2beb09b3`, E rerun) and an EP32 partly filled lane below the MoE profile range (profile the partly filled rank). |
 | 2026-10-26 | D31: item 2a step 1 done (H200 curves `946595cd`), runner option `1c125189`, E rerun with the H200 curves started; lane prediction cache `eddb9bf5` (exact, 1.7× faster). |
 | 2026-10-26 | D31: item 2a steps 2–4 done (measured backend `b9cbda0d`, allgather_reducescatter pricing `0349c1c6`); checks pass with fidelity 77/77; H200 collective jobs submitted. |
 | 2026-10-26 | D31: calibration item 2a opened; one-request breakdown shows underpriced and missing collectives (about 11.7 ms per DECODE step). |
@@ -591,6 +592,57 @@ Calibration item 2a, collective communication (2026-10-26, `in-progress`):
     differs from the 32-GPU options only in `nixl_read_profile`
     (`evidence/d31_h200_64_nixl_read_cost.json`). The merged03 MoE tables have EP16 and EP32
     rows (156 each). Formal 64-GPU calibration still waits for E within 30%.
+- Results of the 17:20 and 17:43 UTC runs (read 2026-10-26 19:00–19:30 UTC):
+  - The three 8-request prefix runs finished (return code 0). Means against `prefix8_base`
+    (`7dce66c0`, analytical collectives):
+
+    | Variant | Code | TTFT ms | TPOT ms | E2E ms | Wall s |
+    | --- | --- | --- | --- | --- | --- |
+    | `prefix8_base` | `7dce66c0` | 590.7 | 24.73 | 25,888 | 6,566 |
+    | `prefix8_wf` (workflow port) | `b3fa995a` | 671.0 (+80.4) | 24.75 (+0.02) | 25,988 | 4,524 |
+    | `prefix8_agrs_h200` (measured collectives) | `1c125189` | 692.3 (+101.6) | 35.55 (+10.82) | 37,061 | 6,876 |
+    | `prefix8_comb_h200` (both) | `b3fa995a` | 786.1 (+195.4) | 35.58 (+10.85) | 37,185 | 4,309 |
+
+    The workflow port raises TTFT (the NIXL read completes at an engine step); the measured
+    allgather_reducescatter collectives raise TPOT by 44%. The two effects add up. The prefix
+    has at most 8 requests in flight, so these values are not compared with the 128-request native
+    run.
+  - `h200_32_comb_h200` (3,100 s) and `h200_32_agrs_h200` (5,170 s) failed with
+    `query_len_cv=1.8750000000000007 not in [0.5302196349700645, 1.875]` from
+    `step5_layer_e2e`. Cause: the measured mixed row lists 16 decodes, then one 16-token chunk,
+    and its spread is exactly 1.875. The runtime batch lists the chunk first; the float sum of
+    squared deviations depends on the order and gives 1.8750000000000007, just above the measured
+    maximum. Fix `2beb09b3`: compute the spread from integer moments
+    (`sqrt(n * sum(q^2) - sum(q)^2) / sum(q)`), which does not depend on the order. New test
+    `test_query_length_spread_does_not_depend_on_request_order`. Step5 unit tests (`-k step5`):
+    153 failed and 15 collection errors; the same 153 tests also fail on `b3fa995a` without the fix
+    (`/data/ycfeng/tmp/d31_cvfix/{unit_step5.log,unit_failed_on_base.log}`), so the fix adds no
+    failure. These are the stale tests already listed as deferred.
+  - `h200_64_comb_h200` (1,310 s) failed with `total_routed_tokens ... below declared minimum
+    8.0: 7.0` for `moe_shuffling` in a DECODE EP wave. Cause: a profile coverage gap, not a code
+    error.
+    - The MoE profiler measures EP rank 0 only. vLLM's `uniform_topk` fills experts from the lowest
+      ID, so rank 0 is always a full rank: at least one token on each of its 11 local experts
+      (8 routed tokens only at 1 token).
+    - Frontier's `balanced` routing fills experts the same way. With fewer than 44 tokens, the
+      last filled rank is only partly filled. For DECODE on TP8/DP4/EP32, every DP rank is padded
+      to the same CUDA-graph size, so the step has 4 × that size tokens. 16 tokens give lanes
+      `[11] × 11, 7, [0] × 20`, and 32 tokens give a lane with 3. Both are below the measured
+      minimum of 8.
+    - TP8/DP2/EP16 cannot reach this: with DP2 padding the step has 2, 4, 8, 16, 32 or ≥ 48
+      tokens, and the partly filled rank then has 16, 10, 20, 18 or 14 routed tokens.
+    - Native `position_cyclic` routing also gives ranks fewer than 8 routed tokens in small decode
+      steps, so these loads are real.
+    - Decision (adopted under D31's "adopt the recommendations" instruction): measure the partly
+      filled rank instead of clamping the query. The profiler gets an option to measure the last
+      filled EP rank; with the same `uniform_topk` fill, that rank carries exactly the load
+      Frontier gives the partly filled lane at the same token count. A short 1-GPU H200 job adds
+      these EP32 rows; the tables become merged04 for step G.
+  - Rerun of step E: `h200_32_comb_h200` from the detached worktree `.worktrees/run-e-2beb09b`
+    (`2beb09b3`), started 19:34 UTC with the merged03 options and `--measured-collectives`; output
+    `/data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/`.
+  - `h200_32_run01` (base) and `h200_32_wf02` (workflow port) still run on the code before the fix
+    and can stop at the same spread check.
 
 Step F status (2026-10-26):
 
