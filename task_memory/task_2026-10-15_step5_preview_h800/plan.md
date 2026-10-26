@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-26 | D31: step F done; status line updated. |
+| 2026-10-26 | D31: workflow port status and the shared-expert DP token-count candidate added to the calibration order. |
 | 2026-10-26 | D31: step D done, step E running; calibration order for E recorded. |
 | 2026-10-26 | D31: step D row rewritten as sub-steps (a)–(g); (a) done. |
 | 2026-10-26 | D31: step B done; Frontier routing set to `balanced` (D31.9); step D scope made concrete. |
@@ -163,8 +164,14 @@ Calibration order for E, after the first error table:
    number of DECODE batches in flight. The `feat/glm53-dsv4-vllm028` branch has candidate
    commits for these (`5f907f66`, `96d9c1ef`, `82390e10`). Test cherry-picks in a separate
    worktree under `.worktrees/` before porting them.
+   Status: ported on `feat/step5-d31-workflow` (`.worktrees/step5-d31-workflow`); the full
+   32-GPU run with the new workflow is running. Merge into `feat/step5-preview` after the unit,
+   dummy-smoke and 77-case fidelity checks.
 2. GPU operators and gaps. Replace the kernel-gap proxy and the FP8 metadata if the operator
-   trace shows a measurable gap.
+   trace shows a measurable gap. Candidate found on 2026-10-26: in an EP wave the shared expert
+   is priced on the merged token count of all DP lanes, while the native shared expert runs on
+   each DP rank's own tokens (operation census, `progress.md`, 2026-10-20). Every DECODE step
+   at DP > 1 is affected.
 3. CPU overhead, which is not modelled now.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: calibration item 1 (workflow port) in progress; measured NIXL check fixed for engine-step completion; shared-expert DP token-count candidate recorded. |
 | 2026-10-26 | D31: step F done (H200 64-GPU native workload succeeded; metrics and the 64-GPU NIXL READ cost archived). |
 | 2026-10-26 | D31: step D done (run 03 tables merged after four profiler/predictor fixes and the DECODE measurement-family fix d034202c); step E started. |
 | 2026-10-26 | D31: D(g) PREFILL tables complete; DECODE run 01 failed at the first PIECEWISE capture (host graph pool assert), fixed in 688eb32b, run 02 submitted. |
@@ -356,6 +357,43 @@ Step D progress (2026-10-26):
 - Step E started 2026-10-26 11:19 UTC:
   `frontier_workload.py run --case h200_32 --predictor-options .../merged03/predictor_options.json
   --output-dir /data/ycfeng/tmp/d31_e_run/h200_32_run01` (log `/data/ycfeng/tmp/d31_e_run/h200_32_run01.log`).
+
+Calibration item 1, workflow port (2026-10-26, `in-progress`):
+
+- Reason: the native engines run vLLM async scheduling (every server log has "Disabling NCCL for
+  DP synchronization when using async scheduling"), so a DECODE engine keeps two batches in flight
+  and its engine steps post, find and report the NIXL READs. Frontier's base path completes the READ
+  at wire end and runs one DECODE batch at a time. The glm53 stream measured that the two features
+  close about 2 × one step of the handoff gap.
+- Method: worktree `/data/ycfeng/Frontier/.worktrees/step5-d31-workflow`, branch
+  `feat/step5-d31-workflow` from `feat/step5-preview`:
+  - `1a6b4f8f`, `a07518e0`, `f9c661ea`: cherry-picks of glm53 `5f907f66`, `96d9c1ef`, `82390e10`
+    (engine-step NIXL READ completion, the all-idle DP group fix, DECODE `max_concurrent_batches=2`
+    with output placeholders). Conflicts resolved in `kv_cache_transfer_start_event.py` and the
+    vLLM V1 scheduler `__init__`; the glm53 task-record driver was not taken.
+  - `0b769dc6`: the ported DECODE placeholder tests use a Step-5 TP8/DP2/EP16 lane instead of the
+    DSV4 fixture, which needs H800 PP1 MONOLITHIC; the two-step test follows the Step DP first-step
+    sync. 11/11 pass.
+  - `cf90408a`: `frontier_workload.py` passes `nixl_read_completion=engine_step` and DECODE
+    `max_concurrent_batches=2`.
+  - `331d646e`: the measured NIXL READ check in `KVCacheTransferEndEvent` required the end time to
+    equal start + measured READ time. In `engine_step` mode the end is at or after it. The first
+    full run (`/data/ycfeng/tmp/d31_wf/h200_32_wf01`) stopped at the first READ with "Measured
+    NIXL READ-to-ready duration changed". `transfer_end` keeps the exact check.
+    `test_nixl_read_completion.py` + `test_decode_output_placeholders.py`: 20 passed.
+- Dummy-mode run on the 32 × 16 short trace: completes, 121.9 s base. Two measured short runs
+  (base and port, `/data/ycfeng/tmp/d31_wf/measured_32x16_{base,wf}`) both stopped with
+  `share_expert_up_proj` `num_tokens` 12,256 above the profiled 6,144: the short trace puts all
+  32 arrivals at time 0, so both PREFILL DP lanes join one EP wave. The canonical trace does not
+  reach this case in PREFILL; the short comparison was dropped, and step E is compared with the
+  full port run instead.
+- Finding from that stop (not fixed; calibration item 2): the EP lane batch takes the shared
+  expert's token count from the merged batch of all DP lanes
+  (`build_ep_lane_batch`, `moe_pre_routing_effective_total_tokens`), while the native shared
+  expert runs on each DP rank's own tokens (2026-10-20 operation census below: its down
+  projection all-reduce is `T x 8,192` B with the same `T` as `o_proj`).
+- Running: full port run `/data/ycfeng/tmp/d31_wf/h200_32_wf02` (log `h200_32_wf02.log`), and the
+  full unit suite on base and port (`/data/ycfeng/tmp/d31_wf/unit/{base,cand}.log`).
 
 Step F status (2026-10-26):
 
