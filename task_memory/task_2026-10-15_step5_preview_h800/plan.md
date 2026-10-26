@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: E rerun result; native rerun with a complete DSA kernel warm-up added (JIT stalls found); item 2b step 1 done. |
 | 2026-10-26 | D31: calibration item 2b (decode step growth with batch size) added with Frontier's own step curve; wf02 result in item 1. |
 | 2026-10-26 | D31: E rerun after the spread fix; step G rerun on merged04 after profiling the partly filled EP ranks. |
 | 2026-10-26 | D31: item 2a step 1 done, EP-lane prediction cache added; items 1 and 2a merged; combined E run and the first G run started. |
@@ -162,13 +163,27 @@ Dependency graph: `A -> {B, C, D}`; `{B, C, D} -> E`; `C -> F`; `{E, F} -> G`.
 B, C and D run in parallel. F needs C's GPUs released, because 32 + 64 GPUs exceeds the limit.
 
 Status (2026-10-26): A–D and F are done (D(g) evidence in `test_report_2026-10-26_h200_profiles.md`,
-F in `test_report_2026-10-26_h200_64_native_workload.md`). The first combined E and G runs
-stopped on two input-range errors: an order-dependent query-length spread (fixed in `2beb09b3`;
-E rerun `h200_32_comb_h200` started 19:34 UTC) and EP32 decode lanes with fewer routed tokens
-than the MoE profile measured. The profiler now measures the partly filled EP rank
-(`--profiled_ep_rank last_routed`); H200 job 04 added those rows, the tables are merged04, and
-the G rerun `h200_64_g01` started 20:17 UTC. Formal 64-GPU calibration still waits for E within
-30%.
+F in `test_report_2026-10-26_h200_64_native_workload.md`). The E rerun `h200_32_comb_h200`
+(workflow port, measured H200 collectives, merged04) finished: all four means are within 30%
+(TTFT −20.3%, TPOT −25.7%, E2E −25.6%, throughput +3.0%), while the p90/p95 rows fail (about
+−32% to −34%). The G rerun `h200_64_g01` is still running.
+
+Native rerun with a complete kernel warm-up (opened 2026-10-26; evidence in `progress.md`).
+Most of the native TTFT/TPOT tail comes from just-in-time compiles of the DSA scoring kernel
+`_paged_scores_sm90`: mixed decode steps at decode lengths 6,144–7,168 need 129 compile-time
+variants that the native warm-up does not compile, and each first use stalls the engine for
+about 0.4 s. The stall count falls from repeat to repeat (h200_32: 84, 54, 34 events), and so
+do the per-repeat means. This is a property of the native warm-up, not serving behaviour that
+Frontier should model, and the stalls are not removed from the native data afterwards. Steps:
+1. Add an optional native length sweep before the first repeat that reaches every variant on
+   every DP lane, never measured (done, `320c2082`).
+2. Rerun C on 32 H200 GPUs with the sweep (job `exp-1027-074903-556239`). Acceptance: no stall
+   events (or only a few) in the formal repeats, per-repeat means without the falling trend,
+   `workload_metrics.py` passes, the sweep coverage is verified.
+3. Recompare E against the new native metrics.
+4. Rerun F on 64 H200 GPUs with the same sweep settings after step 2 releases its GPUs, then
+   compare G.
+Formal 64-GPU calibration still waits for E within 30% against the warmed native run.
 
 Calibration order for E, after the first error table:
 1. Workflow. The D-side first-token handoff (about two decode steps plus the READ plus the
@@ -220,8 +235,15 @@ Calibration order for E, after the first error table:
       three torch-profiler windows at about 8, 20 and 42 requests per engine) and split the
       growth into device busy time per kernel category and device idle time (host waits, DP
       synchronization). Diagnostic only (D31.10).
+      Done (job `exp-1027-062510-683917`): Frontier's step is within about 5% of the native
+      device busy time up to 21 requests per engine and 7% lower at 45. The rest of the native
+      growth is device idle time while the device waits for the host (about 2 ms at 9 requests,
+      8 ms at 45), which belongs to item 3. Two compensating operator errors remain: routed
+      expert compute is overpriced (16.9 against about 11.4 ms per step at 9 requests, because
+      the MoE profile activates every local expert) and the TP all-reduce is underpriced (about
+      3 ms per step).
    2. Compare with Frontier's own step curve from the stage-batch and EP-wave ledgers of a
-      diagnostic run, phase by phase (curve done, `progress.md`).
+      diagnostic run, phase by phase (done, `progress.md`).
    3. Fix the cause where it belongs: a missing or underpriced operator or collective is
       profiled and priced from op profiling (item 2); a host-side cost goes to item 3. No table of
       measured step times is used for prediction.

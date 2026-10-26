@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Update the current status: E rerun result, device-timeline findings, native kernel compiles and the length-sweep rerun. |
 | 2026-10-26 | Update the current status: step E results so far, the running E/G reruns, calibration item 2b. |
 | 2026-10-26 | Update the current status: H200 64-GPU native done. |
 | 2026-10-26 | Add the merged calibration items 1 and 2a and the running E and G runs to the current status. |
@@ -127,23 +128,33 @@ Status as of 2026-10-26:
     −57.0%, E2E −56.8%, total throughput +14.7%.
   - Workflow port alone (`h200_32_wf02`): TTFT −37.4%, TPOT −57.0%, E2E −56.6%, total throughput
     +14.6%.
-  - Running: the E rerun with items 1 and 2a (`h200_32_comb_h200`, from `.worktrees/run-e-2beb09b`)
-    and the G rerun on merged04 (`h200_64_g01`, from `.worktrees/run-g-9125bcb`).
+  - E rerun with items 1 and 2a (`h200_32_comb_h200`, from `.worktrees/run-e-2beb09b`): TTFT
+    −20.3%, TPOT −25.7%, E2E −25.6%, total throughput +3.0%. All four means pass the 30% gate;
+    the p90 and p95 rows fail (about −32% to −34%).
+  - Running: the G rerun on merged04 (`h200_64_g01`, from `.worktrees/run-g-9125bcb`).
 - **Calibration item 2b, decode step growth.** The native decode step grows about 0.7 ms per
-  request per DP engine (30.5 ms → 59 ms from 0 to 40 requests). Frontier's step matches at one
-  request (31.0 ms) and grows more slowly: −10% at 16 requests per engine, −17% at 31. A
-  diagnostic native run with decode torch-profiler windows (job `exp-1027-062510-683917`,
-  32 H200) is splitting the native growth into device and host time. Diagnostic only (D31.10).
+  request per DP engine (30.5 ms → 59 ms from 0 to 40 requests). A diagnostic native run with
+  decode torch-profiler windows (job `exp-1027-062510-683917`, 32 H200) shows that Frontier's
+  step is within about 5% of the native device busy time up to 21 requests per engine. The rest
+  of the native growth is device idle time while the device waits for the host (CPU overhead,
+  item 3). Routed expert compute is overpriced and the TP all-reduce underpriced; the two
+  errors partly cancel. Diagnostic only (D31.10).
+- **Native kernel compiles.** Most of the native TTFT/TPOT tail comes from just-in-time compiles
+  of the DSA scoring kernel during the measured repeats (about 0.4 s per compile, 84, 54 and 34
+  stall events in the three h200_32 repeats). A native length sweep before the first repeat
+  now compiles every variant without being measured (`320c2082`). The h200_32 native rerun
+  with it is job `exp-1027-074903-556239`; h200_64 follows.
 - **Operator profiles.** The H200 profile tables for both roles are measured and merged (run 03,
   `test_report_2026-10-26_h200_profiles.md`). The first runs on them found five defects in the
   profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,
   `d034202c`).
 - **Next.**
-  1. Record the error table of the combined E rerun against native.
-  2. Find the cause of the decode step growth (item 2b) and price it from op profiling, or from
-     the CPU-overhead model if it is host time.
-  3. Calibrate the rest in order: workflow, then operators, then CPU overhead.
-  4. Run the Frontier `h200_64` workload (step G) after step E is within 30%.
+  1. Rerun the native h200_32 and h200_64 workloads with the length sweep and compare E and G
+     against them.
+  2. Fix the two operator errors from the device timeline (routed expert compute, TP
+     all-reduce) from op profiling.
+  3. Model the host time between decode steps (CPU overhead, item 3).
+  4. Formal 64-GPU calibration after E is within 30% against the warmed native run.
 
 ### Sub-task directories (`task_memory/`)
 

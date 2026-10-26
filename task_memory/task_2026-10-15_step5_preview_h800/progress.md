@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: device-timeline job succeeded (Frontier step within about 5% of native device busy time up to 21 requests; routed compute overpriced, TP all-reduce underpriced); native TTFT/TPOT tails traced to just-in-time compiles of the DSA scoring kernel; E rerun all means within 30%; native length-sweep warm-up `320c2082`, H200 32-GPU job `exp-1027-074903-556239` submitted. |
 | 2026-10-26 | D31: workflow-port run wf02 (TTFT −37.4%, TPOT −57.0%); calibration item 3 renumbered 2b to match `plan.md`; item 2b native decode device-timeline diagnostic (harness `26d51a30`, analyzer `a31e3616`), H200 32-GPU job `exp-1027-062510-683917` running. |
 | 2026-10-26 | D31: step E base run result (TPOT −57%); calibration item 3 opened: the small-batch decode step matches native (31.0 vs 30.5 ms), and the native step grows about 0.7 ms per request per engine; native stall shares quantified. |
 | 2026-10-26 | D31: the MoE profiler measures a chosen EP rank (`1fbc99c5`, `4a93f30d`); H200 job 04 measured the partly filled ranks (EP16/EP32 loads as computed); merged04 built; step G rerun started. |
@@ -757,8 +758,11 @@ before the plan entry was added). Native step times and token gaps here are diag
   - The earlier reading that Frontier stays flat came from the narrow TPOT spread of run01. That
     spread only shows that every request saw a similar mix of batch sizes; run01 also used
     analytical collectives (about 11.7 ms per step missing).
-  - `moe_gating_linear` jumps from 0.46 ms at 16 requests to 1.75 ms at 32 (88 layers); to be
-    checked against its profile rows.
+  - `moe_gating_linear` jumps from 0.46 ms at 16 requests to 1.75 ms at 32 (88 MoE layers). The
+    merged04 EP16 KERNEL_ONLY rows show the same step in the measured kernel: 0.0092 ms at 32
+    tokens, 0.0196 ms at 40 (both BF16 and FP8 layer groups). The slowest lane of a wave sets the
+    phase time, and the other lane at 33 or more requests pads to 40. So it is measured, not an
+    artifact.
   - The first `analyze.py` joined EP waves to steps by batch id; both DP lanes share one wave
     that carries one lane's batch id, so half of the steps got no phases. `analyze_window.py`
     joins by time and replaces it.
@@ -798,6 +802,118 @@ before the plan entry was added). Native step times and token gaps here are diag
     Pi run `d31-h200-devtl-submit-1026e`: job `exp-1027-062510-683917`, 4 replicas × 8 H200,
     `step_main`, non-preemptible, creator `i-fengyicheng`, created 22:25:10 UTC, `Running` at
     22:27 UTC. With it this session holds 32 H200 GPUs.
+
+  - Result: `exp-1027-062510-683917` Succeeded at 22:44:26 UTC (run time 1,156 s). The two
+    decode nodes wrote 24 traces each (294.5 MB and 291.4 MB); the prefill nodes wrote none, as
+    configured. Replay status `CLIENT_WORKLOAD_VERIFIED`, three repeats, no observation errors;
+    all three profiler windows opened and closed. Facts:
+    `/data/ycfeng/tmp/ds4_runs/d31-h200-devtl-submit-1026e/scratch/facts_devtl.json`.
+  - Analyzer output: `/data/ycfeng/tmp/d31_diag/devtl/timeline.json` and `summary.txt`. Medians
+    of the decode-only iterations, both DP engines, against Frontier's FULL step from the step
+    curve above. The profiler adds host time to the native period (about 50 ms at 8–9 requests
+    against 39.8 ms without it), so the device busy time is the comparable number:
+
+    | Requests per engine | Native period | Native device busy | Native host-wait idle | Frontier step |
+    | --- | --- | --- | --- | --- |
+    | 8–9 | 45–51 ms | 41 ms | 1.5–2.1 ms | 43.1 ms |
+    | 20–21 | 55 ms | 46–48 ms | 5.8–6.7 ms | 46.4 ms |
+    | 44–46 | 62–65 ms | 53–54 ms | 7.1–8.1 ms | 49.9 ms |
+
+    Frontier's step agrees with the native device busy time within about 5% up to 21 requests
+    and is 7% lower at 45. The rest of the native growth is device idle time while the device
+    waits for the host (about 2 ms at 9 requests, 8 ms at 45; item 3), plus about 2 ms of other
+    idle time at every size.
+  - Kernel components at about 9 requests per engine (native kernel sums per decode step, joined
+    by `/data/ycfeng/tmp/d31_diag/devtl/kernels_joined.py`; Frontier from the EP-wave ledger):
+
+    | Component | Native | Frontier |
+    | --- | --- | --- |
+    | EP dispatch | 9.1 ms | 9.18 ms |
+    | EP combine | 4.9 ms | 5.84 ms |
+    | Routed expert compute | about 11.4 ms | 16.9 ms |
+    | TP all-reduce | 6.1 ms | about 2.6–3.1 ms |
+
+    The routed-compute gap comes from the MoE profile: it routes tokens so that every local
+    expert is active, while a small native batch activates only a few of the 22 local experts.
+    The TP all-reduce is underpriced by about 3 ms. The two errors partly cancel. Both are
+    candidates for item 2 (op profiling), not yet fixed.
+- Root cause of the native TTFT/TPOT tails: just-in-time compiles of one Triton kernel on the
+  decode servers (found in the decode server logs and the traces).
+  - A decode step that mixes decodes with a new request's 16-token prompt tail runs through
+    `Step5DSAMetadataBuilder._plan_prefill`. It plans the DSA scoring kernel `_paged_scores_sm90`
+    for `(longest sequence + 7) // 8` regions, and the region count is a compile-time constant
+    of the kernel (`REGIONS`; `TABLE_ROW` depends on it too). Decode lengths 6,144–7,168 need
+    the 129 variants 768–896. The native warm-up compiles only 513, so the first mixed step at
+    each new longest length compiles a variant (about 0.43 s) while every request of that engine
+    waits.
+  - A mixed step happens only when a new request reaches the engine, about every 2 s per engine
+    at QPS 1, so each repeat reaches a different subset of the variants, and the count of new
+    compiles falls from repeat to repeat.
+  - Stall events (`/data/ycfeng/tmp/d31_diag/native_stall_events.py`: token gaps over 150 ms of
+    formal requests that are already decoding, merged across requests; every event ends within
+    50 ms of some request's first token):
+
+    | Run | Repeat 1 | Repeat 2 | Repeat 3 |
+    | --- | --- | --- | --- |
+    | h200_32 workload02 | 84 events, 38.2 s | 54, 22.8 s | 34, 14.7 s |
+    | h200_64 workload01 | 106 events, 47.1 s | 77, 33.3 s | 53, 23.2 s |
+    | h200_32 device timeline | 86 events, 81.5 s | 58, 22.1 s | 32, 12.3 s |
+
+    The median event lasts 380–436 ms in every run.
+  - The per-repeat native means fall with the stall count. h200_32: TPOT 67.69 → 60.38 →
+    57.16 ms, TTFT 1,171 → 1,071 → 1,008 ms. h200_64: TPOT 74.97 → 68.84 → 65.1 ms, TTFT
+    1,462 → 1,376 → 1,306 ms.
+  - Inference, to be checked by the rerun below: a linear fit of the per-repeat means against
+    the stall time gives about 50.6 ms TPOT and 906 ms TTFT for h200_32 without stalls, and
+    about 55.5 ms and 1,154 ms for h200_64.
+  - This is an artifact of the native warm-up, not serving behaviour that Frontier should model.
+    The stalls are not removed from the native data after the fact. The native run is repeated
+    with all variants compiled beforehand.
+- Step E rerun `h200_32_comb_h200` (workflow port, measured H200 DP2 collectives, merged04;
+  output `/data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/compare.json`):
+
+  | Metric | Frontier | Native | Error | Gate 30% |
+  | --- | --- | --- | --- | --- |
+  | TTFT mean | 863.9 ms | 1,083.7 ms | −20.3% | PASS |
+  | TTFT p90 | 892.9 ms | 1,307.2 ms | −31.7% | FAIL |
+  | TPOT mean | 45.91 ms | 61.75 ms | −25.7% | PASS |
+  | TPOT p90 | 46.81 ms | 71.02 ms | −34.1% | FAIL |
+  | E2E mean | 47.83 s | 64.25 s | −25.6% | PASS |
+  | Total throughput | 5,372.1 tok/s | 5,214.6 tok/s | +3.0% | PASS |
+
+  All four means are within 30%; the p90 and p95 rows fail. Against the stall-free estimate
+  above (inference), the errors would be about −4.7% (TTFT) and −9.3% (TPOT).
+- Native length-sweep warm-up (`320c2082`; tests in `test_step5_canonical_native.py`,
+  `test_step5_client_metrics.py`, `test_step5_priority_runs.py`: 116 passed, asyncopd-py312
+  with the frontier-runtime simulator Python, 127 s). The optional `canonical_replay.length_sweep` runs once before the
+  first repeat: `long_requests_per_lane` long requests of the longest formal shape per DP lane
+  arrive together, so the DP load balancer spreads them over the lanes, while short requests
+  arrive every `lane_interval_s / dp_size` for `duration_s`. Each short request gives one lane
+  a mixed step, so every lane compiles each region count its long requests pass. The sweep is a
+  soft gate: its coverage (short requests still arriving after the last long token) and failures
+  are recorded in `length_sweep` of the replay summary and never change the client workload
+  verdict. A verified idle boundary `after_length_sweep` precedes repeat 1. `client_metrics.py`
+  and `workload_metrics.py` count the sweep records and never measure them; recomputing the
+  workload02 summary with the new code reproduces the archived one exactly
+  (`/data/ycfeng/tmp/d31_sweep_check/h200_32_workload02.json`).
+  - Settings for h200_32: 2 long requests per lane (6,144/1,024 tokens), short requests of
+    64/16 tokens every 0.1 s per lane for 240 s. A region count lasts 8 decode steps (about
+    0.4 s), so each lane sees about four mixed steps per region count. The 16 output tokens keep
+    the short requests running for about 0.7 s, so the load balancer spreads them by load
+    instead of breaking ties toward lane 0. A 64-token prompt leaves a 16-token tail on D (the
+    T2 tail rule), so the step is mixed.
+  - Stage `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_sweep02` (kind `workload`, built
+    from the clean worktree `.worktrees/step5-d31-native-320c208`; `verify` and the StepMind dry
+    run pass; the dry run differs from the device-timeline one only in paths). The first build
+    in `h200_32_sweep01` stopped because `STEP5_POSITION_CYCLIC_IMAGE` was not set and left a
+    partial stage there; that workspace is abandoned.
+  - Pi run `d31-h200-sweep-submit-1027a`: job `exp-1027-074903-556239`, 4 replicas × 8 H200,
+    `step_main`, non-preemptible, creator `i-fengyicheng`, created 23:49:03 UTC, `Starting` at
+    the first read. Account non-preemptible H200 before the submission: 8 GPUs (another
+    session's job).
+  - Acceptance: no stall events (or only a few) in the formal repeats, per-repeat means without
+    the falling trend, `workload_metrics.py` passes. Then compare the step E rerun with it and
+    repeat on h200_64.
 
 Step F status (2026-10-26):
 
