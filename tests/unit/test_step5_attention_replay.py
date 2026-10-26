@@ -10,7 +10,7 @@ from types import ModuleType, SimpleNamespace
 import pytest
 
 from frontier.profiling.step5 import replay
-from frontier.profiling.step5.replay import capture_native_replay, choose_graph_mode
+from frontier.profiling.step5.replay import capture_native_replay, choose_graph_mode, padded_rows
 
 
 @pytest.mark.parametrize("phase,tokens,expected", [
@@ -33,10 +33,13 @@ def test_caller_capture_sizes_control_exact_matches_and_eager_misses(phase, size
 
 
 @pytest.mark.parametrize("phase", ["decode", "prefill", "mixed"])
-@pytest.mark.parametrize("tokens,sizes,padded", [(1, (2,), 2), (3, (1, 2, 4), 4), (5, (1, 2, 8), 8)])
-def test_native_padding_is_rejected_instead_of_capturing_unpadded_rows(phase, tokens, sizes, padded):
-    with pytest.raises(ValueError, match=f"pads {tokens} tokens to capture size {padded}.*padded physical rows"):
-        choose_graph_mode(phase, tokens, sizes)
+@pytest.mark.parametrize("tokens,sizes,padded", [
+    (1, (2,), 2), (3, (1, 2, 4), 4), (5, (1, 2, 8), 8), (8, (1, 2, 8), 8), (9, (1, 2, 8), 9),
+])
+def test_graph_dispatch_pads_to_the_smallest_capture_size_and_eager_does_not_pad(phase, tokens, sizes, padded):
+    graph = choose_graph_mode(phase, tokens, sizes)
+    assert graph == ("none" if tokens > sizes[-1] else "full" if phase == "decode" else "piecewise")
+    assert padded_rows(tokens, sizes) == padded
 
 
 @pytest.mark.parametrize("sizes", [
@@ -46,12 +49,16 @@ def test_native_padding_is_rejected_instead_of_capturing_unpadded_rows(phase, to
 def test_invalid_capture_sizes_are_rejected_even_on_an_eager_miss(sizes):
     with pytest.raises(ValueError, match="capture_sizes.*positive, sorted, unique integers"):
         choose_graph_mode("prefill", 64, sizes)
+    with pytest.raises(ValueError, match="capture_sizes.*positive, sorted, unique integers"):
+        padded_rows(64, sizes)
 
 
 @pytest.mark.parametrize("tokens", [0, -1, True, 1.0, None, "1"])
 def test_invalid_token_counts_are_rejected(tokens):
     with pytest.raises(ValueError, match="num_tokens"):
         choose_graph_mode("decode", tokens)
+    with pytest.raises(ValueError, match="num_tokens"):
+        padded_rows(tokens, (1, 2))
 
 
 @pytest.mark.parametrize("phase", ["", "Prefill", "verify", None, []])

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from frontier.attention.step5 import Step5AttentionWorkload
 from frontier.attention.step5_inputs import MRv2DummyDescriptor
-from frontier.profiling.step5.replay import choose_graph_mode
+from frontier.profiling.step5.replay import choose_graph_mode, padded_rows
 
 
 @dataclass(frozen=True)
@@ -23,6 +23,8 @@ class Step5ProfileInput:
     has_attention_metadata: bool = True
     block_table_columns: int | None = None
     dummy_descriptor: MRv2DummyDescriptor | None = None
+    # Rows a captured graph runs; defaults to the valid tokens.
+    physical_query_rows: int | None = None
 
     @classmethod
     def from_mrv2_dummy(cls, global_layer_id, descriptor, *, block_table_columns):
@@ -40,12 +42,17 @@ class Step5ProfileInput:
             raise ValueError("Query lengths must be positive integers")
         if any(type(c) is not int or c < 0 for c in self.context_lens):
             raise ValueError("Context lengths must be nonnegative integers")
-        if self.phase not in ("prefill", "decode"):
-            raise ValueError("This producer supports prefill and decode")
+        if self.phase not in ("prefill", "decode", "mixed"):
+            raise ValueError("This producer supports prefill, decode and mixed")
         if self.phase == "decode" and any(q != 1 for q in self.query_lens):
             raise ValueError("Decode requires one query token per request")
         if self.phase == "prefill" and max(self.query_lens) == 1:
             raise ValueError("The native one-token path is decode, not prefill")
+        # MRv2 orders one-token decodes first, then the other requests by length.
+        if self.phase == "mixed" and (
+                self.query_lens[0] != 1 or max(self.query_lens) == 1
+                or list(self.query_lens) != sorted(self.query_lens)):
+            raise ValueError("Mixed input requires decodes first, then longer queries in ascending order")
         if self.graph_mode not in ("none", "piecewise", "full"):
             raise ValueError("graph_mode must be none, piecewise or full")
         if self.graph_mode == "full" and self.phase != "decode":
@@ -67,6 +74,13 @@ class Step5ProfileInput:
                     or any(self.context_lens) or self.graph_mode != descriptor.graph_mode
                     or self.block_table_columns is None):
                 raise ValueError("MRv2 dummy input must preserve descriptor split, metadata, zero history and explicit table extent")
+        if self.physical_query_rows is None:
+            object.__setattr__(self, "physical_query_rows", self.num_tokens)
+        if type(self.physical_query_rows) is not int or self.physical_query_rows < self.num_tokens:
+            raise ValueError("physical_query_rows must be an integer covering the query tokens")
+        if self.physical_query_rows > self.num_tokens and (
+                self.graph_mode == "none" or self.dummy_descriptor is not None):
+            raise ValueError("Only a captured graph of real requests pads physical rows")
 
     @property
     def num_tokens(self):
@@ -75,6 +89,19 @@ class Step5ProfileInput:
     @property
     def batch_size(self):
         return len(self.query_lens)
+
+    @property
+    def physical_requests(self):
+        # A FULL graph pads requests to its rows; each padded request has no query.
+        return self.physical_query_rows if self.graph_mode == "full" else self.batch_size
+
+    @property
+    def num_decode_tokens(self):
+        return 0 if self.phase == "prefill" else self.query_lens.count(1)
+
+    @property
+    def num_prefill_tokens(self):
+        return self.num_tokens - self.num_decode_tokens
 
     @property
     def sequence_lens(self):
@@ -88,7 +115,7 @@ class Step5ProfileInput:
             raise ValueError("Physical block table exceeds the producer's allocated serving capacity")
         return Step5AttentionWorkload.from_lengths(
             config, phase=self.phase, query_lengths=self.query_lens,
-            sequence_lengths=self.sequence_lens, physical_query_rows=self.num_tokens,
+            sequence_lengths=self.sequence_lens, physical_query_rows=self.physical_query_rows,
             block_size_tokens=block_size,
             block_table_columns=columns,
             max_model_len_tokens=max_model_len, graph_mode=self.graph_mode,
@@ -104,10 +131,12 @@ def build_profile_inputs(config, *, prefill_tokens, prefixes, decode_batches,
     result = []
     for layer, tokens, prefix, batch in product(layers, prefill_tokens, prefixes, prefill_batches):
         mode = choose_graph_mode("prefill", tokens * batch, cudagraph_capture_sizes)
-        result.append(Step5ProfileInput(layer, (tokens,) * batch, (prefix,) * batch, "prefill", mode))
+        result.append(Step5ProfileInput(layer, (tokens,) * batch, (prefix,) * batch, "prefill", mode,
+            physical_query_rows=padded_rows(tokens * batch, cudagraph_capture_sizes)))
     for layer, batch, context in product(layers, decode_batches, decode_contexts):
         graph = choose_graph_mode("decode", batch, cudagraph_capture_sizes)
-        result.append(Step5ProfileInput(layer, (1,) * batch, (context,) * batch, "decode", graph))
+        result.append(Step5ProfileInput(layer, (1,) * batch, (context,) * batch, "decode", graph,
+            physical_query_rows=padded_rows(batch, cudagraph_capture_sizes)))
     if len(set(result)) != len(result):
         raise ValueError("The profile grid contains duplicate cells")
     if not result:
@@ -136,6 +165,13 @@ def read_profile_inputs(path, *, cudagraph_capture_sizes):
         if "graph_mode" in values and values["graph_mode"] != mode:
             raise ValueError("Explicit graph mode must match native dispatch, or request independent eager work")
         values["graph_mode"] = mode
+        tokens = sum(values["query_lens"])
+        rows = padded_rows(tokens, cudagraph_capture_sizes) if mode != "none" else tokens
+        # DP agreement may pad a lane to a larger captured width than its own tokens need.
+        explicit = values.setdefault("physical_query_rows", rows)
+        if explicit != rows and (mode == "none" or explicit < rows
+                                 or explicit not in cudagraph_capture_sizes):
+            raise ValueError("Explicit physical rows must be a captured width that holds the tokens")
         result.append(Step5ProfileInput(**values))
     if not result or len(set(result)) != len(result):
         raise ValueError("Explicit profile inputs must contain distinct cells")

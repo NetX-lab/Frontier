@@ -5,20 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 
 
-def choose_graph_mode(
-    phase: str, num_tokens: int, capture_sizes: Sequence[int] = (1, 2),
-) -> str:
-    """Resolve FULL decode, breakable PIECEWISE prefill/mixed, or an eager miss.
-
-    Decode denotes uniform single-token decode requests. The caller owns batch
-    admission and supplies the native capture sizes; this is not a scheduler.
-    Padded physical rows are unsupported, so a capture-bucket gap is an error,
-    not an unpadded graph or an eager substitute.
-    """
-    if phase not in ("decode", "prefill", "mixed"):
-        raise ValueError("phase must be decode, prefill, or mixed")
-    if type(num_tokens) is not int or num_tokens <= 0:
-        raise ValueError("num_tokens must be a positive integer")
+def _capture_sizes(capture_sizes: Sequence[int]) -> tuple[int, ...]:
     if not isinstance(capture_sizes, Sequence):
         raise ValueError("capture_sizes must be a non-empty sequence of positive, sorted, unique integers")
     sizes = tuple(capture_sizes)
@@ -28,15 +15,41 @@ def choose_graph_mode(
         or any(left >= right for left, right in zip(sizes, sizes[1:]))
     ):
         raise ValueError("capture_sizes must be a non-empty sequence of positive, sorted, unique integers")
-    if num_tokens > sizes[-1]:
+    return sizes
+
+
+def _positive_tokens(num_tokens: int) -> None:
+    if type(num_tokens) is not int or num_tokens <= 0:
+        raise ValueError("num_tokens must be a positive integer")
+
+
+def choose_graph_mode(
+    phase: str, num_tokens: int, capture_sizes: Sequence[int] = (1, 2),
+) -> str:
+    """Resolve FULL decode, breakable PIECEWISE prefill/mixed, or an eager miss.
+
+    Decode denotes uniform single-token decode requests. The caller owns batch
+    admission and supplies the native capture sizes; this is not a scheduler.
+    A graph runs the padded rows given by :func:`padded_rows`.
+    """
+    if phase not in ("decode", "prefill", "mixed"):
+        raise ValueError("phase must be decode, prefill, or mixed")
+    _positive_tokens(num_tokens)
+    if num_tokens > _capture_sizes(capture_sizes)[-1]:
         return "none"
-    if num_tokens not in sizes:
-        padded = next(size for size in sizes if size > num_tokens)
-        raise ValueError(
-            f"Native dispatch pads {num_tokens} tokens to capture size {padded}; "
-            "padded physical rows are not supported"
-        )
     return "full" if phase == "decode" else "piecewise"
+
+
+def padded_rows(num_tokens: int, capture_sizes: Sequence[int]) -> int:
+    """Physical rows of native dispatch: the smallest capture size that holds the tokens.
+
+    Tokens above the largest capture size run eager without padding.
+    """
+    # Imported here because the stdlib-only smoke judge imports this module.
+    from frontier.config.graph_policy import resolve_capture_size
+
+    _positive_tokens(num_tokens)
+    return resolve_capture_size(num_tokens, _capture_sizes(capture_sizes))[1]
 
 
 def capture_native_replay(

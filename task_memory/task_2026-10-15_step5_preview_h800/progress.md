@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step D(b)/(c) done (profiler produces mixed batches and graph-padded rows). |
 | 2026-10-26 | D31: step D(a) done (attention priced within its measured category); step F waits for account GPU room; census abandoned. |
 | 2026-10-26 | D31: step C done (H200 32-GPU native workload, metrics and KV capacity recorded). |
 | 2026-10-26 | D31: step B done (full dummy workload in 2933 s); workload02 submitted after Pi recovered; D31.9 balanced routing for Frontier. |
@@ -201,8 +202,8 @@ State of the D31 plan steps (see the top section of `plan.md`):
   notes.
 - completed — B. Fast Frontier E2E runs (2026-10-26, details below).
 - completed — C. H200 32-GPU native workload with the routing image (workload02, details below).
-- in-progress — D. H200 Step-5 operator profiles. D(a) is committed; D(b)–D(g) follow (details
-  below).
+- in-progress — D. H200 Step-5 operator profiles. D(a) and D(b)/(c) are committed; D(d)–D(g)
+  follow (details below).
 - waiting — F. H200 64-GPU native workload. The stage is built; launch waits until the account's
   other H200 jobs leave room (details below).
 - pending — E, G.
@@ -230,8 +231,13 @@ Step D progress (2026-10-26):
     sequence length 0, block-table row 0 and slot `PAD_SLOT_ID`); PIECEWISE graphs pad only the
     hidden rows, and attention sees the real request and token counts.
   - Decodes come first in a native batch, then the other requests by ascending length.
-- Next: D(b)/(c) add the mixed phase and padded rows to the profiler inputs, rows and vLLM
-  wrapper; D(d) writes the H200 profile plan and inputs; D(e) generalizes the H800 literals in
+- D(b)/(c) done: the profiler takes phase `mixed` and rows padded to a capture size, including
+  an explicit larger width agreed across DP lanes, and the vLLM wrapper builds MRv2's padded
+  metadata. Report `test_report_2026-10-26_profiler_mixed_padded_rows.md`: fidelity 77/77
+  identical against `e275c83`; the unit run found 2 new failures, both fixed (a module-level
+  import broke the stdlib-only smoke judge, and one dry-run test lacked the new field). The
+  native padding is first exercised by the D(g) profile job.
+- Next: D(d) writes the H200 profile plan and inputs; D(e) generalizes the H800 literals in
   `frontier/profiling/step5/job.py`; D(f) adds the kernel-gap and H200 NIXL read profiles; D(g)
   runs the profile job and wires the tables into the predictor options.
 

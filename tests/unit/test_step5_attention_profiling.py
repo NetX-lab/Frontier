@@ -15,7 +15,7 @@ import pytest
 from frontier.attention.families import STEP5_ATTENTION_FAMILY
 from frontier.attention.step5 import resolve_step5_attention_geometry
 from frontier.profiling.common.model_config import ModelConfig
-from frontier.profiling.step5.inputs import Step5ProfileInput, build_profile_inputs
+from frontier.profiling.step5.inputs import Step5ProfileInput, build_profile_inputs, read_profile_inputs
 from frontier.profiling.step5.rows import OPERATOR_NAMES, Step5ProfileResult, build_row, rows_to_dataframe, summarize_replays
 from frontier.profiling.step5.scopes import NativeScopes, trace_signature
 from frontier.profiling.step5.job import describe_smoke, IMAGE, CLOUD_MOUNT
@@ -58,12 +58,54 @@ def test_smoke_grid_and_shared_cpu_runtime(config):
     {"query_lens": (0,)}, {"context_lens": (-1,)}, {"context_lens": ()},
     {"phase": "mixed"}, {"phase": "decode"}, {"graph_mode": "invalid"},
     {"graph_mode": "full"}, {"global_layer_id": True},
+    {"physical_query_rows": 15}, {"physical_query_rows": 17},
+    {"phase": "mixed", "query_lens": (16, 1), "context_lens": (8, 8)},
+    {"phase": "mixed", "query_lens": (1, 1), "context_lens": (8, 8)},
 ])
 def test_invalid_cells(kwargs):
     values = dict(global_layer_id=0, query_lens=(16,), context_lens=(0,), phase="prefill")
     values.update(kwargs)
     with pytest.raises(ValueError):
         Step5ProfileInput(**values)
+
+
+def test_mixed_and_padded_cells_produce_predictor_features(config):
+    from frontier.execution_time_predictor.step5 import step5_row_features
+
+    mixed = Step5ProfileInput(0, (1, 1, 16), (6144, 6150, 6128), "mixed", "piecewise",
+                              block_table_columns=448, physical_query_rows=24)
+    full = Step5ProfileInput(3, (1, 1, 1), (6144,) * 3, "decode", "full",
+                             block_table_columns=448, physical_query_rows=4)
+    for cell, prefill, decode, requests in ((mixed, 16, 2, 3), (full, 0, 3, 4)):
+        result = build_row(config, cell, tp=8, block_size=16, max_model_len=7168,
+                           runtime_signature="cpu_schema_fixture_not_measurement", device="h200",
+                           time_stats=fake_stats(), evidence={"attention_backend": "native_fixture"})
+        assert (result["batch_num_prefill_tokens"], result["batch_num_decode_tokens"]) == (prefill, decode)
+        assert (result["valid_tokens"], result["padded_tokens"]) == (
+            cell.num_tokens, cell.physical_query_rows - cell.num_tokens)
+        assert cell.physical_requests == requests
+        features = step5_row_features(result)
+        assert features["padded_tokens"] == cell.physical_query_rows - cell.num_tokens
+
+
+def test_explicit_inputs_take_native_padding_or_a_larger_agreed_capture_width(tmp_path):
+    sizes = (1, 2, 4, 8, 16, 24)
+    path = tmp_path / "inputs.json"
+
+    def read(**record):
+        path.write_text(json.dumps([{"global_layer_id": 0, "context_lens": [64] * len(record["query_lens"]),
+                                     "block_table_columns": 448, **record}]))
+        return read_profile_inputs(path, cudagraph_capture_sizes=sizes)[0]
+
+    assert read(query_lens=[1] * 3, phase="decode").physical_query_rows == 4
+    assert read(query_lens=[1] * 3, phase="decode", physical_query_rows=16).physical_query_rows == 16
+    mixed = read(query_lens=[1, 16], phase="mixed")
+    assert (mixed.graph_mode, mixed.physical_query_rows) == ("piecewise", 24)
+    assert read(query_lens=[1] * 3, phase="decode", graph_mode="none").physical_query_rows == 3
+    for rows, mode in ((5, None), (2, None), (4, "none")):
+        with pytest.raises(ValueError, match="captured width that holds the tokens"):
+            read(query_lens=[1] * 3, phase="decode", physical_query_rows=rows,
+                 **({"graph_mode": mode} if mode else {}))
 
 
 def fake_stats():

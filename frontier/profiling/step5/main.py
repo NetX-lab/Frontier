@@ -64,12 +64,13 @@ def main(argv=None):
     ))
     from frontier.attention.step5 import resolve_step5_attention_geometry
 
-    max_num_seqs = max(c.batch_size for c in cells) if args.max_num_seqs is None else args.max_num_seqs
+    requests = max(c.physical_requests for c in cells)
+    max_num_seqs = requests if args.max_num_seqs is None else args.max_num_seqs
     max_num_batched_tokens = (args.max_model_len * max_num_seqs
                              if args.max_num_batched_tokens is None else args.max_num_batched_tokens)
-    if max_num_seqs < max(c.batch_size for c in cells):
+    if max_num_seqs < requests:
         raise ValueError("max-num-seqs must cover every prepared input width")
-    if max_num_batched_tokens < max(c.num_tokens for c in cells):
+    if max_num_batched_tokens < max(c.physical_query_rows for c in cells):
         raise ValueError("max-num-batched-tokens must cover every prepared input")
     for cell in cells:
         cell.workload(config, block_size=args.block_size, max_model_len=args.max_model_len)

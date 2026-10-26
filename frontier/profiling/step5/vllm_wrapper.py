@@ -220,6 +220,7 @@ class VllmStep5AttentionWrapper:
         if not cell.has_attention_metadata:
             return self.torch.zeros(1, dtype=self.torch.int64, device="cuda"), None, None, "none"
         from vllm.v1.attention.backend import CommonAttentionMetadata
+        from vllm.v1.attention.backends.utils import PAD_SLOT_ID
 
         torch = self.torch
         width = (cell.block_table_columns if cell.block_table_columns is not None
@@ -233,14 +234,25 @@ class VllmStep5AttentionWrapper:
                                for q, c in zip(cell.query_lens, cell.context_lens)])
         slots = torch.cat([table[i, p // self.block_size].long() * self.block_size + p % self.block_size
                            for i, p in enumerate(positions.split(cell.query_lens))])
-        starts = torch.tensor([0, *cell.query_lens], dtype=torch.int32).cumsum(0, dtype=torch.int32)
-        lengths = torch.tensor(cell.sequence_lens, dtype=torch.int32)
+        # MRv2 gives FULL padded requests empty queries, zero lengths and zero
+        # table rows, and gives every padded token row position 0 and PAD_SLOT_ID.
+        pad_requests = cell.physical_requests - cell.batch_size
+        pad_rows = cell.physical_query_rows - cell.num_tokens
+        table = torch.cat((table, table.new_zeros(pad_requests, width)))
+        positions = torch.cat((positions, positions.new_zeros(pad_rows)))
+        slots = torch.cat((slots, slots.new_full((pad_rows,), PAD_SLOT_ID)))
+        starts = torch.tensor([0, *cell.query_lens, *(0,) * pad_requests],
+                              dtype=torch.int32).cumsum(0, dtype=torch.int32)
+        lengths = torch.tensor((*cell.sequence_lens, *(0,) * pad_requests), dtype=torch.int32)
+        # FULL metadata spans the padded rows; PIECEWISE and eager use the valid counts.
         common = CommonAttentionMetadata(
             query_start_loc=starts.cuda(), query_start_loc_cpu=starts, seq_lens=lengths.cuda(),
-            num_reqs=cell.batch_size, num_actual_tokens=cell.num_tokens,
+            num_reqs=cell.physical_requests,
+            num_actual_tokens=cell.physical_query_rows if cell.graph_mode == "full" else cell.num_tokens,
             max_query_len=max(cell.query_lens), max_seq_len=max(cell.sequence_lens),
             block_table_tensor=table, slot_mapping=slots, positions=positions,
-            seq_lens_cpu_upper_bound=lengths)
+            seq_lens_cpu_upper_bound=lengths,
+            is_prefilling=torch.tensor([query > 1 for query in cell.query_lens]))
         with self._set_current(self.native), torch.device("cpu"):
             metadata = self.builder.build(0, common, fast_build=False)
         return positions, slots, metadata, cell.graph_mode
@@ -325,11 +337,20 @@ class VllmStep5AttentionWrapper:
                 result.append((layer.g_proj, "forward", "step5_gate_projection"))
         return result
 
+    def _live_state(self, state):
+        """Padded and dummy rows may update the CSA scratch pages; only live pages are results."""
+        if self.layer.sparse_summary_cache is None:
+            return tuple(state)
+        pages = self.layer.sparse_summary_cache._cache.pages
+        return (state[0], *(tensor[:pages] for tensor in state[1:6]), *state[6:])
+
     def _validate_output_state(self, actual, expected, expected_state):
+        # Rows past the valid tokens are graph padding, not request output.
+        actual = actual[:len(expected)]
         if not self.torch.isfinite(actual).all():
             raise AssertionError("Native Step attention produced nonfinite output")
         self.torch.testing.assert_close(actual, expected, rtol=2e-2, atol=2e-2)
-        for current, reference in zip(self.state, expected_state):
+        for current, reference in zip(self._live_state(self.state), self._live_state(expected_state)):
             self.torch.testing.assert_close(current, reference, rtol=2e-2, atol=2e-2)
 
     def _scoped_replay(self, hidden, prepared, initial, expected, expected_state):
@@ -439,7 +460,7 @@ class VllmStep5AttentionWrapper:
     def profile(self, cell, *, warmup_iterations, profile_iterations, max_time_cv, min_timing_window_ms=0.5):
         if cell.global_layer_id != self.layer_id or cell.graph_mode != self.graph_mode:
             raise ValueError("Profile cell must match the constructed layer and graph policy")
-        if cell.batch_size > self.max_batch_size:
+        if cell.physical_requests > self.max_batch_size:
             raise ValueError("Profile batch exceeds the configured request capacity")
         if cell.dummy_descriptor is not None and cell.num_tokens > self.native.scheduler_config.max_num_batched_tokens:
             raise ValueError("MRv2 synchronized descriptor exceeds the native token budget")
@@ -474,32 +495,29 @@ class VllmStep5AttentionWrapper:
                         self._forward(values, self._metadata(part, request_offset=index))
             prepared = self._metadata(cell)
             initial = self._snapshot()
-            hidden = torch.randn((cell.num_tokens, self.config.embedding_dim),
+            hidden = torch.randn((cell.physical_query_rows, self.config.embedding_dim),
                                  dtype=torch.bfloat16, device="cuda")
             for _ in range(warmup_iterations):
                 self._restore(initial)
                 self._forward(hidden, prepared)
             torch.cuda.synchronize()
             self._restore(initial)
-            expected = self._forward(hidden, prepared).clone()
+            expected = self._forward(hidden, prepared)[:cell.num_tokens].clone()
             expected_state = self._snapshot()
             if not cell.has_attention_metadata:
                 for actual_state, reference in zip(expected_state, initial):
                     torch.testing.assert_close(actual_state, reference, rtol=0, atol=0)
             if cell.dummy_descriptor is not None:
-                torch.testing.assert_close(expected_state[0], initial[0], rtol=0, atol=0)
-                if self.layer.sparse_summary_cache is not None:
-                    # Negative slots intentionally update distinct CSA scratch
-                    # pages. Only live summaries must remain unchanged.
-                    pages = self.layer.sparse_summary_cache._cache.pages
-                    for actual_state, reference in zip(expected_state[1:6], initial[1:6]):
-                        torch.testing.assert_close(actual_state[:pages], reference[:pages], rtol=0, atol=0)
+                # The KV cache and live CSA summaries must remain unchanged.
+                for actual_state, reference in zip(self._live_state(expected_state)[:6],
+                                                   self._live_state(initial)[:6]):
+                    torch.testing.assert_close(actual_state, reference, rtol=0, atol=0)
             if prefix:
                 full_lens = cell.sequence_lens
                 full_cell = Step5ProfileInput(cell.global_layer_id, full_lens,
                     (0,) * cell.batch_size, "prefill", block_table_columns=cell.block_table_columns)
                 full_hidden = torch.cat([torch.cat((p, h)) for p, h in zip(
-                    prefix_hidden.split(cell.context_lens), hidden.split(cell.query_lens))])
+                    prefix_hidden.split(cell.context_lens), hidden[:cell.num_tokens].split(cell.query_lens))])
                 self._restore(self.empty_state)
                 if full_cell.num_tokens <= self.native.scheduler_config.max_num_batched_tokens:
                     full_output = self._forward(full_hidden, self._metadata(full_cell))
@@ -515,7 +533,8 @@ class VllmStep5AttentionWrapper:
                         tails.append(output[context:].clone())
                     full_tail = torch.cat(tails)
                 torch.testing.assert_close(expected, full_tail, rtol=2e-2, atol=2e-2)
-                for actual_state, reference in zip(self.state, expected_state):
+                for actual_state, reference in zip(self._live_state(self.state),
+                                                   self._live_state(expected_state)):
                     torch.testing.assert_close(actual_state, reference, rtol=2e-2, atol=2e-2)
                 # FA3 FULL metadata owns persistent scheduler buffers; a full
                 # reference build overwrites them. Rebuild the measured decode
@@ -526,11 +545,9 @@ class VllmStep5AttentionWrapper:
             with self.scopes.observe(self._bindings()):
                 actual = self._forward(hidden, prepared)
             torch.cuda.synchronize()
-            if not torch.isfinite(actual).all() or not torch.isfinite(expected).all():
+            if not torch.isfinite(expected).all():
                 raise AssertionError("Native Step attention produced nonfinite output")
-            torch.testing.assert_close(actual, expected, rtol=2e-2, atol=2e-2)
-            for actual_state, reference in zip(self.state, expected_state):
-                torch.testing.assert_close(actual_state, reference, rtol=2e-2, atol=2e-2)
+            self._validate_output_state(actual, expected, expected_state)
             active = tuple(self.scopes.times())
             expected_active = tuple(name for name, _ in self.description.attention_scopes(
                 cell.workload(self.config, block_size=self.block_size, max_model_len=self.max_model_len)))
