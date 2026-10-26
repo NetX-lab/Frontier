@@ -38,7 +38,8 @@ def test_plan_uses_existing_tp_domains_and_writer(tmp_path):
     assert plan["expected_rows_by_tp_per_method"] == {"1": 3, "8": 3}
     by_tp = {row["num_tensor_parallel_workers"]: set(row["operators"])
              for row in plan["planned_csv_rows"]}
-    assert by_tp[1] == {"emb", "input_layernorm", "post_attention_layernorm", "step5_ffn_merge"}
+    assert by_tp[1] == {"emb", "input_layernorm", "post_attention_layernorm",
+                        "input_cast", "final_residual", "step5_ffn_merge"}
     assert by_tp[8] == {"mlp_up_proj", "mlp_down_proj", "mlp_act",
                         "share_expert_up_proj", "share_expert_down_proj", "share_expert_act"}
     assert plan["profiling_precision"] == "BF16"

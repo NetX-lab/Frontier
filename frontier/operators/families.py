@@ -52,6 +52,22 @@ def _source_prepare_applicable(context) -> bool:
     return context["quant_dtype"] is not None and not context["defer_input_quant"]
 
 
+def _step5_fp32_residual_stream(model_config) -> bool:
+    """Step keeps an FP32 residual stream: it casts the embedding into it and
+    adds the last layer's BF16 output back into it outside any layer."""
+    # Architecture profiles resolve operator families while they register.
+    from frontier.model_architectures import (
+        LinearNormImplementation,
+        get_model_architecture_profile,
+    )
+
+    return model_config is not None and (
+        get_model_architecture_profile(model_config).linear_norm_impl
+        is LinearNormImplementation.STEP5
+        and model_config.fp32_residual_connection
+    )
+
+
 FFN_FAMILY = OperatorFamilySpec(
     family_id="ffn",
     display_name="Dense FFN",
@@ -367,10 +383,10 @@ MEMORY_FAMILY = OperatorFamilySpec(
                 role=role,
                 phases=_ALL_PHASES,
                 predictor_target=False,
-                profiling_target=False,
                 execution_time_attr=attribute,
                 resource_class=ResourceClass.MEMORY,
                 tp_mode=TensorParallelMode.REPLICATED,
+                applicability=_step5_fp32_residual_stream,
             )
             for name, role, attribute in (
                 ("input_cast", OperatorRole.RESHAPE, "input_cast_time"),

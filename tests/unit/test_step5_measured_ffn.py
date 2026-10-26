@@ -168,11 +168,11 @@ def _tables(tmp_path, model, token_counts=(16, 32), *, expert_parallel_size=8,
             )
             for physical in split_replicated_result(row, set(plan["replicated_ops"]),
                                                     unpadded_n_embd=model.embedding_dim):
-                if include_stage_boundaries and physical["num_tensor_parallel_workers"] == 1:
+                # The Step plan measures both stage boundaries in its TP1 rows.
+                if not include_stage_boundaries:
                     for name in ("input_cast", "final_residual"):
-                        physical["time_stats"][name] = _stats(tokens)
-                        physical["typed_operator_contracts"][name] = dict(
-                            physical["typed_operator_contracts"]["input_layernorm"])
+                        physical["time_stats"].pop(name, None)
+                        physical["typed_operator_contracts"].pop(name, None)
                 physical["typed_operator_contracts"] = json.dumps(physical["typed_operator_contracts"])
                 linear.append(physical)
     linear_path = tmp_path / "linear_op.csv"

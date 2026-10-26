@@ -61,8 +61,10 @@ def test_optional_stage_targets_fit_register_and_reload_original_names(model, me
         assert identity["tensor_dtype"]["input"] == "BF16"
         assert identity["tensor_dtype"]["output"] == "FP32"
         assert estimator._frontier_feature_bounds == {"num_tokens": (16., 32.)}
-        assert not bind_operator_query(name).operator.predictor_target
-        assert not bind_operator_query(name).operator.profiling_target
+        operator = bind_operator_query(name).operator
+        assert not operator.predictor_target
+        assert operator.profiling_target and operator.is_applicable(model)
+        assert not operator.is_applicable(None)
     assert len(list((tmp_path / "cache").glob("*.pkl"))) == 6
     for path in (tmp_path / "cache").glob("*.pkl"):
         with path.open("rb") as stream:

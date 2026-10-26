@@ -1066,6 +1066,16 @@ class GPTModel(torch.nn.Module):
             set(profiling_plan.get("enabled_ops", [])) if profiling_plan else None
         )
         self._profile_emb = memory_operator_enabled(enabled_ops, "emb")
+        self._profile_input_cast = self._fp32_block_input and memory_operator_enabled(
+            enabled_ops, "input_cast"
+        )
+        self._profile_final_residual = (
+            self._fp32_block_input and memory_operator_enabled(enabled_ops, "final_residual")
+        )
+        self.input_cast_timer = CudaTimer("input_cast" if self._profile_input_cast else None)
+        self.final_residual_timer = CudaTimer(
+            "final_residual" if self._profile_final_residual else None
+        )
         self._profile_mtp_fusion_proj = bool(
             enabled_ops is not None and "mtp_fusion_proj" in enabled_ops
         )
@@ -1161,17 +1171,25 @@ class GPTModel(torch.nn.Module):
         )
         residual = torch.zeros_like(hidden_states, dtype=residual_dtype)
         for _ in range(self.num_repeat_steps):
-            hidden_states = self.embed_tokens(input_ids)
-            # Step casts the residual stream before input RMSNorm. This input
-            # dtype selects a native JIT specialization; do not time the cast
-            # as part of either embedding or normalization.
+            embedded = self.embed_tokens(input_ids)
+            hidden_states = embedded
+            # Step casts the embedding into its FP32 residual stream before
+            # input RMSNorm. This input dtype selects a native JIT
+            # specialization, so the cast has its own timer.
             if self._fp32_block_input:
-                hidden_states = hidden_states.float()
+                with self.input_cast_timer:
+                    hidden_states = embedded.float()
             hidden_states, _ = self.block(
                 positions,
                 hidden_states,
                 residual,
             )
+            # Step adds the last layer's BF16 output into the FP32 residual
+            # stream once per forward, outside every layer. The embedding has
+            # that output's shape and dtype.
+            if self._profile_final_residual:
+                with self.final_residual_timer:
+                    _load_step5_add_fp32()(embedded, residual)
 
         if self._profile_target_embedded_mtp:
             if self._profile_mtp_fusion_proj:

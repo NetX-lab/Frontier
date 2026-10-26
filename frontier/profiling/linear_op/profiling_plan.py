@@ -13,7 +13,7 @@ from frontier.operators.families import (
     get_family_profiling_names,
 )
 from frontier.model_architectures import get_model_architecture_profile
-from frontier.operators.spec import OperatorRole, TensorParallelMode
+from frontier.operators.spec import TensorParallelMode
 from frontier.spec_decode.mtp_registry import (
     get_target_embedded_mtp_linear_ops,
     get_target_embedded_mtp_same_tp_linear_ops,
@@ -28,14 +28,16 @@ def _dedupe_preserving_order(values: Sequence[str]) -> List[str]:
 
 def _memory_profiling_names(model_config) -> List[str]:
     operators = []
-    for operator in MEMORY_FAMILY.profiling_ops():
+    for operator in MEMORY_FAMILY.profiling_ops(model_config):
         if (
             operator.name == "post_attention_layernorm"
             and not getattr(model_config, "post_attn_norm", False)
         ):
             continue
+        # A fused add-norm absorbs only the per-layer residual adds; Step's
+        # final residual add runs after the last layer, outside any norm.
         if (
-            operator.role is OperatorRole.RESIDUAL
+            operator.profiling_name() == "add"
             and getattr(model_config, "uses_fused_add_norm", False)
         ):
             continue
@@ -60,8 +62,8 @@ def memory_operator_enabled(
     if enabled_ops is None:
         return True
     enabled_op_set = set(enabled_ops)
-    for operator in MEMORY_FAMILY.profiling_ops():
-        if operator.name == operator_name:
+    for operator in MEMORY_FAMILY.operators:
+        if operator.profiling_target and operator.name == operator_name:
             return operator.profiling_name() in enabled_op_set
     raise ValueError(f"Unknown MEMORY profiling operator: {operator_name}")
 
@@ -293,7 +295,7 @@ def _typed_operator_contracts(
 
     memory_family = get_operator_family(MEMORY_FAMILY.family_id)
     memory_names = set(memory_ops)
-    for operator in memory_family.profiling_ops():
+    for operator in memory_family.profiling_ops(model_config):
         operator_name = operator.profiling_name()
         if operator_name not in memory_names or operator_name not in producer_names:
             continue

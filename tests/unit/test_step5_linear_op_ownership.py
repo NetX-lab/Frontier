@@ -99,6 +99,7 @@ def test_step_linear_plan_keeps_ffn_memory_and_typed_branch_merge(config, is_moe
     assert plan["ffn_sharded_enabled"] is True
     assert set(plan["enabled_ops"]) == {
         "input_layernorm", "post_attention_layernorm", "emb",
+        "input_cast", "final_residual",
         "share_expert_up_proj", "share_expert_down_proj", "share_expert_act",
         "step5_ffn_merge",
     } | (set() if is_moe else {"mlp_up_proj", "mlp_down_proj", "mlp_act"})
@@ -113,8 +114,16 @@ def test_step_linear_plan_keeps_ffn_memory_and_typed_branch_merge(config, is_moe
     assert merge["tensor_parallel_sizes"] == [1]
     assert merge["selected_tensor_parallel_size"] == 1
     assert plan["replicated_ops"] == [
-        "input_layernorm", "post_attention_layernorm", "emb", "step5_ffn_merge",
+        "input_layernorm", "post_attention_layernorm", "emb",
+        "input_cast", "final_residual", "step5_ffn_merge",
     ]
+    # The stage boundaries are the TP1 memory rows the Step consumer reads.
+    for name in ("input_cast", "final_residual"):
+        boundary = plan["typed_operator_contracts"][name]
+        assert boundary["operator_family_ids"] == ["memory"]
+        assert boundary["layer_kind"] is None
+        assert boundary["tensor_parallel_mode"] == "replicated"
+        assert boundary["selected_tensor_parallel_size"] == 1
 
 
 def test_step_ffn_merge_obeys_disable_replicated_like_memory(config):
