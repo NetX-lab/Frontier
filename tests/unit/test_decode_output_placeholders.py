@@ -95,20 +95,19 @@ def _decode_lane(
     )
 
 
-def _v4_dp_lanes(monkeypatch, *, max_concurrent_batches=2):
-    """Two attention-DP lanes of a DSV4 NIXL DECODE Replica with grouped KV allocation."""
+def _step5_dp_lanes(monkeypatch, *, max_concurrent_batches=2):
+    """Two attention-DP lanes of a Step-5 NIXL DECODE Replica with grouped KV allocation."""
     monkeypatch.setattr(global_vars, "KV_CONNECTOR", "nixl")
     replica_config = ReplicaConfig(
-        model_name="deepseek-ai/DeepSeek-V4-Flash",
-        device="h800",
-        network_device="h800_dgx",
+        model_name="stepfun-ai/Step-5-Preview",
+        device="h200",
+        network_device="h200_dgx",
         attn_tensor_parallel_size=8,
         attn_dp=2,
         moe_tensor_parallel_size=1,
         moe_expert_parallel_size=16,
-        attention_backend="FLASHMLA_SPARSE_DSV4",
-        kv_cache_dtype="fp8",
-        indexer_kv_cache_dtype="fp8",
+        attention_backend="STEP5_DSA",
+        kv_cache_dtype="auto",
     )
     request_config = SyntheticRequestGeneratorConfig()
     replica = Replica(replica_config, request_config, ClusterType.DECODE)
@@ -118,12 +117,13 @@ def _v4_dp_lanes(monkeypatch, *, max_concurrent_batches=2):
             replica_config=replica_config,
             replica_scheduler_config=VllmV1SchedulerConfig(
                 max_concurrent_batches=max_concurrent_batches,
-                num_blocks=200,
-                num_blocks_mode="explicit",
+                num_blocks=0,
+                num_blocks_mode="memory_planner",
+                enable_runtime_non_kv_cache_overhead_profiling=False,
                 block_size=256,
-                max_tokens_in_batch=64,
+                max_tokens_in_batch=192,
                 enable_chunked_prefill=True,
-                max_model_len=256,
+                max_model_len=2048,
                 batch_size_cap=8,
             ),
             request_generator_config=request_config,
@@ -275,7 +275,7 @@ def test_preemption_victim_with_a_step_in_flight_still_takes_that_step_sample():
 
 
 def test_dp_lane_with_grouped_allocation_runs_two_steps_of_one_request(monkeypatch):
-    lane, _ = _v4_dp_lanes(monkeypatch)
+    lane, sibling = _step5_dp_lanes(monkeypatch)
     assert lane._runs_dp_dummy_passes and lane._is_grouped_kv_allocation()
     requests = []
     for _ in range(2):
@@ -285,10 +285,19 @@ def test_dp_lane_with_grouped_allocation_runs_two_steps_of_one_request(monkeypat
         lane.add_request(request)
         requests.append(request)
 
-    # One batch per busy-loop iteration; the second allocates its token while
-    # the first is in flight. NIXL D recomputes the last prompt token first.
-    older, newer = lane.on_schedule(1.0)
+    # One batch per busy-loop iteration. NIXL D recomputes the last prompt
+    # token first. A Step engine waits at the DP sync after the first
+    # iteration of a wave, until the idle sibling's dummy forward joins it.
+    [older] = lane.on_schedule(1.0)
     assert [row[1:] for row in _rows(older)] == [(1, 99), (1, 99)]
+    assert lane._waits_at_dp_sync
+    [dummy_forward] = sibling.on_schedule(1.0)
+    assert sibling.on_dummy_forward_end(1.5)
+    sibling.on_schedule(1.5)
+    assert sibling.consume_dp_sync_release() == [0] and not lane._waits_at_dp_sync
+
+    # The second batch allocates its token while the first is in flight.
+    [newer] = lane.on_schedule(1.5)
     assert [row[1:] for row in _rows(newer)] == [(1, 100), (1, 100)]
     assert lane._blocking_batch_id == older.id
 
@@ -303,13 +312,15 @@ def test_dp_lane_with_grouped_allocation_runs_two_steps_of_one_request(monkeypat
 
 
 def test_grouped_admission_bounds_the_tokens_of_both_in_flight_batches(monkeypatch):
-    request = _prefilled(100, 3)
+    # The context exceeds the 512-token sliding window, so the in-flight tokens
+    # bound the window groups' blocks.
+    request = _prefilled(1500, 3)
     blocks = {}
     for capacity in (None, 2):
-        lane, _ = _v4_dp_lanes(monkeypatch, max_concurrent_batches=capacity)
+        lane, _ = _step5_dp_lanes(monkeypatch, max_concurrent_batches=capacity)
         blocks[capacity] = lane._get_grouped_admission_blocks(request)
         expected = lane._kv_cache_manager.get_num_admission_blocks(
-            102, max_model_len=256, max_in_flight_tokens=(capacity or 1) * 64
+            1502, max_model_len=2048, max_in_flight_tokens=(capacity or 1) * 192
         )
         assert blocks[capacity] == expected
     assert blocks[2] > blocks[None]
