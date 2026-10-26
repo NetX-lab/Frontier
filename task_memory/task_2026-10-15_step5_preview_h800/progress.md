@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: calibration item 2a opened; one-request breakdown shows underpriced and missing collectives (about 11.7 ms per DECODE step). |
 | 2026-10-26 | D31: port checks recorded (test report); shared-expert DP token count sized at about 0.09% of TPOT (low priority); FP8 approximation warning shown to change no Step-5 time; simulator cost profile. |
 | 2026-10-26 | D31: calibration item 1 (workflow port) in progress; measured NIXL check fixed for engine-step completion; shared-expert DP token-count candidate recorded. |
 | 2026-10-26 | D31: step F done (H200 64-GPU native workload succeeded; metrics and the 64-GPU NIXL READ cost archived). |
@@ -411,6 +412,40 @@ Calibration item 1, workflow port (2026-10-26, `in-progress`):
   applied only by `QuantizationManager.adjust_compute_time` on the dense layer path, which made 0
   calls in the profiled run; Step-5 takes operator precision from `step5_operator_binding`.
 - Running: full port run `/data/ycfeng/tmp/d31_wf/h200_32_wf02` (log `h200_32_wf02.log`).
+
+Calibration item 2a, collective communication (2026-10-26, `in-progress`):
+
+- Evidence: the operator breakdown of a measured one-request run (6144 input, 64 output tokens,
+  base code, step E predictor options; `/data/ycfeng/tmp/d31_diag/b1_trace/`, script
+  `/data/ycfeng/tmp/d31_diag/op_step_breakdown.py`, PREFILL output `prefill_breakdown.txt`)
+  compared with the H800 S2 collective measurements (TP8/DP2/EP16,
+  `step5_comm_20261020/s2_*/collectives/summary.csv`; H200 has none yet).
+- DECODE, one request (Frontier step 19.3 ms; native steps at low load about 32 ms):
+
+  | Collective per step | Frontier | H800 S2 graph median | Count per step |
+  | --- | --- | --- | --- |
+  | EP dispatch | 2.6 µs (`alltoall`, EP16, analytical backend) | 70 µs (`all_gatherv`, DP group) | 88 |
+  | EP combine | 2.6 µs | 42 µs (`reduce_scatterv`, DP group) | 88 |
+  | `attn_tensor_parallel_allreduce` and dense `mlp_tensor_parallel_allreduce` | about 1.2 µs | about 9 µs (TP8) | 92 + 4 |
+  | routed-final and shared-expert `down_proj` TP8 all-reduces | absent (TP size resolves to 1) | about 9 µs | 176 |
+
+  The missing and underpriced collectives add up to about 11.7 ms per step, most of the gap.
+- PREFILL, one request (Frontier TTFT 490 ms, native 1,084 ms): EP dispatch and combine are
+  27.8 ms each over 88 layers (0.32 ms per layer), and the routed and shared TP all-reduces are
+  absent. `attn_tensor_parallel_allreduce` is 107.9 ms over 92 calls (1.17 ms each at 6,144
+  tokens), above the H800 TP8 rows (0.67 ms at 8,192 tokens), so the analytical backend overprices
+  this one. H800 S2 eager rows at 8,192 tokens per DP rank: FP8 dispatch 1.6–2.4 ms,
+  BF16 dispatch 2.9–4.4 ms, combine 2.8–3.9 ms, TP all-reduce 0.67 ms per call. Native PREFILL of one
+  prompt on DP2 is uneven (`[6144, idle]`), and vLLM then uses per-root Broadcast/Reduce.
+- Native communication per step (vLLM `AgRsAll2AllManager`, sequence-parallel MoE off): 273 TP8
+  all-reduces of `T x 8,192` B (embedding 1, `o_proj` 92, dense `down_proj` 4, shared-expert
+  `down_proj` 88, routed final 88), 88 DP-group `all_gatherv` dispatches (4,288 B per row on FP8
+  layers 3–87, 8,256 B on BF16 layers 88–90) and 88 DP-group BF16 `reduce_scatterv` combines.
+- Plan (item 2a in `plan.md`): measure H200 collective curves with the existing producer
+  (`tests/integration/step5_comm/`), port the glm53 measured backend, price Step dispatch/combine
+  as DP-group all-gather/reduce-scatter with native payloads, add the two missing TP all-reduces,
+  then rerun E. Measured collective curves are operator-level communication profiles, so D31.10
+  allows them.
 
 Step F status (2026-10-26):
 

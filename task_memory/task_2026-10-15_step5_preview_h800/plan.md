@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: calibration item 2a (collective communication) added with its five steps. |
 | 2026-10-26 | D31: shared-expert DP token count sized and moved to low priority; D31.10 rule added to calibration item 2. |
 | 2026-10-26 | D31: step F done; status line updated. |
 | 2026-10-26 | D31: workflow port status and the shared-expert DP token-count candidate added to the calibration order. |
@@ -175,6 +176,22 @@ Calibration order for E, after the first error table:
    at DP > 1 is affected, but by about 0.05 ms per step (about 0.09% of TPOT) on this workload,
    so it is low priority. Operator changes follow D31.10: prices come from op profiling, never
    from a table of measured step times.
+   2a. Collective communication (opened 2026-10-26; evidence in `progress.md`). Frontier prices
+   Step EP dispatch/combine as an EP16 `alltoall` on the analytical backend (2.6 µs per layer in
+   DECODE against 70/42 µs measured on H800) and omits the routed-final and shared-expert TP8
+   all-reduces (176 per step). About 11.7 ms of each one-request DECODE step is missing. Steps:
+   1. Measure H200 collective curves with the existing producer `tests/integration/step5_comm/`:
+      TP8/DP2/EP16 on 2 nodes (16 GPUs) and TP8/DP4/EP32 on 4 nodes (32 GPUs), `step_main`,
+      non-preemptible, the locked image of the H800 runs. 48 GPUs in total, within D31.2.
+   2. Port the glm53 `MeasuredCCBackend` (`--cc_backend_config_type measured`) and add the Step
+      DP-group dispatch (`all_gatherv`) and combine (`reduce_scatterv`) curves.
+   3. Price Step dispatch/combine as DP-group all-gather/reduce-scatter with the native payloads
+      (4,288 B per row on FP8 layers, 8,256 B on BF16 layers; BF16 combine of the gathered rows)
+      over `attn_dp` ranks, and add the two missing TP all-reduces.
+   4. Price uneven DP rows (one prompt on DP2) from the measured uneven rows, or fail with a clear
+      range error.
+   5. Unit tests, dummy smoke, the 77-case fidelity matrix (default path unchanged), then rerun E.
+   Step G needs the TP8/DP4 curves from step 1.
 3. CPU overhead, which is not modelled now.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2
