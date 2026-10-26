@@ -102,8 +102,14 @@ def predict_ep_wave_phase_times(
     batch_id: int,
     capture_lane_timings: bool = False,
     source_batches: dict[int, Batch] | None = None,
+    dp_forward_shape: Any = None,
 ) -> EPWavePhaseTimes:
-    """Predict each EP lane and emit workload traces in participant order."""
+    """Predict each EP lane and emit workload traces in participant order.
+
+    With a DP forward shape, each lane runs its pre-routing work and TP
+    reductions on its own DP rank's tokens, as vLLM's AllGatherV dispatch
+    gathers rows only for the routed experts.
+    """
     values = [[] for _ in range(6)]
     lane_records = [] if capture_lane_timings else None
     for ep_id in layer_workload.participant_ep_ids:
@@ -113,6 +119,11 @@ def predict_ep_wave_phase_times(
             ep_id=ep_id,
             layer_workload=layer_workload,
         )
+        if dp_forward_shape is not None:
+            # vLLM EP rank = dp_rank * attn_tp + tp_rank.
+            dp_rank = ep_id // predictor._replica_config.attn_tensor_parallel_size
+            lane_batch.dp_forward_shape = dp_forward_shape
+            lane_batch.moe_pre_routing_effective_total_tokens = dp_forward_shape.num_tokens_across_dp[dp_rank]
         if source_batches is None:
             execution_time = predictor.predict_stage_execution_time(
                 lane_batch, stage_id, cluster_type=cluster_type, num_layers=1,

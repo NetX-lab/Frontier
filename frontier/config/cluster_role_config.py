@@ -119,11 +119,12 @@ class ClusterRoleConfigBuilder:
             ),
             moe_routing_distribution_type=moe_routing_distribution_type,
             device=get_field_value("device"),
-            # Cache layout selection has no role-specific fields; every role
-            # inherits the base replica's native backend and cache dtypes.
+            # Cache layout and the MoE all2all backend have no role-specific
+            # fields; every role inherits the base replica's settings.
             attention_backend=main_config.attention_backend,
             kv_cache_dtype=main_config.kv_cache_dtype,
             indexer_kv_cache_dtype=main_config.indexer_kv_cache_dtype,
+            moe_all2all_backend=main_config.moe_all2all_backend,
             network_device=get_field_value("network_device"),
             cluster_prefix=cluster_prefix,
             speculative_decoding_config=main_config.speculative_decoding_config,
@@ -618,6 +619,7 @@ class ClusterRoleConfigBuilder:
             attention_backend=original_config.attention_backend,
             kv_cache_dtype=original_config.kv_cache_dtype,
             indexer_kv_cache_dtype=original_config.indexer_kv_cache_dtype,
+            moe_all2all_backend=original_config.moe_all2all_backend,
             network_device=original_config.network_device,
             speculative_decoding_config=original_config.speculative_decoding_config,
         )

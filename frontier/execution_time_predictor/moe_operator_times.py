@@ -6,6 +6,7 @@ needs and the model selection that decides which trained estimator answers.
 """
 
 from frontier.config import get_quantization_manager
+from frontier.config.precision_type import PrecisionType
 from frontier.entities import Batch, ExecutionTime
 from frontier.entities.time_components import MoEOperatorTimes, MoETime
 from frontier.logger import init_logger
@@ -21,6 +22,11 @@ from frontier.operators.families import (
     get_comm_operator,
     is_moe_operator_ep_agnostic,
     resolve_moe_operator_tp_key,
+)
+from frontier.profiling.collectives.vllm_forward_collectives import (
+    DTYPE_BYTES,
+    bytes_per_row,
+    step5_dispatch_row,
 )
 from frontier.types import ClusterType
 from typing import Dict, Mapping, Optional
@@ -333,6 +339,8 @@ class MoeOperatorTimes:
                 "expert_parallel_alltoall_dispatch": 0.0,
                 "expert_parallel_alltoall_combine": 0.0,
             }
+        if self._replica_config.moe_all2all_backend == "allgather_reducescatter":
+            return self._predict_dp_dispatch_combine_times(batch)
         if not self._use_expert_parallel_alltoall_path(batch):
             raise ValueError(
                 "Canonical MoE EP execution requires named all-to-all dispatch "
@@ -348,6 +356,47 @@ class MoeOperatorTimes:
                 "expert_parallel_alltoall_dispatch",
                 "expert_parallel_alltoall_combine",
             )
+        }
+
+    def _predict_dp_dispatch_combine_times(self, batch: Batch) -> dict[str, float]:
+        """Price vLLM's AllGatherV dispatch and ReduceScatterV combine over attention DP.
+
+        Each DP rank gathers every rank's rows (activations with top-k weights
+        and ids) and scatters back the BF16 sums of its own rows. With one DP
+        rank there is nothing to exchange.
+        """
+
+        if self._replica_config.attn_dp == 1:
+            return {
+                "expert_parallel_alltoall_dispatch": 0.0,
+                "expert_parallel_alltoall_combine": 0.0,
+            }
+        shape = getattr(batch, "dp_forward_shape", None)
+        metadata = self._step5_layer_metadata
+        if shape is None or metadata is None:
+            raise ValueError(
+                "moe_all2all_backend='allgather_reducescatter' prices Step5 EP lanes "
+                "with a DP forward shape and native layer metadata (non-dummy mode)"
+            )
+        routed = next(p for p in metadata.projections if p.operator_name == "moe_grouped_gemm")
+        group_size = (
+            self._model_config.quantization_config.weight_block_size[1]
+            if routed.weight_precision is PrecisionType.FP8 else None
+        )
+        hidden = self._model_config.embedding_dim
+        activation_dtype = self._model_config.torch_dtype
+        dispatch_row_bytes = bytes_per_row(*step5_dispatch_row(
+            hidden, self._replica_config.router_topk, activation_dtype, group_size,
+        ))
+        rows = shape.num_tokens_across_dp
+        return {
+            "expert_parallel_alltoall_dispatch": self._cc_backend.predict_dp_rows(
+                "allgather", rows, dispatch_row_bytes, shape.cuda_graph, "ATTN_DP",
+            ),
+            "expert_parallel_alltoall_combine": self._cc_backend.predict_dp_rows(
+                "reduce_scatter", rows, hidden * DTYPE_BYTES[activation_dtype],
+                shape.cuda_graph, "ATTN_DP",
+            ),
         }
 
     def _get_effective_moe_total_tokens(self, batch: Batch) -> int:

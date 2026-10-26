@@ -36,6 +36,7 @@ def _harness(role, *, dense_layers=frozenset(), request_capacity=32):
     predictor._step5_max_model_len = 8192
     predictor._replica_config = SimpleNamespace(
         attn_tensor_parallel_size=8, moe_tensor_parallel_size=1, moe_expert_parallel_size=1,
+        moe_all2all_backend=None,
     )
     predictor._step5_attention_workload = lambda batch: step5_batch_workload(predictor, batch)
     scheduler.get_replica = lambda _: SimpleNamespace(is_moe=True)

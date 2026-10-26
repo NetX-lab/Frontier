@@ -810,7 +810,19 @@ class SklearnMoEExecutionTimePredictor(
         # Dense-FFN (non-MoE layer) path still uses FFN TP allreduce semantics.
         # Keep it aligned with dense predictor behavior for mixed-layer models.
         moe_tp_allreduce_time = 0.0
-        if include_ffn and include_moe and self._replica_config.moe_tensor_parallel_size > 1:
+        dp_group_moe = self._replica_config.moe_all2all_backend == "allgather_reducescatter"
+        if (include_ffn and include_moe and dp_group_moe
+                and self._replica_config.attn_tensor_parallel_size > 1):
+            # vLLM reduces the routed output over TP after the combine; with
+            # one DP rank this reduction also carries the shared branch.
+            moe_tp_allreduce_time = self._predict_comm_operator(
+                get_comm_operator("mlp_tensor_parallel_allreduce"),
+                batch,
+            )
+            communication_operator_times["mlp_tensor_parallel_allreduce"] = (
+                moe_tp_allreduce_time
+            )
+        elif include_ffn and include_moe and self._replica_config.moe_tensor_parallel_size > 1:
             moe_tp_allreduce_time = self._predict_comm_operator(
                 get_comm_operator("moe_tensor_parallel_allreduce"),
                 batch,
@@ -911,7 +923,9 @@ class SklearnMoEExecutionTimePredictor(
                 )
                 communication_operator_times[moe_tp_allgather_op] = ffn_tp_allgather_time
             share_expert_tp_allreduce_op = (
-                architecture_profile.share_expert_tensor_parallel_allreduce_op
+                "share_expert_tensor_parallel_allreduce"
+                if dp_group_moe and self._replica_config.attn_dp > 1
+                else architecture_profile.share_expert_tensor_parallel_allreduce_op
             )
             shared_expert_compute_time = (
                 share_expert_up_proj_time
