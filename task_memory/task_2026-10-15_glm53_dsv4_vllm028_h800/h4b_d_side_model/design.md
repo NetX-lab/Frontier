@@ -4,13 +4,14 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Updated the status and inputs: item 1 approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified; the H800 and H200-64 lifecycle runs are copied and analyzed. |
 | 2026-10-25 | Created: measured native mechanism, Frontier's current path, item 1 (READ completion at engine steps), item 2 (DECODE batch queue depth 2), gating options, expected effects, deferred parts, verification plan and approval items. |
 
-**Status.** Proposal. No `frontier/` file is changed. Item 1 exceeds the D-H4A-CHECKPOINT bounds (more than 5 `frontier/` files and a new shared config field), and item 2 is a separate, larger change. Both return to YC before core edits.
+**Status.** Item 1 is approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item1_engine_step.md)). Item 2 is a separate, larger change and returns to YC with its own design before any core edit. The ingress field stays deferred.
 
 **Authority.** D-H4A-CHECKPOINT ("Frontier models the D-side asynchronous remote-KV lifecycle from those measured inputs, with no constant fitted to native06"), D-MAINLINE-LOOP-CAP-DSV4, D-NO-INTERRUPT and the DIAGNOSTIC label in [requirements.md](../requirements.md). GLM, co-location, existing PDD and PD-AF results must stay identical.
 
-**Inputs.** The H200 P2-32 lifecycle run (H4b-(a) on H200, [test report](../test_report_2026-10-25_h200_h4b_lifecycle.md), persisted under `../h200_mainline/diagnostic/inputs/p2_32l/`). This is H200 evidence. The H800 lifecycle run (`exp-1025-121318-827142`, Succeeded) is not yet copied; it is needed before any H800 cell is judged.
+**Inputs.** The H200 P2-32 lifecycle run (H4b-(a) on H200, [test report](../test_report_2026-10-25_h200_h4b_lifecycle.md), persisted under `../h200_mainline/diagnostic/inputs/p2_32l/`). This is H200 evidence. Since 2026-10-26 also the H800 lifecycle run ([test report](../test_report_2026-10-26_h800_h4b_lifecycle.md), `../h4b_lifecycle_measurement/inputs/h800l/`) and the H200-64 lifecycle run ([test report](../test_report_2026-10-26_h200_p2_64_lifecycle.md), `../h200_mainline/diagnostic/inputs/p2_64l/`). Sections 1-9 were written from the H200-32 run alone.
 
 ## 1. What is missing
 
