@@ -298,6 +298,8 @@ def _make_completion_scheduler(
     scheduler._request_queue = []
     scheduler._preempted_requests = []
     scheduler._waiting_requests = []
+    scheduler._nixl_reads_found_by_batch = {}
+    scheduler._nixl_reads_reported = []
     return scheduler
 
 

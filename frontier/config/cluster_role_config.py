@@ -255,6 +255,7 @@ class ClusterRoleConfigBuilder:
                 decode_replica_scheduler_config_num_blocks=self.decode_replica_scheduler_config_num_blocks,
                 decode_replica_scheduler_config_block_size=self.decode_replica_scheduler_config_block_size,
                 decode_replica_scheduler_config_watermark_blocks_fraction=self.decode_replica_scheduler_config_watermark_blocks_fraction,
+                decode_replica_scheduler_config_max_concurrent_batches=self.decode_replica_scheduler_config_max_concurrent_batches,
             )
             cluster_configs[ClusterType.DECODE] = decode_config
 

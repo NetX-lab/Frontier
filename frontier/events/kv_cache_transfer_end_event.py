@@ -9,6 +9,28 @@ if TYPE_CHECKING:
     from frontier.scheduler import BaseGlobalScheduler
 
 
+def report_nixl_reads(
+    scheduler: "BaseGlobalScheduler",
+    metrics_store: "MetricsStore",
+    replica_scheduler,
+    time: float,
+) -> List[BaseEvent]:
+    """Complete the NIXL READs that a DECODE engine step's output reports (`finished_recving`).
+
+    The transfer end runs inline at the output pop: at equal times the
+    engine's next pass (REPLICA_SCHEDULE) runs before a KV_CACHE_TRANSFER_END
+    event, and that pass must find the requests ready.
+    """
+    if not hasattr(replica_scheduler, "consume_found_nixl_reads"):
+        return []
+    events: List[BaseEvent] = []
+    for transfer_info in replica_scheduler.consume_found_nixl_reads():
+        events.extend(
+            KVCacheTransferEndEvent(time, transfer_info).handle_event(scheduler, metrics_store)
+        )
+    return events
+
+
 class KVCacheTransferEndEvent(BaseEvent):
     """Event emitted when a KV cache transfer completes."""
 
@@ -61,10 +83,14 @@ class KVCacheTransferEndEvent(BaseEvent):
                 **transfer_args, coverage=expected_coverage,
                 cost_provider=source_cluster_scheduler._predictor,
             )
-            if (
-                self._transfer_info.transfer_time_ms != expected_time_ms
-                or self.time != self._transfer_info.transfer_start_time + expected_time_ms * 1e-3
-            ):
+            wire_end = self._transfer_info.transfer_start_time + expected_time_ms * 1e-3
+            # In engine_step mode a later DECODE step posts the READ and another step reports it.
+            ready_time_matches = (
+                self.time >= wire_end
+                if predictor._config.nixl_read_completion == "engine_step"
+                else self.time == wire_end
+            )
+            if self._transfer_info.transfer_time_ms != expected_time_ms or not ready_time_matches:
                 raise RuntimeError("Measured NIXL READ-to-ready duration changed")
         if (
             self._transfer_info.transfer_payload != expected_payload

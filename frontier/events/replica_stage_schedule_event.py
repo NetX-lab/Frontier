@@ -175,6 +175,13 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
             return []
 
+        if self._cluster_type == ClusterType.DECODE:
+            # The engine step starts: its KV connector checks and posts the
+            # lane's NIXL READs.
+            lane = cluster_scheduler.get_replica_scheduler(self._replica_id, self._replica_local_id)
+            if hasattr(lane, "on_engine_step_start"):
+                lane.on_engine_step_start(self.time, batch)
+
         if isinstance(batch, DummyForwardBatch):
             return start_dummy_forward(
                 cluster_scheduler, self.time, self._replica_id, self._stage_id, batch
