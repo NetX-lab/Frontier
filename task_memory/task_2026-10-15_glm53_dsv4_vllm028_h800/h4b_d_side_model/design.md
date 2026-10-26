@@ -4,10 +4,11 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Added section 10, the item 2 design (DECODE role override of `max_concurrent_batches`, output placeholders, grouped in-flight allocation, preemption with one batch in flight, READ claim per step, 8 files); section 6.1 points to it; section 9 item 2 updated. |
 | 2026-10-26 | Updated the status and inputs: item 1 approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified; the H800 and H200-64 lifecycle runs are copied and analyzed. |
 | 2026-10-25 | Created: measured native mechanism, Frontier's current path, item 1 (READ completion at engine steps), item 2 (DECODE batch queue depth 2), gating options, expected effects, deferred parts, verification plan and approval items. |
 
-**Status.** Item 1 is approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item1_engine_step.md)). Item 2 is a separate, larger change and returns to YC with its own design before any core edit. The ingress field stays deferred.
+**Status.** Item 1 is approved (D-H4B-ITEM1, option B), implemented in `5f907f66` and `96d9c1ef`, and verified as DIAGNOSTIC ([test report](../test_report_2026-10-26_h4b_item1_engine_step.md)). Item 2 has its design in section 10 and waits for YC's approval before any core edit. The ingress field stays deferred.
 
 **Authority.** D-H4A-CHECKPOINT ("Frontier models the D-side asynchronous remote-KV lifecycle from those measured inputs, with no constant fitted to native06"), D-MAINLINE-LOOP-CAP-DSV4, D-NO-INTERRUPT and the DIAGNOSTIC label in [requirements.md](../requirements.md). GLM, co-location, existing PDD and PD-AF results must stay identical.
 
@@ -104,7 +105,7 @@ Recommendation: B. It satisfies the recorded GLM-identical condition now and lea
 
 ### 6.1 Item 2: DECODE batch queue depth 2 with output placeholders
 
-Native schedules each step one step ahead of its output. This delays the READ post by one step and makes f two steps instead of one. To model it, the DECODE role needs batch capacity 2 on DP>1 with grouped KV allocation, and decoding requests that are in flight must be scheduled again with one output placeholder each, as `AsyncScheduler` does, instead of being skipped (`vllm_v1_engine_replica_scheduler.py:1018-1055`). This changes an accepted value range of `max_concurrent_batches` (today: MONOLITHIC PP1/DP1 only), the scheduler's token accounting for in-flight requests, and their interaction with preemption and KV growth. Rough size: 3-5 `frontier/` files, 150-250 lines, plus tests. It is a separate change with its own design section and approval. Expected effect in section 7.
+Native schedules each step one step ahead of its output. This delays the READ post by one step and makes f two steps instead of one. Design: section 10.
 
 ### 6.2 Late READ handles (open)
 
@@ -150,5 +151,122 @@ Notes:
 ## 9. Approval items for YC
 
 1. Item 1 with option B: the new KV-transfer config field `nixl_read_completion` (default `transfer_end`), 7-8 `frontier/` files, about 160-210 lines. Or option A, which changes GLM NIXL results.
-2. Item 2 (DECODE depth 2 with placeholders): approve a separate design section first.
+2. Item 2 (DECODE depth 2 with placeholders), section 10: the DECODE role override `decode_replica_scheduler_config_max_concurrent_batches` through the existing override registry, the placeholder rescheduling and last-token guard, grouped in-flight allocation, preemption through the existing one-batch path, the per-step READ claim (also at depth 1), and the move of the READ table to `vllm_v1_nixl_reads.py`. 8 `frontier/` files (1 new), about 140-190 lines plus tests.
 3. Ingress field: deferred until the H800 parts are known.
+
+## 10. Item 2: DECODE batch queue depth 2 with output placeholders
+
+Status: proposal (2026-10-26). No `frontier/` edit before YC approves it (section 9, item 2). The choices below were made under D-NO-INTERRUPT and are the lead's recommendations.
+
+### 10.1 Native behavior to reproduce
+
+vLLM 0.28.0, same local copy as section 2.
+
+1. **Depth.** `max_concurrent_batches` is 2 with async scheduling, the V1 model runner and PP ≤ 1 (`config/vllm.py:550-560`). The D engines of native06, P2-32 and P2-64 run `--async-scheduling` with PP 1.
+2. **Every schedule is a queue entry** (`v1/engine/core.py:624`), an empty one included; an empty entry executes as a connector-only step (section 2, point 5).
+3. **Placeholders.** `AsyncScheduler._update_after_schedule` gives each scheduled decoding request one output placeholder (`async_scheduler.py:19-49`). The next schedule computes `num_new_tokens = num_tokens_with_spec + num_output_placeholders − num_computed_tokens` = 1 (`scheduler.py:558-561`), so a decoding request whose previous step is still in flight is scheduled again.
+4. **Last-token guard.** A request whose in-flight step already produces its last output token is skipped (`scheduler.py:530-544`).
+5. **Preemption with a step in flight** (`scheduler.py:1336-1371`, `1796-1823`). The in-flight output is still delivered; it only drains the reset counters. It is dropped only with `drop_stale_output`, which preemption sets from `requires_kv_delivery`, the KV producer flag (`kv_connector/v1/base.py:194`), so not on D.
+6. **Deferred block free** (`scheduler.py:151-157`, `2428-2440`). Blocks of a request freed while a step holding it is still in flight are freed when that step's output is processed. A normal finish frees at once.
+7. **KV admission and reclaim.** The admission cap uses `max_in_flight_tokens = max_concurrent_batches × max_num_batched_tokens` (`config/vllm.py:563-571`). Sliding-window blocks are reclaimed on the processed basis `total_computed_tokens − num_in_flight_tokens` (`v1/core/kv_cache_manager.py:507-511`).
+
+Steady-state timeline (inference). Step k executes over [kS, (k+1)S]. At (k+1)S the engine pops step k and schedules step k+2. A READ requested by the schedule at (j+1)S rides step j+2. It is posted when that step starts at (j+2)S, found by the start of step j+3 (T < S), and reported at the pop of step j+3 at (j+4)S. The same pass schedules the request in step j+5, whose output is popped at (j+6)S.
+
+The READ post is the rule of the section 2 offline check (61.36 ms against native 77.94 ms on H200-32). f is 2 steps, as measured (42.05 ms). Frontier at depth 1 (item 1) posts at the claiming pass and has f = 1 step. Item 2 therefore adds one step to d and one to f: about 2·S_F of TTFT (item 1 test report, section 6).
+
+### 10.2 Gating
+
+| Option | What | Other results | Cost |
+| --- | --- | --- | --- |
+| **A (recommended)** | Reuse the existing `max_concurrent_batches` field. Add a DECODE role override `decode_replica_scheduler_config_max_concurrent_batches` through the unchanged role-override registry (`frontier/scheduler/utils/replica_config.py:33`). On unified DECODE, an explicit 2 means AsyncScheduler output placeholders. | Identical by construction. The default (None) keeps capacity `num_stages`. PREFILL keeps its value. MONOLITHIC capacity 2 is unchanged. | One role field, one registry entry, one propagation line. |
+| B | A new `async_scheduling` flag. | Identical. | A second way to set depth 2 beside `max_concurrent_batches`; rejected. |
+| C | Placeholder semantics for every explicit capacity 2, MONOLITHIC included. | MONOLITHIC capacity-2 results and tests change. | Needs native MONOLITHIC evidence. Left as a separate fidelity item. |
+
+The shared field cannot be used alone: in a PDD run it would also reach PREFILL, where explicit capacity is rejected.
+
+**Validation** (replaces the single check at `vllm_v1_engine_replica_scheduler.py:378-394` with one branch per role):
+- MONOLITHIC: unchanged.
+- Unified DECODE requires `VLLMv1EngineReplicaScheduler`, `num_stages == 1`, no speculative decoding, no prefix caching and no GDN. `attn_dp > 1` and grouped KV allocation are allowed.
+- Other roles raise as today.
+
+The scheduler keeps one boolean, set only by the DECODE branch, that says the lane uses output placeholders.
+
+### 10.3 Scheduling rules with output placeholders
+
+1. **Reschedule in-flight decoding requests.** In `_schedule_running_requests`, the in-flight skip (`vllm_v1_engine_replica_scheduler.py:1111-1147`) does not apply on a placeholder lane. The `_continuation_request_ids` skip (`:1085-1095`) also does not apply to decoding requests on that lane. That skip keeps a request out of a second batch formed in the same call: the base DECODE loop (`base_replica_scheduler.py:938-974`) forms up to capacity batches per call on the non-DP path, and each of those batches is one vLLM schedule. The DP path already forms one batch per iteration (`_schedule_iteration`, `:586-592`).
+2. **Last-token guard.** Skip a decoding request when its in-flight steps, its active-batch count from `_active_batch_request_counts` (`:443-466`), already cover the tokens it still needs. This is vLLM's guard at depth 2, where at most one step of the request is in flight when a schedule runs.
+3. **One token, one step ahead.** `_get_request_next_num_tokens` already returns 1 for a prefill-complete DECODE request. `_advance_scheduler_num_computed_tokens` moves the scheduler frontier by 1 per schedule, so KV allocation runs one token ahead, as in vLLM. `_create_batch` already prices the context as the frontier minus the scheduled tokens (`:396-441`), so the second in-flight batch attends one more token.
+4. **Engine loop: no change.** The non-DP loop (`on_schedule`, `:514-538`) and the DP iteration loop (`_run_dp_iterations`, `:540-583`) already handle capacity 2: fill to capacity, then block on the oldest batch. Output pop and active-mark release (`_pop_batch_output`, `:752-759`) are per batch.
+
+### 10.4 Grouped KV allocation
+
+- On a placeholder lane, lift the two in-flight refusals in `vllm_v1_kv_allocation.py`: `return False` at `:535` and `RuntimeError` at `:642-645`.
+- Reclaim stays on `_get_settled_kv_progress` (`:33-48`). On grouped DECODE that is min(processed, frontier), the processed basis of `remove_skipped_blocks`.
+- `_get_grouped_admission_blocks` (`:50-61`) passes `max_in_flight_tokens = capacity × max_tokens_in_batch` on a placeholder lane, vLLM's formula. This does not change DSV4, where `max_model_len` = 7168 binds before the in-flight term (`max_tokens_in_batch` = 8192). It keeps admission equal to native on configurations where that term binds.
+
+### 10.5 Preemption
+
+A schedule pass runs only when a queue slot is free. The base loop runs while running < capacity, and the DP path allows running + 1 per iteration. So at capacity 2, at most one other batch is in flight. Both preemption call sites (`_try_allocate_with_preemption`, `vllm_v1_kv_allocation.py:949`; final-slice reclaim, `vllm_v1_iteration_policy.py:543`) run inside schedule passes, so a victim is in at most one in-flight batch.
+
+That is the case the existing path handles. `step_in_flight` applies the in-flight sample (`vllm_v1_kv_allocation.py:863-896`), which matches vLLM delivering the stale output on D. No new guard is added for a victim in two batches, because that state is unreachable. An earlier draft of this design had a fail-fast check there; it is dropped.
+
+Stated simplification: the deferred block free (point 6 of 10.1) is not modeled, so a preempted victim's blocks return at most one step early. The DSV4 runs of item 1 have zero preemptions.
+
+### 10.6 NIXL READ rule at any depth
+
+Item 1 posts every requested READ at the lane's next execution start, and reports every found READ at the next output pop. At depth 2 this is one step early twice. The next execution start may be the batch that was already queued. The next pop may be the older batch.
+
+The rule becomes:
+
+1. **Claim.** Each schedule pass claims the READs registered before it. If the pass forms a batch, the READs belong to that batch. If it forms none, they are posted at the lane's next execution start of any kind: batch, dummy forward or connector-only step. This matches native, where the empty entry executes right after the in-flight batch.
+2. **Post.** A batch's start posts the READs it claimed.
+3. **Find.** Every execution start finds the posted READs whose wire end is at or before that time and keeps them under that step: a batch id, the lane's dummy forward, or the connector-only step.
+4. **Report.** The output pop of a batch (`_pop_batch_output`) or the end of the dummy forward makes that step's found READs ready. The existing call sites then report them (`global_batch_end_event.py:323`, `batch_stage_end_event.py:175`, `replica_schedule_event.py:115`). A connector-only step reports at once, as today.
+
+Consequences:
+- `register_nixl_read` loses its depth-1 restriction (`vllm_v1_engine_replica_scheduler.py:959-963`).
+- `has_unfinished_requests` counts claimed and found READs too.
+- Only `ReplicaStageScheduleEvent` changes at the call sites: it passes the starting batch to `on_engine_step_start` (`replica_stage_schedule_event.py:170-171`). `Batch` is unchanged.
+
+At depth 1 the claiming pass's batch is the next one to start, and the step being popped is the only one in flight. The rule then equals item 1's except for a READ registered at the same simulated time as a pass, after it and before the batch starts. Item 1 posts such a READ at that start; the new rule leaves it to the next pass. Section 10.9 checks how large this difference is.
+
+To keep `vllm_v1_engine_replica_scheduler.py` (1,894 lines) clear of the 2,000-line limit, the READ table moves to a new mixin `NixlReadCompletion` in `frontier/scheduler/replica_scheduler/vllm_v1_nixl_reads.py`. This follows `KvBlockAllocation` and `PipelineTerminalRelease`, and the name matches the config field `nixl_read_completion`.
+
+### 10.7 Files and size
+
+| File | Change | Lines (estimate) |
+| --- | --- | --- |
+| `frontier/config/cluster_config.py` (1,888) | `decode_replica_scheduler_config_max_concurrent_batches` | 7 |
+| `frontier/config/cluster_role_config.py` (620) | propagate it to the DECODE role (`:253-258`) | 1 |
+| `frontier/scheduler/utils/replica_config.py` (94) | `"max_concurrent_batches"` in `_OVERRIDE_FIELDS` | 1 |
+| `frontier/config/replica_scheduler_config.py` | help text of `max_concurrent_batches` (`:98-104`) | 3 |
+| `frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py` | per-role validation, placeholder rule and guard, claim calls; READ table moved out | +30 / −50 |
+| new `frontier/scheduler/replica_scheduler/vllm_v1_nixl_reads.py` | `NixlReadCompletion`: register, claim, post, find and report by step | 80 |
+| `frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py` (1,063) | grouped in-flight allocation and admission cap on placeholder lanes | 15 |
+| `frontier/events/replica_stage_schedule_event.py` | pass the starting batch | 2 |
+| `tests/unit/test_nixl_read_completion.py` | depth-2 claim, post, find and report; the depth-1 restriction test is replaced | 80 |
+| new `tests/unit/test_decode_output_placeholders.py` | role override, validation, rescheduling, guard, grouped allocation, admission cap, preemption with one batch in flight, DP and non-DP loops | 150 |
+
+Total: 8 `frontier/` files (1 new), about 140-190 changed lines plus about 230 test lines. This exceeds the 5-file bound and adds a role config field, so it needs YC's approval.
+
+### 10.8 Expected effects (inference)
+
+- TTFT rises by about 2·S_F over item 1 (item 1 test report, section 6): native06 404.03 ms (+1.3%), P2-32 398.38 ms (+9.4%), P2-64 697.09 ms (−6.0%).
+- The P2-32 overshoot comes from the P side, which is already 45.92 ms too long.
+- TPOT is nearly unchanged: each step still gives each request one token, with one more context token on the second in-flight batch.
+- d is about 3 Frontier steps from the claiming pass, and f about 2.
+
+### 10.9 Verification
+
+1. **Default path.** Unit suite failure set equal to the item 1 baseline; `bash examples/architecture/run_dummy_smoke_matrix.sh`; `pytest tests/unit/test_e2e_gate.py -q`; 77-case fidelity from a clean worktree. Expected: identical, apart from the config echo of the new role field.
+2. **Depth-1 engine_step.** Rerun native06, P2-32 and P2-64 with `engine_step` at depth 1 and compare the metrics files with the `e33c24a5` results. Expected: identical, or every difference traced to same-time registrations and reported.
+3. **New unit tests** (section 10.7).
+4. **DSV4 diagnostics.** Run DECODE capacity 2 with `engine_step` on native06, P2-32 and P2-64. Then run the client gate, the H4a-5 attribution, and parts c-f against the lifecycle copies (P2-32l, P2-64l, h800l). Expected: section 10.8.
+5. All results stay DIAGNOSTIC. H200 evidence never qualifies an H800 cell.
+
+### 10.10 Limitations
+
+- `Request.on_batch_schedule` keeps only the latest schedule time (`frontier/entities/request.py:1238`). At depth 2, per-iteration service-time metrics derived from it are understated. TTFT, TPOT and E2E come from completion times and are unaffected.
+- MONOLITHIC capacity 2 keeps its skip semantics (option C).
+- PREFILL depth 2 is not modeled; the P engines also run `--async-scheduling`. It is a candidate item 3 and may explain part of the P2-32 P-side +45.92 ms.
+- Late READ handles (section 6.2) and ingress (section 6.3) are unchanged.
