@@ -27,7 +27,7 @@
     "Decode cells cover every lane state of the fixed 6144/1024 workload with at most three 16-token prompt tails in one decode step; four or more tails fall outside the measured range and Frontier raises",
     "DSA decode contexts stop at 7160 because repeated DSA timing needs region-aligned contexts; Frontier extends the DSA context range by region_block_size - 1",
     "MoE tokens cover the per-lane width and its DP2 and DP4 sums, because the token count Frontier passes to the MoE predictor under attention DP is not yet confirmed",
-    "MoE uses uniform load with standard_fused_topk; the native run used the position_cyclic routing image built on the same base image",
+    "MoE uses balanced load (the round-robin uniform_topk assignment, matching Frontier balanced routing) with the standard_fused_topk router; the native run used the position_cyclic routing image built on the same base image, whose counts are near-uniform",
     "The base image is the routing image's base, so attention and linear kernels match the native run; no native generation binding is applied",
     "No kernel-gap, NIXL, sampler, host or communication timing is measured by this package"
   ]

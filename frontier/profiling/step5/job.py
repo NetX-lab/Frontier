@@ -210,8 +210,8 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1, profile_plan=None):
             "--expert_parallel_sizes", *map(str, expert_parallel_sizes),
             "--num_tokens_list", *map(str, selected["moe_tokens"]),
             "--max_tokens", str(max(selected["moe_tokens"])), "--precision", "BF16",
-            "--profile_method", method, "--device", device, "--load_distributions", "uniform",
-            "--routing_runtime_path", "standard_fused_topk", "--output_dir", str(output / "moe"), "--yes"]})
+            "--profile_method", method, "--device", device, "--load_distributions", "balanced",
+            "--num_samples_per_distribution", "1", "--routing_runtime_path", "standard_fused_topk", "--output_dir", str(output / "moe"), "--yes"]})
     # Attention runs last: a failed native attention cell then leaves the
     # completed linear and MoE tables in place.
     commands.append({"family": "attention", "method": "both_native_families",
