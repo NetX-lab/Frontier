@@ -119,6 +119,12 @@ class BaseCCBackend(ABC):
             f"{type(self).__name__} does not support collective plans"
         )
 
+    def predict_dp_rows(self, operation, rows, row_bytes, cuda_graph, comm_domain):
+        """Price a DP-group gather or scatter from each rank's row count."""
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support per-rank DP row pricing"
+        )
+
     def predict_comm_cost(self, comm_op: str, **kwargs) -> float:
         """
         Unified interface for predicting communication cost.

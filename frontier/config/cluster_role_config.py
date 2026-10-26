@@ -34,6 +34,7 @@ def _get_cc_backend_configs():
         CollectiveSimCCBackendConfig,
         AiconfiguratorCCBackendConfig,
         AstraSimAnalyticalCCBackendConfig,
+        MeasuredCCBackendConfig,
     )
 
     return (
@@ -43,6 +44,7 @@ def _get_cc_backend_configs():
         CollectiveSimCCBackendConfig,
         AiconfiguratorCCBackendConfig,
         AstraSimAnalyticalCCBackendConfig,
+        MeasuredCCBackendConfig,
     )
 
 
@@ -348,6 +350,7 @@ class ClusterRoleConfigBuilder:
             CollectiveSimCCBackendConfig,
             AiconfiguratorCCBackendConfig,
             AstraSimAnalyticalCCBackendConfig,
+            MeasuredCCBackendConfig,
         ) = _get_cc_backend_configs()
 
         return (
@@ -372,7 +375,16 @@ class ClusterRoleConfigBuilder:
                 AstraSimAnalyticalCCBackendConfig,
                 self._create_astra_sim_analytical_cc_backend_config,
             ),
+            ("measured", MeasuredCCBackendConfig, self._create_measured_cc_backend_config),
         )
+
+    def _create_measured_cc_backend_config(self, cluster_prefix: str):
+        """Use the same measured curves for every role of a Replica pod."""
+        MeasuredCCBackendConfig = _get_cc_backend_configs()[6]
+        base_config = self.cc_backend_config
+        if isinstance(base_config, MeasuredCCBackendConfig):
+            return replace(base_config)
+        return MeasuredCCBackendConfig(**self._shared_cc_backend_fields(base_config))
 
     def _cc_backend_value_reader(
         self, cluster_prefix: str, base_config: "BaseCCBackendConfig", config_class: type
@@ -413,7 +425,7 @@ class ClusterRoleConfigBuilder:
     ) -> AnalyticalCCBackendConfig:
         """Create analytical CC backend config with cluster-specific overrides."""
         # Lazy import to avoid circular imports
-        _, _, AnalyticalCCBackendConfig, _, _, _ = _get_cc_backend_configs()
+        _, _, AnalyticalCCBackendConfig, *_ = _get_cc_backend_configs()
 
         base_config = self.cc_backend_config
 
@@ -433,7 +445,7 @@ class ClusterRoleConfigBuilder:
     ) -> VidurCCBackendConfig:
         """Create Vidur CC backend config with cluster-specific overrides."""
         # Lazy import to avoid circular imports
-        _, VidurCCBackendConfig, _, _, _, _ = _get_cc_backend_configs()
+        _, VidurCCBackendConfig, *_ = _get_cc_backend_configs()
 
         base_config = self.cc_backend_config
 
@@ -462,8 +474,7 @@ class ClusterRoleConfigBuilder:
             _,
             _,
             CollectiveSimCCBackendConfig,
-            _,
-            _,
+            *_,
         ) = _get_cc_backend_configs()
 
         from pathlib import Path
@@ -505,7 +516,7 @@ class ClusterRoleConfigBuilder:
             _,
             _,
             AiconfiguratorCCBackendConfig,
-            _,
+            *_,
         ) = _get_cc_backend_configs()
 
         base_config = self.cc_backend_config
@@ -536,6 +547,7 @@ class ClusterRoleConfigBuilder:
             _,
             _,
             AstraSimAnalyticalCCBackendConfig,
+            *_,
         ) = _get_cc_backend_configs()
 
         base_config = self.cc_backend_config
