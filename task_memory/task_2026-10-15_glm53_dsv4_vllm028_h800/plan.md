@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Applied D-NO-STEP-COST-SHORTCUT and D-OPERATOR-LEVEL-ROUTE: H3r superseded by H3o (operator-level DSV4 costs), H4 needs H3o, dependency updated. |
 | 2026-10-25 | Applied D-H200-TEMP-MAINLINE: added the H200 temporary route (milestones P2-32r/32p/32d/64r/64p/64d, waves and dependency); wave 1 submitted. |
 | 2026-10-25 | P1b: linked the design and recorded that `package_01` passed its CPU checks; submission waits for H4b-(a) and 64 free H800. |
 | 2026-10-25 | H4c: linked the design and recorded the implemented option B (commit cefbbc9d) and its results; option A stays with YC. |
@@ -155,13 +156,14 @@
 | **H4a** | **First diagnostic P0 prediction** | 05, 07, 10, 19 | **DONE 2026-10-25 (DIAGNOSTIC).** TTFT 17.35%, TPOT 2.50%, E2E 2.10%, THPT 0.54% against the mean of native06 R4; [test report](test_report_2026-10-25_h4a_p0_diagnostic.md). Checkpoint decided: D-H4A-CHECKPOINT. |
 | **H4b** | **D-side handoff** | 07, 18, 19 | (a) one native P0 measurement job that times the D-side states between the P response and D's first decode step; (b) Frontier models the D-side asynchronous remote-KV lifecycle from those inputs, with no constant fitted to native06. Done when (b) is merged and the P0 diagnostic rerun reports the new TTFT error. |
 | **H4c** | **Step-cost path speed** | 05, 07 | A table-priced step is priced once per step instead of through the per-layer EP waves. Done when results are identical to H4a run5 and the existing regressions, and the wall-time change is measured. |
-| H3r | Targeted cost refinement | 05, 06, 09 | Only for the cost slots that the H4a attribution names as leading error sources. |
-| H4 | Qualified non-dummy P0 path | 05, 07-09 | H4a path with qualified inputs. Step-level costs do not yet support the formal gates (D-H4A-CHECKPOINT). |
+| H3r | Targeted cost refinement | 05, 06, 09 | Superseded by H3o (D-NO-STEP-COST-SHORTCUT): entries of the step-cost table are not refined. |
+| **H3o** | **Operator-level DSV4 costs** | 05, 06, 09 | Step time composed from DSV4 operator profiling inputs for the batch being priced, plus the communication backend (D-OPERATOR-LEVEL-ROUTE). (a) CPU proposal with scope, file list, GPU profiling jobs and time estimate, reviewed by YC. (b) Implementation and GPU profiling after YC approves (a). The step-cost table is only a diagnostic cross-check of the composed step time. |
+| H4 | Qualified non-dummy P0 path | 05, 07-09 | The P0 path priced by H3o operator-level costs. Results priced by the step-cost table never count toward the formal gates (D-NO-STEP-COST-SHORTCUT). |
 | H6 | P0 compare, promote and accept | 19 | All four errors <=30% (promotion to P1 formal), then <=10% (final). |
 | P1b | P1 H800-64 basic native validation | 10, 18 | Runs in parallel with everything above, at lower priority than H4b and H4c. [Design](p1b_basic_validation/design.md); `package_01` passed its CPU checks ([test report](test_report_2026-10-25_p1b_package_preparation.md)); submitted only after H4b-(a) is Running or finished and 64 H800 are free. |
 | P1f | P1 formal reference, comparison and acceptance | 10, 18, 19 | Needs P1b and the P0 30% promotion. |
 
-Dependency: `H4a -> D-H4A-CHECKPOINT -> H4b-(a) -> H4b-(b)`; `H4c` runs while the H4b-(a) job queues and runs; `{H4b-(b), H4c} -> {H3r, H4} -> H6(P0) -> P1f`; `P1b` runs in parallel and `{P1b, H6 promotion} -> P1f`. Accepted data from H1, H2 and H5 is reused, not redone.
+Dependency: `H4a -> D-H4A-CHECKPOINT -> H4b-(a) -> H4b-(b)`; `H4c` runs while the H4b-(a) job queues and runs; from 2026-10-26 `H3o-(a) -> YC review -> H3o-(b) -> H4 -> H6(P0) -> P1f` (D-OPERATOR-LEVEL-ROUTE), with the open H4b-(b) READ items deferred until YC reopens them; `P1b` runs in parallel and `{P1b, H6 promotion} -> P1f`. Accepted data from H1, H2 and H5 is reused, not redone.
 
 ### H200 temporary route — D-H200-TEMP-MAINLINE (2026-10-25)
 

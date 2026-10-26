@@ -1,9 +1,10 @@
 """Diagnostic DeepSeek-V4 step costs measured on one native vLLM PD deployment.
 
 The table prices one whole forward step of one attention-DP lane from the
-composition of its batch. It sits next to the resolved CUDA_EVENT attention
-input and is a diagnostic input, not a qualified per-operator model: it carries
-no formal-gate admission.
+composition of its batch. It is a diagnostic input, not a cost model: it carries
+no formal-gate admission and is never stored in the default profiling path
+(docs/adr/0002). A diagnostic driver selects it by pointing the CUDA_EVENT
+attention input at the table's directory.
 """
 
 import json

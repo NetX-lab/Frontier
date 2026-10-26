@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Recorded YC's standing rule against the whole-step table as a cost model, with the method correction it orders (D-NO-STEP-COST-SHORTCUT), and the operator-level DSV4 cost route as the next route (D-OPERATOR-LEVEL-ROUTE). |
 | 2026-10-26 | Recorded YC's question whether the step-cost table is a measured shortcut instead of operator-level costs, and the answer. |
 | 2026-10-26 | Recorded YC's questions on the repriced entry and on H3r after `d485f570`, and the instruction not to start other modeling for now (D-NO-NEW-MODELING). |
 | 2026-10-26 | Recorded YC's adoption of the lead's recommendations for next actions 1-6 after `6dff7547` (D-H4B-K1-REPRICE) and YC's question on `max_tokens = 1` on P. |
@@ -296,6 +297,19 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
   - Reason. DSV4 has no operator-level serving path. `data/profiling/compute/h800/deepseek-ai/DeepSeek-V4-Flash/` holds only the step-cost table. The existing per-operator reader takes only isolated single-request eager measurements, and it rejects PD batches, CUDA Graph steps and mixed batches (`frontier/execution_time_predictor/deepseek_v4.py:686-697`). Ticket 05 milestones `primitive_profiles` and `family_predictor_integration` are open.
   - Limits. The table cannot predict other batch sizes, context lengths, topologies or hardware; the decode entry is one value for 1-128 requests. Because it is measured on the same workload, a comparison mainly tests the scheduling, transfer and lane-synchronization parts of Frontier, not its cost model. The k=1 repricing, taken from native lifecycle runs of the same workload, has this property most strongly; its only use is to separate the k=1 step from the remaining READ-side error.
   - Lead's recommendation, waiting for YC under item 25. Stop extending the table. Make operator-level DSV4 costs (D-V4-KERNEL-ONLY-GPU-COST; tickets 05 and 09) the next cost work instead of the slot refinement in H3r, and keep the table as a cross-check of the composed step time. This needs GPU profiling jobs and more `frontier/` changes than the D-H4A-CHECKPOINT bounds, so it needs YC's approval before it starts.
+
+[Original Request] Follow-up, 2026-10-26, after the answer to Question 3:
+
+> 记住：不允许引入抄近道的 "每步耗时表"。因为该表 就是把真实运行里测到的整步时间存成表，按 batch 组成查出来，不是由 op profiling CSV 一个个算子算出来的。这个表只限于诊断用途，不能用来证明 Frontier 能预测。如果你当前存在方法错误，必须修正。
+> 接下去，第 2 条定为下一步路线。
+
+26. **D-NO-STEP-COST-SHORTCUT (standing rule).** Frontier composes execution cost per operator, from operator profiling inputs (the `data/profiling/` CSV taxonomy and the predictors trained from it), for the batch being priced. A table of whole steps measured in real runs and looked up by batch composition must not be introduced as a cost model. The existing DSV4 step-cost table (`dsv4_step_cost.json`) is a diagnostic tool only:
+    - It is never placed in Frontier's default profiling input path. A diagnostic driver selects it explicitly.
+    - No result priced by it is used to show that Frontier can predict, and none counts toward the 30% or 10% gates. This applies to every result so far: H4a, H4b-(b) items 1 and 2, P2-32d and P2-64d, and the k=1 repricing. Their gate PASS readings show only how the scheduling, KV transfer and lane-synchronization parts behave when the step costs are given.
+    - **Supersedes.** The open question in D-V4-STEP-COST-FIRST-PASS (item 5), whether step-level costs may later support the formal gates: they may not. The step-cost part of D-INPUT-PERSISTENCE (item 9): the tables are task inputs, not `data/profiling/` inputs. Milestone H3r, the refinement of table entries. The proposal under item 24 to fold the repriced entry into the `data/profiling/` tables is withdrawn. D-H200-STEP-COST-SUBSTITUTION and D-H4B-K1-REPRICE remain records of diagnostic inputs only.
+    - **Method correction ordered by YC.** `load_step_cost_table` bound a table found beside the default attention input to every non-dummy V4 run. With the tables in `data/profiling/compute/{h800,h200}/deepseek-ai/DeepSeek-V4-Flash/`, the whole-step lookup was the default V4 cost path, and it skipped operator model training without any explicit choice. The tables move to task directories, as byte-identical copies checked by digest. The drivers select them through the attention input field, as the P2-64 and k=1 cases already do. A V4 run on the default path then fails with a typed coverage error until operator-level costs exist.
+    - **Repository record.** `docs/adr/0002-operator-costs-not-measured-step-tables.md`.
+27. **D-OPERATOR-LEVEL-ROUTE.** The next route is the lead's recommendation 2 under Question 3: DSV4 costs per operator (D-V4-KERNEL-ONLY-GPU-COST; tickets 05 and 09), composed for each batch, with the step-cost table used only as a diagnostic cross-check of the composed step time. The first step is CPU only: a proposal with the scope, the file list, the GPU jobs and a time estimate, which YC reviews before any implementation or GPU job. This replaces D-NO-NEW-MODELING (item 25) for the planning of this route only. Other modeling stays stopped.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

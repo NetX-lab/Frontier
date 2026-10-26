@@ -1,4 +1,4 @@
-"""H4a-2 probe: run a tiny V4 PDD case on the branch code, without patches; measured mode binds the step-cost table."""
+"""H4a-2 probe: run a tiny V4 PDD case on the branch code, without patches; measured mode selects the diagnostic step-cost table."""
 import csv, runpy, sys
 from pathlib import Path
 
@@ -35,5 +35,9 @@ args += ["--replica_config_model_name", "deepseek-ai/DeepSeek-V4-Flash", "--repl
 if mode == "dummy":
     args += ["--random_forrest_execution_time_predictor_config_enable_dummy_mode",
              "--random_forrest_execution_time_predictor_config_dummy_execution_time_ms", "0.01"]
+else:
+    # The table is never in the default profiling path (ADR 0002); the loader reads it beside this attention input.
+    args += ["--random_forrest_execution_time_predictor_config_atten_input_file",
+             str(Path(__file__).resolve().parents[1] / "step_cost" / "attention.csv")]
 sys.argv = ["frontier.main", *args]
 runpy.run_module("frontier.main", run_name="__main__")

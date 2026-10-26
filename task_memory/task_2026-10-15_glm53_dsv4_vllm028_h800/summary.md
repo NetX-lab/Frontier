@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Archived D-NO-STEP-COST-SHORTCUT and D-OPERATOR-LEVEL-ROUTE: the step-cost results are diagnostic only, and operator-level DSV4 costs (H3o) are the next route. |
 | 2026-10-25 | Archived D-DSV4-H800-MAINLINE-CORRECTION: this directory is the single mainline, H4a is the next milestone, and the trace-audit state is historical. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: archived package CPU acceptance and next-session pointer without sealing/submission or full-ticket admission. |
 | 2026-10-24 | Archived CPU-source acceptance and mirrored-package frontier; complete trace/native ownership remains open. |
@@ -94,7 +95,7 @@ Deliverables so far:
 - P0 native reference: native06 R4, `native06_acceptance_20261023/client_report.md`.
 - profile04 32-H800 profiling run at the P0 topology: 24 of 32 per-rank trace outputs complete (P1, D0, D1), see `../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/`.
 
-Open: H4a first diagnostic P0 prediction (next), then H3r/H4/H6 and P1. No Frontier prediction of the P0 case exists yet. Route: [plan.md](plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25); handoff: [progress.md](progress.md#current-session-handoff--2026-10-25-mainline-correction).
+Open: operator-level DSV4 costs (H3o, D-OPERATOR-LEVEL-ROUTE), then H4/H6 and P1. Frontier has no prediction of the P0 case yet. The H4a, H4b-(b), P2-32d and P2-64d results are priced by the diagnostic step-cost table, which holds measured whole steps of the same workload; they show only how the scheduling and KV-transfer paths behave when step costs are given (D-NO-STEP-COST-SHORTCUT, ADR `docs/adr/0002-operator-costs-not-measured-step-tables.md`). Route: [plan.md](plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25); handoff: [progress.md](progress.md#current-session-handoff--2026-10-25-mainline-correction).
 
 ## Historical final state — 2026-10-25 trace-audit route (superseded)
 

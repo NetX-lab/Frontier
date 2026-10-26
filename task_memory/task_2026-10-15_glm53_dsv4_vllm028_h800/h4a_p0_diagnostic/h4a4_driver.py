@@ -20,28 +20,36 @@ from pathlib import Path
 TASK = Path(__file__).resolve().parents[1]
 REPO = TASK.parents[1]
 H200 = TASK / "h200_mainline"
-DP4_TABLE = H200 / "diagnostic/step_cost_attn_dp4/dsv4_step_cost.json"
 ATTENTION_FIELD = "random_forrest_execution_time_predictor_config_atten_input_file"
+
+
+def table_case(table, **case):
+    """A case priced by a diagnostic step-cost table, which the driver selects explicitly.
+
+    The tables are never in the default profiling path (ADR 0002). The loader reads the table beside
+    the resolved attention input and accepts one topology per directory; attention.csv itself is not read.
+    """
+    return dict(case, table=table, overrides={ATTENTION_FIELD: str(table.parent / "attention.csv")})
+
+
 # num_blocks and max_concurrency are the reference's vLLM values: serving/rank*.json inventory.cache.num_blocks and
 # "Maximum concurrency for 7,168 tokens per request: X" in server.log, equal on every node of both roles.
 CASES = {
-    "native06": dict(
+    "native06": table_case(
+        TASK / "h4a_p0_diagnostic/step_cost/dsv4_step_cost.json",
         input=TASK / "v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/frontier.json",
         input_sha256="747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
-        table=REPO / "data/profiling/compute/h800/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json",
-        num_blocks=54740, max_concurrency=18.59, overrides={}),
-    "p2_32": dict(
+        num_blocks=54740, max_concurrency=18.59),
+    "p2_32": table_case(
+        H200 / "diagnostic/step_cost_attn_dp2/dsv4_step_cost.json",
         input=H200 / "p2_32_reference/package_01/case/inputs/frontier.json",
         input_sha256="5ff79a515c470f3ea537c9b96777a805352660ec262ab00f018e49504cd88b43",
-        table=REPO / "data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/dsv4_step_cost.json",
-        num_blocks=109934, max_concurrency=37.34, overrides={}),
-    "p2_64": dict(
+        num_blocks=109934, max_concurrency=37.34),
+    "p2_64": table_case(
+        H200 / "diagnostic/step_cost_attn_dp4/dsv4_step_cost.json",
         input=H200 / "p2_64_reference/package_01/case/inputs/frontier.json",
         input_sha256="3aac0a3f6b829a478b4a350614722d386398271d5eb0cf670299bc9a533c8cf4",
-        table=DP4_TABLE, num_blocks=112914, max_concurrency=38.35,
-        # The loader reads the table beside the resolved attention input and accepts one topology per directory;
-        # the attn_dp=4 table therefore has a directory of its own.
-        overrides={ATTENTION_FIELD: str(DP4_TABLE.parent / "attention.csv")}),
+        num_blocks=112914, max_concurrency=38.35),
 }
 
 # Design section 5 (KV binding) and the H4a-2 role inheritance; output paths are new.
@@ -127,9 +135,8 @@ def kv_admission(simulator, native_max_concurrency):
 
 
 def step_cost_table(case, fields):
-    """The table the loader reads: dsv4_step_cost.json beside the attention input, when that input is set."""
-    attention = {**case["overrides"], **fields}.get(ATTENTION_FIELD)
-    return Path(attention).parent / "dsv4_step_cost.json" if attention else case["table"]
+    """The table the loader reads: dsv4_step_cost.json beside the attention input."""
+    return Path({**case["overrides"], **fields}[ATTENTION_FIELD]).parent / "dsv4_step_cost.json"
 
 
 def parse_field(argument):

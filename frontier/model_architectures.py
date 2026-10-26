@@ -702,7 +702,8 @@ class ModelArchitectureProfile:
                 "compressed attention, mHC and mixed precision are unsupported",
                 "shared FFN sequence-parallel token/collective execution is unsupported",
                 "measured execution is limited to a diagnostic whole-step table "
-                "(dsv4_step_cost.json) for PREFILL and unified DECODE lanes of its measured topology",
+                "(dsv4_step_cost.json), selected explicitly through the attention input path, "
+                "for PREFILL and unified DECODE lanes of its measured topology",
             ),
             match=lambda config: (
                 _normalized_attr(config, "model_type") == "deepseek_v4"
