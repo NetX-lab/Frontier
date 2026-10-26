@@ -1,0 +1,30 @@
+h200_mainline/diagnostic/inputs/p2_32l: 432 D requests, 4 lane pairs
+  first P0->D0 fixed-6144-1024-req128-qps1-warmup-r007-repeat01 wait 4743.8 ms; behind it [('fixed-6144-1024-req128-qps1-warmup-r011-repeat01', 1641.3), ('fixed-6144-1024-req128-qps1-warmup-r012-repeat01', 1641.3)] same update True
+  first P0->D1 fixed-6144-1024-req128-qps1-warmup-r000-repeat01 wait 1624.1 ms; behind it [] same update True
+  first P1->D0 fixed-6144-1024-req128-qps1-warmup-r001-repeat01 wait 4131.8 ms; behind it [('fixed-6144-1024-req128-qps1-warmup-r003-repeat01', 3912.6), ('fixed-6144-1024-req128-qps1-warmup-r006-repeat01', 3473.5), ('fixed-6144-1024-req128-qps1-warmup-r010-repeat01', 351.3), ('fixed-6144-1024-req128-qps1-warmup-r014-repeat01', 351.3)] same update False
+  first P1->D1 fixed-6144-1024-req128-qps1-warmup-r004-repeat01 wait 3527.0 ms; behind it [('fixed-6144-1024-req128-qps1-warmup-r009-repeat01', 3162.9), ('fixed-6144-1024-req128-qps1-warmup-r013-repeat01', 890.8)] same update False
+  other D requests 420: mean 78.5 p50 73.3 max 406.8 ms
+h4b_lifecycle_measurement/inputs/h800l: 432 D requests, 4 lane pairs
+  first P0->D0 fixed-6144-1024-req128-qps1-warmup-r000-repeat01 wait 1035.1 ms; behind it [] same update True
+  first P0->D1 fixed-6144-1024-req128-qps1-warmup-r004-repeat01 wait 1225.2 ms; behind it [('fixed-6144-1024-req128-qps1-warmup-r010-repeat01', 205.6), ('fixed-6144-1024-req128-qps1-warmup-r013-repeat01', 205.6)] same update False
+  first P1->D0 fixed-6144-1024-req128-qps1-warmup-r003-repeat01 wait 1349.6 ms; behind it [('fixed-6144-1024-req128-qps1-warmup-r006-repeat01', 847.7)] same update True
+  first P1->D1 fixed-6144-1024-req128-qps1-warmup-r001-repeat01 wait 1046.6 ms; behind it [('fixed-6144-1024-req128-qps1-warmup-r005-repeat01', 1038.1), ('fixed-6144-1024-req128-qps1-warmup-r008-repeat01', 42.0)] same update False
+  other D requests 423: mean 65.2 p50 60.9 max 261.7 ms
+h200_mainline/diagnostic/inputs/p2_64l: 432 D requests, 16 lane pairs
+  first P0->D0 fixed-6144-1024-req128-qps1-warmup-r015-repeat01 wait 3763.2 ms; behind it [] same update True
+  first P0->D1 fixed-6144-1024-req128-qps1-warmup-r008-repeat01 wait 4996.9 ms; behind it [] same update True
+  first P0->D2 fixed-6144-1024-req128-qps1-warmup-r001-repeat01 wait 1848.7 ms; behind it [] same update True
+  first P0->D3 fixed-6144-1024-req128-qps1-warmup-r003-repeat01 wait 1685.8 ms; behind it [] same update True
+  first P1->D0 fixed-6144-1024-req128-qps1-warmup-r002-repeat01 wait 1904.8 ms; behind it [('fixed-6144-1024-req128-qps1-warmup-r004-repeat01', 1559.3), ('fixed-6144-1024-req128-qps1-warmup-r010-repeat01', 633.1)] same update True
+  first P1->D1 fixed-6144-1024-req128-qps1-warmup-r007-repeat01 wait 4340.5 ms; behind it [] same update True
+  first P1->D2 fixed-6144-1024-req128-qps1-formal-r053-repeat01 wait 1719.1 ms; behind it [] same update True
+  first P1->D3 fixed-6144-1024-req128-qps1-formal-r004-repeat01 wait 1457.8 ms; behind it [] same update True
+  first P2->D0 fixed-6144-1024-req128-qps1-formal-r009-repeat01 wait 1800.3 ms; behind it [] same update True
+  first P2->D1 fixed-6144-1024-req128-qps1-warmup-r005-repeat01 wait 1915.8 ms; behind it [('fixed-6144-1024-req128-qps1-warmup-r012-repeat01', 1296.5)] same update True
+  first P2->D2 fixed-6144-1024-req128-qps1-warmup-r014-repeat01 wait 4440.2 ms; behind it [] same update True
+  first P2->D3 fixed-6144-1024-req128-qps1-warmup-r009-repeat01 wait 4257.8 ms; behind it [] same update True
+  first P3->D0 fixed-6144-1024-req128-qps1-formal-r002-repeat01 wait 1665.5 ms; behind it [] same update True
+  first P3->D1 fixed-6144-1024-req128-qps1-formal-r006-repeat01 wait 1724.5 ms; behind it [] same update True
+  first P3->D2 fixed-6144-1024-req128-qps1-warmup-r006-repeat01 wait 4259.0 ms; behind it [('fixed-6144-1024-req128-qps1-warmup-r013-repeat01', 3332.9)] same update True
+  first P3->D3 fixed-6144-1024-req128-qps1-warmup-r000-repeat01 wait 1520.3 ms; behind it [] same update True
+  other D requests 412: mean 83.8 p50 73.9 max 148.6 ms

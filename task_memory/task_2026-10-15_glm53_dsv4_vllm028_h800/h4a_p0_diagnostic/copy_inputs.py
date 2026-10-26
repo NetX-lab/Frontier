@@ -91,6 +91,19 @@ H200_P2 = {
         "torch_traces/decode/dp2/dp2_pp0_tp0_dcp0_ep16_rank0.1792946183741136595.pt.trace.json.gz",
         "torch_traces/decode/dp3/dp3_pp0_tp0_dcp0_ep24_rank0.1792946205265552185.pt.trace.json.gz",
     ]),
+    # H4b-(a) on H200-64: the 8 engine-core lifecycle files and the stop markers, as for p2_32l.
+    "p2_64l": h200_reference("p2_64l_case_20261026", "dsv4-h200-p2-64-lifecycle-20261026-01", [
+        "nodes/gpu-h200-0040.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1418.jsonl",
+        "nodes/gpu-h200-0645.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1276.jsonl",
+        "nodes/gpu-h200-0705.lgcm.sh.istep.fun/scheduler_lifecycle/dp2_pid1277.jsonl",
+        "nodes/gpu-h200-0710.lgcm.sh.istep.fun/scheduler_lifecycle/dp3_pid1276.jsonl",
+        "nodes/gpu-h200-0714.lgcm.sh.istep.fun/scheduler_lifecycle/dp0_pid1406.jsonl",
+        "nodes/gpu-h200-0716.lgcm.sh.istep.fun/scheduler_lifecycle/dp1_pid1286.jsonl",
+        "nodes/gpu-h200-0828.lgcm.sh.istep.fun/scheduler_lifecycle/dp2_pid1324.jsonl",
+        "nodes/gpu-h200-1087.lgcm.sh.istep.fun/scheduler_lifecycle/dp3_pid1320.jsonl",
+        *(f"nodes/gpu-h200-{host}.lgcm.sh.istep.fun/native_stopped.json"
+          for host in ("0040", "0645", "0705", "0710", "0714", "0716", "0828", "1087")),
+    ]),
 }
 H800_LIFECYCLE_TAG = "dsv4-h800-p0-lifecycle-20261025-01"
 H800_LIFECYCLE_CASE = TMP / "h4b/cases/h800_lifecycle_case_20261025"
