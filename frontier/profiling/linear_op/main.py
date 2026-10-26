@@ -63,11 +63,14 @@ except ImportError:
     RAY_AVAILABLE = False
     ray = None
 
+from frontier.attention.families import STEP5_ATTENTION_FAMILY
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.common.accelerator import (
     get_available_gpu_ids,
     set_process_visible_device,
 )
+from frontier.profiling.common.runtime_identity import step5_measurement_columns
 from frontier.profiling.linear_op.ray_setup_hook import (
     disable_ray_datasets_serializers,
 )
@@ -1120,6 +1123,11 @@ def main():
             quant_signature=model_config.get_quant_signature(),
             measurement_type=profile_method_to_measurement_type(args.profile_method).value,
         )
+        if resolve_runtime_attention_family(model_config).family_id == STEP5_ATTENTION_FAMILY.family_id:
+            native_facts = (
+                json.loads(result_df["native_facts"].iloc[0]) if "native_facts" in result_df else None
+            )
+            result_df = result_df.assign(**step5_measurement_columns(native_facts))
         if args.source_revision is not None:
             result_df = _attach_runtime_identity(result_df, args, model, model_config)
         output_file = build_profile_method_output_path(

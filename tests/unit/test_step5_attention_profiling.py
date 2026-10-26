@@ -724,7 +724,7 @@ def test_native_initialization_keeps_config_until_group_cleanup(config, tmp_path
     monkeypatch.setattr(VllmStep5AttentionWrapper, "_initialize_weights", lambda _: require_config("initialize_weights"))
     monkeypatch.setattr(VllmStep5AttentionWrapper, "_bind_cache", bind_cache)
     monkeypatch.setattr(VllmStep5AttentionWrapper, "_check_shapes", lambda _: require_config("check_shapes"))
-    monkeypatch.setattr("frontier.profiling.step5.vllm_wrapper.importlib.metadata.version", lambda _: "cpu_fixture")
+    monkeypatch.setattr("importlib.metadata.version", lambda _: "cpu_fixture")
     kwargs = dict(config=config, model_path="cpu_fixture", device="h800", tensor_parallel_size=8,
                   layer_id=0, block_size=16, max_model_len=8192, max_batch_size=1,
                   trace_dir=tmp_path, seed=0, graph_mode="none")
@@ -749,6 +749,7 @@ def test_native_initialization_keeps_config_until_group_cleanup(config, tmp_path
         for _ in range(2):
             wrapper = VllmStep5AttentionWrapper(**kwargs)
             assert wrapper.native_facts is facts and "declared_image=cpu_fixture_declared_source_image" in wrapper.runtime_signature
+            assert wrapper.evidence_kind == "native_measurement"
             require_config("wrapper_alive")
             assert not wrapper.layer.o_proj.reduce_results
             wrapper.close()

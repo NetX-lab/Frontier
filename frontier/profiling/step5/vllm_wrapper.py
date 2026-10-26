@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import copy
-import importlib.metadata
 import json
 import os
 from contextlib import ExitStack
@@ -12,9 +11,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from frontier.attention.step5 import describe_step5_layer
+from frontier.profiling.common.runtime_identity import step5_measurement_columns
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
 from frontier.profiling.step5.inputs import Step5ProfileInput
-from frontier.profiling.step5.job import IMAGE
 from frontier.profiling.step5.rows import OPERATOR_NAMES, Step5ProfileResult, build_row, summarize_replays
 from frontier.profiling.step5.scopes import NativeScopes, trace_signature
 from frontier.profiling.step5.replay import capture_native_replay
@@ -37,7 +36,6 @@ class VllmStep5AttentionWrapper:
         # can otherwise auto-enable the Step architecture's default.
         os.environ.setdefault("VLLM_USE_BREAKABLE_CUDAGRAPH", "1")
         import torch
-        import vllm
         import vllm.distributed.parallel_state as parallel
         from vllm.config import set_current_vllm_config
         from vllm.engine.arg_utils import EngineArgs
@@ -122,19 +120,16 @@ class VllmStep5AttentionWrapper:
             self.layer.eval().requires_grad_(False)
             self._check_shapes()
             manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
-            image = IMAGE
             self.native_facts = None
             if manifest:
                 from frontier.profiling.common.runtime_identity import file_sha256, verify_step5_profile_runtime
                 self.native_facts = verify_step5_profile_runtime(manifest, callables=(type(self.layer), self.layer.forward))
                 if file_sha256(Path(model_path) / "config.json") != self.native_facts["shared"]["model_config_sha256"]:
                     raise ValueError("native attention effective config differs from sealed local configuration")
-                image = self.native_facts["shared"]["native_reference"]["image"]
             self.scopes = NativeScopes(torch)
-            self.runtime_signature = ";".join((f"declared_image={image}", f"vllm={vllm.__version__}",
-                f"torch={torch.__version__}", f"cuda={torch.version.cuda}",
-                f"triton={importlib.metadata.version('triton')}",
-                f"flashinfer={importlib.metadata.version('flashinfer-python')}"))
+            identity = step5_measurement_columns(self.native_facts)
+            self.runtime_signature = identity["runtime_stack_signature"]
+            self.evidence_kind = identity["evidence_kind"]
         except BaseException:
             self._cleanup.close()
             raise
@@ -591,6 +586,7 @@ class VllmStep5AttentionWrapper:
                 raise RuntimeError("Native Step kernel observation was empty")
             stats["step5_layer_e2e"]["kernel_count"] = signature["kernel_count"]
             common = {
+                    "evidence_kind": self.evidence_kind,
                     "attention_backend": self.layer.attn.attn_backend.get_name(),
                     "native_impl": type(self.layer.attn.impl).__name__,
                     "rank_aggregation": "isolated_rank_zero_no_collectives",

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import importlib.metadata
 import importlib.util
 import inspect
 import json
@@ -95,6 +96,29 @@ def file_sha256(path: str | Path) -> str:
 
 def canonical_json(value: Any) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def step5_measurement_columns(native_facts: Mapping[str, Any] | None) -> dict[str, str]:
+    """Return the measurement identity every Step compute row carries.
+
+    The Step predictor publishes each role's models as one bundle with a single
+    evidence kind and each producer's runtime stack. A bound run declares the
+    native reference image its receipt verified; an unbound run declares the
+    profiling job image.
+    """
+    torch_module = importlib.import_module("torch")
+    from frontier.profiling.common.step5_job import IMAGE
+
+    image = IMAGE if native_facts is None else native_facts["shared"]["native_reference"]["image"]
+    version = importlib.metadata.version
+    return {
+        "evidence_kind": "native_measurement",
+        "runtime_stack_signature": ";".join((
+            f"declared_image={image}", f"vllm={version('vllm')}",
+            f"torch={torch_module.__version__}", f"cuda={torch_module.version.cuda}",
+            f"triton={version('triton')}", f"flashinfer={version('flashinfer-python')}",
+        )),
+    }
 
 
 def verify_step5_profile_runtime(manifest_path, *, callables=()):
@@ -358,5 +382,6 @@ __all__ = [
     "file_sha256",
     "measure_runtime_identity",
     "model_config_json_path",
+    "step5_measurement_columns",
     "verify_step5_profile_runtime",
 ]

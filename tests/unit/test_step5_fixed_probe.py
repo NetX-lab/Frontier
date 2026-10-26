@@ -338,6 +338,21 @@ def test_legacy_identity_omits_native_facts_and_bound_fingerprint_uses_shared_on
     assert first.columns()["native_facts"] != second.columns()["native_facts"]
 
 
+def test_step_measurement_columns_declare_the_verified_image(monkeypatch):
+    from frontier.profiling.common.runtime_identity import step5_measurement_columns
+    from frontier.profiling.common.step5_job import IMAGE
+    fake_torch = ModuleType("torch")
+    fake_torch.__version__, fake_torch.version = "cpu_torch", SimpleNamespace(cuda="cpu_cuda")
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setattr("importlib.metadata.version", lambda name: f"{name}_cpu")
+    unbound = step5_measurement_columns(None)
+    assert unbound == {"evidence_kind": "native_measurement", "runtime_stack_signature": (
+        f"declared_image={IMAGE};vllm=vllm_cpu;torch=cpu_torch;cuda=cpu_cuda;"
+        "triton=triton_cpu;flashinfer=flashinfer-python_cpu")}
+    bound = step5_measurement_columns({"shared": {"native_reference": {"image": "derived@sha256:" + "e" * 64}}})
+    assert bound["runtime_stack_signature"].startswith("declared_image=derived@sha256:" + "e" * 64 + ";")
+
+
 def test_source_job_seals_file_artifacts_and_propagates_actual_image(tmp_path):
     from frontier.profiling.common.step5_job import describe_job, stage_package
     repo, dependency = tmp_path / "repo", tmp_path / "dependencies"
