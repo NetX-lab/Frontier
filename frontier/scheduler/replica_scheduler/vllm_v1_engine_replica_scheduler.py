@@ -158,6 +158,7 @@ class VLLMv1EngineReplicaScheduler(
         )
         self._dummy_pass_due = False
         self._dummy_forwards_in_flight = 0
+        self._dummy_pass_start: Optional[float] = None
         # Such an engine counts the busy-loop iterations of its DP wave, each
         # running one forward, a batch or a dummy forward. After every
         # VLLM_DP_SYNC_INTERVAL-th, its host waits in an all-reduce over the DP
@@ -548,7 +549,7 @@ class VLLMv1EngineReplicaScheduler(
         """
         if self._dummy_pass_due:
             self._dummy_pass_due = False
-            return self._issue_dummy_pass()
+            return self._issue_dummy_pass(time)
         if self._iteration_open:
             self._iteration_open = False
             if self._end_iteration():
@@ -568,7 +569,7 @@ class VLLMv1EngineReplicaScheduler(
                 apply_output = self._unpopped_outputs.popleft()
                 self._popped_output_events.extend(apply_output(time))
                 if not formed:
-                    return batches + self._issue_dummy_pass()
+                    return batches + self._issue_dummy_pass(time)
             elif not formed or self._num_running_batches == self._max_concurrent_batches:
                 if self._in_flight_batch_ids:
                     self._blocking_batch_id = self._in_flight_batch_ids[0]
@@ -576,7 +577,7 @@ class VLLMv1EngineReplicaScheduler(
                     self._iteration_open = True
                     self._clear_followup_polls()
                 elif self._dp_wave_running:
-                    return self._issue_dummy_pass()
+                    return self._issue_dummy_pass(time)
                 return batches
             if self._end_iteration():
                 self._clear_followup_polls()
@@ -656,6 +657,16 @@ class VLLMv1EngineReplicaScheduler(
         )
 
     @property
+    def _only_posted_nixl_reads_unfinished(self) -> bool:
+        """Whether the engine's only unfinished requests, if any, wait for posted NIXL READs."""
+        return not (
+            self._running_requests
+            or any(self._waiting_queues())
+            or self._nixl_reads_requested
+            or self._nixl_reads_found
+        )
+
+    @property
     def engine_loop_idle(self) -> bool:
         """Whether the engine waits for work: nothing in flight and no DP sync to finish."""
         return (
@@ -664,7 +675,7 @@ class VLLMv1EngineReplicaScheduler(
             and not self._waits_at_dp_sync
         )
 
-    def _issue_dummy_pass(self) -> List[Batch]:
+    def _issue_dummy_pass(self, time: float) -> List[Batch]:
         """Start one dummy forward on every pipeline stage at once.
 
         `execute_dummy_batch` is one RPC to every worker of the engine. Each
@@ -683,6 +694,7 @@ class VLLMv1EngineReplicaScheduler(
             dummy_forwards.append(dummy_forward)
         self._batch_creation_counter += 1
         self._dummy_forwards_in_flight = self._num_stages
+        self._dummy_pass_start = time
         self._iteration_open = True
         self._clear_followup_polls()
         return dummy_forwards
@@ -694,6 +706,29 @@ class VLLMv1EngineReplicaScheduler(
             return False
         self._last_iteration_end = time
         return True
+
+    def next_pass_start(self, time: float) -> float:
+        """Start of the engine's next pass after its dummy forward ended at `time`.
+
+        An execution path may price an idle forward at zero
+        (`predict_step_cost_execution`), so a group whose forwards are all
+        dummy forwards spins at no simulated cost, and such a dummy forward
+        ends when it starts. While no engine of the group then has a request
+        to schedule and some wait for posted NIXL READs, no pass changes
+        anything until the earliest READ's wire ends; the pass that starts
+        then finds it (`get_finished`), as the next step of an idle engine
+        does. An engine that receives work earlier wakes the others through
+        its forward's first room.
+        """
+        if time > self._dummy_pass_start:
+            return time
+        group = self._dp_group()
+        if not all(lane._only_posted_nixl_reads_unfinished for lane in group):
+            return time
+        return min(
+            (lane.next_nixl_read_end for lane in group if lane._nixl_reads_posted),
+            default=time,
+        )
 
     def hold_batch_output(self, apply_output: Callable[[float], List]) -> bool:
         """Keep the output of a batch that just ended while the host waits at the DP sync.

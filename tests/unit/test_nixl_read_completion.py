@@ -173,3 +173,52 @@ def test_decode_step_start_posts_and_checks_the_lane_reads(monkeypatch):
     assert lane._nixl_reads_posted == [(2.0 + 2.0e-3, read)]
     assert start(2.02) == ["dummy-start"]
     assert lane.consume_found_nixl_reads() == [read]
+
+
+class _Group:
+    def __init__(self, lanes) -> None:
+        self.lanes = lanes
+
+    def get_replica_scheduler(self, replica_id, replica_local_id):
+        return self.lanes[replica_local_id]
+
+
+def _dp_group(size: int = 2) -> list:
+    """DP lanes of one Replica, each just past a dummy pass issued at 1.0."""
+    lanes = [_lane() for _ in range(size)]
+    group = _Group(lanes)
+    for lane_id, lane in enumerate(lanes):
+        lane._replica_local_id = lane_id
+        lane._runs_dp_dummy_passes = True
+        lane._replica_config = SimpleNamespace(attn_dp=size)
+        lane._cluster_scheduler = group
+        lane._dummy_pass_start = 1.0
+    return lanes
+
+
+def test_dp_group_with_only_posted_reads_starts_its_next_pass_at_the_earliest_wire_end():
+    first, second = _dp_group()
+    first._nixl_reads_posted = [(1.006, _read(1, 6.0))]
+    second._nixl_reads_posted = [(1.004, _read(2, 4.0))]
+    # A dummy forward that took no time ran with no forward work in the group.
+    assert first.next_pass_start(1.0) == 1.004
+    assert second.next_pass_start(1.0) == 1.004
+    # One that took time ran with a sibling's batch, and the loop goes on.
+    assert first.next_pass_start(1.002) == 1.002
+
+
+def test_dp_group_with_a_request_to_schedule_starts_its_next_pass_at_once():
+    first, second = _dp_group()
+    first._nixl_reads_posted = [(1.006, _read(1, 6.0))]
+    second._nixl_reads_found = [_read(2, 4.0)]
+    assert first.next_pass_start(1.0) == 1.0
+    second._nixl_reads_found = []
+    second._nixl_reads_requested = [_read(3, 4.0)]
+    assert first.next_pass_start(1.0) == 1.0
+    second._nixl_reads_requested = []
+    second._waiting_requests = [object()]
+    assert first.next_pass_start(1.0) == 1.0
+    # With no READ posted, the wave ends at its next DP sync.
+    first._nixl_reads_posted = []
+    second._waiting_requests = []
+    assert first.next_pass_start(1.0) == 1.0
