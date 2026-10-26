@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31: step E base run result (TPOT −57%); calibration item 3 opened: the small-batch decode step matches native (31.0 vs 30.5 ms), and the native step grows about 0.7 ms per request per engine; native stall shares quantified. |
 | 2026-10-26 | D31: the MoE profiler measures a chosen EP rank (`1fbc99c5`, `4a93f30d`); H200 job 04 measured the partly filled ranks (EP16/EP32 loads as computed); merged04 built; step G rerun started. |
 | 2026-10-26 | D31: prefix runs attribute the workflow port (TTFT +80 ms) and measured collectives (TPOT +10.8 ms); step E/G runs stopped on an order-dependent spread feature (fixed `2beb09b3`, E rerun) and an EP32 partly filled lane below the MoE profile range (profile the partly filled rank). |
 | 2026-10-26 | D31: item 2a step 1 done (H200 curves `946595cd`), runner option `1c125189`, E rerun with the H200 curves started; lane prediction cache `eddb9bf5` (exact, 1.7× faster). |
@@ -216,10 +217,14 @@ State of the D31 plan steps (see the top section of `plan.md`):
 - completed — C. H200 32-GPU native workload with the routing image (workload02, details below).
 - completed — D. H200 Step-5 operator profiles (run 03 tables merged; report
   `test_report_2026-10-26_h200_profiles.md`).
-- in-progress — E. Frontier `h200_32` run on the measured tables (started 11:19 UTC).
+- in-progress — E. Frontier `h200_32` on the measured tables. The base run `h200_32_run01`
+  (merged03, analytical collectives) finished: TTFT −45.0%, TPOT −57.0%, E2E −56.8%, total
+  throughput +14.7% (calibration item 3 below). The rerun `h200_32_comb_h200` (workflow port and
+  measured collectives) has been running since 19:34 UTC.
 - completed — F. H200 64-GPU native workload, job `exp-1026-201417-791460` (report
   `test_report_2026-10-26_h200_64_native_workload.md`).
-- pending — G.
+- in-progress — G. Frontier `h200_64` rerun `h200_64_g01` (merged04, measured collectives),
+  started 20:17 UTC.
 
 Step D progress (2026-10-26):
 
@@ -677,6 +682,59 @@ Calibration item 2a, collective communication (2026-10-26, `in-progress`):
   - Step G rerun: `h200_64_g01` from the detached worktree `.worktrees/run-g-9125bcb`
     (`9125bcb1`), started 20:17 UTC with `--measured-collectives` and the merged04 options;
     output `/data/ycfeng/tmp/d31_merged04_run/h200_64_g01/`.
+
+Calibration item 3, decode step time against batch size (2026-10-26, `in-progress`). Native step
+times and token gaps here are diagnostic only (D31.10); no Frontier cost is derived from them.
+
+- Step E base run `h200_32_run01` (`7dce66c0`, merged03, analytical collectives, wall 32,590 s):
+
+  | Metric | Frontier | Native | Error | Gate 30% |
+  | --- | --- | --- | --- | --- |
+  | TTFT mean | 595.6 ms | 1,083.7 ms | −45.0% | FAIL |
+  | TPOT mean | 26.55 ms | 61.75 ms | −57.0% | FAIL |
+  | TPOT p90 | 26.71 ms | 71.02 ms | −62.4% | FAIL |
+  | E2E mean | 27.75 s | 64.25 s | −56.8% | FAIL |
+  | Total throughput | 5,982.5 tok/s | 5,214.6 tok/s | +14.7% | PASS |
+
+  Frontier's TPOT is almost the same for every request (p50 26.69 ms, p90 26.71 ms); native TPOT
+  spreads from 61.7 ms (p50) to 71.0 ms (p90). Output `/data/ycfeng/tmp/d31_e_run/h200_32_run01/compare.json`.
+  The prefix runs above attribute +10.8 ms of TPOT to the measured collectives and +80–100 ms of
+  TTFT to each of the workflow port and the collectives; the rerun measures them on the full
+  workload.
+- Native decode token gaps, `tests/integration/step5_pd/native_decode_gaps.py` on the workload02
+  replay (`--dp 2`, stall threshold 150 ms; output
+  `/data/ycfeng/tmp/d31_diag/native_decode_gaps_h200_32.json`). The growth phase runs from the
+  first formal decode token to the first formal request's last token, while requests keep joining.
+
+  | Repeat | Growth phase | Stall share of decode time | In the growth phase | After it | First token after decode submit, growth / after |
+  | --- | --- | --- | --- | --- | --- |
+  | 1 | 76.9 s | 19.4% | 44.1% | 6.9% | 657 / 361 ms |
+  | 2 | 66.2 s | 9.4% | 31.5% | 1.0% | 646 / 360 ms |
+  | 3 | 59.1 s | 6.5% | 25.6% | 0.7% | 606 / 342 ms |
+
+  Median non-stall gap by decoding requests per DP engine (repeat 1; repeats 2 and 3 agree within
+  2 ms): 0 → 30.5 ms, 5 → 35.8, 10 → 45.0, 15 → 46.9, 20 → 52.6, 25 → 53.5, 30 → 54.4,
+  35 → 58.8, 40 → 59.2 ms. The vLLM CUDA-graph statistics in the decode server logs give the same
+  curve: 251 FULL steps in a 10 s interval at 8 requests per engine (39.8 ms per step), and about
+  48, 54 and 57 ms at 16, 23 and 31 requests during the drain.
+- Frontier at one request per engine (FULL graph, merged04 and the H200 DP2 curves, `1ef82e4d`):
+  31.01 ms per step against native 30.5 ms. Stage part 4.68 ms; EP wave 26.33 ms (pre-dispatch
+  3.49, dispatch 5.69, routed compute 13.26 of which grouped GEMM 12.78, combine 3.06,
+  post-combine 0.87). A PIECEWISE step with one request takes 55.7 ms.
+- So the small-batch step agrees and the main TPOT gap is the growth of the step with batch
+  size: native +28.7 ms from 0 to 40 requests per engine, about 0.7 ms per request.
+- The merged04 FULL-graph attention rows do not explain it. Per layer at context 6,656: SWA
+  0.0347 ms (8 requests), 0.0407 (32), 0.0507 (64), 0.0588 (128); DSA 0.0677 (8), 0.0897 (32),
+  0.172 (128). Over 69 SWA and 23 DSA layers, 8 → 32 requests adds about 1 ms per step.
+- Candidates, none confirmed: collective growth with rows, the eager pre-forward kernels that run
+  beside the FULL graph replay on a separate stream (seen in the glm53 DSV4 H200 traces), the DP
+  synchronization before each forward, and per-request host work in the Step model runner (KV
+  side storage).
+- Running: a Frontier diagnostic run with the stage-batch and EP-wave ledgers on, to get
+  Frontier's own step time against batch size and its phase split
+  (`/data/ycfeng/tmp/d31_diag/step_curve/curve/`, 84 requests at 0.2 s spacing, 6,144/1,024
+  tokens, `--time_limit 30`, started 21:45 UTC; scripts `build.py`, `run.sh`, `analyze.py` in the
+  parent directory).
 
 Step F status (2026-10-26):
 
