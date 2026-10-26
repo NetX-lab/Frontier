@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Round 2 submitted and failed (HTTP 429); revision 2a recorded. |
 | 2026-10-26 | Round 1 recorded: Codex findings F001-F008, author positions, own additions, remediation in design revision 2. |
 
 ## Round 1
@@ -26,3 +27,9 @@
 | F008 | Routing inventory does not match `balanced_topk`; gating in the wrong family | Agree | §1 runtime scope, §3.5 gating in the MoE family, no hash or score selection charged |
 
 Remaining verification limits: the FULL-graph observation is one rank of one native run, and its host times include profiler overhead. The GPU caps and day estimates are planning caps until C1 and the pilots.
+
+## Round 2
+
+- **Request:** `review_request_02.md` (revision 2 at commit `886290a1`), request `55d630bb-ce7e-40f2-9d0a-658af17f4fed`, same model and effort.
+- **Result:** `failed`. StepCode Codex exited 1 after the model gateway returned `429 Too Many Requests` and the reconnect limit (5/5) was exhausted. No report exists; nothing from the run is treated as a review finding. Logs: `/data/ycfeng/tmp/codex-review/55d630bb-ce7e-40f2-9d0a-658af17f4fed/stderr.log` and `stdout.jsonl`. Following the review-skill rule, it was not resubmitted automatically.
+- **Lead taken from its command log and verified independently:** the reviewer had run `census_peek2.py` on a retained H200 native trace. The author confirmed that `dsv4-h200-p2-profile-20261025-01` (32 rank traces) and `dsv4-h200-p2-64-profile-20261025-01` (64 rank traces) exist, and reran the script on decode dp0 rank 0 of both: FULL graph replays (249 and 301 `cudaGraphLaunch`) and eager pre-forward kernels on stream 23 (9,937 and 10,853). Revision 2a uses these traces for the H200 runtime census and removes the 32-GPU job R1h.

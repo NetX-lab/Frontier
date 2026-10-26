@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | Revision 2a: the retained H200 native profiled runs (P2-32, 32 traces; P2-64, 64 traces) show the same FULL-graph decode structure, so the runtime census R1 covers all three cases on CPU and the 32-GPU H200 job R1h is removed; H200 pilot P1h (1 GPU) added; caps and time updated. Codex round 2 (`55d630bb-…`) failed with HTTP 429 before any report. |
 | 2026-10-26 | Revision 2 after Codex review round 1 (`codex-review-9c8b2435-…/review.md`, verdict `changes_required`, P1 × 5, P2 × 3). Agreed changes: per-operator composition with a source-defined stream graph instead of a layer union; runtime-mode census and pilots before the grids; full once-only ledger with PDD admission, endpoint collectives, block zeroing and pre-forward preparation; unequal-combine binding; EP rank classes; `balanced_topk` scope; workload-owner features and joint coverage; structural acceptance gates; recomputed files, GPU jobs and time; decisions for YC. Per-finding positions are in `review.md`. |
 | 2026-10-26 | Created: CPU-only proposal under D-OPERATOR-LEVEL-ROUTE (requirements item 27). Nothing in it is implemented or submitted. |
 
@@ -42,6 +43,7 @@ The formal accuracy gates (the four metrics against native vLLM) belong to H4/H6
 | Routed MoE, H800 | `task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json` | MXFP4 MARLIN, physical TP1, EP16 rank 0, 16 local experts, balanced routing, M = 16/32/6152/12288. `native_tuple_cost_admission`, `serving_admission` and `simulator_consumption` are all `false` | Isolated training candidates. Not serving costs: at M16, 10 of 16 EP ranks get no tokens; at M32, 4 do (`moe_grid_design.md:32-45`) |
 | Collective curves, H800 | `data/profiling/network/h800_dgx/summary.csv` (EP32 GLM) and `glm_p0_ep16_20261021b/summary.csv` | Uniform curves by input bytes. EP16: smallest all_gatherv point 12,352 B, smallest reduce_scatterv point 196,608 B | Uniform V4 collectives inside the byte range only. The V4 decode payloads at L1 are below it: hidden all-gather 8,192 B, weights and ids 24 B each, M16 reduce-scatter 131,072 B. So G5 is required, not optional |
 | Collective curves, H200 | none | — | Nothing |
+| Native P2 traces, H200 | `/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/torch_traces/` (32 ranks, case `dsv4-h200-p2-profile-fixed128-qps1`) and `dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces/` (64 ranks, case `dsv4-h200-p2-64-profile-fixed128-qps1`) | Torch-profiler traces of native P2-32 and P2-64 deployments | Runtime-mode census of H200 (stage 0). Decode dp0 rank 0 of both runs: FULL graph replays (249 and 301 `cudaGraphLaunch`, annotation `model_dispatch_run_fullgraph`) and eager pre-forward kernels on stream 23 (9,937 and 10,853). Same host-time limit as the H800 traces |
 | Native P0 traces, H800 | `/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/torch_traces/` | Torch-profiler traces of all 32 ranks of a native P0 deployment (physical TP8 / DP2 / EP16, case `dsv4-h800-p0-profile-fixed128-qps1`), 512 recorded steps per rank, with kernels, streams, runtime calls, graph launches and Frontier annotations | Runtime-mode census of H800 (stage 0). One CPU look at decode dp1 rank 0: the 61 useful decode steps ran as FULL graph replays (150 `cudaGraphLaunch`, about 915 kernels per launch, annotation `model_dispatch_run_fullgraph`), and 5,315 eager kernels ran on a separate stream (input and metadata preparation, for example `_compressed_slot_mapping_kernel`). Profiler overhead inflates host times, so host magnitudes from these traces are upper bounds |
 
 The existing CPU-overhead mechanism prices an eager step as two streams: host `forward_launch` against device KERNEL_ONLY operators (`sklearn_execution_time_predictor.py:992-1006, 7125-7140`; enabled by `measurement_input_paths.py:160` when `skip_cpu_overhead_modeling` is false and the CPU-overhead table has `forward_launch`). The unequal-combine producer `frontier/profiling/collectives/vllm_forward_collectives.py` and consumer `measured_cc_backend.py:132-151, 217-229` exist.
@@ -111,13 +113,13 @@ Attention features come from the existing V4 workload owner (`attention/deepseek
 
 | Stage | Content | Stop condition |
 | --- | --- | --- |
-| 0. CPU only | **R1** runtime census of the retained H800 native traces: mode per step class, segments, eager kernels, graph launches, aux-stream fork/join, gaps by segment class, first-tail steps. **C1** coverage matrix: the actual workload vectors of the three cases (batch per DP lane, attention features, SP rows, EP gathered M and rank classes, collective payloads and ordered vectors) against existing data, giving the exact missing coordinates that size G1-G5. **S1** stream graph of each attention variant from the vLLM source | — |
-| 1. Pilots | **P1** (H800, 1 GPU): reduced engine with retained kernel intervals; checks A2 and A4, and kernel identity (names, grids) of the reduced TP1 engine against the native TP8 traces. **R1h** (H200, 32 GPUs, P2-32 topology, short profiled window): the H200 runtime census | A4 fails, or kernel identity differs: stop and report to YC |
+| 0. CPU only | **R1** runtime census of the retained native traces of all three cases (H800 P0, H200 P2-32, H200 P2-64): mode per step class, segments, eager kernels, graph launches, aux-stream fork/join, gaps by segment class, first-tail steps. **C1** coverage matrix: the actual workload vectors of the three cases (batch per DP lane, attention features, SP rows, EP gathered M and rank classes, collective payloads and ordered vectors) against existing data, giving the exact missing coordinates that size G1-G5. **S1** stream graph of each attention variant from the vLLM source | — |
+| 1. Pilots | **P1** (H800, 1 GPU): reduced engine with retained kernel intervals; checks A2 and A4, and kernel identity (names, grids) of the reduced TP1 engine against the native TP8 traces. **P1h** (H200, 1 GPU): the same identity check against the H200 native traces | A4 fails, or kernel identity differs: stop and report to YC |
 | 2. Producers and grids | Producer changes (§6, files 13-17), then G1-G5 / G1h-G5h sized by C1 | — |
 | 3. Simulator | Files 1-12 (§6). Unit-tested on W6 and q1 rows while the grids run | — |
 | 4. Validation | Training, group-held-out accuracy, A1-A12, P0 / P2 replays, diagnostic cross-check | A6 or A10 fails: report with the failing scopes |
 
-Order of cases: H800 P0 first, because its native traces already exist and its GPU jobs are 1-GPU jobs plus one 16-GPU network job; then H200 P2-32 and P2-64 with the same code. If H800 1-GPU jobs cannot start within one day, the order switches and the shortage is reported at once (D-GPU-SHORTAGE-REPORT).
+Order of cases: H800 P0 first, because its network curves partly exist and its GPU jobs are 1-GPU jobs plus one 16-GPU network job; then H200 P2-32 and P2-64 with the same code. If H800 1-GPU jobs cannot start within one day, the order switches and the shortage is reported at once (D-GPU-SHORTAGE-REPORT).
 
 ## 6. Frontier file list (H3o-(b))
 
@@ -161,23 +163,23 @@ All jobs go through the StepMind Python `RJobBackend` with `i-fengyicheng` auth,
 | G4 (H800) | 1 | V4 graph-replay `kernel_gap.csv` | 0.5 |
 | G5 (H800) | 16 | Small payload points (TP8, EP16) and the ordered unequal vectors from C1, with `vllm_forward_collectives.py` | 12 |
 | R2 (H800, only if R1 shows eager host time is material) | 32 | Native P0 with the CPU probe, for `forward_launch` rows | 32 |
-| R1h (H200) | 32 | Native P2-32 profiled window, runtime census | 48 |
+| P1h (H200) | 1 | Identity pilot against the H200 native traces | 1 |
 | G1h-G4h (H200) | 1 each | As G1-G4; decode batch up to 40; rank classes for EP16 and EP32 (8 local experts); M grid includes M6168 and M24576 for DP4 | 7 |
 | G5h (H200) | 16, then 32 | Uniform curves and unequal vectors for TP8, EP16 and EP32 | 36 |
 | R2h (H200, only if needed) | 32 | As R2 | 32 |
 
-Caps: H800 20 GPU-hours, plus 32 if R2 runs; H200 91, plus 32 if R2h runs.
+Caps: H800 20 GPU-hours, plus 32 if R2 runs; H200 44, plus 32 if R2h runs. No H200 runtime-census job is needed: the retained native traces cover it.
 
 ## 8. Time estimate (elapsed working days)
 
 | Stage | Days |
 | --- | --- |
 | 0. R1, C1, S1 (CPU) | 2 |
-| 1. Pilots P1 and R1h (queue-bound) | 1-2 |
+| 1. Pilots P1 and P1h (1 GPU each, queue-bound) | 1 |
 | 2. Producers (files 13-17), then G1-G5 / G1h-G5h | 3 (grids run in parallel with stage 3) |
 | 3. Simulator files 1-12 and tests | 4 |
 | 4. Training, A1-A12, replays, cross-check | 2 |
-| **Total** | **about 12-15**; the H800 P0 milestone at about 9 |
+| **Total** | **about 12-14**; the H800 P0 milestone at about 9 |
 
 Main schedule risks: GPU queues, image or runtime failures (earlier V4 profiling jobs needed several attempts), and a failed pilot.
 
@@ -188,7 +190,7 @@ Main schedule risks: GPU queues, image or runtime failures (earlier V4 profiling
 | D1 | Attention layer cost | (a) Option A: per-scope costs and a critical path over the source stream graph, checked by P1. (b) A measured layer composite (elapsed of the whole layer, shape-aware) with scopes for attribution only; this changes approved Option A | (a) |
 | D2 | Host time of eager steps and eager segments | (a) The existing CPU-overhead `forward_launch` rows (measured host launch time per forward, keyed by batch features), used only for the host stream; the device stream stays operator-composed. (b) A per-kernel launch cost times the kernel count, which is new modeling. (c) Leave host time out and state the limit | Decide after R1: if eager host time is not material, (c) with an explicit zero; if it is, (a). (a) is a measured per-forward host time, so YC should confirm that it is compatible with D-NO-STEP-COST-SHORTCUT |
 | D3 | Size | About 19 files and 2,500 lines, above D-H4A-CHECKPOINT | Approve, staged as §5 |
-| D4 | GPU budget | Caps of §7, including the 32-GPU H200 run R1h, and R2 / R2h only if needed | Approve the caps; exact grids are reported after C1 |
+| D4 | GPU budget | Caps of §7; R2 / R2h (32 GPUs each) only if R1 shows eager host time is material | Approve the caps; exact grids are reported after C1 |
 | D5 | Reduced TP1 engine for per-operator device time | (a) Reduced TP1 with per-rank TP8 shapes, qualified by kernel identity against the native TP8 traces (P1). (b) Per-operator profiling inside full native serving | (a) |
 | D6 | Order | H800 P0 first, or H200 first | H800 P0 first; switch if H800 jobs cannot start within one day |
 
@@ -197,5 +199,5 @@ Main schedule risks: GPU queues, image or runtime failures (earlier V4 profiling
 1. **First-tail step.** The native first tail alone takes 61-69 ms against 20-24 ms for decode-only. Its mode and boundaries are unknown until R1; it is not assumed to be host-bound.
 2. **Pilot failure.** If the critical-path composition misses the joined elapsed (A4), the route stops for a decision; no factor is added.
 3. **Single layer versus 43 layers.** Rows sample one layer. L2 and stream effects across 43 layers are not proven additive; the cross-check shows their size and nothing corrects them.
-4. **Profiler overhead.** R1 and R1h host times are upper bounds. Host costs come only from unprofiled measurements (R2 / R2h).
+4. **Profiler overhead.** R1 host times are upper bounds. Host costs come only from unprofiled measurements (R2 / R2h).
 5. **Routing.** Balanced routing and dummy weights only; real router imbalance belongs to ticket 14.

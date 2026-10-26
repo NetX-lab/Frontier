@@ -4,10 +4,10 @@ Report language: Chinese, with English technical terms and identifiers kept as i
 
 ## Working root and scope
 
-- Working root: `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`, branch `feat/glm53-dsv4-vllm028`. The revised files are uncommitted working-tree changes on top of HEAD; read the working tree.
+- Working root: `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`, branch `feat/glm53-dsv4-vllm028`, HEAD `886290a1` (revision 2 is committed there).
 - Primary target (design review, not a diff review): `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/design.md` (revision 2).
 - Your round-1 report: `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex-review-9c8b2435-c3f3-468e-8c41-6a504ff54fda/review.md`.
-- Author's positions on each round-1 finding: `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/review.md`. Revision 1 is `git show HEAD:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/design.md`.
+- Author's positions on each round-1 finding: `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/review.md`. Revision 1 is `git show 0ce31851:task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/design.md`.
 - Governing records as in round 1: `requirements.md` items 20-27, `plan.md` row H3o, `docs/adr/0002-operator-costs-not-measured-step-tables.md`, `AGENTS.md`.
 
 ## What changed
