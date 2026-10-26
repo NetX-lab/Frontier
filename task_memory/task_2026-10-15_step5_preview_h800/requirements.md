@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-26 | D31.10: no per-step time table in predictions; such a table is diagnostic only. |
 | 2026-10-26 | D31.9: Frontier E2E runs use `balanced` routing; the native run keeps `position_cyclic`. |
 | 2026-10-25 | D31: mainline reset after review; H200 32/64 first with at most 64 non-preemptible H200 GPUs; stop native qualification and D29 process rules; diagnostics off in E2E runs; independent-median profiling rule becomes a diagnostic. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; additional collection runs remain readiness decisions. |
@@ -157,6 +158,18 @@ off), D17/D18 (fixed workload), D26, D27, D29 (routing and calibration order) an
     ranks than `balanced` does. Revisit this only if the TPOT error points to expert-parallel
     load.
   The native run keeps `position_cyclic` (D31.3).
+- **D31.10 No per-step time table in predictions ([Original Request], 2026-10-26).** "记住：不允许引入抄近道的
+  '每步耗时表'。该表就是把真实运行里测到的整步时间存成表，按 batch 组成查出来，不是由 op profiling CSV
+  一个个算子算出来的。这个表只限于诊断用途，不能用来证明 Frontier 能预测。如果你当前存在方错误，必须修正。"
+  - Frontier step times in E2E comparison runs come from operator profiling tables (linear, MoE,
+    attention, kernel gap) and communication inputs, summed operator by operator.
+  - A table of whole-step times measured in real runs and looked up by batch composition (such as
+    the DSV4 step-cost path on `feat/glm53-dsv4-vllm028`) may be used only for diagnosis. Results
+    that depend on it are not evidence that Frontier predicts the native run.
+  - Audit on 2026-10-26: the step E inputs (`merged03/predictor_options.json`) contain no such
+    table, and the ported glm53 commits bring none. Not independent of the evaluation run: the
+    NIXL READ time (51.37 ms) is a per-transfer communication time read from the step C native
+    server logs; it is not a step time.
 
 ## [Original Request] Continue execution — 2026-10-21
 
