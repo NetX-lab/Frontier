@@ -1640,9 +1640,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
                 or feature_cols != list(operator_facts["feature_columns"])):
             raise ValueError("MoE fit must use the bound selected layer contract and feature schema")
         if operator_facts is not None or step5_compute is not None:
-            from frontier.execution_time_predictor.step5 import (
-                STEP5_STAGE_BOUNDARY_NAMES, step5_operator_training_rows,
-            )
+            from frontier.execution_time_predictor.step5 import step5_operator_training_rows
 
             frames = step5_operator_training_rows(
                 model_name, df, training_context, self._active_measurement_type,
@@ -1666,7 +1664,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
             if not count_kernels:
                 continue
             if operator_facts is not None or (step5_compute is not None and (self._active_measurement_type is MeasurementType.KERNEL_ONLY
-                                              or model_name in STEP5_STAGE_BOUNDARY_NAMES)):
+                                              or f"time_stats.{model_name}.kernel_count" in frame)):
                 count_name = f"{model_name}_kernel_count"
                 count_target = f"time_stats.{operator_facts['spec'].profiling_name() if operator_facts else model_name}.kernel_count"
                 count_model, count_precision = fit(count_name, frame, feature_cols, count_target)
@@ -1683,7 +1681,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
                         for fitted in (model, count_model):
                             fitted._frontier_moe_physical_rows = moe_physical_row_receipts(frame)
                     self._store_model_in_cache(model_name, model._frontier_model_hash, model)
-            else:
+            elif step5_compute is None:
                 model = self._paired_with_kernel_count_model(
                     model, model_name, frame, feature_cols, target_col,
                     train=lambda *count_model_args: fit(*count_model_args)[0],

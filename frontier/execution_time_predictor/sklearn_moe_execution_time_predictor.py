@@ -1536,8 +1536,6 @@ class SklearnMoEExecutionTimePredictor(
                     with self._step5_measured_layer(physical_layer):
                         values[name] = self._predict_step5_ffn_operator(name, {"num_tokens": tokens})
                         proofs[name] = dict(self._step5_ffn_costs[name])
-                        if proofs[name]["kernel_count"] is None:
-                            raise ValueError(f"Step {name} has unavailable actual kernel-count coverage")
                 owner._replace_operator_time_values(values)
                 return owner
 

@@ -596,12 +596,15 @@ def step5_operator_training_rows(operator_name, frame, training_context, measure
         lambda x: not isinstance(x, bool) and math.isfinite(x) and x > 0
     ).all():
         raise ValueError(f"Step {operator_name} requires positive finite duration coverage: {target}")
+    # Kernel counts price the gap between kernels, which only KERNEL_ONLY steps
+    # pay; event-timed tables carry no count column and need none.
     column = f"time_stats.{operator_name}.kernel_count"
-    counts = pd.to_numeric(selected[column], errors="coerce") if column in selected else pd.Series(dtype=float)
-    if len(counts) != len(selected) or not counts.map(
-        lambda x: not isinstance(x, bool) and math.isfinite(x) and x >= 1 and x == int(x)
-    ).all():
-        raise ValueError(f"Step {operator_name} requires actual positive integral kernel coverage: {column}")
+    if measurement_type is MeasurementType.KERNEL_ONLY or column in selected:
+        counts = pd.to_numeric(selected[column], errors="coerce") if column in selected else pd.Series(dtype=float)
+        if len(counts) != len(selected) or not counts.map(
+            lambda x: not isinstance(x, bool) and math.isfinite(x) and x >= 1 and x == int(x)
+        ).all():
+            raise ValueError(f"Step {operator_name} requires actual positive integral kernel coverage: {column}")
     source_precision = selected["profiling_precision"].map(PrecisionType.from_string)
     model_precision = resolve_step5_model_precision(config)
     if not source_precision.eq(model_precision).all():

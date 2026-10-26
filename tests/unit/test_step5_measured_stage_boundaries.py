@@ -102,11 +102,17 @@ def test_explicit_columns_need_no_new_producer_contract_or_other_boundary(model,
 
 
 @pytest.mark.parametrize("name", STEP5_STAGE_BOUNDARY_NAMES)
-def test_explicit_duration_requires_actual_counts_before_any_fit(model, measurement, tmp_path, name):
+def test_explicit_duration_requires_counts_only_for_kernel_only_steps(model, measurement, tmp_path, name):
     linear, _ = compute_fixtures._tables(tmp_path, model, include_stage_boundaries=True)
     frame = pd.read_csv(linear).drop(columns=[f"time_stats.{name}.kernel_count"])
     frame.to_csv(linear, index=False)
     manager = _manager(tmp_path / "cache", measurement)
+    if measurement is MeasurementType.CUDA_EVENT:
+        # Event-timed steps pay no per-kernel gap, so they fit without kernel counts.
+        models = _fit(manager, model, linear)
+        assert not hasattr(models[name], "_frontier_kernel_count_model")
+        assert not list((tmp_path / "cache").glob(f"{name}_kernel_count_*.pkl"))
+        return
     manager._train_single_model = lambda *_, **__: pytest.fail("invalid boundary reached fitting")
     with pytest.raises(ValueError, match=f"actual positive integral kernel coverage: time_stats.{name}"):
         _fit(manager, model, linear)
