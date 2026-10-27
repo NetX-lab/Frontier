@@ -166,6 +166,8 @@ class BatchStageEndEvent(BaseEvent):
             replica_scheduler = cluster_scheduler.get_replica_scheduler(
                 self._replica_id, self._replica_local_id
             )
+            if replica_scheduler.consume_paced_dummy_end(self._batch.forward_index):
+                return next_events
             if replica_scheduler.on_dummy_forward_end(self.time):
                 from frontier.events.kv_cache_transfer_end_event import report_nixl_reads
 

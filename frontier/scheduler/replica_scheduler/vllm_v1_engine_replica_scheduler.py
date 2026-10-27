@@ -32,6 +32,7 @@ from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
     BaseReplicaScheduler,
 )
+from frontier.scheduler.replica_scheduler.vllm_v1_dp_dispatch import DataParallelDispatchBarrier
 from frontier.scheduler.replica_scheduler.vllm_v1_decode_attn_cohort import (
     DecodeAttentionCohort,
 )
@@ -72,6 +73,7 @@ class VLLMv1EngineReplicaScheduler(
     NixlReadCompletion,
     DecodeAttentionCohort,
     DisaggregatedRoleScheduling,
+    DataParallelDispatchBarrier,
     BaseReplicaScheduler,
 ):
     """
@@ -161,6 +163,7 @@ class VLLMv1EngineReplicaScheduler(
             and self._replica_is_moe
             and self._replica_config.attn_dp > 1
         )
+        self._initialize_dp_dispatch()
         self._dummy_pass_due = False
         self._dummy_forwards_in_flight = 0
         self._dummy_pass_start: Optional[float] = None
@@ -409,6 +412,21 @@ class VLLMv1EngineReplicaScheduler(
                         "PP1 without speculation or GDN"
                     )
                 self._uses_output_placeholders = True
+            elif self._cluster_type == ClusterType.PREFILL:
+                if (
+                    type(self) is not VLLMv1EngineReplicaScheduler
+                    or self._num_stages != 1
+                    or self._scheduling_policy != "fcfs"
+                    or self._spec_decode_enabled
+                    or model_has_gdn(self._replica_config.model_config)
+                    or self._is_prefix_caching_enabled()
+                    or self._config.enable_chunked_prefill
+                ):
+                    raise NotImplementedError(
+                        "Explicit PREFILL queue capacity requires FCFS VLLM V1 "
+                        "PP1 without speculation, GDN or prefix caching, "
+                        "with chunked prefill disabled"
+                    )
             elif (
                 type(self) is not VLLMv1EngineReplicaScheduler
                 or self._cluster_type != ClusterType.MONOLITHIC
@@ -559,6 +577,8 @@ class VLLMv1EngineReplicaScheduler(
         # the block waits for that batch's output.
         if not self._has_engine_batch_queue:
             return super().on_schedule(time)
+        if not self._dp_dispatch_host_ready(time):
+            return []
         if (
             self._blocking_batch_id is not None
             or self._dummy_forwards_in_flight
@@ -632,10 +652,13 @@ class VLLMv1EngineReplicaScheduler(
         self._iteration_running_limit = math.inf
         self._claim_nixl_reads(batches)
         self._in_flight_batch_ids.extend(batch.id for batch in batches)
+        for batch in batches:
+            self._record_dp_dispatch(batch._forward_cohort_id, time, is_dummy=False)
         return batches
 
     def _end_iteration(self) -> bool:
         """Count one ended busy-loop iteration; return whether the host then waits at the DP sync."""
+        unfinished_snapshot = self._take_dummy_unfinished_snapshot()
         self._dp_wave_steps += 1
         if not (
             self._dp_sync_first_step and self._dp_wave_steps == 1
@@ -643,7 +666,9 @@ class VLLMv1EngineReplicaScheduler(
         ):
             return False
         self._waits_at_dp_sync = True
-        self._unfinished_at_dp_sync = self.has_unfinished_requests
+        self._unfinished_at_dp_sync = (
+            self.has_unfinished_requests if unfinished_snapshot is None else unfinished_snapshot
+        )
         group = self._dp_group()
         if all(lane._waits_at_dp_sync for lane in group):
             # The all-reduce returns once the last engine joins it, and it ends
@@ -718,6 +743,7 @@ class VLLMv1EngineReplicaScheduler(
             not self._in_flight_batch_ids
             and not self._dummy_forwards_in_flight
             and not self._waits_at_dp_sync
+            and getattr(self, "_host_returns_at", None) is None
         )
 
     def _issue_dummy_pass(self, time: float) -> List[Batch]:
@@ -739,10 +765,12 @@ class VLLMv1EngineReplicaScheduler(
         self._dummy_pass_start = time
         self._iteration_open = True
         self._clear_followup_polls()
+        self._record_dummy_dispatch(dummy_forwards[0].forward_index, time)
         return dummy_forwards
 
     def on_dummy_forward_end(self, time: float) -> bool:
         """Record one ended dummy forward; return whether the engine iterates again."""
+        self._validate_blocking_dummy_end()
         self._dummy_forwards_in_flight -= 1
         if self._dummy_forwards_in_flight:
             return False
@@ -1137,7 +1165,7 @@ class VLLMv1EngineReplicaScheduler(
             # scheduled; the next chunk goes out while the previous one is in
             # flight (scheduler.py, the num_new_tokens == 0 branch).
             active_in_batch_queue = (
-                self._cluster_type in {ClusterType.MONOLITHIC, ClusterType.DECODE}
+                self._cluster_type in {ClusterType.MONOLITHIC, ClusterType.DECODE, ClusterType.PREFILL}
                 and self._max_concurrent_batches > 1
                 and not self._uses_output_placeholders
                 and self._is_request_active_in_batch(request)

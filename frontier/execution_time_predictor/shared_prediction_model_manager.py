@@ -144,7 +144,8 @@ class ExecutionTimePredictionModelManager(
                 "graph_policy": {"decode_mode": str(global_vars.get_decode_cuda_graph_mode()).lower()},
             }
             bindings = {}
-            for name in ("kernel_gap_input_file", "nixl_read_profile", "kv_block_zeroing_host_profile"):
+            for name in ("kernel_gap_input_file", "nixl_read_profile", "kv_block_zeroing_host_profile",
+                         "dp_dummy_step_host_profile"):
                 path = getattr(cluster.execution_time_predictor_config, name, None)
                 if path:
                     bindings[name] = {"path": os.path.abspath(path), "sha256": dataset_fingerprint(path)}

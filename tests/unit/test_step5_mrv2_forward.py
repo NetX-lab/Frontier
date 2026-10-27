@@ -398,6 +398,7 @@ def test_real_event_layer_lifecycle_releases_group_and_credits_no_dummy_requests
         assert [request.completed_layer_count for request in real.requests] == [4] * 3
     metrics.on_batch_stage_end = lambda *_: None
     scheduler.get_replica_scheduler(0, 1).on_dummy_forward_end = lambda _: False
+    scheduler.get_replica_scheduler(0, 1).consume_paced_dummy_end = lambda _: False
     for event in ends:
         event.handle_event(_global(scheduler), metrics)
     assert context.is_idle and not context.forward_start_resolved

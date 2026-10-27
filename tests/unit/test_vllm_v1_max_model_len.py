@@ -99,8 +99,7 @@ def _build_scheduler(
             block_size=16,
             batch_size_cap=4,
             max_tokens_in_batch=256,
-            enable_chunked_prefill=True,
-            **config_fields,
+            **{"enable_chunked_prefill": True, **config_fields},
         ),
         request_generator_config=request_generator_config,
         replica=replica,
@@ -112,11 +111,22 @@ def _build_scheduler(
 
 # Unified DECODE accepts an explicit capacity (test_decode_output_placeholders.py).
 @pytest.mark.parametrize("cluster_type", [
-    ClusterType.PREFILL, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN,
+    ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN,
 ])
 def test_explicit_queue_capacity_rejects_disaggregated_roles(cluster_type):
     with pytest.raises(NotImplementedError, match="Explicit queue capacity requires"):
         _build_scheduler(cluster_type=cluster_type, max_concurrent_batches=2)
+
+
+def test_explicit_prefill_queue_capacity_rejects_chunked_prefill():
+    with pytest.raises(NotImplementedError, match="Explicit PREFILL queue capacity requires"):
+        _build_scheduler(max_concurrent_batches=2)
+
+
+def test_explicit_prefill_queue_capacity_accepts_whole_prompts():
+    scheduler = _build_scheduler(max_concurrent_batches=2, enable_chunked_prefill=False)
+    assert scheduler._max_concurrent_batches == 2
+    assert not scheduler._uses_output_placeholders
 
 
 @pytest.mark.parametrize("scheduler_class,config_class", SCHEDULERS[1:])

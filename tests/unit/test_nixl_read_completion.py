@@ -216,8 +216,10 @@ def test_decode_step_start_posts_and_checks_the_lane_reads(monkeypatch):
     )
 
     def start(time):
+        batch = object.__new__(DummyForwardBatch)
+        batch._forward_start_host_delay = 0.0
         return ReplicaStageScheduleEvent(time, 0, 0, ClusterType.DECODE, None)._schedule_popped_batch(
-            None, object.__new__(DummyForwardBatch), None, _Cluster(lane), 0, None,
+            None, batch, None, _Cluster(lane), 0, None,
             logging.getLogger(__name__),
         )
 

@@ -108,6 +108,24 @@ class BaseExecutionTimePredictor(ABC):
                 predictor_config=predictor_config,
             )
 
+        self._dp_dummy_step_host_time = None
+        if predictor_config.dp_dummy_step_host_profile:
+            if not self.requires_forward_start_agreement:
+                raise ValueError(
+                    "DP dummy-step host profile requires a Step model with measured "
+                    "predictors (the DP forward-start agreement), not dummy mode"
+                )
+            from frontier.execution_time_predictor.dp_dummy_step_host_time import (
+                DPDummyStepHostTime,
+            )
+
+            self._dp_dummy_step_host_time = DPDummyStepHostTime.from_file(
+                predictor_config.dp_dummy_step_host_profile,
+                replica_config=replica_config,
+                cluster_type=getattr(self, "_cluster_type", None),
+                predictor_config=predictor_config,
+            )
+
         # get configs
         self._replica_scheduler_provider = str(replica_scheduler_config.get_type())
         self._block_size = replica_scheduler_config.block_size
@@ -134,6 +152,11 @@ class BaseExecutionTimePredictor(ABC):
         if self._kv_block_zeroing_host_time is None or batch.cache_block_zeroing is None:
             return 0.0
         return self._kv_block_zeroing_host_time.time_ms(len(batch.requests))
+
+    def get_dp_dummy_step_cadence_ms(self) -> Optional[float]:
+        """Group host cadence for all-dummy PREFILL forwards; None unless profiled."""
+        profile = getattr(self, "_dp_dummy_step_host_time", None)
+        return None if profile is None else profile.group_cadence_ms
 
     def _assemble_stage(self, layer_times, *, first_layer_id: int) -> StageExecutionTime:
         """Attach model-owned identities to ordered numerical layer results."""

@@ -509,6 +509,17 @@ class ClusterConfig(ClusterRoleConfigBuilder, ClusterTopologySummary):
         },
     )
 
+    prefill_replica_scheduler_config_max_concurrent_batches: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "EngineCore queue capacity for the PREFILL cluster's vllm_v1 scheduler. "
+            "Explicit 2 models vLLM's async scheduling batch queue; "
+            "None keeps the base replica scheduler value.",
+            "mode_dependency": "pd-disaggregation",
+            "omit_if_none": True,
+        },
+    )
+
     # DECODE cluster scheduler configuration (for unified decode in pd-disaggregation mode)
     decode_replica_scheduler_config_type: Optional[str] = field(
         default=None,

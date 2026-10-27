@@ -167,6 +167,7 @@ class ClusterRoleConfigBuilder:
                 prefill_replica_scheduler_config_num_blocks=self.prefill_replica_scheduler_config_num_blocks,
                 prefill_replica_scheduler_config_block_size=self.prefill_replica_scheduler_config_block_size,
                 prefill_replica_scheduler_config_watermark_blocks_fraction=self.prefill_replica_scheduler_config_watermark_blocks_fraction,
+                prefill_replica_scheduler_config_max_concurrent_batches=self.prefill_replica_scheduler_config_max_concurrent_batches,
             )
             cluster_configs[ClusterType.PREFILL] = prefill_config
 

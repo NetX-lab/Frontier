@@ -194,7 +194,7 @@ def test_only_an_explicit_decode_capacity_uses_output_placeholders():
     assert not _decode_lane(
         cluster_type=ClusterType.PREFILL, max_concurrent_batches=None
     )._uses_output_placeholders
-    with pytest.raises(NotImplementedError, match="Explicit queue capacity requires"):
+    with pytest.raises(NotImplementedError, match="Explicit PREFILL queue capacity requires"):
         _decode_lane(cluster_type=ClusterType.PREFILL)
 
 

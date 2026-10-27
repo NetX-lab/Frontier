@@ -100,6 +100,10 @@ class ReplicaScheduleEvent(BaseEvent):
                 ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, lane_id)
                 for lane_id in replica_scheduler.consume_dp_sync_release()
             )
+            events.extend(
+                ReplicaScheduleEvent(tick_time, self._replica_id, self._cluster_type, lane_id)
+                for lane_id, tick_time in replica_scheduler.consume_dp_dispatch_host_ticks()
+            )
             if replica_scheduler.engine_loop_idle:
                 events.extend(self._connector_step_events(scheduler, metrics_store, replica_scheduler))
         return events
