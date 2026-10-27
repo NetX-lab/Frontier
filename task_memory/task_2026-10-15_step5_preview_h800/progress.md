@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: per-rank check: fast ranks wait in the collectives for the slowest routed rank; routed compute about 2.5–3 ms per step high, TP all-reduce about 1–2 ms low; host time (item 3) is the main remaining TPOT gap. |
 | 2026-10-27 | D31: h200_32 length-sweep job succeeded; formal stalls 84/54/34 → 38/21/22, all left above the length the sweep reached; E passes all 14 rows against it; `duration_s` raised to 420 s and the h200_64 sweep job launched; routed-expert lead: `balanced` fills experts from ID 0, so the priced lane has all 22 experts active. |
 | 2026-10-26 | D31: device-timeline job succeeded (Frontier step within about 5% of native device busy time up to 21 requests; routed compute overpriced, TP all-reduce underpriced); native TTFT/TPOT tails traced to just-in-time compiles of the DSA scoring kernel; E rerun all means within 30%; native length-sweep warm-up `320c2082`, H200 32-GPU job `exp-1027-074903-556239` submitted. |
 | 2026-10-26 | D31: workflow-port run wf02 (TTFT −37.4%, TPOT −57.0%); calibration item 3 renumbered 2b to match `plan.md`; item 2b native decode device-timeline diagnostic (harness `26d51a30`, analyzer `a31e3616`), H200 32-GPU job `exp-1027-062510-683917` running. |
@@ -972,6 +973,24 @@ Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31
   rank and about 5 ms above the median rank (with SwiGLU). At 32–36 requests Frontier gives 18.5 ms
   against 15.3–17.9 ms native at 45. The TP all-reduce is about 3.5 ms per step below native, so
   the two errors cancel in the step total.
+- Per-rank check (2026-10-27, `/data/ycfeng/tmp/d31_diag/rank_wait/rank_wait.py` on the device
+  timeline, output `rank_wait.txt`). Within one DP engine's 8 ranks, per decode step:
+  - The routed-time spread between the slowest and the fastest rank (4.4–6.2 ms) reappears
+    almost one for one as extra collective time on the fast ranks (4.2–6.1 ms). The sum of
+    routed, TP all-reduce and EP collective time differs by only 2.7–3.3 ms across ranks. So
+    the fast ranks wait inside the collectives for the slowest rank, and per-rank medians
+    understate the routed time that gates the step.
+  - On the slowest routed rank (routed plus SwiGLU): 13.8–14.4 ms at 8–10 requests, 15.7 ms at
+    20–21, 18.0 ms at 44–46. Frontier: 16.9 ms at 2–16, 18.5 ms at 17–36. Frontier is about
+    2.5–3 ms above the slowest rank at 9–21 requests, not 5 ms.
+  - TP all-reduce on that rank: 4.9–6.5 ms at 8–9 requests, 5.3–5.9 ms at 20–21, 5.6–8.0 ms at
+    44–45; the smallest per-rank value is 3.4–4.4 ms at 8–21 requests. Frontier: about
+    2.6–3.1 ms. So the all-reduce is about 1–2 ms low, not 3.5 ms.
+  - Device busy time on the slowest routed rank: 41.0 ms at 9 requests, 45.1–48.0 ms at 20–21,
+    52.6–52.9 ms at 44–45; Frontier 43.1, 46.4 and 49.9 ms (36 requests).
+  - Inference: the two operator errors are smaller than first estimated and leave the device
+    step within about 5%. The remaining TPOT gap is mainly host time between decode steps
+    (item 3), so item 3 comes before the item 2 operator fixes.
 - Fix options, for the item 2 design (D31.9 revisit condition: the error points to
   expert-parallel load):
   1. `position_cyclic` routing in Frontier: exists for this geometry, but it prices only exact

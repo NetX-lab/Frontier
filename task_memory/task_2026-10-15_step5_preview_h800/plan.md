@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: per-rank check corrects the operator-error sizes; item 3 (host time) now comes before the item 2 operator fixes. |
 | 2026-10-27 | D31: h200_32 length-sweep result (steps 2–3 of the warm-up rerun); sweep length raised to 420 s; h200_64 sweep job first; routed-expert cause refined. |
 | 2026-10-26 | D31: E rerun result; native rerun with a complete DSA kernel warm-up added (JIT stalls found); item 2b step 1 done. |
 | 2026-10-26 | D31: calibration item 2b (decode step growth with batch size) added with Frontier's own step curve; wf02 result in item 1. |
@@ -246,7 +247,7 @@ Calibration order for E, after the first error table:
       device busy time up to 21 requests per engine and about 7% lower at 45 (Frontier's curve ends
       at 36). The rest of the native
       growth is device idle time while the device waits for the host (about 2 ms at 9 requests,
-      8 ms at 45), which belongs to item 3. Two compensating operator errors remain: routed
+      8 ms at 45), which belongs to item 3. Two smaller operator errors remain: routed
       expert compute is overpriced (16.9 against about 11.4 ms per step at 9 requests, because
       the MoE profile activates every local expert) and the TP all-reduce is underpriced (about
       3 ms per step). Refined on 2026-10-27: the routed-expert overpricing comes from Frontier's
@@ -254,7 +255,10 @@ Calibration order for E, after the first error table:
       has all 22 local experts active, while native per-rank loads are about even with fewer
       active experts per rank. Fix options are in `progress.md`; the fix waits for the clean
       native references and goes together with the TP all-reduce fix, because the two errors
-      cancel.
+      cancel. Corrected on 2026-10-27 (per-rank check, `progress.md`): the fast ranks wait
+      inside the collectives for the slowest routed rank, so the errors are about +2.5–3 ms
+      (routed) and −1–2 ms (all-reduce) per step, not the median-rank values above. The
+      remaining TPOT gap is mainly host time, so item 3 comes before these operator fixes.
    2. Compare with Frontier's own step curve from the stage-batch and EP-wave ledgers of a
       diagnostic run, phase by phase (done, `progress.md`).
    3. Fix the cause where it belongs: a missing or underpriced operator or collective is

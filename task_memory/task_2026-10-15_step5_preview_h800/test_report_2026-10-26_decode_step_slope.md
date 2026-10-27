@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Corrected section 3 with the per-rank check: the median-rank values overstated both operator errors. |
 | 2026-10-27 | Added the h200_32 length-sweep rerun (section 6) and the step E comparison against it; updated the limits. |
 | 2026-10-27 | Created: native decode device timeline, Frontier step comparison, kernel components, just-in-time compile stalls, step E rerun. |
 
@@ -94,14 +95,21 @@ local experts.
 | --- | --- | --- | --- |
 | EP dispatch (all-gather) | 9.1 ms | 9.18 ms | +1% |
 | EP combine (reduce-scatter) | 4.9 ms | 5.84 ms | +19% |
-| Routed expert compute | 10.9–11.1 ms | 16.9 ms | about +53% |
-| TP all-reduce | 6.1 ms (fusion kernel), 6.6–6.9 ms (category) | about 2.6–3.1 ms | about −55% |
+| Routed expert compute | 10.9–11.1 ms (median rank); 13.8–14.4 ms with SwiGLU on the slowest routed rank | 16.9 ms | about +2.5–3 ms per step against the slowest routed rank |
+| TP all-reduce | 6.1 ms (fusion kernel), 6.6–6.9 ms (category), median rank; 3.4–4.4 ms smallest rank | about 2.6–3.1 ms | about 1–2 ms per step low |
 
 Frontier's routed compute stays at 16.9 ms from 2 to 16 requests and 18.5 ms from 17 to 36,
 while native grows from 10.9 to 15–16 ms. Inference, not yet measured: the MoE profile routes
 tokens so that every local expert is active, while a small native batch activates only a few
-of the 22 local experts. The two errors (routed compute too high, TP all-reduce too low) partly
-cancel. Both are op-profiling fixes (item 2).
+of the 22 local experts. Both are op-profiling fixes (item 2).
+
+Correction (2026-10-27, per-rank check in `progress.md`): within one DP engine the fast ranks
+wait inside the TP all-reduce and EP collectives for the slowest routed rank, so the per-rank
+medians first used here understate the routed time that gates the step and overstate the
+all-reduce. Against the slowest routed rank, Frontier's routed compute is about 2.5–3 ms per
+step high and the TP all-reduce about 1–2 ms low. Device busy time on that rank is 41.0 ms at
+9 requests, 45.1–48.0 ms at 20–21 and 52.6–52.9 ms at 44–45, against Frontier's 43.1, 46.4 and
+49.9 ms (36 requests): within about 5%.
 
 ### 4. Native decode stalls from just-in-time kernel compiles
 

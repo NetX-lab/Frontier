@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Correct the operator-error sizes after the per-rank check; item 3 moves before the item 2 operator fixes. |
 | 2026-10-27 | Update the current status: h200_32 length-sweep result, E against it, the h200_64 sweep job, the routed-expert cause. |
 | 2026-10-26 | Update the current status: E rerun result, device-timeline findings, native kernel compiles and the length-sweep rerun. |
 | 2026-10-26 | Update the current status: step E results so far, the running E/G reruns, calibration item 2b. |
@@ -142,8 +143,11 @@ Status as of 2026-10-27:
   decode torch-profiler windows (job `exp-1027-062510-683917`, 32 H200) shows that Frontier's
   step is within about 5% of the native device busy time up to 21 requests per engine. The rest
   of the native growth is device idle time while the device waits for the host (CPU overhead,
-  item 3). Routed expert compute is overpriced and the TP all-reduce underpriced; the two
-  errors partly cancel. The routed-expert overpricing comes from Frontier's `balanced`
+  item 3). Measured against the slowest routed rank, which gates the step because the other
+  ranks wait for it inside the collectives, routed expert compute is about 2.5–3 ms per step
+  overpriced and the TP all-reduce about 1–2 ms underpriced. So the main remaining TPOT gap is
+  host time between decode steps (item 3), which now comes before the operator fixes. The
+  routed-expert overpricing comes from Frontier's `balanced`
   materialization, which fills experts from ID 0, so the priced EP lane has all 22 local
   experts active. Diagnostic only (D31.10).
 - **Native kernel compiles.** Most of the native TTFT/TPOT tail comes from just-in-time compiles
