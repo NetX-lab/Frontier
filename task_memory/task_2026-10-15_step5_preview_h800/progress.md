@@ -1124,6 +1124,16 @@ Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31
     all-reduce own cost, graph kernel count, other compute) go together, after the E rerun with
     the item 3 profile shows the remaining error, because fixing one alone moves the body by
     up to 8%.
+  - TP all-reduce input (`/data/ycfeng/tmp/d31_diag/critpath/ar_own_cost.py`, output
+    `ar_own_cost_dp2.txt`, on the raw H200 DP2 `measurements.jsonl` under
+    `/data/ycfeng/tmp/step5_d31_comm_20261026/downloads/d31_h200_s2_20261026_01/`): the
+    committed `summary.csv` median takes the slowest rank of each repeat
+    (`analyze_result.py` `queue_held_analysis`), which includes the benchmark's own launch skew.
+    The fastest rank of each repeat (the last arriver) gives 7.6 µs at `graph_decode_b16`,
+    10.7 µs at b32 and 17.3 µs at b64, against 10.7–11.5, 13.5–14.2 and 18.8–21.2 µs for the
+    slowest rank. Native critical-path own cost: 6.8 µs at 9 requests, 8.2 µs at 20–21,
+    13.1 µs at 44–46. So the last-arriver statistic of the existing measurements tracks the
+    native cost within about 10%, with no new GPU run.
 
 Calibration item 3 lead, host time: KV side-storage reset sync (2026-10-27, diagnostic only,
 D31.10; scripts in `/data/ycfeng/tmp/d31_diag/hostgap/`, input the h200_32 device-timeline
