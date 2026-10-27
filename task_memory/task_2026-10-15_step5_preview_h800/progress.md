@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: h200_32 host probe analyzed: replay idle-boundary and probe-completeness rules corrected (`cdcba47b`); DP2 profile prefill 37.44 ms / decode 5.11 ms (`PERTURBED`, TPOT bias at most 0.7%); step E host rerun started; h200_64 probe job `exp-1027-141317-610373` submitted. |
 | 2026-10-27 | D31: exact native decode critical path (diagnostic): the step prefix before the first TP all-reduce is the KV side-storage reset (item 3); Frontier's step is within −7% to +4% of the native forward body; TP all-reduce is about 1.3 ms high (273 native calls, own cost about 6.8 µs), not low; body idle shortfall is a kernel-count shortfall. |
 | 2026-10-27 | D31: h200_32 host-probe stage `h200_32_hostprobe03` built at 02bd453a, verified and dry-run; submitted through Pi (`d31-h200-32-hostprobe03-submit-1027e`), job `exp-1027-124813-737818`; `h200_32_comb_h200` table version corrected to merged03. |
 | 2026-10-27 | D31: item 3 step 2 fixes from the codex implementation review 668b0946 (F001–F006, Q1–Q3; design section 9); 162 focused unit tests pass. |
@@ -1260,7 +1261,7 @@ Calibration item 3 step 2, review fixes (2026-10-27, `completed`; design section
   coverage) need the probe run; Q5 (the external clean-run-check producer) is not audited.
 - Next: stage `h200_32_hostprobe01` from a clean worktree at the fix commit and submit it.
 
-Calibration item 3 step 2, probe run (2026-10-27, `in-progress`):
+Calibration item 3 step 2, probe runs (2026-10-27; h200_32 `completed`, h200_64 `in-progress`):
 
 - Stage: `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_hostprobe03/stage`, built from the
   clean worktree `/data/ycfeng/Frontier/.worktrees/step5-d31-native-02bd453` (02bd453a) with
@@ -1306,6 +1307,40 @@ Calibration item 3 step 2, probe run (2026-10-27, `in-progress`):
   different (8 × 8 H200, non-preemptible). It is submitted after the h200_32 probe files pass the
   estimator checks, so a probe defect does not cost a 64-GPU run, and after the 32-GPU job has
   released its GPUs (64-GPU session limit).
+- h200_32 probe result (report `test_report_2026-10-27_host_probe_runs.md`): job
+  `exp-1027-124813-737818` Succeeded (2866 s); repeat means TTFT 913.68 / TPOT 53.659 ms.
+  The estimator first stopped on two acceptance rules, both wrong for this run:
+  - every boundary after repeat 1 warmup was unverified: one warmup request failed at the client
+    on a reset proxy keep-alive connection before reaching decode, and the replay expected a
+    completion for every planned request. Reason for the change: a request that never reached a
+    role can not complete there. Method: the replay and the estimator count only
+    client-completed requests (`phase_completions`, `boundary_reached`). Result: windows accepted;
+  - no probe file has an `end` line: the native launcher aborts and force-kills the workers, so
+    `GPUModelRunner.shutdown` never runs (also in sweep03). Method: contiguous step numbers per
+    file plus equal scheduled tokens per role across the three formal windows. Result: prefill
+    784,384 and decode 132,992 tokens in each window.
+  Commit `cdcba47b`; checks: `test_kv_zeroing_host_time_estimator.py` 11 passed (d29 env),
+  `test_step5_canonical_native.py` 46 passed (asyncopd env, adds a `decode_unreached` fault).
+- h200_32 profile (DP2): prefill 37.44 ms over 384 resetting steps (one 6,128-token request each;
+  host work, the device was idle before 98.7% of them); decode 5.11 ms over 14,144 resetting steps
+  (67.6% of steps; device gap 5.28 ms on the same steps; trend 0.13 ms over 1–29 requests, so one
+  mean). 23 hooks on every resetting step. Perturbation: TTFT shift +1.44 ms within the clean
+  repeat range 8.0 ms, TPOT shift +0.357 ms beyond 0.207 ms, so the profile is `PERTURBED`.
+  Decision (no correction factor): use it as measured; the probe's wrapper cost inside `h` is
+  about 0.1–0.2 ms and the bound from the TPOT shift is 0.53 ms per resetting step, so E's TPOT
+  may be high by at most 0.36 ms (0.7%). Profile copy
+  `evidence/d31_h200_32_kv_block_zeroing_host_20261027.json`, report copy
+  `evidence/d31_h200_32_kv_block_zeroing_host_report_20261027.json`.
+- Step E host rerun (started 06:09 UTC, CPU only, clean worktree 02bd453a, no frontier code change
+  since then): options `/data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_32_host.json`
+  (the base options plus `kv_block_zeroing_host_profile`), output
+  `/data/ycfeng/tmp/d31_e05_run/h200_32_m04_host`. It pairs with `h200_32_m04_base`.
+- h200_64 probe submitted after the h200_32 checks passed and its GPUs were released: Pi
+  `d31-h200-64-hostprobe01-submit-1027f`, job `exp-1027-141317-610373` (created 06:13:17 UTC,
+  Pending; 8 × 8 H200, `step_main`, preemptible `no`, creator `i-fengyicheng`). The stage keeps
+  the earlier replay rule, so a failed request costs 120 s per later boundary (worst case about
+  2,270 s of the 3,000 s replay limit, from sweep02's 1,550 s); the estimator re-checks the
+  boundaries with the new rule.
 
 Step F status (2026-10-26):
 

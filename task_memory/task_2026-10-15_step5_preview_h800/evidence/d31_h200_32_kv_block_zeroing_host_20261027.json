@@ -1,0 +1,33 @@
+{
+  "schema": "kv_block_zeroing_host_time.v1",
+  "provenance": {
+    "job_id": "exp-1027-124813-737818",
+    "stage": "/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_hostprobe03/stage",
+    "source_commit": "02bd453aa31b8bce7218433411e066be9623d546",
+    "probe_sha256": "8b4ee896d5f164bc039609bec4aef6193a09f4df1ca4a2636478f42a025de143",
+    "statistic": "mean over the resetting engine steps of the formal windows; per request count when the trend exceeds 1.0 ms",
+    "resetting_steps": {
+      "prefill": 384,
+      "decode": 14144
+    },
+    "perturbation": "PERTURBED",
+    "report": "/data/ycfeng/tmp/step5_d31_profiles_20261026/host06/kv_block_zeroing_host_h200_32_report.json"
+  },
+  "model_architecture_profile": "step5",
+  "device": "h200",
+  "decode_cuda_graph_mode": "full_and_piecewise",
+  "topology": {
+    "attention_tp": 8,
+    "attention_dp": 2,
+    "moe_ep": 16,
+    "pipeline_stages": 1
+  },
+  "roles": {
+    "prefill": {
+      "time_ms": 37.439762921875
+    },
+    "decode": {
+      "time_ms": 5.110489559035633
+    }
+  }
+}

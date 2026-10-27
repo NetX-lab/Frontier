@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Corrected after the h200_32 probe run: the launcher force-kills the workers, so probe files have no `end` line (completeness from gap-free steps and equal window tokens); idle boundaries expect completions only for client-completed requests (4.1, 4.3, F002). |
 | 2026-10-27 | Revised after the codex implementation review (`codex-review-668b0946-.../review.md`, section 9): reference admission rejects probe runs; the worker owns the probe variable; shutdown drains the probe and writes an `end` line; dummy steps end at `_dummy_run` exit; the DP wait is the gloo `all_reduce` alone; the engine interval runs from its earliest first sync to its last launch on one node clock; formal windows come from the verified idle boundaries; the request-count trend rule writes a table. |
 | 2026-10-27 | Probe and estimator implemented; 4.1–4.3 revised to the implementation: every TP rank records, line-buffered per-process files, the interval starts at the first `.tolist()` return, event-pair device gaps, formal windows by wall time, the mean as the profile value, 4 probe and 6 estimator unit tests. |
 | 2026-10-27 | Frontier side implemented (section 8); added the NIXL READ profile regeneration (3.4). |
@@ -176,10 +177,13 @@ are only a cross-check.
   starts when the slowest TP rank launches. Each worker process writes its own file
   `<role>_<host>_<pid>.jsonl` to worker-local scratch with a header line (host, role, TP and
   DP rank and size), line-buffered so a killed process loses no finished line. Native
-  `GPUModelRunner.shutdown`, which every orderly worker exit calls and which synchronizes the
-  device first, writes the steps still waiting for their events and a final `end` line with
-  the step count. Forked workers leave through `os._exit`, so `atexit` cannot do this. After
-  the server stops, the node gzips the files into `host_probe/` of its node record.
+  `GPUModelRunner.shutdown`, which synchronizes the device first, would write the steps still
+  waiting for their events and a final `end` line with the step count. The native P/D launcher
+  stops its engines with `mode=abort` and force-kills the worker processes (observed in
+  hostprobe03 and sweep03), so that path does not run: a file ends with its last finished
+  line, and only the last step and the 1–2 steps whose events were still pending are lost, all
+  after the last formal window. Forked workers leave through `os._exit`, so `atexit` cannot
+  help. After the server stops, the node gzips the files into `host_probe/` of its node record.
 
 ### 4.2 Hooks (all at seams that run for real workload forwards)
 
@@ -192,7 +196,7 @@ are only a cross-check.
 | `dist.all_reduce` inside `dp_utils` only (a proxy for the module's `dist`; other all-reduces are untouched) | `reduce_enter`/`reduce_exit` around the gloo all-reduce, the only call in the sync that waits for the other engines |
 | `StepTimingCollector.forward_start` | launch stamp and CUDA event |
 | `GPUModelRunner.sample_tokens` exit (real step) or `_dummy_run` exit (dummy step; it queues more main-stream work after its `execute_model` returns) | stamp and CUDA event at the end of the step's main-stream work |
-| `GPUModelRunner.shutdown` exit | drains the remaining steps and writes the `end` line |
+| `GPUModelRunner.shutdown` exit | drains the remaining steps and writes the `end` line (not reached when the launcher force-kills the workers, 4.1) |
 
 When a step's events complete, its line gets `gap_ms` (main-stream interval from the
 previous step's end event to this launch event; reset and input-preparation GPU work can
@@ -204,15 +208,24 @@ only by elastic EP, which this workload does not use, so every call runs the all
 
 - Inputs: the copied stage (config, probe files, client summary), the clean run's client
   summary, the job ID and `--min-samples`.
-- A role is usable only with exactly one complete, error-free process per (DP rank, TP rank).
-  A restart (two processes for one rank), a missing rank, a file without its `end` line or
-  with missing steps, or TP ranks of one engine on different hosts stop the estimator.
-- Only steps whose wall time lies in a formal window count. A window runs from the verified
-  idle boundary after a repeat's warmup to the verified idle boundary after its formal phase
-  (client monotonic times, converted with the phase's wall-clock offset). Every engine was idle
-  at both boundaries, so the edges lie in idle gaps. Server and client wall clocks may differ;
-  the report gives the smallest distance from an edge to any step (`window_edge_clearance_s`),
-  which must exceed that difference. An unverified boundary stops the estimator.
+- A role is usable only with exactly one error-free process per (DP rank, TP rank). A restart
+  (two processes for one rank), a missing rank, a file whose step numbers do not run from 1
+  without gaps, or TP ranks of one engine on different hosts stop the estimator. Completeness
+  inside the windows comes from the scheduled tokens: every repetition replays the same
+  requests, so each role's non-dummy tokens at TP rank 0 must be equal in the three formal
+  windows; a file that lost a step with requests breaks the equality.
+- Only steps whose wall time lies in a formal window count. A window runs from the idle
+  boundary after a repeat's warmup to the idle boundary after its formal phase (client
+  monotonic times of each boundary's last observation, converted with the phase's wall-clock
+  offset). The estimator re-checks each boundary from that observation with the replay's rule:
+  every lane idle, and each role's completion count at least the count at the verified
+  length-sweep boundary plus the requests the client saw complete in the phases since. A
+  request that failed at the client may never have reached a role (a reused proxy keep-alive
+  connection can reset before the request is sent), so it adds no expected completion. Every
+  engine was idle at both boundaries, so the edges lie in idle gaps. Server and client wall
+  clocks may differ; the report gives the smallest distance from an edge to any step
+  (`window_edge_clearance_s`), which must exceed that difference. A boundary that fails the
+  check, or an unverified length-sweep boundary, stops the estimator.
 - Join the engines by collective ordinal per TP rank. Ordinals missing on any process are
   counted and excluded. All TP ranks of one engine must agree on the batch (dummy flag,
   request and token counts) at an ordinal; a disagreement means the join is broken and stops
@@ -337,7 +350,7 @@ because the loader has no access to the predictor mode.
 | Finding | Fix |
 | --- | --- |
 | F001 (P1): a declared host-probe run could pass reference admission with a passing receipt. | `client_reference` rejects a diagnostic `canonical_replay.kind` or summary `replay_kind` (`formal_release.DIAGNOSTIC_KINDS`), a config with `host_step_probe`, and a node whose `server_env_set` holds `STEP5_HOST_STEP_PROBE` (4.1). Three new faults in `test_step5_client_metrics.py`; the clean fixture still passes. |
-| F002 (P2): forked workers leave through `os._exit`, so the `atexit` flush never ran and steps were lost. | The drain runs at native `GPUModelRunner.shutdown` exit, after its device synchronize, and writes an `end` line; the estimator rejects a file without it or with missing steps (4.1, 4.3). The sweep03 servers stopped through SIGINT, which takes this path. |
+| F002 (P2): forked workers leave through `os._exit`, so the `atexit` flush never ran and steps were lost. | The drain runs at native `GPUModelRunner.shutdown` exit, after its device synchronize, and writes an `end` line; the estimator rejects a file without it or with missing steps (4.1, 4.3). The sweep03 servers stopped through SIGINT, which takes this path. Corrected after hostprobe03: the launcher force-kills the workers, so no `end` line is written; completeness comes from gap-free step numbers and equal window tokens (4.1, 4.3). |
 | F003 (P2): the whole sync function's duration was taken as the wait, so local preparation and graph dispatch were subtracted. | The probe stamps only the gloo `all_reduce` through a proxy for `dp_utils.dist` (other all-reduces untouched); `excess` uses that duration (4.2, 4.3). |
 | F004 (P2): the estimator always wrote a scalar. | Least-squares trend over the request-count range; above 1 ms the role's entry is the per-count mean table, for both roles (4.3). |
 | F005 (P2): an inherited `STEP5_HOST_STEP_PROBE` survived clean server preparation. | `host_probe_environment` removes the inherited value for every server and sets it only for a declared probe run (4.1). The variable is reachable only through the image or launch environment, which do not set it today; the removal makes the worker its only owner. |

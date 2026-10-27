@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 3 step 2 h200_32 done (DP2 profile, `PERTURBED` with a bounded TPOT bias); E host rerun started; h200_64 probe submitted. |
 | 2026-10-27 | D31: item 2b step 2 refined with the exact native critical path: Frontier's step is within −7% to +4% of the native forward body; TP all-reduce direction corrected; the four item 2 fixes go together after item 3. |
 | 2026-10-27 | D31: corrected the table version of `h200_32_comb_h200` to merged03 (its `command.json`); item 3 step 2 probe run submitted. |
 | 2026-10-27 | D31: h200_32 sweep03 done (clean reference; E passes all 14 rows, TPOT −13.9%); item 3 step 3 (Frontier side) done. |
@@ -312,6 +313,10 @@ Calibration order for E, after the first error table:
       forward launch directly, per engine, with the DP all-reduce wait for peers split out.
       Component host terms only (D31.10). One probe run per DP size (h200_32 DP2 for E, h200_64
       DP4 for G).
+      h200_32 done 2026-10-27 (`test_report_2026-10-27_host_probe_runs.md`): prefill 37.44 ms,
+      decode 5.11 ms per resetting step; marked `PERTURBED` (TPOT +0.36 ms against a 0.21 ms
+      clean repeat range; bias on E's TPOT at most 0.7%), used as measured. h200_64 probe job
+      `exp-1027-141317-610373` submitted.
    3. Implement in Frontier, off by default: the reset host time joins the existing DP
       forward-start agreement, so every DP lane launches from the latest lane's ready time before
       its first attention. Unit tests, dummy smoke and the 77-case fidelity matrix unchanged on
@@ -320,6 +325,8 @@ Calibration order for E, after the first error table:
       unit tests, dummy smoke 12/12, fidelity 77/77 with only config-field differences. The
       NIXL READ profiles were regenerated for the new capacity flag (`design.md` 3.4).
    4. Rerun E and G against the clean references.
+      E host rerun running (`/data/ycfeng/tmp/d31_e05_run/h200_32_m04_host`), paired with the
+      baseline `h200_32_m04_base` that differs only by the host profile.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2
 and G3, exact-byte KV checks, observer validation, census data and the D29 scope ledger.
