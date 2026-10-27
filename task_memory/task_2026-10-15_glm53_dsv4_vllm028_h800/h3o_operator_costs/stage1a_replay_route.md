@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-27 | Created: implementation design of stage 1a ([design.md](design.md) §5, bootstrap parts of entries 13 and 17), the evidence it rests on, and the split into Codex assignments A and B. |
 | 2026-10-27 | A2 revised to declared container scopes (§3.3); graph-replay scope tree added (§3.5); assignment B split into B1 (bridge-check minimum) and B2 (§3.4, §4); assignment A accepted. |
+| 2026-10-27 | B1 accepted and committed (`03d246f9`): implementation decisions, the P1h package layout and the driver CLI recorded in §3.4; the `dsv4_o_proj` row and the eager break under the V2 runner in §3.5. |
 
 ## 1. Purpose
 
@@ -69,6 +70,15 @@ B1:
 - PIECEWISE captures must record eager breaks; zero breaks fail, because `eager_break_during_capture` returns the undecorated function when Breakable capture is disabled at decoration time.
 - The P1h bridge-check driver under `tests/` and its launcher, modelled on the W6 `producer_jobs.py` and the attempt-3 H200 config. The driver keeps the capture record JSON and the replay traces, so the attribution can be rerun on CPU after a library correction without a new GPU run.
 
+B1 as implemented (`03d246f9`, [test_report_2026-10-27_b1_graph_replay_integration.md](../test_report_2026-10-27_b1_graph_replay_integration.md)):
+
+- Breakable capture and the V2 runner are selected by `VLLM_USE_BREAKABLE_CUDAGRAPH=1` and `VLLM_USE_V2_MODEL_RUNNER=1`, which must be set before vLLM is imported. The bridge driver sets both for each mode's process. The runner fails fast when a PIECEWISE mode runs without the Breakable variable, and the hook installation fails when `use_v2_model_runner` is false.
+- NONE has no capture sizes (`cudagraph_capture_sizes=[]`); the plan rejects sizes for NONE, sizes that do not increase strictly, and a largest size above the smallest chunk budget. vLLM may resolve another mode or size list (`resolve_cudagraph_mode_and_sizes`); `recapture_graphs` fails fast on any difference.
+- The runtime mode of each step comes from wrapping `dispatch_cg_and_sync_dp`, imported by name into `vllm/v1/worker/gpu/model_runner.py`; its `BatchExecutionDescriptor` (mode, token count, request count) is written into each raw step record under the key `cudagraph_dispatch`. Attention metadata comes from `execute_model_state.attn_metadata`.
+- Graph-replay records are KERNEL_ONLY (`timing_measurements`); V4 row aggregation refuses graph-replay engine records (`index_records` calls the unchanged `require_scope_timing`) until B2 adds the interval rows.
+- The capture record and its summary are saved as `dsv4_capture_e<engine>.json` beside the raw records, so the bridge report reruns the attribution on CPU.
+- P1h package (option Y): one bootstrap invocation whose script is the bridge driver. The committed `frontier` and `data/config` trees sit at the package root, because the accepted bootstrap puts only the package directory on `PYTHONPATH`. The driver runs each mode as `[sys.executable, profile_dsv4_prefill.py, --config, <mode>/bootstrap_config.json]` with the bootstrap identity fields unchanged, and continues after a failed mode. Its CLI is exactly `--config PATH` (run) and `--config PATH --report` (CPU report). A second worker step runs the report; the worker stops at the first failed step, so after a failed run the report is run locally from the cloud copy.
+
 B2: raw records with intervals (entry 13), the V4 graph-gap reducer bootstrap (entry 17), and the A4 composition check.
 
 ### 3.5 Graph-replay scope tree
@@ -96,10 +106,11 @@ Containers (they must own no kernel): `dsv4_attention_layer`, `dsv4_parallel_inp
 | `dsv4_index_topk` | layer | `indexer.indexer_op.forward`; owns the kernels outside its child |
 | `dsv4_index_scores` | index top-k | sparse-attention-indexer module names `fp8_fp4_mqa_logits`, `fp8_fp4_paged_mqa_logits` and `ops.cp_gather_indexer_k_quant_cache` |
 | `dsv4_sparse_attention` | layer | `forward_mqa` |
+| `dsv4_o_proj` | layer | `_o_proj` of the attention module (the FlashMLA override calls `deep_gemm_fp8_o_proj` of `nvidia/ops/o_proj.py`) |
 | `dsv4_output_inv_rope_quant`, `dsv4_grouped_output_projection` | o_proj | o_proj-module names `fused_inv_rope_fp8_quant`, `fp8_einsum` |
 | `dsv4_output_projection` | o_proj | `wo_b.forward` |
 
-`<compressor>` is `dsv4_compressor` or `dsv4_index_compressor`, the compressor scope on top of the stack. The eager break `_sparse_indexer_and_attn` is registered while the layer scope is on top; at replay the eager-scope runner encloses it in a layer range, and the `dsv4_index_topk` and `dsv4_sparse_attention` ranges inside own its kernels.
+`<compressor>` is `dsv4_compressor` or `dsv4_index_compressor`, the compressor scope on top of the stack. The eager break `_sparse_indexer_and_attn` is registered while the layer scope is on top; at replay the eager-scope runner encloses it in a layer range, and the `dsv4_index_topk` and `dsv4_sparse_attention` ranges inside own its kernels. With the V2 runner the break is this narrow `_sparse_indexer_and_attn`; the wider `_prepare_and_attn_eager` is used only when the V2 runner is off, which the graph-replay policy does not run.
 
 ## 4. Order and acceptance
 
