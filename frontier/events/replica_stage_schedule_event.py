@@ -180,7 +180,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
             # lane's NIXL READs.
             lane = cluster_scheduler.get_replica_scheduler(self._replica_id, self._replica_local_id)
             if hasattr(lane, "on_engine_step_start"):
-                lane.on_engine_step_start(self.time, batch)
+                lane.on_engine_step_start(self.time + batch._forward_start_host_delay, batch)
 
         if isinstance(batch, DummyForwardBatch):
             return start_dummy_forward(
@@ -267,7 +267,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     )
                     # The host prepares the forward before its kernels launch.
                     preparation_time = execution_time.forward_preparation_time * 1e-3
-                    batch._forward_launch_start_time = self.time + preparation_time
+                    batch._forward_launch_start_time = (
+                        self.time + batch._forward_start_host_delay + preparation_time
+                    )
                     batch._forward_launch_time = execution_time.forward_launch_time * 1e-3
                     # Predictor single-layer components are in milliseconds.
                     # Event queue timestamps are in seconds.
@@ -561,7 +563,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     batch._decode_stage_start_time = self.time
                     # The host prepares the forward before its kernels launch.
                     preparation_time = execution_time.forward_preparation_time * 1e-3
-                    batch._forward_launch_start_time = self.time + preparation_time
+                    batch._forward_launch_start_time = (
+                        self.time + batch._forward_start_host_delay + preparation_time
+                    )
                     batch._forward_launch_time = execution_time.forward_launch_time * 1e-3
 
                     # Predictor single-layer attention component is in milliseconds;

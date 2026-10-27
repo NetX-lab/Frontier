@@ -732,7 +732,11 @@ class KvBlockAllocation:
                     f"Failed to allocate grouped KV blocks for request {request.id}"
                 )
             self._sync_prefix_cache_allocation_state(request)
-            if allocation.zero_required_block_ids:
+            # Native skips the zeroing of blocks a NIXL READ fills.
+            zero_required_block_ids = (
+                () if read_reservation else allocation.zero_required_block_ids
+            )
+            if zero_required_block_ids:
                 # Match the native manager drain: retain assignments even if
                 # later preempted, in group order, without ID deduplication.
                 for group_id, block_ids in allocation.group_new_block_ids:
@@ -753,8 +757,7 @@ class KvBlockAllocation:
                         for group_id, block_ids in allocation.group_new_block_ids
                     },
                     "zero_required_block_ids": [
-                        int(block_id)
-                        for block_id in allocation.zero_required_block_ids
+                        int(block_id) for block_id in zero_required_block_ids
                     ],
                     **({"evidence_kind": "source_structural_state",
                         "grouped_cache_state": self._get_grouped_cache_state(request)}

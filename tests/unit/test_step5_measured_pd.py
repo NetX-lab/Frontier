@@ -182,7 +182,9 @@ def test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners
     assert first.num_context_tokens == [4080]
     assert first.request_is_decoding == [False]
     assert first.get_decode_cuda_graph_runtime_mode() == "NONE"
-    assert first.cache_block_zeroing is None
+    # The prompt tail resets only its own two new pages in each of the four groups;
+    # the 1020 pages the READ fills are not reset.
+    assert len(first.cache_block_zeroing.block_ids) == 8
     execution.until(lambda: request.num_emitted_decode_tokens == 1)
     assert request.num_emitted_decode_tokens == 1
     assert request.first_decode_token_completed_at == execution.metrics.outputs[-1][0]

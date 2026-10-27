@@ -40,6 +40,10 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
         default=None,
         metadata={"help": "Explicit NIXL prefix geometry and READ-to-GPU-ready cost JSON; required for grouped measured NIXL."},
     )
+    kv_block_zeroing_host_profile: Optional[str] = field(
+        default=None,
+        metadata={"help": "Measured Step KV side-storage reset host time JSON (kv_block_zeroing_host_time.v1); delays the DP forward start of resetting steps. Unset: no host term."},
+    )
     cpu_overhead_input_file: str = field(
         default="./data/profiling/cpu_overhead/{NETWORK_DEVICE}/{MODEL}/cpu_overheads.csv",
         metadata={"help": "Path to the cpu overhead input file."},

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Update the current status: h200_32 sweep03 result and E against it (14/14 pass, TPOT −13.9%), item 3 Frontier side implemented and checked. |
 | 2026-10-27 | Update the current status: h200_64 780 s sweep result and G against it (14/14 pass), h200_32 sweep03 running, item 3 design reviewed and revised (23 hooks / 46 writes). |
 | 2026-10-27 | Update the current status: G result, h200_64 length-sweep result and its 780 s rerun, the KV side-storage reset sync as the host-time cause. |
 | 2026-10-27 | Correct the operator-error sizes after the per-rank check; item 3 moves before the item 2 operator fixes. |
@@ -139,6 +140,11 @@ Status as of 2026-10-27:
     native TTFT 978.7 ms, TPOT 56.3 ms, E2E 58.59 s, total throughput 5,236.6 tok/s): all 14
     rows pass the 30% gate. TTFT mean −11.7%, p90 −28.5%; TPOT mean −18.5%, p90 −24.5%; E2E
     mean −18.4%; total throughput +2.6%. This native run still has some compile stalls (below).
+  - The same E run against the clean h200_32 rerun with the 420 s sweep (sweep03, job
+    `exp-1027-094843-675984`; native TTFT 912.2 ms, TPOT 53.3 ms, E2E 55.44 s, total throughput
+    5,219.8 tok/s): all 14 rows pass. TTFT mean −5.3% (p95 −6.4%), TPOT mean −13.9% (p95
+    −15.2%), E2E mean −13.7%, total throughput +2.9% (`evidence/d31_h200_32_sweep03_compare_E.json`).
+    Frontier's TPOT is about 7.4 ms per token low, the size of the host time item 3 adds.
 - **Step G result** (`h200_64_g01`, merged04, measured H200 DP4 collectives), against the
   h200_64 length-sweep native run (job `exp-1027-082338-716026`, native TTFT 1,278.7 ms, TPOT
   65.5 ms, E2E 68.32 s, total throughput 4,983.6 tok/s): 11 of 14 rows pass the 30% gate. TTFT
@@ -179,22 +185,24 @@ Status as of 2026-10-27:
   limit. The h200_64 run with a 420 s sweep (job `exp-1027-082338-716026`) cut its stall events
   from 106/77/53 to 69/37/27, again all above the length the sweep reached: its long requests
   needed 448 s. The h200_64 rerun with 780 s succeeded with one stall per repeat, all within
-  the sweep's reach. The h200_32 rerun with 420 s (sweep03, job `exp-1027-094843-675984`) was
-  submitted 2026-10-27 01:48 UTC.
+  the sweep's reach. The h200_32 rerun with 420 s (sweep03, job `exp-1027-094843-675984`)
+  succeeded with 3 / 2 / 1 stall events per repeat, all within the sweep's reach, and stable
+  repeats (TPOT 53.20 / 53.29 / 53.41 ms). Both scales now have a clean native reference.
 - **Operator profiles.** The H200 profile tables for both roles are measured and merged (run 03,
   `test_report_2026-10-26_h200_profiles.md`). The first runs on them found five defects in the
   profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,
   `d034202c`).
 - **Next.**
   1. Model the host time between decode steps (item 3). The design (`design.md`) was reviewed
-     by codex (changes required) and revised: the host time joins the DP forward-start
-     agreement before first attention, a probe measures the host interval directly at real
-     forward seams, one probe run per DP size, and the profile is checked against DP/TP/PP and
-     graph mode. Next: implement the Frontier side and the probe, measure, rerun E and G.
-  2. Compare E against the h200_32 sweep03 rerun when it ends.
-  3. Fix the two operator errors from the device timeline (routed expert compute, TP
+     by codex and revised. The Frontier side is implemented and checked (off by default,
+     `test_report_2026-10-27_kv_block_zeroing_host_time.md`): a measured profile delays every
+     DP lane's forward to the latest lane's reset-ready time. Next: the native `host_probe` run
+     kind and its estimator, one probe run per DP size, then rerun E and G with the measured
+     profiles.
+  2. Fix the two operator errors from the device timeline (routed expert compute, TP
      all-reduce) from op profiling.
-  4. Formal 64-GPU calibration: E is within 30% of the warmed native run on all 14 rows.
+  3. Formal 64-GPU calibration: E and G pass all 14 rows against the clean native references
+     (sweep03 and h200_64 sweep02); the remaining work lowers the TPOT error (−13.9% and −19.2%).
 
 ### Sub-task directories (`task_memory/`)
 

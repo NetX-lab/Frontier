@@ -542,7 +542,8 @@ def check_cache_lifetime(events, stages, completion):
                 "allocation counts output bonus as a KV input")
         new_ids = {group: [block for block in table[len(previous_tables[group]):] if block is not None]
                    for group, table in initial["group_block_ids"].items()}
-        require(allocation["group_new_block_ids"] == new_ids and allocation["zero_required_block_ids"] == [],
+        require(allocation["group_new_block_ids"] == new_ids and allocation["zero_required_block_ids"] == [
+                    block for blocks in allocation["group_new_block_ids"].values() for block in blocks],
                 "group allocation/zeroing evidence differs")
         previous_tables = final["group_block_ids"]
         previous_frontier = frontier

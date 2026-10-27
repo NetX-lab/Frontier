@@ -572,6 +572,8 @@ class Batch(BaseEntity):
         self._is_moe = is_moe
         self.decode_cuda_graph_metadata: Optional[DecodeCudaGraphMetadata] = None
         self.cache_block_zeroing: Optional[KVCacheBlockZeroing] = None
+        # Host time from the DP forward-start agreement to this lane's launch.
+        self._forward_start_host_delay = 0.0
         self._request_runtime_epochs = [
             int(getattr(request, "runtime_epoch", 0)) for request in self._requests
         ]

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: h200_32 sweep03 succeeded (coverage verified, 3/2/1 stall events, all within the sweep's reach); E passes all 14 rows against it (TTFT mean −5.3%, TPOT mean −13.9%, throughput +2.9%); item 3 step 3 (Frontier side) implemented and checked: 304 unit tests, dummy smoke 12/12, fidelity 77/77 (config fields only); NIXL READ profiles regenerated for the new capacity flag. |
 | 2026-10-27 | D31: h200_64 sweep02 succeeded (one stall per repeat, all within the sweep's reach; stable repeats); G passes all 14 rows against it (TTFT −17.5%, TPOT −19.2%); h200_32 sweep03 submitted; item 3 design reviewed by codex (changes required: DP agreement before first attention, real forward-end hook, direct host-interval measurement, DP validation, 23 hooks / 46 writes). |
 | 2026-10-27 | D31: G rerun finished (all four means within 30% of the h200_64 sweep reference, three tail rows fail); h200_64 sweep01 result (stalls left only above the length it reached; 420 s too short), sweep02 with 780 s submitted; item 3 lead: a host sync for the KV side-storage reset on every decode step that allocates a KV block. |
 | 2026-10-27 | D31: per-rank check: fast ranks wait in the collectives for the slowest routed rank; routed compute about 2.5–3 ms per step high, TP all-reduce about 1–2 ms low; host time (item 3) is the main remaining TPOT gap. |
@@ -228,7 +229,9 @@ State of the D31 plan steps (see the top section of `plan.md`):
   throughput +14.7% (calibration item 2b below). The workflow-port run `h200_32_wf02` finished:
   TTFT −37.4%, TPOT −57.0%. The rerun `h200_32_comb_h200` (workflow port and measured
   collectives) finished: all 14 rows pass the 30% gate against the h200_32 sweep reference
-  (TPOT mean −18.5%). Calibration (items 3, then 2) continues.
+  (TPOT mean −18.5%). Against the h200_32 sweep03 reference (420 s sweep) all 14 rows pass:
+  TTFT mean −5.3%, TPOT mean −13.9%, E2E mean −13.7%, throughput +2.9%. Calibration (items 3,
+  then 2) continues.
 - completed — F. H200 64-GPU native workload, job `exp-1026-201417-791460` (report
   `test_report_2026-10-26_h200_64_native_workload.md`).
 - in-progress — G. Frontier `h200_64` rerun `h200_64_g01` (merged04, measured collectives)
@@ -1023,6 +1026,27 @@ before the plan entry was added). Native step times and token gaps here are diag
     `verify` and the StepMind dry run pass; the dry run differs from sweep02 only in paths. Pi run
     `d31-h200-32-sweep03-submit-1027d` (prompt `/data/ycfeng/tmp/ds4_runs/prompts/d31-h200-32-sweep03-submit-1027d.md`)
     waited for sweep02 to end, then submitted.
+  - h200_32 sweep03 result: job `exp-1027-094843-675984` succeeded (01:48:43 → 02:14:45 UTC);
+    replay `CLIENT_WORKLOAD_VERIFIED`; length sweep `coverage_verified=true` (3 short requests
+    returned HTTP 502 during the sweep: `length-sweep-short-00430`, `-00432`, `-07546`;
+    `EngineDeadError` tracebacks appear only at shutdown). Pi report
+    `/data/ycfeng/tmp/ds4_runs/d31-h200-32-sweep03-submit-1027d/output.md`.
+  - Stall regions (`/data/ycfeng/tmp/d31_diag/stall_regions.py`, diagnostic): the sweep reached
+    length 7,168 (region count 896); formal stall events 3 / 2 / 1 per repeat (sweep02: 38 / 21 /
+    22), none above the sweep's reach.
+  - Native metrics (`workload_metrics.py`, strict checks pass;
+    `evidence/d31_h200_32_sweep03_native_metrics.json`): TTFT mean 912.24 ms (p90 949.58), TPOT
+    mean 53.30 ms (p90 55.29), E2E mean 55,440.75 ms, total throughput 5,219.8 tok/s, output
+    throughput 745.7 tok/s. Per-repeat TTFT 907.4 / 915.4 / 913.9 ms, TPOT 53.20 / 53.29 /
+    53.41 ms (no falling trend).
+  - Acceptance (plan C reruns): `workload_metrics.py` PASS, coverage PASS, stall-free repeats
+    PASS (only 1–3 events, within reach), falling trend PASS. This is the clean h200_32 reference.
+  - Step E (`h200_32_comb_h200`, `/data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/frontier_summary.json`,
+    commit `2beb09b3`) against it (`frontier_workload.py compare --gate 0.3`,
+    `evidence/d31_h200_32_sweep03_compare_E.json`): all 14 rows PASS. TTFT mean −5.3% (p95
+    −6.4%), TPOT mean −13.9% (p95 −15.2%), E2E mean −13.7% (p95 −15.1%), total and output
+    throughput +2.9%. The remaining TPOT gap (about 7.4 ms per token) is the size item 3 targets.
+    Note: `/data/ycfeng/tmp/d31_comb_run/...` is an earlier failed run (rc 1) and is not used.
 
 Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31.10):
 
@@ -1115,7 +1139,27 @@ traces `/data/ycfeng/tmp/step5_d31_devtl_20261026/h200_32_devtl01/stage/evidence
   boundary triggers it.
 - Inference: the reset sync is the main remaining TPOT gap. Frontier models no host time
   (`skip_cpu_overhead_modeling=True`), and its CPU-overhead terms, when enabled, add serially
-  without an async-scheduling overlap. Item 3 design: `design.md` (in progress).
+  without an async-scheduling overlap. Item 3 design: `design.md`.
+
+Calibration item 3 step 3, Frontier side (2026-10-27, `completed`; report
+`test_report_2026-10-27_kv_block_zeroing_host_time.md`, design section 8):
+
+- Reason: the host time of a resetting step must delay every DP lane's forward before its first
+  attention, as the native gloo DP all-reduce does (design 3.2, codex finding F001).
+- Method: an optional profile `kv_block_zeroing_host_profile` (loader
+  `frontier/execution_time_predictor/kv_block_zeroing_host_time.py`); the forward-start agreement
+  computes `s = max(a_i + h_i)` and every batch, dummies included, launches `s - t` later; the
+  stage start stays at the agreement time. Trigger: Step-5 capacity sets `zero_new_blocks`; a
+  NIXL read reservation records no zero blocks.
+- Expectation: unchanged results without the profile. Result: fidelity 77/77 (only the two
+  config fields differ), dummy smoke 12/12, 304 focused unit tests pass, Step-5 structural cache
+  checks pass. The structural runner's weight constants are stale (pre-existing, recorded in the
+  report).
+- The NIXL READ profile compares the full cache capacity, so both H200 profiles were
+  regenerated with `zero_new_blocks: true` from the same logs (values unchanged):
+  `evidence/d31_h200_{32,64}_nixl_read_cost_20261027.json`.
+- Next: item 3 step 2, the `host_probe` native run kind and its estimator, then the measured
+  profiles and the E/G reruns.
 
 Step F status (2026-10-26):
 

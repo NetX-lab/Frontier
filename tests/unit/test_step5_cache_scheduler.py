@@ -172,7 +172,7 @@ def test_tp16_planner_binds_four_groups_to_one_physical_pool(
         raw_stride, raw_stride, raw_stride, stride,
     ]
     assert stride - raw_stride == SUMMARY_BYTES_PER_SLOT
-    assert capacity.zero_new_blocks is False
+    assert capacity.zero_new_blocks is True
     assert actual._kv_cache_manager.enable_caching is False
     assert actual._kv_cache_manager.block_pool.get_num_free_blocks() == planned - 1
     with pytest.raises(ValueError, match="no additive common block"):
@@ -398,8 +398,12 @@ def test_real_scheduler_logs_only_new_group_ids_without_pool_zeroing(
             tables = cache.get_group_block_ids(request.id)
             if index < 2:
                 expected_ids.append({group: [table[-1]] for group, table in tables.items()})
+                assert sorted(batch.cache_block_zeroing.block_ids) == sorted(
+                    table[-1] for table in tables.values()
+                )
             else:
                 expected_ids.append({group: [] for group in tables})
+                assert batch.cache_block_zeroing is None
             assert_pool_conserved(actual, [request])
             complete(actual, batch, float(2 * index + 2))
         assert request.completed
@@ -421,9 +425,10 @@ def test_real_scheduler_logs_only_new_group_ids_without_pool_zeroing(
         assert event["num_tokens"] == tokens
         assert event["grouped_cache_schema_version"] == 1
         assert event["group_new_block_ids"] == ids
-        # This is simulator allocation metadata. It does not establish native
-        # zeroing, sparse-summary initialization, or device contents.
-        assert event["zero_required_block_ids"] == []
+        # Native Step resets the side storage of every newly allocated block.
+        assert event["zero_required_block_ids"] == [
+            block for blocks in event["group_new_block_ids"].values() for block in blocks
+        ]
         assigned = [block for blocks in ids.values() for block in blocks]
         assert len(assigned) == len(set(assigned))
         assert 0 not in assigned

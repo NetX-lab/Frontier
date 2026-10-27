@@ -282,7 +282,7 @@ def resolve_step5_kv_cache_capacity(
     # The sparse group's sidepages grow with N; scratch grows only with max_num_seqs.
     return AttentionKVCacheCapacity(
         family_id="step5_attention", block_size=block_size, num_layers=config.num_layers,
-        components=components, groups=groups, reserved_blocks=1,
+        components=components, groups=groups, reserved_blocks=1, zero_new_blocks=True,
         fixed_bytes_per_request_slot=len(scratch.owner_layer_ids) * scratch.page_size_bytes,
     )
 

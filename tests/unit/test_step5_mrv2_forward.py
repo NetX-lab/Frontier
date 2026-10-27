@@ -10,6 +10,8 @@ from frontier.config.model_config import BaseModelConfig
 from frontier.config.replica_scheduler_config import VllmV1SchedulerConfig
 from frontier.entities import Batch, DummyForwardBatch, EPBatchGroup
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
+from frontier.entities.batch import KVCacheBlockZeroing
+from frontier.execution_time_predictor.kv_block_zeroing_host_time import KVBlockZeroingHostTime
 from frontier.execution_time_predictor.step5 import step5_row_features
 from frontier.execution_time_predictor.step5_cost import step5_batch_features, step5_batch_workload
 from frontier.profiling.step5.inputs import Step5ProfileInput
@@ -492,3 +494,76 @@ def test_unknown_policy_and_descriptor_mislabeling_reject_before_cost(monkeypatc
     real.forward_start_descriptor = SimpleNamespace(graph_mode="FULL", num_tokens=1)
     with pytest.raises(ValueError, match="forward-start descriptor"):
         step5_batch_workload(predictor, real)
+
+
+def _first_attention(role, batches, arrivals, host_time_ms):
+    """Admit two lanes at their arrival times; return each lane's first sync event time."""
+    scheduler, predictor, _, stages, _ = _harness(role)
+    if host_time_ms is not None:
+        predictor._kv_block_zeroing_host_time = KVBlockZeroingHostTime("fixture", host_time_ms, ())
+    engine_steps = {}
+    for lane in range(2):
+        scheduler.get_replica_scheduler(0, lane).on_engine_step_start = (
+            lambda time, batch: engine_steps.__setitem__(batch.id, time)
+        )
+    for lane, batch in enumerate(batches):
+        _enqueue(stages[lane], batch, lane)
+    _event(role, 0, arrivals[0]).handle_event(_global(scheduler), _MetricsStore(reporting=False))
+    resumes = _event(role, 1, arrivals[1]).handle_event(_global(scheduler), _MetricsStore(reporting=False))
+    assert [event.time for event in resumes] == [arrivals[1]] * 2
+    first = {}
+    for event in resumes:
+        [follow] = event.handle_event(_global(scheduler), _MetricsStore(reporting=False))
+        first[follow._batch.id] = follow.time
+    return [first[batch.id] for batch in batches], [engine_steps.get(batch.id) for batch in batches]
+
+
+def _resetting(batch):
+    batch.cache_block_zeroing = KVCacheBlockZeroing((3,), 1024)
+    return batch
+
+
+@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE])
+@pytest.mark.parametrize("arrivals,start", [
+    ((1.0, 1.0), 1.009), ((1.0, 1.004), 1.009), ((1.0, 1.02), 1.02),
+])
+def test_kv_block_zeroing_host_time_delays_every_lane_to_the_slowest_reset(role, arrivals, start,
+                                                                          monkeypatch):
+    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "none")
+    make = _prefill_batch if role is ClusterType.PREFILL else _decode_batch
+    # Host times 9/0 ms and first attention 1/5 ms: both lanes are ready at start + 5 ms.
+    batches = [_resetting(make(1)), make(5)]
+    first, engine_steps = _first_attention(role, batches, arrivals, 9.0)
+    assert first == pytest.approx([start + .001, start + .005])
+    for batch in batches:
+        assert batch._forward_launch_start_time == pytest.approx(start)
+        assert batch._forward_start_host_delay == pytest.approx(start - arrivals[1])
+        stage_start = (batch._prefill_stage_start_time if role is ClusterType.PREFILL
+                       else batch._decode_stage_start_time)
+        assert stage_start == arrivals[1]
+    # The DECODE engine step posts its NIXL READs after the launch.
+    expected_steps = [pytest.approx(start)] * 2 if role is ClusterType.DECODE else [None] * 2
+    assert engine_steps == expected_steps
+
+
+@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE])
+@pytest.mark.parametrize("mode", ["none", "full_and_piecewise"])
+def test_kv_block_zeroing_host_time_shifts_a_dummy_peer_and_needs_a_resetting_batch(role, mode,
+                                                                                   monkeypatch):
+    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", mode)
+    make = _prefill_batch if role is ClusterType.PREFILL else _decode_batch
+
+    def run(host_time_ms, resetting):
+        real = make(3)
+        if resetting:
+            _resetting(real)
+        dummy = DummyForwardBatch(0, 0, 0)
+        first, _ = _first_attention(role, [real, dummy], (1.0, 1.0), host_time_ms)
+        return first, dummy
+
+    baseline, _ = run(None, True)
+    assert run(9.0, False)[0] == baseline
+    shifted, dummy = run(9.0, True)
+    assert shifted == pytest.approx([time + .009 for time in baseline])
+    assert dummy.stage_start_time == 1.0
+    assert dummy._forward_launch_start_time == pytest.approx(1.009)

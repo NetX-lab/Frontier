@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: h200_32 sweep03 done (clean reference; E passes all 14 rows, TPOT −13.9%); item 3 step 3 (Frontier side) done. |
 | 2026-10-27 | D31: item 3 revised after the codex design review (23 reset hooks / 46 writes; direct host-interval probe per DP size; reset host time applied at the DP forward-start agreement); h200_64 sweep02 and G against it done. |
 | 2026-10-27 | D31: G result; h200_64 sweep result and the 780 s rerun; item 3 rewritten around the KV side-storage reset sync with its steps. |
 | 2026-10-27 | D31: per-rank check corrects the operator-error sizes; item 3 (host time) now comes before the item 2 operator fixes. |
@@ -205,8 +206,11 @@ Frontier should model, and the stalls are not removed from the native data after
    Result for h200_64 (job `exp-1027-091511-064923`): passes. Coverage verified, one stall event
    per formal repeat (all within the sweep's reach), per-repeat TPOT means 61.45 / 60.95 / 61.37
    ms. G against it: all 14 rows pass (TTFT mean −17.5%, TPOT mean −19.2%, throughput +6.4%).
-   The h200_32 rerun with 420 s (Pi run `d31-h200-32-sweep03-submit-1027d`) is running.
-Formal 64-GPU calibration still waits for E within 30% against the warmed native run.
+   Result for h200_32 (sweep03, job `exp-1027-094843-675984`): passes. Coverage verified,
+   3 / 2 / 1 stall events per repeat (all within the sweep's reach), per-repeat TPOT means
+   53.20 / 53.29 / 53.41 ms. E against it: all 14 rows pass (TTFT mean −5.3%, TPOT mean
+   −13.9%, throughput +2.9%).
+Both clean native references exist now; E and G pass the 30% gate on all 14 rows against them.
 
 Calibration order for E, after the first error table:
 1. Workflow. The D-side first-token handoff (about two decode steps plus the READ plus the
@@ -301,6 +305,9 @@ Calibration order for E, after the first error table:
       forward-start agreement, so every DP lane launches from the latest lane's ready time before
       its first attention. Unit tests, dummy smoke and the 77-case fidelity matrix unchanged on
       the default path.
+      Done 2026-10-27 (`test_report_2026-10-27_kv_block_zeroing_host_time.md`): 304 focused
+      unit tests, dummy smoke 12/12, fidelity 77/77 with only config-field differences. The
+      NIXL READ profiles were regenerated for the new capacity flag (`design.md` 3.4).
    4. Rerun E and G against the clean references.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2

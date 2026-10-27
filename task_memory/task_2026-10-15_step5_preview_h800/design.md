@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Frontier side implemented (section 8); added the NIXL READ profile regeneration (3.4). |
 | 2026-10-27 | Revised after the codex design review (`codex-review-c85d179e-.../review.md`): 23 hooks / 46 writes; the host time joins the DP forward-start agreement before first attention; direct host-interval probe at real seams; DP/TP/PP/graph validation; review response in section 7. |
 | 2026-10-27 | First version: native mechanism, Frontier model, measurement probe, verification. |
 
@@ -134,6 +135,17 @@ schedules its first attention. It is not part of `OverheadTime`.
 - The value is a component host-time term measured by a probe, which D31.10 allows. The
   device time of every step still comes from the operator profiles.
 
+### 3.4 Effect on the NIXL READ profiles
+
+The NIXL READ profile (`nixl_read_profile`) records the run's full KV cache capacity, and its
+loader compares that record with the run, including `zero_new_blocks`. With 3.1, Step-5
+capacity sets `zero_new_blocks=True`, so the existing H200 profiles no longer load. Both were
+regenerated from the same native server logs with the same command and the new capacity:
+`evidence/d31_h200_32_nixl_read_cost_20261027.json` and
+`evidence/d31_h200_64_nixl_read_cost_20261027.json`. The READ values are unchanged (51.37 and
+56.55 ms). The old files stay as the inputs of the earlier E and G runs; runs from the item 3
+commit on use the new files.
+
 ## 4. Measurement: host-step probe run (new diagnostic native run kind)
 
 The torch-profiler numbers (8.7–9.7 ms) are upper bounds because the profiler slows host
@@ -250,3 +262,19 @@ Open points from the review, handled as follows:
 - Collective joining across startup, skipped coordination and restarts: phase and process
   generation in every record, ordinals only for calls that ran the all-reduce (4.2, 4.3).
 - Table range: no extrapolation; an out-of-range request count is an error (3.3).
+
+## 8. Implementation (Frontier side)
+
+Implemented as designed in 3.1–3.3; checks in `test_report_2026-10-27_kv_block_zeroing_host_time.md`.
+
+| Part | Code |
+| --- | --- |
+| Profile loader and lookup | `frontier/execution_time_predictor/kv_block_zeroing_host_time.py` (`KVBlockZeroingHostTime`) |
+| Config field | `ExecutionTimePredictorConfig.kv_block_zeroing_host_profile`, bound into the predictor bundle identity in `shared_prediction_model_manager.py` |
+| Per-lane host time | `BaseExecutionTimePredictor.get_kv_block_zeroing_host_time_ms(batch)`; the predictor rejects the profile without the DP forward-start agreement (dummy mode or a non-Step model) |
+| Agreement | `forward_start_agreement.py`: arrival time per held batch; `s = max(a_i + h_i)`; every batch records `_forward_start_host_delay = s - t` |
+| Consumers | `replica_stage_schedule_event.py` (prefill and decode launch start, DECODE engine-step start), `dp_dummy_forward.py` (dummy first layer) |
+| Trigger | `step5_memory.py` (`zero_new_blocks=True`), `vllm_v1_kv_allocation.py` (a NIXL read reservation records no zero blocks) |
+
+One difference from 3.3: the dummy-mode rejection sits in the predictor, not in the loader,
+because the loader has no access to the predictor mode.

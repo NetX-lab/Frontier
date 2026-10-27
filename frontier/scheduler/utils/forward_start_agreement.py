@@ -91,6 +91,7 @@ def hold_forward_start(scheduler, stage, batch, *, time, replica_id, stage_id):
     lane_id = stage._replica_local_id
     lane_id = 0 if lane_id is None else lane_id
     stage.hold_forward_start(batch)
+    batch._forward_start_arrival_time = time
     ready = context.arrive_forward_start(batch._stage_admission_ticket, lane_id)
     stages = [
         scheduler.get_replica_stage_scheduler(replica_id, lane, stage_id)
@@ -108,6 +109,15 @@ def hold_forward_start(scheduler, stage, batch, *, time, replica_id, stage_id):
             batches, group_id=group,
             request_capacity=scheduler.get_replica_scheduler(replica_id, lane_id)._config.batch_size_cap,
         )
+        # A lane's KV side-storage reset runs on its host before the DP collective,
+        # so every lane launches once the slowest arrival plus reset has passed.
+        host_ready = max(
+            lane_batch._forward_start_arrival_time
+            + lane._execution_time_predictor.get_kv_block_zeroing_host_time_ms(lane_batch) * 1e-3
+            for lane, lane_batch in zip(stages, batches)
+        )
+        for lane_batch in batches:
+            lane_batch._forward_start_host_delay = host_ready - time
         context.resolve_forward_start()
         return [
             ReplicaStageScheduleEvent(

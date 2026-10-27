@@ -90,6 +90,24 @@ class BaseExecutionTimePredictor(ABC):
                 )
             self._step5_max_model_len = replica_scheduler_config.max_model_len
 
+        self._kv_block_zeroing_host_time = None
+        if predictor_config.kv_block_zeroing_host_profile:
+            if not self.requires_forward_start_agreement:
+                raise ValueError(
+                    "KV block zeroing host profile requires a Step model with measured "
+                    "predictors (the DP forward-start agreement), not dummy mode"
+                )
+            from frontier.execution_time_predictor.kv_block_zeroing_host_time import (
+                KVBlockZeroingHostTime,
+            )
+
+            self._kv_block_zeroing_host_time = KVBlockZeroingHostTime.from_file(
+                predictor_config.kv_block_zeroing_host_profile,
+                replica_config=replica_config,
+                cluster_type=getattr(self, "_cluster_type", None),
+                predictor_config=predictor_config,
+            )
+
         # get configs
         self._replica_scheduler_provider = str(replica_scheduler_config.get_type())
         self._block_size = replica_scheduler_config.block_size
@@ -110,6 +128,12 @@ class BaseExecutionTimePredictor(ABC):
             self._initialize_dummy_mode()
         else:
             self._initialize_normal_mode()
+
+    def get_kv_block_zeroing_host_time_ms(self, batch) -> float:
+        """Host time a lane's batch adds before its DP forward start; 0 unless it resets."""
+        if self._kv_block_zeroing_host_time is None or batch.cache_block_zeroing is None:
+            return 0.0
+        return self._kv_block_zeroing_host_time.time_ms(len(batch.requests))
 
     def _assemble_stage(self, layer_times, *, first_layer_id: int) -> StageExecutionTime:
         """Attach model-owned identities to ordered numerical layer results."""
