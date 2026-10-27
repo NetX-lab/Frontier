@@ -236,7 +236,8 @@ Calibration order for E, after the first error table:
       growth into device busy time per kernel category and device idle time (host waits, DP
       synchronization). Diagnostic only (D31.10).
       Done (job `exp-1027-062510-683917`): Frontier's step is within about 5% of the native
-      device busy time up to 21 requests per engine and 7% lower at 45. The rest of the native
+      device busy time up to 21 requests per engine and about 7% lower at 45 (Frontier's curve ends
+      at 36). The rest of the native
       growth is device idle time while the device waits for the host (about 2 ms at 9 requests,
       8 ms at 45), which belongs to item 3. Two compensating operator errors remain: routed
       expert compute is overpriced (16.9 against about 11.4 ms per step at 9 requests, because

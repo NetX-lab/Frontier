@@ -817,21 +817,22 @@ before the plan entry was added). Native step times and token gaps here are diag
     | --- | --- | --- | --- | --- |
     | 8–9 | 45–51 ms | 41 ms | 1.5–2.1 ms | 43.1 ms |
     | 20–21 | 55 ms | 46–48 ms | 5.8–6.7 ms | 46.4 ms |
-    | 44–46 | 62–65 ms | 53–54 ms | 7.1–8.1 ms | 49.9 ms |
+    | 44–46 | 62–65 ms | 53–54 ms | 7.1–8.1 ms | 49.9 ms at 32–36 (the curve ends at 36) |
 
-    Frontier's step agrees with the native device busy time within about 5% up to 21 requests
-    and is 7% lower at 45. The rest of the native growth is device idle time while the device
+    Frontier's step agrees with the native device busy time within about 5% up to 21 requests;
+    at 44–46 native the nearest Frontier point (32–36 requests) is 7% lower. The rest of the native growth is device idle time while the device
     waits for the host (about 2 ms at 9 requests, 8 ms at 45; item 3), plus about 2 ms of other
     idle time at every size.
   - Kernel components at about 9 requests per engine (native kernel sums per decode step, joined
-    by `/data/ycfeng/tmp/d31_diag/devtl/kernels_joined.py`; Frontier from the EP-wave ledger):
+    by `/data/ycfeng/tmp/d31_diag/devtl/kernels_joined.py`, and the `routed_expert` and
+    `tp_all_reduce` categories of `87cb0d58`; Frontier from the EP-wave ledger):
 
     | Component | Native | Frontier |
     | --- | --- | --- |
-    | EP dispatch | 9.1 ms | 9.18 ms |
-    | EP combine | 4.9 ms | 5.84 ms |
-    | Routed expert compute | about 11.4 ms | 16.9 ms |
-    | TP all-reduce | 6.1 ms | about 2.6–3.1 ms |
+    | EP dispatch (all-gather) | 9.1 ms | 9.18 ms |
+    | EP combine (reduce-scatter) | 4.9 ms | 5.84 ms |
+    | Routed expert compute | 10.9–11.1 ms | 16.9 ms |
+    | TP all-reduce | 6.1 ms (fusion kernel), 6.6–6.9 ms (category) | about 2.6–3.1 ms |
 
     The routed-compute gap comes from the MoE profile: it routes tokens so that every local
     expert is active, while a small native batch activates only a few of the 22 local experts.
@@ -850,8 +851,8 @@ before the plan entry was added). Native step times and token gaps here are diag
     at QPS 1, so each repeat reaches a different subset of the variants, and the count of new
     compiles falls from repeat to repeat.
   - Stall events (`/data/ycfeng/tmp/d31_diag/native_stall_events.py`: token gaps over 150 ms of
-    formal requests that are already decoding, merged across requests; every event ends within
-    50 ms of some request's first token):
+    formal requests that are already decoding, merged across requests; 570 of the 584 events end
+    within 50 ms of some request's first token):
 
     | Run | Repeat 1 | Repeat 2 | Repeat 3 |
     | --- | --- | --- | --- |
@@ -859,7 +860,7 @@ before the plan entry was added). Native step times and token gaps here are diag
     | h200_64 workload01 | 106 events, 47.1 s | 77, 33.3 s | 53, 23.2 s |
     | h200_32 device timeline | 86 events, 81.5 s | 58, 22.1 s | 32, 12.3 s |
 
-    The median event lasts 380–436 ms in every run.
+    The median event lasts 381–436 ms in every run.
   - The per-repeat native means fall with the stall count. h200_32: TPOT 67.69 → 60.38 →
     57.16 ms, TTFT 1,171 → 1,071 → 1,008 ms. h200_64: TPOT 74.97 → 68.84 → 65.1 ms, TTFT
     1,462 → 1,376 → 1,306 ms.
