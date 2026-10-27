@@ -389,6 +389,9 @@ class StageExecutionTime:
     def get_single_layer_attention_time(self) -> float:
         return self._first_layer().get_single_layer_attention_time()
 
+    def get_single_layer_pre_dp_time(self) -> float:
+        return self._first_layer().get_single_layer_pre_dp_time()
+
     def get_single_layer_attention_scope_time(self) -> float:
         return self._first_layer().get_single_layer_attention_scope_time()
 

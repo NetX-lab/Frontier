@@ -44,7 +44,12 @@ class IterationSchedulingPolicy:
     def _build_decode_cuda_graph_metadata(
         self, batch: Batch
     ) -> Optional[DecodeCudaGraphMetadata]:
-        if self._cluster_type not in (ClusterType.MONOLITHIC, ClusterType.DECODE):
+        config_mode = global_vars.get_decode_cuda_graph_mode()
+        graph_roles = (ClusterType.MONOLITHIC, ClusterType.DECODE)
+        if config_mode == "full_and_piecewise":
+            # The V2 runner dispatches every forward, a prefill engine's included.
+            graph_roles += (ClusterType.PREFILL,)
+        if self._cluster_type not in graph_roles:
             return None
         if (
             getattr(self, "_spec_decode_enabled", False)
@@ -56,7 +61,6 @@ class IterationSchedulingPolicy:
             # can reintroduce method-specific CUDA graph semantics.
             return None
 
-        config_mode = global_vars.get_decode_cuda_graph_mode()
         if config_mode == "none":
             return None
 
@@ -95,6 +99,28 @@ class IterationSchedulingPolicy:
         )
         is_mixed_batch = not is_uniform_decode_batch
 
+        if config_mode == "full_and_piecewise":
+            runtime_mode, padded_total_tokens, padded_num_reqs = (
+                self.dispatch_full_and_piecewise(
+                    batch.size,
+                    batch.total_num_tokens,
+                    uniform_decode_query_len if is_uniform_decode_batch else None,
+                )
+            )
+            return DecodeCudaGraphMetadata(
+                config_mode=config_mode,
+                runtime_mode=runtime_mode,
+                capture_hit=runtime_mode != "NONE",
+                is_mixed_batch=is_mixed_batch,
+                original_total_tokens=batch.total_num_tokens,
+                padded_total_tokens=padded_total_tokens,
+                original_decode_batch_size=original_decode_batch_size,
+                # FULL pads requests with one-token decode rows.
+                padded_decode_batch_size=(
+                    original_decode_batch_size + padded_num_reqs - batch.size
+                ),
+            )
+
         runtime_mode = "NONE"
         if config_mode == "full_decode_only":
             if is_uniform_decode_batch and capture_hit:
@@ -121,6 +147,29 @@ class IterationSchedulingPolicy:
             original_decode_batch_size=original_decode_batch_size,
             padded_decode_batch_size=padded_decode_batch_size,
         )
+
+    def dispatch_full_and_piecewise(
+        self, num_reqs: int, num_tokens: int, uniform_token_count: Optional[int]
+    ) -> Tuple[str, int, int]:
+        """Dispatch like the vLLM V2 runner's FULL_AND_PIECEWISE graph manager.
+
+        Returns the runtime mode, padded tokens and padded requests. A batch
+        runs the graph of the smallest capture size holding its tokens: FULL,
+        with requests padded to that size, when every request decodes one
+        token and the size is within max_num_seqs; PIECEWISE, with tokens
+        padded only, otherwise; eager above the largest capture size
+        (v1/worker/gpu/cudagraph_utils.py, _init_candidates and dispatch).
+        No captured descriptor bounds the max query length, so it is not an
+        input.
+        """
+        capture_hit, capture_size = self._resolve_decode_cuda_graph_capture_size(
+            num_tokens
+        )
+        if not capture_hit:
+            return "NONE", num_tokens, num_reqs
+        if uniform_token_count == 1 and capture_size <= self._max_num_running_reqs:
+            return "FULL", capture_size, capture_size
+        return "PIECEWISE", capture_size, num_reqs
 
     def _resolve_decode_cuda_graph_capture_size(self, total_tokens: int) -> Tuple[bool, int]:
         cudagraph_capture_sizes = global_vars.get_cudagraph_capture_sizes()

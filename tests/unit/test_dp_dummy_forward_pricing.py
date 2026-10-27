@@ -12,7 +12,7 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
 )
 from frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy import IterationSchedulingPolicy
 from frontier.scheduler.utils.dp_dummy_forward import (
-    resolve_dummy_forward_inputs,
+    resolve_first_layer_inputs,
     start_dummy_forward,
 )
 from frontier.types import ClusterType, MeasurementType
@@ -41,6 +41,13 @@ class PricingPredictor(SklearnExecutionTimePredictor):
         raise NotImplementedError
 
 
+def replica_config(profile_id="glm_moe_dsa"):
+    profile = SimpleNamespace(profile_id=profile_id)
+    return SimpleNamespace(replica_config=SimpleNamespace(
+        model_config=SimpleNamespace(get_model_architecture_profile=lambda: profile)
+    ))
+
+
 def predictor(role=ClusterType.MONOLITHIC):
     owner = object.__new__(PricingPredictor)
     owner._cluster_type = role
@@ -59,6 +66,7 @@ def test_dummy_graph_pricing_waits_for_the_peer_shape(monkeypatch):
         )
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.MONOLITHIC,
+        _config=replica_config(),
         _predictor=SimpleNamespace(
             _num_layers_per_pipeline_stage=78,
             predict_stage_execution_time=predict,
@@ -91,7 +99,7 @@ def test_dummy_first_layer_uses_dp_mode_and_projection_width(runtime, width):
     real = decode_batch(4, runtime)
     dummy = DummyForwardBatch(0, 0, 0)
     dummy.decode_cuda_graph_metadata = decode_batch(1).decode_cuda_graph_metadata
-    dummy._dummy_dispatch_pending = True
+    dummy._first_layer_pricing_deferred = True
     dummy.stage_start_time = 1.0
     seen = []
 
@@ -105,35 +113,39 @@ def test_dummy_first_layer_uses_dp_mode_and_projection_width(runtime, width):
 
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.MONOLITHIC,
+        _config=replica_config(),
         _predictor=SimpleNamespace(predict_stage_execution_time=predict),
     )
     room = {"batches": {0: real, 1: dummy}, "arrival_times": {0: 1.01, 1: 1.0}}
-    resolve_dummy_forward_inputs(scheduler, 0, 0, room)
+    resolve_first_layer_inputs(scheduler, 0, 0, 0, room)
     family = MeasurementType.CUDA_EVENT if runtime == "NONE" else MeasurementType.KERNEL_ONLY
     assert seen == [(family, width)]
     assert room["arrival_times"][1] == pytest.approx(1.002)
     assert dummy.total_num_tokens == 1
     assert dummy.requests == []
-    assert not dummy._dummy_dispatch_pending
+    assert not dummy._first_layer_pricing_deferred
     # Only the first layer negotiates. Later layers retain the same descriptor.
-    resolve_dummy_forward_inputs(scheduler, 0, 1, room)
+    resolve_first_layer_inputs(scheduler, 0, 0, 1, room)
     assert len(seen) == 1
 
 
 def test_an_eager_peer_disables_dummy_graph_even_with_other_graph_peers():
     dummy = DummyForwardBatch(0, 0, 0)
     dummy.decode_cuda_graph_metadata = decode_batch(1).decode_cuda_graph_metadata
-    dummy._dummy_dispatch_pending = True
+    dummy._first_layer_pricing_deferred = True
     dummy.stage_start_time = 0.0
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.MONOLITHIC,
-        _predictor=SimpleNamespace(predict_stage_execution_time=lambda *a, **kw: SimpleNamespace(
-            forward_launch_time=0.0, get_single_layer_attention_scope_time=lambda: 1.0,
-        )),
+        _config=replica_config(),
+        _predictor=SimpleNamespace(
+            predict_stage_execution_time=lambda *a, **kw: SimpleNamespace(
+                forward_launch_time=0.0, get_single_layer_attention_scope_time=lambda: 1.0,
+            ),
+        ),
     )
     room = {"batches": {0: decode_batch(4), 1: decode_batch(2, "NONE"), 2: dummy},
             "arrival_times": {0: 0.1, 1: 0.2, 2: 0.0}}
-    resolve_dummy_forward_inputs(scheduler, 0, 0, room)
+    resolve_first_layer_inputs(scheduler, 0, 0, 0, room)
     assert dummy.decode_cuda_graph_metadata is None
     assert dummy.get_effective_total_tokens_for_compute(ClusterType.MONOLITHIC) == 1
 

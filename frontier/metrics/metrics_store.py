@@ -137,7 +137,8 @@ def _iter_layer_attention_times(execution_time: ExecutionTime, *, skip_zero: boo
     if execution_time.attention_family_id == "deepseek_v4_attention":
         from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
 
-        yield from ((name, value) for _, name, value in timing_operator_times(execution_time, "attention")
+        yield from ((name, value) for phase in ("pre_dp", "attention")
+                    for _, name, value in timing_operator_times(execution_time, phase)
                     if value or not skip_zero)
         return
     family = get_attention_family(execution_time.attention_family_id)
@@ -1158,8 +1159,9 @@ class MetricsStore:
                 )
 
                 layer_meta.update(getattr(layer, "_dsv4_source_rows", {}))
-                phases = ("attention",) if skip_ffn_attn_norm_residual else (
-                    "attention", "pre_dispatch", "dispatch", "routed_compute", "combine", "post_combine",
+                phases = ("pre_dp", "attention") if skip_ffn_attn_norm_residual else (
+                    "pre_dp", "attention", "pre_dispatch", "dispatch", "routed_compute",
+                    "combine", "post_combine",
                 )
                 for phase in phases:
                     for kind, name, duration_ms in timing_operator_times(layer, phase):

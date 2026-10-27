@@ -23,8 +23,10 @@ def timing_operator_times(execution_time, phase):
     from frontier.operators.families import COMM_FAMILY
 
     names_by_phase = {
+        # Work before the forward's DP rendezvous: the runner zeroes newly
+        # allocated cache blocks before it synchronizes the DP descriptor.
+        "pre_dp": ("kv_cache_block_zero",),
         "attention": (
-            "kv_cache_block_zero",
             "dsv4_embedding", "dsv4_embedding_allreduce",
             "dsv4_mhc_first_pre", "dsv4_mhc_ffn_post_attn_pre",
             "dsv4_sp_attention_allgather",

@@ -55,9 +55,12 @@ def test_real_allocation_has_one_before_forward_scope_per_worker(predictor, tp_r
     stage = StageExecutionTime(layers)
     assert stage.op_times["kv_cache_block_zero"] == 2.0
     assert sum("kv_cache_block_zero" in layer.op_times for layer in layers) == 1
-    phase = timing_operator_times(layers[0], "attention")
-    assert phase[0] == ("COMPUTE", "kv_cache_block_zero", 2.0)
-    assert phase[1][1] == "dsv4_embedding"
+    assert timing_operator_times(layers[0], "pre_dp") == (
+        ("COMPUTE", "kv_cache_block_zero", 2.0),
+    )
+    assert timing_operator_times(layers[0], "attention")[0][1] == "dsv4_embedding"
+    assert layers[0].get_single_layer_pre_dp_time() == 2.0
+    assert all(layer.get_single_layer_pre_dp_time() == 0.0 for layer in layers[1:])
     assert sum(component_ledger(stage).values()) == pytest.approx(stage.total_time * 1000)
     calls = layers[0]._dsv4_workloads["kv_cache_block_zero"]
     assert calls["block_ids"] == tuple(range(1, 80))

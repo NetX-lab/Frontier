@@ -271,9 +271,8 @@ def validate_deepseek_v4_dummy_forward(batch):
         raise ValueError("V4 no-metadata execution requires an explicit DummyForwardBatch")
     if batch.requests or batch.num_tokens != [1] or batch.total_num_tokens != 1:
         raise ValueError("V4 DummyForwardBatch must retain its request-free one-row contract")
-    if (batch.spec_decode_metadata is not None or batch.afd_stage_metadata is not None
-            or batch.decode_cuda_graph_metadata is not None):
-        raise NotImplementedError("V4 idle forward requires ordinary eager co-location")
+    if batch.spec_decode_metadata is not None or batch.afd_stage_metadata is not None:
+        raise NotImplementedError("V4 idle forward supports no speculative or AFD metadata")
 
 
 def build_deepseek_v4_dummy_attention_workload(
@@ -294,6 +293,8 @@ def build_deepseek_v4_dummy_attention_workload(
         prefill_context_parallel_size=prefill_context_parallel_size,
     )
     validate_deepseek_v4_dummy_forward(batch)
+    if batch.get_decode_cuda_graph_runtime_mode() != "NONE":
+        raise NotImplementedError("V4 idle forward is priced for eager execution only")
     if has_attention_metadata is not False:
         raise ValueError("V4 idle forward must explicitly declare absent attention metadata")
     layer = bind_layer_attention(model_config, global_layer_id)

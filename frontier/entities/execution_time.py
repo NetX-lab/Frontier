@@ -907,6 +907,10 @@ class ExecutionTime(BaseEntity):
         """
         return self._attention_time.total_time()
 
+    def get_single_layer_pre_dp_time(self) -> float:
+        """Get the device work a layer runs before the forward's DP rendezvous, in ms."""
+        return self._get_pre_dp_execution_time()
+
     def get_single_layer_attention_scope_time(self) -> float:
         """
         Get the complete single-layer attention scope.
@@ -1042,16 +1046,19 @@ class ExecutionTime(BaseEntity):
         """
         Get post-attention portion of one layer in milliseconds.
 
-        Equivalent to: single-layer block - complete single-layer attention scope.
+        Equivalent to: single-layer block - pre-DP work - complete single-layer
+        attention scope.
         """
         post_attention_time = (
             self.get_single_layer_block_time()
+            - self.get_single_layer_pre_dp_time()
             - self.get_single_layer_attention_scope_time()
         )
         if post_attention_time < 0:
             raise ValueError(
                 f"Invalid post-attention time: {post_attention_time} ms "
                 f"(block={self.get_single_layer_block_time()} ms, "
+                f"pre_dp={self.get_single_layer_pre_dp_time()} ms, "
                 f"attention_scope={self.get_single_layer_attention_scope_time()} ms)"
             )
         return post_attention_time
@@ -1113,6 +1120,13 @@ class ExecutionTime(BaseEntity):
             return self._communication_time.moe_tensor_parallel_allreduce_time
         return self._communication_time.tensor_parallel_allreduce_time
 
+    def _get_pre_dp_execution_time(self) -> float:
+        if self._attention_family_id != "deepseek_v4_attention":
+            return 0.0
+        from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
+
+        return sum(value for _, _, value in timing_operator_times(self, "pre_dp"))
+
     def _get_attention_layer_execution_time(self) -> float:
         """
         Get attention layer execution time (single layer).
@@ -1139,10 +1153,11 @@ class ExecutionTime(BaseEntity):
         """
         Get complete transformer block execution time (single layer).
 
-        Includes attention + MLP/MoE + residual connection.
+        Includes pre-DP work + attention + MLP/MoE + residual connection.
         """
         return (
-            self._get_attention_layer_execution_time()
+            self._get_pre_dp_execution_time()
+            + self._get_attention_layer_execution_time()
             + (self._get_moe_execution_time() if self._is_moe else self._get_mlp_layer_execution_time())
             + self._residual_time.add_time
         )
