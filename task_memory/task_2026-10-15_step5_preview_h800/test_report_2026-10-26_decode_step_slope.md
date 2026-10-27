@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Added the h200_32 length-sweep rerun (section 6) and the step E comparison against it; updated the limits. |
 | 2026-10-27 | Created: native decode device timeline, Frontier step comparison, kernel components, just-in-time compile stalls, step E rerun. |
 
 ## Purpose
@@ -157,6 +158,76 @@ h200_64. The native rerun with the length sweep (`320c2082`) measures this direc
 
 All four means pass; the p90/p95 rows fail. The native tails include the compile stalls above.
 
+### 6. Native rerun with the length sweep (h200_32)
+
+Run: job `exp-1027-074903-556239` (4 × 8 H200, `step_main`, non-preemptible, creator
+`i-fengyicheng`), stage `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_sweep02` built
+from `320c2082` (worktree `.worktrees/step5-d31-native-320c208`). Length sweep settings in the run
+definition (`canonical_replay.length_sweep`): two long requests per DP lane, 0.1 s between lanes,
+short 64/16-token requests, `duration_s` 240. Succeeded at 00:14:20 UTC, run time 1,517 s, replay
+`CLIENT_WORKLOAD_VERIFIED`, 3 × (16 + 128) requests recorded, none failed.
+
+```bash
+python3 /data/ycfeng/tmp/d31_diag/native_stall_events.py \
+  /data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_sweep02/stage/evidence/replay/client_requests.jsonl
+cd /data/ycfeng/Frontier/.worktrees/step5-preview
+PYTHONPATH=$PWD:$PWD/tests/comparison/dp_placement_pp \
+  /data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python \
+  tests/integration/step5_pd/workload_metrics.py \
+  --stage /data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_sweep02/stage \
+  --output /data/ycfeng/tmp/d31_sweep02/native_metrics.json
+PYTHONPATH=$PWD:$PWD/tests/comparison/dp_placement_pp \
+  /data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python \
+  tests/integration/step5_pd/frontier_workload.py compare \
+  --frontier /data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/frontier_summary.json \
+  --native /data/ycfeng/tmp/d31_sweep02/native_metrics.json --gate 0.3 \
+  --output /data/ycfeng/tmp/d31_sweep02/compare_E.json
+```
+
+Length sweep: 4,804 requests recorded, one short request failed (HTTP 502). The sweep stopped at
+its 240 s limit while the two long requests per lane were still running (they ended at 252–253 s),
+so `coverage_verified` is false. The long requests were slow because almost every early step
+compiled a variant (median token gap about 410 ms for the first 256 tokens). They reached
+lengths 6,803–6,849 (region counts 851–857) before the short requests stopped.
+
+| Repeat | Stall events (before the sweep) | Total stall time | TTFT mean | TPOT mean |
+| --- | --- | --- | --- | --- |
+| 1 | 38 (84) | 15.0 s | 1,005.8 ms | 58.74 ms (67.69) |
+| 2 | 21 (54) | 8.4 s | 961.9 ms | 54.98 ms (60.38) |
+| 3 | 22 (34) | 9.1 s | 968.3 ms | 55.22 ms (57.16) |
+
+79 of the 81 remaining stall events have region counts 857–896, the range the sweep did not
+reach. Repeats 2 and 3 agree; repeat 1 is still 3.7 ms higher in TPOT.
+
+Expectations and results:
+- `workload_metrics.py` passes: PASS.
+- No or only a few stall events in the formal repeats: FAIL (81 events, almost all above the
+  length the sweep reached).
+- Sweep coverage verified: FAIL (the sweep ended before the long requests).
+
+Step E (`h200_32_comb_h200`, unchanged) against this run, gate 30%,
+`/data/ycfeng/tmp/d31_sweep02/compare_E.json`:
+
+| Metric | Frontier | Native | Relative error | Result |
+| --- | --- | --- | --- | --- |
+| TTFT mean | 863.9 ms | 978.7 ms | −11.7% | PASS |
+| TTFT p50 | 868.7 ms | 929.7 ms | −6.6% | PASS |
+| TTFT p90 | 892.9 ms | 1,249.2 ms | −28.5% | PASS |
+| TTFT p95 | 895.8 ms | 1,269.5 ms | −29.4% | PASS |
+| TPOT mean | 45.91 ms | 56.31 ms | −18.5% | PASS |
+| TPOT p50 | 46.67 ms | 56.23 ms | −17.0% | PASS |
+| TPOT p90 | 46.81 ms | 61.99 ms | −24.5% | PASS |
+| TPOT p95 | 46.85 ms | 62.71 ms | −25.3% | PASS |
+| E2E mean | 47.83 s | 58.59 s | −18.4% | PASS |
+| E2E p50 | 48.61 s | 58.45 s | −16.8% | PASS |
+| E2E p90 | 48.78 s | 64.49 s | −24.4% | PASS |
+| E2E p95 | 48.80 s | 65.19 s | −25.1% | PASS |
+| Total throughput | 5,372.1 tok/s | 5,236.6 tok/s | +2.6% | PASS |
+| Output throughput | 767.4 tok/s | 748.1 tok/s | +2.6% | PASS |
+
+All 14 rows pass. The native reference still contains the residual stalls, so these errors are
+not final. Next: `duration_s` 420 s, h200_64 first (job `exp-1027-082338-716026`), then h200_32.
+
 ## Limits
 
 - The torch profiler perturbs host timing (period about 50 ms against 39.8 ms without it), so
@@ -167,4 +238,5 @@ All four means pass; the p90/p95 rows fail. The native tails include the compile
 - Category assignment is by kernel-name fragments checked against the Step decode traces; the
   `other` column holds generic PyTorch elementwise kernels (router top-k selection, gating
   arithmetic, sampling) that cannot be assigned by name.
-- The zero-stall native values are an extrapolation until the length-sweep rerun finishes.
+- The length-sweep rerun (section 6) still has 81 stall events, so a native run without
+  compile stalls has not been measured yet. The linear fit in section 4 remains an inference.

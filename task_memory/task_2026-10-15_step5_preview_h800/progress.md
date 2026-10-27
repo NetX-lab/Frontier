@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: h200_32 length-sweep job succeeded; formal stalls 84/54/34 → 38/21/22, all left above the length the sweep reached; E passes all 14 rows against it; `duration_s` raised to 420 s and the h200_64 sweep job launched; routed-expert lead: `balanced` fills experts from ID 0, so the priced lane has all 22 experts active. |
 | 2026-10-26 | D31: device-timeline job succeeded (Frontier step within about 5% of native device busy time up to 21 requests; routed compute overpriced, TP all-reduce underpriced); native TTFT/TPOT tails traced to just-in-time compiles of the DSA scoring kernel; E rerun all means within 30%; native length-sweep warm-up `320c2082`, H200 32-GPU job `exp-1027-074903-556239` submitted. |
 | 2026-10-26 | D31: workflow-port run wf02 (TTFT −37.4%, TPOT −57.0%); calibration item 3 renumbered 2b to match `plan.md`; item 2b native decode device-timeline diagnostic (harness `26d51a30`, analyzer `a31e3616`), H200 32-GPU job `exp-1027-062510-683917` running. |
 | 2026-10-26 | D31: step E base run result (TPOT −57%); calibration item 3 opened: the small-batch decode step matches native (31.0 vs 30.5 ms), and the native step grows about 0.7 ms per request per engine; native stall shares quantified. |
@@ -915,6 +916,71 @@ before the plan entry was added). Native step times and token gaps here are diag
   - Acceptance: no stall events (or only a few) in the formal repeats, per-repeat means without
     the falling trend, `workload_metrics.py` passes. Then compare the step E rerun with it and
     repeat on h200_64.
+  - Result (2026-10-27): job `exp-1027-074903-556239` succeeded at 00:14:20 UTC (run time
+    1,517 s; 4 nodes, workload return code 0; replay `CLIENT_WORKLOAD_VERIFIED`; 7 idle
+    boundaries verified; 3 × (16 + 128) requests recorded, 0 failed). Pi report:
+    `/data/ycfeng/tmp/ds4_runs/d31-h200-sweep-submit-1027a/output.md`.
+    - Length sweep: 4,804 requests recorded; one short request failed (HTTP 502,
+      `ServerDisconnectedError`); `coverage_verified=false`: the last short request was sent
+      at 239.9 s and the long requests ended at 252–253 s.
+    - The long requests were slower than planned because almost every early step compiled a
+      variant: tokens 0–256 took 148–166 s (median gap about 410 ms), tokens 256–640 about
+      70 ms per token. When the short requests stopped, the long requests had reached length
+      6,803–6,849 (region count 851–857). Lengths above that were never compiled.
+    - Formal stall events (`native_stall_events.py`): 38 / 21 / 22 per repeat (before: 84 /
+      54 / 34), total 15.0 / 8.4 / 9.1 s. Their region counts are 857–896 in 79 of 81 events,
+      the range the sweep did not reach. Inference: the 81 events are about 40 region counts ×
+      2 decode engines, each compiled once. So the sweep works where it ran, and it needs to run
+      until the long requests finish.
+    - `workload_metrics.py` passes: `/data/ycfeng/tmp/d31_sweep02/native_metrics.json`. Per-repeat
+      means TTFT 1,005.8 / 961.9 / 968.3 ms, TPOT 58.74 / 54.98 / 55.22 ms (before: TPOT 67.69 /
+      60.38 / 57.16 ms). Pooled TTFT mean 978.7 ms (p90 1,246.6), TPOT mean 56.31 ms (p90
+      61.82), total throughput 5,236.6 tok/s.
+    - Step E rerun against it (`frontier_workload.py compare`, gate 30%,
+      `/data/ycfeng/tmp/d31_sweep02/compare_E.json`): all 14 rows pass. TTFT mean −11.7%, p90
+      −28.5%; TPOT mean −18.5%, p90 −24.5%; E2E mean −18.4%; throughput +2.6%.
+    - Acceptance: `workload_metrics.py` PASS; stall-free repeats FAIL (residual stalls above
+      length 6,850); falling trend: repeats 2 and 3 agree (TPOT 54.98 / 55.22 ms), repeat 1 is
+      3.7 ms higher.
+  - Next: the sweep must cover the whole long-request lifetime. `duration_s` raised to 420 s
+    (a parameter of the run definition, no code change). h200_64 goes first because its
+    reference is needed for step G: stage
+    `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_sweep01` (case `h200_64`, kind
+    `workload`, built from `.worktrees/step5-d31-native-320c208`, job tag `d31h20064sweep01`,
+    cloud output `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_64_sweep01`).
+    `verify` and the StepMind dry run pass; the dry run differs from sweep02 only in the
+    replica count (8) and paths. Pi run `d31-h200-64-sweep-submit-1027b` launched at 00:23 UTC.
+    The h200_32 rerun with the same setting follows.
+
+Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31.10):
+
+- Frontier's `balanced` routing materializes `rows × 8` assignments over 352 experts with
+  `materialize_expert_token_counts` (Hamilton remainder, ties broken by expert ID). Below 352
+  assignments it fills experts from ID 0, so EP rank 0 gets one token on each of its 22 experts.
+  Per-rank routed tokens for EP16: 4 rows → 22, 10, 0…; 32 rows → eleven ranks with 22, one with
+  14, four with 0; 64 rows → 44 on ranks 0–6 and 22 on the rest, every expert active.
+- The grouped GEMM is priced on the slowest lane, which is therefore a lane with all 22 local
+  experts active. The merged03 EP16 FP8 profile rows (`standard_fused_topk`, `balanced`) show
+  the time follows the active-expert count: 8 active 0.078 ms, 16 active 0.138 ms, 22 active
+  0.18–0.205 ms per layer.
+- Frontier step curve: routed compute 13.26 ms at 1 request per engine, 16.90 ms at 2–16,
+  18.52 ms at 17–36. Native routed-expert time per EP rank (device timeline, plus about 0.8 ms
+  SwiGLU that the profile row includes): 7.2–12.8 ms at 8–9 requests, 12.0–14.3 ms at 20–21,
+  14.4–17.0 ms at 45. Rank 0 is not consistently the slowest rank, unlike in Frontier's
+  materialization.
+- At 9 requests per engine Frontier (16.9 ms) is about 3.3 ms per step above the slowest native
+  rank and about 5 ms above the median rank (with SwiGLU). At 32–36 requests Frontier gives 18.5 ms
+  against 15.3–17.9 ms native at 45. The TP all-reduce is about 3.5 ms per step below native, so
+  the two errors cancel in the step total.
+- Fix options, for the item 2 design (D31.9 revisit condition: the error points to
+  expert-parallel load):
+  1. `position_cyclic` routing in Frontier: exists for this geometry, but it prices only exact
+     measured position points, which arbitrary decode positions do not have.
+  2. Keep `balanced` and spread the assignments over EP ranks; this needs profile rows keyed by
+     active experts per rank at small token counts.
+  3. A grouped-GEMM model with the active-expert count as a feature, trained on profile rows
+     that vary it.
+  Not decided; it waits for the clean native references and goes with the TP all-reduce fix.
 
 Step F status (2026-10-26):
 

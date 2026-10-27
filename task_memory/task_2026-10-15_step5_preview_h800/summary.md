@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Update the current status: h200_32 length-sweep result, E against it, the h200_64 sweep job, the routed-expert cause. |
 | 2026-10-26 | Update the current status: E rerun result, device-timeline findings, native kernel compiles and the length-sweep rerun. |
 | 2026-10-26 | Update the current status: step E results so far, the running E/G reruns, calibration item 2b. |
 | 2026-10-26 | Update the current status: H200 64-GPU native done. |
@@ -104,7 +105,7 @@ task. Read these first:
 
 ### Status in plain words
 
-Status as of 2026-10-26:
+Status as of 2026-10-27:
 
 - **Native reference results.**
   - H200 32 GPUs (step C, routing image): TTFT 1,083.7 ms, TPOT 61.7 ms, E2E 64.25 s, total
@@ -131,6 +132,10 @@ Status as of 2026-10-26:
   - E rerun with items 1 and 2a (`h200_32_comb_h200`, from `.worktrees/run-e-2beb09b`): TTFT
     −20.3%, TPOT −25.7%, E2E −25.6%, total throughput +3.0%. All four means pass the 30% gate;
     the p90 and p95 rows fail (about −32% to −34%).
+  - The same E run against the h200_32 length-sweep native run (job `exp-1027-074903-556239`,
+    native TTFT 978.7 ms, TPOT 56.3 ms, E2E 58.59 s, total throughput 5,236.6 tok/s): all 14
+    rows pass the 30% gate. TTFT mean −11.7%, p90 −28.5%; TPOT mean −18.5%, p90 −24.5%; E2E
+    mean −18.4%; total throughput +2.6%. This native run still has some compile stalls (below).
   - Running: the G rerun on merged04 (`h200_64_g01`, from `.worktrees/run-g-9125bcb`).
 - **Calibration item 2b, decode step growth.** The native decode step grows about 0.7 ms per
   request per DP engine (30.5 ms → 59 ms from 0 to 40 requests). A diagnostic native run with
@@ -138,19 +143,24 @@ Status as of 2026-10-26:
   step is within about 5% of the native device busy time up to 21 requests per engine. The rest
   of the native growth is device idle time while the device waits for the host (CPU overhead,
   item 3). Routed expert compute is overpriced and the TP all-reduce underpriced; the two
-  errors partly cancel. Diagnostic only (D31.10).
+  errors partly cancel. The routed-expert overpricing comes from Frontier's `balanced`
+  materialization, which fills experts from ID 0, so the priced EP lane has all 22 local
+  experts active. Diagnostic only (D31.10).
 - **Native kernel compiles.** Most of the native TTFT/TPOT tail comes from just-in-time compiles
   of the DSA scoring kernel during the measured repeats (about 0.4 s per compile, 84, 54 and 34
   stall events in the three h200_32 repeats). A native length sweep before the first repeat
-  now compiles every variant without being measured (`320c2082`). The h200_32 native rerun
-  with it is job `exp-1027-074903-556239`; h200_64 follows.
+  compiles the variants without being measured (`320c2082`). The h200_32 rerun with it (job
+  `exp-1027-074903-556239`) cut the formal stall events from 84/54/34 to 38/21/22. The rest are
+  at the longest decode lengths, which the sweep did not reach because it stopped at its 240 s
+  limit. The sweep now runs for 420 s: the h200_64 run is job `exp-1027-082338-716026`
+  (submitted 2026-10-27 00:23 UTC), and h200_32 follows.
 - **Operator profiles.** The H200 profile tables for both roles are measured and merged (run 03,
   `test_report_2026-10-26_h200_profiles.md`). The first runs on them found five defects in the
   profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,
   `d034202c`).
 - **Next.**
-  1. Rerun the native h200_32 and h200_64 workloads with the length sweep and compare E and G
-     against them.
+  1. Finish the native reruns with the 420 s length sweep (h200_64 running, then h200_32) and
+     compare G and E against them.
   2. Fix the two operator errors from the device timeline (routed expert compute, TP
      all-reduce) from op profiling.
   3. Model the host time between decode steps (CPU overhead, item 3).

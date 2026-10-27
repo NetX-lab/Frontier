@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: h200_32 length-sweep result (steps 2–3 of the warm-up rerun); sweep length raised to 420 s; h200_64 sweep job first; routed-expert cause refined. |
 | 2026-10-26 | D31: E rerun result; native rerun with a complete DSA kernel warm-up added (JIT stalls found); item 2b step 1 done. |
 | 2026-10-26 | D31: calibration item 2b (decode step growth with batch size) added with Frontier's own step curve; wf02 result in item 1. |
 | 2026-10-26 | D31: E rerun after the spread fix; step G rerun on merged04 after profiling the partly filled EP ranks. |
@@ -180,9 +181,15 @@ Frontier should model, and the stalls are not removed from the native data after
 2. Rerun C on 32 H200 GPUs with the sweep (job `exp-1027-074903-556239`). Acceptance: no stall
    events (or only a few) in the formal repeats, per-repeat means without the falling trend,
    `workload_metrics.py` passes, the sweep coverage is verified.
-3. Recompare E against the new native metrics.
-4. Rerun F on 64 H200 GPUs with the same sweep settings after step 2 releases its GPUs, then
-   compare G.
+   Result: the job succeeded and the sweep coverage is verified, but the sweep stopped at its
+   240 s `duration_s` while its slowed long requests ran to 253 s. Formal stall events fell from
+   84/54/34 to 38/21/22; 79 of the 81 have region counts 857–896, the range the sweep did not
+   reach. The stall criterion fails, so the native reference is cleaner but not yet clean.
+3. Recompare E against the new native metrics. Done: all 14 rows pass the 30% gate (TTFT mean
+   −11.7%, p90 −28.5%; TPOT mean −18.5%, p90 −24.5%; E2E mean −18.4%; throughput +2.6%).
+4. Rerun with `duration_s` 420 s (a run-definition value, no code change). h200_64 first (job
+   `exp-1027-082338-716026`, 64 H200, submitted 2026-10-27 00:23 UTC), then h200_32 again;
+   compare G and E against them. Acceptance as in step 2.
 Formal 64-GPU calibration still waits for E within 30% against the warmed native run.
 
 Calibration order for E, after the first error table:
@@ -242,7 +249,12 @@ Calibration order for E, after the first error table:
       8 ms at 45), which belongs to item 3. Two compensating operator errors remain: routed
       expert compute is overpriced (16.9 against about 11.4 ms per step at 9 requests, because
       the MoE profile activates every local expert) and the TP all-reduce is underpriced (about
-      3 ms per step).
+      3 ms per step). Refined on 2026-10-27: the routed-expert overpricing comes from Frontier's
+      `balanced` materialization, which fills experts from ID 0, so the priced (slowest) EP lane
+      has all 22 local experts active, while native per-rank loads are about even with fewer
+      active experts per rank. Fix options are in `progress.md`; the fix waits for the clean
+      native references and goes together with the TP all-reduce fix, because the two errors
+      cancel.
    2. Compare with Frontier's own step curve from the stage-batch and EP-wave ledgers of a
       diagnostic run, phase by phase (done, `progress.md`).
    3. Fix the cause where it belongs: a missing or underpriced operator or collective is
