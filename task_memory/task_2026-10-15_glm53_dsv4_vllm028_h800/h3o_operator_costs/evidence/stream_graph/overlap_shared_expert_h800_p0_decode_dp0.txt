@@ -1,0 +1,5 @@
+trace: /data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/torch_traces/decode/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842748090329211.pt.trace.json.gz
+patterns: 'swapAB<4096u, 4096u' 'swapAB<4096u, 2048u' 'act_and_mul_kernel'
+FULL: forwards 110, matching kernels 129.0 per forward, busy 820.0 us per forward, overlapped 533.8 us (65.1%), median forward device span 19214.0 us
+PIECEWISE: forwards 5, matching kernels 129.0 per forward, busy 794.4 us per forward, overlapped 433.4 us (54.5%), median forward device span 43264.6 us
+rc=0

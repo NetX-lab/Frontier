@@ -1,0 +1,1415 @@
+=== dispatch 0 real streams [(23, 2172), (35, 123), (43, 42), (39, 42)]
+calls [('cudaStreamGetCaptureInfo', 3012), ('cudaStreamIsCapturing', 1894), ('cuLaunchKernelEx', 1199), ('cudaLaunchKernel', 624), ('cudaStreamWaitEvent', 598), ('cudaLaunchKernelExC', 488), ('cudaEventRecord', 432), ('cudaDeviceGetAttribute', 344), ('cudaGetFuncBySymbol', 259), ('cudaFuncGetAttributes', 258)]
+K sM triton_poi_fused_add_bitwise_and_bitwise_or_ge_lt_mul_sub_0
+K sM triton_poi_fused_bitwise_and_bitwise_not_bitwise_or_ge_lt_1
+K sM void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long
+K sM void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymou
+K sM Memcpy DtoD (Device -> Device)
+K sM void (anonymous namespace)::multimem_all_reduce_kernel<c10::BFloat16, 16>(c10::BFloat16*, unsigned l
+K sM Memcpy DtoD (Device -> Device)
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128u
+K sM mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM _fused_q_kv_rmsnorm_kernel
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM _fused_q_kv_rmsnorm_kernel
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM Memset (Device)
+K sM nvjet_sm90_tss_256x128_64x4_1x2_h_bz_coopA_TNT
+K sM nvjet_sm90_tst_64x64_64x13_1x4_h_bz_TNT
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+K s35 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K s35 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 8192u, 1024u, 1u, 256u, 128u, 128u
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsfused_indexer_q_cutedslIndexerQFp8Kernel_object_
+   cudaStreamWaitEvent
+K s43 _save_partial_states_kernel
+K s43 _fused_kv_compress_norm_rope_insert_indexer_attn
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 _save_partial_states_kernel
+K s39 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNo
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void vllm::cp_gather_indexer_k_quant_cache_kernel<32>(char const*, char*, char*, int const*, int con
+K sM void deep_gemm::sm90_fp8_mqa_logits<64u, 128u, false, 2u, 256u, 3u, 3u, 132u, 128u, 512u, float>(uns
+K sM void vllm::topKPerRowPrefill<512, false>(float const*, int const*, int const*, int*, int, int, int, 
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+K s35 _save_partial_states_kernel
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressC1
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnNormRopeSt
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM Memset (Device)
+K sM nvjet_sm90_tss_256x128_64x4_1x2_h_bz_coopA_TNT
+K sM nvjet_sm90_tst_64x64_64x13_1x4_h_bz_TNT
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+K s35 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K s35 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 8192u, 1024u, 1u, 256u, 128u, 128u
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsfused_indexer_q_cutedslIndexerQFp8Kernel_object_
+   cudaStreamWaitEvent
+K s43 _save_partial_states_kernel
+K s43 _fused_kv_compress_norm_rope_insert_indexer_attn
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 _save_partial_states_kernel
+K s39 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNo
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void vllm::cp_gather_indexer_k_quant_cache_kernel<32>(char const*, char*, char*, int const*, int con
+K sM void deep_gemm::sm90_fp8_mqa_logits<64u, 128u, false, 2u, 256u, 3u, 3u, 132u, 128u, 512u, float>(uns
+K sM void vllm::topKPerRowPrefill<512, false>(float const*, int const*, int const*, int*, int, int, int, 
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+K s35 _save_partial_states_kernel
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressC1
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnNormRopeSt
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM Memset (Device)
+K sM nvjet_sm90_tss_256x128_64x4_1x2_h_bz_coopA_TNT
+K sM nvjet_sm90_tst_64x64_64x13_1x4_h_bz_TNT
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+K s35 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K s35 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 8192u, 1024u, 1u, 256u, 128u, 128u
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsfused_indexer_q_cutedslIndexerQFp8Kernel_object_
+   cudaStreamWaitEvent
+K s43 _save_partial_states_kernel
+K s43 _fused_kv_compress_norm_rope_insert_indexer_attn
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 _save_partial_states_kernel
+K s39 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNo
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void vllm::cp_gather_indexer_k_quant_cache_kernel<32>(char const*, char*, char*, int const*, int con
+K sM void deep_gemm::sm90_fp8_mqa_logits<64u, 128u, false, 2u, 256u, 3u, 3u, 132u, 128u, 512u, float>(uns
+K sM void vllm::topKPerRowPrefill<512, false>(float const*, int const*, int const*, int*, int, int, int, 
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+=== dispatch 32 dummy streams [(23, 1675), (47, 215), (35, 205), (39, 84), (43, 42)]
+calls [('cudaStreamGetCaptureInfo', 2838), ('cudaStreamIsCapturing', 2691), ('cudaEventQuery', 2434), ('cudaDeviceGetAttribute', 1204), ('cudaGetDriverEntryPointByVersion', 946), ('cudaLaunchKernel', 785), ('cuLaunchKernelEx', 726), ('cudaStreamWaitEvent', 634), ('cudaLaunchKernelExC', 618), ('cudaFuncSetAttribute', 434)]
+K sM triton_poi_fused_add_bitwise_and_bitwise_or_ge_lt_mul_sub_0
+K sM triton_poi_fused_bitwise_and_bitwise_not_bitwise_or_ge_lt_1
+K sM void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 
+K sM void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymou
+K sM Memcpy DtoD (Device -> Device)
+K sM void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm::RankData*, vllm::RankSignals, vllm::Si
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<bool>, std::array<char*, 1
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM Memcpy DtoD (Device -> Device)
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 16u, 128u, 12u, 128u, 128u
+K sM mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+K sM void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 const*, __nv_bf
+   cudaEventRecordWithFlags
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<1536u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM _fused_q_kv_rmsnorm_kernel
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel<c10::BFloat16, 64>
+K sM smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+K sM void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::Ker
+K sM void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 16u, 16u, 128u, 
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array
+K sM Memcpy DtoD (Device -> Device)
+K sM void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 cons
+K sM mhc_fused_tilelang_kernel
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K s47 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+   cudaEventRecord
+K sM mhc_fused_tilelang_kernel
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 const*, __nv_bf
+   cudaEventRecordWithFlags
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<1536u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM _fused_q_kv_rmsnorm_kernel
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel<c10::BFloat16, 64>
+K sM smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+K sM void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::Ker
+K sM void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 16u, 16u, 128u, 
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array
+K sM Memcpy DtoD (Device -> Device)
+K sM void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 cons
+K sM mhc_fused_tilelang_kernel
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K s47 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+   cudaEventRecord
+K sM mhc_fused_tilelang_kernel
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 const*, __nv_bf
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s35 nvjet_sm90_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+K s35 void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, flo
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 nvjet_sm90_tst_64x8_64x16_1x1_h_bz_splitK_TNT
+K s39 void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16, float, __nv_bfloat16, false, f
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s43 nvjet_sm90_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+K s43 void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, flo
+   cudaEventRecordWithFlags
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<1536u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s35 _save_partial_states_kernel
+K s35 _fused_kv_compress_norm_rope_insert_indexer_attn
+K s35 _fill_short_context_topk_indices
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 _save_partial_states_kernel
+K s39 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNo
+   cudaEventRecordWithFlags
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel<c10::BFloat16, 64>
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM _compute_global_topk_indices_and_lens_kernel
+K sM smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+K sM void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::Ker
+K sM void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 16u, 16u, 128u, 
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array
+K sM Memcpy DtoD (Device -> Device)
+K sM void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 cons
+K sM mhc_fused_tilelang_kernel
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K s47 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+   cudaEventRecord
+K sM mhc_fused_tilelang_kernel
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 const*, __nv_bf
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s35 nvjet_sm90_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+K s35 void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, flo
+   cudaEventRecordWithFlags
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<1536u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+   cudaStreamWaitEvent
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel<c10::BFloat16, 64>
+   cudaStreamWaitEvent
+K s35 _save_partial_states_kernel
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressC1
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnNormRopeSt
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+K sM void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::Ker
+K sM void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 16u, 16u, 128u, 
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array
+K sM Memcpy DtoD (Device -> Device)
+K sM void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 cons
+K sM mhc_fused_tilelang_kernel
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K s47 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+   cudaEventRecord
+K sM mhc_fused_tilelang_kernel
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 const*, __nv_bf
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s35 nvjet_sm90_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+K s35 void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, flo
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 nvjet_sm90_tst_64x8_64x16_1x1_h_bz_splitK_TNT
+K s39 void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16, float, __nv_bfloat16, false, f
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s43 nvjet_sm90_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+K s43 void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, flo
+   cudaEventRecordWithFlags
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<1536u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s35 _save_partial_states_kernel
+K s35 _fused_kv_compress_norm_rope_insert_indexer_attn
+K s35 _fill_short_context_topk_indices
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 _save_partial_states_kernel
+K s39 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNo
+   cudaEventRecordWithFlags
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel<c10::BFloat16, 64>
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM _compute_global_topk_indices_and_lens_kernel
+K sM void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::Ker
+K sM void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 16u, 16u, 128u, 
+K sM void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K sM void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array
+K sM Memcpy DtoD (Device -> Device)
+K sM void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 cons
+K sM mhc_fused_tilelang_kernel
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+K s47 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K s47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, fl
+K s47 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_g
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+   cudaEventRecord
+=== dispatch 64 real streams [(23, 2172), (35, 123), (43, 42), (39, 42)]
+calls [('cudaStreamGetCaptureInfo', 3012), ('cudaStreamIsCapturing', 1894), ('cuLaunchKernelEx', 1199), ('cudaLaunchKernel', 624), ('cudaStreamWaitEvent', 598), ('cudaLaunchKernelExC', 488), ('cudaEventRecord', 432), ('cudaDeviceGetAttribute', 344), ('cudaGetFuncBySymbol', 259), ('cudaFuncGetAttributes', 258)]
+K sM triton_poi_fused_add_bitwise_and_bitwise_or_ge_lt_mul_sub_0
+K sM triton_poi_fused_bitwise_and_bitwise_not_bitwise_or_ge_lt_1
+K sM void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long
+K sM void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymou
+K sM Memcpy DtoD (Device -> Device)
+K sM void (anonymous namespace)::multimem_all_reduce_kernel<c10::BFloat16, 16>(c10::BFloat16*, unsigned l
+K sM Memcpy DtoD (Device -> Device)
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128u
+K sM mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM _fused_q_kv_rmsnorm_kernel
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM _fused_q_kv_rmsnorm_kernel
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM Memset (Device)
+K sM nvjet_sm90_tss_256x128_64x4_1x2_h_bz_coopA_TNT
+K sM nvjet_sm90_tst_64x64_64x13_1x4_h_bz_TNT
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+K s35 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K s35 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 8192u, 1024u, 1u, 256u, 128u, 128u
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsfused_indexer_q_cutedslIndexerQFp8Kernel_object_
+   cudaStreamWaitEvent
+K s43 _save_partial_states_kernel
+K s43 _fused_kv_compress_norm_rope_insert_indexer_attn
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 _save_partial_states_kernel
+K s39 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNo
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void vllm::cp_gather_indexer_k_quant_cache_kernel<32>(char const*, char*, char*, int const*, int con
+K sM void deep_gemm::sm90_fp8_mqa_logits<64u, 128u, false, 2u, 256u, 3u, 3u, 132u, 128u, 512u, float>(uns
+K sM void vllm::topKPerRowPrefill<512, false>(float const*, int const*, int const*, int*, int, int, int, 
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+K s35 _save_partial_states_kernel
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressC1
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnNormRopeSt
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM Memset (Device)
+K sM nvjet_sm90_tss_256x128_64x4_1x2_h_bz_coopA_TNT
+K sM nvjet_sm90_tst_64x64_64x13_1x4_h_bz_TNT
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+K s35 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K s35 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 8192u, 1024u, 1u, 256u, 128u, 128u
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsfused_indexer_q_cutedslIndexerQFp8Kernel_object_
+   cudaStreamWaitEvent
+K s43 _save_partial_states_kernel
+K s43 _fused_kv_compress_norm_rope_insert_indexer_attn
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 _save_partial_states_kernel
+K s39 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNo
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void vllm::cp_gather_indexer_k_quant_cache_kernel<32>(char const*, char*, char*, int const*, int con
+K sM void deep_gemm::sm90_fp8_mqa_logits<64u, 128u, false, 2u, 256u, 3u, 3u, 132u, 128u, 512u, float>(uns
+K sM void vllm::topKPerRowPrefill<512, false>(float const*, int const*, int const*, int*, int, int, int, 
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+K s35 _save_partial_states_kernel
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressC1
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnNormRopeSt
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
+K sM void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTempla
+K sM _fused_inv_rope_fp8_quant_per_head
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u,
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+K sM nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u
+K sM void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u
+K sM void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scal
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::arra
+K sM void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::na
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+K sM ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+K sM void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM _swiglu_limit_pad_aware_kernel
+K sM void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+K sM void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+   cudaStreamWaitEvent
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+   cudaEventRecord
+K sM Memcpy DtoD (Device -> Device)
+K sM void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::a
+K sM mhc_post_tilelang_kernel
+K sM void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128
+K sM mhc_pre_big_fuse_with_norm_tilelang_kernel
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+   cudaEventRecord
+   cudaStreamWaitEvent
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u
+K sM Memset (Device)
+K sM nvjet_sm90_tss_256x128_64x4_1x2_h_bz_coopA_TNT
+K sM nvjet_sm90_tst_64x64_64x13_1x4_h_bz_TNT
+K sM nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+K sM _fused_q_kv_rmsnorm_kernel
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+K s35 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K s35 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 8192u, 1024u, 1u, 256u, 128u, 128u
+K s35 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsfused_indexer_q_cutedslIndexerQFp8Kernel_object_
+   cudaStreamWaitEvent
+K s43 _save_partial_states_kernel
+K s43 _fused_kv_compress_norm_rope_insert_indexer_attn
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+   cudaEventRecordWithFlags
+   cudaStreamWaitEvent
+K s39 _save_partial_states_kernel
+K s39 kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNo
+   cudaEventRecordWithFlags
+K sM void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BF
+K sM void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u
+K sM void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BF
+   cudaStreamWaitEvent
+   cudaStreamWaitEvent
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1u
+K sM void vllm::cp_gather_indexer_k_quant_cache_kernel<32>(char const*, char*, char*, int const*, int con
+K sM void deep_gemm::sm90_fp8_mqa_logits<64u, 128u, false, 2u, 256u, 3u, 3u, 132u, 128u, 512u, float>(uns
+K sM void vllm::topKPerRowPrefill<512, false>(float const*, int const*, int const*, int*, int, int, int, 
+K sM void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::nativ
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKerne
+K sM Kernel
