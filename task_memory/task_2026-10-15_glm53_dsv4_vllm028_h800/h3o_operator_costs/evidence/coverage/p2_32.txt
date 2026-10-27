@@ -1,0 +1,389 @@
+# C1 workload coordinates: p2_32
+
+reference: /data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts
+lifecycle: /data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts
+model: deepseek-ai/DeepSeek-V4-Flash, hidden 4096, top-k 6 of 256 experts, hc_mult 4, vocab 129280, 43 layers, indexer compress ratio 4, index_topk 512
+thresholds: outer-projection fork when attention rows <= 1024; shared expert on its stream when MoE input rows <= 256
+role decode: device cuda:0, TP8 DP2 EP16, block sizes [256, 64, 64, 4, 8], capture sizes 1..256 (35)
+role prefill: device cuda:0, TP8 DP2 EP16, block sizes [256, 64, 64, 4, 8], capture sizes 1..256 (35)
+
+## A1. Lane forward classes (serving counters, rank 0 of each lane)
+key: kind mode W(descriptor tokens) R(attention requests: descriptor requests for FULL, own requests otherwise) own_tokens own_reqs has_prefill | forwards | widths across DP
+### decode dp0: 28225 forwards; dummy FULL 1675, dummy PIECEWISE 12, serving FULL 26124, serving PIECEWISE 414
+  dummy FULL 1 1 1 1 False | 1671 | [(1, 1)]
+  dummy FULL 2 2 1 1 False | 1 | [(2, 2)]
+  dummy FULL 4 4 1 1 False | 3 | [(4, 4)]
+  dummy PIECEWISE 1 1 1 1 False | 7 | [(1, 1)]
+  dummy PIECEWISE 2 1 1 1 False | 1 | [(2, 2)]
+  dummy PIECEWISE 4 1 1 1 False | 2 | [(4, 4)]
+  dummy PIECEWISE 8 1 1 1 False | 2 | [(8, 8)]
+  serving FULL 1 1 1 1 False | 658 | [(1, 1)]
+  serving FULL 2 2 1 1 False | 255 | [(2, 2)]
+  serving FULL 2 2 2 2 False | 761 | [(2, 2)]
+  serving FULL 4 4 2 2 False | 263 | [(4, 4)]
+  serving FULL 4 4 3 3 False | 1165 | [(4, 4)]
+  serving FULL 4 4 4 4 False | 664 | [(4, 4)]
+  serving FULL 8 8 4 4 False | 355 | [(8, 8)]
+  serving FULL 8 8 5 5 False | 903 | [(8, 8)]
+  serving FULL 8 8 6 6 False | 965 | [(8, 8)]
+  serving FULL 8 8 7 7 False | 1069 | [(8, 8)]
+  serving FULL 8 8 8 8 False | 2086 | [(8, 8)]
+  serving FULL 16 16 8 8 False | 97 | [(16, 16)]
+  serving FULL 16 16 9 9 False | 1847 | [(16, 16)]
+  serving FULL 16 16 10 10 False | 10471 | [(16, 16)]
+  serving FULL 16 16 11 11 False | 4565 | [(16, 16)]
+  serving PIECEWISE 1 1 1 1 True | 5 | [(1, 1)]
+  serving PIECEWISE 2 1 1 1 False | 3 | [(2, 2)]
+  serving PIECEWISE 2 2 2 2 True | 5 | [(2, 2)]
+  serving PIECEWISE 2 2 2 2 False | 2 | [(2, 2)]
+  serving PIECEWISE 4 2 2 2 False | 3 | [(4, 4)]
+  serving PIECEWISE 4 3 3 3 True | 5 | [(4, 4)]
+  serving PIECEWISE 4 3 3 3 False | 7 | [(4, 4)]
+  serving PIECEWISE 4 4 4 4 True | 5 | [(4, 4)]
+  serving PIECEWISE 8 4 4 4 False | 5 | [(8, 8)]
+  serving PIECEWISE 8 5 5 5 True | 6 | [(8, 8)]
+  serving PIECEWISE 8 5 5 5 False | 3 | [(8, 8)]
+  serving PIECEWISE 8 6 6 6 True | 6 | [(8, 8)]
+  serving PIECEWISE 8 6 6 6 False | 4 | [(8, 8)]
+  serving PIECEWISE 8 7 7 7 True | 5 | [(8, 8)]
+  serving PIECEWISE 8 7 7 7 False | 5 | [(8, 8)]
+  serving PIECEWISE 8 8 8 8 True | 6 | [(8, 8)]
+  serving PIECEWISE 8 8 8 8 False | 3 | [(8, 8)]
+  serving PIECEWISE 16 8 8 8 False | 2 | [(16, 16)]
+  serving PIECEWISE 16 9 9 9 True | 3 | [(16, 16)]
+  serving PIECEWISE 16 9 9 9 False | 6 | [(16, 16)]
+  serving PIECEWISE 16 10 10 10 True | 49 | [(16, 16)]
+  serving PIECEWISE 16 10 10 10 False | 122 | [(16, 16)]
+  serving PIECEWISE 16 11 11 11 True | 116 | [(16, 16)]
+  serving PIECEWISE 16 11 11 11 False | 38 | [(16, 16)]
+### decode dp1: 28225 forwards; dummy FULL 488, serving FULL 27311, serving PIECEWISE 426
+  dummy FULL 1 1 1 1 False | 449 | [(1, 1)]
+  dummy FULL 2 2 1 1 False | 1 | [(2, 2)]
+  dummy FULL 4 4 1 1 False | 37 | [(4, 4)]
+  dummy FULL 8 8 1 1 False | 1 | [(8, 8)]
+  serving FULL 1 1 1 1 False | 1880 | [(1, 1)]
+  serving FULL 2 2 1 1 False | 260 | [(2, 2)]
+  serving FULL 2 2 2 2 False | 756 | [(2, 2)]
+  serving FULL 4 4 2 2 False | 261 | [(4, 4)]
+  serving FULL 4 4 3 3 False | 924 | [(4, 4)]
+  serving FULL 4 4 4 4 False | 873 | [(4, 4)]
+  serving FULL 8 8 2 2 False | 1 | [(8, 8)]
+  serving FULL 8 8 3 3 False | 1 | [(8, 8)]
+  serving FULL 8 8 4 4 False | 162 | [(8, 8)]
+  serving FULL 8 8 5 5 False | 1168 | [(8, 8)]
+  serving FULL 8 8 6 6 False | 1074 | [(8, 8)]
+  serving FULL 8 8 7 7 False | 1973 | [(8, 8)]
+  serving FULL 8 8 8 8 False | 998 | [(8, 8)]
+  serving FULL 16 16 8 8 False | 197 | [(16, 16)]
+  serving FULL 16 16 9 9 False | 1849 | [(16, 16)]
+  serving FULL 16 16 10 10 False | 10370 | [(16, 16)]
+  serving FULL 16 16 11 11 False | 4564 | [(16, 16)]
+  serving PIECEWISE 1 1 1 1 True | 7 | [(1, 1)]
+  serving PIECEWISE 1 1 1 1 False | 5 | [(1, 1)]
+  serving PIECEWISE 2 1 1 1 False | 2 | [(2, 2)]
+  serving PIECEWISE 2 2 2 2 True | 6 | [(2, 2)]
+  serving PIECEWISE 2 2 2 2 False | 3 | [(2, 2)]
+  serving PIECEWISE 4 2 2 2 False | 2 | [(4, 4)]
+  serving PIECEWISE 4 3 3 3 True | 6 | [(4, 4)]
+  serving PIECEWISE 4 3 3 3 False | 3 | [(4, 4)]
+  serving PIECEWISE 4 4 4 4 True | 6 | [(4, 4)]
+  serving PIECEWISE 4 4 4 4 False | 5 | [(4, 4)]
+  serving PIECEWISE 8 5 5 5 True | 6 | [(8, 8)]
+  serving PIECEWISE 8 5 5 5 False | 7 | [(8, 8)]
+  serving PIECEWISE 8 6 6 6 True | 5 | [(8, 8)]
+  serving PIECEWISE 8 6 6 6 False | 6 | [(8, 8)]
+  serving PIECEWISE 8 7 7 7 True | 6 | [(8, 8)]
+  serving PIECEWISE 8 7 7 7 False | 8 | [(8, 8)]
+  serving PIECEWISE 8 8 8 8 True | 5 | [(8, 8)]
+  serving PIECEWISE 8 8 8 8 False | 2 | [(8, 8)]
+  serving PIECEWISE 16 8 8 8 False | 1 | [(16, 16)]
+  serving PIECEWISE 16 9 9 9 True | 3 | [(16, 16)]
+  serving PIECEWISE 16 9 9 9 False | 5 | [(16, 16)]
+  serving PIECEWISE 16 10 10 10 True | 52 | [(16, 16)]
+  serving PIECEWISE 16 10 10 10 False | 124 | [(16, 16)]
+  serving PIECEWISE 16 11 11 11 True | 113 | [(16, 16)]
+  serving PIECEWISE 16 11 11 11 False | 38 | [(16, 16)]
+### prefill dp0: 13345 forwards; dummy FULL 12920, dummy NONE 209, serving NONE 216
+  dummy FULL 1 1 1 1 False | 12920 | [(1, 1)]
+  dummy NONE 1 1 1 1 False | 209 | [(1, 6144)]
+  serving NONE 6144 1 6144 1 True | 216 | [(6144, 1), (6144, 6144)]
+### prefill dp1: 13345 forwards; dummy FULL 12920, dummy NONE 209, serving NONE 216
+  dummy FULL 1 1 1 1 False | 12920 | [(1, 1)]
+  dummy NONE 1 1 1 1 False | 209 | [(6144, 1)]
+  serving NONE 6144 1 6144 1 True | 216 | [(1, 6144), (6144, 6144)]
+
+## A2. Startup warmup dummies (own tokens > 1), excluded from serving coverage
+  prefill dp0: NONE W2 R1 own 2 tokens / 1 reqs, 1 forwards
+  prefill dp0: NONE W16 R2 own 16 tokens / 2 reqs, 1 forwards
+  prefill dp0: PIECEWISE W256 RNone own 256 tokens / 128 reqs, 1 forwards
+  prefill dp0: FULL W128 R128 own 128 tokens / 128 reqs, 1 forwards
+  prefill dp0: FULL W2 R2 own 2 tokens / 2 reqs, 1 forwards
+  prefill dp1: NONE W2 R1 own 2 tokens / 1 reqs, 1 forwards
+  prefill dp1: NONE W16 R2 own 16 tokens / 2 reqs, 1 forwards
+  prefill dp1: PIECEWISE W256 RNone own 256 tokens / 128 reqs, 1 forwards
+  prefill dp1: FULL W128 R128 own 128 tokens / 128 reqs, 1 forwards
+  prefill dp1: FULL W2 R2 own 2 tokens / 2 reqs, 1 forwards
+  decode dp0: NONE W2 R1 own 2 tokens / 1 reqs, 1 forwards
+  decode dp0: NONE W16 R2 own 16 tokens / 2 reqs, 1 forwards
+  decode dp0: PIECEWISE W256 RNone own 256 tokens / 128 reqs, 1 forwards
+  decode dp0: FULL W128 R128 own 128 tokens / 128 reqs, 1 forwards
+  decode dp0: FULL W2 R2 own 2 tokens / 2 reqs, 1 forwards
+  decode dp1: NONE W2 R1 own 2 tokens / 1 reqs, 1 forwards
+  decode dp1: NONE W16 R2 own 16 tokens / 2 reqs, 1 forwards
+  decode dp1: PIECEWISE W256 RNone own 256 tokens / 128 reqs, 1 forwards
+  decode dp1: FULL W128 R128 own 128 tokens / 128 reqs, 1 forwards
+  decode dp1: FULL W2 R2 own 2 tokens / 2 reqs, 1 forwards
+
+## A3. Global forwards (DP rank 0 of each role): N (synchronized widths) -> L = ceil(N/TP) -> M = TP x sum(L)
+### decode: 28225 global forwards, 10 distinct (mode, N)
+  FULL M16: 10819 forwards, N [(1, 1), (2, 2), (4, 4), '... 4 vectors']
+  FULL M32: 16980 forwards, N [(16, 16)]
+  PIECEWISE M16: 90 forwards, N [(1, 1), (2, 2), (4, 4), '... 4 vectors']
+  PIECEWISE M32: 336 forwards, N [(16, 16)]
+### prefill: 13345 global forwards, 4 distinct (mode, N)
+  FULL M16: 12920 forwards, N [(1, 1)]
+  NONE M6152: 418 forwards, N [(1, 6144), (6144, 1)]
+  NONE M12288: 7 forwards, N [(6144, 6144)]
+
+## A4. Routed MoE rank classes (balanced_topk: expert e gets floor(6M/256) + [e < 6M mod 256] rows)
+class: rows routed to the rank, local experts with one extra row, base rows per expert | EP ranks x forwards
+  decode EP16 M16: (0,0,0) x109090; (16,16,0) x65454
+  decode EP16 M32: (0,0,0) x69264; (16,16,0) x207792
+  prefill EP16 M16: (0,0,0) x129200; (16,16,0) x77520
+  prefill EP16 M6152: (2304,0,144) x5434; (2320,16,144) x1254
+  prefill EP16 M12288: (4608,0,288) x112
+gate and top-k rows per rank (L), by mode:
+  decode FULL: 1:21638 2:33960
+  decode PIECEWISE: 1:180 2:672
+  prefill FULL: 1:25840
+  prefill NONE: 1:418 768:432
+
+## A5. Collective payloads (input bytes per rank; EP: ordered per-lane inputs, each lane = TP ranks)
+curves: none for this device
+  embedding_allreduce tp8 eager: 2 distinct, calls 850; coverage {'no curve': 850}; top [50331648, 8192]
+  embedding_allreduce tp8 graph: 5 distinct, calls 82290; coverage {'no curve': 82290}; top [131072, 8192, 65536, 32768, 16384]
+  ep_activation_allgather ep16 eager: 3 distinct, calls 18275; coverage {'no curve': 18275}; top [(8192, 6291456), (6291456, 8192), (6291456, 6291456)]
+  ep_activation_allgather ep16 graph: 2 distinct, calls 1769235; coverage {'no curve': 1769235}; top [(8192, 8192), (16384, 16384)]
+  ep_ids_allgather ep16 eager: 3 distinct, calls 18275; coverage {'no curve': 18275}; top [(24, 18432), (18432, 24), (18432, 18432)]
+  ep_ids_allgather ep16 graph: 2 distinct, calls 1769235; coverage {'no curve': 1769235}; top [(24, 24), (48, 48)]
+  ep_output_reduce_scatter ep16 eager: 3 distinct, calls 18275; coverage {'no curve': 18275}; top [(50397184, 8192, 6291456), (50397184, 6291456, 8192), (100663296, 6291456, 6291456)]
+  ep_output_reduce_scatter ep16 graph: 2 distinct, calls 1769235; coverage {'no curve': 1769235}; top [(131072, 8192, 8192), (262144, 16384, 16384)]
+  ep_weights_allgather ep16 eager: 3 distinct, calls 18275; coverage {'no curve': 18275}; top [(24, 18432), (18432, 24), (18432, 18432)]
+  ep_weights_allgather ep16 graph: 2 distinct, calls 1769235; coverage {'no curve': 1769235}; top [(24, 24), (48, 48)]
+  logits_allgather tp8 eager: 11 distinct, calls 54707; coverage {'no curve': 54707}; top [323200, 355520, 290880, 32320, 258560, 226240]
+  sp_attention_allgather tp8 eager: 2 distinct, calls 36550; coverage {'no curve': 36550}; top [6291456, 8192]
+  sp_attention_allgather tp8 graph: 2 distinct, calls 3538470; coverage {'no curve': 3538470}; top [8192, 16384]
+  sp_attention_reduce_scatter tp8 eager: 2 distinct, calls 36550; coverage {'no curve': 36550}; top [50331648, 65536]
+  sp_attention_reduce_scatter tp8 graph: 2 distinct, calls 3538470; coverage {'no curve': 3538470}; top [65536, 131072]
+  sp_final_mhc_allgather tp8 eager: 2 distinct, calls 850; coverage {'no curve': 850}; top [25165824, 32768]
+  sp_final_mhc_allgather tp8 graph: 2 distinct, calls 82290; coverage {'no curve': 82290}; top [32768, 65536]
+
+## B. Lifecycle forwards per lane (real forwards only; dummies are not scheduler steps)
+kv = cached tokens before the step (the attention CSV convention); max_seq = longest sequence after it
+### decode dp0: 26098 forwards; cached-count mismatches 0, token-count mismatches 0; phases {('warmup',): 4507, ('formal',): 21591}
+  b (requests = logits rows): 1:895 2:1285 3:1048 4:958 5:1008 6:1062 7:1058 8:2335 9:1155 10:7317 11:7083 12:879 13:15
+  (b, first tails): forwards, kv range, max_seq range
+    (1, 0): 890, kv [6144, 7166], max_seq [6145, 7167]
+    (1, 1): 5, kv [6143, 6143], max_seq [6144, 6144]
+    (2, 0): 1280, kv [6144, 7166], max_seq [6239, 7167]
+    (2, 1): 5, kv [6143, 6247], max_seq [6238, 6248]
+    (3, 0): 1043, kv [6144, 7166], max_seq [6348, 7167]
+    (3, 1): 5, kv [6143, 6398], max_seq [6347, 6399]
+    (4, 0): 952, kv [6144, 7166], max_seq [6448, 7167]
+    (4, 1): 5, kv [6143, 6455], max_seq [6447, 6456]
+    (4, 4): 1, kv [6143, 6143], max_seq [6144, 6144]
+    (5, 0): 1002, kv [6144, 7166], max_seq [6146, 7167]
+    (5, 1): 6, kv [6143, 6556], max_seq [6145, 6557]
+    (6, 0): 1057, kv [6144, 7166], max_seq [6604, 7167]
+    (6, 1): 5, kv [6143, 6715], max_seq [6603, 6716]
+    (7, 0): 1053, kv [6144, 7166], max_seq [6708, 7167]
+    (7, 1): 5, kv [6143, 6766], max_seq [6707, 6767]
+    (8, 0): 2329, kv [6144, 7166], max_seq [6185, 7167]
+    (8, 1): 5, kv [6143, 6921], max_seq [6809, 6922]
+    (8, 3): 1, kv [6143, 6183], max_seq [6184, 6184]
+    (9, 0): 1151, kv [6144, 7166], max_seq [6965, 7167]
+    (9, 1): 4, kv [6143, 7022], max_seq [6964, 7023]
+    (10, 0): 7286, kv [6144, 7166], max_seq [6969, 7167]
+    (10, 1): 31, kv [6143, 7162], max_seq [6976, 7163]
+    (11, 0): 6971, kv [6144, 7166], max_seq [6975, 7167]
+    (11, 1): 112, kv [6143, 7166], max_seq [6974, 7167]
+    (12, 0): 861, kv [6144, 7166], max_seq [7021, 7167]
+    (12, 1): 18, kv [6143, 7166], max_seq [7020, 7167]
+    (13, 0): 13, kv [6144, 7166], max_seq [7159, 7167]
+    (13, 1): 2, kv [6143, 7162], max_seq [7158, 7163]
+  query lengths present: (1,):26098
+  newly zeroed blocks per forward: 0:3835 1:2965 2:4240 3:3123 4:3699 5:2784 6:2123 7:1434 8:835 9:486 10:215 11:113 12:66 13:27 14:110 15:6 16:5 20:13 22:12 23:4 26:3
+  per group [256, 64, 64, 4, 8]: (0, 0, 0, 0, 0):3835 (0, 0, 0, 1, 0):2965 (0, 0, 0, 1, 1):2594 (0, 0, 0, 2, 0):1646 (0, 0, 0, 2, 1):2541 (0, 0, 0, 2, 2):1251 (0, 0, 0, 3, 0):582 (0, 0, 0, 3, 1):2020 (0, 0, 0, 3, 2):1801 (0, 0, 0, 3, 3):393 (0, 0, 0, 4, 0):147 (0, 0, 0, 4, 1):613 (0, 0, 0, 4, 2):1004 (0, 0, 0, 4, 3):480 (0, 0, 0, 4, 4):88 (0, 0, 0, 5, 1):144 (0, 0, 0, 5, 2):265 (0, 0, 0, 5, 3):232 (0, 0, 0, 5, 4):102 (0, 0, 0, 6, 2):11 (0, 0, 0, 6, 3):39 (0, 0, 0, 6, 4):7 (0, 0, 0, 7, 0):123 (0, 0, 0, 7, 3):9 (0, 0, 0, 7, 4):8 (0, 0, 0, 7, 7):92 (0, 1, 1, 1, 1):281 (0, 1, 1, 2, 1):277 (0, 1, 1, 2, 2):276 (0, 1, 1, 3, 1):215 (0, 1, 1, 3, 2):340 (0, 1, 1, 3, 3):125 (0, 1, 1, 4, 1):64 (0, 1, 1, 4, 2):213 (0, 1, 1, 4, 3):136 (0, 1, 1, 4, 4):38 (0, 1, 1, 5, 1):16 (0, 1, 1, 5, 2):47 (0, 1, 1, 5, 3):60 (0, 1, 1, 5, 4):32 (0, 1, 1, 6, 2):2 (0, 1, 1, 6, 3):4 (0, 1, 1, 6, 4):4 (0, 1, 1, 7, 3):1 (0, 1, 1, 7, 4):3 (0, 2, 2, 2, 2):13 (0, 2, 2, 3, 2):31 (0, 2, 2, 3, 3):9 (0, 2, 2, 4, 2):10 (0, 2, 2, 4, 3):16 (0, 2, 2, 4, 4):3 (0, 2, 2, 5, 2):4 (0, 2, 2, 5, 3):15 (0, 2, 2, 5, 4):5 (0, 2, 2, 6, 3):2 (0, 2, 2, 7, 3):2 (0, 2, 2, 7, 4):1 (0, 3, 3, 3, 3):1 (0, 3, 3, 4, 4):1 (0, 3, 3, 5, 3):1 (0, 3, 3, 5, 4):1 (0, 3, 3, 7, 7):12 (0, 4, 4, 7, 7):12 (1, 1, 1, 1, 1):93 (1, 1, 1, 2, 1):91 (1, 1, 1, 2, 2):90 (1, 1, 1, 3, 1):72 (1, 1, 1, 3, 2):115 (1, 1, 1, 3, 3):46 (1, 1, 1, 4, 1):22 (1, 1, 1, 4, 2):70 (1, 1, 1, 4, 3):37 (1, 1, 1, 4, 4):9 (1, 1, 1, 5, 1):4 (1, 1, 1, 5, 2):15 (1, 1, 1, 5, 3):20 (1, 1, 1, 5, 4):15 (1, 1, 1, 6, 3):3 (1, 1, 1, 6, 4):2 (1, 1, 1, 7, 4):1 (1, 2, 2, 2, 2):11 (1, 2, 2, 3, 2):28 (1, 2, 2, 3, 3):8 (1, 2, 2, 4, 2):12 (1, 2, 2, 4, 3):20 (1, 2, 2, 4, 4):4 (1, 2, 2, 5, 2):3 (1, 2, 2, 5, 3):7 (1, 2, 2, 5, 4):3 (1, 2, 2, 6, 3):2 (1, 3, 3, 3, 3):2 (1, 3, 3, 4, 3):6 (1, 3, 3, 4, 4):3 (1, 3, 3, 5, 4):4 (2, 2, 2, 4, 2):1 (2, 2, 2, 4, 3):1 (2, 2, 2, 5, 2):1 (2, 2, 2, 5, 3):2 (2, 2, 2, 6, 3):1 (2, 2, 2, 6, 4):1 (3, 3, 3, 7, 7):4 (4, 4, 4, 4, 4):1 (4, 4, 4, 7, 7):3
+  block-table writes (rows, entries): (0, 0):3810 (1, 1):2940 (1, 2):2573 (1, 4):280 (1, 5):92 (1, 2520):23 (2, 2):1626 (2, 3):2518 (2, 4):1244 (2, 5):277 (2, 6):365 (2, 7):89 (2, 8):13 (2, 9):11 (2, 2521):25 (2, 2522):21 (2, 2524):1 (2, 2525):1 (3, 3):574 (3, 4):2003 (3, 5):1785 (3, 6):605 (3, 7):410 (3, 8):237 (3, 9):77 (3, 10):36 (3, 11):8 (3, 12):1 (3, 13):2 (3, 2522):20 (3, 2523):23 (3, 2524):7 (3, 2526):2 (3, 2527):1 (3, 7560):1 (4, 4):145 (4, 5):610 (4, 6):997 (4, 7):539 (4, 8):318 (4, 9):205 (4, 10):84 (4, 11):37 (4, 12):23 (4, 13):5 (4, 14):6 (4, 15):3 (4, 2523):8 (4, 2524):17 (4, 2525):16 (4, 2526):3 (4, 2527):2 (4, 2528):3 (4, 2530):1 (4, 10080):1 (5, 6):143 (5, 7):263 (5, 8):246 (5, 9):151 (5, 10):75 (5, 11):56 (5, 12):33 (5, 13):13 (5, 14):6 (5, 15):1 (5, 16):4 (5, 2524):2 (5, 2525):3 (5, 2526):7 (5, 2527):5 (5, 2528):5 (5, 2529):1 (5, 2530):1 (5, 2532):1 (5, 2534):1 (5, 2540):1 (6, 8):11 (6, 9):39 (6, 10):9 (6, 11):4 (6, 12):7 (6, 13):4 (6, 14):2 (6, 15):1 (6, 16):1 (6, 2526):1 (6, 2527):2 (6, 2528):2 (6, 2529):2 (7, 7):123 (7, 10):9 (7, 11):8 (7, 12):1 (7, 13):3 (7, 14):95 (7, 15):1 (7, 20):12 (7, 22):12 (7, 23):4 (7, 26):3
+  (b, requests completing a compression group of [4, 128] tokens): (1, 0, 0):672 (1, 1, 0):217 (1, 1, 1):6 (2, 0, 0):758 (2, 1, 0):398 (2, 1, 1):12 (2, 2, 0):109 (2, 2, 1):8 (3, 0, 0):481 (3, 1, 0):396 (3, 1, 1):13 (3, 2, 0):93 (3, 2, 1):7 (3, 3, 0):54 (3, 3, 1):4 (4, 0, 0):276 (4, 1, 0):439 (4, 1, 1):15 (4, 2, 0):165 (4, 2, 1):11 (4, 3, 0):46 (4, 3, 1):5 (4, 4, 4):1 (5, 0, 0):260 (5, 1, 0):368 (5, 1, 1):15 (5, 2, 0):218 (5, 2, 1):12 (5, 3, 0):116 (5, 3, 1):9 (5, 3, 2):1 (5, 4, 0):9 (6, 0, 0):139 (6, 1, 0):430 (6, 1, 1):13 (6, 2, 0):272 (6, 2, 1):20 (6, 3, 0):171 (6, 3, 1):16 (6, 3, 2):1 (7, 0, 0):77 (7, 1, 0):351 (7, 1, 1):11 (7, 2, 0):404 (7, 2, 1):27 (7, 3, 0):113 (7, 3, 1):8 (7, 3, 2):1 (7, 4, 0):55 (7, 4, 1):11 (8, 0, 0):566 (8, 1, 0):609 (8, 1, 1):19 (8, 2, 0):405 (8, 2, 1):28 (8, 3, 0):362 (8, 3, 1):36 (8, 4, 0):57 (8, 4, 1):7 (8, 7, 0):231 (8, 7, 3):8 (8, 7, 4):7 (9, 0, 0):60 (9, 1, 0):199 (9, 1, 1):6 (9, 2, 0):428 (9, 2, 1):21 (9, 3, 0):277 (9, 3, 1):22 (9, 3, 2):2 (9, 4, 0):95 (9, 4, 1):16 (9, 4, 2):1 (9, 5, 0):21 (9, 5, 1):4 (9, 6, 0):3 (10, 0, 0):326 (10, 1, 0):1236 (10, 1, 1):37 (10, 2, 0):1932 (10, 2, 1):117 (10, 2, 2):1 (10, 3, 0):1904 (10, 3, 1):185 (10, 3, 2):1 (10, 4, 0):1137 (10, 4, 1):133 (10, 4, 2):6 (10, 5, 0):239 (10, 5, 1):26 (10, 5, 2):2 (10, 6, 0):29 (10, 6, 1):4 (10, 6, 2):2 (11, 0, 0):207 (11, 1, 0):980 (11, 1, 1):38 (11, 2, 0):1605 (11, 2, 1):119 (11, 3, 0):1988 (11, 3, 1):208 (11, 3, 2):7 (11, 4, 0):1133 (11, 4, 1):158 (11, 4, 2):5 (11, 5, 0):505 (11, 5, 1):81 (11, 5, 2):11 (11, 6, 0):20 (11, 6, 1):5 (11, 6, 2):1 (11, 7, 0):10 (11, 7, 1):2 (12, 0, 0):13 (12, 1, 0):116 (12, 1, 1):4 (12, 2, 0):178 (12, 2, 1):15 (12, 3, 0):227 (12, 3, 1):21 (12, 4, 0):153 (12, 4, 1):21 (12, 4, 2):1 (12, 5, 0):90 (12, 5, 1):15 (12, 6, 0):9 (12, 6, 1):3 (12, 7, 0):11 (12, 7, 1):2 (13, 1, 0):5 (13, 2, 0):1 (13, 3, 0):2 (13, 3, 1):1 (13, 5, 0):3 (13, 5, 1):1 (13, 6, 0):2
+### decode dp1: 27152 forwards; cached-count mismatches 0, token-count mismatches 0; phases {('warmup',): 5602, ('formal',): 21550}
+  b (requests = logits rows): 1:2088 2:878 3:1012 4:972 5:970 6:1116 7:1933 8:1183 9:1778 10:7415 11:6937 12:870
+  (b, first tails): forwards, kv range, max_seq range
+    (1, 0): 2081, kv [6144, 7166], max_seq [6145, 7167]
+    (1, 1): 7, kv [6143, 6143], max_seq [6144, 6144]
+    (2, 0): 872, kv [6144, 7166], max_seq [6150, 7167]
+    (2, 1): 6, kv [6143, 6248], max_seq [6149, 6249]
+    (3, 0): 1006, kv [6144, 7166], max_seq [6152, 7167]
+    (3, 1): 6, kv [6143, 6354], max_seq [6151, 6355]
+    (4, 0): 967, kv [6144, 7166], max_seq [6445, 7167]
+    (4, 1): 5, kv [6143, 6456], max_seq [6444, 6457]
+    (5, 0): 964, kv [6144, 7166], max_seq [6156, 7167]
+    (5, 1): 5, kv [6143, 6561], max_seq [6546, 6562]
+    (5, 2): 1, kv [6143, 6154], max_seq [6155, 6155]
+    (6, 0): 1110, kv [6144, 7166], max_seq [6613, 7167]
+    (6, 1): 6, kv [6143, 6709], max_seq [6157, 6710]
+    (7, 0): 1927, kv [6144, 7166], max_seq [6159, 7167]
+    (7, 1): 6, kv [6143, 6809], max_seq [6158, 6810]
+    (8, 0): 1178, kv [6144, 7166], max_seq [6824, 7167]
+    (8, 1): 5, kv [6143, 6905], max_seq [6823, 6906]
+    (9, 0): 1771, kv [6144, 7166], max_seq [6906, 7167]
+    (9, 1): 7, kv [6143, 7119], max_seq [6905, 7120]
+    (10, 0): 7378, kv [6144, 7166], max_seq [6876, 7167]
+    (10, 1): 37, kv [6143, 7165], max_seq [7007, 7166]
+    (11, 0): 6836, kv [6144, 7166], max_seq [6921, 7167]
+    (11, 1): 101, kv [6143, 7166], max_seq [6920, 7167]
+    (12, 0): 846, kv [6144, 7166], max_seq [7021, 7167]
+    (12, 1): 24, kv [6143, 7166], max_seq [7020, 7167]
+  query lengths present: (1,):27152
+  newly zeroed blocks per forward: 0:4518 1:3344 2:4723 3:2592 4:3771 5:2597 6:1959 7:1333 8:886 9:705 10:288 11:236 12:122 13:52 14:20 15:5 16:1
+  per group [256, 64, 64, 4, 8]: (0, 0, 0, 0, 0):4518 (0, 0, 0, 1, 0):3344 (0, 0, 0, 1, 1):2920 (0, 0, 0, 2, 0):1803 (0, 0, 0, 2, 1):1999 (0, 0, 0, 2, 2):1400 (0, 0, 0, 3, 0):593 (0, 0, 0, 3, 1):1886 (0, 0, 0, 3, 2):1655 (0, 0, 0, 3, 3):394 (0, 0, 0, 4, 0):166 (0, 0, 0, 4, 1):633 (0, 0, 0, 4, 2):732 (0, 0, 0, 4, 3):491 (0, 0, 0, 4, 4):106 (0, 0, 0, 5, 1):272 (0, 0, 0, 5, 2):277 (0, 0, 0, 5, 3):241 (0, 0, 0, 5, 4):169 (0, 0, 0, 6, 2):80 (0, 0, 0, 6, 3):183 (0, 0, 0, 6, 4):56 (0, 0, 0, 7, 3):7 (0, 0, 0, 7, 4):6 (0, 1, 1, 1, 1):319 (0, 1, 1, 2, 1):207 (0, 1, 1, 2, 2):278 (0, 1, 1, 3, 1):207 (0, 1, 1, 3, 2):346 (0, 1, 1, 3, 3):137 (0, 1, 1, 4, 1):67 (0, 1, 1, 4, 2):139 (0, 1, 1, 4, 3):143 (0, 1, 1, 4, 4):24 (0, 1, 1, 5, 1):27 (0, 1, 1, 5, 2):62 (0, 1, 1, 5, 3):79 (0, 1, 1, 5, 4):98 (0, 1, 1, 6, 2):17 (0, 1, 1, 6, 3):39 (0, 1, 1, 6, 4):33 (0, 1, 1, 7, 3):5 (0, 1, 1, 7, 4):5 (0, 2, 2, 2, 2):20 (0, 2, 2, 3, 2):25 (0, 2, 2, 3, 3):13 (0, 2, 2, 4, 2):14 (0, 2, 2, 4, 3):17 (0, 2, 2, 4, 4):15 (0, 2, 2, 5, 2):2 (0, 2, 2, 5, 3):7 (0, 2, 2, 5, 4):6 (0, 2, 2, 6, 3):14 (0, 2, 2, 6, 4):4 (1, 1, 1, 1, 1):102 (1, 1, 1, 2, 1):76 (1, 1, 1, 2, 2):88 (1, 1, 1, 3, 1):64 (1, 1, 1, 3, 2):114 (1, 1, 1, 3, 3):34 (1, 1, 1, 4, 1):22 (1, 1, 1, 4, 2):55 (1, 1, 1, 4, 3):53 (1, 1, 1, 4, 4):11 (1, 1, 1, 5, 1):11 (1, 1, 1, 5, 2):15 (1, 1, 1, 5, 3):34 (1, 1, 1, 5, 4):29 (1, 1, 1, 6, 2):8 (1, 1, 1, 6, 3):11 (1, 1, 1, 6, 4):9 (1, 1, 1, 7, 3):1 (1, 1, 1, 7, 4):1 (1, 2, 2, 2, 2):23 (1, 2, 2, 3, 2):10 (1, 2, 2, 3, 3):9 (1, 2, 2, 4, 2):7 (1, 2, 2, 4, 3):14 (1, 2, 2, 4, 4):11 (1, 2, 2, 5, 2):4 (1, 2, 2, 5, 3):4 (1, 2, 2, 5, 4):9 (1, 2, 2, 6, 3):5 (1, 2, 2, 6, 4):1 (1, 2, 2, 7, 4):1 (2, 2, 2, 3, 2):5 (2, 2, 2, 3, 3):2 (2, 2, 2, 4, 2):2 (2, 2, 2, 4, 3):2 (2, 2, 2, 5, 3):1 (2, 2, 2, 6, 3):4
+  block-table writes (rows, entries): (0, 0):4486 (1, 1):3310 (1, 2):2899 (1, 4):315 (1, 5):101 (1, 2520):31 (2, 2):1788 (2, 3):1985 (2, 4):1390 (2, 5):205 (2, 6):352 (2, 7):87 (2, 8):20 (2, 9):23 (2, 2521):34 (2, 2522):21 (2, 2524):4 (2, 2525):1 (2, 5040):1 (3, 3):591 (3, 4):1869 (3, 5):1638 (3, 6):595 (3, 7):407 (3, 8):249 (3, 9):59 (3, 10):23 (3, 11):14 (3, 12):2 (3, 2522):15 (3, 2523):14 (3, 2524):10 (3, 2525):2 (3, 2526):2 (3, 2527):1 (4, 4):165 (4, 5):626 (4, 6):731 (4, 7):552 (4, 8):265 (4, 9):197 (4, 10):91 (4, 11):34 (4, 12):31 (4, 13):13 (4, 2523):2 (4, 2524):17 (4, 2525):17 (4, 2526):6 (4, 2527):3 (4, 2528):2 (5, 6):271 (5, 7):275 (5, 8):265 (5, 9):240 (5, 10):93 (5, 11):134 (5, 12):40 (5, 13):9 (5, 14):10 (5, 2524):1 (5, 2525):7 (5, 2526):1 (5, 2527):6 (5, 2528):2 (5, 2529):1 (5, 2531):1 (6, 8):80 (6, 9):181 (6, 10):72 (6, 11):47 (6, 12):43 (6, 13):23 (6, 14):9 (6, 15):5 (6, 2526):1 (6, 2527):2 (6, 2528):3 (6, 2529):2 (6, 2530):1 (6, 2533):1 (7, 10):7 (7, 11):6 (7, 12):5 (7, 13):6 (7, 14):1 (7, 16):1 (7, 2529):2 (7, 2530):1 (7, 2532):1
+  (b, requests completing a compression group of [4, 128] tokens): (1, 0, 0):1565 (1, 1, 0):507 (1, 1, 1):16 (2, 0, 0):477 (2, 1, 0):352 (2, 1, 1):13 (2, 2, 0):33 (2, 2, 1):3 (3, 0, 0):365 (3, 1, 0):520 (3, 1, 1):15 (3, 2, 0):105 (3, 2, 1):7 (4, 0, 0):296 (4, 1, 0):439 (4, 1, 1):17 (4, 2, 0):133 (4, 2, 1):9 (4, 3, 0):70 (4, 3, 1):8 (5, 0, 0):230 (5, 1, 0):408 (5, 1, 1):14 (5, 2, 0):214 (5, 2, 1):14 (5, 3, 0):24 (5, 3, 1):2 (5, 3, 2):1 (5, 4, 0):56 (5, 4, 1):7 (6, 0, 0):218 (6, 1, 0):322 (6, 1, 1):10 (6, 2, 0):411 (6, 2, 1):24 (6, 3, 0):84 (6, 3, 1):8 (6, 5, 0):34 (6, 5, 1):3 (6, 5, 2):2 (7, 0, 0):189 (7, 1, 0):689 (7, 1, 1):20 (7, 2, 0):578 (7, 2, 1):35 (7, 2, 2):1 (7, 3, 0):331 (7, 3, 1):20 (7, 3, 2):7 (7, 6, 0):55 (7, 6, 1):4 (7, 6, 2):4 (8, 0, 0):67 (8, 1, 0):319 (8, 1, 1):12 (8, 2, 0):489 (8, 2, 1):33 (8, 3, 0):178 (8, 3, 1):19 (8, 4, 0):1 (8, 6, 0):57 (8, 6, 1):4 (8, 6, 2):4 (9, 0, 0):147 (9, 1, 0):275 (9, 1, 1):6 (9, 2, 0):550 (9, 2, 1):33 (9, 2, 2):1 (9, 3, 0):526 (9, 3, 1):44 (9, 3, 2):3 (9, 4, 0):126 (9, 4, 1):13 (9, 4, 2):1 (9, 5, 0):34 (9, 5, 1):7 (9, 6, 0):9 (9, 6, 1):3 (10, 0, 0):455 (10, 1, 0):1359 (10, 1, 1):39 (10, 2, 0):1625 (10, 2, 1):105 (10, 2, 2):1 (10, 3, 0):1987 (10, 3, 1):180 (10, 3, 2):10 (10, 4, 0):1073 (10, 4, 1):123 (10, 4, 2):6 (10, 5, 0):340 (10, 5, 1):54 (10, 5, 2):2 (10, 6, 0):39 (10, 6, 1):6 (10, 7, 0):9 (10, 7, 1):2 (11, 0, 0):492 (11, 1, 0):1093 (11, 1, 1):38 (11, 2, 0):1291 (11, 2, 1):80 (11, 2, 2):5 (11, 3, 0):1618 (11, 3, 1):157 (11, 3, 2):3 (11, 4, 0):1009 (11, 4, 1):143 (11, 4, 2):12 (11, 5, 0):665 (11, 5, 1):114 (11, 5, 2):5 (11, 6, 0):156 (11, 6, 1):40 (11, 6, 2):1 (11, 7, 0):11 (11, 7, 1):4 (12, 0, 0):17 (12, 1, 0):194 (12, 1, 1):8 (12, 2, 0):106 (12, 2, 1):8 (12, 3, 0):190 (12, 3, 1):24 (12, 4, 0):138 (12, 4, 1):16 (12, 5, 0):70 (12, 5, 1):15 (12, 5, 2):2 (12, 6, 0):67 (12, 6, 1):15
+### prefill dp0: 216 forwards; cached-count mismatches 0, token-count mismatches 0; phases {('warmup',): 24, ('formal',): 192}
+  b (requests = logits rows): 1:216
+  (b, first tails): forwards, kv range, max_seq range
+    (1, 1): 216, kv [0, 0], max_seq [6144, 6144]
+  query lengths present: (6144,):216
+  newly zeroed blocks per forward: 2520:216
+  per group [256, 64, 64, 4, 8]: (24, 96, 96, 1536, 768):216
+  block-table writes (rows, entries): (1, 2520):216
+  (b, requests completing a compression group of [4, 128] tokens): (1, 1, 1):216
+### prefill dp1: 216 forwards; cached-count mismatches 0, token-count mismatches 0; phases {('warmup',): 24, ('formal',): 192}
+  b (requests = logits rows): 1:216
+  (b, first tails): forwards, kv range, max_seq range
+    (1, 1): 216, kv [0, 0], max_seq [6144, 6144]
+  query lengths present: (6144,):216
+  newly zeroed blocks per forward: 2520:216
+  per group [256, 64, 64, 4, 8]: (24, 96, 96, 1536, 768):216
+  block-table writes (rows, entries): (1, 2520):216
+  (b, requests completing a compression group of [4, 128] tokens): (1, 1, 1):216
+
+## C. Real-forward request counts: lifecycle run against reference run (different executions)
+  decode dp0: reference 26538 forwards (211 with has_prefill), lifecycle 26098 (210 with a new request)
+    reference b: 1:921 2:1034 3:1177 4:1029 5:912 6:975 7:1079 8:2194 9:1856 10:10642 11:4719
+    lifecycle b: 1:895 2:1285 3:1048 4:958 5:1008 6:1062 7:1058 8:2335 9:1155 10:7317 11:7083 12:879 13:15
+  decode dp1: reference 27737 forwards (215 with has_prefill), lifecycle 27152 (216 with a new request)
+    reference b: 1:2154 2:1029 3:934 4:1046 5:1181 6:1085 7:1987 8:1203 9:1857 10:10546 11:4715
+    lifecycle b: 1:2088 2:878 3:1012 4:972 5:970 6:1116 7:1933 8:1183 9:1778 10:7415 11:6937 12:870
+  prefill dp0: reference 216 forwards (216 with has_prefill), lifecycle 216 (216 with a new request)
+    reference b: 1:216
+    lifecycle b: 1:216
+  prefill dp1: reference 216 forwards (216 with has_prefill), lifecycle 216 (216 with a new request)
+    reference b: 1:216
+    lifecycle b: 1:216
+
+## D. Attention coordinates per lane and their coverage
+real forwards: the reference classes with the lifecycle kv range of the same request count (decode-shaped: every query is 1 token; the first tail is a new request with kv = prompt - 1, so it is decode-shaped too, with has_prefill set). FULL pads to R = W requests with sequence length 0. Dummies: R requests splitting W tokens, sequence length = query length, kv 0.
+coverage counts: rows of each existing file in the same mode / eager rows of the same shape
+### decode dp0
+  dummy FULL W1 R1 own 1/1 prefill=False: 1671 fw; decode kv [0, 0] query [1]; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy FULL W2 R2 own 1/1 prefill=False: 1 fw; decode kv [0, 0] query [1, 1]; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy FULL W4 R4 own 1/1 prefill=False: 3 fw; decode kv [0, 0] query [1, 1]...; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy PIECEWISE W1 R1 own 1/1 prefill=False: 7 fw; decode kv [0, 0] query [1]; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy PIECEWISE W2 R1 own 1/1 prefill=False: 1 fw; prefill kv 0 query [2]; max_seq [2, 2]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy PIECEWISE W4 R1 own 1/1 prefill=False: 2 fw; prefill kv 0 query [4]; max_seq [4, 4]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy PIECEWISE W8 R1 own 1/1 prefill=False: 2 fw; prefill kv 0 query [8]; max_seq [8, 8]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W1 R1 own 1/1 prefill=False: 658 fw; decode kv [6144, 7166] query [1]; max_seq [6145, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W2 R2 own 1/1 prefill=False: 255 fw; decode kv [6144, 7166] query [1]; max_seq [6145, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W2 R2 own 2/2 prefill=False: 761 fw; decode kv [6144, 7166] query [1, 1]; max_seq [6239, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W4 R4 own 2/2 prefill=False: 263 fw; decode kv [6144, 7166] query [1, 1]; max_seq [6239, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W4 R4 own 3/3 prefill=False: 1165 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6348, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W4 R4 own 4/4 prefill=False: 664 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6448, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 4/4 prefill=False: 355 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6448, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 5/5 prefill=False: 903 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6146, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 6/6 prefill=False: 965 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6604, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 7/7 prefill=False: 1069 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6708, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 8/8 prefill=False: 2086 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6185, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W16 R16 own 8/8 prefill=False: 97 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6185, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W16 R16 own 9/9 prefill=False: 1847 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6965, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W16 R16 own 10/10 prefill=False: 10471 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6969, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W16 R16 own 11/11 prefill=False: 4565 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6975, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W1 R1 own 1/1 prefill=True: 5 fw; decode kv [6143, 6143] query [1]; max_seq [6144, 6144]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W2 R1 own 1/1 prefill=False: 3 fw; decode kv [6144, 7166] query [1]; max_seq [6145, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W2 R2 own 2/2 prefill=False: 2 fw; decode kv [6144, 7166] query [1, 1]; max_seq [6239, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W2 R2 own 2/2 prefill=True: 5 fw; decode kv [6143, 6247] query [1, 1]; max_seq [6238, 6248]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W4 R2 own 2/2 prefill=False: 3 fw; decode kv [6144, 7166] query [1, 1]; max_seq [6239, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W4 R3 own 3/3 prefill=False: 7 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6348, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W4 R3 own 3/3 prefill=True: 5 fw; decode kv [6143, 6398] query [1, 1]...; max_seq [6347, 6399]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W4 R4 own 4/4 prefill=True: 5 fw; decode kv [6143, 6455] query [1, 1]...; max_seq [6144, 6456]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R4 own 4/4 prefill=False: 5 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6448, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R5 own 5/5 prefill=False: 3 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6146, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R5 own 5/5 prefill=True: 6 fw; decode kv [6143, 6556] query [1, 1]...; max_seq [6145, 6557]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R6 own 6/6 prefill=False: 4 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6604, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R6 own 6/6 prefill=True: 6 fw; decode kv [6143, 6715] query [1, 1]...; max_seq [6603, 6716]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R7 own 7/7 prefill=False: 5 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6708, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R7 own 7/7 prefill=True: 5 fw; decode kv [6143, 6766] query [1, 1]...; max_seq [6707, 6767]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R8 own 8/8 prefill=False: 3 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6185, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R8 own 8/8 prefill=True: 6 fw; decode kv [6143, 6921] query [1, 1]...; max_seq [6184, 6922]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R8 own 8/8 prefill=False: 2 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6185, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R9 own 9/9 prefill=False: 6 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6965, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R9 own 9/9 prefill=True: 3 fw; decode kv [6143, 7022] query [1, 1]...; max_seq [6964, 7023]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R10 own 10/10 prefill=False: 122 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6969, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R10 own 10/10 prefill=True: 49 fw; decode kv [6143, 7162] query [1, 1]...; max_seq [6976, 7163]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R11 own 11/11 prefill=False: 38 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6975, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R11 own 11/11 prefill=True: 116 fw; decode kv [6143, 7166] query [1, 1]...; max_seq [6974, 7167]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+### decode dp1
+  dummy FULL W1 R1 own 1/1 prefill=False: 449 fw; decode kv [0, 0] query [1]; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy FULL W2 R2 own 1/1 prefill=False: 1 fw; decode kv [0, 0] query [1, 1]; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy FULL W4 R4 own 1/1 prefill=False: 37 fw; decode kv [0, 0] query [1, 1]...; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy FULL W8 R8 own 1/1 prefill=False: 1 fw; decode kv [0, 0] query [1, 1]...; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W1 R1 own 1/1 prefill=False: 1880 fw; decode kv [6144, 7166] query [1]; max_seq [6145, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W2 R2 own 1/1 prefill=False: 260 fw; decode kv [6144, 7166] query [1]; max_seq [6145, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W2 R2 own 2/2 prefill=False: 756 fw; decode kv [6144, 7166] query [1, 1]; max_seq [6150, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W4 R4 own 2/2 prefill=False: 261 fw; decode kv [6144, 7166] query [1, 1]; max_seq [6150, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W4 R4 own 3/3 prefill=False: 924 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6152, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W4 R4 own 4/4 prefill=False: 873 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6445, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 2/2 prefill=False: 1 fw; decode kv [6144, 7166] query [1, 1]; max_seq [6150, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 3/3 prefill=False: 1 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6152, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 4/4 prefill=False: 162 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6445, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 5/5 prefill=False: 1168 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6156, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 6/6 prefill=False: 1074 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6613, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 7/7 prefill=False: 1973 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6159, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W8 R8 own 8/8 prefill=False: 998 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6824, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W16 R16 own 8/8 prefill=False: 197 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6824, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W16 R16 own 9/9 prefill=False: 1849 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6906, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W16 R16 own 10/10 prefill=False: 10370 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6876, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving FULL W16 R16 own 11/11 prefill=False: 4564 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6921, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W1 R1 own 1/1 prefill=False: 5 fw; decode kv [6144, 7166] query [1]; max_seq [6145, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W1 R1 own 1/1 prefill=True: 7 fw; decode kv [6143, 6143] query [1]; max_seq [6144, 6144]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W2 R1 own 1/1 prefill=False: 2 fw; decode kv [6144, 7166] query [1]; max_seq [6145, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W2 R2 own 2/2 prefill=False: 3 fw; decode kv [6144, 7166] query [1, 1]; max_seq [6150, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W2 R2 own 2/2 prefill=True: 6 fw; decode kv [6143, 6248] query [1, 1]; max_seq [6149, 6249]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W4 R2 own 2/2 prefill=False: 2 fw; decode kv [6144, 7166] query [1, 1]; max_seq [6150, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W4 R3 own 3/3 prefill=False: 3 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6152, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W4 R3 own 3/3 prefill=True: 6 fw; decode kv [6143, 6354] query [1, 1]...; max_seq [6151, 6355]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W4 R4 own 4/4 prefill=False: 5 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6445, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W4 R4 own 4/4 prefill=True: 6 fw; decode kv [6143, 6456] query [1, 1]...; max_seq [6444, 6457]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R5 own 5/5 prefill=False: 7 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6156, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R5 own 5/5 prefill=True: 6 fw; decode kv [6143, 6561] query [1, 1]...; max_seq [6155, 6562]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R6 own 6/6 prefill=False: 6 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6613, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R6 own 6/6 prefill=True: 5 fw; decode kv [6143, 6709] query [1, 1]...; max_seq [6157, 6710]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R7 own 7/7 prefill=False: 8 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6159, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R7 own 7/7 prefill=True: 6 fw; decode kv [6143, 6809] query [1, 1]...; max_seq [6158, 6810]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R8 own 8/8 prefill=False: 2 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6824, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W8 R8 own 8/8 prefill=True: 5 fw; decode kv [6143, 6905] query [1, 1]...; max_seq [6823, 6906]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R8 own 8/8 prefill=False: 1 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6824, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R9 own 9/9 prefill=False: 5 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6906, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R9 own 9/9 prefill=True: 3 fw; decode kv [6143, 7119] query [1, 1]...; max_seq [6905, 7120]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R10 own 10/10 prefill=False: 124 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6876, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R10 own 10/10 prefill=True: 52 fw; decode kv [6143, 7165] query [1, 1]...; max_seq [7007, 7166]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R11 own 11/11 prefill=False: 38 fw; decode kv [6144, 7166] query [1, 1]...; max_seq [6921, 7167]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving PIECEWISE W16 R11 own 11/11 prefill=True: 113 fw; decode kv [6143, 7166] query [1, 1]...; max_seq [6920, 7167]; [outer_fork,shared_expert_stream,prepare_prefill_inputs]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+### prefill dp0
+  dummy FULL W1 R1 own 1/1 prefill=False: 12920 fw; decode kv [0, 0] query [1]; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy NONE W1 R1 own 1/1 prefill=False: 209 fw; decode kv [0, 0] query [1]; max_seq [1, 1]; [outer_fork,shared_expert_stream,short_context]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving NONE W6144 R1 own 6144/1 prefill=True: 216 fw; prefill kv 0 query [6144]; max_seq [6144, 6144]; [prepare_prefill_inputs]; coverage {'P6144_kernel_only': [6, 6], 'P6144_cuda_event': [6, 6]}
+### prefill dp1
+  dummy FULL W1 R1 own 1/1 prefill=False: 12920 fw; decode kv [0, 0] query [1]; max_seq [1, 1]; [outer_fork,shared_expert_stream]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  dummy NONE W1 R1 own 1/1 prefill=False: 209 fw; decode kv [0, 0] query [1]; max_seq [1, 1]; [outer_fork,shared_expert_stream,short_context]; coverage {'P6144_kernel_only': [0, 0], 'P6144_cuda_event': [0, 0]}
+  serving NONE W6144 R1 own 6144/1 prefill=True: 216 fw; prefill kv 0 query [6144]; max_seq [6144, 6144]; [prepare_prefill_inputs]; coverage {'P6144_kernel_only': [6, 6], 'P6144_cuda_event': [6, 6]}
