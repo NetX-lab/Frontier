@@ -7,6 +7,7 @@
 | 2026-10-27 | Created: implementation design of stage 1a ([design.md](design.md) §5, bootstrap parts of entries 13 and 17), the evidence it rests on, and the split into Codex assignments A and B. |
 | 2026-10-27 | A2 revised to declared container scopes (§3.3); graph-replay scope tree added (§3.5); assignment B split into B1 (bridge-check minimum) and B2 (§3.4, §4); assignment A accepted. |
 | 2026-10-27 | B1 accepted and committed (`03d246f9`): implementation decisions, the P1h package layout and the driver CLI recorded in §3.4; the `dsv4_o_proj` row and the eager break under the V2 runner in §3.5. |
+| 2026-10-27 | §3.4: the re-capture takes a fresh graph pool (`548ec6c0`, after P1h attempt 1); P1h bridge check PASS on H200 (§4). |
 
 ## 1. Purpose
 
@@ -72,6 +73,7 @@ B1:
 
 B1 as implemented (`03d246f9`, [test_report_2026-10-27_b1_graph_replay_integration.md](../test_report_2026-10-27_b1_graph_replay_integration.md)):
 
+- The re-capture takes a fresh private graph pool (`current_platform.graph_pool_handle()`) for the V2 graph manager and the Breakable runner (`548ec6c0`). Once all graphs of a pool are released, PyTorch refuses to capture into that pool again (P1h attempt 1 failed on the `use_count > 0` assert of the host caching allocator); vLLM also takes a fresh pool when it discards captures.
 - Breakable capture and the V2 runner are selected by `VLLM_USE_BREAKABLE_CUDAGRAPH=1` and `VLLM_USE_V2_MODEL_RUNNER=1`, which must be set before vLLM is imported. The bridge driver sets both for each mode's process. The runner fails fast when a PIECEWISE mode runs without the Breakable variable, and the hook installation fails when `use_v2_model_runner` is false.
 - NONE has no capture sizes (`cudagraph_capture_sizes=[]`); the plan rejects sizes for NONE, sizes that do not increase strictly, and a largest size above the smallest chunk budget. vLLM may resolve another mode or size list (`resolve_cudagraph_mode_and_sizes`); `recapture_graphs` fails fast on any difference.
 - The runtime mode of each step comes from wrapping `dispatch_cg_and_sync_dp`, imported by name into `vllm/v1/worker/gpu/model_runner.py`; its `BatchExecutionDescriptor` (mode, token count, request count) is written into each raw step record under the key `cudagraph_dispatch`. Attention metadata comes from `execute_model_state.attn_metadata`.
@@ -118,3 +120,4 @@ Containers (they must own no kernel): `dsv4_attention_layer`, `dsv4_parallel_inp
 
 - A: the new unit tests pass on CPU; the existing DSA kernel-trace and V4 composition tests still pass.
 - Bridge check: on the reduced engine, every replayed kernel of FULL and PIECEWISE steps resolves through the clone map to exactly one captured node with a matching name, grid and block; otherwise the §5 stop rule applies.
+- Result: PASS on 1 H200 (`exp-1028-031147-398843`, source `548ec6c0`): 24 FULL and 72 PIECEWISE steps, 12 traces without an attribution error, no A2 error; repeated on CPU by the lead ([test report](../test_report_2026-10-27_b1_graph_replay_integration.md), section "P1h submission"). B2 is next.
