@@ -89,15 +89,20 @@ def pd_state_environment(config, role, scratch, stage, inherited):
 
 
 def host_probe_environment(config, role, scratch, stage, inherited):
-    """Activate the diagnostic host-step probe only in role servers, never replay clients."""
+    """Activate the diagnostic host-step probe only in role servers, never replay clients.
+
+    The probe variable is owned here: an inherited value never reaches a server, so only a
+    run that declares `host_step_probe` is instrumented.
+    """
+    env = {key: value for key, value in inherited.items() if key != 'STEP5_HOST_STEP_PROBE'}
     if 'host_step_probe' not in config:
-        return inherited, {}
+        return env, {}
     changed = {
         'STEP5_HOST_STEP_PROBE': json.dumps({'role': role, 'output_dir': str(scratch / 'host_probe')},
                                             sort_keys=True),
         'PYTHONPATH': os.pathsep.join([str(stage / 'host_probe_bootstrap'),
-                                      inherited.get('PYTHONPATH', '')]).rstrip(os.pathsep)}
-    return inherited | changed, changed
+                                      env.get('PYTHONPATH', '')]).rstrip(os.pathsep)}
+    return env | changed, changed
 
 
 def run(config):

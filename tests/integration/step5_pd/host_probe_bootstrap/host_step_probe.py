@@ -1,26 +1,31 @@
 """Diagnostic host-step probe for native Step-5 vLLM role servers.
 
 Each worker process writes one JSON line per model-runner step to
-`<output_dir>/<role>_<host>_<pid>.jsonl`, after a header line with its TP and DP rank.
+`<output_dir>/<role>_<host>_<pid>.jsonl`, after a header line with its host, TP and DP rank.
 A step line holds host `perf_counter_ns` stamps around:
 
 - `GPUModelRunner.execute_model` (`enter`, `exit`) and `sample_tokens` (`sample_exit`);
 - `KVBlockZeroer.zero_block_ids` (`zero`), with the hook count, the block counts, and for
   the first side-storage hook its entry, the return of its `.tolist()` (`first_sync`), its
   exit, and whether the previous step's device work was still running at its entry;
-- the DP padding all-reduce `sync_cudagraph_and_dp_padding` (`sync`, with the per-process
-  call ordinal that joins the DP engines);
+- the DP padding sync `sync_cudagraph_and_dp_padding` (`sync`: the per-process call ordinal
+  that joins the DP engines, and `reduce_enter`/`reduce_exit` around its gloo `all_reduce`,
+  the only part that waits for the other engines);
 - `StepTimingCollector.forward_start` (`launch`).
 
-CUDA events at the launch and at the step end give `gap_ms`, the device idle time from the
+CUDA events at the launch and at the end of the step's main-stream work (`sample_tokens`
+exit, or `_dummy_run` exit for a dummy step) give `gap_ms`, the main-stream time from the
 previous step's end to this step's launch, and `span_ms`, launch to step end.
+
+`GPUModelRunner.shutdown`, which every orderly worker exit calls and which synchronizes the
+device first, writes the remaining steps and a final `end` line with the step count. A file
+without it is truncated. Forked workers leave through `os._exit`, so `atexit` never runs.
 
 The probe never changes arguments, return values or exceptions, and calls every original
 exactly once. The first probe error disables the probe in that process, writes an `error`
 line, and prints an UNVERIFIED line. The hooks perturb native timing, so a probe run is
 never a reference run.
 """
-import atexit
 import functools
 import importlib.abc
 import importlib.machinery
@@ -61,6 +66,7 @@ class Probe:
         self.output_dir = settings['output_dir']
         self.disabled = False
         self.pid = None
+        self.file = None
         self.clear_steps()
 
     def clear_steps(self):
@@ -70,6 +76,7 @@ class Probe:
         self.last = None
         self.last_end = None
         self.zeroing = None
+        self.sync = None
         self.pending = []
 
     def start_process(self, runner):
@@ -85,7 +92,6 @@ class Probe:
         os.makedirs(self.output_dir, exist_ok=True)
         self.file = open(os.path.join(self.output_dir, f'{self.role}_{host}_{self.pid}.jsonl'),
                          'w', buffering=1)
-        atexit.register(self.close)
         self.write(dict(kind='header', role=self.role, host=host, pid=self.pid,
                         tp_rank=get_tensor_model_parallel_rank(),
                         tp_size=get_tensor_model_parallel_world_size(),
@@ -145,10 +151,16 @@ class Probe:
     def step_after(self, current):
         record, events = current
         record['exit'] = now()
-        if record['dummy'] and 'launch' in events:
-            events['end'] = self.last_end = device_event()
         self.current = None
         self.last = current
+
+    def dummy_finished(self, token):
+        """`_dummy_run` queues more main-stream work after its `execute_model` returns."""
+        if self.last is None:
+            return
+        record, events = self.last
+        if record['dummy'] and 'launch' in events and 'end' not in events:
+            events['end'] = self.last_end = device_event()
 
     def sampled(self, token):
         if self.last is None:
@@ -195,10 +207,20 @@ class Probe:
 
     def sync_before(self, arguments):
         self.ordinal += 1
-        return dict(ordinal=self.ordinal, enter=now())
+        self.sync = dict(ordinal=self.ordinal, enter=now())
+        return self.sync
+
+    def reduce_before(self, arguments):
+        if self.sync is not None:
+            self.sync['reduce_enter'] = now()
+
+    def reduce_after(self, token):
+        if self.sync is not None:
+            self.sync['reduce_exit'] = now()
 
     def sync_after(self, sync):
         # Every call is one DP all-reduce, so the ordinal counts calls outside a step too.
+        self.sync = None
         if self.current is not None:
             sync['exit'] = now()
             self.current[0]['sync'] = sync
@@ -209,15 +231,25 @@ class Probe:
             record['launch'] = now()
             events['launch'] = device_event()
 
-    def close(self):
-        """Steps whose device events never completed are written without device times."""
-        if self.pid != os.getpid():
+    def close(self, token):
+        """Native shutdown has synchronized the device, so every step event has completed."""
+        if self.pid != os.getpid() or self.file is None:
             return
         self.finish_last()
-        for record, _ in self.pending:
-            self.write(record)
-        self.pending = []
+        self.resolve()
+        self.write(dict(kind='end', steps=self.sequence))
         self.file.close()
+        self.file = None
+
+
+class DistributedSeam:
+    """Stands in for `torch.distributed` inside the DP sync module only."""
+
+    def __init__(self, distributed):
+        self.distributed = distributed
+
+    def __getattr__(self, name):
+        return getattr(self.distributed, name)
 
 
 def wrap(owner, name, probe, before=None, after=None, bind=False, static=False):
@@ -248,6 +280,8 @@ def instrument(module, probe):
         wrap(module.GPUModelRunner, 'execute_model', probe,
              before=probe.step_before, after=probe.step_after, bind=True)
         wrap(module.GPUModelRunner, 'sample_tokens', probe, after=probe.sampled)
+        wrap(module.GPUModelRunner, '_dummy_run', probe, after=probe.dummy_finished)
+        wrap(module.GPUModelRunner, 'shutdown', probe, after=probe.close)
     elif name == ZEROER:
         wrap(module.KVBlockZeroer, 'zero_block_ids', probe,
              before=probe.zeroing_before, after=probe.zeroing_after, bind=True)
@@ -255,6 +289,10 @@ def instrument(module, probe):
         # dispatch_cg_and_sync_dp resolves this module global at each call.
         wrap(module, 'sync_cudagraph_and_dp_padding', probe,
              before=probe.sync_before, after=probe.sync_after)
+        # Replacing the module's own `dist` name stamps no other caller's all_reduce.
+        if not isinstance(module.dist, DistributedSeam):
+            module.dist = DistributedSeam(module.dist)
+        wrap(module.dist, 'all_reduce', probe, before=probe.reduce_before, after=probe.reduce_after)
     elif name == STEP_TIMING:
         wrap(module.StepTimingCollector, 'forward_start', probe, before=probe.launched)
     elif name == SPARSE_SUMMARY:

@@ -175,7 +175,8 @@ def test_step_length_sweep_is_counted_but_never_measured(step_native, fault):
             native_client_rows(root, WORKLOAD, IDS, "step5")
 
 
-@pytest.mark.parametrize("fault", ["missing_check", "other_origin", "runtime", "image", "source", "artifact", "node", "declaration", "runtime_receipt", "node_version", "node_role", "stage_image"])
+@pytest.mark.parametrize("fault", ["missing_check", "other_origin", "runtime", "image", "source", "artifact", "node", "declaration", "runtime_receipt", "node_version", "node_role", "stage_image",
+                                   "probe_config", "probe_summary", "probe_environment"])
 def test_step_unverified_real_provenance_cannot_be_admitted(tmp_path, step_native, simulator, fault):
     root, _, _ = step_native
     receipt = synthetic_step_check(root)
@@ -189,12 +190,18 @@ def test_step_unverified_real_provenance_cannot_be_admitted(tmp_path, step_nativ
     if fault == "node": check["artifacts"] = [p for p in check["artifacts"] if "decode3" not in p["path"]]
     if fault == "declaration": check["checks"].pop("runtime_identity")
     if fault == "runtime_receipt": check["runtime_evidence"].pop("platform_image")
-    if fault in ("node_version", "node_role", "stage_image"):
-        path = root / ("config.json" if fault == "stage_image" else "nodes/decode3/result.json")
+    # A diagnostic host-probe run is rejected even with a passing receipt bound to its artifacts.
+    paths = {"stage_image": "config.json", "probe_config": "config.json",
+             "probe_summary": "replay/canonical_summary.json"}
+    if fault in ("node_version", "node_role", "stage_image", "probe_config", "probe_summary", "probe_environment"):
+        path = root / paths.get(fault, "nodes/decode3/result.json")
         value = json.loads(path.read_text())
         if fault == "stage_image": value["engine"]["native_reference"]["image"] = "wrong-image"
         if fault == "node_version": value["versions"]["vllm"] = "0.28.0"
         if fault == "node_role": value["plan"]["role"] = "prefill"
+        if fault == "probe_config": value.update(host_step_probe=True, canonical_replay=dict(kind="host_probe"))
+        if fault == "probe_summary": value["replay_kind"] = "host_probe"
+        if fault == "probe_environment": value["server_env_set"] = {"STEP5_HOST_STEP_PROBE": "{}"}
         path.write_text(json.dumps(value))
         check["artifacts"] = [pin(path, root.parents[2]) if p["path"].endswith(str(path.relative_to(root))) else p
                               for p in check["artifacts"]]

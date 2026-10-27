@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 3 step 2 fixes from the codex implementation review 668b0946 (F001–F006, Q1–Q3; design section 9); 162 focused unit tests pass. |
 | 2026-10-27 | D31: item 3 step 2 code: host-step probe, `host_probe` run kind and estimator; 81 focused unit tests pass. |
 | 2026-10-27 | D31: h200_32 sweep03 succeeded (coverage verified, 3/2/1 stall events, all within the sweep's reach); E passes all 14 rows against it (TTFT mean −5.3%, TPOT mean −13.9%, throughput +2.9%); item 3 step 3 (Frontier side) implemented and checked: 304 unit tests, dummy smoke 12/12, fidelity 77/77 (config fields only); NIXL READ profiles regenerated for the new capacity flag. |
 | 2026-10-27 | D31: h200_64 sweep02 succeeded (one stall per repeat, all within the sweep's reach; stable repeats); G passes all 14 rows against it (TTFT −17.5%, TPOT −19.2%); h200_32 sweep03 submitted; item 3 design reviewed by codex (changes required: DP agreement before first attention, real forward-end hook, direct host-interval measurement, DP validation, 23 hooks / 46 writes). |
@@ -1184,6 +1185,43 @@ Calibration item 3 step 2, probe and estimator code (2026-10-27, `completed`; de
 - Limit: the hooks have not run in the native image yet; the h200_32 probe run is their first
   real check (UNVERIFIED lines, one file per rank, 23 hooks per resetting step).
 - Next: stage `h200_32_hostprobe01` from a clean worktree and submit it (32 H200 GPUs).
+
+Calibration item 3 step 2, review fixes (2026-10-27, `completed`; design section 9):
+
+- Reason: the codex implementation review
+  (`codex-review-668b0946-0d5a-432e-a0a5-92f8a7324364/review.md`, verdict changes required)
+  found one P1, four P2 and one P3 defect; the probe run would have lost records (F002) and
+  subtracted local work as DP wait (F003), and a probe run could pass reference admission (F001).
+- Method:
+  - F001: `client_reference` rejects a diagnostic run kind in the config or the client summary
+    (`formal_release.DIAGNOSTIC_KINDS`), `host_step_probe` in the config, and the probe variable
+    in a node's server environment;
+  - F002: the probe drains at native `GPUModelRunner.shutdown` exit and writes an `end` line; the
+    estimator rejects truncated files; `atexit` removed (forked workers exit through `os._exit`);
+  - F003: only the DP sync's gloo `all_reduce` is stamped (proxy for `dp_utils.dist`); `excess`
+    uses its duration;
+  - F004: least-squares request-count trend above 1 ms writes a per-count table, both roles;
+  - F005: `host_probe_environment` removes an inherited `STEP5_HOST_STEP_PROBE` for every server;
+  - F006: the dummy end event is recorded at `_dummy_run` exit;
+  - Q1: engine interval `max_r(launch_r − excess_r) − min_r first_sync_r` on one node clock; the
+    estimator requires the TP ranks of an engine to share a host;
+  - Q3: formal windows run between the verified idle boundaries; the report gives the window
+    edge clearance. On the real sweep03 summary this gives 3 windows of 178.7–180.6 s.
+- Expectation: each defect has a failing case before the fix and a passing case after; the
+  clean admission control still passes.
+- Result: `PYTHONPATH=$PWD:$PWD/tests/unit <frontier-runtime-py310-d29-20261025 python> -m pytest
+  tests/unit/test_step5_host_step_probe.py tests/unit/test_step5_priority_runs.py
+  tests/unit/test_kv_zeroing_host_time_estimator.py tests/unit/test_kv_block_zeroing_host_time.py
+  tests/unit/test_step5_client_metrics.py tests/unit/test_e2e_gate.py tests/unit/test_native_pd_worker.py`:
+  162 passed (log `/data/ycfeng/tmp/d31_kvz_probe_focus_668.log`). A direct call of
+  `client_reference` on the synthetic receipt gave PASS for the clean run and, for the three
+  probe declarations, only the new rejection reasons. In an earlier standalone run the three
+  `test_worker_separates_auxiliary_report_faults_from_native_failure` cases failed with the
+  worker's rendezvous deadline, as they do at the parent commit; they passed in the full run, so
+  they depend on machine load.
+- Limit: Q2 (first sync as the device-idle origin), Q4 (mean versus `E[max]`) and Q6 (live
+  coverage) need the probe run; Q5 (the external clean-run-check producer) is not audited.
+- Next: stage `h200_32_hostprobe01` from a clean worktree at the fix commit and submit it.
 
 Step F status (2026-10-26):
 

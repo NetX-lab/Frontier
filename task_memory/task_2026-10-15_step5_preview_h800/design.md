@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Revised after the codex implementation review (`codex-review-668b0946-.../review.md`, section 9): reference admission rejects probe runs; the worker owns the probe variable; shutdown drains the probe and writes an `end` line; dummy steps end at `_dummy_run` exit; the DP wait is the gloo `all_reduce` alone; the engine interval runs from its earliest first sync to its last launch on one node clock; formal windows come from the verified idle boundaries; the request-count trend rule writes a table. |
 | 2026-10-27 | Probe and estimator implemented; 4.1–4.3 revised to the implementation: every TP rank records, line-buffered per-process files, the interval starts at the first `.tolist()` return, event-pair device gaps, formal windows by wall time, the mean as the profile value, 4 probe and 6 estimator unit tests. |
 | 2026-10-27 | Frontier side implemented (section 8); added the NIXL READ profile regeneration (3.4). |
 | 2026-10-27 | Revised after the codex design review (`codex-review-c85d179e-.../review.md`): 23 hooks / 46 writes; the host time joins the DP forward-start agreement before first attention; direct host-interval probe at real seams; DP/TP/PP/graph validation; review response in section 7. |
@@ -123,8 +124,8 @@ schedules its first attention. It is not part of `OverheadTime`.
   topology (attention TP, attention DP, MoE EP, pipeline stages), decode graph mode, runtime
   scope (async scheduling, MTP off), provenance (job, Frontier commit, probe source hash, image
   digest), and per role (`prefill`, `decode`) the local host time in ms with its sample count
-  and quartiles. If the probe shows that the decode value depends on the request count by more
-  than 1 ms over the observed range, the decode entry is a table keyed by request count
+  and quartiles. If the probe shows that a role's value depends on the request count by more
+  than 1 ms over the observed range, that role's entry is a table keyed by request count
   (linear interpolation; a request count outside the table is an error, no extrapolation).
 - The loader fails with a clear message when:
   - the schema, model profile, device, attention TP, attention DP, MoE EP, pipeline stages or
@@ -158,19 +159,27 @@ are only a cross-check.
 - Run kind `host_probe` in `canonical_stage.py`: the same workload, length sweep and engine
   as `workload`, with probe hooks on the prefill and decode servers. `verify` accepts the
   probe only for this kind (config flag, staged bootstrap and server environment must agree)
-  and still rejects every other diagnostic hook. `formal_release.py` lists the kind as a
-  diagnostic that is never a reference.
+  and still rejects every other diagnostic hook. `formal_release.py` lists the kind in
+  `DIAGNOSTIC_KINDS`, and reference admission (`e2e_gate/admission.py` `client_reference`)
+  rejects a run whose config or client summary declares a diagnostic kind, whose config has
+  `host_step_probe`, or whose node records show the probe variable in the server environment,
+  even with a passing clean-run receipt.
 - The worker adds `host_probe_bootstrap/` (a `sitecustomize.py`) to the servers'
-  `PYTHONPATH` with `STEP5_HOST_STEP_PROBE` set, like `pd_state_observation`. The bootstrap
+  `PYTHONPATH` with `STEP5_HOST_STEP_PROBE` set, like `pd_state_observation`. The worker owns
+  that variable: an inherited value is removed for every server, so only a run that declares
+  `host_step_probe` is instrumented. The bootstrap
   wraps the methods of 4.2 when their modules are imported. The first probe error disables
   the probe in that process, writes an `error` line and prints
   `STEP5_HOST_STEP_PROBE UNVERIFIED`; the probe never changes arguments, returns or
   exceptions of native code and calls every original exactly once.
 - Every TP rank records, because the DP all-reduce runs once per TP rank and the forward
   starts when the slowest TP rank launches. Each worker process writes its own file
-  `<role>_<host>_<pid>.jsonl` to worker-local scratch with a header line (role, TP and DP
-  rank and size), line-buffered so a killed process loses no finished line. After the server
-  stops, the node gzips the files into `host_probe/` of its node record.
+  `<role>_<host>_<pid>.jsonl` to worker-local scratch with a header line (host, role, TP and
+  DP rank and size), line-buffered so a killed process loses no finished line. Native
+  `GPUModelRunner.shutdown`, which every orderly worker exit calls and which synchronizes the
+  device first, writes the steps still waiting for their events and a final `end` line with
+  the step count. Forked workers leave through `os._exit`, so `atexit` cannot do this. After
+  the server stops, the node gzips the files into `host_probe/` of its node record.
 
 ### 4.2 Hooks (all at seams that run for real workload forwards)
 
@@ -180,44 +189,60 @@ are only a cross-check.
 | `KVBlockZeroer.zero_block_ids` enter/exit (only inside a step; the startup warmup reset is ignored) | block count, block count per group, hook count |
 | First side-storage hook `Step5SparseSummaryCacheLayer.zero_kv_cache_side_storage` (wrapped on the class at import; the zeroer binds the hooks later at KV setup) | enter, exit, the return of its `_ids` `.tolist()` (`first_sync`), and whether the previous step's end event was still pending at enter (`prior_pending`) |
 | `dp_utils.sync_cudagraph_and_dp_padding` enter/exit (module global, which `dispatch_cg_and_sync_dp` resolves) | collective call ordinal per process; a step with 0 tokens returns before the call and has none |
+| `dist.all_reduce` inside `dp_utils` only (a proxy for the module's `dist`; other all-reduces are untouched) | `reduce_enter`/`reduce_exit` around the gloo all-reduce, the only call in the sync that waits for the other engines |
 | `StepTimingCollector.forward_start` | launch stamp and CUDA event |
-| `GPUModelRunner.sample_tokens` exit (real step) or `execute_model` exit (dummy step) | stamp and CUDA event at the end of the step's main-stream work |
+| `GPUModelRunner.sample_tokens` exit (real step) or `_dummy_run` exit (dummy step; it queues more main-stream work after its `execute_model` returns) | stamp and CUDA event at the end of the step's main-stream work |
+| `GPUModelRunner.shutdown` exit | drains the remaining steps and writes the `end` line |
 
-When a step's events complete, its line gets `gap_ms` (previous step's end event to this
-launch event) and `span_ms` (launch to end). Event pairs avoid the float precision loss of
-times measured against one early reference event. `should_skip_dp_coordination()` is set
+When a step's events complete, its line gets `gap_ms` (main-stream interval from the
+previous step's end event to this launch event; reset and input-preparation GPU work can
+fall inside it, so it is not a pure device-idle time) and `span_ms` (launch to end). Event
+pairs avoid the float precision loss of times measured against one early reference event. `should_skip_dp_coordination()` is set
 only by elastic EP, which this workload does not use, so every call runs the all-reduce.
 
 ### 4.3 Estimator (`tests/integration/step5_pd/kv_zeroing_host_time.py`)
 
 - Inputs: the copied stage (config, probe files, client summary), the clean run's client
   summary, the job ID and `--min-samples`.
-- A role is usable only with exactly one error-free process per (DP rank, TP rank); a
-  restart (two processes for one rank) or a missing rank stops the estimator.
-- Only steps whose wall time lies in a formal window (first submission to last output of a
-  repeat, from the client summary) count. Warmup, length sweep and startup are excluded.
+- A role is usable only with exactly one complete, error-free process per (DP rank, TP rank).
+  A restart (two processes for one rank), a missing rank, a file without its `end` line or
+  with missing steps, or TP ranks of one engine on different hosts stop the estimator.
+- Only steps whose wall time lies in a formal window count. A window runs from the verified
+  idle boundary after a repeat's warmup to the verified idle boundary after its formal phase
+  (client monotonic times, converted with the phase's wall-clock offset). Every engine was idle
+  at both boundaries, so the edges lie in idle gaps. Server and client wall clocks may differ;
+  the report gives the smallest distance from an edge to any step (`window_edge_clearance_s`),
+  which must exceed that difference. An unverified boundary stops the estimator.
 - Join the engines by collective ordinal per TP rank. Ordinals missing on any process are
   counted and excluded. All TP ranks of one engine must agree on the batch (dummy flag,
   request and token counts) at an ordinal; a disagreement means the join is broken and stops
   the estimator. Dummy steps take part in the collective but yield no sample.
-- For collective `k` at TP rank `r`, the engine that arrived last waited least, so its
-  duration is the collective's own cost and `excess` = duration − minimum over the engines
-  (no cross-node clock is needed). For a resetting step (every TP rank ran at least one hook
-  and launched):
+- For all-reduce `k` at TP rank `r`, the engine that arrived last waited least, so its
+  all-reduce duration (`reduce_exit − reduce_enter`) is the collective's own cost and
+  `excess` = duration − minimum over the engines (no cross-node clock is needed). The local
+  tensor preparation before the all-reduce and the graph dispatch after it stay in the host
+  time. For a resetting step of engine `i` (every TP rank ran at least one hook and launched),
+  on the node's shared monotonic clock:
 
-  `h = max over TP ranks of (launch − excess − first_sync)`.
+  `h_i = max over TP ranks r of (launch_r − excess_r) − min over r of first_sync_r`.
 
-  The interval starts at the first `.tolist()` return: from then on the previous step's
-  device work is done and the device idles until the launch. It contains the rest of the
-  first hook, the other 22 hooks, the input preparation and the collective's own cost.
+  The forward starts when the slowest TP rank launches. The earliest first `.tolist()` return
+  marks the end of the previous step's device work (the device finished, so a rank that
+  waited returns at once); from then on the device idles until the launch. The interval
+  contains the rest of the first hook, the other 22 hooks, the input preparation, the
+  collective's own cost and the dispatch.
 - Profile value per role: the mean of `h` over the resetting steps, because the mean sets the
-  aggregate TPOT effect. A role with fewer resetting steps than `--min-samples` stops the
-  estimator after the report is written; no profile is written then.
-- Report (not used for the value): median and quartiles of `h`; the rank-0-only value and the
-  TP spread; the share of steps whose previous step was still running at the first hook and
-  `h` for both subgroups; `h` per request count (if its trend exceeds 1 ms, the profile
-  switches to the `by_num_requests` form the loader supports); hooks per step (expected 23);
-  the wait for other engines; the joined and unjoined collective counts.
+  aggregate TPOT effect. When the least-squares line of `h` over the observed request counts
+  changes by more than 1 ms (`TREND_LIMIT_MS`) across that range, the role's entry is instead
+  the mean per request count (`by_num_requests`, which the loader interpolates and does not
+  extrapolate). The rule applies to both roles. A role with fewer resetting steps than
+  `--min-samples` stops the estimator after the report is written; no profile is written then.
+- Report (not used for the value): distribution of `h`; the per-rank variant
+  `max_r(launch_r − excess_r − first_sync_r)`, the rank-0-only value and the TP skew of
+  `first_sync`; the share of steps on which a rank's previous step was still running at the
+  first hook and `h` for both subgroups; `h` per request count and the trend; hooks per step
+  (expected 23); the wait for other engines; the joined and unjoined collective counts; the
+  window edge clearance.
 - Cross-check: the device gap `max over TP ranks of (gap_ms − excess)` for resetting steps
   whose previous step has `span_ms`, against `h`; and the same gap for steps that do not reset.
 - Perturbation check: the probe run's client TTFT and TPOT means against the clean run of the
@@ -247,11 +272,17 @@ h200_32 sweep03 rerun (64 GPUs in total, within D31.2); h200_64 runs after both 
    profile.
 3. Probe and estimator synthetic tests (`tests/unit/test_step5_host_step_probe.py`,
    `tests/unit/test_kv_zeroing_host_time_estimator.py`): native results unchanged, a probe or
-   bootstrap error never blocks native code, a forked worker starts its own file; a known
-   local term with unequal collective waits, dummy participants, unmatched collectives, the
-   formal window, a TP-rank batch disagreement, a missing rank, a restart, a probe error, the
-   perturbation status, and a role without enough samples writes no profile; the written
-   profile loads for the run it was measured on.
+   bootstrap error never blocks native code, a forked worker starts its own file, the
+   shutdown drain writes every step and the `end` line without `atexit`, a dummy step ends
+   after `_dummy_run`'s tail, only the DP sync's all-reduce is stamped; a known local term
+   with unequal collective waits, local work around the all-reduce kept in the host time,
+   TP ranks with skewed first syncs, dummy participants, unmatched collectives, the idle
+   boundary windows and their clearance, a TP-rank batch disagreement, a missing rank, a
+   restart, a probe error, a truncated file, TP ranks on two hosts, the perturbation status,
+   the request-count table above the trend limit, and a role without enough samples writes no
+   profile; the written profile loads for the run it was measured on. Worker and admission:
+   an inherited probe variable never reaches a clean server; a probe run is rejected as a
+   reference even with a passing receipt, while the clean control passes.
 4. Probe runs: one launch/`sample_tokens` pair per real forward; collective ordinals agree
    across engines; 23 hooks per resetting step; perturbation within the clean repeat spread.
 5. Reruns of step E (h200_32, DP2 profile) and step G (h200_64, DP4 profile) against the clean
@@ -300,3 +331,34 @@ Implemented as designed in 3.1–3.3; checks in `test_report_2026-10-27_kv_block
 
 One difference from 3.3: the dummy-mode rejection sits in the predictor, not in the loader,
 because the loader has no access to the predictor mode.
+
+## 9. Review response (codex implementation review 668b0946, 2026-10-27)
+
+| Finding | Fix |
+| --- | --- |
+| F001 (P1): a declared host-probe run could pass reference admission with a passing receipt. | `client_reference` rejects a diagnostic `canonical_replay.kind` or summary `replay_kind` (`formal_release.DIAGNOSTIC_KINDS`), a config with `host_step_probe`, and a node whose `server_env_set` holds `STEP5_HOST_STEP_PROBE` (4.1). Three new faults in `test_step5_client_metrics.py`; the clean fixture still passes. |
+| F002 (P2): forked workers leave through `os._exit`, so the `atexit` flush never ran and steps were lost. | The drain runs at native `GPUModelRunner.shutdown` exit, after its device synchronize, and writes an `end` line; the estimator rejects a file without it or with missing steps (4.1, 4.3). The sweep03 servers stopped through SIGINT, which takes this path. |
+| F003 (P2): the whole sync function's duration was taken as the wait, so local preparation and graph dispatch were subtracted. | The probe stamps only the gloo `all_reduce` through a proxy for `dp_utils.dist` (other all-reduces untouched); `excess` uses that duration (4.2, 4.3). |
+| F004 (P2): the estimator always wrote a scalar. | Least-squares trend over the request-count range; above 1 ms the role's entry is the per-count mean table, for both roles (4.3). |
+| F005 (P2): an inherited `STEP5_HOST_STEP_PROBE` survived clean server preparation. | `host_probe_environment` removes the inherited value for every server and sets it only for a declared probe run (4.1). The variable is reachable only through the image or launch environment, which do not set it today; the removal makes the worker its only owner. |
+| F006 (P3): the dummy end event was recorded before `_dummy_run`'s remaining main-stream work. | The dummy end event is recorded at `_dummy_run` exit (4.2). |
+
+Open questions:
+
+- Q1 (engine interval): the interval now runs from the engine's earliest first sync to its
+  last launch on the node's shared monotonic clock (TP ranks on one host are checked). The
+  earliest first sync is the device-done point because a rank that waited for the device
+  returns as soon as the device finishes; a later first sync on another rank is host work of
+  that rank and is part of the stall. The per-rank variant and the first-sync skew are
+  reported for comparison.
+- Q2 (first sync as the idle origin): kept, with its limit. On a step whose previous step had
+  already finished at the first hook, the device idled before the first sync, so `h` is a
+  lower bound there. The report splits `h` into waited and idle steps; a material difference
+  between them is checked before the profile is used.
+- Q3 (server and client clocks): windows now end at verified idle boundaries, and the report
+  gives the edge clearance; a clearance of seconds bounds any plausible clock offset.
+- Q4 (mean versus `E[max]`): the mean stays the design statistic; the reruns of E and G
+  against the clean references test whether it reproduces the aggregate effect.
+- Q5 (external clean-run-check producer): not audited here; the consumer now rejects probe
+  runs on its own.
+- Q6 (live coverage and perturbation): settled by the probe runs (4.4, verification 4).

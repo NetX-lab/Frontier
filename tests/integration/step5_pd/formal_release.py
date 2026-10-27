@@ -22,6 +22,7 @@ COLLECTION_KINDS = {
     "device_timeline": "Diagnostic decode device timeline; profiler windows perturb native timing, never a reference",
     "host_probe": "Diagnostic host-step probe; probe hooks perturb native timing, never a reference",
 }
+DIAGNOSTIC_KINDS = frozenset({"device_timeline", "host_probe"})
 
 
 def pin(path: Path) -> dict:

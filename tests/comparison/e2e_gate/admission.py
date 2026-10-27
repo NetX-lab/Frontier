@@ -28,6 +28,8 @@ from pathlib import Path
 
 import numpy as np
 
+from tests.integration.step5_pd.formal_release import DIAGNOSTIC_KINDS
+
 ACCEPTED = (0.97, 1.03)
 # Two prefills are isolated when their send intervals are this far apart (s).
 ISOLATION_GAP_S = 0.002
@@ -279,6 +281,10 @@ def client_reference(cell: dict, case: dict, run_dir: Path, run_check: Path | No
     if reasons:
         return evidence
     config = json.loads(artifacts[required[0].resolve()])
+    kinds = {config.get("canonical_replay", {}).get("kind"),
+             json.loads(artifacts[required[2].resolve()]).get("replay_kind")}
+    if kinds & DIAGNOSTIC_KINDS or "host_step_probe" in config:
+        reasons.append("A diagnostic run perturbs native timing and is never a clean reference")
     identity = expected_runtime | {"source_hashes": config.get("expected_source_hashes"),
                                     "harness_commit": config.get("source", {}).get("commit")}
     topology = case.get("native_topology")
@@ -316,6 +322,7 @@ def client_reference(cell: dict, case: dict, run_dir: Path, run_check: Path | No
                 reasons.append(f"Step actual GPU/role topology mismatch: {path}")
         if (node.get("stage") != "finished" or node.get("workload_returncode") != 0
                 or node.get("observation_errors") or node.get("exception")
+                or "STEP5_HOST_STEP_PROBE" in node.get("server_env_set", {})
                 or node.get("versions", {}).get("vllm") != expected_runtime.get("vllm_version")
                 or plan.get("engine", {}).get("native_reference") != config["engine"].get("native_reference")):
             reasons.append(f"Unverified actual native runtime: {path}")

@@ -13,9 +13,12 @@ BOOTSTRAP = Path(__file__).resolve().parents[2] / "tests/integration/step5_pd/ho
 sys.path.insert(0, str(BOOTSTRAP))
 import host_step_probe  # noqa: E402
 
-# A recorded event completes once a host `.tolist()` waited for the device.
+# A recorded event completes once a host `.tolist()` or a synchronize waited for the device.
 FAKE_TORCH = """
 DEVICE = {"recorded": 0, "done": 0}
+
+def synchronize():
+    DEVICE["done"] = DEVICE["recorded"]
 
 class Tensor:
     def __init__(self, values):
@@ -50,6 +53,12 @@ class cuda:
 """
 
 FAKE_NATIVE = {
+    "torch/distributed.py": """
+CALLS = []
+
+def all_reduce(tensor, group=None):
+    CALLS.append(group)
+""",
     "vllm/__init__.py": "",
     "vllm/distributed/__init__.py": "",
     "vllm/distributed/parallel_state.py": """
@@ -98,7 +107,14 @@ class KVBlockZeroer:
 """,
     "vllm/v1/worker/gpu/__init__.py": "",
     "vllm/v1/worker/gpu/dp_utils.py": """
+import time
+
+import torch.distributed as dist
+
 def sync_cudagraph_and_dp_padding(num_tokens):
+    time.sleep(0.005)  # local tensor preparation
+    dist.all_reduce([num_tokens], group="dp_cpu")
+    time.sleep(0.005)  # local graph dispatch
     return ("synced", num_tokens)
 
 def dispatch_cg_and_sync_dp(num_tokens):
@@ -110,6 +126,9 @@ class StepTimingCollector:
         pass
 """,
     "vllm/v1/worker/gpu/model_runner.py": """
+from types import SimpleNamespace
+
+import torch
 from vllm.v1.worker.gpu.async_utils import StepTimingCollector
 from vllm.v1.worker.gpu.dp_utils import dispatch_cg_and_sync_dp
 
@@ -140,13 +159,26 @@ class GPUModelRunner:
 
     def sample_tokens(self, grammar_output):
         return ("sampled", grammar_output)
+
+    def _dummy_run(self, num_tokens, is_profile=False):
+        self.execute_model(SimpleNamespace(num_scheduled_tokens={"dummy": num_tokens},
+                                           total_num_scheduled_tokens=num_tokens),
+                           dummy_run=True, is_profile=is_profile)
+        torch.cuda.Event(enable_timing=True).record()  # hidden_states[logits_indices]
+        return ("dummy_ran", num_tokens)
+
+    def shutdown(self):
+        torch.synchronize()
 """,
 }
 
 DRIVER = """
 import json
+import os
+import sys
 from types import SimpleNamespace
 
+import torch.distributed
 from vllm.models.step5.nvidia.sparse_summary_cache import RESETS, Step5SparseSummaryCacheLayer
 from vllm.v1.worker.gpu.model_runner import GPUModelRunner
 from vllm.v1.worker.utils import KVBlockZeroer
@@ -161,21 +193,27 @@ def output(counts, groups=None):
 
 zeroer.zero_block_ids([], [[], [0]])  # startup warmup outside any step
 results = [
-    runner.execute_model(output({"dummy": 1}), dummy_run=True, is_profile=True),
+    runner._dummy_run(1, is_profile=True),
     runner.execute_model(output({"a": 1, "b": 1}, [[7], [8, 9]])),
     runner.sample_tokens("grammar"),
     runner.execute_model(output({"a": 1, "b": 1})),
     runner.sample_tokens(None),
     runner.execute_model(output({}, [[], [10]])),
-    runner.execute_model(output({"dummy": 1}), dummy_run=True),
+    runner._dummy_run(1),
 ]
 layers[0].release_kv_cache_side_storage([11])
-print(json.dumps({"results": results, "resets": RESETS}))
+torch.distributed.all_reduce([0], group="other")
+results.append(runner.shutdown())
+print(json.dumps({"results": results, "resets": RESETS, "all_reduces": torch.distributed.CALLS,
+                  "global_all_reduce_probed": hasattr(torch.distributed.all_reduce, "_step5_host_probe")}))
+sys.stdout.flush()
+os._exit(0)  # a forked worker never runs atexit
 """
 
 
 def _fake_tree(root):
-    (root / "torch.py").write_text(FAKE_TORCH)
+    (root / "torch").mkdir()
+    (root / "torch/__init__.py").write_text(FAKE_TORCH)
     for relative, text in FAKE_NATIVE.items():
         (root / relative).parent.mkdir(parents=True, exist_ok=True)
         (root / relative).write_text(textwrap.dedent(text))
@@ -196,31 +234,42 @@ def test_probe_records_steps_and_leaves_native_results_unchanged(tmp_path):
     assert result.returncode == 0, result.stderr
     assert "UNVERIFIED" not in result.stderr
     native = json.loads(result.stdout)
-    assert native["results"] == [None, None, ["sampled", "grammar"], None, ["sampled", None], "no_forward", None]
+    assert native["results"] == [["dummy_ran", 1], None, ["sampled", "grammar"], None, ["sampled", None],
+                                 "no_forward", ["dummy_ran", 1], None]
     assert native["resets"] == [[0]] * 3 + [[8, 9]] * 3 + [[10]] * 3
+    # One native all_reduce per sync; only the DP sync module's own name is probed.
+    assert native["all_reduces"] == ["dp_cpu"] * 4 + ["other"]
+    assert native["global_all_reduce_probed"] is False
     [path] = output_dir.glob("decode_*.jsonl")
-    header, *steps = [json.loads(line) for line in path.read_text().splitlines()]
+    header, *steps, end = [json.loads(line) for line in path.read_text().splitlines()]
     assert {key: header[key] for key in ("kind", "role", "tp_rank", "tp_size", "dp_rank", "dp_size")} == {
         "kind": "header", "role": "decode", "tp_rank": 3, "tp_size": 8, "dp_rank": 1, "dp_size": 2}
+    # Shutdown drained every step although the process left through os._exit.
+    assert end == {"kind": "end", "steps": 5}
     assert [step["seq"] for step in steps] == [1, 2, 3, 4, 5]
     profile, reset, plain, empty, final = steps
     assert (profile["dummy"], profile["profile"], profile["reqs"], profile["sync"]["ordinal"]) == (True, True, 1, 1)
-    assert profile["span_ms"] == 1.0 and "zero" not in profile and "sample_exit" not in profile
-    # Events: profile launch 1 and end 2; the reset's first .tolist() waits for both.
+    # Events: launch 1, the dummy tail 2, end 3; the end follows the tail.
+    assert profile["span_ms"] == 2.0 and "zero" not in profile and "sample_exit" not in profile
+    # The all_reduce stamps exclude the local work before and after it.
+    for step in profile, reset, plain, final:
+        sync = step["sync"]
+        assert sync["reduce_enter"] - sync["enter"] >= 5e6 and sync["exit"] - sync["reduce_exit"] >= 5e6
     zero = reset["zero"]
     assert (zero["blocks"], zero["groups"], zero["hooks"], zero["prior_pending"]) == (0, [1, 2], 3, True)
     assert zero["enter"] <= zero["first_enter"] <= zero["first_sync"] <= zero["first_exit"] <= zero["exit"]
     assert zero["exit"] <= reset["sync"]["enter"] <= reset["sync"]["exit"] <= reset["launch"] <= reset["exit"]
     assert reset["exit"] <= reset["sample_exit"]
     assert (reset["sync"]["ordinal"], reset["reqs"], reset["tokens"], reset["dummy"]) == (2, 2, 2, False)
-    # Events 3-6 complete at the empty step's reset; the next step writes their device times.
+    # Events 4-7 complete at the empty step's reset; the next step writes their device times.
     assert reset["gap_ms"] == 1.0 and reset["span_ms"] == 1.0
     assert "zero" not in plain and plain["sync"]["ordinal"] == 3
     assert plain["gap_ms"] == 1.0 and plain["span_ms"] == 1.0
     assert empty["zero"]["hooks"] == 3 and empty["zero"]["prior_pending"] is True
     assert not {"sync", "launch", "sample_exit", "gap_ms", "span_ms"} & set(empty)
-    # The process ends before the last step's events complete; it keeps its host stamps.
-    assert final["dummy"] and final["sync"]["ordinal"] == 4 and "launch" in final and "span_ms" not in final
+    # The last dummy's events (launch 8, tail 9, end 10) complete only at the shutdown synchronize.
+    assert final["dummy"] and final["sync"]["ordinal"] == 4
+    assert final["gap_ms"] == 1.0 and final["span_ms"] == 2.0
 
 
 def test_bootstrap_failure_never_blocks_the_native_process(tmp_path):
@@ -286,9 +335,10 @@ def test_a_forked_worker_starts_its_own_record_file(tmp_path, monkeypatch):
         for name in [name for name in sys.modules if name == "torch" or name.startswith("vllm")]:
             del sys.modules[name]
     assert probe.pid == 200 and probe.sequence == 1
-    probe.close()
+    probe.close(None)
+    probe.close(None)
     records = {path.name.split("_")[-1]: path.read_text().splitlines()
                for path in (tmp_path / "probe").glob("prefill_*.jsonl")}
     assert sorted(records) == ["100.jsonl", "200.jsonl"]
     assert len(records["100.jsonl"]) == 2
-    assert [json.loads(line)["kind"] for line in records["200.jsonl"]] == ["header", "step"]
+    assert [json.loads(line)["kind"] for line in records["200.jsonl"]] == ["header", "step", "end"]

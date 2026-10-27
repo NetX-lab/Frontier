@@ -166,3 +166,15 @@ def test_worker_separates_auxiliary_report_faults_from_native_failure(tmp_path, 
         assert "Injected auxiliary result writer failure" in result["observation_errors"][0]
     if case == "native_exit_at_replay_completion":
         assert result["failed_sentinel"]
+
+
+def test_only_a_declared_host_probe_run_instruments_its_servers(tmp_path):
+    inherited = {"STEP5_HOST_STEP_PROBE": json.dumps({"role": "decode", "output_dir": "/stale"}),
+                 "PYTHONPATH": "/stale/host_probe_bootstrap", "HOME": "/root"}
+    env, changed = native_pd_worker.host_probe_environment({}, "prefill", tmp_path, tmp_path / "stage", inherited)
+    assert env == {"PYTHONPATH": "/stale/host_probe_bootstrap", "HOME": "/root"} and changed == {}
+    env, changed = native_pd_worker.host_probe_environment(
+        {"host_step_probe": True}, "prefill", tmp_path, tmp_path / "stage", inherited)
+    assert json.loads(env["STEP5_HOST_STEP_PROBE"]) == {"role": "prefill", "output_dir": str(tmp_path / "host_probe")}
+    assert env["PYTHONPATH"] == f"{tmp_path / 'stage/host_probe_bootstrap'}:/stale/host_probe_bootstrap"
+    assert changed == {key: env[key] for key in ("STEP5_HOST_STEP_PROBE", "PYTHONPATH")}
