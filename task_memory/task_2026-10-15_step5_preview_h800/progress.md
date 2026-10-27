@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: E base with merged04 (no host profile) passes all 14 rows against sweep03 (TTFT −5.3%, TPOT −13.9%), equal to the merged03 run. |
 | 2026-10-27 | D31: h200_64 probe analyzed with the tightened checks: DP4 profile prefill 36.92 ms / decode 5.96 ms, perturbation PASS, accepted for step G; step G host run started. |
 | 2026-10-27 | D31: codex review 223fee59 of the h200_32 probe result (F001–F004, all confirmed): estimator checks every TP rank against the client-completed work, rejects preemptions and partial all-reduces before the last step with requests; the replay checks each formal phase's native work counters; the profile values are unchanged; the profile is not accepted (probe effect unmeasured), so E/G with it are exploratory. |
 | 2026-10-27 | D31: h200_32 host probe analyzed: replay idle-boundary and probe-completeness rules corrected (`cdcba47b`); DP2 profile prefill 37.44 ms / decode 5.11 ms (`PERTURBED`, TPOT bias at most 0.7%); step E host rerun started; h200_64 probe job `exp-1027-141317-610373` submitted. |
@@ -1405,6 +1406,13 @@ Calibration item 3 step 2, probe runs (2026-10-27; h200_32 `completed`, h200_64 
   `/data/ycfeng/tmp/d31_e05_run/h200_64_m04_host`; pairs with `h200_64_m04_base` (started 06:16
   UTC). Started before the base finished because the host has 64 cores and 110 GB free and each
   run uses one core and about 1 GB.
+- E base result (`h200_32_m04_base`, 02bd453a, merged04 tables, no host profile): return code 0,
+  simulator wall time 12,508 s. `frontier_workload.py compare --gate 0.3` against
+  `evidence/d31_h200_32_sweep03_native_metrics.json`
+  (`evidence/d31_h200_32_m04_base_compare_sweep03.json`): all 14 rows PASS. TTFT mean 864.2 vs
+  912.2 ms (−5.3%), p95 −6.5%; TPOT mean 45.92 vs 53.30 ms (−13.9%), p90 −15.2%; E2E mean −13.7%;
+  throughput +2.9%. These equal the merged03 run `h200_32_comb_h200` to the reported digit, so the
+  14 partly filled EP16 rows of merged04 do not change step E.
 
 Step F status (2026-10-26):
 
