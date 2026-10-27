@@ -43,15 +43,24 @@ TRACE_NAME = re.compile(r"^(?P<window>.+)_dp(?P<dp>\d+)_pp\d+_tp(?P<tp>\d+)_dcp\
 STEP_ANNOTATION = re.compile(r"^execute_context_(\d+)\((\d+)\)_generation_(\d+)\((\d+)\)$")
 DEVICE_CATEGORIES = ("kernel", "gpu_memcpy", "gpu_memset")
 LAUNCH_CATEGORIES = ("cuda_runtime", "cuda_driver")
-# The first category whose name fragment occurs in a kernel name wins.
+# The first category whose name fragment occurs in a kernel name wins, so the order matters:
+# the RMSNorm and FlashAttention kernels are CUTLASS kernels, and the DSA indexer's scoring
+# kernel reads paged KV. In the Step decode traces every deep_gemm call is a grouped routed-expert
+# GEMM over the rank's local experts.
 KERNEL_CATEGORIES = (
     ("tp_all_reduce", ("AllReduce", "cross_device_reduce", "allreduce", "all_reduce")),
     ("ep_collective", ("AllToAll", "all_to_all", "AllGather", "all_gather", "ReduceScatter",
                        "reduce_scatter", "deep_ep", "deepep", "nvshmem", "SendRecv")),
-    ("moe_compute", ("moe", "MoE", "Moe", "expert", "grouped", "topk", "routing")),
-    ("attention", ("attn", "Attn", "attention", "Attention", "flash", "fmha", "mla", "Mla",
-                   "indexer", "Indexer", "sparse", "paged", "cache")),
-    ("gemm", ("gemm", "Gemm", "GEMM", "nvjet", "xmma", "cutlass", "matmul")),
+    ("routed_expert", ("deep_gemm", "_fwd_kernel_ep_", "per_token_group_quant", "_count_expert",
+                       "fused_moe", "vllm::moe::")),
+    ("router", ("router_gemm",)),
+    ("ffn_activation", ("swiglu",)),
+    ("dsa_indexer", ("indexer", "_stable_topk_regions", "_paged_scores", "topKPerRow",
+                     "_direct_scores", "_joint_prepare")),
+    ("norm", ("RMSNorm", "rms_norm")),
+    ("attention", ("attn", "Attn", "attention", "Attention", "flash", "fmha", "sparse_decode",
+                   "qknorm_rope", "PagedKVCache")),
+    ("dense_gemm", ("gemm", "Gemm", "GEMM", "nvjet", "xmma", "cutlass", "splitKreduce", "matmul")),
 )
 
 

@@ -43,9 +43,30 @@ def test_iterations_split_device_busy_and_idle_by_launching_thread(tmp_path):
     assert first["idle_host_wait_ms"] == pytest.approx(0.17) and first["idle_other_ms"] == pytest.approx(0.01)
     assert first["wall_busy_ms"] == pytest.approx(0.45)
     assert first["device_ms_by_category"] == pytest.approx(
-        {"tp_all_reduce": 0.1, "moe_compute": 0.2, "other": 0.05})
+        {"tp_all_reduce": 0.1, "routed_expert": 0.2, "other": 0.05})
     assert second["busy_ms"] == pytest.approx(0.03) and second["wall_busy_ms"] == pytest.approx(0.1)
     assert second["device_ms_by_category"] == pytest.approx({"copy": 0.03})
     bucket = result["summary"]["load_t016"]["dp1"]["4"]
     assert bucket["iterations"] == 2 and bucket["busy_ms"] == pytest.approx(0.19)
     assert result["other_kernels_ms"] == pytest.approx({"sampler_kernel": 0.2, "elementwise_kernel": 0.05})
+
+
+@pytest.mark.parametrize(("name", "category"), [
+    ("kernel_cutlass_kernel_vllmmodelsstep5nvidiaopsrms_normRMSNormKernel_object_at_", "norm"),
+    ("void cutlass::device_kernel<flash::enable_sm90_or_later<flash::FlashAttnFwdSm90<", "attention"),
+    ("void flashinfer::BatchPrefillWithPagedKVCacheKernel<true, flashinfer::KernelTraits<", "attention"),
+    ("void flashinfer::trtllm_allreduce_fusion::allreduce_fusion_kernel_oneshot_lamport<", "tp_all_reduce"),
+    ("ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)", "ep_collective"),
+    ("void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 3072u, 4096u, 22u", "routed_expert"),
+    ("void vllm::moe::moe_align_block_size_kernel<int>(int const*", "routed_expert"),
+    ("void fp32_router_gemm_kernel<__nv_bfloat16, 128, 8, 1, 352, 4096, 1>", "router"),
+    ("_swiglustep_and_mul_kernel", "ffn_activation"),
+    ("_paged_scores_sm90", "dsa_indexer"),
+    ("_indexer_norm_rope", "dsa_indexer"),
+    ("void vllm::topKPerRowDecode<512, false, false, false>(float const*", "dsa_indexer"),
+    ("nvjet_sm90_tst_64x8_64x16_4x1_v_bz_splitK_TNT", "dense_gemm"),
+    ("void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16", "dense_gemm"),
+    ("_headwise_sigmoid_gate", "other"),
+])
+def test_step_decode_kernels_fall_in_their_categories(name, category):
+    assert native_decode_timeline.kernel_category({"cat": "kernel", "name": name}) == category
