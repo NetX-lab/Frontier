@@ -163,6 +163,7 @@ def test_stage_trace_helper_keeps_dense_and_gdn_names_on_their_layers() -> None:
         ClusterType.MONOLITHIC,
         moe_tp_enabled=False,
         ep_enabled=False,
+        advance_cursor=lambda _ms: None,
     )
 
     assert {

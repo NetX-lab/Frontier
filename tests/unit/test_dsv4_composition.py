@@ -1,0 +1,184 @@
+"""Stream schedule of the DeepSeek-V4 attention phase (S1 stream graph)."""
+
+import pytest
+
+from frontier.entities import ExecutionTime, StageExecutionTime
+from frontier.execution_time_predictor.dsv4_composition import (
+    compose_attention_phase, serial_attention_phase,
+)
+from frontier.types import ClusterType
+
+THRESHOLD = 64
+NO_GAP = {"cuda_graph": 0.0, "cuda_graph_piecewise": 0.0, "eager": 0.0}
+
+CSA = {
+    "dsv4_mhc_ffn_post_attn_pre": 1.0, "dsv4_sp_attention_allgather": 2.0,
+    "dsv4_fused_qkv_projection": 10.0, "dsv4_compressor_projection": 3.0,
+    "dsv4_index_weights_projection": 4.0, "dsv4_index_compressor_projection": 12.0,
+    "dsv4_fused_qkv_rmsnorm": 1.0,
+    "dsv4_q_projection": 2.0, "dsv4_fused_q_kv_prepare": 3.0,
+    "dsv4_index_query_projection": 4.0, "dsv4_index_fused_query_prepare": 1.0,
+    "dsv4_index_compressor_save_partial_states": 2.0,
+    "dsv4_index_compressor_fused_compress_store": 2.0,
+    "dsv4_compressor_save_partial_states": 1.0, "dsv4_compressor_fused_compress_store": 6.0,
+    "dsv4_index_scores": 5.0, "dsv4_index_topk": 2.0, "dsv4_sparse_attention": 7.0,
+    "dsv4_output_inv_rope_quant": 1.0, "dsv4_grouped_output_projection": 2.0,
+    "dsv4_output_projection": 3.0, "dsv4_sp_attention_reduce_scatter": 2.0,
+}
+HCA = {
+    "dsv4_sp_attention_allgather": 2.0, "dsv4_fused_qkv_projection": 10.0,
+    "dsv4_compressor_projection": 3.0, "dsv4_fused_qkv_rmsnorm": 1.0,
+    "dsv4_q_projection": 2.0, "dsv4_fused_q_kv_prepare": 3.0,
+    "dsv4_compressor_save_partial_states": 1.0, "dsv4_compressor_fused_compress_store": 6.0,
+    "dsv4_sparse_attention": 7.0, "dsv4_output_projection": 3.0,
+}
+UNCOMPRESSED = {
+    "dsv4_sp_attention_allgather": 2.0, "dsv4_fused_qkv_projection": 10.0,
+    "dsv4_fused_qkv_rmsnorm": 1.0, "dsv4_q_projection": 2.0,
+    "dsv4_fused_q_kv_prepare": 3.0, "dsv4_sparse_attention": 7.0,
+    "dsv4_output_projection": 3.0,
+}
+
+
+def compose(scopes, *, variant, mode, rows=THRESHOLD, short=False, counts=None, gap=NO_GAP):
+    return compose_attention_phase(
+        scopes, counts or dict.fromkeys(scopes, 1.0), gap, variant=variant,
+        graph_runtime_mode=mode, rows=rows, multi_stream_gemm_token_threshold=THRESHOLD,
+        indexer_short_context=short,
+    )
+
+
+def test_outer_projections_fork_at_the_threshold_and_run_serially_above_it():
+    forked = compose(CSA, variant="csa", mode="FULL", rows=THRESHOLD)
+    serial = compose(CSA, variant="csa", mode="FULL", rows=THRESHOLD + 1)
+    # Forked: the projections start together; the slowest one (aux2, 12) gates the norm.
+    assert {forked.start_ms[name] for name in (
+        "dsv4_fused_qkv_projection", "dsv4_compressor_projection",
+        "dsv4_index_weights_projection", "dsv4_index_compressor_projection",
+    )} == {3.0}
+    assert forked.start_ms["dsv4_fused_qkv_rmsnorm"] == 15.0
+    assert forked.elapsed_ms == 45.0
+    # Serial: the default projection first, then the auxiliary ones in list order.
+    assert [serial.start_ms[name] for name in (
+        "dsv4_fused_qkv_projection", "dsv4_compressor_projection",
+        "dsv4_index_weights_projection", "dsv4_index_compressor_projection",
+        "dsv4_fused_qkv_rmsnorm",
+    )] == [3.0, 13.0, 16.0, 20.0, 32.0]
+    assert serial.elapsed_ms == 62.0
+
+
+def test_full_csa_forks_the_indexer_compressor_beside_the_query_path():
+    schedule = compose(CSA, variant="csa", mode="FULL")
+    for name in ("dsv4_q_projection", "dsv4_index_query_projection",
+                 "dsv4_index_compressor_save_partial_states",
+                 "dsv4_compressor_save_partial_states"):
+        assert schedule.start_ms[name] == 16.0
+    # The main stream joins the attention compressor (aux1, ends at 23).
+    assert schedule.start_ms["dsv4_index_scores"] == 23.0
+
+
+def test_piecewise_keeps_the_csa_fork_and_serializes_the_nested_indexer_fork():
+    schedule = compose(CSA, variant="csa", mode="PIECEWISE")
+    # `execute_in_parallel` forks in PIECEWISE: the attention compressor starts with the query.
+    assert schedule.start_ms["dsv4_compressor_save_partial_states"] == 16.0
+    assert schedule.start_ms["dsv4_q_projection"] == 16.0
+    # `maybe_execute_in_parallel` is serial on aux0: the indexer compressor follows the q path.
+    assert schedule.start_ms["dsv4_index_compressor_save_partial_states"] == 21.0
+    assert schedule.start_ms["dsv4_index_scores"] == 25.0
+    assert schedule.elapsed_ms == 47.0
+
+
+def test_hca_compressor_forks_in_full_and_runs_on_main_in_piecewise():
+    full = compose(HCA, variant="hca", mode="FULL")
+    piecewise = compose(HCA, variant="hca", mode="PIECEWISE")
+    assert full.start_ms["dsv4_compressor_save_partial_states"] == 13.0
+    assert full.elapsed_ms == 30.0
+    assert piecewise.start_ms["dsv4_compressor_save_partial_states"] == 18.0
+    assert piecewise.elapsed_ms == 35.0
+    assert compose(HCA, variant="hca", mode="NONE").elapsed_ms == full.elapsed_ms
+
+
+def test_short_context_indexer_runs_its_compressor_and_fill_on_aux0():
+    scopes = {name: value for name, value in CSA.items() if name not in {
+        "dsv4_index_query_projection", "dsv4_index_fused_query_prepare",
+        "dsv4_index_scores", "dsv4_index_topk",
+    }}
+    scopes["dsv4_index_short_context_fill"] = 1.0
+    schedule = compose(scopes, variant="csa", mode="NONE", short=True)
+    assert schedule.start_ms["dsv4_index_compressor_save_partial_states"] == 16.0
+    assert schedule.start_ms["dsv4_index_short_context_fill"] == 20.0
+    # The attention compressor on aux1 (ends at 23) is the last to join.
+    assert schedule.start_ms["dsv4_sparse_attention"] == 23.0
+
+
+def test_gaps_follow_the_segment_class_and_are_charged_once():
+    counts = dict.fromkeys(UNCOMPRESSED, 1.0)
+    counts.update({"dsv4_fused_qkv_projection": 2.0, "dsv4_sparse_attention": 3.0})
+    gap = {"cuda_graph": 0.25, "cuda_graph_piecewise": 0.5, "eager": 2.0}
+    piecewise = compose(UNCOMPRESSED, variant="uncompressed", mode="PIECEWISE",
+                        counts=counts, gap=gap)
+    # PIECEWISE: graph pieces pay 0.5 per kernel; the sparse eager break pays 2.0.
+    assert piecewise.start_ms["dsv4_sparse_attention"] == 18.0 + 0.5 * 6
+    assert piecewise.elapsed_ms == 28.0 + 0.5 * 7 + 2.0 * 3
+    full = compose(UNCOMPRESSED, variant="uncompressed", mode="FULL", counts=counts, gap=gap)
+    assert full.elapsed_ms == 28.0 + 0.25 * 10
+    eager = compose(UNCOMPRESSED, variant="uncompressed", mode="NONE", counts=counts, gap=gap)
+    assert eager.elapsed_ms == 28.0 + 2.0 * 10
+    layer = _layer(UNCOMPRESSED, piecewise)
+    assert layer.get_single_layer_attention_scope_time() == piecewise.elapsed_ms
+    assert layer.get_single_layer_block_time() == piecewise.elapsed_ms
+
+
+def test_composition_rejects_incomplete_inputs():
+    with pytest.raises(ValueError, match="no stream position"):
+        compose({**UNCOMPRESSED, "dsv4_index_scores_typo": 1.0},
+                variant="uncompressed", mode="FULL")
+    with pytest.raises(ValueError, match="one kernel count per scope"):
+        compose(UNCOMPRESSED, variant="uncompressed", mode="FULL",
+                counts={"dsv4_sparse_attention": 1.0})
+    with pytest.raises(ValueError, match="kernel gap value is missing: cuda_graph_piecewise"):
+        compose(UNCOMPRESSED, variant="uncompressed", mode="PIECEWISE", gap={"eager": 1.0})
+
+
+def test_serial_schedule_places_scopes_back_to_back():
+    schedule = serial_attention_phase([("dsv4_embedding", 1.0), ("dsv4_sparse_attention", 2.5)])
+    assert dict(schedule.start_ms) == {"dsv4_embedding": 0.0, "dsv4_sparse_attention": 1.0}
+    assert schedule.elapsed_ms == 3.5
+
+
+def test_trace_places_attention_scopes_at_their_composed_offsets():
+    from frontier.metrics.metrics_store import MetricsStore
+
+    schedule = compose(CSA, variant="csa", mode="FULL")
+    stage = StageExecutionTime([_layer({**CSA, "dsv4_mhc_attn_post_ffn_pre": 4.0}, schedule)])
+    events, advances = [], []
+    MetricsStore.__new__(MetricsStore)._emit_stage_layer_traces(
+        lambda kind, name, duration, layer_id, meta, start_offset_ms=None: events.append(
+            (name, start_offset_ms)
+        ),
+        stage, ClusterType.MONOLITHIC, moe_tp_enabled=False, ep_enabled=True,
+        advance_cursor=advances.append,
+    )
+    offsets = dict(events)
+    assert {name: offsets[name] for name in CSA} == dict(schedule.start_ms)
+    assert offsets["dsv4_mhc_attn_post_ffn_pre"] is None
+    assert advances == [schedule.elapsed_ms]
+
+
+def _layer(op_times, schedule):
+    layer = ExecutionTime(
+        num_layers_per_pipeline_stage=1,
+        attention_rope_execution_time=0.0, attention_kv_cache_save_execution_time=0.0,
+        attention_decode_execution_time=0.0, attention_prefill_execution_time=0.0,
+        attention_layer_pre_proj_execution_time=0.0,
+        attention_layer_post_proj_execution_time=0.0,
+        attn_norm_time=0.0, mlp_norm_time=0.0, add_time=0.0,
+        tensor_parallel_communication_time=0.0, pipeline_parallel_communication_time=0.0,
+        expert_parallel_communication_time=0.0, moe_gating_time=0.0, moe_shuffling_time=0.0,
+        schedule_time=0.0, sampler_e2e_time=0.0, prepare_inputs_e2e_time=0.0,
+        process_model_outputs_time=0.0, ray_comm_time=0.0, is_moe=True, op_times=op_times,
+        global_layer_id=2, attention_family_id="deepseek_v4_attention",
+        attention_variant_id="csa",
+    )
+    layer._dsv4_attention_schedule = schedule
+    return layer

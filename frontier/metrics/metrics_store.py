@@ -657,8 +657,13 @@ class MetricsStore:
             extra_meta: dict = None,
             *,
             resolved_meta: dict | None = None,
+            start_offset_ms: float | None = None,
         ):
-            """Helper to emit a single trace event and advance cursor."""
+            """Helper to emit a single trace event and advance cursor.
+
+            With ``start_offset_ms`` the event starts that long after the cursor
+            and the cursor stays; ``advance_cursor`` then moves it past the phase.
+            """
             nonlocal cursor_ms
             if duration_ms <= 0:
                 return  # Skip zero-duration ops
@@ -680,10 +685,11 @@ class MetricsStore:
             meta = base_meta.copy()
             meta.update(trace_meta)
 
+            start_ms = cursor_ms if start_offset_ms is None else cursor_ms + start_offset_ms
             event = TraceEvent(
                 type=op_type,
                 name=op_name,
-                ts_start=cursor_ms / 1000.0,  # Convert back to seconds for ts_start
+                ts_start=start_ms / 1000.0,  # Convert back to seconds for ts_start
                 duration_ms=duration_ms,
                 cluster=cluster_name,
                 replica_id=replica_id,
@@ -692,6 +698,11 @@ class MetricsStore:
                 meta=meta,
             )
             self._trace_store.log_event(event)
+            if start_offset_ms is None:
+                cursor_ms += duration_ms
+
+        def advance_cursor(duration_ms: float) -> None:
+            nonlocal cursor_ms
             cursor_ms += duration_ms
 
         def emit_related_collective_wait_traces() -> None:
@@ -809,7 +820,9 @@ class MetricsStore:
             # collapsing a mixed stage into the first layer's family.
             aggregate_ops = {}
 
-            def collect_stage_op(op_type, op_name, duration_ms, layer_id, metadata):
+            # An aggregated span sums its layers' durations; it has no layer timeline.
+            def collect_stage_op(op_type, op_name, duration_ms, layer_id, metadata,
+                                 start_offset_ms=None):
                 key = (metadata["attention_family_id"], metadata["attention_variant_id"], op_type, op_name)
                 if key not in aggregate_ops:
                     aggregate_ops[key] = [0.0, [], {}]
@@ -836,6 +849,7 @@ class MetricsStore:
                 skip_add_attn_residual=skip_add_attn_residual,
                 use_profile_ep_alltoall=use_profile_ep_alltoall,
                 use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
+                advance_cursor=advance_cursor if should_expand_layers else lambda _ms: None,
             )
             if not should_expand_layers:
                 for (family_id, variant_id, op_type, op_name), (duration_ms, layer_ids, physical_meta) in aggregate_ops.items():
@@ -1132,6 +1146,8 @@ class MetricsStore:
         skip_add_attn_residual: bool = False,
         use_profile_ep_alltoall: bool = False,
         use_ep_alltoall_dispatch_combine: bool = True,
+        *,
+        advance_cursor,
     ) -> None:
         """Emit one trace sequence for each authoritative stage layer.
 
@@ -1139,6 +1155,8 @@ class MetricsStore:
         contain multiple attention families. The legacy aggregate helpers use
         homogeneous scalar views and therefore cannot safely consume this type.
         Stage-owned overhead remains emitted by ``_emit_op_level_traces`` once.
+        A V4 attention phase places its scopes at their composed start offsets
+        and then calls ``advance_cursor`` with the composed elapsed.
         """
 
         for layer_idx, layer in enumerate(execution_time.layer_execution_times):
@@ -1163,11 +1181,15 @@ class MetricsStore:
                     "pre_dp", "attention", "pre_dispatch", "dispatch", "routed_compute",
                     "combine", "post_combine",
                 )
+                schedule = layer._dsv4_attention_schedule
                 for phase in phases:
                     for kind, name, duration_ms in timing_operator_times(layer, phase):
+                        offset_ms = schedule.start_ms[name] if phase == "attention" else None
                         emit(kind, name, duration_ms, layer.global_layer_id, {
                             **layer_meta, **operator_workload_metadata(layer, name),
-                        })
+                        }, start_offset_ms=offset_ms)
+                    if phase == "attention":
+                        advance_cursor(schedule.elapsed_ms)
                 continue
 
             for op_name, duration_ms in _iter_memory_execution_times(

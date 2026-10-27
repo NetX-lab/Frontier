@@ -9,6 +9,7 @@ from frontier.attention.deepseek_v4 import (
     validate_deepseek_v4_dummy_forward,
 )
 from frontier.entities.batch import DummyForwardBatch
+from frontier.execution_time_predictor.dsv4_composition import serial_attention_phase
 from frontier.entities.time_components import MoEOperatorTimes, MoETime
 from frontier.operators.binding import build_operator_manifest
 from frontier.operators.families import get_comm_operator
@@ -407,6 +408,10 @@ def predict_structural_execution(
         "synthetic_destination_assignments": lane_workload.routed_token_count if include_ffn else None,
     })
     timing._dsv4_workloads = MappingProxyType(workloads)
+    # Synthetic durations carry no stream program inputs: no threshold, kernel counts or gaps.
+    timing._dsv4_attention_schedule = serial_attention_phase(
+        (name, value) for _, name, value in timing_operator_times(timing, "attention")
+    )
     return timing
 
 
@@ -455,6 +460,9 @@ def predict_step_cost_execution(
         attention_family_id=spec.family_id, attention_variant_id=spec.variant_id,
     )
     timing._dsv4_workloads = MappingProxyType(workloads)
+    timing._dsv4_attention_schedule = serial_attention_phase(
+        (name, value) for _, name, value in timing_operator_times(timing, "attention")
+    )
     return timing
 
 

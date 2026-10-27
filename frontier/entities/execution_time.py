@@ -1134,9 +1134,8 @@ class ExecutionTime(BaseEntity):
         Includes all attention operations + TP allreduce.
         """
         if self._attention_family_id == "deepseek_v4_attention":
-            from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
-
-            return sum(value for _, _, value in timing_operator_times(self, "attention"))
+            # The composed stream schedule already includes the time between kernels.
+            return self._dsv4_attention_schedule.elapsed_ms
         from frontier.operators.sequence_parallel_moe import (
             EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
         )

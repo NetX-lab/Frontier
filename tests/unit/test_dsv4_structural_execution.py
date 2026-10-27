@@ -182,7 +182,10 @@ def destination(layer=0):
 
 
 def execution_time(op_times, layer=0):
-    return ExecutionTime(
+    from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
+    from frontier.execution_time_predictor.dsv4_composition import serial_attention_phase
+
+    timing = ExecutionTime(
         num_layers_per_pipeline_stage=1,
         attention_rope_execution_time=0.0,
         attention_kv_cache_save_execution_time=0.0,
@@ -201,6 +204,10 @@ def execution_time(op_times, layer=0):
         global_layer_id=layer, attention_family_id="deepseek_v4_attention",
         attention_variant_id="uncompressed" if layer < 2 else "csa",
     )
+    timing._dsv4_attention_schedule = serial_attention_phase(
+        (name, value) for _, name, value in timing_operator_times(timing, "attention")
+    )
+    return timing
 
 
 def test_physical_scopes_conserve_attention_and_five_ep_phases():
@@ -270,9 +277,8 @@ def test_full_43_layer_stage_preserves_every_canonical_physical_scope(predictor)
 
 
 def test_registered_legacy_scope_cannot_silently_enter_v4_phase_projection():
-    result = execution_time({"dsv4_sparse_attention": 1.0, "attn_prefill": 2.0})
     with pytest.raises(ValueError, match="no phase owner"):
-        result.get_single_layer_block_time()
+        execution_time({"dsv4_sparse_attention": 1.0, "attn_prefill": 2.0})
 
 
 @pytest.mark.parametrize("layer", [0, 2, 3, 42])
@@ -389,9 +395,14 @@ def test_real_stage_trace_preserves_physical_scope_and_source_metadata(predictor
     batch_stage.on_schedule(1.0)
     store._emit_op_level_traces(time=1.0, replica_id=0,
                                batch_stage=batch_stage, execution_time=stage,
-                               cluster_type=ClusterType.MONOLITHIC)
+                               cluster_type=ClusterType.MONOLITHIC,
+                               request_ids=[str(request.id) for request in batch.requests])
+    assert {event.layer_id >= 0 for event in sink.events if event.type == "COMPUTE"} == {expand}
     physical = [event for event in sink.events if event.type in {"COMPUTE", "COMM"}]
     assert sum(event.duration_ms for event in sink.events) == pytest.approx(stage.total_time * 1000)
+    # The serial attention schedule keeps every event back to back on the timeline.
+    ends = [event.ts_start * 1000 + event.duration_ms for event in sink.events]
+    assert [event.ts_start * 1000 for event in sink.events[1:]] == pytest.approx(ends[:-1])
     assert sum(event.duration_ms for event in physical) == pytest.approx(sum(stage.op_times.values()))
     names = {event.name for event in physical}
     assert {"dsv4_embedding", "dsv4_embedding_allreduce", "dsv4_mhc_first_pre"} <= names
