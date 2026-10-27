@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: exact native decode critical path (diagnostic): the step prefix before the first TP all-reduce is the KV side-storage reset (item 3); Frontier's step is within −7% to +4% of the native forward body; TP all-reduce is about 1.3 ms high (273 native calls, own cost about 6.8 µs), not low; body idle shortfall is a kernel-count shortfall. |
 | 2026-10-27 | D31: h200_32 host-probe stage `h200_32_hostprobe03` built at 02bd453a, verified and dry-run; submitted through Pi (`d31-h200-32-hostprobe03-submit-1027e`), job `exp-1027-124813-737818`; `h200_32_comb_h200` table version corrected to merged03. |
 | 2026-10-27 | D31: item 3 step 2 fixes from the codex implementation review 668b0946 (F001–F006, Q1–Q3; design section 9); 162 focused unit tests pass. |
 | 2026-10-27 | D31: item 3 step 2 code: host-step probe, `host_probe` run kind and estimator; 81 focused unit tests pass. |
@@ -1098,6 +1099,31 @@ Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31
   3. A grouped-GEMM model with the active-expert count as a feature, trained on profile rows
      that vary it.
   Not decided; it waits for the clean native references and goes with the TP all-reduce fix.
+
+- Exact critical path (2026-10-27, after the per-rank check; report section 10 of
+  `test_report_2026-10-26_decode_step_slope.md`; scripts `/data/ycfeng/tmp/d31_diag/critpath/`):
+  - Reason: the per-rank medians mix each rank's own kernel time with waiting inside the
+    collectives. The rank that arrives last at a TP all-reduce gates it, so its segment is the
+    critical path; the parts add up exactly to the step span.
+  - Corrections to the entry above. The native step has 273 TP all-reduces (92 attention, 88
+    routed, 88 shared expert, 4 dense, 1 embedding), not 176. Their own cost on the critical
+    path is 1.85 ms at 9 requests per engine, 2.25 ms at 20–21 and 3.6 ms at 44–46, so
+    Frontier's 3.14 ms at 9 requests is about 1.3 ms high. Frontier's routed compute is
+    3.5–4.7 ms above the native critical routed time (including the peer wait in combine).
+  - The step prefix before the embedding all-reduce is 6.1–7.8 ms on steps that reset the KV
+    side storage (177 kernels with 23 device-to-host copies) and 0.07 ms on other steps; the
+    other engine idles 4.6–7.6 ms before its step, then runs 1.0–1.3 ms of input preparation.
+    This is the item 3 host time, inside the profiled step span.
+  - Forward body (span minus prefix) against Frontier: 41.5–42.3 against 43.14 ms at 9 requests,
+    46.2–49.8 against 46.3 ms at 20–21, 53.1–53.8 against 49.8 ms (Frontier at 36) at 44–46.
+  - Inside the body Frontier is short on idle time (0.62 against 1.8–1.85 ms at 9 requests) and
+    on other compute (about −1.8 to −2.6 ms); EP collectives with peer waits match. Native
+    graph steps launch about 4,100–4,300 kernels per body at a 0.42 µs median gap; the proxy's
+    0.43 µs is right, Frontier counts about 1,400 kernels.
+  - Decision: item 3 stays first. The item 2 fixes (position-routed expert counts, TP
+    all-reduce own cost, graph kernel count, other compute) go together, after the E rerun with
+    the item 3 profile shows the remaining error, because fixing one alone moves the body by
+    up to 8%.
 
 Calibration item 3 lead, host time: KV side-storage reset sync (2026-10-27, diagnostic only,
 D31.10; scripts in `/data/ycfeng/tmp/d31_diag/hostgap/`, input the h200_32 device-timeline

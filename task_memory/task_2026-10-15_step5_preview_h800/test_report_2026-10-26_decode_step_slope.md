@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Added the exact critical path of native decode steps (section 10): the step prefix before the first TP all-reduce is the KV side-storage reset (item 3); Frontier's step is within −7% to +4% of the native forward body; corrected section 3's TP all-reduce direction (Frontier is about 1.3 ms high, not low). |
 | 2026-10-27 | Corrected the table version of `h200_32_comb_h200` to merged03 (its `command.json`). |
 | 2026-10-27 | Added the 780 s h200_64 rerun with step G against it (section 9); corrected the reset count to 23 sparse-layer hooks with 46 indexed writes (section 8). |
 | 2026-10-27 | Added the h200_64 length-sweep run with step G against it (section 7) and the KV side-storage reset sync as the host-time cause (section 8); updated the limits. |
@@ -105,6 +106,11 @@ Frontier's routed compute stays at 16.9 ms from 2 to 16 requests and 18.5 ms fro
 while native grows from 10.9 to 15–16 ms. Inference, not yet measured: the MoE profile routes
 tokens so that every local expert is active, while a small native batch activates only a few
 of the 22 local experts. Both are op-profiling fixes (item 2).
+
+Correction 2 (2026-10-27, exact critical path, section 10): the per-rank TP all-reduce times
+above include waiting for the other ranks. The all-reduce cost on the critical path is 1.85 ms
+at 9 requests (273 calls per step, about 6.8 µs each), so Frontier's 3.14 ms (272 calls, about
+11.5 µs each) is about 1.3 ms high, not low.
 
 Correction (2026-10-27, per-rank check in `progress.md`): within one DP engine the fast ranks
 wait inside the TP all-reduce and EP collectives for the slowest routed rank, so the per-rank
@@ -402,6 +408,68 @@ All 14 rows pass (the JSON holds p50/p90 and output throughput as well). Frontie
 both TTFT and TPOT. Expectation: with compile stalls removed, the remaining TPOT gap should be
 the host time of section 8 plus the operator errors of item 2. CONFIRMED in direction; the split
 between the two needs the item 3 probe.
+
+### 10. Exact critical path of native decode steps (diagnostic)
+
+Diagnostic only (D31.10). Scripts, not in Git: `/data/ycfeng/tmp/d31_diag/critpath/`
+(`extract.py`, `critpath4.py`, `prefix.py`, `segments.py`, `gap_sites.py`), input the
+device-timeline traces of section 1 (`load_t016`, `load_t040`, `load_t088`).
+
+Method. Within one DP engine the 8 TP ranks leave each TP all-reduce at nearly the same time
+(median end spread 0.8–1.3 µs). The rank that arrives last at a call (the shortest call duration)
+gates it, so its kernels and idle time between the previous call's end and its own start are the
+critical segment. EP dispatch (all-gather) and combine (reduce-scatter) pair each rank with the
+same TP rank of the other engine; their time is split into own cost (the shorter duration of the
+pair) and waiting for the peer. The parts add up exactly to the step span. The window before the
+first TP all-reduce (the embedding all-reduce) is reported separately as the step prefix.
+
+Step prefix (rank 0 of each engine, one profiled window each):
+
+| Window | Steps that reset KV side storage | Prefix of a resetting step | Other steps |
+| --- | --- | --- | --- |
+| `load_t016`, 9 requests (`dp0`, `dp1`) | 11 of 26, 8 of 27 | 6.1–7.6 ms (medians 7.5 and 6.4 ms), 177 kernels including 23 device-to-host copies | 0.07 ms, 13 kernels; after a peer engine's reset: 4.6–7.6 ms idle before the step plus 1.0–1.3 ms prefix |
+| `load_t040`, 20 requests (`dp1`) | 15 of 27 | 7.8 ms (median) | as above |
+| `load_t088`, 45 requests (`dp0`) | 24 of 26 | 7.8 ms (median) | as above |
+
+The 23 device-to-host copies are the 23 `.tolist()` calls of the sparse-layer reset hooks
+(item 3, `design.md` section 2). The resetting step's first kernel starts right after the
+previous step's last kernel (median −5 to −9 µs), as the first `.tolist()` waits for the previous
+step's device work. The other engine idles until its gloo all-reduce returns, then runs its own
+input preparation (1.0–1.3 ms). This is the item 3 host time; the torch profiler inflates it.
+
+Forward body (step span minus prefix), per engine, against Frontier's step curve
+(`/data/ycfeng/tmp/d31_diag/step_curve/analyze_window.txt`, merged04, H200 DP2 curves):
+
+| Requests per engine | Native body | Frontier step | Difference |
+| --- | --- | --- | --- |
+| 9 | 41.5–42.3 ms | 43.14 ms | +2% to +4% |
+| 20–21 | 46.2–49.8 ms (three of four lanes 46.2–46.8) | 46.32–46.37 ms | −7% to 0% |
+| 44–46 | 53.1–53.8 ms | 49.82 ms at 36 (curve ends there) | about −7% |
+
+Components at 9 requests per engine (native critical path of `dp0`/`dp1`; Frontier from the
+EP-wave and stage ledgers):
+
+| Component | Native | Frontier | Difference |
+| --- | --- | --- | --- |
+| Routed experts (grouped GEMM and SwiGLU, plus waiting for the peer in combine) | 12.2–13.4 ms | 16.90 ms | +3.5 to +4.7 ms |
+| TP all-reduce (own cost) | 1.85–1.88 ms, 273 calls | 3.14 ms, 272 calls | +1.3 ms |
+| EP dispatch and combine with peer waits | 14.6–15.3 ms | 15.02 ms | about 0 |
+| Idle time inside the body | 1.8–1.85 ms (plus 0.3 ms tail and end skew) | 0.62 ms (kernel-gap proxy) | −1.2 to −1.5 ms |
+| Other compute (attention, DSA indexer, dense GEMMs, norms, router, elementwise) | 9.3 ms | about 7.5 ms (residual) | about −1.8 to −2.6 ms |
+
+Idle time inside the body per segment (rank `dp*/tp0`, per step; identical counts at 9, 20 and
+45 requests): attention segments 92 × 12.3 kernels, 0.41–0.63 ms idle (0.36–0.56 µs per
+kernel); MoE segments (gate to combine) 88 × 29–31 kernels, 1.5–1.8 ms idle (0.6–0.7 µs per
+kernel, including about 6 µs before each EP collective launch); other segments 92 × 5 kernels,
+0.14–0.18 ms idle. In total about 4,100–4,300 kernels per body. The proxy's 0.43 µs per graph
+kernel matches the native median gap (0.42 µs); Frontier's 0.62 ms of gap corresponds to about
+1,400 counted kernels, so the shortfall is the kernel count, not the gap size.
+
+Inference (not yet tested by a Frontier change): the errors cancel to within −7% to +4% of the
+native body, so the remaining TPOT gap is the step prefix (item 3). Fixing only the routed-expert
+overpricing would leave Frontier about 8% low at 9 requests; the item 2 fixes (routed experts
+from the native position routing, the TP all-reduce own cost, the kernel count of graph steps,
+the other-compute shortfall) have to land together.
 
 ## Limits
 

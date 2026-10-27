@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 2b step 2 refined with the exact native critical path: Frontier's step is within −7% to +4% of the native forward body; TP all-reduce direction corrected; the four item 2 fixes go together after item 3. |
 | 2026-10-27 | D31: corrected the table version of `h200_32_comb_h200` to merged03 (its `command.json`); item 3 step 2 probe run submitted. |
 | 2026-10-27 | D31: h200_32 sweep03 done (clean reference; E passes all 14 rows, TPOT −13.9%); item 3 step 3 (Frontier side) done. |
 | 2026-10-27 | D31: item 3 revised after the codex design review (23 reset hooks / 46 writes; direct host-interval probe per DP size; reset host time applied at the DP forward-start agreement); h200_64 sweep02 and G against it done. |
@@ -279,6 +280,15 @@ Calibration order for E, after the first error table:
       inside the collectives for the slowest routed rank, so the errors are about +2.5–3 ms
       (routed) and −1–2 ms (all-reduce) per step, not the median-rank values above. The
       remaining TPOT gap is mainly host time, so item 3 comes before these operator fixes.
+      Corrected again on 2026-10-27 (exact critical path, section 10 of
+      `test_report_2026-10-26_decode_step_slope.md`): the native step prefix before the first
+      TP all-reduce (6.1–7.8 ms on resetting steps) is the item 3 host time. Without it,
+      Frontier's step is within −7% to +4% of the native forward body at 9–46 requests. The
+      parts: routed experts +3.5 to +4.7 ms, TP all-reduce +1.3 ms (273 native calls at about
+      6.8 µs own cost; the earlier "low" came from per-rank waits), idle time −1.2 to −1.5 ms
+      (Frontier counts about 1,400 of the native 4,100–4,300 graph kernels), other compute
+      about −2 ms, EP collectives about 0. These four fixes go together after the E rerun with
+      the item 3 profile, because one alone moves the body by up to 8%.
    2. Compare with Frontier's own step curve from the stage-batch and EP-wave ledgers of a
       diagnostic run, phase by phase (done, `progress.md`).
    3. Fix the cause where it belongs: a missing or underpriced operator or collective is
