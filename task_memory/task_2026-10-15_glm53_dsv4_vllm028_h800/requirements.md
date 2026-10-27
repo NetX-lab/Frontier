@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Recorded YC's adoption of the revision 2c recommendations and the approval of review round 3 (D-H3O-REVISION-2C-DECISIONS). |
 | 2026-10-26 | Recorded the lead's working decisions for H3o-(a) revision 2c after review round 2 (D-H3O-REVISION-2C), including the source DP synchronization rule that refines item 30 and D7. |
 | 2026-10-26 | Recorded the `/codex-review` request on H3o-(a) (D-H3O-CODEX-REVIEW), YC's decisions D2-D6 with D1 open (D-H3O-DECISIONS), the routing identity rule (D-V4-ROUTING-IDENTITY) and the approval of review round 2. |
 | 2026-10-26 | Recorded YC's standing rule against the whole-step table as a cost model, with the method correction it orders (D-NO-STEP-COST-SHORTCUT), and the operator-level DSV4 cost route as the next route (D-OPERATOR-LEVEL-ROUTE). |
@@ -338,6 +339,17 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - The DP rendezvous comes before post-DP preparation and first-layer device work; DP dummies use the V2 dummy workload; the composed attention elapsed is what the events consume.
     - Growth since D3 and D4, reported to YC: 28 file entries, about +3,310 / −330 lines; caps H200 45 and H800 21 GPU-hours, plus 32 each only if R2h / R2 run; about 15-16.5 working days, H200 milestone at about 11.5.
     - A third review round needs YC's approval.
+
+[Original Request] Follow-up, 2026-10-27, after the revision 2c report:
+
+> 采纳你的推荐；批准，继续
+
+33. **D-H3O-REVISION-2C-DECISIONS.** YC adopted the lead's recommendations in the revision 2c report:
+    - D1: option (a), per-scope costs and a critical path over the conditional source stream graph, checked by the pilots.
+    - The growth since D3 / D4 is confirmed: 28 file entries, about +3,310 / −330 lines; caps H200 45 and H800 21 GPU-hours, plus 32 each only if R2h / R2 run; about 15-16.5 working days.
+    - D7: option (a), the new value `full_and_piecewise` of `decode_cuda_graph_mode`, V4 only.
+    - Round 3 of the Codex review, on revision 2c, is approved: one submission, no automatic retry. A further round needs YC's approval.
+    - Continue: H3o-(b) proceeds in the order of `design.md` §5. The CPU stage 0 and the simulator files that need no GPU data (§6 entries 20-25, 27, 28) come first; GPU jobs follow the §5 gates within the approved caps and the GPU rules.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
