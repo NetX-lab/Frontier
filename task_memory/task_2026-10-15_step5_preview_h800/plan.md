@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 3 step 4 done (E host within 4.1%; G host TTFT −12.9%, TPOT −9.6%); item 4 opened: the native DP wave tail queues dummy-step device work ahead of the next prefill at DP4. |
 | 2026-10-27 | D31: item 3 step 2 h200_64 done (DP4 profile, perturbation PASS, accepted for G); G host rerun started. |
 | 2026-10-27 | D31: codex review of the h200_32 probe result (F001–F004): estimator and replay checks tightened; the h200_32 host profile is not accepted (probe effect unmeasured), so E/G with it are exploratory. |
 | 2026-10-27 | D31: item 3 step 2 h200_32 done (DP2 profile, `PERTURBED` with a bounded TPOT bias); E host rerun started; h200_64 probe submitted. |
@@ -180,6 +181,9 @@ F in `test_report_2026-10-26_h200_64_native_workload.md`). The E rerun `h200_32_
 (TPOT mean −18.5%) and G passes 11 of 14 (all four means; TPOT mean −24.5%; TTFT p90/p95 and
 TPOT p95 fail). Against the clean 780 s h200_64 reference G passes all 14 rows (TTFT mean
 −17.5%, TPOT mean −19.2%). Calibration item 3 (host time) is next.
+Status (2026-10-27, later): item 3 is done. With the host profiles E is within 4.1% on every row
+(exploratory) and G is at TTFT −12.9%, TPOT −9.6%. Next: item 4 (DP wave tail, the main G TTFT
+gap) and the item 2b operator fixes, designed together and reviewed by codex.
 
 Native rerun with a complete kernel warm-up (opened 2026-10-26; evidence in `progress.md`).
 Most of the native TTFT/TPOT tail comes from just-in-time compiles of the DSA scoring kernel
@@ -334,10 +338,31 @@ Calibration order for E, after the first error table:
       unit tests, dummy smoke 12/12, fidelity 77/77 with only config-field differences. The
       NIXL READ profiles were regenerated for the new capacity flag (`design.md` 3.4).
    4. Rerun E and G against the clean references.
-      E host rerun running (`/data/ycfeng/tmp/d31_e05_run/h200_32_m04_host`), paired with the
-      baseline `h200_32_m04_base` that differs only by the host profile (exploratory). G host
-      rerun running (`/data/ycfeng/tmp/d31_e05_run/h200_64_m04_host`, started 08:06 UTC), paired
-      with `h200_64_m04_base`.
+      Done 2026-10-27 (`test_report_2026-10-27_host_probe_runs.md` section 9; each run paired
+      with a base run that differs only by the host profile). E host: every row within 4.1%
+      (TTFT −1.0%, TPOT −3.3%; exploratory, the DP2 profile is not accepted). G host: TTFT
+      −12.9% (p95 −20.5%), TPOT −9.6% (p95 −10.2%), E2E −9.7%, throughput +2.9%; G base was TTFT
+      −17.5%, TPOT −19.2%. The host term adds about 5.6–5.9 ms to TPOT.
+4. DP wave tail before a prefill (opened 2026-10-27; evidence in `progress.md` and
+   `test_report_2026-10-27_h200_64_ttft_wave_tail.md`). At DP4 the native prefill part of TTFT is
+   about 124 ms above Frontier's on average and follows a sawtooth over consecutive requests. In
+   vLLM's DP wave, an engine without a batch runs dummy steps until the engines agree, on step 1
+   and every 16 steps, that no request is left. The host queues these dummy steps faster than the
+   device runs them (about 5 ms against 32 ms each). The next prefill waits until the device has
+   run them (mean about 180 ms at DP4, about 0 at DP2). Frontier runs the dummy steps but lets
+   each one finish before the engine's next pass, so a new request never waits behind queued
+   dummy work. Steps:
+   1. Confirm Frontier's PREFILL wave with a diagnostic run that logs the passes and dummy
+      forward spans of each lane (16 requests, h200_64 host options).
+   2. Design: the engine issues a dummy step after its measured host period instead of after the
+      device work ends, and the device runs the queued dummy work in order before the next batch.
+      The device cost of a dummy step stays priced from op profiling; the host period is a
+      component host term from the host probe (D31.10). Review it with codex together with the
+      item 2 design.
+   3. Implement off by default, check unit tests, dummy smoke and the 77-case fidelity matrix on
+      the default path, then rerun G (and E, which must stay near zero backlog).
+   Two smaller DP4 parts stay open: Frontier's solo prefill is about 60 ms above the native
+   minimum, and the prefill-to-first-token handoff is about 28 ms low.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2
 and G3, exact-byte KV checks, observer validation, census data and the D29 scope ledger.

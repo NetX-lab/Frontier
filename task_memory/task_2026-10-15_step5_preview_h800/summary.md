@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Update the current status: item 3 done (E host within 4.1%, G host TTFT −12.9%, TPOT −9.6%), item 4 (DP wave tail) opened, next steps rewritten. |
 | 2026-10-27 | Update the current status: h200_32 sweep03 result and E against it (14/14 pass, TPOT −13.9%), item 3 Frontier side implemented and checked. |
 | 2026-10-27 | Update the current status: h200_64 780 s sweep result and G against it (14/14 pass), h200_32 sweep03 running, item 3 design reviewed and revised (23 hooks / 46 writes). |
 | 2026-10-27 | Update the current status: G result, h200_64 length-sweep result and its 780 s rerun, the KV side-storage reset sync as the host-time cause. |
@@ -174,8 +175,32 @@ Status as of 2026-10-27:
   the GPU then waits about 9 ms (profiled, an upper bound) for the resets, input preparation, the
   DP all-reduce and the graph launch. Such steps make up a larger share as the batch grows. At
   20 requests per engine, steps without this sync match Frontier's step (46.6 against 46.4 ms),
-  and the mix with it matches the unprofiled native token gaps (about 53 ms). Frontier models
-  no host time today.
+  and the mix with it matches the unprofiled native token gaps (about 53 ms).
+- **Calibration item 3, host time: done.** Frontier now has an optional measured profile that
+  delays every DP lane's forward to the latest lane's reset-ready time
+  (`test_report_2026-10-27_kv_block_zeroing_host_time.md`). The values come from a native
+  timestamp probe, one run per DP size (`test_report_2026-10-27_host_probe_runs.md`):
+  - DP2: prefill 37.44 ms, decode 5.11 ms. Not accepted, because the probe's own effect was not
+    measured.
+  - DP4: prefill 36.92 ms, decode 5.96 ms. Accepted.
+
+  Reruns against the clean references (section 9 of that report):
+
+  | Run | TTFT mean | TPOT mean | Rows |
+  | --- | --- | --- | --- |
+  | E host | −1.0% | −3.3% | every row within 4.1%; exploratory |
+  | G host | −12.9% (p95 −20.5%) | −9.6% (p95 −10.2%) | — |
+  | G base | −17.5% | −19.2% | — |
+- **Calibration item 4, DP wave tail before a prefill (diagnostic).** This is most of the G TTFT
+  gap.
+  - Mechanism: in vLLM's DP wave, an engine without work runs dummy steps until the engines
+    agree, on step 1 and every 16 steps, that no request is left. The host queues these dummy
+    steps faster than the GPU runs them (about 5 ms against 32 ms each).
+  - Effect: at DP4 the next prefill waits until the GPU has run them, a mean of about 180 ms. At
+    DP2 the wait is about 0, because one arrival period holds the whole wave.
+  - Frontier gap: Frontier runs the dummy steps, but it finishes each one before the engine's
+    next pass, so a new request never waits behind queued dummy work
+    (`test_report_2026-10-27_h200_64_ttft_wave_tail.md`).
 - **Native kernel compiles.** Most of the native TTFT/TPOT tail comes from just-in-time compiles
   of the DSA scoring kernel during the measured repeats (about 0.4 s per compile, 84, 54 and 34
   stall events in the three h200_32 repeats). A native length sweep before the first repeat
@@ -193,16 +218,14 @@ Status as of 2026-10-27:
   profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,
   `d034202c`).
 - **Next.**
-  1. Model the host time between decode steps (item 3). The design (`design.md`) was reviewed
-     by codex and revised. The Frontier side is implemented and checked (off by default,
-     `test_report_2026-10-27_kv_block_zeroing_host_time.md`): a measured profile delays every
-     DP lane's forward to the latest lane's reset-ready time. Next: the native `host_probe` run
-     kind and its estimator, one probe run per DP size, then rerun E and G with the measured
-     profiles.
-  2. Fix the two operator errors from the device timeline (routed expert compute, TP
-     all-reduce) from op profiling.
-  3. Formal 64-GPU calibration: E and G pass all 14 rows against the clean native references
-     (sweep03 and h200_64 sweep02); the remaining work lowers the TPOT error (−13.9% and −19.2%).
+  1. Item 4: model the dummy steps that the host queues ahead of the GPU in a DP wave. Price their
+     GPU time from op profiling and use the probe's measured host period between them. Off by
+     default; rerun G.
+  2. Item 2b: the decode operator fixes from the exact native critical path (routed-expert
+     token counts, collective statistic, shuffling, routing kernels, kernel count, L2 flush in
+     the profilers). One design covers items 2b and 4, and codex reviews it.
+  3. Decompose the remaining G TPOT gap (about −5.9 ms at DP4), possibly with a DP4 decode device
+     timeline (diagnostic only).
 
 ### Sub-task directories (`task_memory/`)
 

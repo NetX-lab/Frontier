@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Section 9: E and G reruns with the host profiles against the clean references; the host term closes most of the E gap and about half of the G TPOT gap. |
 | 2026-10-27 | h200_64 probe result (section 7): all checks PASS, profile accepted for step G; step G host run started. |
 | 2026-10-27 | Corrected after codex review 223fee59 (F001–F004): failure classification (3.1), lost-step location and the tightened completeness checks (3.2, 4), withdrawn perturbation bound (5); review fixes and their checks in section 8. |
 | 2026-10-27 | h200_32 probe run (`exp-1027-124813-737818`) analyzed: two estimator acceptance rules corrected (`cdcba47b`), DP2 profile written, perturbation bound recorded; h200_64 probe submitted. |
@@ -248,3 +249,48 @@ PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp PYTHONPATH=$PWD:$PWD/tests/uni
   trailing partial, decode 19,936 plus 0; no preemptions. The profile is identical apart from the
   report path (prefill 37.4398 ms, decode 5.1105 ms), so the stored copies in `evidence/` are
   unchanged.
+
+## 9. Step E and G reruns with the host profiles (item 3 step 4)
+
+Each pair differs only by `kv_block_zeroing_host_profile` in the predictor options. All four runs
+are CPU-only, from the clean worktree `/data/ycfeng/Frontier/.worktrees/step5-d31-native-02bd453`
+(commit `02bd453a`), with merged04 tables and measured H200 collectives, Python
+`/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python`:
+
+```bash
+python tests/integration/step5_pd/frontier_workload.py run --case <h200_32|h200_64> --measured-collectives \
+  --predictor-options /data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_<case>[_host].json \
+  --output-dir /data/ycfeng/tmp/d31_e05_run/<case>_m04_<base|host>
+python tests/integration/step5_pd/frontier_workload.py compare --gate 0.3 \
+  --frontier <run>/frontier_summary.json --native <native reference>.json --output <run>/compare_gate30.json
+```
+
+References: `evidence/d31_h200_32_sweep03_native_metrics.json` (E) and the h200_64 sweep02 metrics
+(G). Every run returned 0 and all 14 rows pass the 30% gate. Relative error = (Frontier −
+native) / native.
+
+| Run | Wall time (s) | TTFT mean (ms) | TTFT p95 | TPOT mean (ms) | TPOT p95 | E2E mean (ms) | Total throughput (tokens/s) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| E native (sweep03) | — | 912.24 | 957.38 | 53.303 | 55.262 | 55,440.8 | 5,219.8 |
+| E base `h200_32_m04_base` | 12,508 | 864.17 (−5.3%) | (−6.5%) | 45.917 (−13.9%) | — | (−13.7%) | (+2.9%) |
+| E host `h200_32_m04_host` | 11,705 | 902.78 (−1.0%) | 940.38 (−1.8%) | 51.558 (−3.3%) | 53.532 (−3.1%) | 53,646.4 (−3.2%) | 5,253.4 (+0.6%) |
+| G native (sweep02) | — | 1,179.88 | 1,366.97 | 61.258 | 63.750 | 63,847.0 | 4,994.5 |
+| G base `h200_64_m04_base` | 17,294 | 973.31 (−17.5%) | 1,016.27 (−25.7%) | 49.506 (−19.2%) | 51.360 (−19.4%) | 51,618.1 (−19.2%) | 5,316.6 (+6.4%) |
+| G host `h200_64_m04_host` | 16,277 | 1,027.43 (−12.9%) | 1,086.16 (−20.5%) | 55.359 (−9.6%) | 57.227 (−10.2%) | 57,659.8 (−9.7%) | 5,137.4 (+2.9%) |
+
+Compare files: `evidence/d31_h200_32_m04_base_compare_sweep03.json`,
+`evidence/d31_h200_32_m04_host_compare_sweep03.json`,
+`evidence/d31_h200_64_m04_base_compare_sweep02.json` (the same rows as
+`evidence/d31_h200_64_sweep02_compare_G.json`) and
+`evidence/d31_h200_64_m04_host_compare_sweep02.json`.
+
+- Observed: the host term adds 5.64 ms (E) and 5.85 ms (G) to TPOT. A resetting step pays `h`
+  (5.11 / 5.96 ms), and every DP lane waits for the latest lane, so with 67.6% (DP2) and 45.4%
+  (DP4) resetting steps per engine nearly every step of the group is delayed.
+- E host is within 3.3% on every mean and within 4.1% on every row. The h200_32 profile is
+  `PERTURBED` and not accepted (section 5), so this result is exploratory.
+- G host, with the accepted DP4 profile, leaves TTFT −12.9% (p90 −19.6%, p95 −20.5%) and TPOT
+  −9.6% (p95 −10.2%). At the final 10% gate it would fail the TTFT rows and the TPOT p95 row.
+- Inference: the DP4 TTFT gap comes mostly from the prefill part of TTFT, not from the
+  handoff; the diagnosis is in `test_report_2026-10-27_h200_64_ttft_wave_tail.md`. The DP4 TPOT
+  residual (about −5.9 ms) is not decomposed yet: no native DP4 decode device timeline exists.

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 3 step 4 done: E host within 4.1% on every row (exploratory); G host TTFT −12.9%, TPOT −9.6%; item 4 lead opened: at DP4 the native prefill waits for the device to run the dummy steps queued by the previous DP wave (mean about 180 ms), which Frontier does not model. |
 | 2026-10-27 | D31: E base with merged04 (no host profile) passes all 14 rows against sweep03 (TTFT −5.3%, TPOT −13.9%), equal to the merged03 run. |
 | 2026-10-27 | D31: h200_64 probe analyzed with the tightened checks: DP4 profile prefill 36.92 ms / decode 5.96 ms, perturbation PASS, accepted for step G; step G host run started. |
 | 2026-10-27 | D31: codex review 223fee59 of the h200_32 probe result (F001–F004, all confirmed): estimator checks every TP rank against the client-completed work, rejects preemptions and partial all-reduces before the last step with requests; the replay checks each formal phase's native work counters; the profile values are unchanged; the profile is not accepted (probe effect unmeasured), so E/G with it are exploratory. |
@@ -1264,7 +1265,7 @@ Calibration item 3 step 2, review fixes (2026-10-27, `completed`; design section
   coverage) need the probe run; Q5 (the external clean-run-check producer) is not audited.
 - Next: stage `h200_32_hostprobe01` from a clean worktree at the fix commit and submit it.
 
-Calibration item 3 step 2, probe runs (2026-10-27; h200_32 `completed`, h200_64 `in-progress`):
+Calibration item 3 steps 2 and 4, probe runs and E/G reruns (2026-10-27; `completed`):
 
 - Stage: `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_hostprobe03/stage`, built from the
   clean worktree `/data/ycfeng/Frontier/.worktrees/step5-d31-native-02bd453` (02bd453a) with
@@ -1413,6 +1414,62 @@ Calibration item 3 step 2, probe runs (2026-10-27; h200_32 `completed`, h200_64 
   912.2 ms (−5.3%), p95 −6.5%; TPOT mean 45.92 vs 53.30 ms (−13.9%), p90 −15.2%; E2E mean −13.7%;
   throughput +2.9%. These equal the merged03 run `h200_32_comb_h200` to the reported digit, so the
   14 partly filled EP16 rows of merged04 do not change step E.
+- Item 3 step 4 results (`completed`; report `test_report_2026-10-27_host_probe_runs.md` section
+  9). All four runs return 0 and pass all 14 rows at the 30% gate.
+  - E host (`h200_32_m04_host`, 11,705 s): TTFT −1.0%, TPOT −3.3%, E2E −3.2%, throughput +0.6%;
+    every row within 4.1%. Exploratory, because the DP2 profile is not accepted.
+  - G base (`h200_64_m04_base`, 17,294 s): TTFT −17.5%, TPOT −19.2%, throughput +6.4%; the same
+    rows as `evidence/d31_h200_64_sweep02_compare_G.json`.
+  - G host (`h200_64_m04_host`, 16,277 s): TTFT −12.9% (p95 −20.5%), TPOT −9.6% (p95 −10.2%),
+    E2E −9.7%, throughput +2.9%.
+  - The host term adds 5.64 ms (E) and 5.85 ms (G) to TPOT. Compare copies:
+    `evidence/d31_h200_32_m04_host_compare_sweep03.json`,
+    `evidence/d31_h200_64_m04_base_compare_sweep02.json` and
+    `evidence/d31_h200_64_m04_host_compare_sweep02.json`.
+  - Next: at the final 10% gate, G still fails the TTFT rows and the TPOT p95 row. The TTFT gap is
+    item 4 below; the DP4 TPOT residual (about −5.9 ms) is not decomposed yet.
+
+Calibration item 4 lead, the DP wave tail before a prefill (2026-10-27, diagnostic only, D31.10;
+report `test_report_2026-10-27_h200_64_ttft_wave_tail.md`, scripts in
+`/data/ycfeng/tmp/d31_diag/ttft64/`):
+
+- Split of TTFT (`ttft_split.py`; native from `client_requests.jsonl` and `proxy_requests.jsonl`
+  of sweep02/sweep03, Frontier from `request_metrics.csv`):
+  - DP4: dispatch to prefill response, native mean 812–816 ms (minimum 616–620), Frontier 689.7
+    ms for every request; prefill response to first token, native mean 363–369 ms, Frontier
+    337.7 ms.
+  - DP2: native 588–592 ms (minimum 579), Frontier 597.8 ms; handoff native 319–324 ms, Frontier
+    305.0 ms.
+- At DP4 the native prefill time follows a sawtooth over consecutive requests (671, 770, 831,
+  908, 983, 716, 661, ... ms; `prefill_overlap.py`). It rises about 65 ms per request, then drops.
+  At DP2 it is flat (about 587 ms).
+- Mechanism (vLLM source `v1/engine/core.py`, `DPEngineCoreProc.run_busy_loop` and
+  `_has_global_unfinished_reqs`; `config/parallel.py:162`): while a DP wave runs, an engine with
+  no batch runs `execute_dummy_batch`. The engines agree that the wave has ended only on step 1
+  and every `dp_sync_interval` (16) steps. A dummy step costs the host about 5 ms but the device
+  about 30 ms, and it produces no output to wait for, so the host queues the wave's dummy steps
+  ahead of the device. The next request's first blocking copy (the KV reset `.tolist()`) waits
+  until the device has run the queued dummy steps.
+- Measurement (`wave_tail.py`, host-probe stamps of TP rank 0 of each engine, `h200_64_hostprobe01`
+  and `h200_32_hostprobe03`): dummy step device span median 32.0 ms (DP4) and 24.8 ms (DP2),
+  launch period median 5.6 / 4.4 ms; estimated device backlog when a prefill step starts, median
+  188 ms and mean 180 ms at DP4, 0 at DP2 (429 of 441 steps below 50 ms).
+- Inference: at DP4 one 1 s arrival period holds about 620 ms of prefill plus about 16 dummy
+  steps of 32 ms, more than 1 s of device work, so the backlog grows from request to request
+  until a short wave lets it drain. At DP2 (about 590 + 16 × 24.8 ms) it fits within 1 s. The
+  backlog (mean about 180 ms) plus the native solo prefill (about 625 ms) gives about 805 ms,
+  close to the native mean of 814 ms.
+- Frontier side (code reading, `vllm_v1_engine_replica_scheduler.py` 145–190 and 582–780,
+  `dp_dummy_forward.py`): the PREFILL role runs DP dummy passes (it has an engine batch queue,
+  the model is MoE and `attn_dp` is 4), but the engine waits for each dummy forward to end before
+  its next pass. A request that arrives during a wave therefore waits for at most one dummy
+  forward, and Frontier shows no prefill wait at all (`request_waiting_time_prefill` 0 and
+  `prefill_e2e_time` 689.7 ms for every request).
+- Two smaller DP4 parts: Frontier's solo prefill is about 60 ms above the native minimum
+  (689.7 against about 625 ms; 597.8 against 579 ms at DP2), and the handoff is about 28 ms low.
+- Next: a Frontier diagnostic run on 16 requests logs the PREFILL wave (passes, dummy forward
+  spans) to confirm the code reading; then the item 4 design (host-ahead dummy steps priced
+  from op profiling plus the measured host period), reviewed together with the item 2 design.
 
 Step F status (2026-10-26):
 
