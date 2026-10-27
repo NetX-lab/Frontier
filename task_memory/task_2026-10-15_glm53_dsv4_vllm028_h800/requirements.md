@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Recorded the lead's working decisions for H3o-(a) revision 2d after review round 3 (D-H3O-REVISION-2D). |
 | 2026-10-27 | Recorded YC's adoption of the revision 2c recommendations and the approval of review round 3 (D-H3O-REVISION-2C-DECISIONS). |
 | 2026-10-26 | Recorded the lead's working decisions for H3o-(a) revision 2c after review round 2 (D-H3O-REVISION-2C), including the source DP synchronization rule that refines item 30 and D7. |
 | 2026-10-26 | Recorded the `/codex-review` request on H3o-(a) (D-H3O-CODEX-REVIEW), YC's decisions D2-D6 with D1 open (D-H3O-DECISIONS), the routing identity rule (D-V4-ROUTING-IDENTITY) and the approval of review round 2. |
@@ -350,6 +351,14 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - D7: option (a), the new value `full_and_piecewise` of `decode_cuda_graph_mode`, V4 only.
     - Round 3 of the Codex review, on revision 2c, is approved: one submission, no automatic retry. A further round needs YC's approval.
     - Continue: H3o-(b) proceeds in the order of `design.md` §5. The CPU stage 0 and the simulator files that need no GPU data (§6 entries 20-25, 27, 28) come first; GPU jobs follow the §5 gates within the approved caps and the GPU rules.
+34. **D-H3O-REVISION-2D.** Lead's working decisions under D-NO-INTERRUPT after review round 3 (request `d8d732a2-…`, verdict `changes_required`, F016-F018, all accepted after spot checks; records in `h3o_operator_costs/review.md`):
+    - Kernel ownership under FULL and PIECEWISE replay comes from the capture itself (graph nodes added inside each scope, bridged to replay kernels by `graph id` and `graph node id`), not from eager signatures (F016).
+    - Cache-block zeroing and block-table writes of real lanes are pre-DP device work; post-DP preparation and the first layer start at the later of the DP rendezvous plus the post-DP host share and the pre-DP device end (F017).
+    - A DP dummy charges the model forward up to the final norm and no LM head, logits gather or sampling (F018).
+    - D2 resolved to (c) by the R1 runtime census: V4 host time is an explicit zero, and a V4 run with `skip_cpu_overhead_modeling=False` raises a typed error. R2h, R2, the CPU-probe split and entry 26 are dropped.
+    - Four V4 gap values (`cuda_graph`, `cuda_graph_piecewise`, `eager`, `eager_preparation`) in a V4 `kernel_gap.csv`, with a V4 value tuple and reader; the existing loader is unchanged.
+    - Growth since item 33, reported to YC: 27 active entries, about +3,745 / −330 lines (+435 lines); caps unchanged (H200 45, H800 21 GPU-hours); about 15.5-17 working days, H200 milestone at about 12.
+    - No design-only round 4 is recommended; the next Codex review is a code review of the first slice (entries 20-25, 27, 28) and needs YC's approval.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

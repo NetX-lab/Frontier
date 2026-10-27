@@ -1,0 +1,8 @@
+LANE decode dp0 dp0_pp0_tp0_dcp0_ep0_rank0.1792946239761662380.pt.trace.json.gz forwards 129 {('FULL', 'dummy'): 66, ('PIECEWISE', 'dummy'): 2, ('PIECEWISE', 'first_tail_alone'): 1, ('FULL', 'decode'): 59, ('PIECEWISE', 'first_tail_with_decodes'): 1}
+LANE decode dp1 dp1_pp0_tp0_dcp0_ep8_rank0.1792946280760554510.pt.trace.json.gz forwards 174 {('FULL', 'dummy'): 110, ('PIECEWISE', 'dummy'): 3, ('PIECEWISE', 'first_tail_alone'): 1, ('FULL', 'decode'): 57, ('PIECEWISE', 'first_tail_with_decodes'): 1, ('PIECEWISE', 'decode'): 2}
+LANE decode dp2 dp2_pp0_tp0_dcp0_ep16_rank0.1792946183741136595.pt.trace.json.gz forwards 64 {('FULL', 'dummy'): 3, ('PIECEWISE', 'first_tail_alone'): 1, ('FULL', 'decode'): 59, ('PIECEWISE', 'decode'): 1}
+LANE decode dp3 dp3_pp0_tp0_dcp0_ep24_rank0.1792946205265552185.pt.trace.json.gz forwards 109 {('FULL', 'dummy'): 47, ('PIECEWISE', 'dummy'): 1, ('PIECEWISE', 'first_tail_alone'): 1, ('FULL', 'decode'): 59, ('PIECEWISE', 'decode'): 1}
+LANE prefill dp0 dp0_pp0_tp0_dcp0_ep0_rank0.1792946186223519831.pt.trace.json.gz forwards 96 {('NONE', 'dummy'): 2, ('FULL', 'dummy'): 93, ('NONE', 'prefill'): 1}
+LANE prefill dp1 dp1_pp0_tp0_dcp0_ep8_rank0.1792946231753991556.pt.trace.json.gz forwards 128 {('NONE', 'prefill'): 12, ('FULL', 'dummy'): 112, ('NONE', 'dummy'): 4}
+LANE prefill dp2 dp2_pp0_tp0_dcp0_ep16_rank0.1792946231790717687.pt.trace.json.gz forwards 128 {('NONE', 'dummy'): 4, ('FULL', 'dummy'): 112, ('NONE', 'prefill'): 12}
+LANE prefill dp3 dp3_pp0_tp0_dcp0_ep24_rank0.1792946232178326036.pt.trace.json.gz forwards 128 {('NONE', 'dummy'): 6, ('FULL', 'dummy'): 112, ('NONE', 'prefill'): 10}

@@ -1,0 +1,7 @@
+/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/torch_traces/decode/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792942701901162313.pt.trace.json.gz
+graph 4676: 154560 replayed kernels, 2240 distinct nodes, local index 0-2499
+  first replay: 362 start-order inversions; categories {'kernel': 2240}; streams [(22032, 215), (22036, 84), (22037, 84), (23, 45)]
+graph 4673: 107520 replayed kernels, 2240 distinct nodes, local index 0-2499
+  first replay: 377 start-order inversions; categories {'kernel': 2240}; streams [(21710, 215), (21714, 84), (21715, 84), (23, 45)]
+graph 4496: 104 replayed kernels, 52 distinct nodes, local index 0-59
+  first replay: 8 start-order inversions; categories {'kernel': 52}; streams [(23, 22), (15437, 14), (15439, 5), (15440, 4)]

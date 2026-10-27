@@ -1,0 +1,4 @@
+LANE decode dp0 dp0_pp0_tp0_dcp0_ep0_rank0.1792942701901162313.pt.trace.json.gz forwards 120 {('FULL', 'dummy'): 59, ('PIECEWISE', 'dummy'): 1, ('PIECEWISE', 'first_tail_alone'): 1, ('FULL', 'decode'): 58, ('PIECEWISE', 'first_tail_with_decodes'): 1}
+LANE decode dp1 dp1_pp0_tp0_dcp0_ep8_rank0.1792942680280151453.pt.trace.json.gz forwards 64 {('FULL', 'dummy'): 4, ('PIECEWISE', 'first_tail_alone'): 1, ('FULL', 'decode'): 58, ('PIECEWISE', 'decode'): 1}
+LANE prefill dp0 dp0_pp0_tp0_dcp0_ep0_rank0.1792942682770529608.pt.trace.json.gz forwards 96 {('NONE', 'prefill'): 2, ('FULL', 'dummy'): 93, ('NONE', 'dummy'): 1}
+LANE prefill dp1 dp1_pp0_tp0_dcp0_ep8_rank0.1792942733290370462.pt.trace.json.gz forwards 128 {('NONE', 'dummy'): 3, ('FULL', 'dummy'): 101, ('NONE', 'prefill'): 24}

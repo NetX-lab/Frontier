@@ -1,0 +1,308 @@
+/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces
+Medians/p90 in microseconds per forward; counts are medians/p90 per forward.
+role dp mode class n | host: sync prepare dispatch post | device: span busy, busy by segment prepare dispatch post, lag | idle wait/other by next segment: prepare dispatch post | since previous forward before-host/wait/other | calls: graph kernel memcpy event_record stream_wait sync | eager activities main/other | graph activities, dispatch concurrency graph/eager | device-side idle per activity (kernel_gap.csv definition) graph/eager
+decode dp0 FULL decode n=59 | host: 1219/1855 3715/4699 4046/6427 15616/19498 | device: 24784/30248 23513/28245 94/108 23307/28020 114/162 21917/23336 | idle: 0/0+297/328 0/0+894/908 0/0+69/79 | since previous: 0/0+0/0+0/5 | calls: 1/1 77/86 13/15 6/8 3/3 0/0 | eager: 88/99 2/2 | graph: 2240/2240 1.09 - | gap: 0.39/3.89
+decode dp0 FULL dummy n=66 | host: 16134/18892 2788/4339 3384/4941 596/1260 | device: 24473/24972 23213/23711 84/85 23124/23622 5/6 21825/22171 | idle: 0/0+338/354 0/0+895/904 0/0+17/19 | since previous: 0/0+0/0+5/6 | calls: 1/1 78/78 9/9 0/0 0/0 0/0 | eager: 87/87 0/0 | graph: 2240/2240 1.09 - | gap: 0.40/4.08
+decode dp0 PIECEWISE dummy n=2 | host: 12790/19068 2755/2790 38114/46429 722/811 | device: 26450/26585 24171/24265 83/83 24083/24178 5/5 30190/37861 | idle: 0/0+339/343 0/0+1930/1965 0/0+11/11 | since previous: 0/0+0/0+6/6 | calls: 44/44 252/252 9/9 0/0 0/0 0/0 | eager: 261/261 0/0 | graph: 2065/2065 1.07 1.13 | gap: 0.61/3.90
+decode dp0 PIECEWISE first_tail_alone n=1 | host: 10070/10070 5054/5054 43157/43157 4280/4280 | device: 31372/31372 29267/29267 96/96 27921/27921 1250/1250 22008/22008 | idle: 0/0+276/276 0/0+1803/1803 0/0+25/25 | since previous: 0/0+0/0+5/5 | calls: 44/44 254/254 15/15 8/8 3/3 0/0 | eager: 267/267 2/2 | graph: 2065/2065 1.22 1.11 | gap: 0.59/3.31
+decode dp0 PIECEWISE first_tail_with_decodes n=1 | host: 1275/1275 5683/5683 37243/37243 21517/21517 | device: 55908/55908 53306/53306 107/107 50560/50560 2640/2640 8890/8890 | idle: 0/0+228/228 0/0+2018/2018 329/329+26/26 | since previous: 0/0+0/0+3/3 | calls: 44/44 256/256 15/15 8/8 3/3 0/0 | eager: 269/269 2/2 | graph: 1973/1973 1.35 1.10 | gap: 0.62/3.88
+decode dp1 FULL decode n=57 | host: 1068/2025 3148/5014 4675/6535 15989/17469 | device: 25399/27160 24182/25920 108/110 23900/25628 168/191 22229/23349 | idle: 0/0+320/340 0/0+811/821 0/0+71/83 | since previous: 0/0+0/0+0/5 | calls: 1/1 84/86 13/15 6/8 3/3 0/0 | eager: 95/99 2/2 | graph: 2148/2148 1.09 - | gap: 0.37/3.93
+decode dp1 FULL dummy n=110 | host: 16354/17389 2891/4072 4711/6523 542/846 | device: 24617/27918 23414/26726 83/84 23326/26635 5/7 21717/22078 | idle: 0/0+325/345 0/0+852/860 0/0+16/18 | since previous: 0/0+0/0+5/6 | calls: 1/1 78/78 9/9 0/0 0/0 0/0 | eager: 87/87 0/0 | graph: 2240/2240 1.09 - | gap: 0.38/3.90
+decode dp1 PIECEWISE decode n=2 | host: 3575/5741 3236/3263 36880/37182 2603/2716 | device: 49910/52434 47803/50250 106/107 47104/49535 593/608 16300/18203 | idle: 0/0+252/253 0/0+1814/1874 0/0+41/58 | since previous: 0/0+0/0+2/4 | calls: 44/44 254/255 14/15 7/8 3/3 0/0 | eager: 266/268 2/2 | graph: 1973/1973 1.35 1.10 | gap: 0.60/3.47
+decode dp1 PIECEWISE dummy n=3 | host: 15620/16589 2938/3195 29816/47750 664/715 | device: 26591/30205 24423/27989 83/83 24336/27901 5/5 22518/37848 | idle: 0/0+367/369 0/0+1842/1872 0/0+12/13 | since previous: 0/0+0/0+5/5 | calls: 44/44 252/252 9/9 0/0 0/0 0/0 | eager: 261/261 0/0 | graph: 2065/2065 1.07 1.14 | gap: 0.58/3.90
+decode dp1 PIECEWISE first_tail_alone n=1 | host: 198895/198895 4216/4216 34163/34163 27091/27091 | device: 58121/58121 55113/55113 111/111 50511/50511 4491/4491 8615/8615 | idle: 0/0+259/259 0/0+2165/2165 558/558+25/25 | since previous: 0/0+0/0+2/2 | calls: 44/44 256/256 15/15 8/8 3/3 0/0 | eager: 269/269 2/2 | graph: 1973/1973 1.16 1.11 | gap: 0.63/4.44
+decode dp1 PIECEWISE first_tail_with_decodes n=1 | host: 1481/1481 3604/3604 30493/30493 3738/3738 | device: 35826/35826 33654/33654 116/116 31925/31925 1614/1614 17760/17760 | idle: 0/0+272/272 0/0+1834/1834 0/0+66/66 | since previous: 0/0+0/0+3/3 | calls: 44/44 256/256 15/15 8/8 3/3 0/0 | eager: 269/269 2/2 | graph: 1973/1973 1.26 1.10 | gap: 0.62/3.53
+decode dp2 FULL decode n=59 | host: 1096/1322 2837/2975 4564/6273 15874/16309 | device: 24446/24772 23218/23538 93/94 23029/23333 103/122 22047/22227 | idle: 0/0+297/315 0/0+861/871 0/0+65/76 | since previous: 0/0+0/0+0/5 | calls: 1/1 77/79 13/15 6/8 3/3 0/0 | eager: 88/92 2/2 | graph: 2240/2240 1.09 - | gap: 0.38/4.03
+decode dp2 FULL dummy n=3 | host: 1122/1135 2859/6504 5040/15153 2081/4212 | device: 24194/36118 22944/30471 83/83 22857/30384 5/49 13174/26670 | idle: 0/3892+336/368 0/1030+866/872 0/0+18/50 | since previous: 0/0+0/0+3/3 | calls: 1/1 78/83 9/14 0/5 0/0 0/0 | eager: 87/97 0/0 | graph: 2240/2240 1.09 - | gap: 0.34/3.57
+decode dp2 PIECEWISE decode n=1 | host: 1075/1075 2952/2952 29772/29772 1836/1836 | device: 26308/26308 24114/24114 93/93 23925/23925 96/96 22734/22734 | idle: 0/0+252/252 0/0+1888/1888 0/0+54/54 | since previous: 0/0+0/0+5/5 | calls: 44/44 251/251 13/13 6/6 3/3 0/0 | eager: 262/262 2/2 | graph: 2065/2065 1.08 1.11 | gap: 0.60/3.63
+decode dp2 PIECEWISE first_tail_alone n=1 | host: 1130/1130 3296/3296 47712/47712 3433/3433 | device: 26699/26699 24559/24559 97/97 24319/24319 142/142 37910/37910 | idle: 0/0+246/246 0/0+1827/1827 0/0+67/67 | since previous: 0/0+0/0+4/4 | calls: 44/44 254/254 15/15 8/8 3/3 0/0 | eager: 267/267 2/2 | graph: 2065/2065 1.09 1.12 | gap: 0.59/3.47
+decode dp3 FULL decode n=59 | host: 1238/1983 2953/3189 3261/5313 17093/17798 | device: 24675/27884 23481/26675 93/95 23275/26472 109/123 22031/22471 | idle: 0/0+302/320 0/0+821/827 0/0+68/78 | since previous: 0/0+0/0+0/5 | calls: 1/1 77/79 13/15 6/8 3/3 0/0 | eager: 88/92 2/2 | graph: 2240/2240 1.09 - | gap: 0.36/4.04
+decode dp3 FULL dummy n=47 | host: 16396/16786 2811/3815 4503/6195 596/1791 | device: 24416/24675 23226/23497 83/84 23138/23410 5/5 21863/22033 | idle: 0/0+345/363 0/0+816/827 0/0+17/20 | since previous: 0/0+0/0+5/6 | calls: 1/1 78/78 9/9 0/0 0/0 0/0 | eager: 87/87 0/0 | graph: 2240/2240 1.09 - | gap: 0.36/4.18
+decode dp3 PIECEWISE decode n=1 | host: 1217/1217 3058/3058 28988/28988 2269/2269 | device: 30200/30200 28179/28179 93/93 27967/27967 119/119 22166/22166 | idle: 0/0+259/259 0/0+1739/1739 0/0+23/23 | since previous: 0/0+0/0+0/0 | calls: 44/44 253/253 15/15 8/8 3/3 0/0 | eager: 266/266 2/2 | graph: 2065/2065 1.08 1.11 | gap: 0.56/3.21
+decode dp3 PIECEWISE dummy n=1 | host: 3838/3838 2953/2953 52975/52975 691/691 | device: 26580/26580 24339/24339 82/82 24252/24252 5/5 37884/37884 | idle: 0/0+305/305 0/0+1923/1923 0/0+13/13 | since previous: 0/0+0/0+5/5 | calls: 44/44 252/252 9/9 0/0 0/0 0/0 | eager: 261/261 0/0 | graph: 2065/2065 1.07 1.13 | gap: 0.60/3.82
+decode dp3 PIECEWISE first_tail_alone n=1 | host: 12674/12674 3723/3723 29922/29922 3899/3899 | device: 26416/26416 24339/24339 95/95 24118/24118 126/126 22699/22699 | idle: 0/0+258/258 0/0+1750/1750 0/0+69/69 | since previous: 0/0+0/0+5/5 | calls: 44/44 254/254 15/15 8/8 3/3 0/0 | eager: 267/267 2/2 | graph: 2065/2065 1.09 1.11 | gap: 0.55/3.51
+prefill dp0 FULL dummy n=93 | host: 2882/4341 2790/3192 3047/3821 571/3129 | device: 24288/25816 23087/24611 83/83 23001/24511 5/7 221066/402426 | idle: 0/0+294/305 0/0+879/890 0/0+15/17 | since previous: 0/0+0/0+5/5 | calls: 1/1 78/78 9/9 0/0 0/0 0/0 | eager: 87/87 0/0 | graph: 2240/2240 1.09 - | gap: 0.39/3.56
+prefill dp0 NONE dummy n=2 | host: 9642/10121 4972/6618 354889/376896 1133/1426 | device: 361874/440875 354922/430724 83/83 354835/430636 5/5 114993/229902 | idle: 2369/4739+188/215 1074/2148+3317/3534 0/0+3/3 | since previous: 0/0+0/0+3/3 | calls: 0/0 2255/2301 99/99 662/708 680/726 2/3 | eager: 1762/1762 546/546 | graph: 0/0 - 1.01 | gap: -/1.52
+prefill dp0 NONE prefill n=1 | host: 835/835 4108/4108 465247/465247 93884/93884 | device: 279135/279135 274539/274539 157/157 274284/274284 99/99 278107/278107 | idle: 0/0+210/210 0/0+4366/4366 0/0+20/20 | since previous: 0/0+0/0+3/3 | calls: 0/0 2463/2463 56/56 655/655 673/673 3/3 | eager: 2259/2259 209/209 | graph: 0/0 - 1.01 | gap: -/1.86
+prefill dp1 FULL dummy n=112 | host: 3169/4858 2817/3196 3163/4174 587/1777 | device: 24260/25801 23022/24552 83/84 22935/24465 5/8 177113/396819 | idle: 0/0+339/358 0/0+883/892 0/0+18/20 | since previous: 0/0+0/0+5/6 | calls: 1/1 78/78 9/9 0/0 0/0 0/0 | eager: 87/87 0/0 | graph: 2240/2240 1.09 - | gap: 0.39/4.07
+prefill dp1 NONE dummy n=4 | host: 8930/38477127 3005/9791 336454/417051 2150/6993 | device: 361470/475875 355794/460724 84/85 355706/457708 5/2931 57466/275075 | idle: 1127/7680+202/245 951/4030+3310/3675 0/0+3/43 | since previous: 2065/38112465+133/1311+1/3 | calls: 0/0 2234/2301 99/104 640/708 656/726 2/3 | eager: 1762/1772 546/546 | graph: 0/0 - 1.01 | gap: -/1.55
+prefill dp1 NONE prefill n=12 | host: 1167/8437 3773/12389 329275/375445 4258/95382 | device: 338075/442103 333695/430300 151/152 330466/430048 3070/3091 136123/164628 | idle: 0/3158+211/213 0/3123+4160/4325 0/0+69/75 | since previous: 0/0+0/0+2/3 | calls: 0/0 2310/2396 61/61 588/588 601/601 0/3 | eager: 2183/2259 209/209 | graph: 0/0 - 1.01 | gap: -/1.84
+prefill dp2 FULL dummy n=112 | host: 1211/2882 2832/3669 4741/6387 584/1905 | device: 24263/25817 23013/24522 83/84 22921/24415 5/5 177088/396848 | idle: 0/0+359/376 0/0+875/885 0/0+17/19 | since previous: 0/0+0/0+5/6 | calls: 1/1 78/78 9/9 0/0 0/0 0/0 | eager: 87/87 0/0 | graph: 2240/2240 1.09 - | gap: 0.39/4.27
+prefill dp2 NONE dummy n=4 | host: 8882/10728 3778/12226 377868/420729 1389/5315 | device: 361136/460120 349989/447906 83/84 349901/444879 5/2945 115009/274999 | idle: 1456/8788+195/237 2922/6202+3466/3735 0/0+3/49 | since previous: 0/9513+0/362+2/3 | calls: 0/0 2258/2301 99/104 664/708 680/726 3/3 | eager: 1762/1772 546/546 | graph: 0/0 - 1.04 | gap: -/1.60
+prefill dp2 NONE prefill n=12 | host: 1025/141254 3864/12533 318301/357969 4685/101638 | device: 338087/443166 333816/432810 151/152 330592/432528 3069/3093 134786/160755 | idle: 0/2988+206/212 0/3088+4029/4077 0/0+70/77 | since previous: 0/1157+0/251+3/4 | calls: 0/0 2310/2391 61/61 588/588 601/601 0/2 | eager: 2183/2259 209/209 | graph: 0/0 - 1.01 | gap: -/1.72
+prefill dp3 FULL dummy n=112 | host: 2829/5058 2870/4366 3130/5032 620/1698 | device: 24264/25782 23057/24554 84/85 22968/24465 5/7 177107/396630 | idle: 0/0+340/360 0/0+849/862 0/0+18/20 | since previous: 0/0+0/0+4/6 | calls: 1/1 78/78 9/9 0/0 0/0 0/0 | eager: 87/87 0/0 | graph: 2240/2240 1.09 - | gap: 0.38/4.14
+prefill dp3 NONE dummy n=6 | host: 9978/38477120 3814/9272 325327/453715 1589/7083 | device: 361013/474684 355010/459355 84/85 354921/456341 5/2931 57419/275179 | idle: 1124/5568+191/219 334/6615+3014/3376 0/0+2/40 | since previous: 0/38112446+0/2913+2/2 | calls: 0/0 2236/2301 99/104 642/708 658/726 2/3 | eager: 1762/1772 546/546 | graph: 0/0 - 1.01 | gap: -/1.42
+prefill dp3 NONE prefill n=10 | host: 11743/136256 3501/12460 307567/357853 3906/145339 | device: 338087/461300 334128/452921 149/150 330888/449683 3077/3100 136137/164889 | idle: 0/3123+181/185 0/1215+3723/3825 0/0+67/75 | since previous: 0/7255+0/233+2/3 | calls: 0/0 2310/2396 61/61 588/588 601/601 0/3 | eager: 2183/2269 209/209 | graph: 0/0 - 1.01 | gap: -/1.65
+
+Device idle while the host had not yet returned the next launch, as a share of the device span plus the idle time since the previous forward after the host began the forward's preparation; forwards whose share exceeds 1%:
+decode FULL dummy n=226: 0.58% overall, 8 forwards above 1%
+decode FULL real n=234: 0.48% overall, 7 forwards above 1%
+decode PIECEWISE dummy n=6: 0.00% overall, 0 forwards above 1%
+decode PIECEWISE real n=10: 0.23% overall, 0 forwards above 1%
+prefill FULL dummy n=429: 0.57% overall, 18 forwards above 1%
+prefill NONE dummy n=16: 1.23% overall, 6 forwards above 1%
+prefill NONE real n=35: 0.43% overall, 4 forwards above 1%
+
+Eager device activities by name, all lanes: count and device time per forward (us), top 12 by time:
+decode FULL decode post (forwards 234):
+        1.0      25.9  _gumbel_sample_kernel
+        0.7      24.3  nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+        1.0      20.3  ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        0.3      11.0  nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+        1.0       8.2  _bias_kernel
+        2.0       5.6  Memcpy DtoH (Device -> Pinned)
+        1.0       4.5  _get_num_sampled_and_rejected_kernel
+        1.0       4.4  _post_update_kernel
+        1.0       4.2  void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int,
+        1.0       3.7  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        0.7       2.6  void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<a
+        0.3       2.3  _apply_write_kernel
+decode FULL decode prepare (forwards 234):
+        5.0       9.0  void at::native::(anonymous namespace)::indexSelectSmallIndex<int, int, unsigned int, 1, 1, -2>(at::cuda::deta
+        9.0       7.5  Memcpy DtoD (Device -> Device)
+        1.0       6.7  _gather_block_tables_kernel
+        5.0       6.5  void at_cuda_detail::cub::detail::scan::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, l
+        5.0       6.2  void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)
+        5.0       5.7  void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::T
+        5.0       5.5  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        6.0       4.9  void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, 4, Triv
+        2.0       4.8  Memcpy HtoD (Pinned -> Device)
+        1.0       4.7  _combine_sampled_and_draft_tokens_kernel
+        6.0       4.3  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&,
+        3.0       4.2  _compressed_slot_mapping_kernel
+decode FULL dummy post (forwards 226):
+        1.0       3.1  void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<a
+        1.0       1.8  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        0.1       0.6  _apply_write_kernel
+        0.1       0.3  Memcpy HtoD (Pinned -> Device)
+decode FULL dummy prepare (forwards 226):
+        9.0       7.6  Memcpy DtoD (Device -> Device)
+        9.0       6.9  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, 
+        5.0       6.6  void at_cuda_detail::cub::detail::scan::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, l
+        5.0       6.5  void at::native::(anonymous namespace)::indexSelectSmallIndex<int, int, unsigned int, 1, 1, -2>(at::cuda::deta
+        5.0       6.3  void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)
+        5.0       5.6  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        5.0       5.3  void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::T
+        6.0       4.9  void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, 4, Triv
+        6.0       4.2  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&,
+        3.0       4.1  _compressed_slot_mapping_kernel
+        5.0       4.0  void at::native::vectorized_elementwise_kernel<2, at::native::FillFunctor<long>, std::array<char*, 1ul> >(int,
+        5.0       3.7  void at_cuda_detail::cub::detail::scan::DeviceScanInitKernel<at_cuda_detail::cub::ScanTileState<long, true> >(
+decode PIECEWISE decode dispatch (forwards 4):
+       43.0     783.5  void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::KernelTemplat
+       43.0     262.4  void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams)
+        4.0     105.1  smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+       21.0     100.8  void deep_gemm::sm90_fp8_paged_mqa_logits<1u, 64u, 128u, 64u, true, false, 3u, 3u, 256u, 128u, 512u, 1u, float
+       10.5      73.4  void vllm::cooperative::cooperative_topk_cs8<512u>(vllm::cooperative::CooperativeTopKParams<512u>)
+       10.5      67.1  void vllm::cooperative::cooperative_topk_cs4<512u>(vllm::cooperative::CooperativeTopKParams<512u>)
+       21.0      31.6  _compute_global_topk_indices_and_lens_kernel
+       21.0      20.0  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, 
+decode PIECEWISE decode post (forwards 4):
+        1.0     240.2  ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        1.0      30.9  _gumbel_sample_kernel
+        0.5      17.8  nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+        0.5      17.6  nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+        1.0       6.9  _bias_kernel
+        2.0       5.0  Memcpy DtoH (Device -> Pinned)
+        1.0       4.3  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        1.0       4.2  void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int,
+        1.0       4.2  _post_update_kernel
+        1.0       3.7  _get_num_sampled_and_rejected_kernel
+        0.5       2.9  _zero_kv_blocks_kernel
+        0.5       2.7  void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_
+decode PIECEWISE decode prepare (forwards 4):
+        5.0      11.1  void at::native::(anonymous namespace)::indexSelectSmallIndex<int, int, unsigned int, 1, 1, -2>(at::cuda::deta
+        9.0       7.5  Memcpy DtoD (Device -> Device)
+        5.0       6.7  void at_cuda_detail::cub::detail::scan::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, l
+        5.0       6.4  void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)
+        1.0       6.4  _gather_block_tables_kernel
+        5.0       5.8  void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::T
+        5.0       5.7  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        2.0       5.0  Memcpy HtoD (Pinned -> Device)
+        6.0       5.0  void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, 4, Triv
+        1.0       4.7  _combine_sampled_and_draft_tokens_kernel
+        6.0       4.3  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&,
+        3.0       4.2  _compressed_slot_mapping_kernel
+decode PIECEWISE dummy dispatch (forwards 6):
+       43.0     446.0  void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::KernelTemplat
+        4.0     102.4  smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+       43.0      91.7  void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams)
+       21.0      52.4  void deep_gemm::sm90_fp8_paged_mqa_logits<1u, 64u, 128u, 64u, true, false, 3u, 3u, 256u, 128u, 512u, 1u, float
+       21.0      39.2  void vllm::cooperative::cooperative_topk_cs8<512u>(vllm::cooperative::CooperativeTopKParams<512u>)
+       21.0      31.0  _compute_global_topk_indices_and_lens_kernel
+       21.0      20.0  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, 
+decode PIECEWISE dummy post (forwards 6):
+        1.0       3.2  void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<a
+        1.0       1.5  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+decode PIECEWISE dummy prepare (forwards 6):
+        9.0       7.5  Memcpy DtoD (Device -> Device)
+        9.0       6.8  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, 
+        5.0       6.6  void at_cuda_detail::cub::detail::scan::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, l
+        5.0       6.5  void at::native::(anonymous namespace)::indexSelectSmallIndex<int, int, unsigned int, 1, 1, -2>(at::cuda::deta
+        5.0       6.3  void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)
+        5.0       5.5  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        5.0       5.2  void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::T
+        6.0       4.9  void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, 4, Triv
+        6.0       4.2  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&,
+        3.0       4.1  _compressed_slot_mapping_kernel
+        5.0       4.0  void at::native::vectorized_elementwise_kernel<2, at::native::FillFunctor<long>, std::array<char*, 1ul> >(int,
+        5.0       3.7  void at_cuda_detail::cub::detail::scan::DeviceScanInitKernel<at_cuda_detail::cub::ScanTileState<long, true> >(
+decode PIECEWISE first_tail_alone dispatch (forwards 4):
+       43.0     753.1  void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::KernelTemplat
+       43.0     263.4  void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams)
+       15.8     111.2  void vllm::cooperative::cooperative_topk_cs8<512u>(vllm::cooperative::CooperativeTopKParams<512u>)
+        4.0     103.1  smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+       21.0      98.0  void deep_gemm::sm90_fp8_paged_mqa_logits<1u, 64u, 128u, 64u, true, false, 3u, 3u, 256u, 128u, 512u, 1u, float
+        5.2      33.8  void vllm::cooperative::cooperative_topk_cs4<512u>(vllm::cooperative::CooperativeTopKParams<512u>)
+       21.0      30.4  _compute_global_topk_indices_and_lens_kernel
+       21.0      20.3  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, 
+decode PIECEWISE first_tail_alone post (forwards 4):
+        1.0    1378.5  ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        1.0      31.7  _gumbel_sample_kernel
+        0.8      26.0  nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+        1.0      14.8  _zero_kv_blocks_kernel
+        0.2       8.8  nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+        1.0       6.5  _bias_kernel
+        1.0       6.0  _apply_write_kernel
+        2.0       4.9  Memcpy DtoH (Device -> Pinned)
+        1.0       4.1  void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int,
+        1.0       3.8  _post_update_kernel
+        2.0       3.6  Memcpy HtoD (Pinned -> Device)
+        1.0       3.5  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+decode PIECEWISE first_tail_alone prepare (forwards 4):
+        5.0       8.1  void at::native::(anonymous namespace)::indexSelectSmallIndex<int, int, unsigned int, 1, 1, -2>(at::cuda::deta
+        9.0       7.5  Memcpy DtoD (Device -> Device)
+        5.0       6.7  void at_cuda_detail::cub::detail::scan::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, l
+        5.0       6.3  void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)
+        1.0       6.0  _gather_block_tables_kernel
+        1.0       5.8  _prepare_prefill_inputs_kernel
+        5.0       5.7  void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::T
+        5.0       5.6  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        6.0       4.9  void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, 4, Triv
+        2.0       4.6  Memcpy HtoD (Pinned -> Device)
+        1.0       4.5  _combine_sampled_and_draft_tokens_kernel
+        6.0       4.3  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&,
+decode PIECEWISE first_tail_with_decodes dispatch (forwards 2):
+       43.0     857.9  void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::KernelTemplat
+       43.0     258.0  void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams)
+       21.0     136.5  void vllm::cooperative::cooperative_topk_cs4<512u>(vllm::cooperative::CooperativeTopKParams<512u>)
+       21.0     112.4  void deep_gemm::sm90_fp8_paged_mqa_logits<1u, 64u, 128u, 64u, true, false, 3u, 3u, 256u, 128u, 512u, 1u, float
+        4.0     106.7  smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+       21.0      31.1  _compute_global_topk_indices_and_lens_kernel
+       21.0      17.5  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, 
+decode PIECEWISE first_tail_with_decodes post (forwards 2):
+        1.0    1962.3  ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        1.0      48.1  _gumbel_sample_kernel
+        1.0      35.6  nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+        1.0      28.0  _zero_kv_blocks_kernel
+        1.0       8.2  _apply_write_kernel
+        1.0       7.5  _bias_kernel
+        2.0       5.6  Memcpy DtoH (Device -> Pinned)
+        1.0       5.3  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        1.0       5.0  void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_
+        1.0       4.4  void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int,
+        1.0       4.3  _post_update_kernel
+        1.0       4.0  _get_num_sampled_and_rejected_kernel
+decode PIECEWISE first_tail_with_decodes prepare (forwards 2):
+        5.0      14.3  void at::native::(anonymous namespace)::indexSelectSmallIndex<int, int, unsigned int, 1, 1, -2>(at::cuda::deta
+        9.0       7.4  Memcpy DtoD (Device -> Device)
+        1.0       6.9  _prepare_prefill_inputs_kernel
+        5.0       6.7  void at_cuda_detail::cub::detail::scan::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, l
+        5.0       6.4  void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)
+        5.0       6.1  void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::T
+        1.0       6.1  _gather_block_tables_kernel
+        5.0       5.5  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        1.0       5.1  _combine_sampled_and_draft_tokens_kernel
+        6.0       4.9  void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, 4, Triv
+        2.0       4.9  Memcpy HtoD (Pinned -> Device)
+        3.0       4.5  _compressed_slot_mapping_kernel
+prefill FULL dummy post (forwards 429):
+        0.0      27.1  _zero_kv_blocks_kernel
+        1.0       3.1  void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<a
+        1.0       1.9  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        0.0       0.2  _apply_write_kernel
+        0.0       0.1  Memcpy HtoD (Pinned -> Device)
+prefill FULL dummy prepare (forwards 429):
+        9.0       7.5  Memcpy DtoD (Device -> Device)
+        9.0       6.9  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, 
+        5.0       6.6  void at_cuda_detail::cub::detail::scan::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, l
+        5.0       6.5  void at::native::(anonymous namespace)::indexSelectSmallIndex<int, int, unsigned int, 1, 1, -2>(at::cuda::deta
+        5.0       6.3  void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)
+        5.0       5.6  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        5.0       5.3  void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::T
+        6.0       4.9  void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, 4, Triv
+        6.0       4.2  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&,
+        3.0       4.1  _compressed_slot_mapping_kernel
+        5.0       4.0  void at::native::vectorized_elementwise_kernel<2, at::native::FillFunctor<long>, std::array<char*, 1ul> >(int,
+        5.0       3.7  void at_cuda_detail::cub::detail::scan::DeviceScanInitKernel<at_cuda_detail::cub::ScanTileState<long, true> >(
+prefill NONE dummy dispatch (forwards 16):
+      129.0  237278.0  ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+       43.0   76431.9  ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+       86.0   16300.9  void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 
+       85.0    6716.4  mhc_fused_tilelang_kernel
+       43.0    6676.2  _swiglu_limit_pad_aware_kernel
+       43.0    6593.3  void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 const*, __nv_b
+       44.0    6470.8  void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 const*, __nv_bfloat16*, _
+        1.0    2018.6  void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __n
+       43.0    1692.8  void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, i
+       43.0     710.3  void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int, int, uns
+       43.0     450.9  void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::KernelTemplat
+       62.0     450.2  nvjet_sm90_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+prefill NONE dummy post (forwards 16):
+        0.2     543.3  _zero_kv_blocks_kernel
+        0.8       3.8  _apply_write_kernel
+        1.0       3.2  void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<a
+        0.9       2.5  Memcpy HtoD (Pinned -> Device)
+        1.0       1.5  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+prefill NONE dummy prepare (forwards 16):
+        9.0       7.5  Memcpy DtoD (Device -> Device)
+        9.0       7.0  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, 
+        5.0       6.6  void at_cuda_detail::cub::detail::scan::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, l
+        5.0       6.5  void at::native::(anonymous namespace)::indexSelectSmallIndex<int, int, unsigned int, 1, 1, -2>(at::cuda::deta
+        5.0       6.3  void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)
+        5.0       5.6  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        5.0       5.4  void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::T
+        6.0       4.9  void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, 4, Triv
+        6.0       4.2  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&,
+        3.0       4.1  _compressed_slot_mapping_kernel
+        5.0       4.0  void at::native::vectorized_elementwise_kernel<2, at::native::FillFunctor<long>, std::array<char*, 1ul> >(int,
+        5.0       3.8  void at_cuda_detail::cub::detail::scan::DeviceScanInitKernel<at_cuda_detail::cub::ScanTileState<long, true> >(
+prefill NONE prefill dispatch (forwards 35):
+       77.2   83315.9  ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+       76.2   49979.9  ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+       86.0   33594.2  void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 
+       43.0   29808.5  void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTemplate<512, tr
+       21.0   28592.7  void vllm::topKPerRowPrefill<512, false>(float const*, int const*, int const*, int*, int, int, int, int)
+       29.5   25859.0  ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        9.8   19750.5  ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+       43.0   17396.1  _swiglu_limit_pad_aware_kernel
+       43.0    6046.2  void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BFloat16, 64
+      236.0    5217.3  void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BFloat16 con
+       43.0    3992.4  void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, i
+       86.0    3817.3  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u, 128u, 12
+prefill NONE prefill post (forwards 35):
+        0.8    2245.6  _zero_kv_blocks_kernel
+        1.0      41.0  nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+        1.0      35.5  ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        1.0      28.8  _gumbel_sample_kernel
+        3.1      17.4  _apply_write_kernel
+        3.9      11.4  Memcpy HtoD (Pinned -> Device)
+        2.0       5.0  Memcpy DtoH (Device -> Pinned)
+        1.0       4.2  void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int,
+        1.0       3.7  _post_update_kernel
+        1.0       3.5  void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<a
+        1.0       3.4  _get_num_sampled_and_rejected_kernel
+        1.0       2.0  void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<a
+prefill NONE prefill prepare (forwards 35):
+        2.0      19.4  _compute_swa_indices_and_lens_kernel
+        5.0      16.6  void at::native::_scatter_gather_elementwise_kernel<128, 8, at::native::_cuda_scatter_gather_internal_kernel<f
+        1.0      12.5  _prepare_prefill_inputs_kernel
+        3.0      11.1  _compressed_slot_mapping_kernel
+        5.0      10.2  void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)
+        1.0       8.7  _compute_slot_mappings_kernel
+        5.0       6.9  void at_cuda_detail::cub::detail::scan::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, l
+        7.0       6.2  Memcpy DtoD (Device -> Device)
+        5.0       5.7  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+        5.0       5.7  void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::T
+        1.0       5.2  _build_c128a_topk_metadata_kernel
+        1.0       4.8  _gather_block_tables_kernel
