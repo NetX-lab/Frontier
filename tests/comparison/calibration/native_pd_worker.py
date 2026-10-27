@@ -7,9 +7,13 @@ pd_replay arguments, and `evidence_dir` names a task-local directory that receiv
 each node's small records and the replay outputs after the run. `role_profiler_config` maps a
 role to the vLLM `--profiler-config` of its servers; each node copies its worker-local
 `torch_profiler_dir` into `torch_trace/` of its node record after its server stops.
+`host_step_probe` (absent for clean runs) enables the diagnostic host-step probe in the role
+servers; each node gzips the probe's per-process step records into `host_probe/` of its
+node record after its server stops.
 """
 
 import argparse
+import gzip
 import importlib.metadata
 import json
 import os
@@ -80,6 +84,18 @@ def pd_state_environment(config, role, scratch, stage, inherited):
     changed = {
         'STEP5_PD_STATE_OBSERVATION': json.dumps(settings, sort_keys=True),
         'PYTHONPATH': os.pathsep.join([str(stage / 'r2_bootstrap'), str(stage),
+                                      inherited.get('PYTHONPATH', '')]).rstrip(os.pathsep)}
+    return inherited | changed, changed
+
+
+def host_probe_environment(config, role, scratch, stage, inherited):
+    """Activate the diagnostic host-step probe only in role servers, never replay clients."""
+    if 'host_step_probe' not in config:
+        return inherited, {}
+    changed = {
+        'STEP5_HOST_STEP_PROBE': json.dumps({'role': role, 'output_dir': str(scratch / 'host_probe')},
+                                            sort_keys=True),
+        'PYTHONPATH': os.pathsep.join([str(stage / 'host_probe_bootstrap'),
                                       inherited.get('PYTHONPATH', '')]).rstrip(os.pathsep)}
     return inherited | changed, changed
 
@@ -174,6 +190,8 @@ def run(config):
                                      selected[role], observer=observer, role=role)
         env, state_env = pd_state_environment(config, role, scratch, stage, env)
         changed.update(state_env)
+        env, probe_env = host_probe_environment(config, role, scratch, stage, env)
+        changed.update(probe_env)
         port = config['http_ports'][role]
         command = server_command(plan['engine'], model, port) + [
             '--kv-transfer-config', json.dumps(kv_transfer_config(plan['engine'], role, port))]
@@ -272,6 +290,17 @@ def run(config):
             error = traceback.format_exc()
             result['observation_errors'].append(error)
             print('PD_STATE_OBSERVATION_ERROR', error, flush=True)
+        try:
+            if 'host_step_probe' in config and (scratch / 'host_probe').is_dir():
+                (node / 'host_probe').mkdir(exist_ok=True)
+                for path in sorted((scratch / 'host_probe').glob('*.jsonl')):
+                    with path.open('rb') as source, gzip.open(
+                            node / 'host_probe' / (path.name + '.gz'), 'wb') as target:
+                        shutil.copyfileobj(source, target)
+        except Exception:
+            error = traceback.format_exc()
+            result['observation_errors'].append(error)
+            print('HOST_STEP_PROBE_ERROR', error, flush=True)
         result['workload_returncode'] = exit_code
         record('finished')
         if 'evidence_dir' in config:

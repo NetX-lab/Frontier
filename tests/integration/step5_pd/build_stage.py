@@ -29,7 +29,7 @@ import sys
 REPO = Path(__file__).resolve().parents[3]
 CALIBRATION = REPO / "tests/comparison/calibration"
 sys.path[:0] = [str(CALIBRATION), str(REPO / "tests/comparison/dp_placement_pp")]
-from native_pd_worker import node_plan, pd_state_environment  # noqa: E402
+from native_pd_worker import host_probe_environment, node_plan, pd_state_environment  # noqa: E402
 from pd_replay import instance_devices, instance_env, kv_transfer_config  # noqa: E402
 from serving_metrics import expected_pull_prompt_sources  # noqa: E402
 from vllm_replay import adapter_record, local_model_config, runtime_version, server_command  # noqa: E402
@@ -44,6 +44,7 @@ HARNESS_FILES = (
     "tests/integration/step5_pd/run_waves.py",
 )
 WORKER = "tests/comparison/calibration/native_pd_worker.py"
+HOST_PROBE = "tests/integration/step5_pd/host_probe_bootstrap"
 CLOUD_ROOT = Path("/mnt/codesign-exp/ycfeng")
 ROLES = ("prefill", "decode")
 
@@ -142,6 +143,9 @@ def preflight(config: dict, model_dir: Path) -> list[dict]:
         env, state_changed = pd_state_environment(config, role, Path("/worker-local-scratch"),
                                                   Path(config["script"]).parent, env)
         changed.update(state_changed)
+        env, probe_changed = host_probe_environment(config, role, Path("/worker-local-scratch"),
+                                                    Path(config["script"]).parent, env)
+        changed.update(probe_changed)
         command = server_command(plan["engine"], model_dir, port) + [
             "--kv-transfer-config", json.dumps(kv_transfer_config(plan["engine"], role, port))]
         rows.append({"host": peer["host"], "position": plan["position"], "role": role,
@@ -219,6 +223,10 @@ def build(definition: dict, *, stage: Path, workspace: Path, output_dir: Path, m
         if "case_id" in definition:
             config["case_id"] = definition["case_id"]
             config["canonical_replay"] = dict(definition["canonical_replay"])
+    if "host_step_probe" in definition:
+        config["host_step_probe"] = True
+        shutil.copytree(REPO / HOST_PROBE, stage / Path(HOST_PROBE).name,
+                        ignore=shutil.ignore_patterns("__pycache__"))
     (stage / "preflight.json").write_text(json.dumps(preflight(config, model_dir), indent=1))
     config["tool_hashes"] = {str(path.relative_to(stage)): sha256(path)
                              for path in sorted(stage.rglob("*")) if path.is_file()}

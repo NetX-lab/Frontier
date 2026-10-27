@@ -23,7 +23,8 @@ SWEEP = {"long_requests_per_lane": 2, "lane_interval_s": .15, "duration_s": 240,
 
 @pytest.mark.parametrize("case_id,kind,sweep", [
     ("h200_32", "qualification", False), ("h800_32", "workload", False), ("h800_64", "workload", False),
-    ("h200_32", "device_timeline", False), ("h200_32", "workload", True), ("h200_32", "qualification", True)])
+    ("h200_32", "device_timeline", False), ("h200_32", "workload", True), ("h200_32", "qualification", True),
+    ("h200_32", "host_probe", True)])
 def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, case_id, kind, sweep):
     inputs = stage_inputs(tmp_path)
     model_path = inputs["model_dir"] / "config.json"
@@ -91,6 +92,22 @@ def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, 
             (stage / "config.json").write_text(json.dumps(changed))
             with pytest.raises(ValueError, match="Only device_timeline runs profile"):
                 canonical_stage.verify(stage)
+    probe = kind == "host_probe"
+    for row in rows:
+        settings = row["server_env_set"].get("STEP5_HOST_STEP_PROBE")
+        assert (settings is not None) == probe
+        if probe:
+            assert json.loads(settings) == {"role": row["role"], "output_dir": "/worker-local-scratch/host_probe"}
+            assert row["server_env_set"]["PYTHONPATH"].split(os.pathsep)[0] == str(stage / "host_probe_bootstrap")
+    assert {name for name in config["tool_hashes"] if name.startswith("host_probe_bootstrap/")} == (
+        {"host_probe_bootstrap/sitecustomize.py", "host_probe_bootstrap/host_step_probe.py"} if probe else set())
+    if probe:
+        changed = copy.deepcopy(config)
+        del changed["host_step_probe"]
+        (stage / "config.json").write_text(json.dumps(changed))
+        with pytest.raises(ValueError, match="Only host_probe runs"):
+            canonical_stage.verify(stage)
+        (stage / "config.json").write_text(json.dumps(config))
     plan = json.loads((stage / "trace/replay_plan.json").read_text())
     assert plan.get("length_sweep") == (SWEEP if sweep else None)
     if kind == "workload":

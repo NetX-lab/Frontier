@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Probe and estimator implemented; 4.1–4.3 revised to the implementation: every TP rank records, line-buffered per-process files, the interval starts at the first `.tolist()` return, event-pair device gaps, formal windows by wall time, the mean as the profile value, 4 probe and 6 estimator unit tests. |
 | 2026-10-27 | Frontier side implemented (section 8); added the NIXL READ profile regeneration (3.4). |
 | 2026-10-27 | Revised after the codex design review (`codex-review-c85d179e-.../review.md`): 23 hooks / 46 writes; the host time joins the DP forward-start agreement before first attention; direct host-interval probe at real seams; DP/TP/PP/graph validation; review response in section 7. |
 | 2026-10-27 | First version: native mechanism, Frontier model, measurement probe, verification. |
@@ -156,55 +157,72 @@ are only a cross-check.
 
 - Run kind `host_probe` in `canonical_stage.py`: the same workload, length sweep and engine
   as `workload`, with probe hooks on the prefill and decode servers. `verify` accepts the
-  probe only for this kind and still rejects every other diagnostic hook. Staging, replay and
-  formal-release admission never accept a probe run as a reference.
+  probe only for this kind (config flag, staged bootstrap and server environment must agree)
+  and still rejects every other diagnostic hook. `formal_release.py` lists the kind as a
+  diagnostic that is never a reference.
 - The worker adds `host_probe_bootstrap/` (a `sitecustomize.py`) to the servers'
   `PYTHONPATH` with `STEP5_HOST_STEP_PROBE` set, like `pd_state_observation`. The bootstrap
-  patches modules when they are imported. Every probe error is caught and logged as
+  wraps the methods of 4.2 when their modules are imported. The first probe error disables
+  the probe in that process, writes an `error` line and prints
   `STEP5_HOST_STEP_PROBE UNVERIFIED`; the probe never changes arguments, returns or
-  exceptions of native code.
-- Only TP rank 0 of each engine records. Records go to worker-local scratch as JSONL, flushed
-  every 256 steps and at exit; the node copies them into its record, as for `pd_state`.
+  exceptions of native code and calls every original exactly once.
+- Every TP rank records, because the DP all-reduce runs once per TP rank and the forward
+  starts when the slowest TP rank launches. Each worker process writes its own file
+  `<role>_<host>_<pid>.jsonl` to worker-local scratch with a header line (role, TP and DP
+  rank and size), line-buffered so a killed process loses no finished line. After the server
+  stops, the node gzips the files into `host_probe/` of its node record.
 
 ### 4.2 Hooks (all at seams that run for real workload forwards)
 
 | Seam | Records |
 | --- | --- |
-| `GPUModelRunner.execute_model` enter/exit | step ordinal, `dummy_run` flag, request and token counts, whether it returned before dispatch (no-forward) |
-| `KVBlockZeroer.zero_block_ids` enter/exit | block count; hook count |
-| First side-storage hook (bound methods wrapped in place on first call) | enter, exit, and whether the previous step's `sample_tokens` exit event was still pending at enter (`query()`), which means the hook waited |
-| `dp_utils.sync_cudagraph_and_dp_padding` enter/exit (module global, which `dispatch_cg_and_sync_dp` resolves) | collective ordinal, skip flag from `should_skip_dp_coordination()` |
-| `StepTimingCollector.forward_start` | stamp and CUDA event |
-| Launch: `cudagraph_manager.run_fullgraph` / `run_pw_graph` enter, or a forward pre-hook on the model for eager | stamp and CUDA event; graph mode |
-| `GPUModelRunner.sample_tokens` exit | stamp and CUDA event (end of the step's main-stream work) |
+| `GPUModelRunner.execute_model` enter/exit | per-process step sequence, wall time, `dummy_run` and `is_profile` flags, request and token counts |
+| `KVBlockZeroer.zero_block_ids` enter/exit (only inside a step; the startup warmup reset is ignored) | block count, block count per group, hook count |
+| First side-storage hook `Step5SparseSummaryCacheLayer.zero_kv_cache_side_storage` (wrapped on the class at import; the zeroer binds the hooks later at KV setup) | enter, exit, the return of its `_ids` `.tolist()` (`first_sync`), and whether the previous step's end event was still pending at enter (`prior_pending`) |
+| `dp_utils.sync_cudagraph_and_dp_padding` enter/exit (module global, which `dispatch_cg_and_sync_dp` resolves) | collective call ordinal per process; a step with 0 tokens returns before the call and has none |
+| `StepTimingCollector.forward_start` | launch stamp and CUDA event |
+| `GPUModelRunner.sample_tokens` exit (real step) or `execute_model` exit (dummy step) | stamp and CUDA event at the end of the step's main-stream work |
 
-Startup and capture records are marked by phase (before the first workload request) and kept
-apart. Each record carries the process generation (pid and start time).
+When a step's events complete, its line gets `gap_ms` (previous step's end event to this
+launch event) and `span_ms` (launch to end). Event pairs avoid the float precision loss of
+times measured against one early reference event. `should_skip_dp_coordination()` is set
+only by elastic EP, which this workload does not use, so every call runs the all-reduce.
 
 ### 4.3 Estimator (`tests/integration/step5_pd/kv_zeroing_host_time.py`)
 
-- Join the engines of one DP group by collective ordinal within (role, instance, process
-  generation). Only calls that ran the all-reduce count; skipped and early-returned calls do
-  not. Dummy forwards take part. A group whose ordinal counts disagree is reported and
-  excluded.
-- For an engine step `k` that reset and whose first hook waited:
-  - `exposed_k` = launch stamp − first hook exit;
-  - split: remaining resets, before the collective, collective, after the collective;
-  - the collective time includes waiting for slower engines. The engine that arrived last
-    waited least, so `intrinsic_k = min over the group of the collective duration` (no
-    cross-node clock is needed);
-  - `local_k = exposed_k − (collective_k − intrinsic_k)`.
-- Per role (and per request count if the trend exceeds 1 ms): median, quartiles, sample count
-  of `local_k`. A role with fewer admitted samples than the `--min-samples` argument gets no
-  entry, and the script refuses to write a profile without both roles.
-- Reported but not used for the value: the share of resetting steps whose first hook did not
-  wait, and their intervals; the resetting-step share per request count against the
-  block-boundary model; hook counts per resetting step (expected 23).
-- Cross-check: device gap = launch event[k] − `sample_tokens` exit event[k−1]
-  (`elapsed_time`, read after `query()`), compared with `exposed_k`.
-- Perturbation check: the probe run's native TPOT/TTFT per request-count bucket against the
-  clean sweep of the same scale. A difference larger than the clean sweep's repeat spread
-  marks the profile UNVERIFIED.
+- Inputs: the copied stage (config, probe files, client summary), the clean run's client
+  summary, the job ID and `--min-samples`.
+- A role is usable only with exactly one error-free process per (DP rank, TP rank); a
+  restart (two processes for one rank) or a missing rank stops the estimator.
+- Only steps whose wall time lies in a formal window (first submission to last output of a
+  repeat, from the client summary) count. Warmup, length sweep and startup are excluded.
+- Join the engines by collective ordinal per TP rank. Ordinals missing on any process are
+  counted and excluded. All TP ranks of one engine must agree on the batch (dummy flag,
+  request and token counts) at an ordinal; a disagreement means the join is broken and stops
+  the estimator. Dummy steps take part in the collective but yield no sample.
+- For collective `k` at TP rank `r`, the engine that arrived last waited least, so its
+  duration is the collective's own cost and `excess` = duration − minimum over the engines
+  (no cross-node clock is needed). For a resetting step (every TP rank ran at least one hook
+  and launched):
+
+  `h = max over TP ranks of (launch − excess − first_sync)`.
+
+  The interval starts at the first `.tolist()` return: from then on the previous step's
+  device work is done and the device idles until the launch. It contains the rest of the
+  first hook, the other 22 hooks, the input preparation and the collective's own cost.
+- Profile value per role: the mean of `h` over the resetting steps, because the mean sets the
+  aggregate TPOT effect. A role with fewer resetting steps than `--min-samples` stops the
+  estimator after the report is written; no profile is written then.
+- Report (not used for the value): median and quartiles of `h`; the rank-0-only value and the
+  TP spread; the share of steps whose previous step was still running at the first hook and
+  `h` for both subgroups; `h` per request count (if its trend exceeds 1 ms, the profile
+  switches to the `by_num_requests` form the loader supports); hooks per step (expected 23);
+  the wait for other engines; the joined and unjoined collective counts.
+- Cross-check: the device gap `max over TP ranks of (gap_ms − excess)` for resetting steps
+  whose previous step has `span_ms`, against `h`; and the same gap for steps that do not reset.
+- Perturbation check: the probe run's client TTFT and TPOT means against the clean run of the
+  same case. A difference larger than the clean run's repeat range marks the profile
+  `PERTURBED` in its provenance.
 
 ### 4.4 Runs
 
@@ -227,9 +245,13 @@ h200_32 sweep03 rerun (64 GPUs in total, within D31.2); h200_64 runs after both 
      the profile.
 2. Dummy smoke matrix and the 77-case fidelity comparison: unchanged results without the
    profile.
-3. Estimator synthetic tests: a known local term with unequal collective waits, skipped and
-   early-returned collectives, dummy participants, missing records and a process restart; a
-   role without enough samples emits nothing.
+3. Probe and estimator synthetic tests (`tests/unit/test_step5_host_step_probe.py`,
+   `tests/unit/test_kv_zeroing_host_time_estimator.py`): native results unchanged, a probe or
+   bootstrap error never blocks native code, a forked worker starts its own file; a known
+   local term with unequal collective waits, dummy participants, unmatched collectives, the
+   formal window, a TP-rank batch disagreement, a missing rank, a restart, a probe error, the
+   perturbation status, and a role without enough samples writes no profile; the written
+   profile loads for the run it was measured on.
 4. Probe runs: one launch/`sample_tokens` pair per real forward; collective ordinals agree
    across engines; 23 hooks per resetting step; perturbation within the clean repeat spread.
 5. Reruns of step E (h200_32, DP2 profile) and step G (h200_64, DP4 profile) against the clean

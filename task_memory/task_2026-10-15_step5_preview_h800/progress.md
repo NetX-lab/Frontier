@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 3 step 2 code: host-step probe, `host_probe` run kind and estimator; 81 focused unit tests pass. |
 | 2026-10-27 | D31: h200_32 sweep03 succeeded (coverage verified, 3/2/1 stall events, all within the sweep's reach); E passes all 14 rows against it (TTFT mean −5.3%, TPOT mean −13.9%, throughput +2.9%); item 3 step 3 (Frontier side) implemented and checked: 304 unit tests, dummy smoke 12/12, fidelity 77/77 (config fields only); NIXL READ profiles regenerated for the new capacity flag. |
 | 2026-10-27 | D31: h200_64 sweep02 succeeded (one stall per repeat, all within the sweep's reach; stable repeats); G passes all 14 rows against it (TTFT −17.5%, TPOT −19.2%); h200_32 sweep03 submitted; item 3 design reviewed by codex (changes required: DP agreement before first attention, real forward-end hook, direct host-interval measurement, DP validation, 23 hooks / 46 writes). |
 | 2026-10-27 | D31: G rerun finished (all four means within 30% of the h200_64 sweep reference, three tail rows fail); h200_64 sweep01 result (stalls left only above the length it reached; 420 s too short), sweep02 with 780 s submitted; item 3 lead: a host sync for the KV side-storage reset on every decode step that allocates a KV block. |
@@ -1160,6 +1161,29 @@ Calibration item 3 step 3, Frontier side (2026-10-27, `completed`; report
   `evidence/d31_h200_{32,64}_nixl_read_cost_20261027.json`.
 - Next: item 3 step 2, the `host_probe` native run kind and its estimator, then the measured
   profiles and the E/G reruns.
+
+Calibration item 3 step 2, probe and estimator code (2026-10-27, `completed`; design 4.1–4.3):
+
+- Reason: the profile value must come from a direct host-time measurement of resetting steps
+  on the native servers; a whole-step time table is not allowed as the value (D31.10).
+- Method:
+  - probe `tests/integration/step5_pd/host_probe_bootstrap/{sitecustomize,host_step_probe}.py`
+    (opt-in by `STEP5_HOST_STEP_PROBE`; every TP rank writes its own line-buffered file);
+  - run kind `host_probe` in `canonical_stage.py`, `build_stage.py`, `formal_release.py`; the
+    worker sets the environment and gzips the files into the node record
+    (`native_pd_worker.py`);
+  - estimator `tests/integration/step5_pd/kv_zeroing_host_time.py`: joins the DP engines by
+    collective ordinal per TP rank, removes the wait for other engines, and writes the mean of
+    `max_r(launch − excess − first_sync)` per role plus a report with the checks of design 4.3.
+- Expectation: native results unchanged by the probe; a probe error never blocks native code;
+  the estimator recovers a known host time from synthetic records with unequal waits.
+- Result: `PYTHONPATH=$PWD:$PWD/tests/unit <frontier-runtime-py310-d29-20261025 python> -m pytest
+  tests/unit/test_step5_host_step_probe.py tests/unit/test_step5_priority_runs.py
+  tests/unit/test_kv_zeroing_host_time_estimator.py tests/unit/test_kv_block_zeroing_host_time.py`:
+  81 passed (log `/data/ycfeng/tmp/d31_kvz_probe_focus.log`).
+- Limit: the hooks have not run in the native image yet; the h200_32 probe run is their first
+  real check (UNVERIFIED lines, one file per rank, 23 hooks per resetting step).
+- Next: stage `h200_32_hostprobe01` from a clean worktree and submit it (32 H200 GPUs).
 
 Step F status (2026-10-26):
 

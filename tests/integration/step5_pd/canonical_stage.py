@@ -86,6 +86,9 @@ def verify(stage: Path) -> dict:
     if (timeline != ("role_profiler_config" in config) or timeline != ("decode_profile_windows" in plan)
             or set(config.get("role_profiler_config", {})) - {"decode"}):
         raise ValueError("Only device_timeline runs profile, and only the decode servers")
+    probe = plan["kind"] == "host_probe"
+    if not probe == ("host_step_probe" in config) == (stage / "host_probe_bootstrap").is_dir():
+        raise ValueError("Only host_probe runs stage and enable the host-step probe")
     for key, expected in {"max_model_len": 7168, "max_num_batched_tokens": 8192, "max_num_seqs": 128,
                           "tensor_parallel_size": 8, "data_parallel_size": dp, "pipeline_parallel_size": 1,
                           "enable_expert_parallel": True, "enforce_eager": False,
@@ -109,6 +112,8 @@ def verify(stage: Path) -> dict:
         command = row["server_command"]
         if "--speculative-config" in command or any("PD_STATE" in key for key in row["server_env_set"]):
             raise ValueError("Speculation or R2 observation enabled")
+        if probe != ("STEP5_HOST_STEP_PROBE" in row["server_env_set"]):
+            raise ValueError("Host-step probe environment differs from the run kind")
     release = formal_release.validate(config)
     return {"task_id": "D21-RUNS", "case_id": config["case_id"], "offline_verified": True,
             "stage": str(stage), "source": config["source"], "files_verified": len(config["tool_hashes"]),
@@ -133,6 +138,10 @@ def build(args) -> dict:
     elif args.kind == "device_timeline":
         definition["description"] += (" D31 diagnostic decode device timeline: the full workload with torch-profiler"
                                       " windows on the decode servers in the first formal repeat; never a reference.")
+    elif args.kind == "host_probe":
+        definition["description"] += (" D31 diagnostic host-step probe: the full workload with host stamps and CUDA"
+                                      " events around every model-runner step on both roles; never a reference.")
+        definition["host_step_probe"] = True
     if "length_sweep" in definition["canonical_replay"]:
         definition["description"] += (" A length sweep before the first repeat compiles every DSA scoring-kernel"
                                       " variant the formal phases reach; its requests are never measured.")
