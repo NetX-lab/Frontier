@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: h200_32 host-probe stage `h200_32_hostprobe03` built at 02bd453a, verified and dry-run; submitted through Pi (`d31-h200-32-hostprobe03-submit-1027e`), job `exp-1027-124813-737818`; `h200_32_comb_h200` table version corrected to merged03. |
 | 2026-10-27 | D31: item 3 step 2 fixes from the codex implementation review 668b0946 (F001–F006, Q1–Q3; design section 9); 162 focused unit tests pass. |
 | 2026-10-27 | D31: item 3 step 2 code: host-step probe, `host_probe` run kind and estimator; 81 focused unit tests pass. |
 | 2026-10-27 | D31: h200_32 sweep03 succeeded (coverage verified, 3/2/1 stall events, all within the sweep's reach); E passes all 14 rows against it (TTFT mean −5.3%, TPOT mean −13.9%, throughput +2.9%); item 3 step 3 (Frontier side) implemented and checked: 304 unit tests, dummy smoke 12/12, fidelity 77/77 (config fields only); NIXL READ profiles regenerated for the new capacity flag. |
@@ -896,7 +897,7 @@ before the plan entry was added). Native step times and token gaps here are diag
   - This is an artifact of the native warm-up, not serving behaviour that Frontier should model.
     The stalls are not removed from the native data after the fact. The native run is repeated
     with all variants compiled beforehand.
-- Step E rerun `h200_32_comb_h200` (workflow port, measured H200 DP2 collectives, merged04;
+- Step E rerun `h200_32_comb_h200` (workflow port, measured H200 DP2 collectives, merged03;
   output `/data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/compare.json`):
 
   | Metric | Frontier | Native | Error | Gate 30% |
@@ -1222,6 +1223,46 @@ Calibration item 3 step 2, review fixes (2026-10-27, `completed`; design section
 - Limit: Q2 (first sync as the device-idle origin), Q4 (mean versus `E[max]`) and Q6 (live
   coverage) need the probe run; Q5 (the external clean-run-check producer) is not audited.
 - Next: stage `h200_32_hostprobe01` from a clean worktree at the fix commit and submit it.
+
+Calibration item 3 step 2, probe run (2026-10-27, `in-progress`):
+
+- Stage: `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_hostprobe03/stage`, built from the
+  clean worktree `/data/ycfeng/Frontier/.worktrees/step5-d31-native-02bd453` (02bd453a) with
+  `canonical_stage.py build --kind host_probe --case h200_32`; job tag `d31h20032hostprobe03`;
+  cloud output `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_32_hostprobe03`.
+- Two earlier builds stopped before writing a usable stage. `build_stage` refuses an existing
+  directory, so each retry used a new name; the partial directories `h200_32_hostprobe01` and
+  `h200_32_hostprobe02` remain (deletion needs approval):
+  - hostprobe01: "Adapter rejects native reference image". The `step5_position_cyclic` adapter
+    needs `STEP5_POSITION_CYCLIC_IMAGE` set to the routing image digest `sha256:f037d958…`.
+  - hostprobe02: "Exported native source conflicts with prior locked pin:
+    vllm/models/step5/nvidia/model.py". The base-image listing
+    (`native_pd_20261020/image_source/sha256_in_image.txt`) does not describe the routing image;
+    the routing listing `task_2026-10-22_step5_position_routing/image_publication/installed_source_sha256.txt`
+    reproduces sweep03's 72 source pins exactly.
+- Checks before submission:
+  - config versus sweep03: only kind, description, paths, `host_step_probe: true`, job tag,
+    output directory, source commit/repository and tool hashes differ; image, engine, model hashes
+    and the 72 expected source hashes are identical; the replay plan differs only in `kind`;
+  - `canonical_stage.py verify`: rc 0 (`verify.log`);
+  - StepMind dry run: rc 0; against sweep03's dry run only the workspace path differs
+    (`stepmind_dry_run.log`).
+- Submission: Pi run `d31-h200-32-hostprobe03-submit-1027e` (prompt
+  `/data/ycfeng/tmp/ds4_runs/prompts/d31-h200-32-hostprobe03-submit-1027e.md`), launched 04:47 UTC;
+  one submission, 4 × 8 H200, `step_main`, non-preemptible.
+  Job `exp-1027-124813-737818`, created 04:48:13 UTC, phase Pending at the first read; creator
+  `i-fengyicheng`, preemptible `no`, `step_main`, 4 × 8 H200, the routing image
+  (`h200_32_hostprobe03/status_1.json`).
+- Table version correction: `h200_32_comb_h200` (the E run compared with sweep03) used the merged03
+  tables (its `command.json` names `merged03/*.csv`), not merged04 as several entries said; plan,
+  this file and the decode-step report are corrected. merged04 adds 14 EP16 and 14 EP32 MoE rows
+  (partly filled ranks) to each MoE table, so EP16 predictions can differ.
+- E baseline for item 3 (started 04:50 UTC, CPU only): `h200_32_m04_base`, merged04 tables, the
+  regenerated NIXL READ profile and no host profile, from the clean worktree at 02bd453a:
+  `frontier_workload.py run --case h200_32 --measured-collectives --predictor-options
+  /data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_32.json
+  --output-dir /data/ycfeng/tmp/d31_e05_run/h200_32_m04_base`. The item 3 rerun differs from it
+  only by `kv_block_zeroing_host_profile`, so the pair isolates the host-time effect.
 
 Step F status (2026-10-26):
 

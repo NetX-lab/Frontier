@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Corrected the table version of `h200_32_comb_h200` to merged03 (its `command.json`). |
 | 2026-10-27 | Added the 780 s h200_64 rerun with step G against it (section 9); corrected the reset count to 23 sparse-layer hooks with 46 indexed writes (section 8). |
 | 2026-10-27 | Added the h200_64 length-sweep run with step G against it (section 7) and the KV side-storage reset sync as the host-time cause (section 8); updated the limits. |
 | 2026-10-27 | Corrected section 3 with the per-rank check: the median-rank values overstated both operator errors. |
@@ -148,7 +149,7 @@ h200_64. The native rerun with the length sweep (`320c2082`) measures this direc
 
 ### 5. Step E rerun against the current native reference
 
-`h200_32_comb_h200` (workflow port, measured H200 DP2 collectives, merged04), output
+`h200_32_comb_h200` (workflow port, measured H200 DP2 collectives, merged03 tables), output
 `/data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/compare.json`, gate 30%:
 
 | Metric | Frontier | Native | Relative error | Result |

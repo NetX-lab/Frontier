@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: corrected the table version of `h200_32_comb_h200` to merged03 (its `command.json`); item 3 step 2 probe run submitted. |
 | 2026-10-27 | D31: h200_32 sweep03 done (clean reference; E passes all 14 rows, TPOT −13.9%); item 3 step 3 (Frontier side) done. |
 | 2026-10-27 | D31: item 3 revised after the codex design review (23 reset hooks / 46 writes; direct host-interval probe per DP size; reset host time applied at the DP forward-start agreement); h200_64 sweep02 and G against it done. |
 | 2026-10-27 | D31: G result; h200_64 sweep result and the 780 s rerun; item 3 rewritten around the KV side-storage reset sync with its steps. |
@@ -169,7 +170,7 @@ B, C and D run in parallel. F needs C's GPUs released, because 32 + 64 GPUs exce
 
 Status (2026-10-26): A–D and F are done (D(g) evidence in `test_report_2026-10-26_h200_profiles.md`,
 F in `test_report_2026-10-26_h200_64_native_workload.md`). The E rerun `h200_32_comb_h200`
-(workflow port, measured H200 collectives, merged04) finished: all four means are within 30%
+(workflow port, measured H200 collectives, merged03 tables) finished: all four means are within 30%
 (TTFT −20.3%, TPOT −25.7%, E2E −25.6%, throughput +3.0%), while the p90/p95 rows fail (about
 −32% to −34%). Status (2026-10-27): against the length-sweep references E passes all 14 rows
 (TPOT mean −18.5%) and G passes 11 of 14 (all four means; TPOT mean −24.5%; TTFT p90/p95 and
