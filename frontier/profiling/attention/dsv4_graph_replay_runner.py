@@ -384,11 +384,17 @@ def recapture_graphs(worker: Any, cudagraph_mode: str, capture_sizes: tuple[int,
 
     import torch
     from vllm.compilation.breakable_cudagraph import BreakableCUDAGraphCapture
+    from vllm.platforms import current_platform
 
     recorder = _require_recorder()
+    # PyTorch refuses to share a private memory pool once all of its graphs are
+    # released (the use_count check of the device and host caching allocators),
+    # so the re-capture uses a fresh pool, as vLLM does for discarded captures.
     cm.graphs.clear()
+    cm.pool = current_platform.graph_pool_handle()
     if cm.breakable_cg_runner is not None:
         cm.breakable_cg_runner.clear_graphs()
+        cm.breakable_cg_runner.graph_pool = cm.pool
     cm._graphs_captured = False
     with CuptiCloneRecorder() as clones, recorder.install(torch.cuda.CUDAGraph, BreakableCUDAGraphCapture):
         runner.capture_model()

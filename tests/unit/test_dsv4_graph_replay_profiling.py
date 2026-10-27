@@ -459,12 +459,15 @@ def recapture(monkeypatch):
         eager_breaks=(EagerBreak(0, 1, (0, LAYER_SCOPE)),), clones=(NodeClone(1010, 10),),
     )
     cm = SimpleNamespace(cudagraph_mode=SimpleNamespace(name="FULL_AND_PIECEWISE"), graphs={"old": "graph"},
-                         use_breakable_cg=True, _graphs_captured=True,
-                         breakable_cg_runner=SimpleNamespace(clear_graphs=lambda: calls.append("clear_breakable")))
+                         use_breakable_cg=True, _graphs_captured=True, pool="released_pool",
+                         breakable_cg_runner=SimpleNamespace(clear_graphs=lambda: calls.append("clear_breakable"),
+                                                             graph_pool="released_pool"))
     runner = SimpleNamespace(cudagraph_manager=cm, compilation_config=SimpleNamespace(cudagraph_capture_sizes=[8, 4, 2, 1]))
 
     def capture():
         assert not cm.graphs and cm._graphs_captured is False
+        assert cm.pool == "fresh_pool"
+        assert cm.breakable_cg_runner is None or cm.breakable_cg_runner.graph_pool == "fresh_pool"
         calls.append("capture")
 
     runner.capture_model = capture
@@ -491,12 +494,15 @@ def recapture(monkeypatch):
     monkeypatch.setenv(replay.BREAKABLE_CUDAGRAPH_ENV, "1")
     monkeypatch.setitem(sys.modules, "torch", SimpleNamespace(cuda=SimpleNamespace(CUDAGraph=object)))
     monkeypatch.setitem(sys.modules, "vllm.compilation.breakable_cudagraph", SimpleNamespace(BreakableCUDAGraphCapture=object))
+    monkeypatch.setitem(sys.modules, "vllm.platforms",
+                        SimpleNamespace(current_platform=SimpleNamespace(graph_pool_handle=lambda: "fresh_pool")))
     return SimpleNamespace(worker=SimpleNamespace(model_runner=runner), cm=cm, calls=calls, record=record, saved=saved)
 
 
 def test_recapture_clears_graphs_and_stops_subscriber_before_record(recapture):
     result = replay.recapture_graphs(recapture.worker, "FULL_AND_PIECEWISE", (1, 2, 4, 8))
     assert recapture.calls == ["clear_breakable", "subscribe", "install", "capture", "restore", "unsubscribe"]
+    assert recapture.cm.pool == recapture.cm.breakable_cg_runner.graph_pool == "fresh_pool"
     assert CaptureRecord.from_json(result["record"]) == recapture.record
     assert result["summary"] == {
         "cudagraph_mode": "FULL_AND_PIECEWISE", "cudagraph_capture_sizes": [1, 2, 4, 8],
@@ -552,6 +558,7 @@ def test_none_returns_empty_capture_without_gpu_or_mutation(recapture):
     assert result["summary"]["captures_by_kind"] == {"graph": 0, "breakable_segment": 0}
     assert result["summary"]["eager_break_count"] == 0
     assert recapture.calls == [] and recapture.cm.graphs == {"old": "graph"}
+    assert recapture.cm.pool == "released_pool"
 
 
 def test_piecewise_capture_needs_no_full_graph(recapture):
