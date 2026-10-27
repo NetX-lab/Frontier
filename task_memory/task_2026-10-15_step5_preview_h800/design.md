@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Corrected after the codex review of the probe run (`codex-review-223fee59-.../review.md`, F001–F004): completeness is checked on every TP rank against the client-completed work, with no preemption in a window and partial all-reduces only after the last step with requests; the formal phases' native work counters must match the client-completed requests; the lost probe steps lie inside the last window; the perturbation check failed and is not settled (4.1, 4.3, verification 4, Q6). |
 | 2026-10-27 | Corrected after the h200_32 probe run: the launcher force-kills the workers, so probe files have no `end` line (completeness from gap-free steps and equal window tokens); idle boundaries expect completions only for client-completed requests (4.1, 4.3, F002). |
 | 2026-10-27 | Revised after the codex implementation review (`codex-review-668b0946-.../review.md`, section 9): reference admission rejects probe runs; the worker owns the probe variable; shutdown drains the probe and writes an `end` line; dummy steps end at `_dummy_run` exit; the DP wait is the gloo `all_reduce` alone; the engine interval runs from its earliest first sync to its last launch on one node clock; formal windows come from the verified idle boundaries; the request-count trend rule writes a table. |
 | 2026-10-27 | Probe and estimator implemented; 4.1–4.3 revised to the implementation: every TP rank records, line-buffered per-process files, the interval starts at the first `.tolist()` return, event-pair device gaps, formal windows by wall time, the mean as the profile value, 4 probe and 6 estimator unit tests. |
@@ -181,8 +182,10 @@ are only a cross-check.
   waiting for their events and a final `end` line with the step count. The native P/D launcher
   stops its engines with `mode=abort` and force-kills the worker processes (observed in
   hostprobe03 and sweep03), so that path does not run: a file ends with its last finished
-  line, and only the last step and the 1–2 steps whose events were still pending are lost, all
-  after the last formal window. Forked workers leave through `os._exit`, so `atexit` cannot
+  line, and the last step and the 1–2 steps whose events were still pending are lost. In
+  hostprobe03 they lie inside the last formal window (it ends at the idle boundary seconds
+  later) but after the role's last step with requests; the estimator rejects a loss that
+  touches a step with requests (4.3). Forked workers leave through `os._exit`, so `atexit` cannot
   help. After the server stops, the node gzips the files into `host_probe/` of its node record.
 
 ### 4.2 Hooks (all at seams that run for real workload forwards)
@@ -211,23 +214,30 @@ only by elastic EP, which this workload does not use, so every call runs the all
 - A role is usable only with exactly one error-free process per (DP rank, TP rank). A restart
   (two processes for one rank), a missing rank, a file whose step numbers do not run from 1
   without gaps, or TP ranks of one engine on different hosts stop the estimator. Completeness
-  inside the windows comes from the scheduled tokens: every repetition replays the same
-  requests, so each role's non-dummy tokens at TP rank 0 must be equal in the three formal
-  windows; a file that lost a step with requests breaks the equality.
+  inside the windows comes from the scheduled tokens, on every process: in each formal window
+  the TP ranks of an engine must hold equal non-dummy tokens, and the engines together exactly
+  the work of the window's client-completed formal requests (P: the transferred whole blocks,
+  `prompt − 16` = 6,128 per request; D: the last block plus one step per output after the
+  first, 16 + 1,023). Work of another request inside a window, or a lost step with requests,
+  breaks one of the two. A preempted request recomputes its tokens and could hide a lost step,
+  so `vllm:num_preemptions_total` must not change across a formal window on either role.
 - Only steps whose wall time lies in a formal window count. A window runs from the idle
   boundary after a repeat's warmup to the idle boundary after its formal phase (client
   monotonic times of each boundary's last observation, converted with the phase's wall-clock
   offset). The estimator re-checks each boundary from that observation with the replay's rule:
   every lane idle, and each role's completion count at least the count at the verified
   length-sweep boundary plus the requests the client saw complete in the phases since. A
-  request that failed at the client may never have reached a role (a reused proxy keep-alive
-  connection can reset before the request is sent), so it adds no expected completion. Every
-  engine was idle at both boundaries, so the edges lie in idle gaps. Server and client wall
+  request that failed at the client may or may not have run on a role, so it adds no expected
+  completion. The idle gauges are snapshots from the last engine output, so a failed request
+  may also still run after a boundary; the exact token check above rejects a window that holds
+  any of its work. Every engine was idle at both boundaries, so the edges lie in idle gaps. Server and client wall
   clocks may differ; the report gives the smallest distance from an edge to any step
   (`window_edge_clearance_s`), which must exceed that difference. A boundary that fails the
   check, or an unverified length-sweep boundary, stops the estimator.
-- Join the engines by collective ordinal per TP rank. Ordinals missing on any process are
-  counted and excluded. All TP ranks of one engine must agree on the batch (dummy flag,
+- Join the engines by collective ordinal per TP rank. An ordinal may lack a participant only
+  after the role's last ordinal with a non-dummy step (the force-killed tail); an earlier
+  partial ordinal, such as a useful step lost on a nonzero TP rank or a lost dummy peer of a
+  resetting step, would drop or bias a sample and stops the estimator. All TP ranks of one engine must agree on the batch (dummy flag,
   request and token counts) at an ordinal; a disagreement means the join is broken and stops
   the estimator. Dummy steps take part in the collective but yield no sample.
 - For all-reduce `k` at TP rank `r`, the engine that arrived last waited least, so its
@@ -254,8 +264,8 @@ only by elastic EP, which this workload does not use, so every call runs the all
   `max_r(launch_r − excess_r − first_sync_r)`, the rank-0-only value and the TP skew of
   `first_sync`; the share of steps on which a rank's previous step was still running at the
   first hook and `h` for both subgroups; `h` per request count and the trend; hooks per step
-  (expected 23); the wait for other engines; the joined and unjoined collective counts; the
-  window edge clearance.
+  (expected 23); the wait for other engines; the joined and trailing partial collective
+  counts; the tokens per engine and window; the window edge clearance.
 - Cross-check: the device gap `max over TP ranks of (gap_ms − excess)` for resetting steps
   whose previous step has `span_ms`, against `h`; and the same gap for steps that do not reset.
 - Perturbation check: the probe run's client TTFT and TPOT means against the clean run of the
@@ -298,6 +308,9 @@ h200_32 sweep03 rerun (64 GPUs in total, within D31.2); h200_64 runs after both 
    reference even with a passing receipt, while the clean control passes.
 4. Probe runs: one launch/`sample_tokens` pair per real forward; collective ordinals agree
    across engines; 23 hooks per resetting step; perturbation within the clean repeat spread.
+   The h200_32 run failed the last check (TPOT +0.357 ms against a clean repeat range of
+   0.207 ms), so its profile is `PERTURBED`: E reruns with it are exploratory sensitivity runs.
+   Accepting it needs a measured probe effect, for example probe on and off within one job.
 5. Reruns of step E (h200_32, DP2 profile) and step G (h200_64, DP4 profile) against the clean
    sweep references. Expectation: TPOT error at 20–40 requests drops from 13–15% to the
    remaining operator gaps (item 2).
@@ -374,4 +387,6 @@ Open questions:
   against the clean references test whether it reproduces the aggregate effect.
 - Q5 (external clean-run-check producer): not audited here; the consumer now rejects probe
   runs on its own.
-- Q6 (live coverage and perturbation): settled by the probe runs (4.4, verification 4).
+- Q6 (live coverage and perturbation): coverage is settled by the probe runs (4.3). The
+  perturbation is not: the h200_32 run failed the TPOT check, and the size of the probe's
+  effect on `h` is not measured (verification 4).

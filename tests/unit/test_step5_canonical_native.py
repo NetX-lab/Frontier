@@ -1,6 +1,7 @@
 """D18 pin, HTTP token transport, phase population and soft-observation regressions."""
 
 import asyncio
+from collections import Counter
 import copy
 import hashlib
 import json
@@ -19,12 +20,28 @@ WORKLOAD = REPO / "data/processed_traces/canonical_fixed_6144_1024_req128_qps1"
 DEFINITION = REPO / "tests/integration/step5_pd/canonical_run_h200.json"
 
 
-def metrics(count=0, dp=4):
-    return "\n".join(
+def metrics(count=0, dp=4, work=None):
+    """A native metrics page; `work` holds lane 0's executed prompt tokens by source and
+    inter-token latencies."""
+    page = "\n".join(
         f'vllm:{name}{{engine="{lane}",model_name="dp_pp_case"}} {value}'
         for lane in range(dp)
         for name, value in [(key, 0) for key in cr.GAUGES] + [
             ("request_success_total", count if lane == 0 else 0)]) + "\n"
+    if work is not None:
+        page += "".join(f'vllm:prompt_tokens_by_source_total{{engine="0",model_name="dp_pp_case",source="{source}"}} '
+                        f'{work[source]}\n' for source in ("local_compute", "local_cache_hit", "external_kv_transfer"))
+        page += f'vllm:inter_token_latency_seconds_count{{engine="0",model_name="dp_pp_case"}} {work["itl"]}\n'
+    return page
+
+
+def native_work(body):
+    """Work P and D execute for one request: P computes the whole 16-token blocks it leaves
+    for D to pull, except the last block, which D recomputes."""
+    transferred = (len(body["prompt"]) - 16) // 16 * 16
+    return {"prefill": Counter(local_compute=transferred),
+            "decode": Counter(local_compute=len(body["prompt"]) - transferred, external_kv_transfer=transferred,
+                              itl=body["max_tokens"] - 1)}
 
 
 def test_common_pins_and_disjoint_stable_template_repeat_ids():
@@ -120,14 +137,19 @@ def test_modified_common_member_is_rejected(tmp_path, member):
     None, "one_http_failure", "idle_failure", "checkpoint_failure", "bad_usage", "text_only")]
     + [("qualification", None), ("qualification", "startup_missing"),
        ("workload", None), ("workload", "one_http_failure"), ("workload", "length_sweep"),
-       ("workload", "decode_unreached")])
+       ("workload", "decode_unreached"), ("workload", "sweep_work_in_formal")])
 @pytest.mark.parametrize("dp", [2, 4])
 def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path, monkeypatch, kind, fault, dp):
     workload = cr.canonical_workload(WORKLOAD)
-    # A failed sweep request must never touch the client workload verdict.
-    failure_id = (cr.LONG_SWEEP_PREFIX + "00" if fault == "length_sweep"
+    swept_fault = fault in ("length_sweep", "sweep_work_in_formal")
+    # A failed sweep request touches the client workload verdict only through work that runs in a
+    # formal phase.
+    failure_id = (cr.LONG_SWEEP_PREFIX + "00" if swept_fault
                   else workload[1][0]["request_id"] + "-repeat01")
+    first_formal_id = workload[1][0]["request_id"] + "-repeat01"
     bodies = {role: {} for role in cr.ROLES}
+    work = {role: Counter() for role in cr.ROLES}
+    late_work = []
     phase_calls = []
     checkpoint_counts = []
     qualification_idle_roles = set()
@@ -156,6 +178,9 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                 nonlocal concurrent_arrivals
                 rid = request.headers["X-Request-Id"]
                 body = await request.json()
+                if role == "decode" and rid == first_formal_id and late_work:
+                    # The failed sweep request was still running on decode after the boundaries.
+                    work["decode"] += late_work.pop()
                 if fault == "decode_unreached" and role == "decode" and rid == failure_id:
                     # A reset reused connection: decode never counts the request.
                     return web.json_response({"error": "connection reset"}, status=502)
@@ -172,10 +197,14 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                                 all_concurrent_arrived.set()
                             await asyncio.wait_for(all_concurrent_arrived.wait(), timeout=2)
                 if role == "prefill":
+                    work["prefill"] += native_work(body)["prefill"]
                     return web.json_response({"choices": [{"finish_reason": "length"}],
                         "kv_transfer_params": {"transfer_mode": "pull", "do_remote_prefill": True,
                             "do_remote_decode": False, "remote_engine_id": "p0", "remote_request_id": rid,
                             "remote_host": "10.0.0.1", "remote_port": 5600, "remote_block_ids": [[0, 1]]}})
+                if fault == "sweep_work_in_formal" and rid == failure_id:
+                    late_work.append(native_work(body)["decode"])
+                    return web.json_response({"error": "reset reused connection"}, status=502)
                 if fault in ("one_http_failure", "length_sweep") and rid == failure_id:
                     return web.json_response({"error": "native failure"}, status=500)
                 response = web.StreamResponse(headers={"Content-Type": "text/event-stream"})
@@ -194,6 +223,7 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                     "completion_tokens": body["max_tokens"] - (fault == "bad_usage" and rid == failure_id)}})
                     + "\n\ndata: [DONE]\n\n").encode())
                 await response.write_eof()
+                work["decode"] += native_work(body)["decode"]
                 return response
             return complete
 
@@ -203,7 +233,7 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
             apps[role].router.add_post("/v1/completions", native(role))
 
             async def page(request, role=role):
-                text = metrics(len(bodies[role]), dp)
+                text = metrics(len(bodies[role]), dp, work[role])
                 if fault == "startup_missing" and not bodies[role]:
                     text = "\n".join(line for line in text.splitlines() if "request_success_total" in line)
                 if kind == "qualification" and len(bodies[role]) == 16:
@@ -228,15 +258,15 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
 
                 sweep = ({"length_sweep": {"long_requests_per_lane": 1, "lane_interval_s": .05, "duration_s": .5,
                                            "short_prompt_tokens": 64, "short_output_tokens": 2}}
-                         if fault == "length_sweep" else {})
+                         if swept_fault else {})
                 return await cr.replay_repetitions(workload, proxy.port, 128896, 0, urls,
                     {"dp_size": dp, "kind": kind, "idle_timeout_s": .1,
-                     "idle_poll_s": .001, "concurrent_requests": 8, **sweep}, checkpoint=checkpoint)
+                     "idle_poll_s": .001, "concurrent_requests": 8, **sweep}, 16, checkpoint=checkpoint)
 
     result, records = asyncio.run(exercise())
     assert result["replay_kind"] == kind
     swept = 0
-    if fault == "length_sweep":
+    if swept_fault:
         swept = dp + 10 * dp
         assert [row["segment"] for row in phase_calls.pop(0)] == ["length_sweep"] * swept
         assert result["length_sweep"]["recorded_requests"] == swept
@@ -282,6 +312,16 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
     else:
         assert not failures
         assert result["client_workload_verified"] is (fault in (None, "startup_missing", "length_sweep"))
+    if kind == "workload" and fault in (None, "length_sweep", "sweep_work_in_formal"):
+        accounting = [repeat["phases"]["formal"]["work_accounting"] for repeat in result["repetitions"]]
+        assert [check["passed"] for check in accounting] == [fault != "sweep_work_in_formal", True, True]
+        assert accounting[1]["expected"] == {
+            "prefill_prompt_sources": {"local_compute": 128 * 6128, "local_cache_hit": 0, "external_kv_transfer": 0},
+            "decode_prompt_sources": {"local_compute": 128 * 16, "local_cache_hit": 0,
+                                      "external_kv_transfer": 128 * 6128},
+            "decode_inter_token_latencies": 128 * 1023}
+        extra = accounting[0]["observed"]["decode_inter_token_latencies"] - 128 * 1023
+        assert extra == (1023 if fault == "sweep_work_in_formal" else 0)
     prompts = {}
     for record in records:
         if record["request_id"] not in bodies["decode"]:

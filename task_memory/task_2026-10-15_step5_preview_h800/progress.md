@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: codex review 223fee59 of the h200_32 probe result (F001–F004, all confirmed): estimator checks every TP rank against the client-completed work, rejects preemptions and partial all-reduces before the last step with requests; the replay checks each formal phase's native work counters; the profile values are unchanged; the profile is not accepted (probe effect unmeasured), so E/G with it are exploratory. |
 | 2026-10-27 | D31: h200_32 host probe analyzed: replay idle-boundary and probe-completeness rules corrected (`cdcba47b`); DP2 profile prefill 37.44 ms / decode 5.11 ms (`PERTURBED`, TPOT bias at most 0.7%); step E host rerun started; h200_64 probe job `exp-1027-141317-610373` submitted. |
 | 2026-10-27 | D31: exact native decode critical path (diagnostic): the step prefix before the first TP all-reduce is the KV side-storage reset (item 3); Frontier's step is within −7% to +4% of the native forward body; TP all-reduce is about 1.3 ms high (273 native calls, own cost about 6.8 µs), not low; body idle shortfall is a kernel-count shortfall. |
 | 2026-10-27 | D31: h200_32 host-probe stage `h200_32_hostprobe03` built at 02bd453a, verified and dry-run; submitted through Pi (`d31-h200-32-hostprobe03-submit-1027e`), job `exp-1027-124813-737818`; `h200_32_comb_h200` table version corrected to merged03. |
@@ -1311,14 +1312,18 @@ Calibration item 3 step 2, probe runs (2026-10-27; h200_32 `completed`, h200_64 
   `exp-1027-124813-737818` Succeeded (2866 s); repeat means TTFT 913.68 / TPOT 53.659 ms.
   The estimator first stopped on two acceptance rules, both wrong for this run:
   - every boundary after repeat 1 warmup was unverified: one warmup request failed at the client
-    on a reset proxy keep-alive connection before reaching decode, and the replay expected a
-    completion for every planned request. Reason for the change: a request that never reached a
-    role can not complete there. Method: the replay and the estimator count only
-    client-completed requests (`phase_completions`, `boundary_reached`). Result: windows accepted;
+    and never completed on decode, and the replay expected a completion for every planned
+    request. The proxy had reused a keep-alive connection and sent the request headers before
+    the exception (proxy line 8405), so whether decode received the request is unknown
+    (corrected after codex F002/F004; the first version said "before reaching decode").
+    Reason for the change: a request that failed at the client need not complete on a role.
+    Method: the replay and the estimator count only client-completed requests
+    (`phase_completions`, `boundary_reached`). Result: windows accepted;
   - no probe file has an `end` line: the native launcher aborts and force-kills the workers, so
     `GPUModelRunner.shutdown` never runs (also in sweep03). Method: contiguous step numbers per
-    file plus equal scheduled tokens per role across the three formal windows. Result: prefill
-    784,384 and decode 132,992 tokens in each window.
+    file plus equal scheduled tokens per role across the three formal windows (TP rank 0 only;
+    replaced after codex F001, see below). Result: prefill 784,384 and decode 132,992 tokens in
+    each window.
   Commit `cdcba47b`; checks: `test_kv_zeroing_host_time_estimator.py` 11 passed (d29 env),
   `test_step5_canonical_native.py` 46 passed (asyncopd env, adds a `decode_unreached` fault).
 - h200_32 profile (DP2): prefill 37.44 ms over 384 resetting steps (one 6,128-token request each;
@@ -1326,9 +1331,12 @@ Calibration item 3 step 2, probe runs (2026-10-27; h200_32 `completed`, h200_64 
   (67.6% of steps; device gap 5.28 ms on the same steps; trend 0.13 ms over 1–29 requests, so one
   mean). 23 hooks on every resetting step. Perturbation: TTFT shift +1.44 ms within the clean
   repeat range 8.0 ms, TPOT shift +0.357 ms beyond 0.207 ms, so the profile is `PERTURBED`.
-  Decision (no correction factor): use it as measured; the probe's wrapper cost inside `h` is
-  about 0.1–0.2 ms and the bound from the TPOT shift is 0.53 ms per resetting step, so E's TPOT
-  may be high by at most 0.36 ms (0.7%). Profile copy
+  First decision (withdrawn after codex F003): use it as measured with an upper bound on its
+  bias. The bound assumed the whole TPOT shift came from `h`; the shift between two jobs also
+  holds run-to-run variation that no clean pair measures, so it bounds nothing. Current
+  decision: no correction factor; the profile is not accepted, and E/G with it are exploratory
+  sensitivity runs until a probe on/off measurement within one job sizes the probe effect.
+  Profile copy
   `evidence/d31_h200_32_kv_block_zeroing_host_20261027.json`, report copy
   `evidence/d31_h200_32_kv_block_zeroing_host_report_20261027.json`.
 - Step E host rerun (started 06:09 UTC, CPU only, clean worktree 02bd453a, no frontier code change
@@ -1341,6 +1349,42 @@ Calibration item 3 step 2, probe runs (2026-10-27; h200_32 `completed`, h200_64 
   the earlier replay rule, so a failed request costs 120 s per later boundary (worst case about
   2,270 s of the 3,000 s replay limit, from sweep02's 1,550 s); the estimator re-checks the
   boundaries with the new rule.
+- Codex review of the probe result (request 223fee59, report
+  `codex-review-223fee59-461a-45f2-9eae-3d6cadf74153/review.md`, verdict `changes_required`,
+  3 P2 + 1 P3; reviewer scripts in `/data/ycfeng/tmp/codex-review/223fee59-461a-45f2-9eae-3d6cadf74153/`).
+  I checked each finding against the artifacts; all four hold:
+  - F001 (completeness): TP rank 0 token equality and dropping unjoined all-reduces accept a
+    nonzero TP rank that lost a useful tail and a lost dummy peer of a resetting step. Fix in
+    `kv_zeroing_host_time.py`: per window, every TP rank of an engine holds equal non-dummy
+    tokens and the engines together exactly the work of the window's client-completed formal
+    requests (`expected_window_tokens` from `canonical_replay.completed_work`: P 6,128, D
+    16 + 1,023 per request); `vllm:num_preemptions_total` unchanged across each formal window
+    (`window_preemptions`); an all-reduce may lack a participant only after the role's last
+    non-dummy ordinal (`engine_steps`, else error).
+  - F002 (stale idle snapshot after an ambiguous failure): the gauges update only with engine
+    outputs, so a failed request's work can continue after an idle boundary. Fix: the exact
+    window tokens above reject such work in the estimator; the replay compares each phase's
+    native work counters (`prompt_tokens_by_source`, inter-token-latency count) with the
+    client-completed requests (`phase_work`, stored as `work_accounting`) and requires a match
+    for formal phases. A failure in a repetition already fails it (`validate_record`); the new
+    check covers work of a failed length-sweep request or of an earlier repetition.
+  - F003 (perturbation bound): see the withdrawn decision above.
+  - F004 (two wrong statements): the failure classification (corrected above) and the lost probe
+    steps, which lie inside the last formal window after the last step with requests, not after
+    the window.
+  Checks: `test_kv_zeroing_host_time_estimator.py` 14 passed (d29 env; new: trailing-only partial
+  all-reduces with a nonzero-TP useful tail and a lost dummy peer, per-rank window tokens against
+  the client work, expected tokens from client records, preemptions);
+  `test_step5_canonical_native.py` 48 passed (asyncopd env; the fake server exports the work
+  counters, and the new `sweep_work_in_formal` fault, a failed sweep request whose decode work
+  lands in repeat 1's formal phase, gives `REFERENCE_UNSTABLE` with 1,023 extra inter-token
+  latencies); related step5 unit files 297 passed, 11 skipped (`test_step5_priority_runs.py` needs
+  `FRONTIER_SIMULATOR_PYTHON` set to the d29 env). `test_mla_stage3_online_trace_builder.py`
+  has 1 failure in an unrelated MLA analysis script (not touched; deferred).
+  Estimator rerun on hostprobe03 (`/data/ycfeng/tmp/d31_diag/probe03/recheck/`): exit 0; window
+  tokens per engine prefill 392,192 × 2 and decode 66,496 × 2 in all three windows; joins
+  prefill 13,643 joined + 4 trailing partial, decode 19,936 + 0; the profile equals the stored
+  one apart from the report path (prefill 37.4398 ms, decode 5.1105 ms).
 
 Step F status (2026-10-26):
 

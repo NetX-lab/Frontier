@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Corrected after codex review 223fee59 (F001–F004): failure classification (3.1), lost-step location and the tightened completeness checks (3.2, 4), withdrawn perturbation bound (5); review fixes and their checks in section 8. |
 | 2026-10-27 | h200_32 probe run (`exp-1027-124813-737818`) analyzed: two estimator acceptance rules corrected (`cdcba47b`), DP2 profile written, perturbation bound recorded; h200_64 probe submitted. |
 
 ## 1. Scope
@@ -31,15 +32,19 @@ a reference (D31.10); the profile holds component host terms only.
 - Observation: in hostprobe03 every boundary after repeat 1 warmup was recorded as unverified
   ("Idle/fresh completion deadline", 120 s wait each); in each one both roles were idle and
   decode had one completion fewer than expected (`/data/ycfeng/tmp/d31_diag/probe03/boundaries.txt`).
-- Cause: the warmup request that failed at the client was reset on a reused proxy keep-alive
-  connection before the proxy sent it to decode (aiohttp `connection_reuseconn`, then
-  `request_exception` within 1 ms, HTTP 502; `proxy.txt`, `failed.txt`). The replay expected
-  one completion per role for every planned request, so the missing decode completion carried
-  into every later boundary.
+- Cause: the warmup request failed at the client and never completed on decode. The proxy
+  reused a keep-alive connection to decode, sent the request headers, then got an exception
+  (aiohttp `connection_reuseconn`, `request_headers_sent`, `request_exception` within 1 ms,
+  HTTP 502; proxy line 8405, `proxy.txt`, `failed.txt`). Whether decode received the request
+  is unknown; the timing fits a connection the server had already closed (keep-alive 5 s), but
+  that is not proven. The replay expected one completion per role for every planned request,
+  so the missing decode completion carried into every later boundary.
 - Fix: `canonical_replay.phase_completions` counts only the requests the client saw complete
   (`recorded_requests − failed`); `boundary_reached` holds the rule; the estimator re-checks
   each formal-window boundary from its last observation with the same rule, counting from the
-  verified length-sweep boundary.
+  verified length-sweep boundary. Idle gauges are snapshots that update only with engine
+  outputs, so this rule alone cannot show that a failed request left no work in a formal
+  window; section 8 adds the work-accounting and preemption checks that reject such a window.
 - Tests: `test_formal_windows_lie_between_the_idle_boundaries` (reset case passes, the same
   shortfall without a client failure, a busy lane and an unverified sweep fail);
   `test_step5_canonical_native.py` adds a `decode_unreached` fault (all boundaries verified).
@@ -55,10 +60,13 @@ a reference (D31.10); the profile holds component host terms only.
   "force killing sub process" in hostprobe03 and in sweep03 alike (`shutdown.txt`), so
   `GPUModelRunner.shutdown` never runs. The file
   is line-buffered, so only the last step and the 1–2 steps whose device events were still
-  pending are lost; all of them are after the last formal window.
-- Fix: the estimator requires contiguous step numbers starting at 1 per file, and equal scheduled
-  tokens per role across the three formal windows (`window_tokens`, TP rank 0, non-dummy steps).
-  A lost step that carried requests breaks the equality.
+  pending are lost. They lie inside the last formal window (which ends at the idle boundary
+  seconds later), after the role's last step with requests.
+- First fix (replaced): the estimator required contiguous step numbers starting at 1 per file,
+  and equal scheduled tokens per role across the three formal windows on TP rank 0 only. That
+  missed a lost tail step on a nonzero TP rank and could not see work that was missing in all
+  three windows alike (codex F001). Section 8 replaces it with an every-rank check against the
+  client-completed work.
 - Result: prefill 784,384 tokens and decode 132,992 tokens in each of the three windows
   (`tokens.txt`: per engine 392,192 / 66,496, equal in every window).
 
@@ -83,9 +91,10 @@ Exit 0. Copies: `evidence/d31_h200_32_kv_block_zeroing_host_20261027.json` (prof
 | --- | --- | --- | --- | --- |
 | Resetting steps | ≥ 100 | 384 | 14,144 (of 20,915 steps, 67.6%) | PASS |
 | Hooks per resetting step | 23 | 23 on all | 23 on all | PASS |
-| DP all-reduce join | all joined in windows | 13,643 joined, 4 unjoined | 19,936 joined, 0 unjoined | PASS (the 4 are the unwritten last steps) |
+| DP all-reduce join | partial only after the last step with requests | 13,643 joined, 4 trailing partial | 19,936 joined, 0 | PASS (the 4 are dummy steps after prefill's last request; section 8 rule) |
 | Window edge clearance | > 0 | 3.19 s | 3.19 s | PASS |
-| Window tokens equal | equal | 784,384 × 3 | 132,992 × 3 | PASS |
+| Window tokens per engine, every TP rank | client-completed work: 128 × 6,128 / 128 × 1,039 | 392,192 × 2 per window | 66,496 × 2 per window | PASS (section 8) |
+| Preemptions in formal windows | 0 | 0 | 0 | PASS (section 8) |
 | `h` mean (profile value) | — | 37.44 ms | 5.11 ms | — |
 | `h` median, p25–p75 | — | 37.02, 35.42–38.54 | 5.09, 4.67–5.32 | — |
 | Previous step still running at first hook | decode ≈ 1 | 1.3% | 100% | as expected |
@@ -106,20 +115,23 @@ Observations:
   10 ms after rank 0 (`rank0_host_ms` 27.7 against 37.4); the forward starts with the slowest
   rank.
 
-## 5. Perturbation bound and decision
+## 5. Perturbation and decision
 
 - Probe cost inside `h`: the wrapper adds about 4.3 µs per hook call pair on the local CPU
   (`/data/ycfeng/tmp/d31_diag/probe03/overhead/bench.py`, indicative only), about 0.1 ms for 23
   hooks, plus a few stamps around the DP sync and the launch. The probe writes its lines before
   the first hook, which on decode lies inside the device wait.
-- Bound: if the whole TPOT shift came from `h` on resetting steps, decode `h` would be high by at
-  most 0.357 / 0.676 = 0.53 ms (10%); the wrapper estimate puts it nearer 0.1–0.2 ms (2–4%).
-  The probe run's own repeats are tight (TPOT 53.62–53.68 ms), and only one clean h200_32 run
-  exists (sweep02 was disturbed: TPOT 55.0–58.7 ms), so the run-to-run offset between jobs is
-  not known.
-- Decision: use the profile as measured, labelled `PERTURBED`; no correction factor. Effect on
-  step E: predicted TPOT may be high by at most about 0.36 ms (0.7% of 53.3 ms), which does not
-  change the 30% gate verdicts or the item 2 decisions (millisecond-scale components).
+- TPOT check failed: the probe run's TPOT is 0.357 ms above the clean sweep03 run, against a
+  clean repeat range of 0.207 ms. The probe run's own repeats are tight (TPOT 53.62–53.68 ms),
+  and only one clean h200_32 run exists (sweep02 was disturbed: TPOT 55.0–58.7 ms), so the
+  run-to-run offset between jobs is not known.
+- Withdrawn (codex F003): the earlier bound (decode `h` high by at most 0.53 ms, TPOT by at most
+  0.36 ms). It assumed the whole shift came from `h` on resetting steps; the probe also stamps
+  non-resetting steps and the DP sync, so the shift cannot be assigned to `h` alone.
+- Decision: no correction factor. The profile stays labelled `PERTURBED` and is not accepted.
+  Step E and step G runs with it are exploratory. Accepting it needs a probe on/off measurement
+  within one job (same nodes, alternating phases), which is deferred while the GPU budget runs
+  E and G.
 
 ## 6. Limits
 
@@ -138,3 +150,37 @@ Submitted through Pi `d31-h200-64-hostprobe01-submit-1027f` (prompt
 `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_hostprobe01/stage` unchanged (built at
 02bd453a with the earlier replay rule; a failed request then costs 120 s per later boundary, which
 the estimator re-checks). Result pending.
+
+## 8. Codex review 223fee59 and fixes
+
+Review report: `codex-review-223fee59-461a-45f2-9eae-3d6cadf74153/review.md` (task directory).
+All four findings were confirmed against the artifacts and fixed.
+
+| ID | Problem | Fix | Check |
+| --- | --- | --- | --- |
+| F001 | Token equality on TP rank 0 across windows does not prove that every rank's steps are complete; equal loss in all windows passes. | `window_tokens` sums non-dummy tokens per (DP, TP) rank in each window, requires all TP ranks of an engine to agree, and requires the engine sum to equal the work of the client-completed formal requests (`expected_window_tokens`). | `test_window_tokens_match_the_client_completed_work_on_every_rank`, `test_expected_window_tokens_count_the_client_completed_formal_requests`, `test_tp_ranks_of_an_engine_run_the_same_batch` |
+| F002 | A failed request may still run on a role; idle gauges are stale snapshots, so a boundary can pass while that work lands in a formal window. | `canonical_replay.phase_work` compares the native prompt-token and inter-token-latency counter deltas of each phase with the work of its client-completed requests; a formal mismatch makes the repetition unverified. The estimator rejects any change of `vllm:num_preemptions_total` in a formal window (`window_preemptions`). | `test_step5_canonical_native.py` fault `sweep_work_in_formal` (formal phase of repeat 1 unverified, extra 1,023 inter-token latencies); `test_a_preemption_in_a_formal_window_rejects_the_run` |
+| F003 | The 0.53 ms / 0.36 ms perturbation bounds do not follow from the TPOT shift. | Bounds withdrawn; profile not accepted; E/G exploratory (section 5). | Docs only |
+| F004 | The four unmatched prefill all-reduces lie inside the last formal window, not after it. | `engine_steps` accepts a partial all-reduce only after the role's last step with requests; any earlier one raises. The report counts `trailing_partial_all_reduces`. | `test_all_reduces_may_lack_participants_only_after_the_last_step_with_requests` (trailing dummy loss accepted; a lost useful tail on a nonzero TP rank, a lost dummy peer before it, and an interior loss rejected) |
+
+Commands (repo root):
+
+```bash
+PYTHONPATH=$PWD:$PWD/tests/unit /data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -m pytest \
+  tests/unit/test_kv_zeroing_host_time_estimator.py -q \
+  --basetemp /data/ycfeng/tmp/d31_pytest/est -p no:cacheprovider -p no:logging        # 14 passed
+PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp PYTHONPATH=$PWD:$PWD/tests/unit \
+  /data/ycfeng/envs/asyncopd-py312/bin/python -m pytest tests/unit/test_step5_canonical_native.py -q \
+  --basetemp /data/ycfeng/tmp/d31_pytest/native -p no:cacheprovider -p no:logging     # 48 passed
+```
+
+- Related step5 test files pass (46 passed, `/data/ycfeng/tmp/d31_diag/probe03/pytest_final.txt`;
+  `test_step5_priority_runs.py` 44 passed with `FRONTIER_SIMULATOR_PYTHON` set to the d29 python).
+  `test_mla_stage3_online_trace_builder.py` has one failure that imports none of the changed
+  modules; deferred.
+- Estimator rerun on hostprobe03 with the tightened checks
+  (`/data/ycfeng/tmp/d31_diag/probe03/recheck/`): exit 0; every TP rank of each engine holds
+  392,192 (prefill) and 66,496 (decode) tokens in all three windows; joins prefill 13,643 plus 4
+  trailing partial, decode 19,936 plus 0; no preemptions. The profile is identical apart from the
+  report path (prefill 37.4398 ms, decode 5.1105 ms), so the stored copies in `evidence/` are
+  unchanged.

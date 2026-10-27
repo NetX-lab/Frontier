@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: codex review of the h200_32 probe result (F001–F004): estimator and replay checks tightened; the h200_32 host profile is not accepted (probe effect unmeasured), so E/G with it are exploratory. |
 | 2026-10-27 | D31: item 3 step 2 h200_32 done (DP2 profile, `PERTURBED` with a bounded TPOT bias); E host rerun started; h200_64 probe submitted. |
 | 2026-10-27 | D31: item 2b step 2 refined with the exact native critical path: Frontier's step is within −7% to +4% of the native forward body; TP all-reduce direction corrected; the four item 2 fixes go together after item 3. |
 | 2026-10-27 | D31: corrected the table version of `h200_32_comb_h200` to merged03 (its `command.json`); item 3 step 2 probe run submitted. |
@@ -315,7 +316,12 @@ Calibration order for E, after the first error table:
       DP4 for G).
       h200_32 done 2026-10-27 (`test_report_2026-10-27_host_probe_runs.md`): prefill 37.44 ms,
       decode 5.11 ms per resetting step; marked `PERTURBED` (TPOT +0.36 ms against a 0.21 ms
-      clean repeat range; bias on E's TPOT at most 0.7%), used as measured. h200_64 probe job
+      clean repeat range). The probe's effect on `h` is not measured, so the profile is not
+      accepted: E and G runs with it are exploratory sensitivity runs (codex F003). Acceptance
+      needs a measured probe effect (probe on and off within one job), deferred while the GPU
+      budget runs E/G. The estimator's completeness checks were tightened after codex F001/F002
+      (all TP ranks, exact client-completed work, no preemption, trailing-only partial
+      all-reduces); the profile values are unchanged. h200_64 probe job
       `exp-1027-141317-610373` submitted.
    3. Implement in Frontier, off by default: the reset host time joins the existing DP
       forward-start agreement, so every DP lane launches from the latest lane's ready time before

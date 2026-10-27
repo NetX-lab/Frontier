@@ -69,7 +69,7 @@ def test_local_host_time_excludes_the_wait_for_other_engines():
     # Engine 0 arrives last this time; its wait is 0 and its value is unchanged.
     collective(processes, 2, {0: ("reset", 3, (5, 5.5), 4, 0), 1: ("dummy", 0, None, 0, 0)}, 2, 50 * MS)
     steps, join = steps_of(processes, 2, 2)
-    assert join == {"joined_all_reduces": 2, "unjoined_all_reduces": 0}
+    assert join == {"joined_all_reduces": 2, "trailing_partial_all_reduces": 0}
     # The dummy participant leaves no step; the plain step carries no host time.
     assert [(step["dp"], step["ordinal"], step["resetting"]) for step in steps] == [
         (0, 1, True), (1, 1, False), (0, 2, True)]
@@ -111,16 +111,35 @@ def test_the_engine_interval_spans_its_earliest_first_sync_to_its_last_launch():
     assert step["wait_ms"] == pytest.approx(2)
 
 
-def test_unmatched_all_reduces_windows_and_inconsistent_ranks():
-    processes = empty(2, 1)
-    for ordinal in (1, 2, 3):
-        collective(processes, ordinal, {0: ("reset", 0, (5,), 4, 0), 1: ("plain", 1, None, 4, 0)}, 1,
-                   (ordinal - 1) * 10**9)
-    del processes[1, 0][1]
-    steps, join = steps_of(processes, 2, 1, [(WALL / 1e9 + 1.5, WALL / 1e9 + 2.5)])
-    assert join == {"joined_all_reduces": 2, "unjoined_all_reduces": 1}
-    assert [step["ordinal"] for step in steps] == [3, 3]
+def test_all_reduces_may_lack_participants_only_after_the_last_step_with_requests():
+    def run_of(last):
+        processes = empty(2, 2)
+        for ordinal in (1, 2, 3):
+            collective(processes, ordinal, {0: ("reset", 0, (5, 5), 4, 0), 1: ("plain", 1, None, 4, 0)}, 2,
+                       (ordinal - 1) * 10**9)
+        collective(processes, 4, {0: last, 1: ("dummy", 0, None, 0, 0)}, 2, 3 * 10**9)
+        return processes
 
+    # The force-killed workers left a trailing dummy all-reduce unwritten on one rank.
+    processes = run_of(("dummy", 0, None, 0, 0))
+    del processes[1, 1][-1]
+    steps, join = steps_of(processes, 2, 2, [(WALL / 1e9 + 1.5, WALL / 1e9 + 2.5)])
+    assert join == {"joined_all_reduces": 3, "trailing_partial_all_reduces": 1}
+    assert [step["ordinal"] for step in steps] == [3, 3]
+    # A nonzero TP rank lost its last step with requests, or the dummy peer of a resetting step
+    # is lost: the sample would silently drop out of the profile.
+    for key in (0, 1), (1, 1):
+        processes = run_of(("reset", 0, (5, 5), 4, 0))
+        del processes[key][-1]
+        with pytest.raises(ValueError, match=r"All-reduces \[4\] lack a participant"):
+            steps_of(processes, 2, 2)
+    processes = run_of(("dummy", 0, None, 0, 0))
+    del processes[1, 0][1]
+    with pytest.raises(ValueError, match=r"All-reduces \[2\] lack a participant"):
+        steps_of(processes, 2, 2)
+
+
+def test_tp_ranks_of_an_engine_run_the_same_batch():
     processes = empty(1, 2)
     collective(processes, 1, {0: ("reset", 0, (5, 5), 4, 0)}, 2, 0)
     processes[0, 1][0]["reqs"] = 3
@@ -155,18 +174,36 @@ def test_a_role_needs_one_complete_process_per_engine_and_rank_on_one_node():
         estimator.role_processes(complete | {("decode", 0, 1): [elsewhere]}, "decode", 1, 2)
 
 
-def test_every_formal_window_schedules_the_same_tokens():
+def test_window_tokens_match_the_client_completed_work_on_every_rank():
     def at(second, tokens, dummy=False):
         return {"kind": "step", "dummy": dummy, "tokens": tokens, "wall_ns": WALL + second * 10**9}
 
     windows = [(WALL / 1e9, WALL / 1e9 + 10), (WALL / 1e9 + 20, WALL / 1e9 + 30)]
-    engines = {(0, 0): {"records": [at(1, 6), at(2, 3), at(21, 9), at(22, 5, dummy=True)]},
-               (0, 1): {"records": [at(1, 100)]}, (1, 0): {"records": [at(3, 4), at(23, 4)]}}
-    assert estimator.window_tokens(engines, "decode", windows) == [13, 13]
-    # The last step of engine 1 stayed unwritten when its worker was killed.
-    engines[1, 0]["records"].pop()
-    with pytest.raises(ValueError, match=r"decode: the formal windows scheduled \[13, 9\] tokens"):
-        estimator.window_tokens(engines, "decode", windows)
+    steps = ([at(1, 6), at(2, 3), at(21, 9), at(22, 5, dummy=True)], [at(3, 4), at(23, 4)])
+    engines = {(dp, tp): {"records": list(records)} for dp, records in enumerate(steps) for tp in range(2)}
+    assert estimator.window_tokens(engines, "decode", windows, [13, 13]) == [[9, 4], [9, 4]]
+    # Work of another request ran inside the second window, e.g. a request that failed at the client.
+    with pytest.raises(ValueError, match=r"decode: formal window 2 scheduled \[9, 4\] tokens per engine, not the 12"):
+        estimator.window_tokens(engines, "decode", windows, [13, 12])
+    # TP rank 1 of engine 1 lost its last step when its worker was killed; TP rank 0 kept it.
+    engines[1, 1]["records"].pop()
+    with pytest.raises(ValueError, match=r"TP ranks of DP engines \{1: \[0, 4\]\} scheduled different tokens "
+                                         r"in formal window 2"):
+        estimator.window_tokens(engines, "decode", windows, [13, 13])
+
+
+def test_expected_window_tokens_count_the_client_completed_formal_requests():
+    def record(segment, repeat, status="completed", prompt=6144, outputs=1024):
+        return {"segment": segment, "repeat": repeat, "status": status, "num_prefill_tokens": prompt,
+                "generated_token_count": outputs}
+
+    records = [record("formal", 1), record("formal", 1), record("warmup", 1),
+               record("length_sweep", 0, prompt=64, outputs=2), record("formal", 2),
+               record("formal", 2, status="failed", outputs=3)]
+    summary = {"repetitions": [{"repeat": 1}, {"repeat": 2}]}
+    # P computes the 6128 tokens it transfers; D the last block and one step per later output.
+    assert estimator.expected_window_tokens(records, summary, 16) == {
+        "prefill": [2 * 6128, 6128], "decode": [2 * (16 + 1023), 16 + 1023]}
 
 
 def summary(ttft, tpot):
@@ -183,10 +220,11 @@ def test_perturbation_compares_with_the_clean_repeat_range():
     assert result["metrics"]["tpot_ms"]["within"] is False
 
 
-def idle(name, monotonic, prefill, decode, verified=True, busy=False):
+def idle(name, monotonic, prefill, decode, verified=True, busy=False, preemptions=0):
     roles = {"prefill": prefill, "decode": decode}
+    page = f'vllm:num_preemptions_total{{engine="0",model_name="dp_pp_case"}} {preemptions}\n'
     return {"boundary": name, "verified": verified, "observations": [
-        {"monotonic": monotonic, "errors": [],
+        {"monotonic": monotonic, "errors": [], "pages": {role: page for role in roles},
          "roles": {role: {"idle": not busy, "completed_requests": count} for role, count in roles.items()}}]}
 
 
@@ -205,7 +243,7 @@ def test_formal_windows_lie_between_the_idle_boundaries():
     records = [{"kind": "step", "dummy": False, "wall_ns": WALL + 2 * 10**9},
                {"kind": "step", "dummy": True, "wall_ns": WALL - 10**9}]
     assert estimator.edge_clearance_s({"p": [{"records": records}]}, windows) == pytest.approx(3.0)
-    # A warmup request whose reused proxy connection reset before decode got it: decode counts one
+    # A warmup request that failed at the client and never completed on decode: decode counts one
     # less, and the old replay rule recorded both later boundaries as unverified.
     reset = [boundaries[0], idle("after_repeat01_warmup", -1.0, 26, 25, verified=False),
              idle("after_repeat01_formal", 100.0, 154, 153, verified=False)]
@@ -220,6 +258,19 @@ def test_formal_windows_lie_between_the_idle_boundaries():
         estimator.formal_windows(probe_summary(boundaries))
 
 
+def test_a_preemption_in_a_formal_window_rejects_the_run():
+    boundaries = [idle("after_length_sweep", -9.0, 10, 10), idle("after_repeat01_warmup", -1.0, 26, 26, preemptions=2),
+                  idle("after_repeat01_formal", 100.0, 154, 154, preemptions=2)]
+    # Preemptions before the formal window do not touch its tokens.
+    estimator.window_preemptions(probe_summary(boundaries))
+    boundaries[2] = idle("after_repeat01_formal", 100.0, 154, 154, preemptions=3)
+    with pytest.raises(ValueError, match="prefill: vllm:num_preemptions_total changed or is missing in formal window 1"):
+        estimator.window_preemptions(probe_summary(boundaries))
+    boundaries[2]["observations"][-1]["pages"]["prefill"] = ""
+    with pytest.raises(ValueError, match="changed or is missing"):
+        estimator.window_preemptions(probe_summary(boundaries))
+
+
 def stage(tmp_path, steps_per_role):
     """An h200_32 host_probe stage: DP2 x TP8 per role; engine 0 resets in every listed
     (pre_ms, reqs) step and reaches the all_reduce 2 ms before engine 1."""
@@ -228,7 +279,7 @@ def stage(tmp_path, steps_per_role):
               "source": {"commit": "fixture"},
               "tool_hashes": {"host_probe_bootstrap/host_step_probe.py": "fixture"},
               "engine": {"tensor_parallel_size": 8, "data_parallel_size": 2, "pipeline_parallel_size": 1,
-                         "compilation_config": {"cudagraph_mode": "FULL_AND_PIECEWISE"}}}
+                         "block_size": 8, "compilation_config": {"cudagraph_mode": "FULL_AND_PIECEWISE"}}}
     root.mkdir()
     (root / "config.json").write_text(json.dumps(config))
     for role, role_steps in steps_per_role.items():
@@ -248,6 +299,12 @@ def stage(tmp_path, steps_per_role):
                            idle("after_repeat01_formal", 100.0, 154, 154)])
     (root / "evidence/replay").mkdir(parents=True)
     (root / "evidence/replay/canonical_summary.json").write_text(json.dumps(probe))
+    # One formal request carries the steps' tokens: P computes the prompt minus its last block of
+    # 8 tokens, D that block and one step per output after the first.
+    tokens = {role: 2 * sum(reqs for _, reqs in role_steps) for role, role_steps in steps_per_role.items()}
+    request = {"segment": "formal", "repeat": 1, "status": "completed", "num_prefill_tokens": tokens["prefill"] + 8,
+               "generated_token_count": tokens["decode"] - 8 + 1}
+    (root / "evidence/replay/client_requests.jsonl").write_text(json.dumps(request) + "\n")
     (tmp_path / "clean.json").write_text(json.dumps(summary(912.0, 53.3)))
     return root
 

@@ -29,7 +29,8 @@ CALIBRATION = Path(__file__).resolve().parents[2] / "comparison/calibration"
 sys.path[:0] = [str(CALIBRATION), str(CALIBRATION.parent / "dp_placement_pp")]
 from pd_proxy import build_app  # noqa: E402
 from pd_replay import canonical_workload as read_canonical_workload  # noqa: E402
-from serving_metrics import parse_prometheus, transfer_delta  # noqa: E402
+from serving_metrics import (  # noqa: E402
+    PROMPT_TOKEN_SOURCES, expected_pull_prompt_sources, parse_prometheus, transfer_delta)
 from vllm_replay import SERVED_MODEL_NAME, local_model_config, replay, runtime_version  # noqa: E402
 
 MANIFEST_SHA256 = "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3"
@@ -186,10 +187,41 @@ def boundary_reached(sample: dict, completed_after: dict | None) -> bool:
 def phase_completions(phase: dict) -> int:
     """Requests of a phase the client saw complete; each one completed on both roles.
 
-    A request that failed at the client may never have reached a role (a reused proxy
-    connection can reset before the request is sent), so it raises no expected count.
+    A request that failed at the client may or may not have run on a role, so it raises no
+    expected count. The idle gauges are snapshots from the last engine output, so such a
+    request may also still run after the boundary; `phase_work` rejects a formal phase that
+    holds any of its work.
     """
     return phase["recorded_requests"] - len(phase["failed_request_ids"])
+
+
+def completed_work(records: list[dict], block_size: int) -> dict:
+    """Work the native counters count for the requests the client saw complete.
+
+    P computes the whole blocks it transfers to D; D computes the rest of the prompt and then
+    runs one decode step for each output token after its first.
+    """
+    completed = [record for record in records if record["status"] == "completed"]
+    splits = [expected_pull_prompt_sources(record["num_prefill_tokens"], block_size) for record in completed]
+    decode = {source: sum(split[source] for split in splits) for source in PROMPT_TOKEN_SOURCES}
+    return {"prefill_prompt_sources": {"local_compute": decode["external_kv_transfer"], "local_cache_hit": 0,
+                                       "external_kv_transfer": 0},
+            "decode_prompt_sources": decode,
+            "decode_inter_token_latencies": sum(record["generated_token_count"] - 1 for record in completed)}
+
+
+def phase_work(records: list[dict], delta: dict, block_size: int) -> dict:
+    """Compare a phase's native work counters with the work of its client-completed requests.
+
+    The token counters count executed work, also of a request that later failed at the client,
+    so work of an earlier failed request that ran inside the phase shows as a difference.
+    """
+    expected = completed_work(records, block_size)
+    observed = {f"{role}_prompt_sources": {source: delta[role]["prompt_tokens_by_source"][source]["total"]
+                                           for source in PROMPT_TOKEN_SOURCES} for role in ROLES}
+    observed["decode_inter_token_latencies"] = (
+        delta["decode"]["requests"]["vllm:inter_token_latency_seconds"]["count"]["total"])
+    return {"passed": observed == expected, "observed": observed, "expected": expected}
 
 
 async def observe_idle(urls: dict, dp_size: int, timeout_s: float, poll_s: float,
@@ -227,7 +259,8 @@ async def observe_idle(urls: dict, dp_size: int, timeout_s: float, poll_s: float
         return {"verified": False, "observations": observations, "error": "Idle/fresh completion deadline"}
 
 
-async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, settings, *, checkpoint=None):
+async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, settings, block_size, *,
+                             checkpoint=None):
     manifest, formal, warmup = workload
     records = []
     result = {"repetitions": [], "idle_boundaries": [], "observation_errors": [],
@@ -344,10 +377,13 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, se
             current["client_workload_verified"] &= idle["verified"]
             try:
                 if before["verified"] and idle["verified"]:
-                    current["phases"][phase]["transfer_delta"] = {
-                        role: transfer_delta(parse_prometheus(before["observations"][-1]["pages"][role]),
-                                             parse_prometheus(idle["observations"][-1]["pages"][role]))
-                        for role in ROLES}
+                    delta = {role: transfer_delta(parse_prometheus(before["observations"][-1]["pages"][role]),
+                                                  parse_prometheus(idle["observations"][-1]["pages"][role]))
+                             for role in ROLES}
+                    work = phase_work(phase_records, delta, block_size)
+                    current["phases"][phase] |= {"transfer_delta": delta, "work_accounting": work}
+                    if phase == "formal":
+                        current["client_workload_verified"] &= work["passed"]
             except Exception as error:
                 result["observation_errors"].append(f"transfer: {type(error).__name__}: {error}")
             persist()
@@ -397,7 +433,7 @@ async def run(args):
         result, _ = await replay_repetitions(workload, args.proxy_port, model["vocab_size"],
                                              args.origin_lead_s,
                                              {"prefill": args.prefill_url, "decode": args.decode_url},
-                                             settings, checkpoint=checkpoint)
+                                             settings, engine["block_size"], checkpoint=checkpoint)
         print("CANONICAL_DONE", json.dumps({"status": result["status"], "reference_admission": "UNVERIFIED"}), flush=True)
     finally:
         await runner.cleanup()

@@ -23,6 +23,11 @@ for the device). The profile holds the mean of `h_i` over the resetting steps of
 measurement windows, per role; when the least-squares trend of `h_i` over the observed
 request counts exceeds `TREND_LIMIT_MS`, the role's entry is the mean per request count.
 
+The probe files are complete for the formal windows: on every TP rank of every engine, the
+non-dummy steps inside a window hold exactly the tokens of the window's client-completed formal
+requests, no request was preempted (recomputed work could hide a lost step), and an all-reduce
+lacks a participant only after the role's last step with requests.
+
 The report adds checks that settle whether `first_sync` is the device idle point: the share
 of steps on which a rank's previous step was still running at the first hook, the
 main-stream gap from the CUDA events (`gap_ms - excess`), the hook count per step, the
@@ -50,10 +55,14 @@ sys.path.insert(0, str(REPO))
 
 from frontier.config import ReplicaConfig  # noqa: E402
 from frontier.execution_time_predictor.kv_block_zeroing_host_time import SCHEMA  # noqa: E402
-from tests.integration.step5_pd.canonical_replay import ROLES, boundary_reached, phase_completions  # noqa: E402
+from tests.integration.step5_pd.canonical_replay import (  # noqa: E402
+    ROLES, boundary_reached, completed_work, phase_completions)
 from tests.integration.step5_pd.frontier_workload import CASES, DEVICES, MODEL  # noqa: E402
+# canonical_replay put the calibration helpers on the path.
+from serving_metrics import engine_values, parse_prometheus  # noqa: E402
 
 PROBE = "host_probe_bootstrap/host_step_probe.py"
+PREEMPTIONS = "vllm:num_preemptions_total"
 # Design 3.3: a request-count dependence above this over the observed range needs a table.
 TREND_LIMIT_MS = 1.0
 
@@ -81,6 +90,8 @@ def formal_windows(summary: dict) -> list[tuple[float, float]]:
     Each boundary is checked from its last recorded observation with the replay's rule,
     counting from the length sweep boundary. Replays before that rule expected completions
     also for the requests that failed at the client, so their recorded verdicts may be wrong.
+    The idle gauges are snapshots, so a failed request may still have run after a boundary;
+    `window_tokens` rejects a window that holds any work besides its formal requests.
     """
     boundaries = {boundary["boundary"]: boundary for boundary in summary["idle_boundaries"]}
     sweep = boundaries["after_length_sweep"]
@@ -104,6 +115,32 @@ def formal_windows(summary: dict) -> list[tuple[float, float]]:
     return windows
 
 
+def window_preemptions(summary: dict) -> None:
+    """Reject a formal window in which a role preempted a request: its recomputed tokens could
+    hide a lost step from the exact token count."""
+    pages = {boundary["boundary"]: boundary["observations"][-1]["pages"] for boundary in summary["idle_boundaries"]}
+    for repetition in summary["repetitions"]:
+        start, end = (pages[f"after_repeat{repetition['repeat']:02d}_{phase}"] for phase in ("warmup", "formal"))
+        for role in ROLES:
+            before, after = (engine_values(parse_prometheus(page[role]), PREEMPTIONS) for page in (start, end))
+            if not after or sum(after.values()) != sum(before.values()):
+                raise ValueError(f"{role}: {PREEMPTIONS} changed or is missing in formal window "
+                                 f"{repetition['repeat']}: {before} -> {after}")
+
+
+def expected_window_tokens(records: list[dict], summary: dict, block_size: int) -> dict[str, list[int]]:
+    """Tokens each role schedules in each formal window: the work of its client-completed formal
+    requests (`canonical_replay.completed_work`)."""
+    expected = {role: [] for role in ROLES}
+    for repetition in summary["repetitions"]:
+        work = completed_work([record for record in records if record["segment"] == "formal"
+                               and record["repeat"] == repetition["repeat"]], block_size)
+        expected["prefill"].append(work["prefill_prompt_sources"]["local_compute"])
+        expected["decode"].append(work["decode_prompt_sources"]["local_compute"]
+                                  + work["decode_inter_token_latencies"])
+    return expected
+
+
 def edge_clearance_s(processes: dict, windows: list[tuple[float, float]]) -> float:
     """Smallest distance from a window edge to a non-dummy step of any process."""
     starts = [record["wall_ns"] / 1e9 for files in processes.values() for process in files
@@ -118,7 +155,7 @@ def role_processes(processes: dict, role: str, dp_size: int, tp_size: int) -> di
     shutdown that force-kills the workers, so `GPUModelRunner.shutdown` never runs: the probe's
     `end` line is absent and the last step or two, still waiting for their device events, stay
     unwritten. The file is line-buffered, so every earlier step is on disk; `window_tokens`
-    checks that no step with formal requests is missing.
+    and `engine_steps` check that no step with requests is missing.
     """
     expected = {(dp, tp) for dp in range(dp_size) for tp in range(tp_size)}
     found = {(dp, tp): files for (name, dp, tp), files in processes.items() if name == role}
@@ -146,20 +183,31 @@ def role_processes(processes: dict, role: str, dp_size: int, tp_size: int) -> di
     return {key: files[0] for key, files in found.items()}
 
 
-def window_tokens(processes: dict[tuple[int, int], dict], role: str, windows: list[tuple[float, float]]) -> list[int]:
-    """Tokens the role's engines scheduled in each formal window, from TP rank 0.
+def window_tokens(processes: dict[tuple[int, int], dict], role: str, windows: list[tuple[float, float]],
+                  expected: list[int]) -> list[list[int]]:
+    """Tokens each DP engine scheduled in each formal window, checked on every TP rank.
 
-    Every repetition replays the same requests, so the totals are equal unless a file lost a
-    step with requests or a repetition recomputed preempted requests.
+    The TP ranks of an engine run the same batches, and the engines together run exactly the
+    work of the window's client-completed formal requests (`expected`). A probe file that lost
+    a step with requests, or work of another request inside the window, breaks one of the two.
     """
-    totals = [sum(record["tokens"] for (dp, tp), process in processes.items() if tp == 0
-                  for record in process["records"]
-                  if record["kind"] == "step" and not record["dummy"] and start <= record["wall_ns"] / 1e9 <= end)
-              for start, end in windows]
-    if len(set(totals)) != 1:
-        raise ValueError(f"{role}: the formal windows scheduled {totals} tokens; a probe file lost steps "
-                         "with requests or a repetition differs")
-    return totals
+    dp_size = 1 + max(dp for dp, _ in processes)
+    per_engine = []
+    for index, (start, end) in enumerate(windows):
+        ranks = defaultdict(set)
+        for (dp, tp), process in processes.items():
+            ranks[dp].add(sum(record["tokens"] for record in process["records"] if record["kind"] == "step"
+                              and not record["dummy"] and start <= record["wall_ns"] / 1e9 <= end))
+        uneven = {dp: sorted(values) for dp, values in ranks.items() if len(values) != 1}
+        if uneven:
+            raise ValueError(f"{role}: the TP ranks of DP engines {uneven} scheduled different tokens in "
+                             f"formal window {index + 1}; a probe file lost steps")
+        engines = [ranks[dp].pop() for dp in range(dp_size)]
+        if sum(engines) != expected[index]:
+            raise ValueError(f"{role}: formal window {index + 1} scheduled {engines} tokens per engine, not the "
+                             f"{expected[index]} of its client-completed formal requests")
+        per_engine.append(engines)
+    return per_engine
 
 
 def engine_steps(processes: dict[tuple[int, int], dict], dp_size: int, tp_size: int,
@@ -171,7 +219,15 @@ def engine_steps(processes: dict[tuple[int, int], dict], dp_size: int, tp_size: 
     by_sequence = {key: {record["seq"]: record for record in process["records"] if record["kind"] == "step"}
                    for key, process in processes.items()}
     ordinals = set.intersection(*(set(records) for records in by_ordinal.values()))
-    every = set.union(*(set(records) for records in by_ordinal.values()))
+    partial = set.union(*(set(records) for records in by_ordinal.values())) - ordinals
+    # A force-killed worker leaves only its last steps unwritten. An all-reduce whose missing
+    # participant ran with requests, or was a dummy peer of one, would bias or drop samples.
+    useful = max(ordinal for records in by_ordinal.values() for ordinal, record in records.items()
+                 if not record["dummy"])
+    lost = sorted(ordinal for ordinal in partial if ordinal <= useful)
+    if lost:
+        raise ValueError(f"All-reduces {lost[:5]} lack a participant at or before the last step with requests "
+                         f"(all-reduce {useful}); a probe file lost steps")
     steps = []
     for ordinal in sorted(ordinals):
         records = {key: by_ordinal[key][ordinal] for key in by_ordinal}
@@ -212,7 +268,7 @@ def engine_steps(processes: dict[tuple[int, int], dict], dp_size: int, tp_size: 
                             hooks=sorted({record["zero"]["hooks"] for record in ranks}),
                             waited=any(record["zero"]["prior_pending"] for record in ranks))
             steps.append(step)
-    join = {"joined_all_reduces": len(ordinals), "unjoined_all_reduces": len(every - ordinals)}
+    join = {"joined_all_reduces": len(ordinals), "trailing_partial_all_reduces": len(partial)}
     return steps, join
 
 
@@ -317,6 +373,9 @@ def main() -> int:
     evidence = args.stage_dir / "evidence"
     summary = json.loads((evidence / "replay/canonical_summary.json").read_text())
     windows = formal_windows(summary)
+    window_preemptions(summary)
+    with (evidence / "replay/client_requests.jsonl").open() as stream:
+        expected = expected_window_tokens([json.loads(line) for line in stream], summary, engine["block_size"])
     processes = read_processes(evidence / "nodes")
     report = {"case": args.case, "stage": str(args.stage_dir), "job_id": args.job_id,
               "formal_windows_wall_s": windows, "window_edge_clearance_s": edge_clearance_s(processes, windows),
@@ -324,7 +383,7 @@ def main() -> int:
     steps = {}
     for role in ROLES:
         engines = role_processes(processes, role, dp, tp)
-        tokens = window_tokens(engines, role, windows)
+        tokens = window_tokens(engines, role, windows, expected[role])
         steps[role], join = engine_steps(engines, dp, tp, windows)
         report["roles"][role] = {"join": join, "window_tokens": tokens, **role_report(steps[role])}
     report["perturbation"] = perturbation(summary, json.loads(args.clean_summary.read_text()))
