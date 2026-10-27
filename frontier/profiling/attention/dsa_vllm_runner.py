@@ -38,11 +38,15 @@ from pathlib import Path
 from typing import Any, Callable
 
 from frontier.profiling.attention.dsa_kernel_trace import (
+    ScopeKey,
+    ScopeKernelTime,
     aggregate_kernel_trace,
     annotation_name,
     load_trace_events,
 )
 from frontier.profiling.attention.dsa_plan import (
+    ENGINE_POLICY_EAGER_CHUNKED,
+    ENGINE_POLICY_GRAPH_REPLAY,
     ENGINE_POLICY_NATIVE_DEFAULTS,
     INDEXER_SCOPE,
     MLA_SCOPE,
@@ -55,6 +59,8 @@ from frontier.profiling.attention.dsa_plan import (
     require_scope_timing,
 )
 from frontier.profiling.attention.dsa_rows import CUDA_EVENT, KERNEL_ONLY, MEASUREMENT_TYPES
+from frontier.profiling.attention.graph_capture import CaptureRecord
+from frontier.profiling.attention.graph_replay_trace import attribute_replay_trace
 from frontier.profiling.common.runtime_identity import (
     collect_device_identity,
     collect_runtime_versions,
@@ -494,13 +500,16 @@ def _step_until(llm_engine: Any, done: Callable[[], bool], max_steps: int, label
         steps += 1
 
 
-def _kernel_only_calls(
-    trace_path: Path, steps: list[dict[str, Any]], engine_index: int
+def _scope_calls(
+    scope_times: dict[ScopeKey, ScopeKernelTime],
+    steps: list[dict[str, Any]],
+    engine_index: int,
+    trace_path: Path,
 ) -> list[dict[str, Any]]:
     by_step = {step["step_index"]: step for step in steps}
     calls = []
     for key, timing in sorted(
-        aggregate_kernel_trace(load_trace_events(trace_path)).items(),
+        scope_times.items(),
         key=lambda item: (item[0].step_index, item[0].global_layer_id, item[0].scope),
     ):
         step = by_step.get(key.step_index)
@@ -522,6 +531,46 @@ def _kernel_only_calls(
     return calls
 
 
+def _kernel_only_calls(
+    trace_path: Path, steps: list[dict[str, Any]], engine_index: int
+) -> list[dict[str, Any]]:
+    return _scope_calls(
+        aggregate_kernel_trace(load_trace_events(trace_path)), steps, engine_index, trace_path
+    )
+
+
+def graph_replay_calls(
+    trace_path: Path,
+    steps: list[dict[str, Any]],
+    engine_index: int,
+    *,
+    record: CaptureRecord,
+    container_scopes: frozenset[str],
+) -> list[dict[str, Any]]:
+    """Build kernel-only calls from captured ownership and nested eager ranges."""
+
+    attributed = attribute_replay_trace(load_trace_events(trace_path), record, container_scopes)
+    return _scope_calls(
+        {key: timing for key, timing in attributed.scope_times.items()
+         if key.scope not in container_scopes},
+        steps, engine_index, trace_path,
+    )
+
+
+_TIMING_MEASUREMENTS = {
+    ENGINE_POLICY_EAGER_CHUNKED: MEASUREMENT_TYPES,
+    ENGINE_POLICY_GRAPH_REPLAY: (KERNEL_ONLY,),
+}
+
+
+def timing_measurements(engine_policy: str) -> tuple[str, ...]:
+    """Select timing that preserves the engine policy's captured graph."""
+
+    if engine_policy not in _TIMING_MEASUREMENTS:
+        require_scope_timing(engine_policy)
+    return _TIMING_MEASUREMENTS[engine_policy]
+
+
 def run_case(
     llm: Any,
     plan: DsaProfilePlan,
@@ -531,6 +580,7 @@ def run_case(
     vocab_size: int,
     trace_dir: Path,
     keep_traces: bool,
+    trace_calls: Callable[[Path, list[dict[str, Any]], int], list[dict[str, Any]]] = _kernel_only_calls,
 ) -> list[dict[str, Any]]:
     from vllm import SamplingParams
 
@@ -578,7 +628,7 @@ def run_case(
         raise RuntimeError(f"{label}: recorded {result['recorded']} of {limit} steps")
     calls = result["calls"]
     if measurement == KERNEL_ONLY:
-        calls = _kernel_only_calls(trace_path, result["steps"], case.engine_index)
+        calls = trace_calls(trace_path, result["steps"], case.engine_index)
         if not keep_traces:
             trace_path.unlink()
     return [*result["steps"], *calls]
@@ -594,14 +644,24 @@ def build_engine(
 ) -> Any:
     """Build the in-process engine; ``engine_options`` adds model-specific LLM arguments."""
 
-    native_defaults = plan.limits.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS
-    if native_defaults and engine_options:
-        raise ValueError("native_defaults does not accept engine_options overrides")
-    execution_options = {"enable_chunked_prefill": False} if native_defaults else {
-        "enforce_eager": True, "enable_chunked_prefill": True,
-        "async_scheduling": False,
-        "long_prefill_token_threshold": plan.engine(engine_index).prefill_query_len,
-    }
+    policy = plan.limits.engine_policy
+    if policy == ENGINE_POLICY_NATIVE_DEFAULTS:
+        if engine_options:
+            raise ValueError("native_defaults does not accept engine_options overrides")
+        execution_options = {"enable_chunked_prefill": False}
+    else:
+        execution_options = {
+            "enable_chunked_prefill": True,
+            "async_scheduling": False,
+            "long_prefill_token_threshold": plan.engine(engine_index).prefill_query_len,
+        }
+        if policy == ENGINE_POLICY_GRAPH_REPLAY:
+            compilation = {"cudagraph_mode": plan.limits.cudagraph_mode}
+            if plan.limits.cudagraph_capture_sizes:
+                compilation["cudagraph_capture_sizes"] = list(plan.limits.cudagraph_capture_sizes)
+            execution_options["compilation_config"] = compilation
+        else:
+            execution_options["enforce_eager"] = True
     os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
     from vllm import LLM
 
@@ -639,10 +699,11 @@ def measure_engine(
     keep_traces: bool,
     case_ids: set[str] | None,
     log_label: str,
+    trace_calls: Callable[[Path, list[dict[str, Any]], int], list[dict[str, Any]]] = _kernel_only_calls,
 ) -> None:
     """Measure the engine's cases with installed hooks; write raw records to ``raw_path``."""
 
-    require_scope_timing(plan.limits.engine_policy)
+    measurements = timing_measurements(plan.limits.engine_policy)
     if inventory["attention_backend"] != expected_attention_backend:
         raise RuntimeError(
             f"Engine selected attention backend {inventory['attention_backend']!r}, "
@@ -672,9 +733,9 @@ def measure_engine(
     with open(raw_path, "w", encoding="utf-8") as handle:
         handle.write(json.dumps(engine_record) + "\n")
         for case in cases:
-            for measurement in MEASUREMENT_TYPES:
+            for measurement in measurements:
                 records = run_case(
-                    llm, plan, case, measurement, rng, vocab_size, trace_dir, keep_traces
+                    llm, plan, case, measurement, rng, vocab_size, trace_dir, keep_traces, trace_calls
                 )
                 handle.writelines(json.dumps(record) + "\n" for record in records)
                 handle.flush()
@@ -726,9 +787,11 @@ __all__ = [
     "build_engine",
     "case_progress",
     "finish_case",
+    "graph_replay_calls",
     "install_case_recorder",
     "install_dsa_hooks",
     "measure_engine",
     "run_case",
     "run_engine",
+    "timing_measurements",
 ]

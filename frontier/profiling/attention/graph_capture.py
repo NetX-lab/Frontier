@@ -389,6 +389,12 @@ class GraphCaptureRecorder:
         self._ids: set[int] = set()
         self._breakable_captures: list[Any] = []
 
+    @property
+    def current_owner(self) -> ScopeOwner | None:
+        """Return the innermost scope owner, or the outside owner."""
+
+        return self._stack[-1] if self._stack else None
+
     def _breakable_ordinal(self, capture: Any) -> int:
         for ordinal, existing in enumerate(self._breakable_captures):
             if existing is capture:

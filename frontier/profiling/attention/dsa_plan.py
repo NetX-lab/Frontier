@@ -45,6 +45,9 @@ PHASE_PREFILL = "prefill"
 PHASE_DECODE = "decode"
 ENGINE_POLICY_EAGER_CHUNKED = "eager_chunked"
 ENGINE_POLICY_NATIVE_DEFAULTS = "native_defaults"
+ENGINE_POLICY_GRAPH_REPLAY = "graph_replay"
+GRAPH_REPLAY_CUDAGRAPH_MODES = ("FULL_AND_PIECEWISE", "PIECEWISE", "NONE")
+PIECEWISE_CUDAGRAPH_MODES = ("FULL_AND_PIECEWISE", "PIECEWISE")
 
 # Native per-layer config lists that must shrink with ``num_hidden_layers``.
 _DENSE_MLP_LAYER_TYPE = "dense"
@@ -136,13 +139,17 @@ class DsaMeasurementLimits:
     decode_measured_steps: int
     prefill_warmup_repeats: int
     prefill_measured_repeats: int
-    engine_policy: Literal["eager_chunked", "native_defaults"] = (
+    engine_policy: Literal["eager_chunked", "native_defaults", "graph_replay"] = (
         ENGINE_POLICY_EAGER_CHUNKED
     )
 
+    cudagraph_mode: str | None = None
+    cudagraph_capture_sizes: tuple[int, ...] = ()
+
     def __post_init__(self) -> None:
         if self.engine_policy not in (
-            ENGINE_POLICY_EAGER_CHUNKED, ENGINE_POLICY_NATIVE_DEFAULTS
+            ENGINE_POLICY_EAGER_CHUNKED, ENGINE_POLICY_NATIVE_DEFAULTS,
+            ENGINE_POLICY_GRAPH_REPLAY,
         ):
             raise ValueError(f"Unknown DSA engine_policy {self.engine_policy!r}")
         for name in (
@@ -169,6 +176,32 @@ class DsaMeasurementLimits:
                 "The largest chunk budget runs the decode cases and must schedule "
                 f"max_num_seqs={self.max_num_seqs} decode tokens in one step, got "
                 f"{max(self.chunk_budgets)}"
+            )
+        if self.engine_policy == ENGINE_POLICY_GRAPH_REPLAY:
+            if self.cudagraph_mode not in GRAPH_REPLAY_CUDAGRAPH_MODES:
+                raise ValueError(
+                    "graph_replay requires cudagraph_mode in "
+                    f"{GRAPH_REPLAY_CUDAGRAPH_MODES}, got {self.cudagraph_mode!r}"
+                )
+            if self.cudagraph_mode in PIECEWISE_CUDAGRAPH_MODES:
+                sizes = self.cudagraph_capture_sizes
+                if not sizes:
+                    raise ValueError("graph_replay requires non-empty cudagraph_capture_sizes")
+                for size in sizes:
+                    _require_positive_int("cudagraph capture size", size)
+                if any(left >= right for left, right in zip(sizes, sizes[1:])):
+                    raise ValueError(f"cudagraph_capture_sizes must be strictly increasing, got {sizes}")
+                if sizes[-1] > min(self.chunk_budgets):
+                    raise ValueError(
+                        f"Maximum cudagraph capture size {sizes[-1]} exceeds the smallest "
+                        f"chunk budget {min(self.chunk_budgets)}"
+                    )
+            elif self.cudagraph_capture_sizes:
+                raise ValueError("cudagraph_mode NONE requires empty cudagraph_capture_sizes")
+        elif self.cudagraph_mode is not None or self.cudagraph_capture_sizes:
+            raise ValueError(
+                f"{self.engine_policy} requires cudagraph_mode=None and empty "
+                "cudagraph_capture_sizes"
             )
         if self.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS:
             if len(self.chunk_budgets) != 1:
@@ -214,7 +247,10 @@ class DsaProfilePlan:
         if self.limits.engine_policy == ENGINE_POLICY_EAGER_CHUNKED:
             # V4 and FULL callers inherit this serializer and frozen legacy plans.
             payload["limits"].pop("engine_policy")
-        else:
+        if self.limits.engine_policy != ENGINE_POLICY_GRAPH_REPLAY:
+            payload["limits"].pop("cudagraph_mode")
+            payload["limits"].pop("cudagraph_capture_sizes")
+        if self.limits.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS:
             payload["timing_collection"] = "pending_native_scope_instrumentation"
         return payload
 
@@ -251,6 +287,10 @@ class DsaProfilePlan:
         if self.limits.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS:
             summary["engine_policy"] = self.limits.engine_policy
             summary["timing_collection"] = "pending_native_scope_instrumentation"
+        if self.limits.engine_policy == ENGINE_POLICY_GRAPH_REPLAY:
+            summary["engine_policy"] = self.limits.engine_policy
+            summary["cudagraph_mode"] = self.limits.cudagraph_mode
+            summary["cudagraph_capture_sizes"] = self.limits.cudagraph_capture_sizes
         return summary
 
 
@@ -386,7 +426,7 @@ def _build_prefill_cases(
     whose budget exceeds it.
     """
 
-    if (limits.engine_policy == ENGINE_POLICY_EAGER_CHUNKED
+    if (limits.engine_policy != ENGINE_POLICY_NATIVE_DEFAULTS
             and max(chunk_budgets) >= limits.max_context_len):
         raise ValueError(
             f"chunk budgets must stay below max_context_len={limits.max_context_len}"
@@ -803,6 +843,9 @@ __all__ = [
     "DSA_SCOPES",
     "ENGINE_POLICY_EAGER_CHUNKED",
     "ENGINE_POLICY_NATIVE_DEFAULTS",
+    "ENGINE_POLICY_GRAPH_REPLAY",
+    "GRAPH_REPLAY_CUDAGRAPH_MODES",
+    "PIECEWISE_CUDAGRAPH_MODES",
     "DsaCase",
     "DsaEngineSpec",
     "DsaLayer",

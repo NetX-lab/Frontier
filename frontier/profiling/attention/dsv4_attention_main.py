@@ -26,6 +26,7 @@ is the native engine's KV block count times the compressed-group block size
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import sys
 from pathlib import Path
@@ -36,7 +37,13 @@ from frontier.profiling.attention.dsa_main import (
     _add_plan_arguments,
     _engine_identity_fields,
 )
-from frontier.profiling.attention.dsa_plan import DsaMeasurementLimits, load_hf_config
+from frontier.profiling.attention.dsa_plan import (
+    ENGINE_POLICY_EAGER_CHUNKED,
+    ENGINE_POLICY_GRAPH_REPLAY,
+    GRAPH_REPLAY_CUDAGRAPH_MODES,
+    DsaMeasurementLimits,
+    load_hf_config,
+)
 from frontier.profiling.attention.dsa_rows import read_records, write_rows_csv
 from frontier.profiling.attention.dsv4_attention_plan import (
     Dsv4ProfilePlan,
@@ -49,10 +56,19 @@ from frontier.profiling.attention.dsv4_attention_rows import (
 from frontier.profiling.common.runtime_identity import RuntimeIdentity, file_sha256
 
 _RAW_FILE_PATTERN = "dsv4_raw_e*.jsonl"
+_RUNNER_MODULES = {
+    ENGINE_POLICY_EAGER_CHUNKED: "frontier.profiling.attention.dsv4_attention_runner",
+    ENGINE_POLICY_GRAPH_REPLAY: "frontier.profiling.attention.dsv4_graph_replay_runner",
+}
 
 
 def _add_dsv4_plan_arguments(parser: argparse.ArgumentParser) -> None:
     _add_plan_arguments(parser)
+    parser.add_argument(
+        "--engine_policy", choices=tuple(_RUNNER_MODULES), default=ENGINE_POLICY_EAGER_CHUNKED,
+    )
+    parser.add_argument("--cudagraph_mode", choices=GRAPH_REPLAY_CUDAGRAPH_MODES)
+    parser.add_argument("--cudagraph_capture_sizes", nargs="+", type=int)
     parser.add_argument(
         "--query_one_context_min", type=int, default=0,
         help="Inclusive cached-context lower bound for --query_one_context_max. "
@@ -83,6 +99,9 @@ def build_plan(args: argparse.Namespace) -> Dsv4ProfilePlan:
         decode_measured_steps=args.decode_measured_steps,
         prefill_warmup_repeats=args.prefill_warmup_repeats,
         prefill_measured_repeats=args.prefill_measured_repeats,
+        engine_policy=getattr(args, "engine_policy", ENGINE_POLICY_EAGER_CHUNKED),
+        cudagraph_mode=getattr(args, "cudagraph_mode", None),
+        cudagraph_capture_sizes=tuple(getattr(args, "cudagraph_capture_sizes", None) or ()),
     )
     return build_dsv4_profile_plan(
         model_name=args.model_name,
@@ -108,8 +127,6 @@ def _plan_command(args: argparse.Namespace) -> None:
 
 
 def _run_command(args: argparse.Namespace) -> None:
-    from frontier.profiling.attention.dsv4_attention_runner import run_engine
-
     engine_config = Path(args.model_dir) / "config.json"
     if file_sha256(engine_config) != file_sha256(args.model_config_path):
         raise ValueError(
@@ -117,7 +134,8 @@ def _run_command(args: argparse.Namespace) -> None:
             "the engine must load the configuration the plan was built from"
         )
     plan = build_plan(args)
-    run_engine(
+    runner = importlib.import_module(_RUNNER_MODULES[plan.limits.engine_policy])
+    runner.run_engine(
         plan=plan,
         engine_index=args.engine_index,
         model_dir=args.model_dir,
@@ -230,6 +248,8 @@ def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     args.handler(args)
 
+
+__all__ = ["build_parser", "build_plan", "main"]
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -34,11 +34,13 @@ preserved unchanged. For the pristine vLLM 0.28 source without that hook,
 from __future__ import annotations
 
 import hashlib
+import importlib
 import inspect
 import os
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -244,28 +246,20 @@ def _routing_identity(model, config):
                  if isinstance(module, MoERunner)}, native_sources=native_sources)
 
 
-def install_dsv4_hooks(
-    worker: Any, engine_index: int, layers: list[tuple[int, str, int]], config=None
-) -> dict[str, Any]:
-    """Wrap every attention layer; return the engine's attention inventory.
+@dataclass(frozen=True)
+class AttentionLayers:
+    """Validated native modules and their planned variants and metadata prefixes."""
 
-    ``layers`` lists ``(global_layer_id, attention_variant, compress_ratio)``
-    of the plan.
-    """
+    modules: dict[int, Any]
+    variants: dict[int, str]
+    prefixes: dict[int, dict[str, str]]
 
-    import importlib
 
-    from vllm import envs
+def discover_attention_layers(worker: Any, layers: list[tuple[int, str, int]]) -> AttentionLayers:
+    """Validate the native attention layers against the reduced-model plan."""
 
     attention_module = importlib.import_module(_ATTENTION_MODULE)
     planned = {layer_id: (variant, ratio) for layer_id, variant, ratio in layers}
-    step_metadata = tuple(
-        metadata_key(variant, source)
-        for variant in dict.fromkeys(variant for _, variant, _ in layers)
-        for source in METADATA_SOURCES_BY_VARIANT[variant]
-    )
-    case_runner.install_case_recorder(worker, engine_index, step_metadata)
-
     modules: dict[int, Any] = {}
     for name, module in worker.get_model().named_modules():
         if isinstance(module, attention_module.DeepseekV4Attention):
@@ -278,7 +272,8 @@ def install_dsv4_hooks(
             f"Engine attention layers {sorted(modules)} differ from the plan {sorted(planned)}"
         )
 
-    layer_inventory = []
+    variants = {}
+    layer_prefixes = {}
     for layer_id in sorted(modules):
         module = modules[layer_id]
         variant, ratio = planned[layer_id]
@@ -296,25 +291,17 @@ def install_dsv4_hooks(
                 f"Layer {layer_id} ({variant}) reads metadata {sorted(prefixes)}, expected "
                 f"{list(METADATA_SOURCES_BY_VARIANT[variant])}"
             )
-        _wrap_layer(module, layer_id, variant, prefixes)
-        for attribute, scope in _METHOD_SCOPES:
-            _wrap(module, attribute, layer_id, scope)
-        _wrap(module.wq_b, "forward", layer_id, "dsv4_q_projection")
-        if module.compressor is not None:
-            _wrap(module.compressor, "forward", layer_id, "dsv4_compressor")
-        if module.indexer is not None:
-            _wrap(module.indexer, "forward", layer_id, "dsv4_index_prepare")
-            _wrap(module.indexer.indexer_op, "forward", layer_id, "dsv4_index_scores_topk")
-        layer_inventory.append(
-            {
-                "global_layer_id": layer_id,
-                "attention_variant": variant,
-                "attention_prefix": module.prefix,
-                "compress_ratio": module.compress_ratio,
-                "metadata_prefixes": prefixes,
-            }
-        )
-    _wrap_rmsnorm(attention_module)
+        variants[layer_id] = variant
+        layer_prefixes[layer_id] = prefixes
+    return AttentionLayers(modules, variants, layer_prefixes)
+
+
+def attention_inventory(
+    modules: dict[int, Any], layer_inventory: list[dict[str, Any]], worker: Any, config=None
+) -> dict[str, Any]:
+    """Observe attention backends, cache layouts, streams, and routing identity."""
+
+    from vllm import envs
 
     attention = list(modules.values())
     indexers = [module.indexer for module in attention if module.indexer is not None]
@@ -368,6 +355,50 @@ def install_dsv4_hooks(
     }
 
 
+def install_dsv4_hooks(
+    worker: Any, engine_index: int, layers: list[tuple[int, str, int]], config=None
+) -> dict[str, Any]:
+    """Wrap every attention layer; return the engine's attention inventory.
+
+    ``layers`` lists ``(global_layer_id, attention_variant, compress_ratio)``
+    of the plan.
+    """
+
+    attention_module = importlib.import_module(_ATTENTION_MODULE)
+    step_metadata = tuple(
+        metadata_key(variant, source)
+        for variant in dict.fromkeys(variant for _, variant, _ in layers)
+        for source in METADATA_SOURCES_BY_VARIANT[variant]
+    )
+    case_runner.install_case_recorder(worker, engine_index, step_metadata)
+    discovered = discover_attention_layers(worker, layers)
+    layer_inventory = []
+    for layer_id in sorted(discovered.modules):
+        module = discovered.modules[layer_id]
+        variant = discovered.variants[layer_id]
+        prefixes = discovered.prefixes[layer_id]
+        _wrap_layer(module, layer_id, variant, prefixes)
+        for attribute, scope in _METHOD_SCOPES:
+            _wrap(module, attribute, layer_id, scope)
+        _wrap(module.wq_b, "forward", layer_id, "dsv4_q_projection")
+        if module.compressor is not None:
+            _wrap(module.compressor, "forward", layer_id, "dsv4_compressor")
+        if module.indexer is not None:
+            _wrap(module.indexer, "forward", layer_id, "dsv4_index_prepare")
+            _wrap(module.indexer.indexer_op, "forward", layer_id, "dsv4_index_scores_topk")
+        layer_inventory.append(
+            {
+                "global_layer_id": layer_id,
+                "attention_variant": variant,
+                "attention_prefix": module.prefix,
+                "compress_ratio": module.compress_ratio,
+                "metadata_prefixes": prefixes,
+            }
+        )
+    _wrap_rmsnorm(attention_module)
+    return attention_inventory(discovered.modules, layer_inventory, worker, config)
+
+
 @contextmanager
 def patch_dummy_weight_finalizers() -> Iterator[None]:
     """Preserve C26, or temporarily supply the pristine dummy-loader hook.
@@ -405,6 +436,28 @@ def patch_dummy_weight_finalizers() -> Iterator[None]:
         del DeepseekV4ForCausalLM.process_weights_after_loading
 
 
+def build_dsv4_engine(
+    plan: Dsv4ProfilePlan,
+    engine_index: int,
+    model_dir: str,
+    seed: int,
+    gpu_memory_utilization: float,
+) -> Any:
+    """Build the in-process V4 engine with the accepted dummy-weight finalizers."""
+
+    # Import the model after selecting the in-process engine core.
+    os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
+    with patch_dummy_weight_finalizers():
+        return case_runner.build_engine(
+            plan,
+            engine_index,
+            model_dir,
+            seed,
+            gpu_memory_utilization,
+            kv_cache_dtype=plan.kv_cache_dtype,
+        )
+
+
 def run_engine(
     *,
     plan: Dsv4ProfilePlan,
@@ -421,17 +474,7 @@ def run_engine(
 ) -> None:
     """Measure every case of one engine; append raw records to ``raw_path``."""
 
-    # Import the model after selecting the in-process engine core.
-    os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
-    with patch_dummy_weight_finalizers():
-        llm = case_runner.build_engine(
-            plan,
-            engine_index,
-            model_dir,
-            seed,
-            gpu_memory_utilization,
-            kv_cache_dtype=plan.kv_cache_dtype,
-        )
+    llm = build_dsv4_engine(plan, engine_index, model_dir, seed, gpu_memory_utilization)
     layers = [
         (layer.global_layer_id, layer.attention_variant, layer.compress_ratio)
         for layer in plan.shape.layers
@@ -454,7 +497,11 @@ def run_engine(
 
 
 __all__ = [
+    "AttentionLayers",
     "METADATA_FIELDS",
+    "attention_inventory",
+    "build_dsv4_engine",
+    "discover_attention_layers",
     "install_dsv4_hooks",
     "metadata_prefixes",
     "patch_dummy_weight_finalizers",
