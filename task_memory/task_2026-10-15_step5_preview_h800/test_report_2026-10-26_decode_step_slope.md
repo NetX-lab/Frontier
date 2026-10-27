@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Added the 780 s h200_64 rerun with step G against it (section 9); corrected the reset count to 23 sparse-layer hooks with 46 indexed writes (section 8). |
 | 2026-10-27 | Added the h200_64 length-sweep run with step G against it (section 7) and the KV side-storage reset sync as the host-time cause (section 8); updated the limits. |
 | 2026-10-27 | Corrected section 3 with the per-rank check: the median-rank values overstated both operator errors. |
 | 2026-10-27 | Added the h200_32 length-sweep rerun (section 6) and the step E comparison against it; updated the limits. |
@@ -321,10 +322,13 @@ python3 /data/ycfeng/tmp/d31_diag/hostgap/zeroing_split.py \
 In the native source (`/data/ycfeng/tmp/d29_published_sources01/source`), every step that
 allocates a new KV block sets `new_block_ids_to_zero` (`vllm/v1/core/sched/scheduler.py:1622-1650`).
 The model runner (`vllm/v1/worker/gpu/model_runner.py:1250-1297`) then calls
-`KVBlockZeroer.zero_block_ids` (`vllm/v1/worker/utils.py:519-598`), which runs 46 Step-5 sparse
-summary cache resets. Each reset (`vllm/models/step5/nvidia/sparse_summary_cache.py:486`) copies
-the GPU block-ID tensor to the host with `.tolist()`, a blocking copy. The first copy waits for
-the previous step's device work. Under async scheduling the host otherwise prepares the next
+`KVBlockZeroer.zero_block_ids` (`vllm/v1/worker/utils.py:519-598`), which calls one reset hook for
+each of the 23 sparse-attention layers (the model has 69 sliding-window and 23 sparse layers).
+Each hook (`vllm/models/step5/nvidia/sparse_summary_cache.py:486-516`) copies the GPU block-ID
+tensor to the host with `.tolist()`, a blocking copy, and then writes two side-storage tensors
+with Python-list indexing (`:353-355`), so a reset step runs 46 indexed writes (the 46
+`aten::index_put_` calls in the trace, each with one `cudaStreamSynchronize`). The first copy
+waits for the previous step's device work on the main stream. Under async scheduling the host otherwise prepares the next
 step while the device runs, so a reset step leaves the device idle while the host runs the
 resets, the rest of the input preparation, the gloo DP all-reduce and the graph launch.
 
@@ -350,6 +354,54 @@ critical path: CONFIRMED for a mechanism (the reset sync), with profiled host ti
 bounds. An unprofiled measurement of the host terms is still needed before Frontier can price
 them (item 3 design).
 
+### 9. Native rerun with the 780 s length sweep (h200_64) and step G
+
+Run: job `exp-1027-091511-064923` (8 × 8 H200, `step_main`, non-preemptible), stage
+`/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_sweep02`, built from `320c2082`; the run
+definition differs from section 7 only in `duration_s` 780. Succeeded at 01:49:49 UTC; replay
+`CLIENT_WORKLOAD_VERIFIED`, 3 × (16 + 128) requests recorded, none failed.
+
+```bash
+cd /data/ycfeng/Frontier/.worktrees/step5-preview
+WS=/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_sweep02
+python3 /data/ycfeng/tmp/d31_diag/stall_regions.py $WS/stage/evidence/replay/client_requests.jsonl
+PYTHONPATH=$PWD:$PWD/tests/comparison/dp_placement_pp \
+  /data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python \
+  tests/integration/step5_pd/workload_metrics.py --stage $WS/stage \
+  --output /data/ycfeng/tmp/d31_sweep_h200_64_02/native_metrics.json
+PYTHONPATH=$PWD:$PWD/tests/comparison/dp_placement_pp \
+  /data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python \
+  tests/integration/step5_pd/frontier_workload.py compare \
+  --frontier /data/ycfeng/tmp/d31_merged04_run/h200_64_g01/frontier_summary.json \
+  --native /data/ycfeng/tmp/d31_sweep_h200_64_02/native_metrics.json --gate 0.3 \
+  --output /data/ycfeng/tmp/d31_sweep_h200_64_02/compare_G.json
+```
+
+- Length sweep: 31,208 requests recorded, 36 short requests failed, `coverage_verified=true`.
+  The long requests reached their full length (7,167 tokens, region count 896) before the last
+  short dispatch.
+- Formal stall events: 1 / 1 / 1 per repeat (section 7: 69 / 37 / 27), at region counts 887,
+  803 and 838, all within the sweep's reach.
+- Per-repeat means: TPOT 61.45 / 60.95 / 61.37 ms, TTFT 1,185 / 1,176 / 1,178 ms. The repeats
+  agree within 1%, with no falling trend.
+
+Step G (`h200_64_g01`, unchanged) against this reference
+(`evidence/d31_h200_64_sweep02_compare_G.json`, gate 30%):
+
+| Metric | Frontier | Native | Abs. error | Rel. error | Status |
+| --- | --- | --- | --- | --- | --- |
+| TTFT mean (ms) | 973.3 | 1,179.9 | −206.6 | −17.5% | PASS |
+| TTFT p95 (ms) | 1,016.3 | 1,367.0 | −350.7 | −25.7% | PASS |
+| TPOT mean (ms) | 49.51 | 61.26 | −11.75 | −19.2% | PASS |
+| TPOT p95 (ms) | 51.36 | 63.75 | −12.39 | −19.4% | PASS |
+| E2E mean (ms) | 51,618 | 63,847 | −12,229 | −19.2% | PASS |
+| Total throughput (tokens/s) | 5,316.6 | 4,994.5 | +322.1 | +6.4% | PASS |
+
+All 14 rows pass (the JSON holds p50/p90 and output throughput as well). Frontier is low on
+both TTFT and TPOT. Expectation: with compile stalls removed, the remaining TPOT gap should be
+the host time of section 8 plus the operator errors of item 2. CONFIRMED in direction; the split
+between the two needs the item 3 probe.
+
 ## Limits
 
 - The torch profiler perturbs host timing (period about 50 ms against 39.8 ms without it), so
@@ -360,8 +412,8 @@ them (item 3 design).
 - Category assignment is by kernel-name fragments checked against the Step decode traces; the
   `other` column holds generic PyTorch elementwise kernels (router top-k selection, gating
   arithmetic, sampling) that cannot be assigned by name.
-- The length-sweep reruns (sections 6 and 7) still have 81 and 133 stall events, so a native
-  run without compile stalls has not been measured yet. The linear fit in section 4 remains an
-  inference.
+- The length-sweep reruns of sections 6 and 7 still had 81 and 133 stall events. The 780 s
+  h200_64 rerun (section 9) has one per repeat; the h200_32 rerun with 420 s is pending. The
+  linear fit in section 4 remains an inference.
 - Section 8's host times come from profiled steps; the profiler inflates host time. They show
   the mechanism, not the size Frontier should price.

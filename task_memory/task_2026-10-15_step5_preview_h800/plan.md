@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 3 revised after the codex design review (23 reset hooks / 46 writes; direct host-interval probe per DP size; reset host time applied at the DP forward-start agreement); h200_64 sweep02 and G against it done. |
 | 2026-10-27 | D31: G result; h200_64 sweep result and the 780 s rerun; item 3 rewritten around the KV side-storage reset sync with its steps. |
 | 2026-10-27 | D31: per-rank check corrects the operator-error sizes; item 3 (host time) now comes before the item 2 operator fixes. |
 | 2026-10-27 | D31: h200_32 length-sweep result (steps 2–3 of the warm-up rerun); sweep length raised to 420 s; h200_64 sweep job first; routed-expert cause refined. |
@@ -171,7 +172,8 @@ F in `test_report_2026-10-26_h200_64_native_workload.md`). The E rerun `h200_32_
 (TTFT −20.3%, TPOT −25.7%, E2E −25.6%, throughput +3.0%), while the p90/p95 rows fail (about
 −32% to −34%). Status (2026-10-27): against the length-sweep references E passes all 14 rows
 (TPOT mean −18.5%) and G passes 11 of 14 (all four means; TPOT mean −24.5%; TTFT p90/p95 and
-TPOT p95 fail). Calibration item 3 (host time) is next.
+TPOT p95 fail). Against the clean 780 s h200_64 reference G passes all 14 rows (TTFT mean
+−17.5%, TPOT mean −19.2%). Calibration item 3 (host time) is next.
 
 Native rerun with a complete kernel warm-up (opened 2026-10-26; evidence in `progress.md`).
 Most of the native TTFT/TPOT tail comes from just-in-time compiles of the DSA scoring kernel
@@ -200,6 +202,10 @@ Frontier should model, and the stalls are not removed from the native data after
 5. Rerun h200_64 with `duration_s` 780 s (job via Pi run `d31-h200-64-sweep02-submit-1027c`,
    submitted 2026-10-27 01:14 UTC; the long requests need about 660 s while short requests keep
    compiling variants), then h200_32 with 420 s. Acceptance as in step 2.
+   Result for h200_64 (job `exp-1027-091511-064923`): passes. Coverage verified, one stall event
+   per formal repeat (all within the sweep's reach), per-repeat TPOT means 61.45 / 60.95 / 61.37
+   ms. G against it: all 14 rows pass (TTFT mean −17.5%, TPOT mean −19.2%, throughput +6.4%).
+   The h200_32 rerun with 420 s (Pi run `d31-h200-32-sweep03-submit-1027d`) is running.
 Formal 64-GPU calibration still waits for E within 30% against the warmed native run.
 
 Calibration order for E, after the first error table:
@@ -276,19 +282,25 @@ Calibration order for E, after the first error table:
 3. Host time between decode steps (opened 2026-10-27; evidence in `progress.md` and section 8 of
    `test_report_2026-10-26_decode_step_slope.md`). Native vLLM runs with async scheduling, so the
    host prepares the next step while the device runs and host time is normally hidden. Every
-   step that allocates a new KV block breaks this: the Step-5 KV side-storage reset copies the
-   block IDs to the host 46 times, the first copy waits for the previous step's device work, and
-   the device stays idle while the host finishes the resets, input preparation, the gloo DP
+   step that allocates a new KV block breaks this: the Step-5 KV side-storage reset runs one hook
+   per sparse layer (23 hooks, each a blocking `.tolist()` copy of the block IDs plus two indexed
+   writes, 46 writes in all); the first copy waits for the previous step's device work, and the
+   device stays idle while the host finishes the resets, input preparation, the gloo DP
    all-reduce and the graph launch (about 9 ms in the profiled run, an upper bound). The share of
    such steps grows with the batch. Frontier models no host time today. Steps:
    1. Design (`design.md`): when a step pays the host term, what the term contains, how it
       enters the step time, and where the measured values live. Codex review for the modelling
-      choice.
-   2. Measure the host terms without the torch profiler: a diagnostic native run kind with a
-      timestamp probe on the decode servers (never a reference), or a single-GPU microbenchmark
-      of the resets if the probe cannot be made clean. Component host terms only (D31.10).
-   3. Implement in Frontier, off by default, with unit tests, dummy smoke and the 77-case
-      fidelity matrix unchanged on the default path.
+      choice (done 2026-10-27: changes required; design revised, see `design.md` section 7).
+   2. Measure the host terms without the torch profiler: a diagnostic native run kind
+      (`host_probe`) with a timestamp probe on the prefill and decode servers (never a
+      reference). It measures the host interval from the first reset copy's return to the
+      forward launch directly, per engine, with the DP all-reduce wait for peers split out.
+      Component host terms only (D31.10). One probe run per DP size (h200_32 DP2 for E, h200_64
+      DP4 for G).
+   3. Implement in Frontier, off by default: the reset host time joins the existing DP
+      forward-start agreement, so every DP lane launches from the latest lane's ready time before
+      its first attention. Unit tests, dummy smoke and the 77-case fidelity matrix unchanged on
+      the default path.
    4. Rerun E and G against the clean references.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2

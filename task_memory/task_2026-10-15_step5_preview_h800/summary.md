@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Update the current status: h200_64 780 s sweep result and G against it (14/14 pass), h200_32 sweep03 running, item 3 design reviewed and revised (23 hooks / 46 writes). |
 | 2026-10-27 | Update the current status: G result, h200_64 length-sweep result and its 780 s rerun, the KV side-storage reset sync as the host-time cause. |
 | 2026-10-27 | Correct the operator-error sizes after the per-rank check; item 3 moves before the item 2 operator fixes. |
 | 2026-10-27 | Update the current status: h200_32 length-sweep result, E against it, the h200_64 sweep job, the routed-expert cause. |
@@ -143,6 +144,11 @@ Status as of 2026-10-27:
   65.5 ms, E2E 68.32 s, total throughput 4,983.6 tok/s): 11 of 14 rows pass the 30% gate. TTFT
   mean −23.9% (p90 −35.6%, p95 −37.6% fail); TPOT mean −24.5% (p95 −30.1% fail); E2E mean
   −24.5%; total throughput +6.7%. The simulation took 4.8 hours.
+  - Against the h200_64 rerun with the 780 s sweep (job `exp-1027-091511-064923`;
+    native TTFT 1,179.9 ms, TPOT 61.3 ms, E2E 63.85 s, total throughput 4,994.5 tok/s), all 14
+    rows pass: TTFT mean −17.5% (p95 −25.7%), TPOT mean −19.2%, E2E mean −19.2%, total
+    throughput +6.4% (`evidence/d31_h200_64_sweep02_compare_G.json`). The repeats are stable
+    (TPOT 61.45 / 60.95 / 61.37 ms).
 - **Calibration item 2b, decode step growth.** The native decode step grows about 0.7 ms per
   request per DP engine (30.5 ms → 59 ms from 0 to 40 requests). A diagnostic native run with
   decode torch-profiler windows (job `exp-1027-062510-683917`, 32 H200) shows that Frontier's
@@ -156,8 +162,9 @@ Status as of 2026-10-27:
   experts active. Diagnostic only (D31.10).
 - **Calibration item 3, host time: cause found (diagnostic).** Native vLLM schedules
   asynchronously, so the host normally prepares the next step while the GPU runs. Every step
-  that allocates a new KV block breaks this: Step-5 resets its KV side storage with 46 blocking
-  device-to-host copies of the block IDs. The host waits for the previous step to finish, and
+  that allocates a new KV block breaks this: Step-5 resets its KV side storage in 23 sparse
+  layers, each with a blocking device-to-host copy of the block IDs and two indexed writes
+  (46 writes in total). The host waits for the previous step to finish, and
   the GPU then waits about 9 ms (profiled, an upper bound) for the resets, input preparation, the
   DP all-reduce and the graph launch. Such steps make up a larger share as the batch grows. At
   20 requests per engine, steps without this sync match Frontier's step (46.6 against 46.4 ms),
@@ -171,17 +178,20 @@ Status as of 2026-10-27:
   at the longest decode lengths, which the sweep did not reach because it stopped at its 240 s
   limit. The h200_64 run with a 420 s sweep (job `exp-1027-082338-716026`) cut its stall events
   from 106/77/53 to 69/37/27, again all above the length the sweep reached: its long requests
-  needed 448 s. The h200_64 rerun uses 780 s (submitted 2026-10-27 01:14 UTC), then h200_32
-  runs with 420 s.
+  needed 448 s. The h200_64 rerun with 780 s succeeded with one stall per repeat, all within
+  the sweep's reach. The h200_32 rerun with 420 s (sweep03, job `exp-1027-094843-675984`) was
+  submitted 2026-10-27 01:48 UTC.
 - **Operator profiles.** The H200 profile tables for both roles are measured and merged (run 03,
   `test_report_2026-10-26_h200_profiles.md`). The first runs on them found five defects in the
   profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,
   `d034202c`).
 - **Next.**
-  1. Model the host time between decode steps (item 3): design with codex review, measure the
-     host terms without the torch profiler, implement it as an opt-in, rerun E and G.
-  2. Finish the native reruns with full sweep coverage (h200_64 with 780 s running, then
-     h200_32 with 420 s) and compare G and E against them.
+  1. Model the host time between decode steps (item 3). The design (`design.md`) was reviewed
+     by codex (changes required) and revised: the host time joins the DP forward-start
+     agreement before first attention, a probe measures the host interval directly at real
+     forward seams, one probe run per DP size, and the profile is checked against DP/TP/PP and
+     graph mode. Next: implement the Frontier side and the probe, measure, rerun E and G.
+  2. Compare E against the h200_32 sweep03 rerun when it ends.
   3. Fix the two operator errors from the device timeline (routed expert compute, TP
      all-reduce) from op profiling.
   4. Formal 64-GPU calibration: E is within 30% of the warmed native run on all 14 rows.

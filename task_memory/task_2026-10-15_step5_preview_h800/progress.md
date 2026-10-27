@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: h200_64 sweep02 succeeded (one stall per repeat, all within the sweep's reach; stable repeats); G passes all 14 rows against it (TTFT −17.5%, TPOT −19.2%); h200_32 sweep03 submitted; item 3 design reviewed by codex (changes required: DP agreement before first attention, real forward-end hook, direct host-interval measurement, DP validation, 23 hooks / 46 writes). |
 | 2026-10-27 | D31: G rerun finished (all four means within 30% of the h200_64 sweep reference, three tail rows fail); h200_64 sweep01 result (stalls left only above the length it reached; 420 s too short), sweep02 with 780 s submitted; item 3 lead: a host sync for the KV side-storage reset on every decode step that allocates a KV block. |
 | 2026-10-27 | D31: per-rank check: fast ranks wait in the collectives for the slowest routed rank; routed compute about 2.5–3 ms per step high, TP all-reduce about 1–2 ms low; host time (item 3) is the main remaining TPOT gap. |
 | 2026-10-27 | D31: h200_32 length-sweep job succeeded; formal stalls 84/54/34 → 38/21/22, all left above the length the sweep reached; E passes all 14 rows against it; `duration_s` raised to 420 s and the h200_64 sweep job launched; routed-expert lead: `balanced` fills experts from ID 0, so the priced lane has all 22 experts active. |
@@ -1000,6 +1001,28 @@ before the plan entry was added). Native step times and token gaps here are diag
     StepMind dry run pass; the dry run differs from sweep01 only in paths; replay timeout 3,000 s
     and worker timeout 5,400 s cover the longer sweep. Pi run `d31-h200-64-sweep02-submit-1027c`
     launched at 01:14 UTC.
+  - h200_64 sweep02 result: job `exp-1027-091511-064923` succeeded at 01:49:49 UTC; replay
+    `CLIENT_WORKLOAD_VERIFIED`, 3 × (16 + 128) requests, none failed. Length sweep: 31,208
+    requests recorded, 36 short requests failed, `coverage_verified=true`; the long requests
+    reached their full length (7,167 tokens, region count 896) before the last short dispatch.
+  - Stall regions (`/data/ycfeng/tmp/d31_diag/stall_regions.py`, diagnostic): one stall event per
+    formal repeat (sweep01: 69 / 37 / 27), at region counts 887 / 803 / 838, all within the sweep's
+    reach. Per-repeat TPOT means 61.45 / 60.95 / 61.37 ms (no falling trend); TTFT means
+    1,185 / 1,176 / 1,178 ms.
+  - Native metrics (`tests/integration/step5_pd/workload_metrics.py --stage
+    .../h200_64_sweep02/stage`): TTFT mean 1,179.9 ms, TPOT mean 61.26 ms, E2E mean 63,847 ms,
+    total throughput 4,994 tokens/s. Copied to `evidence/d31_h200_64_sweep02_native_metrics.json`.
+  - Step G (`h200_64_g01`, unchanged) against it (`frontier_workload.py compare --gate 0.3`,
+    `evidence/d31_h200_64_sweep02_compare_G.json`): all 14 rows PASS. TTFT mean −17.5% (p95
+    −25.7%), TPOT mean −19.2% (p95 −19.4%), E2E mean −19.2%, throughput +6.4%. The three tail rows
+    that failed against sweep01 now pass. Frontier stays low on both TTFT and TPOT, which is the
+    direction of items 3 (reset host time) and 2 (routed compute high, TP all-reduce low).
+  - h200_32 sweep03 (420 s): stage `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_sweep03`
+    (`run_input.json` differs from sweep02 only in `duration_s` 420; built from `320c2082`; job tag
+    `d31h20032sweep03`; cloud output `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_32_sweep03`).
+    `verify` and the StepMind dry run pass; the dry run differs from sweep02 only in paths. Pi run
+    `d31-h200-32-sweep03-submit-1027d` (prompt `/data/ycfeng/tmp/ds4_runs/prompts/d31-h200-32-sweep03-submit-1027d.md`)
+    waited for sweep02 to end, then submitted.
 
 Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31.10):
 
