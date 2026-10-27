@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Added section 7: the revision after codex review 63785f72 (per-pass dummy state, host dispatch barrier keyed by the forward ordinal, group cadence profile, PREFILL queue of two only without chunked prefill). Sections 4.1, 4.2 and 5 are superseded where section 7 differs. |
 | 2026-10-27 | Created: native mechanism, Frontier probe result, the two Frontier changes (PREFILL batch queue of 2, host-paced dummy steps), data, validation and open questions for codex. |
 
 ## 1. Problem
@@ -143,3 +144,110 @@ an engine while every engine of its DP group runs dummy steps. No new GPU run is
 4. With a queue of two, a prompt longer than the token budget sends its next chunk while the
    previous chunk is in flight. Is that safe with grouped KV allocation and the KV block zeroing
    of the item 3 trigger (`_create_batch`, lines 445-470), which the MONOLITHIC path excludes?
+
+## 7. Revision after codex review 63785f72 (supersedes 4.1, 4.2 and 5 where they differ)
+
+Review: `codex-review-63785f72-e511-4dfd-a7af-6b69354afd58/review.md`, verdict `changes_required`
+(F001 P1, F002 P1, F003 P2, F004 P2). The native queue explanation (section 2) and the D31.10
+split (section 4.3) were accepted. The changes below answer each finding.
+
+### 7.1 Native host timeline that the model follows
+
+Evidence for the first formal DP4 request (`/data/ycfeng/tmp/d31_diag/ttft64/prefill_steps_0_4.txt`)
+and the vLLM source:
+
+1. Every forward, real or dummy, first passes `dispatch_cg_and_sync_dp`, a CPU all-reduce over
+   the DP workers. It is a host barrier: dispatch n of every engine leaves it when the last
+   engine arrives. It does not wait for earlier GPU work.
+2. Mixed cohort (one engine runs a real prefill, the others a dummy step): the batch is eager,
+   so the dummy step is eager too. Its MoE dispatch waits on the device, so a dummy engine's host
+   returns only when the cohort's device work ends (dp0: launch 33.6 ms, host exit 548.7 ms).
+3. All-dummy cohort: the dummy step runs as a CUDA graph and nothing in it waits on the device,
+   so the hosts run ahead of the GPU at one group cadence and the GPU runs the queued dummy
+   steps in order.
+4. The engine with the real batch returns at once while its batch queue has room
+   (`step_with_batch_queue`), joins the step-1 finish synchronization with an unfinished
+   request, and pops the output in its next iteration. The other engines' next dispatch waits
+   for that engine (dp0 waited 129 ms, until 682.4 ms).
+
+### 7.2 Frontier model
+
+Applies only when the new predictor option `dp_dummy_step_host_profile` is set and the role is
+PREFILL; without it every path stays as today (bit-identical default).
+
+- **Forward ordinal.** Every lane already numbers its forwards with `_batch_creation_counter`
+  (real batches and dummy passes alike; `_assign_lane_identity`, `DummyForwardBatch.forward_index`),
+  and the forward-start agreement already requires the same number on every lane. That number
+  is the dispatch number n of the native host barrier.
+- **Host dispatch barrier (F002).** Each lane records `(issue time, is dummy)` for forward n when
+  it forms the batch or issues the dummy pass. When the last lane of the DP group records n,
+  the barrier time is D(n) = the latest issue time.
+  - All-dummy cohort: every lane's pass n becomes host-paced. Every lane's host returns at
+    D(n) + p, where p is the measured group cadence, through one `ReplicaScheduleEvent` per lane.
+    This tick is the only continuation of a paced pass.
+  - Mixed cohort: the dummy lanes' hosts return when their dummy forward ends on the device
+    (point 2 above, today's rule); the real lane follows the batch-queue logic (point 4).
+  - p is measured as the interval between the latest launches of consecutive all-dummy cohorts
+    over every engine and TP rank, so it already contains the wait in the barrier. No separate
+    barrier wait is added, and p is not added to any reset step (item 3's host time starts at
+    the stage pop of the resetting batch, after the queued dummy forwards drained).
+- **Per-pass dummy state (F001).** The single counter `_dummy_forwards_in_flight` is replaced, on
+  this path, by per-pass state: the device parts still outstanding per pass id
+  (`forward_index`) and the set of paced pass ids. Only a host-blocking (non-paced) dummy pass
+  blocks `on_schedule` and `engine_loop_idle`. The device end of a paced pass only drains its
+  state; it does not set `_last_iteration_end`, does not count an iteration and does not create
+  a schedule event. A lane's host is busy from the issue of a paced pass until its tick; a
+  schedule event before the tick does nothing, and the first event at or after the tick ends the
+  iteration once (a duplicate event finds the next pass open or the lane idle). Counts can never
+  go negative: an unknown pass id at device end is an error.
+- **Finish snapshot (F001).** On this path the unfinished snapshot of a dummy iteration is taken
+  when the dummy pass is issued (native `local_unfinished_reqs` is computed before
+  `execute_dummy_batch`), not when the iteration ends.
+- **Wave end and drain.** The step counter and the synchronizations on step 1 and every 16 steps
+  are unchanged and now run at host time. When the step-16 synchronization ends the wave, the
+  lanes' hosts are idle while their queued dummy forwards still drain on the stages. A new
+  arrival starts a new wave at once; its prefill waits on the stage behind the queued forwards,
+  and the other lanes join through the existing forward-start wakeup.
+
+### 7.3 PREFILL queue of two (F003)
+
+- New role flag `--cluster_config_prefill_replica_scheduler_config_max_concurrent_batches`
+  (mirrors the DECODE flag).
+- Accepted for the vLLM V1 PREFILL role only with FCFS, PP1, no speculative decoding, no GDN, no
+  prefix caching and **chunked prefill disabled**; otherwise a configuration error. Each prompt is
+  then scheduled whole in one batch, so two chunks of one request are never in flight together
+  and the grouped allocator's one-in-flight rule (`vllm_v1_kv_allocation.py:591-595,712-719`) is
+  never reached. Overlapping grouped PREFILL chunks stay unsupported. The Step workload never
+  chunks (6144-token prompts, 8192-token budget, chunked prefill off).
+- The in-flight skip (`vllm_v1_engine_replica_scheduler.py:1136-1150`) extends to PREFILL. No
+  output placeholders. The KV handoff stays at the output pop (`_apply_prefill_output`).
+
+### 7.4 Cadence profile (F004)
+
+- Separate schema `dp_dummy_step_host_time.v1`, loaded per role predictor like
+  `kv_block_zeroing_host_time.v1`, with the same scope checks (model architecture profile,
+  device, graph mode, topology), its own input binding in the predictor identity, and
+  `skip_cpu_overhead_modeling` required. PREFILL role only; PP1 only.
+- Value: the mean group cadence of complete all-dummy cohorts in the formal windows, from a
+  new estimator `tests/integration/step5_pd/dp_dummy_step_host_time.py` that joins all DP
+  engines and TP ranks by the dispatch ordinal, keeps only ordinals k-1 and k that are dummy on
+  every engine inside one formal window, and reports n, quantiles, per-window means and their
+  coefficient of variation. The mean is used because the GPU backlog adds up the intervals.
+- Admission: DP4 (`h200_64_hostprobe01`) mean 6.307 ms, window means 6.261 / 6.449 / 6.210 ms,
+  CV 1.6%; the DP4 probe was accepted for item 3. DP2 (`h200_32_hostprobe03`) mean 4.599 ms,
+  CV 0.95%, stays **exploratory** because that probe is `PERTURBED` until a probe on/off check in
+  one job. The profile records its admission status.
+
+### 7.5 Validation (replaces section 5)
+
+1. Unit tests: the PREFILL flag and its admission rules (chunked prefill rejected); at least
+   three queued paced passes on one lane with non-negative state; device end after the host's
+   step 16; a new arrival during drain; an arrival between the snapshot and the
+   synchronization; a stale or duplicate schedule event; a mixed cohort that keeps the device-end
+   rule; equal forward ordinals across lanes; the next real request completing; no profile
+   means no change.
+2. Dummy smoke and the 77-case fidelity matrix on the default path (identical results).
+3. Diagnostic probe rerun: wave length, queued dummy forwards and the backlog at the next
+   prefill against the native estimates (diagnostic only).
+4. G and E reruns against the clean references. DP2 results with the exploratory profile are
+   exploratory.

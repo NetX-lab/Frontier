@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 4 group cadence measured (DP4 mean 6.307 ms, DP2 mean 4.599 ms exploratory); codex review 63785f72 of the item 4 design (F001–F004 accepted); design revised (section 7). |
 | 2026-10-27 | D31: item 4 Frontier probe: the PREFILL wave ends after step 1 for all 16 requests (PREFILL batch queue of one step; native async scheduling has two); item 4 design written; item 2b overlap-free critical path (critpath5) recorded. |
 | 2026-10-27 | D31: item 3 step 4 done: E host within 4.1% on every row (exploratory); G host TTFT −12.9%, TPOT −9.6%; item 4 lead opened: at DP4 the native prefill waits for the device to run the dummy steps queued by the previous DP wave (mean about 180 ms), which Frontier does not model. |
 | 2026-10-27 | D31: E base with merged04 (no host profile) passes all 14 rows against sweep03 (TTFT −5.3%, TPOT −13.9%), equal to the merged03 run. |
@@ -1501,10 +1502,39 @@ report `test_report_2026-10-27_h200_64_ttft_wave_tail.md`, scripts in
   unfinished request, so the native wave runs to step 16.
 - Two smaller DP4 parts: Frontier's solo prefill is about 60 ms above the native minimum
   (689.7 against about 625 ms; 597.8 against 579 ms at DP2), and the handoff is about 28 ms low.
-- Next: the item 4 design `design_dp_wave_tail.md` (PREFILL batch queue of two steps through a
-  new PREFILL role flag; host-paced dummy steps while every lane has only dummy work, with the
-  measured host period as a component host term and the dummy device cost from op profiling)
-  goes to codex review, then implementation off by default.
+- Dummy-step group cadence while every engine of the role runs dummy steps
+  (`/data/ycfeng/tmp/d31_diag/wave_frontier/dummy_period.py`, output `dummy_period.txt`). A
+  sample is G(k) − G(k−1), with G(k) the latest launch over every DP engine and TP rank at DP
+  all-reduce ordinal k; only ordinals where every engine runs a dummy step at k−1 and k inside
+  one formal window count. Prefill role:
+
+  | Run | Samples | p50 / p90 / p99 / max (ms) | Mean (ms) | Window means (ms) | CV of window means | Native dummy span p50 / mean (ms) |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | h200_64_hostprobe01 (DP4) | 4212 | 5.48 / 7.57 / 18.73 / 279.09 | 6.307 | 6.261 / 6.449 / 6.210 | 1.63% | 30.87 / 31.80 |
+  | h200_32_hostprobe03 (DP2) | 5347 | 4.33 / 5.59 / 7.81 / 23.27 | 4.599 | 4.543 / 4.608 / 4.649 | 0.95% | 24.53 / 24.56 |
+
+  The dummy spans are a diagnostic only (D31.10). Decode all-dummy steps are rare and include
+  long gaps (a dummy wave that starts while a NIXL READ is pending), so the profile covers the
+  PREFILL role only. The DP2 value stays exploratory: `h200_32_hostprobe03` is `PERTURBED`.
+- Codex design review 63785f72 (`codex-review-63785f72-e511-4dfd-a7af-6b69354afd58/review.md`,
+  request `codex_review_request_dp_wave_tail_design.md`): `changes_required`, four findings, all
+  accepted after checking the cited code:
+  - F001 (P1): one shared dummy counter cannot hold several queued passes. Fix: per-pass state;
+    only a host-blocking pass blocks the host; the host tick is the only continuation of a
+    paced pass; unfinished snapshot at dummy issue.
+  - F002 (P1): the native per-forward DP all-reduce is a CPU barrier, not a device end. Fix: a
+    host dispatch barrier keyed by the forward ordinal; all-dummy cohorts continue at
+    D(n) + group cadence; dummy lanes of a mixed (eager) cohort continue at their device end,
+    which the native host exit at 548.7 ms supports.
+  - F003 (P2): the grouped KV allocator rejects two chunks of one PREFILL request in flight.
+    Fix: PREFILL queue of two only with chunked prefill disabled.
+  - F004 (P2): the cadence needs its own estimator and admission. Fix: estimator over complete
+    all-dummy cohorts (above); separate schema `dp_dummy_step_host_time.v1`; DP2 exploratory.
+  - The revision is section 7 of `design_dp_wave_tail.md`. Codex also found an existing broken
+    fixture: `tests/unit/test_nixl_read_completion.py::test_decode_step_start_posts_and_checks_the_lane_reads`
+    builds a `DummyForwardBatch` with `object.__new__` and misses `_forward_start_host_delay`.
+- Next: implement section 7 through codex-implement in the worktree branch
+  `feat/step5-dp-wave-tail`; write the cadence estimator and profiles in parallel.
 
 Step F status (2026-10-26):
 

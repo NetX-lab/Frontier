@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Section 9: corrected the count of G host rows that fail the 10% gate (7 rows, including E2E p90/p95). |
 | 2026-10-27 | Section 9: E and G reruns with the host profiles against the clean references; the host term closes most of the E gap and about half of the G TPOT gap. |
 | 2026-10-27 | h200_64 probe result (section 7): all checks PASS, profile accepted for step G; step G host run started. |
 | 2026-10-27 | Corrected after codex review 223fee59 (F001–F004): failure classification (3.1), lost-step location and the tightened completeness checks (3.2, 4), withdrawn perturbation bound (5); review fixes and their checks in section 8. |
@@ -290,7 +291,8 @@ Compare files: `evidence/d31_h200_32_m04_base_compare_sweep03.json`,
 - E host is within 3.3% on every mean and within 4.1% on every row. The h200_32 profile is
   `PERTURBED` and not accepted (section 5), so this result is exploratory.
 - G host, with the accepted DP4 profile, leaves TTFT −12.9% (p90 −19.6%, p95 −20.5%) and TPOT
-  −9.6% (p95 −10.2%). At the final 10% gate it would fail the TTFT rows and the TPOT p95 row.
+  −9.6% (p95 −10.2%). At the final 10% gate it would fail 7 of the 14 rows: the four TTFT rows,
+  TPOT p95 (−10.23%), E2E p90 (−10.003%) and E2E p95 (−10.23%).
 - Inference: the DP4 TTFT gap comes mostly from the prefill part of TTFT, not from the
   handoff; the diagnosis is in `test_report_2026-10-27_h200_64_ttft_wave_tail.md`. The DP4 TPOT
   residual (about −5.9 ms) is not decomposed yet: no native DP4 decode device timeline exists.
