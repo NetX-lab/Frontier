@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Update the current status: G result, h200_64 length-sweep result and its 780 s rerun, the KV side-storage reset sync as the host-time cause. |
 | 2026-10-27 | Correct the operator-error sizes after the per-rank check; item 3 moves before the item 2 operator fixes. |
 | 2026-10-27 | Update the current status: h200_32 length-sweep result, E against it, the h200_64 sweep job, the routed-expert cause. |
 | 2026-10-26 | Update the current status: E rerun result, device-timeline findings, native kernel compiles and the length-sweep rerun. |
@@ -137,38 +138,53 @@ Status as of 2026-10-27:
     native TTFT 978.7 ms, TPOT 56.3 ms, E2E 58.59 s, total throughput 5,236.6 tok/s): all 14
     rows pass the 30% gate. TTFT mean −11.7%, p90 −28.5%; TPOT mean −18.5%, p90 −24.5%; E2E
     mean −18.4%; total throughput +2.6%. This native run still has some compile stalls (below).
-  - Running: the G rerun on merged04 (`h200_64_g01`, from `.worktrees/run-g-9125bcb`).
+- **Step G result** (`h200_64_g01`, merged04, measured H200 DP4 collectives), against the
+  h200_64 length-sweep native run (job `exp-1027-082338-716026`, native TTFT 1,278.7 ms, TPOT
+  65.5 ms, E2E 68.32 s, total throughput 4,983.6 tok/s): 11 of 14 rows pass the 30% gate. TTFT
+  mean −23.9% (p90 −35.6%, p95 −37.6% fail); TPOT mean −24.5% (p95 −30.1% fail); E2E mean
+  −24.5%; total throughput +6.7%. The simulation took 4.8 hours.
 - **Calibration item 2b, decode step growth.** The native decode step grows about 0.7 ms per
   request per DP engine (30.5 ms → 59 ms from 0 to 40 requests). A diagnostic native run with
   decode torch-profiler windows (job `exp-1027-062510-683917`, 32 H200) shows that Frontier's
   step is within about 5% of the native device busy time up to 21 requests per engine. The rest
-  of the native growth is device idle time while the device waits for the host (CPU overhead,
-  item 3). Measured against the slowest routed rank, which gates the step because the other
+  of the native growth is device idle time while the device waits for the host (item 3). Measured against the slowest routed rank, which gates the step because the other
   ranks wait for it inside the collectives, routed expert compute is about 2.5–3 ms per step
   overpriced and the TP all-reduce about 1–2 ms underpriced. So the main remaining TPOT gap is
   host time between decode steps (item 3), which now comes before the operator fixes. The
   routed-expert overpricing comes from Frontier's `balanced`
   materialization, which fills experts from ID 0, so the priced EP lane has all 22 local
   experts active. Diagnostic only (D31.10).
+- **Calibration item 3, host time: cause found (diagnostic).** Native vLLM schedules
+  asynchronously, so the host normally prepares the next step while the GPU runs. Every step
+  that allocates a new KV block breaks this: Step-5 resets its KV side storage with 46 blocking
+  device-to-host copies of the block IDs. The host waits for the previous step to finish, and
+  the GPU then waits about 9 ms (profiled, an upper bound) for the resets, input preparation, the
+  DP all-reduce and the graph launch. Such steps make up a larger share as the batch grows. At
+  20 requests per engine, steps without this sync match Frontier's step (46.6 against 46.4 ms),
+  and the mix with it matches the unprofiled native token gaps (about 53 ms). Frontier models
+  no host time today.
 - **Native kernel compiles.** Most of the native TTFT/TPOT tail comes from just-in-time compiles
   of the DSA scoring kernel during the measured repeats (about 0.4 s per compile, 84, 54 and 34
   stall events in the three h200_32 repeats). A native length sweep before the first repeat
   compiles the variants without being measured (`320c2082`). The h200_32 rerun with it (job
   `exp-1027-074903-556239`) cut the formal stall events from 84/54/34 to 38/21/22. The rest are
   at the longest decode lengths, which the sweep did not reach because it stopped at its 240 s
-  limit. The sweep now runs for 420 s: the h200_64 run is job `exp-1027-082338-716026`
-  (submitted 2026-10-27 00:23 UTC), and h200_32 follows.
+  limit. The h200_64 run with a 420 s sweep (job `exp-1027-082338-716026`) cut its stall events
+  from 106/77/53 to 69/37/27, again all above the length the sweep reached: its long requests
+  needed 448 s. The h200_64 rerun uses 780 s (submitted 2026-10-27 01:14 UTC), then h200_32
+  runs with 420 s.
 - **Operator profiles.** The H200 profile tables for both roles are measured and merged (run 03,
   `test_report_2026-10-26_h200_profiles.md`). The first runs on them found five defects in the
   profiler and predictor; all are fixed (`ae4c9312`, `39a82403`, `dd1f37dc`, `6790f110`,
   `d034202c`).
 - **Next.**
-  1. Finish the native reruns with the 420 s length sweep (h200_64 running, then h200_32) and
-     compare G and E against them.
-  2. Fix the two operator errors from the device timeline (routed expert compute, TP
+  1. Model the host time between decode steps (item 3): design with codex review, measure the
+     host terms without the torch profiler, implement it as an opt-in, rerun E and G.
+  2. Finish the native reruns with full sweep coverage (h200_64 with 780 s running, then
+     h200_32 with 420 s) and compare G and E against them.
+  3. Fix the two operator errors from the device timeline (routed expert compute, TP
      all-reduce) from op profiling.
-  3. Model the host time between decode steps (CPU overhead, item 3).
-  4. Formal 64-GPU calibration after E is within 30% against the warmed native run.
+  4. Formal 64-GPU calibration: E is within 30% of the warmed native run on all 14 rows.
 
 ### Sub-task directories (`task_memory/`)
 

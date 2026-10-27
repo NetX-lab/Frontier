@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: G rerun finished (all four means within 30% of the h200_64 sweep reference, three tail rows fail); h200_64 sweep01 result (stalls left only above the length it reached; 420 s too short), sweep02 with 780 s submitted; item 3 lead: a host sync for the KV side-storage reset on every decode step that allocates a KV block. |
 | 2026-10-27 | D31: per-rank check: fast ranks wait in the collectives for the slowest routed rank; routed compute about 2.5–3 ms per step high, TP all-reduce about 1–2 ms low; host time (item 3) is the main remaining TPOT gap. |
 | 2026-10-27 | D31: h200_32 length-sweep job succeeded; formal stalls 84/54/34 → 38/21/22, all left above the length the sweep reached; E passes all 14 rows against it; `duration_s` raised to 420 s and the h200_64 sweep job launched; routed-expert lead: `balanced` fills experts from ID 0, so the priced lane has all 22 experts active. |
 | 2026-10-26 | D31: device-timeline job succeeded (Frontier step within about 5% of native device busy time up to 21 requests; routed compute overpriced, TP all-reduce underpriced); native TTFT/TPOT tails traced to just-in-time compiles of the DSA scoring kernel; E rerun all means within 30%; native length-sweep warm-up `320c2082`, H200 32-GPU job `exp-1027-074903-556239` submitted. |
@@ -225,11 +226,13 @@ State of the D31 plan steps (see the top section of `plan.md`):
   (merged03, analytical collectives) finished: TTFT −45.0%, TPOT −57.0%, E2E −56.8%, total
   throughput +14.7% (calibration item 2b below). The workflow-port run `h200_32_wf02` finished:
   TTFT −37.4%, TPOT −57.0%. The rerun `h200_32_comb_h200` (workflow port and measured
-  collectives) has been running since 19:34 UTC.
+  collectives) finished: all 14 rows pass the 30% gate against the h200_32 sweep reference
+  (TPOT mean −18.5%). Calibration (items 3, then 2) continues.
 - completed — F. H200 64-GPU native workload, job `exp-1026-201417-791460` (report
   `test_report_2026-10-26_h200_64_native_workload.md`).
-- in-progress — G. Frontier `h200_64` rerun `h200_64_g01` (merged04, measured collectives),
-  started 20:17 UTC.
+- in-progress — G. Frontier `h200_64` rerun `h200_64_g01` (merged04, measured collectives)
+  finished on 2026-10-27; all four means are within 30% of the h200_64 sweep reference, three
+  tail rows fail (details in the G result below). Calibration continues with E.
 
 Step D progress (2026-10-26):
 
@@ -687,6 +690,21 @@ Calibration item 2a, collective communication (2026-10-26, `in-progress`):
   - Step G rerun: `h200_64_g01` from the detached worktree `.worktrees/run-g-9125bcb`
     (`9125bcb1`), started 20:17 UTC with `--measured-collectives` and the merged04 options;
     output `/data/ycfeng/tmp/d31_merged04_run/h200_64_g01/`.
+  - G result (2026-10-27): return code 0, simulator wall time 17,179 s (4.8 h). Frontier: TTFT
+    mean/p50/p90/p95 973.3 / 984.5 / 1,013.0 / 1,016.3 ms; TPOT 49.51 / 51.12 / 51.36 /
+    51.36 ms; E2E mean 51,618 ms; total throughput 5,316.6 tok/s, output 759.5 tok/s.
+    `frontier_workload.py compare`, gate 30%:
+    - Against the h200_64 sweep reference (`/data/ycfeng/tmp/d31_sweep_h200_64/compare_G_sweep.json`):
+      TTFT mean −23.9%, p50 −22.4%, p90 −35.6% (FAIL), p95 −37.6% (FAIL); TPOT mean −24.5%,
+      p50 −20.8%, p90 −29.4%, p95 −30.1% (FAIL); E2E mean −24.5%, p90 −29.3%; throughput
+      +6.7%. 11 of 14 rows pass.
+    - Against the pre-sweep reference (`evidence/d31_h200_64_native_metrics.json`,
+      `compare_G_pre.json`): 8 of 14 pass; TPOT mean −28.9%.
+    - The run log shows the BF16 → FP8 "approximation factor=0.500" warnings for
+      `attn_pre_proj`, `attn_post_proj` and `moe_grouped_gemm`, as in the E runs. As recorded
+      on 2026-10-26, they change no Step-5 time: the MoE predictor never calls
+      `adjust_compute_time`, Step-5 attention projections are priced by `step5_attention`, and
+      the profiles have no `attn_pre_proj`/`attn_post_proj` rows.
 
 Calibration item 2b, decode step time against batch size (2026-10-26, `in-progress`; numbered 3
 before the plan entry was added). Native step times and token gaps here are diagnostic only
@@ -952,6 +970,36 @@ before the plan entry was added). Native step times and token gaps here are diag
     `verify` and the StepMind dry run pass; the dry run differs from sweep02 only in the
     replica count (8) and paths. Pi run `d31-h200-64-sweep-submit-1027b` launched at 00:23 UTC.
     The h200_32 rerun with the same setting follows.
+  - h200_64 sweep result (2026-10-27): job `exp-1027-082338-716026` succeeded at 00:53:49 UTC
+    (run time 1,811 s, 8 replicas; replay `CLIENT_WORKLOAD_VERIFIED`; 3 × (16 + 128) requests,
+    0 failed). Pi report: `/data/ycfeng/tmp/ds4_runs/d31-h200-64-sweep-submit-1027b/output.md`.
+    - Length sweep: 16,808 requests recorded, 9 short requests failed (HTTP 502,
+      `ServerDisconnectedError`), `coverage_verified=false`. The long requests ran to 448 s:
+      tokens 0–256 took about 205 s, 256–640 about 220 s (about 0.57 s per token), 640–1,024
+      only 14 s, because the short requests had stopped at 420 s and no mixed step compiled a
+      new variant after that.
+    - Stall regions (`/data/ycfeng/tmp/d31_diag/stall_regions.py`, diagnostic): at the last
+      short dispatch the long requests had length 6,695–6,712 (region count 837–839). Formal
+      stall events (token gaps over 150 ms, merged): 69 / 37 / 27 per repeat, 27.3 / 14.9 / 11.1 s in total (before the
+      sweep: 106 / 77 / 53 events, 47.1 / 33.3 / 23.2 s), region counts 847–896, every one above the sweep's reach. The same script on the
+      h200_32 sweep02 data: reach 850–856; 80 of 81 events above it.
+    - `workload_metrics.py` passes (`/data/ycfeng/tmp/d31_sweep_h200_64/native_metrics.json`).
+      Per-repeat means: TTFT 1,336.2 / 1,257.6 / 1,242.4 ms, TPOT 69.3 / 64.1 / 63.2 ms
+      (before the sweep: 75.0 / 68.8 / 65.1 ms). Pooled TTFT mean 1,278.7 ms (p90 1,574.3), TPOT
+      mean 65.54 ms (p90 74.50), E2E mean 68,323 ms, total throughput 4,983.6 tok/s.
+    - Acceptance: `workload_metrics.py` PASS; stall-free repeats FAIL; falling trend FAIL
+      (repeat 1 is 6 ms above repeat 3). The sweep works where it ran.
+  - Sweep length for h200_64: at sweep01's pace (region counts 800–848 took 220 s with mixed
+    steps) the remaining 48 region counts need about 220 s more, so the long requests end at
+    about 660 s while short requests keep arriving. `duration_s` 780 s for h200_64 (run-definition
+    value only). h200_32 keeps 420 s: its long requests ended at 253 s with a 240 s sweep.
+  - h200_64 sweep02: stage `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_sweep02`
+    (`run_input.json` differs from sweep01 only in `duration_s` 780; built from
+    `.worktrees/step5-d31-native-320c208` at `320c2082`; job tag `d31h20064sweep02`; cloud output
+    `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_64_sweep02`). `verify` and the
+    StepMind dry run pass; the dry run differs from sweep01 only in paths; replay timeout 3,000 s
+    and worker timeout 5,400 s cover the longer sweep. Pi run `d31-h200-64-sweep02-submit-1027c`
+    launched at 01:14 UTC.
 
 Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31.10):
 
@@ -1000,6 +1048,51 @@ Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31
   3. A grouped-GEMM model with the active-expert count as a feature, trained on profile rows
      that vary it.
   Not decided; it waits for the clean native references and goes with the TP all-reduce fix.
+
+Calibration item 3 lead, host time: KV side-storage reset sync (2026-10-27, diagnostic only,
+D31.10; scripts in `/data/ycfeng/tmp/d31_diag/hostgap/`, input the h200_32 device-timeline
+traces `/data/ycfeng/tmp/step5_d31_devtl_20261026/h200_32_devtl01/stage/evidence/nodes/*/torch_trace/`):
+
+- Native runtime facts from the logs: vLLM V2 model runner; async scheduling on ("Disabling
+  NCCL for DP synchronization when using async scheduling"), so the DP sync before each step is
+  a gloo CPU all-reduce (`c10d::allreduce_` in `dispatch_cg_and_sync_dp`).
+- Mechanism (source `/data/ycfeng/tmp/d29_published_sources01/source`):
+  - The scheduler sets `new_block_ids_to_zero` whenever a step allocates a new KV block
+    (`vllm/v1/core/sched/scheduler.py:1622-1650`, `_get_new_block_ids_for_zeroing`).
+  - `update_requests` in `vllm/v1/worker/gpu/model_runner.py:1250-1297` then calls
+    `KVBlockZeroer.zero_block_ids` (`vllm/v1/worker/utils.py:519-598`), which runs one
+    side-storage reset hook per Step-5 sparse summary cache (46 per step).
+  - Each hook runs `zero_kv_cache_side_storage` (`vllm/models/step5/nvidia/sparse_summary_cache.py:486`),
+    whose `_ids` turns the GPU block-ID tensor into a list with `.tolist()`: a blocking
+    device-to-host copy. The first one waits for the previous step's device work; the hooks
+    then run one after another.
+  - Under async scheduling the host normally prepares step N+1 while the device runs step N.
+    In a reset step the host waits for step N to finish, then runs the 46 resets, the rest of the
+    input preparation, the DP all-reduce and the graph launch while the device is idle.
+- Measurement (`zeroing_split.py`; profiled iterations, decode-only, split by a long `aten::to`
+  over 1 ms before the DP all-reduce):
+
+  | Requests per engine | Class | Steps | Period (ms) | Device busy (ms) | Host wait (ms) | Sync → all-reduce (ms) |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | 5 | async | 36 | 39.87 | 40.75 | 0.00 | – |
+  | 5 | sync | 16 | 54.99 | 41.91 | 7.05 | 4.36 |
+  | 20 | async | 23 | 46.57 | 44.87 | 1.39 | – |
+  | 20 | sync | 33 | 58.75 | 48.90 | 6.98 | 5.02 |
+  | 40 | sync | 12 | 63.67 | 52.56 | 9.64 | 6.02 |
+  | 45 | sync | 36 | 62.70 | 52.58 | 8.03 | 5.29 |
+
+  `critical_path.py`: from the end of the sync to the first graph kernel takes about 8.7–9.7 ms
+  in the profiled run, nearly independent of the request count. The profiler inflates host time,
+  so these are upper bounds.
+- Check against unprofiled data (`/data/ycfeng/tmp/d31_diag/native_decode_gaps_h200_32.json`,
+  native token gaps): 30.5 ms at 0 requests, 36–38 at 5, 45–45.7 at 10, 52.6–53.6 at 20,
+  54.4–55.3 at 30, 59.2 at 40. At 20 requests Frontier's step (46.4 ms) matches the async steps;
+  the profiled sync/async mix at 20 requests (about 53.8 ms) matches the unprofiled gaps.
+  The sync share grows with the batch, as expected when any request crossing a 16-token block
+  boundary triggers it.
+- Inference: the reset sync is the main remaining TPOT gap. Frontier models no host time
+  (`skip_cpu_overhead_modeling=True`), and its CPU-overhead terms, when enabled, add serially
+  without an async-scheduling overlap. Item 3 design: `design.md` (in progress).
 
 Step F status (2026-10-26):
 

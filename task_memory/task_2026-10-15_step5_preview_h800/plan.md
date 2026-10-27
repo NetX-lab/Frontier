@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: G result; h200_64 sweep result and the 780 s rerun; item 3 rewritten around the KV side-storage reset sync with its steps. |
 | 2026-10-27 | D31: per-rank check corrects the operator-error sizes; item 3 (host time) now comes before the item 2 operator fixes. |
 | 2026-10-27 | D31: h200_32 length-sweep result (steps 2–3 of the warm-up rerun); sweep length raised to 420 s; h200_64 sweep job first; routed-expert cause refined. |
 | 2026-10-26 | D31: E rerun result; native rerun with a complete DSA kernel warm-up added (JIT stalls found); item 2b step 1 done. |
@@ -168,7 +169,9 @@ Status (2026-10-26): A–D and F are done (D(g) evidence in `test_report_2026-10
 F in `test_report_2026-10-26_h200_64_native_workload.md`). The E rerun `h200_32_comb_h200`
 (workflow port, measured H200 collectives, merged04) finished: all four means are within 30%
 (TTFT −20.3%, TPOT −25.7%, E2E −25.6%, throughput +3.0%), while the p90/p95 rows fail (about
-−32% to −34%). The G rerun `h200_64_g01` is still running.
+−32% to −34%). Status (2026-10-27): against the length-sweep references E passes all 14 rows
+(TPOT mean −18.5%) and G passes 11 of 14 (all four means; TPOT mean −24.5%; TTFT p90/p95 and
+TPOT p95 fail). Calibration item 3 (host time) is next.
 
 Native rerun with a complete kernel warm-up (opened 2026-10-26; evidence in `progress.md`).
 Most of the native TTFT/TPOT tail comes from just-in-time compiles of the DSA scoring kernel
@@ -191,6 +194,12 @@ Frontier should model, and the stalls are not removed from the native data after
 4. Rerun with `duration_s` 420 s (a run-definition value, no code change). h200_64 first (job
    `exp-1027-082338-716026`, 64 H200, submitted 2026-10-27 00:23 UTC), then h200_32 again;
    compare G and E against them. Acceptance as in step 2.
+   Result for h200_64: the job succeeded, but the long requests ran to 448 s, past the 420 s
+   sweep, so `coverage_verified` is false. Formal stall events fell from 106/77/53 to 69/37/27,
+   all at region counts above the sweep's reach. G against it: 11 of 14 rows pass.
+5. Rerun h200_64 with `duration_s` 780 s (job via Pi run `d31-h200-64-sweep02-submit-1027c`,
+   submitted 2026-10-27 01:14 UTC; the long requests need about 660 s while short requests keep
+   compiling variants), then h200_32 with 420 s. Acceptance as in step 2.
 Formal 64-GPU calibration still waits for E within 30% against the warmed native run.
 
 Calibration order for E, after the first error table:
@@ -264,7 +273,23 @@ Calibration order for E, after the first error table:
    3. Fix the cause where it belongs: a missing or underpriced operator or collective is
       profiled and priced from op profiling (item 2); a host-side cost goes to item 3. No table of
       measured step times is used for prediction.
-3. CPU overhead, which is not modelled now.
+3. Host time between decode steps (opened 2026-10-27; evidence in `progress.md` and section 8 of
+   `test_report_2026-10-26_decode_step_slope.md`). Native vLLM runs with async scheduling, so the
+   host prepares the next step while the device runs and host time is normally hidden. Every
+   step that allocates a new KV block breaks this: the Step-5 KV side-storage reset copies the
+   block IDs to the host 46 times, the first copy waits for the previous step's device work, and
+   the device stays idle while the host finishes the resets, input preparation, the gloo DP
+   all-reduce and the graph launch (about 9 ms in the profiled run, an upper bound). The share of
+   such steps grows with the batch. Frontier models no host time today. Steps:
+   1. Design (`design.md`): when a step pays the host term, what the term contains, how it
+      enters the step time, and where the measured values live. Codex review for the modelling
+      choice.
+   2. Measure the host terms without the torch profiler: a diagnostic native run kind with a
+      timestamp probe on the decode servers (never a reference), or a single-GPU microbenchmark
+      of the resets if the probe cannot be made clean. Component host terms only (D31.10).
+   3. Implement in Frontier, off by default, with unit tests, dummy smoke and the 77-case
+      fidelity matrix unchanged on the default path.
+   4. Rerun E and G against the clean references.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2
 and G3, exact-byte KV checks, observer validation, census data and the D29 scope ledger.

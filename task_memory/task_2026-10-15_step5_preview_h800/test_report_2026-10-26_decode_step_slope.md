@@ -1,9 +1,10 @@
-# Test report: decode step growth and native decode stalls (H200 32 GPUs)
+# Test report: decode step growth and native decode stalls (H200 32 and 64 GPUs)
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Added the h200_64 length-sweep run with step G against it (section 7) and the KV side-storage reset sync as the host-time cause (section 8); updated the limits. |
 | 2026-10-27 | Corrected section 3 with the per-rank check: the median-rank values overstated both operator errors. |
 | 2026-10-27 | Added the h200_32 length-sweep rerun (section 6) and the step E comparison against it; updated the limits. |
 | 2026-10-27 | Created: native decode device timeline, Frontier step comparison, kernel components, just-in-time compile stalls, step E rerun. |
@@ -236,6 +237,119 @@ Step E (`h200_32_comb_h200`, unchanged) against this run, gate 30%,
 All 14 rows pass. The native reference still contains the residual stalls, so these errors are
 not final. Next: `duration_s` 420 s, h200_64 first (job `exp-1027-082338-716026`), then h200_32.
 
+### 7. Native rerun with the length sweep (h200_64) and step G
+
+Run: job `exp-1027-082338-716026` (8 × 8 H200, `step_main`, non-preemptible, creator
+`i-fengyicheng`), stage `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_sweep01`, built
+from `320c2082`, length sweep as in section 6 with `duration_s` 420 (two long requests per lane
+on four lanes, short requests every 0.025 s). Succeeded at 00:53:49 UTC, run time 1,811 s,
+replay `CLIENT_WORKLOAD_VERIFIED`, 3 × (16 + 128) requests recorded, none failed.
+
+```bash
+cd /data/ycfeng/Frontier/.worktrees/step5-preview
+WS=/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_sweep01
+python3 /data/ycfeng/tmp/d31_diag/stall_regions.py $WS/stage/evidence/replay/client_requests.jsonl
+PYTHONPATH=$PWD:$PWD/tests/comparison/dp_placement_pp \
+  /data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python \
+  tests/integration/step5_pd/workload_metrics.py --stage $WS/stage \
+  --output /data/ycfeng/tmp/d31_sweep_h200_64/native_metrics.json
+PYTHONPATH=$PWD:$PWD/tests/comparison/dp_placement_pp \
+  /data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python \
+  tests/integration/step5_pd/frontier_workload.py compare \
+  --frontier /data/ycfeng/tmp/d31_merged04_run/h200_64_g01/frontier_summary.json \
+  --native /data/ycfeng/tmp/d31_sweep_h200_64/native_metrics.json --gate 0.3 \
+  --output /data/ycfeng/tmp/d31_sweep_h200_64/compare_G_sweep.json
+```
+
+Length sweep: 16,808 requests recorded, 9 short requests failed (HTTP 502), `coverage_verified`
+false. The long requests ran to 448 s; at the last short dispatch (420 s) they had length
+6,695–6,712 (region count 837–839). Tokens 256–640 took about 220 s (about 0.57 s per token,
+compiling); tokens 640–1,024 took 14 s, after the short requests had stopped.
+
+| Repeat | Stall events (before the sweep) | Total stall time (before) | TTFT mean | TPOT mean (before) |
+| --- | --- | --- | --- | --- |
+| 1 | 69 (106) | 27.3 s (47.1 s) | 1,336.2 ms | 69.3 ms (75.0) |
+| 2 | 37 (77) | 14.9 s (33.3 s) | 1,257.6 ms | 64.1 ms (68.8) |
+| 3 | 27 (53) | 11.1 s (23.2 s) | 1,242.4 ms | 63.2 ms (65.1) |
+
+Every remaining stall event has a region count of 847–896, above the sweep's reach. On the
+h200_32 sweep (section 6) the same script finds 80 of 81 events above that sweep's reach.
+
+Expectations and results:
+- `workload_metrics.py` passes: PASS.
+- No or only a few stall events in the formal repeats: FAIL (133 events, all above the length
+  the sweep reached).
+- Sweep coverage verified: FAIL.
+
+Step G (`h200_64_g01`, merged04, measured H200 DP4 collectives) against this run, gate 30%:
+
+| Metric | Frontier | Native | Relative error | Result |
+| --- | --- | --- | --- | --- |
+| TTFT mean | 973.3 ms | 1,278.7 ms | −23.9% | PASS |
+| TTFT p50 | 984.5 ms | 1,269.3 ms | −22.4% | PASS |
+| TTFT p90 | 1,013.0 ms | 1,573.5 ms | −35.6% | FAIL |
+| TTFT p95 | 1,016.3 ms | 1,629.4 ms | −37.6% | FAIL |
+| TPOT mean | 49.51 ms | 65.54 ms | −24.5% | PASS |
+| TPOT p50 | 51.12 ms | 64.57 ms | −20.8% | PASS |
+| TPOT p90 | 51.36 ms | 72.76 ms | −29.4% | PASS |
+| TPOT p95 | 51.36 ms | 73.48 ms | −30.1% | FAIL |
+| E2E mean | 51.62 s | 68.32 s | −24.5% | PASS |
+| E2E p50 | 53.26 s | 67.33 s | −20.9% | PASS |
+| E2E p90 | 53.53 s | 75.74 s | −29.3% | PASS |
+| E2E p95 | 53.54 s | 76.44 s | −30.0% | PASS |
+| Total throughput | 5,316.6 tok/s | 4,983.6 tok/s | +6.7% | PASS |
+| Output throughput | 759.5 tok/s | 711.9 tok/s | +6.7% | PASS |
+
+11 of 14 rows pass. Against the pre-sweep h200_64 reference 8 of 14 pass (TPOT mean −28.9%,
+`compare_G_pre.json`). The G run log has the BF16 → FP8 "approximation factor=0.500" warnings;
+they change no Step-5 time (the MoE predictor never applies the factor, see `progress.md`).
+
+The sweep needs short requests until the long requests end. At sweep01's pace the remaining 48
+region counts take about 220 s more, so the rerun (`h200_64_sweep02`, job submitted on
+2026-10-27 01:14 UTC) uses `duration_s` 780.
+
+### 8. Host time between decode steps: KV side-storage reset sync (diagnostic)
+
+Scripts (not in Git): `/data/ycfeng/tmp/d31_diag/hostgap/zeroing_split.py`, `critical_path.py`,
+`patterns.py`, `loop_count.py`; input: the h200_32 device-timeline traces of section 1.
+
+```bash
+python3 /data/ycfeng/tmp/d31_diag/hostgap/zeroing_split.py \
+  /data/ycfeng/tmp/step5_d31_devtl_20261026/h200_32_devtl01/stage/evidence/nodes/*/torch_trace/load_t0*_tp0_*.pt.trace.json.gz
+```
+
+In the native source (`/data/ycfeng/tmp/d29_published_sources01/source`), every step that
+allocates a new KV block sets `new_block_ids_to_zero` (`vllm/v1/core/sched/scheduler.py:1622-1650`).
+The model runner (`vllm/v1/worker/gpu/model_runner.py:1250-1297`) then calls
+`KVBlockZeroer.zero_block_ids` (`vllm/v1/worker/utils.py:519-598`), which runs 46 Step-5 sparse
+summary cache resets. Each reset (`vllm/models/step5/nvidia/sparse_summary_cache.py:486`) copies
+the GPU block-ID tensor to the host with `.tolist()`, a blocking copy. The first copy waits for
+the previous step's device work. Under async scheduling the host otherwise prepares the next
+step while the device runs, so a reset step leaves the device idle while the host runs the
+resets, the rest of the input preparation, the gloo DP all-reduce and the graph launch.
+
+Decode-only profiled steps, split into steps with that sync (a long `aten::to` before the DP
+all-reduce) and without:
+
+| Requests per engine | Class | Steps | Period (ms) | Device busy (ms) | Host wait (ms) | Sync → all-reduce (ms) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 5 | async | 36 | 39.87 | 40.75 | 0.00 | – |
+| 5 | sync | 16 | 54.99 | 41.91 | 7.05 | 4.36 |
+| 20 | async | 23 | 46.57 | 44.87 | 1.39 | – |
+| 20 | sync | 33 | 58.75 | 48.90 | 6.98 | 5.02 |
+| 40 | sync | 12 | 63.67 | 52.56 | 9.64 | 6.02 |
+| 45 | sync | 36 | 62.70 | 52.58 | 8.03 | 5.29 |
+
+From the end of the sync to the first graph kernel: about 8.7–9.7 ms, nearly constant with the
+request count (`critical_path.py`). Frontier's step at 20 requests (46.4 ms) matches the async
+steps. The profiled mix at 20 requests (about 53.8 ms) matches the unprofiled native token gaps
+(52.6–53.6 ms, `/data/ycfeng/tmp/d31_diag/native_decode_gaps_h200_32.json`).
+
+Expectations and results: the remaining TPOT gap should come from host time on the step's
+critical path: CONFIRMED for a mechanism (the reset sync), with profiled host times as upper
+bounds. An unprofiled measurement of the host terms is still needed before Frontier can price
+them (item 3 design).
+
 ## Limits
 
 - The torch profiler perturbs host timing (period about 50 ms against 39.8 ms without it), so
@@ -246,5 +360,8 @@ not final. Next: `duration_s` 420 s, h200_64 first (job `exp-1027-082338-716026`
 - Category assignment is by kernel-name fragments checked against the Step decode traces; the
   `other` column holds generic PyTorch elementwise kernels (router top-k selection, gating
   arithmetic, sampling) that cannot be assigned by name.
-- The length-sweep rerun (section 6) still has 81 stall events, so a native run without
-  compile stalls has not been measured yet. The linear fit in section 4 remains an inference.
+- The length-sweep reruns (sections 6 and 7) still have 81 and 133 stall events, so a native
+  run without compile stalls has not been measured yet. The linear fit in section 4 remains an
+  inference.
+- Section 8's host times come from profiled steps; the profiler inflates host time. They show
+  the mechanism, not the size Frontier should price.
