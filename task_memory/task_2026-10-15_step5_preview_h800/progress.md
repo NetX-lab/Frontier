@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 4 Frontier probe: the PREFILL wave ends after step 1 for all 16 requests (PREFILL batch queue of one step; native async scheduling has two); item 4 design written; item 2b overlap-free critical path (critpath5) recorded. |
 | 2026-10-27 | D31: item 3 step 4 done: E host within 4.1% on every row (exploratory); G host TTFT −12.9%, TPOT −9.6%; item 4 lead opened: at DP4 the native prefill waits for the device to run the dummy steps queued by the previous DP wave (mean about 180 ms), which Frontier does not model. |
 | 2026-10-27 | D31: E base with merged04 (no host profile) passes all 14 rows against sweep03 (TTFT −5.3%, TPOT −13.9%), equal to the merged03 run. |
 | 2026-10-27 | D31: h200_64 probe analyzed with the tightened checks: DP4 profile prefill 36.92 ms / decode 5.96 ms, perturbation PASS, accepted for step G; step G host run started. |
@@ -1139,6 +1140,26 @@ Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31
     slowest rank. Native critical-path own cost: 6.8 µs at 9 requests, 8.2 µs at 20–21,
     13.1 µs at 44–46. So the last-arriver statistic of the existing measurements tracks the
     native cost within about 10%, with no new GPU run.
+  - Corrected critical path (2026-10-27, `critpath5.py`, output `crit5_load_t016.txt`; report
+    section 10.1). Reason: `critpath4.py` counted kernels that overlap the previous kernel on the
+    stream twice. Result at 9 requests per engine: router 0.52–0.53 ms (matches; the earlier
+    "router underpriced" was the overlap), idle inside the body 2.72 ms plus 0.33 ms tail and end
+    skew (Frontier 0.62 ms, about −2.4 ms), TP all-reduce 1.70–1.72 ms (Frontier 3.14 ms), routed
+    experts 11.38–12.58 ms plus 0.77 ms activation (Frontier about +3 to +4 ms), EP dispatch and
+    combine with peer waits about equal.
+  - Kernel mapping (`/data/ycfeng/tmp/d31_diag/kmap/`): native `position_cyclic` routing runs 14
+    kernels, about 17 µs per layer (about 1.5 ms of the 1.99 ms "other"), against 6.5–8 µs of
+    priced `topkGating`; the routed-expert measurement (`moe_native_experts_class`) already
+    contains the alignment kernels that Frontier prices again as `moe_shuffling` (about 0.65 ms
+    per step).
+  - Profiler check (`/data/ycfeng/tmp/d31_diag/l2_flush.txt`): only the attention profiler
+    flushes L2 between repeats; linear-op rows at 16 tokens are 3–20% below the native kernels.
+  - Collective statistic (`own_cost_all.py`, output `own_cost_all_dp2.txt`): the fastest rank
+    of each group (last arriver) is about 3–3.7 µs below the slowest rank for every TP
+    all-reduce size; TP all-reduce b8 9.48 → 6.01 µs, b16 11.35 → 7.67 µs.
+  - Decision: fixes A3, B, C, D, E and the L2 flush (`plan.md` item 2b) get their own design
+    document and codex review before code changes, after item 4. Estimate with all fixes: about
+    41.0 ms against 41.5–42.3 ms native at 9 requests.
 
 Calibration item 3 lead, host time: KV side-storage reset sync (2026-10-27, diagnostic only,
 D31.10; scripts in `/data/ycfeng/tmp/d31_diag/hostgap/`, input the h200_32 device-timeline
@@ -1459,17 +1480,31 @@ report `test_report_2026-10-27_h200_64_ttft_wave_tail.md`, scripts in
   until a short wave lets it drain. At DP2 (about 590 + 16 × 24.8 ms) it fits within 1 s. The
   backlog (mean about 180 ms) plus the native solo prefill (about 625 ms) gives about 805 ms,
   close to the native mean of 814 ms.
-- Frontier side (code reading, `vllm_v1_engine_replica_scheduler.py` 145–190 and 582–780,
-  `dp_dummy_forward.py`): the PREFILL role runs DP dummy passes (it has an engine batch queue,
-  the model is MoE and `attn_dp` is 4), but the engine waits for each dummy forward to end before
-  its next pass. A request that arrives during a wave therefore waits for at most one dummy
-  forward, and Frontier shows no prefill wait at all (`request_waiting_time_prefill` 0 and
-  `prefill_e2e_time` 689.7 ms for every request).
+- Frontier side (code reading, `vllm_v1_engine_replica_scheduler.py` 145–190, 391–427 and
+  582–780, `dp_dummy_forward.py`): the PREFILL role runs DP dummy passes (it has an engine batch
+  queue, the model is MoE and `attn_dp` is 4). Its batch queue holds one step: an explicit
+  capacity is accepted only for DECODE and MONOLITHIC PP1/DP1. Each dummy forward ends before
+  the engine's next pass.
+- Frontier diagnostic run (`/data/ycfeng/tmp/d31_diag/wave_frontier/wave_probe.py`, Frontier at
+  `02bd453a`, 16 requests of 6144/2 tokens 1 s apart, h200_64 host options; output
+  `h64host_wave.jsonl`, summary `probe_summary.txt`): for all 16 requests, lane k runs the
+  6128-token prefill, the other three lanes run one dummy forward each, all end 689.1 ms after
+  the arrival with "last pass of the wave", and nothing runs until the next arrival. So the
+  wave ends at the step-1 synchronization: the prefill lane has applied its output and has no
+  unfinished request left.
+- Native counterpart: async scheduling is on for every node of `h200_64_sweep02` ("Disabling
+  NCCL for DP synchronization when using async scheduling", "Using V2 Model Runner";
+  `native_async_flags.txt`). With it `max_concurrent_batches` is `pp_size + 1 = 2`
+  (`config/vllm.py:579-589`), the EngineCore batch queue holds two steps
+  (`v1/engine/core.py:215-221`), and `step_with_batch_queue` returns right after it launches
+  the prefill (lines 749-754). The prefill engine reaches the step-1 synchronization with an
+  unfinished request, so the native wave runs to step 16.
 - Two smaller DP4 parts: Frontier's solo prefill is about 60 ms above the native minimum
   (689.7 against about 625 ms; 597.8 against 579 ms at DP2), and the handoff is about 28 ms low.
-- Next: a Frontier diagnostic run on 16 requests logs the PREFILL wave (passes, dummy forward
-  spans) to confirm the code reading; then the item 4 design (host-ahead dummy steps priced
-  from op profiling plus the measured host period), reviewed together with the item 2 design.
+- Next: the item 4 design `design_dp_wave_tail.md` (PREFILL batch queue of two steps through a
+  new PREFILL role flag; host-paced dummy steps while every lane has only dummy work, with the
+  measured host period as a component host term and the dummy device cost from op profiling)
+  goes to codex review, then implementation off by default.
 
 Step F status (2026-10-26):
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Section 7: Frontier probe result (the PREFILL wave ends after step 1) and the native async-scheduling batch queue that keeps the native wave running to step 16. |
 | 2026-10-27 | Created: TTFT split, native prefill sawtooth, vLLM wave mechanism, wave-tail measurement from the host-probe stamps, Frontier code reading. |
 
 ## 1. Scope
@@ -141,12 +142,42 @@ Code reading (`frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_sched
   include_ffn=False)` and enters the MoE synchronization room of each layer.
 - The engine issues its next pass only after the dummy forward's last stage ends
   (`on_dummy_forward_end` → `ReplicaScheduleEvent(next_pass_start(...))`), so the host never runs
-  ahead of the device. A request that arrives during a wave waits for at most one dummy forward.
+  ahead of the device.
+- The PREFILL role has a batch queue of one step (`_max_concurrent_batches = _num_stages`; an
+  explicit capacity is accepted only for DECODE and for MONOLITHIC PP1/DP1, lines 391–427). The
+  prefill lane therefore takes its batch output before it ends its first iteration.
 
-Diagnostic Frontier run (pending): `wave_probe.py` runs Frontier on 16 requests (6144 prompt and
-2 decode tokens, arrivals 1 s apart, h200_64 host options) and logs every PREFILL dummy pass start
-and end and every real batch per lane, to confirm the code reading and to read Frontier's dummy
-forward cost.
+Diagnostic Frontier run (`wave_probe.py`, Frontier at `02bd453a` in
+`/data/ycfeng/Frontier/.worktrees/step5-d31-native-02bd453`, 16 requests with 6144 prompt and
+2 decode tokens, arrivals 1 s apart, h200_64 host options; output
+`/data/ycfeng/tmp/d31_diag/wave_frontier/h64host_wave.jsonl`, summary `probe_summary.txt` in the
+same directory). All 16 requests give the same pattern:
+
+| Event (times after the arrival) | Frontier |
+| --- | --- |
+| Lane k runs the 6128-token prefill | starts at 0 |
+| The other three lanes each start one dummy forward | at 0 |
+| All dummy forwards end, with `on_dummy_forward_end` returning "last pass of the wave" | at 689.1 ms |
+| Further passes on any lane before the next arrival | none |
+
+So Frontier's PREFILL wave ends at the step-1 synchronization: when the lanes compare their
+unfinished requests, the prefill lane has already applied its output and has none. No dummy
+tail runs and no device backlog forms before the next prefill. The dummy forward cost alone is
+not visible in this run, because each dummy forward waits in the MoE rooms for the concurrent
+prefill and ends with it.
+
+Why the native wave continues: async scheduling is on for every node of `h200_64_sweep02`
+(each `server.log` prints "Disabling NCCL for DP synchronization when using async scheduling"
+and "Using V2 Model Runner"; extract `native_async_flags.txt` in the same directory). With async
+scheduling, `max_concurrent_batches` is `pp_size + 1 = 2` (`config/vllm.py:579-589`), which sizes
+the EngineCore batch queue (`v1/engine/core.py:215-221`). `step_with_batch_queue`
+(`v1/engine/core.py:693-763`) returns right after it launches the prefill while the queue has
+room (lines 749-754), so the prefill engine reaches the step-1 synchronization with an
+unfinished request and the wave runs to step 16.
+
+Consequence: two Frontier changes are needed to model the native wave tail: a PREFILL batch
+queue of two steps, and dummy steps that the host issues at its own pace (about 5.6 ms apart at
+DP4) while the device runs them in order. Design: `design_dp_wave_tail.md`.
 
 ## 8. Limits
 

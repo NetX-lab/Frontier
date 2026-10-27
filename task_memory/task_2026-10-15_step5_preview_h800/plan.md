@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 4 step 1 done (Frontier's PREFILL wave ends after step 1: PREFILL batch queue of one step against native async scheduling's two); item 4 step 2 design written; item 2b fix list corrected with the overlap-free critical path (section 10.1 of the slope report). |
 | 2026-10-27 | D31: item 3 step 4 done (E host within 4.1%; G host TTFT −12.9%, TPOT −9.6%); item 4 opened: the native DP wave tail queues dummy-step device work ahead of the next prefill at DP4. |
 | 2026-10-27 | D31: item 3 step 2 h200_64 done (DP4 profile, perturbation PASS, accepted for G); G host rerun started. |
 | 2026-10-27 | D31: codex review of the h200_32 probe result (F001–F004): estimator and replay checks tightened; the h200_32 host profile is not accepted (probe effect unmeasured), so E/G with it are exploratory. |
@@ -296,6 +297,33 @@ Calibration order for E, after the first error table:
       (Frontier counts about 1,400 of the native 4,100–4,300 graph kernels), other compute
       about −2 ms, EP collectives about 0. These four fixes go together after the E rerun with
       the item 3 profile, because one alone moves the body by up to 8%.
+      Corrected on 2026-10-27 (section 10.1 of the same report: overlapping kernels were counted
+      twice): the router matches; idle time inside the body is about 2.4 ms short; TP all-reduce
+      about +1.4 ms; routed experts about +3 to +4 ms plus `moe_shuffling` counted twice
+      (+0.65 ms); native `position_cyclic` routing kernels cost about 0.9 ms more than the
+      priced `topkGating` rows. The fixes, all priced from op profiling or measured collective
+      rows (D31.10):
+      - A3, routed experts: count tokens per expert from the native position-routing assignment
+        (`WaveRoutingSource` intervals) and price the grouped GEMM with the existing
+        load-imbalance model; widen `validate_position_routing_scope` from the one profiled
+        geometry to Step P/D with MoE-TP1 and EP = TP × DP. Correct the comment in
+        `tests/integration/step5_pd/frontier_workload.py:83-84` with it.
+      - B, collective statistic: price a collective call by the last rank to arrive (median over
+        repeats of the max over groups of the fastest rank in a group), regenerated from the raw
+        per-rank `measurements.jsonl`; no GPU run (TP all-reduce b8 9.48 → 6.01 µs, b16
+        11.35 → 7.67 µs).
+      - E, shuffling: skip `moe_shuffling` when the routed-expert row comes from
+        `moe_native_experts_class`, whose kernels include the alignment.
+      - D, routing kernels: price the native `position_cyclic` routing kernels; needs H200
+        position-routing rows from a small profiling job.
+      - C, kernel count: count the graph kernels the native step launches (about 4,100–4,300
+        against about 1,400), after checking whether the idle time before each EP collective is
+        already inside the measured collective cost.
+      - L2 flush: add the attention profiler's L2 flush to the linear-op and MoE profilers and
+        reprofile the affected H200 rows.
+      Estimate: about 41.0 ms against 41.5–42.3 ms native at 9 requests with all fixes; about 9%
+      low without C. Items 2b and 4 get separate design documents; item 4 goes first because
+      it carries the larger G error (TTFT −12.9%).
    2. Compare with Frontier's own step curve from the stage-batch and EP-wave ledgers of a
       diagnostic run, phase by phase (done, `progress.md`).
    3. Fix the cause where it belongs: a missing or underpriced operator or collective is
@@ -349,16 +377,20 @@ Calibration order for E, after the first error table:
    vLLM's DP wave, an engine without a batch runs dummy steps until the engines agree, on step 1
    and every 16 steps, that no request is left. The host queues these dummy steps faster than the
    device runs them (about 5 ms against 32 ms each). The next prefill waits until the device has
-   run them (mean about 180 ms at DP4, about 0 at DP2). Frontier runs the dummy steps but lets
-   each one finish before the engine's next pass, so a new request never waits behind queued
-   dummy work. Steps:
-   1. Confirm Frontier's PREFILL wave with a diagnostic run that logs the passes and dummy
-      forward spans of each lane (16 requests, h200_64 host options).
-   2. Design: the engine issues a dummy step after its measured host period instead of after the
-      device work ends, and the device runs the queued dummy work in order before the next batch.
-      The device cost of a dummy step stays priced from op profiling; the host period is a
-      component host term from the host probe (D31.10). Review it with codex together with the
-      item 2 design.
+   run them (mean about 180 ms at DP4, about 0 at DP2). Steps:
+   1. Confirm Frontier's PREFILL wave with a diagnostic run (done 2026-10-27, report section 7):
+      Frontier's PREFILL wave ends after step 1, because its PREFILL batch queue holds one step
+      and the prefill lane has applied its output before the step-1 synchronization. Native
+      async scheduling (V2 model runner, logged on all 8 nodes) gives a batch queue of two
+      steps, so the native prefill engine reaches that synchronization with an unfinished
+      request and the wave runs to step 16. Frontier also lets each dummy forward end before
+      the engine's next pass.
+   2. Design (`design_dp_wave_tail.md`, codex review): (a) an explicit PREFILL batch queue of
+      two steps through a new PREFILL role flag that mirrors the DECODE flag; (b) while every
+      lane of the DP group has only dummy work, the engine issues its next dummy step one
+      measured host period after the previous one, and the device runs the queued dummy work in
+      order before the next batch. The device cost of a dummy step stays priced from op
+      profiling; the host period is a component host term from the host probe (D31.10).
    3. Implement off by default, check unit tests, dummy smoke and the 77-case fidelity matrix on
       the default path, then rerun G (and E, which must stay near zero backlog).
    Two smaller DP4 parts stay open: Frontier's solo prefill is about 60 ms above the native

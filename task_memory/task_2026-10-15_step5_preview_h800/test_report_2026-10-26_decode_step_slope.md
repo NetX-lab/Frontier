@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Added section 10.1: the critical path without double-counted overlapping kernels (router matches; idle shortfall about 2.4 ms; position-routing kernels, shuffling counted twice, no L2 flush in the linear-op and MoE profilers). |
 | 2026-10-27 | Added the exact critical path of native decode steps (section 10): the step prefix before the first TP all-reduce is the KV side-storage reset (item 3); Frontier's step is within −7% to +4% of the native forward body; corrected section 3's TP all-reduce direction (Frontier is about 1.3 ms high, not low). |
 | 2026-10-27 | Corrected the table version of `h200_32_comb_h200` to merged03 (its `command.json`). |
 | 2026-10-27 | Added the 780 s h200_64 rerun with step G against it (section 9); corrected the reset count to 23 sparse-layer hooks with 46 indexed writes (section 8). |
@@ -470,6 +471,49 @@ native body, so the remaining TPOT gap is the step prefix (item 3). Fixing only 
 overpricing would leave Frontier about 8% low at 9 requests; the item 2 fixes (routed experts
 from the native position routing, the TP all-reduce own cost, the kernel count of graph steps,
 the other-compute shortfall) have to land together.
+
+#### 10.1 Correction: overlapping kernels (critpath5)
+
+`critpath4.py` added the full duration of every kernel on the critical rank, but some kernels
+start before the previous kernel on the same stream has ended (the router's kernels and some
+attention kernels). The overlapped part was counted twice, once in each kernel. `critpath5.py`
+counts only the part of a kernel after the stream's previous end and reports the overlap in
+`overlap_*` columns (`/data/ycfeng/tmp/d31_diag/critpath/crit5_load_t016.txt`, `load_t016`
+window, 9 requests per engine, `dp0` 20 steps and `dp1` 14 steps):
+
+| Component | Native (critpath5) | Frontier | Difference |
+| --- | --- | --- | --- |
+| Routed experts (grouped GEMM, plus FFN activation 0.77 ms) | 11.38–12.58 ms + 0.77 ms | 16.90 ms (includes `moe_shuffling`) | about +3 to +4 ms after the shuffling row below |
+| `moe_shuffling` | inside the routed-expert kernels | about 0.65 ms | +0.65 ms, counted twice |
+| TP all-reduce (own cost) | 1.70–1.72 ms | 3.14 ms | about +1.4 ms |
+| Router | 0.52–0.53 ms (overlap 0.57–0.59 ms not counted) | | |
+| Position routing (inside "other" 1.99 ms) | about 1.5 ms | about 0.6 ms (`topkGating` rows) | about −0.9 ms |
+| Attention, DSA indexer, dense GEMMs, norms | 1.75–1.77, 0.57–0.86, 3.27, 0.39 ms | | about −0.9 ms in total |
+| EP dispatch with peer wait | 8.80–8.99 + 0.30–0.71 ms | | about 0 together with combine |
+| EP combine with peer wait | 4.67–4.74 + 0.38–0.83 ms | | |
+| Idle inside the body (gap, tail, end skew) | 2.72 + 0.33 ms | 0.62 ms | about −2.4 ms |
+
+What changes against the table above:
+
+- The earlier reading "Frontier underprices the router" came from the overlap; the router
+  itself matches.
+- Native idle time inside the body is 2.7–3.1 ms, not 1.8 ms; Frontier's shortfall is about
+  2.4 ms. The per-kernel gap (0.42 µs native, 0.43 µs in the proxy) is right; Frontier counts
+  about 1,400 of the 4,100–4,300 native kernels. Open question: whether the about 6 µs idle
+  before each EP collective launch is already inside the measured collective cost.
+- Native routing for this workload is `position_cyclic`: 14 kernels and about 17 µs per layer,
+  against 6.5–8 µs for the `topkGating` kernels that Frontier prices. No H200 `position_cyclic`
+  routing rows exist yet.
+- `moe_shuffling` is priced on top of a routed-expert measurement (`moe_native_experts_class`)
+  whose kernels already include the alignment (`moe_align_block_size`, count and sort;
+  `/data/ycfeng/tmp/d31_diag/kmap/profile_shuffle_dec03.txt`, about 8.6 µs per layer).
+- The linear-op and MoE profilers do not flush the L2 cache between repeats; only the attention
+  profiler does (`frontier/profiling/attention/attention_wrapper.py:116-119,210`). At 16 tokens
+  the cached rows are 3–20% low (for example `mlp_up_proj` 10.74 µs against 12.1–13.4 µs native).
+
+Estimate (inference, not yet a Frontier run): with all item 2b fixes Frontier's body at 9
+requests would be about 41.0 ms against 41.5–42.3 ms native; without the kernel-count fix about
+9% low. The fixes and their order are in `plan.md` item 2b.
 
 ## Limits
 
