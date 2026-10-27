@@ -210,14 +210,12 @@ def window_tokens(processes: dict[tuple[int, int], dict], role: str, windows: li
     return per_engine
 
 
-def engine_steps(processes: dict[tuple[int, int], dict], dp_size: int, tp_size: int,
-                 windows: list[tuple[float, float]]) -> tuple[list[dict], dict]:
-    """Join the engines by DP all-reduce ordinal and derive each resetting step's host time."""
+def join_by_ordinal(processes: dict[tuple[int, int], dict]) -> tuple[dict, set[int], set[int]]:
+    """Per process, its steps by DP all-reduce ordinal; the ordinals every process joined; and
+    the trailing ordinals some process lacks."""
     by_ordinal = {key: {record["sync"]["ordinal"]: record for record in process["records"]
                         if record["kind"] == "step" and "sync" in record}
                   for key, process in processes.items()}
-    by_sequence = {key: {record["seq"]: record for record in process["records"] if record["kind"] == "step"}
-                   for key, process in processes.items()}
     ordinals = set.intersection(*(set(records) for records in by_ordinal.values()))
     partial = set.union(*(set(records) for records in by_ordinal.values())) - ordinals
     # A force-killed worker leaves only its last steps unwritten. An all-reduce whose missing
@@ -228,6 +226,15 @@ def engine_steps(processes: dict[tuple[int, int], dict], dp_size: int, tp_size: 
     if lost:
         raise ValueError(f"All-reduces {lost[:5]} lack a participant at or before the last step with requests "
                          f"(all-reduce {useful}); a probe file lost steps")
+    return by_ordinal, ordinals, partial
+
+
+def engine_steps(processes: dict[tuple[int, int], dict], dp_size: int, tp_size: int,
+                 windows: list[tuple[float, float]]) -> tuple[list[dict], dict]:
+    """Join the engines by DP all-reduce ordinal and derive each resetting step's host time."""
+    by_ordinal, ordinals, partial = join_by_ordinal(processes)
+    by_sequence = {key: {record["seq"]: record for record in process["records"] if record["kind"] == "step"}
+                   for key, process in processes.items()}
     steps = []
     for ordinal in sorted(ordinals):
         records = {key: by_ordinal[key][ordinal] for key in by_ordinal}

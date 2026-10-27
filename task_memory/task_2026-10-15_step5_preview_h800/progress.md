@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 4 accepted (`d5b11f63`; R1 applied, R2 withdrawn; fidelity 77/77, focused and full unit suites without code-caused new failures); final cadence profiles in evidence; G/E w01 reruns (queue of two, queue of two plus cadence) started. |
+| 2026-10-27 | D31: item 4 cadence estimator (exclude 3 ordinals after a real step, per-engine intervals): DP4 6.014 ms admitted, DP2 4.464 ms exploratory; codex-implement b36e6b25 delivered item 4 code (review and fidelity matrix in progress); old DP placement test failure bisected to b0bf0c78 (ticket 43 forward preparation; stale fixture timing, fix deferred). |
 | 2026-10-27 | D31: item 4 group cadence measured (DP4 mean 6.307 ms, DP2 mean 4.599 ms exploratory); codex review 63785f72 of the item 4 design (F001–F004 accepted); design revised (section 7). |
 | 2026-10-27 | D31: item 4 Frontier probe: the PREFILL wave ends after step 1 for all 16 requests (PREFILL batch queue of one step; native async scheduling has two); item 4 design written; item 2b overlap-free critical path (critpath5) recorded. |
 | 2026-10-27 | D31: item 3 step 4 done: E host within 4.1% on every row (exploratory); G host TTFT −12.9%, TPOT −9.6%; item 4 lead opened: at DP4 the native prefill waits for the device to run the dummy steps queued by the previous DP wave (mean about 180 ms), which Frontier does not model. |
@@ -1535,6 +1537,113 @@ report `test_report_2026-10-27_h200_64_ttft_wave_tail.md`, scripts in
     builds a `DummyForwardBatch` with `object.__new__` and misses `_forward_start_host_delay`.
 - Next: implement section 7 through codex-implement in the worktree branch
   `feat/step5-dp-wave-tail`; write the cadence estimator and profiles in parallel.
+- Cadence estimator `tests/integration/step5_pd/dp_dummy_step_host_time.py` (completed
+  2026-10-27; the join and the lost-participant check moved out of `engine_steps` into
+  `join_by_ordinal` in `kv_zeroing_host_time.py` so both estimators share them):
+  - Reason for two rule changes against the first `dummy_period.py` estimate:
+    - Long samples cluster right after a real step (`/data/ycfeng/tmp/d31_diag/cadence/outliers.py`,
+      `outliers_dp4.txt`, `outliers_dp2.txt`). DP4 mean by ordinals after the last real step:
+      8.32 ms (2), 7.10 ms (3), 5.94–6.21 ms (4–7); DP2 6.09 / 4.74 / about 4.5 ms. In those
+      ordinals the real engine pops and processes its prefill output before it reaches the
+      all-reduce. That host time belongs to the real step's output, so samples up to 3 ordinals
+      after a real step are left out (`--exclude-after-real 3`). Their excess over the mean is
+      reported per real cohort: 3.38 ms (DP4) and 1.90 ms (DP2), evidence for the open "P output
+      host time" component; it is not added to the cadence.
+    - The engines run on separate nodes, and launch stamps of different nodes are not
+      comparable (`near_real.py` gave lags of about 1e8 ms). Each engine's interval now uses the
+      latest launch over its own TP ranks, and the sample is the mean over engines (spread p50
+      0.32 ms at DP4, 0.11 ms at DP2).
+  - Runs (from the repo root with the d29 python; the profile schema stubbed with
+    `/data/ycfeng/tmp/d31_diag/cadence/est/run_stub.py` until the loader merges; outputs in
+    `/data/ycfeng/tmp/d31_diag/cadence/est/`):
+
+    | Probe | Samples | Mean (ms) | p50 / p90 / p99 (ms) | Window means (ms) | CV | Excluded near real | Perturbation | Admission |
+    | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+    | `h200_64_hostprobe01` (DP4) | 3481 | 6.014 | 5.43 / 7.12 / 15.96 | 6.027 / 6.009 / 6.005 | 0.16% | 731 | PASS | admitted |
+    | `h200_32_hostprobe03` (DP2) | 4580 | 4.464 | 4.29 / 5.09 / 6.32 | 4.421 / 4.465 / 4.506 | 0.78% | 767 | PERTURBED | exploratory |
+
+  - The final profiles are written with the merged loader module (pending the item 4 merge).
+- Item 4 code (codex-implement `b36e6b25-ccb8-46c8-bbc1-271350c4acd3`, report
+  `codex-implement-b36e6b25-ccb8-46c8-bbc1-271350c4acd3/implementation.md`, worktree
+  `/data/ycfeng/Frontier/.worktrees/step5-dp-wave-tail` on `d47f2ea5`): outcome `implemented`.
+  - 13 files changed and 4 new: the PREFILL queue capacity flag and admission, the
+    `dp_dummy_step_host_time.v1` loader and predictor binding, the mixin
+    `vllm_v1_dp_dispatch.py`, the host tick in `replica_schedule_event.py` and the paced device
+    end in `batch_stage_end_event.py`; the main scheduler has 1,949 lines.
+  - Codex's checks: focused suites 347 passed, 1 skipped, 1 failed (the known
+    `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward`); dummy
+    smoke 12/12 twice. The full unit suite cannot be collected in the d29 env (15 modules miss
+    `torch`, `matplotlib` or `aiohttp`).
+  - 77-case fidelity matrix on Codex's code (`/data/ycfeng/tmp/d31_fidelity_wave_run.sh`, output
+    `/data/ycfeng/tmp/d31_fidelity_wave`, compared with `/data/ycfeng/tmp/d31_fidelity_kvz/candidate`
+    by `/data/ycfeng/tmp/d31_fidelity_wave_recompare.py`, result
+    `/data/ycfeng/tmp/d31_fidelity_wave_recompare.json`): 77/77 ran with rc 0; every metric
+    artifact is identical. The only difference in all 77 cases is the new `config.json` key
+    `execution_time_predictor_config/dp_dummy_step_host_profile` (null). PASS.
+  - Claude's review corrections (the default path is unchanged by construction: with no profile
+    the cadence is `None`, so no pass is paced and the unfinished snapshot stays `None`):
+    - R1 (applied): `consume_paced_dummy_end` no longer validates a non-paced end;
+      `on_dummy_forward_end` validates it next in the same event. Reason: the same check ran
+      twice. The pacing test that expected the error from `consume_paced_dummy_end` now expects
+      it from `on_dummy_forward_end`.
+    - R2 (tried, withdrawn): reading the attributes directly instead of `getattr(..., None)` in
+      the mixin, `engine_loop_idle` and `get_dp_dummy_step_cadence_ms`. The focused suites then
+      gave 102 failures (`/data/ycfeng/tmp/d31_diag/item4/focused_r12.log`): 97 test predictor
+      stubs (`object()`, `_StageCosts`, `_FixtureCosts`, `_LanePredictor`, ...) lack the getter,
+      and 5 fixtures build the scheduler with `object.__new__`. Fixing them means editing test
+      fixtures across at least 12 files, out of proportion for a style correction, and the
+      scheduler already uses the same pattern (`_kv_transfer_start_claimed_request_ids`). Kept
+      Codex's `getattr` defaults; deferred as a fixture cleanup.
+    - Checks after R1 (d29 python 3.10.6, `ulimit -v 31457280`, logs in
+      `/data/ycfeng/tmp/d31_diag/item4/`):
+      - Focused suites (Codex's command, basetemp `/data/ycfeng/tmp/d31_pytest/item4_r1`,
+        `focused_r1.log`): 346 passed, 1 skipped, 2 failed: the known late-join test and the
+        pacing test collected before its R1 update; the updated pacing file alone gives 16 passed
+        (`pacing_r1.log`). PASS.
+      - Full unit suite with `--continue-on-collection-errors` and the
+        `test_measurement_family_selector.py` deselection, candidate and a d47f2ea5 baseline run
+        side by side (`run_unit_full.sh`; `unit_cand_r1.log` 343 failed / 8,160 passed,
+        `unit_base_d47.log` 297 failed / 8,167 passed; failure IDs compared in `unit_cmp.txt`):
+        337 failure IDs are common (environment: no `torch`, data and other pre-existing
+        failures). Candidate-only: 46 collective-sim tests that cannot find
+        `frontier/cc_backend/backends/collective-sim` (the new worktree has no submodule
+        checkout; environment) and the pre-update pacing test. Baseline-only: the NIXL fixture
+        that lacked `_forward_start_host_delay`, which this change repairs. No code-caused new
+        failure. PASS.
+      - Dummy smoke (`smoke_r1.log`): 12/12, rc 0. PASS.
+  - Accepted and committed `d5b11f63` on `feat/step5-dp-wave-tail`; fast-forwarded
+    `feat/step5-preview` to it.
+- KV estimator refactor check (`join_by_ordinal` moved into a shared function): rerunning
+  `kv_zeroing_host_time.py` on the DP4 probe (`/data/ycfeng/tmp/d31_diag/item4/kvcheck/`) gives a
+  profile identical to `host06/kv_block_zeroing_host_h200_64.json` except the report path in its
+  provenance, and an identical report. `test_kv_zeroing_host_time_estimator.py` plus
+  `test_dp_dummy_step_host_time.py`: 52 passed. PASS.
+- Cadence profiles with the merged loader (`/data/ycfeng/tmp/d31_diag/cadence/final/run.sh`, from
+  the repo root): values equal the stubbed runs. DP4 6.0135 ms over 3,481 samples, admitted;
+  DP2 4.4640 ms over 4,580 samples, exploratory. Copies:
+  `evidence/d31_h200_64_dp_dummy_step_host_20261027.json` (+ `_report_`),
+  `evidence/d31_h200_32_dp_dummy_step_host_20261027.json` (+ `_report_`). Options
+  `/data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_{64,32}_host_wave.json`
+  are the `_host` options plus `dp_dummy_step_host_profile`.
+- G/E item 4 reruns (started 18:57 UTC, CPU only, clean worktree
+  `/data/ycfeng/Frontier/.worktrees/step5-d31-wave-d5b11f6` at `d5b11f63`, script
+  `/data/ycfeng/tmp/d31_e05_run/run_w01.sh <case> <q2|wave>`):
+  - `h200_64_w01_q2`, `h200_32_w01_q2`: `_host` options; the harness now passes a PREFILL batch
+    queue of two, so against `*_m04_host` these isolate the queue change.
+  - `h200_64_w01_wave`, `h200_32_w01_wave`: `_host_wave` options (queue of two plus the cadence).
+  - Expectation: G TTFT error (−12.9% on `m04_host`) shrinks toward zero with `wave`; E stays
+    within its current band (DP2 backlog near zero). Compared after completion with
+    `frontier_workload.py check --gate 0.3` against
+    `evidence/d31_h200_{64_sweep02,32_sweep03}_native_metrics.json` (final gate 10%).
+- Known failure `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward`
+  is older than this round (bisect with the d29 python, `/data/ycfeng/tmp/d31_bisect/run2.sh`,
+  results `summary2.txt`): it fails on every commit from `dc632f94` (10-10) to HEAD and passes on
+  `2c9d625d` (10-08) and `ced720b3` (10-06). The first failing commit is `b0bf0c78` (10-08,
+  ticket 43 T43-I32, "Start a stage forward after its host preparation"); its parent `2c9d625d`
+  passes. Inference: the forward launch and its first MoE room now come
+  `forward_preparation_time` later, so the `moe_dp4_late_join` fixture's arrival times no longer
+  produce the test premise (lanes 2 and 3 woken into forward 0 with dummies). It is a stale
+  timing premise in the test fixture, not an item 4 defect; the fixture fix is deferred.
 
 Step F status (2026-10-26):
 

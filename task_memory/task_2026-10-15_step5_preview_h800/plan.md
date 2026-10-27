@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 4 step 3 code done (`d5b11f63`, fidelity 77/77 identical metrics); cadence profiles DP4 6.014 ms admitted, DP2 4.464 ms exploratory; G/E reruns with queue-of-two and queue-of-two plus cadence started. |
 | 2026-10-27 | D31: item 4 step 1 done (Frontier's PREFILL wave ends after step 1: PREFILL batch queue of one step against native async scheduling's two); item 4 step 2 design written; item 2b fix list corrected with the overlap-free critical path (section 10.1 of the slope report). |
 | 2026-10-27 | D31: item 3 step 4 done (E host within 4.1%; G host TTFT −12.9%, TPOT −9.6%); item 4 opened: the native DP wave tail queues dummy-step device work ahead of the next prefill at DP4. |
 | 2026-10-27 | D31: item 3 step 2 h200_64 done (DP4 profile, perturbation PASS, accepted for G); G host rerun started. |
@@ -392,7 +393,13 @@ Calibration order for E, after the first error table:
       order before the next batch. The device cost of a dummy step stays priced from op
       profiling; the host period is a component host term from the host probe (D31.10).
    3. Implement off by default, check unit tests, dummy smoke and the 77-case fidelity matrix on
-      the default path, then rerun G (and E, which must stay near zero backlog).
+      the default path, then rerun G (and E, which must stay near zero backlog). Code done
+      2026-10-27 (`d5b11f63`, codex-implement b36e6b25 plus review correction R1; fidelity 77/77
+      identical metrics). Cadence profiles: DP4 6.014 ms (admitted), DP2 4.464 ms (exploratory),
+      `evidence/d31_h200_{64,32}_dp_dummy_step_host_20261027.json`. G and E reruns started
+      18:57 UTC from the clean worktree `step5-d31-wave-d5b11f6`, each in two variants: PREFILL
+      queue of two only (`*_w01_q2`) and queue of two plus the cadence (`*_w01_wave`), both with
+      the KV host profile, so each pairs with the `*_m04_host` run.
    Two smaller DP4 parts stay open: Frontier's solo prefill is about 60 ms above the native
    minimum, and the prefill-to-first-token handoff is about 28 ms low.
 

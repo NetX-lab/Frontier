@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | Section 7.5: implementation status (`d5b11f63`, checks 1 and 2 pass; checks 3 and 4 running). |
+| 2026-10-27 | Section 7.4: cadence estimator excludes the 3 ordinals after a real step and uses per-engine intervals; DP4 6.014 ms (admitted), DP2 4.464 ms (exploratory); near-real excess recorded as P output host time evidence. |
 | 2026-10-27 | Added section 7: the revision after codex review 63785f72 (per-pass dummy state, host dispatch barrier keyed by the forward ordinal, group cadence profile, PREFILL queue of two only without chunked prefill). Sections 4.1, 4.2 and 5 are superseded where section 7 differs. |
 | 2026-10-27 | Created: native mechanism, Frontier probe result, the two Frontier changes (PREFILL batch queue of 2, host-paced dummy steps), data, validation and open questions for codex. |
 
@@ -233,10 +235,30 @@ PREFILL; without it every path stays as today (bit-identical default).
   engines and TP ranks by the dispatch ordinal, keeps only ordinals k-1 and k that are dummy on
   every engine inside one formal window, and reports n, quantiles, per-window means and their
   coefficient of variation. The mean is used because the GPU backlog adds up the intervals.
-- Admission: DP4 (`h200_64_hostprobe01`) mean 6.307 ms, window means 6.261 / 6.449 / 6.210 ms,
-  CV 1.6%; the DP4 probe was accepted for item 3. DP2 (`h200_32_hostprobe03`) mean 4.599 ms,
-  CV 0.95%, stays **exploratory** because that probe is `PERTURBED` until a probe on/off check in
-  one job. The profile records its admission status.
+- **Exclusion after a real step (2026-10-27).** A sample at ordinal k is left out when the last
+  ordinal with a real step on any engine is at most 3 before k (`--exclude-after-real 3`). In
+  those ordinals the engine that ran the real prefill pops and processes its output and reaches
+  the all-reduce late (DP4 mean cadence 8.32 ms two ordinals after a real step and 7.10 ms three
+  after, against about 5.9–6.2 ms from four on; DP2 6.09 / 4.74 ms against about 4.5 ms). That
+  host time belongs to the real step's output processing, not to the dummy cadence. The report
+  keeps the excess as `near_real_excess_ms_per_real_cohort`: 3.38 ms per real cohort at DP4,
+  1.90 ms at DP2. It is evidence for the open "P output host time" component and is not added
+  to p.
+- **Per-node clocks.** The engines run on separate nodes whose monotonic clocks are not
+  comparable, so each engine's interval is the latest launch over its own TP ranks at k minus the
+  same at k-1, and the sample is the mean over the engines. The barrier keeps the engines'
+  intervals equal up to local launch work (spread p50 0.32 ms at DP4, 0.11 ms at DP2).
+- Admission (exclusion and per-engine intervals applied; supersedes the first estimate of DP4
+  6.307 ms and DP2 4.599 ms):
+  - DP4 (`h200_64_hostprobe01`, job `exp-1027-141317-610373`): mean **6.014 ms**, n 3,481, p50
+    5.43 ms, p90 7.12 ms; window means 6.027 / 6.009 / 6.005 ms, CV 0.16%; perturbation PASS, so
+    `admitted`.
+  - DP2 (`h200_32_hostprobe03`, job `exp-1027-124813-737818`): mean **4.464 ms**, n 4,580, p50
+    4.29 ms; window means 4.421 / 4.465 / 4.506 ms, CV 0.78%; the probe is `PERTURBED`, so
+    `exploratory` until a probe on/off check in one job.
+  - D31.10: p is a component host-time term (the host dispatch interval of an all-dummy step),
+    not a whole-step time; the device time of each dummy forward is still priced from the
+    operator profiles.
 
 ### 7.5 Validation (replaces section 5)
 
@@ -251,3 +273,8 @@ PREFILL; without it every path stays as today (bit-identical default).
    prefill against the native estimates (diagnostic only).
 4. G and E reruns against the clean references. DP2 results with the exploratory profile are
    exploratory.
+
+Status (2026-10-27): implemented in `d5b11f63` (`vllm_v1_dp_dispatch.py`,
+`dp_dummy_step_host_time.py`, the PREFILL flag). Checks 1 and 2 pass (unit tests in
+`test_step5_dp_dummy_pacing.py` and `test_dp_dummy_step_host_time.py`; 77/77 identical metrics on
+the default path). Checks 3 and 4 are running; results go to `progress.md`.
