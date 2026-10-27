@@ -1263,6 +1263,13 @@ Calibration item 3 step 2, probe run (2026-10-27, `in-progress`):
   /data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_32.json
   --output-dir /data/ycfeng/tmp/d31_e05_run/h200_32_m04_base`. The item 3 rerun differs from it
   only by `kv_block_zeroing_host_profile`, so the pair isolates the host-time effect.
+- h200_64 probe stage ready, not submitted: `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_hostprobe01/stage`
+  (same worktree and build arguments, run definition of `h200_64_sweep02` with the 780 s sweep,
+  job tag `d31h20064hostprobe01`). Config versus sweep02: only the expected fields differ; the
+  replay plan differs only in `kind`; `verify` rc 0; dry run rc 0 with only the workspace path
+  different (8 × 8 H200, non-preemptible). It is submitted after the h200_32 probe files pass the
+  estimator checks, so a probe defect does not cost a 64-GPU run, and after the 32-GPU job has
+  released its GPUs (64-GPU session limit).
 
 Step F status (2026-10-26):
 
