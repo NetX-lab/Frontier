@@ -50,9 +50,9 @@ sys.path.insert(0, str(REPO))
 
 from frontier.config import ReplicaConfig  # noqa: E402
 from frontier.execution_time_predictor.kv_block_zeroing_host_time import SCHEMA  # noqa: E402
+from tests.integration.step5_pd.canonical_replay import ROLES, boundary_reached, phase_completions  # noqa: E402
 from tests.integration.step5_pd.frontier_workload import CASES, DEVICES, MODEL  # noqa: E402
 
-ROLES = ("prefill", "decode")
 PROBE = "host_probe_bootstrap/host_step_probe.py"
 # Design 3.3: a request-count dependence above this over the observed range needs a table.
 TREND_LIMIT_MS = 1.0
@@ -72,23 +72,34 @@ def read_processes(nodes: Path) -> dict[tuple[str, int, int], list[dict]]:
 
 
 def formal_windows(summary: dict) -> list[tuple[float, float]]:
-    """Wall-clock windows between the verified idle boundaries around each formal phase.
+    """Wall-clock windows between the idle boundaries around each formal phase.
 
     Every engine was idle at both boundaries, so only formal requests run between them, and
     the edges lie in idle gaps away from the steps of either side. The servers' wall clocks
     may differ from the client's by less than the reported edge clearance.
+
+    Each boundary is checked from its last recorded observation with the replay's rule,
+    counting from the length sweep boundary. Replays before that rule expected completions
+    also for the requests that failed at the client, so their recorded verdicts may be wrong.
     """
     boundaries = {boundary["boundary"]: boundary for boundary in summary["idle_boundaries"]}
+    sweep = boundaries["after_length_sweep"]
+    if not sweep["verified"]:
+        raise ValueError("The idle boundary after_length_sweep is unverified")
+    completed = {role: sweep["observations"][-1]["roles"][role]["completed_requests"] for role in ROLES}
     windows = []
     for repetition in summary["repetitions"]:
         formal = repetition["phases"]["formal"]
         offset = formal["origin_wall"] - formal["origin_monotonic"]
         edges = []
         for phase in ("warmup", "formal"):
-            boundary = boundaries[f"after_repeat{repetition['repeat']:02d}_{phase}"]
-            if not boundary["verified"]:
-                raise ValueError(f"The idle boundary {boundary['boundary']} is unverified")
-            edges.append(boundary["observations"][-1]["monotonic"] + offset)
+            completed = {role: count + phase_completions(repetition["phases"][phase])
+                         for role, count in completed.items()}
+            name = f"after_repeat{repetition['repeat']:02d}_{phase}"
+            last = boundaries[name]["observations"][-1]
+            if not boundary_reached(last, completed):
+                raise ValueError(f"The idle boundary {name} is not idle or misses completions {completed}")
+            edges.append(last["monotonic"] + offset)
         windows.append((edges[0], edges[1]))
     return windows
 
@@ -101,9 +112,13 @@ def edge_clearance_s(processes: dict, windows: list[tuple[float, float]]) -> flo
 
 
 def role_processes(processes: dict, role: str, dp_size: int, tp_size: int) -> dict[tuple[int, int], dict]:
-    """Exactly one complete, error-free process per engine and TP rank, or the role is unusable.
+    """Exactly one error-free process per engine and TP rank, or the role is unusable.
 
-    A complete file ends with the probe's shutdown `end` line and holds steps 1 to its count.
+    A file holds steps 1 to N in order. The native P/D launcher stops the engines with an abort
+    shutdown that force-kills the workers, so `GPUModelRunner.shutdown` never runs: the probe's
+    `end` line is absent and the last step or two, still waiting for their device events, stay
+    unwritten. The file is line-buffered, so every earlier step is on disk; `window_tokens`
+    checks that no step with formal requests is missing.
     """
     expected = {(dp, tp) for dp in range(dp_size) for tp in range(tp_size)}
     found = {(dp, tp): files for (name, dp, tp), files in processes.items() if name == role}
@@ -121,14 +136,30 @@ def role_processes(processes: dict, role: str, dp_size: int, tp_size: int) -> di
         if (header["dp_size"], header["tp_size"]) != (dp_size, tp_size):
             raise ValueError(f"{role}: {process['path']} reports DP{header['dp_size']} x TP{header['tp_size']}")
         steps = [record["seq"] for record in records if record["kind"] == "step"]
-        if not records or records[-1]["kind"] != "end" or steps != list(range(1, records[-1]["steps"] + 1)):
-            raise ValueError(f"{role}: {process['path']} is truncated; native shutdown did not drain the probe")
+        if not steps or steps != list(range(1, len(steps) + 1)):
+            raise ValueError(f"{role}: {process['path']} skips steps")
     for dp in range(dp_size):
         hosts = {found[dp, tp][0]["header"]["host"] for tp in range(tp_size)}
         if len(hosts) != 1:
             raise ValueError(f"{role}: the TP ranks of DP engine {dp} run on {sorted(hosts)}; "
                              "their monotonic clocks are not comparable")
     return {key: files[0] for key, files in found.items()}
+
+
+def window_tokens(processes: dict[tuple[int, int], dict], role: str, windows: list[tuple[float, float]]) -> list[int]:
+    """Tokens the role's engines scheduled in each formal window, from TP rank 0.
+
+    Every repetition replays the same requests, so the totals are equal unless a file lost a
+    step with requests or a repetition recomputed preempted requests.
+    """
+    totals = [sum(record["tokens"] for (dp, tp), process in processes.items() if tp == 0
+                  for record in process["records"]
+                  if record["kind"] == "step" and not record["dummy"] and start <= record["wall_ns"] / 1e9 <= end)
+              for start, end in windows]
+    if len(set(totals)) != 1:
+        raise ValueError(f"{role}: the formal windows scheduled {totals} tokens; a probe file lost steps "
+                         "with requests or a repetition differs")
+    return totals
 
 
 def engine_steps(processes: dict[tuple[int, int], dict], dp_size: int, tp_size: int,
@@ -292,8 +323,10 @@ def main() -> int:
               "roles": {}}
     steps = {}
     for role in ROLES:
-        steps[role], join = engine_steps(role_processes(processes, role, dp, tp), dp, tp, windows)
-        report["roles"][role] = {"join": join, **role_report(steps[role])}
+        engines = role_processes(processes, role, dp, tp)
+        tokens = window_tokens(engines, role, windows)
+        steps[role], join = engine_steps(engines, dp, tp, windows)
+        report["roles"][role] = {"join": join, "window_tokens": tokens, **role_report(steps[role])}
     report["perturbation"] = perturbation(summary, json.loads(args.clean_summary.read_text()))
     args.report.write_text(json.dumps(report, indent=1) + "\n")
     short = {role: report["roles"][role]["host_ms"]["n"] for role in ROLES

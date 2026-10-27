@@ -119,7 +119,8 @@ def test_modified_common_member_is_rejected(tmp_path, member):
 @pytest.mark.parametrize("kind,fault", [("canonical", fault) for fault in (
     None, "one_http_failure", "idle_failure", "checkpoint_failure", "bad_usage", "text_only")]
     + [("qualification", None), ("qualification", "startup_missing"),
-       ("workload", None), ("workload", "one_http_failure"), ("workload", "length_sweep")])
+       ("workload", None), ("workload", "one_http_failure"), ("workload", "length_sweep"),
+       ("workload", "decode_unreached")])
 @pytest.mark.parametrize("dp", [2, 4])
 def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path, monkeypatch, kind, fault, dp):
     workload = cr.canonical_workload(WORKLOAD)
@@ -155,6 +156,9 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                 nonlocal concurrent_arrivals
                 rid = request.headers["X-Request-Id"]
                 body = await request.json()
+                if fault == "decode_unreached" and role == "decode" and rid == failure_id:
+                    # A reset reused connection: decode never counts the request.
+                    return web.json_response({"error": "connection reset"}, status=502)
                 bodies[role][rid] = body
                 if kind == "qualification":
                     is_concurrent = rid.removeprefix("qualification-").removesuffix("-repeat01") in {
@@ -244,7 +248,8 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
         assert all(record["repeat"] == 0 for record in records[:swept])
         records = records[swept:]
     expected_count = 24 if kind == "qualification" else 432
-    assert len(records) + swept == len(bodies["prefill"]) == len(bodies["decode"]) == expected_count + swept
+    assert (len(records) + swept == len(bodies["prefill"])
+            == len(bodies["decode"]) + (fault == "decode_unreached") == expected_count + swept)
     assert [len(rows) for rows in phase_calls] == ([16, 8] if kind == "qualification" else [16, 128] * 3)
     for rows in phase_calls:
         expected = [0.0] * 8 if rows[0]["segment"] == "concurrent" else list(range(len(rows)))
@@ -267,7 +272,10 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
         assert result["repeat_metric_means"] is None
     assert result["reference_admission"] == result["runtime_qualification"] == "UNVERIFIED"
     failures = [record for record in records if record["status"] != "completed"]
-    if fault in ("one_http_failure", "bad_usage", "text_only"):
+    if fault == "decode_unreached":
+        # Only client-completed requests raise the expected counts, so every boundary holds.
+        assert all(boundary["verified"] for boundary in result["idle_boundaries"])
+    if fault in ("one_http_failure", "bad_usage", "text_only", "decode_unreached"):
         assert failures and len(failures) < 432
         assert result["status"] == "REFERENCE_UNSTABLE"
         assert result["repetitions"][-1]["metrics"]["formal_requests"] == 128
@@ -276,6 +284,9 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
         assert result["client_workload_verified"] is (fault in (None, "startup_missing", "length_sweep"))
     prompts = {}
     for record in records:
+        if record["request_id"] not in bodies["decode"]:
+            assert fault == "decode_unreached" and record["request_id"] == failure_id
+            continue
         body = bodies["decode"][record["request_id"]]
         assert body["stream"] and body["return_token_ids"] and not body["add_special_tokens"] and not body["echo"]
         assert body["ignore_eos"] and body["min_tokens"] == body["max_tokens"] == 1024

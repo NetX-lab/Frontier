@@ -128,10 +128,9 @@ def test_unmatched_all_reduces_windows_and_inconsistent_ranks():
         steps_of(processes, 1, 2)
 
 
-def process(path, dp, tp, records, host="node0", steps=None):
+def process(path, dp, tp, records, host="node0"):
     header = {"kind": "header", "host": host, "dp_size": 1, "tp_size": 2, "dp_rank": dp, "tp_rank": tp}
-    end = [] if steps is False else [{"kind": "end", "steps": len(records) if steps is None else steps}]
-    return {"path": path, "header": header, "records": records + end}
+    return {"path": path, "header": header, "records": records}
 
 
 def test_a_role_needs_one_complete_process_per_engine_and_rank_on_one_node():
@@ -145,12 +144,29 @@ def test_a_role_needs_one_complete_process_per_engine_and_rank_on_one_node():
     failed = process("q", 0, 1, [step, {"kind": "error"}])
     with pytest.raises(ValueError, match="disabled itself"):
         estimator.role_processes(complete | {("decode", 0, 1): [failed]}, "decode", 1, 2)
-    for truncated in (process("q", 0, 1, [step], steps=False), process("q", 0, 1, [step], steps=2)):
-        with pytest.raises(ValueError, match="q is truncated"):
-            estimator.role_processes(complete | {("decode", 0, 1): [truncated]}, "decode", 1, 2)
+    # The force-killed workers write no `end` line; a file without one is complete up to its last step.
+    ended = process("q", 0, 1, [step, {"kind": "end", "steps": 1}])
+    assert set(estimator.role_processes(complete | {("decode", 0, 1): [ended]}, "decode", 1, 2)) == {(0, 0), (0, 1)}
+    for skipped in (process("q", 0, 1, [step, {"kind": "step", "seq": 3}]), process("q", 0, 1, [])):
+        with pytest.raises(ValueError, match="q skips steps"):
+            estimator.role_processes(complete | {("decode", 0, 1): [skipped]}, "decode", 1, 2)
     elsewhere = process("q", 0, 1, [step], host="node1")
     with pytest.raises(ValueError, match="clocks are not comparable"):
         estimator.role_processes(complete | {("decode", 0, 1): [elsewhere]}, "decode", 1, 2)
+
+
+def test_every_formal_window_schedules_the_same_tokens():
+    def at(second, tokens, dummy=False):
+        return {"kind": "step", "dummy": dummy, "tokens": tokens, "wall_ns": WALL + second * 10**9}
+
+    windows = [(WALL / 1e9, WALL / 1e9 + 10), (WALL / 1e9 + 20, WALL / 1e9 + 30)]
+    engines = {(0, 0): {"records": [at(1, 6), at(2, 3), at(21, 9), at(22, 5, dummy=True)]},
+               (0, 1): {"records": [at(1, 100)]}, (1, 0): {"records": [at(3, 4), at(23, 4)]}}
+    assert estimator.window_tokens(engines, "decode", windows) == [13, 13]
+    # The last step of engine 1 stayed unwritten when its worker was killed.
+    engines[1, 0]["records"].pop()
+    with pytest.raises(ValueError, match=r"decode: the formal windows scheduled \[13, 9\] tokens"):
+        estimator.window_tokens(engines, "decode", windows)
 
 
 def summary(ttft, tpot):
@@ -167,26 +183,40 @@ def test_perturbation_compares_with_the_clean_repeat_range():
     assert result["metrics"]["tpot_ms"]["within"] is False
 
 
-def idle(name, monotonic, verified=True):
-    return {"boundary": name, "verified": verified, "observations": [{"monotonic": monotonic}]}
+def idle(name, monotonic, prefill, decode, verified=True, busy=False):
+    roles = {"prefill": prefill, "decode": decode}
+    return {"boundary": name, "verified": verified, "observations": [
+        {"monotonic": monotonic, "errors": [],
+         "roles": {role: {"idle": not busy, "completed_requests": count} for role, count in roles.items()}}]}
 
 
-def probe_summary(boundaries):
-    formal = {"origin_monotonic": 0.0, "origin_wall": WALL / 1e9}
-    return summary(912.0, 53.3) | {"repetitions": [{"repeat": 1, "phases": {"formal": formal}}],
+def probe_summary(boundaries, warmup_failed=()):
+    formal = {"origin_monotonic": 0.0, "origin_wall": WALL / 1e9, "recorded_requests": 128, "failed_request_ids": []}
+    warmup = {"recorded_requests": 16, "failed_request_ids": list(warmup_failed)}
+    return summary(912.0, 53.3) | {"repetitions": [{"repeat": 1, "phases": {"warmup": warmup, "formal": formal}}],
                                    "idle_boundaries": boundaries}
 
 
-def test_formal_windows_lie_between_the_verified_idle_boundaries():
-    boundaries = [idle("after_length_sweep", -9.0), idle("after_repeat01_warmup", -1.0),
-                  idle("after_repeat01_formal", 100.0)]
+def test_formal_windows_lie_between_the_idle_boundaries():
+    boundaries = [idle("after_length_sweep", -9.0, 10, 10), idle("after_repeat01_warmup", -1.0, 26, 26),
+                  idle("after_repeat01_formal", 100.0, 154, 154)]
     windows = estimator.formal_windows(probe_summary(boundaries))
     assert windows == [(WALL / 1e9 - 1.0, WALL / 1e9 + 100.0)]
     records = [{"kind": "step", "dummy": False, "wall_ns": WALL + 2 * 10**9},
                {"kind": "step", "dummy": True, "wall_ns": WALL - 10**9}]
     assert estimator.edge_clearance_s({"p": [{"records": records}]}, windows) == pytest.approx(3.0)
-    boundaries[2] = idle("after_repeat01_formal", 100.0, verified=False)
-    with pytest.raises(ValueError, match="after_repeat01_formal is unverified"):
+    # A warmup request whose reused proxy connection reset before decode got it: decode counts one
+    # less, and the old replay rule recorded both later boundaries as unverified.
+    reset = [boundaries[0], idle("after_repeat01_warmup", -1.0, 26, 25, verified=False),
+             idle("after_repeat01_formal", 100.0, 154, 153, verified=False)]
+    assert estimator.formal_windows(probe_summary(reset, ["w"])) == windows
+    with pytest.raises(ValueError, match="after_repeat01_warmup is not idle or misses completions"):
+        estimator.formal_windows(probe_summary(reset))
+    boundaries[2] = idle("after_repeat01_formal", 100.0, 154, 154, busy=True)
+    with pytest.raises(ValueError, match="after_repeat01_formal is not idle"):
+        estimator.formal_windows(probe_summary(boundaries))
+    boundaries[0] = idle("after_length_sweep", -9.0, 10, 10, verified=False)
+    with pytest.raises(ValueError, match="after_length_sweep is unverified"):
         estimator.formal_windows(probe_summary(boundaries))
 
 
@@ -214,7 +244,8 @@ def stage(tmp_path, steps_per_role):
             with gzip.open(directory / f"{role}_{tp}.jsonl.gz", "wt") as stream:
                 stream.writelines(json.dumps(line) + "\n" for line in [
                     header, *records, {"kind": "end", "steps": len(records)}])
-    probe = probe_summary([idle("after_repeat01_warmup", -1.0), idle("after_repeat01_formal", 100.0)])
+    probe = probe_summary([idle("after_length_sweep", -9.0, 10, 10), idle("after_repeat01_warmup", -1.0, 26, 26),
+                           idle("after_repeat01_formal", 100.0, 154, 154)])
     (root / "evidence/replay").mkdir(parents=True)
     (root / "evidence/replay/canonical_summary.json").write_text(json.dumps(probe))
     (tmp_path / "clean.json").write_text(json.dumps(summary(912.0, 53.3)))

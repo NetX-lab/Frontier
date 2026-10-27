@@ -175,6 +175,23 @@ def idle_metrics(text: str, dp_size: int) -> dict:
             "idle": all(value == 0 for values in lanes.values() for value in values.values())}
 
 
+def boundary_reached(sample: dict, completed_after: dict | None) -> bool:
+    """Every lane of both roles is idle and each role counts at least the expected completions."""
+    return not sample["errors"] and all(
+        sample["roles"][role]["idle"]
+        and (completed_after is None or sample["roles"][role]["completed_requests"] >= completed_after[role])
+        for role in ROLES)
+
+
+def phase_completions(phase: dict) -> int:
+    """Requests of a phase the client saw complete; each one completed on both roles.
+
+    A request that failed at the client may never have reached a role (a reused proxy
+    connection can reset before the request is sent), so it raises no expected count.
+    """
+    return phase["recorded_requests"] - len(phase["failed_request_ids"])
+
+
 async def observe_idle(urls: dict, dp_size: int, timeout_s: float, poll_s: float,
                        completed_after: dict | None = None, *, diagnostic_only=False) -> dict:
     """Observe fresh per-lane native gauges; a timeout never stops subsequent work."""
@@ -203,11 +220,7 @@ async def observe_idle(urls: dict, dp_size: int, timeout_s: float, poll_s: float
                         return {"verified": not sample["errors"] and all(
                             sample["roles"][role]["idle"] for role in ROLES),
                             "diagnostic_only": True, "observations": observations}
-                    if (not sample["errors"] and all(
-                            sample["roles"][role]["idle"]
-                            and (completed_after is None
-                                 or sample["roles"][role]["completed_requests"] >= completed_after[role])
-                            for role in ROLES)):
+                    if boundary_reached(sample, completed_after):
                         return {"verified": True, "observations": observations}
                     await asyncio.sleep(poll_s)
     except TimeoutError:
@@ -324,7 +337,8 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, se
                     current["client_workload_verified"] = False
                     result["observation_errors"].append(f"metrics: {type(error).__name__}: {error}")
             if completed is not None:
-                completed = {role: count + len(rows) for role, count in completed.items()}
+                completed = {role: count + phase_completions(current["phases"][phase])
+                             for role, count in completed.items()}
             before = idle
             idle = await boundary(f"after_repeat{repeat:02d}_{phase}", completed)
             current["client_workload_verified"] &= idle["verified"]
