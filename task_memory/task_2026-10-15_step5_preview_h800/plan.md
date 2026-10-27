@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: item 3 step 2 h200_64 done (DP4 profile, perturbation PASS, accepted for G); G host rerun started. |
 | 2026-10-27 | D31: codex review of the h200_32 probe result (F001–F004): estimator and replay checks tightened; the h200_32 host profile is not accepted (probe effect unmeasured), so E/G with it are exploratory. |
 | 2026-10-27 | D31: item 3 step 2 h200_32 done (DP2 profile, `PERTURBED` with a bounded TPOT bias); E host rerun started; h200_64 probe submitted. |
 | 2026-10-27 | D31: item 2b step 2 refined with the exact native critical path: Frontier's step is within −7% to +4% of the native forward body; TP all-reduce direction corrected; the four item 2 fixes go together after item 3. |
@@ -321,8 +322,10 @@ Calibration order for E, after the first error table:
       needs a measured probe effect (probe on and off within one job), deferred while the GPU
       budget runs E/G. The estimator's completeness checks were tightened after codex F001/F002
       (all TP ranks, exact client-completed work, no preemption, trailing-only partial
-      all-reduces); the profile values are unchanged. h200_64 probe job
-      `exp-1027-141317-610373` submitted.
+      all-reduces); the profile values are unchanged.
+      h200_64 done 2026-10-27 (same report, section 7): prefill 36.92 ms, decode 5.96 ms;
+      every check passes, including the perturbation check (TPOT −0.045 ms within 0.494 ms), so
+      the DP4 profile is accepted for step G.
    3. Implement in Frontier, off by default: the reset host time joins the existing DP
       forward-start agreement, so every DP lane launches from the latest lane's ready time before
       its first attention. Unit tests, dummy smoke and the 77-case fidelity matrix unchanged on
@@ -332,7 +335,9 @@ Calibration order for E, after the first error table:
       NIXL READ profiles were regenerated for the new capacity flag (`design.md` 3.4).
    4. Rerun E and G against the clean references.
       E host rerun running (`/data/ycfeng/tmp/d31_e05_run/h200_32_m04_host`), paired with the
-      baseline `h200_32_m04_base` that differs only by the host profile.
+      baseline `h200_32_m04_base` that differs only by the host profile (exploratory). G host
+      rerun running (`/data/ycfeng/tmp/d31_e05_run/h200_64_m04_host`, started 08:06 UTC), paired
+      with `h200_64_m04_base`.
 
 Out of scope until a measured E2E error needs them (D31.4): native qualification levels G1, G2
 and G3, exact-byte KV checks, observer validation, census data and the D29 scope ledger.

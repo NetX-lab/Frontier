@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | h200_64 probe result (section 7): all checks PASS, profile accepted for step G; step G host run started. |
 | 2026-10-27 | Corrected after codex review 223fee59 (F001–F004): failure classification (3.1), lost-step location and the tightened completeness checks (3.2, 4), withdrawn perturbation bound (5); review fixes and their checks in section 8. |
 | 2026-10-27 | h200_32 probe run (`exp-1027-124813-737818`) analyzed: two estimator acceptance rules corrected (`cdcba47b`), DP2 profile written, perturbation bound recorded; h200_64 probe submitted. |
 
@@ -145,11 +146,74 @@ Observations:
 
 ## 7. h200_64 probe run
 
-Submitted through Pi `d31-h200-64-hostprobe01-submit-1027f` (prompt
-`/data/ycfeng/tmp/ds4_runs/prompts/d31-h200-64-hostprobe01-submit-1027f.md`), stage
-`/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_hostprobe01/stage` unchanged (built at
-02bd453a with the earlier replay rule; a failed request then costs 120 s per later boundary, which
-the estimator re-checks). Result pending.
+- Stage `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_hostprobe01/stage` (clean worktree
+  `step5-d31-native-02bd453`, 02bd453a; run definition of `h200_64_sweep02` with the 780 s
+  sweep). Submitted through Pi `d31-h200-64-hostprobe01-submit-1027f` (prompt
+  `/data/ycfeng/tmp/ds4_runs/prompts/d31-h200-64-hostprobe01-submit-1027f.md`); job
+  `exp-1027-141317-610373`, 8 × 8 H200, `step_main`, non-preemptible, creator `i-fengyicheng`;
+  Succeeded at 07:30 UTC (launcher finished, poll log
+  `/data/ycfeng/tmp/ds4_runs/d31-h200-64-hostprobe01-submit-1027f/scratch/poll_hostprobe01.log`).
+- Replay: all 7 idle boundaries verified; 14 failed length-sweep requests (soft), none in warmup or
+  formal phases. Repeat means TTFT 1,181.52 ms, TPOT 61.21 ms (sweep02: 1,179.88, 61.26). The two
+  tracebacks in the server logs are vLLM `EngineDeadError` during API-server shutdown, after the
+  replay finished. The stage keeps the earlier replay rule (no counter work accounting); the
+  estimator's every-rank token check and preemption check cover the formal windows (section 8).
+
+Estimator command: as in section 4 with `--case h200_64`, the h200_64 stage,
+`--clean-summary .../h200_64_sweep02/stage/evidence/replay/canonical_summary.json`,
+`--job-id exp-1027-141317-610373`, output `host06/kv_block_zeroing_host_h200_64.json` and
+`host06/kv_block_zeroing_host_h200_64_report.json` (log `host06/estimator_h200_64.log`). Exit 0.
+Copies: `evidence/d31_h200_64_kv_block_zeroing_host_20261027.json` (profile) and
+`evidence/d31_h200_64_kv_block_zeroing_host_report_20261027.json` (report).
+
+| Check | Expectation | Prefill | Decode | Result |
+| --- | --- | --- | --- | --- |
+| Resetting steps | ≥ 100 | 384 | 17,216 (of 37,879 steps, 45.4%) | PASS |
+| Hooks per resetting step | 23 | 23 on all | 23 on all | PASS |
+| DP all-reduce join | partial only after the last step with requests | 13,612 joined, 2 trailing partial | 21,131 joined, 0 | PASS |
+| Window edge clearance | > 0 | 1.34 s | 1.34 s | PASS |
+| Window tokens per engine, every TP rank | client-completed work: 128 × 6,128 / 128 × 1,039 | 196,096 × 4 per window | 33,248 × 4 per window | PASS |
+| Preemptions in formal windows | 0 | 0 | 0 | PASS |
+| `h` mean (profile value) | — | 36.92 ms | 5.96 ms | — |
+| `h` median, p25–p75 | — | 36.29, 35.08–37.56 | 5.88, 5.54–6.21 | — |
+| Previous step still running at first hook | — | 94.3% | 100% | see below |
+| Device gap of resetting steps vs `h` | close | 36.71 vs 36.29 ms median | 6.09 vs 5.88 ms median | PASS |
+| Device gap of non-resetting decode steps | ≤ 0 (host ahead) | — | median −40.1 ms, p75 +0.04 ms | PASS |
+| Trend of `h` over request counts | < 1.0 ms | one count (1) | −0.02 ms over 1–17 | single mean |
+| Wait for slower DP engines | split out | 0 | mean 0.90 ms | — |
+| Perturbation (client shift vs clean repeat range) | within | TTFT +1.64 ms vs range 9.73 | TPOT −0.045 ms vs range 0.494 | PASS |
+
+Comparison with h200_32 (DP2) and observations:
+
+| Value | h200_32 (DP2) | h200_64 (DP4) |
+| --- | --- | --- |
+| Prefill `h` mean | 37.44 ms | 36.92 ms |
+| Decode `h` mean | 5.11 ms | 5.96 ms |
+| Decode `h` on TP rank 0 | 4.40 ms | 5.15 ms |
+| Decode wait for slower DP engines | 0.58 ms | 0.90 ms |
+| Decode resetting share | 67.6% | 45.4% |
+| Perturbation | `PERTURBED` (TPOT) | `PASS` |
+
+- The prefill value agrees within 0.5 ms across DP sizes. At DP4 the previous step was still
+  running at the first hook in 94% of prefill steps (DP2: 1.3%). On TP rank 0 the previous step
+  is a dummy step (the step an idle engine runs to stay in step with busy DP peers) before 384 of
+  384 formal resetting steps at DP4 and 383 of 384 at DP2; at DP4 that dummy step is still on the
+  device in 360 cases, at DP2 in 5 (`/data/ycfeng/tmp/d31_diag/h64_prev.py`). The device gap still matches
+  `h` (36.71 vs 36.29 ms median), so the device waits for the host on these steps in both runs.
+- Decode `h` is 0.85 ms higher at DP4, on TP rank 0 as well (+0.75 ms), so the difference is not
+  only skew between TP ranks. The cause (EP32 against EP16, the nodes, or batch composition) is
+  not analysed; each topology uses its own measured value.
+- The DP4 decode share of resetting steps is lower because each engine holds fewer requests
+  (at most 32 instead of 64), so fewer requests cross a 16-token block boundary in a step.
+- Decision: the h200_64 profile passes every check including the perturbation check, so it is
+  accepted for step G as measured. Its TPOT shift (−0.045 ms) also suggests the probe itself adds
+  little, which supports, but does not prove, that the h200_32 TPOT shift was job-to-job
+  variation; the h200_32 profile stays `PERTURBED` until a probe on/off measurement within one job
+  (section 5).
+- Step G host run (CPU only) started 08:06 UTC from the clean worktree with options
+  `/data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_64_host.json`
+  (the h200_64 base options plus `kv_block_zeroing_host_profile`), output
+  `/data/ycfeng/tmp/d31_e05_run/h200_64_m04_host`; it pairs with `h200_64_m04_base`.
 
 ## 8. Codex review 223fee59 and fixes
 

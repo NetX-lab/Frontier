@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-27 | D31: h200_64 probe analyzed with the tightened checks: DP4 profile prefill 36.92 ms / decode 5.96 ms, perturbation PASS, accepted for step G; step G host run started. |
 | 2026-10-27 | D31: codex review 223fee59 of the h200_32 probe result (F001–F004, all confirmed): estimator checks every TP rank against the client-completed work, rejects preemptions and partial all-reduces before the last step with requests; the replay checks each formal phase's native work counters; the profile values are unchanged; the profile is not accepted (probe effect unmeasured), so E/G with it are exploratory. |
 | 2026-10-27 | D31: h200_32 host probe analyzed: replay idle-boundary and probe-completeness rules corrected (`cdcba47b`); DP2 profile prefill 37.44 ms / decode 5.11 ms (`PERTURBED`, TPOT bias at most 0.7%); step E host rerun started; h200_64 probe job `exp-1027-141317-610373` submitted. |
 | 2026-10-27 | D31: exact native decode critical path (diagnostic): the step prefix before the first TP all-reduce is the KV side-storage reset (item 3); Frontier's step is within −7% to +4% of the native forward body; TP all-reduce is about 1.3 ms high (273 native calls, own cost about 6.8 µs), not low; body idle shortfall is a kernel-count shortfall. |
@@ -1385,6 +1386,25 @@ Calibration item 3 step 2, probe runs (2026-10-27; h200_32 `completed`, h200_64 
   tokens per engine prefill 392,192 × 2 and decode 66,496 × 2 in all three windows; joins
   prefill 13,643 joined + 4 trailing partial, decode 19,936 + 0; the profile equals the stored
   one apart from the report path (prefill 37.4398 ms, decode 5.1105 ms).
+  Commit `f81705cb`.
+- h200_64 probe result (report `test_report_2026-10-27_host_probe_runs.md` section 7): job
+  `exp-1027-141317-610373` Succeeded at 07:30 UTC; all 7 idle boundaries verified, 14 failed
+  length-sweep requests (soft), none in warmup or formal phases; repeat means TTFT 1,181.52 ms,
+  TPOT 61.21 ms (sweep02: 1,179.88, 61.26). Estimator (tightened checks) exit 0: per engine and
+  every TP rank 196,096 (P) / 33,248 (D) tokens in each window, joins P 13,612 + 2 trailing
+  partial, D 21,131 + 0, no preemptions. Profile (DP4): prefill 36.92 ms over 384 resetting
+  steps, decode 5.96 ms over 17,216 (45.4% of steps; device gap 6.09 vs `h` 5.88 ms median; trend
+  −0.02 ms over 1–17 requests). Perturbation PASS (TTFT +1.64 ms within 9.73, TPOT −0.045 ms within
+  0.494). Decision: accepted for step G as measured. Decode `h` is 0.85 ms above DP2 (rank 0 also
+  +0.75 ms); cause not analysed, each topology uses its own value. Copies
+  `evidence/d31_h200_64_kv_block_zeroing_host_20261027.json` and
+  `evidence/d31_h200_64_kv_block_zeroing_host_report_20261027.json`.
+- Step G host run (started 08:06 UTC, CPU only, clean worktree 02bd453a): options
+  `/data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_64_host.json`
+  (the h200_64 base options plus `kv_block_zeroing_host_profile`), output
+  `/data/ycfeng/tmp/d31_e05_run/h200_64_m04_host`; pairs with `h200_64_m04_base` (started 06:16
+  UTC). Started before the base finished because the host has 64 cores and 110 GB free and each
+  run uses one core and about 1 GB.
 
 Step F status (2026-10-26):
 
