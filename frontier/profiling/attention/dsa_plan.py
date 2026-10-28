@@ -56,6 +56,14 @@ _PILOT_PHASE = 'phase'
 _PILOT_BATCH_SIZE = 'batch_size'
 _PILOT_PROMPT_LENGTH = 'prompt_len'
 _PILOT_DP_PEER = 'dp_peer'
+_PILOT_PROMPT_LENGTHS = 'prompt_lens'
+_PILOT_TAIL_COUNT = 'tail_count'
+_PILOT_WARMUP = 'warmup'
+_PILOT_MEASURED = 'measured'
+_PILOT_CHUNK_BUDGET = 'chunk_budget'
+_PILOT_CASE_OPTIONAL_KEYS = frozenset({
+    _PILOT_PROMPT_LENGTHS, _PILOT_TAIL_COUNT, _PILOT_WARMUP, _PILOT_MEASURED,
+})
 _PEER_TOKEN_COUNT = 'num_tokens'
 _PEER_MODE = 'cg_mode'
 _PEER_UNIFORM_COUNT = 'uniform_token_count'
@@ -159,6 +167,13 @@ class DsaCase:
     measured: int
     estimated_steps: int
     dp_peer: DsaDpPeer | None = None
+    prompt_lens: tuple[int, ...] = ()
+    tail_count: int = 1
+
+    @property
+    def request_prompt_lens(self) -> tuple[int, ...]:
+        """Submission order; first-tail cases put the continuing requests first."""
+        return self.prompt_lens or (self.prompt_len,) * self.batch_size
 
 
 @dataclass(frozen=True)
@@ -295,6 +310,10 @@ class DsaProfilePlan:
         if self.limits.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS:
             payload["timing_collection"] = "pending_native_scope_instrumentation"
         for case in payload[_PILOT_CASES]:
+            if not case[_PILOT_PROMPT_LENGTHS]:
+                case.pop(_PILOT_PROMPT_LENGTHS)
+            if case[_PILOT_TAIL_COUNT] == 1:
+                case.pop(_PILOT_TAIL_COUNT)
             if case[_PILOT_DP_PEER] is None:
                 case.pop(_PILOT_DP_PEER)
         return payload
@@ -749,10 +768,11 @@ def _build_serving_cases(
     return (engine,), tuple(cases)
 
 
-def _strict_keys(payload: Any, expected: frozenset[str], label: str) -> None:
+def _strict_keys(payload: Any, expected: frozenset[str], label: str,
+                 optional: frozenset[str] = frozenset()) -> None:
     if not isinstance(payload, dict):
         raise ValueError(f"{label} must be a JSON object")
-    missing, unknown = expected - payload.keys(), payload.keys() - expected
+    missing, unknown = expected - payload.keys(), payload.keys() - (expected | optional)
     if missing or unknown:
         raise ValueError(f"{label}: missing keys {sorted(missing)}, unknown keys {sorted(unknown)}")
 
@@ -762,13 +782,14 @@ def _nonnegative_int(name: str, value: Any) -> None:
         raise ValueError(f"{name} must be a non-negative int, got {value!r}")
 
 
-def _pilot_peer(payload: Any, limits: DsaMeasurementLimits) -> DsaDpPeer | None:
+def _pilot_peer(payload: Any, limits: DsaMeasurementLimits,
+                chunk_budget: int | None = None) -> DsaDpPeer | None:
     if payload is None:
         return None
     _strict_keys(payload, _DP_PEER_KEYS, _PILOT_DP_PEER)
     peer = DsaDpPeer(**payload)
     _require_positive_int("dp_peer num_tokens", peer.num_tokens)
-    if peer.num_tokens > limits.chunk_budgets[0]:
+    if peer.num_tokens > (limits.chunk_budgets[0] if chunk_budget is None else chunk_budget):
         raise ValueError("dp_peer num_tokens exceeds chunk budget")
     if peer.cg_mode not in (DP_FULL, DP_PIECEWISE, DP_NONE):
         raise ValueError(f"Unknown dp_peer cg_mode {peer.cg_mode!r}")
@@ -804,16 +825,25 @@ def build_pilot_cases(limits: DsaMeasurementLimits, payload: Mapping[str, Any]
     budget = limits.chunk_budgets[0]
     engines = []
     for row in payload[_PILOT_ENGINES]:
-        _strict_keys(row, _PILOT_ENGINE_KEYS, "pilot engine")
+        _strict_keys(row, _PILOT_ENGINE_KEYS, "pilot engine", frozenset({_PILOT_CHUNK_BUDGET}))
         _nonnegative_int(_PILOT_ENGINE_INDEX, row[_PILOT_ENGINE_INDEX])
         _nonnegative_int(_PILOT_QUERY_LENGTH, row[_PILOT_QUERY_LENGTH])
         if row[_PILOT_ENGINE_INDEX] != len(engines):
             raise ValueError("pilot engine indices must be contiguous from 0")
-        engines.append(DsaEngineSpec(row[_PILOT_ENGINE_INDEX], budget, limits.max_num_seqs,
+        engine_budget = row.get(_PILOT_CHUNK_BUDGET, budget)
+        _require_positive_int("pilot engine chunk_budget", engine_budget)
+        if engine_budget < limits.max_num_seqs:
+            raise ValueError("pilot engine chunk_budget is below max_num_seqs")
+        if limits.cudagraph_capture_sizes and engine_budget < limits.cudagraph_capture_sizes[-1]:
+            raise ValueError("pilot engine chunk_budget is below largest capture size")
+        if (_PILOT_CHUNK_BUDGET in row
+                and row[_PILOT_QUERY_LENGTH] > min(engine_budget, limits.max_context_len)):
+            raise ValueError("pilot engine prefill_query_len exceeds chunk budget or max_context_len")
+        engines.append(DsaEngineSpec(row[_PILOT_ENGINE_INDEX], engine_budget, limits.max_num_seqs,
                                     limits.max_context_len, limits.block_size, row[_PILOT_QUERY_LENGTH]))
     cases, ids = [], set()
     for row in payload[_PILOT_CASES]:
-        _strict_keys(row, _PILOT_CASE_KEYS, "pilot case")
+        _strict_keys(row, _PILOT_CASE_KEYS, "pilot case", _PILOT_CASE_OPTIONAL_KEYS)
         case_id = row[_PILOT_CASE_ID]
         if not isinstance(case_id, str) or not case_id:
             raise ValueError("pilot case_id must be a non-empty string")
@@ -824,6 +854,7 @@ def build_pilot_cases(limits: DsaMeasurementLimits, payload: Mapping[str, Any]
         _nonnegative_int("case engine_index", index)
         if index >= len(engines):
             raise ValueError(f"Pilot case {case_id} references missing engine {index}")
+        budget = engines[index].chunk_budget
         phase, batch, prompt = row[_PILOT_PHASE], row[_PILOT_BATCH_SIZE], row[_PILOT_PROMPT_LENGTH]
         if phase not in PILOT_PHASES:
             raise ValueError(f"Unknown pilot phase {phase!r}")
@@ -833,14 +864,19 @@ def build_pilot_cases(limits: DsaMeasurementLimits, payload: Mapping[str, Any]
         _nonnegative_int(_PILOT_PROMPT_LENGTH, prompt)
         if phase != PHASE_DUMMY:
             _require_positive_int(_PILOT_PROMPT_LENGTH, prompt)
-        peer = _pilot_peer(row[_PILOT_DP_PEER], limits)
+        peer = _pilot_peer(row[_PILOT_DP_PEER], limits, budget)
         q = engines[index].prefill_query_len
         if phase in (PHASE_PREFILL, PHASE_DECODE) and q:
             raise ValueError(f"{phase} requires engine prefill_query_len == 0")
-        if phase in (PHASE_PREFILL, PHASE_FIRST_TAIL) and peer is not None:
+        if phase == PHASE_PREFILL and peer is not None:
             raise ValueError(f"{phase} does not allow a dp_peer")
         if phase in (PHASE_PREFILL, PHASE_DUMMY) and batch != 1:
             raise ValueError(f"{phase} requires batch_size == 1")
+        if phase == PHASE_DUMMY and (prompt != 0 or peer is None):
+            raise ValueError("dummy requires prompt_len == 0 and a dp_peer")
+        if _PILOT_CASE_OPTIONAL_KEYS.intersection(row):
+            cases.append(_extended_pilot_case(row, engines[index], limits, peer))
+            continue
         if phase == PHASE_PREFILL:
             warmup, measured = limits.prefill_warmup_repeats, limits.prefill_measured_repeats
             max_tokens, estimated = 1, (warmup + measured) * _prefill_steps(prompt, budget)
@@ -880,6 +916,63 @@ def build_pilot_cases(limits: DsaMeasurementLimits, payload: Mapping[str, Any]
         cases.append(DsaCase(case_id, index, phase, batch, prompt, max_tokens,
                              warmup, measured, estimated, peer))
     return tuple(engines), tuple(cases)
+
+
+def _extended_pilot_case(row: Mapping[str, Any], engine: DsaEngineSpec,
+                         limits: DsaMeasurementLimits, peer: DsaDpPeer | None) -> DsaCase:
+    """Admit explicit request contexts by executing the CPU scheduling prediction.
+
+    Legacy pilots keep their historical conservative allowances and serialization.
+    Explicit pilots instead use the actual construction length, so a short measured
+    window near max_model_len is not rejected by a loose build-step allowance.
+    """
+    from frontier.profiling.attention.dsa_case_prediction import predict_case_requests
+
+    phase, batch, prompt = row[_PILOT_PHASE], row[_PILOT_BATCH_SIZE], row[_PILOT_PROMPT_LENGTH]
+    lengths = row.get(_PILOT_PROMPT_LENGTHS, [prompt] * batch)
+    if not isinstance(lengths, list) or len(lengths) != batch:
+        raise ValueError("prompt_lens must be a JSON list of batch_size lengths")
+    for length in lengths:
+        if phase == PHASE_DUMMY:
+            _nonnegative_int("prompt_lens entry", length)
+        else:
+            _require_positive_int("prompt_lens entry", length)
+        if length + 1 > limits.max_context_len:
+            raise ValueError("prompt_lens entry + 1 exceeds max_context_len")
+    tails = row.get(_PILOT_TAIL_COUNT, 1)
+    _require_positive_int("tail_count", tails)
+    if _PILOT_TAIL_COUNT in row and phase != PHASE_FIRST_TAIL:
+        raise ValueError("tail_count is only valid for first_tail")
+    if phase == PHASE_DUMMY and any(lengths):
+        raise ValueError("dummy prompt_lens must be zero")
+    if phase == PHASE_FIRST_TAIL:
+        if tails > batch:
+            raise ValueError("tail_count exceeds batch_size")
+        q = engine.prefill_query_len
+        if q <= 0:
+            raise ValueError("first_tail requires positive engine prefill_query_len")
+        if (prompt - 1) % q or any(length != prompt for length in lengths[-tails:]):
+            raise ValueError("first_tail tail prompts must equal prompt_len with (prompt_len - 1) divisible by prefill_query_len")
+        if tails * q + batch - tails > engine.chunk_budget:
+            raise ValueError("simultaneous first_tail chunks exceed chunk budget")
+    prefill = phase in (PHASE_PREFILL, PHASE_FIRST_TAIL)
+    warmup = row.get(_PILOT_WARMUP, limits.prefill_warmup_repeats if prefill else limits.decode_warmup_steps)
+    measured = row.get(_PILOT_MEASURED, limits.prefill_measured_repeats if prefill else limits.decode_measured_steps)
+    _nonnegative_int("warmup", warmup)
+    _require_positive_int("measured", measured)
+    max_tokens = 0 if phase == PHASE_DUMMY else 1 if phase == PHASE_PREFILL else limits.max_context_len
+    case = DsaCase(row[_PILOT_CASE_ID], engine.engine_index, phase, batch, prompt,
+                   max_tokens, warmup, measured, 0, peer, tuple(lengths), tails)
+    _, steps, outputs = predict_case_requests(case, engine)
+    if phase not in (PHASE_DUMMY, PHASE_PREFILL):
+        max_tokens = max(outputs, default=0) + 1
+    # Prompt plus the largest generated-token lifetime bounds retained KV, even
+    # when individual prompts have different FCFS construction times.
+    capacity = sum(lengths) + batch * max_tokens
+    if capacity > limits.max_kv_tokens_per_lane:
+        raise ValueError("explicit pilot KV bound exceeds max_kv_tokens_per_lane")
+    return DsaCase(case.case_id, case.engine_index, phase, batch, prompt,
+                   max_tokens, warmup, measured, steps, peer, tuple(lengths), tails)
 
 
 def build_dsa_profile_plan(

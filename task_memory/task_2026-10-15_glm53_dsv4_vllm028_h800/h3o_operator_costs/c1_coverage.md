@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | §4.1: amended the first-tail compression mixes and fixed the meaning of "near" in the context profiles (requirements D-G1H-GRID-AMENDMENT). |
 | 2026-10-27 | Created: C1 results, the exact grids of G1h-G5h and G1-G5, and the GPU-hour estimates. |
 
 ## 1. Result
@@ -158,6 +159,11 @@ Grid, the same for G1h and G1. Each window is measured for every layer variant a
 4. **Prefill serving.** NONE W6144 with no cached tokens: measured again with intervals on H200, measured for the first time on H800.
 
 Total: about 650 windows per device.
+
+**Amendment (2026-10-28, requirements D-G1H-GRID-AMENDMENT).** The G1h grid as built by B11 applies the 3 compression mixes to every FULL and PIECEWISE class and profile, including the first-tail windows. Two rules complete it:
+
+- A first tail (6,143 cached tokens, query 1) writes at both ratios. With t first tails, each mix target (n4, n128) becomes (max(n4, t), max(n128, t)), and duplicates are removed.
+- "Near" a profile target means within 127 cached tokens (one ratio-128 group): low 6,144-6,271, high 7,039-7,166. Continuing requests stay inside 6,144-7,166.
 
 **Why the W24 margin.** The largest observed lane holds 13 requests. Frontier places requests on lanes with its own scheduler, so one lane can hold a few more. The W16 classes cover a lane with up to 16 requests, and W24 covers one with up to 24. A lane with more requests raises the typed coverage error (design §3.7 item 4). That error is the intended signal, not a failure to hide.
 

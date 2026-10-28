@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | Recorded the lead's G1h grid amendment after the B11 blockers (D-G1H-GRID-AMENDMENT). |
 | 2026-10-27 | Recorded the lead's working decisions for H3o-(a) revision 2d after review round 3 (D-H3O-REVISION-2D). |
 | 2026-10-27 | Recorded YC's adoption of the revision 2c recommendations and the approval of review round 3 (D-H3O-REVISION-2C-DECISIONS). |
 | 2026-10-26 | Recorded the lead's working decisions for H3o-(a) revision 2c after review round 2 (D-H3O-REVISION-2C), including the source DP synchronization rule that refines item 30 and D7. |
@@ -359,6 +360,11 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - Four V4 gap values (`cuda_graph`, `cuda_graph_piecewise`, `eager`, `eager_preparation`) in a V4 `kernel_gap.csv`, with a V4 value tuple and reader; the existing loader is unchanged.
     - Growth since item 33, reported to YC: 27 active entries, about +3,745 / −330 lines (+435 lines); caps unchanged (H200 45, H800 21 GPU-hours); about 15.5-17 working days, H200 milestone at about 12.
     - No design-only round 4 is recommended; the next Codex review is a code review of the first slice (entries 20-25, 27, 28) and needs YC's approval.
+35. **D-G1H-GRID-AMENDMENT.** Lead's working decisions under D-NO-INTERRUPT after B11 (`9abfeda9`) reported two blockers in the G1h grid (`h3o_operator_costs/c1_coverage.md` §4.1):
+    - **First-tail mixes.** A first tail has 6,143 cached tokens and query 1, so it writes at ratio 4 and at ratio 128 in its step. The requested first-tail mixes (0, 0) and (k4, 0) cannot occur. With t first tails, each target (n4, n128) becomes (max(n4, t), max(n128, t)), and duplicate windows are removed. The amended targets are exactly the mixes that native first-tail steps can have. Reason: the grid must list coordinates that native runs produce; a target no run can produce adds no coverage.
+    - **"Near" in the context profiles.** A continuing request counts as near a profile target when its cached tokens are within 127 tokens of the target (one ratio-128 group): low 6,144-6,271, high 7,039-7,166. Continuing requests stay inside the native range 6,144-7,166; cached 6,143 belongs only to first tails. Reason: 127 is the smallest allowance that reaches a ratio-128 write (cached 6,271 for low, 7,039 for high) inside the native range, and the placement keeps every request that does not need to write at its exact target.
+    - Each case keeps 0 warm-up steps and 1 measured step (B11's choice, accepted): further steps would advance the contexts and change the mix.
+    - Lead probe on CPU (`/data/ycfeng/tmp/b11_review/probe_amended.py`): with both amendments, 1,036 of 1,041 windows get a case; the 5 others fail in the FCFS placement (first tail, W8 and W16 own 6 low (5, 1); W24 own 18 high (1, 1), (7, 1), (4, 4)). B11b resolves them or reports the native evidence.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

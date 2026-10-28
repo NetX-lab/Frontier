@@ -43,6 +43,7 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Callable
 
+from frontier.profiling.attention.dsa_case_prediction import requests_match_case
 from frontier.profiling.attention.dsa_kernel_trace import (
     ScopeKey,
     ScopeKernelTime,
@@ -138,6 +139,8 @@ class _CaseRecorder:
     measurement: str
     dp_peer: dict[str, Any] | None = None
     prompt_len: int = 0
+    prompt_lens: tuple[int, ...] = ()
+    tail_count: int = 1
     matches: int = 0
     recorded: int = 0
     steps: list[dict[str, Any]] = field(default_factory=list)
@@ -200,12 +203,8 @@ class _WorkerState:
             matches = case.phase == PHASE_DUMMY
         elif not requests or case.phase == PHASE_DUMMY:
             matches = False
-        elif case.phase == PHASE_FIRST_TAIL:
-            tails = [r for r in requests if r["num_scheduled_tokens"] == 1
-                     and r["num_computed_tokens"] + 1 == case.prompt_len]
-            matches = (len(requests) == case.batch_size and len(tails) == 1
-                       and all(r is tails[0] or r["num_computed_tokens"] >= case.prompt_len
-                               for r in requests))
+        elif case.phase == PHASE_FIRST_TAIL or case.prompt_lens:
+            matches = requests_match_case(case, requests)
         else:
             prefills = sum(r["num_computed_tokens"] < r["prompt_len"] for r in requests)
             if case.phase == PHASE_PREFILL:
@@ -522,11 +521,14 @@ def begin_case(
     measurement: str,
     dp_peer: dict[str, Any] | None = None,
     prompt_len: int = 0,
+    prompt_lens: tuple[int, ...] = (),
+    tail_count: int = 1,
 ) -> None:
     state = _require_state()
     if state.case is not None:
         raise RuntimeError(f"Case {state.case.case_id} is still active")
-    state.case = _CaseRecorder(case_id, phase, batch_size, skip, limit, measurement, dp_peer, prompt_len)
+    state.case = _CaseRecorder(case_id, phase, batch_size, skip, limit, measurement,
+                               dp_peer, prompt_len, prompt_lens, tail_count)
     if measurement == KERNEL_ONLY:
         state.start_profiler()
 
@@ -555,7 +557,7 @@ def _case_window(case: DsaCase, engine: DsaEngineSpec) -> tuple[int, int]:
 
     if case.phase == PHASE_PREFILL:
         query_budget = engine.prefill_query_len or engine.chunk_budget
-        steps_per_prompt = math.ceil(case.prompt_len / query_budget)
+        steps_per_prompt = math.ceil(case.request_prompt_lens[0] / query_budget)
         return case.warmup * steps_per_prompt, case.measured * steps_per_prompt
     if case.phase in (PHASE_DECODE, PHASE_FIRST_TAIL, PHASE_DUMMY):
         return case.warmup, case.measured
@@ -686,8 +688,10 @@ def run_case(
     engine_spec = plan.engine(case.engine_index)
     skip, limit = _case_window(case, engine_spec)
     begin_args = (case.case_id, case.phase, case.batch_size, skip, limit, measurement)
-    if case.dp_peer is not None or case.phase == PHASE_FIRST_TAIL:
+    if case.dp_peer is not None or case.phase == PHASE_FIRST_TAIL or case.prompt_lens:
         begin_args += (None if case.dp_peer is None else asdict(case.dp_peer), case.prompt_len)
+        if case.prompt_lens or case.tail_count != 1:
+            begin_args += (case.prompt_lens, case.tail_count)
     llm_engine = llm.llm_engine
     max_steps = _CASE_STEP_MULTIPLIER * case.estimated_steps + _CASE_STEP_ALLOWANCE
     label = f"{case.case_id}/{measurement}"
@@ -695,9 +699,9 @@ def run_case(
         max_tokens=case.max_tokens, temperature=0.0, ignore_eos=True, detokenize=False
     )
     if case.phase == PHASE_FIRST_TAIL:
-        request_ids = [f"{label}/q{index}" for index in range(case.batch_size - 1)]
-        for request_id in request_ids:
-            llm_engine.add_request(request_id, _random_prompt(rng, case.prompt_len, vocab_size), params)
+        request_ids = [f"{label}/q{index}" for index in range(case.batch_size - case.tail_count)]
+        for request_id, prompt_len in zip(request_ids, case.request_prompt_lens):
+            llm_engine.add_request(request_id, _random_prompt(rng, prompt_len, vocab_size), params)
         emitted = set()
         steps = 0
         while len(emitted) < len(request_ids):
@@ -710,14 +714,17 @@ def run_case(
         llm.collective_rpc(begin_case, args=begin_args)
         tail_params = SamplingParams(max_tokens=1, temperature=0.0, ignore_eos=True, detokenize=False)
         for repeat in range(case.warmup + case.measured):
-            tail_id = f"{label}/r{repeat}/q{len(request_ids)}"
-            llm_engine.add_request(tail_id, _random_prompt(rng, case.prompt_len, vocab_size), tail_params)
-            finished = False
+            tail_ids = [f"{label}/r{repeat}/q{len(request_ids) + index}"
+                        for index in range(case.tail_count)]
+            for tail_id, prompt_len in zip(tail_ids, case.request_prompt_lens[-case.tail_count:]):
+                llm_engine.add_request(tail_id, _random_prompt(rng, prompt_len, vocab_size), tail_params)
+            finished = set()
             steps = 0
-            while not finished:
+            while len(finished) < len(tail_ids):
                 if steps >= max_steps or not llm_engine.has_unfinished_requests():
                     raise RuntimeError(f"{label}: tail request did not finish within {max_steps} steps")
-                finished = any(output.request_id == tail_id and output.finished for output in llm_engine.step())
+                finished.update(output.request_id for output in llm_engine.step()
+                                if output.request_id in tail_ids and output.finished)
                 steps += 1
         llm_engine.abort_request(request_ids)
         while llm_engine.has_unfinished_requests():
@@ -733,16 +740,16 @@ def run_case(
                 for index in range(case.batch_size):
                     llm_engine.add_request(
                         f"{label}/r{repeat}/q{index}",
-                        _random_prompt(rng, case.prompt_len, vocab_size),
+                        _random_prompt(rng, case.request_prompt_lens[index], vocab_size),
                         params,
                     )
                 while llm_engine.has_unfinished_requests():
                     llm_engine.step()
         else:
             request_ids = [f"{label}/q{index}" for index in range(case.batch_size)]
-            for request_id in request_ids:
+            for request_id, prompt_len in zip(request_ids, case.request_prompt_lens):
                 llm_engine.add_request(
-                    request_id, _random_prompt(rng, case.prompt_len, vocab_size), params
+                    request_id, _random_prompt(rng, prompt_len, vocab_size), params
                 )
             _step_until(
                 llm_engine,
