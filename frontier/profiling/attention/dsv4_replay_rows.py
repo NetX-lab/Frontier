@@ -39,6 +39,7 @@ from frontier.profiling.kernel_gap.dsv4_replay_gaps import (
     build_layer_calls, layer_call_timing, validate_identities,
 )
 
+DSV4_REPLAY_OP_NAME = "attention_graph_replay"
 DSV4_REPLAY_ROW_SCHEMA_VERSION = "dsv4_attention_replay.v1"
 GAP_STATS_PREFIX = "gap_stats"
 LAYER_WINDOW_STATS_PREFIX = "layer_window_stats"
@@ -209,4 +210,4 @@ def build_dsv4_replay_rows(
     return rows
 
 
-__all__ = ["DSV4_REPLAY_ROW_SCHEMA_VERSION", "build_dsv4_replay_rows"]
+__all__ = ["DSV4_REPLAY_OP_NAME", "DSV4_REPLAY_ROW_SCHEMA_VERSION", "build_dsv4_replay_rows"]

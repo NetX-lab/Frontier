@@ -16,6 +16,8 @@
 | 2026-10-28 | B5 accepted: result in §4; B6 next. |
 | 2026-10-28 | B6 design (§3.4) and submission (§4). |
 | 2026-10-28 | B6 accepted: result in §4; B7 next. |
+| 2026-10-28 | B7 design (§3.4, including the planner-role key deviation from design §3.6) and submission (§4); entry 10's runtime wiring moved to B8. |
+| 2026-10-28 | B7 accepted: result in §4; B8 next. |
 
 ## 1. Purpose
 
@@ -153,6 +155,22 @@ B6 design ([codex_assignment_B6_replay_rows.md](codex_assignment_B6_replay_rows.
 - A non-host-ahead call raises: under the step hold every owned activity must be host-ahead. A4 and the rows share one per-call timing function and one plan-engine check.
 - Dummy rows carry the dispatch, phase and metadata columns but no request or key-length columns; first-tail mixed batches get the load columns through `request_load_columns`, split from `batch_load_columns`.
 
+B7 design ([codex_assignment_B7_dsv4_attention_predictor.md](codex_assignment_B7_dsv4_attention_predictor.md)):
+
+- New `frontier/attention/dsv4_features.py`, shared by the loader and the runtime:
+  - Phase rule: decode (every request decoding), first_tail (every request schedules 1 token, at least one not decoding), prefill (no decoding request, every request more than 1 token); any other mix is a coverage error.
+  - Per-batch features: request and query-token counts, dispatch rows, and closed-form sums of the SWA, compressed and selected key pairs and of the compressed writes.
+  - An explicit table maps each of the 22 CSA-family scopes to its feature columns; dummy rows use the dispatch rows only.
+- New `frontier/execution_time_predictor/dsv4_predictor.py` with the replay loader, trainer and predictor.
+  - The loader admits KERNEL_ONLY only and reuses the identity, routing and shape checks of the isolated path through shared helpers.
+  - Each key, (scope, variant, graph runtime mode, phase), gets two models: the scope's cost and its signed gap.
+- Deviation from design §3.6, whose key also carries the planner role for every scope: here the planner role keys only `dsv4_sparse_attention`, the scope that owns the FlashMLA tile-schedule planner kernel.
+  - Evidence: package 03 rows paired by dispatch rows and request lists (`evidence/p1h_bridge/package_03/b7_planner_role_gaps.*`). On planner layers `dsv4_sparse_attention` costs +100% to +215% more and its gap is +0.34 to +1.91 µs (except the PIECEWISE dummy, which has no attention metadata).
+  - Every other scope differs by at most 0.34 µs in gap and 6.2% in cost, with no consistent sign, so those scopes pool both roles.
+  - The measurement type is not part of the key, because only KERNEL_ONLY is admitted.
+- `compose_attention_phase(scope_ms, scope_gap_ms, ...)`: each scope weighs its cost plus its own signed gap. Callers price scopes without a measured gap as kernel count times the class value of `segment_class`. A4 must stay byte-identical.
+- Entry 10's runtime part (`load_kernel_gap_ms` reading the V4 gap values, the V4 layer-operator class following the batch graph mode, no V4 attention term in `add_kernel_gap`) moves to B8 with entry 3, because only the trained composition path consumes it.
+
 ## 4. Order and acceptance
 
 `A (graph_capture.py, graph_replay_trace.py, CPU tests with fakes) -> review and commit -> B1 (policy, scope tree, re-capture, step range, bridge-check driver and launcher) -> review and commit -> P1h bridge check (1 H200, via /ds4-exec) -> B2 (intervals, gap reducer, A4) -> rest of P1h`.
@@ -171,3 +189,5 @@ B6 design ([codex_assignment_B6_replay_rows.md](codex_assignment_B6_replay_rows.
 - B5 (CPU, lead rerun; [test report](../test_report_2026-10-28_b5_identity_shape_keys.md)): P2-32 {46 PASS, 129 NO_REFERENCE, 0 FAIL} and P2-64 {54, 121, 0}, both verdict PASS; 7 referenced and 16 unreferenced pilot shapes per trace set. The unreferenced shapes stay unqualified by this check; the stage 4 end-to-end replays qualify them. Next: B6, the graph-replay V4 rows with a per-scope gap column (rows part of entry 13), then entries 1, 10 and 3.
 - B6 submitted (`4663821b`): acceptance is 505 rows from the 1925 package 03 layer calls, an A4 report byte-identical to the `d2a226fe` baseline, and row compositions of the medians within the A4 limits.
 - B6 (CPU, lead rerun; [test report](../test_report_2026-10-28_b6_replay_rows.md)): 505 rows from 1925 calls with the expected phase and mode counts; A4 byte-identical; row compositions of the medians: median 2.1e-16, p90 0.77%, max 3.19% (single-call rows exact). Next: B7, the V4 attention loader, trainer and predictor on these rows (entry 1), each scope weighed by its own gap in `compose_attention_phase` (entry 2 revision) and the V4 gap selection (entry 10).
+- B7 submitted (`54e3584a`): acceptance is an A4 report byte-identical to the `d2a226fe` baseline, a round trip from synthetic records to predictions that compose exactly like the row medians, and, on the real package 03 table with an exact-lookup fit, predicted cost plus gap composed against each row's measured window within median 5% and p90 10%. Next: B8 (entries 4, 5, 3 and the entry 10 wiring).
+- B7 (CPU, lead rerun; [test report](../test_report_2026-10-28_b7_dsv4_attention_predictor.md)): 883 passed; A4 byte-identical; on the real package 03 table with an exact-lookup fit, 554 models and each row composed from predicted cost plus gap: median 0.49%, p90 1.34%, max 6.67% (two CSA FULL decode rows above 5%, led by the pooled `dsv4_compressor_fused_compress_store`). In-sample only; A6 qualifies other shapes. Next: B8 (entries 4, 5, 3 and the entry 10 wiring).

@@ -11,6 +11,10 @@ PREDICTOR_ROOT = REPO_ROOT / "frontier/execution_time_predictor"
 # Profiling helpers each predictor module may import; any module not listed
 # imports none.
 RUNTIME_IMPORTS = {
+    # Attention composition retains the shared segment-class names for other scopes.
+    "dsv4_composition.py": {"frontier.profiling.kernel_gap.schema"},
+    # Replay admission reads the CPU-only aggregate schema and filename contract.
+    "dsv4_predictor.py": {"frontier.profiling.attention.dsv4_replay_rows"},
     # V4 reads the producer's CPU-only schema, composite scope ownership and
     # provenance format. No runner, native package or collection function runs.
     "deepseek_v4.py": {

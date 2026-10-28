@@ -557,7 +557,8 @@ def source_physical_rows(predictor, source_batches):
                for batch in source_batches.values())
 
 
-def load_attention_dataframe(file_path, model, tp, block_size, measurement_type, *, float_precision=None):
+def load_attention_dataframe(file_path, model, tp, block_size, measurement_type, *,
+                             schema_version=None, float_precision=None):
     """Read the existing wide V4 schema without passing it to the dense loader."""
     import pandas as pd
     from frontier.profiling.attention.dsv4_attention_rows import DSV4_ROW_SCHEMA_VERSION
@@ -567,7 +568,7 @@ def load_attention_dataframe(file_path, model, tp, block_size, measurement_type,
     except FileNotFoundError as exc:
         raise DeepSeekV4CoverageError(f"V4 attention table missing: {file_path}") from exc
     expected = {
-        "schema_version": DSV4_ROW_SCHEMA_VERSION,
+        "schema_version": DSV4_ROW_SCHEMA_VERSION if schema_version is None else schema_version,
         "measurement_type": measurement_type.value,
         "attention_family": "deepseek_v4_attention",
         "model_architecture_profile": model.get_model_architecture_profile().profile_id,
@@ -755,17 +756,7 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
             rows = _select_rows(rows, {name: attention_layout[name] for name in provenance_columns
                                       if name != "input_file_sha256"}, "accepted input provenance")
         if getattr(replica, "moe_gating_routing_runtime_path", None) == "balanced_topk":
-            from frontier.profiling.attention.dsv4_attention_rows import BALANCED_ROUTING_SHA256, routing_columns
-
-            for name in ("routing_runtime_path", "routing_strategy_sha256", "moe_routing"):
-                if name not in rows or rows[name].isna().any() or len(rows[name].unique()) != 1:
-                    raise DeepSeekV4CoverageError(f"V4 balanced isolated attention missing/ambiguous {name}")
-            rows = _select_rows(rows, {"routing_runtime_path": "balanced_topk",
-                "routing_strategy_sha256": BALANCED_ROUTING_SHA256}, "balanced isolated attention")
-            try:
-                routing_columns(json.loads(rows.moe_routing.iloc[0]))
-            except (ValueError, TypeError, AttributeError, KeyError) as exc:
-                raise DeepSeekV4CoverageError("V4 balanced isolated attention routing identity mismatch") from exc
+            rows = validate_balanced_routing(rows)
         rows = _select_rows(rows, {name: value for name, value in attention_layout.items()
                                   if name not in provenance_columns}, "isolated attention layout")
         source = build_deepseek_v4_attention_workload(model, replica, batch, layer_id,
@@ -896,7 +887,8 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
                 or not json.loads(value).get(scope) for value in rows.linear_backends
             ):
                 raise DeepSeekV4CoverageError(f"V4 {scope} requires the qualified FP8 DeepGEMM projection backend")
-    _validate_isolated_identity(rows, predictor, measurement)
+    validate_measured_identity(rows, model, replica, measurement)
+    rows = _select_rows(rows, {"graph_mode": "eager"}, "isolated identity")
     target = f"time_stats.{scope}.median"
     if target not in rows or any(not math.isfinite(float(v)) or float(v) <= 0 for v in rows[target]):
         raise DeepSeekV4CoverageError(f"V4 {scope} requires finite positive measured {target}")
@@ -935,7 +927,8 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
     }
 
 
-def _validate_isolated_identity(rows, predictor, measurement):
+def validate_measured_identity(rows, model_config, replica_config, measurement):
+    """Check measured provenance for both eager scopes and graph replay tables."""
     import json
     from frontier.profiling.common.runtime_identity import IDENTITY_COLUMNS, RuntimeIdentity
 
@@ -944,17 +937,17 @@ def _validate_isolated_identity(rows, predictor, measurement):
             raise DeepSeekV4CoverageError(f"V4 isolated scope has missing/ambiguous {name}")
     row = rows.iloc[0]
     expected = {
-        "graph_mode": "eager", "measurement_type": measurement.value,
+        "measurement_type": measurement.value,
         "model_architecture_profile": "deepseek_v4",
-        "quant_signature": predictor._model_config.get_quant_signature(),
-        "profiling_precision": predictor._model_config.get_default_precision().name,
+        "quant_signature": model_config.get_quant_signature(),
+        "profiling_precision": model_config.get_default_precision().name,
     }
     _select_rows(rows, expected, "isolated identity")
     groups = json.loads(row.parallel_groups)
     if groups.get("engine_tensor_parallel") != 1:
-        raise DeepSeekV4CoverageError("V4 isolated scope requires its measured physical TP1 identity")
-    if str(predictor._replica_config.device).lower() not in row.device_name.lower():
-        raise DeepSeekV4CoverageError("V4 measured device does not match the selected replica")
+        raise DeepSeekV4CoverageError("V4 isolated scope requires its measured physical TP1 identity (parallel_groups)")
+    if str(replica_config.device).lower() not in row.device_name.lower():
+        raise DeepSeekV4CoverageError("V4 measured device does not match the selected replica (device_name)")
     identity = RuntimeIdentity(**{name: (json.loads(row[name]) if name in (
         "runtime_versions", "parallel_groups") else row[name]) for name in (
         "runtime_versions", "source_revision", "model_config_revision", "model_config_sha256",
@@ -962,4 +955,21 @@ def _validate_isolated_identity(rows, predictor, measurement):
         "parallel_groups", "graph_mode",
     )})
     if identity.fingerprint != row.runtime_fingerprint:
-        raise DeepSeekV4CoverageError("V4 measured runtime fingerprint does not match its provenance")
+        raise DeepSeekV4CoverageError("V4 measured runtime fingerprint does not match its provenance (runtime_fingerprint)")
+
+
+def validate_balanced_routing(rows):
+    """Select the measured balanced routing identity when the replica requests it."""
+    import json
+    from frontier.profiling.attention.dsv4_attention_rows import BALANCED_ROUTING_SHA256, routing_columns
+
+    for name in ("routing_runtime_path", "routing_strategy_sha256", "moe_routing"):
+        if name not in rows or rows[name].isna().any() or len(rows[name].unique()) != 1:
+            raise DeepSeekV4CoverageError(f"V4 balanced isolated attention missing/ambiguous {name}")
+    rows = _select_rows(rows, {"routing_runtime_path": "balanced_topk",
+        "routing_strategy_sha256": BALANCED_ROUTING_SHA256}, "balanced isolated attention")
+    try:
+        routing_columns(json.loads(rows.moe_routing.iloc[0]))
+    except (ValueError, TypeError, AttributeError, KeyError) as exc:
+        raise DeepSeekV4CoverageError("V4 balanced isolated attention routing identity mismatch (moe_routing)") from exc
+    return rows

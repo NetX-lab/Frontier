@@ -56,13 +56,12 @@ from frontier.profiling.attention.dsv4_attention_rows import (
     build_dsv4_rows,
 )
 from frontier.profiling.attention.dsv4_replay_rows import (
-    DSV4_REPLAY_ROW_SCHEMA_VERSION, build_dsv4_replay_rows,
+    DSV4_REPLAY_OP_NAME, DSV4_REPLAY_ROW_SCHEMA_VERSION, build_dsv4_replay_rows,
 )
 from frontier.profiling.kernel_gap.dsv4_replay_gaps import read_replay_records
 from frontier.profiling.common.runtime_identity import RuntimeIdentity, file_sha256
 
 _RAW_FILE_PATTERN = "dsv4_raw_e*.jsonl"
-_REPLAY_OP_NAME = "attention_graph_replay"
 _RUNNER_MODULES = {
     ENGINE_POLICY_EAGER_CHUNKED: "frontier.profiling.attention.dsv4_attention_runner",
     ENGINE_POLICY_GRAPH_REPLAY: "frontier.profiling.attention.dsv4_graph_replay_runner",
@@ -202,7 +201,7 @@ def _aggregate_command(args: argparse.Namespace) -> None:
             profiling_type="compute",
             hardware=args.device,
             model_name=args.model_name,
-            op_name=_REPLAY_OP_NAME if replay else "attention",
+            op_name=DSV4_REPLAY_OP_NAME if replay else "attention",
             profile_method=_PROFILE_METHOD_BY_MEASUREMENT[measurement],
         )
         write_rows_csv(measurement_rows, identity, path)

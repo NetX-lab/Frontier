@@ -140,8 +140,7 @@ def check_composition(records: Sequence[ReplayRecords], roles: Mapping[tuple[str
                            indexer_short_context=call.short_context)
             signed_gaps = timing.scope_gaps_ms
             composed = compose_attention_phase(
-                {name: value + signed_gaps.get(name, 0.0) for name, value in scope_ms.items()},
-                counts, dict.fromkeys(required, 0.0), **options,
+                scope_ms, {name: signed_gaps.get(name, 0.0) for name in scope_ms}, **options,
             )
             errors.append((composed.elapsed_ms - target_ms) / target_ms)
             for name, cost in scope_ms.items():
@@ -149,7 +148,8 @@ def check_composition(records: Sequence[ReplayRecords], roles: Mapping[tuple[str
                 if cost != 0:
                     scope_ratios[name].append(signed_gaps.get(name, 0.0) / cost)
             if not required - gap_ms.keys():
-                diagnostic = compose_attention_phase(scope_ms, counts, gap_ms, **options)
+                diagnostic = compose_attention_phase(scope_ms, {name: counts[name] * gap_ms[segment_class(group.step_mode, name)]
+                                                                  for name in scope_ms}, **options)
                 diagnostic_errors.append((diagnostic.elapsed_ms - target_ms) / target_ms)
         summary, diagnostic = _errors(errors), _errors(diagnostic_errors)
         status = _status(host_ahead_count, summary)

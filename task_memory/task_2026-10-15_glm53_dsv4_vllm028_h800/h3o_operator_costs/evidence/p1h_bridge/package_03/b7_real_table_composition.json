@@ -1,0 +1,291 @@
+{
+  "summary": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b6_review/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+    "sha256": "277626cd766865bd0d006d73bf01b31292d7e3f536acce919b1c7ceca7f30ff6",
+    "rows": 505,
+    "models": 554,
+    "models_by_target": {
+      "time_stats": 277,
+      "gap_stats": 277
+    },
+    "models_by_phase": {
+      "decode": 160,
+      "dummy": 234,
+      "prefill": 80,
+      "first_tail": 80
+    },
+    "median_absolute_relative_error": 0.004909042604138507,
+    "p90_absolute_relative_error": 0.013427296634388455,
+    "maximum_absolute_relative_error": 0.06672723200168651,
+    "rows_above_five_percent": 2,
+    "limits_passed": true
+  },
+  "rows_above_five_percent": [
+    {
+      "row_index": 13,
+      "key": {
+        "case_id": "e0-decode-b1-p6144",
+        "attention_variant": "csa",
+        "graph_runtime_mode": "FULL",
+        "phase": "decode",
+        "plans_tile_schedule": false,
+        "padded_rows": 1,
+        "prefill_seq_lens": "[]",
+        "prefill_kv_cache_sizes": "[]",
+        "decode_kv_cache_sizes": "[6151]"
+      },
+      "predicted_ms": 0.09087017313639323,
+      "target_ms": 0.096416015625,
+      "absolute_relative_error": 0.05751993019683316,
+      "pooled_scope_deltas": [
+        {
+          "scope": "dsv4_compressor_fused_compress_store",
+          "cost_delta_ms": -0.005315673828124999,
+          "gap_delta_ms": -0.0001042480468749999,
+          "weight_delta_ms": -0.005419921874999999
+        },
+        {
+          "scope": "dsv4_index_compressor_fused_compress_store",
+          "cost_delta_ms": -0.00051190185546875,
+          "gap_delta_ms": -0.0004481201171874999,
+          "weight_delta_ms": -0.00096002197265625
+        },
+        {
+          "scope": "dsv4_q_projection",
+          "cost_delta_ms": 0.0006511383056640625,
+          "gap_delta_ms": -4.7927856445312365e-05,
+          "weight_delta_ms": 0.0006032104492187502
+        },
+        {
+          "scope": "dsv4_fused_qkv_projection",
+          "cost_delta_ms": 0.0002186584472656239,
+          "gap_delta_ms": 1.3122558593749774e-05,
+          "weight_delta_ms": 0.00023178100585937366
+        },
+        {
+          "scope": "dsv4_index_fused_query_prepare",
+          "cost_delta_ms": 0.00020500183105468753,
+          "gap_delta_ms": 1.3061523437500025e-05,
+          "weight_delta_ms": 0.00021806335449218756
+        },
+        {
+          "scope": "dsv4_compressor_projection",
+          "cost_delta_ms": 0.00032388305664062325,
+          "gap_delta_ms": -0.00011193847656249998,
+          "weight_delta_ms": 0.00021194458007812327
+        },
+        {
+          "scope": "dsv4_index_compressor_projection",
+          "cost_delta_ms": 0.00016398620605468858,
+          "gap_delta_ms": 1.805114746093739e-05,
+          "weight_delta_ms": 0.00018203735351562597
+        },
+        {
+          "scope": "dsv4_fused_q_kv_prepare",
+          "cost_delta_ms": 0.00010485839843749978,
+          "gap_delta_ms": 5.796813964843749e-05,
+          "weight_delta_ms": 0.00016282653808593727
+        },
+        {
+          "scope": "dsv4_output_projection",
+          "cost_delta_ms": 0.00010424804687500077,
+          "gap_delta_ms": 5.709838867187496e-05,
+          "weight_delta_ms": 0.00016134643554687573
+        },
+        {
+          "scope": "dsv4_compressor_save_partial_states",
+          "cost_delta_ms": 0.0001095123291015626,
+          "gap_delta_ms": 3.697204589843753e-05,
+          "weight_delta_ms": 0.00014648437500000013
+        },
+        {
+          "scope": "dsv4_index_weights_projection",
+          "cost_delta_ms": 0.00026141357421875094,
+          "gap_delta_ms": -0.00011895751953124988,
+          "weight_delta_ms": 0.00014245605468750106
+        },
+        {
+          "scope": "dsv4_fused_qkv_rmsnorm",
+          "cost_delta_ms": -0.00012812805175781259,
+          "gap_delta_ms": 2.0034790039062482e-05,
+          "weight_delta_ms": -0.0001080932617187501
+        },
+        {
+          "scope": "dsv4_index_compressor_save_partial_states",
+          "cost_delta_ms": -0.00010626220703124998,
+          "gap_delta_ms": 1.4251708984374962e-05,
+          "weight_delta_ms": -9.201049804687502e-05
+        },
+        {
+          "scope": "dsv4_sparse_attention",
+          "cost_delta_ms": -2.963256835937511e-05,
+          "gap_delta_ms": 0.00010379028320312489,
+          "weight_delta_ms": 7.415771484374977e-05
+        },
+        {
+          "scope": "dsv4_index_query_projection",
+          "cost_delta_ms": 4.522705078124998e-05,
+          "gap_delta_ms": -0.000108856201171875,
+          "weight_delta_ms": -6.362915039062503e-05
+        },
+        {
+          "scope": "dsv4_index_topk",
+          "cost_delta_ms": 2.1118164062499355e-05,
+          "gap_delta_ms": -8.251953124999991e-05,
+          "weight_delta_ms": -6.140136718750056e-05
+        },
+        {
+          "scope": "dsv4_output_inv_rope_quant",
+          "cost_delta_ms": 4.6142578125000014e-05,
+          "gap_delta_ms": -5.1269531250000046e-06,
+          "weight_delta_ms": 4.101562500000001e-05
+        },
+        {
+          "scope": "dsv4_index_scores",
+          "cost_delta_ms": -8.097330729167022e-06,
+          "gap_delta_ms": -3.177897135416666e-05,
+          "weight_delta_ms": -3.9876302083333685e-05
+        },
+        {
+          "scope": "dsv4_grouped_output_projection",
+          "cost_delta_ms": 9.033203124999764e-06,
+          "gap_delta_ms": -5.172729492187479e-06,
+          "weight_delta_ms": 3.860473632812285e-06
+        }
+      ]
+    },
+    {
+      "row_index": 204,
+      "key": {
+        "case_id": "e0-decode-b4-p6144",
+        "attention_variant": "csa",
+        "graph_runtime_mode": "FULL",
+        "phase": "decode",
+        "plans_tile_schedule": true,
+        "padded_rows": 4,
+        "prefill_seq_lens": "[]",
+        "prefill_kv_cache_sizes": "[]",
+        "decode_kv_cache_sizes": "[6150, 6151, 6152, 6153]"
+      },
+      "predicted_ms": 0.12353565979003907,
+      "target_ms": 0.11580810546875,
+      "absolute_relative_error": 0.06672723200168651,
+      "pooled_scope_deltas": [
+        {
+          "scope": "dsv4_compressor_fused_compress_store",
+          "cost_delta_ms": 0.00807073974609375,
+          "gap_delta_ms": 0.0003502044677734374,
+          "weight_delta_ms": 0.008420944213867188
+        },
+        {
+          "scope": "dsv4_index_compressor_fused_compress_store",
+          "cost_delta_ms": 0.0030402450561523436,
+          "gap_delta_ms": -0.0009104995727539063,
+          "weight_delta_ms": 0.0021297454833984373
+        },
+        {
+          "scope": "dsv4_index_compressor_save_partial_states",
+          "cost_delta_ms": -0.0007603530883789063,
+          "gap_delta_ms": -0.00013206481933593752,
+          "weight_delta_ms": -0.0008924179077148438
+        },
+        {
+          "scope": "dsv4_compressor_save_partial_states",
+          "cost_delta_ms": -0.0006665115356445312,
+          "gap_delta_ms": -0.00011132812499999988,
+          "weight_delta_ms": -0.0007778396606445311
+        },
+        {
+          "scope": "dsv4_fused_qkv_projection",
+          "cost_delta_ms": 0.0011070632934570314,
+          "gap_delta_ms": -0.0006326370239257812,
+          "weight_delta_ms": 0.0004744262695312502
+        },
+        {
+          "scope": "dsv4_index_fused_query_prepare",
+          "cost_delta_ms": 0.00031352996826171896,
+          "gap_delta_ms": 5.054473876953125e-05,
+          "weight_delta_ms": 0.0003640747070312502
+        },
+        {
+          "scope": "dsv4_index_query_projection",
+          "cost_delta_ms": -0.00045303344726562497,
+          "gap_delta_ms": 0.0001996231079101562,
+          "weight_delta_ms": -0.0002534103393554688
+        },
+        {
+          "scope": "dsv4_compressor_projection",
+          "cost_delta_ms": -0.00022486114501953092,
+          "gap_delta_ms": 0.00044749450683593747,
+          "weight_delta_ms": 0.00022263336181640656
+        },
+        {
+          "scope": "dsv4_grouped_output_projection",
+          "cost_delta_ms": 3.5636901855469125e-05,
+          "gap_delta_ms": 0.00010670471191406253,
+          "weight_delta_ms": 0.00014234161376953166
+        },
+        {
+          "scope": "dsv4_index_topk",
+          "cost_delta_ms": -5.590820312500067e-05,
+          "gap_delta_ms": -7.958984374999991e-05,
+          "weight_delta_ms": -0.00013549804687500058
+        },
+        {
+          "scope": "dsv4_fused_qkv_rmsnorm",
+          "cost_delta_ms": 5.345916748046879e-05,
+          "gap_delta_ms": -0.00018359374999999997,
+          "weight_delta_ms": -0.00013013458251953119
+        },
+        {
+          "scope": "dsv4_output_inv_rope_quant",
+          "cost_delta_ms": -0.00012005615234374992,
+          "gap_delta_ms": -2.067565917968756e-06,
+          "weight_delta_ms": -0.00012212371826171868
+        },
+        {
+          "scope": "dsv4_sparse_attention",
+          "cost_delta_ms": -0.00010766601562500061,
+          "gap_delta_ms": 1.3275146484375503e-05,
+          "weight_delta_ms": -9.439086914062511e-05
+        },
+        {
+          "scope": "dsv4_index_compressor_projection",
+          "cost_delta_ms": -1.4648437500000555e-05,
+          "gap_delta_ms": 8.003997802734407e-05,
+          "weight_delta_ms": 6.539154052734352e-05
+        },
+        {
+          "scope": "dsv4_output_projection",
+          "cost_delta_ms": -8.245086669921887e-05,
+          "gap_delta_ms": 4.0214538574218756e-05,
+          "weight_delta_ms": -4.223632812500012e-05
+        },
+        {
+          "scope": "dsv4_fused_q_kv_prepare",
+          "cost_delta_ms": -5.3314208984374997e-05,
+          "gap_delta_ms": 7.763671874999999e-05,
+          "weight_delta_ms": 2.432250976562499e-05
+        },
+        {
+          "scope": "dsv4_q_projection",
+          "cost_delta_ms": 1.4648437500000555e-05,
+          "gap_delta_ms": -5.538940429687059e-06,
+          "weight_delta_ms": 9.109497070313496e-06
+        },
+        {
+          "scope": "dsv4_index_scores",
+          "cost_delta_ms": 0.0,
+          "gap_delta_ms": -7.93457031250002e-06,
+          "weight_delta_ms": -7.93457031250002e-06
+        },
+        {
+          "scope": "dsv4_index_weights_projection",
+          "cost_delta_ms": 0.00018013000488281174,
+          "gap_delta_ms": -0.000180877685546875,
+          "weight_delta_ms": -7.476806640632511e-07
+        }
+      ]
+    }
+  ]
+}

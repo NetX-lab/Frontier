@@ -2,8 +2,9 @@
 
 The attention layer issues its compressor and indexer scopes on auxiliary
 streams. The phase elapsed is the critical path through the layer's fork/join
-stream program, with every scope weighted by its device cost plus the time
-between its kernels. Host time is zero: the program is a device-only timeline.
+stream program, with every scope weighted by its device cost plus its own
+signed gap before its first kernel and between its kernels. Host time is
+zero: the program is a device-only timeline.
 
 Source: vLLM 2cf0a6915ce544dc493a0990f2ea38d81601128a,
 models/deepseek_v4/attention.py:361-602, 895-965 and
@@ -163,24 +164,21 @@ def _schedule(program, weight_ms):
 
 
 def compose_attention_phase(
-    scope_ms: Mapping[str, float], kernel_counts: Mapping[str, float],
-    gap_ms: Mapping[str, float], *, variant: str, graph_runtime_mode: str, rows: int,
+    scope_ms: Mapping[str, float], scope_gap_ms: Mapping[str, float], *,
+    variant: str, graph_runtime_mode: str, rows: int,
     multi_stream_gemm_token_threshold: int, indexer_short_context: bool,
 ) -> AttentionSchedule:
     """Compose one layer's attention phase on the stream program of its call.
 
     ``rows`` is the layer's local row count; the outer input projections fork
     when it is at most the recorded multi-stream GEMM threshold. Each scope
-    weighs its cost plus its kernel count times the gap of its segment class.
+    weighs its cost plus its own signed gap before its first kernel and between
+    its kernels. The caller supplies measured gaps for attention scopes and
+    kernel count times the segment-class value for other scopes.
     """
-    if set(kernel_counts) != set(scope_ms):
-        raise ValueError("V4 attention composition requires one kernel count per scope")
-    weight_ms = {}
-    for name, cost_ms in scope_ms.items():
-        segment = segment_class(graph_runtime_mode, name)
-        if segment not in gap_ms:
-            raise ValueError(f"V4 kernel gap value is missing: {segment}")
-        weight_ms[name] = cost_ms + kernel_counts[name] * gap_ms[segment]
+    if set(scope_gap_ms) != set(scope_ms):
+        raise ValueError("V4 attention composition requires one gap per scope")
+    weight_ms = {name: cost_ms + scope_gap_ms[name] for name, cost_ms in scope_ms.items()}
     program = _layer_program(
         variant, graph_runtime_mode, rows <= multi_stream_gemm_token_threshold,
         indexer_short_context,

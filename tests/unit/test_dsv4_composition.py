@@ -4,12 +4,11 @@ import pytest
 
 from frontier.entities import ExecutionTime, StageExecutionTime
 from frontier.execution_time_predictor.dsv4_composition import (
-    compose_attention_phase, serial_attention_phase,
+    compose_attention_phase, segment_class, serial_attention_phase,
 )
 from frontier.types import ClusterType
 
 THRESHOLD = 64
-NO_GAP = {"cuda_graph": 0.0, "cuda_graph_piecewise": 0.0, "eager": 0.0}
 
 CSA = {
     "dsv4_mhc_ffn_post_attn_pre": 1.0, "dsv4_sp_attention_allgather": 2.0,
@@ -40,9 +39,9 @@ UNCOMPRESSED = {
 }
 
 
-def compose(scopes, *, variant, mode, rows=THRESHOLD, short=False, counts=None, gap=NO_GAP):
+def compose(scopes, *, variant, mode, rows=THRESHOLD, short=False, gap=None):
     return compose_attention_phase(
-        scopes, counts or dict.fromkeys(scopes, 1.0), gap, variant=variant,
+        scopes, dict.fromkeys(scopes, 0.0) if gap is None else gap, variant=variant,
         graph_runtime_mode=mode, rows=rows, multi_stream_gemm_token_threshold=THRESHOLD,
         indexer_short_context=short,
     )
@@ -111,33 +110,47 @@ def test_short_context_indexer_runs_its_compressor_and_fill_on_aux0():
     assert schedule.start_ms["dsv4_sparse_attention"] == 23.0
 
 
-def test_gaps_follow_the_segment_class_and_are_charged_once():
-    counts = dict.fromkeys(UNCOMPRESSED, 1.0)
-    counts.update({"dsv4_fused_qkv_projection": 2.0, "dsv4_sparse_attention": 3.0})
-    gap = {"cuda_graph": 0.25, "cuda_graph_piecewise": 0.5, "eager": 2.0}
-    piecewise = compose(UNCOMPRESSED, variant="uncompressed", mode="PIECEWISE",
-                        counts=counts, gap=gap)
-    # PIECEWISE: graph pieces pay 0.5 per kernel; the sparse eager break pays 2.0.
-    assert piecewise.start_ms["dsv4_sparse_attention"] == 18.0 + 0.5 * 6
-    assert piecewise.elapsed_ms == 28.0 + 0.5 * 7 + 2.0 * 3
-    full = compose(UNCOMPRESSED, variant="uncompressed", mode="FULL", counts=counts, gap=gap)
-    assert full.elapsed_ms == 28.0 + 0.25 * 10
-    eager = compose(UNCOMPRESSED, variant="uncompressed", mode="NONE", counts=counts, gap=gap)
-    assert eager.elapsed_ms == 28.0 + 2.0 * 10
-    layer = _layer(UNCOMPRESSED, piecewise)
-    assert layer.get_single_layer_attention_scope_time() == piecewise.elapsed_ms
-    assert layer.get_single_layer_block_time() == piecewise.elapsed_ms
+def test_each_scope_adds_its_own_signed_gap_once():
+    gaps = {name: (i + 1) * 0.1 for i, name in enumerate(UNCOMPRESSED)}
+    gaps["dsv4_sparse_attention"] = -0.5
+    schedule = compose(UNCOMPRESSED, variant="uncompressed", mode="PIECEWISE", gap=gaps)
+    assert schedule.start_ms["dsv4_sparse_attention"] == pytest.approx(
+        18.0 + sum(gaps[name] for name in list(UNCOMPRESSED)[:5]))
+    assert schedule.elapsed_ms == pytest.approx(28.0 + sum(gaps.values()))
+    for mode in ("FULL", "NONE"):
+        assert compose(UNCOMPRESSED, variant="uncompressed", mode=mode, gap=gaps) == schedule
+    layer = _layer(UNCOMPRESSED, schedule)
+    assert layer.get_single_layer_attention_scope_time() == schedule.elapsed_ms
+    assert layer.get_single_layer_block_time() == schedule.elapsed_ms
+
+
+@pytest.mark.parametrize("mode,scope,expected", [
+    ("FULL", "dsv4_sparse_attention", "cuda_graph"),
+    ("FULL", "dsv4_q_projection", "cuda_graph"),
+    ("PIECEWISE", "dsv4_sparse_attention", "eager"),
+    ("PIECEWISE", "dsv4_index_scores", "eager"),
+    ("PIECEWISE", "dsv4_index_topk", "eager"),
+    ("PIECEWISE", "dsv4_attention_output_zero", "eager"),
+    ("PIECEWISE", "dsv4_q_projection", "cuda_graph_piecewise"),
+    ("NONE", "dsv4_sparse_attention", "eager"),
+    ("NONE", "dsv4_q_projection", "eager"),
+])
+def test_segment_class_mapping(mode, scope, expected):
+    assert segment_class(mode, scope) == expected
+
+
+def test_segment_class_rejects_unknown_mode():
+    with pytest.raises(ValueError, match="no segment classes"):
+        segment_class("unknown", "dsv4_sparse_attention")
 
 
 def test_composition_rejects_incomplete_inputs():
     with pytest.raises(ValueError, match="no stream position"):
         compose({**UNCOMPRESSED, "dsv4_index_scores_typo": 1.0},
                 variant="uncompressed", mode="FULL")
-    with pytest.raises(ValueError, match="one kernel count per scope"):
-        compose(UNCOMPRESSED, variant="uncompressed", mode="FULL",
-                counts={"dsv4_sparse_attention": 1.0})
-    with pytest.raises(ValueError, match="kernel gap value is missing: cuda_graph_piecewise"):
-        compose(UNCOMPRESSED, variant="uncompressed", mode="PIECEWISE", gap={"eager": 1.0})
+    for gap in ({"dsv4_sparse_attention": 1.0}, {**dict.fromkeys(UNCOMPRESSED, 0.0), "extra": 0.0}):
+        with pytest.raises(ValueError, match="one gap per scope"):
+            compose(UNCOMPRESSED, variant="uncompressed", mode="FULL", gap=gap)
 
 
 def test_serial_schedule_places_scopes_back_to_back():

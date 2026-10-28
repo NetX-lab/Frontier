@@ -7,7 +7,7 @@ import statistics
 
 import pytest
 
-from frontier.execution_time_predictor.dsv4_composition import compose_attention_phase, segment_class
+from frontier.execution_time_predictor.dsv4_composition import compose_attention_phase
 from frontier.profiling.attention import dsv4_attention_main as main
 from frontier.profiling.attention.dsa_rows import KERNEL_ONLY
 from frontier.profiling.attention.dsv4_attention_plan import metadata_key
@@ -135,9 +135,8 @@ def test_single_call_row_composes_own_scope_costs_and_gaps_to_window(plan):
     assert row["layer_window_stats.count"] == 1
     scopes = json.loads(row["operator_scopes"])
     result = compose_attention_phase(
-        {s: row[f"time_stats.{s}.median"] + row[f"gap_stats.{s}.median"] for s in scopes},
-        {s: row[f"time_stats.{s}.kernel_count"] for s in scopes},
-        {segment_class(row["graph_runtime_mode"], s): 0.0 for s in scopes},
+        {s: row[f"time_stats.{s}.median"] for s in scopes},
+        {s: row[f"gap_stats.{s}.median"] for s in scopes},
         variant=row["attention_variant"], graph_runtime_mode=row["graph_runtime_mode"], rows=row["padded_rows"],
         multi_stream_gemm_token_threshold=row["multi_stream_gemm_token_threshold"],
         indexer_short_context=row["indexer_short_context"],

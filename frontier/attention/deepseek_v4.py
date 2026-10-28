@@ -19,6 +19,8 @@ from frontier.types import ClusterType
 UNCOMPRESSED_VARIANT, CSA_VARIANT, HCA_VARIANT = (
     DEEPSEEK_V4_ATTENTION_FAMILY.supported_variants
 )
+FLASHMLA_PADDED_Q_HEADS_SMALL = 64
+FLASHMLA_PADDED_Q_HEADS_LARGE = 128
 ATTENTION_CACHE = "attention"
 INDEXER_CACHE = "indexer"
 SWA_CACHE = "swa"
@@ -131,6 +133,12 @@ def _integer(value, name, *, minimum=1):
     if type(value) is not int or value < minimum:
         raise ValueError(f"{name} must be an integer >= {minimum}")
     return value
+
+
+def deepseek_v4_padded_q_heads(local_heads: int) -> int:
+    """FlashMLA's two padded query-head widths, shared with replay admission."""
+    return (FLASHMLA_PADDED_Q_HEADS_SMALL if local_heads <= FLASHMLA_PADDED_Q_HEADS_SMALL
+            else FLASHMLA_PADDED_Q_HEADS_LARGE)
 
 
 def _validate_source_batch(batch):
@@ -284,7 +292,7 @@ def build_deepseek_v4_attention_workload(
     local_heads = heads // tp
     if local_heads > 128:
         raise NotImplementedError("V4 FlashMLA supports at most 128 local Q heads")
-    padded_heads = 64 if local_heads <= 64 else 128
+    padded_heads = deepseek_v4_padded_q_heads(local_heads)
     query = (tokens, local_heads, head)
     padded = (tokens, padded_heads, head)
     ratio = model_config.compress_ratios[global_layer_id]
@@ -413,7 +421,7 @@ def build_deepseek_v4_dummy_attention_workload(
     head = _integer(model_config.head_dim, "head dimension")
     if head != 512 or heads % tp or groups % tp or heads % groups or heads // tp > 128:
         raise NotImplementedError("V4 idle forward requires source-compatible FlashMLA TP shapes")
-    padded_heads = 64 if heads // tp <= 64 else 128
+    padded_heads = deepseek_v4_padded_q_heads(heads // tp)
     operators = _projection_workloads(model_config, replica_config, tokens)
     if heads // tp < padded_heads:
         operators["dsv4_query_padding"] = (_call(
