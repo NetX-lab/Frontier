@@ -17,7 +17,7 @@
   "name": "G3H_MOE",
   "job_tag": "v4-h200-g3h-moe-rank-classes-20261028-01",
   "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_moe/g3h_01",
-  "source_revision": "5083d0369a5f9b86c333b30fce78154a3364225f",
+  "source_revision": "32d3d08b466a16c70a55f6f44359bd20106c91ca",
   "model": "deepseek-ai/DeepSeek-V4-Flash",
   "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
   "timeout_seconds": 7200,
@@ -166,7 +166,6 @@
       ]
     }
   ],
-  "source_revision_note": "Lead must replace this pre-B12 HEAD after committing B12 and B12b; build only from committed bytes.",
   "gpu_time_estimate": {
     "h800_seconds": 92,
     "h800_rows": 8,
