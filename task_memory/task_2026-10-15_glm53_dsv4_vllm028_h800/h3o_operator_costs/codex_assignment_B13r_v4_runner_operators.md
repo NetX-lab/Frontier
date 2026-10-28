@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | Scope updated at submission: B13 is committed (`7753e5a9`), the G2h package is built from it and submitted. |
 | 2026-10-28 | Created: Codex assignment B13r of stage 2 ([design.md](design.md) §3.1, §3.3 and §6 entry 15; [c1_coverage.md](c1_coverage.md) §3.2, §3.3 and §4.2; G1h-02 result in [../test_report_2026-10-28_g1h_worker_import_fix.md](../test_report_2026-10-28_g1h_worker_import_fix.md)). |
 
 ## Goal
@@ -17,7 +18,7 @@ Design entry 15 lists four operators that run on objects of the V2 model runner,
 | `dsv4_input_preparation` | the post-DP preparation of `execute_model` (`model_runner.py` about 1471-1600): `prepare_inputs`, `prepare_attn`, `model_state.preprocess_state`, `model_state.prepare_attn`, `model_state.prepare_inputs` |
 | `dsv4_sampling` | `sample()` without `compute_logits` (`model_runner.py:1333-1365`: the logits-row gather `hidden_states[logits_indices]` and the sampler) and `postprocess_sampled` (`model_runner.py:1367-1398`: `post_update` and `model_state.postprocess_state`) |
 
-B13 (request `2c58b7b1`) measures the standalone operators (mHC, shared expert, embedding, final norm, LM head shard). B13r measures these four, on 1 H200, on native runner objects. It delivers, all on CPU:
+B13 (request `2c58b7b1`, committed in `7753e5a9`) measures the standalone operators (mHC, shared expert, embedding, final norm, LM head shard). B13r measures these four, on 1 H200, on native runner objects. It delivers, all on CPU:
 
 1. **Owned step scopes in the graph-replay runner** (`frontier/profiling/attention/dsv4_graph_replay_runner.py`). Every recorded step attributes the kernels of these four operators to their own scope, so a replay trace has no unowned eager work outside the model forward except what the report lists.
 2. **Direct block-operator calls on a native-layout engine.** The zeroing and the block-table writes measured on the C1 grids, on an engine whose KV-cache layout equals the native TP8 rank.
@@ -86,19 +87,19 @@ Hence:
 - Settings: destination `package_01`; name `G2H_V4_RUNNER_OPERATORS`; job tag `v4-h200-g2h-runner-20261028-01`; output directory `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_01`; 1 H200, `step_main`, non-preemptible; the image, mount and `cuda_compat_path` of `g1h/package_plan.json`.
 - `source_revision`: the current HEAD; the lead replaces it after committing B13r. Do not build the package.
 - The builder's dry-run check requires the planned rows and case ids to equal `expected_rows.json`, and runs the import probe of the worker entry modules with `fasteners` and `sklearn` blocked.
-- **GPU time.** Path A from G1h-02 (engine runs 2,711 s, job 3,055 s, 0.85 GPU-hours) plus the scope overhead; path B from the 43-layer engine start-up and the planned calls. Compare with the G1h-G4h cap of 7 (about 0.92 used, plus G2h from B13).
+- **GPU time.** Path A from G1h-02 (engine runs 2,711 s, job 3,055 s, 0.85 GPU-hours) plus the scope overhead; path B from the 43-layer engine start-up and the planned calls. Compare with the G1h-G4h cap of 7 (about 0.92 used, plus G2h from B13, estimated 0.23-0.60 GPU-hours and running now).
 
 ## Out of scope
 
 - Any GPU, platform or network action. Building or submitting the package.
-- The B13 operators and files (`frontier/profiling/linear_op/`, `fp8_block_linear.py`, `tensor_parallel_layers.py`, `deepseek_v4_axes.py`, `g2h/`), except reading them.
+- The B13 operators and files (`frontier/profiling/linear_op/`, `fp8_block_linear.py`, `tensor_parallel_layers.py`, `deepseek_v4_axes.py`, `g2h/` including the built `g2h/package_01/`), except reading them.
 - The consumers (entries 1-12), the loaders and trainers, `execution_enabled`, and `frontier/execution_time_predictor/`.
 - The communication operators and the logits gather; the output copy of `sample_tokens` (`AsyncOutput`, `model_runner.py` about 1780-1790) is reported as unowned, not priced.
 - The G1h grid, its case construction and the G1h package files; the MoE and collective producers; H800 files.
 
 ## Scope and context
 
-- **Working root:** `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028` (Git worktree; B13 is committed before this request starts). Leave the untracked `.cortexkit/`, `.pi/` and `remaining_measurements/` alone.
+- **Working root:** `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028` (Git worktree; B13 is committed in `7753e5a9` and the G2h package plan is pinned in `2572af34`). Leave the untracked `.cortexkit/`, `.pi/` and `remaining_measurements/` alone.
 - **Task records:** [../requirements.md](../requirements.md), [../plan.md](../plan.md), [design.md](design.md) (§3.1, §3.3, §4, §6 entries 15 and 17), [c1_coverage.md](c1_coverage.md) (§3.2, §3.3, §4.2), [codex_assignment_B13_v4_operator_producer.md](codex_assignment_B13_v4_operator_producer.md) and its report, and [codex_assignment_B11_g1h_attention_windows.md](codex_assignment_B11_g1h_attention_windows.md) for the G1h case list.
 - **Writable paths:**
   - `frontier/profiling/attention/` (the graph-replay runner, the rows builder and the engine builder, for the step scopes and the 43-layer override);
