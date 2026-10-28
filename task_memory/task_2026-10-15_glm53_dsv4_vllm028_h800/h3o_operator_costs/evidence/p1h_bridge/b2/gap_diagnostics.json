@@ -1,0 +1,507 @@
+{
+  "identity": {
+    "device_name": "NVIDIA H200",
+    "driver_version": "not recorded in the bridge run",
+    "target_tensor_parallel_size": 8,
+    "torch": "2.13.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "values_us": {
+    "cuda_graph": 0.4029155405916909,
+    "cuda_graph_piecewise": 0.9618163320170886,
+    "eager": 1.934530550687183
+  },
+  "reasons": [
+    "eager_preparation: no host-ahead sample"
+  ],
+  "classes": {
+    "cuda_graph": {
+      "sample_count": 6216,
+      "host_ahead_count": 6192,
+      "host_bound_excluded_count": 24,
+      "exclusion_counts": {
+        "host_bound": 24
+      },
+      "mean": 0.4029155405916909,
+      "median": 0.44775390625,
+      "p10": 0.0322265625,
+      "p90": 0.927734375,
+      "min": -4.1279296875,
+      "max": 4.73583984375,
+      "negative_count": 507,
+      "roots": {
+        "sample_count": 24,
+        "host_ahead_count": 0,
+        "host_bound_excluded_count": 24,
+        "exclusion_counts": {
+          "host_bound": 24
+        },
+        "mean": null,
+        "median": null,
+        "p10": null,
+        "p90": null,
+        "min": null,
+        "max": null,
+        "negative_count": 0
+      },
+      "attention_owned": {
+        "sample_count": 2928,
+        "host_ahead_count": 2928,
+        "host_bound_excluded_count": 0,
+        "exclusion_counts": {},
+        "mean": 0.39343044927211407,
+        "median": 0.44775390625,
+        "p10": 0.06318359374999999,
+        "p90": 1.183740234375,
+        "min": -4.1279296875,
+        "max": 4.73583984375,
+        "negative_count": 286
+      }
+    },
+    "cuda_graph_piecewise": {
+      "sample_count": 17304,
+      "host_ahead_count": 17102,
+      "host_bound_excluded_count": 202,
+      "exclusion_counts": {
+        "host_bound": 202
+      },
+      "mean": 0.9618163320170886,
+      "median": 0.416015625,
+      "p10": 0.0,
+      "p90": 1.15185546875,
+      "min": -1.72802734375,
+      "max": 24.44921875,
+      "negative_count": 1692,
+      "roots": {
+        "sample_count": 504,
+        "host_ahead_count": 303,
+        "host_bound_excluded_count": 201,
+        "exclusion_counts": {
+          "host_bound": 201
+        },
+        "mean": 1.8209522612417492,
+        "median": 1.82373046875,
+        "p10": 1.60009765625,
+        "p90": 2.01611328125,
+        "min": 1.43994140625,
+        "max": 2.78271484375,
+        "negative_count": 0
+      },
+      "attention_owned": {
+        "sample_count": 6624,
+        "host_ahead_count": 6495,
+        "host_bound_excluded_count": 129,
+        "exclusion_counts": {
+          "host_bound": 129
+        },
+        "mean": 1.9738837567359506,
+        "median": 0.416015625,
+        "p10": 0.0,
+        "p90": 5.53564453125,
+        "min": -1.3759765625,
+        "max": 24.44921875,
+        "negative_count": 621
+      }
+    },
+    "eager": {
+      "sample_count": 7996,
+      "host_ahead_count": 3156,
+      "host_bound_excluded_count": 4840,
+      "exclusion_counts": {
+        "host_bound": 4840
+      },
+      "mean": 1.934530550687183,
+      "median": 1.21484375,
+      "p10": -0.6083984375,
+      "p90": 4.83203125,
+      "min": -4.22412109375,
+      "max": 32.416015625,
+      "negative_count": 483,
+      "roots": {
+        "sample_count": 0,
+        "host_ahead_count": 0,
+        "host_bound_excluded_count": 0,
+        "exclusion_counts": {},
+        "mean": null,
+        "median": null,
+        "p10": null,
+        "p90": null,
+        "min": null,
+        "max": null,
+        "negative_count": 0
+      },
+      "attention_owned": {
+        "sample_count": 7996,
+        "host_ahead_count": 3156,
+        "host_bound_excluded_count": 4840,
+        "exclusion_counts": {
+          "host_bound": 4840
+        },
+        "mean": 1.934530550687183,
+        "median": 1.21484375,
+        "p10": -0.6083984375,
+        "p90": 4.83203125,
+        "min": -4.22412109375,
+        "max": 32.416015625,
+        "negative_count": 483
+      }
+    },
+    "eager_preparation": {
+      "sample_count": 8698,
+      "host_ahead_count": 0,
+      "host_bound_excluded_count": 8602,
+      "exclusion_counts": {
+        "host_bound": 8602,
+        "no_dependency_end": 96
+      },
+      "mean": null,
+      "median": null,
+      "p10": null,
+      "p90": null,
+      "min": null,
+      "max": null,
+      "negative_count": 0,
+      "roots": {
+        "sample_count": 0,
+        "host_ahead_count": 0,
+        "host_bound_excluded_count": 0,
+        "exclusion_counts": {},
+        "mean": null,
+        "median": null,
+        "p10": null,
+        "p90": null,
+        "min": null,
+        "max": null,
+        "negative_count": 0
+      },
+      "attention_owned": {
+        "sample_count": 0,
+        "host_ahead_count": 0,
+        "host_bound_excluded_count": 0,
+        "exclusion_counts": {},
+        "mean": null,
+        "median": null,
+        "p10": null,
+        "p90": null,
+        "min": null,
+        "max": null,
+        "negative_count": 0
+      }
+    }
+  },
+  "classes_by_step_mode": {
+    "cuda_graph": {
+      "FULL": {
+        "sample_count": 6216,
+        "host_ahead_count": 6192,
+        "host_bound_excluded_count": 24,
+        "exclusion_counts": {
+          "host_bound": 24
+        },
+        "mean": 0.4029155405916909,
+        "median": 0.44775390625,
+        "p10": 0.0322265625,
+        "p90": 0.927734375,
+        "min": -4.1279296875,
+        "max": 4.73583984375,
+        "negative_count": 507,
+        "roots": {
+          "sample_count": 24,
+          "host_ahead_count": 0,
+          "host_bound_excluded_count": 24,
+          "exclusion_counts": {
+            "host_bound": 24
+          },
+          "mean": null,
+          "median": null,
+          "p10": null,
+          "p90": null,
+          "min": null,
+          "max": null,
+          "negative_count": 0
+        },
+        "attention_owned": {
+          "sample_count": 2928,
+          "host_ahead_count": 2928,
+          "host_bound_excluded_count": 0,
+          "exclusion_counts": {},
+          "mean": 0.39343044927211407,
+          "median": 0.44775390625,
+          "p10": 0.06318359374999999,
+          "p90": 1.183740234375,
+          "min": -4.1279296875,
+          "max": 4.73583984375,
+          "negative_count": 286
+        }
+      }
+    },
+    "cuda_graph_piecewise": {
+      "PIECEWISE": {
+        "sample_count": 17304,
+        "host_ahead_count": 17102,
+        "host_bound_excluded_count": 202,
+        "exclusion_counts": {
+          "host_bound": 202
+        },
+        "mean": 0.9618163320170886,
+        "median": 0.416015625,
+        "p10": 0.0,
+        "p90": 1.15185546875,
+        "min": -1.72802734375,
+        "max": 24.44921875,
+        "negative_count": 1692,
+        "roots": {
+          "sample_count": 504,
+          "host_ahead_count": 303,
+          "host_bound_excluded_count": 201,
+          "exclusion_counts": {
+            "host_bound": 201
+          },
+          "mean": 1.8209522612417492,
+          "median": 1.82373046875,
+          "p10": 1.60009765625,
+          "p90": 2.01611328125,
+          "min": 1.43994140625,
+          "max": 2.78271484375,
+          "negative_count": 0
+        },
+        "attention_owned": {
+          "sample_count": 6624,
+          "host_ahead_count": 6495,
+          "host_bound_excluded_count": 129,
+          "exclusion_counts": {
+            "host_bound": 129
+          },
+          "mean": 1.9738837567359506,
+          "median": 0.416015625,
+          "p10": 0.0,
+          "p90": 5.53564453125,
+          "min": -1.3759765625,
+          "max": 24.44921875,
+          "negative_count": 621
+        }
+      }
+    },
+    "eager": {
+      "PIECEWISE": {
+        "sample_count": 2256,
+        "host_ahead_count": 1966,
+        "host_bound_excluded_count": 290,
+        "exclusion_counts": {
+          "host_bound": 290
+        },
+        "mean": 1.1310004450661242,
+        "median": 1.21630859375,
+        "p10": 0.255126953125,
+        "p90": 2.52783203125,
+        "min": -4.22412109375,
+        "max": 4.99169921875,
+        "negative_count": 147,
+        "roots": {
+          "sample_count": 0,
+          "host_ahead_count": 0,
+          "host_bound_excluded_count": 0,
+          "exclusion_counts": {},
+          "mean": null,
+          "median": null,
+          "p10": null,
+          "p90": null,
+          "min": null,
+          "max": null,
+          "negative_count": 0
+        },
+        "attention_owned": {
+          "sample_count": 2256,
+          "host_ahead_count": 1966,
+          "host_bound_excluded_count": 290,
+          "exclusion_counts": {
+            "host_bound": 290
+          },
+          "mean": 1.1310004450661242,
+          "median": 1.21630859375,
+          "p10": 0.255126953125,
+          "p90": 2.52783203125,
+          "min": -4.22412109375,
+          "max": 4.99169921875,
+          "negative_count": 147
+        }
+      },
+      "NONE": {
+        "sample_count": 5740,
+        "host_ahead_count": 1190,
+        "host_bound_excluded_count": 4550,
+        "exclusion_counts": {
+          "host_bound": 4550
+        },
+        "mean": 3.2620433134191176,
+        "median": 0.48046875,
+        "p10": -3.2001953125,
+        "p90": 15.042333984375004,
+        "min": -4.09619140625,
+        "max": 32.416015625,
+        "negative_count": 336,
+        "roots": {
+          "sample_count": 0,
+          "host_ahead_count": 0,
+          "host_bound_excluded_count": 0,
+          "exclusion_counts": {},
+          "mean": null,
+          "median": null,
+          "p10": null,
+          "p90": null,
+          "min": null,
+          "max": null,
+          "negative_count": 0
+        },
+        "attention_owned": {
+          "sample_count": 5740,
+          "host_ahead_count": 1190,
+          "host_bound_excluded_count": 4550,
+          "exclusion_counts": {
+            "host_bound": 4550
+          },
+          "mean": 3.2620433134191176,
+          "median": 0.48046875,
+          "p10": -3.2001953125,
+          "p90": 15.042333984375004,
+          "min": -4.09619140625,
+          "max": 32.416015625,
+          "negative_count": 336
+        }
+      }
+    },
+    "eager_preparation": {
+      "FULL": {
+        "sample_count": 2120,
+        "host_ahead_count": 0,
+        "host_bound_excluded_count": 2096,
+        "exclusion_counts": {
+          "host_bound": 2096,
+          "no_dependency_end": 24
+        },
+        "mean": null,
+        "median": null,
+        "p10": null,
+        "p90": null,
+        "min": null,
+        "max": null,
+        "negative_count": 0,
+        "roots": {
+          "sample_count": 0,
+          "host_ahead_count": 0,
+          "host_bound_excluded_count": 0,
+          "exclusion_counts": {},
+          "mean": null,
+          "median": null,
+          "p10": null,
+          "p90": null,
+          "min": null,
+          "max": null,
+          "negative_count": 0
+        },
+        "attention_owned": {
+          "sample_count": 0,
+          "host_ahead_count": 0,
+          "host_bound_excluded_count": 0,
+          "exclusion_counts": {},
+          "mean": null,
+          "median": null,
+          "p10": null,
+          "p90": null,
+          "min": null,
+          "max": null,
+          "negative_count": 0
+        }
+      },
+      "PIECEWISE": {
+        "sample_count": 6578,
+        "host_ahead_count": 0,
+        "host_bound_excluded_count": 6506,
+        "exclusion_counts": {
+          "host_bound": 6506,
+          "no_dependency_end": 72
+        },
+        "mean": null,
+        "median": null,
+        "p10": null,
+        "p90": null,
+        "min": null,
+        "max": null,
+        "negative_count": 0,
+        "roots": {
+          "sample_count": 0,
+          "host_ahead_count": 0,
+          "host_bound_excluded_count": 0,
+          "exclusion_counts": {},
+          "mean": null,
+          "median": null,
+          "p10": null,
+          "p90": null,
+          "min": null,
+          "max": null,
+          "negative_count": 0
+        },
+        "attention_owned": {
+          "sample_count": 0,
+          "host_ahead_count": 0,
+          "host_bound_excluded_count": 0,
+          "exclusion_counts": {},
+          "mean": null,
+          "median": null,
+          "p10": null,
+          "p90": null,
+          "min": null,
+          "max": null,
+          "negative_count": 0
+        }
+      }
+    }
+  },
+  "none_unowned": {
+    "sample_count": 11366,
+    "host_ahead_count": 1395,
+    "host_bound_excluded_count": 9923,
+    "exclusion_counts": {
+      "host_bound": 9923,
+      "no_dependency_end": 48
+    },
+    "mean": 1.3308380236335124,
+    "median": 1.4404296875,
+    "p10": 0.15966796875,
+    "p90": 2.59208984375,
+    "min": -1.11962890625,
+    "max": 4.6708984375,
+    "negative_count": 99,
+    "roots": {
+      "sample_count": 0,
+      "host_ahead_count": 0,
+      "host_bound_excluded_count": 0,
+      "exclusion_counts": {},
+      "mean": null,
+      "median": null,
+      "p10": null,
+      "p90": null,
+      "min": null,
+      "max": null,
+      "negative_count": 0
+    },
+    "attention_owned": {
+      "sample_count": 0,
+      "host_ahead_count": 0,
+      "host_bound_excluded_count": 0,
+      "exclusion_counts": {},
+      "mean": null,
+      "median": null,
+      "p10": null,
+      "p90": null,
+      "min": null,
+      "max": null,
+      "negative_count": 0
+    }
+  },
+  "owned_non_kernel_time_us_by_engine_mode": {
+    "NONE": 0.0,
+    "PIECEWISE": 0.0,
+    "FULL_AND_PIECEWISE": 0.0
+  }
+}

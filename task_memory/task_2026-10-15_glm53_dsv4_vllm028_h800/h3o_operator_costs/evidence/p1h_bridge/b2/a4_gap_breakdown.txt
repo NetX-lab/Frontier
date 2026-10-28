@@ -1,0 +1,319 @@
+class means us {'cuda_graph': 0.4029155405916909, 'cuda_graph_piecewise': 0.9618163320170886, 'eager': 1.934530550687183}
+
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b1-p256', 'csa'): calls 16 target 104.7 us, kernels 30, kernel time 147.2 us
+   cuda_graph: n/call 30 actual mean 0.661 us vs class 0.403; excess per call -7.75 us
+      dsv4_compressor_fused_compress_store          n/call   1.0 mean   4.164 median   4.096 min   3.904
+      dsv4_compressor_projection                    n/call   2.0 mean   0.675 median   0.511 min   0.192
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   1.750 median   1.728 min   1.695
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.162 median   0.144 min   0.064
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.980 median   0.976 min   0.447
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.184 median   0.175 min   0.128
+      dsv4_grouped_output_projection                n/call   1.0 mean  -0.716 median  -0.672 min  -0.959
+      dsv4_index_compressor_fused_compress_store    n/call   1.0 mean   0.992 median   0.912 min   0.704
+      dsv4_index_compressor_projection              n/call   2.0 mean   1.190 median   1.327 min   0.640
+      dsv4_index_compressor_save_partial_states     n/call   1.0 mean   1.030 median   0.960 min   0.895
+      dsv4_index_fused_query_prepare                n/call   1.0 mean   0.570 median   0.560 min   0.416
+      dsv4_index_query_projection                   n/call   2.0 mean   0.703 median   0.752 min   0.415
+      dsv4_index_scores                             n/call   1.0 mean   0.242 median   0.240 min   0.192
+      dsv4_index_topk                               n/call   2.0 mean   0.491 median   0.479 min   0.415
+      dsv4_index_weights_projection                 n/call   2.0 mean   0.614 median   0.863 min   0.032
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   0.216 median   0.192 min   0.160
+      dsv4_output_projection                        n/call   2.0 mean   0.443 median   0.417 min   0.384
+      dsv4_q_projection                             n/call   2.0 mean   1.455 median   1.712 min   0.800
+      dsv4_sparse_attention                         n/call   4.0 mean  -0.464 median   0.416 min  -3.424
+
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b1-p256', 'hca'): calls 16 target 84.1 us, kernels 18, kernel time 96.3 us
+   cuda_graph: n/call 18 actual mean 0.172 us vs class 0.403; excess per call 4.15 us
+      dsv4_compressor_fused_compress_store          n/call   2.0 mean   0.498 median   0.448 min   0.415
+      dsv4_compressor_projection                    n/call   2.0 mean   0.354 median   0.416 min   0.032
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   0.956 median   0.928 min   0.864
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.306 median   0.288 min   0.224
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.543 median   0.480 min   0.415
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.262 median   0.223 min   0.160
+      dsv4_grouped_output_projection                n/call   1.0 mean  -0.708 median  -0.672 min  -0.960
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   0.174 median   0.160 min   0.128
+      dsv4_output_projection                        n/call   2.0 mean   0.473 median   0.448 min   0.416
+      dsv4_q_projection                             n/call   2.0 mean   0.470 median   0.448 min   0.384
+      dsv4_sparse_attention                         n/call   3.0 mean  -0.854 median   0.416 min  -3.457
+
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b1-p256', 'uncompressed'): calls 16 target 75.8 us, kernels 13, kernel time 75.1 us
+   cuda_graph: n/call 13 actual mean 0.053 us vs class 0.403; excess per call 4.55 us
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.402 median   0.368 min   0.127
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.439 median   0.417 min   0.384
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.422 median   0.480 min   0.128
+      dsv4_grouped_output_projection                n/call   1.0 mean  -0.500 median  -0.400 min  -0.800
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   0.214 median   0.192 min   0.160
+      dsv4_output_projection                        n/call   2.0 mean   0.414 median   0.416 min   0.383
+      dsv4_q_projection                             n/call   2.0 mean   0.470 median   0.448 min   0.384
+      dsv4_sparse_attention                         n/call   3.0 mean  -0.831 median   0.448 min  -3.520
+
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b4-p2048', 'csa'): calls 16 target 117.2 us, kernels 30, kernel time 166.3 us
+   cuda_graph: n/call 30 actual mean 0.660 us vs class 0.403; excess per call -7.71 us
+      dsv4_compressor_fused_compress_store          n/call   1.0 mean   4.164 median   4.225 min   3.360
+      dsv4_compressor_projection                    n/call   2.0 mean   0.512 median   0.512 min   0.192
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   1.756 median   1.728 min   1.695
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.164 median   0.145 min   0.127
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   1.060 median   1.104 min   0.417
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.202 median   0.160 min   0.128
+      dsv4_grouped_output_projection                n/call   1.0 mean  -0.650 median  -0.672 min  -0.768
+      dsv4_index_compressor_fused_compress_store    n/call   1.0 mean   1.110 median   0.960 min   0.800
+      dsv4_index_compressor_projection              n/call   2.0 mean   1.365 median   1.408 min   0.704
+      dsv4_index_compressor_save_partial_states     n/call   1.0 mean   1.010 median   0.928 min   0.927
+      dsv4_index_fused_query_prepare                n/call   1.0 mean   0.488 median   0.464 min   0.416
+      dsv4_index_query_projection                   n/call   2.0 mean   0.753 median   0.816 min   0.416
+      dsv4_index_scores                             n/call   1.0 mean   0.200 median   0.160 min   0.128
+      dsv4_index_topk                               n/call   2.0 mean   0.463 median   0.480 min   0.383
+      dsv4_index_weights_projection                 n/call   2.0 mean   0.692 median   0.896 min   0.096
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   0.240 median   0.224 min   0.160
+      dsv4_output_projection                        n/call   2.0 mean   0.471 median   0.448 min   0.383
+      dsv4_q_projection                             n/call   2.0 mean   1.415 median   1.504 min   0.735
+      dsv4_sparse_attention                         n/call   4.0 mean  -0.587 median   0.417 min  -4.128
+
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b4-p2048', 'hca'): calls 16 target 84.4 us, kernels 18, kernel time 96.4 us
+   cuda_graph: n/call 18 actual mean 0.179 us vs class 0.403; excess per call 4.04 us
+      dsv4_compressor_fused_compress_store          n/call   2.0 mean   0.507 median   0.465 min   0.384
+      dsv4_compressor_projection                    n/call   2.0 mean   0.319 median   0.352 min   0.032
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   0.904 median   0.880 min   0.832
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.232 median   0.192 min   0.128
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.525 median   0.480 min   0.415
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.218 median   0.160 min   0.128
+      dsv4_grouped_output_projection                n/call   1.0 mean  -0.544 median  -0.576 min  -0.640
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   0.184 median   0.160 min   0.160
+      dsv4_output_projection                        n/call   2.0 mean   0.462 median   0.448 min   0.416
+      dsv4_q_projection                             n/call   2.0 mean   0.446 median   0.416 min   0.384
+      dsv4_sparse_attention                         n/call   3.0 mean  -0.767 median   0.416 min  -3.392
+
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b4-p2048', 'uncompressed'): calls 16 target 77.4 us, kernels 13, kernel time 75.8 us
+   cuda_graph: n/call 13 actual mean 0.095 us vs class 0.403; excess per call 4.00 us
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.454 median   0.560 min   0.160
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.449 median   0.448 min   0.383
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.442 median   0.528 min   0.160
+      dsv4_grouped_output_projection                n/call   1.0 mean  -0.408 median  -0.432 min  -0.672
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   0.178 median   0.160 min   0.128
+      dsv4_output_projection                        n/call   2.0 mean   0.450 median   0.417 min   0.384
+      dsv4_q_projection                             n/call   2.0 mean   0.463 median   0.464 min   0.384
+      dsv4_sparse_attention                         n/call   3.0 mean  -0.717 median   0.416 min  -3.328
+
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b8-p2052', 'csa'): calls 16 target 113.1 us, kernels 30, kernel time 156.9 us
+   cuda_graph: n/call 30 actual mean 0.648 us vs class 0.403; excess per call -7.34 us
+      dsv4_compressor_fused_compress_store          n/call   1.0 mean   4.178 median   4.272 min   3.328
+      dsv4_compressor_projection                    n/call   2.0 mean   0.397 median   0.416 min   0.064
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   1.782 median   1.744 min   1.696
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.204 median   0.160 min   0.127
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   1.020 median   1.040 min   0.448
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.250 median   0.208 min   0.160
+      dsv4_grouped_output_projection                n/call   1.0 mean  -0.690 median  -0.704 min  -0.768
+      dsv4_index_compressor_fused_compress_store    n/call   1.0 mean   1.242 median   0.945 min   0.769
+      dsv4_index_compressor_projection              n/call   2.0 mean   1.290 median   1.344 min   0.255
+      dsv4_index_compressor_save_partial_states     n/call   1.0 mean   1.104 median   0.991 min   0.896
+      dsv4_index_fused_query_prepare                n/call   1.0 mean   0.498 median   0.480 min   0.447
+      dsv4_index_query_projection                   n/call   2.0 mean   0.752 median   0.768 min   0.416
+      dsv4_index_scores                             n/call   1.0 mean   0.214 median   0.192 min   0.160
+      dsv4_index_topk                               n/call   2.0 mean   0.466 median   0.480 min   0.384
+      dsv4_index_weights_projection                 n/call   2.0 mean   0.583 median   0.671 min   0.031
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   0.204 median   0.192 min   0.160
+      dsv4_output_projection                        n/call   2.0 mean   0.458 median   0.448 min   0.415
+      dsv4_q_projection                             n/call   2.0 mean   1.454 median   1.472 min   0.800
+      dsv4_sparse_attention                         n/call   4.0 mean  -0.599 median   0.417 min  -4.064
+
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b8-p2052', 'hca'): calls 16 target 85.6 us, kernels 18, kernel time 97.8 us
+   cuda_graph: n/call 18 actual mean 0.185 us vs class 0.403; excess per call 3.92 us
+      dsv4_compressor_fused_compress_store          n/call   2.0 mean   0.500 median   0.496 min   0.384
+      dsv4_compressor_projection                    n/call   2.0 mean   0.379 median   0.400 min   0.128
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   0.944 median   0.897 min   0.832
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.258 median   0.224 min   0.192
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.552 median   0.496 min   0.415
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.168 median   0.160 min   0.128
+      dsv4_grouped_output_projection                n/call   1.0 mean  -0.602 median  -0.624 min  -0.705
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   0.196 median   0.192 min   0.160
+      dsv4_output_projection                        n/call   2.0 mean   0.472 median   0.448 min   0.415
+      dsv4_q_projection                             n/call   2.0 mean   0.453 median   0.448 min   0.384
+      dsv4_sparse_attention                         n/call   3.0 mean  -0.780 median   0.416 min  -3.648
+
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b8-p2052', 'uncompressed'): calls 16 target 77.9 us, kernels 13, kernel time 76.5 us
+   cuda_graph: n/call 13 actual mean 0.104 us vs class 0.403; excess per call 3.89 us
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.466 median   0.416 min   0.160
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.465 median   0.448 min   0.383
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.468 median   0.529 min   0.160
+      dsv4_grouped_output_projection                n/call   1.0 mean  -0.360 median  -0.352 min  -0.704
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   0.242 median   0.224 min   0.192
+      dsv4_output_projection                        n/call   2.0 mean   0.473 median   0.448 min   0.352
+      dsv4_q_projection                             n/call   2.0 mean   0.482 median   0.447 min   0.383
+      dsv4_sparse_attention                         n/call   3.0 mean  -0.769 median   0.416 min  -3.392
+
+('FULL_AND_PIECEWISE', 'PIECEWISE', 'e0-prefill-p4095', 'csa'): calls 48 target 281.0 us, kernels 30, kernel time 345.8 us
+   cuda_graph_piecewise: n/call 21 actual mean 4.978 us vs class 0.962; excess per call -84.34 us
+   eager: n/call 9 actual mean 1.383 us vs class 1.935; excess per call 4.97 us
+      dsv4_compressor_fused_compress_store          n/call   1.0 mean   5.546 median   5.568 min   4.192
+      dsv4_compressor_projection                    n/call   1.0 mean   5.088 median   5.055 min   4.736
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   1.118 median   1.072 min   0.992
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   7.111 median   7.104 min   6.401
+      dsv4_fused_qkv_projection                     n/call   2.0 mean  10.463 median   9.857 min  -1.022
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.291 median   0.288 min   0.000
+      dsv4_grouped_output_projection                n/call   1.0 mean   0.017 median   0.032 min  -0.032
+      dsv4_index_compressor_fused_compress_store    n/call   1.0 mean   0.443 median   0.416 min   0.383
+      dsv4_index_compressor_projection              n/call   1.0 mean  21.349 median  21.120 min  20.320
+      dsv4_index_compressor_save_partial_states     n/call   1.0 mean   0.325 median   0.288 min   0.223
+      dsv4_index_fused_query_prepare                n/call   1.0 mean   7.679 median   7.616 min   6.752
+      dsv4_index_query_projection                   n/call   2.0 mean   0.622 median   0.800 min  -0.160
+      dsv4_index_scores                             n/call   2.0 mean   0.868 median   0.656 min   0.064
+      dsv4_index_topk                               n/call   2.0 mean   2.178 median   1.616 min   1.024
+      dsv4_index_weights_projection                 n/call   2.0 mean  15.456 median  15.600 min   7.968
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.889 median   1.857 min   1.728
+      dsv4_output_projection                        n/call   2.0 mean   0.129 median   0.128 min  -0.032
+      dsv4_q_projection                             n/call   2.0 mean   0.172 median  -0.016 min  -0.544
+      dsv4_sparse_attention                         n/call   5.0 mean   1.270 median   1.152 min   0.992
+
+('FULL_AND_PIECEWISE', 'PIECEWISE', 'e0-prefill-p4095', 'hca'): calls 48 target 164.0 us, kernels 19, kernel time 168.1 us
+   cuda_graph_piecewise: n/call 14 actual mean 0.633 us vs class 0.962; excess per call 4.61 us
+   eager: n/call 5 actual mean 1.513 us vs class 1.935; excess per call 2.11 us
+      dsv4_compressor_fused_compress_store          n/call   2.0 mean   0.433 median   0.416 min   0.383
+      dsv4_compressor_projection                    n/call   1.0 mean   5.120 median   5.104 min   4.704
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   0.402 median   0.416 min   0.255
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.619 median   0.608 min   0.352
+      dsv4_fused_qkv_projection                     n/call   2.0 mean  -0.147 median   0.064 min  -1.249
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.157 median   0.160 min  -0.192
+      dsv4_grouped_output_projection                n/call   1.0 mean   0.032 median   0.032 min   0.000
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.789 median   1.792 min   1.536
+      dsv4_output_projection                        n/call   2.0 mean   0.131 median   0.128 min  -0.128
+      dsv4_q_projection                             n/call   2.0 mean  -0.046 median  -0.065 min  -0.385
+      dsv4_sparse_attention                         n/call   5.0 mean   1.513 median   1.152 min   0.992
+
+('FULL_AND_PIECEWISE', 'PIECEWISE', 'e0-prefill-p4095', 'uncompressed'): calls 24 target 112.0 us, kernels 13, kernel time 106.3 us
+   cuda_graph_piecewise: n/call 10 actual mean 0.142 us vs class 0.962; excess per call 8.19 us
+   eager: n/call 3 actual mean 1.386 us vs class 1.935; excess per call 1.65 us
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.068 median   0.064 min  -0.000
+      dsv4_fused_qkv_projection                     n/call   2.0 mean  -0.373 median  -0.240 min  -1.088
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.155 median   0.128 min   0.000
+      dsv4_grouped_output_projection                n/call   1.0 mean   0.032 median   0.032 min   0.000
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.707 median   1.664 min   1.536
+      dsv4_output_projection                        n/call   2.0 mean   0.136 median   0.128 min  -0.032
+      dsv4_q_projection                             n/call   2.0 mean  -0.031 median  -0.064 min  -0.224
+      dsv4_sparse_attention                         n/call   3.0 mean   1.386 median   1.233 min   0.992
+
+('PIECEWISE', 'PIECEWISE', 'e0-decode-b4-p2048', 'hca'): calls 16 target 97.3 us, kernels 18, kernel time 94.8 us
+   cuda_graph_piecewise: n/call 15 actual mean 0.713 us vs class 0.962; excess per call 3.73 us
+   eager: n/call 3 actual mean -0.015 us vs class 1.935; excess per call 5.85 us
+      dsv4_compressor_fused_compress_store          n/call   2.0 mean   0.436 median   0.416 min   0.384
+      dsv4_compressor_projection                    n/call   2.0 mean   0.317 median   0.400 min   0.064
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   0.408 median   0.416 min   0.384
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.654 median   0.640 min   0.576
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.549 median   0.480 min   0.415
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.740 median   0.703 min   0.640
+      dsv4_grouped_output_projection                n/call   1.0 mean   2.878 median   2.896 min   2.656
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.610 median   1.616 min   1.472
+      dsv4_output_projection                        n/call   2.0 mean   0.464 median   0.448 min   0.383
+      dsv4_q_projection                             n/call   2.0 mean   0.437 median   0.416 min   0.383
+      dsv4_sparse_attention                         n/call   3.0 mean  -0.015 median   1.216 min  -3.200
+
+('PIECEWISE', 'PIECEWISE', 'e0-decode-b4-p2048', 'uncompressed'): calls 8 target 84.2 us, kernels 13, kernel time 76.3 us
+   cuda_graph_piecewise: n/call 10 actual mean 0.831 us vs class 0.962; excess per call 1.31 us
+   eager: n/call 3 actual mean -0.076 us vs class 1.935; excess per call 6.03 us
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.176 median   0.160 min   0.127
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.472 median   0.448 min   0.384
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.604 median   0.608 min   0.576
+      dsv4_grouped_output_projection                n/call   1.0 mean   3.060 median   3.120 min   2.848
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.684 median   1.632 min   1.568
+      dsv4_output_projection                        n/call   2.0 mean   0.436 median   0.432 min   0.383
+      dsv4_q_projection                             n/call   2.0 mean   0.486 median   0.448 min   0.384
+      dsv4_sparse_attention                         n/call   3.0 mean  -0.076 median   1.216 min  -3.424
+
+('PIECEWISE', 'PIECEWISE', 'e0-decode-b8-p2052', 'csa'): calls 15 target 122.8 us, kernels 30, kernel time 153.4 us
+   cuda_graph_piecewise: n/call 23 actual mean 0.980 us vs class 0.962; excess per call -0.41 us
+   eager: n/call 7 actual mean 0.656 us vs class 1.935; excess per call 8.95 us
+      dsv4_compressor_fused_compress_store          n/call   1.0 mean   3.392 median   3.360 min   2.880
+      dsv4_compressor_projection                    n/call   2.0 mean   0.412 median   0.480 min   0.064
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   0.951 median   0.928 min   0.895
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.192 median   0.192 min   0.064
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   1.003 median   1.104 min   0.448
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.188 median   0.160 min   0.160
+      dsv4_grouped_output_projection                n/call   1.0 mean   3.234 median   3.200 min   2.881
+      dsv4_index_compressor_fused_compress_store    n/call   1.0 mean   0.465 median   0.417 min   0.416
+      dsv4_index_compressor_projection              n/call   2.0 mean   1.420 median   1.440 min   1.088
+      dsv4_index_compressor_save_partial_states     n/call   1.0 mean   0.457 median   0.416 min   0.383
+      dsv4_index_fused_query_prepare                n/call   1.0 mean   0.510 median   0.416 min   0.415
+      dsv4_index_query_projection                   n/call   2.0 mean   0.592 median   0.560 min   0.415
+      dsv4_index_scores                             n/call   1.0 mean   0.254 median   0.160 min  -0.128
+      dsv4_index_topk                               n/call   2.0 mean   2.023 median   1.952 min   1.184
+      dsv4_index_weights_projection                 n/call   2.0 mean   0.763 median   0.896 min   0.064
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.675 median   1.728 min   1.440
+      dsv4_output_projection                        n/call   2.0 mean   0.436 median   0.448 min   0.353
+      dsv4_q_projection                             n/call   2.0 mean   1.108 median   1.168 min   0.608
+      dsv4_sparse_attention                         n/call   4.0 mean   0.073 median   1.216 min  -3.712
+
+('PIECEWISE', 'PIECEWISE', 'e0-decode-b8-p2052', 'hca'): calls 16 target 98.5 us, kernels 18, kernel time 96.1 us
+   cuda_graph_piecewise: n/call 15 actual mean 0.712 us vs class 0.962; excess per call 3.75 us
+   eager: n/call 3 actual mean 0.030 us vs class 1.935; excess per call 5.71 us
+      dsv4_compressor_fused_compress_store          n/call   2.0 mean   0.477 median   0.417 min   0.384
+      dsv4_compressor_projection                    n/call   2.0 mean   0.322 median   0.384 min   0.063
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   0.418 median   0.416 min   0.384
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.684 median   0.640 min   0.607
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.488 median   0.448 min   0.416
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.628 median   0.608 min   0.576
+      dsv4_grouped_output_projection                n/call   1.0 mean   2.946 median   2.928 min   2.688
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.676 median   1.648 min   1.504
+      dsv4_output_projection                        n/call   2.0 mean   0.438 median   0.447 min   0.384
+      dsv4_q_projection                             n/call   2.0 mean   0.437 median   0.448 min   0.383
+      dsv4_sparse_attention                         n/call   3.0 mean   0.030 median   1.233 min  -3.168
+
+('PIECEWISE', 'PIECEWISE', 'e0-decode-b8-p2052', 'uncompressed'): calls 8 target 84.9 us, kernels 13, kernel time 77.0 us
+   cuda_graph_piecewise: n/call 10 actual mean 0.834 us vs class 0.962; excess per call 1.27 us
+   eager: n/call 3 actual mean -0.127 us vs class 1.935; excess per call 6.18 us
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.176 median   0.160 min   0.160
+      dsv4_fused_qkv_projection                     n/call   2.0 mean   0.450 median   0.448 min   0.416
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.648 median   0.608 min   0.576
+      dsv4_grouped_output_projection                n/call   1.0 mean   3.252 median   3.232 min   3.008
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.620 median   1.600 min   1.472
+      dsv4_output_projection                        n/call   2.0 mean   0.444 median   0.416 min   0.384
+      dsv4_q_projection                             n/call   2.0 mean   0.430 median   0.416 min   0.384
+      dsv4_sparse_attention                         n/call   3.0 mean  -0.127 median   1.264 min  -3.424
+
+('PIECEWISE', 'PIECEWISE', 'e0-prefill-p4095', 'csa'): calls 48 target 284.2 us, kernels 30, kernel time 350.2 us
+   cuda_graph_piecewise: n/call 21 actual mean 5.022 us vs class 0.962; excess per call -85.26 us
+   eager: n/call 9 actual mean 1.541 us vs class 1.935; excess per call 3.54 us
+      dsv4_compressor_fused_compress_store          n/call   1.0 mean   5.549 median   5.552 min   4.608
+      dsv4_compressor_projection                    n/call   1.0 mean   5.071 median   4.944 min   4.640
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   1.075 median   1.024 min   0.991
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   7.129 median   7.088 min   6.528
+      dsv4_fused_qkv_projection                     n/call   2.0 mean  10.776 median  10.144 min  -1.184
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.311 median   0.288 min   0.064
+      dsv4_grouped_output_projection                n/call   1.0 mean   0.019 median   0.032 min  -0.032
+      dsv4_index_compressor_fused_compress_store    n/call   1.0 mean   0.450 median   0.416 min   0.384
+      dsv4_index_compressor_projection              n/call   1.0 mean  21.477 median  21.072 min  20.096
+      dsv4_index_compressor_save_partial_states     n/call   1.0 mean   0.299 median   0.256 min   0.191
+      dsv4_index_fused_query_prepare                n/call   1.0 mean   7.806 median   7.808 min   7.072
+      dsv4_index_query_projection                   n/call   2.0 mean   0.611 median   0.800 min  -0.129
+      dsv4_index_scores                             n/call   2.0 mean   0.740 median   0.704 min   0.160
+      dsv4_index_topk                               n/call   2.0 mean   2.567 median   2.097 min   1.056
+      dsv4_index_weights_projection                 n/call   2.0 mean  15.472 median  15.712 min   7.968
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.993 median   1.952 min   1.792
+      dsv4_output_projection                        n/call   2.0 mean   0.151 median   0.128 min   0.000
+      dsv4_q_projection                             n/call   2.0 mean   0.127 median  -0.096 min  -0.320
+      dsv4_sparse_attention                         n/call   5.0 mean   1.451 median   1.249 min   1.056
+
+('PIECEWISE', 'PIECEWISE', 'e0-prefill-p4095', 'hca'): calls 48 target 164.5 us, kernels 19, kernel time 167.3 us
+   cuda_graph_piecewise: n/call 14 actual mean 0.626 us vs class 0.962; excess per call 4.71 us
+   eager: n/call 5 actual mean 1.624 us vs class 1.935; excess per call 1.55 us
+      dsv4_compressor_fused_compress_store          n/call   2.0 mean   0.418 median   0.416 min   0.383
+      dsv4_compressor_projection                    n/call   1.0 mean   5.076 median   5.040 min   4.672
+      dsv4_compressor_save_partial_states           n/call   1.0 mean   0.382 median   0.415 min   0.032
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.613 median   0.609 min   0.320
+      dsv4_fused_qkv_projection                     n/call   2.0 mean  -0.163 median   0.032 min  -1.280
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.139 median   0.128 min  -0.256
+      dsv4_grouped_output_projection                n/call   1.0 mean   0.029 median   0.032 min   0.000
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.834 median   1.824 min   1.632
+      dsv4_output_projection                        n/call   2.0 mean   0.143 median   0.128 min  -0.032
+      dsv4_q_projection                             n/call   2.0 mean  -0.054 median   0.000 min  -0.384
+      dsv4_sparse_attention                         n/call   5.0 mean   1.624 median   1.280 min   1.087
+
+('PIECEWISE', 'PIECEWISE', 'e0-prefill-p4095', 'uncompressed'): calls 24 target 113.0 us, kernels 13, kernel time 107.2 us
+   cuda_graph_piecewise: n/call 10 actual mean 0.158 us vs class 0.962; excess per call 8.03 us
+   eager: n/call 3 actual mean 1.450 us vs class 1.935; excess per call 1.45 us
+      dsv4_fused_q_kv_prepare                       n/call   1.0 mean   0.061 median   0.048 min  -0.032
+      dsv4_fused_qkv_projection                     n/call   2.0 mean  -0.326 median  -0.225 min  -1.153
+      dsv4_fused_qkv_rmsnorm                        n/call   1.0 mean   0.155 median   0.129 min   0.096
+      dsv4_grouped_output_projection                n/call   1.0 mean   0.028 median   0.032 min  -0.000
+      dsv4_output_inv_rope_quant                    n/call   1.0 mean   1.935 median   1.920 min   1.792
+      dsv4_output_projection                        n/call   2.0 mean   0.082 median   0.128 min  -0.160
+      dsv4_q_projection                             n/call   2.0 mean  -0.053 median  -0.064 min  -0.288
+      dsv4_sparse_attention                         n/call   3.0 mean   1.450 median   1.344 min   1.152

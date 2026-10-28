@@ -1,0 +1,51 @@
+PIECEWISE PIECEWISE e0-prefill-p4095 layer 2 rows 512 target 202.6 us composed 202.6 us
+scope                                        streams      start     end composed  weight   gaps  predecessors
+dsv4_fused_qkv_projection                    7             -1.1    44.7      0.0    44.7   20.3  []
+      void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::F s7    -1.1-    5.8 gap  -1.09 kind graph
+      void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0 s7    27.1-   44.7 gap  21.38 kind graph
+dsv4_compressor_projection                   368            4.6    22.7      0.0    22.7    4.6  []
+      nvjet_sm90_tss_128x64_64x8_1x2_h_bz_TNT                      s368     4.6-   22.7 gap   4.64 kind graph
+dsv4_index_compressor_projection             370           20.3    35.9      0.0    35.9   20.3  []
+      nvjet_sm90_tss_64x32_64x16_1x2_h_bz_TNT                      s370    20.3-   35.9 gap  20.32 kind graph
+dsv4_index_weights_projection                369           20.5    40.9      0.0    40.9   29.1  []
+      nvjet_sm90_tst_32x64_64x16_2x4_h_bz_splitK_TNN               s369    20.5-   27.6 gap  20.54 kind graph
+      void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_ s369    36.1-   40.9 gap   8.58 kind graph
+dsv4_fused_qkv_rmsnorm                       368           45.0    47.2     44.7     2.4    0.3  ['dsv4_compressor_projection', 'dsv4_fused_qkv_projection', 'dsv4_index_compressor_projection', 'dsv4_index_weights_projection']
+      _fused_q_kv_rmsnorm_kernel                                   s368    45.0-   47.2 gap   0.29 kind graph
+dsv4_q_projection                            368           47.0    58.2     47.2    11.0    0.1  ['dsv4_fused_qkv_rmsnorm']
+      void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::F s368    47.0-   50.9 gap  -0.19 kind graph
+      void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0 s368    51.2-   58.2 gap   0.26 kind graph
+dsv4_index_query_projection                  371           48.0    69.1     47.2    21.9    1.2  ['dsv4_compressor_projection', 'dsv4_fused_qkv_rmsnorm']
+      void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::F s371    48.0-   52.1 gap   0.83 kind graph
+      void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0 s371    52.5-   69.1 gap   0.38 kind graph
+dsv4_compressor_save_partial_states          369           48.2    53.1     47.2     5.9    1.0  ['dsv4_fused_qkv_rmsnorm', 'dsv4_index_weights_projection']
+      _save_partial_states_kernel                                  s369    48.2-   53.1 gap   0.99 kind graph
+dsv4_compressor_fused_compress_store         369           58.3    90.5     53.1    37.5    5.3  ['dsv4_compressor_save_partial_states']
+      kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_a s369    58.3-   90.5 gap   5.28 kind graph
+dsv4_fused_q_kv_prepare                      368           65.8    83.9     58.2    25.7    7.6  ['dsv4_q_projection']
+      void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKV s368    65.8-   83.9 gap   7.62 kind graph
+dsv4_index_fused_query_prepare               371           77.0    85.7     69.1    16.6    8.0  ['dsv4_index_query_projection']
+      kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsfused_in s371    77.0-   85.7 gap   7.97 kind graph
+dsv4_index_compressor_save_partial_states    371           86.0    89.2     85.7     3.6    0.3  ['dsv4_index_fused_query_prepare']
+      _save_partial_states_kernel                                  s371    86.0-   89.2 gap   0.29 kind graph
+dsv4_index_compressor_fused_compress_store   371           89.7    96.2     89.2     7.0    0.5  ['dsv4_index_compressor_save_partial_states']
+      _fused_kv_compress_norm_rope_insert_indexer_attn             s371    89.7-   96.2 gap   0.48 kind graph
+dsv4_index_topk                              7            100.0   114.6    106.3     8.3    5.0  ['dsv4_index_scores']
+      void at::native::vectorized_elementwise_kernel<4, at::native s7   100.0-  101.1 gap   3.74 kind eager
+      void vllm::topKPerRowPrefill<512, false>(float const*, int c s7   112.4-  114.6 gap   1.25 kind eager
+dsv4_index_scores                            7            102.4   111.2     96.2    10.1    1.5  ['dsv4_compressor_fused_compress_store', 'dsv4_fused_q_kv_prepare', 'dsv4_index_compressor_fused_compress_store']
+      void vllm::cp_gather_indexer_k_quant_cache_kernel<8>(char co s7   102.4-  105.2 gap   1.28 kind eager
+      void deep_gemm::sm90_fp8_mqa_logits<64u, 128u, false, 2u, 25 s7   105.4-  111.2 gap   0.19 kind eager
+dsv4_sparse_attention                        7            115.8   176.4    114.6    61.8    7.4  ['dsv4_index_topk']
+      void at::native::vectorized_elementwise_kernel<4, at::native s7   115.8-  117.1 gap   1.22 kind eager
+      kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_ s7   119.3-  121.3 gap   2.24 kind eager
+      kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_ s7   122.6-  125.0 gap   1.31 kind eager
+      Kernel                                                       s7   126.5-  128.6 gap   1.47 kind eager
+      void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemp s7   129.7-  176.4 gap   1.15 kind eager
+dsv4_output_inv_rope_quant                   7            178.4   183.8    176.4     7.5    2.0  ['dsv4_sparse_attention']
+      _fused_inv_rope_fp8_quant_per_head                           s7   178.4-  183.8 gap   2.01 kind graph
+dsv4_grouped_output_projection               7            183.8   192.3    183.8     8.4    0.0  ['dsv4_output_inv_rope_quant']
+      void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0 s7   183.8-  192.3 gap   0.00 kind graph
+dsv4_output_projection                       7            192.4   202.6    192.3    10.4    0.5  ['dsv4_grouped_output_projection']
+      void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::F s7   192.4-  195.5 gap   0.13 kind graph
+      void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0 s7   195.8-  202.6 gap   0.35 kind graph

@@ -1,0 +1,86 @@
+{
+  "NONE": {
+    "activity_counts": {
+      "memcpy": 649,
+      "kernel": 16457
+    },
+    "cases": {
+      "e0-prefill-p4095": {
+        "call_rows_equal": true,
+        "call_count": 1752,
+        "interval_count": 8850
+      },
+      "e0-decode-b1-p256": {
+        "call_rows_equal": true,
+        "call_count": 560,
+        "interval_count": 2696
+      },
+      "e0-decode-b4-p2048": {
+        "call_rows_equal": true,
+        "call_count": 608,
+        "interval_count": 2784
+      },
+      "e0-decode-b8-p2052": {
+        "call_rows_equal": true,
+        "call_count": 608,
+        "interval_count": 2776
+      }
+    }
+  },
+  "PIECEWISE": {
+    "activity_counts": {
+      "memcpy": 649,
+      "kernel": 16588
+    },
+    "cases": {
+      "e0-prefill-p4095": {
+        "call_rows_equal": true,
+        "call_count": 1824,
+        "interval_count": 8901
+      },
+      "e0-decode-b1-p256": {
+        "call_rows_equal": true,
+        "call_count": 608,
+        "interval_count": 2776
+      },
+      "e0-decode-b4-p2048": {
+        "call_rows_equal": true,
+        "call_count": 608,
+        "interval_count": 2784
+      },
+      "e0-decode-b8-p2052": {
+        "call_rows_equal": true,
+        "call_count": 608,
+        "interval_count": 2776
+      }
+    }
+  },
+  "FULL_AND_PIECEWISE": {
+    "activity_counts": {
+      "memcpy": 673,
+      "kernel": 16588
+    },
+    "cases": {
+      "e0-prefill-p4095": {
+        "call_rows_equal": true,
+        "call_count": 1824,
+        "interval_count": 8901
+      },
+      "e0-decode-b1-p256": {
+        "call_rows_equal": true,
+        "call_count": 608,
+        "interval_count": 2784
+      },
+      "e0-decode-b4-p2048": {
+        "call_rows_equal": true,
+        "call_count": 608,
+        "interval_count": 2792
+      },
+      "e0-decode-b8-p2052": {
+        "call_rows_equal": true,
+        "call_count": 608,
+        "interval_count": 2784
+      }
+    }
+  }
+}
