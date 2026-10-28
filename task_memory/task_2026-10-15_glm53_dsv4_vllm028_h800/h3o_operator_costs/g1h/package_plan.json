@@ -1094,7 +1094,7 @@
     }
   ],
   "seed": 1234,
-  "source_revision": "5083d0369a5f9b86c333b30fce78154a3364225f",
+  "source_revision": "68e8be314088bb4caac81973348d1ed6e4f5f554",
   "task_id": "H3O-STAGE2-G1H-ATTENTION",
   "timeout_seconds": 10800,
   "worker_output_root": "/tmp/glm_producers/out",
