@@ -41,12 +41,15 @@ DTYPE_BYTES = {"bfloat16": 2, "float16": 2, "float32": 4, "int32": 4}
 # ``all_reduce`` etc. go through vLLM's GroupCoordinator, which picks the
 # communicator. ``device_group_all_reduce`` and ``cpu_all_reduce`` are plain
 # torch.distributed all-reduces on the group's NCCL and gloo process groups,
-# as dp_utils._run_ar issues them.
+# as dp_utils._run_ar issues them. ``sp_all_gather`` and
+# ``sp_reduce_scatter`` call vLLM's sequence-parallel functions, which try the
+# custom kernels first.
 OPS = ("all_reduce", "reduce_scatter", "all_gather", "all_gatherv",
-       "reduce_scatterv", "device_group_all_reduce", "cpu_all_reduce")
+       "reduce_scatterv", "device_group_all_reduce", "cpu_all_reduce",
+       "sp_all_gather", "sp_reduce_scatter")
 
 
-def _ceil_div(a: int, b: int) -> int:
+def ceil_div(a: int, b: int) -> int:
     return -(-a // b)
 
 
@@ -143,7 +146,9 @@ class CollectiveCall:
     """One distinct collective and how often a forward pass issues it.
 
     ``shard_rows`` holds, per global rank, the rows on the sharded side: the
-    input of all_reduce/all_gather(v), the output of reduce_scatter(v). A rank
+    input of all_reduce/all_gather(v), the output of reduce_scatter(v). For
+    sp_reduce_scatter it instead holds the unpadded input rows, because those
+    cannot be recovered from the rounded-up output rows. A rank
     with zero rows does not issue a TP-local call. ``captured`` marks calls
     inside the CUDA-graph-captured model forward; logits and DP synchronization
     run outside it (gpu_model_runner.py ``compute_logits`` after
@@ -185,8 +190,10 @@ def call_bytes(call: CollectiveCall, parallel: ServingParallelism,
     total = sum(call.shard_rows[m] for m in members) * call.row_bytes()
     if call.op in ("all_reduce", "device_group_all_reduce", "cpu_all_reduce"):
         return own, own
-    if call.op in ("all_gather", "all_gatherv"):
+    if call.op in ("all_gather", "all_gatherv", "sp_all_gather"):
         return own, total
+    if call.op == "sp_reduce_scatter":
+        return own, ceil_div(call.shard_rows[rank], len(members)) * call.row_bytes()
     if call.op == "reduce_scatter":
         return own * len(members), own
     if call.op == "reduce_scatterv":
@@ -217,9 +224,9 @@ def forward_collectives(model: ModelShape, parallel: ServingParallelism,
         return tuple(v for v in values_per_dp for _ in range(tp))
 
     tokens = per_rank(scenario.tokens_per_dp_rank)
-    sp_rows = per_rank(_ceil_div(n, tp) for n in scenario.tokens_per_dp_rank)
+    sp_rows = per_rank(ceil_div(n, tp) for n in scenario.tokens_per_dp_rank)
     logit_rows = per_rank(scenario.logit_rows_per_dp_rank)
-    padded_vocab = _ceil_div(model.vocab_size, VOCAB_PADDING_SIZE) * VOCAB_PADDING_SIZE
+    padded_vocab = ceil_div(model.vocab_size, VOCAB_PADDING_SIZE) * VOCAB_PADDING_SIZE
     if padded_vocab % tp:
         raise ValueError("Padded vocab is not divisible by TP")
 

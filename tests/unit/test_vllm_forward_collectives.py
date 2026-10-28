@@ -3,6 +3,7 @@
 import pytest
 
 from frontier.profiling.collectives.vllm_forward_collectives import (
+    CollectiveCall,
     ForwardScenario,
     ModelShape,
     ServingParallelism,
@@ -125,3 +126,18 @@ def test_grid_builds_uniform_single_active_and_graph_steps():
                                     ((16, 16), (16, 16), True)]
     with pytest.raises(ValueError, match="Invalid eager point"):
         scenarios_from_grid(parallel, {"eager": [[4, 8]], "cuda_graph_batch_sizes": []})
+
+
+@pytest.mark.parametrize("op, rows, expected", [
+    ("sp_all_gather", 3, (36_864, 294_912)),
+    ("sp_reduce_scatter", 1, (12_288, 12_288)),
+    ("sp_reduce_scatter", 9, (110_592, 24_576)),
+    ("sp_reduce_scatter", 16, (196_608, 24_576)),
+])
+def test_sequence_parallel_op_bytes(op, rows, expected):
+    parallel = ServingParallelism.from_engine(ENGINE)
+    call = CollectiveCall("sp", op, "tp", 0, (6144,), ("bfloat16",),
+                          (rows,) * 8 + (1,) * 8, 1, "CPU fixture")
+    assert call_bytes(call, parallel, 0) == expected
+    assert call_bytes(call, parallel, 8) == (
+        (12_288, 98_304) if op == "sp_all_gather" else (12_288, 12_288))

@@ -38,6 +38,10 @@ import time
 from pathlib import Path
 from unittest.mock import patch
 
+from frontier.profiling.collectives.vllm_dsv4_forward_collectives import (
+    DeepseekV4Shape,
+    dsv4_plan,
+)
 from frontier.profiling.collectives.vllm_forward_collectives import (
     CollectiveCall,
     ModelShape,
@@ -226,7 +230,7 @@ class CollectiveRunner:
         return SLEEP_CALIBRATION_CYCLES / (begin.elapsed_time(end) * 1e3)
 
     def communicators(self) -> dict:
-        """Which all-reduce communicators vLLM enabled on each group of this rank."""
+        """Enabled communicators and custom-collective state of each group."""
         import vllm
 
         enabled = {}
@@ -237,6 +241,14 @@ class CollectiveRunner:
                 and not getattr(getattr(comm, attr), "disabled", False)
                 for attr in ("pynccl_comm", "ca_comm", "symm_mem_comm", "fi_ar_comm",
                              "qr_comm", "all2all_manager")}
+            custom = comm.ca_comm
+            if custom is not None:
+                enabled[name]["custom_collectives"] = {
+                    "mnnvl_multicast_ptr": bool(getattr(custom, "mnnvl_multicast_ptr", 0)),
+                    **{attr: getattr(custom, attr, None) for attr in (
+                        "max_mnnvl_all_gather_size", "max_mnnvl_reduce_scatter_size",
+                        "max_all_gather_size", "max_reduce_scatter_size", "fully_connected")},
+                }
         return {"torch": self.torch.__version__, "vllm": vllm.__version__,
                 "communicators": enabled,
                 "group_ranks": {name: list(g.ranks) for name, g in self.groups.items()},
@@ -264,6 +276,17 @@ class CollectiveRunner:
         if call.op == "all_reduce":
             (tensor,) = self._tensors(call, rows, self.device)
             return lambda: group.all_reduce(tensor)
+        if call.op == "sp_all_gather":
+            from vllm.models.common.ops.sequence_parallel import sp_all_gather
+
+            (tensor,) = self._tensors(call, rows, self.device)
+            return lambda: sp_all_gather(tensor)
+        if call.op == "sp_reduce_scatter":
+            from vllm.models.common.ops.sequence_parallel import sp_reduce_scatter
+
+            # Keep the unpadded T rows: native padding belongs in the timing.
+            (tensor,) = self._tensors(call, rows, self.device)
+            return lambda: sp_reduce_scatter(tensor)
         if call.op == "all_gather":
             (tensor,) = self._tensors(call, rows, self.device)
             return lambda: group.all_gather(tensor, dim=call.dim)
@@ -453,6 +476,27 @@ def write_csv(path: Path, rows: list[dict]) -> None:
         writer.writerows(rows)
 
 
+def _glm_plan(model, parallel, grid):
+    return [(s, c) for s in scenarios_from_grid(parallel, grid)
+            for c in forward_collectives(model, parallel, s)]
+
+
+ARCHITECTURE_PLANNERS = {
+    "GlmMoeDsaForCausalLM": (ModelShape.from_hf_config, _glm_plan),
+    "DeepseekV4ForCausalLM": (DeepseekV4Shape.from_hf_config, dsv4_plan),
+}
+
+
+def plan_from_config(model_config: dict, parallel: ServingParallelism, grid: dict) -> list:
+    """Select the shape parser and planner by the model's first architecture."""
+    architecture = model_config["architectures"][0]
+    if architecture not in ARCHITECTURE_PLANNERS:
+        raise ValueError(f"Unsupported architecture {architecture!r}; supported: "
+                         f"{', '.join(ARCHITECTURE_PLANNERS)}")
+    shape_parser, plan_builder = ARCHITECTURE_PLANNERS[architecture]
+    return plan_builder(shape_parser(model_config), parallel, grid)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True, type=Path)
@@ -461,9 +505,8 @@ def main() -> None:
     args = parser.parse_args()
     config = json.loads(args.config.read_text())
     parallel = ServingParallelism.from_engine(config["engine"])
-    model = ModelShape.from_hf_config(json.loads(Path(config["model_config"]).read_text()))
-    scenarios = scenarios_from_grid(parallel, config["grid"])
-    plan = [(s, c) for s in scenarios for c in forward_collectives(model, parallel, s)]
+    plan = plan_from_config(json.loads(Path(config["model_config"]).read_text()),
+                            parallel, config["grid"])
     settings = {key: int(config[key]) for key in RUN_SETTINGS}
     if args.list_cases:
         for scenario, call in plan:

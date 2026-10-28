@@ -1,5 +1,7 @@
 """CPU checks for the pure helpers of the vLLM collective, NIXL READ and EP + NIXL benchmarks."""
 
+import json
+import sys
 import types
 
 import pytest
@@ -22,12 +24,17 @@ from frontier.profiling.collectives.nixl_kv_read_benchmark import (
     summarize_case,
 )
 from frontier.profiling.collectives.vllm_collective_benchmark import (
+    CollectiveRunner,
+    main,
+    plan_from_config,
     forward_totals,
     network_all_reduce_rows,
     pass_order,
     summarize,
 )
-from frontier.profiling.collectives.vllm_forward_collectives import ModelShape, ServingParallelism
+from frontier.profiling.collectives.vllm_forward_collectives import (
+    CollectiveCall, ModelShape, ServingParallelism,
+)
 
 KV_CACHE = {
     "regions": [{"name": "main_mla", "count": 3, "block_bytes": 1152},
@@ -204,3 +211,99 @@ def test_overlap_summary_uses_slowest_d_rank():
     assert row["ep_loaded_queue_held_fraction"] == pytest.approx(2 / 3)
     assert row["read_loaded_covered_fraction"] == pytest.approx(2 / 3)
     assert row["ep_load_runs"] == 7 and row["data_verified"]
+
+
+@pytest.mark.parametrize("architecture, shape_config, grid, expected", [
+    ("GlmMoeDsaForCausalLM", {"first_k_dense_replace": 1},
+     {"eager": [], "cuda_graph_batch_sizes": [4]}, "moe_attention_reduce_scatter"),
+    ("DeepseekV4ForCausalLM", {"hc_mult": 4},
+     {"graph_tokens_per_lane": [4]}, "sp_attention_reduce_scatter"),
+])
+def test_main_selects_architecture(monkeypatch, tmp_path, capsys,
+                                   architecture, shape_config, grid, expected):
+    model = tmp_path / "model.json"
+    model_config = {"architectures": [architecture], "n_routed_experts": 8,
+                    "hidden_size": 16, "num_hidden_layers": 4, "num_experts_per_tok": 2,
+                    "vocab_size": 128, **shape_config}
+    model.write_text(json.dumps(model_config))
+    engine = {"tensor_parallel_size": 2, "data_parallel_size": 2, "pipeline_parallel_size": 1,
+              "enable_expert_parallel": True, "dtype": "bfloat16", "async_scheduling": True}
+    path = tmp_path / "stage.json"
+    path.write_text(json.dumps({"engine": engine, "model_config": str(model), "grid": grid,
+                               "warmup_calls": 5, "repeats": 30, "calls_per_repeat": 10,
+                               "passes": 3, "shuffle_seed": 20261028}))
+    monkeypatch.setattr(sys, "argv", ["benchmark", "--config", str(path), "--list-cases"])
+    main()
+    output = capsys.readouterr().out
+    assert expected in output
+    assert ("dp_batch_sync_all_reduce" in output) == (architecture == "GlmMoeDsaForCausalLM")
+    assert "cases 6 passes 3 measurements 18" in output if architecture.startswith("DeepseekV4") else (
+        "cases 9 passes 3 measurements 27" in output)
+
+
+def test_unknown_architecture_lists_supported_names():
+    parallel = ServingParallelism.from_engine({
+        "tensor_parallel_size": 2, "data_parallel_size": 2, "pipeline_parallel_size": 1,
+        "enable_expert_parallel": True, "dtype": "bfloat16", "async_scheduling": True})
+    with pytest.raises(ValueError, match="Unsupported architecture.*Unknown") as error:
+        plan_from_config({"architectures": ["Unknown"]}, parallel, {})
+    assert "GlmMoeDsaForCausalLM" in str(error.value)
+    assert "DeepseekV4ForCausalLM" in str(error.value)
+
+
+@pytest.mark.parametrize("op, rows", [("sp_all_gather", 3), ("sp_reduce_scatter", 17)])
+def test_sp_issue_calls_native_function_with_unpadded_tensor(monkeypatch, op, rows):
+    module = types.ModuleType("vllm.models.common.ops.sequence_parallel")
+    observed = []
+    result = object()
+    def native(tensor):
+        observed.append(tensor)
+        return result
+    setattr(module, op, native)
+    monkeypatch.setitem(sys.modules, module.__name__, module)
+    runner = object.__new__(CollectiveRunner)
+    runner.parallel = ServingParallelism.from_engine({
+        "tensor_parallel_size": 8, "data_parallel_size": 2, "pipeline_parallel_size": 1,
+        "enable_expert_parallel": True, "dtype": "bfloat16", "async_scheduling": True})
+    # Measure instance 1's lane 1 to exercise instance-local indexing too.
+    runner.instance, runner.instance_rank = 1, 8
+    runner.device = "cuda-fixture"
+    def forbidden(*args, **kwargs):
+        pytest.fail("SP collective went through GroupCoordinator")
+    runner.groups = {"tp": types.SimpleNamespace(ranks=list(range(24, 32)),
+                      all_gather=forbidden, reduce_scatter=forbidden)}
+    def ones(shape, dtype, device):
+        return types.SimpleNamespace(shape=shape, dtype=dtype, device=device)
+    runner.torch = types.SimpleNamespace(ones=ones, bfloat16="bf16")
+    call = CollectiveCall("sp", op, "tp", 0, (4096,), ("bfloat16",),
+                          (1,) * 8 + (rows,) * 8, 1, "CPU fixture")
+    issue = runner._issue(call)
+    assert observed == []
+    assert issue() is result and issue() is result
+    assert observed[0] is observed[1]
+    assert observed[0].shape == (rows, 4096)
+    assert observed[0].dtype == "bf16" and observed[0].device == runner.device
+
+
+@pytest.mark.parametrize("multicast, enabled", [(0, False), (1234, True)])
+def test_communicators_records_custom_collective_state(monkeypatch, multicast, enabled):
+    module = types.ModuleType("vllm")
+    module.__version__ = "cpu-fixture"
+    monkeypatch.setitem(sys.modules, "vllm", module)
+    custom = types.SimpleNamespace(mnnvl_multicast_ptr=multicast,
+        max_mnnvl_all_gather_size=2_097_152, max_mnnvl_reduce_scatter_size=16_777_216,
+        max_all_gather_size=1_048_576, max_reduce_scatter_size=8_388_608, fully_connected=True)
+    def comm(ca):
+        return types.SimpleNamespace(ca_comm=ca, **{name: None for name in (
+            "pynccl_comm", "symm_mem_comm", "fi_ar_comm", "qr_comm", "all2all_manager")})
+    runner = object.__new__(CollectiveRunner)
+    runner.torch = types.SimpleNamespace(__version__="cpu-fixture")
+    runner.groups = {"tp": types.SimpleNamespace(device_communicator=comm(custom), ranks=[0, 1]),
+                     "ep": types.SimpleNamespace(device_communicator=comm(None), ranks=[0, 1, 2, 3])}
+    runner.hosts, runner.sleep_cycles_per_us = ["host"], 1.0
+    record = runner.communicators()["communicators"]
+    assert record["tp"]["custom_collectives"] == {
+        "mnnvl_multicast_ptr": enabled, "max_mnnvl_all_gather_size": 2_097_152,
+        "max_mnnvl_reduce_scatter_size": 16_777_216, "max_all_gather_size": 1_048_576,
+        "max_reduce_scatter_size": 8_388_608, "fully_connected": True}
+    assert "custom_collectives" not in record["ep"] and not record["ep"]["ca_comm"]
