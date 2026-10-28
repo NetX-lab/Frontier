@@ -74,8 +74,8 @@
     "pipeline_parallel_size": 1,
     "tensor_parallel_size": 8
   },
-  "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/g5h16_tp8_dp2_ep16_01",
-  "job_tag": "dsv4-comm-g5h16-01",
+  "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/g5h16_tp8_dp2_ep16_02",
+  "job_tag": "dsv4-comm-g5h16-02",
   "passes": 3,
   "shuffle_seed": 20261028,
   "grid_source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/c1_coverage.md §4.5; /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/design.md §4",
