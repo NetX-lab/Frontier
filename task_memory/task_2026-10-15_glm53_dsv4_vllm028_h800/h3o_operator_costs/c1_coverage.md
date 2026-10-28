@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | §4.2: the mHC head and the final norm run on the descriptor rows W, not on L (pinned `model.py:1197-1211`, native grid 6,144 in the 6,144-token prefill). §4.4: G4h comes from the G1h-02 records. |
 | 2026-10-28 | §4.1: amended the first-tail compression mixes and fixed the meaning of "near" in the context profiles (requirements D-G1H-GRID-AMENDMENT). |
 | 2026-10-27 | Created: C1 results, the exact grids of G1h-G5h and G1-G5, and the GPU-hour estimates. |
 
@@ -175,9 +176,9 @@ Row axes that the cases use. Here N is a lane's synchronized width, L = ceil(N /
 
 | Axis | Operators | Decode | Prefill | Margin |
 | --- | --- | --- | --- | --- |
-| Rows per rank under SP: L | mHC scopes, shared expert, final norm, mHC head | 1, 2 | 1, 768 | 3, 4 |
+| Rows per rank under SP: L | mHC scopes, shared expert | 1, 2 | 1, 768 | 3, 4 |
 | Gathered rows: 8L | attention-side rows | 8, 16 | 8 (dummy), 6,144 | 24, 32 |
-| Descriptor rows: W | embedding | 1, 2, 4, 8, 16 | 1, 6,144 | 24 |
+| Descriptor rows: W | embedding, final norm, mHC head (corrected 2026-10-28: they run after the gather) | 1, 2, 4, 8, 16 | 1, 6,144 | 24 |
 | Real requests: b | LM head, sampling | 1-13 | 1 | up to 24 |
 | New block ids per forward | `kv_cache_block_zero` | 0-26 | 2,520 | up to 32 |
 | (requests with writes, entries) | `dsv4_block_table_write` | the observed pairs: up to (7, 26) for continuing requests, plus 2,520 entries per new request, up to 4 new requests | (1, 2,520) | requests up to 8, continuing entries up to 32 |
@@ -211,6 +212,8 @@ Rank classes are given as (rows routed to the rank, local experts that get one e
 ### 4.4 Gaps between kernels (G4h, G4)
 
 C1 does not change G4. The four V4 gap values come from graph replays and eager segments on the reduced engine (design §3.3), with segment classes from R1.
+
+On H200 the G1h-02 replay records give them on CPU (design §6, implementation notes for stage 2), so no separate G4h job runs.
 
 ### 4.5 Collectives (G5h, G5)
 
