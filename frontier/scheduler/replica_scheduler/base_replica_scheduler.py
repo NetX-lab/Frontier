@@ -9,7 +9,7 @@ from frontier.config import (
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.errors import FrontierMemoryOOMError
 from frontier.entities import Batch, EPBatchGroup, Replica, Request
-from frontier.execution_time_predictor import BaseExecutionTimePredictor
+from frontier.execution_time_predictor.base_execution_time_predictor import BaseExecutionTimePredictor
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_stage_scheduler import ReplicaStageScheduler
 from frontier.scheduler.utils.memory_planner import MemoryPlanner

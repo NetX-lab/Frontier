@@ -1,7 +1,8 @@
 """vLLM sequence-parallel collective geometry and source-owned timing."""
 
-from frontier.config.parallel_semantics import sequence_parallel_moe_token_widths
-from frontier.config.precision_type import PrecisionType
+# The frontier.config package imports the operator families, which import this
+# module while they initialize, so functions import frontier.config names when
+# they run.
 
 
 SP_TP_OPERATORS = (
@@ -40,6 +41,9 @@ def source_tp_operator_names(model, replica, layer_id):
 
 def tp_workload(name, model, tp, tokens, logits_rows=None):
     """Largest rank input; activations stay BF16 even with FP8 weights."""
+    from frontier.config.parallel_semantics import sequence_parallel_moe_token_widths
+    from frontier.config.precision_type import PrecisionType
+
     hidden = model.embedding_dim
     bf16_bytes = int(PrecisionType.BF16.bytes_per_element)
     rows = sequence_parallel_moe_token_widths([tokens], tp).local_tokens[0]
@@ -106,6 +110,8 @@ def ep_widths(ctx):
 
 
 def ep_workload(name, model, topk, widths):
+    from frontier.config.precision_type import PrecisionType
+
     bf16_bytes = int(PrecisionType.BF16.bytes_per_element)
     if name == "expert_parallel_alltoall_dispatch":
         rows = max(widths.local_tokens)

@@ -8,11 +8,6 @@ from frontier.attention.families import (
     DSA_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
 )
-from frontier.config.parallel_semantics import (
-    resolve_shared_expert_tensor_parallel_mode,
-    resolve_shared_expert_tensor_parallel_size,
-)
-from frontier.config.precision_type import PrecisionType
 from frontier.operators.registry import OperatorRegistry
 from frontier.operators.spec import (
     CommOperatorSpec,
@@ -29,6 +24,9 @@ from frontier.operators.spec import (
 )
 from frontier.moe_ep_workload import resolve_ep_lane_workload
 from frontier.types import ClusterType
+
+# The frontier.config package imports this module while it initializes, so the
+# payload functions import their frontier.config names when they run.
 
 
 _ALL_PHASES = (OperatorPhase.PREFILL, OperatorPhase.DECODE, OperatorPhase.MIXED)
@@ -424,6 +422,7 @@ def _moe_tp_allgather_payload_bytes(ctx: CommPayloadContext) -> int:
 def _dsv4_sp_local_hidden_bytes(ctx: CommPayloadContext) -> int:
     """Source BF16 shard width from sequence_parallel.sp_shard padding."""
 
+    from frontier.config.precision_type import PrecisionType
     from frontier.entities.batch import EPBatchGroup
 
     if (
@@ -562,6 +561,10 @@ def _moe_tp_devices(ctx: CommPayloadContext) -> int:
 
 
 def _shared_expert_tp_devices(ctx: CommPayloadContext) -> int:
+    from frontier.config.parallel_semantics import (
+        resolve_shared_expert_tensor_parallel_size,
+    )
+
     return resolve_shared_expert_tensor_parallel_size(
         cluster_type=ctx.cluster_type,
         replica_config=ctx.replica_config,
@@ -572,6 +575,10 @@ def _shared_expert_tp_devices(ctx: CommPayloadContext) -> int:
 def _shared_expert_tp_group(ctx: CommPayloadContext) -> str:
     if ctx.cluster_type is ClusterType.DECODE_FFN:
         return "moe_tp"
+
+    from frontier.config.parallel_semantics import (
+        resolve_shared_expert_tensor_parallel_mode,
+    )
 
     tp_mode = resolve_shared_expert_tensor_parallel_mode(
         model_config=ctx.model_config

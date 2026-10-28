@@ -11,9 +11,7 @@ from frontier.config import ClusterConfig, BaseRequestGeneratorConfig
 from frontier.entities import Batch, EPBatchGroup, ExecutionTime, Replica, Request, Cluster
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 # Phase 2.5: Removed deprecated MoECollectiveScheduleEvent import
-from frontier.execution_time_predictor import (
-    BaseExecutionTimePredictor,
-)
+from frontier.execution_time_predictor.base_execution_time_predictor import BaseExecutionTimePredictor
 from frontier.model_architectures import (
     ExpertParallelCollective,
     ModelArchitectureProfile,

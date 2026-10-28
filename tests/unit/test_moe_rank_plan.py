@@ -108,9 +108,12 @@ def test_lane_dry_run_is_the_expected_task_list(monkeypatch, capsys, method, top
 
 def test_builder_checks_all_four_plans_without_building():
     builder = runpy.run_path(str(G3H / "prepare_package.py"))
+    destination = G3H / SPEC["destination"]
+    # The submitted package stays in the task directory once it is built.
+    existed = destination.exists()
     plans = builder["check_plan"](SPEC, ROOT)
     assert set(plans) == {f"{method}_ep{ep}" for method in SPEC["methods"] for ep in (16, 32)}
-    assert not (G3H / SPEC["destination"]).exists()
+    assert destination.exists() == existed
 
 
 def test_builder_detects_a_wrong_representative_rank(monkeypatch):
