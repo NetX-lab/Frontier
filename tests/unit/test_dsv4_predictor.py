@@ -90,8 +90,7 @@ def load(path, model, replica, measurement=MeasurementType.KERNEL_ONLY):
 
 
 def trained(df):
-    return DeepSeekV4AttentionPredictor(train_dsv4_attention_models(df, _fit),
-                                      multi_stream_gemm_token_threshold=int(df.multi_stream_gemm_token_threshold.iloc[0]))
+    return DeepSeekV4AttentionPredictor(train_dsv4_attention_models(df, _fit))
 
 
 def test_records_aggregate_loader_training_prediction_and_composition_round_trip(tmp_path, plan, model, replica):
@@ -205,11 +204,11 @@ def test_prediction_value_contract(table, model, replica, target, value, valid):
 
 def test_predictor_keeps_only_its_models_and_requires_some(table, model, replica):
     with pytest.raises(ValueError, match="requires trained"):
-        DeepSeekV4AttentionPredictor({"attn_dsa_other": object()}, multi_stream_gemm_token_threshold=1024)
+        DeepSeekV4AttentionPredictor({"attn_dsa_other": object()})
     df = load(table, model, replica)
     models = train_dsv4_attention_models(df, _fit)
-    predictor = DeepSeekV4AttentionPredictor({**models, "attn_dsa_other": object()}, multi_stream_gemm_token_threshold=7)
-    assert predictor._models == models and predictor.multi_stream_gemm_token_threshold == 7
+    predictor = DeepSeekV4AttentionPredictor({**models, "attn_dsa_other": object()})
+    assert predictor._models == models and predictor.multi_stream_gemm_token_threshold == int(df.multi_stream_gemm_token_threshold.iloc[0])
 
 
 @pytest.mark.parametrize("column,value", [
@@ -264,3 +263,20 @@ def test_input_mapping_and_aggregate_filename_agree(table):
     assert dsv4_input_path(str(table.with_name("attention_kernel_only.csv"))) == str(table)
     with pytest.raises(ValueError, match="filename"):
         dsv4_input_path(str(table.with_name("attention.csv")))
+
+
+@pytest.mark.parametrize("invalid", ["missing", "different"])
+def test_predictor_requires_one_threshold_on_all_its_models(table, model, replica, invalid):
+    models = train_dsv4_attention_models(load(table, model, replica), _fit)
+    fitted = next(iter(models.values()))
+    if invalid == "missing":
+        del fitted._frontier_dsv4_multi_stream_gemm_token_threshold
+    else:
+        fitted._frontier_dsv4_multi_stream_gemm_token_threshold += 1
+    with pytest.raises(ValueError, match="exactly one.*threshold"):
+        DeepSeekV4AttentionPredictor(models)
+
+
+def test_loader_resolves_main_cache_fp8_alias(table, model, replica):
+    alias = SimpleNamespace(**{**vars(replica), "kv_cache_dtype": "fp8"})
+    pd.testing.assert_frame_equal(load(table, model, alias), load(table, model, replica))

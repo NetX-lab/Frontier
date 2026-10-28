@@ -6,11 +6,12 @@ models/deepseek_v4/nvidia/model.py and common/ops/sequence_parallel.py.
 
 from frontier.attention.deepseek_v4 import (
     DeepSeekV4CoverageError, _integer, _validate_source_batch, compute_rows,
-    validate_deepseek_v4_dummy_forward, deepseek_v4_tile_schedule_planners,
+    validate_deepseek_v4_dummy_forward, build_deepseek_v4_attention_workload,
 )
 from frontier.entities.batch import DummyForwardBatch
 from frontier.execution_time_predictor.dsv4_composition import serial_attention_phase
-from frontier.entities.time_components import MoEOperatorTimes, MoETime
+from frontier.entities.time_components import AttentionOperatorTimes, MoEOperatorTimes, MoETime
+from frontier.attention.dsv4_features import build_dsv4_features, build_dsv4_dummy_features
 from frontier.operators.binding import build_operator_manifest
 from frontier.operators.families import get_comm_operator
 
@@ -71,9 +72,54 @@ def timing_operator_times(execution_time, phase):
     )
 
 
+def predict_attention_operator_times(
+    predictor, batch, layer_id, cluster_type, *, execution_mode,
+    prefix_caching, decode_context_parallel_size, prefill_context_parallel_size,
+) -> AttentionOperatorTimes:
+    """Price V2 attention scopes with synthetic calls or replay costs and gaps."""
+    model = predictor._model_config
+    workload = build_deepseek_v4_attention_workload(
+        model, predictor._replica_config, batch, layer_id,
+        cluster_type=cluster_type, execution_mode=execution_mode,
+        prefix_caching=prefix_caching,
+        decode_context_parallel_size=decode_context_parallel_size,
+        prefill_context_parallel_size=prefill_context_parallel_size,
+    )
+    if predictor._enable_dummy_mode:
+        timing = AttentionOperatorTimes({
+            scope: predictor._dummy_execution_time * len(calls)
+            for scope, calls in workload["operators"].items()
+        })
+    else:
+        rows = workload["num_tokens"]
+        variant = workload["variant"]
+        features = (build_dsv4_dummy_features(rows) if isinstance(batch, DummyForwardBatch)
+                    else build_dsv4_features(
+                        batch.num_tokens, batch.num_context_tokens, batch.request_is_decoding,
+                        variant=variant, compress_ratio=max(1, model.compress_ratios[layer_id]),
+                        sliding_window=model.sliding_window, index_topk=model.index_topk,
+                        padded_rows=rows,
+                    ))
+        attention_predictor = predictor._predictions["dsv4_attention"]
+        prediction = attention_predictor.scope_times(
+            features, variant=variant, graph_runtime_mode=workload["graph_runtime_mode"],
+            plans_tile_schedule=workload["plans_tile_schedule"],
+            scopes=tuple(workload["operators"]),
+        )
+        timing = AttentionOperatorTimes(prediction.cost_ms)
+        timing._dsv4_scope_gap_ms = prediction.gap_ms
+        timing._dsv4_composition_inputs = dict(
+            variant=variant, graph_runtime_mode=workload["graph_runtime_mode"], rows=rows,
+            multi_stream_gemm_token_threshold=attention_predictor.multi_stream_gemm_token_threshold,
+            indexer_short_context=workload["indexer_short_context"],
+        )
+    timing._dsv4_workloads = workload["operators"]
+    return timing
+
+
 def predict_source_execution(
     predictor, batch, layer_id, tp_rank, *, execution_mode,
-    has_attention_metadata, prefix_caching, decode_context_parallel_size,
+    prefix_caching, decode_context_parallel_size,
     prefill_context_parallel_size, enable_expert_parallel, moe_backend,
     all2all_backend, skip_padding, input_padding_mask, selected_logits_rows,
     include_attention=True, include_ffn=True,
@@ -100,12 +146,8 @@ def predict_source_execution(
         raise NotImplementedError("V4 source scope does not represent an existing input padding mask")
     if isinstance(batch, DummyForwardBatch):
         validate_deepseek_v4_dummy_forward(batch)
-        if has_attention_metadata is not False:
-            raise ValueError("V4 idle source must declare absent attention metadata")
     else:
         _validate_source_batch(batch)
-        if has_attention_metadata is not True:
-            raise NotImplementedError("V4 real Batch requires real metadata eager execution")
     tp = _integer(replica.attn_tensor_parallel_size, "attention TP")
     rank = _integer(tp_rank, "source TP rank", minimum=0)
     if rank >= tp:
@@ -185,9 +227,9 @@ def predict_source_execution(
             state_dtype="float32", activation_dtype="bfloat16",
         )
         communication("dsv4_sp_attention_allgather")
-        attention = predictor._predict_dsv4_dummy_attention_time(
-            batch, layer_id, predictor._cluster_type, execution_mode=execution_mode,
-            has_attention_metadata=has_attention_metadata, prefix_caching=prefix_caching,
+        attention = predict_attention_operator_times(
+            predictor, batch, layer_id, predictor._cluster_type, execution_mode=execution_mode,
+            prefix_caching=prefix_caching,
             decode_context_parallel_size=decode_context_parallel_size,
             prefill_context_parallel_size=prefill_context_parallel_size,
         )
@@ -518,7 +560,6 @@ def serving_context(predictor, batch, layer_id):
     return dict(
         execution_mode=("eager" if batch.get_decode_cuda_graph_runtime_mode() == "NONE"
                         else "cuda_graph"),
-        has_attention_metadata=not isinstance(batch, DummyForwardBatch),
         # The component cache independently rejects prefix caching/MTP/PD.
         prefix_caching=False, decode_context_parallel_size=1,
         prefill_context_parallel_size=1, enable_expert_parallel=True,
@@ -555,36 +596,6 @@ def source_physical_rows(predictor, source_batches):
     tp = replica.attn_tensor_parallel_size
     return sum(((compute_rows(batch) + tp - 1) // tp) * tp
                for batch in source_batches.values())
-
-
-def load_attention_dataframe(file_path, model, tp, block_size, measurement_type, *,
-                             schema_version=None, float_precision=None):
-    """Read the existing wide V4 schema without passing it to the dense loader."""
-    import pandas as pd
-    from frontier.profiling.attention.dsv4_attention_rows import DSV4_ROW_SCHEMA_VERSION
-
-    try:
-        rows = pd.read_csv(file_path, float_precision=float_precision)
-    except FileNotFoundError as exc:
-        raise DeepSeekV4CoverageError(f"V4 attention table missing: {file_path}") from exc
-    expected = {
-        "schema_version": DSV4_ROW_SCHEMA_VERSION if schema_version is None else schema_version,
-        "measurement_type": measurement_type.value,
-        "attention_family": "deepseek_v4_attention",
-        "model_architecture_profile": model.get_model_architecture_profile().profile_id,
-        "quant_signature": model.get_quant_signature(),
-        "profiling_precision": model.get_default_precision().name,
-        "attention_backend": "FLASHMLA_SPARSE_DSV4",
-        "n_embd": model.embedding_dim, "n_q_head": model.num_q_heads,
-        "n_q_head_per_rank": model.num_q_heads // tp,
-        "num_tensor_parallel_workers": tp, "o_groups": model.o_groups,
-        "o_groups_per_rank": model.o_groups // tp, "block_size": block_size,
-        **{name: getattr(model, name) for name in (
-            "q_lora_rank", "o_lora_rank", "head_dim", "qk_rope_head_dim",
-            "sliding_window", "index_topk", "index_n_heads", "index_head_dim",
-        )},
-    }
-    return _select_rows(rows, expected, "attention schema/model/TP")
 
 
 def _select_rows(rows, expected, scope):
@@ -635,62 +646,16 @@ def _read_isolated_component(reader, scope, *args, **kwargs):
     return rows
 
 
-def build_isolated_prefill_layouts(plan, records, *, expected_identity, input_file_sha256):
-    """Declare flat per-layer contracts from accepted non-timing engine/step facts."""
-    import pandas as pd
-    from frontier.profiling.attention.dsa_rows import index_records
-    from frontier.profiling.attention.dsv4_attention_rows import (
-        _ENGINE_COLUMNS, _model_columns, _variant_metadata,
-    )
+def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None):
+    """Consume one isolated eager linear/MoE scope without serving admission.
 
-    engines, steps, _ = index_records(r for r in records if r["kind"] != "call")
-    layouts = {}
-    for step in steps.values():
-        if step["phase"] != "prefill":
-            raise DeepSeekV4CoverageError("V4 isolated prefill contract requires prefill raw metadata")
-        engine = engines[step["engine_index"]]
-        columns = _model_columns(plan, engine)
-        for layer in plan.shape.layers:
-            try:
-                metadata = pd.json_normalize(_variant_metadata(step, layer.attention_variant),
-                                             sep="_metadata.").iloc[0].to_dict()
-            except ValueError as exc:
-                raise DeepSeekV4CoverageError("V4 isolated prefill contract lacks native metadata") from exc
-            layout = {
-                **{name: columns[name] for name in (*_ENGINE_COLUMNS, "block_size",
-                    "kv_cache_dtype", "max_model_len", "max_num_batched_tokens", "max_num_seqs")},
-                **{name: columns[name] for name in ("routing_runtime_path",
-                    "routing_strategy_sha256", "moe_routing") if name in columns},
-                **metadata, "compress_ratio": max(1, layer.compress_ratio),
-                "attention_variant": layer.attention_variant,
-                "plans_tile_schedule": layer.plans_tile_schedule,
-                **expected_identity, "input_file_sha256": input_file_sha256,
-            }
-            if layer.global_layer_id in layouts and layouts[layer.global_layer_id] != layout:
-                raise DeepSeekV4CoverageError("V4 isolated prefill raw layouts disagree between steps")
-            layouts[layer.global_layer_id] = layout
-    metadata_columns = {name for layout in layouts.values() for name in layout if "_metadata." in name}
-    return {layer: {**dict.fromkeys(metadata_columns), **layout} for layer, layout in layouts.items()}
-
-
-def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None,
-                        attention_layout=None):
-    """Consume one isolated eager measurement, never publish a serving duration.
-
-    Attention scopes may overlap and composites cannot be split into their
-    constituent operators. Physical TP1 with target per-rank TP8 dimensions is
-    retained as such; this receipt does not assert TP8 or phase equivalence.
-    Linear/MoE selection uses the existing typed readers and feature classifier.
-    Attention requires an independently qualified complete flattened layout;
-    accepted prefill and decode bind input bytes and runtime identity in that
-    same explicit or externally admitted sidecar contract, never inferred from candidate rows. Reduced metadata
-    in that contract never asserts serving capacity.
+    Physical TP1 with target per-rank TP8 dimensions is retained as such.
+    Selection uses the existing typed readers and feature classifier.
     """
     import json
     import math
     import pandas as pd
     from frontier.execution_time_predictor.profiling_dataframe_loaders import ProfilingDataFrameLoaders
-    from frontier.profiling.attention.dsv4_attention_plan import DSV4_SCOPE_NAMES, scope_operators
     from frontier.types import ClusterType, MeasurementType
 
     _validate_source_batch(batch)
@@ -698,15 +663,8 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         raise DeepSeekV4CoverageError("V4 isolated measured scopes do not qualify PD batches")
     if batch.get_decode_cuda_graph_runtime_mode() != "NONE":
         raise DeepSeekV4CoverageError("V4 native graph/compiled scope requires qualified replay measurements")
-    phase = "prefill"
     if any(batch.request_is_decoding) or any(q == 1 for q in batch.num_tokens):
-        # Native SWA classifies short prompt extends as decode kernels too.
-        # The scheduled semantic snapshot and prompt extent exclude first-tail.
-        if (scope not in DSV4_SCOPE_NAMES or len(batch.requests) != 1
-                or batch.request_is_decoding != [True] or batch.num_tokens != [1]
-                or batch.num_context_tokens[0] < batch.requests[0].num_prefill_tokens):
-            raise DeepSeekV4CoverageError("V4 isolated decode requires one ongoing decode, not first-tail or mixed phases")
-        phase = "decode"
+        raise DeepSeekV4CoverageError("V4 isolated non-attention scopes require prefill, not first-tail or mixed phases")
     model, replica = predictor._model_config, predictor._replica_config
     if model.get_model_architecture_profile().profile_id != "deepseek_v4":
         raise ValueError("V4 measured scopes require the DeepSeek-V4 profile")
@@ -717,176 +675,66 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
     loaders._model_config = model
     loaders._replica_config = replica
     tp = replica.attn_tensor_parallel_size
-    layer = model.get_layer_attention_spec(layer_id)
-    if scope in DSV4_SCOPE_NAMES:
-        from frontier.attention.deepseek_v4 import build_deepseek_v4_attention_workload
-        from frontier.profiling.attention.dsv4_attention_rows import _ENGINE_COLUMNS
+    contract = model.get_model_architecture_profile().resolve_layer_contract(
+        model, layer_id=layer_id, operator_name=scope,
+        attention_tp_size=tp, attention_dp_size=replica.attn_dp,
+        num_pipeline_stages=replica.num_pipeline_stages,
+        moe_tp_size=replica.moe_tensor_parallel_size,
+        expert_parallel_size=replica.moe_expert_parallel_size,
+    ) if scope in ("share_expert_up_proj", "share_expert_act", "share_expert_down_proj", "moe_grouped_gemm") else None
+    if contract is None:
+        raise DeepSeekV4CoverageError(f"V4 {scope} has no qualified native measurement; generic routing columns do not qualify")
+    if scope == "moe_grouped_gemm":
+        from frontier.execution_time_predictor.moe_dataset_training import select_moe_operator_features
+        from frontier.moe_ep_workload import EPLaneWorkload
+        from frontier.moe_load_imbalance import MOE_LOAD_IMBALANCE_FEATURES, MoELoadImbalanceInput
 
-        path = predictor._attention_input_file
-        if attention_layout is None:
-            from frontier.execution_time_predictor.dsv4_attention_input import load_isolated_prefill_layout
-
-            attention_layout = load_isolated_prefill_layout(path, layer_id, measurement, phase)
-        accepted_prefill = phase == "prefill" and (getattr(replica,
-            "moe_gating_routing_runtime_path", None) == "balanced_topk" or attention_layout is not None
-            and "input_file_sha256" in attention_layout)
-        rows = (load_attention_dataframe(path, model, tp, predictor._block_size, measurement,
-                                        float_precision="round_trip")
-                if phase == "decode" or accepted_prefill else predictor._load_attention_df(path))
-        layout_columns = set(_ENGINE_COLUMNS) | {
-            "block_size", "kv_cache_dtype", "compress_ratio", "max_model_len",
-            "max_num_batched_tokens", "max_num_seqs",
-        } | {name for name in rows if "_metadata." in name}
-        provenance_columns = {"source_revision", "runtime_fingerprint", "model_config_sha256",
-                               "input_file_sha256"} if phase == "decode" or accepted_prefill else set()
-        layout_columns |= provenance_columns
-        if accepted_prefill:
-            layout_columns |= {"attention_variant", "plans_tile_schedule"}
-        if getattr(replica, "moe_gating_routing_runtime_path", None) == "balanced_topk":
-            layout_columns |= {"routing_runtime_path", "routing_strategy_sha256", "moe_routing"}
-        if attention_layout is None or set(attention_layout) != layout_columns:
-            raise DeepSeekV4CoverageError("V4 attention requires a complete isolated layout contract")
-        if provenance_columns:
-            from frontier.profiling.common.runtime_identity import file_sha256
-
-            if (any(not isinstance(attention_layout[name], str) or not attention_layout[name]
-                    for name in provenance_columns)
-                    or file_sha256(path) != attention_layout["input_file_sha256"]):
-                raise DeepSeekV4CoverageError("V4 accepted input provenance does not match the measured table")
-            rows = _select_rows(rows, {name: attention_layout[name] for name in provenance_columns
-                                      if name != "input_file_sha256"}, "accepted input provenance")
-        if getattr(replica, "moe_gating_routing_runtime_path", None) == "balanced_topk":
-            rows = validate_balanced_routing(rows)
-        rows = _select_rows(rows, {name: value for name, value in attention_layout.items()
-                                  if name not in provenance_columns}, "isolated attention layout")
-        source = build_deepseek_v4_attention_workload(model, replica, batch, layer_id,
-            cluster_type=predictor._cluster_type, execution_mode="eager",
-            has_attention_metadata=True, prefix_caching=False,
-            decode_context_parallel_size=1, prefill_context_parallel_size=1)
+        if not isinstance(lane_workload, EPLaneWorkload):
+            raise DeepSeekV4CoverageError("V4 grouped GEMM requires an explicit expert lane, not inferred routing")
+        if (lane_workload.moe_expert_parallel_size != contract.expert_parallel_size
+                or lane_workload.total_expert_num != model.num_experts
+                or lane_workload.router_topk != model.num_experts_per_tok):
+            raise DeepSeekV4CoverageError("V4 grouped GEMM lane does not match the typed model/EP contract")
+        path = predictor._moe_input_file
+        rows = _read_isolated_component(loaders._load_moe_df, scope, path, replica,
+            tensor_parallel_size=contract.tensor_parallel_size,
+            expert_parallel_size=contract.expert_parallel_size,
+            layer_contract=contract, operator_name=scope,
+            # Preserve serialized float features for exact (not fitted)
+            # lookup. The default parser rounds the accepted entropy row.
+            float_precision="round_trip")
+        rows = _select_rows(rows, {"moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
+            "moe_quantization_mode": "mxfp4", "moe_native_backend": "MARLIN"}, scope)
+        rows, columns = select_moe_operator_features(scope, rows)
+        if tuple(columns) != MOE_LOAD_IMBALANCE_FEATURES:
+            raise DeepSeekV4CoverageError("V4 MARLIN isolated scope requires exact expert-load feature coverage")
+        features = MoELoadImbalanceInput(
+            num_tokens=sum(lane_workload.global_token_counts) // lane_workload.router_topk,
+            num_experts_per_device=lane_workload.local_expert_width,
+            hidden_dim=model.embedding_dim, expert_hidden_dim=contract.effective_ffn_width,
+            router_topk=lane_workload.router_topk,
+            expert_token_counts=list(lane_workload.local_token_counts),
+        ).to_features_dict()
         rows = _select_rows(rows, {
-            "padded_heads": source["num_padded_q_heads"],
-            "kv_cache_dtype": replica.kv_cache_dtype,
-            "attention_kv_cache_dtype": replica.kv_cache_dtype,
-        }, "attention source/cache layout")
-        planners = deepseek_v4_tile_schedule_planners(
-            tuple(spec.variant_id for spec in model.get_layer_attention_specs())
-        )
-        rows = _select_rows(rows, {
-            "phase": phase, "attention_variant": layer.variant_id,
-            "compress_ratio": max(1, model.compress_ratios[layer_id]),
-            "plans_tile_schedule": planners[layer_id],
-            "total_tokens": batch.total_num_tokens,
-            "batch_size": len(batch.requests),
+            "num_tokens": sum(lane_workload.global_token_counts) // lane_workload.router_topk,
+            **{name: features[name] for name in columns},
         }, scope)
-        if phase == "decode":
-            key_len = batch.num_context_tokens[0] + 1
-            native = {
-                "is_prefill": False, "is_mixed_batch": False,
-                "num_prefill_seqs": 0, "num_decode_seqs": 1,
-                "total_prefill_tokens": 0, "total_decode_tokens": 1,
-                "max_key_len": key_len,
-                "swa_metadata.num_decodes": 1, "swa_metadata.num_decode_tokens": 1,
-                "swa_metadata.num_prefills": 0, "swa_metadata.num_prefill_tokens": 0,
-                "swa_metadata.max_decode_query_len": 1,
-                "global_layer_ids": json.dumps([layer_id]),
-                "num_layers_sampled": 1, "num_steps_sampled": 1,
-            }
-            if layer.variant_id != "uncompressed":
-                native.update({
-                    "attention_metadata.max_query_len": 1,
-                    "attention_metadata.max_seq_len": key_len,
-                    "attention_metadata.num_actual_tokens": 1,
-                    "attention_metadata.num_reqs": 1,
-                })
-            if layer.variant_id == "csa":
-                native.update({
-                    "indexer_metadata.max_seq_len": key_len,
-                    "indexer_metadata.num_decodes": 1, "indexer_metadata.num_decode_tokens": 1,
-                    "indexer_metadata.num_prefills": 0, "indexer_metadata.num_prefill_tokens": 0,
-                })
-            rows = _select_rows(rows, native, "ongoing decode native metadata")
-        for column in ("prefill_seq_lens", "prefill_kv_cache_sizes", "decode_kv_cache_sizes", "operator_scopes"):
-            if column not in rows:
-                raise DeepSeekV4CoverageError(f"V4 {scope} missing {column}")
-        pairs = sorted(zip(batch.num_tokens, batch.num_context_tokens))
-        def matches_geometry(row):
-            queries = json.loads(row["prefill_seq_lens"])
-            contexts = json.loads(row["prefill_kv_cache_sizes"])
-            if phase == "decode":
-                return (queries == contexts == []
-                        and json.loads(row["decode_kv_cache_sizes"]) == batch.num_context_tokens)
-            return (len(queries) == len(contexts) == len(pairs)
-                    and sorted(zip(queries, contexts)) == pairs
-                    and json.loads(row["decode_kv_cache_sizes"]) == [])
-
-        rows = rows[rows.apply(matches_geometry, axis=1)]
-        rows = _select_rows(rows, {}, f"{scope} actual query/context")
-        if phase == "decode" and len(rows) != 1:
-            raise DeepSeekV4CoverageError("V4 isolated decode requires one exact measured observation")
-        expected_operators = list(scope_operators(scope, layer.variant_id))
-        if any(json.loads(value).get(scope) != expected_operators for value in rows.operator_scopes):
-            raise DeepSeekV4CoverageError(f"V4 {scope} composite ownership is missing or mismatched")
     else:
-        contract = model.get_model_architecture_profile().resolve_layer_contract(
-            model, layer_id=layer_id, operator_name=scope,
-            attention_tp_size=tp, attention_dp_size=replica.attn_dp,
-            num_pipeline_stages=replica.num_pipeline_stages,
-            moe_tp_size=replica.moe_tensor_parallel_size,
-            expert_parallel_size=replica.moe_expert_parallel_size,
-        ) if scope in ("share_expert_up_proj", "share_expert_act", "share_expert_down_proj", "moe_grouped_gemm") else None
-        if contract is None:
-            raise DeepSeekV4CoverageError(f"V4 {scope} has no qualified native measurement; generic routing columns do not qualify")
-        if scope == "moe_grouped_gemm":
-            from frontier.execution_time_predictor.moe_dataset_training import select_moe_operator_features
-            from frontier.moe_ep_workload import EPLaneWorkload
-            from frontier.moe_load_imbalance import MOE_LOAD_IMBALANCE_FEATURES, MoELoadImbalanceInput
-
-            if not isinstance(lane_workload, EPLaneWorkload):
-                raise DeepSeekV4CoverageError("V4 grouped GEMM requires an explicit expert lane, not inferred routing")
-            if (lane_workload.moe_expert_parallel_size != contract.expert_parallel_size
-                    or lane_workload.total_expert_num != model.num_experts
-                    or lane_workload.router_topk != model.num_experts_per_tok):
-                raise DeepSeekV4CoverageError("V4 grouped GEMM lane does not match the typed model/EP contract")
-            path = predictor._moe_input_file
-            rows = _read_isolated_component(loaders._load_moe_df, scope, path, replica,
-                tensor_parallel_size=contract.tensor_parallel_size,
-                expert_parallel_size=contract.expert_parallel_size,
-                layer_contract=contract, operator_name=scope,
-                # Preserve serialized float features for exact (not fitted)
-                # lookup. The default parser rounds the accepted entropy row.
-                float_precision="round_trip")
-            rows = _select_rows(rows, {"moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
-                "moe_quantization_mode": "mxfp4", "moe_native_backend": "MARLIN"}, scope)
-            rows, columns = select_moe_operator_features(scope, rows)
-            if tuple(columns) != MOE_LOAD_IMBALANCE_FEATURES:
-                raise DeepSeekV4CoverageError("V4 MARLIN isolated scope requires exact expert-load feature coverage")
-            features = MoELoadImbalanceInput(
-                num_tokens=sum(lane_workload.global_token_counts) // lane_workload.router_topk,
-                num_experts_per_device=lane_workload.local_expert_width,
-                hidden_dim=model.embedding_dim, expert_hidden_dim=contract.effective_ffn_width,
-                router_topk=lane_workload.router_topk,
-                expert_token_counts=list(lane_workload.local_token_counts),
-            ).to_features_dict()
-            rows = _select_rows(rows, {
-                "num_tokens": sum(lane_workload.global_token_counts) // lane_workload.router_topk,
-                **{name: features[name] for name in columns},
-            }, scope)
-        else:
-            path = predictor._compute_input_file
-            rows = _read_isolated_component(loaders._load_linear_op_df, scope,
-                path, contract.tensor_parallel_size,
-                required_columns=[f"time_stats.{scope}.median"],
-                layer_contract=contract, operator_name=scope)
-            local = (compute_rows(batch) + tp - 1) // tp
-            rows = _select_rows(rows, {"num_tokens": local}, scope)
-            if scope != "share_expert_act" and "linear_backends" not in rows:
-                raise DeepSeekV4CoverageError(f"V4 {scope} missing projection backend identity")
-            if scope != "share_expert_act" and any(
-                not all(name == "FlashInferFp8DeepGEMMDynamicBlockScaledKernel"
-                        for name in json.loads(value).get(scope, []))
-                or not json.loads(value).get(scope) for value in rows.linear_backends
-            ):
-                raise DeepSeekV4CoverageError(f"V4 {scope} requires the qualified FP8 DeepGEMM projection backend")
+        path = predictor._compute_input_file
+        rows = _read_isolated_component(loaders._load_linear_op_df, scope,
+            path, contract.tensor_parallel_size,
+            required_columns=[f"time_stats.{scope}.median"],
+            layer_contract=contract, operator_name=scope)
+        local = (compute_rows(batch) + tp - 1) // tp
+        rows = _select_rows(rows, {"num_tokens": local}, scope)
+        if scope != "share_expert_act" and "linear_backends" not in rows:
+            raise DeepSeekV4CoverageError(f"V4 {scope} missing projection backend identity")
+        if scope != "share_expert_act" and any(
+            not all(name == "FlashInferFp8DeepGEMMDynamicBlockScaledKernel"
+                    for name in json.loads(value).get(scope, []))
+            or not json.loads(value).get(scope) for value in rows.linear_backends
+        ):
+            raise DeepSeekV4CoverageError(f"V4 {scope} requires the qualified FP8 DeepGEMM projection backend")
     validate_measured_identity(rows, model, replica, measurement)
     rows = _select_rows(rows, {"graph_mode": "eager"}, "isolated identity")
     target = f"time_stats.{scope}.median"
@@ -906,13 +754,11 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         "measurement_type": measurement.value, "graph_mode": "eager",
         "physical_tensor_parallel_size": 1, "target_tensor_parallel_size": tp,
         "serving_admission": False,
-        "qualification": ("isolated eager scope only; reduced-model layer observation, not full serving"
-                          if phase == "decode" else "isolated eager scope only"),
+        "qualification": "isolated eager scope only",
         "source_revision": rows.source_revision.iloc[0], "input_file": str(path),
         "runtime_fingerprint": rows.runtime_fingerprint.iloc[0],
         "model_config_sha256": rows.model_config_sha256.iloc[0],
         "parallel_groups": json.loads(row.parallel_groups),
-        "attention_layout": dict(attention_layout) if scope in DSV4_SCOPE_NAMES else None,
         "row_metadata": {name: value.item() if hasattr(value, "item") else value
                          for name, value in row.items()
                          if (name.endswith(".block_size") or name in (
@@ -956,20 +802,3 @@ def validate_measured_identity(rows, model_config, replica_config, measurement):
     )})
     if identity.fingerprint != row.runtime_fingerprint:
         raise DeepSeekV4CoverageError("V4 measured runtime fingerprint does not match its provenance (runtime_fingerprint)")
-
-
-def validate_balanced_routing(rows):
-    """Select the measured balanced routing identity when the replica requests it."""
-    import json
-    from frontier.profiling.attention.dsv4_attention_rows import BALANCED_ROUTING_SHA256, routing_columns
-
-    for name in ("routing_runtime_path", "routing_strategy_sha256", "moe_routing"):
-        if name not in rows or rows[name].isna().any() or len(rows[name].unique()) != 1:
-            raise DeepSeekV4CoverageError(f"V4 balanced isolated attention missing/ambiguous {name}")
-    rows = _select_rows(rows, {"routing_runtime_path": "balanced_topk",
-        "routing_strategy_sha256": BALANCED_ROUTING_SHA256}, "balanced isolated attention")
-    try:
-        routing_columns(json.loads(rows.moe_routing.iloc[0]))
-    except (ValueError, TypeError, AttributeError, KeyError) as exc:
-        raise DeepSeekV4CoverageError("V4 balanced isolated attention routing identity mismatch (moe_routing)") from exc
-    return rows

@@ -18,6 +18,8 @@
 | 2026-10-28 | B6 accepted: result in §4; B7 next. |
 | 2026-10-28 | B7 design (§3.4, including the planner-role key deviation from design §3.6) and submission (§4); entry 10's runtime wiring moved to B8. |
 | 2026-10-28 | B7 accepted: result in §4; B8 next. |
+| 2026-10-28 | B8 design (§3.4: the V2 scope rule, the dummy geometry, the registration and the trained attention path; entry 10 wiring deferred again) and submission (§4). |
+| 2026-10-28 | B8 accepted and committed after the Git state repair ([issues.md](../issues.md) I-001): result in §4; entries 6-9 next. |
 
 ## 1. Purpose
 
@@ -171,6 +173,17 @@ B7 design ([codex_assignment_B7_dsv4_attention_predictor.md](codex_assignment_B7
 - `compose_attention_phase(scope_ms, scope_gap_ms, ...)`: each scope weighs its cost plus its own signed gap. Callers price scopes without a measured gap as kernel count times the class value of `segment_class`. A4 must stay byte-identical.
 - Entry 10's runtime part (`load_kernel_gap_ms` reading the V4 gap values, the V4 layer-operator class following the batch graph mode, no V4 attention term in `add_kernel_gap`) moves to B8 with entry 3, because only the trained composition path consumes it.
 
+B8 design ([codex_assignment_B8_dsv4_attention_runtime.md](codex_assignment_B8_dsv4_attention_runtime.md)):
+
+- Entry 4: one V2 workload builder for real and dummy forwards in NONE, PIECEWISE and FULL; `has_attention_metadata` and the eager-only dummy builder go.
+  - Scope rule, checked against all 505 package 03 rows (`/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_design/rules.py`: 0 mismatches in scope sets and `indexer_short_context`): the base scopes; for ratio > 1 the compressor trio, whose store always runs; for CSA the index weights and index-compressor trio, then the short-context fill under NONE when max(s) // r ≤ top-k, otherwise the query projection, query prepare and top-k, plus the scores when some request has q ≤ 1 or the q > 1 requests have a compressed key.
+  - Dummy geometry (design §3.7 item 4): FULL has R requests of one row and no context, PIECEWISE and NONE one request of R rows. Valid-row fields are 0 and the serving-request fields are empty. The warmup-only scopes `dsv4_query_padding` and `dsv4_attention_output_zero` are no longer emitted (the native dummy forward does not run them).
+  - One shared helper resolves the `fp8` alias to `fp8_ds_mla` for the cache resolver and the replay loader; a real V4 replica uses `fp8`.
+- Entry 5: the sklearn predictor loads the replay table, trains with its own `_train_model` (one-row keys fitted directly, as in `prediction_family_trainers.py`) and publishes `DeepSeekV4AttentionPredictor`, whose threshold now comes from an attribute the trainer attaches to every model. The profiling-loader V4 branch goes, so the manager path raises until final admission.
+- Entry 3, attention part: one function prices a V4 attention layer, in dummy mode with the synthetic duration and in trained mode with the predicted cost per scope, and attaches the per-scope gaps and the `compose_attention_phase` inputs. The isolated-eager attention path, its layout helpers and four files go.
+- Deferred again: entry 10 wiring (the V4 gap selection in `kernel_gap.py` and `add_kernel_gap`) and the kernel-count pairing of V4 targets. Reason: they price the structural composition, which B8 does not wire; today no V4 attention gap is added anywhere, because only `_record_attention_kernels` / `_record_kernel_count` add attention gaps and the V4 path calls neither.
+- Also deferred: PD admission (entry 8); the manager path, metadata registration and the family's `execution_enabled` (final admission); the structural composition wiring (entries 6-9); the V4 measurement-family choice per step; mixed decode/prefill batches in trained mode; removing the static warmup-only operators.
+
 ## 4. Order and acceptance
 
 `A (graph_capture.py, graph_replay_trace.py, CPU tests with fakes) -> review and commit -> B1 (policy, scope tree, re-capture, step range, bridge-check driver and launcher) -> review and commit -> P1h bridge check (1 H200, via /ds4-exec) -> B2 (intervals, gap reducer, A4) -> rest of P1h`.
@@ -191,3 +204,12 @@ B7 design ([codex_assignment_B7_dsv4_attention_predictor.md](codex_assignment_B7
 - B6 (CPU, lead rerun; [test report](../test_report_2026-10-28_b6_replay_rows.md)): 505 rows from 1925 calls with the expected phase and mode counts; A4 byte-identical; row compositions of the medians: median 2.1e-16, p90 0.77%, max 3.19% (single-call rows exact). Next: B7, the V4 attention loader, trainer and predictor on these rows (entry 1), each scope weighed by its own gap in `compose_attention_phase` (entry 2 revision) and the V4 gap selection (entry 10).
 - B7 submitted (`54e3584a`): acceptance is an A4 report byte-identical to the `d2a226fe` baseline, a round trip from synthetic records to predictions that compose exactly like the row medians, and, on the real package 03 table with an exact-lookup fit, predicted cost plus gap composed against each row's measured window within median 5% and p90 10%. Next: B8 (entries 4, 5, 3 and the entry 10 wiring).
 - B7 (CPU, lead rerun; [test report](../test_report_2026-10-28_b7_dsv4_attention_predictor.md)): 883 passed; A4 byte-identical; on the real package 03 table with an exact-lookup fit, 554 models and each row composed from predicted cost plus gap: median 0.49%, p90 1.34%, max 6.67% (two CSA FULL decode rows above 5%, led by the pooled `dsv4_compressor_fused_compress_store`). In-sample only; A6 qualifies other shapes. Next: B8 (entries 4, 5, 3 and the entry 10 wiring).
+- B8 submitted (`bb6c54ec`): acceptance is the builder's scope sets equal to all 505 rows' observed sets, the sklearn owner pattern with cache reuse and one-row keys, the trained runtime path on the real table equal to B7's composition (median 0.49%, p90 1.34%), A4 byte-identical, the runtime import boundary passing, and the dummy-mode changes listed from structural runs before and after. Entry 10 wiring is deferred again (§3.4).
+- B8 (CPU, lead rerun; [test report](../test_report_2026-10-28_b8_dsv4_attention_runtime.md)). Results:
+  - Scope sets, short-context state, tile-schedule state and row count R equal all 505 rows (0 mismatches).
+  - The trained runtime path on the real table reproduces B7: 554 models, median 0.49%, p90 1.34%, max 6.67%, the same two rows above 5%.
+  - A4 is byte-identical; the import boundary passes.
+  - The structural runs change only as expected: idle HCA 9 → 11 and CSA 13 → 16 calls, real HCA +1 store call, +0.2 ms per forward in synthetic timing.
+  - The regression suites give 1255 passed with only the known failure.
+
+  Lead corrections R1 (duplicated request-order fields on the sparse-attention call), R3 (stale messages) and R4 (the GLM-5.3 contract test of the removed V4 loader branch). Committed after the Git state repair ([issues.md](../issues.md) I-001). Next: entries 6-9 (structural composition wiring, entry 10 wiring, the manager path, the family's `execution_enabled`).

@@ -308,13 +308,13 @@ def test_unmeasured_family_rejects_csv_loading_and_standalone_training(
         ProfilingDataFrameLoaders,
     )
     from frontier.training.attention_trainer import AttentionTrainer
-    from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
 
     monkeypatch.chdir(REPO_ROOT)
     model = BaseModelConfig.create_from_name(model_name)
     loader = ProfilingDataFrameLoaders()
     loader._active_measurement_type = MeasurementType.KERNEL_ONLY
-    with pytest.raises(DeepSeekV4CoverageError, match="V4 attention table missing"):
+    # The shared model manager loads V4 attention only after final admission.
+    with pytest.raises(NotImplementedError, match="deepseek_v4_attention is not enabled for execution"):
         loader._load_attention_df(
             str(tmp_path / "missing.csv"), SimpleNamespace(model_config=model, attn_tensor_parallel_size=8),
             SimpleNamespace(block_size=64),

@@ -1353,12 +1353,19 @@ class Batch(BaseEntity):
 class DummyForwardBatch(Batch):
     """One pipeline stage's part of vLLM's attention-DP dummy pass.
 
-    A DP engine core whose step executed no batch runs ``execute_dummy_batch``,
-    ``_dummy_run(1, uniform_decode=True)`` on every pipeline stage. Eager and
-    piecewise execution have no attention metadata; FULL replay builds metadata
+    In the V1 runner, a DP engine core whose step executed no batch runs
+    ``execute_dummy_batch``, ``_dummy_run(1, uniform_decode=True)`` on every
+    pipeline stage. Eager and piecewise execution have no attention metadata;
+    FULL replay builds metadata
     for one actual request slot with seq_len=1. Graph forwards pad projections
     and MoE input to the DP-wide capture width. Dummy slot mappings are -1, so
     no real KV page is written. The forward carries no serving request.
+
+    The V2 / DeepSeek-V4 runner uses the synchronized descriptor's rows and
+    requests: FULL pads requests to the descriptor, while PIECEWISE and NONE
+    keep one request. Each request's sequence length equals its query length,
+    every row is padding, and the forward has dummy attention metadata. FULL
+    re-stages the capture metadata.
     """
 
     def __init__(

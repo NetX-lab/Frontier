@@ -53,7 +53,7 @@ def source_batch(tokens=17):
 
 def component(predictor, batch, layer=0, rank=0, **overrides):
     context = dict(
-        execution_mode="eager", has_attention_metadata=True,
+        execution_mode="eager",
         prefix_caching=False, decode_context_parallel_size=1,
         prefill_context_parallel_size=1, enable_expert_parallel=True,
         moe_backend="auto", all2all_backend="allgather_reducescatter",
@@ -200,7 +200,6 @@ def test_logit_rows_are_explicit_and_zero_omits_head(predictor):
     ({"input_padding_mask": [False] * 17}, "input padding"),
     ({"skip_padding": 1}, "skip_padding"),
     ({"execution_mode": "capture"}, "eager"),
-    ({"has_attention_metadata": False}, "metadata"),
     ({"prefix_caching": True}, "prefix"),
     ({"decode_context_parallel_size": 2}, "DCP1"),
     ({"prefill_context_parallel_size": 2}, "PCP1"),
@@ -259,7 +258,7 @@ def test_actual_eager_state_and_request_snapshot_are_preserved(predictor):
     )
     result = component(predictor, batch, layer=3, rank=7)
     assert result["source_rows"] == 1
-    assert result["attention_time"].total_time() == 20.0
+    assert result["attention_time"].total_time() == 22.0
     batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
         "full_decode_only", "FULL", True, False, 1, 8, 1, 8,
     )

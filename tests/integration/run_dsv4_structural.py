@@ -95,7 +95,7 @@ def validate_attention_boundary(operators, *, query, context, layer):
           compression_ratio=ratio, compressed_history_rows=(history,),
           swa_logical_window_span_rows=(query + min(context, config["sliding_window"] - 1),),
           query_intervals=((context, sequence),))
-    store = ratio > 1 and (ratio != 128 or writes > 0)
+    store = ratio > 1
     require(("dsv4_compressor_fused_compress_store" in operators) == store,
             "wrong boundary scope: dsv4_compressor_fused_compress_store")
     if ratio > 1:

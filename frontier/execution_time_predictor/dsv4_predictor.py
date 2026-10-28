@@ -20,11 +20,14 @@ from frontier.attention.dsv4_features import (
     DSV4_FEATURE_COLUMNS, DSV4_GEOMETRY_COLUMNS, PHASE_DUMMY, DeepSeekV4BatchFeatures,
     build_dsv4_features, build_dsv4_dummy_features, dsv4_feature_columns,
 )
-from frontier.attention.families import DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT
+from frontier.attention.families import (
+    DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT, deepseek_v4_main_kv_cache_dtype,
+)
 from frontier.attention.string_coercion import coerce_truthy_bool
 from frontier.execution_time_predictor.deepseek_v4 import (
-    load_attention_dataframe, validate_balanced_routing, validate_measured_identity,
+    _select_rows, validate_measured_identity,
 )
+from frontier.profiling.attention.dsv4_attention_rows import BALANCED_ROUTING_SHA256, routing_columns
 from frontier.profiling.attention.dsv4_replay_rows import (
     DSV4_REPLAY_OP_NAME, DSV4_REPLAY_ROW_SCHEMA_VERSION, GAP_STATS_PREFIX,
 )
@@ -43,6 +46,47 @@ TILE_PLANNER_SCOPE = "dsv4_sparse_attention"
 THRESHOLD_COLUMN = "multi_stream_gemm_token_threshold"
 _BOOLEAN_TOKENS = frozenset({"1", "true", "t", "yes", "y", "0", "false", "f", "no", "n"})
 _REQUEST_COLUMNS = ("prefill_seq_lens", "prefill_kv_cache_sizes", "decode_kv_cache_sizes")
+
+
+def load_attention_dataframe(file_path, model, tp, block_size, measurement_type, *,
+                             float_precision=None):
+    """Read the replay-only V4 schema without passing it to the dense loader."""
+    try:
+        rows = pd.read_csv(file_path, float_precision=float_precision)
+    except FileNotFoundError as exc:
+        raise DeepSeekV4CoverageError(f"V4 attention table missing: {file_path}") from exc
+    expected = {
+        "schema_version": DSV4_REPLAY_ROW_SCHEMA_VERSION,
+        "measurement_type": measurement_type.value,
+        "attention_family": "deepseek_v4_attention",
+        "model_architecture_profile": model.get_model_architecture_profile().profile_id,
+        "quant_signature": model.get_quant_signature(),
+        "profiling_precision": model.get_default_precision().name,
+        "attention_backend": "FLASHMLA_SPARSE_DSV4",
+        "n_embd": model.embedding_dim, "n_q_head": model.num_q_heads,
+        "n_q_head_per_rank": model.num_q_heads // tp,
+        "num_tensor_parallel_workers": tp, "o_groups": model.o_groups,
+        "o_groups_per_rank": model.o_groups // tp, "block_size": block_size,
+        **{name: getattr(model, name) for name in (
+            "q_lora_rank", "o_lora_rank", "head_dim", "qk_rope_head_dim",
+            "sliding_window", "index_topk", "index_n_heads", "index_head_dim",
+        )},
+    }
+    return _select_rows(rows, expected, "attention schema/model/TP")
+
+
+def validate_balanced_routing(rows):
+    """Select the measured balanced routing identity when the replica requests it."""
+    for name in ("routing_runtime_path", "routing_strategy_sha256", "moe_routing"):
+        if name not in rows or rows[name].isna().any() or len(rows[name].unique()) != 1:
+            raise DeepSeekV4CoverageError(f"V4 balanced replay attention missing/ambiguous {name}")
+    rows = _select_rows(rows, {"routing_runtime_path": "balanced_topk",
+        "routing_strategy_sha256": BALANCED_ROUTING_SHA256}, "balanced replay attention")
+    try:
+        routing_columns(json.loads(rows.moe_routing.iloc[0]))
+    except (ValueError, TypeError, AttributeError, KeyError) as exc:
+        raise DeepSeekV4CoverageError("V4 balanced replay attention routing identity mismatch (moe_routing)") from exc
+    return rows
 
 
 def dsv4_input_path(attention_file: str) -> str:
@@ -129,7 +173,7 @@ def load_dsv4_attention_dataframe(
     tp = replica_config.attn_tensor_parallel_size
     try:
         df = load_attention_dataframe(path, model_config, tp, block_size, measurement_type,
-                                     schema_version=DSV4_REPLAY_ROW_SCHEMA_VERSION, float_precision="round_trip")
+                                     float_precision="round_trip")
         validate_measured_identity(df, model_config, replica_config, measurement_type)
         _require_column(df, "engine_cudagraph_mode", path)
         if (df.engine_cudagraph_mode.isna().any() or df.engine_cudagraph_mode.nunique() != 1
@@ -140,9 +184,10 @@ def load_dsv4_attention_dataframe(
     except DeepSeekV4CoverageError as exc:
         raise DeepSeekV4CoverageError(f"V4 replay {path}: {exc}") from exc
     df = df.copy()
+    main_dtype = deepseek_v4_main_kv_cache_dtype(replica_config.kv_cache_dtype)
     layout = {"padded_heads": deepseek_v4_padded_q_heads(model_config.num_q_heads // tp),
-              "kv_cache_dtype": replica_config.kv_cache_dtype,
-              "attention_kv_cache_dtype": replica_config.kv_cache_dtype}
+              "kv_cache_dtype": main_dtype,
+              "attention_kv_cache_dtype": main_dtype}
     for column, value in layout.items():
         _require_column(df, column, path)
         if df[column].isna().any() or not (df[column] == value).all():
@@ -209,6 +254,7 @@ def dsv4_model_name(key: tuple, target: str) -> str:
 def train_dsv4_attention_models(df: pd.DataFrame, train: Callable) -> dict:
     """Fit costs and signed gaps only on rows where their physical scope exists."""
     models = {}
+    threshold = int(df[THRESHOLD_COLUMN].iloc[0])
     for scope in DSV4_FEATURE_COLUMNS:
         target_column = f"{TIME_STATS_PREFIX}.{scope}.{MEDIAN_STAT}"
         if target_column not in df:
@@ -227,6 +273,7 @@ def train_dsv4_attention_models(df: pd.DataFrame, train: Callable) -> dict:
                 name = dsv4_model_name(key, target)
                 model = train(model_name=name, df=rows, feature_cols=list(columns),
                               target_col=f"{prefix}.{scope}.{MEDIAN_STAT}")
+                model._frontier_dsv4_multi_stream_gemm_token_threshold = threshold
                 model._frontier_dsv4_bounds = {
                     column: (float(rows[column].min()), float(rows[column].max())) for column in bounds_columns
                 }
@@ -243,11 +290,17 @@ class DeepSeekV4ScopeTimes:
 class DeepSeekV4AttentionPredictor:
     """Exact measured lookup, then fitted interpolation within measured bounds."""
 
-    def __init__(self, models: Mapping, *, multi_stream_gemm_token_threshold: int):
+    def __init__(self, models: Mapping):
         self._models = {name: model for name, model in models.items() if name.startswith(MODEL_PREFIX)}
         if not self._models:
             raise ValueError("Measured V4 replay attention requires trained profiling data")
-        self.multi_stream_gemm_token_threshold = multi_stream_gemm_token_threshold
+        thresholds = {
+            getattr(model, "_frontier_dsv4_multi_stream_gemm_token_threshold", None)
+            for model in self._models.values()
+        }
+        if None in thresholds or len(thresholds) != 1:
+            raise ValueError("Measured V4 replay models require exactly one multi-stream GEMM token threshold")
+        self.multi_stream_gemm_token_threshold = thresholds.pop()
 
     def scope_times(
         self, features: DeepSeekV4BatchFeatures, *, variant: str, graph_runtime_mode: str,

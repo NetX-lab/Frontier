@@ -312,12 +312,6 @@ class ProfilingDataFrameLoaders:
             FileNotFoundError: If the input file does not exist
             ValueError: If no data matches filtering criteria
         """
-        if resolve_runtime_attention_family(replica_config.model_config).family_id == "deepseek_v4_attention":
-            from frontier.execution_time_predictor.deepseek_v4 import load_attention_dataframe
-
-            return load_attention_dataframe(file_path, replica_config.model_config,
-                replica_config.attn_tensor_parallel_size, replica_scheduler_config.block_size,
-                self._active_measurement_type)
         resolve_runtime_attention_family(
             replica_config.model_config
         ).require_enabled_for_execution()

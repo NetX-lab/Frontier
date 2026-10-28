@@ -1435,10 +1435,10 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
     def _load_attention_df(self, file_path: str) -> pd.DataFrame:
         if self._get_attention_family().family_id == "deepseek_v4_attention":
-            from frontier.execution_time_predictor.deepseek_v4 import load_attention_dataframe
+            from frontier.execution_time_predictor.dsv4_predictor import load_dsv4_attention_dataframe
 
-            return load_attention_dataframe(file_path, self._model_config,
-                self._replica_config.attn_tensor_parallel_size, self._block_size,
+            return load_dsv4_attention_dataframe(file_path, self._model_config,
+                self._replica_config, self._block_size,
                 self._active_measurement_type)
         if self._get_attention_family() is DSA_ATTENTION_FAMILY:
             from frontier.execution_time_predictor.dsa_predictor import load_dsa_dataframe
@@ -3193,34 +3193,25 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             )
 
         model = self._get_estimator()
-        grid_search_params = self._get_grid_search_params()
-
-        if len(df) < self._config.k_fold_cv_splits:
-            cv = 2
-        else:
-            cv = self._config.k_fold_cv_splits
-
-        grid_search = GridSearchCV(
-            estimator=model,
-            param_grid=grid_search_params,
-            scoring=self._get_scorer(),
-            cv=cv,
-            n_jobs=self._config.num_training_job_threads,
-        )
-
-        # we don't create a train/test split, because we want to use all data for training
-        # and we don't care about overfitting, because we only want to predict execution time within the same domain
         X, y = df[feature_cols], df[target_col]
-
-        grid_search.fit(X, y)
-        score = grid_search.score(X, y)
-
-        logger.info(
-            f"Trained model {model_name} and found best parameters: {grid_search.best_params_} "
-            f"with mean absolute percentage error (MEAP) {-score}%"
-        )
-
-        best_estimator = grid_search.best_estimator_
+        if len(df) == 1:
+            best_estimator = model.fit(X, y)
+            logger.info("Model %s trained on its single row", model_name)
+        else:
+            cv = 2 if len(df) < self._config.k_fold_cv_splits else self._config.k_fold_cv_splits
+            grid_search = GridSearchCV(
+                estimator=model, param_grid=self._get_grid_search_params(),
+                scoring=self._get_scorer(), cv=cv,
+                n_jobs=self._config.num_training_job_threads,
+            )
+            # Fit all measured rows: predictions stay in the same domain.
+            grid_search.fit(X, y)
+            score = grid_search.score(X, y)
+            logger.info(
+                f"Trained model {model_name} and found best parameters: {grid_search.best_params_} "
+                f"with mean absolute percentage error (MEAP) {-score}%"
+            )
+            best_estimator = grid_search.best_estimator_
         # Attach model identity so prediction cache can stay in sync with the actual estimator.
         setattr(best_estimator, "_frontier_model_hash", model_hash)
         setattr(best_estimator, "_frontier_feature_names", list(feature_cols))
@@ -3574,6 +3565,10 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             from frontier.execution_time_predictor.dsa_predictor import train_dsa_models
 
             return train_dsa_models(self._load_attention_df(self._attention_input_file), self._train_model)
+        if self._get_attention_family().family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.dsv4_predictor import train_dsv4_attention_models
+
+            return train_dsv4_attention_models(self._load_attention_df(self._attention_input_file), self._train_model)
         if self._is_mla_attention_family():
             return self._train_mla_attention_layer_models()
 
@@ -4052,6 +4047,10 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             from frontier.execution_time_predictor.dsa_predictor import DSAPredictor
 
             return {"dsa_attention": DSAPredictor(self._models)}
+        if self._get_attention_family().family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.dsv4_predictor import DeepSeekV4AttentionPredictor
+
+            return {"dsv4_attention": DeepSeekV4AttentionPredictor(self._models)}
         if self._is_mla_attention_family():
             feature_columns = get_enabled_shared_predictor_feature_columns(
                 LATENT_MLA_ATTENTION_FAMILY
@@ -7580,47 +7579,6 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             }),
         )
 
-    def _predict_dsv4_dummy_attention_time(
-        self, batch: Batch, layer_id: int, cluster_type: ClusterType, *,
-        execution_mode: str, has_attention_metadata: bool,
-        prefix_caching: bool, decode_context_parallel_size: int,
-        prefill_context_parallel_size: int,
-    ) -> AttentionOperatorTimes:
-        """Price selected eager source components without admitting V4 serving.
-
-        Each source component call receives the configured synthetic duration.
-        Their sum does not model native auxiliary-stream critical-path latency.
-        """
-        from frontier.attention.deepseek_v4 import (
-            DeepSeekV4CoverageError,
-            build_deepseek_v4_attention_workload,
-            build_deepseek_v4_dummy_attention_workload,
-        )
-        from frontier.entities.batch import DummyForwardBatch
-
-        builder = (build_deepseek_v4_dummy_attention_workload
-                   if isinstance(batch, DummyForwardBatch)
-                   else build_deepseek_v4_attention_workload)
-        workload = builder(
-            self._model_config, self._replica_config, batch, layer_id,
-            cluster_type=cluster_type, execution_mode=execution_mode,
-            has_attention_metadata=has_attention_metadata,
-            prefix_caching=prefix_caching,
-            decode_context_parallel_size=decode_context_parallel_size,
-            prefill_context_parallel_size=prefill_context_parallel_size,
-        )
-        if not self._enable_dummy_mode:
-            raise DeepSeekV4CoverageError(
-                "V4 attention serving lacks phase/physical-TP/graph-qualified latency; "
-                "isolated eager composite scopes cannot be summed across auxiliary streams"
-            )
-        timing = AttentionOperatorTimes({
-            name: self._dummy_execution_time * len(calls)
-            for name, calls in workload["operators"].items()
-        })
-        timing._dsv4_workloads = workload["operators"]
-        return timing
-
     def _predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
     ) -> AttentionTime:
@@ -7647,13 +7605,15 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         layer_spec = bind_layer_attention(self._model_config, layer_id)
         attention_family = get_attention_family(layer_spec.family_id)
         if attention_family.family_id == "deepseek_v4_attention":
-            from frontier.execution_time_predictor.deepseek_v4 import serving_context
+            from frontier.execution_time_predictor.deepseek_v4 import (
+                predict_attention_operator_times, serving_context,
+            )
 
             context = serving_context(self, batch, layer_id)
-            components = self._predict_dsv4_dummy_attention_time(
-                batch, layer_id, cluster_type, **{
+            components = predict_attention_operator_times(
+                self, batch, layer_id, cluster_type, **{
                     name: context[name] for name in (
-                        "execution_mode", "has_attention_metadata", "prefix_caching",
+                        "execution_mode", "prefix_caching",
                         "decode_context_parallel_size", "prefill_context_parallel_size",
                     )
                 },

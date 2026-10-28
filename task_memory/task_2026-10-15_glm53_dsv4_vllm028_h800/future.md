@@ -2,6 +2,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | Added the DeepSeek-V4 attention items that B8 left without a planned route entry. |
 | 2026-10-25 | Added the deferred profile04 P0 trace-audit ranks (D-TRACE-AUDIT-STOP). |
 | 2026-10-21 | D-MEASUREMENT-FIRST stops expanded CUPTI investigation; retained current evidence and bounded future choices without waiving DSA coverage. |
 | 2026-10-20 | Created: deferred work that is out of scope for the current tickets but must not be lost. First entry: the non-NIXL PDD DECODE-side KV reservation. |
@@ -76,3 +77,24 @@ Status: deferred by D-TRACE-AUDIT-STOP. Owner: unassigned. Recorded 2026-10-25.
 **Why deferred.** The P0 rank outputs do not block the first diagnostic P0 prediction (H4a). P1 is the other prefill lane of the same topology and serves the same workload.
 
 **Restart condition.** The H4a error attribution shows that the prefill lane cost is a leading error source and that P1 cannot stand in for P0. YC then approves one proposal that states its own resource limit; the 60 s / 30 GiB limit applies to inspections, not to this audit.
+
+## DeepSeek-V4 attention: items B8 left without a route entry
+
+Status: open, deferred. Owner: lead (H3o). Recorded 2026-10-28.
+
+**Cause.** B8 ([h3o_operator_costs/codex_assignment_B8_dsv4_attention_runtime.md](h3o_operator_costs/codex_assignment_B8_dsv4_attention_runtime.md)) made the V2 attention builder and the trained replay path the only V4 attention workload. Four items stay outside it, and no planned H3o entry owns them yet:
+- **Static warmup-only operators.** `dsv4_query_padding` and `dsv4_attention_output_zero` are still in the static V4 operator list. B8's builder no longer emits them for dummy forwards, and the replay table has no rows for them.
+- **Mixed batches in trained mode.** A batch with both decodes and prefills has no phase in the feature rule, so trained mode raises `DeepSeekV4CoverageError`. Package 03 measured no mixed rows.
+- **Measurement family per step.** It is not yet decided which measurement family (KERNEL_ONLY replay or another family) prices each V4 step type. Today only the replay family exists for attention.
+- **Kernel-count pairing.** The kernel-count pairing of V4 targets for the kernel-gap accounting.
+
+The entry 10 wiring, the manager path and the family's `execution_enabled` are planned route entries (6-9 and final admission) and are tracked in [progress.md](progress.md), not here.
+
+**Affected path.** V4 trained attention pricing under `frontier/execution_time_predictor/deepseek_v4.py` and `dsv4_predictor.py`, and the static operator list consumed by the structural path.
+
+**Why deferred.** None of the four items affects the H200 P0/P2 cases that the next entries qualify. Each one needs either measured rows that package 03 does not have (mixed batches) or a decision that depends on how entries 6-9 wire the composition (measurement family, kernel-count pairing, warmup-only operators).
+
+**Restart condition.** One of the following:
+- entries 6-9 are wired;
+- a target case schedules mixed decode/prefill V4 batches;
+- gate A12 reports one of these items as an error source.

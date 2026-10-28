@@ -122,7 +122,8 @@ def test_structural_boundary_validator_rejects_missing_store_and_wrong_write_row
                   request_is_decoding=[False], is_moe=True)
     calls = build_deepseek_v4_attention_workload(
         model, replica, batch, 3, cluster_type=ClusterType.MONOLITHIC,
-        execution_mode="eager", has_attention_metadata=True, prefix_caching=False,
+        execution_mode="eager",
+        prefix_caching=False,
         decode_context_parallel_size=1, prefill_context_parallel_size=1,
     )["operators"]
     validate(calls, query=1, context=127, layer=3)
@@ -233,7 +234,7 @@ def test_source_and_destination_timing_use_distinct_physical_rows(predictor):
     predictor._replica_config.total_expert_num = 256
     result = predictor._predict_dsv4_structural_execution(
         source_batch(), 0, 0, lane_workload=destination(),
-        execution_mode="eager", has_attention_metadata=True,
+        execution_mode="eager",
         prefix_caching=False, decode_context_parallel_size=1,
         prefill_context_parallel_size=1, enable_expert_parallel=True,
         moe_backend="auto", all2all_backend="allgather_reducescatter",
@@ -258,7 +259,7 @@ def test_full_43_layer_stage_preserves_every_canonical_physical_scope(predictor)
     layers = [predictor._predict_dsv4_structural_execution(
         source_batch(), layer, 0, lane_workload=destination(layer),
         include_stage_owned=layer == 0,
-        execution_mode="eager", has_attention_metadata=True,
+        execution_mode="eager",
         prefix_caching=False, decode_context_parallel_size=1,
         prefill_context_parallel_size=1, enable_expert_parallel=True,
         moe_backend="auto", all2all_backend="allgather_reducescatter",
@@ -281,52 +282,50 @@ def test_registered_legacy_scope_cannot_silently_enter_v4_phase_projection():
         execution_time({"dsv4_sparse_attention": 1.0, "attn_prefill": 2.0})
 
 
-@pytest.mark.parametrize("layer", [0, 2, 3, 42])
-def test_explicit_idle_forward_has_its_own_no_metadata_operator_scope(predictor, layer):
-    from frontier.attention.deepseek_v4 import build_deepseek_v4_dummy_attention_workload
-    from frontier.entities import DummyForwardBatch
+@pytest.mark.parametrize("layer,base_count", [(0, 8), (2, 19), (3, 11), (42, 19)])
+@pytest.mark.parametrize("mode,rows", [("NONE", 1), ("FULL", 4), ("PIECEWISE", 2), ("PIECEWISE", 4)])
+def test_dummy_attention_uses_v2_descriptor_geometry(predictor, layer, base_count, mode, rows):
+    from frontier.attention.deepseek_v4 import build_deepseek_v4_attention_workload
+    from frontier.entities.batch import DecodeCudaGraphMetadata, DummyForwardBatch
 
     batch = DummyForwardBatch(0, 0, 0)
-    workload = build_deepseek_v4_dummy_attention_workload(
-        predictor._model_config, predictor._replica_config, batch, layer,
-        cluster_type=ClusterType.MONOLITHIC, execution_mode="eager",
-        has_attention_metadata=False, prefix_caching=False,
-        decode_context_parallel_size=1, prefill_context_parallel_size=1,
-    )
-    names = set(workload["operators"])
-    assert {"dsv4_query_padding", "dsv4_attention_output_zero"} <= names
-    assert not names.intersection({
-        "dsv4_fused_q_kv_prepare", "dsv4_sparse_attention", "dsv4_index_scores",
-        "dsv4_index_topk", "dsv4_index_short_context_fill",
-        "dsv4_compressor_save_partial_states", "dsv4_compressor_fused_compress_store",
-        "dsv4_index_compressor_save_partial_states",
-        "dsv4_index_compressor_fused_compress_store",
-    })
-    assert workload["operators"]["dsv4_fused_qkv_projection"][0]["input_shape"] == (1, 4096)
-    assert ("dsv4_index_query_projection" in names) == (layer >= 2 and layer % 2 == 0)
-
-
-def test_idle_branch_never_substitutes_for_real_batch_metadata(predictor):
-    from frontier.attention.deepseek_v4 import (
-        build_deepseek_v4_attention_workload,
-        build_deepseek_v4_dummy_attention_workload,
-    )
-    from frontier.entities import DummyForwardBatch
-
-    context = dict(cluster_type=ClusterType.MONOLITHIC, execution_mode="eager",
-                   has_attention_metadata=False, prefix_caching=False,
-                   decode_context_parallel_size=1, prefill_context_parallel_size=1)
-    with pytest.raises(NotImplementedError, match="real metadata"):
-        build_deepseek_v4_attention_workload(
-            predictor._model_config, predictor._replica_config, source_batch(), 0, **context)
-    with pytest.raises(ValueError, match="explicit DummyForwardBatch"):
-        build_deepseek_v4_dummy_attention_workload(
-            predictor._model_config, predictor._replica_config, source_batch(), 0, **context)
-    context["has_attention_metadata"] = True
-    with pytest.raises(ValueError, match="absent attention metadata"):
-        build_deepseek_v4_dummy_attention_workload(
-            predictor._model_config, predictor._replica_config, DummyForwardBatch(0, 0, 0),
-            0, **context)
+    if mode != "NONE":
+        batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
+            "full_and_piecewise", mode, True, False, 1, rows, 1, rows,
+        )
+    context = dict(cluster_type=ClusterType.MONOLITHIC,
+                   execution_mode="eager" if mode == "NONE" else "cuda_graph",
+                   prefix_caching=False, decode_context_parallel_size=1,
+                   prefill_context_parallel_size=1)
+    result = build_deepseek_v4_attention_workload(
+        predictor._model_config, predictor._replica_config, batch, layer, **context)
+    operators = result["operators"]
+    csa = result["variant"] == "csa"
+    expected = 16 if csa and mode == "NONE" else 18 if csa and mode == "PIECEWISE" and rows == 2 else base_count
+    assert len(operators) == expected
+    assert not {"dsv4_query_padding", "dsv4_attention_output_zero"} & set(operators)
+    assert result["indexer_short_context"] == (csa and mode == "NONE")
+    assert result["num_tokens"] == rows and result["actual_num_tokens"] == 0
+    query_rows = (1,) * rows if mode == "FULL" else (rows,)
+    assert result["request_intervals"] == tuple((0, q) for q in query_rows)
+    ratio = predictor._model_config.compress_ratios[layer]
+    assert result["new_compressed_rows"] == tuple(q // ratio if ratio > 1 else 0 for q in query_rows)
+    sparse = operators["dsv4_sparse_attention"][0]
+    assert sparse["swa_logical_window_span_rows"] == query_rows
+    assert sparse["compressed_history_rows"] == result["new_compressed_rows"]
+    assert sparse["query_intervals"] == result["request_intervals"]
+    assert sparse["actual_query_rows"] == 0 and sparse["invalid_padding_rows"] == rows
+    prepare = operators["dsv4_fused_q_kv_prepare"][0]
+    assert prepare["kv_cache_write_rows"] == 0 and prepare["invalid_padding_rows"] == rows
+    for field in ("semantic_is_decoding", "source_request_order", "decode_request_indices", "prefill_request_indices"):
+        assert result[field] == ()
+    for field in ("decode_request_indices", "prefill_request_indices"):
+        assert sparse[field] == ()
+    for field in ("num_decode_query_tokens", "num_prefill_query_tokens"):
+        assert result[field] == 0
+    timing = predictor._predict_attention_layer_time(batch, layer, ClusterType.MONOLITHIC)
+    assert timing.operator_times.op_times == {scope: predictor._dummy_execution_time * len(calls)
+                                             for scope, calls in operators.items()}
 
 
 def test_idle_geometry_has_no_request_rows_or_lm_head(predictor):
@@ -338,7 +337,7 @@ def test_idle_geometry_has_no_request_rows_or_lm_head(predictor):
     dummy = DummyForwardBatch(0, 0, 0)
     result = predictor._predict_dsv4_structural_execution(
         dummy, 42, 0, lane_workload=destination(42),
-        execution_mode="eager", has_attention_metadata=False,
+        execution_mode="eager",
         prefix_caching=False, decode_context_parallel_size=1,
         prefill_context_parallel_size=1, enable_expert_parallel=True,
         moe_backend="auto", all2all_backend="allgather_reducescatter",
@@ -351,7 +350,7 @@ def test_idle_geometry_has_no_request_rows_or_lm_head(predictor):
     assert result._dsv4_source_rows["source_forward_kind"] == "request-free dummy"
     assert "dsv4_lm_head" not in result.op_times
     assert "dsv4_logits_gather" not in result.op_times
-    assert "dsv4_sparse_attention" not in result.op_times
+    assert "dsv4_sparse_attention" in result.op_times
     predictor._replica_config.attn_dp = 2
     assert source_physical_rows(predictor, {0: source_batch(17), 1: dummy}) == 32
 

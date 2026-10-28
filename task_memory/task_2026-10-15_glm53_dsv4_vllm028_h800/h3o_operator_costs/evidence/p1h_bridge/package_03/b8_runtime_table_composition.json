@@ -1,0 +1,30 @@
+{
+  "summary": {
+    "sha256": "277626cd766865bd0d006d73bf01b31292d7e3f536acce919b1c7ceca7f30ff6",
+    "rows": 505,
+    "models": 554,
+    "scope_mismatches": [],
+    "median_absolute_relative_error": 0.004909042604138507,
+    "p90_absolute_relative_error": 0.013427296634388455,
+    "maximum_absolute_relative_error": 0.06672723200168651,
+    "rows_above_five_percent": [
+      13,
+      204
+    ],
+    "b7_equal": true
+  },
+  "above": [
+    {
+      "row_index": 13,
+      "predicted_ms": 0.09087017313639323,
+      "target_ms": 0.096416015625,
+      "absolute_relative_error": 0.05751993019683316
+    },
+    {
+      "row_index": 204,
+      "predicted_ms": 0.12353565979003907,
+      "target_ms": 0.11580810546875,
+      "absolute_relative_error": 0.06672723200168651
+    }
+  ]
+}

@@ -127,6 +127,14 @@ def require_deepseek_v4_storage_device(device: str, gpu_platform: str) -> None:
         raise NotImplementedError("DeepSeek-V4 storage requires H800/H200 CUDA")
 
 
+DEEPSEEK_V4_MAIN_KV_CACHE_DTYPE_ALIASES = {"fp8": "fp8_ds_mla"}
+
+
+def deepseek_v4_main_kv_cache_dtype(kv_cache_dtype: str) -> str:
+    """Resolve vLLM's fp8 alias to the UE8M0-paged V4 main cache format."""
+    return DEEPSEEK_V4_MAIN_KV_CACHE_DTYPE_ALIASES.get(kv_cache_dtype, kv_cache_dtype)
+
+
 def _deepseek_v4_kv_cache_capacity(config, block_size: int, selection=None):
     """Pinned FlashMLA packed pages, independent of execution admission."""
     from frontier.attention.memory import (
@@ -140,9 +148,7 @@ def _deepseek_v4_kv_cache_capacity(config, block_size: int, selection=None):
     require_deepseek_v4_storage_device(selection.device, selection.gpu_platform)
     if selection.attention_backend != "FLASHMLA_SPARSE_DSV4":
         raise NotImplementedError("DeepSeek-V4 cache requires FLASHMLA_SPARSE_DSV4")
-    # vLLM DeepseekV4SparseMLABackend publishes fp8 as an alias of this
-    # UE8M0-paged format. No automatic or alternate backend selection is made.
-    main_dtype = {"fp8": "fp8_ds_mla"}.get(selection.kv_cache_dtype, selection.kv_cache_dtype)
+    main_dtype = deepseek_v4_main_kv_cache_dtype(selection.kv_cache_dtype)
     if main_dtype != "fp8_ds_mla":
         raise NotImplementedError("DeepSeek-V4 cache requires explicit fp8/fp8_ds_mla main KV dtype")
     if selection.indexer_kv_cache_dtype != "fp8":
