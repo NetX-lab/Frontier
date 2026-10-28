@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | Added the G3h run on 1 H200 and its kernel-identity check against the native P2 traces. |
 | 2026-10-28 | Created: lead review and rerun before the B12 + B12b commit. |
 
 ## Scope
@@ -35,3 +36,35 @@ Codex-reported checks not rerun by the lead: the source comparison of the native
 - CPU evidence only. GPU kernel names, cuteDSL availability on the worker image, and zero-local-class launches are not yet observed; G3h checks them against the native census.
 - The standalone shuffling scope keeps its own block-size rule and `ignore_invalid_experts=False`, while native grouped Marlin aligns inside the grouped envelope with `ignore_invalid_experts=True`. The consumer must not charge the shuffling row as a native cost outside the grouped envelope.
 - `tests/unit/test_profiling_governance_minimal_red.py` is 2,071 lines before and after; B12 replaced 2 lines in it and did not refactor it.
+
+## G3h run on 1 H200 (after the commit)
+
+Submitted through /ds4-exec (Pi `g3h-submit-1028g`, report `/data/ycfeng/tmp/ds4_runs/g3h-submit-1028g/output.md`) from the sealed package (manifest SHA-256 `711b70a0…8a8e`, 1,024 files, all hashes verified before submission).
+
+| Item | Expected | Actual | Result |
+| --- | --- | --- | --- |
+| RJob | Succeeded | `exp-1029-010008-493772`, 1 H200, `step_main`, non-preemptible; both phases (`G3H_MOE_CUDA_EVENT`, `G3H_MOE_RECORD_FUNCTION`) succeeded; no traceback | PASS |
+| Worker runtime | H200, vLLM 0.28.0 | NVIDIA H200, vLLM 0.28.0 | PASS |
+| GPU time | within the G1h-G4h cap of 7 | phase runtime 132.8 s = 0.0369 GPU-hours | PASS |
+| Copy | equal to the cloud tree | 112 files, 26,895,108 bytes, every size equal; `/data/ycfeng/tmp/glm53_dsv4/h200/g3h_01/download/` | PASS |
+| Tables | 13 EP16 and 20 EP32 rows per method | CUDA_EVENT 13 / 20, RECORD_FUNCTION 13 / 20; 99 kernel traces | PASS |
+| Backends | native V4 gate and grouped Marlin | `vllm_gate_linear`, `MARLIN`, `vllm_marlin_mxfp4` | PASS |
+
+### Kernel identity against the native P2 traces (CPU, lead)
+
+Scripts and outputs are kept in `h3o_operator_costs/evidence/g3h/`; scratch `/data/ycfeng/tmp/g3h_accept/`.
+
+| # | Command | Expected | Actual | Result |
+| --- | --- | --- | --- | --- |
+| 1 | `trace_kernels.py <G3h RECORD_FUNCTION profiler_traces>` → `trace_shapes.txt` | kernels per annotated scope and row | one multiset per row and scope | done |
+| 2 | `native_moe_kernels.py <P2-32 torch_traces>` and `<P2-64 torch_traces>` → `p2_32_moe.txt`, `p2_64_moe.txt`, `p2_32_moe_fill.txt` (dispatch segment of the TP0 trace of each lane, the census segmentation) | native routed-MoE and gate kernels per forward | per forward 43 each of `moe_align_block_size_kernel<long>`, `count_and_sort_expert_tokens_kernel<long>`, `_swiglu_limit_pad_aware_kernel` and `moe_sum_vec_kernel<c10::BFloat16, long, 6, true>`, at least 43 `FillFunctor<int>` grid 1, and 86 Marlin GEMMs | done |
+| 3 | `compare_shapes.py` → `cmp_ep16.txt` (P2-32 / EP16), `cmp_ep32.txt` (P2-64 / EP32) | every native (name, grid) appears in G3h | "native shapes not in G3h" empty for both; 13 and 20 shared shapes | PASS |
+
+Details:
+- Each G3h grouped-GEMM call launches the native per-layer set of 7 kernels: `FillFunctor<int>` grid 1, `moe_align_block_size_kernel<long>`, `count_and_sort_expert_tokens_kernel<long>`, 2 Marlin GEMMs (grid 528 on EP16, 264 on EP32), `_swiglu_limit_pad_aware_kernel` and `moe_sum_vec_kernel<c10::BFloat16, long, 6, true>`. The `<long>` kernels confirm the int64 routed ids on the `balanced_topk` path.
+- Gate: rows with L ≤ 4 launch the cuteDSL `ll_bf16_dotprod` kernel at grid 256; L = 768 launches `nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT` at grid (8, 12, 1). Native uses the same two kernels: cuteDSL in decode and dummy forwards, nvjet in the 6144-token prefill.
+- Shapes only in G3h are rows that the native runs did not observe (other grids of the same kernels) and the balanced-routing top-k kernels; the 4 `CUDAFunctorOnSelf_add<float>` kernels per trace are harness work outside the scopes.
+- Zero-local rows (EP16 rank 6 with 16 tokens and rank 12 with 32 tokens; EP32 rank 24 with 32 tokens) launch all 7 kernels; their grouped-GEMM median is 0.0118-0.0120 ms, against about 0.101 ms (EP16) and 0.062 ms (EP32) for non-zero rows of the same token count (`rows.txt`).
+- The RECORD_FUNCTION gate rows hold one traced call each (no variance estimate); every CUDA_EVENT row holds 20 measurements for each of the four operators.
+
+Limits of the run: `weight_source=dummy`, `gating_runtime_context=standalone_legacy`, `graph_mode=eager`. The standalone shuffling limit above still applies.

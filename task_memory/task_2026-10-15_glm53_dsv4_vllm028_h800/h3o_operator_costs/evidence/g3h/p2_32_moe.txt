@@ -1,0 +1,107 @@
+== decode dp0 FULL decode forwards 58 tokens {'1': 10, '2': 48}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== decode dp0 FULL dummy forwards 59 tokens {}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== decode dp0 PIECEWISE dummy forwards 1 tokens {}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== decode dp0 PIECEWISE first_tail_alone forwards 1 tokens {'1': 1}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== decode dp0 PIECEWISE first_tail_with_decodes forwards 1 tokens {'2': 1}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== decode dp1 FULL decode forwards 58 tokens {'1': 58}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== decode dp1 FULL dummy forwards 4 tokens {}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== decode dp1 PIECEWISE decode forwards 1 tokens {'1': 1}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== decode dp1 PIECEWISE first_tail_alone forwards 1 tokens {'1': 1}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== prefill dp0 FULL dummy forwards 93 tokens {}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== prefill dp0 NONE dummy forwards 1 tokens {}
+     43.00 grid=[256, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[264, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 145, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[12304, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== prefill dp0 NONE prefill forwards 2 tokens {'6144': 2}
+     43.00 grid=[256, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[8, 12, 1] nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+     86.00 grid=[264, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 145, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[12304, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== prefill dp1 FULL dummy forwards 101 tokens {}
+     43.00 grid=[96, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[528, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 1, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[32, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== prefill dp1 NONE dummy forwards 3 tokens {}
+     43.00 grid=[256, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at
+     86.00 grid=[264, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+     43.00 grid=[1, 145, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+     43.00 grid=[12304, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+== prefill dp1 NONE prefill forwards 24 tokens {'6144': 24}
+     43.00 grid=[256, 2, 1] _swiglu_limit_pad_aware_kernel
+     43.00 grid=[8, 12, 1] nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+     86.00 grid=[264, 1, 1] void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 28147497671065
+      1.79 grid=[1, 145, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     41.21 grid=[1, 288, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned lo
+     43.00 grid=[2, 1, 1] void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int
+      1.79 grid=[12304, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
+     41.21 grid=[24576, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const
