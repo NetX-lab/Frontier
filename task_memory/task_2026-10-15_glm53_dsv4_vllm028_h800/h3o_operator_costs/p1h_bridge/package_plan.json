@@ -4,7 +4,7 @@
   "name": "P1H_BRIDGE",
   "job_tag": "v4-h200-p1h-graph-bridge-20261028-03",
   "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_graph_bridge/p1h_bridge_03",
-  "source_revision": "548ec6c0e953e1b259dd3b465d958686ebb8e35b",
+  "source_revision": "230239c83cf44cfb2e3d117cb8424d763b64d314",
   "native_revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
   "native_repo": "/data/ycfeng/tmp/opencode/vllm-v0.28.0",
   "base_package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02",
