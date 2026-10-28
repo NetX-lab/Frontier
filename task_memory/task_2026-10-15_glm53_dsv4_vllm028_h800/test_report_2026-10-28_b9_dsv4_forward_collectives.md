@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | Dispatch bytes corrected for int64 `topk_ids` (see [test_report_2026-10-28_b10_g5h16.md](test_report_2026-10-28_b10_g5h16.md)). |
 | 2026-10-28 | Added the commit and the submission lock check. |
 | 2026-10-28 | Created: lead review and rerun of Codex assignment B9 (request `c82022e6`). |
 
@@ -47,7 +48,7 @@ From the saved dry runs; they equal the design's table.
 | SP attention all-gather | 8,192 → 65,536 (T 1-8); 16,384; 24,576; 32,768 → 262,144 | 6,291,456 → 50,331,648; 8,192 → 65,536 |
 | SP attention reduce-scatter (unpadded key) | 8,192 … 262,144 → 8,192 … 32,768 | 50,331,648 → 6,291,456; 8,192 → 8,192 |
 | SP final mHC all-gather | 32,768 → 262,144 … 131,072 → 1,048,576 | 25,165,824 → 201,326,592; 32,768 → 262,144 |
-| EP16 dispatch | 8,240 → 131,840 … 32,960 → 527,360 | 6,328,320 → 101,253,120; mixed `eager_t6144_1` 6,328,320 → 50,692,480 |
+| EP16 dispatch (int64 ids, corrected after G5h-16 `_01`; the first run used 8,240 bytes per row) | 8,264 → 132,224 … 33,056 → 528,896 | 6,346,752 → 101,548,032; mixed `eager_t6144_1` 6,346,752 → 50,840,128 |
 | EP16 combine | 131,072 → 8,192 … 524,288 → 32,768 | 100,663,296 → 6,291,456; mixed 50,397,184 |
 | EP32 combine, one 1-token lane | — | 151,060,480 → 6,291,456 |
 | logits all-gather | — | 32,320 × b → 258,560 × b, b = 1-24 |

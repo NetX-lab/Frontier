@@ -55,7 +55,7 @@ def test_call_list_order_counts_and_capture():
     assert {call.name for call in calls.values() if not call.captured} == {"logits_all_gather"}
     assert not any(call.group == "dp" for call in calls.values())
     assert calls["moe_dispatch_all_gatherv"].columns == (4096, 6, 6)
-    assert calls["moe_dispatch_all_gatherv"].dtypes == ("bfloat16", "float32", "int32")
+    assert calls["moe_dispatch_all_gatherv"].dtypes == ("bfloat16", "float32", "int64")
     assert calls["sp_final_mhc_all_gather"].columns == (16384,)
     assert parallel.expert_parallel_size == 16
     _, eager = _forward()
@@ -80,7 +80,7 @@ def test_graph_literal_bytes(tokens, embedding, gather, mhc, dp):
         assert padded == 65_536 * r
         assert call_bytes(calls["sp_final_mhc_all_gather"], parallel, rank) == (mhc, mhc * 8)
         assert call_bytes(calls["moe_dispatch_all_gatherv"], parallel, rank) == (
-            r * 8_240, r * 8_240 * dp * 8)
+            r * 8_264, r * 8_264 * dp * 8)
         assert call_bytes(calls["moe_combine_reduce_scatterv"], parallel, rank) == (
             (131_072 if dp == 2 else 262_144) * r, r * 8_192)
 
@@ -102,14 +102,14 @@ def test_eager_literal_bytes(lanes, combine):
         assert call_bytes(calls["sp_attention_all_gather"], parallel, rank) == (gather, 8 * gather)
         assert call_bytes(calls["sp_attention_reduce_scatter"], parallel, rank) == (embedding, gather)
         assert call_bytes(calls["sp_final_mhc_all_gather"], parallel, rank) == (mhc, 8 * mhc)
-        assert call_bytes(calls["moe_dispatch_all_gatherv"], parallel, rank)[0] == r * 8_240
+        assert call_bytes(calls["moe_dispatch_all_gatherv"], parallel, rank)[0] == r * 8_264
         assert call_bytes(calls["moe_combine_reduce_scatterv"], parallel, rank) == (
             combine, r * 8_192)
     if lanes == (6144, 1):
         dispatch = calls["moe_dispatch_all_gatherv"]
         assert dispatch.shard_rows == (768,) * 8 + (1,) * 8
-        assert call_bytes(dispatch, parallel, 0) == (6_328_320, 50_692_480)
-        assert call_bytes(dispatch, parallel, 8) == (8_240, 50_692_480)
+        assert call_bytes(dispatch, parallel, 0) == (6_346_752, 50_840_128)
+        assert call_bytes(dispatch, parallel, 8) == (8_264, 50_840_128)
         assert calls["sp_attention_reduce_scatter"].shard_rows == (6144,) * 8 + (1,) * 8
 
 

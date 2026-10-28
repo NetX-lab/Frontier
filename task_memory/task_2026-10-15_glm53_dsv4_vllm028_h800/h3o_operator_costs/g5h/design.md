@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | Corrected the dispatch `topk_ids` dtype to int64 (§2, §3, §4), found by the G5h-16 kernel comparison ([../../test_report_2026-10-28_b10_g5h16.md](../../test_report_2026-10-28_b10_g5h16.md)). |
 | 2026-10-28 | Created: stage order, the two native-path findings, the V4 forward call list, the grid, the launch and runtime checks, and the split into Codex assignments B9 and B10. |
 
 ## 1. Purpose and order
@@ -25,7 +26,7 @@ Source: native commit `2cf0a69` checkout `/data/ycfeng/Frontier/.real-engine/vLL
 
 **Finding 2: the V4 EP dispatch is one grouped `all_gatherv`.**
 - The P2 server log shows `MoEPrepareAndFinalizeNaiveDPEPModular` with `MarlinExperts` (MXFP4 weights, bf16 activations). Its `prepare` (`prepare_finalize/naive_dp_ep.py:113-170`) does not quantize the input (no input quantization dtype), so no scale tensor is gathered, and calls `get_ep_group().dispatch(hidden, topk_weights, topk_ids, is_sequence_parallel=True)`.
-- `AgRsAll2AllManager.dispatch` (`all2all.py:95-130`) gathers `[hidden bf16, topk_weights f32, topk_ids]` in one `all_gatherv` over the EP group, with per-EP-rank sizes from `sp_local_sizes` (`forward_context.py:102-113`: each lane's `ceil(T / TP)` repeated TP times). `topk_ids` are int32 because mega-MoE is off (`model.py:582`). `combine` is one `reduce_scatterv` over the EP group with the same sizes.
+- `AgRsAll2AllManager.dispatch` (`all2all.py:95-130`) gathers `[hidden bf16, topk_weights f32, topk_ids]` in one `all_gatherv` over the EP group, with per-EP-rank sizes from `sp_local_sizes` (`forward_context.py:102-113`: each lane's `ceil(T / TP)` repeated TP times). `topk_ids` are int64: the measured runs route with the pinned balanced routing (`frontier/profiling/moe/balanced_routing.py:27` returns `torch.long` when `indices_type` is None), and the naive DP/EP prepare step leaves `indices_type` None (`prepare_finalize/naive_dp_ep.py:103-104`). The P2 census shows `moe_align_block_size_kernel<long>`. The int32 of the model router (`model.py:582`) does not apply, because the balanced routing replaces it. `combine` is one `reduce_scatterv` over the EP group with the same sizes.
 - The census agrees: 129 `AllGatherV` kernels per dummy-prefill forward, 3 per layer (one per gathered tensor).
 - Frontier prices three separate `dsv4_ep_*_allgather` operators today. Entry 8 replaces them with one grouped dispatch call priced from this measurement.
 
@@ -43,7 +44,7 @@ Source: native commit `2cf0a69` checkout `/data/ycfeng/Frontier/.real-engine/vLL
 | `sp_attention_all_gather` | `sp_all_gather` | TP | `[r, 4096]` bf16 | 43 | `model.py:962-963` |
 | `sp_attention_reduce_scatter` | `sp_reduce_scatter` | TP | `[T, 4096]` bf16 before the pad | 43 | `model.py:966-967` |
 | `sp_final_mhc_all_gather` | `sp_all_gather` | TP | `[r, 4 × 4096]` bf16 | 1 | `model.py:1196-1197` |
-| `moe_dispatch_all_gatherv` | `all_gatherv` | EP | `[r, 4096]` bf16, `[r, 6]` f32, `[r, 6]` int32 | 43 | `all2all.py` dispatch |
+| `moe_dispatch_all_gatherv` | `all_gatherv` | EP | `[r, 4096]` bf16, `[r, 6]` f32, `[r, 6]` int64 | 43 | `all2all.py` dispatch |
 | `moe_combine_reduce_scatterv` | `reduce_scatterv` | EP | input `[Σ r, 4096]` bf16 | 43 | `all2all.py` combine |
 | `logits_all_gather` | `all_gather` dim −1 | TP | `[b, 16160]` bf16 | 1, eager | `logits_processor.py:126` |
 
@@ -68,7 +69,7 @@ Expected per-lane input bytes (C1 §4.5 plus the margins):
 | SP attention reduce-scatter, unpadded key | 8,192, 16,384, 32,768, 65,536, 131,072, 196,608, 262,144 (padded 65,536 × r) | 8,192 (padded 65,536), 50,331,648 |
 | SP final mHC all-gather | 32,768, 65,536, 98,304, 131,072 | 32,768, 25,165,824 |
 | logits all-gather | — | 32,320 × b, b = 1-24 |
-| EP dispatch, per lane: activation / weights / ids | r × 8,192 / r × 24 / r × 24, r = 1-4 | 6,291,456 or 8,192 / 18,432 or 24 |
+| EP dispatch, per lane: activation / weights / ids | r × 8,192 / r × 24 / r × 48, r = 1-4 | 6,291,456 or 8,192 / 18,432 or 24 / 36,864 or 48 |
 | EP combine input (EP16) | 131,072 × r | 100,663,296; 50,397,184 (mixed) |
 | EP combine input (EP32) | 262,144 × r | for example 151,060,480 for one 1-token lane |
 

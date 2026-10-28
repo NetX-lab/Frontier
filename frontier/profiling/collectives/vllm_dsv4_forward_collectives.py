@@ -9,7 +9,7 @@ Native references are to commit 2cf0a69:
 * ``distributed/device_communicators/custom_all_reduce.py:399-500``: custom
   and MNNVL eligibility depends on bytes, dtype and contiguity.
 * ``distributed/device_communicators/all2all.py``: AgRsAll2AllManager groups
-  hidden, float32 top-k weights and int32 ids in one dispatch, then combines
+  hidden, float32 top-k weights and int64 ids in one dispatch, then combines
   with reduce_scatterv. ``forward_context.py:102-113`` repeats each lane's
   ceil(T / TP) rows for every TP rank in that lane.
 * ``model_executor/layers/logits_processor.py:118-129`` and
@@ -28,11 +28,16 @@ from frontier.profiling.collectives.vllm_forward_collectives import (
     CollectiveCall,
     ForwardScenario,
     ServingParallelism,
-    TOPK_IDS_DTYPE,
     TOPK_WEIGHTS_DTYPE,
     VOCAB_PADDING_SIZE,
     ceil_div,
 )
+
+# The measured runs route with frontier/profiling/moe/balanced_routing.py, which
+# returns torch.long ids when indices_type is None; the naive DP/EP prepare step
+# leaves it None (prepare_finalize/naive_dp_ep.py:103-104). The native census
+# shows moe_align_block_size_kernel<long>.
+DSV4_TOPK_IDS_DTYPE = "int64"
 
 CALL_NAMES = (
     "embedding_all_reduce", "sp_attention_all_gather", "sp_attention_reduce_scatter",
@@ -99,7 +104,7 @@ def dsv4_forward_collectives(model: DeepseekV4Shape, parallel: ServingParallelis
                        (model.hc_mult * hidden,), (act,), sp_rows, 1,
                        "deepseek_v4/nvidia/model.py:1196-1197"),
         CollectiveCall("moe_dispatch_all_gatherv", "all_gatherv", "ep", 0,
-                       (hidden, k, k), (act, TOPK_WEIGHTS_DTYPE, TOPK_IDS_DTYPE),
+                       (hidden, k, k), (act, TOPK_WEIGHTS_DTYPE, DSV4_TOPK_IDS_DTYPE),
                        sp_rows, layers, "all2all.py AgRsAll2AllManager.dispatch"),
         CollectiveCall("moe_combine_reduce_scatterv", "reduce_scatterv", "ep", 0,
                        (hidden,), (act,), sp_rows, layers,

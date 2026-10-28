@@ -36,7 +36,7 @@ DP_SYNC_DTYPE = "int32"
 # vocab_parallel_embedding.DEFAULT_VOCAB_PADDING_SIZE.
 VOCAB_PADDING_SIZE = 64
 
-DTYPE_BYTES = {"bfloat16": 2, "float16": 2, "float32": 4, "int32": 4}
+DTYPE_BYTES = {"bfloat16": 2, "float16": 2, "float32": 4, "int32": 4, "int64": 8}
 
 # ``all_reduce`` etc. go through vLLM's GroupCoordinator, which picks the
 # communicator. ``device_group_all_reduce`` and ``cpu_all_reduce`` are plain
