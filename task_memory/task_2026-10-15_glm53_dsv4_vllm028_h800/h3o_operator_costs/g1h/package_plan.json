@@ -43,7 +43,7 @@
     248,
     256
   ],
-  "destination": "package_01",
+  "destination": "package_02",
   "expected_attention_backend": "FLASHMLA_SPARSE_DSV4",
   "gpu": 1,
   "gpu_memory_utilization": 0.85,
@@ -55,12 +55,12 @@
     "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
   ],
   "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
-  "job_tag": "v4-h200-g1h-attention-20261028-01",
+  "job_tag": "v4-h200-g1h-attention-20261028-02",
   "mem_gb": 128,
   "name": "G1H_ATTENTION",
   "native_repo": "/data/ycfeng/tmp/opencode/vllm-v0.28.0",
   "native_revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
-  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_attention/g1h_01",
+  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_attention/g1h_02",
   "pilot_cases": "pilot_cases.json",
   "plan_args": [
     "--model_name",
@@ -1094,7 +1094,7 @@
     }
   ],
   "seed": 1234,
-  "source_revision": "32d3d08b466a16c70a55f6f44359bd20106c91ca",
+  "source_revision": "a689ed05f462eb269b9dffe640da151e6614a5ef",
   "task_id": "H3O-STAGE2-G1H-ATTENTION",
   "timeout_seconds": 10800,
   "worker_output_root": "/tmp/glm_producers/out",
