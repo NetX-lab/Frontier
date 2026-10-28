@@ -380,3 +380,53 @@ def test_eager_non_kernel_attribution_does_not_change_kernel_metrics(full, categ
     assert owned.capture is None and outside.capture is None
     assert (owned.launch_end_us, outside.launch_end_us) == (31.0, 56.0)
     assert all(row.capture == 0 and row.launch_end_us == 11.0 for row in result.intervals if row.kind == "graph")
+
+
+def test_hold_is_an_unowned_dependency_with_shape_and_no_scope_cost():
+    from frontier.profiling.attention.graph_replay_trace import HOLD_ACTIVITY,hold_annotation_name
+    events=[_step(),_scope(LAYER,1,30),_annotation(hold_annotation_name(0),2,8),
+            _launch(1,3,graph=False),_activity(0,'sleep',50,40),
+            _scope(INNER,20,10),_launch(2,22,graph=False),_activity(0,'attention',91,5,correlation=2)]
+    result=attribute_replay_trace(events,CaptureRecord(),CONTAINERS)
+    hold=result.intervals[0]
+    assert hold.activity==HOLD_ACTIVITY and hold.owner is None
+    assert (hold.grid,hold.block)==(GRID,BLOCK)
+    assert result.outside_kernel_counts=={0:0}
+    assert result.layer_windows=={(0,4):(91.0,96.0)}
+    assert result.scope_times[ScopeKey(0,*INNER)]==ScopeKernelTime(0.005,1)
+    # A hold under a declared container still has no owner and cannot violate A2.
+    assert result.scope_times[ScopeKey(0,*LAYER)].kernel_count==0
+
+
+@pytest.mark.parametrize('count',[0,2])
+def test_hold_requires_exactly_one_kernel_launch(count):
+    from frontier.profiling.attention.graph_replay_trace import hold_annotation_name
+    events=[_step(),_annotation(hold_annotation_name(0),2,8)]
+    for index in range(count):events.extend([_launch(index+1,3+index,graph=False),_activity(0,'sleep',50+index*20,10,correlation=index+1)])
+    with pytest.raises(ValueError,match='exactly one kernel'):
+        attribute_replay_trace(events,CaptureRecord(),())
+
+
+@pytest.mark.parametrize('index,start,duration',[(1,2,8),(0,-1,8),(0,399,8)])
+def test_hold_must_be_inside_the_same_step(index,start,duration):
+    from frontier.profiling.attention.graph_replay_trace import hold_annotation_name
+    with pytest.raises(ValueError,match='inside its step range'):
+        attribute_replay_trace([_step(),_annotation(hold_annotation_name(index),start,duration)],CaptureRecord(),())
+
+
+@pytest.mark.parametrize('field',['grid','block'])
+@pytest.mark.parametrize('hold',[False,True])
+def test_eager_and_hold_kernels_require_launch_dimensions(field,hold):
+    from frontier.profiling.attention.graph_replay_trace import hold_annotation_name
+    activity=_activity(0,'kernel',50,10)
+    activity['args'].pop(field)
+    events=[_step(),_launch(1,3,graph=False),activity]
+    if hold:events.append(_annotation(hold_annotation_name(0),2,8))
+    with pytest.raises(ValueError,match=f'requires {field}'):
+        attribute_replay_trace(events,CaptureRecord(),())
+
+
+def test_copies_do_not_keep_launch_dimensions():
+    events=[_step(),_launch(1,3,graph=False),_activity(0,'copy',50,10,category='gpu_memcpy')]
+    result=attribute_replay_trace(events,CaptureRecord(),())
+    assert result.intervals[0].grid is None and result.intervals[0].block is None

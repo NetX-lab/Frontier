@@ -9,6 +9,8 @@
 | 2026-10-27 | B1 accepted and committed (`03d246f9`): implementation decisions, the P1h package layout and the driver CLI recorded in §3.4; the `dsv4_o_proj` row and the eager break under the V2 runner in §3.5. |
 | 2026-10-27 | §3.4: the re-capture takes a fresh graph pool (`548ec6c0`, after P1h attempt 1); P1h bridge check PASS on H200 (§4). |
 | 2026-10-28 | B2 accepted and committed (`32afae01`): implementation decisions in §3.4; A4 result on the bridge data and the remedy recommendation in §4. |
+| 2026-10-28 | §2: second checkout of the native commit noted; B3 assignment submitted (§4). |
+| 2026-10-28 | B3 accepted: implementation in §3.4; result and the tile-schedule planner finding in §4. |
 
 ## 1. Purpose
 
@@ -16,7 +18,7 @@ Design §5 stage 1a takes kernel ownership from the CUDA graph capture itself, b
 
 ## 2. Evidence
 
-vLLM, native commit `2cf0a69` (`/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm`):
+vLLM, native commit `2cf0a69` (`/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm`; the same commit is also checked out at `/data/ycfeng/tmp/opencode/vllm-v0.28.0`):
 
 - Breakable capture is auto-enabled for `DeepseekV4ForCausalLM` and then forces `compilation_config.mode = NONE` (`config/vllm.py:1310-1345`). The V4 forward therefore runs as ordinary Python during capture, so Python scope hooks run at capture time.
 - `BreakableCUDAGraphCapture` (`compilation/breakable_cudagraph.py:124-214`): each graph segment is a separate `torch.cuda.CUDAGraph` with its own `capture_begin(pool)` / `capture_end()`; `add_eager(fn)` ends the segment, runs `fn()` once with no capture open, appends `fn` to `segments`, and begins a new segment; `replay()` runs `segments` in order.
@@ -121,6 +123,16 @@ Containers (they must own no kernel): `dsv4_attention_layer`, `dsv4_parallel_inp
 
 `<compressor>` is `dsv4_compressor` or `dsv4_index_compressor`, the compressor scope on top of the stack. The eager break `_sparse_indexer_and_attn` is registered while the layer scope is on top; at replay the eager-scope runner encloses it in a layer range, and the `dsv4_index_topk` and `dsv4_sparse_attention` ranges inside own its kernels. With the V2 runner the break is this narrow `_sparse_indexer_and_attn`; the wider `_prepare_and_attn_eager` is used only when the V2 runner is off, which the graph-replay policy does not run.
 
+B3 as implemented ([test_report_2026-10-28_b3_hold_pilot_identity.md](../test_report_2026-10-28_b3_hold_pilot_identity.md)):
+
+- Pilot plan: `--pilot_cases PATH` (strict JSON: engines with their `prefill_query_len`, cases with phase, batch, prompt and an optional `dp_peer`) and `--step_hold_us`. Phases `first_tail` and `dummy` join `prefill` and `decode`. Plans without these options serialize byte-identically.
+- Step hold: a device spin of `step_hold_us` at the start of each recorded step, calibrated in cycles per µs at hook installation, so that the host runs ahead of the device inside the step. The step range now also covers `sample_tokens`.
+- DP-peer emulation: for a case with a `dp_peer`, the wrapped `dispatch_cg_and_sync_dp` calls vLLM's own synchronization with `dp_size` 2 and temporarily replaces `dp_utils.dist`, whose `all_reduce` writes the planned peer column into the CPU tensor; padding and mode therefore come from the native rule.
+- A4 is the own-gap gate: each call composes with its own measured signed gaps; the one-value-per-class composition stays as a diagnostic.
+- `tests/comparison/calibration/dsv4_kernel_identity_check.py` expands the pilot's per-layer attention kernels to the full model and requires count-wise containment in a native TP0 dispatch multiset of the same step class and mode (P2-32 and P2-64).
+- The bridge config lists runs as (mode, engine index, case ids); package 03 runs FULL_AND_PIECEWISE for engines e0 (21 cases) and e1 (4 first-tail cases).
+- Lead correction: `build_dsv4_rows` refuses graph-replay plans before reading records.
+
 ## 4. Order and acceptance
 
 `A (graph_capture.py, graph_replay_trace.py, CPU tests with fakes) -> review and commit -> B1 (policy, scope tree, re-capture, step range, bridge-check driver and launcher) -> review and commit -> P1h bridge check (1 H200, via /ds4-exec) -> B2 (intervals, gap reducer, A4) -> rest of P1h`.
@@ -132,3 +144,5 @@ Containers (they must own no kernel): `dsv4_attention_layer`, `dsv4_parallel_inp
 - A4 on the bridge data: FAIL. Of 74 groups, 38 have no host-ahead call, 28 fail and 8 pass. With one gap value per class, FULL CSA passes (1.6-2.2%), FULL uncompressed and HCA are 4-7% high, PIECEWISE decode 8-9% high, PIECEWISE prefill 6-9% high except CSA 6-7% low. With each call's own gaps the composition equals the measured window (errors about 1e-16 in all 36 evaluated groups), so the stream program is right and the class approximation is the cause. This is the design §3.3 stop rule; the decision was reported to YC.
 - Recommendation (b), adopted by default under D-NO-INTERRUPT: each attention scope's measured signed gaps (entry and intra-scope, host-ahead samples) are recorded with its cost row at its shape as a separate gap column, and the predictor learns them like durations; class values stay for non-attention operators and pre- and post-forward work. Diagnostic support: per-scope gaps taken from the nearest other decode shape compose all 13 decode groups within median 0.7% and p90 1.2%. A4 then checks the per-call composition, and shape generalization moves to A6. The change lands in entries 1, 3 and 10.
 - B3 is next: the kernel identity checker, the host-ahead hold, a case above the 1024-row threshold, the step range over `sample_tokens`, and the rest-of-P1h package.
+- B3 (CPU, lead rerun): pytest groups pass with only the two known failures; legacy plans and the census are byte-identical; on the B2 data the A4 gate gives {no_host_ahead_call 38, pass 36} (no hold in B2), the diagnostic {38, fail 28, pass 8}; the package 03 plan has 25 cases and 335 steps.
+- Finding (blocks package 03): the 6-layer reduced engine runs the FlashMLA tile-schedule planner (`get_mla_metadata_kernel`, about 26 µs) in every layer; native runs it in layers 0-3 only. vLLM keeps one plan per (SWA KV-cache group, layer type); `_approximate_gcd` splits the 43-layer model's SWA layers into 2 strided groups (even, odd; the native `cache.kv_cache_groups` inventory shows them) and the 6-layer model's into 3, so every reduced layer plans and no layer measures reuse. Frontier's "first layer of each variant" rule also misses that layer 1 plans natively. The expansion overcounts 39 planners, about 1 ms per decode step. Fix: assignment B4 (a vLLM-grouping planner rule shared by the plan and the predictor, a reduced layout with the native group structure, the realized groups recorded by the engine, and an identity expansion per (variant, role)).

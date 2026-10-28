@@ -47,6 +47,7 @@ import json
 import re
 import statistics
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 
 DEVICE_CATEGORIES = ("kernel", "gpu_memcpy", "gpu_memset")
@@ -57,6 +58,10 @@ DISPATCH_MODES = {
     "model_forward": "NONE",
 }
 SEGMENTS = ("prepare", "dispatch", "post")
+_KERNEL_CATEGORY = "kernel"
+_GRID, _BLOCK = "grid", "block"
+_LAUNCH_DIMENSIONS = 3
+_DISPATCH_SEGMENT = "dispatch"
 STEP_RANGE = re.compile(r"execute_context_(\d+)\((\d+)\)_generation_(\d+)\((\d+)\)")
 LANE_TRACE = re.compile(r"(?P<role>prefill|decode)/dp(?P<dp>\d+)/dp(?P=dp)_pp0_tp0_.*\.pt\.trace\.json\.gz$")
 
@@ -114,7 +119,7 @@ def lane_traces(trace_dir: Path) -> list[tuple[str, int, Path]]:
     return sorted(lanes, key=lambda lane: (lane[0], lane[1]))
 
 
-def forward_census(role: str, path: Path) -> dict:
+def _forward_segments(role: str, path: Path):
     with gzip.open(path, "rt") as trace_file:
         events = [event for event in json.load(trace_file)["traceEvents"] if event.get("ph") == "X"]
 
@@ -155,14 +160,12 @@ def forward_census(role: str, path: Path) -> dict:
     if len(dispatches) != len(metadata):
         raise ValueError(f"{path}: {len(metadata)} metadata ranges but {len(dispatches)} dispatch ranges")
     forwards = []
-    eager_names: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(lambda: [0, 0.0]))
-    previous_device_end = None
     for index, (meta, dispatch) in enumerate(zip(metadata, dispatches)):
         dispatch_end = dispatch["ts"] + dispatch["dur"]
         next_meta = metadata[index + 1]["ts"] if index + 1 < len(metadata) else float("inf")
         if not meta["ts"] <= dispatch["ts"] < next_meta:
             raise ValueError(f"{path}: forward {index} dispatch range is not between its metadata ranges")
-        floor = forwards[-1]["_dispatch_end"] if forwards else float("-inf")
+        floor = forwards[-1][0]["_dispatch_end"] if forwards else float("-inf")
         sync = next((event for event in reversed(syncs) if floor <= event["ts"] < meta["ts"]), None)
         next_sync = next((event for event in syncs if dispatch_end <= event["ts"] < next_meta), None)
         bounds = {
@@ -185,7 +188,47 @@ def forward_census(role: str, path: Path) -> dict:
             record["step"] = dict(zip(("context_requests", "context_tokens",
                                        "generation_requests", "generation_tokens"), numbers))
         record["class"] = step_class(role, record)
+        forwards.append((record, bounds))
 
+    return thread, main_stream, eager_streams, foreign_device, launches, launch_starts, device_by_correlation, forwards
+
+
+@dataclass(frozen=True)
+class ForwardKernels:
+    index: int
+    mode: str
+    step_class: str
+    kernels: Counter
+
+
+def dispatch_kernel_multisets(role: str, path: Path) -> tuple[ForwardKernels, ...]:
+    """Return launch-shaped dispatch kernel multisets, sharing census segmentation."""
+    _, _, _, _, launches, starts, device, forwards = _forward_segments(role, path)
+    result = []
+    for record, bounds in forwards:
+        start, stop = bounds[_DISPATCH_SEGMENT]
+        kernels = Counter()
+        for launch in launches[bisect.bisect_left(starts, start):bisect.bisect_left(starts, stop)]:
+            for event in device.get(launch["args"].get("correlation"), []):
+                if event.get("cat") == _KERNEL_CATEGORY:
+                    dimensions = []
+                    for field in (_GRID, _BLOCK):
+                        value = event["args"].get(field)
+                        if (not isinstance(value, (list, tuple)) or len(value) != _LAUNCH_DIMENSIONS
+                                or any(type(item) is not int for item in value)):
+                            raise ValueError(f"{path}: kernel {event['name']!r} requires {field} with three ints")
+                        dimensions.append(tuple(value))
+                    kernels[(event["name"], *dimensions)] += 1
+        result.append(ForwardKernels(record["index"], record["mode"], record["class"], kernels))
+    return tuple(result)
+
+
+def forward_census(role: str, path: Path) -> dict:
+    thread, main_stream, eager_streams, foreign_device, launches, launch_starts, device_by_correlation, segments_by_forward = _forward_segments(role, path)
+    forwards = []
+    eager_names: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(lambda: [0, 0.0]))
+    previous_device_end = None
+    for record, bounds in segments_by_forward:
         work = []
         segments = {}
         for name, (start, stop) in bounds.items():

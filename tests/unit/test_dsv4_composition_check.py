@@ -1,6 +1,6 @@
 """CPU A4 grouping, host-ahead admission, planner-role and report contracts."""
 
-from dataclasses import replace
+from dataclasses import asdict, replace
 import importlib.util
 import json
 from pathlib import Path
@@ -20,7 +20,7 @@ _SPEC.loader.exec_module(check)
 
 
 def roles(saved):
-    return {(record.engine["cudagraph_capture"]["cudagraph_mode"], 0): True for record in saved}
+    return {(record.engine["cudagraph_capture"]["cudagraph_mode"], record.engine["engine_index"], 0): True for record in saved}
 
 
 def test_composed_and_call_gap_diagnostic_equal_joined_target():
@@ -65,7 +65,9 @@ def test_missing_class_value_is_a_distinct_group_status():
     saved = [full, eager]
     report = check.check_composition(saved, roles(saved))
     group = next(group for group in report["groups"] if group["step_mode"] == "NONE")
-    assert group["status"] == "missing_gap_value" and group["missing_gap_values"] == ["eager"]
+    assert group["status"] == "no_host_ahead_call"
+    assert group["diagnostic"]["missing_gap_values"] == ["eager"]
+    assert group["diagnostic"]["status"] == "no_host_ahead_call"
     assert report["verdict"] == "FAIL"
 
 
@@ -81,7 +83,7 @@ def test_groups_keep_planner_variant_case_threshold_and_short_context_coordinate
 
 
 def _config(tmp_path, saved):
-    return bridge.BridgeConfig({}, (), (), 0, ("case",), tuple(record.engine["cudagraph_capture"]["cudagraph_mode"] for record in saved), (1,), tmp_path)
+    return bridge.BridgeConfig({}, (), (), tuple(bridge.BridgeRun(record.engine["cudagraph_capture"]["cudagraph_mode"], record.engine["engine_index"], ("case",)) for record in saved), (1,), tmp_path)
 
 
 def test_planner_role_comes_from_plan_and_ordered_inventory_is_checked(tmp_path, monkeypatch):
@@ -95,7 +97,7 @@ def test_planner_role_comes_from_plan_and_ordered_inventory_is_checked(tmp_path,
     monkeypatch.setattr(check.dsv4_attention_main, "build_parser", lambda: SimpleNamespace(parse_args=lambda argv: argv))
     monkeypatch.setattr(check.dsv4_attention_main, "build_plan", build)
     assert set(check.planner_roles(config, saved).values()) == {False}
-    assert invocations == [["plan", *bridge.graph_mode_flags(config, mode)] for mode in config.modes]
+    assert invocations == [["plan", *bridge.graph_mode_flags(mode, config.cudagraph_capture_sizes)] for mode in (run.mode for run in config.runs)]
     engine = dict(saved[0].engine, layers=[dict(saved[0].engine["layers"][0], compress_ratio=0)])
     with pytest.raises(ValueError, match="engine layers do not match.*recorded.*planned"):
         check.planner_roles(config, [replace(saved[0], engine=engine), *saved[1:]])
@@ -108,27 +110,27 @@ def test_real_planner_uncompressed_ratio_zero_matches_engine_ratio_one(tmp_path)
     saved = complete_records()
     config = replace(_config(tmp_path, saved), plan_args=tuple(PLAN_ARGS))
     plan = check.dsv4_attention_main.build_plan(check.dsv4_attention_main.build_parser().parse_args(
-        ["plan", *config.plan_args, *bridge.graph_mode_flags(config, "NONE")]))
+        ["plan", *config.plan_args, *bridge.graph_mode_flags("NONE", config.cudagraph_capture_sizes)]))
     assert any(layer.attention_variant == "uncompressed" and layer.compress_ratio == 0 for layer in plan.shape.layers)
     layers = [{"global_layer_id": layer.global_layer_id, "attention_variant": layer.attention_variant,
                "compress_ratio": max(1, layer.compress_ratio)} for layer in plan.shape.layers]
     saved = tuple(replace(record, engine=dict(record.engine, layers=layers)) for record in saved)
     actual = check.planner_roles(config, saved)
-    for mode in config.modes:
-        assert {layer.global_layer_id: actual[(mode, layer.global_layer_id)] for layer in plan.shape.layers} == {
+    for mode in (run.mode for run in config.runs):
+        assert {layer.global_layer_id: actual[(mode, 0, layer.global_layer_id)] for layer in plan.shape.layers} == {
             layer.global_layer_id: layer.plans_tile_schedule for layer in plan.shape.layers}
 
 
 def test_report_cli_writes_report_and_exit_verdict(tmp_path, monkeypatch):
     saved = complete_records()
     config = _config(tmp_path, saved)
-    for mode, record in zip(config.modes, saved):
+    for mode, record in zip((run.mode for run in config.runs), saved):
         path = tmp_path / mode / "raw" / "dsv4_raw_e0.jsonl"
         path.parent.mkdir(parents=True)
         path.write_text("".join(json.dumps(row) + "\n" for row in (record.engine, *record.steps, *record.calls, *record.intervals)))
     monkeypatch.setattr(check, "planner_roles", lambda config, records: roles(records))
     path = tmp_path / "config.json"
-    path.write_text(json.dumps(dict(config.__dict__, output_root=str(tmp_path))))
+    path.write_text(json.dumps(dict(asdict(config), output_root=str(tmp_path))))
     assert check.main(["--config", str(path)]) == 0
     report = json.loads((tmp_path / "composition_report.json").read_text())
     assert report["verdict"] == "PASS" and len(report["groups"]) == 3
@@ -144,3 +146,34 @@ def test_planner_failure_writes_explicit_failure_report(tmp_path, monkeypatch):
     assert check.report_composition(config) == 1
     report = json.loads((tmp_path / "composition_report.json").read_text())
     assert report["verdict"] == "FAIL" and report["reasons"] == ["planner inventory mismatch"]
+
+
+def test_own_gap_gate_keeps_class_diagnostic_and_scope_distributions():
+    saved=list(complete_records())
+    # Change a measured gap without changing its matching call duration.
+    # The own-gap composition follows the new target; class means remain pooled.
+    full=saved[0]
+    saved[0]=replace(full,intervals=tuple(dict(row,start_us=row['start_us']+5,end_us=row['end_us']+5,
+        graph_gap_us=6) if row['scope']=='dsv4_output_projection' else row for row in full.intervals))
+    reference=replace(full,source='reference',
+        steps=tuple(dict(row,case_id='reference') for row in full.steps),
+        calls=tuple(dict(row,case_id='reference') for row in full.calls),
+        intervals=tuple(dict(row,case_id='reference') for row in full.intervals))
+    saved.append(reference)
+    report=check.check_composition(saved,roles(saved))
+    group=next(group for group in report['groups'] if group['step_mode']=='FULL' and group['case_id']=='case')
+    assert group['status']=='pass' and group['host_ahead_fraction']==1.0
+    assert group['diagnostic']['status']=='fail'
+    assert group['diagnostic']['missing_gap_values']==[]
+    assert group['scope_gaps']['dsv4_output_projection']['gap_sum_ms']['median']==0.006
+    assert group['scope_gaps']['dsv4_output_projection']['ratio_to_scope_cost']['median']==3.0
+
+
+def test_roles_are_keyed_by_engine_as_well_as_mode(tmp_path,monkeypatch):
+    saved=complete_records()[:1]
+    second=replace(saved[0],source='engine1',engine=dict(saved[0].engine,engine_index=1))
+    config=_config(tmp_path,[*saved,second])
+    monkeypatch.setattr(check.dsv4_attention_main,'build_parser',lambda:SimpleNamespace(parse_args=lambda argv:argv))
+    monkeypatch.setattr(check.dsv4_attention_main,'build_plan',lambda args:SimpleNamespace(shape=SimpleNamespace(
+        target_tensor_parallel_size=8,layers=(SimpleNamespace(global_layer_id=0,attention_variant='uncompressed',compress_ratio=1,plans_tile_schedule=True),))))
+    assert check.planner_roles(config,[*saved,second])=={('FULL_AND_PIECEWISE',0,0):True,('FULL_AND_PIECEWISE',1,0):True}

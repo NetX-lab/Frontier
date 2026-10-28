@@ -7,7 +7,8 @@ group child scopes and must own no kernel themselves, while other scopes may
 own kernels outside their children. Sorted range indices keep trace attribution
 O(n log n), plus the captured dependency edges visited per graph launch. Copies
 and memsets remain in the intervals and graph wait calculation, but contribute
-no operator kernel time.
+no operator kernel time. A step hold launches exactly one sleep kernel; it
+is retained as an unowned dependency interval and excluded from all costs.
 """
 
 from __future__ import annotations
@@ -26,6 +27,11 @@ from frontier.profiling.attention.dsa_kernel_trace import (
 from frontier.profiling.attention.graph_capture import CaptureRecord, GraphNode, ScopeOwner
 
 STEP_ANNOTATION_PREFIX = "frontier_dsa_step"
+HOLD_ANNOTATION_PREFIX = "frontier_dsa_hold"
+HOLD_ACTIVITY = "hold"
+_KERNEL_ACTIVITY = "kernel"
+GRID, BLOCK = "grid", "block"
+_LAUNCH_DIMENSIONS = 3
 _SEPARATOR = "|"
 _ANNOTATION_CATEGORY = "user_annotation"
 _LAUNCH_CATEGORIES = frozenset({"cuda_runtime", "cuda_driver"})
@@ -51,6 +57,8 @@ class ReplayInterval:
     correlation: Any
     launch_end_us: float
     graph_gap_us: float | None
+    grid: tuple[int, int, int] | None
+    block: tuple[int, int, int] | None
 
 
 @dataclass(frozen=True)
@@ -64,6 +72,10 @@ class ReplayAttribution:
 
 def step_annotation_name(step_index: int) -> str:
     return _SEPARATOR.join((STEP_ANNOTATION_PREFIX, str(step_index)))
+
+
+def hold_annotation_name(step_index: int) -> str:
+    return _SEPARATOR.join((HOLD_ANNOTATION_PREFIX, str(step_index)))
 
 
 def parse_step_annotation(name: Any) -> int | None:
@@ -188,7 +200,7 @@ def _validate_kernel(event: dict[str, Any], node: GraphNode) -> None:
     name = event.get("name")
     if name != node.kernel_name and (node.kernel_name_demangled is None or name != node.kernel_name_demangled):
         raise ValueError(f"Kernel name mismatch for node {node.node_id}: trace {name!r}, captured raw {node.kernel_name!r}, demangled {node.kernel_name_demangled!r}")
-    for field in ("grid", "block"):
+    for field in (GRID, BLOCK):
         actual = event.get("args", {}).get(field)
         expected = getattr(node, field)
         if not isinstance(actual, (tuple, list)) or tuple(actual) != expected:
@@ -203,6 +215,7 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
     group child scopes; a kernel owned directly by one of them fails (A2).
     """
     step_ranges: dict[tuple[Any, Any], list[_Range]] = defaultdict(list)
+    hold_ranges: dict[tuple[Any, Any], list[_Range]] = defaultdict(list)
     scope_ranges: dict[tuple[Any, Any], list[_Range]] = defaultdict(list)
     launches: dict[Any, list[dict[str, Any]]] = defaultdict(list)
     graph_activities: dict[Any, list[dict[str, Any]]] = defaultdict(list)
@@ -213,6 +226,10 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
         category = event.get("cat")
         if category == _ANNOTATION_CATEGORY:
             name = event.get("name")
+            if isinstance(name, str) and name.startswith(HOLD_ANNOTATION_PREFIX):
+                hold = parse_step_annotation(name.replace(HOLD_ANNOTATION_PREFIX, STEP_ANNOTATION_PREFIX, 1))
+                hold_ranges[_thread(event)].append(_range(event, hold))
+                continue
             step = parse_step_annotation(name)
             if step is not None:
                 steps.add(step)
@@ -235,6 +252,14 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
             (graph_activities if graph else eager_activities)[correlation].append(event)
 
     step_indices = {thread: _RangeIndex(rows, False) for thread, rows in step_ranges.items()}
+    for thread, rows in hold_ranges.items():
+        for hold in rows:
+            enclosing = [step for step in step_ranges[thread]
+                         if step.key == hold.key and step.start <= hold.start and hold.end <= step.end]
+            if len(enclosing) != 1:
+                raise ValueError(f"Hold range {hold.key} must lie inside its step range on the same thread")
+    hold_indices = {thread: _RangeIndex(rows, False) for thread, rows in hold_ranges.items()}
+    hold_counts = {(thread, index): 0 for thread, rows in hold_ranges.items() for index in range(len(rows))}
     scope_indices = {thread: _RangeIndex(rows, True) for thread, rows in scope_ranges.items()}
     clones = _clone_nodes(record)
     captured_ids = {node.node_id for node in record.nodes}
@@ -266,14 +291,27 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
 
     def append(event: dict[str, Any], step: int, owner: ScopeOwner | None, kind: str,
                launch: dict[str, Any], capture: int | None = None,
-               original: int | None = None, gap: float | None = None) -> None:
+               original: int | None = None, gap: float | None = None,
+               activity: str | None = None) -> None:
         arguments = event.get("args", {})
         start = float(event["ts"])
+        activity = activity or _ACTIVITIES[event["cat"]]
+        dimensions = {}
+        for field in (GRID, BLOCK):
+            value = arguments.get(field)
+            if activity in (_KERNEL_ACTIVITY, HOLD_ACTIVITY):
+                if (not isinstance(value, (tuple, list)) or len(value) != _LAUNCH_DIMENSIONS
+                        or any(type(item) is not int for item in value)):
+                    raise ValueError(f"Kernel {event['name']!r} requires {field} with three ints, got {value!r}")
+                dimensions[field] = tuple(value)
+            else:
+                dimensions[field] = None
         intervals.append(ReplayInterval(
-            step, owner, kind, _ACTIVITIES[event["cat"]], event["name"],
+            step, owner, kind, activity, event["name"],
             start, start + float(event["dur"]), arguments.get("stream"),
             arguments.get("graph id"), arguments.get("graph node id"), original,
             capture, arguments.get("correlation"), float(launch["ts"]) + float(launch["dur"]), gap,
+            dimensions[GRID], dimensions[BLOCK],
         ))
         if owner is not None:
             scopes.add(ScopeKey(step, *owner))
@@ -329,12 +367,27 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
         if step is None:
             unattributed.add(id(launch))
             continue
+        hold_index = hold_indices.get(_thread(launch))
+        hold_step = hold_index.at(float(launch["ts"])) if hold_index is not None else None
+        if hold_step is not None:
+            if hold_step != step or len(kernels) != 1 or kernels[0]["cat"] != _KERNEL_ACTIVITY:
+                raise ValueError(f"Hold range {hold_step} must launch exactly one kernel inside its step")
+            rows = hold_ranges[_thread(launch)]
+            index = next(index for index, row in enumerate(rows)
+                         if row.start <= float(launch["ts"]) < row.end)
+            hold_counts[(_thread(launch), index)] += 1
+            append(kernels[0], step, None, "eager", launch, activity=HOLD_ACTIVITY)
+            continue
         index = scope_indices.get(_thread(launch))
         key = index.at(float(launch["ts"])) if index is not None else None
         if key is not None and key.step_index != step:
             raise ValueError(f"Eager launch step {step} disagrees with scope annotation {key!r}")
         for event in kernels:
             append(event, step, None if key is None else (key.global_layer_id, key.scope), "eager", launch)
+
+    for (thread, index), count in hold_counts.items():
+        if count != 1:
+            raise ValueError(f"Hold range {hold_ranges[thread][index].key} must launch exactly one kernel, found {count}")
 
     totals: dict[ScopeKey, float] = {key: 0.0 for key in scopes}
     counts: dict[ScopeKey, int] = {key: 0 for key in scopes}
@@ -361,5 +414,6 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
 
 __all__ = [
     "ReplayAttribution", "ReplayInterval", "STEP_ANNOTATION_PREFIX", "attribute_replay_trace",
+    "HOLD_ANNOTATION_PREFIX", "HOLD_ACTIVITY", "hold_annotation_name",
     "load_trace_events", "parse_step_annotation", "step_annotation_name",
 ]

@@ -105,7 +105,7 @@ def test_cli_none_has_empty_sizes():
 
 def test_graph_serialization_and_summary(plan):
     payload = plan.to_json()
-    assert set(payload["limits"]) == _LIMIT_KEYS | {"engine_policy", "cudagraph_mode", "cudagraph_capture_sizes"}
+    assert set(payload["limits"]) == _LIMIT_KEYS | {"engine_policy", "cudagraph_mode", "cudagraph_capture_sizes", "step_hold_us"}
     assert payload["limits"]["engine_policy"] == ENGINE_POLICY_GRAPH_REPLAY
     assert payload["limits"]["cudagraph_mode"] == "FULL_AND_PIECEWISE"
     assert payload["limits"]["cudagraph_capture_sizes"] == (1, 2, 4, 8)
@@ -184,7 +184,7 @@ def test_cli_runner_policy_table(plan, monkeypatch, tmp_path):
 
 
 @pytest.fixture
-def native_tree(plan, monkeypatch):
+def native_tree(plan, monkeypatch, request):
     entries, annotations, launches, parallel_calls = [], [], [], []
     native = {name: SimpleNamespace() for name in {
         replay._ATTENTION_MODULE, replay._COMPRESSOR_MODULE, replay._COMPRESS_STORE_MODULE,
@@ -277,12 +277,12 @@ def native_tree(plan, monkeypatch):
     descriptor = SimpleNamespace(cg_mode=SimpleNamespace(name="FULL"), num_tokens=8, num_reqs=None)
     runner_module = native[replay._MODEL_RUNNER_MODULE]
     runner_module.dispatch_cg_and_sync_dp = lambda *args, **kwargs: (descriptor, "tensor")
-    runner = SimpleNamespace(execute_model_state=None)
+    runner = SimpleNamespace(execute_model_state=None, sample_tokens=lambda *args, **kwargs: "sampled")
 
     def execute_model(*args):
         runner_module.dispatch_cg_and_sync_dp()
         runner.execute_model_state = SimpleNamespace(attn_metadata=metadata)
-        return "replayed without Python layer hooks"
+        return None
 
     runner.execute_model = execute_model
     worker = SimpleNamespace(
@@ -310,14 +310,21 @@ def native_tree(plan, monkeypatch):
     monkeypatch.setitem(sys.modules, "vllm", SimpleNamespace(envs=SimpleNamespace(VLLM_MULTI_STREAM_GEMM_TOKEN_THRESHOLD=1024)))
     monkeypatch.setitem(sys.modules, "torch", SimpleNamespace(profiler=SimpleNamespace(record_function=annotation)))
     layers = [(layer.global_layer_id, layer.attention_variant, layer.compress_ratio) for layer in plan.shape.layers]
+    calibration_requests = []
+    hold_us = getattr(request, "param", 0.0)
+    if hold_us:
+        plan = replace(plan, limits=replace(plan.limits, step_hold_us=hold_us))
+        monkeypatch.setattr(replay, "_calibrate_hold", lambda torch, requested_us:
+                            calibration_requests.append(requested_us) or (123, 2.0))
     inventory = replay.install_graph_replay_hooks(worker, 0, layers, plan)
     state = case_runner._require_state()
-    monkeypatch.setattr(state, "begin_step", lambda scheduler: None)
+    monkeypatch.setattr(state, "begin_step", lambda scheduler, dummy_run=False: None)
     state.case = case_runner._CaseRecorder("fake", "decode", 1, 0, 1, KERNEL_ONLY)
     state.active = case_runner._ActiveStep(7, dict.fromkeys(state.step_metadata))
     return SimpleNamespace(entries=entries, annotations=annotations, launches=launches,
                            parallel_calls=parallel_calls, native=native, modules=modules, worker=worker,
-                           state=state, inventory=inventory, metadata=metadata, descriptor=descriptor)
+                           state=state, inventory=inventory, metadata=metadata, descriptor=descriptor,
+                           calibration_requests=calibration_requests)
 
 
 @pytest.mark.parametrize("variant", ["csa", "hca", "uncompressed"])
@@ -409,12 +416,15 @@ def test_eager_scope_runner_annotates_registration_owner(native_tree):
 
 
 def test_step_range_reads_full_replay_metadata_and_dispatch(native_tree):
-    assert native_tree.worker.model_runner.execute_model("ignored") == "replayed without Python layer hooks"
+    assert native_tree.worker.model_runner.execute_model("ignored") is None
     assert native_tree.annotations == [step_annotation_name(7)]
     record = native_tree.state.active.record
     assert all(record[key] is not None for key in native_tree.state.step_metadata)
-    assert record[replay.CUDAGRAPH_DISPATCH_KEY] == {"cg_mode": "FULL", "num_tokens": 8, "num_reqs": None}
+    assert record[replay.CUDAGRAPH_DISPATCH_KEY] == {"cg_mode": "FULL", "num_tokens": 8, "num_reqs": None, "num_tokens_across_dp": None}
     assert record["csa_compressor_metadata"] == {"block_size": 1, "num_decode_tokens": 1, "c128_boundary": 1}
+    assert native_tree.state.step_range is not None
+    assert native_tree.worker.model_runner.sample_tokens() == "sampled"
+    assert native_tree.state.step_range is None
     native_tree.state.active = None
     native_tree.worker.model_runner.execute_model("unmeasured")
     assert native_tree.annotations == [step_annotation_name(7)]
@@ -423,7 +433,7 @@ def test_step_range_reads_full_replay_metadata_and_dispatch(native_tree):
 def test_case_wrapper_is_outermost_and_metadata_precedes_end_step(native_tree, monkeypatch):
     state = native_tree.state
     active = state.active
-    monkeypatch.setattr(state, "begin_step", lambda scheduler: active)
+    monkeypatch.setattr(state, "begin_step", lambda scheduler, dummy_run=False: active)
     # Installation wraps the inner step before creating the outer case classifier.
     ended = []
     monkeypatch.setattr(state, "end_step", lambda finished: ended.append(dict(finished.record)))
@@ -690,6 +700,7 @@ def test_graph_call_interval_rows_follow_calls_with_capture_identity(tmp_path, k
         "name": "kernel", "start_us": 100.0, "end_us": 120.0, "stream": 7,
         "graph_id": 99, "graph_node_id": 1010, "original_node_id": 10, "capture": 5,
         "capture_kind": kind, "correlation": 1, "launch_end_us": 11.0, "graph_gap_us": None,
+        "grid": (2, 1, 1), "block": (32, 1, 1),
     }
 
 
@@ -721,3 +732,245 @@ def test_driver_version_query_is_lazy_and_shuts_down_on_failure(monkeypatch):
     with pytest.raises(RuntimeError, match="fake NVML failure"):
         collect_driver_version()
     assert calls == ["init", "shutdown", "init", "shutdown"]
+
+
+def _empty_schedule():
+    return SimpleNamespace(finished_req_ids=[],num_scheduled_tokens={},scheduled_new_reqs=[],
+                           scheduled_cached_reqs=SimpleNamespace(req_ids=[],num_computed_tokens=[]))
+
+
+@pytest.mark.parametrize('phase,dummy,matched',[('dummy',True,True),('dummy',False,False),('decode',True,False),('prefill',True,False),('first_tail',True,False)])
+def test_dummy_binding_follows_wrapped_native_signature(monkeypatch,phase,dummy,matched):
+    from functools import wraps
+    import inspect
+    state=case_runner._WorkerState(0,None,())
+    peer={'num_tokens':2,'cg_mode':'FULL','uniform_token_count':1,'max_query_len':1}
+    state.case=case_runner._CaseRecorder('case',phase,1,1,1,KERNEL_ONLY,peer)
+    observed=[]
+    def native(scheduler_output,intermediate_tensors=None,dummy_run=False,skip_attn_for_dummy_run=False):
+        observed.append((dummy_run,state.matched_dp_peer,state.active))
+        return None
+    @wraps(native)
+    def inner(*args,**kwargs):return native(*args,**kwargs)
+    runner=SimpleNamespace(execute_model=inner)
+    monkeypatch.setattr(case_runner,'_STATE',state)
+    case_runner._wrap_execute_model(runner)
+    assert inspect.signature(runner.execute_model)==inspect.signature(native)
+    runner.execute_model(_empty_schedule(),None,dummy)
+    assert observed[-1][1]==(peer if matched else None)
+    assert observed[-1][2] is None  # Warmup retains the peer without recording.
+    assert state.matched_dp_peer is None
+    assert state.case.matches==int(matched)
+    if matched:
+        runner.execute_model(_empty_schedule(),dummy_run=True)
+        assert state.case.steps[0]['requests']==[]
+        assert state.matched_dp_peer is None
+
+
+@pytest.mark.parametrize('requests,matched',[
+    ([(1,6143),(1,6144),(1,6150)],True), ([(1,6143),(1,6143),(1,6144)],False),
+    ([(2,6142),(1,6144),(1,6150)],False), ([(1,6143),(1,6142),(1,6150)],False),
+    ([(1,6143),(1,6150)],False),
+])
+def test_first_tail_matching_exactly_one_tail_and_warmup_peer(monkeypatch,requests,matched):
+    state=case_runner._WorkerState(0,None,())
+    state.case=case_runner._CaseRecorder('tail','first_tail',3,1,2,KERNEL_ONLY,None,6144)
+    monkeypatch.setattr(state,'_scheduled_requests',lambda output:[dict(num_scheduled_tokens=n,num_computed_tokens=c,prompt_len=6144) for n,c in requests])
+    assert state.begin_step(None) is None
+    assert state.case.matches==int(matched)
+    if matched:
+        assert state.begin_step(None).record['phase']=='first_tail'
+
+
+@pytest.mark.parametrize('raises',[False,True])
+def test_case_wrapper_clears_peer_after_recorded_and_unrecorded_calls(monkeypatch,raises):
+    state=case_runner._WorkerState(0,None,())
+    peer={'num_tokens':4,'cg_mode':'FULL','uniform_token_count':1,'max_query_len':1}
+    state.case=case_runner._CaseRecorder('dummy','dummy',1,0,1,KERNEL_ONLY,peer)
+    def native(scheduler_output,dummy_run=False):
+        assert state.matched_dp_peer==peer
+        if raises:raise RuntimeError('native failure')
+    runner=SimpleNamespace(execute_model=native)
+    monkeypatch.setattr(case_runner,'_STATE',state)
+    case_runner._wrap_execute_model(runner)
+    if raises:
+        with pytest.raises(RuntimeError,match='native failure'):runner.execute_model(_empty_schedule(),True)
+    else:
+        runner.execute_model(_empty_schedule(),True)
+    assert state.matched_dp_peer is None and state.active is None
+
+
+@pytest.mark.parametrize('mode,tokens,uniform,maxq,expected_tokens,expected_mode',[
+    ('FULL',16,1,1,16,'FULL'),('PIECEWISE',9,None,1,16,'PIECEWISE'),('NONE',6144,None,6144,8,'NONE'),
+])
+def test_dp_peer_emulation_column_and_native_descriptor(monkeypatch,mode,tokens,uniform,maxq,expected_tokens,expected_mode):
+    from enum import IntEnum
+    import numpy as np
+    class Modes(IntEnum):NONE=0;PIECEWISE=1;FULL=2
+    dp_utils=SimpleNamespace(get_dp_group=lambda:'original group',dist=object())
+    old_group,old_dist=dp_utils.get_dp_group,dp_utils.dist
+    monkeypatch.setitem(sys.modules,replay._DP_UTILS_MODULE,dp_utils)
+    monkeypatch.setitem(sys.modules,replay._COMPILATION_MODULE,SimpleNamespace(CUDAGraphMode=Modes))
+    state=case_runner._WorkerState(0,None,(replay.CUDAGRAPH_DISPATCH_KEY,))
+    state.matched_dp_peer=dict(num_tokens=tokens,cg_mode=mode,uniform_token_count=uniform,max_query_len=maxq)
+    state.active=case_runner._ActiveStep(0,{replay.CUDAGRAPH_DISPATCH_KEY:None})
+    monkeypatch.setattr(case_runner,'_STATE',state)
+    seen=[]
+    def native(cudagraph_manager,num_reqs,num_tokens,uniform_token_count,dp_size,dp_rank,max_query_len=None,need_eager=False,num_active_loras=0):
+        assert (dp_size,dp_rank)==(2,0)
+        tensor=np.zeros((4,2),dtype=int)
+        tensor[:,0]=[num_tokens,Modes.FULL.value,uniform_token_count or 0,max_query_len or -1]
+        assert dp_utils.get_dp_group().cpu_group is None
+        dp_utils.dist.all_reduce(tensor,group=None)
+        seen.append(tensor.copy())
+        synced_mode=Modes(tensor[1].min())
+        width=num_tokens if synced_mode==Modes.NONE else next(size for size in (1,2,4,8,16) if size>=tensor[0].max())
+        if synced_mode!=Modes.NONE:tensor[0,:]=width
+        return SimpleNamespace(cg_mode=synced_mode,num_tokens=width,num_reqs=num_reqs),tensor[0]
+    module=SimpleNamespace(dispatch_cg_and_sync_dp=native)
+    replay._wrap_dispatch(module)
+    desc,tensor=module.dispatch_cg_and_sync_dp(None,8,8,1,1,0,max_query_len=1)
+    assert tensor is None and (desc.cg_mode.name,desc.num_tokens)==(expected_mode,expected_tokens)
+    assert seen[0][:,1].tolist()==[tokens,Modes[mode].value,uniform or 0,maxq or -1]
+    assert state.active.record[replay.CUDAGRAPH_DISPATCH_KEY]['num_tokens_across_dp']==([8,6144] if mode=='NONE' else [expected_tokens]*2)
+    assert dp_utils.get_dp_group is old_group and dp_utils.dist is old_dist
+    # Warmup calls apply the same emulation without active metadata recording.
+    state.active=None
+    module.dispatch_cg_and_sync_dp(None,8,8,1,1,0,max_query_len=1)
+    assert len(seen)==2
+
+
+def test_dp_attributes_restored_on_exception_and_nonlocal_size_rejected(monkeypatch):
+    from enum import IntEnum
+    class Modes(IntEnum):FULL=2
+    original_group=lambda:None
+    original_dist=object()
+    dp=SimpleNamespace(get_dp_group=original_group,dist=original_dist)
+    monkeypatch.setitem(sys.modules,replay._DP_UTILS_MODULE,dp)
+    monkeypatch.setitem(sys.modules,replay._COMPILATION_MODULE,SimpleNamespace(CUDAGraphMode=Modes))
+    state=case_runner._WorkerState(0,None,())
+    state.matched_dp_peer=dict(num_tokens=1,cg_mode='FULL',uniform_token_count=1,max_query_len=1)
+    monkeypatch.setattr(case_runner,'_STATE',state)
+    def native(dp_size,dp_rank):raise RuntimeError('dispatch failure')
+    module=SimpleNamespace(dispatch_cg_and_sync_dp=native)
+    replay._wrap_dispatch(module)
+    with pytest.raises(RuntimeError,match='dispatch failure'):module.dispatch_cg_and_sync_dp(1,0)
+    assert dp.get_dp_group is original_group and dp.dist is original_dist
+    with pytest.raises(ValueError,match='dp_size == 1'):module.dispatch_cg_and_sync_dp(2,0)
+
+
+def test_step_range_hold_sampling_and_unexpected_return(monkeypatch):
+    entries=[]
+    @contextmanager
+    def annotation(name):
+        entries.append(('enter',name));yield;entries.append(('exit',name))
+    torch=SimpleNamespace(profiler=SimpleNamespace(record_function=annotation),cuda=SimpleNamespace(_sleep=lambda cycles:entries.append(('sleep',cycles))))
+    state=case_runner._WorkerState(0,torch,())
+    state.active=case_runner._ActiveStep(9,{})
+    state.hold_cycles=123
+    monkeypatch.setattr(case_runner,'_STATE',state)
+    runner=SimpleNamespace(execute_model=lambda:None,execute_model_state=SimpleNamespace(attn_metadata={}),sample_tokens=lambda:entries.append(('sample',None)) or 'out')
+    replay._wrap_step(runner,SimpleNamespace(modules={}))
+    replay._wrap_sample_tokens(runner)
+    assert runner.execute_model() is None
+    assert state.step_range is not None
+    assert entries[0]==('enter','frontier_dsa_step|9')
+    assert entries[1:4]==[('enter','frontier_dsa_hold|9'),('sleep',123),('exit','frontier_dsa_hold|9')]
+    assert runner.sample_tokens()=='out'
+    assert entries[-2:]==[('sample',None),('exit','frontier_dsa_step|9')]
+    assert state.step_range is None
+    state.close_step_range()
+    bad=SimpleNamespace(execute_model=lambda:'unexpected')
+    replay._wrap_step(bad,SimpleNamespace(modules={}))
+    with pytest.raises(RuntimeError,match='must return None'):bad.execute_model()
+    state.case=case_runner._CaseRecorder('bad','decode',1,0,1,KERNEL_ONLY)
+    with pytest.raises(RuntimeError,match='open step range'):case_runner.finish_case(None,None)
+    state.close_step_range()
+
+
+def test_hold_calibration_and_inventory_fields(native_tree):
+    events=[]
+    class Event:
+        def __init__(self,enable_timing):assert enable_timing
+        def record(self):events.append('record')
+        def synchronize(self):events.append('sync')
+        def elapsed_time(self,end):return 50.0
+    torch=SimpleNamespace(cuda=SimpleNamespace(Event=Event,_sleep=lambda cycles:events.append(cycles)))
+    assert replay._calibrate_hold(torch,0)==(0,None)
+    assert events==[]
+    assert replay._calibrate_hold(torch,200000)==(400000000,2000.0)
+    assert events==[100000000,'record',100000000,'record','sync']
+    assert native_tree.inventory['step_hold_us']==0.0
+    assert native_tree.inventory['hold_cycles_per_us'] is None
+
+
+def test_dummy_worker_closes_range(monkeypatch):
+    state=case_runner._WorkerState(0,SimpleNamespace(profiler=SimpleNamespace(record_function=lambda name:nullcontext())),())
+    monkeypatch.setattr(case_runner,'_STATE',state)
+    def dummy():state.open_step_range('dummy')
+    case_runner.run_dummy_step(SimpleNamespace(execute_dummy_batch=dummy))
+    assert state.step_range is None
+
+
+@pytest.mark.parametrize('phase,batch',[('first_tail',3),('first_tail',1),('dummy',1)])
+def test_pilot_drivers_build_before_begin_and_execute_native_dummy(plan,monkeypatch,tmp_path,phase,batch):
+    from frontier.profiling.attention.dsa_plan import DsaCase,DsaDpPeer
+    case=DsaCase('pilot',0,phase,batch,6144 if phase=='first_tail' else 0,
+                 1024 if phase=='first_tail' else 0,1,2,13 if phase=='first_tail' else 3,
+                 None if phase=='first_tail' else DsaDpPeer(4,'FULL',1,1))
+    monkeypatch.setitem(sys.modules,'vllm',SimpleNamespace(SamplingParams=lambda **kwargs:kwargs))
+    entries,requests=[],{}
+    begun=False
+    recorded=0
+    def step():
+        nonlocal recorded
+        entries.append('step')
+        outputs=[]
+        for request_id,row in list(requests.items()):
+            row['steps']+=1
+            finished=row['max_tokens']==1 and row['steps']==2
+            outputs.append(SimpleNamespace(request_id=request_id,outputs=[SimpleNamespace(token_ids=[1])],finished=finished))
+            if finished:
+                requests.pop(request_id)
+                if begun:recorded+=1
+        return outputs
+    def add(request_id,prompt,params):
+        entries.append(('add',request_id,params['max_tokens']))
+        requests[request_id]=dict(steps=0,**params)
+    def abort(ids):
+        entries.append(('abort',ids))
+        for request_id in ids:requests.pop(request_id)
+    engine=SimpleNamespace(step=step,add_request=add,has_unfinished_requests=lambda:bool(requests),abort_request=abort)
+    def rpc(fn,args=()):
+        nonlocal begun,recorded
+        entries.append(fn.__name__)
+        if fn is case_runner.begin_case:
+            if phase=='first_tail':assert all(row['steps']>=1 for row in requests.values())
+            begun=True
+            assert args[-1]==case.prompt_len
+            assert args[3:5]==(case.warmup,case.measured)
+        elif fn is case_runner.run_dummy_step:recorded+=1
+        elif fn is case_runner.finish_case:
+            return [dict(recorded=max(0,recorded-case.warmup),steps=[],calls=[])]
+        return [None]
+    llm=SimpleNamespace(llm_engine=engine,collective_rpc=rpc)
+    assert case_runner.run_case(llm,plan,case,KERNEL_ONLY,random.Random(1),10,tmp_path,True,lambda *args:[])==[]
+    assert not requests
+    assert entries[-1]=='finish_case'
+    if phase=='first_tail':
+        if batch > 1:
+            assert entries.index('begin_case')>entries.index('step')
+        else:
+            assert entries[0]=='begin_case'
+        assert sum(isinstance(row,tuple) and row[0]=='add' and row[2]==1 for row in entries)==3
+    else:
+        assert entries.count('run_dummy_step')==3
+        assert not any(isinstance(row,tuple) and row[0]=='add' for row in entries)
+
+
+@pytest.mark.parametrize("native_tree", [200000.0], indirect=True)
+def test_nonzero_hold_calibration_is_in_the_engine_inventory(native_tree):
+    assert native_tree.calibration_requests == [200000.0]
+    assert native_tree.inventory["step_hold_us"] == 200000.0
+    assert native_tree.inventory["hold_cycles_per_us"] == 2.0
+    assert native_tree.state.hold_cycles == 123

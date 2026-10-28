@@ -18,6 +18,10 @@ the q/kv down-projections, norms, RoPE, and ``o_proj`` stay outside both and
 are linear-op work. Hooks are installed after engine start-up, so the memory
 profiling and dummy runs are never recorded.
 
+Graph pilots disable async scheduling and enable chunked prefill; native
+serving uses async scheduling without chunked prefill. First-tail pilots need
+the final one-token chunk.
+
 The weights are vLLM dummy weights and routing, top-k selection, and metadata
 are the engine's own; nothing in the measured path is replaced.
 
@@ -28,12 +32,14 @@ the DeepSeek-V4 attention producer, which installs its own module hooks.
 
 from __future__ import annotations
 
+import inspect
 import json
 import math
 import os
 import random
 import re
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from functools import wraps
 from pathlib import Path
 from typing import Any, Callable
 
@@ -52,6 +58,8 @@ from frontier.profiling.attention.dsa_plan import (
     MLA_SCOPE,
     PHASE_DECODE,
     PHASE_PREFILL,
+    PHASE_FIRST_TAIL,
+    PHASE_DUMMY,
     SHARED_INDEX_VARIANT,
     DsaCase,
     DsaEngineSpec,
@@ -87,6 +95,10 @@ CAPTURE_KIND = "capture_kind"
 CORRELATION = "correlation"
 LAUNCH_END_US = "launch_end_us"
 GRAPH_GAP_US = "graph_gap_us"
+GRID, BLOCK = "grid", "block"
+DUMMY_RUN_PARAMETER = "dummy_run"
+_CASE_STEP_MULTIPLIER = 4
+_CASE_STEP_ALLOWANCE = 64
 
 _LAYER_INDEX = re.compile(r"(?:^|\.)layers\.(\d+)\.")
 _MLA_METADATA_FIELDS = (
@@ -124,6 +136,8 @@ class _CaseRecorder:
     skip: int
     limit: int
     measurement: str
+    dp_peer: dict[str, Any] | None = None
+    prompt_len: int = 0
     matches: int = 0
     recorded: int = 0
     steps: list[dict[str, Any]] = field(default_factory=list)
@@ -152,6 +166,9 @@ class _WorkerState:
         self.active: _ActiveStep | None = None
         self.next_step_index = 0
         self.profiler: Any = None
+        self.matched_dp_peer: dict[str, Any] | None = None
+        self.step_range: Any = None
+        self.hold_cycles = 0
 
     def _scheduled_requests(self, scheduler_output: Any) -> list[dict[str, int]]:
         for req_id in scheduler_output.finished_req_ids:
@@ -174,18 +191,30 @@ class _WorkerState:
             for req_id, computed in entries
         ]
 
-    def begin_step(self, scheduler_output: Any) -> _ActiveStep | None:
-        requests = self._scheduled_requests(scheduler_output)
+    def begin_step(self, scheduler_output: Any, dummy_run: bool = False) -> _ActiveStep | None:
+        requests = [] if dummy_run else self._scheduled_requests(scheduler_output)
         case = self.case
-        if case is None or not requests:
+        if case is None:
             return None
-        prefills = sum(r["num_computed_tokens"] < r["prompt_len"] for r in requests)
-        if case.phase == PHASE_PREFILL:
-            matches = len(requests) == case.batch_size and prefills == case.batch_size
+        if dummy_run:
+            matches = case.phase == PHASE_DUMMY
+        elif not requests or case.phase == PHASE_DUMMY:
+            matches = False
+        elif case.phase == PHASE_FIRST_TAIL:
+            tails = [r for r in requests if r["num_scheduled_tokens"] == 1
+                     and r["num_computed_tokens"] + 1 == case.prompt_len]
+            matches = (len(requests) == case.batch_size and len(tails) == 1
+                       and all(r is tails[0] or r["num_computed_tokens"] >= case.prompt_len
+                               for r in requests))
         else:
-            matches = prefills == 0 and len(requests) == case.batch_size
+            prefills = sum(r["num_computed_tokens"] < r["prompt_len"] for r in requests)
+            if case.phase == PHASE_PREFILL:
+                matches = len(requests) == case.batch_size and prefills == case.batch_size
+            else:
+                matches = prefills == 0 and len(requests) == case.batch_size
         if not matches:
             return None
+        self.matched_dp_peer = case.dp_peer
         case.matches += 1
         if case.matches <= case.skip or case.recorded >= case.limit:
             return None
@@ -273,6 +302,17 @@ class _WorkerState:
             annotation_name(active.step_index, layer_id, scope)
         ):
             return function(*args, **kwargs)
+
+    def open_step_range(self, name: str) -> None:
+        if self.step_range is not None:
+            raise RuntimeError("A recorded step range is still open")
+        self.step_range = self.torch.profiler.record_function(name)
+        self.step_range.__enter__()
+
+    def close_step_range(self) -> None:
+        if self.step_range is not None:
+            self.step_range.__exit__(None, None, None)
+            self.step_range = None
 
     def start_profiler(self) -> None:
         torch = self.torch
@@ -366,18 +406,25 @@ def _wrap_mla(module: Any, layer_id: int) -> None:
 def _wrap_execute_model(runner: Any) -> None:
     original = runner.execute_model
 
+    signature = inspect.signature(original)
+
+    @wraps(original)
     def execute_model(scheduler_output, *args, **kwargs):
         state = _require_state()
-        active = state.begin_step(scheduler_output)
-        if active is None:
-            return original(scheduler_output, *args, **kwargs)
-        state.active = active
+        bound = signature.bind(scheduler_output, *args, **kwargs)
+        bound.apply_defaults()
+        active = state.begin_step(scheduler_output, bound.arguments.get(DUMMY_RUN_PARAMETER, False))
         try:
+            if active is None:
+                return original(scheduler_output, *args, **kwargs)
+            state.active = active
             output = original(scheduler_output, *args, **kwargs)
+            state.end_step(active)
+            return output
         finally:
-            state.active = None
-        state.end_step(active)
-        return output
+            if active is not None:
+                state.active = None
+            state.matched_dp_peer = None
 
     runner.execute_model = execute_model
 
@@ -473,11 +520,13 @@ def begin_case(
     skip: int,
     limit: int,
     measurement: str,
+    dp_peer: dict[str, Any] | None = None,
+    prompt_len: int = 0,
 ) -> None:
     state = _require_state()
     if state.case is not None:
         raise RuntimeError(f"Case {state.case.case_id} is still active")
-    state.case = _CaseRecorder(case_id, phase, batch_size, skip, limit, measurement)
+    state.case = _CaseRecorder(case_id, phase, batch_size, skip, limit, measurement, dp_peer, prompt_len)
     if measurement == KERNEL_ONLY:
         state.start_profiler()
 
@@ -489,6 +538,8 @@ def case_progress(worker: Any) -> int:
 def finish_case(worker: Any, trace_path: str | None) -> dict[str, Any]:
     state = _require_state()
     case = state.case
+    if state.step_range is not None:
+        raise RuntimeError(f"Case {case.case_id} finished with an open step range")
     state.case = None
     if case.measurement == KERNEL_ONLY:
         state.stop_profiler(trace_path)
@@ -506,7 +557,7 @@ def _case_window(case: DsaCase, engine: DsaEngineSpec) -> tuple[int, int]:
         query_budget = engine.prefill_query_len or engine.chunk_budget
         steps_per_prompt = math.ceil(case.prompt_len / query_budget)
         return case.warmup * steps_per_prompt, case.measured * steps_per_prompt
-    if case.phase == PHASE_DECODE:
+    if case.phase in (PHASE_DECODE, PHASE_FIRST_TAIL, PHASE_DUMMY):
         return case.warmup, case.measured
     raise ValueError(f"Unknown case phase {case.phase!r}")
 
@@ -594,7 +645,7 @@ def graph_replay_calls(
             ORIGINAL_NODE_ID: interval.original_node_id, CAPTURE: interval.capture,
             CAPTURE_KIND: None if interval.capture is None else captures[interval.capture],
             CORRELATION: interval.correlation, LAUNCH_END_US: interval.launch_end_us,
-            GRAPH_GAP_US: interval.graph_gap_us,
+            GRAPH_GAP_US: interval.graph_gap_us, GRID: interval.grid, BLOCK: interval.block,
         })
     return calls
 
@@ -613,6 +664,12 @@ def timing_measurements(engine_policy: str) -> tuple[str, ...]:
     return _TIMING_MEASUREMENTS[engine_policy]
 
 
+def run_dummy_step(worker: Any) -> None:
+    """Execute the native metadata-bearing dummy batch and close its step range."""
+    worker.execute_dummy_batch()
+    _require_state().close_step_range()
+
+
 def run_case(
     llm: Any,
     plan: DsaProfilePlan,
@@ -628,41 +685,74 @@ def run_case(
 
     engine_spec = plan.engine(case.engine_index)
     skip, limit = _case_window(case, engine_spec)
-    llm.collective_rpc(
-        begin_case,
-        args=(case.case_id, case.phase, case.batch_size, skip, limit, measurement),
-    )
+    begin_args = (case.case_id, case.phase, case.batch_size, skip, limit, measurement)
+    if case.dp_peer is not None or case.phase == PHASE_FIRST_TAIL:
+        begin_args += (None if case.dp_peer is None else asdict(case.dp_peer), case.prompt_len)
     llm_engine = llm.llm_engine
-    params = SamplingParams(
+    max_steps = _CASE_STEP_MULTIPLIER * case.estimated_steps + _CASE_STEP_ALLOWANCE
+    label = f"{case.case_id}/{measurement}"
+    params = None if case.phase == PHASE_DUMMY else SamplingParams(
         max_tokens=case.max_tokens, temperature=0.0, ignore_eos=True, detokenize=False
     )
-    max_steps = 4 * case.estimated_steps + 64
-    label = f"{case.case_id}/{measurement}"
-    if case.phase == PHASE_PREFILL:
-        for repeat in range(case.warmup + case.measured):
-            for index in range(case.batch_size):
-                llm_engine.add_request(
-                    f"{label}/r{repeat}/q{index}",
-                    _random_prompt(rng, case.prompt_len, vocab_size),
-                    params,
-                )
-            while llm_engine.has_unfinished_requests():
-                llm_engine.step()
-    else:
-        request_ids = [f"{label}/q{index}" for index in range(case.batch_size)]
+    if case.phase == PHASE_FIRST_TAIL:
+        request_ids = [f"{label}/q{index}" for index in range(case.batch_size - 1)]
         for request_id in request_ids:
-            llm_engine.add_request(
-                request_id, _random_prompt(rng, case.prompt_len, vocab_size), params
-            )
-        _step_until(
-            llm_engine,
-            lambda: llm.collective_rpc(case_progress)[0] >= limit,
-            max_steps,
-            label,
-        )
+            llm_engine.add_request(request_id, _random_prompt(rng, case.prompt_len, vocab_size), params)
+        emitted = set()
+        steps = 0
+        while len(emitted) < len(request_ids):
+            if steps >= max_steps or not llm_engine.has_unfinished_requests():
+                raise RuntimeError(f"{label}: decode requests did not emit an output within {max_steps} steps")
+            for output in llm_engine.step():
+                if output.request_id in request_ids and any(item.token_ids for item in output.outputs):
+                    emitted.add(output.request_id)
+            steps += 1
+        llm.collective_rpc(begin_case, args=begin_args)
+        tail_params = SamplingParams(max_tokens=1, temperature=0.0, ignore_eos=True, detokenize=False)
+        for repeat in range(case.warmup + case.measured):
+            tail_id = f"{label}/r{repeat}/q{len(request_ids)}"
+            llm_engine.add_request(tail_id, _random_prompt(rng, case.prompt_len, vocab_size), tail_params)
+            finished = False
+            steps = 0
+            while not finished:
+                if steps >= max_steps or not llm_engine.has_unfinished_requests():
+                    raise RuntimeError(f"{label}: tail request did not finish within {max_steps} steps")
+                finished = any(output.request_id == tail_id and output.finished for output in llm_engine.step())
+                steps += 1
         llm_engine.abort_request(request_ids)
         while llm_engine.has_unfinished_requests():
             llm_engine.step()
+    elif case.phase == PHASE_DUMMY:
+        llm.collective_rpc(begin_case, args=begin_args)
+        for _ in range(case.warmup + case.measured):
+            llm.collective_rpc(run_dummy_step)
+    else:
+        llm.collective_rpc(begin_case, args=begin_args)
+        if case.phase == PHASE_PREFILL:
+            for repeat in range(case.warmup + case.measured):
+                for index in range(case.batch_size):
+                    llm_engine.add_request(
+                        f"{label}/r{repeat}/q{index}",
+                        _random_prompt(rng, case.prompt_len, vocab_size),
+                        params,
+                    )
+                while llm_engine.has_unfinished_requests():
+                    llm_engine.step()
+        else:
+            request_ids = [f"{label}/q{index}" for index in range(case.batch_size)]
+            for request_id in request_ids:
+                llm_engine.add_request(
+                    request_id, _random_prompt(rng, case.prompt_len, vocab_size), params
+                )
+            _step_until(
+                llm_engine,
+                lambda: llm.collective_rpc(case_progress)[0] >= limit,
+                max_steps,
+                label,
+            )
+            llm_engine.abort_request(request_ids)
+            while llm_engine.has_unfinished_requests():
+                llm_engine.step()
 
     trace_path = trace_dir / f"{case.case_id}.json"
     result = llm.collective_rpc(finish_case, args=(str(trace_path),))[0]
@@ -834,6 +924,7 @@ __all__ = [
     "install_dsa_hooks",
     "measure_engine",
     "run_case",
+    "run_dummy_step",
     "run_engine",
     "timing_measurements",
 ]

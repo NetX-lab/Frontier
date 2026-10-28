@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from frontier.config.precision_type import PrecisionType
+from frontier.profiling.attention.dsa_plan import require_scope_timing
 from frontier.profiling.attention.dsa_rows import (
     KERNEL_ONLY,
     MEASUREMENT_TYPES,
@@ -213,8 +214,9 @@ def build_dsv4_rows(
 ) -> dict[str, list[dict[str, Any]]]:
     """Group raw records into rows, keyed by measurement type."""
 
+    require_scope_timing(plan.limits.engine_policy)
     engines, steps, calls = index_records(records)
-    identities = {canonical_json(engine.get("moe_routing")) for engine in engines.values()}
+    identities ={canonical_json(engine.get("moe_routing")) for engine in engines.values()}
     if len(identities) > 1:
         raise ValueError("Raw engines disagree on constructed routing identity")
     groups: dict[tuple, _RowAccumulator] = {}

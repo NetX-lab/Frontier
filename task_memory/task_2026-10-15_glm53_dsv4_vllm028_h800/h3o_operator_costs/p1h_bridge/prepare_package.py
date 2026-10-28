@@ -5,7 +5,7 @@ directory and native pins of ``h800_decode_balanced_02`` unchanged, except the
 launcher's workspace locator. The committed ``frontier`` and ``data/config``
 trees are extracted at the package root, because the accepted bootstrap puts
 only the package directory on ``PYTHONPATH`` before it runs the bridge driver.
-The driver then runs one profiling process per graph mode. A fresh destination
+The driver then runs one profiling process per (graph mode, engine) run. A fresh destination
 is required; an existing package is never altered.
 """
 
@@ -89,19 +89,25 @@ def main():
 
     if sha(package / "balanced_routing.py") != BALANCED_ROUTING_SHA256:
         raise ValueError("Accepted balanced routing strategy mismatch")
-    plan_args = [*spec["plan_args"], "--model_config_path", str(package / "model/config.json")]
+    shutil.copy2(HERE / spec["pilot_cases"], package / "pilot_cases.json")
+    plan_args = [*spec["plan_args"], "--model_config_path", str(package / "model/config.json"),
+                 "--pilot_cases", str(package / "pilot_cases.json")]
     expected = {}
-    for mode in spec["modes"]:
+    plans = {}
+    for mode in dict.fromkeys(run["mode"] for run in spec["runs"]):
         sizes = [] if mode == "NONE" else ["--cudagraph_capture_sizes",
                                            *map(str, spec["cudagraph_capture_sizes"])]
         plan = build_plan(build_parser().parse_args(
             ["plan", *plan_args, "--engine_policy", "graph_replay", "--cudagraph_mode", mode, *sizes]))
-        cases = {case.case_id: case for case in plan.cases if case.engine_index == spec["engine_index"]}
-        missing = sorted(set(spec["case_ids"]) - cases.keys())
-        if missing:
-            raise ValueError(f"{mode}: planned engine {spec['engine_index']} lacks cases {missing}")
+        plans[mode] = plan
         write(package / f"plans/{mode}.json", plan.to_json())
-        expected[mode] = {case_id: cases[case_id].estimated_steps for case_id in spec["case_ids"]}
+    for run in spec["runs"]:
+        mode, engine = run["mode"], run["engine_index"]
+        cases = {case.case_id: case for case in plans[mode].cases_for_engine(engine)}
+        missing = sorted(set(run["case_ids"]) - cases.keys())
+        if missing:
+            raise ValueError(f"{mode}: planned engine {engine} lacks cases {missing}")
+        expected[f"{mode}/e{engine}"] = {case_id: cases[case_id].estimated_steps for case_id in run["case_ids"]}
 
     overlay = json.loads((base / "overlay.json").read_text())
     overlay["staged_dir"] = str(package)
@@ -114,7 +120,7 @@ def main():
                                           cwd=spec["native_repo"])
         native_hashes[name] = hashlib.sha256(content).hexdigest()
     tool_names = ("dsv4_graph_bridge_check.py", "profile_dsv4_prefill.py", "balanced_routing.py",
-                  "overlay.json", "overlay_model.py", "native_dummy_bootstrap.py")
+                  "overlay.json", "overlay_model.py", "native_dummy_bootstrap.py", "pilot_cases.json")
     tool_hashes = {str(package / name): sha(package / name) for name in tool_names}
     for directory in ("frontier", "data", "model", "plans"):
         tool_hashes.update({str(path): sha(path) for path in (package / directory).rglob("*")
@@ -133,7 +139,7 @@ def main():
                      "--expected_attention_backend", spec["expected_attention_backend"],
                      "--gpu_memory_utilization", str(spec["gpu_memory_utilization"]),
                      "--seed", str(spec["seed"])],
-        "engine_index": spec["engine_index"], "case_ids": spec["case_ids"], "modes": spec["modes"],
+        "runs": spec["runs"],
         "cudagraph_capture_sizes": spec["cudagraph_capture_sizes"],
         "output_root": f"{phase_root}/bridge",
     }
@@ -156,13 +162,13 @@ def main():
         "task_id": spec["task_id"], "source_revision": revision, "native_revision": spec["native_revision"],
         "base_manifest_sha256": spec["base_manifest_sha256"], "builder_sha256": sha(Path(__file__)),
         "package_plan_sha256": sha(HERE / "package_plan.json"), "files": files,
-        "estimated_steps_by_mode_and_case": expected, "modes": spec["modes"],
+        "estimated_steps_by_run_and_case": expected, "runs": spec["runs"],
         "cudagraph_capture_sizes": spec["cudagraph_capture_sizes"],
         "planning_gpu_hours_cap": spec["planning_gpu_hours_cap"],
         "timeout_gpu_hours": spec["gpu"] * spec["timeout_seconds"] / 3600})
     verify_package(base, spec["base_manifest_sha256"])
     print(json.dumps({"package": str(package), "source_revision": revision, "files": len(files),
-                      "estimated_steps_by_mode_and_case": expected, "gpu_or_platform_operations": 0}))
+                      "estimated_steps_by_run_and_case": expected, "gpu_or_platform_operations": 0}))
 
 
 if __name__ == "__main__":

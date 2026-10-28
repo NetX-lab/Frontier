@@ -49,6 +49,7 @@ from frontier.profiling.attention.dsa_plan import (
     _required_config_int,
     _required_config_str,
     build_context_grid,
+    build_pilot_cases,
 )
 from frontier.profiling.common.model_config import ModelConfig
 
@@ -375,6 +376,17 @@ def _per_rank(hf_config: Mapping[str, Any], key: str, tensor_parallel_size: int)
     return value // tensor_parallel_size
 
 
+def _check_startup_query_length(engine: DsaEngineSpec, limits: DsaMeasurementLimits) -> None:
+    """Check the V4 startup dummy query at the configured scheduler capacity."""
+    startup_query_len = (engine.chunk_budget + limits.max_num_seqs - 1) // limits.max_num_seqs
+    if startup_query_len > engine.max_model_len:
+        raise ValueError(
+            f"V4 exact prefill startup query length {startup_query_len} exceeds "
+            f"max_model_len={engine.max_model_len}: "
+            f"chunk_budget={engine.chunk_budget}, max_num_seqs={limits.max_num_seqs}"
+        )
+
+
 def build_dsv4_profile_plan(
     *,
     model_name: str,
@@ -386,6 +398,7 @@ def build_dsv4_profile_plan(
     query_one_context_min: int = 0,
     query_one_context_max: int | None = None,
     prefill_prompt_len: int | None = None,
+    pilot_cases: Mapping[str, Any] | None = None,
 ) -> Dsv4ProfilePlan:
     if type(query_one_context_min) is not int or query_one_context_min < 0:
         raise ValueError("query_one_context_min must be a non-negative int")
@@ -430,21 +443,19 @@ def build_dsv4_profile_plan(
         short_context_max_seq_len=(index_topk + 1) * csa_ratio - 1,
         layers=layers,
     )
-    if query_one_context_max is not None or prefill_prompt_len is not None:
+    if pilot_cases is not None:
+        if query_one_context_max is not None or prefill_prompt_len is not None:
+            raise ValueError("pilot_cases is mutually exclusive with query_one_context_max and prefill_prompt_len")
+        engines, cases = build_pilot_cases(limits, pilot_cases)
+        for engine in engines:
+            _check_startup_query_length(engine, limits)
+    elif query_one_context_max is not None or prefill_prompt_len is not None:
         engines, cases = _build_serving_cases(
             limits, query_one_context_max, query_one_context_min, prefill_prompt_len
         )
         if prefill_prompt_len is not None and query_one_context_max is None:
             engine, = engines
-            startup_query_len = (
-                engine.chunk_budget + limits.max_num_seqs - 1
-            ) // limits.max_num_seqs
-            if startup_query_len > engine.max_model_len:
-                raise ValueError(
-                    f"V4 exact prefill startup query length {startup_query_len} exceeds "
-                    f"max_model_len={engine.max_model_len}: "
-                    f"chunk_budget={engine.chunk_budget}, max_num_seqs={limits.max_num_seqs}"
-                )
+            _check_startup_query_length(engine, limits)
             engines = (replace(engine, max_num_seqs=limits.max_num_seqs),)
     else:
         chunk_budgets = tuple(sorted(limits.chunk_budgets))

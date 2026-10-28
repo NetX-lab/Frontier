@@ -32,7 +32,7 @@ def records(mode, intervals, *, variant="uncompressed", call_costs=None, source=
               "device_name": "NVIDIA H200", "driver_version": "driver", "target_tensor_parallel_size": 8,
               "runtime_versions": {"torch": "torch version", "torch_cuda": "CUDA version"},
               "cudagraph_capture": {"cudagraph_mode": "FULL_AND_PIECEWISE" if mode == "FULL" else mode},
-              "multi_stream_gemm_token_threshold": 1024,
+              "multi_stream_gemm_token_threshold": 1024, "step_hold_us": 0.0, "hold_cycles_per_us": None,
               "layers": [{"global_layer_id": 0, "attention_variant": variant, "compress_ratio": 1}]}
     step = {"kind": "step", "engine_index": 0, "step_index": 0, "case_id": "case",
             "cudagraph_dispatch": {"cg_mode": mode, "num_tokens": 1}}
@@ -308,3 +308,62 @@ def test_container_owned_copy_remains_dependency_only_without_a_scope_position()
     assert reduction.diagnostics["classes"]["eager"]["sample_count"] == 1
     assert reduction.diagnostics["owned_non_kernel_time_us_by_engine_mode"]["NONE"] == 1
     assert reduction.values_us["eager"] == 1
+
+
+def _held(saved):
+    return replace(saved,engine=dict(saved.engine,step_hold_us=200000.0,hold_cycles_per_us=1000.0))
+
+
+@pytest.mark.parametrize('mode,launch,capture_kind',[('NONE','eager',None),('FULL','graph','graph')])
+def test_hold_supplies_r1_stream_and_layer_entry_without_gap_sample(mode,launch,capture_kind):
+    saved=_held(records(mode,[interval(10,100,activity='hold',stream=99),
+        interval(101,105,scope=Q,launch=launch,capture_kind=capture_kind,stream=7,launch_end=50)]))
+    hold,kernel=replay.activity_gaps([saved])
+    assert hold.segment is None and hold.exclusion_reason=='hold_dependency'
+    assert kernel.dependency_end_us==100 and kernel.gap_us==1 and kernel.host_ahead
+    diagnostics=replay.reduce_dsv4_gaps([saved]).diagnostics
+    assert diagnostics['none_unowned']['sample_count']==0
+    assert diagnostics['classes']['eager_preparation']['sample_count']==0
+
+
+def test_hold_overlap_exclusion_slack_and_post_hold_launch_counts():
+    saved=_held(records('NONE',[interval(10,100,activity='hold'),interval(20,25,activity='memcpy'),
+        interval(101,105,scope=Q,launch_end=150),interval(110,114,scope=OUT,launch_end=50),
+        interval(120,125,activity='memcpy',launch_end=130)]))
+    samples=replay.activity_gaps([saved])
+    overlap=next(sample for sample in samples if sample.interval['start_us']==20)
+    assert overlap.exclusion_reason=='overlaps_hold' and not overlap.host_ahead
+    diagnostic=replay.reduce_dsv4_gaps([saved]).diagnostics['hold_by_step_mode_and_case']['NONE']['case']
+    assert diagnostic=={'step_count':1,'realized_hold_duration_us':{'min':90.0,'median':90.0,'max':90.0},
+        'slack_us':{'min':-50.0,'median':-50.0},'attention_owned_post_hold_launch_count':1,'unowned_post_hold_launch_count':1}
+
+
+@pytest.mark.parametrize('configured,count',[(0,1),(1,0),(1,2)])
+def test_step_hold_count_invariant(configured,count):
+    saved=records('NONE',[interval(i*10,i*10+5,activity='hold') for i in range(count)]+[interval(50,60,scope=Q)])
+    if configured:saved=_held(saved)
+    with pytest.raises(ValueError,match=f'requires {configured} hold intervals'):
+        replay.activity_gaps([saved])
+
+
+@pytest.mark.parametrize('field',['step_hold_us','hold_cycles_per_us'])
+def test_engine_requires_hold_identity_fields(field):
+    saved=complete_records()[0]
+    engine=dict(saved.engine);engine.pop(field)
+    with pytest.raises(ValueError,match='no hold field'):
+        replay.reduce_dsv4_gaps([replace(saved,engine=engine)])
+
+
+@pytest.mark.parametrize("owned", [False, True])
+def test_hold_overlap_exclusion_precedes_eager_position_checks(owned):
+    rows = [interval(0, 20, activity="hold"),
+            interval(5, 6, scope=Q, launch="graph", capture_kind="breakable_segment"),
+            interval(15, 16, scope=OUT, launch="graph", capture_kind="breakable_segment")]
+    overlapping = interval(1, 2, scope=SPARSE) if owned else interval(8, 9)
+    rows.append(overlapping)
+    saved = records("PIECEWISE", rows)
+    saved = replace(saved, engine=dict(saved.engine, step_hold_us=20.0, hold_cycles_per_us=1.0))
+    samples = replay.activity_gaps([saved])
+    sample = next(sample for sample in samples if sample.interval is overlapping)
+    assert sample.exclusion_reason == "overlaps_hold"
+    assert not sample.host_ahead

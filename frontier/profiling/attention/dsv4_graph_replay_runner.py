@@ -9,6 +9,13 @@ attention, and output projections under each attention layer. Top-k owns its own
 kernels outside its scores child. Every hook checks its declared parent, including
 calls on auxiliary streams, which execute in the same Python thread.
 
+Padded steps execute attention over the synchronized dispatched rows, without
+sequence parallelism on this TP1 engine. A dummy beside a NONE peer executes
+its local one token. Returning no DP-width tensor is safe for the reduced dense
+MLP. Host synchronization inside execute_model and full launch queues are not
+excluded by construction: calibrated hold slack detects late launches. Sampling
+kernels and output copies are inside the step range as unowned eager preparation.
+
 The worker re-captures after installing the hooks and stops the clone subscriber
 before starting the profiler. This module imports GPU packages only in worker
 functions, so plans and saved traces remain usable on a CPU host.
@@ -17,11 +24,13 @@ functions, so plans and saved traces remain usable on a CPU host.
 from __future__ import annotations
 
 import importlib
+import inspect
 import json
 import os
 from collections import Counter
 from functools import partial, wraps
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Callable
 
 from frontier.profiling.attention import dsa_vllm_runner as case_runner
@@ -42,10 +51,20 @@ from frontier.profiling.attention.graph_capture import (
     GraphCaptureRecorder,
     ScopeOwner,
 )
-from frontier.profiling.attention.graph_replay_trace import step_annotation_name
+from frontier.profiling.attention.graph_replay_trace import hold_annotation_name, step_annotation_name
 from frontier.profiling.common.runtime_identity import collect_driver_version
 
 CUDAGRAPH_DISPATCH_KEY = "cudagraph_dispatch"
+NUM_TOKENS_ACROSS_DP = "num_tokens_across_dp"
+STEP_HOLD_US = "step_hold_us"
+HOLD_CYCLES_PER_US = "hold_cycles_per_us"
+HOLD_CALIBRATION_CYCLES = 100_000_000
+_LOCAL_DP_SIZE, _EMULATED_DP_SIZE, _LOCAL_DP_RANK, _PEER_DP_RANK = 1, 2, 0, 1
+_DP_SIZE_PARAMETER, _DP_RANK_PARAMETER = "dp_size", "dp_rank"
+_DP_PEER_ROWS = ("num_tokens", "cg_mode", "uniform_token_count", "max_query_len")
+_DP_UTILS_MODULE = "vllm.v1.worker.gpu.dp_utils"
+_COMPILATION_MODULE = "vllm.config.compilation"
+_MS_TO_US = 1000.0
 DRIVER_VERSION_KEY = "driver_version"
 TARGET_TENSOR_PARALLEL_SIZE_KEY = "target_tensor_parallel_size"
 BREAKABLE_CUDAGRAPH_ENV = "VLLM_USE_BREAKABLE_CUDAGRAPH"
@@ -258,8 +277,13 @@ def _wrap_step(runner: Any, discovered: attention_runner.AttentionLayers) -> Non
         active = state.active
         if active is None:
             return original(*args, **kwargs)
-        with state.torch.profiler.record_function(step_annotation_name(active.step_index)):
-            result = original(*args, **kwargs)
+        state.open_step_range(step_annotation_name(active.step_index))
+        if state.hold_cycles:
+            with state.torch.profiler.record_function(hold_annotation_name(active.step_index)):
+                state.torch.cuda._sleep(state.hold_cycles)
+        result = original(*args, **kwargs)
+        if result is not None:
+            raise RuntimeError("A recorded graph-replay execute_model must return None to close its range at sampling")
         metadata = runner.execute_model_state.attn_metadata
         if not isinstance(metadata, dict):
             raise ValueError("Micro-batched attention metadata is not supported by the DSA profiler")
@@ -277,23 +301,86 @@ def _wrap_step(runner: Any, discovered: attention_runner.AttentionLayers) -> Non
     runner.execute_model = execute_model
 
 
+def _wrap_sample_tokens(runner: Any) -> None:
+    original = runner.sample_tokens
+
+    @wraps(original)
+    def sample_tokens(*args, **kwargs):
+        result = original(*args, **kwargs)
+        case_runner._require_state().close_step_range()
+        return result
+
+    runner.sample_tokens = sample_tokens
+
+
+class _DpPeerReduction:
+    """Write only the peer column of the native CPU all-reduce tensor."""
+
+    def __init__(self, peer, modes):
+        self.values = (peer[_DP_PEER_ROWS[0]], modes[peer[_DP_PEER_ROWS[1]]].value,
+                       peer[_DP_PEER_ROWS[2]] or 0, peer[_DP_PEER_ROWS[3]] or -1)
+
+    def all_reduce(self, tensor, group=None):
+        for row, value in enumerate(self.values):
+            tensor[row][_PEER_DP_RANK] = value
+
+
 def _wrap_dispatch(module: Any) -> None:
     original = module.dispatch_cg_and_sync_dp
+    signature = inspect.signature(original)
 
     @wraps(original)
     def dispatch(*args, **kwargs):
-        result = original(*args, **kwargs)
         state = case_runner._require_state()
+        peer = state.matched_dp_peer
+        synced_tokens = None
+        if peer is None:
+            result = original(*args, **kwargs)
+        else:
+            bound = signature.bind(*args, **kwargs)
+            bound.apply_defaults()
+            if bound.arguments[_DP_SIZE_PARAMETER] != _LOCAL_DP_SIZE:
+                raise ValueError("DP-peer emulation requires bound dp_size == 1")
+            dp_utils = importlib.import_module(_DP_UTILS_MODULE)
+            modes = importlib.import_module(_COMPILATION_MODULE).CUDAGraphMode
+            old_group, old_dist = dp_utils.get_dp_group, dp_utils.dist
+            try:
+                dp_utils.get_dp_group = lambda: SimpleNamespace(cpu_group=None)
+                dp_utils.dist = _DpPeerReduction(peer, modes)
+                bound.arguments[_DP_SIZE_PARAMETER] = _EMULATED_DP_SIZE
+                bound.arguments[_DP_RANK_PARAMETER] = _LOCAL_DP_RANK
+                desc, tensor = original(*bound.args, **bound.kwargs)
+                synced_tokens = [int(value) for value in tensor.tolist()]
+                result = desc, None
+            finally:
+                dp_utils.get_dp_group, dp_utils.dist = old_group, old_dist
         if state.active is not None:
             desc, _ = result
             state.capture_metadata(CUDAGRAPH_DISPATCH_KEY, lambda: {
                 "cg_mode": desc.cg_mode.name,
                 "num_tokens": desc.num_tokens,
                 "num_reqs": desc.num_reqs,
+                NUM_TOKENS_ACROSS_DP: synced_tokens,
             })
         return result
 
     module.dispatch_cg_and_sync_dp = dispatch
+
+
+def _calibrate_hold(torch, hold_us: float) -> tuple[int, float | None]:
+    if hold_us == 0:
+        return 0, None
+    torch.cuda._sleep(HOLD_CALIBRATION_CYCLES)
+    start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+    start.record()
+    torch.cuda._sleep(HOLD_CALIBRATION_CYCLES)
+    end.record()
+    end.synchronize()
+    elapsed_us = start.elapsed_time(end) * _MS_TO_US
+    if elapsed_us <= 0:
+        raise RuntimeError(f"Hold calibration elapsed time must be positive, got {elapsed_us} us")
+    cycles_per_us = HOLD_CALIBRATION_CYCLES / elapsed_us
+    return round(hold_us * cycles_per_us), cycles_per_us
 
 
 def install_graph_replay_hooks(
@@ -311,10 +398,13 @@ def install_graph_replay_hooks(
     discovered = attention_runner.discover_attention_layers(worker, layers)
     _RECORDER = GraphCaptureRecorder(CudaGraphQueries(), _eager_scope_runner)
     _wrap_step(worker.model_runner, discovered)
+    _wrap_sample_tokens(worker.model_runner)
     _wrap_dispatch(importlib.import_module(_MODEL_RUNNER_MODULE))
     case_runner.install_case_recorder(
         worker, engine_index, plan.shape.step_metadata_keys() + (CUDAGRAPH_DISPATCH_KEY,)
     )
+    state = case_runner._require_state()
+    state.hold_cycles, cycles_per_us = _calibrate_hold(state.torch, plan.limits.step_hold_us)
     layer_inventory = []
     for layer in sorted(discovered.modules):
         module = discovered.modules[layer]
@@ -345,7 +435,8 @@ def install_graph_replay_hooks(
     attention_module._fill_short_context_topk_indices = _ShortContextFill(
         attention_module._fill_short_context_topk_indices
     )
-    return attention_runner.attention_inventory(discovered.modules, layer_inventory, worker, config)
+    return dict(attention_runner.attention_inventory(discovered.modules, layer_inventory, worker, config),
+                **{STEP_HOLD_US: plan.limits.step_hold_us, HOLD_CYCLES_PER_US: cycles_per_us})
 
 
 def _capture_result(record: CaptureRecord, mode: str, sizes: tuple[int, ...]) -> dict[str, Any]:

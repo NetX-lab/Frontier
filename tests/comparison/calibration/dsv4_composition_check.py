@@ -4,8 +4,8 @@ Plans restore the tile-planner role absent from the raw engine inventory. Gap
 means use all engine modes together, while errors are grouped by every runtime,
 planner and workload coordinate. Only calls with a defined, host-ahead gap for
 every owned activity count. The target is the joined kernel window plus its
-first kernel's signed gap. A diagnostic substitutes this call's own signed
-kernel gaps for the class means; it is reported but does not gate acceptance.
+first kernel's signed gap. The gate substitutes this call's own signed
+kernel gaps into scope costs and gates acceptance; the class means remain diagnostic.
 """
 
 from __future__ import annotations
@@ -23,10 +23,10 @@ from frontier.execution_time_predictor.dsv4_composition import compose_attention
 from frontier.profiling.attention import dsv4_attention_main
 from frontier.profiling.kernel_gap.dsv4_replay_gaps import (
     ACTIVITY, CASE_ID, CG_MODE, COMPRESS_RATIO, END_US, ENGINE_CAPTURE, ENGINE_MODE,
-    GLOBAL_LAYER_ID, HOST_BOUND, KERNEL, LAYERS, NO_DEPENDENCY, NUM_TOKENS, SCOPE,
+    ENGINE_INDEX, GLOBAL_LAYER_ID, HOST_BOUND, KERNEL, LAYERS, NO_DEPENDENCY, NUM_TOKENS, SCOPE,
     START_US, STEP_INDEX, TARGET_TP, THRESHOLD, US_TO_MS, VARIANT, CUDAGRAPH_DISPATCH_KEY,
     LayerCall, ReplayRecords, activity_gaps, build_layer_calls, read_replay_records,
-    reduce_dsv4_gaps,
+    reduce_dsv4_gaps, gap_statistics,
 )
 from dsv4_graph_bridge_check import BridgeConfig, graph_mode_flags, load_config
 
@@ -40,6 +40,11 @@ NO_OWNED_KERNEL, NON_POSITIVE_TARGET = "no_owned_kernel", "non_positive_target"
 TIME_MS, KERNEL_COUNT = "time_ms", "kernel_count"
 
 
+_HOST_AHEAD_FRACTION = 'host_ahead_fraction'
+_SCOPE_GAPS = 'scope_gaps'
+_GAP_SUM_MS = 'gap_sum_ms'
+_RATIO_TO_SCOPE_COST = 'ratio_to_scope_cost'
+
 @dataclass(frozen=True)
 class CompositionGroup:
     engine_mode: str
@@ -52,26 +57,27 @@ class CompositionGroup:
     indexer_short_context: bool
 
 
-def planner_roles(config: BridgeConfig, records: Sequence[ReplayRecords]) -> Mapping[tuple[str, int], bool]:
+def planner_roles(config: BridgeConfig, records: Sequence[ReplayRecords]) -> Mapping[tuple[str, int, int], bool]:
     """Rebuild each mode's plan and require the exact ordered layer inventory.
 
     The engine module stores at least ratio 1, while the plan keeps the native
     ``compress_ratios`` entry, which is 0 for uncompressed layers.
     """
     roles = {}
-    by_mode = {record.engine[ENGINE_CAPTURE][ENGINE_MODE]: record for record in records}
-    for mode in config.modes:
+    by_run = {(record.engine[ENGINE_CAPTURE][ENGINE_MODE], record.engine[ENGINE_INDEX]): record for record in records}
+    for run in config.runs:
+        mode = run.mode
         plan = dsv4_attention_main.build_plan(dsv4_attention_main.build_parser().parse_args(
-            ["plan", *config.plan_args, *graph_mode_flags(config, mode)]
+            ["plan", *config.plan_args, *graph_mode_flags(mode, config.cudagraph_capture_sizes)]
         ))
         expected = [(layer.global_layer_id, layer.attention_variant, max(1, layer.compress_ratio)) for layer in plan.shape.layers]
-        record = by_mode[mode]
+        record = by_run[(mode, run.engine_index)]
         actual = [(layer[GLOBAL_LAYER_ID], layer[VARIANT], layer[COMPRESS_RATIO]) for layer in record.engine[LAYERS]]
         if actual != expected:
             raise ValueError(f"A4 {mode} engine layers do not match the rebuilt plan: recorded {actual}, planned {expected}")
         if plan.shape.target_tensor_parallel_size != record.engine[TARGET_TP]:
             raise ValueError(f"A4 {mode} target TP does not match the rebuilt plan: recorded {record.engine[TARGET_TP]}, planned {plan.shape.target_tensor_parallel_size}")
-        roles.update({(mode, layer.global_layer_id): layer.plans_tile_schedule for layer in plan.shape.layers})
+        roles.update({(mode, run.engine_index, layer.global_layer_id): layer.plans_tile_schedule for layer in plan.shape.layers})
     return roles
 
 
@@ -79,7 +85,7 @@ def _group(call: LayerCall, roles) -> CompositionGroup:
     mode = call.engine[ENGINE_CAPTURE][ENGINE_MODE]
     dispatch = call.step[CUDAGRAPH_DISPATCH_KEY]
     return CompositionGroup(mode, dispatch[CG_MODE], call.engine[TARGET_TP], call.variant,
-                            roles[(mode, call.global_layer_id)], call.step[CASE_ID],
+                            roles[(mode, call.engine[ENGINE_INDEX], call.global_layer_id)], call.step[CASE_ID],
                             dispatch[NUM_TOKENS] <= call.engine[THRESHOLD], call.short_context)
 
 
@@ -91,7 +97,19 @@ def _errors(signed_errors):
             "signed_median_error": float(np.median(signed_errors))}
 
 
-def check_composition(records: Sequence[ReplayRecords], roles: Mapping[tuple[str, int], bool]) -> dict[str, Any]:
+def _status(count, errors):
+    if count == 0:
+        return NO_HOST_AHEAD_CALL
+    return (GROUP_PASS if errors["median_error"] <= MEDIAN_ERROR_LIMIT
+            and errors["p90_error"] <= P90_ERROR_LIMIT else GROUP_FAIL)
+
+
+def _percentiles(values):
+    stats = gap_statistics(values)
+    return {key: stats[key] for key in ("median", "p10", "p90")}
+
+
+def check_composition(records: Sequence[ReplayRecords], roles: Mapping[tuple[str, int, int], bool]) -> dict[str, Any]:
     """Evaluate layer calls without pooling different composition coordinates."""
     reduction = reduce_dsv4_gaps(records)
     gap_ms = {segment: value * US_TO_MS for segment, value in reduction.values_us.items()}
@@ -107,6 +125,7 @@ def check_composition(records: Sequence[ReplayRecords], roles: Mapping[tuple[str
     for group, calls in grouped.items():
         exclusions, missing, errors, diagnostic_errors = Counter(), set(), [], []
         host_ahead_count = 0
+        scope_gaps, scope_ratios = defaultdict(list), defaultdict(list)
         for call in calls:
             scope_ms = {row[SCOPE]: row[TIME_MS] for row in call.calls}
             counts = {row[SCOPE]: row[KERNEL_COUNT] for row in call.calls}
@@ -136,26 +155,31 @@ def check_composition(records: Sequence[ReplayRecords], roles: Mapping[tuple[str
             signed_gaps = defaultdict(float)
             for gap in kernels:
                 signed_gaps[gap.interval[SCOPE]] += gap.gap_us * US_TO_MS
-            diagnostic = compose_attention_phase(
+            composed = compose_attention_phase(
                 {name: value + signed_gaps[name] for name, value in scope_ms.items()},
                 counts, dict.fromkeys(required, 0.0), **options,
             )
-            diagnostic_errors.append((diagnostic.elapsed_ms - target_ms) / target_ms)
+            errors.append((composed.elapsed_ms - target_ms) / target_ms)
+            for name, cost in scope_ms.items():
+                scope_gaps[name].append(signed_gaps[name])
+                if cost != 0:
+                    scope_ratios[name].append(signed_gaps[name] / cost)
             if not required - gap_ms.keys():
-                composed = compose_attention_phase(scope_ms, counts, gap_ms, **options)
-                errors.append((composed.elapsed_ms - target_ms) / target_ms)
-        summary = _errors(errors)
-        if missing:
-            status = MISSING_GAP_VALUE
-        elif host_ahead_count == 0:
-            status = NO_HOST_AHEAD_CALL
-        elif summary["median_error"] <= MEDIAN_ERROR_LIMIT and summary["p90_error"] <= P90_ERROR_LIMIT:
-            status = GROUP_PASS
-        else:
-            status = GROUP_FAIL
+                diagnostic = compose_attention_phase(scope_ms, counts, gap_ms, **options)
+                diagnostic_errors.append((diagnostic.elapsed_ms - target_ms) / target_ms)
+        summary, diagnostic = _errors(errors), _errors(diagnostic_errors)
+        status = _status(host_ahead_count, summary)
+        diagnostic["status"] = (NO_HOST_AHEAD_CALL if host_ahead_count == 0
+                                else MISSING_GAP_VALUE if missing
+                                else _status(host_ahead_count, diagnostic))
+        diagnostic["missing_gap_values"] = sorted(missing)
         groups.append({**asdict(group), "call_count": len(calls), "host_ahead_count": host_ahead_count,
-                       "exclusion_counts": dict(sorted(exclusions.items())), "missing_gap_values": sorted(missing),
-                       **summary, "diagnostic": _errors(diagnostic_errors), "status": status})
+                       _HOST_AHEAD_FRACTION: host_ahead_count / len(calls),
+                       "exclusion_counts": dict(sorted(exclusions.items())),
+                       _SCOPE_GAPS: {name: {_GAP_SUM_MS: _percentiles(scope_gaps[name]),
+                                             _RATIO_TO_SCOPE_COST: _percentiles(scope_ratios[name])}
+                                      for name in sorted(scope_gaps)},
+                       **summary, "diagnostic": diagnostic, "status": status})
     return {"verdict": PASS if groups and all(group["status"] == GROUP_PASS for group in groups) else FAIL,
             "limits": {"median_error": MEDIAN_ERROR_LIMIT, "p90_error": P90_ERROR_LIMIT},
             "gap_values_ms": gap_ms, "gap_value_reasons": list(reduction.reasons), "groups": groups}
@@ -163,7 +187,7 @@ def check_composition(records: Sequence[ReplayRecords], roles: Mapping[tuple[str
 
 def report_composition(config: BridgeConfig) -> int:
     try:
-        records = read_replay_records([config.output_root / mode / "raw" / f"dsv4_raw_e{config.engine_index}.jsonl" for mode in config.modes])
+        records = read_replay_records([config.output_root / run.mode / "raw" / f"dsv4_raw_e{run.engine_index}.jsonl" for run in config.runs])
         report = check_composition(records, planner_roles(config, records))
     except (OSError, ValueError, KeyError, TypeError) as error:
         report = {"verdict": FAIL, "limits": {"median_error": MEDIAN_ERROR_LIMIT, "p90_error": P90_ERROR_LIMIT},

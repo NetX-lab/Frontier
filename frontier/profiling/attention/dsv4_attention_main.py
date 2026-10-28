@@ -67,6 +67,8 @@ def _add_dsv4_plan_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--engine_policy", choices=tuple(_RUNNER_MODULES), default=ENGINE_POLICY_EAGER_CHUNKED,
     )
+    parser.add_argument("--pilot_cases", type=Path)
+    parser.add_argument("--step_hold_us", type=float, default=0.0)
     parser.add_argument("--cudagraph_mode", choices=GRAPH_REPLAY_CUDAGRAPH_MODES)
     parser.add_argument("--cudagraph_capture_sizes", nargs="+", type=int)
     parser.add_argument(
@@ -99,6 +101,7 @@ def build_plan(args: argparse.Namespace) -> Dsv4ProfilePlan:
         decode_measured_steps=args.decode_measured_steps,
         prefill_warmup_repeats=args.prefill_warmup_repeats,
         prefill_measured_repeats=args.prefill_measured_repeats,
+        step_hold_us=getattr(args, "step_hold_us", 0.0),
         engine_policy=getattr(args, "engine_policy", ENGINE_POLICY_EAGER_CHUNKED),
         cudagraph_mode=getattr(args, "cudagraph_mode", None),
         cudagraph_capture_sizes=tuple(getattr(args, "cudagraph_capture_sizes", None) or ()),
@@ -113,6 +116,7 @@ def build_plan(args: argparse.Namespace) -> Dsv4ProfilePlan:
         query_one_context_min=getattr(args, "query_one_context_min", 0),
         query_one_context_max=getattr(args, "query_one_context_max", None),
         prefill_prompt_len=getattr(args, "prefill_prompt_len", None),
+        pilot_cases=(load_hf_config(args.pilot_cases) if getattr(args, "pilot_cases", None) else None),
     )
 
 
