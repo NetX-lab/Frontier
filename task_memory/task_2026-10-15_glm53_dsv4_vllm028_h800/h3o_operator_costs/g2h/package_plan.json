@@ -17,7 +17,7 @@
   "name": "G2H_V4_OPERATORS",
   "job_tag": "v4-h200-g2h-operators-20261028-01",
   "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_operators/g2h_01",
-  "source_revision": "e8eb3c97f689f47b090753e525730f90817c113f",
+  "source_revision": "7753e5a951710d93c1426fc699614ff3d2cff5cc",
   "model": "deepseek-ai/DeepSeek-V4-Flash",
   "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
   "timeout_seconds": 3600,
