@@ -21,6 +21,7 @@ import numpy as np
 
 from frontier.execution_time_predictor.dsv4_composition import compose_attention_phase, segment_class
 from frontier.profiling.attention import dsv4_attention_main
+from frontier.profiling.attention.dsv4_attention_plan import require_realized_kv_cache_groups
 from frontier.profiling.kernel_gap.dsv4_replay_gaps import (
     ACTIVITY, CASE_ID, CG_MODE, COMPRESS_RATIO, END_US, ENGINE_CAPTURE, ENGINE_MODE,
     ENGINE_INDEX, GLOBAL_LAYER_ID, HOST_BOUND, KERNEL, LAYERS, NO_DEPENDENCY, NUM_TOKENS, SCOPE,
@@ -77,6 +78,7 @@ def planner_roles(config: BridgeConfig, records: Sequence[ReplayRecords]) -> Map
             raise ValueError(f"A4 {mode} engine layers do not match the rebuilt plan: recorded {actual}, planned {expected}")
         if plan.shape.target_tensor_parallel_size != record.engine[TARGET_TP]:
             raise ValueError(f"A4 {mode} target TP does not match the rebuilt plan: recorded {record.engine[TARGET_TP]}, planned {plan.shape.target_tensor_parallel_size}")
+        require_realized_kv_cache_groups(plan, record.engine)
         roles.update({(mode, run.engine_index, layer.global_layer_id): layer.plans_tile_schedule for layer in plan.shape.layers})
     return roles
 

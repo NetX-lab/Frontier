@@ -443,7 +443,7 @@ def decode_layout(row):
 @pytest.mark.parametrize("method", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
 @pytest.mark.parametrize("context", [6143, 6144, 6146, 6147, 6270, 6271, 6272,
                                     6654, 6655, 6656, 6778, 7166])
-def test_real_ongoing_decode_exact_all_scopes_and_six_layer_roles(decode_measured, decode_tables, method, context):
+def test_real_ongoing_decode_exact_scopes_reject_obsolete_layer_role(decode_measured, decode_tables, method, context):
     p = decode_measured
     path, table = decode_tables[method]
     p._attention_input_file = str(path)
@@ -455,6 +455,15 @@ def test_real_ongoing_decode_exact_all_scopes_and_six_layer_roles(decode_measure
         layer = json.loads(row.global_layer_ids)[0]
         seen.add((row.attention_variant, bool(row.plans_tile_schedule)))
         layout = decode_layout(row)
+        # This immutable historical table used the first-variant rule. Its
+        # uncompressed layer 1 reuse row cannot price the native planner role.
+        if row.attention_variant == "uncompressed" and not bool(row.plans_tile_schedule):
+            assert layer == 1
+            for scope in json.loads(row.operator_scopes):
+                with pytest.raises(DeepSeekV4CoverageError, match="ongoing decode native metadata has no exact measured rows"):
+                    read_isolated_scope(p, ongoing_batch(context), layer, scope,
+                                        attention_layout=layout)
+            continue
         for scope in json.loads(row.operator_scopes):
             result = read_isolated_scope(p, ongoing_batch(context), layer, scope,
                                         attention_layout=layout)
@@ -791,3 +800,21 @@ def test_preparation_refuses_existing_output_and_unsupported_acceptance(accepted
     with pytest.raises(ValueError, match="original isolated acceptance"):
         prepare_attention_input(path, package, tmp_path / "must_not_exist")
     assert not (tmp_path / "must_not_exist").exists()
+
+
+@pytest.mark.parametrize("layer_id,variant,planner", [(1, "uncompressed", True), (4, "csa", False)])
+def test_isolated_scope_uses_full_model_swa_group_planner_role(measured, layer_id, variant, planner):
+    p, row = measured
+    layout = json.loads((Path(__file__).parents[1] /
+        "fixtures/deepseek_v4_attention_layouts.json").read_text())["layouts"][variant]
+    row.update(layout)
+    row.update(attention_variant=variant, plans_tile_schedule=planner,
+               operator_scopes=json.dumps({"dsv4_sparse_attention": list(scope_operators(
+                   "dsv4_sparse_attention", variant))}))
+    other = dict(row, plans_tile_schedule=not planner,
+                 **{"time_stats.dsv4_sparse_attention.median": 0.75})
+    pd.DataFrame([row, other]).to_csv(p._attention_input_file, index=False)
+    result = read_isolated_scope(p, source_batch([6144], [0]), layer_id,
+                                "dsv4_sparse_attention", attention_layout=layout)
+    assert result["time_ms"] == 0.125
+    assert result["row_metadata"]["plans_tile_schedule"] == planner

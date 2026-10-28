@@ -20,8 +20,6 @@
     "deepseek-ai/DeepSeek-V4-Flash",
     "--target_tensor_parallel_size",
     "8",
-    "--num_layers",
-    "6",
     "--block_size",
     "256",
     "--kv_cache_dtype",

@@ -11,6 +11,9 @@ is inside the pilot step range as unowned eager preparation and is not included
 in attention identity. Native dispatch contains other operators and collectives,
 so qualification requires count-wise containment, not multiset equality.
 
+Expansion uses the full-model counts of each variant and planner/reuse role.
+Every reduced layer of a role must carry the same kernel multiset in the step.
+
 Run with tests/analysis on PYTHONPATH; gzip TP0 traces are read one at a time.
 """
 
@@ -29,7 +32,7 @@ from frontier.profiling.attention.dsv4_attention_plan import resolve_dsv4_layers
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.kernel_gap.dsv4_replay_gaps import (
     ACTIVITY, CASE_ID, CG_MODE, ENGINE_CAPTURE, ENGINE_INDEX, ENGINE_MODE,
-    GLOBAL_LAYER_ID, KERNEL, NAME, STEP_INDEX, VARIANT, CUDAGRAPH_DISPATCH_KEY,
+    GLOBAL_LAYER_ID, KERNEL, NAME, STEP_INDEX, CUDAGRAPH_DISPATCH_KEY,
     ReplayRecords, read_replay_records,
 )
 from dsv4_composition_check import planner_roles
@@ -39,7 +42,6 @@ from v4_runtime_census import dispatch_kernel_multisets, lane_traces
 PASS, FAIL = "PASS", "FAIL"
 GRID, BLOCK = "grid", "block"
 FIRST_TAIL_ALONE, FIRST_TAIL_WITH_DECODES = "first_tail_alone", "first_tail_with_decodes"
-_LAYERS_PER_VARIANT = 2
 _DIMENSIONS = 3
 
 _NATIVE_LAYER_COUNT = 'num_hidden_layers'
@@ -60,7 +62,9 @@ _MARGIN = 'margin'
 _STEP_COUNT = 'step_count'
 _PASS_COUNT = 'pass_count'
 _VERDICT = 'verdict'
-_VARIANT_LAYER_COUNTS = 'variant_layer_counts'
+_LAYER_ROLE_COUNTS = 'layer_role_counts'
+_PLANS_TILE_SCHEDULE = 'plans_tile_schedule'
+_VARIANT = 'variant'
 _STEPS = 'steps'
 _CASES = 'cases'
 _NATIVE_CANDIDATES = 'native_candidates'
@@ -103,34 +107,41 @@ def _plans(config: BridgeConfig):
         for mode in dict.fromkeys(run.mode for run in config.runs)}
 
 
-def variant_layer_counts(config: BridgeConfig) -> Mapping[str, int]:
-    """Count native decoder layers from the pinned model configuration."""
+def layer_role_counts(config: BridgeConfig) -> Mapping[tuple[str, bool], int]:
+    """Count native decoder layers by variant and SWA-group planner role."""
     mode = config.runs[0].mode
     args = dsv4_attention_main.build_parser().parse_args(
         ["plan", *config.plan_args, *graph_mode_flags(mode, config.cudagraph_capture_sizes)])
     hf_config = json.loads(Path(args.model_config_path).read_text(encoding="utf-8"))
     layers = resolve_dsv4_layers(ModelConfig.from_model_name(args.model_name), hf_config,
                                  hf_config[_NATIVE_LAYER_COUNT])
-    return Counter(layer.attention_variant for layer in layers)
+    return Counter((layer.attention_variant, layer.plans_tile_schedule) for layer in layers)
 
 
 def expand_attention_kernels(layer_kernels: Mapping[int, Counter[KernelIdentity]],
                              layer_variants: Mapping[int, str],
                              layer_roles: Mapping[int, bool],
-                             variant_counts: Mapping[str, int]) -> Counter[KernelIdentity]:
-    """Expand one planner and one reuse layer per variant to the full model."""
+                             role_counts: Mapping[tuple[str, bool], int]) -> Counter[KernelIdentity]:
+    """Expand equal reduced multisets by the full-model count of each layer role."""
+    layers_by_role = defaultdict(list)
+    for layer, variant in layer_variants.items():
+        layers_by_role[(variant, layer_roles[layer])].append(layer)
+    extra = layers_by_role.keys() - role_counts.keys()
+    if extra:
+        raise ValueError(f"Identity reduced layer roles absent from the full model: {sorted(extra)!r}")
     expected = Counter()
-    for variant, count in variant_counts.items():
-        layers = [layer for layer, value in layer_variants.items() if value == variant]
-        planners = [layer for layer in layers if layer_roles[layer]]
-        reuse = [layer for layer in layers if not layer_roles[layer]]
-        if len(layers) != _LAYERS_PER_VARIANT or len(planners) != 1 or len(reuse) != 1:
-            raise ValueError(f"Identity requires exactly one planner and one reuse layer for {variant}, got {layers}")
-        for layer, factor in ((planners[0], 1), (reuse[0], count - 1)):
+    for role, count in role_counts.items():
+        layers = sorted(layers_by_role[role])
+        if not layers:
+            raise ValueError(f"Identity has no reduced layers for full-model role {role!r}")
+        for layer in layers:
             if layer not in layer_kernels:
-                raise ValueError(f"Identity step has no attention kernels for layer {layer}")
-            for identity, occurrences in layer_kernels[layer].items():
-                expected[identity] += factor * occurrences
+                raise ValueError(f"Identity role {role!r} has no attention kernels for layer {layer}")
+        kernels = layer_kernels[layers[0]]
+        if any(layer_kernels[layer] != kernels for layer in layers[1:]):
+            raise ValueError(f"Identity role {role!r} has unequal kernel multisets in layers {layers}")
+        for identity, occurrences in kernels.items():
+            expected[identity] += count * occurrences
     return expected
 
 
@@ -181,7 +192,7 @@ def match_kernels(expected: Counter[KernelIdentity], kind: str, mode: str,
 def check_identity(config: BridgeConfig, records: Sequence[ReplayRecords],
                    candidates: Sequence[NativeCandidate], margin_cases: Sequence[str] = ()) -> dict[str, Any]:
     plans, roles = _plans(config), planner_roles(config, records)
-    counts = variant_layer_counts(config)
+    counts = layer_role_counts(config)
     by_run = {(record.engine[ENGINE_CAPTURE][ENGINE_MODE], record.engine[ENGINE_INDEX]): record for record in records}
     steps, cases = [], []
     for run in config.runs:
@@ -210,7 +221,8 @@ def check_identity(config: BridgeConfig, records: Sequence[ReplayRecords],
                           _STEP_COUNT: len(case_steps), _PASS_COUNT: sum(row[_STATUS] == PASS for row in case_steps),
                           _STATUS: PASS if case_steps and all(row[_STATUS] == PASS for row in case_steps) else FAIL})
     return {_VERDICT: PASS if cases and all(case[_MARGIN] or case[_STATUS] == PASS for case in cases) else FAIL,
-            _VARIANT_LAYER_COUNTS: dict(counts), _STEPS: steps, _CASES: cases,
+            _LAYER_ROLE_COUNTS: [{_VARIANT: variant, _PLANS_TILE_SCHEDULE: planner, _COUNT: count}
+                                 for (variant, planner), count in sorted(counts.items())], _STEPS: steps, _CASES: cases,
             _NATIVE_CANDIDATES: [{_CLASS: row.step_class, _MODE: row.mode, _FORWARD_COUNT: row.forward_count,
                                    _ROLES: list(row.roles), _KERNEL_COUNT: sum(row.kernels.values())} for row in candidates]}
 
@@ -240,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = ["NativeCandidate", "check_identity", "expand_attention_kernels", "main", "match_kernels",
-           "native_candidates", "native_step_class", "variant_layer_counts"]
+           "native_candidates", "native_step_class", "layer_role_counts"]
 
 if __name__ == "__main__":
     raise SystemExit(main())

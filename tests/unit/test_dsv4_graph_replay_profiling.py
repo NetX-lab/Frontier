@@ -30,7 +30,7 @@ from frontier.profiling.attention.graph_capture import (
 )
 from frontier.profiling.attention.graph_replay_trace import step_annotation_name
 from test_dsv4_attention_profiling import (
-    PLAN_ARGS, _FakeAttention, _build_plan, _engine_record, _limits, hf_config,
+    PLAN_ARGS, _FakeAttention, _build_plan, _engine_record, _fake_kv_cache_groups, _limits, hf_config,
 )
 from test_graph_replay_trace import _activity, _launch, _node, _step
 
@@ -285,6 +285,8 @@ def native_tree(plan, monkeypatch, request):
         return None
 
     runner.execute_model = execute_model
+    runner.kv_cache_config = SimpleNamespace(kv_cache_groups=_fake_kv_cache_groups(
+        plan, [(f"model.layers.{layer}.attn", module) for layer, module in modules.items()]))
     worker = SimpleNamespace(
         model_runner=runner, get_model=lambda: SimpleNamespace(named_modules=lambda: [
             (f"model.layers.{layer}.attn", module) for layer, module in modules.items()
@@ -317,6 +319,7 @@ def native_tree(plan, monkeypatch, request):
         monkeypatch.setattr(replay, "_calibrate_hold", lambda torch, requested_us:
                             calibration_requests.append(requested_us) or (123, 2.0))
     inventory = replay.install_graph_replay_hooks(worker, 0, layers, plan)
+    assert inventory["kv_cache_groups"] == plan.summary()["kv_cache_groups"]
     state = case_runner._require_state()
     monkeypatch.setattr(state, "begin_step", lambda scheduler, dummy_run=False: None)
     state.case = case_runner._CaseRecorder("fake", "decode", 1, 0, 1, KERNEL_ONLY)

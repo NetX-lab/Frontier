@@ -1,7 +1,7 @@
 """CPU-only measurement plan for DeepSeek-V4 compressed attention on vLLM.
 
-DeepSeek-V4 attention has three layer variants that share one sliding-window
-(SWA) KV cache and differ in their compressed KV path:
+DeepSeek-V4 attention has three layer variants that use sliding-window
+(SWA) KV caches and differ in their compressed KV path:
 
 * ``uncompressed``: SWA attention only;
 * ``hca``: a compressor writes one KV entry per ``hca`` ratio tokens and the
@@ -14,8 +14,8 @@ per-layer-type tile-scheduler planning, so they are measured inside a real
 vLLM engine. As in the DSA plan, everything the GPU run needs is fixed here:
 
 * a reduced model with the leading decoder layers of the native layer order,
-  enough to hold two layers of every variant, so each variant has the layer
-  that plans the decode tile schedule and a layer that reuses the plan; the
+  preserving the native cache-group counts, SWA variant sets and tile-schedule
+  planner/reuse roles; the
   attention head count and output groups are the per-rank values of the
   target tensor-parallel size;
 * one engine per prefill chunk budget, with the DSA case builders.
@@ -32,6 +32,10 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import Any, Mapping
 
+from frontier.attention.deepseek_v4 import (
+    COMPRESSOR_STATE_CACHE, SWA_CACHE,
+    deepseek_v4_kv_cache_groups, deepseek_v4_tile_schedule_planners,
+)
 from frontier.attention.families import (
     DEEPSEEK_V4_ATTENTION_FAMILY,
     DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT,
@@ -61,9 +65,8 @@ UNCOMPRESSED_VARIANT, CSA_VARIANT, HCA_VARIANT = (
 # vLLM builds the lightning indexer only on layers with this compress ratio
 # ("Only C4A uses sparse attention and hence has indexer").
 INDEXER_COMPRESS_RATIO = 4
-# Each variant needs a tile-schedule planning layer and a reusing layer.
-_LAYERS_PER_VARIANT = 2
 _PER_LAYER_KEY = "compress_ratios"
+KV_CACHE_GROUPS = "kv_cache_groups"
 
 LAYER_SCOPE = "dsv4_attention_layer"
 
@@ -190,7 +193,7 @@ class Dsv4Layer:
     global_layer_id: int
     attention_variant: str
     compress_ratio: int  # Native ``compress_ratios`` entry.
-    plans_tile_schedule: bool  # First layer of its variant; plans decode tiles.
+    plans_tile_schedule: bool  # First variant in its SWA group; plans decode tiles.
 
 
 @dataclass(frozen=True)
@@ -246,9 +249,63 @@ class Dsv4ProfilePlan(DsaProfilePlan):
             (layer.global_layer_id, layer.attention_variant, layer.plans_tile_schedule)
             for layer in self.shape.layers
         ]
+        summary[KV_CACHE_GROUPS] = _plan_kv_cache_groups(self)
         summary["short_context_max_seq_len"] = self.shape.short_context_max_seq_len
         summary["kv_cache_dtype"] = self.kv_cache_dtype
         return summary
+
+
+def _plan_kv_cache_groups(plan: Dsv4ProfilePlan) -> list[list[list[Any]]]:
+    return [[list(member) for member in group] for group in deepseek_v4_kv_cache_groups(
+        tuple(layer.attention_variant for layer in plan.shape.layers))]
+
+
+def require_realized_kv_cache_groups(
+    plan: Dsv4ProfilePlan, engine_record: Mapping[str, Any],
+) -> None:
+    """Require the predicted groups, ignoring group order but preserving members."""
+    predicted = _plan_kv_cache_groups(plan)
+    realized = engine_record.get(KV_CACHE_GROUPS)
+    # JSON preserves the canonical member order within each group. Sorting only
+    # the outer list retains duplicates and catches member-order differences.
+    if not isinstance(realized, list) or sorted(realized, key=repr) != sorted(predicted, key=repr):
+        raise ValueError(f"DeepSeek-V4 kv_cache_groups mismatch: recorded {realized!r}, "
+                         f"planned {predicted!r}")
+
+
+def _group_counts_and_swa_variants(variants, groups):
+    counts = {"SWA": 0, "CSA-state": 0, "HCA-state": 0}
+    swa_variants = []
+    for group in groups:
+        layer, cache = group[0]
+        if cache == SWA_CACHE:
+            counts["SWA"] += 1
+            swa_variants.append(frozenset(variants[i] for i, _ in group))
+        elif cache == COMPRESSOR_STATE_CACHE:
+            counts["CSA-state" if variants[layer] == CSA_VARIANT else "HCA-state"] += 1
+    return counts, tuple(swa_variants)
+
+
+def _reduced_layout_failure(variants, full_variants, full_groups):
+    missing = set(full_variants) - set(variants)
+    if missing:
+        return (f"every variant condition failed: missing {sorted(missing)}; "
+                f"kv_cache_groups unavailable for variants {variants!r}")
+    groups = deepseek_v4_kv_cache_groups(variants)
+    counts, swa_variants = _group_counts_and_swa_variants(variants, groups)
+    full_counts, full_swa_variants = _group_counts_and_swa_variants(full_variants, full_groups)
+    failure = None
+    for name, count in counts.items():
+        if count != full_counts[name]:
+            failure = f"{name} group count {count} versus {full_counts[name]} in the full model"
+            break
+    if failure is None and swa_variants != full_swa_variants:
+        failure = f"ordered SWA variant sets {swa_variants!r} versus {full_swa_variants!r}"
+    full_roles = set(zip(full_variants, deepseek_v4_tile_schedule_planners(full_variants)))
+    roles = set(zip(variants, deepseek_v4_tile_schedule_planners(variants)))
+    if failure is None and full_roles - roles:
+        failure = f"layer role coverage missing {sorted(full_roles - roles)!r}"
+    return None if failure is None else f"{failure}; kv_cache_groups={groups!r}"
 
 
 def _native_compress_ratios(hf_config: Mapping[str, Any]) -> list[int]:
@@ -276,7 +333,7 @@ def _variant_of_ratio(ratio: int) -> str:
 def resolve_dsv4_layers(
     model_config: ModelConfig, hf_config: Mapping[str, Any], num_layers: int | None
 ) -> tuple[Dsv4Layer, ...]:
-    """Take the leading layers; by default the fewest holding two of every variant."""
+    """Take the fewest leading layers preserving native KV groups and planner roles."""
 
     specs = model_config.get_layer_attention_specs()
     ratios = _native_compress_ratios(hf_config)
@@ -299,36 +356,25 @@ def resolve_dsv4_layers(
                 f"{ratios[spec.global_layer_id]} is {native!r}, Frontier says "
                 f"{spec.variant_id!r}"
             )
+    full_variants = tuple(spec.variant_id for spec in specs)
+    full_groups = deepseek_v4_kv_cache_groups(full_variants)
     if num_layers is None:
-        counts = dict.fromkeys(_ALL_VARIANTS, 0)
-        for num_layers, spec in enumerate(specs, start=1):
-            counts[spec.variant_id] += 1
-            if min(counts.values()) >= _LAYERS_PER_VARIANT:
-                break
+        num_layers = next(
+            count for count in range(1, len(specs) + 1)
+            if _reduced_layout_failure(full_variants[:count], full_variants, full_groups) is None
+        )
     _require_positive_int("num_layers", num_layers)
     if num_layers > len(specs):
         raise ValueError(f"num_layers={num_layers} exceeds the model's {len(specs)} layers")
-    layers = []
-    planned: set[str] = set()
-    for spec in specs[:num_layers]:
-        layers.append(
-            Dsv4Layer(
-                global_layer_id=spec.global_layer_id,
-                attention_variant=spec.variant_id,
-                compress_ratio=ratios[spec.global_layer_id],
-                plans_tile_schedule=spec.variant_id not in planned,
-            )
-        )
-        planned.add(spec.variant_id)
-    for variant in _ALL_VARIANTS:
-        found = sum(layer.attention_variant == variant for layer in layers)
-        if found < _LAYERS_PER_VARIANT:
-            raise ValueError(
-                f"The reduced model needs {_LAYERS_PER_VARIANT} {variant!r} layers "
-                f"(a tile-schedule planning and a reusing layer); num_layers="
-                f"{num_layers} gives {found}"
-            )
-    return tuple(layers)
+    variants = full_variants[:num_layers]
+    failure = _reduced_layout_failure(variants, full_variants, full_groups)
+    if failure is not None:
+        raise ValueError(f"num_layers={num_layers} is not admissible: {failure}")
+    planners = deepseek_v4_tile_schedule_planners(variants)
+    return tuple(
+        Dsv4Layer(spec.global_layer_id, spec.variant_id, ratios[spec.global_layer_id], planner)
+        for spec, planner in zip(specs[:num_layers], planners)
+    )
 
 
 def _single_ratio(layers: tuple[Dsv4Layer, ...], variant: str) -> int:

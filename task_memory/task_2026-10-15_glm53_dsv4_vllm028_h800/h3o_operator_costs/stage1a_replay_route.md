@@ -11,6 +11,7 @@
 | 2026-10-28 | B2 accepted and committed (`32afae01`): implementation decisions in §3.4; A4 result on the bridge data and the remedy recommendation in §4. |
 | 2026-10-28 | §2: second checkout of the native commit noted; B3 assignment submitted (§4). |
 | 2026-10-28 | B3 accepted: implementation in §3.4; result and the tile-schedule planner finding in §4. |
+| 2026-10-28 | B4 accepted: KV-cache group rule and the 11-layer reduced model in §3.4; result in §4. |
 
 ## 1. Purpose
 
@@ -133,6 +134,13 @@ B3 as implemented ([test_report_2026-10-28_b3_hold_pilot_identity.md](../test_re
 - The bridge config lists runs as (mode, engine index, case ids); package 03 runs FULL_AND_PIECEWISE for engines e0 (21 cases) and e1 (4 first-tail cases).
 - Lead correction: `build_dsv4_rows` refuses graph-replay plans before reading records.
 
+B4 as implemented ([test_report_2026-10-28_b4_tile_schedule_groups.md](../test_report_2026-10-28_b4_tile_schedule_groups.md)):
+
+- `frontier/attention/deepseek_v4.py` reproduces vLLM 0.28's decoder KV-cache groups (`_approximate_gcd` over [max(n_csa, n_hca), N, n_csa, n_hca] with lower bound max(n_csa, n_hca), strided split of the SWA, CSA-state and HCA-state groups). The first layer of each variant in each SWA group plans the decode tile schedule: layers 0-3 in the full model.
+- The predictor and the profiling plan share this rule. The default reduced model is the fewest leading layers with the full model's group counts, ordered SWA variant sets and (variant, role) coverage: 11 layers, planners 0-3, CSA reuse {4, 6, 8, 10}, HCA reuse {5, 7, 9}. `--num_layers 6` is rejected.
+- Both runners record the realized `kv_cache_groups`; `build_dsv4_rows` and the A4 planner-role check require them to equal the plan's.
+- The identity check expands per (variant, planner role) with the full-model counts {uncompressed planner 2, CSA planner 1, CSA reuse 20, HCA planner 1, HCA reuse 19}; the reduced layers of one role must carry equal kernel multisets.
+
 ## 4. Order and acceptance
 
 `A (graph_capture.py, graph_replay_trace.py, CPU tests with fakes) -> review and commit -> B1 (policy, scope tree, re-capture, step range, bridge-check driver and launcher) -> review and commit -> P1h bridge check (1 H200, via /ds4-exec) -> B2 (intervals, gap reducer, A4) -> rest of P1h`.
@@ -146,3 +154,4 @@ B3 as implemented ([test_report_2026-10-28_b3_hold_pilot_identity.md](../test_re
 - B3 is next: the kernel identity checker, the host-ahead hold, a case above the 1024-row threshold, the step range over `sample_tokens`, and the rest-of-P1h package.
 - B3 (CPU, lead rerun): pytest groups pass with only the two known failures; legacy plans and the census are byte-identical; on the B2 data the A4 gate gives {no_host_ahead_call 38, pass 36} (no hold in B2), the diagnostic {38, fail 28, pass 8}; the package 03 plan has 25 cases and 335 steps.
 - Finding (blocks package 03): the 6-layer reduced engine runs the FlashMLA tile-schedule planner (`get_mla_metadata_kernel`, about 26 µs) in every layer; native runs it in layers 0-3 only. vLLM keeps one plan per (SWA KV-cache group, layer type); `_approximate_gcd` splits the 43-layer model's SWA layers into 2 strided groups (even, odd; the native `cache.kv_cache_groups` inventory shows them) and the 6-layer model's into 3, so every reduced layer plans and no layer measures reuse. Frontier's "first layer of each variant" rule also misses that layer 1 plans natively. The expansion overcounts 39 planners, about 1 ms per decode step. Fix: assignment B4 (a vLLM-grouping planner rule shared by the plan and the predictor, a reduced layout with the native group structure, the realized groups recorded by the engine, and an identity expansion per (variant, role)).
+- B4 (CPU, lead rerun): pytest groups pass with only the two known failures; the predicted 43-layer groups equal the native P2 serving inventory; DSA plans byte-identical; V4 plans change only in the reduced layout; the package 03 plan has 11 layers, 25 cases and steps [280, 55]. Package 03 is next: first confirm that the recorded groups equal the 11-layer prediction and that planner kernels run in layers 0-3 only.

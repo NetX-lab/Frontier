@@ -85,8 +85,8 @@ def _add_dsv4_plan_arguments(parser: argparse.ArgumentParser) -> None:
         required=True,
         help="KV-cache dtype of the target deployment (vLLM --kv-cache-dtype).",
     )
-    # By default the reduced engine keeps the fewest leading layers that hold
-    # two layers of every attention variant.
+    # By default the reduced engine keeps the fewest leading layers that
+    # preserve the native KV-cache groups and tile-schedule planner roles.
     parser.set_defaults(num_layers=None)
 
 

@@ -13,6 +13,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from frontier.attention.deepseek_v4 import deepseek_v4_kv_cache_groups
 from frontier.attention.families import DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT
 from frontier.profiling.attention import dsa_vllm_runner as case_runner
 from frontier.profiling.attention import dsv4_attention_runner as dsv4_runner
@@ -34,6 +35,7 @@ from frontier.profiling.attention.dsv4_attention_plan import (
     expected_scopes,
     metadata_key,
     scope_operators,
+    resolve_dsv4_layers,
 )
 from frontier.profiling.attention.dsv4_attention_rows import build_dsv4_rows
 from frontier.profiling.common.runtime_identity import IDENTITY_COLUMNS
@@ -240,21 +242,23 @@ def plan(hf_config, request):
     return _build_plan(hf_config)
 
 
-def test_reduced_model_holds_two_layers_per_variant(plan, hf_config):
+def test_reduced_model_preserves_native_groups_and_layer_roles(plan, hf_config):
     layers = [
         (l.global_layer_id, l.attention_variant, l.compress_ratio, l.plans_tile_schedule)
         for l in plan.shape.layers
     ]
     assert layers == [
-        (0, "uncompressed", 0, True), (1, "uncompressed", 0, False),
+        (0, "uncompressed", 0, True), (1, "uncompressed", 0, True),
         (2, "csa", 4, True), (3, "hca", 128, True),
         (4, "csa", 4, False), (5, "hca", 128, False),
+        (6, "csa", 4, False), (7, "hca", 128, False),
+        (8, "csa", 4, False), (9, "hca", 128, False), (10, "csa", 4, False),
     ]
     assert plan.hf_overrides == {
-        "num_hidden_layers": 6,
+        "num_hidden_layers": 11,
         "num_attention_heads": hf_config["num_attention_heads"] // 8,
         "o_groups": hf_config["o_groups"] // 8,
-        "compress_ratios": hf_config["compress_ratios"][:6],
+        "compress_ratios": hf_config["compress_ratios"][:11],
     }
     shape = plan.shape
     assert (shape.heads_per_rank, shape.o_groups_per_rank) == (8, 1)
@@ -264,13 +268,19 @@ def test_reduced_model_holds_two_layers_per_variant(plan, hf_config):
     assert plan.kv_cache_dtype == "fp8"
 
 
-def test_explicit_num_layers_must_hold_every_variant_twice(hf_config):
-    # Layers 0-3 hold one csa and one hca layer.
-    with pytest.raises(ValueError, match="needs 2 'csa' layers"):
-        _build_plan(hf_config, num_layers=4)
-    with pytest.raises(ValueError, match="needs 2 'hca' layers"):
-        _build_plan(hf_config, num_layers=5)
-    assert len(_build_plan(hf_config, num_layers=8).shape.layers) == 8
+@pytest.mark.parametrize("count", [11, 12, 13, 43])
+def test_explicit_admissible_layers(hf_config, count):
+    assert len(_build_plan(hf_config, num_layers=count).shape.layers) == count
+
+
+def test_explicit_six_layers_rejects_swa_group_count(hf_config):
+    with pytest.raises(ValueError, match="num_layers=6.*SWA group count 3 versus 2.*kv_cache_groups"):
+        _build_plan(hf_config, num_layers=6)
+
+
+def test_explicit_missing_variant_rejects_layout(hf_config):
+    with pytest.raises(ValueError, match="every variant condition.*hca.*kv_cache_groups"):
+        _build_plan(hf_config, num_layers=3)
 
 
 def test_plan_rejects_ratios_that_disagree_with_frontier(hf_config):
@@ -343,6 +353,7 @@ def test_plan_dry_run_cli(tmp_path, capsys):
     output = tmp_path / "plan.json"
     dsv4_main(["plan", *PLAN_ARGS, "--output", str(output)])
     summary = json.loads(capsys.readouterr().out.split("[dsv4]")[0])
+    assert summary["kv_cache_groups"] == _build_plan(load_hf_config(CONFIG_PATH)).summary()["kv_cache_groups"]
     full = json.loads(output.read_text())
     assert summary["num_cases"] == len(full["cases"])
     assert summary["num_engines"] == 2
@@ -472,7 +483,7 @@ def test_exact_prefill_cli_preserves_planner_and_effective_geometry(tmp_path, ca
     assert serialized["limits"]["max_num_seqs"] == 128
     assert "engine_policy" not in serialized["limits"]
     assert (plan.shape.heads_per_rank, plan.shape.o_groups_per_rank) == (8, 1)
-    assert len(plan.shape.layers) == 6
+    assert len(plan.shape.layers) == 11
     monkeypatch.setitem(sys.modules, "vllm", SimpleNamespace(LLM=lambda **kwargs: kwargs))
     options = case_runner.build_engine(plan, 0, "CPU_FAKE_MODEL", 1234, 0.85)
     assert (options["max_model_len"], options["max_num_batched_tokens"],
@@ -573,14 +584,14 @@ def test_exact_prefill_rows_group_three_samples_by_variant_and_role():
             records += steps
     rows = build_dsv4_rows(plan, records)
     for measurement, method_rows in rows.items():
-        assert len(method_rows) == 6
+        assert len(method_rows) == 5
         assert {(row["attention_variant"], row["plans_tile_schedule"])
-                for row in method_rows} == {(variant, role) for variant in VARIANTS
-                                           for role in (True, False)}
+                for row in method_rows} == {("uncompressed", True), ("csa", True), ("csa", False),
+                                           ("hca", True), ("hca", False)}
         for row in method_rows:
             assert (row["prefill_chunk_size"], row["kv_cache_size"], row["max_model_len"],
                     row["max_num_batched_tokens"], row["max_num_seqs"]) == (6144, 0, 7168, 8192, 128)
-            assert row["time_stats.dsv4_sparse_attention.count"] == 3
+            assert row["time_stats.dsv4_sparse_attention.count"] == 3 * row["num_layers_sampled"]
             assert (f"time_stats.{LAYER_SCOPE}.count" in row) is (measurement == CUDA_EVENT)
 
 
@@ -608,6 +619,7 @@ def _engine_record(engine_index=1, chunk_budget=1024):
         "aux_stream_count": 3,
         "multi_stream_gemm_token_threshold": 1024,
         "layers": [],
+        "kv_cache_groups": _build_plan(load_hf_config(CONFIG_PATH)).summary()["kv_cache_groups"],
     }
 
 
@@ -666,12 +678,12 @@ def test_rows_split_variant_and_tile_schedule_role(plan):
     records += _step_records(plan, KERNEL_ONLY, 0, _prefill_request(1024, 2048),
                              "e1-prefill-p4159", PHASE_PREFILL, 0.5)
     rows = build_dsv4_rows(plan, records)
-    assert len(rows[CUDA_EVENT]) == 6 and len(rows[KERNEL_ONLY]) == 6
+    assert len(rows[CUDA_EVENT]) == 5 and len(rows[KERNEL_ONLY]) == 5
     keys = [(r["attention_variant"], r["plans_tile_schedule"], r["global_layer_ids"])
             for r in rows[CUDA_EVENT]]
     assert keys == [
-        ("csa", True, "[2]"), ("csa", False, "[4]"), ("hca", True, "[3]"),
-        ("hca", False, "[5]"), ("uncompressed", True, "[0]"), ("uncompressed", False, "[1]"),
+        ("csa", True, "[2]"), ("csa", False, "[4, 6, 8, 10]"), ("hca", True, "[3]"),
+        ("hca", False, "[5, 7, 9]"), ("uncompressed", True, "[0, 1]"),
     ]
     csa = rows[CUDA_EVENT][0]
     assert csa["max_key_len"] == 3072 and csa["compressed_key_len"] == 768
@@ -731,7 +743,7 @@ def test_decode_rows_keep_one_row_per_step(plan):
     records += _step_records(plan, CUDA_EVENT, 0, decode((514, 520)), "d", PHASE_DECODE, 0.2)
     records += _step_records(plan, CUDA_EVENT, 1, decode((515, 521)), "d", PHASE_DECODE, 0.2)
     rows = build_dsv4_rows(plan, records)[CUDA_EVENT]
-    assert len(rows) == 12
+    assert len(rows) == 10
     assert {row["num_steps_sampled"] for row in rows} == {1}
     assert rows[0]["decode_kv_cache_size_max"] in (520, 521)
 
@@ -752,7 +764,7 @@ def test_aggregate_cli_writes_canonical_tables(plan, tmp_path):
     for name, measurement in (("attention.csv", CUDA_EVENT), ("attention_kernel_only.csv", KERNEL_ONLY)):
         with open(base / name, newline="") as handle:
             rows = list(csv.DictReader(handle))
-        assert len(rows) == 6
+        assert len(rows) == 5
         assert {row["measurement_type"] for row in rows} == {measurement}
         assert set(IDENTITY_COLUMNS) <= set(rows[0])
         assert rows[0]["schema_version"] == "dsv4_attention.v1"
@@ -890,6 +902,19 @@ def _fake_metadata(requests, ratio, max_model_len, budget):
             "indexer.k_cache": indexer, "indexer.compressor.state_cache": compressor}
 
 
+
+def _fake_kv_cache_groups(plan, modules):
+    suffixes = {"attention": "", "indexer": ".indexer.k_cache", "swa": ".swa_cache",
+                "compressor_state": ".compressor.state_cache",
+                "index_compressor_state": ".indexer.compressor.state_cache"}
+    prefixes = {layer: module.prefix for layer, module in (
+        (int(name.split("layers.")[1].split(".")[0]), module) for name, module in modules
+    )}
+    return [SimpleNamespace(layer_names=[prefixes[layer] + suffixes[cache]
+                                        for layer, cache in reversed(group)])
+            for group in deepseek_v4_kv_cache_groups(
+                tuple(layer.attention_variant for layer in plan.shape.layers))]
+
 @pytest.fixture
 def fake_engine(plan, monkeypatch):
     log = []
@@ -932,7 +957,8 @@ def fake_engine(plan, monkeypatch):
         return "output"
 
     worker = SimpleNamespace(
-        model_runner=SimpleNamespace(execute_model=execute_model),
+        model_runner=SimpleNamespace(execute_model=execute_model,
+            kv_cache_config=SimpleNamespace(kv_cache_groups=_fake_kv_cache_groups(plan, modules))),
         get_model=lambda: SimpleNamespace(named_modules=lambda: iter(modules)),
         vllm_config=SimpleNamespace(
             use_v2_model_runner=True, cache_config=SimpleNamespace(num_gpu_blocks=4096)
@@ -961,6 +987,7 @@ def test_hooks_record_every_scope_of_every_layer(plan, fake_engine, prompt):
     assert inventory["prepare_and_attn_fn"] == "_prepare_and_attn"
     assert inventory["aux_stream_count"] == 3 and inventory["use_v2_model_runner"] is True
     assert inventory["num_gpu_blocks"] == 4096
+    assert inventory["kv_cache_groups"] == plan.summary()["kv_cache_groups"]
     assert [layer["metadata_prefixes"] for layer in inventory["layers"]][2] == {
         "swa": "model.layers.2.attn.swa_cache", "attention": "model.layers.2.attn",
         "compressor": "model.layers.2.attn.compressor.state_cache",
@@ -974,14 +1001,14 @@ def test_hooks_record_every_scope_of_every_layer(plan, fake_engine, prompt):
     assert worker.model_runner.execute_model(_prefill_output(prompt)) == "output"
     result = case_runner.finish_case(worker, None)
     assert result["recorded"] == 1
-    assert log.count("rmsnorm") == 6 and log.count("indexer_op") == (2 if prompt > 2051 else 0)
+    assert log.count("rmsnorm") == 11 and log.count("indexer_op") == (5 if prompt > 2051 else 0)
     records = [_engine_record(), *result["steps"], *result["calls"]]
     for record in records[1:]:
         record["engine_index"] = 1
     step = result["steps"][0]
     assert step[metadata_key("hca", "compressor")]["c128_boundary"] is None
     rows = build_dsv4_rows(plan, records)[CUDA_EVENT]
-    assert len(rows) == 6
+    assert len(rows) == 5
     csa = rows[0]
     assert csa["index_scores_executed"] is (prompt > 2051)
     assert csa[f"time_stats.{LAYER_SCOPE}.count"] == 1
@@ -1082,3 +1109,49 @@ def test_q1_cli_runs_native_shaped_schedule_and_metadata(
     assert sum(row[metadata_key("hca", "attention")]["max_seq_len"] % 128 == 0
                for row in recorded) == 8
     assert sum(row[metadata_key("hca", "compressor")]["c128_boundary"] for row in recorded) == 8
+
+
+@pytest.mark.parametrize("change", ["missing", "different", "duplicate", "member_order"])
+def test_rows_require_realized_cache_groups_from_every_engine(plan, change):
+    engine = _engine_record()
+    if change == "missing":
+        del engine["kv_cache_groups"]
+    elif change == "different":
+        engine["kv_cache_groups"][1][0][0] = 99
+    elif change == "duplicate":
+        engine["kv_cache_groups"].append(engine["kv_cache_groups"][1])
+    else:
+        engine["kv_cache_groups"][1].reverse()
+    with pytest.raises(ValueError, match="kv_cache_groups mismatch.*recorded.*planned"):
+        build_dsv4_rows(plan, [_engine_record(0), engine])
+
+
+def test_rows_accept_reordered_groups(plan):
+    engine = _engine_record()
+    engine["kv_cache_groups"].reverse()
+    assert build_dsv4_rows(plan, [engine]) == {CUDA_EVENT: [], KERNEL_ONLY: []}
+
+
+def test_inventory_rejects_undiscovered_cache_name(plan, fake_engine):
+    worker, _ = fake_engine
+    worker.model_runner.kv_cache_config.kv_cache_groups[0].layer_names.append("unknown.cache")
+    layers = [(l.global_layer_id, l.attention_variant, l.compress_ratio) for l in plan.shape.layers]
+    with pytest.raises(ValueError, match="unknown.cache.*not a discovered DeepSeek-V4 cache"):
+        dsv4_runner.install_dsv4_hooks(worker, 1, layers)
+
+
+@pytest.mark.parametrize("variants,count,condition", [
+    (("uncompressed", "csa", "hca", "uncompressed", "hca"), 3, "ordered SWA variant sets"),
+    (("uncompressed", "csa", "csa", "hca", "csa"), 4, "layer role coverage.*csa.*False"),
+])
+def test_reduced_admission_requires_swa_variant_sets_and_full_role_coverage(variants, count, condition):
+    from frontier.attention.families import DEEPSEEK_V4_ATTENTION_FAMILY
+    ratios = {"uncompressed": 0, "csa": 4, "hca": 128}
+    specs = tuple(SimpleNamespace(global_layer_id=i, variant_id=variant,
+                                 family_id=DEEPSEEK_V4_ATTENTION_FAMILY.family_id)
+                  for i, variant in enumerate(variants))
+    model = SimpleNamespace(get_layer_attention_specs=lambda: specs)
+    config = {"num_hidden_layers": len(specs), "compress_ratios": [ratios[v] for v in variants]}
+    with pytest.raises(ValueError, match=condition + ".*kv_cache_groups"):
+        resolve_dsv4_layers(model, config, count)
+    assert len(resolve_dsv4_layers(model, config, None)) == len(specs)

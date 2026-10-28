@@ -87,13 +87,14 @@ def _config(tmp_path, saved):
 
 
 def test_planner_role_comes_from_plan_and_ordered_inventory_is_checked(tmp_path, monkeypatch):
-    saved = complete_records()
+    saved = _planned_records(complete_records())
     config = _config(tmp_path, saved)
     invocations = []
     def build(args):
         invocations.append(args)
-        return SimpleNamespace(shape=SimpleNamespace(target_tensor_parallel_size=8, layers=(SimpleNamespace(
-            global_layer_id=0, attention_variant="uncompressed", compress_ratio=1, plans_tile_schedule=False),)))
+        plan = _real_plan()
+        return replace(plan, shape=replace(plan.shape, layers=tuple(
+            replace(layer, plans_tile_schedule=False) for layer in plan.shape.layers)))
     monkeypatch.setattr(check.dsv4_attention_main, "build_parser", lambda: SimpleNamespace(parse_args=lambda argv: argv))
     monkeypatch.setattr(check.dsv4_attention_main, "build_plan", build)
     assert set(check.planner_roles(config, saved).values()) == {False}
@@ -114,7 +115,8 @@ def test_real_planner_uncompressed_ratio_zero_matches_engine_ratio_one(tmp_path)
     assert any(layer.attention_variant == "uncompressed" and layer.compress_ratio == 0 for layer in plan.shape.layers)
     layers = [{"global_layer_id": layer.global_layer_id, "attention_variant": layer.attention_variant,
                "compress_ratio": max(1, layer.compress_ratio)} for layer in plan.shape.layers]
-    saved = tuple(replace(record, engine=dict(record.engine, layers=layers)) for record in saved)
+    saved = tuple(replace(record, engine=dict(record.engine, layers=layers,
+                  kv_cache_groups=plan.summary()["kv_cache_groups"])) for record in saved)
     actual = check.planner_roles(config, saved)
     for mode in (run.mode for run in config.runs):
         assert {layer.global_layer_id: actual[(mode, 0, layer.global_layer_id)] for layer in plan.shape.layers} == {
@@ -170,10 +172,46 @@ def test_own_gap_gate_keeps_class_diagnostic_and_scope_distributions():
 
 
 def test_roles_are_keyed_by_engine_as_well_as_mode(tmp_path,monkeypatch):
-    saved=complete_records()[:1]
+    saved=_planned_records(complete_records()[:1])
     second=replace(saved[0],source='engine1',engine=dict(saved[0].engine,engine_index=1))
     config=_config(tmp_path,[*saved,second])
     monkeypatch.setattr(check.dsv4_attention_main,'build_parser',lambda:SimpleNamespace(parse_args=lambda argv:argv))
-    monkeypatch.setattr(check.dsv4_attention_main,'build_plan',lambda args:SimpleNamespace(shape=SimpleNamespace(
-        target_tensor_parallel_size=8,layers=(SimpleNamespace(global_layer_id=0,attention_variant='uncompressed',compress_ratio=1,plans_tile_schedule=True),))))
-    assert check.planner_roles(config,[*saved,second])=={('FULL_AND_PIECEWISE',0,0):True,('FULL_AND_PIECEWISE',1,0):True}
+    plan = _real_plan()
+    monkeypatch.setattr(check.dsv4_attention_main,'build_plan',lambda args:plan)
+    assert check.planner_roles(config,[*saved,second]) == {
+        ('FULL_AND_PIECEWISE', engine, layer.global_layer_id): layer.plans_tile_schedule
+        for engine in (0, 1) for layer in plan.shape.layers
+    }
+
+
+_REAL_BUILD_PLAN = check.dsv4_attention_main.build_plan
+_REAL_BUILD_PARSER = check.dsv4_attention_main.build_parser
+
+
+def _real_plan():
+    from test_dsv4_attention_profiling import PLAN_ARGS
+    return _REAL_BUILD_PLAN(_REAL_BUILD_PARSER().parse_args(["plan", *PLAN_ARGS]))
+
+
+def _planned_records(records):
+    plan = _real_plan()
+    layers = [dict(global_layer_id=layer.global_layer_id, attention_variant=layer.attention_variant,
+                   compress_ratio=max(1, layer.compress_ratio)) for layer in plan.shape.layers]
+    return tuple(replace(record, engine=dict(record.engine, layers=layers,
+                 kv_cache_groups=plan.summary()["kv_cache_groups"])) for record in records)
+
+
+@pytest.mark.parametrize("change", ["missing", "different"])
+def test_planner_roles_require_realized_groups_per_run(tmp_path, monkeypatch, change):
+    saved = list(_planned_records(complete_records()))
+    engine = dict(saved[1].engine)
+    if change == "missing":
+        del engine["kv_cache_groups"]
+    else:
+        engine["kv_cache_groups"][1][0][0] = 99
+    saved[1] = replace(saved[1], engine=engine)
+    monkeypatch.setattr(check.dsv4_attention_main, "build_parser",
+                        lambda: SimpleNamespace(parse_args=lambda argv: argv))
+    monkeypatch.setattr(check.dsv4_attention_main, "build_plan", lambda args: _real_plan())
+    with pytest.raises(ValueError, match="kv_cache_groups mismatch.*recorded.*planned"):
+        check.planner_roles(_config(tmp_path, saved), saved)

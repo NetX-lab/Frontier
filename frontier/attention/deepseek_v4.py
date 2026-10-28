@@ -8,11 +8,119 @@ models/deepseek_v4/{attention,compressor,nvidia/flashmla}.py.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
+from frontier.attention.families import DEEPSEEK_V4_ATTENTION_FAMILY
 from frontier.attention.model_binding import bind_layer_attention
 from frontier.entities.batch import Batch, DummyForwardBatch, EPBatchGroup
 from frontier.types import ClusterType
+
+
+UNCOMPRESSED_VARIANT, CSA_VARIANT, HCA_VARIANT = (
+    DEEPSEEK_V4_ATTENTION_FAMILY.supported_variants
+)
+ATTENTION_CACHE = "attention"
+INDEXER_CACHE = "indexer"
+SWA_CACHE = "swa"
+COMPRESSOR_STATE_CACHE = "compressor_state"
+INDEX_COMPRESSOR_STATE_CACHE = "index_compressor_state"
+DEEPSEEK_V4_CACHES_BY_VARIANT = {
+    UNCOMPRESSED_VARIANT: (SWA_CACHE,),
+    CSA_VARIANT: (ATTENTION_CACHE, INDEXER_CACHE, SWA_CACHE,
+                  COMPRESSOR_STATE_CACHE, INDEX_COMPRESSOR_STATE_CACHE),
+    HCA_VARIANT: (ATTENTION_CACHE, SWA_CACHE, COMPRESSOR_STATE_CACHE),
+}
+# The profiling runner discovers these prefixes from the native modules.
+DEEPSEEK_V4_CACHE_METADATA_SOURCES = {
+    ATTENTION_CACHE: "attention", INDEXER_CACHE: "indexer", SWA_CACHE: "swa",
+    COMPRESSOR_STATE_CACHE: "compressor",
+    INDEX_COMPRESSOR_STATE_CACHE: "index_compressor",
+}
+
+
+def _approximate_gcd(values: Sequence[int], *, lower_bound: int | None = None) -> int:
+    """Port vLLM's minimum-padding chunk size; ties prefer the larger size."""
+    if not values:
+        raise ValueError("values must be non-empty")
+    if any(x <= 0 for x in values):
+        raise ValueError(f"values must be positive, got: {list(values)!r}")
+    min_d = max(1, lower_bound if lower_bound is not None else 1)
+    max_d = max(values)
+    if min_d > max_d:
+        return min_d
+    best_d = min_d
+    best_pad: int | None = None
+    for d in range(min_d, max_d + 1):
+        pad = sum((d - (x % d)) % d for x in values)
+        if best_pad is None or pad < best_pad or (pad == best_pad and d > best_d):
+            best_pad = pad
+            best_d = d
+    return best_d
+
+
+def deepseek_v4_kv_cache_groups(
+    variant_ids: Sequence[str],
+) -> tuple[tuple[tuple[int, str], ...], ...]:
+    """vLLM 0.28 decoder KV-cache groups for the specified layer order.
+
+    Source at 2cf0a69: v1/core/kv_cache_utils.py, group_and_unify_kv_cache_specs,
+    _approximate_gcd and _get_kv_cache_groups_uniform_groups; tuple counts from
+    v1/kv_cache_interface.py, UniformTypeKVCacheSpecs.get_num_layer_tuples.
+    C4A, C4 indexer and C128A KV pages have different sizes, so the full-MLA
+    tuple count is max(CSA, HCA). SWA pages share one size; CSA compressor and
+    index-compressor state pages differ; HCA state pages share one size.
+    The native H200 serving inventory confirms the 43-layer groups. These
+    page-size facts require both CSA and HCA. MTP/speculative layers are outside
+    this rule; Frontier's V4 attention already rejects speculative decoding.
+    """
+    for layer, variant in enumerate(variant_ids):
+        if variant not in DEEPSEEK_V4_CACHES_BY_VARIANT:
+            raise ValueError(f"Unknown DeepSeek-V4 variant id {variant!r} at layer {layer}")
+    csa_layers = [i for i, variant in enumerate(variant_ids) if variant == CSA_VARIANT]
+    hca_layers = [i for i, variant in enumerate(variant_ids) if variant == HCA_VARIANT]
+    if not csa_layers or not hca_layers:
+        raise ValueError("DeepSeek-V4 KV-cache groups require both CSA and HCA layers")
+    full = tuple(sorted(
+        (layer, cache)
+        for layer, variant in enumerate(variant_ids)
+        for cache in DEEPSEEK_V4_CACHES_BY_VARIANT[variant]
+        if cache in (ATTENTION_CACHE, INDEXER_CACHE)
+    ))
+    values = (max(len(csa_layers), len(hca_layers)), len(variant_ids),
+              len(csa_layers), len(hca_layers))
+    chunk_size = _approximate_gcd(values, lower_bound=values[0])
+    uniform_groups = (
+        tuple(((layer, SWA_CACHE),) for layer in range(len(variant_ids))),
+        tuple(((layer, COMPRESSOR_STATE_CACHE), (layer, INDEX_COMPRESSOR_STATE_CACHE))
+              for layer in csa_layers),
+        tuple(((layer, COMPRESSOR_STATE_CACHE),) for layer in hca_layers),
+    )
+    groups = [full]
+    for layer_tuples in uniform_groups:
+        group_count = (len(layer_tuples) + chunk_size - 1) // chunk_size
+        for i in range(group_count):
+            groups.append(tuple(sorted(member for layer_tuple in layer_tuples[i::group_count]
+                                       for member in layer_tuple)))
+    return tuple(groups)
+
+
+def deepseek_v4_tile_schedule_planners(variant_ids: Sequence[str]) -> tuple[bool, ...]:
+    """First variant in each SWA group plans decode tiles; prefill has no planner.
+
+    vLLM 2cf0a69 models/deepseek_v4/attention.py reads the SWA group's metadata;
+    nvidia/flashmla.py and sparse_swa.py build_tile_scheduler keep one schedule
+    per layer type in that object. No kernel runs in steps without decode tokens.
+    """
+    planners = [False] * len(variant_ids)
+    for group in deepseek_v4_kv_cache_groups(variant_ids):
+        if group[0][1] != SWA_CACHE:
+            continue
+        seen: set[str] = set()
+        for layer, _ in group:
+            variant = variant_ids[layer]
+            planners[layer] = variant not in seen
+            seen.add(variant)
+    return tuple(planners)
 
 
 class DeepSeekV4CoverageError(ValueError):

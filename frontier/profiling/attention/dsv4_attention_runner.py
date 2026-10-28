@@ -45,10 +45,14 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Any
 
+from frontier.attention.deepseek_v4 import (
+    DEEPSEEK_V4_CACHES_BY_VARIANT, DEEPSEEK_V4_CACHE_METADATA_SOURCES,
+)
 from frontier.profiling.attention import dsa_vllm_runner as case_runner
 from frontier.profiling.attention.dsv4_attention_plan import (
     CSA_VARIANT,
     LAYER_SCOPE,
+    KV_CACHE_GROUPS,
     METADATA_SOURCES_BY_VARIANT,
     UNCOMPRESSED_VARIANT,
     Dsv4ProfilePlan,
@@ -303,6 +307,21 @@ def attention_inventory(
 
     from vllm import envs
 
+    cache_names = {}
+    for layer in layer_inventory:
+        layer_id, variant = layer["global_layer_id"], layer["attention_variant"]
+        prefixes = metadata_prefixes(modules[layer_id])
+        for cache in DEEPSEEK_V4_CACHES_BY_VARIANT[variant]:
+            cache_names[prefixes[DEEPSEEK_V4_CACHE_METADATA_SOURCES[cache]]] = (layer_id, cache)
+    kv_cache_groups = []
+    for group in worker.model_runner.kv_cache_config.kv_cache_groups:
+        members = []
+        for name in group.layer_names:
+            if name not in cache_names:
+                raise ValueError(f"KV-cache group name {name!r} is not a discovered DeepSeek-V4 cache")
+            members.append(cache_names[name])
+        kv_cache_groups.append([list(member) for member in sorted(members)])
+
     attention = list(modules.values())
     indexers = [module.indexer for module in attention if module.indexer is not None]
     compressors = [module.compressor for module in attention if module.compressor is not None]
@@ -351,6 +370,7 @@ def attention_inventory(
         "use_v2_model_runner": bool(worker.vllm_config.use_v2_model_runner),
         "num_gpu_blocks": worker.vllm_config.cache_config.num_gpu_blocks,
         "layers": layer_inventory,
+        KV_CACHE_GROUPS: kv_cache_groups,
         **({"moe_routing": _routing_identity(worker.get_model(), config)} if config is not None else {}),
     }
 

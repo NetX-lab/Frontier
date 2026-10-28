@@ -5,8 +5,8 @@ A step record carries one metadata entry per ``(variant, source)`` of the
 reduced model, see ``dsv4_attention_plan.METADATA_SOURCES_BY_VARIANT``.
 
 A row aggregates every call of one scope over the reduced model's layers of
-one attention variant and one tile-schedule role (the first layer of a
-variant plans the FlashMLA decode tile schedule, later layers reuse it), over
+one attention variant and one tile-schedule role (the first variant in each
+SWA cache group plans the FlashMLA decode tile schedule, later layers reuse it), over
 the steps of one case that share the same scheduled requests and native
 metadata of that variant. ``operator_scopes`` maps each timed scope to the
 canonical family operators whose kernels run in it.
@@ -48,6 +48,7 @@ from frontier.profiling.attention.dsv4_attention_plan import (
     expected_scopes,
     metadata_key,
     scope_operators,
+    require_realized_kv_cache_groups,
 )
 from frontier.profiling.common.runtime_identity import canonical_json
 
@@ -216,6 +217,8 @@ def build_dsv4_rows(
 
     require_scope_timing(plan.limits.engine_policy)
     engines, steps, calls = index_records(records)
+    for engine in engines.values():
+        require_realized_kv_cache_groups(plan, engine)
     identities ={canonical_json(engine.get("moe_routing")) for engine in engines.values()}
     if len(identities) > 1:
         raise ValueError("Raw engines disagree on constructed routing identity")

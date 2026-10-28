@@ -71,15 +71,53 @@ def test_missing_and_grid_mismatch_report_closest_candidate():
     assert result['grid_mismatches']==[{'name':K[0],'block':list(K[2]),'expected_grid':list(K[1]),'native_grids':[[2,1,1]],'missing_count':2}]
 
 
-def test_planner_reuse_full_model_expansion_and_cardinality():
-    kernels={0:Counter({K:1}),1:Counter({K:2}),2:Counter({K:3}),3:Counter({K:4})}
-    variants={0:'a',1:'a',2:'b',3:'b'}
-    roles={0:True,1:False,2:True,3:False}
-    assert identity.expand_attention_kernels(kernels,variants,roles,{'a':3,'b':20})=={K:84}
-    with pytest.raises(ValueError,match='exactly one planner and one reuse'):
-        identity.expand_attention_kernels(kernels,variants,dict(roles,**{} ) | {1:True},{'a':3,'b':20})
-    with pytest.raises(ValueError,match='no attention kernels'):
-        identity.expand_attention_kernels({0:kernels[0]},variants,roles,{'a':3,'b':20})
+def _role_expansion_inputs():
+    from test_dsv4_attention_profiling import _build_plan, CONFIG_PATH
+    from frontier.profiling.attention.dsa_plan import load_hf_config
+    plan = _build_plan(load_hf_config(CONFIG_PATH))
+    variants = {layer.global_layer_id: layer.attention_variant for layer in plan.shape.layers}
+    roles = {layer.global_layer_id: layer.plans_tile_schedule for layer in plan.shape.layers}
+    counts = {('uncompressed', True): 2, ('csa', True): 1, ('csa', False): 20,
+              ('hca', True): 1, ('hca', False): 19}
+    # Distinct multisets make every full-model expansion factor observable.
+    signatures = {role: (role[0] + str(role[1]), K[1], K[2]) for role in counts}
+    kernels = {layer: Counter({signatures[(variants[layer], roles[layer])]: 1}) for layer in variants}
+    return kernels, variants, roles, counts, signatures
+
+
+def test_planner_reuse_full_model_expansion_with_several_layers_per_role():
+    kernels, variants, roles, counts, signatures = _role_expansion_inputs()
+    assert identity.expand_attention_kernels(kernels, variants, roles, counts) == {
+        signatures[role]: count for role, count in counts.items()}
+
+
+@pytest.mark.parametrize('layer', [1, 6, 7])
+def test_unequal_multisets_within_role_raise(layer):
+    kernels, variants, roles, counts, _ = _role_expansion_inputs()
+    kernels[layer][K] += 1
+    with pytest.raises(ValueError, match='role.*unequal kernel multisets.*layers'):
+        identity.expand_attention_kernels(kernels, variants, roles, counts)
+
+
+def test_missing_full_model_role_raises():
+    kernels, variants, roles, counts, _ = _role_expansion_inputs()
+    del variants[2]
+    with pytest.raises(ValueError, match="no reduced layers.*csa.*True"):
+        identity.expand_attention_kernels(kernels, variants, roles, counts)
+
+
+def test_reduced_role_absent_from_full_model_raises():
+    kernels, variants, roles, counts, _ = _role_expansion_inputs()
+    roles[0] = False
+    with pytest.raises(ValueError, match="roles absent from the full model.*uncompressed.*False"):
+        identity.expand_attention_kernels(kernels, variants, roles, counts)
+
+
+def test_missing_kernels_in_any_reduced_layer_raise():
+    kernels, variants, roles, counts, _ = _role_expansion_inputs()
+    del kernels[10]
+    with pytest.raises(ValueError, match="role.*csa.*False.*no attention kernels.*layer 10"):
+        identity.expand_attention_kernels(kernels, variants, roles, counts)
 
 
 def _pilot(tmp_path):
@@ -91,6 +129,7 @@ def _pilot(tmp_path):
         'driver_version':'fake','target_tensor_parallel_size':8,'runtime_versions':{'torch':'fake','torch_cuda':'fake'},
         'step_hold_us':0.0,'hold_cycles_per_us':None,'multi_stream_gemm_token_threshold':1024,
         'cudagraph_capture':{'cudagraph_mode':mode},
+        'kv_cache_groups':plan.summary()['kv_cache_groups'],
         'layers':[dict(global_layer_id=layer.global_layer_id,attention_variant=layer.attention_variant,compress_ratio=max(1,layer.compress_ratio)) for layer in plan.shape.layers]}
     step=dict(kind='step',engine_index=0,case_id=case.case_id,step_index=0,phase='decode',cudagraph_dispatch={'cg_mode':'FULL','num_tokens':1})
     intervals=tuple(dict(kind='interval',engine_index=0,case_id=case.case_id,step_index=0,
@@ -102,10 +141,15 @@ def _pilot(tmp_path):
 
 def test_saved_pilot_full_expansion_containment_and_margin_gate(tmp_path):
     config,record,case=_pilot(tmp_path)
-    assert identity.variant_layer_counts(config)=={'uncompressed':2,'csa':21,'hca':20}
+    assert identity.layer_role_counts(config)=={('uncompressed',True):2,('csa',True):1,
+        ('csa',False):20,('hca',True):1,('hca',False):19}
     candidate=identity.NativeCandidate('decode','FULL',Counter({K:44}),2,('decode',))
     report=identity.check_identity(config,[record],[candidate])
     assert report['verdict']=='PASS' and report['steps'][0]['expected_kernel_count']==43
+    assert report['layer_role_counts'] == [
+        {'variant': variant, 'plans_tile_schedule': planner, 'count': count}
+        for (variant, planner), count in sorted(identity.layer_role_counts(config).items())]
+    assert 'variant_layer_counts' not in report
     report=identity.check_identity(config,[record],[])
     assert report['verdict']=='FAIL' and report['steps'][0]['missing_kernel_count']==43
     report=identity.check_identity(config,[record],[],[case.case_id])

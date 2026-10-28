@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-28 | Created: lead verification of Codex assignment B3 and the tile-schedule planner finding. |
+| 2026-10-28 | Finding status: fixed on CPU by B4. |
 
 ## Scope
 
@@ -59,6 +60,8 @@ Cause (vLLM 0.28.0 source, `2cf0a69`):
 - Frontier's rule "the first layer of each variant plans" also disagrees with native: the uncompressed layer 1 plans natively.
 
 Consequence: the 6-layer reduced engine has no reuse layer for any variant, so its rows cannot price the 39 reusing layers. Package 03 is held until the fix (assignment B4) is verified.
+
+Status: fixed on CPU by assignment B4 ([test_report_2026-10-28_b4_tile_schedule_groups.md](test_report_2026-10-28_b4_tile_schedule_groups.md)); the GPU confirmation is package 03.
 
 ## Limits
 

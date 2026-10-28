@@ -6,7 +6,7 @@ models/deepseek_v4/nvidia/model.py and common/ops/sequence_parallel.py.
 
 from frontier.attention.deepseek_v4 import (
     DeepSeekV4CoverageError, _integer, _validate_source_batch, compute_rows,
-    validate_deepseek_v4_dummy_forward,
+    validate_deepseek_v4_dummy_forward, deepseek_v4_tile_schedule_planners,
 )
 from frontier.entities.batch import DummyForwardBatch
 from frontier.execution_time_predictor.dsv4_composition import serial_attention_phase
@@ -777,13 +777,13 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
             "kv_cache_dtype": replica.kv_cache_dtype,
             "attention_kv_cache_dtype": replica.kv_cache_dtype,
         }, "attention source/cache layout")
+        planners = deepseek_v4_tile_schedule_planners(
+            tuple(spec.variant_id for spec in model.get_layer_attention_specs())
+        )
         rows = _select_rows(rows, {
             "phase": phase, "attention_variant": layer.variant_id,
             "compress_ratio": max(1, model.compress_ratios[layer_id]),
-            "plans_tile_schedule": not any(
-                model.get_layer_attention_spec(i).variant_id == layer.variant_id
-                for i in range(layer_id)
-            ),
+            "plans_tile_schedule": planners[layer_id],
             "total_tokens": batch.total_num_tokens,
             "batch_size": len(batch.requests),
         }, scope)

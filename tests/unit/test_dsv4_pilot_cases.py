@@ -54,6 +54,8 @@ def test_package_plan_cli_rebuilds_pilot_and_summary(payload):
         str(BRIDGE / 'package_02/model/config.json'), '--pilot_cases', str(BRIDGE/'pilot_cases.json'),
         *graph_mode_flags('FULL_AND_PIECEWISE', tuple(spec['cudagraph_capture_sizes']))])
     plan = cli.build_plan(args)
+    assert len(plan.shape.layers) == 11
+    assert len(plan.cases) == 25
     assert plan.to_json()['limits']['step_hold_us'] == 200000
     assert plan.summary()['cases_by_phase'] == {'prefill':1,'decode':10,'first_tail':4,'dummy':10}
     assert [engine['estimated_steps'] for engine in plan.summary()['engines']] == [280,55]
@@ -159,7 +161,7 @@ def test_pilot_mutually_exclusive_serving_options(hf_config,payload,limits,argum
     from frontier.profiling.attention.dsv4_attention_plan import build_dsv4_profile_plan
     with pytest.raises(ValueError,match='mutually exclusive'):
         build_dsv4_profile_plan(model_name='deepseek-ai/DeepSeek-V4-Flash',hf_config=hf_config,
-            target_tensor_parallel_size=8,num_layers=6,limits=limits,kv_cache_dtype='fp8',pilot_cases=payload,**{argument:value})
+            target_tensor_parallel_size=8,num_layers=None,limits=limits,kv_cache_dtype='fp8',pilot_cases=payload,**{argument:value})
 
 
 @pytest.mark.parametrize('hold', [-1,float('inf'),float('nan'),True,'1'])
@@ -184,7 +186,7 @@ def test_pilot_engines_receive_the_v4_startup_query_check(hf_config, payload, li
     with pytest.raises(ValueError, match="V4 exact prefill startup query length 64 exceeds max_model_len=63"):
         build_dsv4_profile_plan(
             model_name="deepseek-ai/DeepSeek-V4-Flash", hf_config=hf_config,
-            target_tensor_parallel_size=8, num_layers=6, limits=limited,
+            target_tensor_parallel_size=8, num_layers=None, limits=limited,
             kv_cache_dtype="fp8", pilot_cases=payload,
         )
 
@@ -194,7 +196,7 @@ def test_pilot_peers_serialize_only_when_present(hf_config, payload, limits):
 
     plan = build_dsv4_profile_plan(
         model_name="deepseek-ai/DeepSeek-V4-Flash", hf_config=hf_config,
-        target_tensor_parallel_size=8, num_layers=6, limits=limits,
+        target_tensor_parallel_size=8, num_layers=None, limits=limits,
         kv_cache_dtype="fp8", pilot_cases=payload,
     )
     cases = {row["case_id"]: row for row in plan.to_json()["cases"]}
