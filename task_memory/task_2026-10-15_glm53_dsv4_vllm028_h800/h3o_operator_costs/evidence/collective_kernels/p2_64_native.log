@@ -1,0 +1,13 @@
+command: /data/ycfeng/envs/frontier-py310/bin/python tests/analysis/v4_collective_kernels.py native --trace-dir /data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces --output task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/evidence/collective_kernels/p2_64_native.json --summary task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/evidence/collective_kernels/p2_64_native.txt
+LANE decode dp0 dp0_pp0_tp0_dcp0_ep0_rank0.1792946239761662380.pt.trace.json.gz forwards 129
+LANE decode dp1 dp1_pp0_tp0_dcp0_ep8_rank0.1792946280760554510.pt.trace.json.gz forwards 174
+LANE decode dp2 dp2_pp0_tp0_dcp0_ep16_rank0.1792946183741136595.pt.trace.json.gz forwards 64
+LANE decode dp3 dp3_pp0_tp0_dcp0_ep24_rank0.1792946205265552185.pt.trace.json.gz forwards 109
+LANE prefill dp0 dp0_pp0_tp0_dcp0_ep0_rank0.1792946186223519831.pt.trace.json.gz forwards 96
+LANE prefill dp1 dp1_pp0_tp0_dcp0_ep8_rank0.1792946231753991556.pt.trace.json.gz forwards 128
+LANE prefill dp2 dp2_pp0_tp0_dcp0_ep16_rank0.1792946231790717687.pt.trace.json.gz forwards 128
+LANE prefill dp3 dp3_pp0_tp0_dcp0_ep24_rank0.1792946232178326036.pt.trace.json.gz forwards 128
+WROTE task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/evidence/collective_kernels/p2_64_native.json task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/evidence/collective_kernels/p2_64_native.txt
+wall_seconds: 139.99
+peak_memory_kib: 2859096
+exit_code: 0

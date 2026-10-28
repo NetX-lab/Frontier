@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | Added the commit and the submission lock check. |
 | 2026-10-28 | Created: lead review and rerun of Codex assignment B9 (request `c82022e6`). |
 
 ## Scope
@@ -60,4 +61,8 @@ From the saved dry runs; they equal the design's table.
 
 ## Not verified here
 
-No GPU run: MNNVL kernel selection, NCCL kernels and timings are verified by G5h-16 and B10. The real submission lock is built after the commit (next section of `progress.md`).
+No GPU run: MNNVL kernel selection, NCCL kernels and timings are verified by G5h-16 and B10.
+
+## After the commit
+
+Committed as `5083d036`. `runtime_check.build_lock` on both stage configs (preview copies in `/data/ycfeng/tmp/b9_review/stage_g5h{16,32}_*_lock_preview.json`; `submit.py` writes the real lock at submission): `workspace_head` `5083d0369a5f9b86c333b30fce78154a3364225f`, NCCL `/usr/local/lib/python3.12/dist-packages/nvidia/nccl/lib/libnccl.so.2` → `618968ee277041751512e619190132a9bdf351c3ce7129c73484f6ef441ad692` (the P2 overlay value), 6 benchmark source hashes and 5 vLLM file hashes. PASS.

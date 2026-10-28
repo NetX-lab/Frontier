@@ -1,0 +1,9 @@
+command: /data/ycfeng/envs/frontier-py310/bin/python tests/analysis/v4_collective_kernels.py native --trace-dir /data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/torch_traces --output task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/evidence/collective_kernels/p2_32_native.json --summary task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/evidence/collective_kernels/p2_32_native.txt
+LANE decode dp0 dp0_pp0_tp0_dcp0_ep0_rank0.1792942701901162313.pt.trace.json.gz forwards 120
+LANE decode dp1 dp1_pp0_tp0_dcp0_ep8_rank0.1792942680280151453.pt.trace.json.gz forwards 64
+LANE prefill dp0 dp0_pp0_tp0_dcp0_ep0_rank0.1792942682770529608.pt.trace.json.gz forwards 96
+LANE prefill dp1 dp1_pp0_tp0_dcp0_ep8_rank0.1792942733290370462.pt.trace.json.gz forwards 128
+WROTE task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/evidence/collective_kernels/p2_32_native.json task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/evidence/collective_kernels/p2_32_native.txt
+wall_seconds: 61.507
+peak_memory_kib: 2548900
+exit_code: 0

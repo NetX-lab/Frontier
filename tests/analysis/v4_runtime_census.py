@@ -49,6 +49,7 @@ import statistics
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Iterator
 
 DEVICE_CATEGORIES = ("kernel", "gpu_memcpy", "gpu_memset")
 LAUNCH_CATEGORIES = ("cuda_runtime", "cuda_driver")
@@ -202,24 +203,45 @@ class ForwardKernels:
     scheduled_tokens: int | None = None
 
 
+@dataclass(frozen=True)
+class ForwardKernelEvents:
+    record: dict
+    segment_bounds: dict[str, tuple[float, float]]
+    kernels_by_segment: dict[str, tuple[dict, ...]]
+
+
+def forward_kernel_events(role: str, path: Path) -> Iterator[ForwardKernelEvents]:
+    """Yield each forward's record, host segment bounds and correlated kernels.
+
+    Segment membership follows the host launch, including every kernel attached
+    to a graph launch. The iterator holds only this trace's parsed events.
+    """
+    _, _, _, _, launches, starts, device, forwards = _forward_segments(role, path)
+    for record, bounds in forwards:
+        kernels = {}
+        for segment, (start, stop) in bounds.items():
+            inside = launches[bisect.bisect_left(starts, start):bisect.bisect_left(starts, stop)]
+            kernels[segment] = tuple(event for launch in inside
+                                     for event in device.get(launch["args"].get("correlation"), [])
+                                     if event.get("cat") == _KERNEL_CATEGORY)
+        yield ForwardKernelEvents(record, bounds, kernels)
+
+
 def dispatch_kernel_multisets(role: str, path: Path) -> tuple[ForwardKernels, ...]:
     """Return launch-shaped dispatch kernel multisets, sharing census segmentation."""
-    _, _, _, _, launches, starts, device, forwards = _forward_segments(role, path)
     result = []
-    for record, bounds in forwards:
-        start, stop = bounds[_DISPATCH_SEGMENT]
+    for forward in forward_kernel_events(role, path):
+        record = forward.record
         kernels = Counter()
-        for launch in launches[bisect.bisect_left(starts, start):bisect.bisect_left(starts, stop)]:
-            for event in device.get(launch["args"].get("correlation"), []):
-                if event.get("cat") == _KERNEL_CATEGORY:
-                    dimensions = []
-                    for field in (_GRID, _BLOCK):
-                        value = event["args"].get(field)
-                        if (not isinstance(value, (list, tuple)) or len(value) != _LAUNCH_DIMENSIONS
-                                or any(type(item) is not int for item in value)):
-                            raise ValueError(f"{path}: kernel {event['name']!r} requires {field} with three ints")
-                        dimensions.append(tuple(value))
-                    kernels[(event["name"], *dimensions)] += 1
+        for event in forward.kernels_by_segment[_DISPATCH_SEGMENT]:
+            dimensions = []
+            for field in (_GRID, _BLOCK):
+                value = event["args"].get(field)
+                if (not isinstance(value, (list, tuple)) or len(value) != _LAUNCH_DIMENSIONS
+                        or any(type(item) is not int for item in value)):
+                    raise ValueError(f"{path}: kernel {event['name']!r} requires {field} with three ints")
+                dimensions.append(tuple(value))
+            kernels[(event["name"], *dimensions)] += 1
         step = record.get("step")
         scheduled_tokens = None if step is None else step["context_tokens"] + step["generation_tokens"]
         result.append(ForwardKernels(record["index"], record["mode"], record["class"], kernels, scheduled_tokens))
