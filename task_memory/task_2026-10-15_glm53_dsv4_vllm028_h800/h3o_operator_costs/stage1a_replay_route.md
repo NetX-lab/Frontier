@@ -14,6 +14,8 @@
 | 2026-10-28 | B4 accepted: KV-cache group rule and the 11-layer reduced model in §3.4; result in §4. |
 | 2026-10-28 | Package 03 result and the kernel identity coverage finding in §4; B5 submitted. |
 | 2026-10-28 | B5 accepted: result in §4; B6 next. |
+| 2026-10-28 | B6 design (§3.4) and submission (§4). |
+| 2026-10-28 | B6 accepted: result in §4; B7 next. |
 
 ## 1. Purpose
 
@@ -143,6 +145,14 @@ B4 as implemented ([test_report_2026-10-28_b4_tile_schedule_groups.md](../test_r
 - Both runners record the realized `kv_cache_groups`; `build_dsv4_rows` and the A4 planner-role check require them to equal the plan's.
 - The identity check expands per (variant, planner role) with the full-model counts {uncompressed planner 2, CSA planner 1, CSA reuse 20, HCA planner 1, HCA reuse 19}; the reduced layers of one role must carry equal kernel multisets.
 
+B6 design ([codex_assignment_B6_replay_rows.md](codex_assignment_B6_replay_rows.md)):
+
+- New `frontier/profiling/attention/dsv4_replay_rows.py`: rows from graph-replay records (schema `dsv4_attention_replay.v1`, KERNEL_ONLY only), written by `dsv4_attention_main aggregate` as `attention_graph_replay_kernel_only.csv`; the eager rows and their table are unchanged.
+- Row key: engine, case, variant, planner role, step dispatch (`cg_mode`, `num_tokens`, `num_reqs`), request signature, variant metadata and the observed scope set. Per scope: `time_stats` (with `kernel_count`) and `gap_stats` (the per-call sum of the scope's kernels' signed gaps); per row: `layer_window_stats` (the A4 target).
+- Scope sets are observed, not derived from a rule: on CSA layers vLLM skips the scores and the prefill top-k when a prefill chunk has no compressed key, and runs the short-context fill only eagerly. Entry 4 must predict the observed sets.
+- A non-host-ahead call raises: under the step hold every owned activity must be host-ahead. A4 and the rows share one per-call timing function and one plan-engine check.
+- Dummy rows carry the dispatch, phase and metadata columns but no request or key-length columns; first-tail mixed batches get the load columns through `request_load_columns`, split from `batch_load_columns`.
+
 ## 4. Order and acceptance
 
 `A (graph_capture.py, graph_replay_trace.py, CPU tests with fakes) -> review and commit -> B1 (policy, scope tree, re-capture, step range, bridge-check driver and launcher) -> review and commit -> P1h bridge check (1 H200, via /ds4-exec) -> B2 (intervals, gap reducer, A4) -> rest of P1h`.
@@ -159,3 +169,5 @@ B4 as implemented ([test_report_2026-10-28_b4_tile_schedule_groups.md](../test_r
 - B4 (CPU, lead rerun): pytest groups pass with only the two known failures; the predicted 43-layer groups equal the native P2 serving inventory; DSA plans byte-identical; V4 plans change only in the reduced layout; the package 03 plan has 11 layers, 25 cases and steps [280, 55]. Package 03 is next: first confirm that the recorded groups equal the 11-layer prediction and that planner kernels run in layers 0-3 only.
 - Package 03 (1 H200, `exp-1028-132243-707076`, about 0.244 GPU-hours; [test report](../test_report_2026-10-28_p1h_package03.md)): the realized groups equal the 11-layer prediction and the planner runs in layers 0-3 only; the bridge check, the A4 own-gap gate (125 groups), the host-ahead hold and the reducer pass. The kernel identity tool fails because it compares a pilot step with a native forward of another shape when the native traces lack its shape; at every shape the native traces contain, the kernels agree once the eager-break rows are part of the key. B5 keys the identity check by (class, mode, padded rows, eager rows) and reports `NO_REFERENCE` for uncovered shapes. After B5: entries 1, 10 and 3 with the per-scope gap column of remedy (b).
 - B5 (CPU, lead rerun; [test report](../test_report_2026-10-28_b5_identity_shape_keys.md)): P2-32 {46 PASS, 129 NO_REFERENCE, 0 FAIL} and P2-64 {54, 121, 0}, both verdict PASS; 7 referenced and 16 unreferenced pilot shapes per trace set. The unreferenced shapes stay unqualified by this check; the stage 4 end-to-end replays qualify them. Next: B6, the graph-replay V4 rows with a per-scope gap column (rows part of entry 13), then entries 1, 10 and 3.
+- B6 submitted (`4663821b`): acceptance is 505 rows from the 1925 package 03 layer calls, an A4 report byte-identical to the `d2a226fe` baseline, and row compositions of the medians within the A4 limits.
+- B6 (CPU, lead rerun; [test report](../test_report_2026-10-28_b6_replay_rows.md)): 505 rows from 1925 calls with the expected phase and mode counts; A4 byte-identical; row compositions of the medians: median 2.1e-16, p90 0.77%, max 3.19% (single-call rows exact). Next: B7, the V4 attention loader, trainer and predictor on these rows (entry 1), each scope weighed by its own gap in `compose_attention_phase` (entry 2 revision) and the V4 gap selection (entry 10).

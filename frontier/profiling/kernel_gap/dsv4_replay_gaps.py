@@ -64,6 +64,7 @@ DEVICE_NAME, DRIVER_VERSION, TARGET_TP = "device_name", "driver_version", "targe
 RUNTIME_VERSIONS, TORCH_VERSION, TORCH_CUDA = "runtime_versions", "torch", "torch_cuda"
 NO_DEPENDENCY, NON_KERNEL = "no_dependency_end", "non_kernel_dependency"
 HOST_BOUND = "host_bound"
+NO_OWNED_KERNEL, NON_POSITIVE_TARGET = "no_owned_kernel", "non_positive_target"
 OVERLAPS_HOLD = "overlaps_hold"
 HOLD_DEPENDENCY = "hold_dependency"
 HOLD_DIAGNOSTICS = "hold_by_step_mode_and_case"
@@ -132,6 +133,50 @@ class ActivityGap:
     @property
     def attention_owned(self) -> bool:
         return self.interval[SCOPE] is not None
+
+
+@dataclass(frozen=True)
+class LayerCallTiming:
+    exclusion_reason: str | None
+    window_ms: float | None
+    scope_gaps_ms: Mapping[str, float]
+
+
+def attention_gaps_by_layer(
+    gaps: Sequence[ActivityGap],
+) -> dict[tuple[str, str, int, int], list[ActivityGap]]:
+    """Index attention-owned activities by source, case, step and layer."""
+    result = defaultdict(list)
+    for gap in gaps:
+        if gap.attention_owned:
+            row = gap.interval
+            result[(gap.source, row[CASE_ID], row[STEP_INDEX], row[GLOBAL_LAYER_ID])].append(gap)
+    return dict(result)
+
+
+def layer_call_timing(owned: Sequence[ActivityGap]) -> LayerCallTiming:
+    """Measure a layer call's window and per-scope signed kernel gaps in ms.
+
+    Admission checks include owned copies/memsets and retain A4's exclusion
+    order. Costs and gap sums include kernels only; the first kernel's signed
+    gap extends the measured window back to its dependency end.
+    """
+    kernels = [gap for gap in owned if gap.interval[ACTIVITY] == KERNEL]
+    if not kernels:
+        return LayerCallTiming(NO_OWNED_KERNEL, None, {})
+    if any(gap.dependency_end_us is None for gap in owned):
+        return LayerCallTiming(NO_DEPENDENCY, None, {})
+    if any(not gap.host_ahead for gap in owned):
+        return LayerCallTiming(HOST_BOUND, None, {})
+    first = min(kernels, key=lambda gap: gap.interval[START_US])
+    window_ms = (max(gap.interval[END_US] for gap in kernels)
+                 - first.interval[START_US] + first.gap_us) * US_TO_MS
+    if window_ms <= 0:
+        return LayerCallTiming(NON_POSITIVE_TARGET, None, {})
+    scope_gaps = defaultdict(float)
+    for gap in kernels:
+        scope_gaps[gap.interval[SCOPE]] += gap.gap_us * US_TO_MS
+    return LayerCallTiming(None, window_ms, dict(scope_gaps))
 
 
 @dataclass(frozen=True)
@@ -510,7 +555,8 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["ActivityGap", "GapReduction", "LayerCall", "ReplayRecords", "activity_gaps",
+__all__ = ["ActivityGap", "GapReduction", "LayerCall", "LayerCallTiming", "ReplayRecords", "activity_gaps",
+           "attention_gaps_by_layer", "layer_call_timing", "NO_OWNED_KERNEL", "NON_POSITIVE_TARGET",
            "build_layer_calls", "gap_statistics", "main", "read_replay_records", "reduce_dsv4_gaps"]
 
 if __name__ == "__main__":

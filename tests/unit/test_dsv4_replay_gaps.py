@@ -367,3 +367,37 @@ def test_hold_overlap_exclusion_precedes_eager_position_checks(owned):
     sample = next(sample for sample in samples if sample.interval is overlapping)
     assert sample.exclusion_reason == "overlaps_hold"
     assert not sample.host_ahead
+
+
+
+def test_shared_layer_timing_sums_signed_kernel_gaps_and_window():
+    saved = records("FULL", [interval(0, 2),
+        interval(4, 10, scope=Q, launch="graph", capture_kind="graph"),
+        interval(8, 13, scope=OUT, launch="graph", capture_kind="graph", gap=-2)])
+    owned = [sample for sample in replay.activity_gaps([saved]) if sample.attention_owned]
+    timing = replay.layer_call_timing(owned)
+    assert timing.exclusion_reason is None
+    assert timing.window_ms == pytest.approx(0.011)
+    assert timing.scope_gaps_ms == {Q: 0.002, OUT: -0.002}
+    assert replay.attention_gaps_by_layer(owned) == {("FULL", "case", 0, 0): owned}
+
+
+@pytest.mark.parametrize("reason", [replay.NO_OWNED_KERNEL, replay.NO_DEPENDENCY,
+                                  replay.HOST_BOUND, replay.NON_POSITIVE_TARGET])
+def test_shared_layer_timing_preserves_exclusion_order_including_owned_non_kernels(reason):
+    saved = complete_records()[0]
+    owned = [sample for sample in replay.activity_gaps([saved]) if sample.attention_owned]
+    missing = replace(owned[0], dependency_end_us=None, host_wait_us=1.0)
+    host_bound = replace(owned[0], host_wait_us=1.0)
+    copy = replace(missing, interval=dict(missing.interval, activity="memcpy"))
+    if reason == replay.NO_OWNED_KERNEL:
+        owned = [copy]
+    elif reason == replay.NO_DEPENDENCY:
+        owned = [host_bound, copy, *owned[1:]]
+    elif reason == replay.HOST_BOUND:
+        owned = [replace(copy, dependency_end_us=0.0), *owned]
+    else:
+        owned = [replace(owned[0], gap_us=-100.0), *owned[1:]]
+    timing = replay.layer_call_timing(owned)
+    assert timing.exclusion_reason == reason
+    assert timing.window_ms is None and timing.scope_gaps_ms == {}

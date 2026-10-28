@@ -43,6 +43,7 @@ from frontier.profiling.common.runtime_identity import (
 CUDA_EVENT = "CUDA_EVENT"
 KERNEL_ONLY = "KERNEL_ONLY"
 MEASUREMENT_TYPES = (CUDA_EVENT, KERNEL_ONLY)
+TIME_STATS_PREFIX = "time_stats"
 
 # Native metadata fields every recorded step must carry.
 REQUIRED_MLA_METADATA_FIELDS = (
@@ -106,13 +107,10 @@ def _metadata_signature(step: Mapping[str, Any]) -> str:
     return canonical_json({"mla": mla, "indexer": step["indexer_metadata"]})
 
 
-def batch_load_columns(
+def request_load_columns(
     requests: Sequence[StepRequest],
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Return the step's load columns and its context-size columns.
-
-    Model-specific columns sit between the two groups in the DSA tables.
-    """
+) -> dict[str, Any]:
+    """Return request load columns, including mixed prefill/decode batches."""
 
     prefills = [r for r in requests if r.is_prefill]
     decodes = [r for r in requests if not r.is_prefill]
@@ -137,6 +135,21 @@ def batch_load_columns(
         "decode_kv_cache_sizes": json.dumps(decode_contexts),
         "max_key_len": max(r.num_computed_tokens + r.num_scheduled_tokens for r in requests),
     }
+    return load
+
+
+def batch_load_columns(
+    requests: Sequence[StepRequest],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Return the step's load columns and its context-size columns.
+
+    Model-specific columns sit between the two groups in the DSA tables.
+    """
+
+    load = request_load_columns(requests)
+    prefills = [r for r in requests if r.is_prefill]
+    decodes = [r for r in requests if not r.is_prefill]
+    decode_contexts = sorted(r.num_computed_tokens for r in decodes)
     context: dict[str, Any]
     if prefills and not decodes:
         context = {
@@ -197,14 +210,17 @@ def _model_columns(plan: DsaProfilePlan, engine: Mapping[str, Any]) -> dict[str,
     }
 
 
-def _stat_columns(scope: str, values: Sequence[float]) -> dict[str, Any]:
+def _stat_columns(
+    scope: str, values: Sequence[float], *, prefix: str = TIME_STATS_PREFIX,
+) -> dict[str, Any]:
+    column = f"{prefix}.{scope}" if scope else prefix
     return {
-        f"time_stats.{scope}.min": min(values),
-        f"time_stats.{scope}.max": max(values),
-        f"time_stats.{scope}.mean": statistics.fmean(values),
-        f"time_stats.{scope}.median": statistics.median(values),
-        f"time_stats.{scope}.std": statistics.pstdev(values),
-        f"time_stats.{scope}.count": len(values),
+        f"{column}.min": min(values),
+        f"{column}.max": max(values),
+        f"{column}.mean": statistics.fmean(values),
+        f"{column}.median": statistics.median(values),
+        f"{column}.std": statistics.pstdev(values),
+        f"{column}.count": len(values),
     }
 
 
@@ -221,7 +237,7 @@ def scope_columns(
                 f"kernel counts {sorted(kernel_counts)}; these calls measure "
                 "different work"
             )
-        columns[f"time_stats.{scope}.kernel_count"] = next(iter(kernel_counts))
+        columns[f"{TIME_STATS_PREFIX}.{scope}.kernel_count"] = next(iter(kernel_counts))
     return columns
 
 
@@ -409,6 +425,7 @@ __all__ = [
     "REQUIRED_MLA_METADATA_FIELDS",
     "StepRequest",
     "batch_load_columns",
+    "request_load_columns",
     "build_dsa_rows",
     "expected_scopes",
     "index_records",

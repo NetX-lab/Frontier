@@ -516,3 +516,19 @@ def test_worker_records_all_sequences_in_a_multi_prefill_case():
 def test_prefill_window_counts_chunks_per_prompt(plan):
     case = next(c for c in plan.cases if c.case_id == "e0-prefill-p4159")
     assert runner._case_window(case, plan.engine(case.engine_index)) == (17, 34)
+
+
+
+def test_request_load_columns_support_mixed_batch_without_changing_pure_context_contract():
+    from frontier.profiling.attention.dsa_rows import StepRequest, batch_load_columns, request_load_columns
+    requests = [StepRequest(1, 63, 64), StepRequest(1, 80, 64)]
+    load = request_load_columns(requests)
+    assert load["is_mixed_batch"] and load["batch_size"] == load["total_tokens"] == 2
+    assert load["num_prefill_seqs"] == load["num_decode_seqs"] == 1
+    assert load["max_key_len"] == 81
+    with pytest.raises(ValueError, match="pure prefill or pure decode"):
+        batch_load_columns(requests)
+    with pytest.raises(ValueError, match="must schedule one decode token"):
+        request_load_columns([StepRequest(2, 80, 64)])
+    for pure in ([StepRequest(4, 0, 64)], [StepRequest(1, 80, 64)]):
+        assert batch_load_columns(pure)[0] == request_load_columns(pure)

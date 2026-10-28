@@ -21,13 +21,14 @@ import numpy as np
 
 from frontier.execution_time_predictor.dsv4_composition import compose_attention_phase, segment_class
 from frontier.profiling.attention import dsv4_attention_main
-from frontier.profiling.attention.dsv4_attention_plan import require_realized_kv_cache_groups
+from frontier.profiling.attention.dsv4_attention_plan import (
+    require_engine_layer_inventory, require_realized_kv_cache_groups,
+)
 from frontier.profiling.kernel_gap.dsv4_replay_gaps import (
-    ACTIVITY, CASE_ID, CG_MODE, COMPRESS_RATIO, END_US, ENGINE_CAPTURE, ENGINE_MODE,
-    ENGINE_INDEX, GLOBAL_LAYER_ID, HOST_BOUND, KERNEL, LAYERS, NO_DEPENDENCY, NUM_TOKENS, SCOPE,
-    START_US, STEP_INDEX, TARGET_TP, THRESHOLD, US_TO_MS, VARIANT, CUDAGRAPH_DISPATCH_KEY,
+    CASE_ID, CG_MODE, ENGINE_CAPTURE, ENGINE_MODE, ENGINE_INDEX, NUM_TOKENS, SCOPE,
+    STEP_INDEX, TARGET_TP, THRESHOLD, US_TO_MS, CUDAGRAPH_DISPATCH_KEY,
     LayerCall, ReplayRecords, activity_gaps, build_layer_calls, read_replay_records,
-    reduce_dsv4_gaps, gap_statistics,
+    reduce_dsv4_gaps, gap_statistics, attention_gaps_by_layer, layer_call_timing,
 )
 from dsv4_graph_bridge_check import BridgeConfig, graph_mode_flags, load_config
 
@@ -37,7 +38,6 @@ REPORT_FILE = "composition_report.json"
 PASS, FAIL = "PASS", "FAIL"
 GROUP_PASS, GROUP_FAIL = "pass", "fail"
 NO_HOST_AHEAD_CALL, MISSING_GAP_VALUE = "no_host_ahead_call", "missing_gap_value"
-NO_OWNED_KERNEL, NON_POSITIVE_TARGET = "no_owned_kernel", "non_positive_target"
 TIME_MS, KERNEL_COUNT = "time_ms", "kernel_count"
 
 
@@ -71,13 +71,11 @@ def planner_roles(config: BridgeConfig, records: Sequence[ReplayRecords]) -> Map
         plan = dsv4_attention_main.build_plan(dsv4_attention_main.build_parser().parse_args(
             ["plan", *config.plan_args, *graph_mode_flags(mode, config.cudagraph_capture_sizes)]
         ))
-        expected = [(layer.global_layer_id, layer.attention_variant, max(1, layer.compress_ratio)) for layer in plan.shape.layers]
         record = by_run[(mode, run.engine_index)]
-        actual = [(layer[GLOBAL_LAYER_ID], layer[VARIANT], layer[COMPRESS_RATIO]) for layer in record.engine[LAYERS]]
-        if actual != expected:
-            raise ValueError(f"A4 {mode} engine layers do not match the rebuilt plan: recorded {actual}, planned {expected}")
-        if plan.shape.target_tensor_parallel_size != record.engine[TARGET_TP]:
-            raise ValueError(f"A4 {mode} target TP does not match the rebuilt plan: recorded {record.engine[TARGET_TP]}, planned {plan.shape.target_tensor_parallel_size}")
+        try:
+            require_engine_layer_inventory(plan, record.engine)
+        except ValueError as error:
+            raise ValueError(f"A4 {mode} engine {record.source}: {error}") from error
         require_realized_kv_cache_groups(plan, record.engine)
         roles.update({(mode, run.engine_index, layer.global_layer_id): layer.plans_tile_schedule for layer in plan.shape.layers})
     return roles
@@ -115,11 +113,7 @@ def check_composition(records: Sequence[ReplayRecords], roles: Mapping[tuple[str
     """Evaluate layer calls without pooling different composition coordinates."""
     reduction = reduce_dsv4_gaps(records)
     gap_ms = {segment: value * US_TO_MS for segment, value in reduction.values_us.items()}
-    gaps = activity_gaps(records)
-    by_layer = defaultdict(list)
-    for gap in gaps:
-        if gap.attention_owned:
-            by_layer[(gap.source, gap.interval[CASE_ID], gap.interval[STEP_INDEX], gap.interval[GLOBAL_LAYER_ID])].append(gap)
+    by_layer = attention_gaps_by_layer(activity_gaps(records))
     grouped = defaultdict(list)
     for call in build_layer_calls(records):
         grouped[_group(call, roles)].append(call)
@@ -133,39 +127,27 @@ def check_composition(records: Sequence[ReplayRecords], roles: Mapping[tuple[str
             counts = {row[SCOPE]: row[KERNEL_COUNT] for row in call.calls}
             required = {segment_class(group.step_mode, name) for name in scope_ms}
             missing.update(required - gap_ms.keys())
-            owned = by_layer[(call.source, call.step[CASE_ID], call.step[STEP_INDEX], call.global_layer_id)]
-            kernels = [gap for gap in owned if gap.interval[ACTIVITY] == KERNEL]
-            if not kernels:
-                exclusions[NO_OWNED_KERNEL] += 1
+            owned = by_layer.get((call.source, call.step[CASE_ID], call.step[STEP_INDEX], call.global_layer_id), ())
+            timing = layer_call_timing(owned)
+            if timing.exclusion_reason is not None:
+                exclusions[timing.exclusion_reason] += 1
                 continue
-            if any(gap.dependency_end_us is None for gap in owned):
-                exclusions[NO_DEPENDENCY] += 1
-                continue
-            if any(not gap.host_ahead for gap in owned):
-                exclusions[HOST_BOUND] += 1
-                continue
-            first = min(kernels, key=lambda gap: gap.interval[START_US])
-            target_ms = (max(gap.interval[END_US] for gap in kernels) - first.interval[START_US] + first.gap_us) * US_TO_MS
-            if target_ms <= 0:
-                exclusions[NON_POSITIVE_TARGET] += 1
-                continue
+            target_ms = timing.window_ms
             host_ahead_count += 1
             options = dict(variant=call.variant, graph_runtime_mode=group.step_mode,
                            rows=call.step[CUDAGRAPH_DISPATCH_KEY][NUM_TOKENS],
                            multi_stream_gemm_token_threshold=call.engine[THRESHOLD],
                            indexer_short_context=call.short_context)
-            signed_gaps = defaultdict(float)
-            for gap in kernels:
-                signed_gaps[gap.interval[SCOPE]] += gap.gap_us * US_TO_MS
+            signed_gaps = timing.scope_gaps_ms
             composed = compose_attention_phase(
-                {name: value + signed_gaps[name] for name, value in scope_ms.items()},
+                {name: value + signed_gaps.get(name, 0.0) for name, value in scope_ms.items()},
                 counts, dict.fromkeys(required, 0.0), **options,
             )
             errors.append((composed.elapsed_ms - target_ms) / target_ms)
             for name, cost in scope_ms.items():
-                scope_gaps[name].append(signed_gaps[name])
+                scope_gaps[name].append(signed_gaps.get(name, 0.0))
                 if cost != 0:
-                    scope_ratios[name].append(signed_gaps[name] / cost)
+                    scope_ratios[name].append(signed_gaps.get(name, 0.0) / cost)
             if not required - gap_ms.keys():
                 diagnostic = compose_attention_phase(scope_ms, counts, gap_ms, **options)
                 diagnostic_errors.append((diagnostic.elapsed_ms - target_ms) / target_ms)

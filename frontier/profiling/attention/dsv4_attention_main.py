@@ -9,7 +9,9 @@ GPU run measures is the plan its dry run printed:
   JSON-lines records (GPU worker with vLLM).
 * ``aggregate``: CPU-only; turns the raw records of all engines into the
   canonical ``attention.csv`` (CUDA events) and ``attention_kernel_only.csv``
-  (kernel-only) tables with runtime identity columns.
+  (kernel-only) tables for eager-chunked plans, or
+  ``attention_graph_replay_kernel_only.csv`` with per-scope signed gaps for
+  graph-replay plans. All tables carry runtime identity columns.
 
 Example dry run for DeepSeek-V4-Flash on H800. ``--max_kv_tokens_per_lane``
 is the native engine's KV block count times the compressed-group block size
@@ -44,7 +46,7 @@ from frontier.profiling.attention.dsa_plan import (
     DsaMeasurementLimits,
     load_hf_config,
 )
-from frontier.profiling.attention.dsa_rows import read_records, write_rows_csv
+from frontier.profiling.attention.dsa_rows import KERNEL_ONLY, read_records, write_rows_csv
 from frontier.profiling.attention.dsv4_attention_plan import (
     Dsv4ProfilePlan,
     build_dsv4_profile_plan,
@@ -53,9 +55,14 @@ from frontier.profiling.attention.dsv4_attention_rows import (
     DSV4_ROW_SCHEMA_VERSION,
     build_dsv4_rows,
 )
+from frontier.profiling.attention.dsv4_replay_rows import (
+    DSV4_REPLAY_ROW_SCHEMA_VERSION, build_dsv4_replay_rows,
+)
+from frontier.profiling.kernel_gap.dsv4_replay_gaps import read_replay_records
 from frontier.profiling.common.runtime_identity import RuntimeIdentity, file_sha256
 
 _RAW_FILE_PATTERN = "dsv4_raw_e*.jsonl"
+_REPLAY_OP_NAME = "attention_graph_replay"
 _RUNNER_MODULES = {
     ENGINE_POLICY_EAGER_CHUNKED: "frontier.profiling.attention.dsv4_attention_runner",
     ENGINE_POLICY_GRAPH_REPLAY: "frontier.profiling.attention.dsv4_graph_replay_runner",
@@ -162,25 +169,32 @@ def _aggregate_command(args: argparse.Namespace) -> None:
     raw_paths = sorted(Path(args.raw_dir).glob(_RAW_FILE_PATTERN))
     if not raw_paths:
         raise ValueError(f"No {_RAW_FILE_PATTERN} files under {args.raw_dir}")
-    records = read_records(raw_paths)
-    engine_indices = {r["engine_index"] for r in records if r["kind"] == "engine"}
+    replay = plan.limits.engine_policy == ENGINE_POLICY_GRAPH_REPLAY
+    if replay:
+        records = read_replay_records(raw_paths)
+        engines = [record.engine for record in records]
+    else:
+        records = read_records(raw_paths)
+        engines = [record for record in records if record["kind"] == "engine"]
+    engine_indices = {engine["engine_index"] for engine in engines}
     missing = {engine.engine_index for engine in plan.engines} - engine_indices
     if missing and not args.allow_partial_engines:
         raise ValueError(f"Raw records lack engines {sorted(missing)}")
     identity = RuntimeIdentity(
-        **_engine_identity_fields(records),
+        **_engine_identity_fields(engines),
         source_revision=args.source_revision,
         model_config_revision=args.model_config_revision,
         model_config_sha256=file_sha256(args.model_config_path),
-        schema_version=DSV4_ROW_SCHEMA_VERSION,
+        schema_version=DSV4_REPLAY_ROW_SCHEMA_VERSION if replay else DSV4_ROW_SCHEMA_VERSION,
         quant_signature=ModelConfig.from_model_name(args.model_name).get_quant_signature(),
         parallel_groups={
             "target_tensor_parallel": plan.shape.target_tensor_parallel_size,
             "engine_tensor_parallel": 1,
         },
-        graph_mode=GRAPH_MODE_EAGER,
+        graph_mode=plan.limits.cudagraph_mode if replay else GRAPH_MODE_EAGER,
     )
-    rows = build_dsv4_rows(plan, records)
+    rows = ({KERNEL_ONLY: build_dsv4_replay_rows(plan, records)} if replay
+            else build_dsv4_rows(plan, records))
     written = {}
     for measurement, measurement_rows in rows.items():
         path = build_profile_method_output_path(
@@ -188,7 +202,7 @@ def _aggregate_command(args: argparse.Namespace) -> None:
             profiling_type="compute",
             hardware=args.device,
             model_name=args.model_name,
-            op_name="attention",
+            op_name=_REPLAY_OP_NAME if replay else "attention",
             profile_method=_PROFILE_METHOD_BY_MEASUREMENT[measurement],
         )
         write_rows_csv(measurement_rows, identity, path)

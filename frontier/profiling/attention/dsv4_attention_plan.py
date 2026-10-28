@@ -260,6 +260,27 @@ def _plan_kv_cache_groups(plan: Dsv4ProfilePlan) -> list[list[list[Any]]]:
         tuple(layer.attention_variant for layer in plan.shape.layers))]
 
 
+def require_engine_layer_inventory(
+    plan: Dsv4ProfilePlan, engine_record: Mapping[str, Any],
+) -> None:
+    """Require the plan's ordered layer inventory and target TP.
+
+    The engine stores at least ratio 1, while the plan keeps the native
+    ``compress_ratios`` entry, which is 0 for uncompressed layers.
+    """
+    expected = [(layer.global_layer_id, layer.attention_variant, max(1, layer.compress_ratio))
+                for layer in plan.shape.layers]
+    actual = [(layer["global_layer_id"], layer["attention_variant"], layer["compress_ratio"])
+              for layer in engine_record["layers"]]
+    if actual != expected:
+        raise ValueError(f"DeepSeek-V4 engine layers do not match the plan: "
+                         f"recorded {actual}, planned {expected}")
+    target_tp = engine_record["target_tensor_parallel_size"]
+    if target_tp != plan.shape.target_tensor_parallel_size:
+        raise ValueError(f"DeepSeek-V4 target TP does not match the plan: recorded {target_tp}, "
+                         f"planned {plan.shape.target_tensor_parallel_size}")
+
+
 def require_realized_kv_cache_groups(
     plan: Dsv4ProfilePlan, engine_record: Mapping[str, Any],
 ) -> None:
@@ -558,6 +579,8 @@ __all__ = [
     "build_dsv4_profile_plan",
     "expected_scopes",
     "metadata_key",
+    "require_engine_layer_inventory",
+    "require_realized_kv_cache_groups",
     "resolve_dsv4_layers",
     "scope_operators",
 ]
