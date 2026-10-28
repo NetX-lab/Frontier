@@ -1,12 +1,13 @@
 """Join Kineto replay activities to captured operator scopes and eager ranges.
 
 Graph activities use launch correlation and the CUPTI clone bridge; eager
-kernels use the innermost CPU annotation containing their launch. Container
-scopes are declared by the integrator's scope tree: they group child scopes and
-must own no kernel themselves, while other scopes may own kernels outside their
-children. Sorted range indices keep trace attribution O(n log n), plus the
-captured dependency edges visited per graph launch. Copies and memsets remain in
-the intervals and graph wait calculation, but contribute no operator kernel time.
+kernels, copies and memsets use the innermost CPU annotation containing their
+launch. Container scopes are declared by the integrator's scope tree: they
+group child scopes and must own no kernel themselves, while other scopes may
+own kernels outside their children. Sorted range indices keep trace attribution
+O(n log n), plus the captured dependency edges visited per graph launch. Copies
+and memsets remain in the intervals and graph wait calculation, but contribute
+no operator kernel time.
 """
 
 from __future__ import annotations
@@ -46,7 +47,9 @@ class ReplayInterval:
     graph_id: int | None
     graph_node_id: int | None
     original_node_id: int | None
+    capture: int | None
     correlation: Any
+    launch_end_us: float
     graph_gap_us: float | None
 
 
@@ -194,7 +197,7 @@ def _validate_kernel(event: dict[str, Any], node: GraphNode) -> None:
 
 def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureRecord,
                            container_scopes: Collection[str]) -> ReplayAttribution:
-    """Attribute complete graph launches and eager kernels, failing ambiguity.
+    """Attribute complete graph launches and eager activities, failing ambiguity.
 
     ``container_scopes`` names the scopes of the integrator's tree that only
     group child scopes; a kernel owned directly by one of them fails (A2).
@@ -203,7 +206,7 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
     scope_ranges: dict[tuple[Any, Any], list[_Range]] = defaultdict(list)
     launches: dict[Any, list[dict[str, Any]]] = defaultdict(list)
     graph_activities: dict[Any, list[dict[str, Any]]] = defaultdict(list)
-    eager_kernels: dict[Any, list[dict[str, Any]]] = defaultdict(list)
+    eager_activities: dict[Any, list[dict[str, Any]]] = defaultdict(list)
     scopes: set[ScopeKey] = set()
     steps: set[int] = set()
     for event in events:
@@ -226,12 +229,10 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
             arguments = event.get("args", {})
             node_id = arguments.get("graph node id")
             graph = node_id is not None and int(node_id) > 0
-            if not graph and category != "kernel":
-                continue
             correlation = arguments.get("correlation")
             if correlation is None:
                 raise ValueError(f"Activity {event.get('name')!r} has no launch correlation")
-            (graph_activities if graph else eager_kernels)[correlation].append(event)
+            (graph_activities if graph else eager_activities)[correlation].append(event)
 
     step_indices = {thread: _RangeIndex(rows, False) for thread, rows in step_ranges.items()}
     scope_indices = {thread: _RangeIndex(rows, True) for thread, rows in scope_ranges.items()}
@@ -264,6 +265,7 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
         return index.at(float(launch["ts"])) if index is not None else None
 
     def append(event: dict[str, Any], step: int, owner: ScopeOwner | None, kind: str,
+               launch: dict[str, Any], capture: int | None = None,
                original: int | None = None, gap: float | None = None) -> None:
         arguments = event.get("args", {})
         start = float(event["ts"])
@@ -271,7 +273,7 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
             step, owner, kind, _ACTIVITIES[event["cat"]], event["name"],
             start, start + float(event["dur"]), arguments.get("stream"),
             arguments.get("graph id"), arguments.get("graph node id"), original,
-            arguments.get("correlation"), gap,
+            capture, arguments.get("correlation"), float(launch["ts"]) + float(launch["dur"]), gap,
         ))
         if owner is not None:
             scopes.add(ScopeKey(step, *owner))
@@ -319,9 +321,9 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
                 dependency_ends = [ends[item] for item in node.dependencies if ends[item] is not None]
                 if dependency_ends:
                     gap = float(event["ts"]) - max(dependency_ends)
-            append(event, step, node.owner, "graph", node_id, gap)
+            append(event, step, node.owner, "graph", launch, capture, node_id, gap)
 
-    for correlation, kernels in eager_kernels.items():
+    for correlation, kernels in eager_activities.items():
         launch = launch_for(correlation, False)
         step = step_for(launch)
         if step is None:
@@ -332,7 +334,7 @@ def attribute_replay_trace(events: Iterable[dict[str, Any]], record: CaptureReco
         if key is not None and key.step_index != step:
             raise ValueError(f"Eager launch step {step} disagrees with scope annotation {key!r}")
         for event in kernels:
-            append(event, step, None if key is None else (key.global_layer_id, key.scope), "eager")
+            append(event, step, None if key is None else (key.global_layer_id, key.scope), "eager", launch)
 
     totals: dict[ScopeKey, float] = {key: 0.0 for key in scopes}
     counts: dict[ScopeKey, int] = {key: 0 for key in scopes}

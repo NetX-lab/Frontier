@@ -233,7 +233,7 @@ def test_outside_kernels_and_unattributed_launches_count_once(full):
     result = attribute_replay_trace(events, record, CONTAINERS)
     assert result.outside_kernel_counts == {0: 2}
     assert result.unattributed_launch_count == 3
-    assert len(result.intervals) == 5
+    assert len(result.intervals) == 6
     assert result.layer_windows == {(0, 4): (100.0, 230.0)}
 
 
@@ -357,3 +357,26 @@ def test_step_annotation_round_trip_and_unrelated_names():
     assert parse_step_annotation(annotation_name(0, *INNER)) is None
     assert parse_step_annotation("other") is None
     assert parse_step_annotation(None) is None
+
+
+@pytest.mark.parametrize("category,activity", [("gpu_memcpy", "memcpy"), ("gpu_memset", "memset")])
+def test_eager_non_kernel_attribution_does_not_change_kernel_metrics(full, category, activity):
+    record, events = full
+    baseline = attribute_replay_trace(events, record, CONTAINERS)
+    events += [
+        _scope(LAYER, 20, 30), _scope(INNER, 25, 15),
+        _launch(10, 30, graph=False), _activity(0, "owned copy", 140, 500, correlation=10, category=category),
+        _launch(11, 55, graph=False), _activity(0, "outside copy", 150, 600, correlation=11, category=category),
+        _launch(12, 500, graph=False), _activity(0, "unmeasured copy", 550, 10, correlation=12, category=category),
+    ]
+    result = attribute_replay_trace(events, record, CONTAINERS)
+    assert result.scope_times == baseline.scope_times
+    assert result.layer_windows == baseline.layer_windows
+    assert result.outside_kernel_counts == baseline.outside_kernel_counts
+    assert result.unattributed_launch_count == baseline.unattributed_launch_count + 1
+    owned, outside = [row for row in result.intervals if row.kind == "eager"]
+    assert (owned.owner, outside.owner) == (INNER, None)
+    assert owned.activity == outside.activity == activity
+    assert owned.capture is None and outside.capture is None
+    assert (owned.launch_end_us, outside.launch_end_us) == (31.0, 56.0)
+    assert all(row.capture == 0 and row.launch_end_us == 11.0 for row in result.intervals if row.kind == "graph")

@@ -79,15 +79,22 @@ def profile_args(config: BridgeConfig, mode: str) -> list[str]:
     """Build one bootstrap invocation, retaining the shared workload flags."""
 
     mode_root = config.output_root / mode
+    return [
+        "run", *config.plan_args, *graph_mode_flags(config, mode),
+        "--engine_index", str(config.engine_index), *config.run_args,
+        "--raw_dir", str(mode_root / "raw"), "--trace_dir", str(mode_root / "traces"),
+        "--keep_traces", "--case_ids", *config.case_ids,
+    ]
+
+
+def graph_mode_flags(config: BridgeConfig, mode: str) -> list[str]:
+    """Flags shared by profiling and CPU plan reconstruction for one graph mode."""
     capture_flags = [] if mode == _NONE_MODE else [
         "--cudagraph_capture_sizes", *(str(size) for size in config.cudagraph_capture_sizes),
     ]
     return [
-        "run", *config.plan_args,
         "--engine_policy", ENGINE_POLICY_GRAPH_REPLAY, "--cudagraph_mode", mode,
-        *capture_flags, "--engine_index", str(config.engine_index), *config.run_args,
-        "--raw_dir", str(mode_root / "raw"), "--trace_dir", str(mode_root / "traces"),
-        "--keep_traces", "--case_ids", *config.case_ids,
+        *capture_flags,
     ]
 
 
@@ -218,7 +225,7 @@ def main(argv: list[str] | None = None) -> int:
     return report_bridge(config) if args.report else run_bridge(config)
 
 
-__all__ = ["BridgeConfig", "load_config", "main", "profile_args", "report_bridge", "run_bridge"]
+__all__ = ["BridgeConfig", "graph_mode_flags", "load_config", "main", "profile_args", "report_bridge", "run_bridge"]
 
 if __name__ == "__main__":
     raise SystemExit(main())

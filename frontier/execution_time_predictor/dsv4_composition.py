@@ -14,13 +14,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Iterable, Mapping
+from typing import Collection, Iterable, Mapping
+
+from frontier.profiling.kernel_gap.schema import CUDA_GRAPH, CUDA_GRAPH_PIECEWISE, EAGER
 
 MAIN, AUX0, AUX1, AUX2 = "main", "aux0", "aux1", "aux2"
 STREAMS = (MAIN, AUX0, AUX1, AUX2)
-
-# Gap values of the segment classes, as named in the V4 kernel_gap.csv.
-CUDA_GRAPH, CUDA_GRAPH_PIECEWISE, EAGER = "cuda_graph", "cuda_graph_piecewise", "eager"
 
 # Main-stream scopes of the phase before and after the layer's stream program.
 _PREFIX = (
@@ -107,7 +106,7 @@ def _layer_program(variant, mode, multi_stream_gemm, indexer_short_context):
     return program + [_run(MAIN, _SPARSE), _run(MAIN, _SUFFIX)]
 
 
-def _segment_class(mode, name):
+def segment_class(mode, name):
     if mode == "FULL":
         return CUDA_GRAPH
     if mode == "PIECEWISE":
@@ -117,24 +116,50 @@ def _segment_class(mode, name):
     raise ValueError(f"V4 graph runtime mode has no segment classes: {mode}")
 
 
-def _schedule(program, weight_ms):
-    ready = dict.fromkeys(STREAMS, 0.0)
-    start = {}
+def _scope_frontiers(program, present):
+    frontier = {stream: frozenset() for stream in STREAMS}
+    predecessors = {}
     for step, stream, operand in program:
         if step == "wait":
-            ready[stream] = max(ready[stream], ready[operand])
+            frontier[stream] |= frontier[operand]
             continue
         for name in operand:
-            if name not in weight_ms:
+            if name not in present:
                 continue
-            if name in start:
+            if name in predecessors:
                 raise ValueError(f"V4 attention scope is placed twice: {name}")
-            start[name] = ready[stream]
-            ready[stream] += weight_ms[name]
-    unplaced = set(weight_ms) - set(start)
+            predecessors[name] = frontier[stream]
+            frontier[stream] = frozenset({name})
+    unplaced = set(present) - set(predecessors)
     if unplaced:
         raise ValueError(f"V4 attention scopes have no stream position: {sorted(unplaced)}")
-    return AttentionSchedule(elapsed_ms=ready[MAIN], start_ms=MappingProxyType(start))
+    return predecessors, frontier[MAIN]
+
+
+def attention_scope_predecessors(
+    present: Collection[str], *, variant: str, graph_runtime_mode: str, rows: int,
+    multi_stream_gemm_token_threshold: int, indexer_short_context: bool,
+) -> Mapping[str, frozenset[str]]:
+    """Immediate scope frontier at each position of this call's stream program.
+
+    Absent scopes pass their stream frontier through. A wait unions the two
+    frontiers, preserving all device dependencies even if a scope has no cost.
+    """
+    program = _layer_program(
+        variant, graph_runtime_mode, rows <= multi_stream_gemm_token_threshold,
+        indexer_short_context,
+    )
+    predecessors, _ = _scope_frontiers(program, present)
+    return MappingProxyType(predecessors)
+
+
+def _schedule(program, weight_ms):
+    predecessors, final_main = _scope_frontiers(program, weight_ms)
+    start = {}
+    for name, previous in predecessors.items():
+        start[name] = max((start[item] + weight_ms[item] for item in previous), default=0.0)
+    elapsed = max((start[name] + weight_ms[name] for name in final_main), default=0.0)
+    return AttentionSchedule(elapsed_ms=elapsed, start_ms=MappingProxyType(start))
 
 
 def compose_attention_phase(
@@ -152,7 +177,7 @@ def compose_attention_phase(
         raise ValueError("V4 attention composition requires one kernel count per scope")
     weight_ms = {}
     for name, cost_ms in scope_ms.items():
-        segment = _segment_class(graph_runtime_mode, name)
+        segment = segment_class(graph_runtime_mode, name)
         if segment not in gap_ms:
             raise ValueError(f"V4 kernel gap value is missing: {segment}")
         weight_ms[name] = cost_ms + kernel_counts[name] * gap_ms[segment]

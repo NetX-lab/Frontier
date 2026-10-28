@@ -66,6 +66,28 @@ from frontier.profiling.common.runtime_identity import (
     collect_runtime_versions,
 )
 
+RECORD_KIND = "kind"
+INTERVAL_RECORD = "interval"
+ENGINE_INDEX = "engine_index"
+CASE_ID = "case_id"
+STEP_INDEX = "step_index"
+GLOBAL_LAYER_ID = "global_layer_id"
+SCOPE = "scope"
+LAUNCH_KIND = "launch_kind"
+ACTIVITY = "activity"
+NAME = "name"
+START_US = "start_us"
+END_US = "end_us"
+STREAM = "stream"
+GRAPH_ID = "graph_id"
+GRAPH_NODE_ID = "graph_node_id"
+ORIGINAL_NODE_ID = "original_node_id"
+CAPTURE = "capture"
+CAPTURE_KIND = "capture_kind"
+CORRELATION = "correlation"
+LAUNCH_END_US = "launch_end_us"
+GRAPH_GAP_US = "graph_gap_us"
+
 _LAYER_INDEX = re.compile(r"(?:^|\.)layers\.(\d+)\.")
 _MLA_METADATA_FIELDS = (
     "num_reqs",
@@ -547,14 +569,34 @@ def graph_replay_calls(
     record: CaptureRecord,
     container_scopes: frozenset[str],
 ) -> list[dict[str, Any]]:
-    """Build kernel-only calls from captured ownership and nested eager ranges."""
+    """Build kernel-only call rows followed by all attributed replay intervals."""
 
     attributed = attribute_replay_trace(load_trace_events(trace_path), record, container_scopes)
-    return _scope_calls(
+    calls = _scope_calls(
         {key: timing for key, timing in attributed.scope_times.items()
          if key.scope not in container_scopes},
         steps, engine_index, trace_path,
     )
+    by_step = {step[STEP_INDEX]: step for step in steps}
+    captures = {capture.ordinal: capture.kind for capture in record.captures}
+    for interval in attributed.intervals:
+        step = by_step.get(interval.step_index)
+        if step is None:
+            raise ValueError(f"Trace {trace_path} has intervals of unrecorded step {interval.step_index}")
+        calls.append({
+            RECORD_KIND: INTERVAL_RECORD, ENGINE_INDEX: engine_index, CASE_ID: step[CASE_ID],
+            STEP_INDEX: interval.step_index,
+            GLOBAL_LAYER_ID: None if interval.owner is None else interval.owner[0],
+            SCOPE: None if interval.owner is None else interval.owner[1],
+            LAUNCH_KIND: interval.kind, ACTIVITY: interval.activity, NAME: interval.name,
+            START_US: interval.start_us, END_US: interval.end_us, STREAM: interval.stream,
+            GRAPH_ID: interval.graph_id, GRAPH_NODE_ID: interval.graph_node_id,
+            ORIGINAL_NODE_ID: interval.original_node_id, CAPTURE: interval.capture,
+            CAPTURE_KIND: None if interval.capture is None else captures[interval.capture],
+            CORRELATION: interval.correlation, LAUNCH_END_US: interval.launch_end_us,
+            GRAPH_GAP_US: interval.graph_gap_us,
+        })
+    return calls
 
 
 _TIMING_MEASUREMENTS = {

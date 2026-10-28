@@ -580,7 +580,7 @@ def test_graph_calls_exclude_containers_keep_zero_scopes_and_validate_steps(tmp_
     path.write_text(json.dumps({"traceEvents": [_step(), _launch(1, 10), _activity(1010, "kernel", 100, 20)]}))
     calls = case_runner.graph_replay_calls(path, [{"step_index": 0, "case_id": "case"}], 2,
                                           record=record, container_scopes=replay.CONTAINER_SCOPES)
-    assert [(call["scope"], call["time_ms"], call["kernel_count"]) for call in calls] == [
+    assert [(call["scope"], call["time_ms"], call["kernel_count"]) for call in calls if call["kind"] == "call"] == [
         (zero[1], 0.0, 0), (owner[1], 0.020, 1),
     ]
     assert all(call["engine_index"] == 2 and call["case_id"] == "case" for call in calls)
@@ -592,6 +592,7 @@ def test_run_engine_keeps_capture_passes_routing_and_uses_trace_callback(plan, m
     calls = []
     capture = replay._capture_result(CaptureRecord(), "FULL_AND_PIECEWISE", (1, 2, 4, 8))
     routing = {"identity": "read at call time"}
+    monkeypatch.setattr(replay, "collect_driver_version", lambda: "fake driver")
     monkeypatch.setattr(attention_runner, "routing_config", routing)
     monkeypatch.setenv(replay.BREAKABLE_CUDAGRAPH_ENV, "1")
 
@@ -609,6 +610,8 @@ def test_run_engine_keeps_capture_passes_routing_and_uses_trace_callback(plan, m
     assert calls[1] == (replay.recapture_graphs, ("FULL_AND_PIECEWISE", (1, 2, 4, 8)))
     assert json.loads((tmp_path / "dsv4_capture_e0.json").read_text()) == capture
     assert measured[0]["inventory"]["cudagraph_capture"] == capture["summary"]
+    assert measured[0]["inventory"]["driver_version"] == "fake driver"
+    assert measured[0]["inventory"]["target_tensor_parallel_size"] == plan.shape.target_tensor_parallel_size
     assert measured[0]["log_label"] == "dsv4_graph"
     assert measured[0]["trace_calls"].keywords == {"record": CaptureRecord(), "container_scopes": replay.CONTAINER_SCOPES}
 
@@ -668,3 +671,53 @@ def test_run_case_uses_supplied_trace_calls(plan, monkeypatch, tmp_path):
                                   KERNEL_ONLY, random.Random(1234), 100, tmp_path, True, trace_calls)
     assert result == [step, call]
     assert callback_args == [(tmp_path / f"{case.case_id}.json", [step], case.engine_index)]
+
+
+@pytest.mark.parametrize("kind", ["graph", "breakable_segment"])
+def test_graph_call_interval_rows_follow_calls_with_capture_identity(tmp_path, kind):
+    owner = (4, "dsv4_q_projection")
+    record = CaptureRecord(captures=(GraphCapture(5, kind, None, 7),),
+                           nodes=(_node(10, "kernel", owner=owner, capture=5),),
+                           scope_entries=(ScopeEntry(5, owner, None),), clones=(NodeClone(1010, 10),))
+    path = tmp_path / "trace.json"
+    path.write_text(json.dumps({"traceEvents": [_step(), _launch(1, 10), _activity(1010, "kernel", 100, 20)]}))
+    rows = case_runner.graph_replay_calls(path, [{"step_index": 0, "case_id": "case"}], 2,
+                                         record=record, container_scopes=replay.CONTAINER_SCOPES)
+    assert [row["kind"] for row in rows] == ["call", "interval"]
+    assert rows[1] == {
+        "kind": "interval", "engine_index": 2, "case_id": "case", "step_index": 0,
+        "global_layer_id": 4, "scope": owner[1], "launch_kind": "graph", "activity": "kernel",
+        "name": "kernel", "start_us": 100.0, "end_us": 120.0, "stream": 7,
+        "graph_id": 99, "graph_node_id": 1010, "original_node_id": 10, "capture": 5,
+        "capture_kind": kind, "correlation": 1, "launch_end_us": 11.0, "graph_gap_us": None,
+    }
+
+
+def test_outside_eager_interval_rows_order_and_unrecorded_step(tmp_path):
+    path = tmp_path / "trace.json"
+    path.write_text(json.dumps({"traceEvents": [_step(), _launch(1, 10, graph=False),
+        _activity(0, "copy", 100, 20, category="gpu_memcpy"),
+        _activity(0, "kernel", 90, 5)]}))
+    rows = case_runner.graph_replay_calls(path, [{"step_index": 0, "case_id": "case"}], 2,
+                                         record=CaptureRecord(), container_scopes=replay.CONTAINER_SCOPES)
+    assert [row["activity"] for row in rows] == ["kernel", "memcpy"]
+    assert all(row["scope"] is None and row["global_layer_id"] is None and row["capture_kind"] is None
+               and row["capture"] is None and row["launch_end_us"] == 11.0 for row in rows)
+    with pytest.raises(ValueError, match="intervals of unrecorded step 0"):
+        case_runner.graph_replay_calls(path, [], 2, record=CaptureRecord(), container_scopes=replay.CONTAINER_SCOPES)
+
+
+def test_driver_version_query_is_lazy_and_shuts_down_on_failure(monkeypatch):
+    from frontier.profiling.common.runtime_identity import collect_driver_version
+    calls = []
+    fake = SimpleNamespace(nvmlInit=lambda: calls.append("init"), nvmlShutdown=lambda: calls.append("shutdown"),
+                           nvmlSystemGetDriverVersion=lambda: "driver")
+    monkeypatch.setitem(sys.modules, "pynvml", fake)
+    assert collect_driver_version() == "driver"
+    assert calls == ["init", "shutdown"]
+    def fail():
+        raise RuntimeError("fake NVML failure")
+    fake.nvmlSystemGetDriverVersion = fail
+    with pytest.raises(RuntimeError, match="fake NVML failure"):
+        collect_driver_version()
+    assert calls == ["init", "shutdown", "init", "shutdown"]

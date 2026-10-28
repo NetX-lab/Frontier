@@ -194,3 +194,14 @@ def test_bootstrap_cli_runs_every_mode(config, tmp_path, monkeypatch):
     assert bridge.main(["--config", str(path)]) == 0
     assert modes == list(config.modes)
     assert not (config.output_root / "bridge_report.json").exists()
+
+
+@pytest.mark.parametrize("mode", ["NONE", "PIECEWISE", "FULL_AND_PIECEWISE"])
+def test_public_graph_mode_flags_are_the_unchanged_profile_slice(config, mode):
+    expected = ["--engine_policy", "graph_replay", "--cudagraph_mode", mode]
+    if mode != "NONE":
+        expected += ["--cudagraph_capture_sizes", "1", "2", "4", "8"]
+    assert bridge.graph_mode_flags(config, mode) == expected
+    args = bridge.profile_args(config, mode)
+    start = args.index("--engine_policy")
+    assert args[start:args.index("--engine_index")] == expected

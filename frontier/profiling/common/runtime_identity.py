@@ -84,6 +84,17 @@ def collect_device_identity() -> tuple[str, str]:
     return torch_module.cuda.get_device_name(device), f"sm{major}{minor}"
 
 
+def collect_driver_version() -> str:
+    """Read the NVIDIA driver version on the measuring worker."""
+    import pynvml
+
+    pynvml.nvmlInit()
+    try:
+        return pynvml.nvmlSystemGetDriverVersion()
+    finally:
+        pynvml.nvmlShutdown()
+
+
 def file_sha256(path: str | Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -224,6 +235,7 @@ __all__ = [
     "attach_identity_columns",
     "canonical_json",
     "collect_device_identity",
+    "collect_driver_version",
     "collect_runtime_versions",
     "file_sha256",
     "measure_runtime_identity",

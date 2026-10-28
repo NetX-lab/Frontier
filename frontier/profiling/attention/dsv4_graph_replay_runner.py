@@ -43,8 +43,11 @@ from frontier.profiling.attention.graph_capture import (
     ScopeOwner,
 )
 from frontier.profiling.attention.graph_replay_trace import step_annotation_name
+from frontier.profiling.common.runtime_identity import collect_driver_version
 
 CUDAGRAPH_DISPATCH_KEY = "cudagraph_dispatch"
+DRIVER_VERSION_KEY = "driver_version"
+TARGET_TENSOR_PARALLEL_SIZE_KEY = "target_tensor_parallel_size"
 BREAKABLE_CUDAGRAPH_ENV = "VLLM_USE_BREAKABLE_CUDAGRAPH"
 V2_MODEL_RUNNER_ENV = "VLLM_USE_V2_MODEL_RUNNER"
 _ENV_ENABLED = "1"
@@ -450,6 +453,8 @@ def run_engine(
     capture_path.write_text(json.dumps(capture, indent=2) + "\n", encoding="utf-8")
     record = CaptureRecord.from_json(capture["record"])
     inventory["cudagraph_capture"] = capture["summary"]
+    inventory[DRIVER_VERSION_KEY] = collect_driver_version()
+    inventory[TARGET_TENSOR_PARALLEL_SIZE_KEY] = plan.shape.target_tensor_parallel_size
     case_runner.measure_engine(
         llm=llm, plan=plan, engine_index=engine_index, inventory=inventory,
         vocab_size=vocab_size, seed=seed, expected_attention_backend=expected_attention_backend,

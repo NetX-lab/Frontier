@@ -182,3 +182,67 @@ def _layer(op_times, schedule):
     )
     layer._dsv4_attention_schedule = schedule
     return layer
+
+
+@pytest.mark.parametrize("variant,scopes", [("csa", CSA), ("hca", HCA), ("uncompressed", UNCOMPRESSED)])
+@pytest.mark.parametrize("mode", ["NONE", "PIECEWISE", "FULL"])
+@pytest.mark.parametrize("rows", [THRESHOLD, THRESHOLD + 1])
+@pytest.mark.parametrize("short", [False, True])
+def test_frontier_schedule_equals_original_stream_clock_walk(variant, scopes, mode, rows, short):
+    from frontier.execution_time_predictor.dsv4_composition import MAIN, STREAMS, _layer_program, _schedule
+    if variant == "csa" and short:
+        scopes = {name: cost for name, cost in scopes.items() if name not in {
+            "dsv4_index_query_projection", "dsv4_index_fused_query_prepare"}}
+        scopes["dsv4_index_short_context_fill"] = 1.0
+    program = _layer_program(variant, mode, rows <= THRESHOLD, short)
+    ready, starts = dict.fromkeys(STREAMS, 0.0), {}
+    for step, stream, operand in program:
+        if step == "wait":
+            ready[stream] = max(ready[stream], ready[operand])
+        else:
+            for name in operand:
+                if name in scopes:
+                    starts[name] = ready[stream]
+                    ready[stream] += scopes[name]
+    actual = _schedule(program, scopes)
+    assert dict(actual.start_ms) == starts
+    assert actual.elapsed_ms == ready[MAIN]
+
+
+def _preds(scopes, variant="csa", mode="NONE", rows=THRESHOLD, short=False):
+    from frontier.execution_time_predictor.dsv4_composition import attention_scope_predecessors
+    return attention_scope_predecessors(scopes, variant=variant, graph_runtime_mode=mode,
+        rows=rows, multi_stream_gemm_token_threshold=THRESHOLD, indexer_short_context=short)
+
+
+def test_scope_predecessors_csa_forks_serial_side_and_join():
+    forked = _preds(CSA)
+    assert forked["dsv4_compressor_projection"] == frozenset({"dsv4_sp_attention_allgather"})
+    assert forked["dsv4_fused_qkv_rmsnorm"] == frozenset({"dsv4_fused_qkv_projection",
+        "dsv4_compressor_projection", "dsv4_index_weights_projection", "dsv4_index_compressor_projection"})
+    assert forked["dsv4_index_compressor_save_partial_states"] == frozenset({
+        "dsv4_fused_qkv_rmsnorm", "dsv4_compressor_projection", "dsv4_index_compressor_projection"})
+    serial = _preds(CSA, rows=THRESHOLD + 1)
+    assert serial["dsv4_compressor_projection"] == frozenset({"dsv4_fused_qkv_projection"})
+    assert serial["dsv4_index_weights_projection"] == frozenset({"dsv4_compressor_projection"})
+    assert _preds(CSA, mode="PIECEWISE")["dsv4_index_compressor_save_partial_states"] == frozenset({"dsv4_index_fused_query_prepare"})
+    assert forked["dsv4_index_scores"] == frozenset({"dsv4_fused_q_kv_prepare",
+        "dsv4_index_fused_query_prepare", "dsv4_index_compressor_fused_compress_store",
+        "dsv4_compressor_fused_compress_store"})
+
+
+def test_scope_predecessors_short_context_hca_and_absent_scopes():
+    present = {name for name in CSA if name not in {"dsv4_index_query_projection", "dsv4_index_fused_query_prepare",
+        "dsv4_index_scores", "dsv4_index_topk"}} | {"dsv4_index_short_context_fill"}
+    short = _preds(present, short=True)
+    assert short["dsv4_index_short_context_fill"] == frozenset({"dsv4_index_compressor_fused_compress_store"})
+    assert _preds(HCA, variant="hca")["dsv4_compressor_save_partial_states"] == frozenset({
+        "dsv4_fused_qkv_rmsnorm", "dsv4_compressor_projection"})
+    assert _preds(HCA, variant="hca", mode="PIECEWISE")["dsv4_compressor_save_partial_states"] == frozenset({"dsv4_fused_q_kv_prepare"})
+    assert _preds({"dsv4_q_projection", "dsv4_output_projection"}, variant="uncompressed") == {
+        "dsv4_q_projection": frozenset(), "dsv4_output_projection": frozenset({"dsv4_q_projection"})}
+    with pytest.raises(ValueError, match="no stream position"):
+        _preds({"unknown"}, variant="uncompressed")
+    from frontier.execution_time_predictor.dsv4_composition import MAIN, _schedule
+    with pytest.raises(ValueError, match="placed twice"):
+        _schedule([("run", MAIN, ("x", "x"))], {"x": 1.0})
