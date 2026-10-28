@@ -202,7 +202,7 @@ def test_wrapper_reports_the_block_fp8_backend(cuda_runtime):
         expert_hidden_dim=2048, router_topk=8, num_tensor_parallel_workers=1,
         _dtype=cuda_runtime.torch.bfloat16, per_channel_quant=False,
         block_shape=[128, 128], profile_method="cuda_event", output_dir=None,
-        quantization_mode="fp8",
+        quantization_mode="fp8", routing_runtime_path="grouped_topk_sigmoid",
     ).items():
         setattr(wrapper, name, value)
     row = wrapper.profile_grouped_gemm(4, routing_inputs=dict(

@@ -209,8 +209,19 @@ def test_producer_executes_shared_tensor_inside_routing_timer(monkeypatch):
         return balanced_topk(*args)
     monkeypatch.setattr(moe_impl, "CudaTimer", timer)
     monkeypatch.setattr(moe_impl, "balanced_topk", route)
-    gate = moe_impl.MoEGatingNetwork(4, 8, 3, use_vllm_fused_topk=False,
-                                   routing_runtime_path="balanced_topk")
+    class NativeGate(torch.nn.Linear):
+        def __init__(self, input_size, output_size, out_dtype, params_dtype):
+            super().__init__(input_size, output_size, bias=False, dtype=params_dtype)
+            self.out_dtype = out_dtype
+        def forward(self, hidden_states):
+            return super().forward(hidden_states).to(self.out_dtype), None
+    native = ModuleType("vllm.model_executor.layers.fused_moe")
+    native.GateLinear = NativeGate
+    monkeypatch.setitem(sys.modules, native.__name__, native)
+    monkeypatch.setattr(moe_impl, "HAS_VLLM", True)
+    monkeypatch.setattr(moe_impl, "ensure_vllm_single_rank_parallel_state", lambda: None)
+    gate = moe_impl.MoEGatingNetwork(4, 8, 3, routing_runtime_path="balanced_topk",
+                                   router_config=SimpleNamespace(dtype=torch.float32))
     weights, ids = gate(torch.ones(5, 4))
     assert calls == ["moe_gating_routing_topk"]
     assert torch.bincount(ids.flatten(), minlength=8).tolist() == [2] * 7 + [1]
@@ -331,3 +342,50 @@ def test_v4_disaggregated_roles_and_copy_preserve_selector(decode_roles):
     for role in cluster.get_cluster_configs_for_disaggregation().values():
         assert role.replica_config.moe_gating_routing_runtime_path == "balanced_topk"
     assert ClusterConfig(replica_config=replica)._create_replica_config_copy().moe_gating_routing_runtime_path == "balanced_topk"
+
+
+# B12: each distinct DP placement of the complete C1 observed and margin grid.
+from itertools import permutations
+from test_moe_rank_plan import SPEC
+from frontier.moe_ep_workload import materialize_balanced_ep_workload, materialize_balanced_rank_classes
+
+G3H_PLACEMENTS = [(topology["expert_parallel_size"], placement)
+    for topology in SPEC["topologies"] for rows in topology["dp_lane_local_rows"]
+    for placement in sorted(set(permutations(rows)))]
+
+
+@pytest.mark.parametrize("ep,lane_rows", G3H_PLACEMENTS)
+def test_g3h_all_dp_placements_match_native_per_rank(native, native_expert_map, ep, lane_rows):
+    simulator, metadata_type, group, ctx = native
+    ranks_per_lane = ep // len(lane_rows)
+    group.world_size = ep
+    metadata = metadata_type(torch.tensor([rows * ranks_per_lane for rows in lane_rows],
+                                          dtype=torch.int32))
+    ctx.dp_metadata = metadata
+    ctx.cudagraph_runtime_mode = "NONE"
+    chunks = []
+    with metadata.sp_local_sizes(ranks_per_lane) as sizes:
+        for rank, local in enumerate(sizes):
+            group.rank_in_group = rank
+            _, ids = simulator.simulate_routing(torch.empty(local, 1), torch.empty(local, 256),
+                                                "balanced_topk", 6, torch.int32)
+            chunks.append(ids)
+    gathered_ids = torch.cat(chunks)
+    gathered = sum(sizes)
+    workload = materialize_balanced_ep_workload(
+        routing_token_count=gathered, router_topk=6, total_expert_num=256,
+        moe_expert_parallel_size=ep,
+    )
+    classes = materialize_balanced_rank_classes(
+        routing_token_count=gathered, router_topk=6, total_expert_num=256,
+        moe_expert_parallel_size=ep,
+    )
+    _, unchunked = balanced_topk(torch.empty(gathered, 1), torch.empty(gathered, 256), 6, torch.int32)
+    torch.testing.assert_close(gathered_ids, unchunked)
+    for rank in range(ep):
+        _, expert_map, _ = native_expert_map(ep, rank, 256, "linear")
+        local_ids = expert_map[gathered_ids.long()]
+        counts = torch.bincount(local_ids[local_ids >= 0].long(), minlength=256 // ep).tolist()
+        assert counts == list(workload.per_ep_per_expert_tokens[rank].values())
+        base = gathered * 6 // 256
+        assert classes[rank] == (sum(counts), sum(count > base for count in counts), base)

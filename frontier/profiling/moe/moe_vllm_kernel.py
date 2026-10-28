@@ -21,7 +21,6 @@ import json
 import math
 
 import torch
-import triton
 import triton.language as tl
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Tuple
@@ -32,6 +31,7 @@ from frontier.profiling.moe.fp8_block_experts import (
     expert_parallel_layout,
     get_fp8_block_routed_experts,
 )
+from frontier.profiling.moe.moe_impl import get_routing_id_dtype
 from frontier.profiling.moe.mxfp4_marlin_experts import (
     get_mxfp4_marlin_routed_experts,
 )
@@ -130,7 +130,6 @@ try:
     try:
         # vLLM 0.10.x low-level API.
         from vllm.model_executor.layers.fused_moe.fused_moe import (
-            fused_moe_kernel,
             invoke_fused_moe_kernel,
             moe_align_block_size,
             try_get_optimal_moe_config,
@@ -787,6 +786,7 @@ def profile_fused_moe_kernel(
     global_num_experts: Optional[int] = None,
     expert_map: Optional[torch.Tensor] = None,
     model_type: Optional[str] = None,
+    routing_runtime_path: str = "standard_fused_topk",
 ) -> Dict:
     """
     Profile vLLM's fused MoE kernel with given routing decisions.
@@ -822,6 +822,8 @@ def profile_fused_moe_kernel(
         global_num_experts: Global expert count for alignment when profiling EP-local workloads.
         expert_map: Optional mapping from global expert ids to local expert ids.
         model_type: Actual model identity required by the pinned MXFP4 adapter.
+        routing_runtime_path: Selects the native routed-id dtype; balanced_topk
+            uses int64 and the other profiling paths retain int32.
 
     Returns:
         Dictionary containing timing statistics. On the vLLM 0.10.x path it also
@@ -946,7 +948,7 @@ def profile_fused_moe_kernel(
         ).contiguous()
         functional_topk_ids = topk_ids.to(
             device=device,
-            dtype=torch.int32,
+            dtype=get_routing_id_dtype(routing_runtime_path),
         ).contiguous()
 
         if mxfp4_weight_source == "checkpoint":

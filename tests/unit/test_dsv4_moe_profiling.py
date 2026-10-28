@@ -10,8 +10,6 @@ the build test replaces it and checks what the profiler passes to vLLM.
 from __future__ import annotations
 
 import sys
-from types import SimpleNamespace
-from unittest.mock import Mock
 
 import pytest
 
@@ -69,6 +67,9 @@ def test_checkpoint_mxfp4_runtime_requires_cuda(monkeypatch):
     pytest.importorskip("torch")
     from frontier.profiling.moe import moe_vllm_kernel as kernel
 
+    # This platform-boundary test assumes the modular API; no vLLM import is
+    # needed to exercise its CUDA/ROCm admission rules on CPU.
+    monkeypatch.setattr(kernel, "VLLM_API_VERSION", "functional_fused_experts")
     monkeypatch.setattr(
         kernel, "accelerator_platform", lambda _torch: "rocm"
     )

@@ -882,6 +882,51 @@ def materialize_layer_ep_workload(
     )
 
 
+
+def materialize_balanced_ep_workload(
+    *, routing_token_count: int, router_topk: int, total_expert_num: int,
+    moe_expert_parallel_size: int,
+) -> LayerEPWorkload:
+    """Use the existing routing algebra for a balanced, contiguous EP forward."""
+    return materialize_layer_ep_workload(
+        routing_ratios=generate_moe_routing_ratios(
+            total_expert_num=total_expert_num, distribution_type="balanced",
+            seed=0, layer_id=0,
+        ),
+        target_replica_id=0, global_layer_id=0,
+        routing_token_count=routing_token_count, router_topk=router_topk,
+        total_expert_num=total_expert_num,
+        moe_expert_parallel_size=moe_expert_parallel_size,
+        expert_to_ep=build_contiguous_expert_ownership(
+            total_expert_num, moe_expert_parallel_size,
+        ),
+    )
+
+
+def materialize_balanced_rank_classes(
+    *, routing_token_count: int, router_topk: int, total_expert_num: int,
+    moe_expert_parallel_size: int,
+) -> tuple[tuple[int, int, int], ...]:
+    """Return (local routed rows, experts with an extra row, base rows) per rank.
+
+    Expert counts and ownership come from the shared Hamilton workload
+    materializer. This identity describes balanced routing, including empty
+    local populations, and can also be used by profile consumers.
+    """
+    workload = materialize_balanced_ep_workload(
+        routing_token_count=routing_token_count, router_topk=router_topk,
+        total_expert_num=total_expert_num,
+        moe_expert_parallel_size=moe_expert_parallel_size,
+    )
+    base = workload.total_routed_assignments // total_expert_num
+    return tuple(
+        (workload.per_ep_routed_tokens[rank],
+         sum(count > base for count in workload.per_ep_per_expert_tokens[rank].values()),
+         base)
+        for rank in workload.participant_ep_ids
+    )
+
+
 __all__ = [
     "EPLaneWorkload",
     "ExpertOwnership",
@@ -892,6 +937,8 @@ __all__ = [
     "materialize_expert_token_counts",
     "generate_moe_routing_ratios",
     "materialize_layer_ep_workload",
+    "materialize_balanced_ep_workload",
+    "materialize_balanced_rank_classes",
     "resolve_ep_lane_workload",
     "resolve_routing_details",
     "split_global_expert_tokens_into_lanes",

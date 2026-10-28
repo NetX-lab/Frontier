@@ -65,15 +65,19 @@ from frontier.profiling.common.accelerator import (
 )
 from frontier.profiling.utils import (
     EXPORTABLE_PROFILE_METHOD_CHOICES,
-    ProfileMethod,
     build_profile_method_output_path,
-    build_profiling_output_path,
     get_num_tokens_to_profile,
     normalize_profile_method,
     profile_method_to_measurement_type,
     require_profiling_dependencies,
 )
 from frontier.profiling.moe.moe_input import resolve_moe_expert_parallel_sizes
+from frontier.profiling.moe.moe_profile_identity import balanced_routing_columns
+from frontier.profiling.moe.moe_rank_plan import (
+    parse_dp_lane_local_rows,
+    plan_dp_lane_rows,
+    validate_lane_rows_args,
+)
 
 MoEWrapper = None
 
@@ -147,7 +151,7 @@ def _worker_profile_task(
         num_tensor_parallel_workers=wrapper_args["num_tensor_parallel_workers"],
         expert_parallel_size=wrapper_args["expert_parallel_size"],
         profile_method=wrapper_args["profile_method"],
-        rank=0,  # Always rank 0 within this GPU's context
+        rank=wrapper_args["rank"],
         output_dir=wrapper_args["output_dir"],
         use_vllm_kernel=wrapper_args["use_vllm_kernel"],
         use_fp8=wrapper_args.get("use_fp8", False),
@@ -165,6 +169,8 @@ def _worker_profile_task(
         num_tokens=profile_args["num_tokens"],
         load_distribution=profile_args["load_distribution"],
         seed=profile_args["seed"],
+        **({"gating_num_tokens": profile_args["gating_num_tokens"]}
+           if "gating_num_tokens" in profile_args else {}),
     )
 
     return result
@@ -246,6 +252,11 @@ def parse_args():
             "Exact num_tokens points to profile. "
             "When provided, this bypasses the default max_tokens grid."
         ),
+    )
+    parser.add_argument(
+        "--dp_lane_local_rows", type=parse_dp_lane_local_rows, nargs="+",
+        help="One comma-separated SP-local row vector per forward, in DP lane order. "
+             "Replaces the token grid and profiles every distinct rank class and gate width.",
     )
     parser.add_argument(
         "--profile_method",
@@ -370,6 +381,10 @@ def parse_args():
     if (args.source_revision is None) != (args.model_config_revision is None):
         parser.error("--source_revision and --model_config_revision must be given together")
     args.profile_method = normalize_profile_method(args.profile_method)
+    try:
+        validate_lane_rows_args(args)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     return args, args.enable_load_imbalance
 
@@ -621,11 +636,15 @@ def _build_moe_confirmation_sections(
     for model in args.models:
         model_config = model_configs[model]
         ep_sizes = resolved_ep_sizes_by_model[model]
-        model_configurations = _count_moe_configurations(
-            num_tokens_count=num_tokens_count,
-            tensor_parallel_count=len(args.num_tensor_parallel_workers),
-            expert_parallel_count=len(ep_sizes),
-            cases_per_parallel_point=cases_per_parallel_point,
+        model_configurations = (
+            len(_lane_rank_tasks(args, model_config))
+            if getattr(args, "dp_lane_local_rows", None)
+            else _count_moe_configurations(
+                num_tokens_count=num_tokens_count,
+                tensor_parallel_count=len(args.num_tensor_parallel_workers),
+                expert_parallel_count=len(ep_sizes),
+                cases_per_parallel_point=cases_per_parallel_point,
+            )
         )
         total_configurations += model_configurations
         _, model_precision = _resolve_precision_for_model(
@@ -672,6 +691,43 @@ def _build_moe_confirmation_sections(
         raise RuntimeError("MoE confirmation sections are missing Profiling Matrix.")
 
     return sections
+
+
+def _lane_rank_tasks(args: argparse.Namespace, model_config: ModelConfig) -> list[dict]:
+    sizes = resolve_moe_expert_parallel_sizes(model_config.num_experts, args.expert_parallel_sizes)
+    return [task.to_dict() for task in plan_dp_lane_rows(
+        args.dp_lane_local_rows, expert_parallel_size=sizes[0],
+        num_experts=model_config.num_experts, router_topk=model_config.num_experts_per_tok,
+    )]
+
+
+def _num_tokens_for_args(args: argparse.Namespace) -> list[int]:
+    if args.dp_lane_local_rows:
+        return sorted({
+            task["num_tokens"] for model in args.models
+            for task in _lane_rank_tasks(args, ModelConfig.from_model_name(model))
+        })
+    return get_num_tokens_to_profile(
+        args.max_tokens, extra_num_tokens=args.extra_num_tokens,
+        num_tokens_list=args.num_tokens_list,
+    )
+
+
+def _profile_cases(args, model_config, num_tokens_to_profile):
+    if getattr(args, "dp_lane_local_rows", None):
+        return [dict(task, load_distribution="balanced", seed=0)
+                for task in _lane_rank_tasks(args, model_config)]
+    if args.enable_load_imbalance:
+        return [dict(num_tokens=rows, load_distribution=distribution, seed=seed, ep_rank=0)
+                for rows in num_tokens_to_profile for distribution in args.load_distributions
+                for seed in range(args.num_samples_per_distribution)]
+    return [dict(num_tokens=rows, load_distribution="uniform", seed=None, ep_rank=0)
+            for rows in num_tokens_to_profile]
+
+
+def _gate_profile_args(test_case: dict) -> dict:
+    return ({"gating_num_tokens": test_case["gating_num_tokens"]}
+            if "gating_num_tokens" in test_case else {})
 
 
 def profile_model(
@@ -771,123 +827,18 @@ def profile_model(
                     f"expert_parallel_size ({expert_parallel_size})"
                 )
 
-            # Generate test cases based on load imbalance settings
-            if args.enable_load_imbalance:
-                test_cases = []
-                for num_tokens in num_tokens_to_profile:
-                    for load_dist in args.load_distributions:
-                        for seed in range(args.num_samples_per_distribution):
-                            test_cases.append({
-                                "num_tokens": num_tokens,
-                                "load_distribution": load_dist,
-                                "seed": seed,
-                            })
-            else:
-                test_cases = [
-                    {"num_tokens": num_tokens, "load_distribution": "uniform", "seed": None}
-                    for num_tokens in num_tokens_to_profile
-                ]
+            test_cases = _profile_cases(args, model_config, num_tokens_to_profile)
+            cases_by_rank = {}
+            for test_case in test_cases:
+                cases_by_rank.setdefault(test_case["ep_rank"], []).append(test_case)
 
-            # Common wrapper arguments for this (TP, EP) combination
-            wrapper_args = {
-                "num_tensor_parallel_workers": num_tensor_parallel_workers,
-                "expert_parallel_size": expert_parallel_size,
-                "profile_method": args.profile_method,
-                "output_dir": args.output_dir,
-                "use_vllm_kernel": use_vllm_kernel,
-                "use_fp8": resolved_use_fp8,
-                "per_channel_quant": args.per_channel_quant,
-                "block_shape": resolved_block_shape,
-            }
-            if hasattr(args, "routing_runtime_path"):
-                wrapper_args["routing_runtime_path"] = args.routing_runtime_path
-            if hasattr(args, "gating_runtime_context"):
-                wrapper_args["gating_runtime_context"] = args.gating_runtime_context
-
-            # Convert model_config to dict for multiprocessing serialization
-            model_config_dict = model_config.to_dict()
-
-            if not args.disable_ray:
-                # Ray mode: create actors and submit tasks
-                model_wrappers = []
-                for rank in range(args.num_gpus):
-                    ray_wrapper_init_args = [
-                        model_config,
-                        num_tensor_parallel_workers,
-                        expert_parallel_size,
-                        args.profile_method,
-                        rank,
-                        args.output_dir,
-                        use_vllm_kernel,
-                        resolved_use_fp8,
-                        args.per_channel_quant,
-                        resolved_block_shape,
-                    ]
-                    if hasattr(args, "routing_runtime_path"):
-                        ray_wrapper_init_args.append(args.routing_runtime_path)
-                    if hasattr(args, "gating_runtime_context"):
-                        ray_wrapper_init_args.append(args.gating_runtime_context)
-                    model_wrappers.append(
-                        moe_wrapper_actor.remote(*ray_wrapper_init_args)
-                    )
-
-                for test_case in test_cases:
-                    worker_id = len(ray_promises) % args.num_gpus
-                    promise = model_wrappers[worker_id].profile.remote(
-                        num_tokens=test_case["num_tokens"],
-                        load_distribution=test_case["load_distribution"],
-                        seed=test_case["seed"],
-                    )
-                    ray_promises.append(promise)
-
-                    if len(ray_promises) >= args.num_gpus:
-                        results = ray.get(ray_promises)
-                        for r in results:
-                            _collect_result(r)
-                        ray_promises = []
-                    pbar.update(1)
-
-            elif actual_num_gpus > 1:
-                # Non-Ray multi-GPU mode: use ProcessPoolExecutor
-                tasks_by_gpu = {gpu_id: [] for gpu_id in available_gpus}
-                for idx, test_case in enumerate(test_cases):
-                    gpu_id = available_gpus[idx % actual_num_gpus]
-                    gpu_local_idx = available_gpus.index(gpu_id)
-                    tasks_by_gpu[gpu_id].append(
-                        (gpu_id, gpu_local_idx, model_config_dict, wrapper_args, test_case)
-                    )
-
-                # One executor per GPU to keep worker-to-GPU affinity stable.
-                ctx = mp.get_context("spawn")
-                executors = {
-                    gpu_id: ProcessPoolExecutor(max_workers=1, mp_context=ctx)
-                    for gpu_id in available_gpus
-                }
-                futures = []
-                try:
-                    for gpu_id, gpu_tasks in tasks_by_gpu.items():
-                        executor = executors[gpu_id]
-                        for task in gpu_tasks:
-                            futures.append(executor.submit(_worker_profile_task, task))
-                    for future in as_completed(futures):
-                        result = future.result()
-                        _collect_result(result)
-                        pbar.update(1)
-                finally:
-                    for executor in executors.values():
-                        executor.shutdown(wait=True)
-            else:
-                # Single-GPU sequential mode
-                import torch
-                set_process_visible_device(available_gpus[0], torch_module=torch)
-                torch.cuda.set_device(0)
-
-                wrapper_kwargs = {
-                    "model_config": model_config,
+            for ep_rank, test_cases in sorted(cases_by_rank.items()):
+                # Common wrapper arguments for this (TP, EP) combination
+                wrapper_args = {
                     "num_tensor_parallel_workers": num_tensor_parallel_workers,
                     "expert_parallel_size": expert_parallel_size,
+                    "rank": ep_rank,
                     "profile_method": args.profile_method,
-                    "rank": 0,
                     "output_dir": args.output_dir,
                     "use_vllm_kernel": use_vllm_kernel,
                     "use_fp8": resolved_use_fp8,
@@ -895,22 +846,119 @@ def profile_model(
                     "block_shape": resolved_block_shape,
                 }
                 if hasattr(args, "routing_runtime_path"):
-                    wrapper_kwargs["routing_runtime_path"] = args.routing_runtime_path
+                    wrapper_args["routing_runtime_path"] = args.routing_runtime_path
                 if hasattr(args, "gating_runtime_context"):
-                    wrapper_kwargs["gating_runtime_context"] = (
-                        args.gating_runtime_context
-                    )
+                    wrapper_args["gating_runtime_context"] = args.gating_runtime_context
 
-                wrapper = moe_wrapper_class(**wrapper_kwargs)
+                # Convert model_config to dict for multiprocessing serialization
+                model_config_dict = model_config.to_dict()
 
-                for test_case in test_cases:
-                    result = wrapper.profile(
-                        num_tokens=test_case["num_tokens"],
-                        load_distribution=test_case["load_distribution"],
-                        seed=test_case["seed"],
-                    )
-                    _collect_result(result)
-                    pbar.update(1)
+                if not args.disable_ray:
+                    # Ray mode: create actors and submit tasks
+                    model_wrappers = []
+                    for _ in range(args.num_gpus):
+                        ray_wrapper_init_args = [
+                            model_config,
+                            num_tensor_parallel_workers,
+                            expert_parallel_size,
+                            args.profile_method,
+                            ep_rank,
+                            args.output_dir,
+                            use_vllm_kernel,
+                            resolved_use_fp8,
+                            args.per_channel_quant,
+                            resolved_block_shape,
+                        ]
+                        if hasattr(args, "routing_runtime_path"):
+                            ray_wrapper_init_args.append(args.routing_runtime_path)
+                        if hasattr(args, "gating_runtime_context"):
+                            ray_wrapper_init_args.append(args.gating_runtime_context)
+                        model_wrappers.append(
+                            moe_wrapper_actor.remote(*ray_wrapper_init_args)
+                        )
+
+                    for test_case in test_cases:
+                        worker_id = len(ray_promises) % args.num_gpus
+                        promise = model_wrappers[worker_id].profile.remote(
+                            num_tokens=test_case["num_tokens"],
+                            load_distribution=test_case["load_distribution"],
+                            seed=test_case["seed"],
+                            **_gate_profile_args(test_case),
+                        )
+                        ray_promises.append(promise)
+
+                        if len(ray_promises) >= args.num_gpus:
+                            results = ray.get(ray_promises)
+                            for r in results:
+                                _collect_result(r)
+                            ray_promises = []
+                        pbar.update(1)
+
+                elif actual_num_gpus > 1:
+                    # Non-Ray multi-GPU mode: use ProcessPoolExecutor
+                    tasks_by_gpu = {gpu_id: [] for gpu_id in available_gpus}
+                    for idx, test_case in enumerate(test_cases):
+                        gpu_id = available_gpus[idx % actual_num_gpus]
+                        gpu_local_idx = available_gpus.index(gpu_id)
+                        tasks_by_gpu[gpu_id].append(
+                            (gpu_id, gpu_local_idx, model_config_dict, wrapper_args, test_case)
+                        )
+
+                    # One executor per GPU to keep worker-to-GPU affinity stable.
+                    ctx = mp.get_context("spawn")
+                    executors = {
+                        gpu_id: ProcessPoolExecutor(max_workers=1, mp_context=ctx)
+                        for gpu_id in available_gpus
+                    }
+                    futures = []
+                    try:
+                        for gpu_id, gpu_tasks in tasks_by_gpu.items():
+                            executor = executors[gpu_id]
+                            for task in gpu_tasks:
+                                futures.append(executor.submit(_worker_profile_task, task))
+                        for future in as_completed(futures):
+                            result = future.result()
+                            _collect_result(result)
+                            pbar.update(1)
+                    finally:
+                        for executor in executors.values():
+                            executor.shutdown(wait=True)
+                else:
+                    # Single-GPU sequential mode
+                    import torch
+                    set_process_visible_device(available_gpus[0], torch_module=torch)
+                    torch.cuda.set_device(0)
+
+                    wrapper_kwargs = {
+                        "model_config": model_config,
+                        "num_tensor_parallel_workers": num_tensor_parallel_workers,
+                        "expert_parallel_size": expert_parallel_size,
+                        "profile_method": args.profile_method,
+                        "rank": ep_rank,
+                        "output_dir": args.output_dir,
+                        "use_vllm_kernel": use_vllm_kernel,
+                        "use_fp8": resolved_use_fp8,
+                        "per_channel_quant": args.per_channel_quant,
+                        "block_shape": resolved_block_shape,
+                    }
+                    if hasattr(args, "routing_runtime_path"):
+                        wrapper_kwargs["routing_runtime_path"] = args.routing_runtime_path
+                    if hasattr(args, "gating_runtime_context"):
+                        wrapper_kwargs["gating_runtime_context"] = (
+                            args.gating_runtime_context
+                        )
+
+                    wrapper = moe_wrapper_class(**wrapper_kwargs)
+
+                    for test_case in test_cases:
+                        result = wrapper.profile(
+                            num_tokens=test_case["num_tokens"],
+                            load_distribution=test_case["load_distribution"],
+                            seed=test_case["seed"],
+                            **_gate_profile_args(test_case),
+                        )
+                        _collect_result(result)
+                        pbar.update(1)
 
     # Collect remaining Ray results
     if not args.disable_ray and ray_promises:
@@ -942,7 +990,8 @@ MOE_SCHEMA_VERSION = "moe.v1"
 
 
 def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict[str, Any]:
-    cases_per_parallel_point = _get_moe_cases_per_parallel_point(args)
+    lane_rows = getattr(args, "dp_lane_local_rows", None)
+    cases_per_parallel_point = 1 if lane_rows else _get_moe_cases_per_parallel_point(args)
     models = {}
     for model in args.models:
         model_config = ModelConfig.from_model_name(model)
@@ -971,7 +1020,11 @@ def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict
                 cases_per_parallel_point=cases_per_parallel_point,
             ),
         }
-    return {
+        if lane_rows:
+            tasks = _lane_rank_tasks(args, model_config)
+            models[model]["rank_tasks"] = tasks
+            models[model]["profiled_steps"] = len(tasks)
+    result = {
         "profile_method": args.profile_method,
         "load_distributions": (
             list(args.load_distributions) if args.enable_load_imbalance else ["uniform"]
@@ -980,6 +1033,10 @@ def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict
         "num_tokens": list(num_tokens_to_profile),
         "models": models,
     }
+    if lane_rows:
+        result["dp_lane_local_rows"] = [list(rows) for rows in lane_rows]
+        result.update(balanced_routing_columns())
+    return result
 
 
 def _attach_runtime_identity(
@@ -1010,11 +1067,7 @@ def _get_available_gpus(num_gpus: int) -> List[int]:
 def main():
     args, use_vllm_kernel_default = parse_args()
     if args.dry_run:
-        num_tokens_to_profile = get_num_tokens_to_profile(
-            args.max_tokens,
-            extra_num_tokens=args.extra_num_tokens,
-            num_tokens_list=args.num_tokens_list,
-        )
+        num_tokens_to_profile = _num_tokens_for_args(args)
         print(json.dumps(_dry_run(args, num_tokens_to_profile), indent=2))
         return
     require_profiling_dependencies("moe", ("torch", "vllm", "triton"))
@@ -1064,11 +1117,7 @@ def main():
         device_dir = Path(args.output_dir) / "compute" / args.device
         device_dir.mkdir(parents=True, exist_ok=True)
 
-        num_tokens_to_profile = get_num_tokens_to_profile(
-            args.max_tokens,
-            extra_num_tokens=args.extra_num_tokens,
-            num_tokens_list=args.num_tokens_list,
-        )
+        num_tokens_to_profile = _num_tokens_for_args(args)
 
         model_configs = {
             model: ModelConfig.from_model_name(model) for model in args.models
@@ -1121,6 +1170,9 @@ def main():
             )
             for model in args.models
         )
+        if args.dp_lane_local_rows:
+            total_combos = sum(len(_lane_rank_tasks(args, config))
+                               for config in model_configs.values())
         pbar = tqdm(total=total_combos)
 
         for model in args.models:

@@ -68,6 +68,7 @@ def _build_scheduler(cluster_type: ClusterType) -> VLLMv1EngineReplicaScheduler:
     scheduler._max_batch_size = 64
     scheduler._max_num_running_reqs = 64
     scheduler._spec_decode_enabled = True
+    scheduler._uses_output_placeholders = False
     scheduler._spec_decode_config = SimpleNamespace(num_speculative_tokens=2)
     scheduler._build_spec_decode_batch_metadata = lambda _batch: None
     return scheduler
@@ -86,6 +87,8 @@ def _build_spec_request(request_id: int) -> SimpleNamespace:
         execution_signature=(0, 0, 0),
         current_decode_token_index=0,
         num_context_tokens=16,
+        num_processed_tokens=16,
+        num_prefill_tokens=16,
         is_thinking_mode_enabled=False,
         thinking_home_cluster_type=None,
     )
