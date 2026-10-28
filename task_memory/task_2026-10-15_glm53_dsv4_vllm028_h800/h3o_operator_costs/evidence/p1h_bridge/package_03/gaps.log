@@ -1,0 +1,1 @@
+[dsv4_gaps] wrote /data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/gap_output/compute/h200/DeepSeek-V4-Flash/kernel_gap.csv: {'cuda_graph': 0.45751683176536034, 'cuda_graph_piecewise': 0.6076024212269042, 'eager': 3.5458052116176213, 'eager_preparation': 1.1498390104769525}
