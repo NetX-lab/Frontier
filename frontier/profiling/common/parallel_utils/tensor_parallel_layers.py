@@ -7,7 +7,6 @@
 """Tensor parallel layers for profiling."""
 
 import os
-from types import SimpleNamespace
 from typing import Optional, Tuple
 
 import torch
@@ -392,8 +391,7 @@ def _require_fp8_linear_method_kernel(layer: torch.nn.Module) -> Fp8LinearMethod
 def build_fp8_linear_method_kernels(
     model: torch.nn.Module,
     *,
-    model_dtype: torch.dtype,
-    model_type: str,
+    model_config,
 ) -> None:
     """Bind a vLLM ``Fp8LinearMethod`` to every block-FP8 profiling linear layer.
 
@@ -417,16 +415,17 @@ def build_fp8_linear_method_kernels(
     )
 
     ensure_vllm_single_rank_parallel_state()
-    model_config = SimpleNamespace(
-        dtype=model_dtype,
-        hf_config=SimpleNamespace(model_type=model_type),
-        hf_text_config=SimpleNamespace(model_type=model_type),
+    from frontier.profiling.linear_op.fp8_quantization import (
+        checkpoint_hf_config, resolve_checkpoint_quantization,
     )
-    with vllm_config_context(model_config=model_config):
+
+    hf_config = checkpoint_hf_config(model_config)
+    with vllm_config_context(model_config=hf_config):
+        _, quant_config = resolve_checkpoint_quantization(hf_config.hf_config)
         for layer in layers:
             layer._fp8_linear_method_kernel = Fp8LinearMethodKernel(
                 weight=layer.weight.data,
-                block_size=layer._fp8_block_size_list,
+                quant_config=quant_config,
                 logical_widths=[layer.weight.shape[0]],
                 input_size=layer.input_size,
                 output_size=layer.output_size,
@@ -465,6 +464,26 @@ def linear_fp8_backends_by_operator(model: torch.nn.Module) -> dict[str, list[st
             raise ValueError("an FP8 profiling linear layer has no operator name")
         backends.setdefault(module._precision_op_name, set()).add(backend)
     return {operator: sorted(names) for operator, names in sorted(backends.items())}
+
+
+def linear_fp8_bindings_by_operator(model: torch.nn.Module) -> dict[str, list[dict]]:
+    """Retain the resolved config and scale dtypes beside each backend identity."""
+
+    bindings: dict[str, list[dict]] = {}
+    for module in model.modules():
+        kernel = getattr(module, "_fp8_linear_method_kernel", None)
+        if kernel is None:
+            continue
+        identity = {
+            "backend_name": kernel.backend_name,
+            "quantization_method": kernel.quantization_method,
+            "weight_scale_dtype": kernel.weight_scale_dtype,
+            "processed_weight_scale_dtype": kernel.processed_weight_scale_dtype,
+        }
+        entries = bindings.setdefault(module._precision_op_name, [])
+        if identity not in entries:
+            entries.append(identity)
+    return bindings
 
 
 class VocabParallelEmbedding(torch.nn.Module):

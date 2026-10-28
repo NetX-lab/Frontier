@@ -1,0 +1,94 @@
+{
+  "base_package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02",
+  "base_manifest_sha256": "9714cdb749e8504df32955bb62e080467434e33e20da1d23ae653da2ce8e09cf",
+  "native_revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "native_repo": "/data/ycfeng/tmp/opencode/vllm-v0.28.0",
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "cuda_compat_path": "/usr/local/cuda-13.0/compat",
+  "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+  "gpu_type": "H200",
+  "charged_group": "step_main",
+  "gpu": 1,
+  "cpu": 16,
+  "mem_gb": 128,
+  "preemptible": false,
+  "task_id": "H3O-STAGE2-G2H-OPERATORS",
+  "destination": "package_01",
+  "name": "G2H_V4_OPERATORS",
+  "job_tag": "v4-h200-g2h-operators-20261028-01",
+  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_operators/g2h_01",
+  "source_revision": "e8eb3c97f689f47b090753e525730f90817c113f",
+  "model": "deepseek-ai/DeepSeek-V4-Flash",
+  "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+  "timeout_seconds": 3600,
+  "planning_gpu_hours_cap": 1,
+  "common_args": [
+    "--models",
+    "deepseek-ai/DeepSeek-V4-Flash",
+    "--device",
+    "h200",
+    "--num_gpus",
+    "1",
+    "--disable_ray",
+    "--num_tensor_parallel_workers",
+    "1",
+    "--is_moe",
+    "--yes"
+  ],
+  "methods": {
+    "cuda_event": "linear_op.csv",
+    "record_function": "linear_op_kernel_only.csv"
+  },
+  "topologies": [
+    {
+      "attention_tp_size": 8,
+      "attention_dp_size": 2,
+      "expert_parallel_size": 16
+    },
+    {
+      "attention_tp_size": 8,
+      "attention_dp_size": 4,
+      "expert_parallel_size": 32
+    }
+  ],
+  "gpu_time_estimate": {
+    "invocations": 6,
+    "csv_rows_both_methods": 92,
+    "operator_rows_both_methods": 190,
+    "active_calls_per_operator_row": 20,
+    "warmup_calls_per_operator_row": 3,
+    "startup_seconds_per_invocation": [
+      120,
+      300
+    ],
+    "timing_and_trace_seconds": [
+      120,
+      360
+    ],
+    "estimated_total_seconds": [
+      840,
+      2160
+    ],
+    "estimated_gpu_hours": [
+      0.23333333333333334,
+      0.6
+    ],
+    "c1_g2h_gpu_hours": 1,
+    "g1h_g4h_cap_gpu_hours": 7,
+    "already_used_gpu_hours_approx": 0.92,
+    "qualification": "Planning allowance, not measured; six cold vLLM imports plus tilelang/Inductor compilation and 190 operator scopes. Current G1h-02 report records 0.85 GPU-hours, bringing prior G1h-G4h usage to about 0.92 of 7. B13r remains separate; retain the one-hour G2h cap.",
+    "prior_to_g1h_02_gpu_hours_approx": 0.07,
+    "g1h_02_gpu_hours_approx": 0.85
+  },
+  "qualification": "Synthetic standalone eager measurements using native vLLM calls. record_function costs sum owned device kernels; cuda_event rows validate elapsed. Native worker image, e8m0 conversion and kernels remain GPU-unverified. No consumer activation, serving admission or engine B13r scope is included.",
+  "native_kernel_notes": "native_kernel_notes.md",
+  "operator_grid": "operator_grid.json",
+  "expected_rows": "expected_rows.json",
+  "shared_expert_rows": [
+    1,
+    2,
+    3,
+    4,
+    768
+  ]
+}

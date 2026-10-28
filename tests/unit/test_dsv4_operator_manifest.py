@@ -64,8 +64,10 @@ def test_layer_manifest_uses_exact_compression_scope_inventory(
     assert routed.variant_id == ("hash" if layer < 3 else "score")
     assert shared.family_id == "share_expert"
     assert all(binding.frozen for binding in manifest.family_bindings)
-    assert all(not operator.predictor_target and not operator.profiling_target
-               and not operator.e2e_trace_target for operator in manifest.operators())
+    assert all(not operator.predictor_target and not operator.e2e_trace_target
+               for operator in manifest.operators())
+    assert all(operator.profiling_target == (operator.name in {op.name for op in mhc.family.operators})
+               for operator in manifest.operators())
     for binding in manifest.family_bindings:
         assert binding.variant_id in binding.family.supported_variants
         with pytest.raises(NotImplementedError, match="frozen"):
@@ -95,17 +97,17 @@ def test_43_layer_inventory_counts_mhc_and_endpoints_once(model):
     assert routes == {"hash": 3, "score": 40}
 
 
-def test_new_scope_inventory_is_not_a_predictor_or_profiling_target():
+def test_scope_inventory_stays_disabled_with_standalone_mhc_profiling_targets():
     attention = get_attention_family("deepseek_v4_attention")
     assert get_operator_family("deepseek_v4_attention") is attention
     mhc = get_operator_family("deepseek_v4_mhc")
     for family in (attention, mhc):
         assert family.operators
         assert family.execution_enabled is False
-        assert family.profiling_ops() == ()
+        assert bool(family.profiling_ops()) == (family is mhc)
         for operator in family.operators:
             assert operator.predictor_target is False
-            assert operator.profiling_target is False
+            assert operator.profiling_target == (family is mhc)
             assert operator.e2e_trace_target is False
             assert operator.execution_time_attr is None
             with pytest.raises(NotImplementedError, match="not enabled"):

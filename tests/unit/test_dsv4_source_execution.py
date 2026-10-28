@@ -306,8 +306,10 @@ def test_structural_admission_keeps_normal_execution_and_training_closed(predict
     assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
     for family in (DEEPSEEK_V4_ATTENTION_FAMILY, DEEPSEEK_V4_MHC_FAMILY):
         assert family.execution_enabled is False
-        assert all(not op.predictor_target and not op.profiling_target
-                   and not op.e2e_trace_target for op in family.operators)
+        assert all(not op.predictor_target and not op.e2e_trace_target
+                   for op in family.operators)
+        assert all(op.profiling_target == (family is DEEPSEEK_V4_MHC_FAMILY)
+                   for op in family.operators)
 
 
 def test_component_requires_v4_and_valid_layer(predictor):

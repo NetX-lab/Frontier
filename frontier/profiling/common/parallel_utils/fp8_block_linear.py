@@ -50,14 +50,13 @@ class Fp8LinearMethodKernel:
         self,
         *,
         weight: torch.Tensor,
-        block_size: Sequence[int],
+        quant_config,
         logical_widths: Sequence[int],
         input_size: int,
         output_size: int,
         tensor_parallel_size: int,
     ) -> None:
         from vllm.model_executor.layers.quantization.fp8 import (
-            Fp8Config,
             Fp8LinearMethod,
         )
         from vllm.platforms import current_platform
@@ -73,13 +72,7 @@ class Fp8LinearMethodKernel:
         layer = torch.nn.Module()
         layer.tp_size = tensor_parallel_size
         with _default_dtype(weight.dtype), weight.device:
-            method = Fp8LinearMethod(
-                Fp8Config(
-                    is_checkpoint_fp8_serialized=True,
-                    activation_scheme="dynamic",
-                    weight_block_size=list(block_size),
-                )
-            )
+            method = Fp8LinearMethod(quant_config)
             method.create_weights(
                 layer,
                 input_size_per_partition=input_size_per_partition,
@@ -93,11 +86,19 @@ class Fp8LinearMethodKernel:
             fp8_limit = torch.finfo(fp8_dtype).max
             with torch.no_grad():
                 layer.weight.copy_(weight.clamp(-fp8_limit, fp8_limit).to(fp8_dtype))
-                layer.weight_scale_inv.fill_(1.0)
+                # Float8 e8m0 fill is not implemented on every PyTorch backend.
+                # Convert FP32 ones, then copy the representable unit scales.
+                layer.weight_scale_inv.copy_(
+                    torch.ones(layer.weight_scale_inv.shape, device=weight.device,
+                               dtype=torch.float32).to(layer.weight_scale_inv.dtype)
+                )
+            self.weight_scale_dtype = str(layer.weight_scale_inv.dtype)
             method.process_weights_after_loading(layer)
         self._layer = layer
         self._method = method
         self.backend_name = type(method.fp8_linear).__name__
+        self.quantization_method = quant_config.get_name()
+        self.processed_weight_scale_dtype = str(layer.weight_scale_inv.dtype)
 
     def apply(self, x: torch.Tensor, bias: torch.Tensor | None) -> torch.Tensor:
         return self._method.apply(self._layer, x, bias)

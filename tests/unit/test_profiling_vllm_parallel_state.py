@@ -48,9 +48,10 @@ layer = layers.ColumnParallelLinear(
     512, 2048, bias=False, fp8_weight_block_size=(128, 128), world_size=8,
     linear_metric_name="q_b_proj",
 )
+from frontier.profiling.common.model_config import ModelConfig
 try:
     layers.build_fp8_linear_method_kernels(
-        torch.nn.Sequential(layer), model_dtype=torch.bfloat16, model_type="glm_moe_dsa"
+        torch.nn.Sequential(layer), model_config=ModelConfig.from_model_name("zai-org/GLM-5.3")
     )
 except KernelSelection as selected:
     print("linear_kernel_selection", *selected.args[0])
