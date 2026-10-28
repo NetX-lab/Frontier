@@ -33,8 +33,8 @@ for step in $STEPS; do
     identity)
       for pair in "p32 $P32" "p64 $P64"; do
         set -- $pair
-        timeout 1800 $PY tests/comparison/calibration/dsv4_kernel_identity_check.py --config $V/bridge_config.json --native_trace_dirs $2 --margin_cases e0-decode-b24-p6144 e0-dummy-full16 --output $V/identity_$1.json > $V/identity_$1.log 2>&1
-        echo "identity $1 rc $?"; tail -2 $V/identity_$1.log
+        timeout 1800 $PY tests/comparison/calibration/dsv4_kernel_identity_check.py --config $V/bridge_config.json --native_trace_dirs $2 --output $V/identity_$1.json > $V/identity_$1.log 2>&1
+        echo "identity $1 rc $?"; tail -3 $V/identity_$1.log
       done;;
   esac
 done

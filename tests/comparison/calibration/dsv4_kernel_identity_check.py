@@ -2,14 +2,17 @@
 
 The pilot disables async scheduling and enables chunked prefill, whereas the
 native engine enables async scheduling without chunking. First tails need their
-one-token final chunk. The TP1 reduced engine has no sequence parallelism; its
-padded attention executes all dispatched rows, as native does. A dummy beside a
-NONE peer executes its local one token. The MLP is dense, so suppressing the DP
-width tensor cannot change that forward. Host synchronizations and full launch
-queues are detected by hold slack rather than excluded by construction. Sampling
-is inside the pilot step range as unowned eager preparation and is not included
-in attention identity. Native dispatch contains other operators and collectives,
-so qualification requires count-wise containment, not multiset equality.
+one-token final chunk. References require the same step class, CUDA Graph mode,
+padded dispatch rows and eager attention rows. FULL attention uses padded rows;
+PIECEWISE and NONE attention use scheduled rows, while a dummy executes all
+dispatched rows. Shapes absent from the native traces are NO_REFERENCE and
+remain unqualified. The TP1 reduced engine has no sequence parallelism. The MLP
+is dense, so suppressing the DP width tensor cannot change that forward. Host
+synchronizations and full launch queues are detected by hold slack rather than
+excluded by construction. Sampling is inside the pilot step range as unowned
+eager preparation and is not included in attention identity. Native dispatch
+contains other operators and collectives, so qualification requires count-wise
+containment, not multiset equality.
 
 Expansion uses the full-model counts of each variant and planner/reuse role.
 Every reduced layer of a role must carry the same kernel multiset in the step.
@@ -32,14 +35,17 @@ from frontier.profiling.attention.dsv4_attention_plan import resolve_dsv4_layers
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.kernel_gap.dsv4_replay_gaps import (
     ACTIVITY, CASE_ID, CG_MODE, ENGINE_CAPTURE, ENGINE_INDEX, ENGINE_MODE,
-    GLOBAL_LAYER_ID, KERNEL, NAME, STEP_INDEX, CUDAGRAPH_DISPATCH_KEY,
+    GLOBAL_LAYER_ID, KERNEL, NAME, NUM_TOKENS, STEP_INDEX, CUDAGRAPH_DISPATCH_KEY,
     ReplayRecords, read_replay_records,
 )
 from dsv4_composition_check import planner_roles
 from dsv4_graph_bridge_check import BridgeConfig, graph_mode_flags, load_config
 from v4_runtime_census import dispatch_kernel_multisets, lane_traces
 
-PASS, FAIL = "PASS", "FAIL"
+PASS, FAIL, NO_REFERENCE = "PASS", "FAIL", "NO_REFERENCE"
+# This per-layer norm dispatches one grid-x block per padded token row.
+_ROW_COUNT_KERNEL = "_fused_q_kv_rmsnorm_kernel"
+_EAGER_ATTENTION_MODES = frozenset({"PIECEWISE", "NONE"})
 GRID, BLOCK = "grid", "block"
 FIRST_TAIL_ALONE, FIRST_TAIL_WITH_DECODES = "first_tail_alone", "first_tail_with_decodes"
 _DIMENSIONS = 3
@@ -58,7 +64,6 @@ _MISSING_COUNT = 'missing_count'
 _CLOSEST_FORWARD_COUNT = 'closest_candidate_forward_count'
 _RUN = 'run'
 _NATIVE_CLASS = 'native_class'
-_MARGIN = 'margin'
 _STEP_COUNT = 'step_count'
 _PASS_COUNT = 'pass_count'
 _VERDICT = 'verdict'
@@ -74,31 +79,57 @@ _FORWARD_COUNT = 'forward_count'
 _ROLES = 'roles'
 _KERNEL_COUNT = 'kernel_count'
 _REASONS = 'reasons'
+_SHAPE_KEY = 'shape_key'
+_SHAPE_COVERAGE = 'shape_coverage'
+_PILOT_CASE_IDS = 'pilot_case_ids'
+_STATUS_COUNTS = 'step_status_counts'
+_NATIVE_FORWARD_COUNT = 'native_forward_count'
+_REQUESTS = 'requests'
+_NUM_SCHEDULED_TOKENS = 'num_scheduled_tokens'
 
 KernelIdentity = tuple[str, tuple[int, int, int], tuple[int, int, int]]
+ShapeKey = tuple[str, str, int, int | None]
 
 
 @dataclass(frozen=True)
 class NativeCandidate:
     step_class: str
     mode: str
+    padded_rows: int
+    eager_rows: int | None
     kernels: Counter[KernelIdentity]
     forward_count: int
     roles: tuple[str, ...]
 
+    @property
+    def shape_key(self) -> ShapeKey:
+        return self.step_class, self.mode, self.padded_rows, self.eager_rows
+
+
+def _padded_rows(kernels: Counter[KernelIdentity], source: str) -> int:
+    grids = {grid for (name, grid, _), count in kernels.items() if name == _ROW_COUNT_KERNEL and count > 0}
+    if len(grids) != 1:
+        raise ValueError(f"{source}: row-count kernel {_ROW_COUNT_KERNEL!r} has {len(grids)} grids, expected exactly one")
+    return next(iter(grids))[0]
+
 
 def native_candidates(trace_dirs: Sequence[Path]) -> tuple[NativeCandidate, ...]:
-    """Deduplicate exact dispatch multisets by class and mode over all TP0 lanes."""
+    """Deduplicate exact dispatch multisets by the full shape key over TP0 lanes."""
     counts, roles = Counter(), defaultdict(set)
     for directory in trace_dirs:
         for role, _, path in lane_traces(directory):
             for forward in dispatch_kernel_multisets(role, path):
+                padded_rows = _padded_rows(forward.kernels, f"{path}: forward {forward.index}")
+                eager_rows = None
+                if forward.mode in _EAGER_ATTENTION_MODES:
+                    eager_rows = padded_rows if forward.step_class == PHASE_DUMMY else forward.scheduled_tokens
+                shape = forward.step_class, forward.mode, padded_rows, eager_rows
                 signature = tuple(sorted(forward.kernels.items()))
-                key = forward.step_class, forward.mode, signature
+                key = shape, signature
                 counts[key] += 1
                 roles[key].add(role)
-    return tuple(NativeCandidate(kind, mode, Counter(dict(signature)), count, tuple(sorted(roles[key])))
-                 for key, count in counts.items() for kind, mode, signature in (key,))
+    return tuple(NativeCandidate(*shape, Counter(dict(signature)), count, tuple(sorted(roles[key])))
+                 for key, count in counts.items() for shape, signature in (key,))
 
 
 def _plans(config: BridgeConfig):
@@ -170,10 +201,12 @@ def _kernel_rows(kernels: Counter[KernelIdentity]) -> list[dict[str, Any]]:
 
 
 def match_kernels(expected: Counter[KernelIdentity], kind: str, mode: str,
+                  padded_rows: int, eager_rows: int | None,
                   candidates: Sequence[NativeCandidate]) -> dict[str, Any]:
-    selected = [candidate for candidate in candidates if candidate.step_class == kind and candidate.mode == mode]
+    shape = kind, mode, padded_rows, eager_rows
+    selected = [candidate for candidate in candidates if candidate.shape_key == shape]
     closest = min(selected, key=lambda candidate: sum((expected - candidate.kernels).values()), default=None)
-    missing = expected if closest is None else expected - closest.kernels
+    missing = None if closest is None else expected - closest.kernels
     grid_mismatches = []
     if closest is not None:
         for (name, grid, block), count in sorted(missing.items()):
@@ -182,15 +215,34 @@ def match_kernels(expected: Counter[KernelIdentity], kind: str, mode: str,
             if other_grids:
                 grid_mismatches.append({NAME: name, BLOCK: list(block), _EXPECTED_GRID: list(grid),
                                         _NATIVE_GRIDS: other_grids, _MISSING_COUNT: count})
-    return {_STATUS: PASS if closest is not None and not missing else FAIL,
+    return {_STATUS: NO_REFERENCE if closest is None else FAIL if missing else PASS,
             _CANDIDATE_COUNT: len(selected), _EXPECTED_KERNEL_COUNT: sum(expected.values()),
-            _MISSING_KERNEL_COUNT: sum(missing.values()), _MISSING_KERNELS: _kernel_rows(missing),
+            _MISSING_KERNEL_COUNT: None if missing is None else sum(missing.values()),
+            _MISSING_KERNELS: None if missing is None else _kernel_rows(missing),
             _GRID_MISMATCHES: grid_mismatches,
             _CLOSEST_FORWARD_COUNT: None if closest is None else closest.forward_count}
 
 
+def _status_counts(steps: Sequence[Mapping[str, Any]]) -> dict[str, int]:
+    counts = Counter(step[_STATUS] for step in steps)
+    return {status: counts[status] for status in (PASS, FAIL, NO_REFERENCE)}
+
+
+def _shape_coverage(steps: Sequence[Mapping[str, Any]],
+                    candidates: Sequence[NativeCandidate]) -> list[dict[str, Any]]:
+    by_shape = defaultdict(list)
+    native_counts = Counter()
+    for step in steps:
+        by_shape[tuple(step[_SHAPE_KEY])].append(step)
+    for candidate in candidates:
+        native_counts[candidate.shape_key] += candidate.forward_count
+    return [{_SHAPE_KEY: list(shape), _PILOT_CASE_IDS: sorted({step[CASE_ID] for step in shaped_steps}),
+             _STATUS_COUNTS: _status_counts(shaped_steps), _NATIVE_FORWARD_COUNT: native_counts[shape]}
+            for shape, shaped_steps in sorted(by_shape.items())]
+
+
 def check_identity(config: BridgeConfig, records: Sequence[ReplayRecords],
-                   candidates: Sequence[NativeCandidate], margin_cases: Sequence[str] = ()) -> dict[str, Any]:
+                   candidates: Sequence[NativeCandidate]) -> dict[str, Any]:
     plans, roles = _plans(config), planner_roles(config, records)
     counts = layer_role_counts(config)
     by_run = {(record.engine[ENGINE_CAPTURE][ENGINE_MODE], record.engine[ENGINE_INDEX]): record for record in records}
@@ -213,39 +265,57 @@ def check_identity(config: BridgeConfig, records: Sequence[ReplayRecords],
                 kind = native_step_class(spec.phase, spec.batch_size)
                 mode = step[CUDAGRAPH_DISPATCH_KEY][CG_MODE]
                 expected = expand_attention_kernels(intervals[(case_id, step[STEP_INDEX])], layer_variants, layer_roles, counts)
+                padded_rows = step[CUDAGRAPH_DISPATCH_KEY][NUM_TOKENS]
+                observed_rows = _padded_rows(expected, f"Pilot {run.key} case {case_id!r} step {step[STEP_INDEX]}")
+                if observed_rows != padded_rows:
+                    raise ValueError(f"Pilot {run.key} case {case_id!r} step {step[STEP_INDEX]}: "
+                                     f"row-count kernel grid x {observed_rows} differs from dispatch num_tokens {padded_rows}")
+                eager_rows = None
+                if mode in _EAGER_ATTENTION_MODES:
+                    eager_rows = (padded_rows if spec.phase == PHASE_DUMMY else
+                                  sum(request[_NUM_SCHEDULED_TOKENS] for request in step[_REQUESTS]))
                 result = {_RUN: run.key, CASE_ID: case_id, STEP_INDEX: step[STEP_INDEX], _NATIVE_CLASS: kind,
-                          CG_MODE: mode, _MARGIN: case_id in margin_cases, **match_kernels(expected, kind, mode, candidates)}
+                          CG_MODE: mode, _SHAPE_KEY: [kind, mode, padded_rows, eager_rows],
+                          **match_kernels(expected, kind, mode, padded_rows, eager_rows, candidates)}
                 steps.append(result)
                 case_steps.append(result)
-            cases.append({_RUN: run.key, CASE_ID: case_id, _MARGIN: case_id in margin_cases,
-                          _STEP_COUNT: len(case_steps), _PASS_COUNT: sum(row[_STATUS] == PASS for row in case_steps),
-                          _STATUS: PASS if case_steps and all(row[_STATUS] == PASS for row in case_steps) else FAIL})
-    return {_VERDICT: PASS if cases and all(case[_MARGIN] or case[_STATUS] == PASS for case in cases) else FAIL,
+            case_counts = _status_counts(case_steps)
+            case_status = (FAIL if case_counts[FAIL] else
+                           NO_REFERENCE if case_counts[NO_REFERENCE] else PASS)
+            cases.append({_RUN: run.key, CASE_ID: case_id, _STEP_COUNT: len(case_steps),
+                          _PASS_COUNT: case_counts[PASS], _STATUS_COUNTS: case_counts, _STATUS: case_status})
+    step_counts = _status_counts(steps)
+    verdict = FAIL if step_counts[FAIL] else PASS if step_counts[PASS] else NO_REFERENCE
+    return {_VERDICT: verdict, _STATUS_COUNTS: step_counts, _SHAPE_COVERAGE: _shape_coverage(steps, candidates),
             _LAYER_ROLE_COUNTS: [{_VARIANT: variant, _PLANS_TILE_SCHEDULE: planner, _COUNT: count}
                                  for (variant, planner), count in sorted(counts.items())], _STEPS: steps, _CASES: cases,
-            _NATIVE_CANDIDATES: [{_CLASS: row.step_class, _MODE: row.mode, _FORWARD_COUNT: row.forward_count,
-                                   _ROLES: list(row.roles), _KERNEL_COUNT: sum(row.kernels.values())} for row in candidates]}
+            _NATIVE_CANDIDATES: [{_CLASS: row.step_class, _MODE: row.mode, _SHAPE_KEY: list(row.shape_key),
+                                  _FORWARD_COUNT: row.forward_count, _ROLES: list(row.roles),
+                                  _KERNEL_COUNT: sum(row.kernels.values())} for row in candidates]}
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--native_trace_dirs", type=Path, nargs="+", required=True)
-    parser.add_argument("--margin_cases", nargs="+", default=())
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         config = load_config(args.config)
         records = read_replay_records([config.output_root / run.mode / "raw" / f"dsv4_raw_e{run.engine_index}.jsonl"
                                       for run in config.runs])
-        report = check_identity(config, records, native_candidates(args.native_trace_dirs), args.margin_cases)
+        report = check_identity(config, records, native_candidates(args.native_trace_dirs))
     except (OSError, ValueError, KeyError, TypeError) as error:
-        report = {_VERDICT: FAIL, _STEPS: [], _CASES: [], _REASONS: [str(error)]}
+        report = {_VERDICT: FAIL, _STEPS: [], _CASES: [], _SHAPE_COVERAGE: [],
+                  _STATUS_COUNTS: _status_counts([]), _REASONS: [str(error)]}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
-    counts = Counter(step[_STATUS] for step in report[_STEPS])
-    print(f"[dsv4_identity] {report[_VERDICT]}: {len(report[_STEPS])} steps, {dict(counts)}, "
-          f"{sum(case[_MARGIN] for case in report[_CASES])} margin cases")
+    coverage = report[_SHAPE_COVERAGE]
+    referenced = [row[_SHAPE_KEY] for row in coverage if row[_NATIVE_FORWARD_COUNT]]
+    unreferenced = [row[_SHAPE_KEY] for row in coverage if not row[_NATIVE_FORWARD_COUNT]]
+    print(f"[dsv4_identity] {report[_VERDICT]}: {len(report[_STEPS])} steps, {report[_STATUS_COUNTS]}")
+    print(f"[dsv4_identity] referenced shapes ({len(referenced)}): {referenced}")
+    print(f"[dsv4_identity] unreferenced shapes ({len(unreferenced)}): {unreferenced}")
     for reason in report.get(_REASONS, []):
         print(f"[dsv4_identity] {reason}")
     return int(report[_VERDICT] != PASS)

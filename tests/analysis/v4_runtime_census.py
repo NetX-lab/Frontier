@@ -199,6 +199,7 @@ class ForwardKernels:
     mode: str
     step_class: str
     kernels: Counter
+    scheduled_tokens: int | None = None
 
 
 def dispatch_kernel_multisets(role: str, path: Path) -> tuple[ForwardKernels, ...]:
@@ -219,7 +220,9 @@ def dispatch_kernel_multisets(role: str, path: Path) -> tuple[ForwardKernels, ..
                             raise ValueError(f"{path}: kernel {event['name']!r} requires {field} with three ints")
                         dimensions.append(tuple(value))
                     kernels[(event["name"], *dimensions)] += 1
-        result.append(ForwardKernels(record["index"], record["mode"], record["class"], kernels))
+        step = record.get("step")
+        scheduled_tokens = None if step is None else step["context_tokens"] + step["generation_tokens"]
+        result.append(ForwardKernels(record["index"], record["mode"], record["class"], kernels, scheduled_tokens))
     return tuple(result)
 
 
