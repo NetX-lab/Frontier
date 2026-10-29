@@ -462,9 +462,14 @@ def build_dsv4_engine(
     model_dir: str,
     seed: int,
     gpu_memory_utilization: float,
+    *,
+    routed_expert_count: int | None = None,
 ) -> Any:
     """Build the in-process V4 engine with the accepted dummy-weight finalizers."""
 
+    if routed_expert_count is not None:
+        from dataclasses import replace
+        plan = replace(plan, hf_overrides=dict(plan.hf_overrides, n_routed_experts=routed_expert_count))
     # Import the model after selecting the in-process engine core.
     os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
     with patch_dummy_weight_finalizers():

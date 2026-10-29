@@ -846,12 +846,32 @@ KV_CACHE_FAMILY = OperatorFamilySpec(
             phases=_ALL_PHASES,
             trace_kind=TraceKind.COMPUTE,
             predictor_target=False,
-            profiling_target=False,
+            profiling_target=True,
             e2e_trace_target=False,
             resource_class=ResourceClass.MEMORY,
             tp_mode=TensorParallelMode.REPLICATED,
         ),
+        OperatorSpec(
+            name="dsv4_block_table_write", role=OperatorRole.CACHE_WRITE,
+            phases=_ALL_PHASES, trace_kind=TraceKind.COMPUTE,
+            predictor_target=False, profiling_target=True, e2e_trace_target=False,
+            resource_class=ResourceClass.MEMORY, tp_mode=TensorParallelMode.REPLICATED,
+        ),
     ),
+)
+
+
+DEEPSEEK_V4_RUNNER_FAMILY = OperatorFamilySpec(
+    family_id="deepseek_v4_runner", display_name="DeepSeek V4 Runner",
+    supported_variants=("input_preparation", "sampling"),
+    resource_class=ResourceClass.COMP, execution_enabled=False,
+    disabled_reason="Runner operators are profiling targets; consumer admission is pending",
+    operators=tuple(OperatorSpec(
+        name=name, role=OperatorRole.INDEXING, phases=_ALL_PHASES,
+        trace_kind=TraceKind.COMPUTE, predictor_target=False,
+        profiling_target=True, e2e_trace_target=False,
+        resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.REPLICATED,
+    ) for name in ("dsv4_input_preparation", "dsv4_sampling")),
 )
 
 
@@ -905,6 +925,7 @@ for _family in (
     SHARE_EXPERT_FAMILY,
     COMM_FAMILY,
     KV_CACHE_FAMILY,
+    DEEPSEEK_V4_RUNNER_FAMILY,
     KV_TRANSFER_FAMILY,
 ):
     OPERATOR_REGISTRY.register(_family)

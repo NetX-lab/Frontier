@@ -13,8 +13,8 @@ Padded steps execute attention over the synchronized dispatched rows, without
 sequence parallelism on this TP1 engine. A dummy beside a NONE peer executes
 its local one token. Returning no DP-width tensor is safe for the reduced dense
 MLP. Host synchronization inside execute_model and full launch queues are not
-excluded by construction: calibrated hold slack detects late launches. Sampling
-kernels and output copies are inside the step range as unowned eager preparation.
+excluded by construction: calibrated hold slack detects late launches. Runner
+operators have step owners; output copies remain unowned inside the step range.
 
 The worker re-captures after installing the hooks and stops the clone subscriber
 before starting the profiler. This module imports GPU packages only in worker
@@ -52,7 +52,11 @@ from frontier.profiling.attention.graph_capture import (
     ScopeOwner,
 )
 from frontier.profiling.attention.graph_replay_trace import hold_annotation_name, step_annotation_name
+from frontier.profiling.attention.dsv4_step_scopes import (
+    STEP_LAYER_ID, ZERO_SCOPE, WRITE_SCOPE, INPUT_SCOPE, SAMPLING_SCOPE, LOGITS_SCOPE,
+)
 from frontier.profiling.common.runtime_identity import collect_driver_version
+from frontier.profiling.model_runner.dsv4_runner_rows import MODEL_FORWARD_PREFIX, write_replay_report
 
 CUDAGRAPH_DISPATCH_KEY = "cudagraph_dispatch"
 NUM_TOKENS_ACROSS_DP = "num_tokens_across_dp"
@@ -102,6 +106,11 @@ _GROUPED_OUTPUT_PROJECTION = "dsv4_grouped_output_projection"
 _OUTPUT_PROJECTION = "dsv4_output_projection"
 
 SCOPE_TREE = (
+    (ZERO_SCOPE, None),
+    (WRITE_SCOPE, None),
+    (INPUT_SCOPE, None),
+    (SAMPLING_SCOPE, None),
+    (LOGITS_SCOPE, SAMPLING_SCOPE),
     (LAYER_SCOPE, None),
     (_PROJECTIONS, LAYER_SCOPE),
     (_FUSED_QKV_PROJECTION, _PROJECTIONS),
@@ -313,6 +322,49 @@ def _wrap_sample_tokens(runner: Any) -> None:
     runner.sample_tokens = sample_tokens
 
 
+# These are the bound objects actually called by pinned GPUModelRunner. The
+# LM head runs inside sample(); the trace reader gives each kernel to the
+# innermost range, so the row gather and sampler stay with sampling.
+_RUNNER_STEP_CALLS = (
+    ("kv_block_zeroer", "zero_block_ids", ZERO_SCOPE),
+    ("block_tables", "apply_staged_writes", WRITE_SCOPE),
+    (None, "prepare_inputs", INPUT_SCOPE),
+    (None, "prepare_attn", INPUT_SCOPE),
+    ("model_state", "preprocess_state", INPUT_SCOPE),
+    ("model_state", "prepare_attn", INPUT_SCOPE),
+    ("model_state", "prepare_inputs", INPUT_SCOPE),
+    (None, "sample", SAMPLING_SCOPE),
+    ("model", "compute_logits", LOGITS_SCOPE),
+    (None, "postprocess_sampled", SAMPLING_SCOPE),
+)
+
+
+def _wrap_runner_step_scopes(runner):
+    for member, attribute, scope in _RUNNER_STEP_CALLS:
+        owner = runner if member is None else getattr(runner, member)
+        original = getattr(owner, attribute)
+
+        @wraps(original)
+        def call(*args, _fn=original, _scope=scope, **kwargs):
+            return _scope_call(STEP_LAYER_ID, _scope, _fn, args, kwargs)
+
+        setattr(owner, attribute, call)
+
+    original_forward = runner.model.forward
+
+    @wraps(original_forward)
+    def model_forward(*args, **kwargs):
+        state = case_runner._require_state()
+        if state.active is None:
+            return original_forward(*args, **kwargs)
+        # This range marks a forward boundary without creating an operator
+        # owner or parenting the attention scopes.
+        with state.torch.profiler.record_function(f"{MODEL_FORWARD_PREFIX}{state.active.step_index}"):
+            return original_forward(*args, **kwargs)
+
+    runner.model.forward = model_forward
+
+
 class _DpPeerReduction:
     """Write only the peer column of the native CPU all-reduce tensor."""
 
@@ -399,6 +451,7 @@ def install_graph_replay_hooks(
     _RECORDER = GraphCaptureRecorder(CudaGraphQueries(), _eager_scope_runner)
     _wrap_step(worker.model_runner, discovered)
     _wrap_sample_tokens(worker.model_runner)
+    _wrap_runner_step_scopes(worker.model_runner)
     _wrap_dispatch(importlib.import_module(_MODEL_RUNNER_MODULE))
     case_runner.install_case_recorder(
         worker, engine_index, plan.shape.step_metadata_keys() + (CUDAGRAPH_DISPATCH_KEY,)
@@ -544,6 +597,7 @@ def run_engine(
     capture_path.write_text(json.dumps(capture, indent=2) + "\n", encoding="utf-8")
     record = CaptureRecord.from_json(capture["record"])
     inventory["cudagraph_capture"] = capture["summary"]
+    inventory["runner_layout"] = llm.collective_rpc(_runner_layout)[0]
     inventory[DRIVER_VERSION_KEY] = collect_driver_version()
     inventory[TARGET_TENSOR_PARALLEL_SIZE_KEY] = plan.shape.target_tensor_parallel_size
     case_runner.measure_engine(
@@ -553,6 +607,13 @@ def run_engine(
         log_label="dsv4_graph",
         trace_calls=partial(case_runner.graph_replay_calls, record=record, container_scopes=CONTAINER_SCOPES),
     )
+
+    write_replay_report(raw_path)
+
+
+def _runner_layout(worker):
+    from frontier.profiling.model_runner.dsv4_block_operators import runner_layout
+    return runner_layout(worker.model_runner)
 
 
 __all__ = [

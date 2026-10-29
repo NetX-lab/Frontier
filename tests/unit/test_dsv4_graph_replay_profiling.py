@@ -278,6 +278,12 @@ def native_tree(plan, monkeypatch, request):
     runner_module = native[replay._MODEL_RUNNER_MODULE]
     runner_module.dispatch_cg_and_sync_dp = lambda *args, **kwargs: (descriptor, "tensor")
     runner = SimpleNamespace(execute_model_state=None, sample_tokens=lambda *args, **kwargs: "sampled")
+    noop = lambda *args, **kwargs: None
+    runner.kv_block_zeroer = SimpleNamespace(zero_block_ids=noop)
+    runner.block_tables = SimpleNamespace(apply_staged_writes=noop)
+    runner.prepare_inputs = runner.prepare_attn = runner.sample = runner.postprocess_sampled = noop
+    runner.model_state = SimpleNamespace(preprocess_state=noop, prepare_attn=noop, prepare_inputs=noop)
+    runner.model = SimpleNamespace(compute_logits=noop, forward=noop)
 
     def execute_model(*args):
         runner_module.dispatch_cg_and_sync_dp()
@@ -609,13 +615,14 @@ def test_run_engine_keeps_capture_passes_routing_and_uses_trace_callback(plan, m
     monkeypatch.setattr(attention_runner, "routing_config", routing)
     monkeypatch.setenv(replay.BREAKABLE_CUDAGRAPH_ENV, "1")
 
-    def rpc(fn, args):
+    def rpc(fn, args=()):
         calls.append((fn, args))
         return [{"attention_backend": "fake"} if fn is replay.install_graph_replay_hooks else capture]
 
     monkeypatch.setattr(attention_runner, "build_dsv4_engine", lambda *args: SimpleNamespace(collective_rpc=rpc))
     measured = []
     monkeypatch.setattr(case_runner, "measure_engine", lambda **kwargs: measured.append(kwargs))
+    monkeypatch.setattr(replay, "write_replay_report", lambda path: None)
     replay.run_engine(plan=plan, engine_index=0, model_dir="fake", vocab_size=100, seed=1234,
                       gpu_memory_utilization=0.85, expected_attention_backend="fake", raw_path=tmp_path / "raw.jsonl",
                       trace_dir=tmp_path / "traces", keep_traces=True)
@@ -673,7 +680,7 @@ def test_run_case_uses_supplied_trace_calls(plan, monkeypatch, tmp_path):
     monkeypatch.setitem(sys.modules, "vllm", SimpleNamespace(SamplingParams=lambda **kwargs: kwargs))
     engine = SimpleNamespace(add_request=lambda *args: None, has_unfinished_requests=lambda: False)
 
-    def rpc(fn, args):
+    def rpc(fn, args=()):
         return [{"recorded": limit, "steps": [step], "calls": []}] if fn is case_runner.finish_case else [None]
 
     def trace_calls(*args):

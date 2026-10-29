@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from frontier.config.precision_type import PrecisionType
+from frontier.profiling.attention.dsv4_step_scopes import is_step_scope
 from frontier.profiling.attention.dsa_plan import require_scope_timing
 from frontier.profiling.attention.dsa_rows import (
     KERNEL_ONLY,
@@ -216,7 +217,8 @@ def build_dsv4_rows(
     """Group raw records into rows, keyed by measurement type."""
 
     require_scope_timing(plan.limits.engine_policy)
-    engines, steps, calls = index_records(records)
+    engines, steps, calls = index_records(record for record in records
+                                         if record["kind"] != "call" or not is_step_scope(record))
     for engine in engines.values():
         require_realized_kv_cache_groups(plan, engine)
     identities ={canonical_json(engine.get("moe_routing")) for engine in engines.values()}

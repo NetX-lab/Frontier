@@ -74,6 +74,7 @@ from frontier.profiling.common.runtime_identity import (
     collect_device_identity,
     collect_runtime_versions,
 )
+from frontier.profiling.model_runner.dsv4_runner_rows import forward_correlations
 
 RECORD_KIND = "kind"
 INTERVAL_RECORD = "interval"
@@ -624,7 +625,9 @@ def graph_replay_calls(
 ) -> list[dict[str, Any]]:
     """Build kernel-only call rows followed by all attributed replay intervals."""
 
-    attributed = attribute_replay_trace(load_trace_events(trace_path), record, container_scopes)
+    events = load_trace_events(trace_path)
+    attributed = attribute_replay_trace(events, record, container_scopes)
+    forward_launches = forward_correlations(events)
     calls = _scope_calls(
         {key: timing for key, timing in attributed.scope_times.items()
          if key.scope not in container_scopes},
@@ -637,6 +640,8 @@ def graph_replay_calls(
         if step is None:
             raise ValueError(f"Trace {trace_path} has intervals of unrecorded step {interval.step_index}")
         calls.append({
+            **({"model_forward": interval.correlation in forward_launches}
+               if forward_launches is not None else {}),
             RECORD_KIND: INTERVAL_RECORD, ENGINE_INDEX: engine_index, CASE_ID: step[CASE_ID],
             STEP_INDEX: interval.step_index,
             GLOBAL_LAYER_ID: None if interval.owner is None else interval.owner[0],

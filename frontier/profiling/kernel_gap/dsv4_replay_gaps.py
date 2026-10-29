@@ -33,6 +33,7 @@ import numpy as np
 import pandas as pd
 
 from frontier.execution_time_predictor.dsv4_composition import attention_scope_predecessors
+from frontier.profiling.attention.dsv4_step_scopes import attention_owned, is_step_scope
 from frontier.profiling.attention.dsa_plan import ENGINE_POLICY_GRAPH_REPLAY
 from frontier.profiling.attention.dsa_vllm_runner import (
     ACTIVITY, CAPTURE_KIND, CASE_ID, END_US, ENGINE_INDEX, GLOBAL_LAYER_ID,
@@ -132,7 +133,7 @@ class ActivityGap:
 
     @property
     def attention_owned(self) -> bool:
-        return self.interval[SCOPE] is not None
+        return attention_owned(self.interval)
 
 
 @dataclass(frozen=True)
@@ -260,13 +261,15 @@ def build_layer_calls(records: Sequence[ReplayRecords]) -> tuple[LayerCall, ...]
                 raise ValueError(f"Replay row in {record.source} has an unrecorded engine or step: {_step_key(row)}")
             key = (*_step_key(row), row[GLOBAL_LAYER_ID])
             if row[RECORD_KIND] == CALL_RECORD:
+                if is_step_scope(row):
+                    continue
                 if row[SCOPE] not in CONTAINER_SCOPES:
                     calls[key].append(row)
             else:
                 if (row[SCOPE] is None) != (row[GLOBAL_LAYER_ID] is None):
                     _invalid(steps[_step_key(row)], row, "owner scope and layer must both be null or both be present")
                 step_intervals[_step_key(row)].append(row)
-                if row[SCOPE] is not None:
+                if attention_owned(row):
                     if row[SCOPE] in CONTAINER_SCOPES and row[ACTIVITY] == KERNEL:
                         _invalid(steps[_step_key(row)], row, "kernel is owned by a container scope")
                     owned[key].append(row)
@@ -368,7 +371,7 @@ def activity_gaps(records: Sequence[ReplayRecords]) -> tuple[ActivityGap, ...]:
                         dep_end = row[START_US] - graph_gap
                     else:
                         dep_end = earlier.before(row[START_US])
-                elif row[SCOPE] is not None:
+                elif attention_owned(row):
                     segment = EAGER
                     key = (record.source, *_step_key(row), row[GLOBAL_LAYER_ID])
                     call = by_call[key]
@@ -412,7 +415,7 @@ def activity_gaps(records: Sequence[ReplayRecords]) -> tuple[ActivityGap, ...]:
                         if first_graph <= row[START_US] <= last_graph and not overlaps_hold:
                             _invalid(step, row, "unowned eager activity is between the first and last graph activity")
                         segment = EAGER_PREPARATION
-                if row[ACTIVITY] != KERNEL and row[SCOPE] is not None and segment != EAGER_PREPARATION:
+                if row[ACTIVITY] != KERNEL and attention_owned(row) and segment != EAGER_PREPARATION:
                     segment, reason = None, NON_KERNEL
                 gap = None if dep_end is None else row[START_US] - dep_end
                 host_wait = None if gap is None else min(max(row[LAUNCH_END_US] - dep_end, 0.0), max(gap, 0.0))
@@ -463,14 +466,14 @@ def _hold_diagnostics(records: Sequence[ReplayRecords]) -> dict[str, Any]:
         for step in record.steps:
             rows = intervals[_step_key(step)]
             holds = [row for row in rows if row[ACTIVITY] == HOLD_ACTIVITY]
-            owned = [row for row in rows if row[SCOPE] is not None]
+            owned = [row for row in rows if attention_owned(row)]
             end = holds[0][END_US] if holds else None
             grouped[(step[CUDAGRAPH_DISPATCH_KEY][CG_MODE], step[CASE_ID])].append({
                 _HOLD_DURATION: holds[0][END_US] - holds[0][START_US] if holds else None,
                 _HOLD_SLACK: end - max(row[LAUNCH_END_US] for row in owned) if holds and owned else None,
                 _POST_HOLD_ATTENTION: sum(row[LAUNCH_END_US] > end for row in owned) if holds else 0,
                 _POST_HOLD_UNOWNED: sum(row[LAUNCH_END_US] > end for row in rows
-                               if row[SCOPE] is None and row[ACTIVITY] != HOLD_ACTIVITY) if holds else 0,
+                               if not attention_owned(row) and row[ACTIVITY] != HOLD_ACTIVITY) if holds else 0,
             })
     result = {}
     for (mode, case), rows in sorted(grouped.items()):
