@@ -43,7 +43,7 @@
     248,
     256
   ],
-  "destination": "package_02",
+  "destination": "package_03",
   "expected_attention_backend": "FLASHMLA_SPARSE_DSV4",
   "gpu": 1,
   "gpu_memory_utilization": 0.85,
@@ -55,12 +55,12 @@
     "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
   ],
   "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
-  "job_tag": "v4-h200-g2h-runner-20261029-02-replay",
+  "job_tag": "v4-h200-g2h-runner-20261029-03-replay",
   "mem_gb": 128,
   "name": "G2H_V4_RUNNER_REPLAY",
   "native_repo": "/data/ycfeng/tmp/opencode/vllm-v0.28.0",
   "native_revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
-  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/replay",
+  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_03/replay",
   "pilot_cases": "../g1h/pilot_cases.json",
   "plan_args": [
     "--model_name",
@@ -1132,26 +1132,26 @@
       1.0084,
       1.1917333333333333
     ],
-    "prior_used_gpu_hours": 1.89,
+    "prior_used_gpu_hours": 1.95,
     "g1h_g4h_cap_gpu_hours": 7,
     "cap_used_after_this_plan_gpu_hours": [
-      2.8983999999999996,
-      3.081733333333333
+      2.9584,
+      3.1417333333333333
     ]
   },
   "jobs": [
     {
       "name": "G2H_V4_RUNNER_REPLAY",
       "phase": "G2H_RUNNER_REPLAY",
-      "job_tag": "v4-h200-g2h-runner-20261029-02-replay",
-      "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/replay",
+      "job_tag": "v4-h200-g2h-runner-20261029-03-replay",
+      "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_03/replay",
       "config": "bridge_config.json"
     },
     {
       "name": "G2H_V4_BLOCK_OPERATORS",
       "phase": "G2H_BLOCK_OPERATORS",
-      "job_tag": "v4-h200-g2h-runner-20261029-02-block",
-      "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/block",
+      "job_tag": "v4-h200-g2h-runner-20261029-03-block",
+      "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_03/block",
       "config": "block_config.json"
     }
   ]

@@ -1,6 +1,8 @@
 # G2h V4 runner operators
 
-CPU plan and builder for B13s, correcting the missing sampling annotations and the second-bootstrap failure observed in G2h-01 (`exp-1029-113750-923871`). The G1h-02 replay grid and the B13r direct grid remain unchanged. Claude reviews/commits these files, replaces `source_revision` with that commit, builds a fresh `package_02`, then submits its two jobs. Keep `package_01` intact. CPU implementation does not build or submit a package.
+CPU plan and builder for B13s, correcting the missing sampling annotations and the second-bootstrap failure observed in G2h-01 (`exp-1029-113750-923871`). The G1h-02 replay grid and the B13r direct grid remain unchanged. Claude reviews/commits these files, replaces `source_revision` with that commit, builds a fresh package, then submits its jobs. Keep `package_01` and `package_02` intact. CPU implementation does not build or submit a package.
+
+`package_02` ran G2h-02. Its replay job is the path A result. Its block job (`exp-1029-135037-016686`) failed in 5.8 s: the block entry runs the prefill entry `profile_dsv4_prefill.py`, which requires `VLLM_USE_V2_MODEL_RUNNER=1` (line 20). The bridge driver sets that variable for its replay children, but nothing set it for the block job. The block job command now sets it with `env`, as the accepted base package's prefill job does. `package_03` carries this fix; only its block job is submitted, because the replay job of `package_02` already ran.
 
 ## Plan check (CPU only)
 
@@ -27,8 +29,8 @@ Each job runs in its own container on one H200, charged to step_main, non-preemp
 
 | Job / phase | Tag | Output directory |
 | --- | --- | --- |
-| `G2H_V4_RUNNER_REPLAY` / `G2H_RUNNER_REPLAY` | `v4-h200-g2h-runner-20261029-02-replay` | `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/replay` |
-| `G2H_V4_BLOCK_OPERATORS` / `G2H_BLOCK_OPERATORS` | `v4-h200-g2h-runner-20261029-02-block` | `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/block` |
+| `G2H_V4_RUNNER_REPLAY` / `G2H_RUNNER_REPLAY` | `v4-h200-g2h-runner-20261029-03-replay` (`package_02`: `-02-replay`, `g2h_runner_02/replay`) | `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_03/replay` |
+| `G2H_V4_BLOCK_OPERATORS` / `G2H_BLOCK_OPERATORS` | `v4-h200-g2h-runner-20261029-03-block` | `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_03/block` |
 
 Replay uses the same 989 IDs (e0 686, e1 296, e2 7). Direct calls use the native 43-layer allocation and grid-specified eight experts: 33 zero and 164 write coordinates per method, 394 rows total. Local outputs are `G2H_RUNNER_REPLAY/bridge/FULL_AND_PIECEWISE/{raw,traces}` and `G2H_BLOCK_OPERATORS/` respectively.
 
@@ -36,19 +38,18 @@ After committing and pinning the revision, the lead builds and runs these comman
 
 ```bash
 timeout 600s /data/ycfeng/envs/frontier-py310/bin/python prepare_package.py
-timeout 7200s bash package_02/launch/launch_glm_producers.sh package_02/jobs/G2H_V4_RUNNER_REPLAY.json
-timeout 7200s bash package_02/launch/launch_glm_producers.sh package_02/jobs/G2H_V4_BLOCK_OPERATORS.json
+timeout 7200s bash package_03/launch/launch_glm_producers.sh package_03/jobs/G2H_V4_BLOCK_OPERATORS.json
 ```
 
 The generated jobs run the following worker commands in **separate containers**:
 
 ```bash
-python -I package_02/native_dummy_bootstrap.py --config package_02/bridge_config.json
-python package_02/dsv4_graph_bridge_check.py --config package_02/bridge_config.json --report
+python -I package_03/native_dummy_bootstrap.py --config package_03/bridge_config.json
+python package_03/dsv4_graph_bridge_check.py --config package_03/bridge_config.json --report
 ```
 
 ```bash
-python -I package_02/native_dummy_bootstrap.py --config package_02/block_config.json
+env VLLM_USE_V2_MODEL_RUNNER=1 python -I package_03/native_dummy_bootstrap.py --config package_03/block_config.json
 ```
 
 Replay produces its existing raw JSONL, captures, traces and attention CSVs plus adjacent `dsv4_raw_eN.ownership.json` and `dsv4_raw_eN.runner.csv`. The ownership file classifies **every recorded-step kernel, memcpy and memset** as attention scope, step scope, model forward or unowned. Hold kernels are calibration and excluded from the census. Each step has counts and each observed kind (FULL, PIECEWISE, first tail, multi-tail, dummy, prefill) has unowned names, grids and counts. There is no name-based ownership inference. Model-forward boundaries use CPU launch correlations within `frontier_v4_model_forward|<step>` ranges; graph nodes without attention ownership are model-forward work.
@@ -122,7 +123,7 @@ Group (b) is left for the lead's scope decision; this change adds no wrappers fo
 
 Observed G2h-01 path A took **3,089 s / 0.858 GPU h (about 0.86)**. Retaining a conservative 120-360 s allowance for the new annotations gives replay **0.891-0.958 GPU h**. The separate block job needs its own startup (180-480 s), planned holds `394 * (3+20) * 0.020 = 181.24 s` as a conservative allowance (warm-up does not hold), and 60-180 s for other work/tracing: **0.117-0.234 GPU h**. Total estimated additional time is **1.008-1.192 GPU h**; direct startup and GPU/native matching remain unmeasured.
 
-The G1h-G4h cap is **7 GPU h**, with about **1.89 used**. After these jobs, estimated usage is **2.898-3.082 GPU h**, leaving **3.918-4.102 GPU h**. These are planning estimates, not measured path-B results.
+The G1h-G4h cap is **7 GPU h**, with about **1.95 used** (1.89 before G2h-02 plus 0.06 for its failed block job, Job Create 13:50:37 to Job Stop 13:54:12). With the G2h-02 replay and the `package_03` block job, estimated usage is **2.958-3.142 GPU h**, leaving **3.858-4.042 GPU h**. These are planning estimates, not measured path-B results.
 
 ## Registry impact audit
 

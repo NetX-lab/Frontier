@@ -226,16 +226,20 @@ def test_package_check_writes_no_destination():
     assert result["path_a_cases_per_engine"] == {"0": 686, "1": 296, "2": 7}
     assert result["path_b_total_rows"] == 394 and result["package_built"] is False
     assert result["phases"] == ["G2H_RUNNER_REPLAY", "G2H_BLOCK_OPERATORS"]
-    assert plan["destination"] == "package_02"
+    assert plan["destination"] == "package_03"
     jobs = result["jobs"]
     assert [job["name"] for job in jobs] == ["G2H_V4_RUNNER_REPLAY", "G2H_V4_BLOCK_OPERATORS"]
-    assert [job["job_tag"] for job in jobs] == ["v4-h200-g2h-runner-20261029-02-replay",
-                                              "v4-h200-g2h-runner-20261029-02-block"]
+    assert [job["job_tag"] for job in jobs] == ["v4-h200-g2h-runner-20261029-03-replay",
+                                              "v4-h200-g2h-runner-20261029-03-block"]
     assert [job["bootstrap_calls"] for job in jobs] == [1, 1]
     assert len({job["output_dir"] for job in jobs}) == 2
     assert all(len(job["phases"]) == 1 for job in jobs)
-    configs = [Path(job["phases"][0]["steps"][0]["commands"][0]["argv"][-1]).name for job in jobs]
-    assert configs == ["bridge_config.json", "block_config.json"]
+    commands = [job["phases"][0]["steps"][0]["commands"][0]["argv"] for job in jobs]
+    assert [Path(argv[-1]).name for argv in commands] == ["bridge_config.json", "block_config.json"]
+    # The bridge driver selects the V2 runner for its replay children; the
+    # block entry runs the prefill entry directly, which requires it.
+    assert commands[0][0] == "{python}"
+    assert commands[1][:3] == ["env", f"{replay.V2_MODEL_RUNNER_ENV}=1", "{python}"]
     assert (PACKAGE / plan["destination"]).exists() == before
 
 

@@ -17,6 +17,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 REPLAY_PHASE = "G2H_RUNNER_REPLAY"
 BLOCK_PHASE = "G2H_BLOCK_OPERATORS"
+BOOTSTRAP = "native_dummy_bootstrap.py"
 JOB_FIELDS = (
     "image", "cuda_compat_path", "cloud_mount", "gpu_type", "charged_group",
     "gpu", "cpu", "mem_gb", "preemptible", "timeout_seconds",
@@ -26,11 +27,17 @@ JOB_FIELDS = (
 
 def job_definitions(spec, package):
     """Use the same job commands for CPU validation and package generation."""
+    from frontier.profiling.attention.dsv4_graph_replay_runner import V2_MODEL_RUNNER_ENV
     jobs = []
     for entry in spec["jobs"]:
+        bootstrap = ["{python}", "-I", str(package / BOOTSTRAP), "--config", str(package / entry["config"])]
+        if entry["phase"] == BLOCK_PHASE:
+            # The bridge driver selects the V2 runner for its replay children;
+            # the block entry runs the prefill entry directly, so the job selects
+            # it the way the accepted base package's prefill job does.
+            bootstrap = ["env", f"{V2_MODEL_RUNNER_ENV}=1", *bootstrap]
         commands = [{"name": "bridge_run" if entry["phase"] == REPLAY_PHASE else "block_operators",
-                     "argv": ["{python}", "-I", str(package / "native_dummy_bootstrap.py"),
-                              "--config", str(package / entry["config"])]}]
+                     "argv": bootstrap}]
         steps = [{"commands": commands}]
         if entry["phase"] == REPLAY_PHASE:
             steps.append({"commands": [{"name": "bridge_report", "argv": [
@@ -118,8 +125,8 @@ print('worker import probe PASS')
             raise ValueError(f"G2h jobs require distinct {key} values")
     job_reports = []
     for job in jobs:
-        count = sum(Path(command["argv"][2]).name == "native_dummy_bootstrap.py"
-                    for step in job["phases"][0]["steps"] for command in step["commands"])
+        count = sum(Path(part).name == BOOTSTRAP for step in job["phases"][0]["steps"]
+                    for command in step["commands"] for part in command["argv"])
         if count != 1:
             raise ValueError(f"{job['name']} must bootstrap exactly once")
         job_reports.append(dict(job, file=str(HERE / spec["destination"] / "jobs" / f"{job['name']}.json"),
