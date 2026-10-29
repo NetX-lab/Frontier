@@ -3,7 +3,10 @@ D-G1H-WRITER-EXTREMES CPU supplement plan
 This directory plans the difference between the amended shared G1h grid and the
 G1h-02 raw measurements. It contains 432 added windows and 18 fixed repeats,
 using 450 cases and 450 measured steps. Every case has zero warm-up steps and
-one measured step. No package has been built and no GPU job has run here.
+one measured step. The lead built `package_01` at `a689ed05` in
+`.worktrees/g1h-supplement-build`; H200 job `exp-1030-021110-248027` measured
+all 450 steps, and the 2,160 non-repeat rows are promoted into the committed
+attention table (see `../../test_report_2026-10-29_b22_g1h_writer_supplement.md`).
 
 | Category | Added windows | Repeats | Cases / measured steps | Engine |
 | --- | ---: | ---: | ---: | ---: |

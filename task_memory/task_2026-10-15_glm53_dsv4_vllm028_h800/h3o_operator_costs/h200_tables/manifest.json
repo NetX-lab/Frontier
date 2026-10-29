@@ -47,6 +47,22 @@
     {
       "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g3h_01/download/G3H_MOE_RECORD_FUNCTION/ep32/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
       "sha256": "d687c3f5bf0dc2a367de65994b61dcdce9da836886ce77e03346ebf233c5b193"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g1h_supplement/package_plan.json",
+      "sha256": "b8d0e0850e37f96f68c17c58831f8d97aa60f6d4c0a57a0aca28161ae08aa4e8"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g1h_supplement/pilot_cases.json",
+      "sha256": "9b647387a9ce66fe7ec36b8f45347b98ce3c2afac7468a9460885ff3eb2f9b91"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      "sha256": "1c516e7aea195742ba31208a033e6ff6352ff601393623786a9e9dbe8b222ca2"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+      "sha256": "6bb1a615d4492e78907bcf5af2733053e9c8b3944a2889c0062e32166ddaa590"
     }
   ],
   "model_config_revision": "082a2aa294ad5f4056895c42b297b4af24703384",
@@ -54,8 +70,8 @@
   "outputs": [
     {
       "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
-      "row_count": 4945,
-      "sha256": "34c4f3a86822994b126d195a54fce934e208fd3ba9dff2cc4fddb560c129321f"
+      "row_count": 7105,
+      "sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb"
     },
     {
       "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
@@ -86,6 +102,27 @@
     "/data/ycfeng/tmp/glm53_dsv4/h200/g3h_01/download/G3H_MOE_RECORD_FUNCTION/ep32/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv": [
       "32d3d08b466a16c70a55f6f44359bd20106c91ca"
     ],
-    "attention": "a689ed05f462eb269b9dffe640da151e6614a5ef"
-  }
+    "attention": "a689ed05f462eb269b9dffe640da151e6614a5ef",
+    "attention_supplement": "a689ed05f462eb269b9dffe640da151e6614a5ef"
+  },
+  "supplement_excluded_repeat_cases": [
+    "g1hs-e0-0432-full",
+    "g1hs-e0-0433-full",
+    "g1hs-e0-0434-full",
+    "g1hs-e0-0435-full",
+    "g1hs-e0-0436-full",
+    "g1hs-e0-0437-full",
+    "g1hs-e0-0438-piecewise",
+    "g1hs-e0-0439-piecewise",
+    "g1hs-e0-0440-piecewise",
+    "g1hs-e0-0441-piecewise",
+    "g1hs-e0-0442-piecewise",
+    "g1hs-e0-0443-piecewise",
+    "g1hs-e1-0444-first_tail",
+    "g1hs-e1-0445-first_tail",
+    "g1hs-e1-0446-first_tail",
+    "g1hs-e1-0447-first_tail",
+    "g1hs-e1-0448-first_tail",
+    "g1hs-e1-0449-first_tail"
+  ]
 }
