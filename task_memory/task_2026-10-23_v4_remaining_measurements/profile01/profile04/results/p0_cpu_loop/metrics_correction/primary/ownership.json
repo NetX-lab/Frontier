@@ -1,0 +1,15 @@
+{
+  "baseline": "0f2fb6cdffbbe86f2fdc06e5141e3e80c227c2b9",
+  "source_owner": "Russell (delivered and closed)",
+  "source_paths": [
+    "tests/analysis/v4_trace_audit_metrics.py",
+    "tests/unit/test_v4_trace_audit_metrics.py"
+  ],
+  "standards_review_write_scope": "metrics_correction/review_standards.md",
+  "spec_review_write_scope": "metrics_correction/review_spec.md",
+  "gpu_review_write_scope": "profile01/scope_lifetime/results/review_runtime.md",
+  "primary": "GPU/platform and raw reproduction; full CPU controls and once-only ranks; main task documents and scoped commits",
+  "concurrency": "At most three native subagents; at most two full CPU ranks; no subagent platform/full-input operations",
+  "allocation": "D-V4-P0-AUDIT-METRICS-CORRECTION",
+  "recorded_utc": "2026-10-24T19:03:08.429225+00:00"
+}

@@ -1,0 +1,9 @@
+{
+  "status": "CPU_HARNESS_PARSE_FAILURE",
+  "returncode": 1,
+  "observed_error": "SyntaxError: invalid syntax",
+  "observed_line": 8,
+  "cause": "The outer recorded-stdin triple-single-quoted string contained a nested triple-single-quoted fake probe string.",
+  "scope": "Parsing failed before the recorded controls executed; no package/source/SDK/native/GPU operation occurred.",
+  "correction": "Use distinct outer triple-double quotes and an ordinary multiline fake-probe string; change only temporary CPU invocation quoting."
+}

@@ -132,6 +132,8 @@ class ExecutionTime(BaseEntity):
         global_layer_id: int | None = None,
         attention_family_id: str | None = None,
         attention_variant_id: str | None = None,
+        attn_dsa_indexer_time: float = 0.0,
+        attn_dsa_mla_time: float = 0.0,
     ) -> None:
         self._id = ExecutionTime.generate_id()
 
@@ -321,6 +323,12 @@ class ExecutionTime(BaseEntity):
             "attn_mla_v_up_proj_time",
             attn_mla_v_up_proj_time,
         )
+        attn_dsa_indexer_time = read_op_time_attr(
+            "attn_dsa_indexer_time", attn_dsa_indexer_time
+        )
+        attn_dsa_mla_time = read_op_time_attr(
+            "attn_dsa_mla_time", attn_dsa_mla_time
+        )
         expert_parallel_alltoall_time = read_op_time_attr(
             "expert_parallel_alltoall_time",
             0.0,
@@ -357,6 +365,8 @@ class ExecutionTime(BaseEntity):
             attn_mla_decode_q_latent_proj_time=attn_mla_decode_q_latent_proj_time,
             attn_mla_decode_time=attn_mla_decode_time,
             attn_mla_v_up_proj_time=attn_mla_v_up_proj_time,
+            attn_dsa_indexer_time=attn_dsa_indexer_time,
+            attn_dsa_mla_time=attn_dsa_mla_time,
             attn_norm_time=attn_norm_time,
             operator_times=attention_operator_times,
         )
@@ -897,6 +907,10 @@ class ExecutionTime(BaseEntity):
         """
         return self._attention_time.total_time()
 
+    def get_single_layer_pre_dp_time(self) -> float:
+        """Get the device work a layer runs before the forward's DP rendezvous, in ms."""
+        return self._get_pre_dp_execution_time()
+
     def get_single_layer_attention_scope_time(self) -> float:
         """
         Get the complete single-layer attention scope.
@@ -923,6 +937,10 @@ class ExecutionTime(BaseEntity):
         """Project the same disjoint operators used by the EP scheduling phases."""
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError("MoE phase timing is only available for MoE models")
+        if self._attention_family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
+
+            return timing_operator_times(self, phase)
         if phase in ("dispatch", "combine"):
             name = f"expert_parallel_alltoall_{phase}"
             return (("COMM", name, self._get_required_moe_ep_phase_time(name)),)
@@ -959,6 +977,8 @@ class ExecutionTime(BaseEntity):
     def get_single_layer_moe_dispatch_time(self) -> float:
         """Get the exact named EP dispatch latency for one MoE layer."""
 
+        if self._attention_family_id == "deepseek_v4_attention":
+            return self._moe_phase_time("dispatch")
         return self._get_required_moe_ep_phase_time(
             "expert_parallel_alltoall_dispatch"
         )
@@ -970,6 +990,8 @@ class ExecutionTime(BaseEntity):
     def get_single_layer_moe_combine_time(self) -> float:
         """Get the exact named EP combine latency for one MoE layer."""
 
+        if self._attention_family_id == "deepseek_v4_attention":
+            return self._moe_phase_time("combine")
         return self._get_required_moe_ep_phase_time(
             "expert_parallel_alltoall_combine"
         )
@@ -1024,16 +1046,19 @@ class ExecutionTime(BaseEntity):
         """
         Get post-attention portion of one layer in milliseconds.
 
-        Equivalent to: single-layer block - complete single-layer attention scope.
+        Equivalent to: single-layer block - pre-DP work - complete single-layer
+        attention scope.
         """
         post_attention_time = (
             self.get_single_layer_block_time()
+            - self.get_single_layer_pre_dp_time()
             - self.get_single_layer_attention_scope_time()
         )
         if post_attention_time < 0:
             raise ValueError(
                 f"Invalid post-attention time: {post_attention_time} ms "
                 f"(block={self.get_single_layer_block_time()} ms, "
+                f"pre_dp={self.get_single_layer_pre_dp_time()} ms, "
                 f"attention_scope={self.get_single_layer_attention_scope_time()} ms)"
             )
         return post_attention_time
@@ -1064,6 +1089,10 @@ class ExecutionTime(BaseEntity):
         """
         if not isinstance(self._moe_or_mlp_time, MoETime):
             return 0.0
+        if self._attention_family_id == "deepseek_v4_attention":
+            return sum(self._moe_phase_time(phase) for phase in (
+                "pre_dispatch", "dispatch", "routed_compute", "combine", "post_combine",
+            ))
         return (
             self._moe_or_mlp_time.total_time()
             + self._get_expert_parallel_communication_time()
@@ -1091,15 +1120,31 @@ class ExecutionTime(BaseEntity):
             return self._communication_time.moe_tensor_parallel_allreduce_time
         return self._communication_time.tensor_parallel_allreduce_time
 
+    def _get_pre_dp_execution_time(self) -> float:
+        if self._attention_family_id != "deepseek_v4_attention":
+            return 0.0
+        from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
+
+        return sum(value for _, _, value in timing_operator_times(self, "pre_dp"))
+
     def _get_attention_layer_execution_time(self) -> float:
         """
         Get attention layer execution time (single layer).
 
         Includes all attention operations + TP allreduce.
         """
+        if self._attention_family_id == "deepseek_v4_attention":
+            # The composed stream schedule already includes the time between kernels.
+            return self._dsv4_attention_schedule.elapsed_ms
+        from frontier.operators.sequence_parallel_moe import (
+            EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
+        )
+
         return (
             self._attention_time.total_time()
             + self._get_attn_tp_allreduce_time()
+            + sum(self._op_times.get(name, 0.0)
+                  for name in (*SP_TP_OPERATORS, *EMBEDDING_LOGITS_OPERATORS))
             + self._kernel_gap_times.get("attention", 0.0)
         )
 
@@ -1107,10 +1152,11 @@ class ExecutionTime(BaseEntity):
         """
         Get complete transformer block execution time (single layer).
 
-        Includes attention + MLP/MoE + residual connection.
+        Includes pre-DP work + attention + MLP/MoE + residual connection.
         """
         return (
-            self._get_attention_layer_execution_time()
+            self._get_pre_dp_execution_time()
+            + self._get_attention_layer_execution_time()
             + (self._get_moe_execution_time() if self._is_moe else self._get_mlp_layer_execution_time())
             + self._residual_time.add_time
         )
@@ -1388,6 +1434,20 @@ class ExecutionTime(BaseEntity):
         return self._time_attr_value(
             "attn_mla_v_up_proj_time",
             self._attention_time.attn_mla_v_up_proj_time,
+        )
+
+    @property
+    def attn_dsa_indexer_time(self) -> float:
+        """Inclusive sparse-indexer time for one physical layer."""
+        return self._time_attr_value(
+            "attn_dsa_indexer_time", self._attention_time.attn_dsa_indexer_time
+        )
+
+    @property
+    def attn_dsa_mla_time(self) -> float:
+        """Inclusive sparse MLA time for one physical layer."""
+        return self._time_attr_value(
+            "attn_dsa_mla_time", self._attention_time.attn_dsa_mla_time
         )
 
     @property

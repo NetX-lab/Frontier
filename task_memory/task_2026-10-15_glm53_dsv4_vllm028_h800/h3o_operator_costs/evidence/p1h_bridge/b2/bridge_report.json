@@ -1,0 +1,195 @@
+{
+  "verdict": "PASS",
+  "reasons": [],
+  "modes": {
+    "NONE": {
+      "run_exit_code": 0,
+      "capture_summary": {
+        "cudagraph_mode": "NONE",
+        "cudagraph_capture_sizes": [],
+        "captures_by_kind": {
+          "graph": 0,
+          "breakable_segment": 0
+        },
+        "node_count": 0,
+        "kernel_node_count": 0,
+        "clone_count": 0,
+        "eager_break_count": 0,
+        "eager_break_owner_scopes": []
+      },
+      "cg_mode_counts": {
+        "NONE": 48
+      },
+      "traces": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/NONE/traces/e0-decode-b1-p256.json",
+          "graph_kernel_interval_count": 0,
+          "eager_kernel_interval_count": 2588,
+          "outside_kernel_count": 1692,
+          "unattributed_launch_count": 1190,
+          "error": null
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/NONE/traces/e0-decode-b4-p2048.json",
+          "graph_kernel_interval_count": 0,
+          "eager_kernel_interval_count": 2672,
+          "outside_kernel_count": 1696,
+          "unattributed_launch_count": 7731,
+          "error": null
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/NONE/traces/e0-decode-b8-p2052.json",
+          "graph_kernel_interval_count": 0,
+          "eager_kernel_interval_count": 2668,
+          "outside_kernel_count": 1692,
+          "unattributed_launch_count": 14454,
+          "error": null
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/NONE/traces/e0-prefill-p4095.json",
+          "graph_kernel_interval_count": 0,
+          "eager_kernel_interval_count": 8529,
+          "outside_kernel_count": 5637,
+          "unattributed_launch_count": 3371,
+          "error": null
+        }
+      ],
+      "artifact_errors": []
+    },
+    "PIECEWISE": {
+      "run_exit_code": 0,
+      "capture_summary": {
+        "cudagraph_mode": "PIECEWISE",
+        "cudagraph_capture_sizes": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64,
+          128,
+          256,
+          512
+        ],
+        "captures_by_kind": {
+          "graph": 0,
+          "breakable_segment": 70
+        },
+        "node_count": 2403,
+        "kernel_node_count": 2403,
+        "clone_count": 2403,
+        "eager_break_count": 60,
+        "eager_break_owner_scopes": [
+          "dsv4_attention_layer"
+        ]
+      },
+      "cg_mode_counts": {
+        "PIECEWISE": 48
+      },
+      "traces": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/PIECEWISE/traces/e0-decode-b1-p256.json",
+          "graph_kernel_interval_count": 1864,
+          "eager_kernel_interval_count": 804,
+          "outside_kernel_count": 1692,
+          "unattributed_launch_count": 531,
+          "error": null
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/PIECEWISE/traces/e0-decode-b4-p2048.json",
+          "graph_kernel_interval_count": 1864,
+          "eager_kernel_interval_count": 808,
+          "outside_kernel_count": 1696,
+          "unattributed_launch_count": 3341,
+          "error": null
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/PIECEWISE/traces/e0-decode-b8-p2052.json",
+          "graph_kernel_interval_count": 1864,
+          "eager_kernel_interval_count": 804,
+          "outside_kernel_count": 1692,
+          "unattributed_launch_count": 6226,
+          "error": null
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/PIECEWISE/traces/e0-prefill-p4095.json",
+          "graph_kernel_interval_count": 5856,
+          "eager_kernel_interval_count": 2724,
+          "outside_kernel_count": 5604,
+          "unattributed_launch_count": 1492,
+          "error": null
+        }
+      ],
+      "artifact_errors": []
+    },
+    "FULL_AND_PIECEWISE": {
+      "run_exit_code": 0,
+      "capture_summary": {
+        "cudagraph_mode": "FULL_AND_PIECEWISE",
+        "cudagraph_capture_sizes": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64,
+          128,
+          256,
+          512
+        ],
+        "captures_by_kind": {
+          "graph": 4,
+          "breakable_segment": 70
+        },
+        "node_count": 3443,
+        "kernel_node_count": 3439,
+        "clone_count": 3443,
+        "eager_break_count": 60,
+        "eager_break_owner_scopes": [
+          "dsv4_attention_layer"
+        ]
+      },
+      "cg_mode_counts": {
+        "FULL": 24,
+        "PIECEWISE": 24
+      },
+      "traces": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/FULL_AND_PIECEWISE/traces/e0-decode-b1-p256.json",
+          "graph_kernel_interval_count": 2072,
+          "eager_kernel_interval_count": 596,
+          "outside_kernel_count": 1692,
+          "unattributed_launch_count": 467,
+          "error": null
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/FULL_AND_PIECEWISE/traces/e0-decode-b4-p2048.json",
+          "graph_kernel_interval_count": 2072,
+          "eager_kernel_interval_count": 600,
+          "outside_kernel_count": 1696,
+          "unattributed_launch_count": 3277,
+          "error": null
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/FULL_AND_PIECEWISE/traces/e0-decode-b8-p2052.json",
+          "graph_kernel_interval_count": 2072,
+          "eager_kernel_interval_count": 596,
+          "outside_kernel_count": 1692,
+          "unattributed_launch_count": 6162,
+          "error": null
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/b2_rebuild/FULL_AND_PIECEWISE/traces/e0-prefill-p4095.json",
+          "graph_kernel_interval_count": 5856,
+          "eager_kernel_interval_count": 2724,
+          "outside_kernel_count": 5604,
+          "unattributed_launch_count": 1492,
+          "error": null
+        }
+      ],
+      "artifact_errors": []
+    }
+  }
+}

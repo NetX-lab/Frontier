@@ -1,0 +1,27 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/control.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "start_utc": "2026-10-23T18:42:51.500816+00:00",
+  "end_utc": "2026-10-23T18:42:51.761191+00:00",
+  "returncode": 0,
+  "frontier_commit": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+  "dirty_paths": [
+    " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    " M task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+    "?? .cortexkit/",
+    "?? .pi/",
+    "?? remaining_measurements/"
+  ]
+}

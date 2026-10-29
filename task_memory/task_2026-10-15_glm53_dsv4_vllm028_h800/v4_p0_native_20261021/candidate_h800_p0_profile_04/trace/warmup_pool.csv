@@ -1,0 +1,17 @@
+request_id,arrived_at,num_prefill_tokens,num_decode_tokens
+fixed-6144-1024-req128-qps1-warmup-r000,0.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r001,1.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r002,2.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r003,3.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r004,4.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r005,5.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r006,6.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r007,7.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r008,8.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r009,9.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r010,10.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r011,11.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r012,12.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r013,13.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r014,14.0,6144,1024
+fixed-6144-1024-req128-qps1-warmup-r015,15.0,6144,1024

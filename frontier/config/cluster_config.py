@@ -552,6 +552,16 @@ class ClusterConfig(ClusterRoleConfigBuilder, ClusterTopologySummary):
             "mode_dependency": "pd-disaggregation",
         },
     )
+    decode_replica_scheduler_config_max_concurrent_batches: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "EngineCore queue capacity for the decode cluster's vllm_v1 scheduler. "
+            "Explicit 2 models vLLM's async scheduling with output placeholders; "
+            "None keeps the base replica scheduler value.",
+            "mode_dependency": "pd-disaggregation",
+            "omit_if_none": True,
+        },
+    )
 
     # DECODE_ATTN cluster scheduler configuration (for pd-af-disaggregation mode)
     decode_attn_replica_scheduler_config_type: Optional[str] = field(

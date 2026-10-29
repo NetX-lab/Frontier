@@ -1,0 +1,36 @@
+{
+  "returncode": 0,
+  "started_utc": "2026-10-22T20:23:29.008250+00:00",
+  "ended_utc": "2026-10-22T20:24:24.032454+00:00",
+  "output_dir": "/data/ycfeng/tmp/glm53_dsv4/native06_startup02_b62c155_r4yp8hoi",
+  "verification": {
+    "status": "PASS",
+    "native_startup": {
+      "ok": true,
+      "module": "/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/native_full_structure.py",
+      "module_sha256": "e6a9025c9af92237cd0d25dd937ecd00177a36a0cddf512bb9aa5d81176378aa",
+      "extension": "FullModelInventory",
+      "native_wrapper_extension_injected": true,
+      "actual_native_hooks_installed": [
+        "torch.cuda.graphs.CUDAGraph.replay",
+        "vllm.v1.worker.gpu_model_runner.GPUModelRunner._dummy_run",
+        "vllm.v1.worker.gpu_model_runner.GPUModelRunner._model_forward",
+        "vllm.v1.worker.gpu_worker.Worker.compile_or_warm_up_model",
+        "vllm.v1.worker.gpu_worker.Worker.execute_model",
+        "vllm.v1.worker.gpu_worker.Worker.load_model",
+        "vllm.v1.worker.gpu_worker.Worker.shutdown"
+      ],
+      "observation_errors": [],
+      "successful_forwards": 0,
+      "successful_replays": 0,
+      "gpu_initialized": false,
+      "real_worker_constructor_called": false,
+      "config_and_constructor_are_cpu_standins": true
+    },
+    "strategy_origin": "/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/balanced_routing.py",
+    "strategy_class": "register_balanced_topk.<locals>.BalancedTopKRouting",
+    "native_registry_origin": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+    "balanced_environment": "balanced_topk",
+    "cuda_initialized": false
+  }
+}

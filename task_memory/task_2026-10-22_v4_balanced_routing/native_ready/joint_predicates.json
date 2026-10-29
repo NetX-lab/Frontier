@@ -1,0 +1,20 @@
+{
+  "authorization": "CPU-only joint binding fixture; no native launch authorization",
+  "check_record": "written after the run; native pre-launch evidence is the run manifest (written 2026-10-22T20:06:43.527944+00:00)",
+  "checked_at_utc": "2026-10-22T20:06:46Z",
+  "checks": {
+    "checkout": "PASS: /data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69:  2cf0a6915ce544dc493a0990f2ea38d81601128a, actual dirty=''; case/run/mode/generation bound",
+    "harness_pinned_and_client_rows": "PASS: Actual clean pinned canonical_workload/native_client_rows: {'repeat01': 128, 'repeat02': 128, 'repeat03': 128}; native server commands/environments: {'cpu-v4-0': True, 'cpu-v4-1': True, 'cpu-v4-2': True, 'cpu-v4-3': True}",
+    "inputs_unchanged": "PASS: changed since launch: []",
+    "native_lifecycle": "PASS: Every node drained, heads stopped after all drains, headless stopped after heads, native return codes 0",
+    "native_workers": "PASS: 4 distinct native nodes; both roles and every configured DP lane; source/model/GPU verified",
+    "rank_runtime_graph": "FAIL: UNVERIFIED: ValueError: Missing or unexpected physical-rank serving files: cpu-v4-0",
+    "requests_and_idle_lanes": "PASS: 7 boundaries; both roles, all 2 DP lanes and fresh phase completion counts",
+    "terminal_status": "FAIL: UNVERIFIED: FileNotFoundError: [Errno 2] No such file or directory: '/data/ycfeng/tmp/glm53_dsv4/native06_cpu_b62c155/joint_fixture_torch/case/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/platform_terminal_receipt.json'"
+  },
+  "derived_num_blocks": {},
+  "kv_cache_tokens_by_engine": {},
+  "rjob_name": null,
+  "run_manifest": "runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/run_manifest.json",
+  "status": "FAIL"
+}

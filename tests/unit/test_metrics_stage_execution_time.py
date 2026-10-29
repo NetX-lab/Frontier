@@ -26,6 +26,7 @@ def _layer(
     family_id: str,
     op_times: dict[str, float],
     pipeline_parallel_communication_time: float = 0.0,
+    mlp_up_proj_time: float = 0.0,
     **residual_times: float,
 ) -> ExecutionTime:
     return ExecutionTime(
@@ -50,7 +51,7 @@ def _layer(
         process_model_outputs_time=0.0,
         ray_comm_time=0.0,
         is_moe=False,
-        mlp_layer_up_proj_execution_time=0.0,
+        mlp_layer_up_proj_execution_time=mlp_up_proj_time,
         mlp_layer_down_proj_execution_time=0.0,
         mlp_layer_act_execution_time=0.0,
         global_layer_id=layer_id,
@@ -162,6 +163,7 @@ def test_stage_trace_helper_keeps_dense_and_gdn_names_on_their_layers() -> None:
         ClusterType.MONOLITHIC,
         moe_tp_enabled=False,
         ep_enabled=False,
+        advance_cursor=lambda _ms: None,
     )
 
     assert {
@@ -279,7 +281,10 @@ def test_residual_traces_preserve_owner_and_physical_layer_metadata(
         cursor += duration * 1e-3
 
 
-def test_stage_op_level_traces_include_gdn_metadata_without_duplication() -> None:
+@pytest.mark.parametrize("include_zero_cost_layer", [False, True])
+def test_stage_op_level_traces_include_gdn_metadata_without_duplication(
+    include_zero_cost_layer: bool,
+) -> None:
     dense = _layer(
         0,
         "dense_attention",
@@ -294,8 +299,23 @@ def test_stage_op_level_traces_include_gdn_metadata_without_duplication() -> Non
             "gdn_core_decode": 17.0,
             "gdn_output_projection": 19.0,
         },
+        mlp_up_proj_time=3.0,
     )
-    stage = StageExecutionTime((dense, gdn), stage_execution_time=dense)
+    layers = [dense, gdn]
+    if include_zero_cost_layer:
+        layers.insert(
+            1,
+            _layer(
+                2,
+                "gated_delta_net",
+                {name: 0.0 for name in (
+                    "gdn_input_projections", "gdn_core_prefill",
+                    "gdn_core_decode", "gdn_output_projection",
+                )},
+                add_ffn_residual_time=5.0,
+            ),
+        )
+    stage = StageExecutionTime(tuple(layers), stage_execution_time=dense)
     store, _per_batch = _store()
     del store._emit_op_level_traces
     store._config.enable_op_level_tracing = True
@@ -369,6 +389,18 @@ def test_stage_op_level_traces_include_gdn_metadata_without_duplication() -> Non
     assert {event.meta["attention_family_id"] for event in gdn_events} == {
         "gated_delta_net"
     }
+    mlp_events = [event for event in events if event.name == "mlp_up_proj"]
+    assert len(mlp_events) == 1
+    assert mlp_events[0].duration_ms == 3.0
+    assert mlp_events[0].meta["global_layer_ids"] == [1]
+    assert not any(event.name == "mlp_down_proj" for event in events)
+    if include_zero_cost_layer:
+        residual_events = [event for event in events if event.name == "add_ffn_residual"]
+        assert len(residual_events) == 1
+        assert residual_events[0].meta["global_layer_ids"] == [2]
+        assert residual_events[0].ts_start == pytest.approx(
+            mlp_events[0].ts_start + mlp_events[0].duration_ms * 1e-3
+        )
 
 
 def test_stage_component_ledger_preserves_family_names_and_owner_once() -> None:

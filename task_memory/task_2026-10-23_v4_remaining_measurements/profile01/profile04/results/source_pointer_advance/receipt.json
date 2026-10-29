@@ -1,0 +1,2921 @@
+{
+  "status": "PASS_SCOPE_SOURCE_POINTER_ADVANCE",
+  "created_at_utc": "2026-10-24T15:12:29.890271+00:00",
+  "baseline": "396c2887",
+  "files": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "sha256": "3ab3f7df7500f6555a792e952757e694071247d42a6319652ed66dd986761708",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/scope_source_pointer_root_wn35aqjv/01.diff",
+      "diff_sha256": "8961dea3b4b4f227403fcd52e87a5ed6d546533a988fd59fd9fc970cf9c39207",
+      "diff_lines": 29
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "sha256": "67785ac0a299a43d6b6fff5b06794bc70eeff7957f2a583e47007509eeb48b80",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/scope_source_pointer_root_wn35aqjv/02.diff",
+      "diff_sha256": "e3b5d2a7afdf1871e74340c504af58ae49914f88a52ee3917be4218aab5118c4",
+      "diff_lines": 29
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "sha256": "8294a1971e6d4bfd8f907b2b1e780856dc2696fed3be44d13c19a03156b377a8",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/scope_source_pointer_root_wn35aqjv/03.diff",
+      "diff_sha256": "535a21bba328e393709c843fb32a750043413c25ce57bac92d8c6b4c70ef4694",
+      "diff_lines": 29
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "sha256": "40b3128cb72fcc0ab3651d5486487bb9c2d4c00972dbe252cc528898c47cc3aa",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/scope_source_pointer_root_wn35aqjv/04.diff",
+      "diff_sha256": "feec18ec39f4f80ffdc8d9183d85752ec46b728b3c9f1ef68d2b81b890a3a9e6",
+      "diff_lines": 29
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "sha256": "61ae3bb5f083e2c76d4cfca026b7518062869b1967ea9352df8d79e3891c83ed",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/scope_source_pointer_root_wn35aqjv/05.diff",
+      "diff_sha256": "22265527789e870d0d43a4abdabc64bd3bdc59ea94392d31a85d5cc4a6770cab",
+      "diff_lines": 29
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "sha256": "087aba948ecb07ba0b73bb614ca19b5fc8dfe5b2fb863db917c8f99acebfc346",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/scope_source_pointer_root_wn35aqjv/06.diff",
+      "diff_sha256": "096758d5fce0e7f4e7b05053cfd7b174ad2cbd13628d04935714b030db9e13ad",
+      "diff_lines": 29
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "sha256": "daa824de6176feb9fe4a43f3c17783e5b150d96bf21c8cbf5785439814c7de49",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/scope_source_pointer_root_wn35aqjv/07.diff",
+      "diff_sha256": "3a453049501e865aaa06586d45a1c59e7c339d7b52d07ce74ec220da446509b8",
+      "diff_lines": 31
+    }
+  ],
+  "checks": [
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: checkboxes preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: raw requests preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: 50PASS",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: 252source/179tests",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: NOT submitted",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: no stale current source gate",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link progress.md#profile04-submission-milestone--2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link progress.md#routing-milestone--current-2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/10-h800-predictive-e2e.md#p0_h800_32-per-model-highest-priority",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/10-h800-predictive-e2e.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/10-h800-predictive-e2e.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/19-comparison-and-acceptance.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/11-h200-regression-delivery.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/11-h200-regression-delivery.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/11-h200-regression-delivery.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/19-comparison-and-acceptance.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link review_report_2026-10-20_mainline_and_tickets.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link g0b_reconciliation_20261020/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link v4_full_structure_20261019/actual_review/test_report_2026-10-19_v4_full_structure_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c36_glm_observer_20261019/paired_actual_review/test_report_2026-10-19_paired_observer.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c38_native_boundaries_20261019/actual_review/test_report_2026-10-19_native_boundaries.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/01-runtime-lock-native-qualification.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/02-observer-instrumentation-gate-adaptation.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/07-nixl-pd-integration.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/02-observer-instrumentation-gate-adaptation.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/07-nixl-pd-integration.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/08-workflow-delta-pd-placement.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c39_glm_full_pd_20261019/functional_c40_review/test_report_2026-10-19_functional_c40_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c39_glm_full_pd_20261019/final_input_review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c39_glm_full_pd_20261019/freeze_receipt_01.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c39_glm_full_pd_20261019/functional_actual_review/test_report_2026-10-19_glm_full_pd_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c39_glm_full_pd_20261019/pressure_actual_review/test_report_2026-10-19_pressure_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/07-nixl-pd-integration.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/12-decision-d-pd.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c39_glm_full_pd_20261019/pressure_actual_review/verification_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link pr_preparation_20261020/publication_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link test_report_2026-10-19_native_queue_v4_g0a.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link test_report_2026-10-19_native_inputs_dummy_init.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link test_report_2026-10-19_dsv4_cache_zero_dp8.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c23_cache_zero_execution_20261019/combined_candidate_manifest_r2.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c23_cache_zero_execution_20261019/acceptance_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c23_cache_zero_execution_20261019/collector_readiness/verification_report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link test_report_2026-10-19_recorder_lifecycle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link test_report_2026-10-19_v4_cache_lifecycle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c21_c22_continuation_20261019/cpu_input_readiness.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link test_report_2026-10-19_glm_structural_pd.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c16_glm_structural_pd_20261019/c16_final_review_r3_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c16_glm_structural_pd_20261019/r3_final_candidate/commit_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link test_report_2026-10-19_dsv4_structural_execution.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c17_v4_structural_execution_20261019/final_acceptance/",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c17_v4_structural_execution_20261019/independent_review/final_r3/review_report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c18_scope_withdrawal_20261019/withdrawal_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link post_structural_native_readiness_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link post_structural_native_readiness_20261019/manifest.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link glm_native_remaining_evidence_map_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link test_report_2026-10-19_native_harness.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c19_native_harness_20261019/commit_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link test_report_2026-10-19_dsv4_boundaries.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c20_boundary_execution_20261019/commit_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link scope_readback_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link scope_readback_20261019/remediation_final/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link three_model_readiness_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link three_model_readiness_20261019/manifest.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link three_model_readiness_20261019/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link c16_glm_structural_pd_20261019/ownership_handover/op_trace_handover.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link spec.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link requirements.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link source_spec_v2/",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/00-baseline-audit.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/01-runtime-lock-native-qualification.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/02-observer-instrumentation-gate-adaptation.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/03-layer-cache-routing-inventory.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/04-glm53-dsa-family.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/05-dsv4-flash-family.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/06-communication-measurement.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/07-nixl-pd-integration.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/08-workflow-delta-pd-placement.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/09-predictor-bundle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/10-h800-predictive-e2e.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/11-h200-regression-delivery.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/12-decision-d-pd.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/13-decision-d-async.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/14-decision-d-routing.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/15-decision-d-dp-pd.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/16-glm-canonical-case.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/17-dsv4-canonical-case.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/18-native-ground-truth-h200.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md: link tickets/19-comparison-and-acceptance.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: checkboxes preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: raw requests preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: 50PASS",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: 252source/179tests",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: NOT submitted",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: no stale current source gate",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/groundtruth_fixture/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/native_capture_scope_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/terminal_platform.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/platform_group_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/download_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/root_cpu_replay_01.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/root_cpu_replay_02_metadata_p2.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/test_report_2026-10-24_trace.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/diagnosis.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link /data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link /data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/test_report_2026-10-24_profile04_stage_docs.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence_cpu/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_report_2026-10-24_integration.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_diagnosis.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../../../v4-native-profile03-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/delivery.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/requirements.md#callback-payload-correction-and-similar-diagnostic-authority",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/results/archive_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/moe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/moe/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_input_source.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/requirements.md#h-launch-integration-allocation",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/moe/local_measurement_plan.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/queue_selection.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link canonical_case_20261021/p0_binding/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/driver/review_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/requirements.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/proposal.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/test_report_2026-10-23_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/driver_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link ../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-21_h200_g0b.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link review_report_2026-10-20_mainline_and_tickets.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link g0b_reconciliation_20261020/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link pr_preparation_20261020/publication_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-20_github_publication.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_public_branch_documentation.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c39_glm_full_pd_20261019/functional_c40_review/test_report_2026-10-19_functional_c40_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c39_glm_full_pd_20261019/handle_serialization_repair/independent_review/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c39_glm_full_pd_20261019/pressure_frozen_02/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c39_glm_full_pd_20261019/pressure_actual_review/test_report_2026-10-19_pressure_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c39_glm_full_pd_20261019/pressure_actual_review/verification_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c36_glm_observer_20261019/paired_root_result.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c36_glm_observer_20261019/paired_actual_review/test_report_2026-10-19_paired_observer.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c38_native_boundaries_20261019/actual_review/test_report_2026-10-19_native_boundaries.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link v4_full_structure_20261019/actual_review/test_report_2026-10-19_v4_full_structure_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link v4_full_structure_20261019/export_platform_03.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c36_glm_observer_20261019/perturbation_diagnosis/test_report_2026-10-19_c36_perturbation_diagnosis.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_c39_c40_glm_pd.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c39_glm_full_pd_20261019/c40_frontend_review/test_report_2026-10-19_c40_frontend_acceptance.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c39_glm_full_pd_20261019/pressure_harness/independent_review/test_report_2026-10-19_pressure_harness.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c39_glm_full_pd_20261019/final_input_review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c39_glm_full_pd_20261019/freeze_receipt_01.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_native_queue_v4_g0a.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link plan.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_native_inputs_dummy_init.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link plan.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c25_native_progress_20261019/submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c25_native_progress_20261019/root/terminal_container_status.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c25_native_progress_20261019/root/replica_terminal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_dsv4_cache_zero_dp8.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c23_cache_zero_execution_20261019/combined_candidate_manifest_r2.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c23_cache_zero_execution_20261019/acceptance_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c23_cache_zero_execution_20261019/collector_readiness/verification_report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_recorder_lifecycle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_v4_cache_lifecycle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c21_c22_continuation_20261019/cpu_input_readiness.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_glm_structural_pd.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c16_glm_structural_pd_20261019/c16_final_review_r3_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c16_glm_structural_pd_20261019/r3_final_candidate/commit_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_dsv4_structural_execution.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c17_v4_structural_execution_20261019/final_acceptance/",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c17_v4_structural_execution_20261019/independent_review/final_r3/review_report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c18_scope_withdrawal_20261019/withdrawal_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link post_structural_native_readiness_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link post_structural_native_readiness_20261019/manifest.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link glm_native_remaining_evidence_map_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_native_harness.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c19_native_harness_20261019/commit_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-19_dsv4_boundaries.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c20_boundary_execution_20261019/commit_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link scope_readback_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link scope_readback_20261019/remediation_final/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link three_model_readiness_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link three_model_readiness_20261019/manifest.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link three_model_readiness_20261019/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link c16_glm_structural_pd_20261019/ownership_handover/op_trace_handover.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link review.md#11-documentation-only-resume-audit--2026-10-18",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link plan.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md: link test_report_2026-10-18_documentation_review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: checkboxes preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: raw requests preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: 50PASS",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: 252source/179tests",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: NOT submitted",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: no stale current source gate",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link progress.md#profile04-terminal-audit-frontier--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/results/archive_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/moe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/moe/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link progress.md#profile02-and-local-moe-acceptance--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link progress.md#balanced-q1-and-queued-profile02--2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/queue_selection.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/driver/review_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/requirements.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/proposal.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link progress.md#g2-profile-driver-closure--current-2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/test_report_2026-10-23_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/driver_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link progress.md#cpu-collector-closure--current-2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_input_source.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link ../task_2026-10-23_v4_remaining_measurements/requirements.md#h-launch-integration-allocation",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link v4_marlin_control_20261019/test_report_2026-10-19_v4_marlin_control.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c33_dp_policy_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c34_native_queue_20261019/actual_native_review_02/test_report_2026-10-19_glm_native_queue.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_queue_admission_full_v4.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_c36_c38_full_v4.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/pressure_actual_review/test_report_2026-10-19_pressure_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/pressure_actual_review/verification_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/handle_serialization_repair/independent_review/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/pressure_frozen_02/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/pressure_payload_02.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/pressure_platform_01.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/pressure_platform_02.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/pressure_launcher_started.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/functional_c40_review/test_report_2026-10-19_functional_c40_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/functional_actual_review/test_report_2026-10-19_glm_full_pd_actual.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/handle_serialization_repair/test_report_2026-10-19_nixl_handle_serialization.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c39_glm_full_pd_20261019/pressure_02_capacity.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link pr_preparation_20261020/publication_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-20_github_publication.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_native_queue_v4_g0a.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link plan.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link progress.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_native_inputs_dummy_init.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link plan.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link progress.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_dsv4_cache_zero_dp8.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c23_cache_zero_execution_20261019/combined_candidate_manifest_r2.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c23_cache_zero_execution_20261019/acceptance_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c23_cache_zero_execution_20261019/collector_readiness/verification_report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_recorder_lifecycle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_v4_cache_lifecycle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c21_c22_continuation_20261019/cpu_input_readiness.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_glm_structural_pd.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c16_glm_structural_pd_20261019/c16_final_review_r3_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c16_glm_structural_pd_20261019/r3_final_candidate/commit_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_dsv4_structural_execution.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c17_v4_structural_execution_20261019/final_acceptance/",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c17_v4_structural_execution_20261019/independent_review/final_r3/review_report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c18_scope_withdrawal_20261019/withdrawal_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link post_structural_native_readiness_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link post_structural_native_readiness_20261019/manifest.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link glm_native_remaining_evidence_map_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_native_harness.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c19_native_harness_20261019/commit_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link test_report_2026-10-19_dsv4_boundaries.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link c20_boundary_execution_20261019/commit_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link scope_readback_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link scope_readback_20261019/remediation_final/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link three_model_readiness_20261019/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link three_model_readiness_20261019/manifest.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link three_model_readiness_20261019/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md: link plan.md#current-continuation-after-c32c34",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: checkboxes preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: raw requests preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: 50PASS",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: 252source/179tests",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: NOT submitted",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: no stale current source gate",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../progress.md#profile04-terminal-audit-frontier--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../progress.md#profile04-submission-milestone--2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../progress.md#profile02-and-local-moe-acceptance--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/queue_selection.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../progress.md#balanced-q1-and-queued-profile02--2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/driver/review_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/requirements.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/proposal.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../progress.md#g2-profile-driver-closure--current-2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/driver_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../progress.md#cpu-collector-closure--current-2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../test_report_2026-10-21_h200_dsv4_g0a.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../w6_dsv4_producers_20261020/summary.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../test_report_2026-10-20_dsv4_profiling_producers.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../test_report_2026-10-19_c36_c38_full_v4.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../c32_c34_native_20261019/v4_native_run/result.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../c32_v4_inventory_20261019/test_report_2026-10-19_v4_inventory.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../v4_marlin_control_20261019/test_report_2026-10-19_v4_marlin_control.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../test_report_2026-10-19_native_queue_v4_g0a.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../test_report_2026-10-19_native_inputs_dummy_init.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../c25_native_progress_20261019/c27_audit/report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../plan.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../test_report_2026-10-19_dsv4_cache_zero_dp8.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../test_report_2026-10-19_v4_cache_lifecycle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../test_report_2026-10-19_dsv4_structural_execution.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../c17_v4_structural_execution_20261019/final_acceptance/",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../c17_v4_structural_execution_20261019/independent_review/final_r3/review_report.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md: link ../test_report_2026-10-19_dsv4_boundaries.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: checkboxes preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: raw requests preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: 50PASS",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: 252source/179tests",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: NOT submitted",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: no stale current source gate",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../progress.md#profile04-terminal-audit-frontier--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../progress.md#profile04-submission-milestone--2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../progress.md#profile02-and-local-moe-acceptance--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/queue_selection.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../progress.md#balanced-q1-and-queued-profile02--2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/driver/review_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/requirements.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/proposal.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../progress.md#g2-profile-driver-closure--current-2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/driver_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../progress.md#cpu-collector-closure--current-2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../nixl_accounting_20261021/context/test_report_2026-10-21_nixl_context.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../dsa_full_dummy_admission_20261021/measurement_proposal.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../test_report_2026-10-19_dsv4_cache_zero_dp8.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../test_report_2026-10-19_recorder_lifecycle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md: link ../test_report_2026-10-19_v4_cache_lifecycle.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: checkboxes preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: raw requests preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: 50PASS",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: 252source/179tests",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: NOT submitted",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: no stale current source gate",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link progress.md#profile04-terminal-audit-frontier--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/requirements.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link progress.md#profile04-submission-milestone--2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/requirements.md#callback-payload-correction-and-similar-diagnostic-authority",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/progress.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/queue_selection.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/driver/review_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/requirements.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/proposal.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/driver_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md: link ../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: checkboxes preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: raw requests preserved",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: 50PASS",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: 252source/179tests",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: NOT submitted",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: no stale current source gate",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/groundtruth_fixture/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/native_capture_scope_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/results/terminal_platform.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/results/platform_group_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/results/download_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/results/root_cpu_replay_01.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/results/run_metadata_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/results/review_2026-10-24_run_metadata.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/results/root_cpu_replay_02_metadata_p2.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/results/test_report_2026-10-24_trace.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/scope_lifetime/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/scope_lifetime/source_binding.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/results/p0_cpu_loop/load_gc/test_report_2026-10-24_loading_gc.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link plan.md#profile04-cpu-audit-follow-up-2026-10-24",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link progress.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link requirements.md#d-v4-p0-audit-gc-observation",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link requirements.md#d-v4-p0-audit-gc-freeze",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link requirements.md#d-v4-scope-lifetime-review-repair",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/test_report_2026-10-24_profile04_root.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile04/root_archive_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/groundtruth_fixture/test_report_2026-10-24_root_acceptance.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/native_capture_scope_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_statistics_image_g8m3pvpv/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/failure/statistics_control.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/failure/test_report_2026-10-24_profiler_rpc_failure.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link requirements.md#d-v4-profile04-package--minimum-configuration-correction",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/failure/timeline.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/failure/timeline.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/failure/rpc_loop.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/failure/rpc_loop_command.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link /data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/failure/metadata_audit.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/failure/metadata_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/graph_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/graph_probe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/graph_probe/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/profile03/platform_launch.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/stream_probe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/stream_probe/results/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/stream_probe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/dp_sequence_cpu.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/dp_sequence_cpu/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/integration_cpu/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/integration_cpu/test_report_2026-10-24_integration.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/graph_probe/root_checks/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/graph_probe/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/graph_probe/root_submission.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link ../../../v4-native-profile03-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/delivery.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link requirements.md#callback-payload-correction-and-similar-diagnostic-authority",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/stream_identity/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/stream_identity/test_report_2026-10-24_stream_loader.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/collection_gaps.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link profile01/results/archive_receipt.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link moe/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link moe/root_seal.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link moe/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link moe/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link progress.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link balanced_decode/results/primary_acceptance.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link balanced_decode/results/review.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link balanced_decode/results/root_verification.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link balanced_decode/results/data_audit.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link balanced_decode/root_run_check.json",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link moe_grid_design.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link progress.md#balanced-q1-and-queued-profile02--2026-10-23",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link requirements.md",
+      "passed": true
+    },
+    {
+      "check": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md: link proposal.md",
+      "passed": true
+    },
+    {
+      "check": "advance gross<=80",
+      "passed": true
+    }
+  ],
+  "numstat": "2\t1\ttask_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md\n2\t1\ttask_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md\n2\t1\ttask_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md\n2\t1\ttask_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md\n2\t1\ttask_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md\n2\t1\ttask_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md\n3\t2\ttask_memory/task_2026-10-23_v4_remaining_measurements/summary.md\n",
+  "gross": 23,
+  "scope": "Source CPU/source acceptance and separately allocatedpackage frontier only; R5incomplete, no newGPU/runtime/ownership admission."
+}

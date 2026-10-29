@@ -1,0 +1,20 @@
+{
+  "status": "PASS_CPU_SOURCE_CONTROL",
+  "source": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/profiler/wrapper.py",
+  "sha256": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+  "revision": "2cf0a69",
+  "actual_worker_profiler_class": true,
+  "native_iteration_limit": 3,
+  "states_before_execution": [
+    true,
+    true,
+    true,
+    false,
+    false
+  ],
+  "events": [
+    "start",
+    "stop"
+  ],
+  "cuda_imported": false
+}

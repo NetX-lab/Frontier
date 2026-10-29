@@ -1,0 +1,31 @@
+=== PIECEWISE dispatch: 44 graph launches, eager activities 174, streams [(23, 174)]
+   43 void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::dec
+   43 void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160
+   21 void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, 
+   21 void deep_gemm::sm90_fp8_paged_mqa_logits<1u, 64u, 128u, 64u, true, false, 3u, 3
+   21 void vllm::cooperative::cooperative_topk_cs8<512u>(vllm::cooperative::Cooperativ
+   21 _compute_global_topk_indices_and_lens_kernel
+    4 smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+sequence of the first 3 breaks:
+    G
+    smxx::decode::get_mla_metadata_kernel(GetDecodeSch
+    void sm90::decode::sparse_fp8::flash_fwd_splitkv_m
+    void smxx::decode::flash_fwd_mla_combine_kernel<cu
+    G
+    smxx::decode::get_mla_metadata_kernel(GetDecodeSch
+    void sm90::decode::sparse_fp8::flash_fwd_splitkv_m
+    void smxx::decode::flash_fwd_mla_combine_kernel<cu
+    G
+    void at::native::vectorized_elementwise_kernel<4, 
+    void deep_gemm::sm90_fp8_paged_mqa_logits<1u, 64u,
+    void vllm::cooperative::cooperative_topk_cs8<512u>
+    _compute_global_topk_indices_and_lens_kernel
+    smxx::decode::get_mla_metadata_kernel(GetDecodeSch
+    void sm90::decode::sparse_fp8::flash_fwd_splitkv_m
+    void smxx::decode::flash_fwd_mla_combine_kernel<cu
+    G
+    smxx::decode::get_mla_metadata_kernel(GetDecodeSch
+    void sm90::decode::sparse_fp8::flash_fwd_splitkv_m
+    void smxx::decode::flash_fwd_mla_combine_kernel<cu
+    G
+rc=0

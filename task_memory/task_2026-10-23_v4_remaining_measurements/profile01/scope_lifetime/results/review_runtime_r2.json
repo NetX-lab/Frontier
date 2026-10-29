@@ -1,0 +1,785 @@
+{
+  "reviewer": "Codex independent S5 runtime-evidence reviewer",
+  "phase": "R2",
+  "inspected_utc": "2026-10-24T19:29:19.152375+00:00",
+  "finding_verdict": "R1_OMISSIONS_CLOSED_NO_NEW_MATERIAL_FINDING",
+  "review_coverage": {
+    "audit_source": "All 152 lines, including failure propagation, tuple/window/replay predicates and report output; no auditor import or execution.",
+    "frozen_probe": "All 252 lines; callback payload/query lifetime, default constructor, post-capture negative boolean and close-before-Kineto inspected.",
+    "frozen_graph_probe": "ABI, diagnostic sink, ID query, owned subscriber and target_kernels sections.",
+    "native_serve_profile": "ServingProfile.range lines 175-206; source hash matches frozen package.",
+    "main_task_records": "Current requirements/plan/progress/summary and relevant scope allocations; historical snapshots do not supersede current continuation.",
+    "platform": "Retained local platform_02, 32-line log and original launcher records only; no live platform read."
+  },
+  "r1_findings": {
+    "observe_errors": "CLOSED: final source line 47 and empty retained raw list; nonempty list rejected.",
+    "op_pairing": "CLOSED: final source lines 66-72 and five exact start/end records; missing/duplicate/mismatched/out-of-order starts rejected.",
+    "unique_successful_close": "CLOSED: final source lines 124-127, observe sequences 37<38 and control 51<52, each result true; false/nonboolean/missing/duplicate/late closes and duplicate Kineto rejected."
+  },
+  "verification": {
+    "method": "timeout 60s python3 -B with standard-library retained-file scalar comparisons and evaluation of only three repaired AST check expressions; no full audit/probe import or rerun.",
+    "python": "3.10.6",
+    "python_optimization": 0,
+    "scalar_checks": [
+      {
+        "name": "final_audit_identity",
+        "pass": true
+      },
+      {
+        "name": "final_audit_allocation",
+        "pass": true
+      },
+      {
+        "name": "probe_manifest_identity",
+        "pass": true
+      },
+      {
+        "name": "sealed_manifest_inventory",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:config.json",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/build_package.py",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/graph_image_receipt",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/graph_image_report",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/graph_manifest",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/graph_seal",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/image_check.py",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/launcher_template",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/profile_plan.json",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/source_acceptance",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:inputs/template_config",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:launch.py",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:source_lock.json",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:tests/comparison/calibration/native_full_structure.py",
+        "pass": true
+      },
+      {
+        "name": "sealed_input:tests/comparison/calibration/native_serve_profile.py",
+        "pass": true
+      },
+      {
+        "name": "raw_binding:diagnostics/fault.log",
+        "pass": true
+      },
+      {
+        "name": "raw_binding:diagnostics/stages.jsonl",
+        "pass": true
+      },
+      {
+        "name": "raw_binding:probe/control_trace.json",
+        "pass": true
+      },
+      {
+        "name": "raw_binding:probe/observe_trace.json",
+        "pass": true
+      },
+      {
+        "name": "raw_binding:probe/probe_report.json",
+        "pass": true
+      },
+      {
+        "name": "raw_download_totals",
+        "pass": true
+      },
+      {
+        "name": "primary_r2_result",
+        "pass": true
+      },
+      {
+        "name": "primary_r2_receipt_logs",
+        "pass": true
+      },
+      {
+        "name": "error_lists_and_fault_empty",
+        "pass": true
+      },
+      {
+        "name": "stage_sequence_and_monotonic_clock",
+        "pass": true
+      },
+      {
+        "name": "callback_sink_and_subscription",
+        "pass": true
+      },
+      {
+        "name": "raw_callback_counts",
+        "pass": true
+      },
+      {
+        "name": "observe_window_record_identity",
+        "pass": true
+      },
+      {
+        "name": "raw_exact_pair:0",
+        "pass": true
+      },
+      {
+        "name": "raw_exact_pair:1",
+        "pass": true
+      },
+      {
+        "name": "raw_exact_pair:2",
+        "pass": true
+      },
+      {
+        "name": "raw_exact_pair:3",
+        "pass": true
+      },
+      {
+        "name": "raw_exact_pair:4",
+        "pass": true
+      },
+      {
+        "name": "observe_raw_target_identity",
+        "pass": true
+      },
+      {
+        "name": "observe_contained_launch",
+        "pass": true
+      },
+      {
+        "name": "observe_successful_unique_close",
+        "pass": true
+      },
+      {
+        "name": "observe_frame_identity",
+        "pass": true
+      },
+      {
+        "name": "observe_telemetry_binding",
+        "pass": true
+      },
+      {
+        "name": "control_raw_target_identity",
+        "pass": true
+      },
+      {
+        "name": "control_contained_launch",
+        "pass": true
+      },
+      {
+        "name": "control_successful_unique_close",
+        "pass": true
+      },
+      {
+        "name": "control_frame_identity",
+        "pass": true
+      },
+      {
+        "name": "control_telemetry_binding",
+        "pass": true
+      },
+      {
+        "name": "original_tuple:8589934592",
+        "pass": true
+      },
+      {
+        "name": "freshness_type_full_replay:8589934592",
+        "pass": true
+      },
+      {
+        "name": "original_tuple:8589934593",
+        "pass": true
+      },
+      {
+        "name": "freshness_type_full_replay:8589934593",
+        "pass": true
+      },
+      {
+        "name": "original_tuple:8589934594",
+        "pass": true
+      },
+      {
+        "name": "freshness_type_full_replay:8589934594",
+        "pass": true
+      },
+      {
+        "name": "original_tuple:8589934595",
+        "pass": true
+      },
+      {
+        "name": "freshness_type_full_replay:8589934595",
+        "pass": true
+      },
+      {
+        "name": "original_tuple:8589934596",
+        "pass": true
+      },
+      {
+        "name": "freshness_type_full_replay:8589934596",
+        "pass": true
+      },
+      {
+        "name": "primary_join_values_match_raw",
+        "pass": true
+      },
+      {
+        "name": "six_unmatched_no_cause_inference",
+        "pass": true
+      },
+      {
+        "name": "all_callbacks_before_capture_end",
+        "pass": true
+      },
+      {
+        "name": "raw_lifetime_scalar_and_exec",
+        "pass": true
+      },
+      {
+        "name": "control_initialization_preserved",
+        "pass": true
+      },
+      {
+        "name": "shape_topology_outputs_only",
+        "pass": true
+      },
+      {
+        "name": "execution_receipt_actual_bindings",
+        "pass": true
+      },
+      {
+        "name": "terminal_log_and_spent_attempt",
+        "pass": true
+      },
+      {
+        "name": "execution_hash:package_primary/execution/platform_02.json",
+        "pass": true
+      },
+      {
+        "name": "execution_hash:package_primary/execution/platform_02.exp-1025-021228-212042-cfcd2084.log",
+        "pass": true
+      },
+      {
+        "name": "execution_hash:package_primary/execution/launcher_result.json",
+        "pass": true
+      },
+      {
+        "name": "repaired_expression_rejections",
+        "pass": true
+      },
+      {
+        "name": "r1_preserved",
+        "pass": true
+      }
+    ],
+    "repaired_expression_negative_checks": [
+      {
+        "name": "observe_errors_nonempty",
+        "rejected": true
+      },
+      {
+        "name": "op_start_missing",
+        "rejected": true
+      },
+      {
+        "name": "op_start_duplicate",
+        "rejected": true
+      },
+      {
+        "name": "op_start_after_end",
+        "rejected": true
+      },
+      {
+        "name": "op_start_payload_mismatch",
+        "rejected": true
+      },
+      {
+        "name": "observe_close_false",
+        "rejected": true
+      },
+      {
+        "name": "observe_close_nonboolean",
+        "rejected": true
+      },
+      {
+        "name": "observe_close_missing",
+        "rejected": true
+      },
+      {
+        "name": "observe_close_duplicate",
+        "rejected": true
+      },
+      {
+        "name": "observe_close_kineto_duplicate",
+        "rejected": true
+      },
+      {
+        "name": "observe_close_after_kineto",
+        "rejected": true
+      },
+      {
+        "name": "control_close_false",
+        "rejected": true
+      },
+      {
+        "name": "control_close_nonboolean",
+        "rejected": true
+      },
+      {
+        "name": "control_close_missing",
+        "rejected": true
+      },
+      {
+        "name": "control_close_duplicate",
+        "rejected": true
+      },
+      {
+        "name": "control_close_kineto_duplicate",
+        "rejected": true
+      },
+      {
+        "name": "control_close_after_kineto",
+        "rejected": true
+      }
+    ],
+    "primary_r2_checks": 60,
+    "primary_r2_seconds": 0.12284475704655051,
+    "primary_execution_binding_checks": 20,
+    "reviewer_gpu_operations": 0,
+    "reviewer_platform_operations": 0,
+    "reviewer_delegations": 0
+  },
+  "raw_observations": {
+    "callback_counts": {
+      "created": 11,
+      "clones": 5,
+      "exec": 1
+    },
+    "op_pairs": [
+      {
+        "slot": 0,
+        "scope": "add_a",
+        "start_sequence": 9,
+        "end_sequence": 11,
+        "window_start": 3250936453094248,
+        "window_end": 3250936466228408
+      },
+      {
+        "slot": 1,
+        "scope": "mul_b",
+        "start_sequence": 12,
+        "end_sequence": 14,
+        "window_start": 3250936490868376,
+        "window_end": 3250936501622389
+      },
+      {
+        "slot": 2,
+        "scope": "add_c",
+        "start_sequence": 15,
+        "end_sequence": 17,
+        "window_start": 3250936506736101,
+        "window_end": 3250936515910810
+      },
+      {
+        "slot": 3,
+        "scope": "mul_d",
+        "start_sequence": 18,
+        "end_sequence": 20,
+        "window_start": 3250936520355510,
+        "window_end": 3250936529051860
+      },
+      {
+        "slot": 4,
+        "scope": "sub_out",
+        "start_sequence": 21,
+        "end_sequence": 23,
+        "window_start": 3250936533063081,
+        "window_end": 3250936542416982
+      }
+    ],
+    "direct_joins": [
+      {
+        "scope": "add_a",
+        "source_node": 905808832,
+        "source_full_id": 4294967296,
+        "clone_node": 905818312,
+        "clone_full_id": 8589934592,
+        "callback_ns": 3250936458839103,
+        "window_start": 3250936453094248,
+        "window_end": 3250936466228408
+      },
+      {
+        "scope": "mul_b",
+        "source_node": 905810728,
+        "source_full_id": 4294967297,
+        "clone_node": 905820208,
+        "clone_full_id": 8589934593,
+        "callback_ns": 3250936496865374,
+        "window_start": 3250936490868376,
+        "window_end": 3250936501622389
+      },
+      {
+        "scope": "add_c",
+        "source_node": 905812624,
+        "source_full_id": 4294967298,
+        "clone_node": 905822104,
+        "clone_full_id": 8589934594,
+        "callback_ns": 3250936510753501,
+        "window_start": 3250936506736101,
+        "window_end": 3250936515910810
+      },
+      {
+        "scope": "mul_d",
+        "source_node": 905814520,
+        "source_full_id": 4294967299,
+        "clone_node": 905824000,
+        "clone_full_id": 8589934595,
+        "callback_ns": 3250936523806533,
+        "window_start": 3250936520355510,
+        "window_end": 3250936529051860
+      },
+      {
+        "scope": "sub_out",
+        "source_node": 905816416,
+        "source_full_id": 4294967300,
+        "clone_node": 905825896,
+        "clone_full_id": 8589934596,
+        "callback_ns": 3250936537104465,
+        "window_start": 3250936533063081,
+        "window_end": 3250936542416982
+      }
+    ],
+    "unmatched_created_count": 6,
+    "unmatched_created_cause": "UNKNOWN",
+    "thread_equalities_observed_only": [
+      {
+        "native_id": true,
+        "python_ident": true
+      },
+      {
+        "native_id": true,
+        "python_ident": true
+      },
+      {
+        "native_id": true,
+        "python_ident": true
+      },
+      {
+        "native_id": true,
+        "python_ident": true
+      },
+      {
+        "native_id": true,
+        "python_ident": true
+      }
+    ],
+    "observe_close_sequence": 37,
+    "observe_kineto_sequence": 38,
+    "control_close_sequence": 51,
+    "control_kineto_sequence": 52,
+    "control_verdict_preserved": "UNVERIFIED",
+    "control_graph_ids": [
+      5
+    ],
+    "control_full_ids": [
+      21474836480,
+      21474836481,
+      21474836482,
+      21474836483,
+      21474836484
+    ],
+    "expected_output_values": [
+      2.0,
+      2.0,
+      3.0,
+      3.0,
+      2.0
+    ],
+    "elements": 1024,
+    "warmup": 3
+  },
+  "job": "exp-1025-021228-212042",
+  "gpu_uuid": "NVIDIA H800 (UUID: GPU-4c9987eb-19e6-793f-0326-c502be48abcd)",
+  "host": "gpu-h800-0158.host.platform.shaipower.com",
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "gpu_attempts": "spent1/1",
+  "host_driver_release": "UNRECORDED",
+  "trace_telemetry": {
+    "driver_api": 13000,
+    "runtime_api": 13000,
+    "cupti": 130001
+  },
+  "permitted_conclusion": "Inspected frozen source and retained evidence support P1-P6 for this single sealed H800/1024-element live-TLS probe; primary alone decides final acceptance.",
+  "limits": [
+    "Lifetime support combines frozen source inspection and retained boolean/exec observations; the audit AST count alone does not establish all lifetime restrictions.",
+    "Same-run control establishes five-kernel topology and exact output identity only; original UNVERIFIED initialization remains.",
+    "Six unmatched-created causes are unknown; thread equalities are observations only.",
+    "Host driver release and fresh worker driver/library binary identities were not measured by this review; API/CUPTI versions are telemetry.",
+    "No native serving, general ownership strategies, timing/non-perturbation, dependencies, costs or reference admission.",
+    "No GPU/probe/large-trace/spent-control/full-audit rerun, live platform/network/cloud/Docker/credentials/Git operations or delegation."
+  ],
+  "inspected_artifacts": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/AGENTS.md": {
+      "sha256": "82354337fec8131194f31ad8f09d298d2ef6e3ad48282b0b4bd46e87b5a57249",
+      "bytes": 62494
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md": {
+      "sha256": "c229e702243f2093e323aa37af75f2b7e44feb2eace9a6c19868d3ea563b4c3f",
+      "bytes": 60019
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/plan.md": {
+      "sha256": "46d8b409189c02c19858132c6c50d6f8a38db8327c2f369b073173b5fe979591",
+      "bytes": 27007
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/progress.md": {
+      "sha256": "fe3db4301a049c16bd6f810043b5d5a1822d317e0213a8df70ce67d4ba2e8f2a",
+      "bytes": 89698
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/summary.md": {
+      "sha256": "023d1d57558ae6869abde2296d39708735c6911c8dcdddf53fabf0c95de289e3",
+      "bytes": 41045
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/requirements.md": {
+      "sha256": "faedecc3a642c5a8d487981d389b836e536f929938a35c81866bed1917bbd209",
+      "bytes": 2248
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/plan.md": {
+      "sha256": "9ce664a8abe2a6f2fd032bc78e9dbfa053f3c01e1f9b2c4a707c124ab057ebdd",
+      "bytes": 1788
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/progress.md": {
+      "sha256": "d7ebe8761ca10ee813b03050bd7194126f2b550c80d35625c90c6a623fb32606",
+      "bytes": 5978
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/summary.md": {
+      "sha256": "f50238ce4547516ba1a781880b0f14fe729771c9b1187d3a85e9705da82f0594",
+      "bytes": 1238
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/scope_lifetime_design.md": {
+      "sha256": "e8469d17ea4ffed882523ebcc50f2614dafd411554b019bb3d3713099bf7b3bd",
+      "bytes": 5449
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json": {
+      "sha256": "89232a9e1ee60e5d57859dd707796a85b3d99ba89ad309d98aab3c93b2ed6b0b",
+      "bytes": 2557
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json": {
+      "sha256": "f639ab3351d436e32a6e2233f0aea5a18f989bb3927e1292a1ff062a7b1562bc",
+      "bytes": 2386
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": {
+      "sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+      "bytes": 13796
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/review_runtime_r1.md": {
+      "sha256": "8bf113280df85ac05bd2986e6e0f1e5a0afe3e7bda96c14d59df8ebe1df6f242",
+      "bytes": 5241
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/audit_allocation.json": {
+      "sha256": "68233741d60de6942daa9301844030bd14ec832796f51594c7ab76c5f77500b3",
+      "bytes": 987
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/primary_raw_audit_r2.json": {
+      "sha256": "a7dcdcbed3ac1fa50fe8fcd97a1142184df117faf3fa34bff8b90cefbbdf3584",
+      "bytes": 8344
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw_audit_receipt_r2.json": {
+      "sha256": "a5b768ba05179d5a0eeceb3159390ef7bd3c397823eb380bf7ea9fd8fe39851c",
+      "bytes": 1215
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw_audit_r2.stdout": {
+      "sha256": "7ae53936d97f7e2ec7d406f088a66a19a0f2940ad6b40bd70140d7a0cbc19383",
+      "bytes": 85
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw_audit_r2.stderr": {
+      "sha256": "1f9a285c1212ad66a94adccdfe08d97df9f7433e6f98fa4b028e0f2ca03b057d",
+      "bytes": 67
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/execution_source_binding.json": {
+      "sha256": "a8bcd4e22bb5816c1d244947040f37b19fdce6ae5759fe2aa641c88eb37cad6c",
+      "bytes": 2349
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/cloud_inventory.json": {
+      "sha256": "9eb11fbd97ecce24b0b7c7e41219fd2c10be4a8a6c4757abd7f630778cf99809",
+      "bytes": 1479
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/download_receipt.json": {
+      "sha256": "3be010ccd8cb5664f8b1802a18ef4443e9e6e593cca2fdb50095de730d6f38c4",
+      "bytes": 796
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/root_seal.json": {
+      "sha256": "44871474bc9018d2b3c0256a5e43f648b489c3a5ea71214c8956b7067490580a",
+      "bytes": 5918
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/package_inventory.json": {
+      "sha256": "dafbcb7cc266e018ba4c41efc4fe52e73c4ac47fc6fcd7aa8928d2a187f90165",
+      "bytes": 4522
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/platform_02.json": {
+      "sha256": "f036a63b0f2dad146c58a9d2c5ce8c1ceb558ba0305c90d8bb2a5a7a06c67416",
+      "bytes": 3081
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/platform_02.exp-1025-021228-212042-cfcd2084.log": {
+      "sha256": "fc18505c0803a545303d87e1d205da21e9390d80ba95d74b235a7a3980417d1c",
+      "bytes": 2102
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/launcher_result.json": {
+      "sha256": "e6fd33630b4792b705e10b47517298c223a86890d8a7418b2d88e9c47ee3b7eb",
+      "bytes": 2430
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/execution/launcher_01.raw.log": {
+      "sha256": "515f434a7b77af8970a55b17161dd4a7661bd0e062ac61ed2cabac85f406cc59",
+      "bytes": 3620
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_scope_lifetime_audit.py": {
+      "sha256": "539da5af58b362d0ecdea09af8e9c6c3157f21af7f530fb12c3629ffce658f93",
+      "bytes": 10156
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py": {
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+      "bytes": 34078
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_serve_profile.py": {
+      "sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+      "bytes": 26078
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/diagnostics/fault.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/diagnostics/stages.jsonl": {
+      "sha256": "ee426997af0349e1510d3113525f1e6700781da4c536385e64744136aca6818e",
+      "bytes": 15576
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/probe/control_trace.json": {
+      "sha256": "a3815882be30a2ac83b50577b508e74cb5211cc06e66fb81327cf60d5c8f32bc",
+      "bytes": 18882
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/probe/observe_trace.json": {
+      "sha256": "fe8c03c857ec412fbb5dd02335b2454e4ac3b25d3fa88b72d504c0786a6fbee8",
+      "bytes": 18845
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/raw/probe/probe_report.json": {
+      "sha256": "e988ee758ae7e08a52ecd996277b8b574f7113511f58d3ef9d4ddad77812e586",
+      "bytes": 171580
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/manifest.json": {
+      "sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+      "bytes": 2252
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/config.json": {
+      "sha256": "adc4e6af3f2ab4179d1722b23ee61bcd58c80f0c13fc6b21d9543c199b9e1103",
+      "bytes": 2182
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/build_package.py": {
+      "sha256": "a42524884ce480001f3cd44c2e348da94ae77b941d12a9283409926353ed7711",
+      "bytes": 8432
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_image_receipt": {
+      "sha256": "da9106453b0d9b291cddb6af6fe17f004a3c6ebed4069f00df1b8b905671f32c",
+      "bytes": 999
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_image_report": {
+      "sha256": "00e17cb6c58b45cdfb3f93c4947de8ad750c4ae08bd5b4ec870b258f9a529528",
+      "bytes": 9945
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_manifest": {
+      "sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146",
+      "bytes": 984
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/graph_seal": {
+      "sha256": "3226e380175e5b573e30d2367b7be3130725b70e6e12a98177929e5c1985f2ca",
+      "bytes": 5833
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/image_check.py": {
+      "sha256": "002fb52b9b08c246fe01fcedefd4002d14cfea690540680de40feec481fe2639",
+      "bytes": 4102
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/launcher_template": {
+      "sha256": "2d84970c4bec06533942ceafbfd6a7a6eb729c6ee12e73fe594faaf797ee493d",
+      "bytes": 3037
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/profile_plan.json": {
+      "sha256": "90800cbed3a90453b045a5fdfbd4517be4201972e8e136e0c29187ebd85abc97",
+      "bytes": 1027
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/source_acceptance": {
+      "sha256": "f639ab3351d436e32a6e2233f0aea5a18f989bb3927e1292a1ff062a7b1562bc",
+      "bytes": 2386
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/inputs/template_config": {
+      "sha256": "6c94d88d6b24e09093dc9b90f5e2b48f41c661f0c22d858c2c0059738929d25e",
+      "bytes": 1328
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/launch.py": {
+      "sha256": "b3814788c5147f98ae60c7f023701b0291af17b1a89b94bc6ba6aaf5d6c0d71b",
+      "bytes": 3801
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/source_lock.json": {
+      "sha256": "cd6db51a0423a2b4cbb97a97db0f2954e2fdc090086da3eed1b85bf8d5e52f4b",
+      "bytes": 8251
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py": {
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+      "bytes": 34078
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": {
+      "sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+      "bytes": 13796
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json": {
+      "sha256": "89232a9e1ee60e5d57859dd707796a85b3d99ba89ad309d98aab3c93b2ed6b0b",
+      "bytes": 2557
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/tests/comparison/calibration/native_full_structure.py": {
+      "sha256": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+      "bytes": 53427
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/tests/comparison/calibration/native_serve_profile.py": {
+      "sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+      "bytes": 26078
+    }
+  }
+}

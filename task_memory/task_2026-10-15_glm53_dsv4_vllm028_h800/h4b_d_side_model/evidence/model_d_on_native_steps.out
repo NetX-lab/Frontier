@@ -1,0 +1,5 @@
+T=2.57 ms n=378 native d=77.94 model d=61.36 model-native=-16.58 model d p50=61.79 min=50.26 max=76.65
+T=2.99 ms n=378 native d=77.94 model d=61.36 model-native=-16.58 model d p50=61.79 min=50.26 max=76.65
+T=10.0 ms n=378 native d=77.94 model d=61.36 model-native=-16.58 model d p50=61.79 min=50.26 max=76.65
+T=22.0 ms n=378 native d=77.94 model d=81.39 model-native=3.45 model d p50=82.16 min=60.02 max=97.09
+T=27.0 ms n=378 native d=77.94 model d=81.61 model-native=3.67 model d p50=82.21 min=63.64 max=97.09

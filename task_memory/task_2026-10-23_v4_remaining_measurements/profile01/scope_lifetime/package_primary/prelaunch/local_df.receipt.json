@@ -1,0 +1,14 @@
+{
+  "command": [
+    "df",
+    "-B1",
+    "-P",
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+    "/data/ycfeng/tmp"
+  ],
+  "start_utc": "2026-10-24T18:05:33.635094+00:00",
+  "end_utc": "2026-10-24T18:05:33.643259+00:00",
+  "exit": 0,
+  "stdout": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/local_df.stdout",
+  "stderr": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/local_df.stderr"
+}

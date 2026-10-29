@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "ordinary_staged_files_whitespace_check": "PASS",
+  "raw_patch_context_lines": 54,
+  "raw_patch_context_semantics": "Single-space blank context markers required by unified diff, not whitespace in added source lines.",
+  "patches": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/driver/change.diff",
+      "sha256": "34372281a52dbe67ea9cb045a735d20679b4e9ed9f08cdc0e95d143ee298d3f6",
+      "command": [
+        "git",
+        "apply",
+        "--cached",
+        "--check",
+        "--whitespace=error",
+        "task_memory/task_2026-10-23_v4_remaining_measurements/driver/change.diff"
+      ],
+      "returncode": 0,
+      "base_commit": "313c8167",
+      "isolated_index": "/data/ycfeng/tmp/glm53_dsv4/g2_patch_check_9jwe5ndq/index0"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/driver/change_r1.diff",
+      "sha256": "5b3adaa3aecd99684e913af521e7d1207b809fe0f5543aa79905b551df363af0",
+      "command": [
+        "git",
+        "apply",
+        "--cached",
+        "--check",
+        "--whitespace=error",
+        "task_memory/task_2026-10-23_v4_remaining_measurements/driver/change_r1.diff"
+      ],
+      "returncode": 0,
+      "base_commit": "313c8167",
+      "isolated_index": "/data/ycfeng/tmp/glm53_dsv4/g2_patch_check_9jwe5ndq/index1"
+    }
+  ],
+  "initial_check_log": "/data/ycfeng/tmp/glm53_dsv4/g2_patch_check_9jwe5ndq/staged_check.log",
+  "active_index_unchanged_by_patch_checks": true
+}

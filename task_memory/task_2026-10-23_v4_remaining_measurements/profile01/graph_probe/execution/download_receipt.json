@@ -1,0 +1,32 @@
+{
+  "status": "HASH_IDENTICAL_DOWNLOAD",
+  "observed_at_utc": "2026-10-24T05:52:41.954937+00:00",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/graph_payload_probe/1aa1e4a5_h800_20261024_01",
+  "remote_read_root": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/graph_payload_probe/1aa1e4a5_h800_20261024_01",
+  "local_root": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_results_tl_k7ef9/artifacts",
+  "files": [
+    {
+      "path": "diagnostics/fault.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "diagnostics/stages.jsonl",
+      "bytes": 5787,
+      "sha256": "cb6e471d5c817f403b9361dbe0310d4f4d778cde83b82b9afa9b809cd0b13e32"
+    },
+    {
+      "path": "probe/probe_report.json",
+      "bytes": 26253,
+      "sha256": "68f79e9b8eac14d3b4f45d39b1664a776483ce413aeaa8ab3749b10f537c7ae8"
+    },
+    {
+      "path": "probe/replay_trace.json",
+      "bytes": 21106,
+      "sha256": "53e9456ba603e0ef9ffa761272ed97b41d8fe2b6dd1446f497b8e912c547897d"
+    }
+  ],
+  "count": 4,
+  "bytes": 53146,
+  "method": "Read-only sudo inventory/tar of the exact personal run root; original cloud bytes/permissions unchanged."
+}

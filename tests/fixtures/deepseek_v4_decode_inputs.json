@@ -1,0 +1,17 @@
+{
+  "acceptance_evidence": {
+    "authority": "Parent task accepted-source decision, reaffirmed by R1; not candidate-row self-qualification",
+    "job": "exp-1022-003156-993689",
+    "report": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-21_v4_q1_warm_remeasure/observed/warmup_comparison.md",
+    "receipt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-21_v4_q1_warm_remeasure/observed/measurement02_primary.json"
+  },
+  "expected_identity": {
+    "source_revision": "d2878ed90ef4aecc1d2d80b597381b813420e2a8",
+    "runtime_fingerprint": "6fba7d93f7a2ecdd",
+    "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818"
+  },
+  "input_file_sha256": {
+    "CUDA_EVENT": "0864cae34120ebd7a9c38a3a5c81f16167ad754278d02eb24fb80d6fd3532d19",
+    "KERNEL_ONLY": "98ca168e18717abf9a9182ab1d8f83aeb10d54df09b450261c9e6511f60bf985"
+  }
+}

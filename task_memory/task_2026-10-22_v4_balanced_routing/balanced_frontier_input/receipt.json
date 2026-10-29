@@ -1,0 +1,15 @@
+{
+  "status": "PASS_CONFIG_RECONSTRUCTION_ONLY",
+  "source": "410f06299aab38800ba023ce939e9fcf4f2b7cc4",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "input": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/balanced_frontier_input/frontier.json",
+  "sha256": "747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
+  "flat_fields": 775,
+  "basis": "/data/ycfeng/tmp/glm53_dsv4/frontier_p0_probe_20261021/v4_unshimmed/command.json",
+  "trace_sha256": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+  "actual_simulator_executed": false,
+  "actual_role_materialization": "pending final caller source",
+  "pricing_graph_memory_qualification": "UNVERIFIED; runtime/workload input binding only; existing closed guards remain",
+  "cpu_overhead_modeling": false,
+  "initial_check_error": "root inspected SimulationConfig.replica_config instead of cluster_config.replica_config; same input bytes subsequently verified"
+}

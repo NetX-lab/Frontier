@@ -1,0 +1,35 @@
+{
+  "task_id": "W128-V4-NATIVE06-ROUTING-READER",
+  "baseline": "b62c155",
+  "production_and_matrix_scopes": [
+    "frontier",
+    "examples",
+    "data",
+    "tests/e2e/refactor_fidelity",
+    "tests/scratch_root.py",
+    "pyproject.toml",
+    "environment.yml",
+    "environment_profiling.yml"
+  ],
+  "production_and_matrix_files_compared": 744,
+  "changed_production_or_matrix_paths": [],
+  "gitlinks": [{
+    "path": "frontier/cc_backend/backends/collective-sim",
+    "baseline": "d28fe917370c2d55230c3ea226e5660785b44aca",
+    "head_matches": true,
+    "worktree_state": "uninitialized; recorded gitlink unchanged"
+  }],
+  "inspection_correction": "Initial diagnostic treated the uninitialized gitlink as a missing regular file and exited 1; corrected inspection separates 160000 gitlinks from regular files and exits 0. No repository file was changed to resolve the diagnostic error.",
+  "original_files_verified": 199,
+  "changed_original_paths": [],
+  "reachability": {
+    "driver": "tests/e2e/refactor_fidelity/run_matrix.py:159-193 runs only case.script with repo PYTHONPATH",
+    "cases": "tests/e2e/refactor_fidelity/cases.py defines example shell wrapper paths; lines 58-61 forward extra_args to frontier.main",
+    "changed_files": "One versioned checker in task_memory and one pytest unit module; neither is an example, frontier module or matrix import",
+    "frontier_search": "No check_groundtruth_run, test_native_reader_binding, task_memory or tests imports in frontier/",
+    "status": "UNCHANGED_BYTES_AND_NO_MATRIX_REACHABILITY_FROM_THIS_CHANGE; root owns mapping to prior 77/77 capture"
+  },
+  "package_pins_verified": 43,
+  "frozen_r3": "ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917",
+  "frozen_r2": "29523700ac8492fa6e192ce272f8ab5a7a48d1528bd4064417e26e811533d10a"
+}

@@ -1,0 +1,52 @@
+{
+  "status": "HASH_IDENTICAL_DOWNLOAD",
+  "start_utc": "2026-10-23T15:35:52.989410+00:00",
+  "end_utc": "2026-10-23T15:37:14.833763+00:00",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261023-02",
+  "remote_root": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261023-02",
+  "local_root": "/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts",
+  "files": 226,
+  "bytes": 4549518256,
+  "inventory_sha256": "33ed03ea23e094deb89039b1dde2bd4bd80cbff288bd017867bbfe85411ed566",
+  "temporary_analysis_copy": true,
+  "previous_failure": "Unprivileged read denied for root:root 0600 run_manifest.json; sudo read-only export used, original permissions and bytes unchanged.",
+  "commands": [
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "shai-ycfeng",
+        "sudo -n timeout 60s python3 - /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261023-02"
+      ],
+      "stdin": "from pathlib import Path\nimport hashlib,json,sys\nr=Path(sys.argv[1]); files=[]\nfor p in sorted(r.rglob('*')):\n if not p.is_file(): continue\n assert p.resolve().is_relative_to(r.resolve()),str(p)\n h=hashlib.sha256()\n with p.open('rb') as f:\n  for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)\n files.append({'path':str(p.relative_to(r)),'bytes':p.stat().st_size,'sha256':h.hexdigest()})\nprint(json.dumps({'root':str(r),'files':files}))\n",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "shai-ycfeng",
+        "sudo -n tar -C /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261023-02 -cf - ."
+      ],
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "tar",
+        "--no-same-owner",
+        "--no-same-permissions",
+        "-xf",
+        "-",
+        "-C",
+        "/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts"
+      ],
+      "returncode": 0
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "task_id": "W128-V4-MOE-PACKAGE",
+  "status": "PASS_SOURCE_AND_CPU_ROUTING_NOT_GPU_BACKEND",
+  "python": "3.10.20 (main, May 10 2026, 19:27:29) [Clang 22.1.3 ]",
+  "torch": "2.1.2+cu121",
+  "numpy": "1.26.4",
+  "cuda_initialized": false,
+  "backend_label": "vllm_marlin_mxfp4",
+  "actual_native_selector_executed": false,
+  "block_selection_source_AST_executed": true,
+  "profile_default_use_fp8": true,
+  "expert_quantization_mode": "mxfp4 from existing model operation precision, not base/shared FP8",
+  "routing_metadata": {
+    "routing_runtime_path": "balanced_topk",
+    "routing_assignment_policy": "global_round_robin_balanced",
+    "routing_weight_policy": "uniform_1_over_topk",
+    "routing_uses_router_logits": false
+  },
+  "rows": [
+    {
+      "M": 12288,
+      "rank0_expert_counts": [
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288,
+        288
+      ],
+      "rank0_assignments": 4608,
+      "source_block_size_m": 64,
+      "rank0_aligned_rows": 5120,
+      "native_gating_rows": [
+        768
+      ],
+      "conditional": false
+    },
+    {
+      "M": 6152,
+      "rank0_expert_counts": [
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145
+      ],
+      "rank0_assignments": 2320,
+      "source_block_size_m": 64,
+      "rank0_aligned_rows": 3072,
+      "native_gating_rows": [
+        768,
+        1
+      ],
+      "conditional": true
+    },
+    {
+      "M": 32,
+      "rank0_expert_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "rank0_assignments": 16,
+      "source_block_size_m": 8,
+      "rank0_aligned_rows": 128,
+      "native_gating_rows": [
+        2
+      ],
+      "conditional": false
+    },
+    {
+      "M": 16,
+      "rank0_expert_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "rank0_assignments": 16,
+      "source_block_size_m": 8,
+      "rank0_aligned_rows": 128,
+      "native_gating_rows": [
+        1
+      ],
+      "conditional": false
+    }
+  ],
+  "all_original_columns_retained": true,
+  "producer_input_scope": "M gathered rows; gating/shuffle not consumed; no serving equivalence",
+  "control_setup_errors": [
+    "resolve_grouped_gemm_backend is keyword-only; inspected signature",
+    "routing result keys are global_num_experts/expert_map; inspected return dict",
+    "manual next() omitted native loop terminal64; executed actual native AST instead"
+  ]
+}

@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from frontier.profiling.common.layers.activation import SiluAndMul
+from frontier.profiling.common.layers.activation import SiluAndMul, SiluAndMulWithClamp
 from frontier.profiling.common.layers.layernorm import GemmaRMSNorm, RMSNorm
 from frontier.profiling.common.layers.rotary_embedding import get_rope
 from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
@@ -21,7 +21,9 @@ from frontier.profiling.common.parallel_utils.tensor_parallel_utils import (
 from frontier.profiling.common.cuda_timer import CudaTimer
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.common.utils import raise_if_fp8_requested
+from frontier.profiling.linear_op.mla_attention import MlaAttentionLinearOps
 from frontier.profiling.linear_op.profiling_plan import memory_operator_enabled
+from frontier.attention.families import DSA_ATTENTION_FAMILY
 from frontier.model_architectures import (
     AttentionLinearOpImplementation,
     MODEL_ARCHITECTURE_REGISTRY,
@@ -29,6 +31,10 @@ from frontier.model_architectures import (
 )
 
 REUSE_MEMORY = True
+
+# Attention families whose projections run through vLLM's MLA wrapper
+# (fused q_a/kv_a, q_b, o_proj) instead of a fused qkv projection.
+MLA_PROJECTION_FAMILY_IDS = frozenset({DSA_ATTENTION_FAMILY.family_id})
 
 
 def _resolve_num_kv_heads_per_worker(num_kv_heads: int, world_size: int) -> int:
@@ -665,7 +671,11 @@ class ShareExpertMLP(torch.nn.Module):
             linear_metric_name="share_expert_up_proj",  # Distinct timer name
             fp8_weight_block_size=fp8_block_size,
         )
-        self.act = SiluAndMul()
+        self.act = (
+            SiluAndMul()
+            if config.swiglu_limit is None
+            else SiluAndMulWithClamp(config.swiglu_limit)
+        )
 
         self.down_proj = RowParallelLinear(
             config.share_expert_dim,  # Use share_expert_dim
@@ -703,6 +713,8 @@ def build_linear_op_attention_module(
     attention_linear_ops = get_model_architecture_profile(config).attention_linear_ops
 
     if attn_sharded_enabled:
+        if config.get_attention_family().family_id in MLA_PROJECTION_FAMILY_IDS:
+            return MlaAttentionLinearOps(config, world_size)
         if attention_linear_ops.sharded_impl is AttentionLinearOpImplementation.STEP3_TEXT:
             return Step3TextCausalSelfAttention(config, world_size)
         if attention_linear_ops.sharded_impl is AttentionLinearOpImplementation.STEP2_MINI:

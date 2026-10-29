@@ -8,6 +8,7 @@ max_model_len.
 """
 
 import pytest
+from types import SimpleNamespace
 
 from frontier.config import (
     FixedRequestLengthGeneratorConfig,
@@ -18,6 +19,7 @@ from frontier.config import (
     Sj2qFastserveLiteSchedulerConfig,
     Sj2qPenaltyOnlySchedulerConfig,
     SyntheticRequestGeneratorConfig,
+    SpeculativeDecodingConfig,
     VllmV1SchedulerConfig,
 )
 from frontier.entities import Replica, Request
@@ -56,6 +58,7 @@ SCHEDULERS = [
 
 class _ClusterScheduler:
     def __init__(self, replica_id: int, num_stages: int) -> None:
+        self._config = SimpleNamespace(decode_attn_micro_batch_size=4)
         self._contexts = {
             (replica_id, stage_id): StageExecutionContext(
                 replica_id=replica_id, stage_id=stage_id, ep_size=1
@@ -71,13 +74,16 @@ def _build_scheduler(
     scheduler_class=VLLMv1EngineReplicaScheduler,
     config_class=VllmV1SchedulerConfig,
     cluster_type=ClusterType.PREFILL,
+    replica_fields=None,
     **config_fields,
 ):
-    replica_config = ReplicaConfig(
+    replica_options = dict(
         model_name="meta-llama/Llama-2-7b-hf",
         device="a100",
         network_device="a100_pairwise_nvlink",
     )
+    replica_options.update(replica_fields or {})
+    replica_config = ReplicaConfig(**replica_options)
     request_generator_config = SyntheticRequestGeneratorConfig(
         num_requests=1,
         length_generator_config=FixedRequestLengthGeneratorConfig(
@@ -102,6 +108,45 @@ def _build_scheduler(
         cluster_scheduler=_ClusterScheduler(replica.id, replica.num_pipeline_stages),
         cluster_type=cluster_type,
     )
+
+
+# Unified DECODE accepts an explicit capacity (test_decode_output_placeholders.py).
+@pytest.mark.parametrize("cluster_type", [
+    ClusterType.PREFILL, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN,
+])
+def test_explicit_queue_capacity_rejects_disaggregated_roles(cluster_type):
+    with pytest.raises(NotImplementedError, match="Explicit queue capacity requires"):
+        _build_scheduler(cluster_type=cluster_type, max_concurrent_batches=2)
+
+
+@pytest.mark.parametrize("scheduler_class,config_class", SCHEDULERS[1:])
+def test_explicit_queue_capacity_rejects_scheduler_subclasses(
+    scheduler_class, config_class
+):
+    with pytest.raises(NotImplementedError, match="Explicit queue capacity requires"):
+        _build_scheduler(
+            scheduler_class, config_class, ClusterType.MONOLITHIC,
+            max_concurrent_batches=2,
+        )
+
+
+@pytest.mark.parametrize("replica_fields,config_fields", [
+    ({"num_pipeline_stages": 2}, {}),
+    ({"attn_dp": 2}, {}),
+    ({}, {"enable_prefix_caching": True}),
+    ({"speculative_decoding_config": SpeculativeDecodingConfig(enabled=True)}, {}),
+    ({"model_name": "Qwen3.8-2.4T-A95B-Quark-MXFP4"}, {}),
+])
+def test_explicit_queue_capacity_rejects_unsupported_runtime_scopes(
+    replica_fields, config_fields
+):
+    with pytest.raises(NotImplementedError, match="Explicit queue capacity requires"):
+        _build_scheduler(
+            cluster_type=ClusterType.MONOLITHIC,
+            replica_fields=replica_fields,
+            max_concurrent_batches=2,
+            **config_fields,
+        )
 
 
 def test_a_prompt_beyond_the_workload_bound_is_scheduled_whole() -> None:

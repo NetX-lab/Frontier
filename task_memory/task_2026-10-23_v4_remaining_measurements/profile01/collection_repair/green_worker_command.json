@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/unit/test_native_pd_worker.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/green_worker_temp"
+  ],
+  "returncode": 0,
+  "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/green_worker.log",
+  "tail": [
+    "....................................                                     [100%]",
+    "36 passed in 3.12s"
+  ]
+}

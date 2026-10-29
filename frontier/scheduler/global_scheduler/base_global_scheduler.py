@@ -8,7 +8,7 @@ from frontier.entities import Cluster, Replica, Request
 from frontier.config import BaseRequestGeneratorConfig
 from frontier.scheduler.cluster_scheduler import ClusterSchedulerRegistry
 from frontier.types import ClusterType
-from frontier.execution_time_predictor import BaseExecutionTimePredictor
+from frontier.execution_time_predictor.base_execution_time_predictor import BaseExecutionTimePredictor
 from frontier.logger import init_logger
 
 if TYPE_CHECKING:

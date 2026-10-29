@@ -1,0 +1,43 @@
+{
+  "status": "PASS",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "--quiet",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "runuser",
+    "-u",
+    "brainpp",
+    "--",
+    "env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "TMPDIR=/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_inherited_twc5dume",
+    "CUDA_VISIBLE_DEVICES=",
+    "OMP_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+    "-B",
+    "-c",
+    "import json,runpy,pytest;from pathlib import Path;g=runpy.run_path('/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/tests/run_cpu_checks.py');g['DiagnosticCopy'].pytest_sessionstart.__globals__['HERE']=Path('/data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe');p=g['DiagnosticCopy']();r=pytest.main(['/data/ycfeng/Frontier/.worktrees/glm-full-dummy-h200/tests/profiling/test_cuda_graph_probe_attempt1.py', '/data/ycfeng/Frontier/.worktrees/glm-full-dummy-h200/tests/unit/test_cuda_graph_scope_probe.py', '-q', '-p', 'no:cacheprovider', '-k', 'not callback_fields_are_copied_only_while_native_data_is_valid and not callback_never_propagates_python_exceptions_across_c and not callback_layout_matches_compiled_cuda13_header', '--basetemp=/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_inherited_twc5dume/case_tmp', '--junitxml=/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_inherited_twc5dume/inherited.xml'],plugins=[p]);print(json.dumps({'candidate_loads':p.loads}));assert p.loads==71;raise SystemExit(int(r))"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe",
+  "start_utc": "2026-10-24T05:22:10.505028+00:00",
+  "end_utc": "2026-10-24T05:22:11.873382+00:00",
+  "returncode": 0,
+  "counts": {
+    "tests": 71,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "candidate_loads": 71,
+  "candidate_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "original_root_receipt": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/receipt.json",
+  "correction": "Initial root argv slicing omitted -k and treated the expression as a path;0tests ran. Restored the original seven-argument prefix; no source/tests changed; only this inherited suite was rerun.",
+  "output": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_inherited_twc5dume"
+}

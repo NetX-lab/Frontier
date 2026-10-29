@@ -1,0 +1,16 @@
+{
+  "command": [
+    "docker",
+    "image",
+    "inspect",
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "--format",
+    "{\"image_id\":{{json .Id}},\"user\":{{json .Config.User}},\"repo_digests\":{{json .RepoDigests}}}"
+  ],
+  "start_utc": "2026-10-24T18:07:01.680226+00:00",
+  "end_utc": "2026-10-24T18:07:01.944698+00:00",
+  "exit": 1,
+  "stdout": "\n",
+  "stderr": "template parsing error: template: :1:46: executing \"\" at <.Config.User>: map has no entry for key \"User\"\n",
+  "operation": "read existing local image metadata only; no image run/build/pull"
+}

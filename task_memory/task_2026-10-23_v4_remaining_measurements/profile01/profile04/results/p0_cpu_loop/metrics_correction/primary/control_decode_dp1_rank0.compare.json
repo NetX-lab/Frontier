@@ -1,0 +1,1 @@
+{"payload_equal": true, "kernel_rows_equal": true, "rows": [142567, 142567], "kernel_total": [{"count": 142567, "sum_ms": 1377.599441999903, "union_ms": 1215.560419921875}, {"count": 142567, "sum_ms": 1377.599441999903, "union_ms": 1215.560419921875}], "useful_steps": [61, 61]}

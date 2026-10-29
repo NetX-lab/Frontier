@@ -11,9 +11,7 @@ from frontier.config import ClusterConfig, BaseRequestGeneratorConfig
 from frontier.entities import Batch, EPBatchGroup, ExecutionTime, Replica, Request, Cluster
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 # Phase 2.5: Removed deprecated MoECollectiveScheduleEvent import
-from frontier.execution_time_predictor import (
-    BaseExecutionTimePredictor,
-)
+from frontier.execution_time_predictor.base_execution_time_predictor import BaseExecutionTimePredictor
 from frontier.model_architectures import (
     ExpertParallelCollective,
     ModelArchitectureProfile,
@@ -464,6 +462,36 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
         return None
 
+    def validate_kv_transfer_target_scope(self, source_capacity, request: Request) -> None:
+        """Validate every selectable NIXL lane before advancing placement."""
+        if self._cluster_type != ClusterType.DECODE:
+            raise ValueError("NIXL transfer target validation requires DECODE")
+        replica_ids = list(self._cluster.replicas.keys())
+        if not replica_ids:
+            raise ValueError("DECODE cluster has no replicas")
+        for replica_id in replica_ids:
+            for replica_local_id in range(self._replica_dp_size):
+                lane = self.get_replica_scheduler(replica_id, replica_local_id)
+                lane.validate_kv_transfer_target_scope(request)
+                if lane._kv_cache_capacity != source_capacity:
+                    raise ValueError(
+                        "PREFILL and DECODE cache capacities must match"
+                    )
+
+    def select_kv_transfer_target(
+        self, time: float, request: Request
+    ) -> tuple[int, int]:
+        """Select the DECODE lane that reserves before a NIXL READ.
+
+        A NIXL request reaches its reserved lane directly, so this is the only
+        placement the DECODE policy makes for it.
+        """
+        raise ValueError(
+            "NIXL structural PD needs a DECODE cluster scheduler that selects "
+            f"transfer targets; {type(self).__name__} does not. "
+            "Use round_robin or vllm_load_balancing."
+        )
+
     def get_replica(self, replica_id: int) -> Replica:
         return self._cluster.replicas[replica_id]
 
@@ -848,6 +876,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         batch: Batch,
         target_replica_id: int,
         global_layer_id: int,
+        routing_token_count: int | None = None,
     ):
         """Materialize one canonical per-layer workload for a full-model MoE batch."""
 
@@ -856,6 +885,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             batch=batch,
             target_replica_id=target_replica_id,
             global_layer_id=global_layer_id,
+            routing_token_count=routing_token_count,
         )
 
     def _build_prefill_ep_lane_batch(

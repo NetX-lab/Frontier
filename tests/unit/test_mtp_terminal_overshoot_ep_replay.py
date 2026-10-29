@@ -86,6 +86,7 @@ def _predictor() -> _NonDummyMoEPredictor:
     predictor._replica_config = SimpleNamespace(
         num_pipeline_stages=2,
         attn_tensor_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=1,
         moe_expert_parallel_size=2,
         router_topk=2,

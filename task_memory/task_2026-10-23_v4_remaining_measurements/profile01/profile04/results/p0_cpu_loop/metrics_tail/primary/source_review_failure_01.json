@@ -1,0 +1,27 @@
+{
+  "status": "FAIL_RETAINED_RECEIPT_CONSISTENCY",
+  "observed_utc": "2026-10-24T20:06:53.681402+00:00",
+  "command": "timeout 60s /usr/bin/python3 -B -",
+  "failed_expression": "len(tiny[\"checks\"]) == 63 and all(r[\"status\"] == \"PASS\" and r[\"expected\"] == r[\"actual\"] for r in tiny[\"checks\"])",
+  "failed_row": {
+    "name": "stable_tie_order",
+    "expected": [
+      [
+        1,
+        2,
+        0,
+        3
+      ]
+    ],
+    "actual": [
+      [
+        2,
+        1,
+        0
+      ]
+    ],
+    "status": "PASS"
+  },
+  "original_receipt_sha256": "99a7862bd79c84f061671a62f0f3b6cdeeb217d1cec126aa7b5ad83d58aa67f9",
+  "new_control_invocations": 0
+}

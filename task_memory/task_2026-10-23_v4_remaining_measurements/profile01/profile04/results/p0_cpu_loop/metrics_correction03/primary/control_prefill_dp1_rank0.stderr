@@ -1,0 +1,2 @@
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_interval_metrics.py", line 81, in <module>

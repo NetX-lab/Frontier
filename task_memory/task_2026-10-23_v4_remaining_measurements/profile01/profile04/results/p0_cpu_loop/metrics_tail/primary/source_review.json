@@ -1,0 +1,51 @@
+{
+  "status": "ACCEPTED_TIMER_FOR_ONCE_ONLY_DIAGNOSIS",
+  "decision": "D-V4-P0-AUDIT-METRICS-TAIL-DIAGNOSIS",
+  "reviewer": "primary",
+  "observed_utc": "2026-10-24T20:06:53.681958+00:00",
+  "head_before_timer_commit": "ffbfbc37590d6a3e8a99923c9ee90a5e0d4475a6",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "timer_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics_timing.py",
+  "timer_sha256": "fdce5eca10e0cea28af12b87d25a94ed68f0ce0de2eda77c6b5fa2ccb5b541b5",
+  "timer_gross_lines": 98,
+  "owner_markdown_lines": 88,
+  "tiny_control_invocations_used": 1,
+  "new_tiny_or_full_control_invocations_this_review": 0,
+  "diagnostic_invocations_used": 0,
+  "diagnostic_invocation_ceiling": 1,
+  "retained_runtime_checks_reported_pass": 63,
+  "consistent_serialized_checks": 62,
+  "stable_order_evidence": "bound deep-copied fixture record; aggregate field remains invalid",
+  "retained_fixtures": 5,
+  "retained_AST_closure": "exact function, generated module and pipeline",
+  "source_hashes": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+    "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics_timing.py": "fdce5eca10e0cea28af12b87d25a94ed68f0ce0de2eda77c6b5fa2ccb5b541b5",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/owner/tiny_control.py": "6e6b69a9317cc6418aa7a39ec92a960e4007bf640d15b56990ce9e33e0b4c010"
+  },
+  "reviewed_artifacts": {
+    "ast_closure.json": "cd0f8422341ffd26e3987246ad31d1ce6e77c076f7fd00a60817a8c5ccb6b8da",
+    "check_progress.md": "7267a45b55afe28a30a0d21b03147e4b713e81298ba275094e45d9adfc7d4ebb",
+    "static_compile.py": "ca18b5ea7e2bafc6f75bea8413941def641edc24d0c8db031080daca1773bead",
+    "static_compile_result.json": "d8609c7470fcbed3a4e01ebf1d0a581bfd94e4394219c5bcb6a84a19251be1b4",
+    "test_report_2026-10-25_metrics_tail_timer.md": "1a3e7618b6bab0ad09c39c7c6b158aa7c61a0482d7ce706ea112d4e3c9cfb315",
+    "tiny_control.py": "6e6b69a9317cc6418aa7a39ec92a960e4007bf640d15b56990ce9e33e0b4c010",
+    "tiny_control_result.json": "99a7862bd79c84f061671a62f0f3b6cdeeb217d1cec126aa7b5ad83d58aa67f9"
+  },
+  "tiny_receipt_binding_sha256": "0d17f4c6ae9d04ffe3de3535da8e2c3687d9395ca4ab3ea068a542ff806dec09",
+  "manual_source_review": [
+    "Only sparse observations and one wrapper around the existing sorted binding are inserted.",
+    "Original membership, count/sum, union expressions and call order are retained.",
+    "batch_start follows caller-side groups construction; its preceding stage gap is separate."
+  ],
+  "limits": [
+    "One serialized tiny-check field is invalid and remains preserved, with its evidence bound separately.",
+    "No fixture, full trace, spent driver or GPU execution during evidence review.",
+    "The timer gate creates no R5 or timing/non-perturbation acceptance."
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "status": "PASS",
+  "source_files": {
+    "tests/comparison/calibration/native_serve_profile.py": "17d6dea11d35a2dc9849a11986fe5df46b45adb84d2d2bdeb958642a851b26ef",
+    "tests/unit/test_native_serve_profile.py": "a43f82d524e08250f1aa1b4b3bc3d9f4d9ba01935b6e1b9326c0a62ecf190c84"
+  },
+  "results": [
+    {
+      "suite": "test_native_serve_profile",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_serve_profile.py",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/profile03_cupti_green_habvsnv1/test_native_serve_profile.xml"
+      ],
+      "start_utc": "2026-10-23T17:12:33.459791+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 33,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "3361352f4463cfd9bd5ff114af106272a76f77b61827356b1529a1fc22903995"
+    },
+    {
+      "suite": "test_native_pd_worker",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_pd_worker.py",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/profile03_cupti_green_habvsnv1/test_native_pd_worker.xml"
+      ],
+      "start_utc": "2026-10-23T17:12:36.028593+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 19,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "7b3acd54a2237da38fe800a29b75250cb2ae16bc3a2999f14dfcfe59e64e5b9d"
+    },
+    {
+      "suite": "test_native_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_serving_inventory.py",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/profile03_cupti_green_habvsnv1/test_native_serving_inventory.xml"
+      ],
+      "start_utc": "2026-10-23T17:12:38.046803+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 28,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "a04cf7e31c5d3853b8fd85247c188aa168be3880a2466a99eceea65c32d5e928"
+    },
+    {
+      "suite": "test_native_v2_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_v2_serving_inventory.py",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/profile03_cupti_green_habvsnv1/test_native_v2_serving_inventory.xml"
+      ],
+      "start_utc": "2026-10-23T17:12:39.563752+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 45,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "90560d0d419910c0cf0c63f6b3464776c258a81e6f92224a040bbe47e8b1a90d"
+    }
+  ],
+  "numstat": "4\t1\ttests/comparison/calibration/native_serve_profile.py\n29\t0\ttests/unit/test_native_serve_profile.py\n",
+  "gross_lines": 34,
+  "line_cap": 80,
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "command": [
+    "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/unit/test_native_pd_worker.py",
+    "tests/unit/test_native_pd_manifest.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_py312",
+    "--junitxml",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/cpu_evidence/tests_py312.xml"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run",
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/brainpp",
+    "LANG": "C.UTF-8",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "started_utc": "2026-10-24T08:09:08.128555+00:00",
+  "returncode": 0,
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "counts": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "55",
+      "time": "6.066",
+      "timestamp": "2026-10-24T16:09:08.340726+08:00",
+      "hostname": "kun-workspace-vgen2"
+    }
+  ],
+  "cpu_only": true
+}

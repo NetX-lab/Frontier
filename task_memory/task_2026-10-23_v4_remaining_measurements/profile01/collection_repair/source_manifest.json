@@ -1,0 +1,48 @@
+{
+  "task_id": "W128-PROFILE03-COLLECTION",
+  "source_status": "CPU_VERIFIED_PENDING_ROOT_REVIEW",
+  "base": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+  "source_commit": "20660f4c0776ddd75dc211f1f0819266b48ba23c",
+  "branch": "v4-profile03-collection",
+  "changed_files": [
+    "tests/comparison/calibration/native_pd_worker.py",
+    "tests/unit/test_native_pd_worker.py"
+  ],
+  "files": {
+    "tests/comparison/calibration/native_pd_worker.py": {
+      "additions": 24,
+      "deletions": 6,
+      "gross": 30,
+      "limit": 80,
+      "sha256": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b"
+    },
+    "tests/unit/test_native_pd_worker.py": {
+      "additions": 121,
+      "deletions": 8,
+      "gross": 129,
+      "limit": 180,
+      "sha256": "84fa7a4be7a8a957eb62671e652d6e00ff48d153c92671bea7a53fe6528cea4c"
+    }
+  },
+  "gross_total": 159,
+  "limit_total": 260,
+  "final_checks_sha256": "5b9e9abde333bd28aec250844d90430270fda8a024dca2d0ad2088fb414dd74f",
+  "matrix_binding_sha256": "90e666851baabb0e3b5627ef97883da869720fd9e4103f48820b0bcf50da3c59",
+  "native_stop_source": {
+    "path": "tests/comparison/dp_placement_pp/vllm_replay.py",
+    "sha256": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901",
+    "unchanged_from_base": true,
+    "signal_sequence": [
+      "SIGINT",
+      "SIGTERM",
+      "SIGKILL"
+    ],
+    "final_wait": "unbounded"
+  },
+  "native_checkout": {
+    "path": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+  },
+  "no_package_changes": true,
+  "no_native_c26_checker_changes": true
+}

@@ -43,6 +43,7 @@ Gate kinds (scenario matrix ``gate``):
 from __future__ import annotations
 
 import json
+import math
 import statistics
 from collections import Counter
 from pathlib import Path
@@ -57,6 +58,7 @@ from tests.comparison.calibration.e2e_metrics_gap import (
     metric_values,
     token_count_mismatches,
 )
+from tests.comparison.calibration.client_metrics import TTFT_SEMANTIC
 
 MIN_MODE_REQUESTS = 20
 REQUIRED_MODE_SHARE = 0.2
@@ -210,6 +212,50 @@ def dp_pp_reading(cell: dict, sample: dict, sides: dict[str, pd.DataFrame], chec
     }
 
 
+def client_reading(cell: dict, sample: dict, sides: dict[str, pd.DataFrame], checks: dict) -> dict:
+    """The canonical four gates, retaining and gating every independent repetition."""
+    workload = sample["client_workload"]
+    expected = workload["lengths"]
+    problems = []
+    references = sample["reference_admission"]
+    vllm = [side for side in sides if side.startswith("vllm/")]
+    members = [side for side in sides if side.startswith("frontier/")]
+    if (len(references) != 1 or len(members) != 1
+            or len(vllm) != workload["repetitions"]["clean_repetitions"]
+            or any(status != "PASS" for status in references.values())
+            or len(sample["formal_request_ids"]) != workload["selection"]["num_formal_requests"]):
+        problems.append("reference_repetition_admission")
+    for side, rows in sides.items():
+        numeric = rows[NORMALIZED_COLUMNS[1:]]
+        tpot = (rows["request_e2e_time_ms"] - rows["ttft_ms"]) / (rows["request_num_decode_tokens"] - 1)
+        if ("ttft_semantic" not in rows or not rows["ttft_semantic"].eq(TTFT_SEMANTIC).all()
+                or not all(math.isfinite(x) for x in numeric.to_numpy().flat)
+                or not rows["request_num_prefill_tokens"].eq(expected["prompt_tokens_per_request"]).all()
+                or not rows["request_num_decode_tokens"].eq(expected["output_tokens_per_request"]).all()
+                or (tpot - rows["tpot_ms"]).abs().gt(CLOCK_TOLERANCE_MS).any()
+                or rows.index.has_duplicates):
+            problems.append(side)
+    checks["client_metric_gaps"] = problems
+    if problems:
+        checks["blocked_status"] = checks["blocked_status"] or "INSUFFICIENT_EVIDENCE"
+
+    def four(reading):
+        reading["metrics"] = [r for r in reading["metrics"] if r["metric"] != "request_throughput_rps"]
+        reading["verdict"] = verdict([r["status"] for r in reading["metrics"]])
+        return reading
+
+    pooled = four(single_reading(cell, sample, sides, checks))
+    repetitions = {side: four(single_reading(cell, sample,
+                    {name: rows for name, rows in sides.items() if name == side or name in members}, checks))
+                   for side in vllm}
+    windows = {side: dict(first_submission_s=float(rows["arrival_s"].min()),
+                         last_token_s=float(rows["completion_s"].max()),
+                         total_tokens=int(rows[["request_num_prefill_tokens", "request_num_decode_tokens"]]
+                                          .to_numpy().sum())) for side, rows in sides.items()}
+    return {**pooled, "repetitions": repetitions, "formal_windows": windows,
+            "verdict": verdict([pooled["verdict"], *(r["verdict"] for r in repetitions.values())])}
+
+
 def gate_reading(cell: dict, case: dict, rows_dir: Path) -> dict:
     sample, sides = read_rows(rows_dir)
     if sample["cell_id"] != cell["cell_id"]:
@@ -218,9 +264,13 @@ def gate_reading(cell: dict, case: dict, rows_dir: Path) -> dict:
         missing = set(NORMALIZED_COLUMNS[1:]) - set(rows.columns)
         if missing:
             raise ValueError(f"{rows_dir / side}.csv lacks the normalized columns {sorted(missing)}")
+        if cell["gate"] == "client" and rows.index.has_duplicates:
+            sample["sides"][side].setdefault("duplicates", []).extend(rows.index[rows.index.duplicated()].tolist())
+            sides[side] = rows[~rows.index.duplicated()]
     checks = admission(sample, sides, case["routing"]["status"])
-    reading = (dp_pp_reading if cell["gate"] == "dp_pp_pairs" else single_reading)(cell, sample, sides, checks)
+    reader = {"dp_pp_pairs": dp_pp_reading, "client": client_reading}.get(cell["gate"], single_reading)
+    reading = reader(cell, sample, sides, checks)
     return {"cell_id": cell["cell_id"], "gate": cell["gate"], "relative_error_limit": RELATIVE_ERROR_LIMIT,
-            "ttft_semantic": "request_arrival_to_prefill_completion", "sides": sorted(sides),
+            "ttft_semantic": TTFT_SEMANTIC if cell["gate"] == "client" else "request_arrival_to_prefill_completion",
+            "sides": sorted(sides),
             "formal_request_count": len(sample["formal_request_ids"]), **checks, **reading}
-

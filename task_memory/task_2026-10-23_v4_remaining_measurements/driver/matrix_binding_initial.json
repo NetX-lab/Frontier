@@ -1,0 +1,18 @@
+{
+  "status": "DEFAULT_MATRIX_BYTES_IDENTICAL_REVIEW_PENDING",
+  "capture_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "identical_cases": 77,
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "new_capture": false,
+  "prior_binding_sha256": "d9d64138e70bce155404cb1cb7274bb099dd5ee26c39fbe0a7e69cae22e91dd8",
+  "source_manifest_sha256": "c48d89ef3a585980a94a0f694c2d78bb9f417ffeb48d24d678a69d617fbb6563",
+  "limit": "No serving/runtime/GPU qualification; final review and commit binding remain pending"
+}

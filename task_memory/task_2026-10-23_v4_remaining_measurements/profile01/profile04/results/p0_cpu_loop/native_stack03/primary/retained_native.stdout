@@ -1,0 +1,3 @@
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7f8e74ebb640 (LWP 2791659)]

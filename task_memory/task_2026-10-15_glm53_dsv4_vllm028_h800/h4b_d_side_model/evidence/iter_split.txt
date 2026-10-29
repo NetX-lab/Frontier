@@ -1,0 +1,14 @@
+decoding {'d_iter': {'n': 378, 'mean': 2.81, 'p50': 3, 'p95': 5, 'min': 1, 'max': 6}, 'f_iter': {'n': 378, 'mean': 1, 'p50': 1, 'p95': 1, 'min': 1, 'max': 1}, 'step_ms': {'n': 378, 'mean': 20.35, 'p50': 20.52, 'p95': 21.05, 'min': 18.76, 'max': 22.37}, 'c_to_e_iter': {'n': 378, 'mean': 4.81, 'p50': 5, 'p95': 7, 'min': 3, 'max': 8}}
+  d_iter counts [(1, 45), (2, 140), (3, 73), (4, 82), (5, 36), (6, 2)] f_iter counts [(1, 378)]
+   d with 1 iterations: n 45 mean 41.8
+   d with 2 iterations: n 140 mean 61.6
+   d with 3 iterations: n 73 mean 81.9
+   d with 4 iterations: n 82 mean 101.6
+   d with 5 iterations: n 36 mean 121.1
+   d with 6 iterations: n 2 mean 137.6
+idle {'d_iter': {'n': 6, 'mean': 5.17, 'p50': 4, 'p95': 5, 'min': 3, 'max': 12}, 'f_iter': {'n': 6, 'mean': 1, 'p50': 1, 'p95': 1, 'min': 1, 'max': 1}, 'step_ms': {'n': 6, 'mean': 11.51, 'p50': 18.29, 'p95': 18.54, 'min': 3.85, 'max': 19.4}, 'c_to_e_iter': {'n': 6, 'mean': 7.17, 'p50': 6, 'p95': 7, 'min': 5, 'max': 14}}
+  d_iter counts [(3, 2), (4, 2), (5, 1), (12, 1)] f_iter counts [(1, 6)]
+   d with 3 iterations: n 2 mean 35.8
+   d with 4 iterations: n 2 mean 72.7
+   d with 5 iterations: n 1 mean 25.3
+   d with 12 iterations: n 1 mean 60.1

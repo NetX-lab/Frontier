@@ -1,0 +1,24 @@
+WARNING 07:59:03 model_architectures.py:1302] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported; measured execution is limited to a diagnostic whole-step table (dsv4_step_cost.json), selected explicitly through the attention input path, for PREFILL and unified DECODE lanes of its measured topology
+{
+  "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b6_review/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+  "sha256": "277626cd766865bd0d006d73bf01b31292d7e3f536acce919b1c7ceca7f30ff6",
+  "rows": 505,
+  "models": 554,
+  "models_by_target": {
+    "time_stats": 277,
+    "gap_stats": 277
+  },
+  "models_by_phase": {
+    "decode": 160,
+    "dummy": 234,
+    "prefill": 80,
+    "first_tail": 80
+  },
+  "median_absolute_relative_error": 0.004909042604138507,
+  "p90_absolute_relative_error": 0.013427296634388455,
+  "maximum_absolute_relative_error": 0.06672723200168651,
+  "rows_above_five_percent": 2,
+  "limits_passed": true
+}
+{"row_index": 13, "key": {"case_id": "e0-decode-b1-p6144", "attention_variant": "csa", "graph_runtime_mode": "FULL", "phase": "decode", "plans_tile_schedule": false, "padded_rows": 1, "prefill_seq_lens": "[]", "prefill_kv_cache_sizes": "[]", "decode_kv_cache_sizes": "[6151]"}, "predicted_ms": 0.09087017313639323, "target_ms": 0.096416015625, "absolute_relative_error": 0.05751993019683316}
+{"row_index": 204, "key": {"case_id": "e0-decode-b4-p6144", "attention_variant": "csa", "graph_runtime_mode": "FULL", "phase": "decode", "plans_tile_schedule": true, "padded_rows": 4, "prefill_seq_lens": "[]", "prefill_kv_cache_sizes": "[]", "decode_kv_cache_sizes": "[6150, 6151, 6152, 6153]"}, "predicted_ms": 0.12353565979003907, "target_ms": 0.11580810546875, "absolute_relative_error": 0.06672723200168651}

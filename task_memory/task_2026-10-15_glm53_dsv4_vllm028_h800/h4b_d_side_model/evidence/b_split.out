@@ -1,0 +1,4 @@
+b all n 384 mean/median/min/max (13.54, 13.39, 4.41, 31.05)
+adds right after an update 378
+arrival -> preceding update (engine loop wait) (13.41, 13.23, 4.25, 30.91)
+update -> add (0.2, 0.15, 0.07, 1.31)

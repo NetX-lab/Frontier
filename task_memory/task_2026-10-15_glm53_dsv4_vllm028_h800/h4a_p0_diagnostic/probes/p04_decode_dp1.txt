@@ -1,0 +1,4 @@
+/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842735368033988.pt.trace.json.gz 64 cpu steps 61 gpu steps
+composition [((0, 0, 1, 1), 60), ((1, 1, 0, 0), 1)]
+(0, 1) n 60 interval_ms med 19.732 span_ms med 19.729 busy_ms med 20.904 kernels med 2227.0
+(1, 0) n 1 interval_ms med 21.661 span_ms med 21.652 busy_ms med 21.736 kernels med 2233

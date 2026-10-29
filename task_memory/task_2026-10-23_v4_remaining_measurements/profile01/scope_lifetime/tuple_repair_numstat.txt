@@ -1,0 +1,2 @@
+6	4	task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py
+19	0	tests/unit/test_cupti_scope_lifetime.py

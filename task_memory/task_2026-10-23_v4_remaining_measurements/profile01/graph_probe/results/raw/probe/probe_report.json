@@ -1,0 +1,778 @@
+{
+  "schema_version": "cuda_graph_scope_probe.v3",
+  "command": "run",
+  "script_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "image_digest_from_launcher": "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "torch_version": "2.13.0+cu130",
+  "torch_cuda_version": "13.0",
+  "api": {
+    "python_api": {
+      "raw_cuda_graph": true,
+      "raw_cuda_graph_exec": true,
+      "instantiate": true
+    },
+    "mapping_api": "CUDA13_topology_and_CUPTI_ID_queries",
+    "cuda_bindings_version": "13.3.1",
+    "runtime_api": {
+      "cudaGraphGetNodes": true,
+      "cudaGraphGetEdges": true,
+      "cudaGraphNodeGetType": true,
+      "cudaGraphEventRecordNodeGetEvent": true
+    },
+    "cuda_runtime_version": "13.0.96",
+    "runtime_header": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include/cuda_runtime_api.h",
+    "runtime_declarations": [
+      {
+        "line": 10533,
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphEventRecordNodeGetEvent(cudaGraphNode_t node, cudaEvent_t *event_out);"
+      },
+      {
+        "line": 11264,
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphNodeGetType(cudaGraphNode_t node, enum cudaGraphNodeType *pType);"
+      },
+      {
+        "line": 11295,
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphGetNodes(cudaGraph_t graph, cudaGraphNode_t *nodes, size_t *numNodes);"
+      },
+      {
+        "line": 11366,
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphGetEdges(cudaGraph_t graph, cudaGraphNode_t *from, cudaGraphNode_t *to, cudaGraphEdgeData *edgeData, size_t *numEdges);"
+      }
+    ],
+    "cupti_version": "13.0.85",
+    "cupti_library": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13",
+    "cupti_header": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include/cupti_activity.h",
+    "cupti_declarations": [
+      {
+        "line": 7380,
+        "declaration": "CUptiResult CUPTIAPI cuptiGetGraphNodeId(CUgraphNode node, uint64_t *nodeId);"
+      },
+      {
+        "line": 7394,
+        "declaration": "CUptiResult CUPTIAPI cuptiGetGraphId(CUgraph graph, uint32_t *pId);"
+      },
+      {
+        "line": 7408,
+        "declaration": "CUptiResult CUPTIAPI cuptiGetGraphExecId(CUgraphExec graphExec, uint32_t *pId);"
+      }
+    ],
+    "cupti_missing_python_bindings": {
+      "cuptiGetGraphNodeId": true,
+      "cuptiGetGraphId": true,
+      "cuptiGetGraphExecId": true
+    },
+    "cupti_typed_exports": {
+      "cuptiGetGraphNodeId": true,
+      "cuptiGetGraphId": true,
+      "cuptiGetGraphExecId": true
+    },
+    "callback_abi": {
+      "size": 56,
+      "alignment": 8,
+      "offsets": {
+        "graph": 0,
+        "originalGraph": 8,
+        "node": 16,
+        "originalNode": 24,
+        "nodeType": 32,
+        "dependency": 40,
+        "graphExec": 48
+      },
+      "resource_domain": 3,
+      "node_cloned": 20,
+      "exec_created": 18,
+      "resource_data": {
+        "size": 24,
+        "alignment": 8,
+        "offsets": {
+          "context": 0,
+          "resourceHandle": 8,
+          "resourceDescriptor": 16
+        }
+      },
+      "resource_handle": {
+        "size": 8,
+        "alignment": 8,
+        "offsets": {
+          "stream": 0
+        }
+      }
+    },
+    "callback_missing_python_bindings": {
+      "cuptiSubscribe": true,
+      "cuptiEnableCallback": true,
+      "cuptiUnsubscribe": true
+    },
+    "callback_typed_exports": {
+      "cuptiSubscribe": true,
+      "cuptiEnableCallback": true,
+      "cuptiUnsubscribe": true
+    },
+    "mapped_cupti_libraries": [
+      "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13"
+    ],
+    "event_cuda_event_descriptor": true,
+    "rejected_get_graph_data_source": "    def get_graph_data(self) -> dict:\n        r\"\"\"Return a dictionary describing the graph's topology and node metadata.\n\n        ``keep_graph`` must be True.  The graph must have been instantiated\n        (via :meth:`instantiate`) before calling this method.\n        Requires the ``cuda.bindings`` package.\n\n        Returns a dictionary with structure::\n\n            {\n                \"exec_graph_id\": int,\n                \"nodes\": [\n                    {\n                        \"index\": int,\n                        \"node_type\": str,\n                        \"tools_id\": int,\n                        \"graph_id\": int,\n                        \"node_id\": int,\n                        \"kernel_name\": str or None,\n                        \"dependencies\": [int, ...],\n                        \"dependents\": [int, ...],\n                    },\n                    ...,\n                ],\n            }\n\n        Each node's ``graph_id`` is remapped to the exec graph id so that\n        ``tools_id`` values match those reported by CUPTI-based profilers.\n        ``dependencies`` and ``dependents`` are lists of node indices within\n        the ``nodes`` list.\n\n        This structure is useful for inspecting a profiler trace and\n        establishing whether a particular dependency observed in the profile\n        is a true dependency (encoded in the graph) or a fake dependency\n        caused by mapping of independent streams to the same hardware\n        channel.\n        \"\"\"\n        from torch.cuda._graph_annotations import _is_tools_id_unavailable\n\n        if _cuda_runtime is None or _cuda_driver is None:\n            raise RuntimeError(\"get_graph_data requires the cuda.bindings package\")\n\n        if _is_tools_id_unavailable():\n            raise RuntimeError(\n                \"get_graph_data requires cudaGraphNodeGetToolsId which needs \"\n                \"cuda.bindings >= 13.1 and CUDA driver >= 13.1 \"\n                \"(or cuda-compat >= 13.1 in LD_LIBRARY_PATH)\"\n            )\n\n        node_type_names = {\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeKernel: \"kernel\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeMemcpy: \"memcpy\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeMemset: \"memset\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeHost: \"host\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeGraph: \"child_graph\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeEmpty: \"empty\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeWaitEvent: \"wait_event\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeEventRecord: \"event_record\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeMemAlloc: \"mem_alloc\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeMemFree: \"mem_free\",\n        }\n\n        raw = self.raw_cuda_graph()\n\n        _, num = _check_cuda_bindings(_cuda_runtime.cudaGraphGetNodes(raw, numNodes=0))\n        nodes, num = _check_cuda_bindings(\n            _cuda_runtime.cudaGraphGetNodes(raw, numNodes=num)\n        )\n\n        handle_to_idx: dict[int, int] = {}\n        node_infos: list[dict] = []\n\n        for i in range(num):\n            node = nodes[i]\n            handle_to_idx[int(node)] = i\n\n            ntype = _check_cuda_bindings(_cuda_runtime.cudaGraphNodeGetType(node))\n            tools_id = _check_cuda_bindings(_cuda_runtime.cudaGraphNodeGetToolsId(node))\n            graph_id = tools_id >> 32\n            node_id = tools_id & 0xFFFFFFFF\n\n            kernel_name = None\n            if ntype == _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeKernel:\n                cu_node = _cuda_driver.CUgraphNode(init_value=int(node))\n                err, params = _cuda_driver.cuGraphKernelNodeGetParams(cu_node)\n                if err == _cuda_driver.CUresult.CUDA_SUCCESS and int(params.func):\n                    cu_func = _cuda_driver.CUfunction(init_value=int(params.func))\n                    err, name = _cuda_driver.cuFuncGetName(cu_func)\n                    if err == _cuda_driver.CUresult.CUDA_SUCCESS:\n                        kernel_name = name.decode() if isinstance(name, bytes) else name\n\n            node_infos.append(\n                {\n                    \"index\": i,\n                    \"node_type\": node_type_names.get(ntype, str(ntype)),\n                    \"tools_id\": tools_id,\n                    \"graph_id\": graph_id,\n                    \"node_id\": node_id,\n                    \"kernel_name\": kernel_name,\n                    \"dependencies\": [],\n                    \"dependents\": [],\n                }\n            )\n\n        _, _, _, num_edges = _check_cuda_bindings(\n            _cuda_runtime.cudaGraphGetEdges(raw, numEdges=0)\n        )\n        if num_edges > 0:\n            from_nodes, to_nodes, _edge_data, num_edges = _check_cuda_bindings(\n                _cuda_runtime.cudaGraphGetEdges(raw, numEdges=num_edges)\n            )\n            for i in range(num_edges):\n                src = handle_to_idx.get(int(from_nodes[i]))\n                dst = handle_to_idx.get(int(to_nodes[i]))\n                if src is not None and dst is not None:\n                    node_infos[src][\"dependents\"].append(dst)\n                    node_infos[dst][\"dependencies\"].append(src)\n\n        exec_handle = _cuda_runtime.cudaGraphExec_t(\n            init_value=self.raw_cuda_graph_exec()\n        )\n        exec_graph_id = _check_cuda_bindings(\n            _cuda_runtime.cudaGraphExecGetId(exec_handle)\n        )\n        for info in node_infos:\n            info[\"tools_id\"] = (exec_graph_id << 32) | info[\"node_id\"]\n            info[\"graph_id\"] = exec_graph_id\n\n        return {\n            \"exec_graph_id\": exec_graph_id,\n            \"nodes\": node_infos,\n        }\n",
+    "cuda_initialized": false
+  },
+  "performance_acceptance": false,
+  "consumer_admission": false,
+  "U1": "PASS",
+  "U2": "PASS",
+  "U3": "PASS",
+  "U4": "PASS",
+  "device_name": "NVIDIA H800",
+  "driver_version": 13000,
+  "callback_capture": {
+    "subscribed": true,
+    "unsubscribed": true,
+    "subscription_active": false,
+    "events": [
+      {
+        "callback_id": 20,
+        "node": 292054696,
+        "original_node": 292037632,
+        "node_id": 8589934592,
+        "original_node_id": 4294967296
+      },
+      {
+        "callback_id": 20,
+        "node": 292056592,
+        "original_node": 292039528,
+        "node_id": 8589934593,
+        "original_node_id": 4294967297
+      },
+      {
+        "callback_id": 20,
+        "node": 292058488,
+        "original_node": 292041424,
+        "node_id": 8589934594,
+        "original_node_id": 4294967298
+      },
+      {
+        "callback_id": 20,
+        "node": 292060384,
+        "original_node": 292043320,
+        "node_id": 8589934595,
+        "original_node_id": 4294967299
+      },
+      {
+        "callback_id": 20,
+        "node": 292062280,
+        "original_node": 292045216,
+        "node_id": 8589934596,
+        "original_node_id": 4294967300
+      },
+      {
+        "callback_id": 20,
+        "node": 292064176,
+        "original_node": 292047112,
+        "node_id": 8589934597,
+        "original_node_id": 4294967301
+      },
+      {
+        "callback_id": 20,
+        "node": 292066072,
+        "original_node": 292049008,
+        "node_id": 8589934598,
+        "original_node_id": 4294967302
+      },
+      {
+        "callback_id": 20,
+        "node": 292067968,
+        "original_node": 292050904,
+        "node_id": 8589934599,
+        "original_node_id": 4294967303
+      },
+      {
+        "callback_id": 20,
+        "node": 292069864,
+        "original_node": 292052800,
+        "node_id": 8589934600,
+        "original_node_id": 4294967304
+      },
+      {
+        "callback_id": 18,
+        "graph": 292034848,
+        "graph_exec": 292280944,
+        "graph_id": 1,
+        "exec_graph_id": 2
+      }
+    ],
+    "errors": [],
+    "results": [
+      {
+        "api": "cuptiSubscribe",
+        "result": 0
+      },
+      {
+        "api": "cuptiEnableCallback",
+        "result": 0,
+        "callback_id": 20
+      },
+      {
+        "api": "cuptiEnableCallback",
+        "result": 0,
+        "callback_id": 18
+      },
+      {
+        "api": "cuptiUnsubscribe",
+        "result": 0
+      }
+    ],
+    "subscriber_handle": 291971856
+  },
+  "raw_cuda_graph": 292034848,
+  "raw_cuda_graph_exec": 292280944,
+  "event_handles": {
+    "scope_a.start": 262820000,
+    "scope_a.end": 284948128,
+    "scope_b.start": 284948720,
+    "scope_b.end": 284949312
+  },
+  "dag": {
+    "nodes": [
+      {
+        "index": 0,
+        "handle": 292037632,
+        "node_type": "event_record",
+        "dependencies": [],
+        "dependents": [
+          1
+        ],
+        "event_handle": 262820000,
+        "cupti_node_id": 4294967296
+      },
+      {
+        "index": 1,
+        "handle": 292039528,
+        "node_type": "kernel",
+        "dependencies": [
+          0
+        ],
+        "dependents": [
+          2
+        ],
+        "cupti_node_id": 4294967297
+      },
+      {
+        "index": 2,
+        "handle": 292041424,
+        "node_type": "kernel",
+        "dependencies": [
+          1
+        ],
+        "dependents": [
+          3
+        ],
+        "cupti_node_id": 4294967298
+      },
+      {
+        "index": 3,
+        "handle": 292043320,
+        "node_type": "event_record",
+        "dependencies": [
+          2
+        ],
+        "dependents": [
+          4
+        ],
+        "event_handle": 284948128,
+        "cupti_node_id": 4294967299
+      },
+      {
+        "index": 4,
+        "handle": 292045216,
+        "node_type": "event_record",
+        "dependencies": [
+          3
+        ],
+        "dependents": [
+          5
+        ],
+        "event_handle": 284948720,
+        "cupti_node_id": 4294967300
+      },
+      {
+        "index": 5,
+        "handle": 292047112,
+        "node_type": "kernel",
+        "dependencies": [
+          4
+        ],
+        "dependents": [
+          6
+        ],
+        "cupti_node_id": 4294967301
+      },
+      {
+        "index": 6,
+        "handle": 292049008,
+        "node_type": "kernel",
+        "dependencies": [
+          5
+        ],
+        "dependents": [
+          7
+        ],
+        "cupti_node_id": 4294967302
+      },
+      {
+        "index": 7,
+        "handle": 292050904,
+        "node_type": "event_record",
+        "dependencies": [
+          6
+        ],
+        "dependents": [
+          8
+        ],
+        "event_handle": 284949312,
+        "cupti_node_id": 4294967303
+      },
+      {
+        "index": 8,
+        "handle": 292052800,
+        "node_type": "kernel",
+        "dependencies": [
+          7
+        ],
+        "dependents": [],
+        "cupti_node_id": 4294967304
+      }
+    ],
+    "source_graph_id": 1,
+    "exec_graph_id": 2
+  },
+  "U2_basis": "retained_source_topology_and_IDs_before_Kineto",
+  "U4_basis": "retained_source_graph_only",
+  "scope_mapping": {
+    "scopes": {
+      "scope_a": {
+        "start_node_index": 0,
+        "end_node_index": 3,
+        "kernel_node_indices": [
+          1,
+          2
+        ]
+      },
+      "scope_b": {
+        "start_node_index": 4,
+        "end_node_index": 7,
+        "kernel_node_indices": [
+          5,
+          6
+        ]
+      }
+    },
+    "unscoped_kernel_indices": [
+      8
+    ]
+  },
+  "id_snapshots": {
+    "before": {
+      "source_graph_id": 1,
+      "exec_graph_id": 2,
+      "node_ids": {
+        "292037632": 4294967296,
+        "292039528": 4294967297,
+        "292041424": 4294967298,
+        "292043320": 4294967299,
+        "292045216": 4294967300,
+        "292047112": 4294967301,
+        "292049008": 4294967302,
+        "292050904": 4294967303,
+        "292052800": 4294967304
+      }
+    },
+    "after": {
+      "source_graph_id": 1,
+      "exec_graph_id": 2,
+      "node_ids": {
+        "292037632": 4294967296,
+        "292039528": 4294967297,
+        "292041424": 4294967298,
+        "292043320": 4294967299,
+        "292045216": 4294967300,
+        "292047112": 4294967301,
+        "292049008": 4294967302,
+        "292050904": 4294967303,
+        "292052800": 4294967304
+      }
+    }
+  },
+  "trace_path": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/graph_payload_probe/1aa1e4a5_h800_20261024_01/probe/replay_trace.json",
+  "all_kernel_count": 6,
+  "target_launch": {
+    "ph": "X",
+    "cat": "cuda_runtime",
+    "name": "cudaGraphLaunch",
+    "pid": 152,
+    "tid": 152,
+    "ts": 1963684034951.515,
+    "dur": 78.679,
+    "args": {
+      "cbid": 311,
+      "correlation": 14
+    }
+  },
+  "target_kernels": [
+    {
+      "ph": "X",
+      "cat": "kernel",
+      "name": "void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul> >(int, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul>)",
+      "pid": 0,
+      "tid": 7,
+      "ts": 1963684035008.97,
+      "dur": 0.864,
+      "args": {
+        "queued": 0,
+        "device": 0,
+        "context": 1,
+        "stream": 7,
+        "correlation": 14,
+        "registers per thread": 32,
+        "shared memory": 0,
+        "blocks per SM": 0.007576,
+        "warps per SM": 0.030303,
+        "grid": [
+          1,
+          1,
+          1
+        ],
+        "block": [
+          128,
+          1,
+          1
+        ],
+        "est. achieved occupancy %": 0,
+        "occupancy": {
+          "activeBlocksPerMultiprocessor": 16,
+          "limitingFactors": "WARPS|REGS",
+          "blockLimitRegs": 16,
+          "blockLimitSharedMem": 228,
+          "blockLimitWarps": 16,
+          "blockLimitBlocks": 32,
+          "blockLimitBarriers": 2147483647,
+          "allocatedRegistersPerBlock": 4096,
+          "allocatedSharedMemPerBlock": 1024
+        },
+        "graph id": 2,
+        "graph node id": 8589934593,
+        "channel": 2,
+        "channel_type": 1
+      }
+    },
+    {
+      "ph": "X",
+      "cat": "kernel",
+      "name": "void at::native::vectorized_elementwise_kernel<4, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, std::array<char*, 3ul> >(int, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, std::array<char*, 3ul>)",
+      "pid": 0,
+      "tid": 7,
+      "ts": 1963684035010.122,
+      "dur": 1.344,
+      "args": {
+        "queued": 0,
+        "device": 0,
+        "context": 1,
+        "stream": 7,
+        "correlation": 14,
+        "registers per thread": 32,
+        "shared memory": 0,
+        "blocks per SM": 0.007576,
+        "warps per SM": 0.030303,
+        "grid": [
+          1,
+          1,
+          1
+        ],
+        "block": [
+          128,
+          1,
+          1
+        ],
+        "est. achieved occupancy %": 0,
+        "occupancy": {
+          "activeBlocksPerMultiprocessor": 16,
+          "limitingFactors": "WARPS|REGS",
+          "blockLimitRegs": 16,
+          "blockLimitSharedMem": 228,
+          "blockLimitWarps": 16,
+          "blockLimitBlocks": 32,
+          "blockLimitBarriers": 2147483647,
+          "allocatedRegistersPerBlock": 4096,
+          "allocatedSharedMemPerBlock": 1024
+        },
+        "graph id": 2,
+        "graph node id": 8589934594,
+        "channel": 2,
+        "channel_type": 1
+      }
+    },
+    {
+      "ph": "X",
+      "cat": "kernel",
+      "name": "void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul> >(int, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul>)",
+      "pid": 0,
+      "tid": 7,
+      "ts": 1963684035024.105,
+      "dur": 0.864,
+      "args": {
+        "queued": 0,
+        "device": 0,
+        "context": 1,
+        "stream": 7,
+        "correlation": 14,
+        "registers per thread": 32,
+        "shared memory": 0,
+        "blocks per SM": 0.007576,
+        "warps per SM": 0.030303,
+        "grid": [
+          1,
+          1,
+          1
+        ],
+        "block": [
+          128,
+          1,
+          1
+        ],
+        "est. achieved occupancy %": 0,
+        "occupancy": {
+          "activeBlocksPerMultiprocessor": 16,
+          "limitingFactors": "WARPS|REGS",
+          "blockLimitRegs": 16,
+          "blockLimitSharedMem": 228,
+          "blockLimitWarps": 16,
+          "blockLimitBlocks": 32,
+          "blockLimitBarriers": 2147483647,
+          "allocatedRegistersPerBlock": 4096,
+          "allocatedSharedMemPerBlock": 1024
+        },
+        "graph id": 2,
+        "graph node id": 8589934597,
+        "channel": 2,
+        "channel_type": 1
+      }
+    },
+    {
+      "ph": "X",
+      "cat": "kernel",
+      "name": "void at::native::vectorized_elementwise_kernel<4, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, std::array<char*, 3ul> >(int, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, std::array<char*, 3ul>)",
+      "pid": 0,
+      "tid": 7,
+      "ts": 1963684035025.257,
+      "dur": 1.312,
+      "args": {
+        "queued": 0,
+        "device": 0,
+        "context": 1,
+        "stream": 7,
+        "correlation": 14,
+        "registers per thread": 32,
+        "shared memory": 0,
+        "blocks per SM": 0.007576,
+        "warps per SM": 0.030303,
+        "grid": [
+          1,
+          1,
+          1
+        ],
+        "block": [
+          128,
+          1,
+          1
+        ],
+        "est. achieved occupancy %": 0,
+        "occupancy": {
+          "activeBlocksPerMultiprocessor": 16,
+          "limitingFactors": "WARPS|REGS",
+          "blockLimitRegs": 16,
+          "blockLimitSharedMem": 228,
+          "blockLimitWarps": 16,
+          "blockLimitBlocks": 32,
+          "blockLimitBarriers": 2147483647,
+          "allocatedRegistersPerBlock": 4096,
+          "allocatedSharedMemPerBlock": 1024
+        },
+        "graph id": 2,
+        "graph node id": 8589934598,
+        "channel": 2,
+        "channel_type": 1
+      }
+    },
+    {
+      "ph": "X",
+      "cat": "kernel",
+      "name": "void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul> >(int, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul>)",
+      "pid": 0,
+      "tid": 7,
+      "ts": 1963684035030.762,
+      "dur": 1.184,
+      "args": {
+        "queued": 0,
+        "device": 0,
+        "context": 1,
+        "stream": 7,
+        "correlation": 14,
+        "registers per thread": 32,
+        "shared memory": 0,
+        "blocks per SM": 0.007576,
+        "warps per SM": 0.030303,
+        "grid": [
+          1,
+          1,
+          1
+        ],
+        "block": [
+          128,
+          1,
+          1
+        ],
+        "est. achieved occupancy %": 0,
+        "occupancy": {
+          "activeBlocksPerMultiprocessor": 16,
+          "limitingFactors": "WARPS|REGS",
+          "blockLimitRegs": 16,
+          "blockLimitSharedMem": 228,
+          "blockLimitWarps": 16,
+          "blockLimitBlocks": 32,
+          "blockLimitBarriers": 2147483647,
+          "allocatedRegistersPerBlock": 4096,
+          "allocatedSharedMemPerBlock": 1024
+        },
+        "graph id": 2,
+        "graph node id": 8589934600,
+        "channel": 2,
+        "channel_type": 1
+      }
+    }
+  ],
+  "replay_node_mapping": {
+    "node_identity": "direct_cupti_clone_callbacks",
+    "graph_relation": {
+      "callback_id": 18,
+      "graph": 292034848,
+      "graph_exec": 292280944,
+      "graph_id": 1,
+      "exec_graph_id": 2
+    },
+    "kernel_node_indices": [
+      1,
+      2,
+      5,
+      6,
+      8
+    ],
+    "scope_transfer": {
+      "scope_a": {
+        "start_event": {
+          "callback_id": 20,
+          "node": 292054696,
+          "original_node": 292037632,
+          "node_id": 8589934592,
+          "original_node_id": 4294967296
+        },
+        "end_event": {
+          "callback_id": 20,
+          "node": 292060384,
+          "original_node": 292043320,
+          "node_id": 8589934595,
+          "original_node_id": 4294967299
+        },
+        "kernel_node_ids": [
+          8589934593,
+          8589934594
+        ]
+      },
+      "scope_b": {
+        "start_event": {
+          "callback_id": 20,
+          "node": 292062280,
+          "original_node": 292045216,
+          "node_id": 8589934596,
+          "original_node_id": 4294967300
+        },
+        "end_event": {
+          "callback_id": 20,
+          "node": 292067968,
+          "original_node": 292050904,
+          "node_id": 8589934599,
+          "original_node_id": 4294967303
+        },
+        "kernel_node_ids": [
+          8589934597,
+          8589934598
+        ]
+      }
+    },
+    "unscoped_kernel_ids": [
+      8589934600
+    ],
+    "clone_links": [
+      {
+        "callback_id": 20,
+        "node": 292054696,
+        "original_node": 292037632,
+        "node_id": 8589934592,
+        "original_node_id": 4294967296
+      },
+      {
+        "callback_id": 20,
+        "node": 292056592,
+        "original_node": 292039528,
+        "node_id": 8589934593,
+        "original_node_id": 4294967297
+      },
+      {
+        "callback_id": 20,
+        "node": 292058488,
+        "original_node": 292041424,
+        "node_id": 8589934594,
+        "original_node_id": 4294967298
+      },
+      {
+        "callback_id": 20,
+        "node": 292060384,
+        "original_node": 292043320,
+        "node_id": 8589934595,
+        "original_node_id": 4294967299
+      },
+      {
+        "callback_id": 20,
+        "node": 292062280,
+        "original_node": 292045216,
+        "node_id": 8589934596,
+        "original_node_id": 4294967300
+      },
+      {
+        "callback_id": 20,
+        "node": 292064176,
+        "original_node": 292047112,
+        "node_id": 8589934597,
+        "original_node_id": 4294967301
+      },
+      {
+        "callback_id": 20,
+        "node": 292066072,
+        "original_node": 292049008,
+        "node_id": 8589934598,
+        "original_node_id": 4294967302
+      },
+      {
+        "callback_id": 20,
+        "node": 292067968,
+        "original_node": 292050904,
+        "node_id": 8589934599,
+        "original_node_id": 4294967303
+      },
+      {
+        "callback_id": 20,
+        "node": 292069864,
+        "original_node": 292052800,
+        "node_id": 8589934600,
+        "original_node_id": 4294967304
+      }
+    ]
+  }
+}

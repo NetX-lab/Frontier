@@ -1,0 +1,191 @@
+{
+  "status": "SEALED_READY_ISOLATED_PROFILE",
+  "created_at_utc": "2026-10-23T15:48:58.505411+00:00",
+  "task_id": "W128-V4-MOE-ROOT",
+  "authority": [
+    "D-V4-H800-RJOB-AUTHORITY",
+    "D-V4-QUEUE-PARALLEL-WORK"
+  ],
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01",
+  "manifest_sha256": "2ce8333148675cbec721c7f0f9710f70c1b031032be971ffcf7b1e754a1377f4",
+  "input_count": 1003,
+  "builder_commit": "737b631191542202c42b32c0c4a225058021ff92",
+  "documentation_fix_commit": "941a4450dfe6c74ead086cb4629eb193b6071d7a",
+  "runtime_commit": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+  "merged_commit": "be067bb5305c9114b1a65bd74105e3c2d86151e5",
+  "source_numstat": "153\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/moe/build_package.py\n51\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/moe/profile_plan.json\n",
+  "gross_maintained_lines": 204,
+  "source_line_cap": 300,
+  "snapshot_git_equal_files": 512,
+  "original_inputs_rehashed": 527,
+  "checks": {
+    "image": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_image_8266q40i/receipt.json",
+      "sha256": "9f5cb37396672625721413eb7f0db3ac45a2d9c7920d5f75657206c440cea6ab",
+      "stdout_sha256": "6e97754959d2d272729a34ef282ec8d6fdc1b8e8ba99cefdbc902f9da7187979",
+      "result": [
+        {
+          "stage": "image_pins",
+          "status": "PASS",
+          "sources": 440,
+          "binaries": 20,
+          "inputs": 1003,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]"
+        },
+        {
+          "stage": "actual_worker_entry",
+          "status": "PASS",
+          "runtime_report_executed": false
+        },
+        {
+          "stage": "actual_image_dry_run",
+          "phase": "EP16_RANK0_LOCAL_MOE_CUDA_EVENT",
+          "status": "PASS",
+          "rows": 4
+        },
+        {
+          "stage": "actual_image_dry_run",
+          "phase": "EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION",
+          "status": "PASS",
+          "rows": 4
+        },
+        {
+          "stage": "actual_native_api_import",
+          "status": "PASS",
+          "torch": "2.13.0+cu130",
+          "experts": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/experts/marlin_moe.py",
+          "selector": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/oracle/mxfp4.py",
+          "cuda_initialized": false,
+          "actual_gpu_backend_selection": false
+        }
+      ]
+    },
+    "sdk": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_sdk_owvwod60/receipt.json",
+      "sha256": "beaf6488dec2b94c81a92d86626a3d80f878e1ff29cdc701604bcd1173cfa707",
+      "stdout_sha256": "513f4bb8d01094065357ef116666a5fdc7f6034366de9dfa60a92a194e2bd54e",
+      "result": [
+        {
+          "status": "PASS",
+          "stage": "actual_sdk_resource_before_spawn",
+          "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+          "workspace": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+          "code_mount_point": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+          "charged_group": "codesign",
+          "preemptible": false,
+          "cpu": 16,
+          "gpu": 1,
+          "mem_gb": 128,
+          "replica": 1,
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "positive_tags": [
+            "H800"
+          ],
+          "mounts": [
+            "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+          ],
+          "custom_resources": [
+            "mellanox.com/mlnx_rdma:1",
+            "rdma/mlnx_shared:8"
+          ],
+          "command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 1800 python3 /data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/launch/glm_producer_worker.py --config /data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/jobs/moe.json'",
+          "source_sha256": "c52980712bdcc4e9b77a00051aad813500b4a63070b327f1c48cfd2278f869cd",
+          "sdk_config_sha256": "0fc88ea9fd70ad08f69d76637f4e05c65309f80ce81b4ff933c3b0d0320d4d37",
+          "sdk_spawn_sha256": "bb691868e93b85748af02e5255204f3706ec56382457beb9612e66189574f647",
+          "submissions": 0
+        }
+      ]
+    }
+  },
+  "prelaunch": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_prelaunch_xp7pif3h/receipt.json",
+    "sha256": "37927bcce48d6619b11de085a4d73e1e7630107fe52a7ec689a1dcd1f727eee2",
+    "result": {
+      "observed_at_utc": "2026-10-23T15:48:06.327703+00:00",
+      "quota": "/data/ycfeng/tmp/glm53_dsv4/moe01_prelaunch_xp7pif3h/quota.json",
+      "quota_sha256": "72b3a750cfb114e1a628e1a8d7d921f4f05fe291d0f9e601a4414cb29a96cbbc",
+      "personal_job_pages": 1,
+      "personal_job_count": 104,
+      "personal_live_jobs": [],
+      "nfs_ip": "100.96.128.195",
+      "source_host": "kun-workspace-vgen2",
+      "destination": {
+        "path": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/56e9405d_ep16_rank0_balanced_20261023_01",
+        "exists": false,
+        "is_symlink": false
+      },
+      "destination_command": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "shai-ycfeng",
+        "python3 -"
+      ],
+      "destination_stdin": "from pathlib import Path; import json; p=Path('/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/56e9405d_ep16_rank0_balanced_20261023_01'); print(json.dumps({'path':str(p),'exists':p.exists(),'is_symlink':p.is_symlink()}))"
+    }
+  },
+  "reviews": [
+    {
+      "axis": "spec",
+      "session": "ses_e96cadd44ffe2tpzVNP4Aru0R5",
+      "result": "No actionable source defect; shared P3 citation corrected at941a4450 and checked by root",
+      "reviewer_ran_tests": false
+    },
+    {
+      "axis": "standards",
+      "session": "ses_e96cadc58ffeMlZRUhtwHbERDz",
+      "result": "No actionable source defect; shared P3 citation corrected at941a4450 and checked by root",
+      "reviewer_ran_tests": false
+    }
+  ],
+  "matrix": {
+    "status": "PASS_EXPLICIT_EXISTING_SOURCE_BINDING",
+    "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+    "comparison_source": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+    "inherited_source_binding": "97803f07f72454030a4d3fe538d7cdf473906b8a",
+    "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+    "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+    "identical_cases": 77,
+    "new_capture": false,
+    "unchanged_domains": [
+      "frontier",
+      "data",
+      "examples",
+      "tests/e2e/refactor_fidelity",
+      "tests/integration/canonical_case"
+    ]
+  },
+  "expected_outputs": {
+    "cuda_event": {
+      "cloud_table": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/56e9405d_ep16_rank0_balanced_20261023_01/EP16_RANK0_LOCAL_MOE_CUDA_EVENT/compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+      "distribution_seed": 0,
+      "phase": "EP16_RANK0_LOCAL_MOE_CUDA_EVENT",
+      "rows": 4,
+      "table": "compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+      "trace_directory": "profiler_traces"
+    },
+    "record_function": {
+      "cloud_table": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/56e9405d_ep16_rank0_balanced_20261023_01/EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION/compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+      "distribution_seed": 0,
+      "phase": "EP16_RANK0_LOCAL_MOE_RECORD_FUNCTION",
+      "rows": 4,
+      "table": "compute/h800/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+      "trace_directory": "profiler_traces"
+    }
+  },
+  "resources": {
+    "gpu_type": "H800",
+    "charged_group": "codesign",
+    "gpu": 1,
+    "cpu": 16,
+    "mem_gb": 128,
+    "preemptible": false,
+    "timeout_seconds": 1800,
+    "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/56e9405d_ep16_rank0_balanced_20261023_01"
+  },
+  "actual_gpu_backend_selection": false,
+  "serving_admission": false,
+  "qualification": "Candidate rank0 grouped-GEMM envelope only; gating M is not native L, shuffle overlaps; actual GPU selector/statistics/traces/terminal pending."
+}

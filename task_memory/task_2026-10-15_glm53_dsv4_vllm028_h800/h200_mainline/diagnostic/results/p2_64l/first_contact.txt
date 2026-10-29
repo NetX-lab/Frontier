@@ -1,0 +1,32 @@
+decoding lanes, all repetitions
+  d_iterations   1 requests    1 d     49.7 transfer_max    2.0 d-transfer_max    47.8 spread   0.6
+  d_iterations   2 requests  252 d     74.6 transfer_max   26.4 d-transfer_max    48.2 spread   2.1
+  d_iterations   3 requests   66 d     99.5 transfer_max   51.0 d-transfer_max    48.5 spread  25.6
+  d_iterations   4 requests   48 d    124.8 transfer_max   75.9 d-transfer_max    48.9 spread  51.2
+  d_iterations   5 requests    1 d    148.6 transfer_max   96.3 d-transfer_max    52.3 spread  73.4
+  d_iterations  56 requests    1 d   1457.8 transfer_max   25.5 d-transfer_max  1432.3 spread  23.9
+  d_iterations  67 requests    1 d   1724.5 transfer_max   32.1 d-transfer_max  1692.4 spread   8.1
+  d_iterations  68 requests    1 d   1719.1 transfer_max    2.2 d-transfer_max  1716.9 spread   0.5
+  d_iterations  70 requests    1 d   1800.3 transfer_max   25.2 d-transfer_max  1775.1 spread  23.6
+decoding lanes, repetitions 2-3
+  d_iterations   1 requests    1 d     49.7 transfer_max    2.0 d-transfer_max    47.8 spread   0.6
+  d_iterations   2 requests  169 d     74.4 transfer_max   26.2 d-transfer_max    48.2 spread   2.1
+  d_iterations   3 requests   42 d     99.2 transfer_max   50.6 d-transfer_max    48.6 spread  25.2
+  d_iterations   4 requests   36 d    125.2 transfer_max   76.0 d-transfer_max    49.2 spread  50.7
+first P3->D3: fixed-6144-1024-req128-qps1-warmup-r000-repeat01 (warmup)
+first P1->D0: fixed-6144-1024-req128-qps1-warmup-r002-repeat01 (warmup)
+first P2->D1: fixed-6144-1024-req128-qps1-warmup-r005-repeat01 (warmup)
+first P0->D2: fixed-6144-1024-req128-qps1-warmup-r001-repeat01 (warmup)
+first P3->D2: fixed-6144-1024-req128-qps1-warmup-r006-repeat01 (warmup)
+first P0->D3: fixed-6144-1024-req128-qps1-warmup-r003-repeat01 (warmup)
+first P2->D3: fixed-6144-1024-req128-qps1-warmup-r009-repeat01 (warmup)
+first P1->D1: fixed-6144-1024-req128-qps1-warmup-r007-repeat01 (warmup)
+first P0->D1: fixed-6144-1024-req128-qps1-warmup-r008-repeat01 (warmup)
+first P0->D0: fixed-6144-1024-req128-qps1-warmup-r015-repeat01 (warmup)
+first P2->D2: fixed-6144-1024-req128-qps1-warmup-r014-repeat01 (warmup)
+first P3->D0: fixed-6144-1024-req128-qps1-formal-r002-repeat01 (d 1665.5 ms, d_iterations 68)
+first P1->D3: fixed-6144-1024-req128-qps1-formal-r004-repeat01 (d 1457.8 ms, d_iterations 56)
+first P3->D1: fixed-6144-1024-req128-qps1-formal-r006-repeat01 (d 1724.5 ms, d_iterations 67)
+first P2->D0: fixed-6144-1024-req128-qps1-formal-r009-repeat01 (d 1800.3 ms, d_iterations 70)
+first P1->D2: fixed-6144-1024-req128-qps1-formal-r053-repeat01 (d 1719.1 ms, d_iterations 68)
+16 lane pairs

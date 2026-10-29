@@ -1,0 +1,40 @@
+# Native stack source notes
+
+## Modification History
+
+| Date | Change |
+| --- | --- |
+| 2026-10-25 Hong Kong | Primary retained late worker partials, aligned the launcher schema and preserved no-shell startup/SIGABRT stop semantics before the unrun control. |
+| 2026-10-24 UTC | Added the single-run GDB observer and two-case synthetic control for primary review; no execution. |
+
+The worker is closed. Primary owns the GDB source, control, notes, launcher, runtime pins, receipts, execution and acceptance. Allocation: `../primary/allocation.json` (locally committed at `47e7eaaf`).
+
+Before execution, primary writes `../primary/control_inputs.json` with exactly these fields; compute both source hashes from the reviewed final files:
+
+```json
+{
+  "command": ["/usr/bin/python3", "-u", "-B", "ABSOLUTE_OWNER_PATH/control.py"],
+  "source_pins": [
+    {"path": "ABSOLUTE_OWNER_PATH/control.py", "sha256": "PRIMARY_COMPUTED_SHA256"},
+    {"path": "ABSOLUTE_WORKSPACE_PATH/tests/analysis/v4_trace_audit_native_stack.gdb", "sha256": "PRIMARY_COMPUTED_SHA256"}
+  ]
+}
+```
+
+Primary invokes the bound absolute control command under `sudo -n systemd-run --scope -p MemoryMax=30G timeout 60s`. Both cases belong to this one invocation. The control requires Python 3.10.6, verifies both source pins and `sys.orig_argv`, then reserves `control_command.json` exclusively before launching either case. It neither executes nor imports any existing task control.
+
+Both synthetic inferiors use only the standard library, inherit the environment, report selected cgroup/Python/allocator environment/GC metadata, and respectively exit0 or send themselves SIGABRT. The four v1 cgroup mapping statements are copied exactly from `observe_gc.py` (SHA256 `3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c`). Controller and both inferiors must observe 32212254720 bytes and matching selected metadata. No allocator or GC setting changes.
+
+Each case exclusively saves `.command.json`, `.stdout`, `.stderr` and `.result.json` in `owner/`. The command JSON includes the complete inferior source/argv and its SHA256. `control_command.json` binds inputs bytes and both reviewed sources; `control_result.json` retains both cases. Existing files prevent another invocation; no retry is implemented.
+
+Every GDB invocation needs `--nx --nh --batch -iex 'set debuginfod enabled off' -iex 'set auto-load off' -x GDB_SOURCE --args ...`. Early commands prevent fetching symbols or loading auxiliary scripts before the command file. The file disables debuginfod, preserves native ASLR with `set disable-randomization off`, uses no startup shell, and contains exactly one `gdb.execute('run')`.
+
+`V4_NATIVE_STATUS ` prefixes exactly one JSON line. `inferior_exited`, `inferior_exit_code`, `observed_stop_signal` and `observed_pid` distinguish an observed exit from a signal stop. A new-thread event retains PID before a short-lived inferior exits. GDB returns0 only after observed inferior exit0 without a run error or observed signal.
+
+SIGABRT remains a stopped inferior: exit code is null, signal is SIGABRT, GDB returns1, and `batch_quit_action=kill_stopped_inferior` describes termination when GDB quits. It is not a natural exit-6 or an observed completed signal exit. Only a stopped, unexited inferior gets `thread apply all bt 24`, `info sharedlibrary` and `info proc mappings`; no map attempt follows an inferior exit. Capture errors remain explicit in the status JSON. No inferior function evaluation, core dump or memory mutation command is used.
+
+Static validation only: Python syntax, embedded GDB Python syntax, source limits and unchanged timing-source binding. No control, GDB, tests or trace was executed. GDB command/event behavior awaits primary's fresh control. The enclosing 60-second timeout may censor output before a status marker; primary must retain that failure.
+
+GDB perturbs scheduling and elapsed timing. Diagnostic timings do not establish unchanged performance. A detection stack can narrow the allocator detection path; it cannot identify the corruption writer or establish a cure. R5 remains24/32; native ownership, dependency and cost acceptance remain unchanged. The accepted timing source and CLI body are untouched.
+
+Primary retained the original70/118/37-line worker partials and their hashes in `../primary/late_worker_delivery.json`. SIGABRT now uses nopass while stopped; Linux child limits/cgroup are read only while the inferior is alive. No source control or full diagnostic was executed by this repair.

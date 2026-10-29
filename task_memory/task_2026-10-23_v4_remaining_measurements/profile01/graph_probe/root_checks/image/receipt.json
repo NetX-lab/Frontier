@@ -1,0 +1,78 @@
+{
+  "status": "PASS_CPU_IMAGE_ENTRY_ABI_AND_BYTECODE",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "torch": "2.13.0+cu130",
+  "torch_cuda": "13.0",
+  "cupti_version": "13.0.85",
+  "header": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include/cupti_callbacks.h",
+  "header_sha256": "b2f82221fb03ecb2b2a27afa2d64284babdf49fee1a3a2811258d473285e1105",
+  "compiler_command": [
+    "c++",
+    "-std=c++11",
+    "-I/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include",
+    "-x",
+    "c++",
+    "-fsyntax-only",
+    "-"
+  ],
+  "compiler_returncode": 0,
+  "ctypes_abi": {
+    "size": 56,
+    "alignment": 8,
+    "offsets": {
+      "graph": 0,
+      "originalGraph": 8,
+      "node": 16,
+      "originalNode": 24,
+      "nodeType": 32,
+      "dependency": 40,
+      "graphExec": 48
+    },
+    "resource_domain": 3,
+    "node_cloned": 20,
+    "exec_created": 18,
+    "resource_data": {
+      "size": 24,
+      "alignment": 8,
+      "offsets": {
+        "context": 0,
+        "resourceHandle": 8,
+        "resourceDescriptor": 16
+      }
+    },
+    "resource_handle": {
+      "size": 8,
+      "alignment": 8,
+      "offsets": {
+        "stream": 0
+      }
+    }
+  },
+  "old_callback_calls": [
+    {
+      "opcode": "CALL",
+      "offset": 516,
+      "line": 196,
+      "end_line": 196,
+      "column": 35
+    },
+    {
+      "opcode": "CALL",
+      "offset": 574,
+      "line": 197,
+      "end_line": 197,
+      "column": 44
+    },
+    {
+      "opcode": "CALL",
+      "offset": 584,
+      "line": 196,
+      "end_line": 197,
+      "column": 16
+    }
+  ],
+  "cuda_initialized": false,
+  "original_fault": "old source line197",
+  "interpretation": "Actual Python3.12.3 distinguishes node and original-node call sites; this does not prove the old crash cause.",
+  "limits": "No graph capture, subscription, native ID query or runtime payload decoding."
+}

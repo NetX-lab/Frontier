@@ -1,0 +1,33 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/unit/test_native_pd_worker.py",
+    "tests/unit/test_native_pd_manifest.py",
+    "tests/unit/test_calibration_pd_harness.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work",
+    "--junitxml",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/cpu_evidence/tests.xml"
+  ],
+  "cpu_only": true,
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run",
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "",
+    "HOME": "/home/brainpp",
+    "LANG": "C.UTF-8",
+    "PATH": "/usr/bin:/bin",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128"
+  },
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "returncode": 1,
+  "started_utc": "2026-10-24T08:08:18.252632+00:00"
+}

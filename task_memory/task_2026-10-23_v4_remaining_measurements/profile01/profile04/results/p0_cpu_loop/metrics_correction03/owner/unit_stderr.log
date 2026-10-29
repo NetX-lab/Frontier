@@ -1,0 +1,15 @@
+Running scope as unit: run-r0d3d81960f1d468584cc0da25738d351.scope
+test_actual_composed_function_and_sparse_observations (__main__.IntervalMetricsTests) ... ok
+test_cgroup_sensor_expressions_are_frozen (__main__.IntervalMetricsTests) ... ok
+test_composed_ast_grouping_pipeline_and_entry_unchanged (__main__.IntervalMetricsTests) ... ok
+test_empty_and_mixed_keys (__main__.IntervalMetricsTests) ... ok
+test_exact_recurrence_and_representation_ast (__main__.IntervalMetricsTests) ... ok
+test_exact_source_guard_rejects_mismatched_missing_duplicate_definitions (__main__.IntervalMetricsTests) ... ok
+test_pins_and_caps (__main__.IntervalMetricsTests) ... ok
+test_repeated_members_and_global_duplicate_identities (__main__.IntervalMetricsTests) ... ok
+test_ties_reversed_groups_and_float_sum_order (__main__.IntervalMetricsTests) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.584s
+
+OK

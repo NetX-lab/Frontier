@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.578" timestamp="2026-10-21T23:53:03.935786+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_native_cold_start" name="test_successor_full_checker_rebinds_pinned_launch_receipts" time="1.664"><failure message="AssertionError: {'checkout': &quot;PASS: /data/ycfeng/tmp/native_cold_start_p1_red/test_successor_full_checker_re0/source: fixture-native 2...S: changed since launch: []', 'native_lifecycle': 'FAIL: UNVERIFIED: ValueError: Incomplete native node evidence', ...}&#10;assert False&#10; +  where False = &lt;built-in method startswith of str object at 0x7f75b1680030&gt;('PASS')&#10; +    where &lt;built-in method startswith of str object at 0x7f75b1680030&gt; = 'FAIL: UNVERIFIED: ValueError: Head readiness endpoint mismatch: host0'.startswith">native_case = (&lt;module 'external_groundtruth_check' from '/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accura...'instances': {'decode': {'http_url': 'http://10.0.0.5:31100'}, 'prefill': {'http_url': 'http://10.0.0.1:31000'}}, ...})
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f75b26b14f0&gt;
+
+    def test_successor_full_checker_rebinds_pinned_launch_receipts(native_case, monkeypatch):
+        """Exercise the copy's native admission branch with real pinned subprocess readers."""
+        from tests.unit.test_native_groundtruth_check import load_checker
+        previous, case, run, manifest, records, summary = native_case
+        checker = load_checker(TRACE.parents[2] / 'task_memory/task_2026-10-21_native_cold_start/check_groundtruth_run_successor.py')
+        monkeypatch.setattr(checker, 'git', previous.git)
+        harness = Path(manifest['harness_worktree'])
+        original = __import__('subprocess').run
+        module = 'tests/comparison/calibration/pd_replay.py'
+        content = (TRACE.parents[2] / module).read_bytes()
+        (harness / module).write_bytes(content)
+        manifest['harness_sha256'][module] = hashlib.sha256(content).hexdigest()
+        stamp = (run / 'run_manifest.json').stat()
+        (run / 'run_manifest.json').write_text(json.dumps(manifest))
+        os.utime(run / 'run_manifest.json', ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+        digest = hashlib.sha256((run / 'run_manifest.json').read_bytes()).hexdigest()
+    
+        def git_run(args, **kwargs):
+            if args[:3] == ['git', '-C', str(harness)] and args[-1].endswith(':' + module):
+                return __import__('subprocess').CompletedProcess(args, 0, stdout=content)
+            return original(args, **kwargs)
+    
+        monkeypatch.setattr(checker.subprocess, 'run', git_run)
+        for path in (run / 'nodes').glob('*/result.json'):
+            node = json.loads(path.read_text())
+            identity = dict(server_pid=101, server_started_at_utc='2026-01-01T00:00:01+00:00',
+                            run_manifest_sha256=digest, run_generation=manifest['run_generation'])
+            path.write_text(json.dumps(node | identity))
+            if node['plan']['lane'] == 0:
+                ready = path.with_name('server_ready.json')
+                ready.write_text(json.dumps(json.loads(ready.read_text()) | identity | dict(
+                    health_status=200, ready_at_utc='2026-01-01T00:00:02+00:00')))
+        (run / 'launcher_receipt.json').write_text(json.dumps(json.loads((run / 'launcher_receipt.json').read_text()) |
+                                                             {'run_manifest_sha256': digest}))
+        repetitions = summary['canonical_repetitions']
+        first = repetitions['idle_boundaries'][0]
+        urls = {role: summary['instances'][role]['http_url'] for role in pd_replay.ROLES}
+        first.update(proof='dedicated_services_ready_client_zero_native_counters_zero',
+                     client_dispatched_requests=0, fresh_services=pd_replay.dedicated_services(run, urls, 4))
+        for role in first['observations'][-1]['roles'].values():
+            role.update(idle=False, lanes={str(lane): {} for lane in range(4)}, completion_counters={str(lane):
+                {reason: 0 for reason in ('stop', 'length', 'abort', 'error', 'repetition')} for lane in range(4)})
+        (run / 'run/canonical_repetitions.json').write_text(json.dumps(repetitions))
+        (run / 'run/replay_summary.json').write_text(json.dumps(summary))
+        result = checker.check(case, 'native', 'clean')
+        (run / 'successor_predicates.red_or_green.json').write_text(json.dumps(result, indent=2))
+        assert result['checks']['harness_pinned_and_client_rows'].startswith('PASS')
+        assert result['checks']['requests_and_idle_lanes'].startswith('PASS: 7 boundaries;')
+&gt;       assert result['checks']['native_workers'].startswith('PASS'), result['checks']
+E       AssertionError: {'checkout': "PASS: /data/ycfeng/tmp/native_cold_start_p1_red/test_successor_full_checker_re0/source: fixture-native 2...S: changed since launch: []', 'native_lifecycle': 'FAIL: UNVERIFIED: ValueError: Incomplete native node evidence', ...}
+E       assert False
+E        +  where False = &lt;built-in method startswith of str object at 0x7f75b1680030&gt;('PASS')
+E        +    where &lt;built-in method startswith of str object at 0x7f75b1680030&gt; = 'FAIL: UNVERIFIED: ValueError: Head readiness endpoint mismatch: host0'.startswith
+
+tests/unit/test_native_cold_start.py:270: AssertionError</failure></testcase></testsuite></testsuites>

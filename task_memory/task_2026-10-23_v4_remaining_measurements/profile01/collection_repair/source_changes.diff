@@ -1,0 +1,315 @@
+diff --git a/tests/comparison/calibration/native_pd_worker.py b/tests/comparison/calibration/native_pd_worker.py
+index d6da9981..189e1280 100644
+--- a/tests/comparison/calibration/native_pd_worker.py
++++ b/tests/comparison/calibration/native_pd_worker.py
+@@ -155,6 +155,10 @@ def node_plan(config, peers, host, devices):
+         raise ValueError('Role GPU block overrides require positive integer counts')
+     if role in block_counts:
+         engine['num_gpu_blocks_override'] = block_counts[role]
++    iteration_counts = config.get('role_profiler_max_iterations', {})
++    if (type(iteration_counts) is not dict or set(iteration_counts) - {'prefill', 'decode'}
++            or any(type(value) is not int or value <= 0 for value in iteration_counts.values())):
++        raise ValueError('Role profiler iteration overrides require positive integer counts')
+     lane = position % nodes_per_role * local
+     profiler = engine.get('profiler_config') or {}
+     if (engine.get('worker_extension_cls') == 'native_serve_profile.NativeServeProfile'
+@@ -163,6 +167,8 @@ def node_plan(config, peers, host, devices):
+             and Path(profiler['torch_profiler_dir']).is_absolute()):
+         engine['profiler_config'] = profiler | {
+             'torch_profiler_dir': str(Path(profiler['torch_profiler_dir']) / role / f'dp{lane}')}
++        if role in iteration_counts:
++            engine['profiler_config']['max_iterations'] = iteration_counts[role]
+     heads = dict(zip(('prefill', 'decode'), (peers[0], peers[nodes_per_role])))
+     engine.update(host=peers[position]['ip'], data_parallel_size_local=local,
+                   data_parallel_address=heads[role]['ip'],
+@@ -196,7 +202,8 @@ def run(config):
+     with (node / 'worker.log').open('w', buffering=1) as log:
+         os.dup2(log.fileno(), 1)
+         os.dup2(log.fileno(), 2)
+-    result = dict(host=host, qualification_verified=False, observation_errors=[])
++    result = dict(host=host, qualification_verified=False, observation_errors=[], shutdown_timings={})
++    timings = result['shutdown_timings']
+     server = replay = None
+     plan = None
+     exit_code = 1
+@@ -247,6 +254,7 @@ def run(config):
+         visible = os.environ.get('CUDA_VISIBLE_DEVICES')
+         devices = visible.split(',') if visible else [str(index) for index in range(config['gpu'])]
+         plan = node_plan(config, peers, host, devices)
++        drain_paths = [root / 'nodes' / peer['host'] / 'drained.json' for peer in plan['peers']]
+         result['plan'] = plan
+         if plan['position'] == 0 and 'case_dir' in config:
+             try:
+@@ -369,8 +377,12 @@ def run(config):
+         record('drain_returned')
+         write_json(node / 'drained.json', dict(role=role, lane=plan['lane']))
+         if plan['lane'] == 0:
+-            await_condition(lambda: len(list(root.glob('nodes/*/drained.json'))) == config['replica'],
+-                            config['peer_wait_seconds'], native_required=True)
++            timings['drain_quorum_wait'] = dict(start_monotonic=time.monotonic())
++            try:
++                await_condition(lambda: all(path.is_file() for path in drain_paths),
++                                config['peer_wait_seconds'], native_required=True)
++            finally:
++                timings['drain_quorum_wait']['end_monotonic'] = time.monotonic()
+     except BaseException:
+         exit_code = 1
+         result['exception'] = traceback.format_exc()
+@@ -381,21 +393,27 @@ def run(config):
+             result['replay_stop'] = stop_server(replay, config['stop_timeout_s'])
+         if server is not None:
+             result['shutdown_order'] = dict(drained_before_stop=(node / 'drained.json').is_file(),
+-                all_nodes_drained_before_head_stop=sorted(p.parent.name for p in root.glob('nodes/*/drained.json'))
++                all_nodes_drained_before_head_stop=sorted(p.parent.name for p in drain_paths if p.is_file())
+                     if plan is not None and plan['lane'] == 0 else [],
+                 native_returned_before_requested_stop=server.poll() is not None)
+             if plan['lane'] and not (node / 'failed.json').exists():
+                 head_stopped = root / 'nodes' / plan['heads'][plan['role']]['host'] / 'native_stopped.json'
+-                deadline = time.monotonic() + config['stop_timeout_s']
++                timings['head_marker_wait'] = dict(start_monotonic=time.monotonic())
++                deadline = timings['head_marker_wait']['start_monotonic'] + config['peer_wait_seconds']
+                 while not head_stopped.exists() and time.monotonic() < deadline:
+                     if server.poll() not in (None, 0):
+                         break
+                     time.sleep(1)
++                timings['head_marker_wait']['end_monotonic'] = time.monotonic()
+                 result['shutdown_order']['head_stopped_before_headless_stop'] = head_stopped.exists()
+                 if not head_stopped.exists():
+                     result['observation_errors'].append('Head shutdown marker missing; native stop order unverified')
+             result['shutdown_order']['native_returned_before_requested_stop'] = server.poll() is not None
+-            result['server_stop'] = stop_server(server, config['stop_timeout_s'])
++            timings['native_stop'] = dict(start_monotonic=time.monotonic())
++            try:
++                result['server_stop'] = stop_server(server, config['stop_timeout_s'])
++            finally:
++                timings['native_stop']['end_monotonic'] = time.monotonic()
+             if result['server_stop']['returncode'] != 0:
+                 exit_code = 1
+             write_json(node / 'native_stopped.json', result['server_stop'] | {'shutdown_order': result['shutdown_order']})
+diff --git a/tests/unit/test_native_pd_worker.py b/tests/unit/test_native_pd_worker.py
+index ab921bbe..2f627c6e 100644
+--- a/tests/unit/test_native_pd_worker.py
++++ b/tests/unit/test_native_pd_worker.py
+@@ -18,7 +18,8 @@ import pytest
+ from tests.comparison.calibration import native_pd_worker
+ 
+ 
+-def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, engine=None):
++def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, engine=None,
++             lifecycle=None):
+     directory = Path(tempfile.mkdtemp(prefix=case + "_", dir=temporary))
+     root = directory / "output"
+     model = directory / "model"
+@@ -26,7 +27,8 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+     model.mkdir()
+     scratch.mkdir()
+     (model / "config.json").write_text("{}")
+-    own_host = "host1" if case == "canonical_clean_natural_headless_exit" else "host0"
++    own_host = "host1" if case in ("canonical_clean_natural_headless_exit",
++        "canonical_clean_active_headless_exit", "canonical_clean_headless_native_error") else "host0"
+     for index in range(4):
+         if f"host{index}" == own_host:
+             continue
+@@ -34,7 +36,8 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+         node.mkdir(parents=True)
+         (node / "ready.json").write_text(json.dumps({
+             "host": f"host{index}", "ip": f"10.0.0.{index + 1}"}))
+-        (node / "drained.json").write_text("{}")
++        if not (lifecycle and index == 3 and lifecycle.get("peer_drained_at", 0) != 0):
++            (node / "drained.json").write_text("{}")
+     (root / "nodes/host2/server_ready.json").write_text("{}")
+     events = []
+     replay_commands = []
+@@ -42,6 +45,25 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+     child_imports = []
+     real_popen = subprocess.Popen
+     injected = False
++    clock = [0]
++    real_glob = Path.glob
++
++    def advance(seconds):
++        clock[0] += seconds
++        marker_at = lifecycle.get("head_marker_at")
++        marker = root / "nodes/host0/native_stopped.json"
++        if marker_at is not None and clock[0] >= marker_at and not marker.exists():
++            marker.write_text('{"returncode":0,"signal":"SIGINT"}')
++            events.append("head_native_stopped")
++        peer_at = lifecycle.get("peer_drained_at")
++        if peer_at is not None and clock[0] >= peer_at:
++            (root / "nodes/host3/drained.json").write_text("{}")
++
++    def glob(path, pattern):
++        if (lifecycle.get("stale_drain_listing") and pattern == "nodes/*/drained.json"
++                and clock[0] < 20):
++            return iter(())
++        return real_glob(path, pattern)
+ 
+     def write_json(path, value):
+         nonlocal injected
+@@ -65,6 +87,9 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+             if (self.kind == "server" and case == "canonical_clean_natural_headless_exit"
+                     and (root / "nodes/host1/drained.json").exists()):
+                 self.returncode = 0
++            if (self.kind == "server" and case == "canonical_clean_headless_native_error"
++                    and (root / "nodes/host1/drained.json").exists()):
++                self.returncode = 23
+             if self.kind == "replay":
+                 self.returncode = 4 if case == "canonical_clean_admission_failure" else 0
+                 if "replay_completed" not in events:
+@@ -105,6 +130,10 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+ 
+     def stop_server(process, timeout):
+         events.append(process.kind + "_stop_called")
++        if lifecycle is not None:
++            clock[0] += 3
++            if lifecycle.get('stop_raises'):
++                raise RuntimeError('Injected native stop error')
+         if process.poll() is not None:
+             return {"signal": None, "returncode": process.returncode}
+         process.returncode = (23 if case == "native_shutdown_error"
+@@ -141,6 +170,8 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+         "peer_wait_seconds": 10, "startup_timeout_s": startup_timeout_s, "replay_timeout_s": 10,
+         "drain_seconds": 0, "stop_timeout_s": 10, "weight_suffixes": [".bin"],
+     }
++    if lifecycle is not None:
++        config["peer_wait_seconds"] = 60
+     if case.startswith("canonical_clean"):
+         config.update(mode="clean", idle_timeout_s=180, idle_poll_s=1)
+     if case in ("canonical_clean_standard_layout", "canonical_clean_manifest_staging_failure"):
+@@ -149,7 +180,7 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+             metadata = Path(config['case_dir']) / 'runs/groundtruth_clean/cpu-fixture/run_manifest.json'
+             metadata.parent.mkdir(parents=True)
+             metadata.write_text(json.dumps({'run_generation': 'CPU-worker-cold-start'}))
+-    if case == "canonical_clean_natural_headless_exit":
++    if own_host == "host1":
+         (root / "replay_finished.json").write_text('{"returncode":0}')
+     if case.startswith('canonical_clean_serving'):
+         config.update(case_dir=str(directory / 'local-case'), run_tag='cpu-fixture')
+@@ -226,7 +257,11 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+         if case == "canonical_clean_standard_layout" or case.startswith('canonical_clean_serving'):
+             stack.enter_context(patch.object(worker, "stage_run_manifest",
+                 side_effect=lambda *args: events.append("prelaunch_manifest_staged")))
+-        if case == "canonical_clean_natural_headless_exit":
++        if lifecycle is not None:
++            stack.enter_context(patch.object(worker.time, "monotonic", side_effect=lambda: clock[0]))
++            stack.enter_context(patch.object(worker.time, "sleep", side_effect=advance))
++            stack.enter_context(patch.object(Path, "glob", glob))
++        elif case == "canonical_clean_natural_headless_exit":
+             def publish_head_stop(_):
+                 events.append("head_native_stopped")
+                 (root / "nodes/host0/native_stopped.json").write_text('{"returncode":0,"signal":"SIGINT"}')
+@@ -241,6 +276,8 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+         "observation_errors": result["observation_errors"],
+         "replay_commands": replay_commands,
+         "shutdown_order": result.get("shutdown_order"),
++        "shutdown_timings": result.get("shutdown_timings"),
++        "lifecycle_monotonic": clock[0],
+         "server_environments": server_environments,
+         "server_env_set": result.get('server_env_set'),
+         "serving_instrumentation": result.get('serving_instrumentation'),
+@@ -383,9 +420,11 @@ def test_missing_serving_provenance_is_soft_and_does_not_enable_stale_emission(t
+     assert 'FRONTIER_NATIVE_SERVING_EVIDENCE_DIR' not in result['server_environments'][0]
+ 
+ 
+-def test_profile_nodes_have_distinct_trace_directories_without_changing_input():
++@pytest.mark.parametrize('iterations', [{}, {'prefill': 7, 'decode': 5}, {'prefill': 7}])
++def test_profile_nodes_have_distinct_trace_directories_without_changing_input(iterations):
+     config = dict(data_parallel_size_local=1, http_ports=dict(prefill=8100, decode=8200),
+-        dp_rpc_ports=dict(prefill=3100, decode=3200), engine=dict(data_parallel_size=2,
++        dp_rpc_ports=dict(prefill=3100, decode=3200), role_profiler_max_iterations=iterations,
++        engine=dict(data_parallel_size=2,
+             tensor_parallel_size=8, kv_transfer={},
+             worker_extension_cls='native_serve_profile.NativeServeProfile',
+             profiler_config=dict(profiler='torch', torch_profiler_dir='/trace', max_iterations=3)))
+@@ -394,6 +433,13 @@ def test_profile_nodes_have_distinct_trace_directories_without_changing_input():
+     plans = [native_pd_worker.node_plan(config, peers, peer['host'], list(range(8))) for peer in peers]
+     assert [p['engine']['profiler_config']['torch_profiler_dir'] for p in plans] == [
+         '/trace/prefill/dp0', '/trace/prefill/dp1', '/trace/decode/dp0', '/trace/decode/dp1']
++    assert [p['engine']['profiler_config']['max_iterations'] for p in plans] == [
++        iterations.get(role, 3) for role in ('prefill', 'prefill', 'decode', 'decode')]
++    for plan in plans:
++        assert plan['engine']['profiler_config'] == config['engine']['profiler_config'] | {
++            'torch_profiler_dir': f"/trace/{plan['role']}/dp{plan['lane']}",
++            'max_iterations': iterations.get(plan['role'], 3)}
++    assert all(p['engine']['profiler_config'] is not config['engine']['profiler_config'] for p in plans)
+     assert json.dumps(config, sort_keys=True) == original
+ 
+ 
+@@ -401,9 +447,76 @@ def test_profile_nodes_have_distinct_trace_directories_without_changing_input():
+     dict(profiler='torch', torch_profiler_dir='s3://example/traces')])
+ def test_native_profile_config_outside_local_torch_window_is_preserved(profiler):
+     config = dict(data_parallel_size_local=1, http_ports=dict(prefill=8100, decode=8200),
+-        dp_rpc_ports=dict(prefill=3100, decode=3200), engine=dict(data_parallel_size=2,
++        dp_rpc_ports=dict(prefill=3100, decode=3200), role_profiler_max_iterations={'prefill': 7},
++        engine=dict(data_parallel_size=2,
+             tensor_parallel_size=8, kv_transfer={},
+             worker_extension_cls='native_serve_profile.NativeServeProfile', profiler_config=profiler))
+     peers = [dict(host=f'cpu{i}', ip=f'192.0.2.{i + 1}') for i in range(4)]
+     plan = native_pd_worker.node_plan(config, peers, 'cpu0', list(range(8)))
+     assert plan['engine']['profiler_config'] == profiler
++
++
++@pytest.mark.parametrize('iterations', [None, [], {'other': 1}, {'prefill': 0},
++                                      {'decode': True}, {'decode': 1.5}])
++def test_role_profiler_iterations_require_positive_integer_role_values(iterations):
++    config = dict(data_parallel_size_local=1, role_profiler_max_iterations=iterations,
++        http_ports=dict(prefill=8100, decode=8200), dp_rpc_ports=dict(prefill=3100, decode=3200),
++        engine=dict(data_parallel_size=2, tensor_parallel_size=8, kv_transfer={}))
++    peers = [dict(host=f'cpu{i}', ip=f'192.0.2.{i + 1}') for i in range(4)]
++    with pytest.raises(ValueError, match='Role profiler iteration'):
++        native_pd_worker.node_plan(config, peers, 'cpu0', list(range(8)))
++
++
++@pytest.mark.parametrize('case,marker_at,wait,returncode,signal,observed', [
++    ('canonical_clean_natural_headless_exit', 20, 20, 0, None, True),
++    ('canonical_clean_active_headless_exit', 20, 20, 0, 'SIGINT', True),
++    ('canonical_clean_active_headless_exit', 61, 60, 0, 'SIGINT', False),
++    ('canonical_clean_natural_headless_exit', None, 60, 0, None, False),
++    ('canonical_clean_headless_native_error', 20, 0, 23, None, False)])
++def test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome(
++        tmp_path, case, marker_at, wait, returncode, signal, observed):
++    result = exercise(native_pd_worker, tmp_path, case, lifecycle={'head_marker_at': marker_at})
++    assert result['worker_returncode'] == (1 if returncode else 0)
++    assert result['lifecycle_monotonic'] == wait + 3
++    assert result['native_server_returncode'] == returncode
++    assert result['native_server_stop_signal'] == signal
++    assert not result['failed_sentinel']
++    order = result['shutdown_order']
++    assert order['head_stopped_before_headless_stop'] is observed
++    assert order['native_returned_before_requested_stop'] is (signal is None)
++    assert order['drained_before_stop'] is True
++    assert order['all_nodes_drained_before_head_stop'] == []
++    assert result['observation_errors'] == ([] if observed else [
++        'Head shutdown marker missing; native stop order unverified'])
++    timings = result['shutdown_timings']
++    assert timings['head_marker_wait'] == {'start_monotonic': 0, 'end_monotonic': wait}
++    assert timings['native_stop'] == {'start_monotonic': wait, 'end_monotonic': wait + 3}
++    assert 'drain_quorum_wait' not in timings
++    if observed:
++        assert result['events'].index('head_native_stopped') < result['events'].index('server_stop_called')
++
++
++@pytest.mark.parametrize('stale_listing,peer_at,wait,returncode,members', [
++    (True, 0, 0, 0, ['host0', 'host1', 'host2', 'host3']),
++    (False, 20, 20, 0, ['host0', 'host1', 'host2', 'host3']),
++    (False, None, 60, 1, ['host0', 'host1', 'host2'])])
++def test_head_drain_quorum_and_membership_use_known_paths(
++        tmp_path, stale_listing, peer_at, wait, returncode, members):
++    result = exercise(native_pd_worker, tmp_path, 'canonical_clean', lifecycle={
++        'stale_drain_listing': stale_listing, 'peer_drained_at': peer_at})
++    assert result['lifecycle_monotonic'] == wait + 3
++    assert result['worker_returncode'] == returncode
++    assert result['native_server_returncode'] == 0
++    assert result['failed_sentinel'] is bool(returncode)
++    assert result['shutdown_order']['all_nodes_drained_before_head_stop'] == members
++    assert result['shutdown_order']['native_returned_before_requested_stop'] is False
++    assert not result['observation_errors']
++    timings = result['shutdown_timings']
++    assert timings['drain_quorum_wait'] == {'start_monotonic': 0, 'end_monotonic': wait}
++    assert timings['native_stop'] == {'start_monotonic': wait, 'end_monotonic': wait + 3}
++    assert 'head_marker_wait' not in timings
++
++
++def test_native_stop_exception_is_not_suppressed_by_diagnostic_timing(tmp_path):
++    with pytest.raises(RuntimeError, match='Injected native stop error'):
++        exercise(native_pd_worker, tmp_path, 'canonical_clean', lifecycle={'stop_raises': True})

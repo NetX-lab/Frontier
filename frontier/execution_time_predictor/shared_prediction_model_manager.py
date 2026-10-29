@@ -15,6 +15,7 @@ from frontier.execution_time_predictor.measurement_input_paths import (
     uses_two_stream_eager_pricing,
 )
 from frontier.execution_time_predictor.kernel_gap import load_kernel_gap_ms
+from frontier.execution_time_predictor.dsv4_step_cost_input import load_step_cost_table
 from frontier.logger import init_logger
 
 
@@ -378,6 +379,9 @@ class ExecutionTimePredictionModelManager(
             is_moe_model = model_config.is_moe
 
             logger.info(f"\n--- Processing Cluster: {cluster_type} ---")
+            if load_step_cost_table(execution_time_predictor_config, replica_config) is not None:
+                logger.info("Cluster %s prices V4 steps from its step-cost table; no models to train", cluster_type)
+                continue
             logger.info(f"Device: {replica_config.device}")
             logger.info(f"Model: {replica_config.model_name}")
             logger.info(f"Attention TP Size: {replica_config.attn_tensor_parallel_size}")

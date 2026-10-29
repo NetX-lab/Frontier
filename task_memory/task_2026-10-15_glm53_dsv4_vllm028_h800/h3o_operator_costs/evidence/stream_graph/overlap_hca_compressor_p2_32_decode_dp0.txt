@@ -1,0 +1,5 @@
+trace: /data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/torch_traces/decode/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792942701901162313.pt.trace.json.gz
+patterns: 'SparseAttnCompressC128Block8' 'SparseAttnNormRopeStoreKernel'
+FULL: forwards 117, matching kernels 40.0 per forward, busy 57.1 us per forward, overlapped 54.3 us (95.1%), median forward device span 17912.5 us
+PIECEWISE: forwards 3, matching kernels 40.0 per forward, busy 101.3 us per forward, overlapped 0.0 us (0.0%), median forward device span 27946.2 us
+rc=0

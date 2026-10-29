@@ -23,7 +23,8 @@ from typing import Callable, Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
-from frontier.entities.batch import Batch, DummyForwardBatch, Request
+from frontier.config import global_vars
+from frontier.entities.batch import Batch, DummyForwardBatch, KVCacheBlockZeroing, Request
 from frontier.kv_cache.replica_kv_cache_manager import ReplicaKVCacheManager
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
@@ -40,6 +41,7 @@ from frontier.scheduler.replica_scheduler.vllm_v1_kv_allocation import KvBlockAl
 from frontier.scheduler.replica_scheduler.vllm_v1_mtp_wait import (
     TargetEmbeddedMtpWaitPolicy,
 )
+from frontier.scheduler.replica_scheduler.vllm_v1_nixl_reads import NixlReadCompletion
 from frontier.scheduler.replica_scheduler.vllm_v1_pp_terminal_release import (
     PipelineTerminalRelease,
 )
@@ -64,6 +66,7 @@ class VLLMv1EngineReplicaScheduler(
     PrefixCacheLedger,
     TargetEmbeddedMtpWaitPolicy,
     PipelineTerminalRelease,
+    NixlReadCompletion,
     DecodeAttentionCohort,
     DisaggregatedRoleScheduling,
     BaseReplicaScheduler,
@@ -116,7 +119,13 @@ class VLLMv1EngineReplicaScheduler(
         self._waiting_requests: List[Request] = []
         # Requests waiting for prefill-side KV transfer completion.
         self._pending_kv_transfer_requests: set[int] = set()
+        self._kv_transfer_start_claimed_request_ids: set[int] = set()
+        # NIXL starts blocked by one selected DECODE lane's real KV capacity.
+        self._pending_kv_transfer_start_events: List = []
+        self._kv_transfer_receiving_request_ids: set[int] = set()
+        self._kv_transfer_ready_request_ids: set[int] = set()
         self._scheduled_num_computed_tokens_by_request: Dict[int, int] = {}
+        self._pending_cache_zero_block_ids: Dict[str, List[int]] = {}
         self._monolithic_pp_pending_terminal_release_iters: Dict[int, int] = {}
         self._monolithic_pp_waiting_sensitive_release_extensions: set[int] = set()
         self._monolithic_pp_terminal_release_followup_poll_pending = False
@@ -151,6 +160,7 @@ class VLLMv1EngineReplicaScheduler(
         )
         self._dummy_pass_due = False
         self._dummy_forwards_in_flight = 0
+        self._dummy_pass_start: Optional[float] = None
         # Such an engine counts the busy-loop iterations of its DP wave, each
         # running one forward, a batch or a dummy forward. After every
         # VLLM_DP_SYNC_INTERVAL-th, its host waits in an all-reduce over the DP
@@ -170,6 +180,18 @@ class VLLMv1EngineReplicaScheduler(
         # a batch, a batch output, or a dummy forward. None before the first.
         # Only the batch-queue roles run vLLM's engine loop.
         self._last_iteration_end: Optional[float] = None
+        # NIXL READs this DECODE lane pulls when engine steps complete them
+        # (nixl_read_completion='engine_step', NixlReadCompletion): requested
+        # at P end, claimed by the next schedule pass, posted with their wire
+        # end when the pass's step starts, and found complete at a later step
+        # start, whose output reports them.
+        self._nixl_reads_requested: List = []
+        self._nixl_reads_claimed: Dict[int, List] = {}
+        self._nixl_reads_unposted: List = []
+        self._nixl_reads_posted: List[Tuple[float, object]] = []
+        self._nixl_reads_found_by_batch: Dict[int, List] = {}
+        self._nixl_reads_found_by_dummy_forward: List = []
+        self._nixl_reads_reported: List = []
 
         # Configuration mapping from vLLM v1 parameters
         self._max_num_running_reqs = self._config.batch_size_cap
@@ -304,7 +326,47 @@ class VLLMv1EngineReplicaScheduler(
         self._decode_attn_next_cohort_id = 0
         self._current_iteration_token_budget = 0
         self._kv_cache_manager: Optional[ReplicaKVCacheManager] = None
-        if (
+        grouped_capacity = (
+            self._kv_cache_capacity
+            if self._kv_cache_capacity is not None
+            and self._kv_cache_capacity.is_grouped
+            else None
+        )
+        if grouped_capacity is not None:
+            if self._cluster_type != ClusterType.MONOLITHIC and not (
+                self._cluster_type in (ClusterType.PREFILL, ClusterType.DECODE)
+                and global_vars.KV_CONNECTOR == "nixl"
+            ):
+                raise NotImplementedError(
+                    "Grouped KV cache allocation supports MONOLITHIC or NIXL PREFILL/DECODE only"
+                )
+            if int(self._replica_config.num_pipeline_stages) != 1:
+                raise NotImplementedError(
+                    "Grouped KV cache allocation initially supports pipeline parallel size 1"
+                )
+            if bool(getattr(self._config, "enable_prefix_caching", False)):
+                raise NotImplementedError(
+                    "Grouped KV cache allocation does not support prefix caching"
+                )
+            if self._spec_decode_enabled:
+                raise NotImplementedError(
+                    "Grouped KV cache allocation does not support speculative decoding or MTP"
+                )
+            if int(getattr(self._config, "num_preallocate_tokens", 0)) != 0:
+                raise NotImplementedError(
+                    "Grouped KV cache allocation does not support block preallocation"
+                )
+            self._kv_cache_manager = ReplicaKVCacheManager(
+                block_size=int(self._config.block_size),
+                num_gpu_blocks=int(self._config.num_blocks),
+                enable_caching=False,
+                caching_hash_algo=str(
+                    getattr(self._config, "prefix_caching_hash_algo", "builtin")
+                ),
+                num_preallocate_tokens=0,
+                cache_capacity=grouped_capacity,
+            )
+        elif (
             bool(getattr(self._config, "enable_prefix_caching", False))
             and self._cluster_type in (ClusterType.MONOLITHIC, ClusterType.PREFILL)
         ):
@@ -320,17 +382,89 @@ class VLLMv1EngineReplicaScheduler(
                 ),
             )
 
+        # On unified DECODE an explicit capacity models vLLM's AsyncScheduler:
+        # a decoding request whose step is in flight holds an output
+        # placeholder and is scheduled again (async_scheduler.py). FCFS
+        # preempts the running tail, which no earlier part of the same pass
+        # scheduled, so a victim's in-flight sample ends at its frontier.
+        self._uses_output_placeholders = False
+        requested_capacity = getattr(self._config, "max_concurrent_batches", None)
+        if requested_capacity is not None:
+            if self._cluster_type == ClusterType.DECODE:
+                if (
+                    type(self) is not VLLMv1EngineReplicaScheduler
+                    or self._num_stages != 1
+                    or self._scheduling_policy != "fcfs"
+                    or self._spec_decode_enabled
+                    or model_has_gdn(self._replica_config.model_config)
+                ):
+                    raise NotImplementedError(
+                        "Explicit DECODE queue capacity requires FCFS VLLM V1 "
+                        "PP1 without speculation or GDN"
+                    )
+                self._uses_output_placeholders = True
+            elif (
+                type(self) is not VLLMv1EngineReplicaScheduler
+                or self._cluster_type != ClusterType.MONOLITHIC
+                or self._num_stages != 1
+                or self._replica_config.attn_dp != 1
+                or self._is_grouped_kv_allocation()
+                or self._is_prefix_caching_enabled()
+                or self._spec_decode_enabled
+                or model_has_gdn(self._replica_config.model_config)
+            ):
+                raise NotImplementedError(
+                    "Explicit queue capacity requires ordinary-cache VLLM V1 "
+                    "MONOLITHIC PP1/DP1 or unified DECODE, without prefix "
+                    "caching, speculation or GDN"
+                )
+            self._max_concurrent_batches = requested_capacity
+
     def _create_batch(self, requests: List[Request], num_tokens: List[int]) -> Batch:
         # The scheduler frontier already counts this batch's tokens. A prompt
         # chunk scheduled while the request's previous chunk is in flight
-        # attends to tokens the Request counts only when that chunk ends.
+        # attends to tokens the Request counts only when that chunk ends, and
+        # so does a decode step scheduled on an output placeholder.
+        # NIXL D recomputes the last prompt token; Request progress counts
+        # accepted outputs, one ahead of that computed-KV frontier.
         num_context_tokens = [
-            request.num_context_tokens
-            if request.is_decoding
-            else self._get_scheduler_num_computed_tokens(request) - scheduled_tokens
+            self._get_scheduler_num_computed_tokens(request) - scheduled_tokens
+            if not request.is_decoding or self._uses_output_placeholders or (
+                self._cluster_type == ClusterType.DECODE
+                and global_vars.KV_CONNECTOR == "nixl"
+            )
+            else self._get_settled_kv_progress(request)
             for request, scheduled_tokens in zip(requests, num_tokens)
         ]
-        batch = super()._create_batch(requests, num_tokens, num_context_tokens)
+        num_output_placeholders = (
+            [self._get_active_batch_request_counts().get(request.id, 0) for request in requests]
+            if self._uses_output_placeholders
+            else None
+        )
+        batch = super()._create_batch(
+            requests, num_tokens, num_context_tokens, num_output_placeholders
+        )
+        if self._is_grouped_kv_allocation():
+            block_ids = tuple(
+                block_id for group in self._kv_cache_capacity.groups
+                for block_id in self._pending_cache_zero_block_ids.get(group.group_id, ())
+            )
+            if block_ids:
+                batch.cache_block_zeroing = KVCacheBlockZeroing(
+                    block_ids, self._kv_cache_capacity.physical_block_size_bytes,
+                )
+            self._emit_schedule_decision_event(
+                event="grouped_cache_batch", decision_result=None, request_id=None,
+                token_budget=int(self._current_iteration_token_budget),
+                num_tokens=sum(num_tokens),
+                extra_fields={
+                    "batch_id": batch.id, "replica_id": self._replica_id,
+                    "replica_local_id": self._replica_local_id,
+                    "zero_required_block_ids": list(block_ids),
+                    "physical_block_size_bytes": self._kv_cache_capacity.physical_block_size_bytes,
+                },
+            )
+            self._pending_cache_zero_block_ids.clear()
         metadata = self._build_decode_cuda_graph_metadata(batch)
         if metadata is not None:
             batch.decode_cuda_graph_metadata = metadata
@@ -404,10 +538,13 @@ class VLLMv1EngineReplicaScheduler(
                     f"source_replica={self._replica_id}, "
                     f"source_dp={self._replica_local_id}"
                 )
-
+        for request in requests:
             if request.id in self._allocation_map:
                 self._free_request_resources(request)
             self._pending_kv_transfer_requests.discard(request.id)
+            getattr(
+                self, "_kv_transfer_start_claimed_request_ids", set()
+            ).discard(request.id)
 
     def on_schedule(self, time: float = 0.0) -> List[Batch]:
         # vLLM runs iterations until its batch queue is full or an iteration
@@ -425,10 +562,15 @@ class VLLMv1EngineReplicaScheduler(
         if self._runs_dp_dummy_passes:
             return self._run_dp_iterations(time)
         batches = self._start_iterations(super().on_schedule(time), time)
+        self._claim_nixl_reads(batches)
         self._in_flight_batch_ids.extend(batch.id for batch in batches)
         if self._in_flight_batch_ids:
             self._blocking_batch_id = self._in_flight_batch_ids[0]
             self._clear_followup_polls()
+        else:
+            # An iteration that schedules nothing still runs the KV connector
+            # (`kv_connector_no_forward`).
+            self.on_engine_step_start(time)
         return batches
 
     def _run_dp_iterations(self, time: float) -> List[Batch]:
@@ -443,7 +585,7 @@ class VLLMv1EngineReplicaScheduler(
         """
         if self._dummy_pass_due:
             self._dummy_pass_due = False
-            return self._issue_dummy_pass()
+            return self._issue_dummy_pass(time)
         if self._iteration_open:
             self._iteration_open = False
             if self._end_iteration():
@@ -463,15 +605,15 @@ class VLLMv1EngineReplicaScheduler(
                 apply_output = self._unpopped_outputs.popleft()
                 self._popped_output_events.extend(apply_output(time))
                 if not formed:
-                    return batches + self._issue_dummy_pass()
-            elif not formed or self._num_running_batches == self._num_stages:
+                    return batches + self._issue_dummy_pass(time)
+            elif not formed or self._num_running_batches == self._max_concurrent_batches:
                 if self._in_flight_batch_ids:
                     self._blocking_batch_id = self._in_flight_batch_ids[0]
                     self._dummy_pass_due = not formed
                     self._iteration_open = True
                     self._clear_followup_polls()
                 elif self._dp_wave_running:
-                    return self._issue_dummy_pass()
+                    return self._issue_dummy_pass(time)
                 return batches
             if self._end_iteration():
                 self._clear_followup_polls()
@@ -482,6 +624,7 @@ class VLLMv1EngineReplicaScheduler(
         self._iteration_running_limit = self._num_running_batches + 1
         batches = self._start_iterations(super().on_schedule(time), time)
         self._iteration_running_limit = math.inf
+        self._claim_nixl_reads(batches)
         self._in_flight_batch_ids.extend(batch.id for batch in batches)
         return batches
 
@@ -540,8 +683,24 @@ class VLLMv1EngineReplicaScheduler(
 
     @property
     def has_unfinished_requests(self) -> bool:
-        """vLLM's `Scheduler.has_unfinished_requests`: a waiting or running request."""
-        return bool(self._running_requests) or any(self._waiting_queues())
+        """vLLM's `Scheduler.has_unfinished_requests`: a waiting or running request.
+
+        A request whose NIXL READ is pending waits as `WAITING_FOR_REMOTE_KVS`.
+        """
+        return (
+            bool(self._running_requests)
+            or any(self._waiting_queues())
+            or self._has_nixl_reads
+        )
+
+    @property
+    def _only_posted_nixl_reads_unfinished(self) -> bool:
+        """Whether the engine's only unfinished requests, if any, wait for posted NIXL READs."""
+        return not (
+            self._running_requests
+            or any(self._waiting_queues())
+            or self._has_nixl_reads_off_wire
+        )
 
     @property
     def engine_loop_idle(self) -> bool:
@@ -552,7 +711,7 @@ class VLLMv1EngineReplicaScheduler(
             and not self._waits_at_dp_sync
         )
 
-    def _issue_dummy_pass(self) -> List[Batch]:
+    def _issue_dummy_pass(self, time: float) -> List[Batch]:
         """Start one dummy forward on every pipeline stage at once.
 
         `execute_dummy_batch` is one RPC to every worker of the engine. Each
@@ -564,10 +723,14 @@ class VLLMv1EngineReplicaScheduler(
             dummy_forward = DummyForwardBatch(
                 self._replica_id, stage_id, self._batch_creation_counter
             )
+            dummy_forward.decode_cuda_graph_metadata = (
+                self._build_decode_cuda_graph_metadata(dummy_forward)
+            )
             self._assign_lane_identity(dummy_forward, self._batch_creation_counter)
             dummy_forwards.append(dummy_forward)
         self._batch_creation_counter += 1
         self._dummy_forwards_in_flight = self._num_stages
+        self._dummy_pass_start = time
         self._iteration_open = True
         self._clear_followup_polls()
         return dummy_forwards
@@ -578,7 +741,31 @@ class VLLMv1EngineReplicaScheduler(
         if self._dummy_forwards_in_flight:
             return False
         self._last_iteration_end = time
+        self._report_nixl_reads_of_dummy_forward()
         return True
+
+    def next_pass_start(self, time: float) -> float:
+        """Start of the engine's next pass after its dummy forward ended at `time`.
+
+        An execution path may price an idle forward at zero
+        (`predict_step_cost_execution`), so a group whose forwards are all
+        dummy forwards spins at no simulated cost, and such a dummy forward
+        ends when it starts. While no engine of the group then has a request
+        to schedule and some wait for posted NIXL READs, no pass changes
+        anything until the earliest READ's wire ends; the pass that starts
+        then finds it (`get_finished`), as the next step of an idle engine
+        does. An engine that receives work earlier wakes the others through
+        its forward's first room.
+        """
+        if time > self._dummy_pass_start:
+            return time
+        group = self._dp_group()
+        if not all(lane._only_posted_nixl_reads_unfinished for lane in group):
+            return time
+        return min(
+            (lane.next_nixl_read_end for lane in group if lane._nixl_reads_posted),
+            default=time,
+        )
 
     def hold_batch_output(self, apply_output: Callable[[float], List]) -> bool:
         """Keep the output of a batch that just ended while the host waits at the DP sync.
@@ -607,6 +794,7 @@ class VLLMv1EngineReplicaScheduler(
             if batch.id == self._blocking_batch_id:
                 self._blocking_batch_id = None
         self._release_batch_requests_active(batch)
+        self._report_nixl_reads_of_batch(batch)
 
     def on_batch_end(self, batch: Batch) -> None:
         """
@@ -773,6 +961,37 @@ class VLLMv1EngineReplicaScheduler(
                     f"processed_tokens={request.num_processed_tokens}"
                 )
 
+        if self._cluster_type == ClusterType.DECODE:
+            self._retry_pending_kv_transfer_starts(batch.completed_at)
+
+    def defer_kv_transfer_start(self, event) -> None:
+        """Retain one capacity-blocked NIXL start on its selected D lane."""
+        request_id = event.get_request_id()
+        if any(
+            pending.get_request_id() == request_id
+            for pending in self._pending_kv_transfer_start_events
+        ):
+            raise RuntimeError(
+                f"Duplicate pending NIXL transfer start for request {request_id}"
+            )
+        self._pending_kv_transfer_start_events.append(event)
+
+    def has_pending_kv_transfer_starts(self) -> bool:
+        """Return whether this lane already has an older blocked NIXL start."""
+        return bool(self._pending_kv_transfer_start_events)
+
+    def _retry_pending_kv_transfer_starts(self, time: float) -> None:
+        """Reserve FIFO blocked starts after this D output releases capacity."""
+        ready_events = []
+        while self._pending_kv_transfer_start_events:
+            event = self._pending_kv_transfer_start_events[0]
+            if not event.try_reserve_target(self):
+                break
+            self._pending_kv_transfer_start_events.pop(0)
+            event.set_capacity_retry_time(time)
+            ready_events.append(event)
+        self._popped_output_events.extend(ready_events)
+
     def _waiting_queues(self) -> Tuple[List[Request], List[Request], List[Request]]:
         # Preemption inserts a victim into `_request_queue`, or into
         # `_waiting_requests` on DECODE and DECODE_ATTN. A later waiting-queue
@@ -862,10 +1081,15 @@ class VLLMv1EngineReplicaScheduler(
                 req_index += 1
                 continue
 
+            # Each batch of one DECODE call is its own vLLM schedule, which
+            # with output placeholders schedules a request in flight again.
             continuation_request_ids = getattr(
                 self, "_continuation_request_ids", set()
             )
-            if request.id in continuation_request_ids:
+            if (
+                request.id in continuation_request_ids
+                and not self._uses_output_placeholders
+            ):
                 logger.debug(
                     "[VLLMv1Engine] Phase 1: skipping req=%s "
                     "(already scheduled in current cycle)",
@@ -888,19 +1112,35 @@ class VLLMv1EngineReplicaScheduler(
                 req_index += 1
                 continue
 
+            # With output placeholders, vLLM skips a request whose steps in
+            # flight already sample its last output token (scheduler.py, the
+            # num_output_placeholders check) and schedules any other again.
+            if self._uses_output_placeholders and (
+                self._get_active_batch_request_counts().get(request.id, 0)
+                >= request.remaining_decode_tokens
+            ):
+                logger.debug(
+                    "[VLLMv1Engine][DECODE] Phase 1: skipping req=%s "
+                    "(its steps in flight sample its last output token)",
+                    request.id,
+                )
+                req_index += 1
+                continue
+
             # vLLM skips an in-flight request only once every prompt token is
             # scheduled; the next chunk goes out while the previous one is in
             # flight (scheduler.py, the num_new_tokens == 0 branch).
-            active_in_pp_batch = (
+            active_in_batch_queue = (
                 self._cluster_type in {ClusterType.MONOLITHIC, ClusterType.DECODE}
-                and self._num_stages > 1
+                and self._max_concurrent_batches > 1
+                and not self._uses_output_placeholders
                 and self._is_request_active_in_batch(request)
                 and (
                     request.is_decoding
                     or self._get_request_next_num_tokens(request) == 0
                 )
             )
-            if active_in_pp_batch:
+            if active_in_batch_queue:
                 if self._cluster_type == ClusterType.MONOLITHIC:
                     reserved_tokens = (
                         self._get_monolithic_pp_mtp_visible_budget_reservation_tokens(
@@ -919,7 +1159,7 @@ class VLLMv1EngineReplicaScheduler(
                         )
                 logger.debug(
                     "[VLLMv1Engine][%s] Phase 1: skipping req=%s "
-                    "(already active in a PP batch)",
+                    "(already active in the batch queue)",
                     self._cluster_type.name,
                     request.id,
                 )
@@ -1009,9 +1249,7 @@ class VLLMv1EngineReplicaScheduler(
                     f"num_new_tokens={num_new_tokens}, "
                     f"blocks_allocated={self._allocation_map.get(request.id, 0)}"
                 )
-                available_blocks_running = int(
-                    self._config.num_blocks - self._num_allocated_blocks
-                )
+                available_blocks_running = self._get_available_kv_blocks()
                 self._emit_schedule_decision_event(
                     event="decision",
                     decision_result="RUNNING_SCHEDULED",
@@ -1186,7 +1424,7 @@ class VLLMv1EngineReplicaScheduler(
                 scheduler_num_computed_tokens=scheduler_num_computed_tokens,
             ):
                 # Flow validation: log memory pressure for waiting queue admission
-                available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
+                available_blocks = self._get_available_kv_blocks()
                 logger.info(
                     f"[MEMORY_PRESSURE] trigger=waiting_allocation_failed, "
                     f"requesting_req={request.id}, "
@@ -1255,9 +1493,7 @@ class VLLMv1EngineReplicaScheduler(
                 f"running_count={len(self._running_requests)}, "
                 f"token_budget_remaining={token_budget}"
             )
-            available_blocks_admission = int(
-                self._config.num_blocks - self._num_allocated_blocks
-            )
+            available_blocks_admission = self._get_available_kv_blocks()
             self._emit_schedule_decision_event(
                 event="decision",
                 decision_result="ADMISSION",
@@ -1356,7 +1592,7 @@ class VLLMv1EngineReplicaScheduler(
         waiting_tokens: List[int] = []
         released = self._materialize_monolithic_pp_terminal_release_before_iteration_start()
         token_budget = self._max_num_scheduled_tokens
-        available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
+        available_blocks = self._get_available_kv_blocks()
         waiting_count = len(self._request_queue) + len(self._preempted_requests)
 
         # Flow validation: log iteration start
@@ -1377,7 +1613,12 @@ class VLLMv1EngineReplicaScheduler(
         )
 
         # Flow validation: log memory state
-        total_blocks = int(self._config.num_blocks)
+        reserved_blocks = int(
+            self._kv_cache_manager.block_pool.reserved_blocks
+            if self._is_grouped_kv_allocation()
+            else 0
+        )
+        total_blocks = int(self._config.num_blocks) - reserved_blocks
         allocated_blocks = int(self._num_allocated_blocks)
         usage_ratio = allocated_blocks / total_blocks if total_blocks > 0 else 0.0
         watermark = self._watermark_blocks
@@ -1385,6 +1626,7 @@ class VLLMv1EngineReplicaScheduler(
             f"[MEMORY_STATE] total_blocks={total_blocks}, "
             f"allocated_blocks={allocated_blocks}, "
             f"free_blocks={available_blocks}, "
+            f"reserved_blocks={reserved_blocks}, "
             f"usage_ratio={usage_ratio:.4f}, "
             f"watermark_blocks={watermark}"
         )
@@ -1396,9 +1638,7 @@ class VLLMv1EngineReplicaScheduler(
                 request_id=None,
                 token_budget=token_budget,
                 num_tokens=0,
-                available_blocks=int(
-                    self._config.num_blocks - self._num_allocated_blocks
-                ),
+                available_blocks=self._get_available_kv_blocks(),
                 batch_request_ids=[],
                 request_num_tokens=[],
                 batch_size=0,
@@ -1420,7 +1660,7 @@ class VLLMv1EngineReplicaScheduler(
         all_num_tokens.extend(running_tokens)
 
         # Flow validation: log Phase 1 end
-        available_blocks_p1 = int(self._config.num_blocks - self._num_allocated_blocks)
+        available_blocks_p1 = self._get_available_kv_blocks()
         logger.info(
             f"[PHASE1_END] scheduled_count={len(running_scheduled)}, "
             f"preempted_count={len(preempted_requests)}, "
@@ -1445,9 +1685,7 @@ class VLLMv1EngineReplicaScheduler(
             all_num_tokens.extend(waiting_tokens)
 
             # Flow validation: log Phase 2 end
-            available_blocks_p2 = int(
-                self._config.num_blocks - self._num_allocated_blocks
-            )
+            available_blocks_p2 = self._get_available_kv_blocks()
             logger.info(
                 f"[PHASE2_END] admitted_count={len(waiting_scheduled)}, "
                 f"token_budget_remaining={token_budget}, "
@@ -1472,7 +1710,7 @@ class VLLMv1EngineReplicaScheduler(
                 request_id=None,
                 token_budget=token_budget,
                 num_tokens=0,
-                available_blocks=int(self._config.num_blocks - self._num_allocated_blocks),
+                available_blocks=self._get_available_kv_blocks(),
                 batch_request_ids=[],
                 request_num_tokens=[],
                 batch_size=0,
@@ -1516,7 +1754,7 @@ class VLLMv1EngineReplicaScheduler(
             request_id=None,
             token_budget=token_budget,
             num_tokens=total_tokens,
-            available_blocks=int(self._config.num_blocks - self._num_allocated_blocks),
+            available_blocks=self._get_available_kv_blocks(),
             batch_request_ids=[request.id for request in ordered_scheduled_requests],
             request_num_tokens=ordered_num_tokens,
             batch_size=batch_size,

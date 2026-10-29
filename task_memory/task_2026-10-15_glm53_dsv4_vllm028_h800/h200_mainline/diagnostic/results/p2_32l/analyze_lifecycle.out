@@ -1,0 +1,28 @@
+{
+  "acceptance_2": true,
+  "complete": 384,
+  "formal": 384,
+  "outside_reference_range": {
+    "1": [
+      "ttft_ms",
+      "tpot_ms",
+      "e2e_ms",
+      "total_thpt_tokens_s",
+      "proxy_handoff_ms"
+    ],
+    "2": [
+      "ttft_ms",
+      "tpot_ms",
+      "e2e_ms",
+      "total_thpt_tokens_s",
+      "proxy_handoff_ms"
+    ],
+    "3": [
+      "ttft_ms",
+      "tpot_ms",
+      "e2e_ms",
+      "total_thpt_tokens_s",
+      "proxy_handoff_ms"
+    ]
+  }
+}

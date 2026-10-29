@@ -1,0 +1,112 @@
+{
+  "status": "EXPLICIT_FAKE_NATIVE_AND_SDK_OUTPUTS_ONLY",
+  "native": [
+    {
+      "path": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_success_run/probe/cpu_entry.json",
+      "receipt": {
+        "argv": [
+          "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_success/probe_diagnostic.py",
+          "run",
+          "--output-dir",
+          "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_success_run/probe",
+          "--image-digest",
+          "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+        ],
+        "diagnostics_existed_before_entry": true,
+        "output_absent_before_entry": true,
+        "diagnostics": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_success_run/diagnostics",
+        "output": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_success_run/probe",
+        "TMPDIR": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_success_tmp",
+        "XDG_CACHE_HOME": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_success_tmp/cache"
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_failure_run/probe/cpu_entry.json",
+      "receipt": {
+        "argv": [
+          "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_failure/probe_diagnostic.py",
+          "run",
+          "--output-dir",
+          "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_failure_run/probe",
+          "--image-digest",
+          "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+        ],
+        "diagnostics_existed_before_entry": true,
+        "output_absent_before_entry": true,
+        "diagnostics": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_failure_run/diagnostics",
+        "output": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_failure_run/probe",
+        "TMPDIR": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_failure_tmp",
+        "XDG_CACHE_HOME": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/native_failure_tmp/cache"
+      }
+    }
+  ],
+  "sdk_launch_receipts": {
+    "launcher_started.json": {
+      "start_utc": "2026-10-24T05:23:26.870785+00:00",
+      "config": {
+        "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+        "cuda_compat_path": "/usr/local/cuda-13.0/compat",
+        "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+        "preemptible": false,
+        "workspace": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin",
+        "script": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin/probe_diagnostic.py",
+        "source_sha256": "2ba143d568b88436b6f8b9809ca1dbcac415f0fbaa083f5cad9728bd0d306fd4",
+        "source_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+        "output_dir": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_run/probe",
+        "job_tag": "dsv4-h800-graph-payload-probe-20261024-01",
+        "charged_group": "codesign",
+        "positive_tags": [
+          "H800"
+        ],
+        "cpu": 16,
+        "mem_gb": 64,
+        "timeout_seconds": 600,
+        "worker_tmp_dir": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_tmp",
+        "envs": {
+          "OMP_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "XDG_CACHE_HOME": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_tmp/cache",
+          "CUDA_CACHE_PATH": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_tmp/cuda-cache",
+          "FRONTIER_GRAPH_DIAGNOSTICS_DIR": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_run/diagnostics"
+        },
+        "cloud_run_root": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_run",
+        "diagnostics_dir": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_run/diagnostics"
+      }
+    },
+    "launcher_result.json": {
+      "start_utc": "2026-10-24T05:23:26.870785+00:00",
+      "config": {
+        "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+        "cuda_compat_path": "/usr/local/cuda-13.0/compat",
+        "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+        "preemptible": false,
+        "workspace": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin",
+        "script": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin/probe_diagnostic.py",
+        "source_sha256": "2ba143d568b88436b6f8b9809ca1dbcac415f0fbaa083f5cad9728bd0d306fd4",
+        "source_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+        "output_dir": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_run/probe",
+        "job_tag": "dsv4-h800-graph-payload-probe-20261024-01",
+        "charged_group": "codesign",
+        "positive_tags": [
+          "H800"
+        ],
+        "cpu": 16,
+        "mem_gb": 64,
+        "timeout_seconds": 600,
+        "worker_tmp_dir": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_tmp",
+        "envs": {
+          "OMP_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "XDG_CACHE_HOME": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_tmp/cache",
+          "CUDA_CACHE_PATH": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_tmp/cuda-cache",
+          "FRONTIER_GRAPH_DIAGNOSTICS_DIR": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_run/diagnostics"
+        },
+        "cloud_run_root": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_run",
+        "diagnostics_dir": "/data/ycfeng/tmp/w128_graph_package_cpu_ip4s7q7c/sdk_standin_run/diagnostics"
+      },
+      "job": "cpu-stand-in",
+      "status": "CPU_STAND_IN_COMPLETED",
+      "end_utc": "2026-10-24T05:23:26.870955+00:00"
+    }
+  }
+}

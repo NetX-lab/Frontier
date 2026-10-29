@@ -1,0 +1,33 @@
+--- original_stream_package/launch.py
++++ h800_graph_probe_01/launch.py
+@@ -1,4 +1,4 @@
+-"""Submit the native stream/capture probe through the existing backend."""
++"""Submit the corrected graph payload probe through the existing backend."""
+ 
+ import argparse
+ from datetime import datetime, timezone
+@@ -17,13 +17,21 @@
+     parser.add_argument("--launch", action="store_true")
+     args = parser.parse_args()
+     config = json.loads((HERE / "config.json").read_text())
++    manifest = json.loads((HERE / "manifest.json").read_text())
++    for name, expected in manifest["files"].items():
++        if hashlib.sha256((HERE / name).read_bytes()).hexdigest() != expected:
++            raise ValueError(f"Prepared graph package input changed: {name}")
+     script = Path(config["script"])
+     if hashlib.sha256(script.read_bytes()).hexdigest() != config["source_sha256"]:
+-        raise ValueError("Reviewed native profile probe source changed")
+-    argv = ["python3", str(script), "--output-dir", config["output_dir"]]
++        raise ValueError("Reviewed graph payload probe source changed")
++    argv = ["python3", str(script), "run", "--output-dir", config["output_dir"],
++            "--image-digest", config["image"].split("@", 1)[1]]
+     verify_and_run = (
+-        "import hashlib,os,pathlib,sys; "
++        "import hashlib,json,os,pathlib,sys; "
++        f"manifest=json.loads(pathlib.Path({str(HERE / 'manifest.json')!r}).read_text()); "
++        f"assert all(hashlib.sha256((pathlib.Path({str(HERE)!r})/n).read_bytes()).hexdigest()==h for n,h in manifest['files'].items()); "
+         f"assert hashlib.sha256(pathlib.Path({str(script)!r}).read_bytes()).hexdigest()=={config['source_sha256']!r}; "
++        f"pathlib.Path({config['diagnostics_dir']!r}).mkdir(parents=True,exist_ok=False); "
+         f"os.execv(sys.executable,[sys.executable]+{argv[1:]!r})"
+     )
+     command = ("export LD_LIBRARY_PATH=" + shlex.quote(config["cuda_compat_path"])

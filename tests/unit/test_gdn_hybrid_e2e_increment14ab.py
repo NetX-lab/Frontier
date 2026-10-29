@@ -37,7 +37,7 @@ from frontier.entities.time_components import (
     MoEOperatorTimes,
 )
 from frontier.execution_time_predictor.gdn_predictor import GDNPredictor
-from frontier.execution_time_predictor import ExecutionTimePredictorRegistry
+from frontier.execution_time_predictor.execution_time_predictor_registry import ExecutionTimePredictorRegistry
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )

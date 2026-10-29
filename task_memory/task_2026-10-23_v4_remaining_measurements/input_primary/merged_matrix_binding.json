@@ -1,0 +1,48 @@
+{
+  "status": "MERGED_SOURCE_BOUND_TO_FIXED_CAPTURE",
+  "merged_commit": "732406aa235ff63c97e7b9bbd6d5836fe1881de7",
+  "capture_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "comparison": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "only_non_record_delta": [
+    "tests/analysis/v4_kernel_coverage.py"
+  ],
+  "delta_role": "Standalone read-only audit, not imported by the simulator or fidelity case drivers",
+  "matrix_capture_reused": true,
+  "new_matrix_capture": false,
+  "source_only_changes": [
+    "task_memory/task_2026-10-23_v4_remaining_measurements/audit/native_source_evidence.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/audit/test_report_2026-10-23_kernel_coverage.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/baseline_binding.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/design.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_bundle/matrix_receipt.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_bundle/non_timing_layout_receipt.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_bundle/plan.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_bundle/post_capture_verification.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_bundle/progress.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_bundle/summary.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_bundle/test_report_2026-10-23_input_bundle.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_input_source.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_representation.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/native_profile_checks/profiler_lifecycle_control.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/native_profile_checks/trace_56x11l33/w0.1792726948207158520.pt.trace.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/native_profile_checks/trace_56x11l33/w0.1792726948208277889.pt.trace.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/native_profile_checks/trace_56x11l33/w0.1792726948208998658.pt.trace.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/native_profile_seam.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/proposal.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md",
+    "tests/analysis/v4_kernel_coverage.py"
+  ]
+}

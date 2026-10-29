@@ -1,0 +1,49 @@
+case_id: dsv4-h200-p2-canonical-fixed128-qps1
+run_generation: v4-native-v028-h200-p2-canonical-20261025-01
+purpose: P2 H200-32 native reference for DSV4 under D-H200-TEMP-MAINLINE; Frontier comparisons against it are DIAGNOSTIC
+model: DeepSeek-V4-Flash
+architecture: pd-disaggregation
+groundtruth_checkout_path: /data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69
+groundtruth_commit: 2cf0a6915ce544dc493a0990f2ea38d81601128a
+groundtruth_branch: ''
+workload_sha256:
+  trace.csv: 2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2
+  request_ids.json: 318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6
+  warmup_pool.csv: 55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e
+  manifest.json: 5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3
+  SHA256SUMS: 594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9
+image: hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635
+groundtruth_checker_path: /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
+groundtruth_checker_sha256: ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917
+primary_checker_schema_review_required: true
+runtime_source_overlay:
+  manifest: overlay.json
+  sha256: e32a880ac09c1687e63e58088838b8c901047821f5dae8b3efc8e672652a3852
+  accepted_c26_model_sha256: d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee
+  native_checkout_is_base_only: true
+topology:
+  vllm:
+    prefill:
+      tp: 8
+      dp: 2
+      ep: 16
+      pp: 1
+    decode:
+      tp: 8
+      dp: 2
+      ep: 16
+      pp: 1
+  frontier:
+    sys_arch: pd-disaggregation
+policy:
+  priority: P2
+  gpu_type: H200
+  charged_group: step_main
+  preemptible: false
+  metric_relative_error_limit: 0.1
+  all_four_metrics_required: true
+  root_cap_check_required: true
+  root_package_acceptance_required: true
+  auxiliary_validators_soft: true
+  H200_nonpreemptible_running_plus_queued_limit: 64
+  formal64_requires_same_model_same_hardware32_all_four_errors_at_most: 0.3

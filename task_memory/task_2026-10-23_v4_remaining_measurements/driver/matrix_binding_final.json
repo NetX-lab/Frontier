@@ -1,0 +1,29 @@
+{
+  "status": "G2_DEFAULT_MATRIX_GATE_PASS_BY_EXPLICIT_BINDING",
+  "source_commit": "05952396b0b8e5a794c53e10f9a21213beb5193d",
+  "capture_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "identical_cases": 77,
+  "mismatched_cases": 0,
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "source_files": {
+    "tests/comparison/calibration/native_pd_worker.py": "9ec701ec12f7a5da0f442f994a353f98c5ae1d2880b9feca38106ea536fd5cab",
+    "tests/comparison/calibration/native_serve_profile.py": "ea810b91665ca9a804e1b0309ad03f0d50772a96585c66602945a7125cfc1ea5",
+    "tests/comparison/calibration/pd_replay.py": "65ec81721ebe1d02a4028388521bc25d57888bb39a721bc59c21dc6f0a3ed0ae",
+    "tests/unit/test_native_cold_start.py": "f4112a16ae089bf63b4a5bd28588743e74e95152ad57556a424f26c48df8ad06",
+    "tests/unit/test_native_pd_worker.py": "ed20f690b6d5515ac21bd1a238b14fbcf94a00f8f1d3c91ea21ef52d433161dc",
+    "tests/unit/test_native_serve_profile.py": "559dcf7bb63c48344cbffc542e580d29ff33196813f58e49786155cb923a9037",
+    "tests/unit/test_native_streaming_replay.py": "f4b552eafe50deb84def6cabb077f7f1a696306c22aed42fcfbd505a2455961e"
+  },
+  "new_capture": false,
+  "prior_binding_sha256": "d9d64138e70bce155404cb1cb7274bb099dd5ee26c39fbe0a7e69cae22e91dd8",
+  "reachability": "Changed paths are native diagnostic replay/collector and CPU tests; simulator, examples, profiling tables and matrix drivers are byte-identical to the admitted capture.",
+  "limitations": "No serving/native/GPU or numerical cost qualification; final suite receipt and root source acceptance are separate."
+}

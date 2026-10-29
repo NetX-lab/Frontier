@@ -1,0 +1,42 @@
+{
+  "status": "OBSERVED_CPU_SERIALIZATION",
+  "platform_operations": 0,
+  "root_anti_affinities": [
+    "hard/default"
+  ],
+  "rows": [
+    {
+      "name": "default",
+      "leaf_anti_affinities": [
+        "hard/default"
+      ],
+      "serialized_affinity": {
+        "podAntiAffinity": {
+          "requiredDuringSchedulingIgnoredDuringExecution": [
+            {
+              "labelSelector": {
+                "matchExpressions": [
+                  {
+                    "key": "rjob.brainpp.cn/rjob-task-id",
+                    "operator": "In",
+                    "values": [
+                      "cpu-no-submission-default"
+                    ]
+                  }
+                ]
+              },
+              "topologyKey": "kubernetes.io/hostname"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-I",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_affinity_cpu_bllqc_bg/read_affinity.py"
+  ],
+  "output": "/data/ycfeng/tmp/glm53_dsv4/profile03_affinity_cpu_bllqc_bg"
+}

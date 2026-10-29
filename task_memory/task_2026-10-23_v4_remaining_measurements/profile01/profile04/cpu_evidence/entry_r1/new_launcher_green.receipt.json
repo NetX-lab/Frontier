@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-I",
+    "-B",
+    "-c",
+    "import json,pathlib,runpy,sys\nlaunch=pathlib.Path(sys.argv[1]); receipt=pathlib.Path(sys.argv[2]); root=launch.parent\ndef trace(frame,event,arg):\n    if event == 'call' and frame.f_code.co_name == 'write_run_manifest':\n        assert pathlib.Path(frame.f_code.co_filename) == root/'native_pd_worker.py'\n        assert 'pd_replay' not in sys.modules, 'Forbidden preload'\n        assert pathlib.Path(sys.modules['vllm_replay'].__file__) == root/'tests/comparison/dp_placement_pp/vllm_replay.py'\n        receipt.write_text(json.dumps(dict(status='GREEN_BEFORE_WRITE_RUN_MANIFEST_BODY', worker=frame.f_code.co_filename, dependency=sys.modules['vllm_replay'].__file__, sys_path=sys.path, pd_replay_preloaded=False, run_files_written=False, submitted=False),indent=2)+'\\n')\n        print('FRESH_LAUNCHER_GREEN_BEFORE_WRITE_RUN_MANIFEST_BODY')\n        raise SystemExit(0)\n    return trace\nsys.argv=[str(launch)]; sys.settrace(trace); runpy.run_path(str(launch),run_name='__main__')\nraise AssertionError('Sentinel not reached')",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/entry_r1/new_launcher_green/launch.py",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/entry_r1/new_launcher_sentinel.json"
+  ],
+  "returncode": 0,
+  "cpu_only": true
+}

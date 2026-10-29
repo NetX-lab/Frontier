@@ -1,0 +1,17 @@
+{
+  "status": "PASS_EXPLICIT_UNCHANGED_DOMAIN_MATRIX_BINDING",
+  "fixed_baseline": "0f2fb6cdffbbe86f2fdc06e5141e3e80c227c2b9",
+  "capture_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "identical_cases": 77,
+  "fresh_capture": false,
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "scope": "Only a standalone CPU audit adapter and its tests; no simulator/default matrix callsite reaches these paths."
+}

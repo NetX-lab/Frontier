@@ -69,7 +69,7 @@ class ClusterTopologySummary:
     def get_server_count_metadata(self, sys_arch: str) -> Dict[str, int]:
         clusters_info = self._collect_cluster_info()
         server_counts_by_cluster = {}
-        _, _, _, CollectiveSimCCBackendConfig, _, _ = _get_cc_backend_configs()
+        _, _, _, CollectiveSimCCBackendConfig, *_ = _get_cc_backend_configs()
         cluster_prefix_by_name = {
             "PREFILL": "prefill",
             "DECODE_ATTN": "decode_attn",

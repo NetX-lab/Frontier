@@ -1,0 +1,18 @@
+{
+  "status": "RED_REPRODUCED_GREEN_CONTROL",
+  "staged_tool_hashes_pass": 16,
+  "unmounted_checker_errors": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py": {
+      "type": "FileNotFoundError",
+      "message": "[Errno 2] No such file or directory: '/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py'"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py": {
+      "type": "FileNotFoundError",
+      "message": "[Errno 2] No such file or directory: '/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py'"
+    }
+  },
+  "corrected_tool_map_pass": true,
+  "torch_or_vllm_imported": false,
+  "command_artifact": "/data/ycfeng/tmp/glm53_dsv4/native_checker_mount_d97gefx5/command.json",
+  "code_sha256": "966d69533931c0daa002ed4d407acfadef5ccbb5d9b74891b44128b5f5cccfc3"
+}

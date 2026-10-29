@@ -11,6 +11,30 @@ logger = init_logger(__name__)
 
 
 @dataclass(frozen=True)
+class KVCacheBlockZeroing:
+    """One scheduler step's assignments, shared by its physical TP workers.
+
+    IDs retain allocation order and repeated assignments. The unique physical
+    reservation extent is not native store traffic or a zeroed segment span.
+    """
+
+    block_ids: tuple[int, ...]
+    physical_block_size_bytes: int
+
+    def __post_init__(self) -> None:
+        block_ids = tuple(self.block_ids)
+        if not block_ids or any(type(block) is not int or block <= 0 for block in block_ids):
+            raise ValueError("cache zeroing requires non-null positive physical block IDs")
+        if type(self.physical_block_size_bytes) is not int or self.physical_block_size_bytes <= 0:
+            raise ValueError("cache zeroing requires a positive physical block stride")
+        object.__setattr__(self, "block_ids", block_ids)
+
+    @property
+    def physical_reservation_extent_bytes(self) -> int:
+        return len(set(self.block_ids)) * self.physical_block_size_bytes
+
+
+@dataclass(frozen=True)
 class AFDStageMetadata:
     """Minimal AFD metadata for simulation.
 
@@ -452,6 +476,7 @@ class Batch(BaseEntity):
         is_moe: bool = None,
         num_context_tokens: Optional[List[int]] = None,
         request_is_decoding: Optional[List[bool]] = None,
+        num_output_placeholders: Optional[List[int]] = None,
     ) -> None:
         if is_moe is None:
             raise ValueError("Batch.is_moe must be explicitly set")
@@ -497,6 +522,14 @@ class Batch(BaseEntity):
             if request_is_decoding is None
             else request_is_decoding
         )
+        # Outputs of each request's earlier steps still in flight when this
+        # batch is scheduled (vLLM's num_output_placeholders). They advance the
+        # request's decode-token index before this batch's output arrives.
+        self._num_output_placeholders: List[int] = (
+            [0] * len(requests)
+            if num_output_placeholders is None
+            else num_output_placeholders
+        )
         self._total_num_tokens: int = sum(num_tokens)
         self._num_prefill_tokens = sum(
             num_tokens_to_process
@@ -538,6 +571,7 @@ class Batch(BaseEntity):
         self._is_idle = is_idle
         self._is_moe = is_moe
         self.decode_cuda_graph_metadata: Optional[DecodeCudaGraphMetadata] = None
+        self.cache_block_zeroing: Optional[KVCacheBlockZeroing] = None
         self._request_runtime_epochs = [
             int(getattr(request, "runtime_epoch", 0)) for request in self._requests
         ]
@@ -548,7 +582,10 @@ class Batch(BaseEntity):
             self._get_thinking_round_start_time(request) for request in self._requests
         ]
         self._request_mutation_signatures = [
-            self._get_request_mutation_signature(request) for request in self._requests
+            self._get_request_mutation_signature(request, num_placeholders)
+            for request, num_placeholders in zip(
+                self._requests, self._num_output_placeholders
+            )
         ]
 
         # AFD stage metadata for StepFun-vLLM alignment
@@ -580,15 +617,22 @@ class Batch(BaseEntity):
         return request.execution_signature
 
     @staticmethod
-    def _get_request_mutation_signature(request: Request) -> tuple[int, int, int, int]:
+    def _get_request_mutation_signature(
+        request: Request, num_output_placeholders: int = 0
+    ) -> tuple[int, int, int, int]:
         """Capture decode-step progress for stale batch-end mutation checks.
 
         The decode-token cursor advances once per committed decode iteration and
         cleanly distinguishes stale same-round decode callbacks without being
-        perturbed by prefix-cache hits or chunked-prefill bookkeeping.
+        perturbed by prefix-cache hits or chunked-prefill bookkeeping. A batch
+        expects the cursor its request reaches once the outputs of the
+        `num_output_placeholders` steps in flight ahead of it are applied.
         """
         execution_signature = Batch._get_request_execution_signature(request)
-        return (*execution_signature, request.current_decode_token_index)
+        return (
+            *execution_signature,
+            request.current_decode_token_index + num_output_placeholders,
+        )
 
     def add_spec_terminal_completion_delay(
         self,
@@ -1060,7 +1104,10 @@ class Batch(BaseEntity):
             self._get_thinking_round_start_time(request) for request in self._requests
         ]
         self._request_mutation_signatures = [
-            self._get_request_mutation_signature(request) for request in self._requests
+            self._get_request_mutation_signature(request, num_placeholders)
+            for request, num_placeholders in zip(
+                self._requests, self._num_output_placeholders
+            )
         ]
 
         for request in self._requests:
@@ -1306,11 +1353,19 @@ class Batch(BaseEntity):
 class DummyForwardBatch(Batch):
     """One pipeline stage's part of vLLM's attention-DP dummy pass.
 
-    A DP engine core whose step executed no batch runs ``execute_dummy_batch``,
-    ``_dummy_run(1)`` on every pipeline stage: one request slot with one token
-    and no attention metadata. Attention kernels and KV-cache writes are
-    skipped, while projections, norms and every MoE layer with its EP
-    collectives run. The forward carries no request.
+    In the V1 runner, a DP engine core whose step executed no batch runs
+    ``execute_dummy_batch``, ``_dummy_run(1, uniform_decode=True)`` on every
+    pipeline stage. Eager and piecewise execution have no attention metadata;
+    FULL replay builds metadata
+    for one actual request slot with seq_len=1. Graph forwards pad projections
+    and MoE input to the DP-wide capture width. Dummy slot mappings are -1, so
+    no real KV page is written. The forward carries no serving request.
+
+    The V2 / DeepSeek-V4 runner uses the synchronized descriptor's rows and
+    requests: FULL pads requests to the descriptor, while PIECEWISE and NONE
+    keep one request. Each request's sequence length equals its query length,
+    every row is padding, and the forward has dummy attention metadata. FULL
+    re-stages the capture metadata.
     """
 
     def __init__(
@@ -1383,6 +1438,8 @@ class EPBatchGroup(Batch):
         # expert tokens; predictor lookups must not collapse to a zero-token
         # stage in that case.
         self._moe_pre_routing_effective_total_tokens: Optional[int] = None
+        # C2's immutable result identifies all source lanes, independent of routing.
+        self.moe_sequence_parallel_token_widths = None
         self._decode_ffn_execution_time_recorded_stage_ids: set[int] = set()
         self.activation_bytes: int = 0
     

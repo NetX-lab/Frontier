@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "local_root": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_results",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_prefill/39b2bf8_balanced_warm2/PREFILL_WARM_6144_C0_BALANCED",
+  "files": {
+    "PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv": {
+      "bytes": 43114,
+      "sha256": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv": {
+      "bytes": 41635,
+      "sha256": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/logs/accepted_c26_prefill.log": {
+      "bytes": 23136,
+      "sha256": "bb76b180d2c00b95e77f84bb7fe631f90257f2c6c6b1de3091b3411e8d600b82"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/logs/aggregate_prefill.log": {
+      "bytes": 689,
+      "sha256": "f20683afd1279ea54b81b76514c7fe1727f4c24f86eee68ff9e71be295cd120e"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/profiler_traces/e0-prefill-p6144.json": {
+      "bytes": 7702607,
+      "sha256": "990dd2a7a4a4dd9adcd427dd047cb5bb34b65b791563bca7d0d76a3f4f54cdff"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/raw/dsv4_aggregate_summary.json": {
+      "bytes": 2390,
+      "sha256": "38a62d2b1209caa0e209eedde91789766afb09b507c0aa232646c9c2829648ce"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/raw/dsv4_raw_e0.jsonl": {
+      "bytes": 78669,
+      "sha256": "0330db5625e5d7a8b014ffa804d962b1798ddf05222109896c0f79e4fce61ec4"
+    },
+    "status.json": {
+      "bytes": 1208,
+      "sha256": "976182d88ce111639d8fde98acffa90002f8474471950be85aa2bf7c41cd75da"
+    }
+  },
+  "matched_files": 8,
+  "matched_bytes": 7893448
+}

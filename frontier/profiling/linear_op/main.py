@@ -33,7 +33,7 @@ because MoE models use expert layers instead of dense MLP layers.
 from __future__ import annotations
 
 import argparse
-import itertools
+import json
 import os
 import sys
 from pathlib import Path
@@ -71,18 +71,23 @@ from frontier.profiling.common.accelerator import (
 from frontier.profiling.linear_op.ray_setup_hook import (
     disable_ray_datasets_serializers,
 )
-from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
+from frontier.profiling.linear_op.profiling_plan import (
+    build_profiling_plan,
+    build_sequence_parallel_shared_expert_plan,
+    tensor_parallel_sweep_exclusion,
+)
 from frontier.operators.typed_contracts import serialize_typed_operator_contract_column
 from frontier.profiling.utils import (
     EXPORTABLE_PROFILE_METHOD_CHOICES,
-    ProfileMethod,
     build_profile_method_output_path,
-    build_profiling_output_path,
     get_num_tokens_to_profile,
     normalize_profile_method,
     profile_method_to_measurement_type,
     require_profiling_dependencies,
 )
+
+
+LINEAR_OP_SCHEMA_VERSION = "linear_op.v1"
 
 
 def _ensure_torch_available():
@@ -140,7 +145,7 @@ def _worker_profile_linear_op_task(
     """
     global _CUDA_INITIALIZED, _CUDA_GPU_ID, _CUDA_GPU_LOCAL_IDX
     torch_module = _ensure_torch_available()
-    from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
+    from frontier.profiling.linear_op.linear_op_wrapper import linear_op_wrapper_class
 
     wrapper_args, num_tokens, gpu_id, gpu_local_idx = task_args
 
@@ -166,7 +171,7 @@ def _worker_profile_linear_op_task(
     model_config = ModelConfig(**wrapper_args["model_config_dict"])
 
     # Create wrapper and run profiling
-    wrapper = LinearOpWrapper(
+    wrapper = linear_op_wrapper_class(wrapper_args.get("profiling_plan"))(
         model_config=model_config,
         num_tensor_parallel_workers=wrapper_args["num_tensor_parallel_workers"],
         profile_method=wrapper_args["profile_method"],
@@ -278,6 +283,10 @@ def parse_args():
         ),
     )
     parser.add_argument(
+        "--deepseek_v4_operator_grid", type=str, default=None,
+        help="JSON grid of SP-local, descriptor and logits rows for V4 standalone operators.",
+    )
+    parser.add_argument(
         "--include_target_embedded_mtp",
         action="store_true",
         help=(
@@ -348,9 +357,38 @@ def parse_args():
             "(input_layernorm, post_attention_layernorm, add, emb)."
         ),
     )
+    parser.add_argument(
+        "--sequence_parallel_moe_topology",
+        type=int,
+        nargs=3,
+        default=None,
+        metavar=("ATTN_TP", "ATTN_DP", "EP"),
+        help=(
+            "Also profile TP=1 shared-expert rows with the replicated typed "
+            "contract of this one-stage sequence-parallel MoE deployment."
+        ),
+    )
+    parser.add_argument(
+        "--source_revision",
+        default=None,
+        help="Frontier source revision; attaches runtime identity columns.",
+    )
+    parser.add_argument(
+        "--model_config_revision",
+        default=None,
+        help="Upstream model config revision; attaches runtime identity columns.",
+    )
+    parser.add_argument(
+        "--dry_run",
+        action="store_true",
+        help="Print the profiling plans as JSON and exit without torch or GPUs.",
+    )
     args = parser.parse_args()
+    if (args.source_revision is None) != (args.model_config_revision is None):
+        parser.error("--source_revision and --model_config_revision must be given together")
     args.profile_method = normalize_profile_method(args.profile_method)
-    os.makedirs(args.output_dir, exist_ok=True)
+    if not args.dry_run:
+        os.makedirs(args.output_dir, exist_ok=True)
 
     return args
 
@@ -509,7 +547,177 @@ def _materialize_profile_result_rows(
         if should_split
         else (materialized,)
     )
-    return [row for row in candidate_rows if row.get("time_stats")]
+    rows = [dict(row) for row in candidate_rows if row.get("time_stats")]
+    for row in rows:
+        linear_backends = row.pop("linear_backends", None)
+        if linear_backends is None:
+            continue
+        row_backends = {
+            operator: names
+            for operator, names in linear_backends.items()
+            if operator in row["time_stats"]
+        }
+        if row_backends:
+            row["linear_backends"] = json.dumps(row_backends, sort_keys=True)
+    return rows
+
+
+def _restrict_to_plan_operators(
+    result: Dict[str, Any], profiling_plan: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Keep only the plan's operators; other timed modules ran as shape context."""
+
+    enabled_ops = list(profiling_plan["enabled_ops"])
+    missing = [name for name in enabled_ops if name not in result["time_stats"]]
+    if missing:
+        raise RuntimeError(f"profiling result lacks planned operators {missing}")
+    restricted = dict(result)
+    restricted["time_stats"] = {
+        name: result["time_stats"][name] for name in enabled_ops
+    }
+    return restricted
+
+
+def _build_profiling_plans(
+    args: argparse.Namespace, model_config: ModelConfig
+) -> List[Dict[str, Any]]:
+    """Return the TP-sweep plans followed by the optional sequence-parallel plan.
+
+    Profiles that the generic TP sweep cannot represent contribute only the
+    sequence-parallel shared-expert plan, so they require that topology.
+    """
+
+    if getattr(args, "deepseek_v4_operator_grid", None) is not None:
+        if args.num_tokens_list is not None:
+            raise ValueError("--deepseek_v4_operator_grid cannot be combined with --num_tokens_list")
+        if args.sequence_parallel_moe_topology is not None:
+            raise ValueError("--deepseek_v4_operator_grid cannot be combined with --sequence_parallel_moe_topology")
+        from frontier.profiling.linear_op.deepseek_v4_plan import build_operator_plans, load_operator_grid
+
+        return build_operator_plans(model_config, load_operator_grid(args.deepseek_v4_operator_grid))
+    attn_tp, ffn_tp, moe_tp, all_tps = _resolve_tp_ranges(args)
+    exclusion = tensor_parallel_sweep_exclusion(model_config)
+    if exclusion is None:
+        plans = [
+            build_profiling_plan(
+                model_config=model_config,
+                tp_size=num_tensor_parallel_workers,
+                attn_tp=attn_tp,
+                ffn_tp=ffn_tp,
+                moe_tp=moe_tp,
+                disable_replicated=args.disable_replicated,
+                is_moe=args.is_moe,
+                include_target_embedded_mtp=args.include_target_embedded_mtp,
+            )
+            for num_tensor_parallel_workers in all_tps
+        ]
+    elif args.sequence_parallel_moe_topology is None:
+        raise ValueError(
+            f"{exclusion}; only its sequence-parallel shared-expert rows are "
+            "supported, which requires --sequence_parallel_moe_topology"
+        )
+    else:
+        print(f"[INFO] Skipping the TP sweep: {exclusion}", file=sys.stderr)
+        plans = []
+    if args.sequence_parallel_moe_topology is not None:
+        attention_tp_size, attention_dp_size, expert_parallel_size = (
+            args.sequence_parallel_moe_topology
+        )
+        plans.append(
+            build_sequence_parallel_shared_expert_plan(
+                model_config,
+                attention_tp_size=attention_tp_size,
+                attention_dp_size=attention_dp_size,
+                expert_parallel_size=expert_parallel_size,
+            )
+        )
+    for plan in plans:
+        plan["num_tokens"] = get_num_tokens_to_profile(
+            args.max_tokens, extra_num_tokens=args.extra_num_tokens,
+            num_tokens_list=args.num_tokens_list,
+        )
+    return plans
+
+
+def _plan_summary(plan: Dict[str, Any], num_tokens: List[int]) -> Dict[str, Any]:
+    contracts = plan["typed_operator_contracts"]
+    num_tokens = plan.get("num_tokens", num_tokens)
+    summary = {
+        "tp_size": plan["tp_size"],
+        "sequence_parallel_moe_topology": plan.get("sequence_parallel_moe_topology"),
+        "enabled_ops": list(plan["enabled_ops"]),
+        "replicated_ops": list(plan["replicated_ops"]),
+        "padded_n_embd": plan["padded_n_embd"],
+        "padded_n_expanded_embd": plan["padded_n_expanded_embd"],
+        "operator_contracts": {
+            name: {
+                "operator_family_id": contract["operator_family_id"],
+                "tensor_parallel_mode": contract["tensor_parallel_mode"],
+                "selected_tensor_parallel_size": contract["selected_tensor_parallel_size"],
+                "effective_ffn_width": contract["effective_ffn_width"],
+            }
+            for name, contract in contracts.items()
+        },
+        "num_token_points": len(num_tokens) if plan["enabled_ops"] else 0,
+        "skip_reasons": list(plan["skip_reasons"]),
+    }
+    if "row_axis" in plan:
+        summary.update(plan_name=plan["plan_name"], row_axis=plan["row_axis"],
+                       num_tokens=list(num_tokens), attention_tp_size=plan["attention_tp_size"])
+        summary["operator_contracts"] = dict(contracts)
+    return summary
+
+
+
+def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict[str, Any]:
+    models = {}
+    for model in args.models:
+        model_config = ModelConfig.from_model_name(model)
+        plans = _build_profiling_plans(args, model_config)
+        models[model] = {
+            "attention_family": model_config.get_attention_family().family_id,
+            "quantization": (
+                None
+                if model_config.quantization_config is None
+                else {
+                    "quant_method": model_config.quantization_config.quant_method,
+                    "weight_block_size": model_config.quantization_config.weight_block_size,
+                }
+            ),
+            "plans": [_plan_summary(plan, num_tokens_to_profile) for plan in plans],
+            "profiled_steps": sum(
+                len(plan["num_tokens"]) for plan in plans if plan["enabled_ops"]
+            ),
+        }
+    if getattr(args, "deepseek_v4_operator_grid", None) is not None:
+        num_tokens_to_profile = sorted({
+            row for model in models.values() for plan in model["plans"] for row in plan["num_tokens"]
+        })
+    return {
+        "profile_method": args.profile_method,
+        "num_tokens": list(num_tokens_to_profile),
+        "models": models,
+    }
+
+
+def _attach_runtime_identity(
+    df: pd.DataFrame, args: argparse.Namespace, model: str, model_config: ModelConfig
+) -> pd.DataFrame:
+    from frontier.profiling.common.runtime_identity import (
+        attach_identity_columns,
+        measure_runtime_identity,
+    )
+
+    identity = measure_runtime_identity(
+        model_name=model,
+        source_revision=args.source_revision,
+        model_config_revision=args.model_config_revision,
+        schema_version=LINEAR_OP_SCHEMA_VERSION,
+        quant_signature=model_config.get_quant_signature(),
+        parallel_groups={"engine_tensor_parallel": 1},
+        graph_mode="eager",
+    )
+    return pd.DataFrame(attach_identity_columns(df.to_dict("records"), identity))
 
 
 def _resolve_fp8_settings(
@@ -549,7 +757,7 @@ def profile_model(
     - Non-Ray mode with num_gpus > 1: Uses ProcessPoolExecutor for multi-GPU profiling
     - Non-Ray mode with num_gpus = 1: Sequential single-GPU profiling
     """
-    from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
+    from frontier.profiling.linear_op.linear_op_wrapper import linear_op_wrapper_class
 
     model_config = ModelConfig.from_model_name(model)
     dtype, _ = _resolve_precision_for_model(model_config, args.precision, model)
@@ -579,19 +787,12 @@ def profile_model(
         profile_method=args.profile_method,
     ).parent
 
-    attn_tp, ffn_tp, moe_tp, all_tps = _resolve_tp_ranges(args)
-
-    for num_tensor_parallel_workers in all_tps:
-        profiling_plan = build_profiling_plan(
-            model_config=model_config,
-            tp_size=num_tensor_parallel_workers,
-            attn_tp=attn_tp,
-            ffn_tp=ffn_tp,
-            moe_tp=moe_tp,
-            disable_replicated=args.disable_replicated,
-            is_moe=args.is_moe,
-            include_target_embedded_mtp=args.include_target_embedded_mtp,
-        )
+    sequence_parallel_results: List[Dict[str, Any]] = []
+    for profiling_plan in _build_profiling_plans(args, model_config):
+        plan_num_tokens = profiling_plan["num_tokens"]
+        num_tensor_parallel_workers = profiling_plan["tp_size"]
+        is_sequence_parallel_plan = ("sequence_parallel_moe_topology" in profiling_plan
+                                     or "row_axis" in profiling_plan)
 
         if not profiling_plan["enabled_ops"]:
             skip_reasons = profiling_plan.get("skip_reasons", [])
@@ -599,7 +800,7 @@ def profile_model(
             print(
                 f"[WARNING] Skipping TP={num_tensor_parallel_workers} for model {model}: {reason_text}"
             )
-            pbar.update(len(num_tokens_to_profile))
+            pbar.update(len(plan_num_tokens))
             continue
 
         # Determine whether to split replicated ops into separate TP=1 rows.
@@ -613,7 +814,22 @@ def profile_model(
         )
 
         def _collect_result(result):
-            """Append result to all_results, splitting replicated ops if needed."""
+            """Append result rows, splitting replicated ops if needed.
+
+            Sequence-parallel shared-expert rows are TP=1 rows with their own
+            typed contract, so they bypass the TP=1 deduplication.
+            """
+            if is_sequence_parallel_plan:
+                sequence_parallel_results.extend(
+                    _materialize_profile_result_rows(
+                        _restrict_to_plan_operators(result, profiling_plan),
+                        measurement_type=measurement_type,
+                        should_split=False,
+                        replicated_op_names=set(),
+                        model_config=model_config,
+                    )
+                )
+                return
             all_results.extend(
                 _materialize_profile_result_rows(
                     result,
@@ -650,7 +866,7 @@ def profile_model(
                 num_cpus=1,
                 num_gpus=1,
             )(
-                LinearOpWrapper,
+                linear_op_wrapper_class(profiling_plan),
             ).options(runtime_env=runtime_env)
 
             model_wrappers = [
@@ -664,7 +880,7 @@ def profile_model(
                 )
                 for rank in range(args.num_gpus)
             ]
-            for num_tokens in num_tokens_to_profile:
+            for num_tokens in plan_num_tokens:
                 worker_id = len(promises)
                 promise = model_wrappers[worker_id].profile.remote(
                     num_tokens,
@@ -693,7 +909,7 @@ def profile_model(
 
             # Distribute tasks across GPUs (round-robin)
             tasks_by_gpu = {gpu_id: [] for gpu_id in available_gpus}
-            for idx, num_tokens in enumerate(num_tokens_to_profile):
+            for idx, num_tokens in enumerate(plan_num_tokens):
                 gpu_id = available_gpus[idx % actual_num_gpus]
                 tasks_by_gpu[gpu_id].append(
                     (wrapper_args, num_tokens, gpu_id, gpu_local_idx_map[gpu_id])
@@ -747,7 +963,7 @@ def profile_model(
             set_process_visible_device(available_gpus[0], torch_module=torch_module)
             torch_module.cuda.set_device(0)
 
-            wrapper = LinearOpWrapper(
+            wrapper = linear_op_wrapper_class(profiling_plan)(
                 model_config=model_config,
                 num_tensor_parallel_workers=num_tensor_parallel_workers,
                 profile_method=args.profile_method,
@@ -756,7 +972,7 @@ def profile_model(
                 profiling_plan=profiling_plan,
             )
 
-            for num_tokens in num_tokens_to_profile:
+            for num_tokens in plan_num_tokens:
                 result = wrapper.profile(num_tokens)
                 _collect_result(result)
                 pbar.update(1)
@@ -764,7 +980,7 @@ def profile_model(
     # Deduplicate TP=1 replicated rows produced by multiple TP sizes.
     all_results = deduplicate_tp1_rows(
         all_results, tp1_key_fields=("num_tokens", "model_arch", "measurement_type")
-    )
+    ) + sequence_parallel_results
 
     if not all_results:
         raise RuntimeError(
@@ -818,6 +1034,14 @@ def filter_mlp_columns(df):
 
 def main():
     args = parse_args()
+    if args.dry_run:
+        num_tokens_to_profile = get_num_tokens_to_profile(
+            args.max_tokens,
+            extra_num_tokens=args.extra_num_tokens,
+            num_tokens_list=args.num_tokens_list,
+        )
+        print(json.dumps(_dry_run(args, num_tokens_to_profile), indent=2))
+        return
     require_profiling_dependencies("linear-op", ("torch", "vllm"))
 
     # Display execution mode
@@ -883,15 +1107,12 @@ def main():
     ):
         sys.exit(0)
 
-    _, _, _, all_tps = _resolve_tp_ranges(args)
-
-    total_combos = itertools.product(
-        args.models,
-        num_tokens_to_profile,
-        all_tps,
+    total_steps = sum(
+        len(plan["num_tokens"])
+        for model in args.models
+        for plan in _build_profiling_plans(args, ModelConfig.from_model_name(model))
     )
-
-    pbar = tqdm(total=len(list(total_combos)))
+    pbar = tqdm(total=total_steps)
 
     for model in args.models:
         result_df = profile_model(
@@ -918,6 +1139,8 @@ def main():
             quant_signature=model_config.get_quant_signature(),
             measurement_type=profile_method_to_measurement_type(args.profile_method).value,
         )
+        if args.source_revision is not None:
+            result_df = _attach_runtime_identity(result_df, args, model, model_config)
         output_file = build_profile_method_output_path(
             output_root=args.output_dir,
             profiling_type="compute",

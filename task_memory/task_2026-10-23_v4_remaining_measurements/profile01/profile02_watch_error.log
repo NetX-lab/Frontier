@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "<stdin>", line 13, in <module>
+  File "/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/kubernetes/watch/watch.py", line 199, in stream
+    resp = func(*args, **kwargs)
+  File "/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/kubernetes/client/api/custom_objects_api.py", line 2984, in list_namespaced_custom_object
+    return self.list_namespaced_custom_object_with_http_info(group, version, namespace, plural, **kwargs)  # noqa: E501
+  File "/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/kubernetes/client/api/custom_objects_api.py", line 3151, in list_namespaced_custom_object_with_http_info
+    return self.api_client.call_api(
+  File "/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/kubernetes/client/api_client.py", line 374, in call_api
+    return self.__call_api(resource_path, method,
+  File "/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/kubernetes/client/api_client.py", line 191, in __call_api
+    raise e
+  File "/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/kubernetes/client/api_client.py", line 184, in __call_api
+    response_data = self.request(
+  File "/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/kubernetes/client/api_client.py", line 400, in request
+    return self.rest_client.GET(url,
+  File "/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/kubernetes/client/rest.py", line 246, in GET
+    return self.request("GET", url,
+  File "/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/kubernetes/client/rest.py", line 232, in request
+    raise ForbiddenException(http_resp=r)
+kubernetes.client.exceptions.ForbiddenException: (403)
+Reason: Forbidden
+HTTP response headers: HTTPHeaderDict({'audit-id': 'd3f210c7-ffa6-4209-816f-d2234eac2a11', 'cache-control': 'no-cache, private', 'content-type': 'application/json', 'x-content-type-options': 'nosniff', 'x-kubernetes-pf-flowschema-uid': 'bb9a21e1-c624-4681-a37b-f9e9cefbadb6', 'x-kubernetes-pf-prioritylevel-uid': '6cc3b69b-3d5d-4f36-8276-a0fe04161ae2', 'date': 'Fri, 23 Oct 2026 10:11:53 GMT', 'content-length': '399', 'x-envoy-upstream-service-time': '0', 'x-request-id': '0ebf9677-db9b-4bd3-a70f-8ffc7b0b69ba', 'server': 'envoy'})
+HTTP response body: {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"rjobs.rjob.brainpp.cn \"exp-1023-180821-373637\" is forbidden: User \"<personal-principal>\" cannot watch resource \"rjobs\" in API group \"rjob.brainpp.cn\" in the namespace \"shai-core\"","reason":"Forbidden","details":{"name":"exp-1023-180821-373637","group":"rjob.brainpp.cn","kind":"rjobs"},"code":403}

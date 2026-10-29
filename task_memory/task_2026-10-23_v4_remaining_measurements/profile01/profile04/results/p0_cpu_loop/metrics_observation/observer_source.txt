@@ -1,0 +1,36 @@
+"""Time original metrics calls without changing the loading-GC audit pipeline."""
+import ast
+import hashlib
+from pathlib import Path
+
+source = Path(__file__).with_name("load_without_gc.py")
+assert hashlib.sha256(source.read_bytes()).hexdigest() == "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02"
+tree = ast.parse(source.read_text())
+addition = ast.parse('''
+original_instrument = observer.stage.instrument
+
+def instrument_metrics(text):
+    parsed = original_instrument(text)
+    wrapper = ast.parse("""
+def timed_metrics(function):
+    def measured(events):
+        started = time.monotonic()
+        _obs('metrics_start', count=len(events))
+        result = function(events)
+        _obs('metrics_done', count=len(events), seconds=time.monotonic() - started)
+        return result
+    return measured
+""").body[0]
+    parsed.body.insert(0, wrapper)
+    metrics = next(node for node in parsed.body if isinstance(node, ast.FunctionDef) and node.name == 'metrics')
+    original_body = ast.dump(ast.Module(body=metrics.body, type_ignores=[]))
+    metrics.decorator_list.append(ast.Name(id='timed_metrics', ctx=ast.Load()))
+    assert ast.dump(ast.Module(body=metrics.body, type_ignores=[])) == original_body
+    return ast.fix_missing_locations(parsed)
+
+observer.stage.instrument = instrument_metrics
+''').body
+position = next(i for i, node in enumerate(tree.body) if isinstance(node, ast.Try))
+tree.body[position:position] = addition
+exec(compile(ast.fix_missing_locations(tree), str(source), "exec"),
+     {"__name__": "__main__", "__file__": str(source), "ast": ast})

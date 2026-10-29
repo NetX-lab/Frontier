@@ -25,6 +25,7 @@ from frontier.events.ep_alltoall_dispatch_ready_event import (
 )
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
+    CommunicationTime,
     SklearnDisaggregationExecutionTimePredictor,
 )
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
@@ -1780,9 +1781,9 @@ def _trained_predictor(model_config, *, isolate_branch: bool = True):
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
     def _get_communication_time(*_args, include_attention: bool = True,
-                                include_stage_owned: bool = True):
-        del include_attention, include_stage_owned
-        return _ZeroAttributes()
+                                include_stage_owned: bool = True, layer_id: int = 0):
+        del include_attention, include_stage_owned, layer_id
+        return CommunicationTime()
 
     predictor._get_communication_time = _get_communication_time
     predictor._get_overhead_time = lambda *_args: _ZeroAttributes()

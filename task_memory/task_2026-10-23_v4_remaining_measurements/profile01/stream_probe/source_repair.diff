@@ -1,0 +1,53 @@
+--- original_native_profile_probe.py
++++ tests/comparison/calibration/native_profile_probe.py
+@@ -45,7 +45,10 @@
+ 
+ 
+ def graph_correspondence(report):
+-    capture = report.get('cycles', {}).get('1', {}).get('capture_ops', {})
++    cycles = report.get('cycles', {})
++    if cycles.get('1', {}).get('capture_returned') is not True:
++        return dict(status='UNKNOWN', reason='Capture did not complete successfully')
++    capture = cycles['1'].get('capture_ops', {})
+     owners = {}
+     for label, row in capture.items():
+         identities = {graph_identity(e) for e in row.get('runtime', []) + row.get('kernels', [])}
+@@ -60,7 +63,10 @@
+         return dict(status='UNKNOWN', reason='Two captured CPU annotations are not retained')
+     transfers = {}
+     for cycle in ('1', '2'):
+-        replay = report['cycles'].get(cycle, {}).get('replay', {})
++        state = cycles.get(cycle, {})
++        if state.get('replay_returned') is not True:
++            return dict(status='UNKNOWN', reason=f'Replay cycle {cycle} did not complete successfully')
++        replay = state.get('replay', {})
+         kernels = replay.get('kernels', [])
+         pairs = [graph_identity(e) for e in kernels]
+         if (len(replay.get('annotations', [])) != 1 or not kernels
+@@ -199,13 +205,20 @@
+                 row['status'] = ('PASS' if identifier is not None and len(row['annotations']) == 1
+                                  and row['kernels'] and expected.get('trace_stream_id') == identifier
+                                  and all(k.get('args', {}).get('stream') == identifier for k in row['kernels']) else 'FAIL')
+-            for label in state['priming']:
+-                state['priming'][label] = joined(events, label)
+-            for label in state.get('capture_ops', {}):
+-                state['capture_ops'][label] = joined(events, label)
+-            state['capture_envelope'] = joined(events, 'probe.capture_and_instantiate')
+-            state['replay'] = joined(events, f'probe.c{cycle}.replay')
+             state['status'] = 'PASS' if len(state['eager']) == 4 and all(r['status'] == 'PASS' for r in state['eager'].values()) else 'FAIL'
++
++            def analyze_priming():
++                for label in state['priming']:
++                    state['priming'][label] = joined(events, label)
++
++            def analyze_graph():
++                for label in state.get('capture_ops', {}):
++                    state['capture_ops'][label] = joined(events, label)
++                state['capture_envelope'] = joined(events, 'probe.capture_and_instantiate')
++                state['replay'] = joined(events, f'probe.c{cycle}.replay')
++
++            attempt(f'analyze_priming_cycle{cycle}', analyze_priming)
++            attempt(f'analyze_graph_cycle{cycle}', analyze_graph)
+         attempt(f'analyze_cycle{cycle}', analyze)
+         save()
+     report['graph_correspondence'] = attempt('graph_correspondence', lambda: graph_correspondence(report)) or dict(status='UNKNOWN')

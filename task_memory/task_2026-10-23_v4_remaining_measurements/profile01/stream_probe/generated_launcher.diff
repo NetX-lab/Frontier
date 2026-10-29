@@ -1,0 +1,36 @@
+--- task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt2_20261021/launch.py
++++ /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01/launch.py
+@@ -1,4 +1,4 @@
+-"""Submit the standalone CUDA graph identity probe through the existing backend."""
++"""Submit the native stream/capture probe through the existing backend."""
+ 
+ import argparse
+ from datetime import datetime, timezone
+@@ -19,10 +19,8 @@
+     config = json.loads((HERE / "config.json").read_text())
+     script = Path(config["script"])
+     if hashlib.sha256(script.read_bytes()).hexdigest() != config["source_sha256"]:
+-        raise ValueError("Reviewed graph probe source changed")
+-    argv = ["python3", str(script), "run", "--output-dir", config["output_dir"],
+-            "--image-digest", config["image"].split("@", 1)[1],
+-            "--elements", str(config["elements"]), "--warmup", str(config["warmup"])]
++        raise ValueError("Reviewed native profile probe source changed")
++    argv = ["python3", str(script), "--output-dir", config["output_dir"]]
+     verify_and_run = (
+         "import hashlib,os,pathlib,sys; "
+         f"assert hashlib.sha256(pathlib.Path({str(script)!r}).read_bytes()).hexdigest()=={config['source_sha256']!r}; "
+@@ -45,12 +43,12 @@
+     resource = ResourceConfig(
+         cpu=config["cpu"], gpu=1, mem_gb=config["mem_gb"], replica=1,
+         preemptible=config["preemptible"],
+-        image=config["image"], positive_tags=["H200"], extra_requirements=[],
++        image=config["image"], positive_tags=config["positive_tags"], extra_requirements=[],
+         mounts=[config["cloud_mount"]], command="{COMMAND}",
+         task_specs={"default": {"is_critical": True}},
+         envs={"PYTHONDONTWRITEBYTECODE": "1", "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+               "VLLM_CUDA_COMPATIBILITY_PATH": config["cuda_compat_path"],
+-              "TMPDIR": config["worker_tmp_dir"]},
++              "TMPDIR": config["worker_tmp_dir"]} | config["envs"],
+     )
+     receipt = {"start_utc": datetime.now(timezone.utc).isoformat(), "config": config}
+     (HERE / "launcher_started.json").write_text(json.dumps(receipt, indent=2) + "\n")

@@ -1,0 +1,134 @@
+{
+  "native_revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "checks": [
+    {
+      "prompt": 191,
+      "initial_allocated": [
+        1,
+        3,
+        3,
+        48,
+        24
+      ],
+      "source_held": [
+        1,
+        2,
+        2,
+        2,
+        16
+      ],
+      "connector_exchanged_including_null": [
+        1,
+        3,
+        3,
+        3,
+        17
+      ],
+      "destination_reserved": [
+        1,
+        2,
+        2,
+        2,
+        16
+      ],
+      "transferred": [
+        1,
+        2,
+        2,
+        2,
+        16
+      ]
+    },
+    {
+      "prompt": 6144,
+      "initial_allocated": [
+        24,
+        96,
+        96,
+        1536,
+        768
+      ],
+      "source_held": [
+        24,
+        2,
+        2,
+        2,
+        16
+      ],
+      "connector_exchanged_including_null": [
+        24,
+        3,
+        3,
+        3,
+        17
+      ],
+      "destination_reserved": [
+        24,
+        2,
+        2,
+        2,
+        16
+      ],
+      "transferred": [
+        24,
+        2,
+        2,
+        2,
+        16
+      ]
+    },
+    {
+      "prompt": 6145,
+      "initial_allocated": [
+        25,
+        97,
+        97,
+        1537,
+        769
+      ],
+      "source_held": [
+        25,
+        3,
+        3,
+        3,
+        17
+      ],
+      "connector_exchanged_including_null": [
+        25,
+        3,
+        3,
+        3,
+        17
+      ],
+      "destination_reserved": [
+        25,
+        3,
+        3,
+        3,
+        17
+      ],
+      "transferred": [
+        25,
+        3,
+        3,
+        3,
+        17
+      ]
+    }
+  ],
+  "source_sha256": {
+    "vllm/v1/core/single_type_kv_cache_manager.py:624-661": "dc6d2e64cc4cd8cbb3f4bd77d2d035038658d75b6e52f9ace0cf637a4897f71f",
+    "vllm/v1/core/single_type_kv_cache_manager.py:597-622": "dc6d2e64cc4cd8cbb3f4bd77d2d035038658d75b6e52f9ace0cf637a4897f71f",
+    "vllm/v1/core/single_type_kv_cache_manager.py:229-286": "dc6d2e64cc4cd8cbb3f4bd77d2d035038658d75b6e52f9ace0cf637a4897f71f",
+    "vllm/v1/core/single_type_kv_cache_manager.py:288-325": "dc6d2e64cc4cd8cbb3f4bd77d2d035038658d75b6e52f9ace0cf637a4897f71f",
+    "vllm/v1/core/single_type_kv_cache_manager.py:1063-1098": "dc6d2e64cc4cd8cbb3f4bd77d2d035038658d75b6e52f9ace0cf637a4897f71f",
+    "vllm/v1/core/single_type_kv_cache_manager.py:663-674": "dc6d2e64cc4cd8cbb3f4bd77d2d035038658d75b6e52f9ace0cf637a4897f71f",
+    "vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_scheduler.py:240-284": "a1c1f2f06874836649d2e7534143c32ffec301b99b621a2d275f168eb36f5af2",
+    "vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py:2412-2508": "4860f51b6ac3301c243794b7626b5536f6b0ec41204e426ee6b61bc0e1d0bdb7",
+    "vllm/v1/core/sched/scheduler.py:2665-2700": "4b79ab760c3864af6838d555c01335deea3aac97c9be2be415fa0e5dab32f07e",
+    "vllm/v1/core/kv_cache_manager.py:99-109": "2d20c3d98845cfd8d88a2f66b8fc6402ea1fcfbee16879d2364a4a9e45b8fa47",
+    "vllm/v1/core/kv_cache_manager.py:714-732": "2d20c3d98845cfd8d88a2f66b8fc6402ea1fcfbee16879d2364a4a9e45b8fa47",
+    "vllm/v1/core/kv_cache_coordinator.py:370-391": "9e6542c45f138480b1a535a69ed5b16cf489e23b1185ef7e86bee096d4b1ccc6"
+  },
+  "scope": "extracted actual native bodies; fixture objects, no native runtime import or device execution"
+}

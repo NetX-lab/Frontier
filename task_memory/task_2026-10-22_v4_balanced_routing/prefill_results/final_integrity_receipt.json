@@ -1,0 +1,22 @@
+{
+  "Modification History": [
+    {
+      "change": "Final read-only recheck of8 collected originals and529 sealed package files; confirmed exact rebuilt CSVs and stopped writing.",
+      "date": "2026-10-23"
+    }
+  ],
+  "aggregate_rebuild_receipt_sha256": "d0c7545df57da060a80ddf83128d39daf38e032286fc536572345f700326ea13",
+  "csv_exact_bytes_reverified": 2,
+  "external_operations": 0,
+  "original_artifacts_reverified": 8,
+  "originals_unchanged": true,
+  "results_receipt_sha256": "7bc70889acebcb6f8c9adfb71ac241d37bb4066e7d2bc5befb651abeb693b893",
+  "root_acceptance_and_remote_hash_comparison_pending": true,
+  "sealed_inputs_unchanged": true,
+  "sealed_package_files_reverified": 529,
+  "source_or_Git_operations": 0,
+  "task_id": "W128-V4-BALANCED-PREFILL-RESULTS",
+  "test_report_sha256": "8855ffc6b9e344ca37c0c299305207bc2d394adca531375dc2eec5fd8b5784a0",
+  "verdict": "PASS_ISOLATED_BOUNDED_MEASUREMENT_ONLY_WITH_RETAINED_ANOMALIES",
+  "writing_stopped_after_this_receipt": true
+}

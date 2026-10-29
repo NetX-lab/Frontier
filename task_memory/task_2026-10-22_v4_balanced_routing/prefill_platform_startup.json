@@ -1,0 +1,58 @@
+{
+  "job": "exp-1023-023708-916112",
+  "observed_utc": "2026-10-22T18:42:21.306079+00:00",
+  "creator": "i-fengyicheng",
+  "preemptible": "no",
+  "charged_group": "codesign",
+  "status": {
+    "phase": "Running",
+    "reason": "RJobRunning",
+    "message": "Tasks is running: [default]",
+    "taskStatuses": {
+      "default": {
+        "active": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "local_nfs_address": "100.96.128.195",
+  "tasks": [
+    {
+      "name": "default",
+      "replicas": 1,
+      "source_mount": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run:/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run",
+      "containers": [
+        {
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "limits": {
+            "cpu": "16",
+            "mellanox.com/mlnx_rdma": "1",
+            "memory": "125Gi",
+            "nvidia.com/gpu": "1",
+            "rdma/mlnx_shared": "8"
+          }
+        }
+      ]
+    }
+  ],
+  "replicas": [
+    {
+      "name": "exp-1023-023708-916112-cfcd2084",
+      "ip": "10.191.24.37",
+      "phase": "Running"
+    }
+  ],
+  "logs": [
+    {
+      "replica": "exp-1023-023708-916112-cfcd2084",
+      "phase": "Running",
+      "path": "/data/ycfeng/tmp/glm53_dsv4/exp-1023-023708-916112-cfcd2084_startup.log",
+      "lines": 28,
+      "hardware_lines": [
+        "GPU_TYPE=H800"
+      ],
+      "error_lines": []
+    }
+  ]
+}

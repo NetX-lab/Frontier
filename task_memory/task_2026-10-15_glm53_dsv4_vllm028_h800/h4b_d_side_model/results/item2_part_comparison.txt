@@ -1,0 +1,21 @@
+== native06: lifecycle repetitions [1, 2, 3], 378 requests
+  native lifecycle: b+c+d+e 79.20  f 41.80  a+g 4.90  handoff 125.91
+  frontier depth 1: kv_transfer 47.70  d_first_step 30.01  handoff 77.71  tpot 19.48  kv_transfer/tpot 2.45  d_first_step/tpot 1.54  handoff gap -45.79  P-side gap +12.69
+  frontier depth 2: kv_transfer 66.70  d_first_step 49.00  handoff 115.70  tpot 19.48  kv_transfer/tpot 3.42  d_first_step/tpot 2.51  handoff gap -7.79  P-side gap +12.69
+  depth 2 minus depth 1: kv_transfer +19.00  d_first_step +19.00  handoff +38.00  (2 x tpot 38.97)
+  depth 2 minus lifecycle: handoff -10.20  (b+c+d+e) vs kv_transfer -12.50  f vs d_first_step +7.20  a+g -4.90
+  target handoff 123.49; lifecycle minus target +2.41
+== p2_32: lifecycle repetitions [1, 2, 3], 378 requests
+  native lifecycle: b+c+d+e 91.79  f 42.05  a+g 4.63  handoff 138.47
+  frontier depth 1: kv_transfer 45.57  d_first_step 34.11  handoff 79.68  tpot 18.64  kv_transfer/tpot 2.44  d_first_step/tpot 1.83  handoff gap -48.24  P-side gap +45.92
+  frontier depth 2: kv_transfer 63.66  d_first_step 52.19  handoff 115.85  tpot 18.64  kv_transfer/tpot 3.41  d_first_step/tpot 2.80  handoff gap -12.07  P-side gap +45.92
+  depth 2 minus depth 1: kv_transfer +18.08  d_first_step +18.08  handoff +36.17  (2 x tpot 37.28)
+  depth 2 minus lifecycle: handoff -22.62  (b+c+d+e) vs kv_transfer -28.14  f vs d_first_step +10.14  a+g -4.63
+  target handoff 127.92; lifecycle minus target +10.55
+== p2_64: lifecycle repetitions [2, 3], 248 requests
+  native lifecycle: b+c+d+e 104.18  f 51.53  a+g 3.95  handoff 159.66
+  frontier depth 1: kv_transfer 61.34  d_first_step 26.76  handoff 88.10  tpot 24.77  kv_transfer/tpot 2.48  d_first_step/tpot 1.08  handoff gap -99.67  P-side gap +6.82
+  frontier depth 2: kv_transfer 85.29  d_first_step 50.71  handoff 136.00  tpot 24.77  kv_transfer/tpot 3.44  d_first_step/tpot 2.05  handoff gap -51.77  P-side gap +6.82
+  depth 2 minus depth 1: kv_transfer +23.95  d_first_step +23.95  handoff +47.90  (2 x tpot 49.54)
+  depth 2 minus lifecycle: handoff -23.66  (b+c+d+e) vs kv_transfer -18.89  f vs d_first_step -0.82  a+g -3.95
+  target handoff 187.76; lifecycle minus target -28.10

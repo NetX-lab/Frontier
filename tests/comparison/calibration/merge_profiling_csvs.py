@@ -16,7 +16,8 @@ Merge rules, per table:
   source does not have is left empty.
 - Rows are every source row, in the order the sources are named, so an output
   row's provenance is its position (the receipt records each source's range).
-- A row's identity is every column except the `time_stats.` measurements. Two
+- A row's identity is every column except the `time_stats.` measurements and
+  native collective timing statistics (`*_us`, `queue_held_fraction`). Two
   rows with the same identity are rejected, and so is a row without any
   measurement.
 
@@ -41,6 +42,15 @@ import sys
 from pathlib import Path
 
 MEASUREMENT_PREFIX = "time_stats."
+# Native collective summaries use microsecond statistics, not time_stats names.
+COLLECTIVE_MEASUREMENTS = frozenset({
+    "median_us", "mean_us", "std_us", "min_us", "max_us", "p10_us", "p90_us",
+    "launch_median_us", "queue_held_fraction",
+})
+
+
+def is_measurement(column: str) -> bool:
+    return column.startswith(MEASUREMENT_PREFIX) or column in COLLECTIVE_MEASUREMENTS
 
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -90,12 +100,12 @@ def supplement_tables(base_dir: Path) -> dict[str, str]:
 def identity(row: dict) -> tuple:
     return tuple(sorted(
         (key, value) for key, value in row.items()
-        if value and not key.startswith(MEASUREMENT_PREFIX)
+        if value and not is_measurement(key)
     ))
 
 
 def measurements(row: dict) -> dict:
-    return {key: value for key, value in row.items() if key.startswith(MEASUREMENT_PREFIX) and value}
+    return {key: value for key, value in row.items() if is_measurement(key) and value}
 
 
 def merge_table(run_dir: Path, sources: list[str], recorded: dict[str, str], base: Path | None, base_sha256: str | None):

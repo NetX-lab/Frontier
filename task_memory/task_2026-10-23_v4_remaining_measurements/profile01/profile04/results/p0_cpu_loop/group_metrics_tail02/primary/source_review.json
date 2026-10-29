@@ -1,0 +1,48 @@
+{
+  "status": "ACCEPTED_CPU_GROUP_SEGMENT_SOURCE_AND_TINY_WITH_LIMITS",
+  "observed_utc": "2026-10-24T21:25:34.274639+00:00",
+  "decision": "D-V4-P0-GROUP-METRICS-SEGMENTS",
+  "primary_inspection_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/primary_source_inspection.json",
+  "primary_inspection_sha256": "86e9ca795567c55ed076b63c174868ba14ae1550824274f6f62574e003669097",
+  "source_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+  "source_sha256": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426",
+  "source_lines": 112,
+  "source_cap": 140,
+  "active_tiny_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control02.py",
+  "active_tiny_sha256": "dabfdc8199ea3e6e17ea9c7ef96656801c5c8b973b29c02ca13a6096c0580650",
+  "tiny_lines": 114,
+  "tiny_cap": 115,
+  "tiny_receipt_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_result02.json",
+  "tiny_receipt_sha256": "1b4074b85ac02cd5594ce70d2f2782c214670daf5687ce949ea8bdcd853202e7",
+  "serialized_checks": 32,
+  "all_exact_and_consistent": true,
+  "actual_memory_limit_bytes": 32212254720,
+  "independent_reviews": [
+    {
+      "axis": "spec",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/review_spec.md",
+      "sha256": "0a91b3fa23eeeedcee5c8f5120203945f7222daacf0e303af6dddd50a715210c",
+      "open_findings": 0,
+      "original_sensor_failure_preserved": true
+    },
+    {
+      "axis": "standards",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/review_standards.md",
+      "sha256": "f7678a9d45b7fcbfd75d7bae367dab1945824c33d21bdb7c1850a12ee7a4d9a8",
+      "open_findings": 0,
+      "original_sensor_failure_preserved": true
+    }
+  ],
+  "original_tiny_used": 1,
+  "original_tiny_result": "FAIL_BEFORE_AST_ZERO_CHECKS",
+  "repair_tiny_used": 1,
+  "repair_tiny_result": "PASS32_EXACT_CHECKS",
+  "segment_diagnostic_used": 0,
+  "segment_diagnostic_ceiling": 1,
+  "new_complete_control_or_affected_runs": 0,
+  "limits": [
+    "CPU/source/fixture proof only;performance not established.",
+    "R5still24/32;native ownership,dependencies,timing/non-perturbation,cost/reference not accepted.",
+    "Original failed tiny and prior failures/accepted evidence remain immutable;no control rerun."
+  ]
+}

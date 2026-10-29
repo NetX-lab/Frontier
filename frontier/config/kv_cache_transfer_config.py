@@ -5,7 +5,10 @@ from frontier.config.base_poly_config import BasePolyConfig
 from frontier.types import KVCacheTransferType
 
 # vLLM KV connectors of a PDD prefill instance whose device work Frontier prices.
-KV_CONNECTORS = ("none", "p2p_nccl")
+KV_CONNECTORS = ("none", "p2p_nccl", "nixl")
+# When a NIXL READ completes for the DECODE scheduler: at the end of its wire
+# time, or at the output of the DECODE engine step that finds it complete.
+NIXL_READ_COMPLETIONS = ("transfer_end", "engine_step")
 
 
 def _require_positive(value: float | int, field_name: str) -> None:
@@ -63,8 +66,9 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
     kv_connector: str = field(
         default="none",
         metadata={
-            "help": "vLLM KV connector of the PDD prefill instance: none, or p2p_nccl "
-            "(P2pNcclConnector), whose per-layer KV extract each prefill step pays."
+            "help": "vLLM KV connector of the PDD prefill instance: none, p2p_nccl "
+            "(P2pNcclConnector), or nixl. NIXL is currently admitted only by the "
+            "reservation-backed GLM structural payload path."
         },
     )
     kv_send_slowdown_per_layer_ms: float = field(
@@ -73,6 +77,16 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
             "help": "Measured correction, not a model of the send: device time (ms) added to each layer "
             "of a PDD prefill step that completes a prompt, for the slowdown of the layer's later "
             "operators while the kv_connector sends its KV. Requires a kv_connector; 0 disables it."
+        },
+    )
+    nixl_read_completion: str = field(
+        default="transfer_end",
+        metadata={
+            "help": "When a NIXL READ completes for the DECODE scheduler: transfer_end (the request "
+            "is ready when the wire time ends) or engine_step (the DECODE engine posts the READ at "
+            "its next step, a later step finds it complete, and that step's output reports it, as "
+            "vLLM's start_load_kv / get_finished / finished_recving do). engine_step requires "
+            "kv_connector=nixl."
         },
     )
 
@@ -85,6 +99,26 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
             raise ValueError(f"kv_connector must be one of {list(KV_CONNECTORS)}, got {self.kv_connector!r}")
         if self.kv_send_slowdown_per_layer_ms > 0 and self.kv_connector == "none":
             raise ValueError("kv_send_slowdown_per_layer_ms corrects the KV send of a kv_connector; kv_connector is 'none'.")
+        if self.kv_connector == "nixl" and self.kv_send_slowdown_per_layer_ms > 0:
+            raise ValueError(
+                "kv_send_slowdown_per_layer_ms is a P2P per-layer correction and "
+                "must be zero for the NIXL structural path."
+            )
+        if self.kv_connector == "nixl" and self.enable_latency_hiding:
+            raise ValueError(
+                "NIXL structural PD models one whole-request handoff and does not "
+                "support latency hiding."
+            )
+        if self.nixl_read_completion not in NIXL_READ_COMPLETIONS:
+            raise ValueError(
+                f"nixl_read_completion must be one of {list(NIXL_READ_COMPLETIONS)}, "
+                f"got {self.nixl_read_completion!r}"
+            )
+        if self.nixl_read_completion == "engine_step" and self.kv_connector != "nixl":
+            raise ValueError(
+                "nixl_read_completion='engine_step' models NIXL READs; "
+                f"kv_connector is {self.kv_connector!r}."
+            )
 
 
 @dataclass

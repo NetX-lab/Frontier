@@ -1,0 +1,45 @@
+INFO 10-24 05:58:39 [importing.py:53] Triton is installed but 0 active driver(s) found (expected 1). Disabling Triton to prevent runtime errors.
+INFO 10-24 05:58:39 [importing.py:88] Triton not installed or not compatible; certain GPU-related functions will not be available.
+WARNING 10-24 05:58:53 [interface.py:368] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+WARNING 10-24 05:58:56 [import_utils.py:408] Module humming was found but failed to import
+WARNING 10-24 05:58:56 [import_utils.py:408] Traceback (most recent call last):
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/vllm/utils/import_utils.py", line 406, in _has_module
+WARNING 10-24 05:58:56 [import_utils.py:408]     importlib.import_module(module_name)
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/lib/python3.12/importlib/__init__.py", line 90, in import_module
+WARNING 10-24 05:58:56 [import_utils.py:408]     return _bootstrap._gcd_import(name[level:], package, level)
+WARNING 10-24 05:58:56 [import_utils.py:408]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/__init__.py", line 11, in <module>
+WARNING 10-24 05:58:56 [import_utils.py:408]     import humming.ops  # noqa
+WARNING 10-24 05:58:56 [import_utils.py:408]     ^^^^^^^^^^^^^^^^^^
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/ops/__init__.py", line 7, in <module>
+WARNING 10-24 05:58:56 [import_utils.py:408]     from humming.kernel.humming import HummingKernel
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/kernel/__init__.py", line 1, in <module>
+WARNING 10-24 05:58:56 [import_utils.py:408]     from humming.kernel.dequant_weight import DequantKernel
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/kernel/dequant_weight.py", line 9, in <module>
+WARNING 10-24 05:58:56 [import_utils.py:408]     from humming.jit.runtime import KernelRuntime
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/jit/__init__.py", line 1, in <module>
+WARNING 10-24 05:58:56 [import_utils.py:408]     from humming.jit.runtime import KernelRuntime
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/jit/runtime.py", line 10, in <module>
+WARNING 10-24 05:58:56 [import_utils.py:408]     from humming.jit.compiler import NVCCCompiler, NVRTCCompiler
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/jit/compiler.py", line 14, in <module>
+WARNING 10-24 05:58:56 [import_utils.py:408]     from humming.utils.nvrtc import get_nvrtc_library_path, may_build_nvrtc_compile_binary
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/utils/nvrtc.py", line 140, in <module>
+WARNING 10-24 05:58:56 [import_utils.py:408]     build_nvrtc_compile_binary_in_bg()
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/utils/nvrtc.py", line 132, in build_nvrtc_compile_binary_in_bg
+WARNING 10-24 05:58:56 [import_utils.py:408]     jit_utils.popen_and_reap(
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/local/lib/python3.12/dist-packages/humming/utils/jit.py", line 59, in popen_and_reap
+WARNING 10-24 05:58:56 [import_utils.py:408]     threading.Thread(target=proc.wait, name="humming-bg-build-reaper", daemon=True).start()
+WARNING 10-24 05:58:56 [import_utils.py:408]   File "/usr/lib/python3.12/threading.py", line 992, in start
+WARNING 10-24 05:58:56 [import_utils.py:408]     _start_new_thread(self._bootstrap, ())
+WARNING 10-24 05:58:56 [import_utils.py:408] RuntimeError: can't start new thread
+WARNING 10-24 05:58:56 [interface.py:368] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+WARNING 10-24 05:58:57 [interface.py:368] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+INFO 10-24 05:59:03 [worker_base.py:286] Injected <class 'native_serve_profile.NativeServeProfile'> into <class 'vllm.v1.worker.gpu_worker.Worker'> for extended collective_rpc calls ['full_model_inventory']
+WARNING 10-24 05:59:03 [worker_base.py:310] Missing `shared_worker_lock` argument from executor. This argument is needed for mm_processor_cache_type='shm'.
+{"status": "PASS", "position": 0, "role": "prefill", "native_startup": {"ok": true, "module": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03/tests/comparison/calibration/native_serve_profile.py", "module_sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58", "extension": "NativeServeProfile", "native_wrapper_extension_injected": true, "actual_native_hooks_installed": ["torch.cuda.graphs.CUDAGraph.replay", "vllm.v1.worker.gpu_model_runner.GPUModelRunner._dummy_run", "vllm.v1.worker.gpu_model_runner.GPUModelRunner._model_forward", "vllm.v1.worker.gpu_worker.Worker.compile_or_warm_up_model", "vllm.v1.worker.gpu_worker.Worker.execute_model", "vllm.v1.worker.gpu_worker.Worker.load_model", "vllm.v1.worker.gpu_worker.Worker.shutdown"], "observation_errors": [], "successful_forwards": 0, "successful_replays": 0, "gpu_initialized": false, "real_worker_constructor_called": false, "config_and_constructor_are_cpu_standins": true}, "profile_hooks": ["torch.cuda.Event.record", "torch.cuda.Event.wait", "Worker.profile", "Worker.load_model", "Worker.execute_model", "Worker.sample_tokens", "Worker.compile_or_warm_up_model", "Worker.shutdown"], "profile_errors": [], "profiler_config": {"delay_iterations": 0, "ignore_frontend": true, "max_iterations": 512, "profiler": "torch", "torch_profiler_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-03/torch_traces/prefill/dp0", "torch_profiler_record_shapes": false, "torch_profiler_use_gzip": true, "torch_profiler_with_flops": false, "torch_profiler_with_memory": false, "torch_profiler_with_stack": false, "wait_iterations": 0, "warmup_iterations": 0}, "limits": {"bytes": 268435456, "records": 600000}, "strategy_origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03/tests/comparison/calibration/balanced_routing.py", "cuda_initialized": false, "model_hooks_runtime_verified": false, "original_probe_sha256": "8c04aad06417ddde7e33f11b41959b3330404f0a4106756318c95ff1700227a3", "in_memory_probe_changes": {"extension": 1, "import": 2, "class": 2, "inventory": 1}}

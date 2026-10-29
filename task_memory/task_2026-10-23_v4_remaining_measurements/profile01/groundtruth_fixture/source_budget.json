@@ -1,0 +1,11 @@
+{
+  "base_revision": "c4b59b65f177619223c7e0c8466bf852ee9c8083",
+  "owned_file": "tests/unit/test_native_groundtruth_check.py",
+  "additions": 32,
+  "deletions": 5,
+  "gross": 37,
+  "ceiling": 60,
+  "source_sha256": "d5f702efe9d108ee0ef34594f3d61f459a14268a7fa55b7a68134d30aa4e5b43",
+  "diff_sha256": "260d9f3d5c93b797e23b1f3616d89230d375c34afa96278c535a464339bb961a",
+  "unchanged_test_functions": 17
+}

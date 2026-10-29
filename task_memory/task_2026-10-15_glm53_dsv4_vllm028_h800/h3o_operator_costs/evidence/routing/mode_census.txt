@@ -1,0 +1,24 @@
+dsv4-h800-p0-profile-20261024-04 prefill
+  final modes (kind, mode): forwards {('dummy', 'NONE'): 158, ('dummy', 'PIECEWISE'): 1, ('dummy', 'FULL'): 9455, ('serving', 'NONE'): 216}
+  desired-mode differences {((0, 2), 'NONE'): 156, ((2, 0), 'NONE'): 156}
+  (kind, has_prefill, mode) {('dummy', True, 'NONE'): 2, ('dummy', True, 'PIECEWISE'): 1, ('dummy', False, 'FULL'): 9455, ('serving', True, 'NONE'): 216, ('dummy', False, 'NONE'): 156}
+dsv4-h800-p0-profile-20261024-04 decode
+  final modes (kind, mode): forwards {('dummy', 'NONE'): 2, ('dummy', 'PIECEWISE'): 5, ('dummy', 'FULL'): 486, ('serving', 'PIECEWISE'): 383, ('serving', 'FULL'): 22746}
+  desired-mode differences {((1, 2), 'PIECEWISE'): 192, ((2, 1), 'PIECEWISE'): 183}
+  (kind, has_prefill, mode) {('dummy', True, 'NONE'): 2, ('dummy', True, 'PIECEWISE'): 1, ('dummy', False, 'FULL'): 486, ('serving', True, 'PIECEWISE'): 204, ('serving', False, 'FULL'): 22746, ('serving', False, 'PIECEWISE'): 179, ('dummy', False, 'PIECEWISE'): 4}
+dsv4-h200-p2-profile-20261025-01 prefill
+  final modes (kind, mode): forwards {('dummy', 'NONE'): 149, ('dummy', 'PIECEWISE'): 1, ('dummy', 'FULL'): 9079, ('serving', 'NONE'): 217}
+  desired-mode differences {((0, 2), 'NONE'): 149, ((2, 0), 'NONE'): 147}
+  (kind, has_prefill, mode) {('dummy', True, 'NONE'): 2, ('dummy', True, 'PIECEWISE'): 1, ('dummy', False, 'FULL'): 9079, ('dummy', False, 'NONE'): 147, ('serving', True, 'NONE'): 217}
+dsv4-h200-p2-profile-20261025-01 decode
+  final modes (kind, mode): forwards {('dummy', 'NONE'): 2, ('dummy', 'PIECEWISE'): 5, ('dummy', 'FULL'): 656, ('serving', 'PIECEWISE'): 357, ('serving', 'FULL'): 23114}
+  desired-mode differences {((1, 2), 'PIECEWISE'): 173, ((2, 1), 'PIECEWISE'): 171}
+  (kind, has_prefill, mode) {('dummy', True, 'NONE'): 2, ('dummy', True, 'PIECEWISE'): 1, ('dummy', False, 'FULL'): 656, ('serving', True, 'PIECEWISE'): 190, ('serving', False, 'FULL'): 23114, ('serving', False, 'PIECEWISE'): 167, ('dummy', False, 'PIECEWISE'): 4}
+dsv4-h200-p2-64-profile-20261025-01 prefill
+  final modes (kind, mode): forwards {('dummy', 'NONE'): 224, ('dummy', 'PIECEWISE'): 1, ('dummy', 'FULL'): 8408, ('serving', 'NONE'): 109}
+  desired-mode differences {((2, 0, 2, 2), 'NONE'): 75, ((0, 2, 2, 2), 'NONE'): 74, ((2, 2, 2, 0), 'NONE'): 73, ((2, 2, 0, 2), 'NONE'): 72, ((0, 2, 0, 0), 'NONE'): 2, ((0, 2, 0, 2), 'NONE'): 2}
+  (kind, has_prefill, mode) {('dummy', True, 'NONE'): 2, ('dummy', True, 'PIECEWISE'): 1, ('dummy', False, 'FULL'): 8408, ('dummy', False, 'NONE'): 222, ('serving', True, 'NONE'): 109}
+dsv4-h200-p2-64-profile-20261025-01 decode
+  final modes (kind, mode): forwards {('dummy', 'NONE'): 2, ('dummy', 'PIECEWISE'): 17, ('dummy', 'FULL'): 2233, ('serving', 'PIECEWISE'): 293, ('serving', 'FULL'): 16469}
+  desired-mode differences {((2, 2, 1, 2), 'PIECEWISE'): 78, ((2, 1, 2, 2), 'PIECEWISE'): 77, ((2, 2, 2, 1), 'PIECEWISE'): 75, ((1, 2, 2, 2), 'PIECEWISE'): 73, ((1, 2, 1, 2), 'PIECEWISE'): 1, ((1, 1, 2, 2), 'PIECEWISE'): 1}
+  (kind, has_prefill, mode) {('dummy', True, 'NONE'): 2, ('dummy', True, 'PIECEWISE'): 1, ('dummy', False, 'FULL'): 2233, ('dummy', False, 'PIECEWISE'): 16, ('serving', True, 'PIECEWISE'): 79, ('serving', False, 'PIECEWISE'): 214, ('serving', False, 'FULL'): 16469}

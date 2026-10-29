@@ -320,6 +320,24 @@ def _supports_share_expert(model_config) -> bool:
     return model_config.supports_share_expert()
 
 
+# Architecture profiles whose linear operators the generic TP sweep cannot
+# represent, with the reason. Their shared-expert rows can still be measured by
+# ``build_sequence_parallel_shared_expert_plan``.
+_TENSOR_PARALLEL_SWEEP_EXCLUSIONS = {
+    "deepseek_v4": (
+        "DeepSeek-V4 generic linear profiling cannot represent fused scopes, "
+        "grouped output projection, mHC, and mixed-precision routed experts"
+    ),
+}
+
+
+def tensor_parallel_sweep_exclusion(model_config) -> str | None:
+    """Return why the generic TP sweep cannot profile the model, or None."""
+
+    profile_id = get_model_architecture_profile(model_config).profile_id
+    return _TENSOR_PARALLEL_SWEEP_EXCLUSIONS.get(profile_id)
+
+
 def build_profiling_plan(
     model_config,
     tp_size: int,
@@ -330,6 +348,10 @@ def build_profiling_plan(
     include_target_embedded_mtp: bool = False,
     moe_tp: Sequence[int] | None = None,
 ) -> Dict[str, object]:
+    exclusion = tensor_parallel_sweep_exclusion(model_config)
+    if exclusion is not None:
+        raise NotImplementedError(exclusion)
+    architecture_profile = get_model_architecture_profile(model_config)
     if type(tp_size) is not int or tp_size <= 0:
         raise ValueError(f"tp_size must be a positive int, got {tp_size!r}")
     attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")
@@ -378,7 +400,6 @@ def build_profiling_plan(
         ffn_sharded_enabled = tp_size in ffn_tp_set
 
     padded_n_embd = model_config.embedding_dim
-    architecture_profile = get_model_architecture_profile(model_config)
     typed_layer_contracts = _typed_layer_contracts(
         model_config,
         profile=architecture_profile,
@@ -512,4 +533,74 @@ def build_profiling_plan(
         "typed_layer_contracts": typed_layer_contracts,
         "typed_operator_contracts": typed_operator_contracts,
         "skip_reasons": skip_reasons,
+    }
+
+
+def build_sequence_parallel_shared_expert_plan(
+    model_config,
+    *,
+    attention_tp_size: int,
+    attention_dp_size: int,
+    expert_parallel_size: int,
+) -> Dict[str, object]:
+    """Plan the shared-expert rows of a sequence-parallel MoE deployment.
+
+    With attention TP > 1, attention DP > 1, EP > 1 and one pipeline stage, an
+    architecture profile that sets ``replicate_shared_expert_in_sequence_parallel``
+    keeps the full shared expert on every rank and gives it only that rank's
+    token slice. The rows are measured at TP=1 and carry the replicated typed
+    contract that ``resolve_layer_contract`` selects for that topology.
+    """
+
+    profile = model_config.get_model_architecture_profile()
+    if not profile.replicate_shared_expert_in_sequence_parallel:
+        raise ValueError(
+            f"profile {profile.profile_id!r} does not replicate the shared expert "
+            "under sequence-parallel MoE"
+        )
+    if not (getattr(model_config, "is_moe", False) and _supports_share_expert(model_config)):
+        raise ValueError("sequence-parallel shared-expert rows require an MoE model with a shared expert")
+    operator_names = _share_expert_profiling_names()
+    contracts: Dict[str, Dict[str, object]] = {}
+    for operator_name in operator_names:
+        resolved = profile.resolve_layer_contract(
+            model_config,
+            operator_name=operator_name,
+            attention_tp_size=attention_tp_size,
+            attention_dp_size=attention_dp_size,
+            expert_parallel_size=expert_parallel_size,
+            num_pipeline_stages=1,
+        )
+        if resolved.tensor_parallel_mode is not TensorParallelMode.REPLICATED:
+            raise ValueError(
+                f"{operator_name} resolves to {resolved.tensor_parallel_mode.value} for "
+                f"attention TP={attention_tp_size}, DP={attention_dp_size}, "
+                f"EP={expert_parallel_size}; sequence-parallel replication needs "
+                "attention TP > 1, attention DP > 1 and EP > 1"
+            )
+        contracts[operator_name] = resolved.typed_metadata_identity()
+    widths = {contract["selected_padded_ffn_width"] for contract in contracts.values()}
+    if len(widths) != 1:
+        raise ValueError(f"shared-expert operators resolve to different widths {sorted(widths)}")
+    return {
+        "tp_size": 1,
+        "attn_enabled": False,
+        "ffn_enabled": True,
+        "attn_sharded_enabled": False,
+        "ffn_sharded_enabled": True,
+        "replicated_enabled": False,
+        "disable_replicated": True,
+        "enabled_ops": operator_names,
+        "disabled_ops": [],
+        "replicated_ops": [],
+        "padded_n_embd": model_config.embedding_dim,
+        "padded_n_expanded_embd": widths.pop(),
+        "typed_layer_contracts": [],
+        "typed_operator_contracts": contracts,
+        "skip_reasons": [],
+        "sequence_parallel_moe_topology": {
+            "attention_tp_size": attention_tp_size,
+            "attention_dp_size": attention_dp_size,
+            "expert_parallel_size": expert_parallel_size,
+        },
     }

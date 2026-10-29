@@ -1,0 +1,33 @@
+dsv4-h800-p0-profile-20261024-04 decode node gpu-h800-0187.host.platform.shaipower.com
+  forwards=23622 T_differs=398 (1.7%)
+  by cause: {'width (graph, unequal capture sizes)': 398}
+   93 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (8, 9), (8, 16), (16, 16))
+   77 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (9, 8), (16, 8), (16, 16))
+   48 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (32, 33), (32, 40), (40, 40))
+   34 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (25, 24), (32, 24), (32, 32))
+   20 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (34, 32), (40, 32), (40, 40))
+   20 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (18, 16), (24, 16), (24, 24))
+   19 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (17, 16), (24, 16), (24, 24))
+   19 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (10, 8), (16, 8), (16, 16))
+artifacts decode node gpu-h200-0577.lgcm.sh.istep.fun
+  forwards=24134 T_differs=842 (3.5%)
+  by cause: {'width (graph, unequal capture sizes)': 842}
+   210 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (11, 8), (16, 8), (16, 16))
+   130 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (8, 11), (8, 16), (16, 16))
+   126 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (9, 8), (16, 8), (16, 16))
+   102 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (8, 9), (8, 16), (16, 16))
+   67 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (25, 24), (32, 24), (32, 32))
+   54 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (8, 10), (8, 16), (16, 16))
+   51 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (7, 9), (8, 16), (16, 16))
+   36 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2), (12, 8), (16, 8), (16, 16))
+artifacts decode node gpu-h200-0722.lgcm.sh.istep.fun
+  forwards=19014 T_differs=1029 (5.4%)
+  by cause: {'width (graph, unequal capture sizes)': 1029}
+   845 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2, 2, 2), (32, 31, 34, 31), (32, 32, 40, 32), (40, 40, 40, 40))
+   45 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2, 2, 2), (32, 31, 33, 31), (32, 32, 40, 32), (40, 40, 40, 40))
+   45 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2, 2, 2), (31, 31, 33, 30), (32, 32, 40, 32), (40, 40, 40, 40))
+   30 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2, 2, 2), (9, 5, 6, 6), (16, 8, 8, 8), (16, 16, 16, 16))
+   20 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2, 2, 2), (32, 31, 33, 30), (32, 32, 40, 32), (40, 40, 40, 40))
+   18 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2, 2, 2), (23, 22, 25, 25), (24, 24, 32, 32), (32, 32, 32, 32))
+   17 mode,desired,local,lane_width,native_synced = ('FULL', (2, 2, 2, 2), (9, 9, 9, 6), (16, 16, 16, 8), (16, 16, 16, 16))
+   1 mode,desired,local,lane_width,native_synced = ('PIECEWISE', (1, 1, 1, 1), (9, 9, 9, 6), (16, 16, 16, 8), (16, 16, 16, 16))

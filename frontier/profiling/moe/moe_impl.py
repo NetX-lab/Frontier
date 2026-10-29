@@ -24,6 +24,8 @@ from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
     RowParallelLinear,
 )
 from frontier.profiling.common.utils import raise_if_fp8_requested
+from frontier.profiling.common.vllm_compat import ensure_vllm_single_rank_parallel_state
+from frontier.profiling.moe.balanced_routing import balanced_topk
 
 try:
     try:
@@ -128,6 +130,7 @@ class MoEGatingNetwork(nn.Module):
         use_vllm_fused_topk: bool = True,
         renormalize: bool = True,
         routing_runtime_path: str = "standard_fused_topk",
+        router_config=None,
     ):
         super().__init__()
         self.hidden_dim = hidden_dim
@@ -150,8 +153,34 @@ class MoEGatingNetwork(nn.Module):
                 "uniform_topk routing profiling requires the vLLM routing path."
             )
 
-        if self.use_vllm_fused_topk and HAS_VLLM_REPLICATED_LINEAR:
+        if routing_runtime_path in {"grouped_topk_sigmoid", "balanced_topk"}:
+            from vllm.model_executor.layers.fused_moe import GateLinear
+
+            if not self.use_vllm_fused_topk:
+                raise ValueError(f"{routing_runtime_path} requires the native vLLM router")
+            if routing_runtime_path == "grouped_topk_sigmoid":
+                from vllm.model_executor.layers.fused_moe.router.grouped_topk_router import grouped_topk
+
+                for name in ("n_group", "topk_group", "norm_topk_prob", "routed_scaling_factor"):
+                    if router_config is None or getattr(router_config, name) is None:
+                        raise ValueError(f"grouped_topk_sigmoid requires model config {name}")
+            ensure_vllm_single_rank_parallel_state()
+            # Native V4 hard-codes FP32 output and no bias (nvidia/model.py:571-577).
+            # GateLinear defaults bias=False (router/gate_linear.py:49-58); the
+            # parameter dtype is the model dtype, before its dispatch flags are set.
+            self.gate = GateLinear(hidden_dim, num_experts, out_dtype=torch.float32,
+                                   params_dtype=router_config.dtype)
+            self.linear_backend = "vllm_gate_linear"
+            if routing_runtime_path == "grouped_topk_sigmoid":
+                self.grouped_topk = grouped_topk
+                self.num_expert_group = router_config.n_group
+                self.topk_group = router_config.topk_group
+                self.renormalize = router_config.norm_topk_prob
+                self.routed_scaling_factor = router_config.routed_scaling_factor
+                self.register_buffer("e_score_correction_bias", torch.zeros(num_experts, dtype=torch.float32))
+        elif self.use_vllm_fused_topk and HAS_VLLM_REPLICATED_LINEAR:
             # Align gating linear kernel family with vLLM runtime contract.
+            ensure_vllm_single_rank_parallel_state()
             self.gate = ReplicatedLinear(
                 hidden_dim, num_experts, bias=False, disable_tp=True,
             )
@@ -200,8 +229,20 @@ class MoEGatingNetwork(nn.Module):
                 "routing_runtime_path",
                 "standard_fused_topk",
             )
-            if getattr(self, "use_vllm_fused_topk", False):
-                if routing_runtime_path == "uniform_topk":
+            if routing_runtime_path == "balanced_topk":
+                routing_weights, selected_experts = balanced_topk(
+                    hidden_states, logits, self.router_topk,
+                )
+            elif getattr(self, "use_vllm_fused_topk", False):
+                if routing_runtime_path == "grouped_topk_sigmoid":
+                    routing_weights, selected_experts = self.grouped_topk(
+                        hidden_states=hidden_states, gating_output=logits,
+                        topk=self.router_topk, renormalize=self.renormalize,
+                        num_expert_group=self.num_expert_group, topk_group=self.topk_group,
+                        scoring_func="sigmoid", routed_scaling_factor=self.routed_scaling_factor,
+                        e_score_correction_bias=self.e_score_correction_bias,
+                    )
+                elif routing_runtime_path == "uniform_topk":
                     routing_weights, selected_experts, _ = uniform_topk(
                         hidden_states=hidden_states,
                         gating_output=logits,
@@ -236,6 +277,20 @@ class MoEGatingNetwork(nn.Module):
 def get_routing_runtime_metadata(
     routing_runtime_path: str,
 ) -> dict[str, object]:
+    if routing_runtime_path == "balanced_topk":
+        return {
+            "routing_runtime_path": routing_runtime_path,
+            "routing_assignment_policy": "global_round_robin_balanced",
+            "routing_weight_policy": "uniform_1_over_topk",
+            "routing_uses_router_logits": False,
+        }
+    if routing_runtime_path == "grouped_topk_sigmoid":
+        return {
+            "routing_runtime_path": routing_runtime_path,
+            "routing_assignment_policy": "grouped_topk_bias",
+            "routing_weight_policy": "sigmoid_renorm_scaled",
+            "routing_uses_router_logits": True,
+        }
     if routing_runtime_path == "standard_fused_topk":
         return {
             "routing_runtime_path": "standard_fused_topk",
@@ -253,6 +308,20 @@ def get_routing_runtime_metadata(
     raise ValueError(
         f"Unsupported routing_runtime_path for MoE profiling: {routing_runtime_path}"
     )
+
+
+# Runtime dtype policy is separate from metadata: routing_runtime_path already
+# identifies it in CSV rows. Naive DP/EP leaves balanced_topk indices_type=None.
+ROUTING_ID_DTYPES = {
+    "balanced_topk": torch.int64,
+    "grouped_topk_sigmoid": torch.int32,
+    "standard_fused_topk": torch.int32,
+    "uniform_topk": torch.int32,
+}
+
+
+def get_routing_id_dtype(routing_runtime_path: str) -> torch.dtype:
+    return ROUTING_ID_DTYPES[routing_runtime_path]
 
 
 class MoETokenShuffler(nn.Module):
@@ -273,12 +342,14 @@ class MoETokenShuffler(nn.Module):
         dtype: torch.dtype,
         use_gated: bool,
         num_local_experts: Optional[int] = None,
+        routing_runtime_path: str = "standard_fused_topk",
     ):
         super().__init__()
         if not HAS_VLLM:
             raise ImportError(
                 "vLLM is required for MoE shuffling alignment but is not available."
             ) from _VLLM_IMPORT_ERROR
+        self.routing_id_dtype = get_routing_id_dtype(routing_runtime_path)
         self.num_experts = num_experts
         self.num_local_experts = (
             num_experts if num_local_experts is None else num_local_experts
@@ -318,7 +389,7 @@ class MoETokenShuffler(nn.Module):
         """
         num_tokens = hidden_states.shape[0]
         block_size = self._get_block_size_m(num_tokens)
-        topk_ids = selected_experts.to(dtype=torch.int32)
+        topk_ids = selected_experts.to(dtype=self.routing_id_dtype)
 
         aligned_num_experts = (
             self.num_experts if global_num_experts is None else global_num_experts

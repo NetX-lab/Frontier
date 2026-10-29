@@ -1,0 +1,105 @@
+{
+  "status": "ACCEPTED_CPU_GROUP_METRICS_SOURCE_WITH_EXACT_CONTROLS",
+  "observed_utc": "2026-10-24T20:38:50.046835+00:00",
+  "decision": "D-V4-P0-AUDIT-METRICS-GROUP-CORRECTION",
+  "decision_owner": "primary",
+  "fixed_point": "4ae81052e8b7a82593b68c6740dadb07e9e1624b",
+  "source_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+  "source_sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+  "test_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+  "test_sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827",
+  "caps": {
+    "source": 80,
+    "source_limit": 220,
+    "test": 194,
+    "test_limit": 200,
+    "owner_markdown": 100,
+    "owner_markdown_limit": 100
+  },
+  "owner_unit": {
+    "tests": 9,
+    "evidence_rows": 42,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "invocations_used": 1,
+    "receipt_sha256": "54ff3b0421108f5ba20aa0c6b33fd97f9fc41d7ed0e23c9d35a241f5c8522886"
+  },
+  "primary_unit": {
+    "tests": 9,
+    "evidence_rows": 42,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "invocations_used": 1,
+    "actual_memory_limit_bytes": 32212254720,
+    "receipt_sha256": "df6347a47bb3b191798e4e0d6c0df340d8364eaf01528e09807fc3b6a13d101f"
+  },
+  "complete_controls": {
+    "invocations_used": 2,
+    "invocation_ceiling": 2,
+    "receipt_sha256": "8a5cbbb4f022b631871703074fd61541816429fa3931d60028f9cdb07f9afa21",
+    "controls": [
+      {
+        "key": [
+          "decode",
+          1,
+          0
+        ],
+        "status": "PASS_EXACT_COMPLETE_CONTROL",
+        "index_rows": 142567,
+        "metric_groups": 361,
+        "non_clock_json_exact": true,
+        "decompressed_index_exact": true
+      },
+      {
+        "key": [
+          "prefill",
+          1,
+          0
+        ],
+        "status": "PASS_EXACT_COMPLETE_CONTROL",
+        "index_rows": 570964,
+        "metric_groups": 240,
+        "non_clock_json_exact": true,
+        "decompressed_index_exact": true
+      }
+    ]
+  },
+  "independent_reviews": [
+    {
+      "axis": "Spec",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/review_spec.md",
+      "sha256": "0c83e3e581463e266a158c0fd3461812b2666ee7664f646222086bc71d780ed9",
+      "findings": 0,
+      "status": "NO_FINDINGS"
+    },
+    {
+      "axis": "Standards",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/review_standards.md",
+      "sha256": "a4a2e94723a9eefb15743562058b98b5d19f0d383af8d1e07545500ac164ead8",
+      "findings": 0,
+      "status": "NO_FINDINGS"
+    }
+  ],
+  "primary_source_review_sha256": "cd32f0c9de5e8f87ee4f63d9c6d19d08dcdb0699ef45021057e7c67fbdc3ace1",
+  "matrix_binding_sha256": "37539823f2005293d9ca70db7991b20df84d02de4caf3d3949791af6a9fce215",
+  "affected_invocations_used": 0,
+  "affected_invocation_ceiling": 8,
+  "pilot_precondition": "Complete fresh P0rank0 final JSON/index, all identity/field checks and >=3 useful steps accepted by primary before the remaining seven.",
+  "timeout_seconds": 60,
+  "actual_memory_limit_bytes": 32212254720,
+  "max_rank_concurrency": 2,
+  "automatic_retry": false,
+  "gpu_attempts_used": 1,
+  "gpu_attempt_ceiling": 1,
+  "reference_admission": false,
+  "cost_admission": false,
+  "native_ownership_admission": false,
+  "limitations": [
+    "Only the new offline CPU metrics source and its exact control scenarios are accepted.",
+    "Full P0 performance remains unmeasured; R5 is24/32 before affected execution.",
+    "Scope GPU remains the separately accepted single-image P1\u2013P6 result; no additional GPU invocation.",
+    "Historical first-correction controls/pilot, timing/tiny and original outputs are preserved and not rerun."
+  ]
+}

@@ -1,0 +1,14 @@
+test_duplicate_global_identity_with_equal_endpoints (primary_group_metrics_tests.GroupMetricsTest) ... ok
+test_empty_groups (primary_group_metrics_tests.GroupMetricsTest) ... ok
+test_generated_ast_and_composition (primary_group_metrics_tests.GroupMetricsTest) ... ok
+test_original_float_accumulation (primary_group_metrics_tests.GroupMetricsTest) ... ok
+test_overlap_repeated_memberships_and_keys (primary_group_metrics_tests.GroupMetricsTest) ... ok
+test_pipeline_and_entry_closure (primary_group_metrics_tests.GroupMetricsTest) ... ok
+test_receipt_values_are_copied (primary_group_metrics_tests.GroupMetricsTest) ... ok
+test_source_pins (primary_group_metrics_tests.GroupMetricsTest) ... ok
+test_stable_global_order_and_integer_group_keys (primary_group_metrics_tests.GroupMetricsTest) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.250s
+
+OK

@@ -1,0 +1,117 @@
+{
+  "task_id": "W128-V4-BALANCED-DELIVERY-UNION",
+  "revisions": {
+    "A": "186dfef",
+    "B": "65743ea",
+    "C": "ac21f88"
+  },
+  "files": {
+    "A": {
+      "frontier/config/cluster_role_config.py": {
+        "added": 2,
+        "deleted": 0
+      },
+      "frontier/config/replica_config.py": {
+        "added": 12,
+        "deleted": 0
+      },
+      "frontier/execution_time_predictor/layer_contract_resolution.py": {
+        "added": 7,
+        "deleted": 1
+      },
+      "frontier/execution_time_predictor/moe_routing_workload.py": {
+        "added": 1,
+        "deleted": 0
+      },
+      "frontier/execution_time_predictor/prediction_family_trainers.py": {
+        "added": 7,
+        "deleted": 0
+      },
+      "frontier/execution_time_predictor/prediction_model_identity.py": {
+        "added": 4,
+        "deleted": 1
+      },
+      "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": {
+        "added": 1,
+        "deleted": 0
+      },
+      "frontier/model_architectures.py": {
+        "added": 2,
+        "deleted": 1
+      },
+      "frontier/moe_routing_runtime.py": {
+        "added": 7,
+        "deleted": 0
+      },
+      "frontier/profiling/moe/balanced_routing.py": {
+        "added": 72,
+        "deleted": 0
+      },
+      "frontier/profiling/moe/moe_impl.py": {
+        "added": 13,
+        "deleted": 1
+      },
+      "tests/unit/test_balanced_routing.py": {
+        "added": 300,
+        "deleted": 0
+      }
+    },
+    "B": {
+      "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py": {
+        "added": 70,
+        "deleted": 0
+      },
+      "tests/comparison/calibration/native_full_structure.py": {
+        "added": 43,
+        "deleted": 0
+      },
+      "tests/comparison/dp_placement_pp/vllm_replay.py": {
+        "added": 6,
+        "deleted": 1
+      },
+      "tests/unit/test_native_reader_binding.py": {
+        "added": 99,
+        "deleted": 0
+      },
+      "tests/unit/test_native_v2_serving_inventory.py": {
+        "added": 4,
+        "deleted": 1
+      },
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py": {
+        "added": 28,
+        "deleted": 4,
+        "routing": 29,
+        "dispatch": 3,
+        "baseline_sha256": "21b5a7232e31df74052856d933c003b5af9caca7ce2fc6362fc1dbca36593560"
+      }
+    },
+    "C": {
+      "frontier/execution_time_predictor/deepseek_v4.py": {
+        "added": 15,
+        "deleted": 0
+      },
+      "frontier/profiling/attention/dsv4_attention_rows.py": {
+        "added": 28,
+        "deleted": 0
+      },
+      "frontier/profiling/attention/dsv4_attention_runner.py": {
+        "added": 70,
+        "deleted": 2
+      },
+      "tests/comparison/calibration/profile_dsv4_prefill.py": {
+        "added": 51,
+        "deleted": 0
+      },
+      "task_memory/task_2026-10-22_v4_h800_prefill/configured_capacity/prepare_package.py": {
+        "added": 18,
+        "deleted": 5
+      }
+    }
+  },
+  "distinct_files": 23,
+  "routing_lines": 874,
+  "dispatch_lines_separate": 491,
+  "remaining_lines": 26,
+  "verdict": "DELIVERED_SCOPE_VERIFIED_NOT_FINAL_ACCEPTANCE",
+  "pending": "Spec P2 repairs, final builder metadata/timeouts and any regression delta"
+}

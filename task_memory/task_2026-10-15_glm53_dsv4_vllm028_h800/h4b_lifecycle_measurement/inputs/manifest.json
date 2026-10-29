@@ -1,0 +1,128 @@
+{
+ "h800l": {
+  "source_root": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01",
+  "cloud_origin": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_lifecycle_20261025/case/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01",
+  "files": [
+   {
+    "path": "run_manifest.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/run_manifest.json",
+    "bytes": 11110,
+    "sha256": "3ee5780c5506718664a2b74a4fd0976b344866292a8b255554dcca262fa41bad"
+   },
+   {
+    "path": "replay_finished.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/replay_finished.json",
+    "bytes": 22,
+    "sha256": "1e3f6691f455051e8adb15d961e4bf3c7a17e83dd88b2afdd13315cc288250bb"
+   },
+   {
+    "path": "run/canonical_repetitions.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/run/canonical_repetitions.json",
+    "bytes": 15887,
+    "sha256": "2527bead4ed983aa98bb18d224c90057f63d0dfd0d4170fffe926e599a4d0a5d"
+   },
+   {
+    "path": "run/client_requests.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/run/client_requests.jsonl",
+    "bytes": 368160,
+    "sha256": "b230e94d5372555482233155466058e4824515740962e0707b59dade94adc5e2"
+   },
+   {
+    "path": "run/proxy.log",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/run/proxy.log",
+    "bytes": 74,
+    "sha256": "b3aa8b076c425cf27f0853c83e999a8b3005a6cf5adb9a4d348f9cade8ea614d"
+   },
+   {
+    "path": "run/proxy_requests.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/run/proxy_requests.jsonl",
+    "bytes": 552146,
+    "sha256": "774738e0c1becbceb0188b5b54788b208109d62d8a88dbe6e72962494763d861"
+   },
+   {
+    "path": "run/replay_summary.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/run/replay_summary.json",
+    "bytes": 21129,
+    "sha256": "e8bf0f36aca6cac0d2acf8d039a55d108305c665e57b1866e945fee9bb4e1650"
+   },
+   {
+    "path": "launcher_receipt.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/launcher_receipt.json",
+    "bytes": 359,
+    "sha256": "49d6d6a5fa95ea876f4371d2535fee8fa2a4bd8ef120734cf61a65f426d3efb2"
+   },
+   {
+    "path": "platform_terminal_receipt.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/platform_terminal_receipt.json",
+    "bytes": 3410,
+    "sha256": "1d2e44f4761f10d19e18e3edfcbcc9364c2872258ccc496e9d2934140025af38"
+   },
+   {
+    "path": "nodes/gpu-h800-0133.host.platform.shaipower.com/scheduler_lifecycle/dp0_pid1588.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/nodes/gpu-h800-0133.host.platform.shaipower.com/scheduler_lifecycle/dp0_pid1588.jsonl",
+    "bytes": 848553,
+    "sha256": "1f67f4c55179b7a93175825f813c68d27eddf2c00eb1f45afe3ccc45f3caa879"
+   },
+   {
+    "path": "nodes/gpu-h800-0179.host.platform.shaipower.com/scheduler_lifecycle/dp1_pid1448.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/nodes/gpu-h800-0179.host.platform.shaipower.com/scheduler_lifecycle/dp1_pid1448.jsonl",
+    "bytes": 904846,
+    "sha256": "eeb5c56f284d42d9b9778cb24d466c7657f41af18b5def5602ad367295eec049"
+   },
+   {
+    "path": "nodes/gpu-h800-0209.host.platform.shaipower.com/scheduler_lifecycle/dp0_pid1587.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/nodes/gpu-h800-0209.host.platform.shaipower.com/scheduler_lifecycle/dp0_pid1587.jsonl",
+    "bytes": 7352207,
+    "sha256": "4b3e4cbfb04966a5ca7a11541a0013e7742966ee574dac4dd018163b182f9141"
+   },
+   {
+    "path": "nodes/gpu-h800-0339.host.platform.shaipower.com/scheduler_lifecycle/dp1_pid1448.jsonl",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/nodes/gpu-h800-0339.host.platform.shaipower.com/scheduler_lifecycle/dp1_pid1448.jsonl",
+    "bytes": 7060843,
+    "sha256": "590016bc0c7c8e10fee566c7cdde6bde26cf4ceecc0d00a1f50ce032297d3f10"
+   },
+   {
+    "path": "nodes/gpu-h800-0133.host.platform.shaipower.com/native_stopped.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/nodes/gpu-h800-0133.host.platform.shaipower.com/native_stopped.json",
+    "bytes": 409,
+    "sha256": "81626968876499759dbf7e4a67e7a8e91c241fbed33926ced1e1ef6627cd3c05"
+   },
+   {
+    "path": "nodes/gpu-h800-0179.host.platform.shaipower.com/native_stopped.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/nodes/gpu-h800-0179.host.platform.shaipower.com/native_stopped.json",
+    "bytes": 248,
+    "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc"
+   },
+   {
+    "path": "nodes/gpu-h800-0209.host.platform.shaipower.com/native_stopped.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/nodes/gpu-h800-0209.host.platform.shaipower.com/native_stopped.json",
+    "bytes": 409,
+    "sha256": "81626968876499759dbf7e4a67e7a8e91c241fbed33926ced1e1ef6627cd3c05"
+   },
+   {
+    "path": "nodes/gpu-h800-0339.host.platform.shaipower.com/native_stopped.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/runs/groundtruth_clean/dsv4-h800-p0-lifecycle-20261025-01/nodes/gpu-h800-0339.host.platform.shaipower.com/native_stopped.json",
+    "bytes": 248,
+    "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc"
+   },
+   {
+    "path": "run_check_status.groundtruth_clean.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/cases/h800_lifecycle_case_20261025/analysis/run_check_status.groundtruth_clean.json",
+    "bytes": 15955,
+    "sha256": "43557156b6ce801a4da228cd4f21a412f4d751cd3b2c07377b9d4dfc28dc4b52"
+   },
+   {
+    "path": "download_receipt.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/downloads/dsv4-h800-p0-lifecycle-20261025-01/download_receipt.json",
+    "bytes": 2224,
+    "sha256": "63062662f5ff8465c20a71b25454124a8184dc6bee3932514863d03fd775a4b9"
+   },
+   {
+    "path": "cloud_inventory.json",
+    "source": "/data/ycfeng/tmp/glm53_dsv4/h4b/downloads/dsv4-h800-p0-lifecycle-20261025-01/cloud_inventory.json",
+    "bytes": 11968,
+    "sha256": "a37e41367605d950064a3ce97eb6b4387386a00985c9a34ebcc132b22d887ba0"
+   }
+  ]
+ }
+}

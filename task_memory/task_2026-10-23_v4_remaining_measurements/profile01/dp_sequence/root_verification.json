@@ -1,0 +1,236 @@
+{
+  "status": "PASS_BOUND_SOURCE_AND_BASELINE_CLASSIFICATION",
+  "observed_at_utc": "2026-10-24T05:05:47.468424+00:00",
+  "source_revision": "bb50186e417f99080d71948b38f6006e954a8c41",
+  "owner_revision": "178c1123ee736fe040d8f1a12a443e8f18ce3a76",
+  "checks": [
+    "tests/comparison/calibration/native_full_structure.py",
+    "base:tests/comparison/calibration/native_full_structure.py",
+    "tests/comparison/calibration/native_serve_profile.py",
+    "base:tests/comparison/calibration/native_serve_profile.py",
+    "tests/unit/test_native_serve_profile.py",
+    "base:tests/unit/test_native_serve_profile.py",
+    "tests/unit/test_native_v2_serving_inventory.py",
+    "base:tests/unit/test_native_v2_serving_inventory.py",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/context_red.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/final.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/final2.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/final_context.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/frozen_native_binding.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/green.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/green2.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/matrix_binding.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/plan.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/progress.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/red.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/requirements.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/source.diff",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/source_binding.json",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/summary.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/test_report_2026-10-24_dp_sequence.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py",
+    "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py",
+    "vllm/v1/worker/gpu_worker.py",
+    "vllm/v1/worker/gpu/model_runner.py",
+    "vllm/v1/worker/gpu/dp_utils.py",
+    "comparison hash",
+    "77 complete cases",
+    "matrix domain:44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+    "matrix domain:bb50186e417f99080d71948b38f6006e954a8c41",
+    "matrix domain:5f7d0950b78276a77a66b7330cf0041a9f380f12",
+    "unchanged base count/emit methods",
+    "unchanged hook statements",
+    "original root receipt binding",
+    "214PASS/1FAIL/0SKIP",
+    "baseline original failure",
+    "baseline log hash",
+    "baseline/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay_model.py",
+    "baseline/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay.json",
+    "baseline/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/source_lock.json",
+    "baseline/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+    "candidate original failure",
+    "candidate log hash",
+    "candidate/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay_model.py",
+    "candidate/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay.json",
+    "candidate/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/source_lock.json",
+    "candidate/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+    "32 rank rows",
+    "rank equality:nodes/fixture-host0/serving/rank0.json",
+    "rank equality:nodes/fixture-host0/serving/rank1.json",
+    "rank equality:nodes/fixture-host0/serving/rank2.json",
+    "rank equality:nodes/fixture-host0/serving/rank3.json",
+    "rank equality:nodes/fixture-host0/serving/rank4.json",
+    "rank equality:nodes/fixture-host0/serving/rank5.json",
+    "rank equality:nodes/fixture-host0/serving/rank6.json",
+    "rank equality:nodes/fixture-host0/serving/rank7.json",
+    "rank equality:nodes/fixture-host1/serving/rank0.json",
+    "rank equality:nodes/fixture-host1/serving/rank1.json",
+    "rank equality:nodes/fixture-host1/serving/rank2.json",
+    "rank equality:nodes/fixture-host1/serving/rank3.json",
+    "rank equality:nodes/fixture-host1/serving/rank4.json",
+    "rank equality:nodes/fixture-host1/serving/rank5.json",
+    "rank equality:nodes/fixture-host1/serving/rank6.json",
+    "rank equality:nodes/fixture-host1/serving/rank7.json",
+    "rank equality:nodes/fixture-host2/serving/rank0.json",
+    "rank equality:nodes/fixture-host2/serving/rank1.json",
+    "rank equality:nodes/fixture-host2/serving/rank2.json",
+    "rank equality:nodes/fixture-host2/serving/rank3.json",
+    "rank equality:nodes/fixture-host2/serving/rank4.json",
+    "rank equality:nodes/fixture-host2/serving/rank5.json",
+    "rank equality:nodes/fixture-host2/serving/rank6.json",
+    "rank equality:nodes/fixture-host2/serving/rank7.json",
+    "rank equality:nodes/fixture-host3/serving/rank0.json",
+    "rank equality:nodes/fixture-host3/serving/rank1.json",
+    "rank equality:nodes/fixture-host3/serving/rank2.json",
+    "rank equality:nodes/fixture-host3/serving/rank3.json",
+    "rank equality:nodes/fixture-host3/serving/rank4.json",
+    "rank equality:nodes/fixture-host3/serving/rank5.json",
+    "rank equality:nodes/fixture-host3/serving/rank6.json",
+    "rank equality:nodes/fixture-host3/serving/rank7.json",
+    "baselinetests/unit/test_native_groundtruth_check.py",
+    "baselinetests/comparison/calibration/native_full_structure.py",
+    "baselinetests/comparison/calibration/native_serve_profile.py",
+    "baselinetests/unit/test_native_v2_serving_inventory.py",
+    "baselinetests/unit/test_native_serve_profile.py",
+    "candidatetests/unit/test_native_groundtruth_check.py",
+    "candidatetests/comparison/calibration/native_full_structure.py",
+    "candidatetests/comparison/calibration/native_serve_profile.py",
+    "candidatetests/unit/test_native_v2_serving_inventory.py",
+    "candidatetests/unit/test_native_serve_profile.py"
+  ],
+  "root_suite_counts": {
+    "passed": 214,
+    "failed": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "baseline_failure": "Existing V2 groundtruth fixture omits dp_utils and uses old hook checker",
+  "rank_counter_and_hook_equality": 32,
+  "matrix_cases": 77,
+  "new_matrix_capture": false,
+  "native_pairing": "UNVERIFIED",
+  "prior_auxiliary_error": "Root checker initially addressed row['observer']['hooks']; actual schema has top-level row['hooks']. Corrected only this read; no source/tests/fixtures changed.",
+  "files": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_test_receipt.json",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/receipt.json",
+      "bytes": 13328,
+      "sha256": "bb3aa9c282293f37fa73761f232cf30fc80e1d4490e86a03698c643acbb79af9"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_diagnosis.json",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/diagnosis.json",
+      "bytes": 13038,
+      "sha256": "db093b8cfe39a26feb25fded97e76c736a8488a7a5d221c5fd5b66550cf87445"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_diagnosis.txt",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/diagnosis.md",
+      "bytes": 4675,
+      "sha256": "6ac5adc73fff3cc329b800fd59b23688379ee64a68e36aa34ea54e0021cb8a11"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_binding_script.py",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_binding_20261024.py",
+      "bytes": 6602,
+      "sha256": "14d8e9f7adbd80b85d41525fbcebc1bf669fa4558bb9b63cd8fd5bf4fc834dc9"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_v2_serving_inventory.xml",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_v2_serving_inventory.xml",
+      "bytes": 7419,
+      "sha256": "f37790e5edac6bab0a9752bad200fceb1fd12dea2fb75cdcb94a09fbb45a00e9"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_serve_profile.xml",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_serve_profile.xml",
+      "bytes": 5669,
+      "sha256": "2f46983b88256d1ace3d23efee9c8ff7829b25a68ee80364ec1a1e1760c0d980"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_serving_inventory.xml",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_serving_inventory.xml",
+      "bytes": 4500,
+      "sha256": "ef4505120caea2ab4f1bdcc651747a5e92c392419fbbce5734ff85bc87e485db"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_groundtruth_check.xml",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_groundtruth_check.xml",
+      "bytes": 16998,
+      "sha256": "4e7e5f70b0a105bbb876bf74b8067504b5007429e1d8df468681d679b9a4f102"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_full_structure.xml",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_full_structure.xml",
+      "bytes": 1127,
+      "sha256": "6e0c4a4078d6fecf9f2ed53730d77276e9b5971d2b27b55c3594ac3f3bacc99e"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_v2_serving_inventory.log",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_v2_serving_inventory.log",
+      "bytes": 99,
+      "sha256": "29ae57972f1bf856ec2632a0f48c3e990fbf5bc80f3fe7905657c282dda32cf0"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_serve_profile.log",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_serve_profile.log",
+      "bytes": 99,
+      "sha256": "8abf6d2236e5d71f0e34177441c46e738b1f76a562619195e2df71caa3345813"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_serving_inventory.log",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_serving_inventory.log",
+      "bytes": 99,
+      "sha256": "514f96b048e2e34e150253f4d08ef776a18bd172ec05bf947d15553aa11e1258"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_groundtruth_check.log",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_groundtruth_check.log",
+      "bytes": 4917,
+      "sha256": "32b1ef890aaec334a519b857c5bffa9c11310ffd27e231d79ec40f5c00990b7c"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/root_logs/native_full_structure.log",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/native_full_structure.log",
+      "bytes": 98,
+      "sha256": "ff58282ad4367bd71fe0b6201dd06352d62de0d4bdef2b4fa7acaa8ecae97022"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/baseline.json",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/baseline.json",
+      "bytes": 4177,
+      "sha256": "a22a5f1100b2223dcc1f0e9e6b7ba0b1789e599e8b7afad626774a167562a9fa"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/candidate.json",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/candidate.json",
+      "bytes": 4172,
+      "sha256": "5e11d7f8685f189f586c9a20dc5d9659f67c48e73e01c22e949346a7285f56ab"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/baseline.xml",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/baseline.xml",
+      "bytes": 1435,
+      "sha256": "ca59d31b4881c1c9bac8cda1d346f0cd5f30cf60042d4ec565d9a38125b057a4"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/candidate.xml",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/candidate.xml",
+      "bytes": 1435,
+      "sha256": "a4ae61023b8815aaa47de1dcc5f22a70d3251575248885e8d37f3a771503d782"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/baseline.log",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/baseline.log",
+      "bytes": 4825,
+      "sha256": "60086964f93742fa15a23105cd5db09e019e0e41b4f02e1433e8fd3d26bb9a4c"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_control/candidate.log",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/candidate.log",
+      "bytes": 4825,
+      "sha256": "6d7e0bdd310c58eea006cd5d105d59ddb397cbbadc2c588246113b230180060f"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "task_id": "W128-DP-SEQUENCE-ROOT-FAILURE",
+  "name": "baseline",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "--quiet",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "runuser",
+    "-u",
+    "brainpp",
+    "--",
+    "env",
+    "PYTHONPATH=.:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "FRONTIER_VLLM_BS_ROOT=/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "TMPDIR=/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "CUDA_VISIBLE_DEVICES=",
+    "NATIVE_CHECKER_LEGACY_BASELINE=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+    "OPENBLAS_NUM_THREADS=1",
+    "OMP_NUM_THREADS=1",
+    "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/test_native_groundtruth_check.py::test_v2_native_auto_and_c26_actual_collector_cover_all32ranks[serving_counters0]",
+    "-p",
+    "no:cacheprovider",
+    "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/baseline.xml"
+  ],
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "CUDA_VISIBLE_DEVICES": "",
+    "NATIVE_CHECKER_LEGACY_BASELINE": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "start_utc": "2026-10-23T19:11:24.840310+00:00",
+  "returncode": 1,
+  "counts": {
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "keyerror_rows": 32,
+  "final_incomplete_inventory": true,
+  "input_hashes": {
+    "overlay_model.py": {
+      "path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay_model.py",
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/overlay_model.py",
+      "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee"
+    },
+    "overlay.json": {
+      "path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/overlay.json",
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/overlay.json",
+      "sha256": "52559fe7bba086ab05622b29a3136f3c6f26c5a2029816cfa50dd07452842fdc"
+    },
+    "source_lock.json": {
+      "path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02/source_lock.json",
+      "resolved": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02/source_lock.json",
+      "sha256": "d33a2cdb55efa34b18794924e590958a79b95e359551d5727bac999421293e51"
+    }
+  },
+  "legacy": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py",
+    "sha256": "c615832529ecaf54805f5d399ea084414f868b477ae3e45c196a4ec1272d2b7b"
+  },
+  "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-root-failure/baseline.log",
+  "log_sha256": "60086964f93742fa15a23105cd5db09e019e0e41b4f02e1433e8fd3d26bb9a4c",
+  "xml_sha256": "ca59d31b4881c1c9bac8cda1d346f0cd5f30cf60042d4ec565d9a38125b057a4"
+}

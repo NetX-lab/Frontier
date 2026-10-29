@@ -1,0 +1,454 @@
+{
+  "phases": {
+    "G2H_OPERATORS_CUDA_EVENT": {
+      "csv_rows": 36,
+      "operator_rows": 65,
+      "plans": [
+        {
+          "plan": "sp_local_rows",
+          "operator": "dsv4_mhc_first_pre",
+          "axis": "sp_local_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            768
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "sp_local_rows",
+          "operator": "dsv4_mhc_ffn_post_attn_pre",
+          "axis": "sp_local_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            768
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "sp_local_rows",
+          "operator": "dsv4_mhc_attn_post_ffn_pre",
+          "axis": "sp_local_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            768
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "sp_local_rows",
+          "operator": "dsv4_mhc_final_post",
+          "axis": "sp_local_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            768
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "descriptor_rows",
+          "operator": "dsv4_embedding",
+          "axis": "descriptor_rows",
+          "rows": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            24,
+            6144
+          ],
+          "tp_size": 8
+        },
+        {
+          "plan": "descriptor_rows",
+          "operator": "dsv4_mhc_head",
+          "axis": "descriptor_rows",
+          "rows": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            24,
+            6144
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "descriptor_rows",
+          "operator": "dsv4_final_norm",
+          "axis": "descriptor_rows",
+          "rows": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            24,
+            6144
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "logits_rows",
+          "operator": "dsv4_lm_head",
+          "axis": "logits_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24
+          ],
+          "tp_size": 8
+        }
+      ]
+    },
+    "G2H_SHARED_EXPERT_EP16_CUDA_EVENT": {
+      "csv_rows": 5,
+      "operator_rows": 15,
+      "plans": [
+        {
+          "plan": "shared_expert_ep16",
+          "operator": "share_expert_up_proj",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "shared_expert_ep16",
+          "operator": "share_expert_down_proj",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "shared_expert_ep16",
+          "operator": "share_expert_act",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        }
+      ]
+    },
+    "G2H_SHARED_EXPERT_EP32_CUDA_EVENT": {
+      "csv_rows": 5,
+      "operator_rows": 15,
+      "plans": [
+        {
+          "plan": "shared_expert_ep32",
+          "operator": "share_expert_up_proj",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "shared_expert_ep32",
+          "operator": "share_expert_down_proj",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "shared_expert_ep32",
+          "operator": "share_expert_act",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        }
+      ]
+    },
+    "G2H_OPERATORS_RECORD_FUNCTION": {
+      "csv_rows": 36,
+      "operator_rows": 65,
+      "plans": [
+        {
+          "plan": "sp_local_rows",
+          "operator": "dsv4_mhc_first_pre",
+          "axis": "sp_local_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            768
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "sp_local_rows",
+          "operator": "dsv4_mhc_ffn_post_attn_pre",
+          "axis": "sp_local_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            768
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "sp_local_rows",
+          "operator": "dsv4_mhc_attn_post_ffn_pre",
+          "axis": "sp_local_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            768
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "sp_local_rows",
+          "operator": "dsv4_mhc_final_post",
+          "axis": "sp_local_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            768
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "descriptor_rows",
+          "operator": "dsv4_embedding",
+          "axis": "descriptor_rows",
+          "rows": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            24,
+            6144
+          ],
+          "tp_size": 8
+        },
+        {
+          "plan": "descriptor_rows",
+          "operator": "dsv4_mhc_head",
+          "axis": "descriptor_rows",
+          "rows": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            24,
+            6144
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "descriptor_rows",
+          "operator": "dsv4_final_norm",
+          "axis": "descriptor_rows",
+          "rows": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            24,
+            6144
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "logits_rows",
+          "operator": "dsv4_lm_head",
+          "axis": "logits_rows",
+          "rows": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24
+          ],
+          "tp_size": 8
+        }
+      ]
+    },
+    "G2H_SHARED_EXPERT_EP16_RECORD_FUNCTION": {
+      "csv_rows": 5,
+      "operator_rows": 15,
+      "plans": [
+        {
+          "plan": "shared_expert_ep16",
+          "operator": "share_expert_up_proj",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "shared_expert_ep16",
+          "operator": "share_expert_down_proj",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "shared_expert_ep16",
+          "operator": "share_expert_act",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        }
+      ]
+    },
+    "G2H_SHARED_EXPERT_EP32_RECORD_FUNCTION": {
+      "csv_rows": 5,
+      "operator_rows": 15,
+      "plans": [
+        {
+          "plan": "shared_expert_ep32",
+          "operator": "share_expert_up_proj",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "shared_expert_ep32",
+          "operator": "share_expert_down_proj",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        },
+        {
+          "plan": "shared_expert_ep32",
+          "operator": "share_expert_act",
+          "axis": "sp_local_rows",
+          "rows": [
+            768,
+            4,
+            3,
+            2,
+            1
+          ],
+          "tp_size": 1
+        }
+      ]
+    }
+  }
+}

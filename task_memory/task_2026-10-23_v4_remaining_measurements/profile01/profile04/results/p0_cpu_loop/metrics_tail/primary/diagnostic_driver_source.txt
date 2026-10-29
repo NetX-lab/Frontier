@@ -1,0 +1,68 @@
+"""Execute the one allocated sparse P0 metrics-tail diagnosis without retry."""
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+REPO = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028")
+RECORDS = REPO / "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary"
+ALLOCATION = RECORDS / "execution_allocation.json"
+
+
+def sha(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def main():
+    plan = json.loads(ALLOCATION.read_text())
+    assert sha(__file__) == plan["driver_sha256"]
+    assert sha(plan["timer_path"]) == plan["timer_sha256"]
+    assert sha(RECORDS / "source_review.json") == plan["source_review_sha256"]
+    for pin in plan["source_pins"]:
+        assert sha(pin["path"]) == pin["expected_sha256"], pin["path"]
+    assert sha(plan["download_inventory_path"]) == plan["download_inventory_sha256"]
+    inputs = plan["input_bindings"]
+    for kind in ("trace", "profile", "inventory"):
+        path = Path(plan["input_root"]) / inputs[kind + "_path"]
+        assert path.stat().st_size == inputs[kind + "_bytes"]
+        assert sha(path) == inputs[kind + "_sha256"], str(path)
+    prefix = Path(plan["prefix"])
+    receipt_path = prefix.with_suffix(".receipt.json")
+    receipt = {"decision": plan["decision"], "command": plan["command"],
+               "cwd": str(REPO), "python": sys.version, "executable": sys.executable,
+               "environment": "system Python, -u -B, no conda; original loading-GC policy",
+               "start_utc": datetime.now(timezone.utc).isoformat(),
+               "head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip(),
+               "allocation_sha256": sha(ALLOCATION), "driver_sha256": sha(__file__),
+               "timer_sha256": sha(plan["timer_path"]), "input_bindings": inputs,
+               "diagnostic_invocations_used": 1, "diagnostic_invocation_ceiling": 1,
+               "new_controls_or_affected_invocations": 0, "status": "STARTING"}
+    with receipt_path.open("x") as stream:
+        json.dump(receipt, stream, indent=2)
+    started = time.monotonic()
+    with prefix.with_suffix(".stdout").open("x") as output, prefix.with_suffix(".stderr").open("x") as errors:
+        result = subprocess.run(plan["command"], cwd=REPO, stdout=output, stderr=errors)
+    receipt.update(returncode=result.returncode, enclosing_seconds=time.monotonic() - started,
+                   end_utc=datetime.now(timezone.utc).isoformat(), status="DIAGNOSIS_COMPLETE")
+    cgroup = prefix.with_suffix(".cgroup.json")
+    if cgroup.exists():
+        receipt["actual_cgroup"] = json.loads(cgroup.read_text())
+    receipt["closed_outputs"] = [{"path": str(path), "bytes": path.stat().st_size,
+                                  "sha256": sha(path)}
+                                 for path in sorted(prefix.parent.glob(prefix.name + ".*"))
+                                 if path != receipt_path]
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
+    print(json.dumps({"returncode": result.returncode, "seconds": receipt["enclosing_seconds"],
+                      "receipt": str(receipt_path), "diagnostic_invocations_used": 1}), flush=True)
+    sys.exit(result.returncode)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,213 @@
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md
+index a05b2c30..a8958ddf 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md
+@@ -5,6 +5,7 @@
+ 
+ | Date | Change |
+ | --- | --- |
++| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: synchronized one submitted profile04 attempt and dated Starting/unassigned snapshot; original profile03 FAILED, accepted evidence and all admission gates retained. |
+ | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current profile03 FAILED and offline timeline/metadata/RPC controls recorded; Starting checkpoints, accepted captures and full-ticket boundaries preserved. |
+ | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: synchronized limited graph correspondence acceptance and merged/sealed profile03 Starting; runtime, placement, transport and full-ticket gates remain open. |
+ | 2026-10-24 | W128-OCT24-REPAIR-DOCS: synchronized integrated collection repairs, sealed graph-probe launcher-start receipt and delivered unsealed profile03; native/cost/calibration gates unchanged. |
+@@ -191,7 +192,18 @@
+ 
+ ## GPU stream acceptance and active DP slice — current (2026-10-24)
+ 
+-### Profile03 FAILED and offline diagnosis — current (2026-10-24)
++### Profile04 submission milestone — 2026-10-24
++
++Frozen root records f4f4ab79: source8cbf7ab9/records6ec96b4c mergedf0eafafb; accepted runtime1437ace6 unchanged. Only the existing optional native `torch_profiler_dump_cuda_time_total=false` setting changes; synchronous raw export, native300-second RPC, P512/D64 and600000records/268435456bytes remain unchanged. [Review](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md) and [root report](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md) record55tests PASS, five actual-image checks PASS and153source/Git/package checks PASS; these are adopted executions, not this owner's reruns.
++[Seal](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json):45inputs, manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f. Local launch1 raised `KeyError: 'AUTHORIZATION'` before platform creation: NO job; its original receipt/log remain unchanged. Local launch2 exported the existing authorization and [submitted](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json) exactly one GPU attempt1/1, exp-1024-172225-512616.
++[Exact platform snapshot](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json) at2026-10-24T09:49:36Z: Starting/four unassigned replicas, i-fengyicheng/codesign/non-preemptible. Requested4×8H800/64CPU/500Gi each (SDK512mem_gb),3600s; RDMA limits1/8 and exact local NFS100.96.128.195 to the sealed owner package. [80-check submission archive](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json) PASS observed launcherPID3950111 alive at09:52:22Z. Neither timestamp is a fresh platform/process reading here.
++Preferred-versus-required affinity encoding remains unresolved. Actual hosts/32H800 identities/RDMA/client432successes/formal coverage/raw DP pairing/stream/post-stop validation remain UNVERIFIED. Root next: retain this launcher -> actual placement/runtime -> terminal/raw-artifact acceptance; no second attempt or automatic retry. Optional text statistics are intentionally absent, not missing raw-trace evidence; export may still exceed300seconds.
++Original profile03 remains FAILED:137complete/7failed/288unsubmitted of432rows, original190files retained. Native06 ACCEPTED_NATIVE_REFERENCE_R4, isolated datasets and tiny graph correspondence retain their limits; no general captured ownership, cost admission or numeric ID remap. Full05/09/19 OPEN; GLM paused, balanced routing, workflow/GPU/operator-gap before CPU-overhead last, official mean/total THPT/30%/10% and auxiliary soft gates unchanged.
++Independent one-file CPU fixture restoration is pending review/root acceptance, not accepted and not a runtime/package change. All earlier current/next-action checkpoints below are dated history, superseded only for the current execution route; their original observations, failures and handoffs remain preserved.
++Document-only verification: Python3.10.6/local receipt hashes/45 sealed local inputs/new links/history/checklists/original Sections1–8/scoped whitespace PASS; [verification receipt](/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/verification.json). Root55/five/153/80 executions are adopted, not rerun; original190 failed outputs were not rehashed.
++Self-check: D1–D7 CLEAR; S5 stale current checkpoints corrected (Branch B), scope/criteria unchanged; [checkpoint and exact commands](/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/test_report_2026-10-24_profile04_stage_docs.md). Initial checker FAIL from concurrent committed root progress is preserved there; this owner did not edit primary records. Root retains final acceptance/commit.
++
++### Profile03 FAILED and offline diagnosis — historical checkpoint (2026-10-24)
+ 
+ Profile03 exp-1024-141341-669621 FAILED at2026-10-24T07:06:45Z, platform1Failed/3Stopped, launcher exit1. [Timeline](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md)/[bound JSON](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json) observe four distinct hosts0108/0329/0422/0618 and32 distinct H800 UUIDs. P1 execute_model TimeoutError and P0 EngineDeadError share07:06:27 wall-log label; cross-host ordering, actual NET/IB/NIXL transport and threeStopped terminal exit codes remain unverified. Actual distinct hosts do not prove hard-affinity enforcement.
+ 432 client rows:144 submitted,137 completed(16 warmup+121 formal),7 formal failed,288 not submitted. [Complete-copy receipt](/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json) records190 files/8208668144 bytes downloaded hash-identically; this is failure-artifact retention, not run/reference/cost admission.
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md
+index 60c2da9c..df60bfed 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md
+@@ -4,6 +4,7 @@
+ 
+ | Date | Change |
+ | --- | --- |
++| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: archived one submitted profile04 attempt and dated Starting/unassigned snapshot without runtime success or cost admission; original failed run and full-ticket gates retained. |
+ | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: archived current profile03 FAILED and limited offline diagnosis; preserved Starting checkpoints, accepted captures and full05/09/19 OPEN. |
+ | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: archived limited graph correspondence acceptance and merged/sealed profile03 Starting; runtime, placement, transport and full-ticket gates remain open. |
+ | 2026-10-24 | W128-OCT24-REPAIR-DOCS: archived integrated CPU collection repairs, sealed graph-probe launcher start and delivered unsealed profile03 without native/cost/calibration admission. |
+@@ -82,11 +83,19 @@
+ 
+ ## Final state — current (2026-10-24)
+ 
+-Active acceptance remains DSV4 only; GLM remains PAUSED_PENDING_USER_APPROVAL. Official mean client TTFT/TPOT/E2E, total THPT and30% promotion/10% final gates are unchanged. Current execution pointer: [Routing milestone — current (2026-10-23)](progress.md#routing-milestone--current-2026-10-23).
++Active acceptance remains DSV4 only; GLM remains PAUSED_PENDING_USER_APPROVAL. Official mean client TTFT/TPOT/E2E, total THPT and30% promotion/10% final gates are unchanged. Current execution pointer: [Profile04 submission milestone](progress.md#profile04-submission-milestone--2026-10-24).
+ 
+ ### GPU stream acceptance and active DP slice — current (2026-10-24)
+ 
+-#### Profile03 FAILED and offline diagnosis — current (2026-10-24)
++#### Profile04 submission milestone — 2026-10-24
++
++Root records f4f4ab79 bind source8cbf7ab9/records6ec96b4c/mergedf0eafafb and unchanged accepted runtime1437ace6. The existing optional native CUDA statistics table is false; raw export,300-second RPC,512/64 windows and record limits remain fixed. [Review](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md)/[root report](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md):55tests/five actual-image checks/153source-Git-package checks PASS, adopted evidence only.
++[Seal](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json):45inputs, manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f. Local launch1 `KeyError: 'AUTHORIZATION'` created NO platform job; original receipt/log unchanged. Local launch2 exported existing authorization and [submitted](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json) exactly one GPU attempt1/1, exp-1024-172225-512616.
++[Snapshot](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json)2026-10-24T09:49:36Z: Starting/four unassigned replicas, i-fengyicheng/codesign/non-preemptible, requested4×8H800/64CPU/500Gi each/3600s, RDMA1/8/exact owner-package local NFS100.96.128.195. [80-check archive](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json) PASS observed launcher3950111 alive09:52:22Z; no fresh platform/process reading here.
++Affinity preferred-versus-required encoding is unresolved; actual hosts/GPU/RDMA/client432successes/formal coverage/raw DP/stream/post-stop remain UNVERIFIED. Root retains the launcher through runtime/terminal/raw-data verification; no automatic retry. Optional text statistics are intentionally absent; synchronous export can still exceed300seconds.
++Profile03 remains FAILED,137complete/7failed/288unsubmitted of432rows/original190files preserved. Native06R4, isolated datasets and tiny graph correspondence keep their limits; no generic ownership/cost admission/numeric ID remap. Full05/09/19 OPEN, GLM paused, balanced routing/workflow-GPU-operator-gap before CPU-overhead last and soft gates unchanged. Earlier current/next-action text below is dated history, not current submission status.
++
++#### Profile03 FAILED and offline diagnosis — historical checkpoint (2026-10-24)
+ 
+ Profile03 exp-1024-141341-669621 FAILED2026-10-24T07:06:45Z, platform1Failed/3Stopped, launcher exit1. [Timeline](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md)/[JSON](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json): four distinct hosts0108/0329/0422/0618,32 distinct H800 UUIDs; P1 execute_model TimeoutError/P0 EngineDeadError share07:06:27 wall-log label, cross-host ordering unverified. Hard-affinity enforcement, NET/IB/NIXL transport and threeStopped exit codes are not proved.
+ 432 client rows:144 submitted,137 completed(16 warmup+121 formal),7 failed,288 not submitted. [Full-copy receipt](/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json):190 files/8208668144 bytes hash-identical, not successful-run/reference/cost evidence.
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md
+index 60750ec1..447a83a4 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md
+@@ -4,6 +4,7 @@
+ 
+ | Date | Change |
+ | --- | --- |
++| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: current dependency advances from reviewed/sealed profile04 to its single submitted attempt's placement/runtime/data verification; failed history and gates unchanged. |
+ | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current dependency advances from FAILED profile03/preserved outputs to offline synthesis and separately bounded repair decision; historical captures and gates unchanged. |
+ | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: advanced current dependency from source/package repairs to Starting profile03 runtime audit after limited graph acceptance; full05/09/19 unchanged. |
+ | 2026-10-24 | Replaced the stale queued-profile route with accepted diagnostic/isolated data and the next bounded collection repairs. |
+@@ -127,6 +128,10 @@
+ 
+ ## Final execution route — current (2026-10-24)
+ 
++Current submission dependency at root records f4f4ab79: `unchanged runtime1437ace6 + existing optional CUDA statistics=false -> source8cbf7ab9/records6ec96b4c/mergedf0eafafb ->55tests/five image/153source-Git-package checks PASS ->45-input seal -> one GPU attempt1/1 exp-1024-172225-512616 -> actual placement/runtime -> terminal/raw-data acceptance`. [Detailed submission evidence](progress.md#profile04-submission-milestone--2026-10-24) binds manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f and80archive checks PASS; local launch1 AUTHORIZATION error created NO job, local launch2 exported the existing decision.
++[Exact snapshot](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json)2026-10-24T09:49:36Z: Starting/four unassigned replicas; launcher3950111 alive09:52:22Z in the archive, not a fresh reading. Requested4×8H800/codesign/non-preemptible/64CPU/500Gi each/3600s, RDMA1/8/exact local NFS. Affinity encoding unresolved; actual hosts/GPU/RDMA/432client successes/formal coverage/DP/stream/post-stop still UNVERIFIED. Keep the existing launcher; no duplicate or automatic retry.
++Parallel, independent CPU fixture restoration remains pending review/root verification and integration, not accepted. Profile03 remains FAILED137complete/7failed/288unsubmitted of432rows/original190files; native06R4/isolated datasets/tiny graph limits unchanged. Full05/09/19 OPEN, GLM paused, balanced routing/no numeric ID remap, tuple-qualified costs -> workflow/GPU/operator-gap -> CPU-overhead last ->19; official gates stay unchanged. The offline/pre-failure dependency snapshots below are preserved history, superseded only as current next actions.
++
+ Use [Routing milestone — current (2026-10-23)](progress.md#routing-milestone--current-2026-10-23) and `../task_2026-10-22_v4_balanced_routing/plan.md` for detailed ownership. A186dfef is accepted/merged292c489; C8c2502c is accepted/merged84c806f and finalized39b2bf8 (184/184 tests, A/C26PASS, clean strict77/77 identical with451 artifacts). All three B/C P2s are closed; native mergedce9ceba passes root133 merged tests with frontier/ bytes equal accepted39b2bf8. Evidence: routing `prefill_primary_fidelity.json`, `test_report_2026-10-23_prefill_acceptance.md` and `native_merged_source_receipt.json`. This source evidence does not admit native06 runtime.
+ 
+ Native06 P0 reference ACCEPTED_NATIVE_REFERENCE_R4 under merged d278659/frozen67f31923, unchanged b62c155 run/12.002222GPUh; old R3 FAIL/native05 UNVERIFIED remain historical. Historical routing23/953=A432/B319/C202/dispatch491 and integrated D-Q103/197/core55 unchanged; R4 additional2files223lines/zeroCore under3/300 separately accounted, no net-union claim. Existing native-profile3600/1800/1800/32GPUh caps and mean/total-THPT/30%/10% predicates remain unchanged. Current task-required H800 authority and queue-time priorities are D-V4-H800-RJOB-AUTHORITY and D-V4-QUEUE-PARALLEL-WORK in `../task_2026-10-23_v4_remaining_measurements/requirements.md`; GLM remains paused and CPU overhead remains last.
+@@ -135,8 +140,8 @@ Native06 P0 reference ACCEPTED_NATIVE_REFERENCE_R4 under merged d278659/frozen67
+ 2. Completed native06 P0 reference: final `native06_acceptance_20261023/{primary_acceptance_r4.json,frozen_r4_result.json}` ACCEPTED_NATIVE_REFERENCE_R4/all8/8PASS after merged208PASS/no findings/freeze. Client432/432/three rounds/seven boundaries and32ranks/six phases physical graph P NONE/D PIECEWISE+FULL PASS. Exact final evidence: [routing current root state](../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state). Only18 P0 subtask PASS, full18 other hardware/prerequisites unfinished.
+ 3. Completed D-Q10 integration e89b45d/source2f87828: merged144PASS/94exact/legacy102positive72negative (`../task_2026-10-23_v4_prefill_contract/integration_receipt.json`). R4 `matrix_accounting.json` reuses actual576d27877/77/451actual hashes/519cache names/777runtime-input bytes, same environment/gitlink and unreached changed unit file; NOT new R4 capture. Isolated qualification only, full05/09 open.
+ 4. Profile02 diagnostic audit/Q2a balanced q1/Q2b local-MoE and targeted stream/restart evidence remain accepted within their existing limits. Callback probe f01f35dc is ACCEPTED_GPU_GRAPH_CORRESPONDENCE_WITH_LIMITS ([acceptance](../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json)): one tiny graph/one target replay/two retained-source snapshots, not generic native/V4 ownership or cost admission; old crash cause remains inference. D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY covers the approved correction/similar bounded continuation; old3/3 failures remain historical. Q1 closes five P0 subitems in17 only.
+-   Current profile03 outcome: exp-1024-141341-669621 FAILED2026-10-24T07:06:45Z/1Failed+3Stopped/launcher exit1; [timeline](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md) verifies four hosts0108/0329/0422/0618/32 H800 UUIDs,144 submitted/137 complete/7 failed/288 not submitted among432 rows. Actual distinct hosts do not prove hard-affinity enforcement or NET/IB/NIXL transport; cross-host fatal ordering unverified.
+-   Current dependency: `preserved190-file/8208668144-byte hash-identical outputs -> {completed timeline/metadata audit, source-bound CPU RED/GREEN, root raw-trace/pending-reply analysis IN PROGRESS} -> root offline synthesis -> separately bounded repair/verification decision`. [CPU mechanism](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md) supports542s stop/report versus300s RPC budget, not original slow-phase/GPU root cause; [metadata](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md) lacks all32 profile-stop JSON/P0+D1 formal publication, so no pairing/coverage admission. No new GPU attempt, sealed45-input edits or consumer admission; Native06 R4/profile02 diagnostic/Q2a/Q2b/limited graph accepted boundaries and full05/09/19 OPEN remain intact.
++   Preserved profile03 outcome: exp-1024-141341-669621 FAILED2026-10-24T07:06:45Z/1Failed+3Stopped/launcher exit1; [timeline](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md) verifies four hosts0108/0329/0422/0618/32 H800 UUIDs,144 submitted/137 complete/7 failed/288 not submitted among432 rows. Actual distinct hosts do not prove hard-affinity enforcement or NET/IB/NIXL transport; cross-host fatal ordering unverified.
++   Historical offline dependency: `preserved190-file/8208668144-byte hash-identical outputs -> {completed timeline/metadata audit, source-bound CPU RED/GREEN, root raw-trace/pending-reply analysis IN PROGRESS} -> root offline synthesis -> separately bounded repair/verification decision`. [CPU mechanism](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md) supports542s stop/report versus300s RPC budget, not original slow-phase/GPU root cause; [metadata](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md) lacks all32 profile-stop JSON/P0+D1 formal publication, so no pairing/coverage admission. No new GPU attempt, sealed45-input edits or consumer admission; Native06 R4/profile02 diagnostic/Q2a/Q2b/limited graph accepted boundaries and full05/09/19 OPEN remain intact.
+    Historical submitted/Starting dependency, preserved verbatim below and superseded by the FAILED/offline dependency above:
+    Current dependency: `accepted DP/coverage/shutdown repairs1437ace6 -> merged profile03 package39e23132 (438ddfc4 P3 records fix) -> image/SDK/165 binding checks PASS ->45-input seal -> submitted exp-1024-141341-669621 Starting06:18:19Z -> GPU startup/business/coverage/raw DP pairing/stream/post-stop audit -> tuple-qualified costs`. [Seal](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json), [submission](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json) and [platform](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json) bind the owner package and unchanged inputs; runtime gates remain pending. SDK hard/default differs from the template's preferred podAntiAffinity; actual hard placement/hosts/RDMA transport unverified. Use [current progress](progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24) and `profile01/profile03_design.md` in remaining-measurements for the original >=3 useful-step/no-drop gates; auxiliary checks remain soft.
+ 5. Remaining qualified operator/graph/physicalTP8 cost coverage -> complete non-dummy Frontier prediction/workflow/GPU/operator-gap -> CPU-overhead last ->19 four-metric calibration. Native reference execution proof does not qualify those costs, independent expert histogram or Frontier prediction;05/09/19 remain unfinished. Historical q1 cannot be relabeled; old prefill/native05 failure evidence remains unchanged.
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md
+index 6fea7f1a..3a58cce3 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md
+@@ -4,6 +4,7 @@
+ 
+ | Date | Change |
+ | --- | --- |
++| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: one profile04 attempt submitted, dated Starting/unassigned snapshot only; original profile03 FAILED and full05/09/19 OPEN preserved. |
+ | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current profile03 FAILED/offline mechanism and metadata gaps recorded; accepted captures/history/checklists preserved, full05 OPEN. |
+ | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: limited graph correspondence accepted; merged/sealed profile03 Starting with runtime/placement/transport unverified, full05 OPEN. |
+ | 2026-10-24 | W128-OCT24-REPAIR-DOCS: collection repairs integrated, graph package sealed/launcher started and profile03 delivered unsealed; full05 remains OPEN. |
+@@ -76,7 +77,14 @@
+ 
+ ### GPU stream acceptance and active DP slice — current (2026-10-24)
+ 
+-#### Profile03 FAILED and offline diagnosis — current (2026-10-24)
++#### Profile04 submission milestone — 2026-10-24
++
++Root records f4f4ab79: source8cbf7ab9/records6ec96b4c/mergedf0eafafb, accepted runtime1437ace6 unchanged; existing optional native CUDA statistics=false, raw export/300-second RPC/512-64/record limits fixed. [Review](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md)/[root report](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md):55tests/five image/153source-Git-package checks PASS. [Seal](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json):45inputs/manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f.
++Local launch1 AUTHORIZATION KeyError created NO job, original receipt/log unchanged. Local launch2 exported existing authorization and [submitted](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json) exactly one GPU attempt1/1 exp-1024-172225-512616. [Snapshot](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json)2026-10-24T09:49:36Z Starting/four unassigned; requested4×8H800/codesign/non-preemptible/64CPU/500Gi each/3600s/RDMA1-8/exact local NFS. [80-check archive](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json) PASS observed launcher3950111 alive09:52:22Z, not a fresh reading here.
++Affinity encoding unresolved; no actual hosts/GPU/RDMA/client432successes/formal coverage/raw DP/stream/post-stop validation or cost admission. Root retains launcher -> placement/runtime/terminal/raw-data verification, no automatic retry; optional text table intentionally absent, synchronous export still subject to300seconds.
++Profile03 remains FAILED137complete/7failed/288unsubmitted of432rows/original190files. Native06R4/isolated datasets/tiny graph limits and all checklists unchanged; full05/09/19 OPEN, GLM paused, balanced routing/no numeric ID remap/workflow-GPU-operator-gap before CPU-overhead last/official gates preserved. Earlier current/next-action blocks below are dated history, not current submission status; [detailed checkpoint](../progress.md#profile04-submission-milestone--2026-10-24).
++
++#### Profile03 FAILED and offline diagnosis — historical checkpoint (2026-10-24)
+ 
+ Profile03 exp-1024-141341-669621 FAILED2026-10-24T07:06:45Z, platform1Failed/3Stopped, launcher exit1. [Timeline](../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md)/[JSON](../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json): four distinct hosts0108/0329/0422/0618,32 distinct H800 UUIDs. P1 execute_model TimeoutError/P0 EngineDeadError share07:06:27 wall-log label; cross-host ordering, hard-affinity enforcement, NET/IB/NIXL transport and threeStopped exit codes unverified.
+ 432 client rows:144 submitted,137 completed(16 warmup+121 formal),7 failed,288 not submitted. [Full-copy receipt](/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json) binds190 files/8208668144 bytes hash-identical; failure retention is not successful-run/cost evidence.
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md
+index 1098ebbc..c59a41c4 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md
+@@ -4,6 +4,7 @@
+ 
+ | Date | Change |
+ | --- | --- |
++| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: one profile04 attempt submitted, dated Starting/unassigned snapshot only; original profile03 FAILED and full05/09/19 OPEN preserved. |
+ | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current profile03 FAILED/offline mechanism and metadata gaps recorded; accepted captures/history/checklists preserved, full09 OPEN. |
+ | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: limited graph correspondence accepted; merged/sealed profile03 Starting with runtime/placement/transport unverified, full09 OPEN. |
+ | 2026-10-24 | W128-OCT24-REPAIR-DOCS: collection repairs integrated, graph package sealed/launcher started and profile03 delivered unsealed; full09 remains OPEN. |
+@@ -53,7 +54,14 @@
+ 
+ ### GPU stream acceptance and active DP slice — current (2026-10-24)
+ 
+-#### Profile03 FAILED and offline diagnosis — current (2026-10-24)
++#### Profile04 submission milestone — 2026-10-24
++
++Root records f4f4ab79: source8cbf7ab9/records6ec96b4c/mergedf0eafafb, accepted runtime1437ace6 unchanged; existing optional native CUDA statistics=false, raw export/300-second RPC/512-64/record limits fixed. [Review](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md)/[root report](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md):55tests/five image/153source-Git-package checks PASS. [Seal](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json):45inputs/manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f.
++Local launch1 AUTHORIZATION KeyError created NO job, original receipt/log unchanged. Local launch2 exported existing authorization and [submitted](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json) exactly one GPU attempt1/1 exp-1024-172225-512616. [Snapshot](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json)2026-10-24T09:49:36Z Starting/four unassigned; requested4×8H800/codesign/non-preemptible/64CPU/500Gi each/3600s/RDMA1-8/exact local NFS. [80-check archive](../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json) PASS observed launcher3950111 alive09:52:22Z, not a fresh reading here.
++Affinity encoding unresolved; no actual hosts/GPU/RDMA/client432successes/formal coverage/raw DP/stream/post-stop validation or qualified bundle/cost admission. Root retains launcher -> placement/runtime/terminal/raw-data verification, no automatic retry; optional text table intentionally absent, synchronous export still subject to300seconds.
++Profile03 remains FAILED137complete/7failed/288unsubmitted of432rows/original190files. Native06R4/isolated datasets/tiny graph limits and all checklists unchanged; full05/09/19 OPEN, GLM paused, balanced routing/no numeric ID remap/workflow-GPU-operator-gap before CPU-overhead last/official gates preserved. Earlier current/next-action blocks below are dated history, not current submission status; [detailed checkpoint](../progress.md#profile04-submission-milestone--2026-10-24).
++
++#### Profile03 FAILED and offline diagnosis — historical checkpoint (2026-10-24)
+ 
+ Profile03 exp-1024-141341-669621 FAILED2026-10-24T07:06:45Z, platform1Failed/3Stopped, launcher exit1. [Timeline](../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md)/[JSON](../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json): four distinct hosts0108/0329/0422/0618,32 distinct H800 UUIDs. P1 execute_model TimeoutError/P0 EngineDeadError share07:06:27 wall-log label; cross-host ordering, hard-affinity enforcement, NET/IB/NIXL transport and threeStopped exit codes unverified.
+ 432 client rows:144 submitted,137 completed(16 warmup+121 formal),7 failed,288 not submitted. [Full-copy receipt](/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json) binds190 files/8208668144 bytes hash-identical; failure retention is not successful-run/cost evidence.
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md
+index 46ff0a45..31a63b3f 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md
+@@ -4,6 +4,7 @@
+ 
+ | Date | Change |
+ | --- | --- |
++| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: next dependency is the single submitted profile04 attempt's actual runtime/data verification; dated Starting only, prior failures and Sections1–8 unchanged. |
+ | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current dependency is FAILED profile03/offline synthesis, not Starting monitoring; accepted captures, prior annotations and Sections1–8 unchanged. |
+ | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: next dependency is Starting profile03 runtime/coverage audit after limited graph acceptance and merged/sealed package; Sections1–8 unchanged. |
+ | 2026-10-24 | W128-OCT24-REPAIR-DOCS: next route is delivered profile03 package validation/run/audit alongside sealed graph-probe launcher checks; integrated source and historical Sections1–8 remain distinct. |
+@@ -28,7 +29,14 @@ Current recorded milestones: [limited stream acceptance and active DP slice](pro
+ 
+ ## GPU stream acceptance and active DP slice — current (2026-10-24)
+ 
+-### Profile03 FAILED and offline diagnosis — current (2026-10-24)
++### Profile04 submission milestone — 2026-10-24
++
++Root records f4f4ab79 bind source8cbf7ab9/records6ec96b4c/mergedf0eafafb and unchanged accepted runtime1437ace6. Existing optional native CUDA statistics=false; raw export,300-second RPC,P512/D64 and record limits unchanged. [Review](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md)/[root report](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md):55tests/five image/153source-Git-package checks PASS. [Seal](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json):45inputs/manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f.
++Local launch1 AUTHORIZATION KeyError created NO job, original receipt/log unchanged. Local launch2 exported existing authorization and [submitted](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json) exactly one GPU attempt1/1 exp-1024-172225-512616. [Snapshot](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json)2026-10-24T09:49:36Z Starting/four unassigned; requested4×8H800/codesign/non-preemptible/64CPU/500Gi each/3600s/RDMA1-8/exact local NFS. [80-check archive](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json) PASS observed launcher3950111 alive09:52:22Z; no fresh reading here.
++Next root: retain launcher -> actual placement/runtime -> terminal/raw-data acceptance -> tuple/rank/dependency-qualified KERNEL_ONLY costs. Preferred-versus-required affinity encoding unresolved; actual hosts/GPU/RDMA/client432successes/formal coverage/raw DP/stream/post-stop UNVERIFIED. No automatic retry, numeric ID remap, overlapping scope sum, unexplained CPU gap or consumer/serving admission; optional text statistics intentionally absent, export can still exceed300seconds.
++Profile03 remains FAILED137complete/7failed/288unsubmitted of432rows/original190files. Native06R4, isolated datasets and tiny graph correspondence retain their limits; full05/09/19 OPEN, GLM paused, balanced routing/workflow-GPU-operator-gap before CPU-overhead last/official gates unchanged. Earlier current/next-action checkpoints below are dated history; original Sections1–8 remain byte-for-byte unchanged. [Detailed milestone](progress.md#profile04-submission-milestone--2026-10-24).
++
++### Profile03 FAILED and offline diagnosis — historical checkpoint (2026-10-24)
+ 
+ Profile03 exp-1024-141341-669621 FAILED2026-10-24T07:06:45Z, platform1Failed/3Stopped, launcher exit1. [Timeline](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md)/[JSON](../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json): four distinct hosts0108/0329/0422/0618,32 distinct H800 UUIDs; P1 execute_model TimeoutError/P0 EngineDeadError share07:06:27 wall-log label. Cross-host ordering, hard-affinity enforcement, NET/IB/NIXL transport and threeStopped exit codes remain unverified.
+ 432 client rows:144 submitted,137 completed(16 warmup+121 formal),7 failed,288 not submitted. [Full-copy receipt](/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json):190 files/8208668144 bytes hash-identical; not successful-run/reference/cost admission.
+diff --git a/task_memory/task_2026-10-23_v4_remaining_measurements/summary.md b/task_memory/task_2026-10-23_v4_remaining_measurements/summary.md
+index 179271c9..e6eee235 100644
+--- a/task_memory/task_2026-10-23_v4_remaining_measurements/summary.md
++++ b/task_memory/task_2026-10-23_v4_remaining_measurements/summary.md
+@@ -4,6 +4,7 @@
+ 
+ | Date | Change |
+ | --- | --- |
++| 2026-10-24 | W128-PROFILE04-STAGE-DOCS: archived reviewed/sealed profile04 and one submitted attempt with dated Starting/unassigned snapshot; runtime/data/cost gates and original failed-run evidence retained. |
+ | 2026-10-24 | Selected the existing optional-table correction after native CPU/image controls; profile04 prepare-only work starts, with the original failed run and admission limits preserved. |
+ | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current profile03 FAILED/offline mechanism and metadata limits archived; Starting checkpoints and earlier accepted captures preserved. |
+ | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: archived limited graph correspondence acceptance and merged/sealed profile03 Starting; runtime, placement, transport and full-ticket gates remain open. |
+@@ -24,7 +25,15 @@
+ 
+ ## GPU stream acceptance and active DP slice — current (2026-10-24)
+ 
+-### Existing optional-table correction and fresh profile04 — current
++### Profile04 submission milestone — 2026-10-24
++
++Frozen root records f4f4ab79: source8cbf7ab9/records6ec96b4c mergedf0eafafb; accepted runtime1437ace6 unchanged. Existing optional native `torch_profiler_dump_cuda_time_total=false` omits only the text statistics table; synchronous raw export, native300-second RPC, P512/D64 and600000records/268435456bytes remain fixed. [Review](profile01/profile04/review.md)/[root report](profile01/profile04/test_report_2026-10-24_profile04_root.md) record55tests PASS, five actual-image checks PASS and153source/Git/package checks PASS, adopted executions only.
++[Seal](profile01/profile04/root_seal.json):45inputs, manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f. Local launch1 `KeyError: 'AUTHORIZATION'` created NO platform job; original receipt/log unchanged. Local launch2 exported existing authorization and [submitted](profile01/profile04/root_submission.json) exactly one GPU attempt1/1 exp-1024-172225-512616.
++[Snapshot](profile01/profile04/root_run_check.json)2026-10-24T09:49:36Z: Starting/four unassigned replicas, i-fengyicheng/codesign/non-preemptible. Requested4×8H800/64CPU/500Gi each (SDK512mem_gb)/3600s, RDMA1/8 and exact owner-package local NFS100.96.128.195. [80-check submission archive](profile01/profile04/root_archive_verification.json) PASS observed launcher3950111 alive09:52:22Z; this owner performed no fresh platform/process reading.
++Preferred-versus-required affinity encoding unresolved; actual hosts/32H800/RDMA/client432successes/formal coverage/raw DP/stream/post-stop remain UNVERIFIED. Root next: retain existing launcher -> actual placement/runtime -> terminal/raw-data acceptance, no duplicate/automatic retry. Text tables intentionally absent; raw traces/metadata still required and export can still exceed300seconds.
++Profile03 remains FAILED137complete/7failed/288unsubmitted of432rows/original190files. Native06 ACCEPTED_NATIVE_REFERENCE_R4, isolated datasets and tiny graph correspondence retain their limits; no generic captured ownership/cost admission/numeric ID remap. Full05/09/19 OPEN, GLM paused, balanced routing/workflow-GPU-operator-gap before CPU-overhead last/official mean-total THPT/30%/10% and soft gates unchanged. Independent one-file CPU fixture restoration remains pending review/root acceptance, not integrated or accepted. Earlier current/next-action checkpoints below are dated history, superseded only for current execution.
++
++### Existing optional-table correction and fresh profile04 — historical preparation checkpoint
+ 
+ Exact-image native constructor/autostop [receipt](/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_image_g8m3pvpv/receipt.json) exported both CPU control traces with eight payload annotations. `torch_profiler_dump_cuda_time_total=true` called statistics/lazy-event materialization once; false called neither and omitted only the optional text table. CUDA stayed uninitialized; this is CPU branch/export verification, not GPU timing or CUDA trace equivalence.
+ [Native statistics controls](profile01/profile03/failure/statistics_control.md) preserve export with true-table RED/false-table GREEN for the same explicit virtual phase costs. Export-too-slow and CPU-only automatic tables remain RED; native300-second timeout,512/64 capture caps and runtime/native/C26 bytes are not changed. The [root failure report](profile01/profile03/failure/test_report_2026-10-24_profiler_rpc_failure.md) distinguishes file-mtime/source evidence from the original unproved pending-reply schedule.

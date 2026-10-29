@@ -1,0 +1,62 @@
+{
+  "decision": "D-V4-P0-GROUP-METRICS-SEGMENTS",
+  "recorded_utc": "2026-10-24T20:49:57.847077+00:00",
+  "authority": [
+    "D-V4-CONTINUE-FRESH-GATES",
+    "D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY"
+  ],
+  "evidence_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/pilot_failure.json",
+  "evidence_sha256": "5a440544e13faa8a2ffd4d8c30ae3b789be1368525b8ab24027a6258384dc019",
+  "source_commit": "8b4d6993d8daf738352c117a091cb4f801c0a429",
+  "frozen_source_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+  "frozen_source_sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+  "source_owner": "new native agent, named in delivery",
+  "source_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+  "source_gross_cap": 140,
+  "tiny_control_gross_cap": 100,
+  "owner_markdown_gross_cap": 100,
+  "owner_records": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner",
+  "primary_records": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary",
+  "new_diagnostic_scratch": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01",
+  "old_pilot_attempts_used": 1,
+  "old_pilot_attempt_ceiling": 8,
+  "old_remaining_seven": "NOT_RUN_BLOCKED",
+  "tiny_control_invocation_ceiling": 1,
+  "fresh_segment_diagnostic_invocation_ceiling": 1,
+  "fresh_affected_invocation_ceiling": 0,
+  "complete_control_invocation_ceiling": 0,
+  "timeout_seconds": 60,
+  "actual_memory_limit_bytes": 32212254720,
+  "max_rank_concurrency": 2,
+  "selected_rank_concurrency": 1,
+  "automatic_retry": false,
+  "hypotheses": [
+    {
+      "rank": 1,
+      "cause": "Global stable sort plus integer order construction is material",
+      "prediction": "The global sorted/order region occupies much of the remaining four-second metrics window; group recurrence starts late or not at all."
+    },
+    {
+      "rank": 2,
+      "cause": "Per-group sorting or exact union recurrence is material",
+      "prediction": "Global order completes relatively early, but a measured group sort/union region is long or remains censored."
+    },
+    {
+      "rank": 3,
+      "cause": "Unchanged pre-metrics work and the required post-metrics tail exceed the budget together",
+      "prediction": "The batch reaches or nearly reaches completion but the existing per-stream/synchronization/step/serialization tail remains open at timeout."
+    }
+  ],
+  "method": "Compose after the accepted group adapter. Add only sparse global-order and per-group count/sum/sort/union entry/exit observations; a sorted wrapper must forward original arguments exactly and return the same list. Strip only new telemetry/wrapper names to prove the accepted AST is unchanged. No per-event log, extra sort, data mutation, elapsed-time extrapolation or original-file edit.",
+  "tiny_criteria": "Copied serialized expected/actual evidence must be exact; stripping new telemetry must restore the accepted function/composition AST and unchanged union recurrence. Include stable ties, duplicate membership and original float accumulation. Do not run/import prior unit/control/diagnostic drivers.",
+  "primary_scope": "Archive failed pilot, inspect new source/tiny evidence, freeze new command/input/dependency pins, run the one fresh diagnostic and report actual versus censored regions. Any subsequent correction/controls/affected runs require their own measured allocation.",
+  "forbidden": [
+    "Old scripts rerun or import",
+    "Accepted group/adapter/timer/stage/loader/GC/reader/auditor edits",
+    "Original raw/result/sealed native/package edits",
+    "Core/native/C26/checker changes",
+    "New affected-rank or complete-control run in this allocation",
+    "GPU/platform/network operations or publication",
+    "Native ownership/dependency/cost/reference admission"
+  ]
+}

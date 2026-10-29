@@ -14,6 +14,7 @@ from frontier.execution_time_predictor.base_execution_time_predictor import Base
 from frontier.entities import EPBatchGroup, Request
 from frontier.entities.time_components import AttentionTime
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
+    CommunicationTime,
     SklearnDisaggregationExecutionTimePredictor,
 )
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
@@ -977,7 +978,7 @@ def test_disaggregation_moe_live_paths_use_registered_role_context(
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
     predictor._emit_cuda_graph_activation_records = lambda *_args: None
-    predictor._get_communication_time = lambda *_args, **_kwargs: SimpleNamespace(
+    predictor._get_communication_time = lambda *_args, **_kwargs: CommunicationTime(
         tensor_parallel_time=3.0,
         pipeline_parallel_time=0.0,
     )
@@ -1113,7 +1114,7 @@ def test_pdd_attention_only_prediction_preserves_global_layer_id() -> None:
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
     predictor._emit_cuda_graph_activation_records = lambda *_args: None
-    predictor._get_communication_time = lambda *_args, **_kwargs: SimpleNamespace(
+    predictor._get_communication_time = lambda *_args, **_kwargs: CommunicationTime(
         tensor_parallel_time=0.0,
         pipeline_parallel_time=0.0,
     )
@@ -1176,9 +1177,11 @@ def test_pdd_shared_domain_post_attention_prediction_skips_attention_lookup(
         *_args,
         include_attention: bool = True,
         include_stage_owned: bool = True,
-    ) -> SimpleNamespace:
+        layer_id: int = 0,
+    ) -> CommunicationTime:
+        assert layer_id == 2
         communication_attention_flags.append(include_attention)
-        return SimpleNamespace(
+        return CommunicationTime(
             tensor_parallel_time=4.0 if include_attention else 0.0,
             pipeline_parallel_time=0.0,
         )

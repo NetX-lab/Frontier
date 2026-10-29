@@ -1,0 +1,109 @@
+{
+  "status": "RECORDED_ONE_LOADING_GC_COMPARISON",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "/usr/bin/python3",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py",
+    "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01"
+  ],
+  "start": "2026-10-24T14:42:30.657908+00:00",
+  "end": "2026-10-24T14:43:30.972746+00:00",
+  "wall_seconds": 60.31484381714836,
+  "exit": 124,
+  "source_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+  "cgroup": {
+    "cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n0::/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n",
+    "memory_mount_root": "/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c",
+    "group": "/sys/fs/cgroup/memory/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope",
+    "limits": {
+      "memory.limit_in_bytes": "32212254720",
+      "memory.usage_in_bytes": "6475776",
+      "memory.failcnt": "0"
+    }
+  },
+  "control": {
+    "status": "PASS_LOADING_GC_CONTROL_EQUIVALENCE",
+    "command": [
+      "sudo",
+      "-n",
+      "systemd-run",
+      "--scope",
+      "-p",
+      "MemoryMax=30G",
+      "timeout",
+      "60s",
+      "/usr/bin/python3",
+      "-B",
+      "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+      "compare",
+      "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/decode_dp1_load_control_02.json",
+      "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/decode_dp1_freeze_control_01.json"
+    ],
+    "exit": 0,
+    "comparison": {
+      "payload_equal": true,
+      "kernel_rows_equal": true,
+      "rows": [
+        142567,
+        142567
+      ],
+      "kernel_total": [
+        {
+          "count": 142567,
+          "sum_ms": 1377.599441999903,
+          "union_ms": 1215.560419921875
+        },
+        {
+          "count": 142567,
+          "sum_ms": 1377.599441999903,
+          "union_ms": 1215.560419921875
+        }
+      ],
+      "useful_steps": [
+        61,
+        61
+      ]
+    },
+    "load_gc_disabled": {
+      "t": 0.043,
+      "stage": "load_gc_disabled",
+      "rss_mb": 22.0,
+      "enabled": false
+    },
+    "freeze": {
+      "t": 2.797,
+      "stage": "freeze_after_load",
+      "rss_mb": 513.4,
+      "seconds": 1.1351890861988068e-05,
+      "objects": 667676,
+      "gc_enabled": true
+    },
+    "gc_rows_during_load": [],
+    "source_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+    "stderr": "Running scope as unit: run-rdfce450a19474e218f803592870bbfa3.scope\n",
+    "limits": "Decode control only, not P0/full32 acceptance."
+  },
+  "files": {
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01.stderr": "50031e889e852a7e6c74b411233cc11d51006d82bc237a3cef9f2646a2a165e5",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01.gc.jsonl": "62fce72e2e1d8b65bb1694c2161a76bac3f0d11f8cc044c1996435e4abda6d7c",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01.cgroup.json": "60006b3328a30e8d8ec7a4f30a7336655c0ebe3accace91ffc3c039f15ea3370",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01.obs.jsonl": "22ca10b16a7b681c0114d7ef0b679bcd940c9ba5b1f854ecc6b397c92b393922",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01.hb.log": "428ef9431c9789055e4c79a544ff430e72773e05ba02b89b1c3b2559a86cdfc0",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01.kernels.jsonl.gz": "7d7c482f0b590392b63a794a80ad1c73dfd1ee7c008f2f215c54e35214fccdce"
+  },
+  "parser_changed": false,
+  "predicates_changed": false,
+  "gpu_operations": 0,
+  "limits": "One P0pilot only; inspect complete output/useful steps before any acceptance or all-rank allocation."
+}

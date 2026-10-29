@@ -615,6 +615,11 @@ def test_prefill_stage_schedule_resets_component_ledger_for_pipeline_stage() -> 
         _execution_time_predictor=predictor,
     )
     cluster_scheduler = SimpleNamespace(
+        _config=SimpleNamespace(replica_config=SimpleNamespace(
+            model_config=SimpleNamespace(
+                get_model_architecture_profile=lambda: SimpleNamespace(profile_id="generic"),
+            ),
+        )),
         get_replica_stage_scheduler=Mock(return_value=stage_scheduler),
         get_replica=Mock(
             return_value=SimpleNamespace(

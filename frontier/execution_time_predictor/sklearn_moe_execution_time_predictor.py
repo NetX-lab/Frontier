@@ -3,7 +3,8 @@ from collections import OrderedDict
 from dataclasses import replace
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
-from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.families import DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY
+from frontier.attention.model_binding import bind_layer_attention
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
@@ -18,6 +19,7 @@ from frontier.entities.time_components import (
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
+from frontier.execution_time_predictor.sequence_parallel_moe import input_layernorm_tokens
 from frontier.logger import init_logger
 from frontier.model_architectures import ResidualAddPolicy
 from frontier.moe_routing_runtime import (
@@ -28,6 +30,10 @@ from frontier.moe_ep_workload import (
 )
 from frontier.operators.families import (
     get_comm_operator,
+)
+from frontier.operators.sequence_parallel_moe import (
+    source_tp_operator_names,
+    uses_sequence_parallel_moe,
 )
 
 if TYPE_CHECKING:
@@ -75,6 +81,39 @@ class SklearnMoEExecutionTimePredictor(
     # replica/layer/token shape is revisited across EP waves, while a
     # long-lived predictor must not retain an unbounded request history.
     _LAYER_WORKLOAD_CACHE_CAPACITY = 256
+
+    def _predict_dsv4_dummy_source_execution(
+        self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
+    ) -> dict:
+        """Query partial source-rank components without admitting V4 serving."""
+        from frontier.execution_time_predictor.deepseek_v4 import predict_source_execution
+
+        return predict_source_execution(
+            self, batch, layer_id, tp_rank, **source_context,
+        )
+
+    def _predict_dsv4_structural_execution(
+        self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
+    ) -> ExecutionTime:
+        """Price one V4 layer from the measured step table or explicit synthetic timing."""
+        if self._dsv4_step_costs is not None:
+            from frontier.execution_time_predictor.deepseek_v4 import predict_step_cost_execution
+
+            return predict_step_cost_execution(
+                self, batch, layer_id, tp_rank, **source_context,
+            )
+        if not self._enable_dummy_mode:
+            from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
+
+            raise DeepSeekV4CoverageError(
+                "V4 serving requires measured mHC, routing, phase and TP equivalence; "
+                "isolated shared/MARLIN/attention rows do not qualify a complete forward"
+            )
+        from frontier.execution_time_predictor.deepseek_v4 import predict_structural_execution
+
+        return predict_structural_execution(
+            self, batch, layer_id, tp_rank, **source_context,
+        )
 
 
     @staticmethod
@@ -133,6 +172,7 @@ class SklearnMoEExecutionTimePredictor(
         include_moe: Optional[bool] = None,
         lane_workload: Optional[EPLaneWorkload] = None,
         include_stage_owned: bool = True,
+        layer_id: int = 0,
     ) -> ExecutionTime:
         """Return fixed dummy ExecutionTime object with MoE-aware fields."""
         if type(include_attention) is not bool:
@@ -144,6 +184,12 @@ class SklearnMoEExecutionTimePredictor(
         if not include_ffn and include_moe is True:
             raise ValueError("include_moe cannot be true when include_ffn is false")
         base_time = self._dummy_execution_time
+        dsa_attention = None
+        if include_attention and (
+            bind_layer_attention(self._model_config, layer_id).family_id
+            == DSA_ATTENTION_FAMILY.family_id
+        ):
+            dsa_attention = self._predict_dsa_dummy_attention_time(layer_id)
         model_is_moe = bool(getattr(self._model_config, "is_moe", False))
         is_moe = include_ffn and (
             model_is_moe if include_moe is None else include_moe
@@ -165,10 +211,14 @@ class SklearnMoEExecutionTimePredictor(
         attn_tp_size = self._replica_config.attn_tensor_parallel_size
         moe_tp_size = self._replica_config.moe_tensor_parallel_size
         moe_ep_size = self._replica_config.moe_expert_parallel_size
+        sp_moe_layer = (
+            uses_sequence_parallel_moe(self._model_config, self._replica_config)
+            and self._model_config.is_moe_layer(layer_id)
+        )
 
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
         attn_tp_allreduce_time = (
-            base_time if include_attention and attn_tp_size > 1 else 0.0
+            base_time if include_attention and attn_tp_size > 1 and not sp_moe_layer else 0.0
         )
         # MoE TP all-reduce covers the shared pre-routing hidden-state domain.
         # A zero-routed physical lane still participates in that collective.
@@ -279,15 +329,26 @@ class SklearnMoEExecutionTimePredictor(
             mlp_operator_times = None
             moe_operator_times = None
 
+        if include_attention:
+            communication_operator_times.op_times.update({
+                name: base_time
+                for name in source_tp_operator_names(
+                    self._model_config, self._replica_config, layer_id,
+                )
+                if name != "logits_allgather" or batch.requests
+            })
+
         return ExecutionTime(
             num_layers_per_pipeline_stage=1,
             attention_rope_execution_time=(base_time if include_attention else 0.0),
             attention_kv_cache_save_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and dsa_attention is None else 0.0
             ),
-            attention_decode_execution_time=(base_time if include_attention else 0.0),
+            attention_decode_execution_time=(
+                base_time if include_attention and dsa_attention is None else 0.0
+            ),
             attention_prefill_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and dsa_attention is None else 0.0
             ),
             attention_layer_pre_proj_execution_time=(
                 base_time if include_attention else 0.0
@@ -336,6 +397,9 @@ class SklearnMoEExecutionTimePredictor(
             communication_operator_times=communication_operator_times,
             mlp_operator_times=mlp_operator_times,
             moe_operator_times=moe_operator_times,
+            attention_operator_times=(
+                dsa_attention.operator_times if dsa_attention is not None else None
+            ),
         )
 
     def __init__(
@@ -380,7 +444,9 @@ class SklearnMoEExecutionTimePredictor(
             )
         self._moe_gating_routing_runtime_path = (
             resolve_moe_gating_routing_runtime_path(
-                self._moe_routing_distribution_type
+                self._moe_routing_distribution_type,
+                replica_config.model_config.get_model_architecture_profile(),
+                getattr(replica_config, "moe_gating_routing_runtime_path", None),
             )
         )
 
@@ -419,14 +485,15 @@ class SklearnMoEExecutionTimePredictor(
         batch: Batch,
         layer_id: int,
         cluster_type: ClusterType,
-        cache: dict[tuple[str, str], AttentionTime] | None = None,
+        cache: dict[tuple[str, str, int], AttentionTime] | None = None,
     ) -> AttentionTime:
         """Reuse numerics only within one synchronous stage prediction.
 
         The stage owns one batch, cluster, predictor configuration and loaded
         artifact set. Phase, context, padding, state initialization, physical
         shape and TP/quantization therefore cannot change during this lifetime.
-        Only the normalized attention family/variant varies between layers.
+        The attention binding and input-norm width can vary between layers:
+        sequence-parallel MoE outputs leave later inputs locally sharded.
         Global layer identity and MoE routing remain outside this numeric cache.
         Direct layer calls do not retain numerical results across requests.
         """
@@ -435,7 +502,7 @@ class SklearnMoEExecutionTimePredictor(
                 batch=batch, layer_id=layer_id, cluster_type=cluster_type,
             )
         spec = self._model_config.get_layer_attention_spec(layer_id)
-        key = (spec.family_id, spec.variant_id)
+        key = (spec.family_id, spec.variant_id, input_layernorm_tokens(self, batch, layer_id))
         cached = cache.get(key)
         if cached is not None:
             self._attention_query_cache_hits += 1
@@ -473,7 +540,7 @@ class SklearnMoEExecutionTimePredictor(
         include_ffn: bool = True,
         include_attention: bool = True,
         layer_id: int = 0,
-        attention_query_cache: dict[tuple[str, str], AttentionTime] | None = None,
+        attention_query_cache: dict[tuple[str, str, int], AttentionTime] | None = None,
         include_stage_owned: bool = True,
         stage_num_layers: int = 1,
     ) -> "ExecutionTime":
@@ -547,9 +614,22 @@ class SklearnMoEExecutionTimePredictor(
                 pipeline_parallel_communication_time
             )
 
-        # For MoE models, attention still uses Tensor Parallelism (AllReduce).
+        sp_moe_layer = (
+            uses_sequence_parallel_moe(self._model_config, self._replica_config)
+            and self._model_config.is_moe_layer(layer_id)
+        )
+        if include_attention:
+            communication_operator_times.update({
+                name: self._predict_comm_operator(get_comm_operator(name), batch)
+                for name in source_tp_operator_names(
+                    self._model_config, self._replica_config, layer_id,
+                )
+            })
+
+        # Sequence-parallel MoE reduces the attention output to local SP rows.
         if (
             not include_attention
+            or sp_moe_layer
             or self._replica_config.attn_tensor_parallel_size == 1
         ):
             attn_tp_allreduce_time = 0
@@ -574,7 +654,7 @@ class SklearnMoEExecutionTimePredictor(
             communication_operator_times["moe_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time
             )
-        elif include_ffn and self._replica_config.attn_tensor_parallel_size > 1:
+        elif include_ffn and not sp_moe_layer and self._replica_config.attn_tensor_parallel_size > 1:
             moe_tp_allreduce_time = attn_tp_allreduce_time
             communication_operator_times["mlp_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time
@@ -622,7 +702,8 @@ class SklearnMoEExecutionTimePredictor(
             moe_gating_routing_topk_time = 0.0
             moe_shuffling_time = 0.0
             moe_grouped_gemm_time = 0.0
-            if self._model_config.supports_share_expert():
+            if (self._model_config.supports_share_expert()
+                    and self._get_model_architecture_profile().dense_layers_use_shared_expert_rows):
                 # Step2Mini/Step3 dense layers are the shared-expert FFN.  Map
                 # those profiled operations into the dense MLP component
                 # fields so the layer remains a FULL_STAGE_WORLD operation and
@@ -1228,7 +1309,7 @@ class SklearnMoEExecutionTimePredictor(
         """Predict layer-specific routing with a shared stage-local attention cache."""
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError("num_layers must be a positive int")
-        cache: dict[tuple[str, str], AttentionTime] = {}
+        cache: dict[tuple[str, str, int], AttentionTime] = {}
         layers = [
             self._predict_layer_with_kernel_gap(
                 self._predict_moe_layer_execution_time,
@@ -1250,7 +1331,7 @@ class SklearnMoEExecutionTimePredictor(
         include_moe: bool | None = None,
         include_ffn: bool = True,
         include_attention: bool = True,
-        _attention_query_cache: dict[tuple[str, str], AttentionTime] | None = None,
+        _attention_query_cache: dict[tuple[str, str, int], AttentionTime] | None = None,
         *,
         include_stage_owned: bool = True,
         stage_num_layers: int = 1,
@@ -1296,6 +1377,23 @@ class SklearnMoEExecutionTimePredictor(
                 f"layer_id={layer_id} is dense"
             )
 
+        if bind_layer_attention(self._model_config, layer_id).family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.deepseek_v4 import serving_context
+
+            if include_ffn:
+                if not self._enable_dummy_mode:
+                    from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
+
+                    raise DeepSeekV4CoverageError("V4 native hash/score routing and serving scope remain unqualified")
+                raise ValueError(
+                    "V4 serving FFN requires the source-qualified synthetic EP wave"
+                )
+            return self._predict_dsv4_structural_execution(
+                batch, layer_id, 0, include_attention=True, include_ffn=False,
+                include_stage_owned=include_stage_owned,
+                **serving_context(self, batch, layer_id),
+            )
+
         # Every routed public call crosses the typed-lane admission boundary
         # before mode-specific timing or lookup work.
         self._admit_routed_ep_aggregate(
@@ -1311,6 +1409,7 @@ class SklearnMoEExecutionTimePredictor(
                 include_ffn=include_ffn,
                 include_moe=include_moe_for_layer,
                 include_stage_owned=include_stage_owned,
+                layer_id=layer_id,
             )
             return dummy_execution_time
 

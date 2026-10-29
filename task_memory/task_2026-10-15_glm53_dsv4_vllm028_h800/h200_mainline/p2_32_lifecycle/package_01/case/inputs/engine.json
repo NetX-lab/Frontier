@@ -1,0 +1,37 @@
+{
+  "async_scheduling": true,
+  "block_size": null,
+  "data_parallel_size": 2,
+  "distributed_executor_backend": "mp",
+  "dtype": "bfloat16",
+  "enable_chunked_prefill": false,
+  "enable_expert_parallel": true,
+  "enable_prefix_caching": false,
+  "enforce_eager": false,
+  "gpu_memory_utilization": 0.85,
+  "kv_cache_dtype": "fp8",
+  "kv_transfer": {
+    "decode_side_channel_port": 5700,
+    "kv_buffer_device": "cuda",
+    "prefill_side_channel_port": 5600
+  },
+  "load_format": "dummy",
+  "max_model_len": 7168,
+  "max_num_batched_tokens": 8192,
+  "max_num_seqs": 128,
+  "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+  "moe_gating_routing_runtime_path": "balanced_topk",
+  "native_reference": {
+    "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+    "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+  },
+  "pipeline_parallel_size": 1,
+  "seed": 1234,
+  "shutdown_timeout": 30,
+  "skip_tokenizer_init": true,
+  "tensor_parallel_size": 8,
+  "vllm_version": "0.28.0",
+  "worker_extension_cls": "native_full_structure.FullModelInventory",
+  "scheduler_cls": "native_scheduler_lifecycle.LifecycleObservedScheduler"
+}

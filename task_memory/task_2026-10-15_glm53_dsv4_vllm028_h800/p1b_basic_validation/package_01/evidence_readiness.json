@@ -1,0 +1,29 @@
+{
+  "cost": {
+    "h800_measured_startup_or_timing": false,
+    "max_payload_gpu_hours": 64.0,
+    "minimum_schedule_gpu_hours": 7.573333333333333,
+    "payload_guard_seconds": 3600,
+    "scheduled_arrival_span_seconds": 426
+  },
+  "native_limits": [
+    "H800 grouped memory and actual allocation",
+    "native HMA P/D transfer",
+    "all32rank forwards/replays with conditional NONE semantics",
+    "ordered shutdown",
+    "complete 3x(16+128) client records",
+    "four calibration errors<=10percent"
+  ],
+  "primary_review": [
+    "Unsealed candidate",
+    "Existing checker V4/V2/schema/C26 binding"
+  ],
+  "reused_h200_evidence": "Source/bootstrap/native dtype and geometry functions only; no H800 memory/timing claim",
+  "runtime": "native2cf base + accepted C26 one-file bootstrap; binaries unchanged",
+  "runtime_qualified": false,
+  "source_instrumentation": "Existing NativeServingInventory; V1 and supported V2 actual calls",
+  "status": "UNSEALED_REVIEW_CANDIDATE",
+  "submitted": false,
+  "target": "H800/codesign64 nonpreemptible; P32+D32 TP8/DP4/EP32/PP1",
+  "purpose": "DIAGNOSTIC P1b basic_validation: 64-rank native P/D runtime evidence; client metrics enter no gate"
+}

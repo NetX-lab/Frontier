@@ -1,0 +1,36 @@
+{
+  "decision": "D-V4-P0-GROUP-SEGMENTS-ABORT-READONLY-RCA",
+  "recorded_utc": "2026-10-24T21:33:34.223331+00:00",
+  "authority": [
+    "D-V4-CONTINUE-FRESH-GATES",
+    "D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY"
+  ],
+  "evidence_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/diagnostic_failure.json",
+  "evidence_sha256": "0c440c674c38f696f94efae3166f97b1a51f9af1d58a3b55bd597095b83d4b0c",
+  "scope": "Read retained abort evidence, exact local runtime/source metadata and existing documented Python environments. Identify available interpreter/native symbols/core evidence and a bounded next diagnostic;do not choose an algorithm correction from absent metrics timings.",
+  "primary_ownership": [
+    "requirements.md",
+    "plan.md",
+    "progress.md",
+    "summary.md",
+    "group_metrics_tail02/primary/",
+    "group_metrics_tail02/test_report_2026-10-25_group_segments_abort.md"
+  ],
+  "sidecar_ownership": [
+    "group_metrics_tail02/abort_source_diagnosis.md"
+  ],
+  "sidecar_markdown_cap": 100,
+  "raw_trace_parse_invocations": 0,
+  "control_invocations": 0,
+  "affected_invocations": 0,
+  "GPU_invocations": 0,
+  "old_diagnostic_used": 1,
+  "old_diagnostic_ceiling": 1,
+  "forbidden": [
+    "Old control/diagnostic/audit drivers run or imported",
+    "New full-trace/control/rank execution without a separate decided allocation",
+    "Source/GC/loader/raw/package or host environment changes",
+    "Dependency installation,publication,platform/GPU operations"
+  ],
+  "done_condition": "Bound local metadata/source paths and report observed versus UNKNOWN causes, existing candidate runtimes and one recommended next diagnostic with its evidence limit."
+}

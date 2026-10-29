@@ -44,6 +44,12 @@ class QuantizationConfig:
     weight_block_size: Optional[Tuple[int, int]] = None
     ignored_layers: List[str] = field(default_factory=list)
     quantized_operations: Optional[List[str]] = None
+    scale_fmt: Optional[str] = field(default=None, metadata={"omit_if_none": True})
+
+    @property
+    def fmt(self) -> Optional[str]:
+        """The existing FP8 precision contract uses E4M3 values."""
+        return "e4m3" if self.quant_method == "fp8" else None
 
     @staticmethod
     def _normalize_quant_method(quant_method: Optional[str]) -> Optional[str]:
@@ -137,6 +143,8 @@ class QuantizationConfig:
             parts.append(
                 f"operations={','.join(sorted(self.quantized_operations))}"
             )
+        if self.scale_fmt is not None:
+            parts.append(f"scale_fmt={self.scale_fmt}")
 
         signature_str = "|".join(parts)
         return signature_str
@@ -163,6 +171,8 @@ class QuantizationConfig:
                 )
 
         quant_method = cls._normalize_quant_method(config_dict.get("quant_method"))
+        if quant_method == "fp8" and config_dict.get("fmt", "e4m3") != "e4m3":
+            raise ValueError("FP8 quantization requires fmt='e4m3'")
         activation_scheme = config_dict.get("activation_scheme")
         if quant_method == "quark":
             global_quant_config = config_dict.get("global_quant_config") or {}
@@ -185,16 +195,21 @@ class QuantizationConfig:
         return cls(
             quant_method=quant_method,
             activation_scheme=activation_scheme,
-            is_checkpoint_fp8_serialized=bool(config_dict.get("is_checkpoint_fp8_serialized", False)),
+            is_checkpoint_fp8_serialized=bool(
+                config_dict.get("is_checkpoint_fp8_serialized", quant_method == "fp8")
+            ),
             weight_block_size=weight_block_size,
             ignored_layers=list(
-                config_dict.get("ignored_layers", config_dict.get("exclude", []))
+                config_dict.get("ignored_layers")
+                or config_dict.get("modules_to_not_convert")
+                or config_dict.get("exclude", [])
             ),
             quantized_operations=(
                 list(quantized_operations)
                 if quantized_operations is not None
                 else None
             ),
+            scale_fmt=config_dict.get("scale_fmt"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -206,6 +221,7 @@ class QuantizationConfig:
             "weight_block_size": list(self.weight_block_size) if self.weight_block_size else None,
             "ignored_layers": self.ignored_layers,
             "quantized_operations": self.quantized_operations,
+            **({"scale_fmt": self.scale_fmt} if self.scale_fmt is not None else {}),
         }
 
 
@@ -276,7 +292,12 @@ def _infer_share_expert_dim_from_hf_config(
     if raw_value is None:
         raw_value = cfg.get("shared_expert_intermediate_size")
     if raw_value is None:
-        return None
+        count = cfg.get("n_shared_experts")
+        if count is None or count == 0:
+            return None
+        if type(count) is not int or count < 0:
+            raise ValueError("n_shared_experts must be a non-negative int")
+        raw_value = count * int(cfg["moe_intermediate_size"])
 
     share_expert_dim = int(raw_value)
     if share_expert_dim <= 0:
@@ -341,6 +362,57 @@ class BaseModelConfig(BaseFixedConfig):
     qk_head_dim: Optional[int] = None
     v_head_dim: Optional[int] = None
 
+    # Sparse index selection is separate from the MLA cache dimensions.
+    index_topk: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    index_n_heads: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    index_head_dim: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    index_topk_freq: Optional[int] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    index_topk_pattern: Optional[str] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    index_skip_topk_offset: Optional[int] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    indexer_rope_interleave: Optional[bool] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    tie_word_embeddings: Optional[bool] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    topk_method: Optional[str] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    n_group: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    topk_group: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+
+    # Compressed attention, routing, and mHC metadata from the native model.
+    scoring_func: Optional[str] = field(default=None, metadata={"omit_if_none": True})
+    norm_topk_prob: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
+    routed_scaling_factor: Optional[float] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    compress_ratios: Optional[Tuple[int, ...]] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    sliding_window: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    num_hash_layers: Optional[int] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    hc_mult: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    hc_sinkhorn_iters: Optional[int] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    hc_eps: Optional[float] = field(default=None, metadata={"omit_if_none": True})
+    o_groups: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    o_lora_rank: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    compress_rope_theta: Optional[float] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    swiglu_limit: Optional[float] = field(default=None, metadata={"omit_if_none": True})
+    expert_dtype: Optional[str] = field(default=None, metadata={"omit_if_none": True})
+
     # Qwen3.5 hybrid sequence-mixer topology.  These fields are interpreted
     # only by the explicitly registered qwen3_5_moe profile.
     layer_types: Optional[Tuple[str, ...]] = None
@@ -389,6 +461,8 @@ class BaseModelConfig(BaseFixedConfig):
             self.architectures = tuple(str(value) for value in self.architectures)
         if self.layer_types is not None:
             self.layer_types = tuple(str(value) for value in self.layer_types)
+        if self.compress_ratios is not None:
+            self.compress_ratios = tuple(self.compress_ratios)
         if self.full_attention_interval is not None:
             self.full_attention_interval = int(self.full_attention_interval)
         # Resolve lazily so legacy construction-time validation order remains
@@ -563,8 +637,7 @@ class BaseModelConfig(BaseFixedConfig):
 
     def get_qk_head_dim(self) -> int:
         """Return the full QK head dimension."""
-        family = self.get_attention_family()
-        if family.memory_layout is AttentionMemoryLayout.LATENT_MLA:
+        if self.use_mla:
             if self.qk_head_dim is None:
                 raise ValueError("MLA qk_head_dim is not configured")
             return self.qk_head_dim
@@ -668,6 +741,17 @@ class BaseModelConfig(BaseFixedConfig):
         with open(file_path, "r", encoding="utf-8") as f:
             cfg = json.load(f)
 
+        num_experts = cfg.get("num_experts", cfg.get("n_routed_experts", 0))
+        if type(num_experts) is not int or num_experts < 0:
+            raise ValueError(f"num_experts must be a non-negative int in {file_path}")
+        if (
+            "num_experts" in cfg
+            and "n_routed_experts" in cfg
+            and cfg["num_experts"] != cfg["n_routed_experts"]
+        ):
+            raise ValueError(f"Conflicting expert counts in {file_path}")
+        is_moe = num_experts > 1
+
         # Required fields (fail fast)
         required = [
             ("num_hidden_layers", int),
@@ -682,14 +766,12 @@ class BaseModelConfig(BaseFixedConfig):
         for k, _t in required:
             if k not in cfg:
                 # For MoE models, intermediate_size may be absent but moe_intermediate_size required instead.
-                if k == "intermediate_size" and ("num_experts" in cfg and isinstance(cfg["num_experts"], int) and cfg["num_experts"] > 1):
+                if k == "intermediate_size" and is_moe:
                     if "moe_intermediate_size" not in cfg:
                         raise ValueError(f"Missing required key 'moe_intermediate_size' in {file_path} for MoE model")
                     continue
                 raise ValueError(f"Missing required key '{k}' in {file_path}")
 
-        # Detect MoE
-        is_moe = int(cfg.get("num_experts", 0)) > 1
         model_type_lower = str(cfg.get("model_type", "")).lower()
 
         # Map common fields
@@ -734,7 +816,8 @@ class BaseModelConfig(BaseFixedConfig):
                 if "qwen" in model_type or "qwen" in arch0:
                     use_qkv_bias = True
 
-        rope_theta = cfg.get("rope_theta")
+        rope_parameters = cfg.get("rope_parameters") or {}
+        rope_theta = cfg.get("rope_theta", rope_parameters.get("rope_theta"))
         rope_scaling = cfg.get("rope_scaling")
         partial_rotary_factor = float(cfg.get("partial_rotary_factor", 1.0))
         if not 0.0 < partial_rotary_factor <= 1.0:
@@ -782,7 +865,10 @@ class BaseModelConfig(BaseFixedConfig):
             cfg.get("use_mla", False)
             or (
                 model_type_lower
-                in {"deepseek_v2", "deepseek_v3", "deepseek_mtp", "kimi_k2"}
+                in {
+                    "deepseek_v2", "deepseek_v3", "deepseek_mtp", "kimi_k2",
+                    "glm_moe_dsa",
+                }
                 and cfg.get("kv_lora_rank") is not None
             )
         )
@@ -826,6 +912,22 @@ class BaseModelConfig(BaseFixedConfig):
         quantization_config = QuantizationConfig.from_dict(quant_config_dict)
         fused_add_norm_capability = cls._resolve_fused_add_norm_capability(cfg)
 
+        moe_layers_enum = cfg.get("moe_layers_enum")
+        if is_moe and moe_layers_enum is None and "first_k_dense_replace" in cfg:
+            first_dense = cfg["first_k_dense_replace"]
+            frequency = cfg.get("moe_layer_freq", 1)
+            if type(first_dense) is not int or not 0 <= first_dense <= num_layers:
+                raise ValueError("first_k_dense_replace must be within the backbone")
+            if type(frequency) is not int or frequency <= 0:
+                raise ValueError("moe_layer_freq must be a positive int")
+            moe_layers = [
+                layer_id for layer_id in range(first_dense, num_layers)
+                if layer_id % frequency == 0
+            ]
+            if not moe_layers:
+                raise ValueError("MoE configuration selects no routed backbone layers")
+            moe_layers_enum = ",".join(map(str, moe_layers))
+
         base_kwargs = dict(
             num_layers=num_layers,
             num_q_heads=num_q_heads,
@@ -844,6 +946,7 @@ class BaseModelConfig(BaseFixedConfig):
             vocab_size=vocab_size,
             rope_theta=rope_theta,
             rope_scaling=rope_scaling,
+            is_neox_style=not cfg.get("rope_interleave", False),
             partial_rotary_factor=partial_rotary_factor,
             model_type=model_type_lower or None,
             model_architecture_profile=cfg.get("model_architecture_profile"),
@@ -861,6 +964,50 @@ class BaseModelConfig(BaseFixedConfig):
             qk_rope_head_dim=qk_rope_head_dim,
             qk_head_dim=qk_head_dim,
             v_head_dim=v_head_dim,
+            index_topk=cfg.get("index_topk"),
+            index_n_heads=cfg.get("index_n_heads"),
+            index_head_dim=cfg.get("index_head_dim"),
+            index_topk_freq=cfg.get("index_topk_freq"),
+            index_topk_pattern=cfg.get("index_topk_pattern"),
+            index_skip_topk_offset=cfg.get("index_skip_topk_offset"),
+            indexer_rope_interleave=cfg.get("indexer_rope_interleave"),
+            tie_word_embeddings=(
+                cfg.get("tie_word_embeddings")
+                if cfg.get("index_topk") is not None
+                else None
+            ),
+            topk_method=(
+                cfg.get("topk_method")
+                if cfg.get("index_topk") is not None
+                else None
+            ),
+            n_group=cfg.get("n_group") if cfg.get("index_topk") is not None else None,
+            topk_group=cfg.get("topk_group") if cfg.get("index_topk") is not None else None,
+            scoring_func=(
+                cfg.get("scoring_func") if cfg.get("compress_ratios") is not None or cfg.get("index_topk") is not None else None
+            ),
+            norm_topk_prob=(
+                cfg.get("norm_topk_prob") if cfg.get("compress_ratios") is not None or cfg.get("index_topk") is not None else None
+            ),
+            routed_scaling_factor=(
+                cfg.get("routed_scaling_factor")
+                if cfg.get("compress_ratios") is not None or cfg.get("index_topk") is not None else None
+            ),
+            compress_ratios=cfg.get("compress_ratios"),
+            sliding_window=(
+                cfg.get("sliding_window")
+                if cfg.get("compress_ratios") is not None
+                else None
+            ),
+            num_hash_layers=cfg.get("num_hash_layers"),
+            hc_mult=cfg.get("hc_mult"),
+            hc_sinkhorn_iters=cfg.get("hc_sinkhorn_iters"),
+            hc_eps=cfg.get("hc_eps"),
+            o_groups=cfg.get("o_groups"),
+            o_lora_rank=cfg.get("o_lora_rank"),
+            compress_rope_theta=cfg.get("compress_rope_theta"),
+            swiglu_limit=cfg.get("swiglu_limit"),
+            expert_dtype=cfg.get("expert_dtype"),
             layer_types=layer_types,
             full_attention_interval=optional_int("full_attention_interval"),
             linear_conv_kernel_dim=optional_int("linear_conv_kernel_dim"),
@@ -876,11 +1023,10 @@ class BaseModelConfig(BaseFixedConfig):
             fused_add_norm_capability=fused_add_norm_capability,
             dense_mlp_hidden_dim=dense_mlp_hidden_dim,
             routed_mlp_hidden_dim=routed_mlp_hidden_dim,
-            moe_layers_enum=cfg.get("moe_layers_enum"),
+            moe_layers_enum=moe_layers_enum,
         )
 
         if is_moe:
-            num_experts = int(cfg["num_experts"])  # already validated
             num_experts_per_tok = int(cfg.get("num_experts_per_tok", 0))
             return MoEModelConfig(
                 **base_kwargs,

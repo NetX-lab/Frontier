@@ -1,0 +1,65 @@
+{
+  "status": "HASH_IDENTICAL_DOWNLOAD",
+  "observed_at_utc": "2026-10-23T18:11:53.286355+00:00",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/native_stream_probe/5f7d0950_h800_20261024_01",
+  "local_root": "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_results_sxh2vn9h/artifacts",
+  "temporary_analysis_copy": true,
+  "file_count": 5,
+  "bytes": 228175,
+  "commands": [
+    [
+      "ssh",
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "ConnectTimeout=10",
+      "shai-ycfeng",
+      "sudo -n timeout 60s python3 -"
+    ],
+    [
+      "ssh",
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "ConnectTimeout=10",
+      "shai-ycfeng",
+      "sudo -n tar -C /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/native_stream_probe/5f7d0950_h800_20261024_01 -cf - ."
+    ],
+    [
+      "tar",
+      "--no-same-owner",
+      "--no-same-permissions",
+      "-xf",
+      "-",
+      "-C",
+      "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_results_sxh2vn9h/artifacts"
+    ]
+  ],
+  "files": [
+    {
+      "path": "native_profiler.log",
+      "bytes": 194,
+      "sha256": "a47c77ff4e0ab9a3c31cdd40064f0f9dd34278e1eab482bc4143c4c16ce9479d"
+    },
+    {
+      "path": "native_traces/native_stream_probe.1792778788224797738.pt.trace.json.gz",
+      "bytes": 4259,
+      "sha256": "bf9be1a84dfa25c5d60c92715476fb7b9e8b7dc082feb46514a0f79e81efad18"
+    },
+    {
+      "path": "native_traces/native_stream_probe.1792778788371600646.pt.trace.json.gz",
+      "bytes": 3464,
+      "sha256": "b1648316902c3d12a1d91e76916711a8ad0c8ff201e983f94a5c0a66aea3c074"
+    },
+    {
+      "path": "probe_report.json",
+      "bytes": 91276,
+      "sha256": "f17a85b80a8c63c277f231208f7d218645ffb01326b9cd8b8bfa340e8de3812b"
+    },
+    {
+      "path": "proc_maps.txt",
+      "bytes": 128982,
+      "sha256": "23203705e961165f9229a2785ec00a305d144be00fcc0262ab083294861b947e"
+    }
+  ]
+}

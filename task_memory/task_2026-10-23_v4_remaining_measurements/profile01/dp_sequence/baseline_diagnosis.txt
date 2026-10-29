@@ -1,0 +1,27 @@
+# W128-DP-SEQUENCE-ROOT-FAILURE diagnosis
+
+## Result
+
+Pre-existing V2 fixture mismatch, not an observed optional-counter regression. Baseline44f2ddb and frozen candidate178c1123 each run exactly the same single selector with root's identical environment, immutable C26 inputs and real legacy snapshot: 0PASS/1FAIL/0ERROR/0SKIP. Each emits32 identical `v2_installation` KeyErrors and rejects `fixture-host0/0` with the exact same incomplete-inventory message. All32 emitted native counter dictionaries and hook lists are identical between versions. Original root five-suite result remains214PASS/1FAIL/0SKIP; this diagnosis does not relabel that gate as passed.
+
+## Cause and proposed scope
+
+`tests/unit/test_native_groundtruth_check.py:557–559` calls installed Worker.load_model. The actual collector load wrapper calls install_v2; candidate `native_full_structure.py:844–845` indexes `sys.modules['vllm.v1.worker.gpu.dp_utils']`, already present in baseline's equivalent installation code. The fixture registers only runner/cudagraph modules at `test_native_groundtruth_check.py:546–550`, so the dependency is absent. Real pinned runner source imports dp_utils at `vllm/v1/worker/gpu/model_runner.py:97`; the fake runner bypasses this import and the actual classifier/DP-dispatch path (`test_native_groundtruth_check.py:485–487`). The exception is softened into observation_errors. The external checker rejects any nonempty errors at `check_groundtruth_run.py:572–579`, and the test fails at608.
+
+Do not fix the collector by silently skipping dependency installation or filtering observation_errors. Adding just a dp_utils carrier is also incomplete: install_v2_dispatch next needs runner-module get_uniform_decode_token_count/dispatch_cg_and_sync_dp, which this fixture does not expose. Fully installing those existing hooks yields14 hooks; the old external checker expects exactly11. Existing frozen R3 already supplies the required3 dispatch hooks/source/operand checks (`check_groundtruth_run_successor_r3.py:238–240`); no frozen checker bytes should change.
+
+Recommended separate allocation: only `tests/unit/test_native_groundtruth_check.py`, ceiling60 gross lines. Update its V2 stand-in to expose/invoke source-backed classifier and DP dispatch with an explicit CPU group, and select the existing frozen R3 successor for this V2 fixture's source/operand/hook checks. Reuse the existing local oracle/DPGroup mechanism rather than add a second interface. This proposal is not implemented or verified. Until separately authorized and verified, retain the failure as an explicit pre-existing fixture limitation. No production/calibration/callback change is needed to diagnose the current failure.
+
+## Evidence and preservation
+
+- `candidate.json`, `baseline.json`: exact commands/environment, counts, input hashes and logs/XML hashes. The same original root TMPDIR is retained; raw new probe logs are in this directory.
+- `diagnosis.json`: all5 source hashes per revision, canonical workload hashes, real C26/legacy hashes, all32-row equality and clean worktree checks.
+- C26 overlay SHA256 `d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee`; all3 C26 files resolve to the identical immutable profile02 package on both runs. Legacy SHA256 `c615832529ecaf54805f5d399ea084414f868b477ae3e45c196a4ec1272d2b7b`.
+- Failing test file is byte-identical: SHA256 `ac993d053a5ad77ee464e29921b395afc19623f85d317c36a7012dace3805166`.
+- Baseline collector SHA256 `e6a9025c9af92237cd0d25dd937ecd00177a36a0cddf512bb9aa5d81176378aa`; candidate collector SHA256 `a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c`.
+- Frozen candidate records manifest SHA256 remains `259ecb0c4a73106f28c706d9f8cb58a72a53f8400dd0288ee46ed9794d697196`; every indexed record still matches.
+- Candidate HEAD `178c1123ee736fe040d8f1a12a443e8f18ce3a76`; new detached baseline HEAD `44f2ddb9736f0abaaf6a52a5fb768519996b7da3`. Both tracked worktrees clean. Baseline retained at `/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-baseline`, with only a new ignored read-only input alias to root's immutable C26 target. No worktree removed, source/test/record edit, stage/commit/reset, GPU/network/StepMind/cloud/SSH or delegation.
+
+## Phase checkpoint
+
+Scope is complete: ranked hypotheses were recorded before probes; root's feedback loop was tightened to one case; candidate and baseline reproduced the same failure with identical inputs; diagnosis and bounded proposal are retained. No side issue was repaired and no behavior-changing probe was run. Next action belongs to root: record the baseline limitation or authorize the fixture-only correction. Owner stops here.

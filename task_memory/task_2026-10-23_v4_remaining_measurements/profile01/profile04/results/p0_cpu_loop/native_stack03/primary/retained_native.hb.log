@@ -1,0 +1,125 @@
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/usr/lib/python3.10/gzip.py", line 496 in read
+  File "/usr/lib/python3.10/_compression.py", line 118 in readall
+  File "/usr/lib/python3.10/gzip.py", line 301 in read
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/usr/lib/python3.10/json/decoder.py", line 353 in raw_decode
+  File "/usr/lib/python3.10/json/decoder.py", line 337 in decode
+  File "/usr/lib/python3.10/json/__init__.py", line 346 in loads
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/usr/lib/python3.10/json/decoder.py", line 353 in raw_decode
+  File "/usr/lib/python3.10/json/decoder.py", line 337 in decode
+  File "/usr/lib/python3.10/json/__init__.py", line 346 in loads
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/usr/lib/python3.10/json/decoder.py", line 353 in raw_decode
+  File "/usr/lib/python3.10/json/decoder.py", line 337 in decode
+  File "/usr/lib/python3.10/json/__init__.py", line 346 in loads
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/usr/lib/python3.10/json/decoder.py", line 353 in raw_decode
+  File "/usr/lib/python3.10/json/decoder.py", line 337 in decode
+  File "/usr/lib/python3.10/json/__init__.py", line 346 in loads
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/usr/lib/python3.10/json/decoder.py", line 353 in raw_decode
+  File "/usr/lib/python3.10/json/decoder.py", line 337 in decode
+  File "/usr/lib/python3.10/json/__init__.py", line 346 in loads
+  File "/usr/lib/python3.10/json/__init__.py", line 293 in load
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py", line 81 in load_trace
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 56 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/usr/lib/python3.10/re.py", line 290 in _compile
+  File "/usr/lib/python3.10/re.py", line 200 in search
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 72 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 86 in <listcomp>
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 86 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 119 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/usr/lib/python3.10/json/encoder.py", line 257 in iterencode
+  File "/usr/lib/python3.10/json/encoder.py", line 202 in encode
+  File "/usr/lib/python3.10/json/__init__.py", line 231 in dumps
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 119 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>
+Timeout (0:00:05)!
+Thread 0x00007f8e75ad2280 (most recent call first):
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 13 in batched_metrics
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 3 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 108 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py", line 112 in <module>

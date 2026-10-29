@@ -1,0 +1,49 @@
+--- /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py
++++ profile01/graph_probe/probe_diagnostic.py
+@@ -69,6 +69,19 @@
+ _OWNED_CALLBACKS = []  # Native subscriptions must outlive every registered callback pointer.
+ 
+ 
++class CuptiResourceHandle(ctypes.Union):
++    """CUpti_ResourceData resourceHandle union from CUPTI13.0.85."""
++
++    _fields_ = [("stream", ctypes.c_void_p)]
++
++
++class CuptiResourceData(ctypes.Structure):
++    """Resource callback envelope; graph payload is resourceDescriptor."""
++
++    _fields_ = [("context", ctypes.c_void_p), ("resourceHandle", CuptiResourceHandle),
++                ("resourceDescriptor", ctypes.c_void_p)]
++
++
+ class CuptiGraphData(ctypes.Structure):
+     """CUpti_GraphData from the locked CUDA13.0 cupti_callbacks.h."""
+ 
+@@ -84,7 +97,13 @@
+ def callback_abi():
+     return {"size": ctypes.sizeof(CuptiGraphData), "alignment": ctypes.alignment(CuptiGraphData),
+             "offsets": {name: getattr(CuptiGraphData, name).offset for name, _ in CuptiGraphData._fields_},
+-            "resource_domain": RESOURCE, "node_cloned": NODE_CLONED, "exec_created": EXEC_CREATED}
++            "resource_domain": RESOURCE, "node_cloned": NODE_CLONED, "exec_created": EXEC_CREATED,
++            "resource_data": {"size": ctypes.sizeof(CuptiResourceData),
++                "alignment": ctypes.alignment(CuptiResourceData), "offsets": {
++                    name: getattr(CuptiResourceData, name).offset for name, _ in CuptiResourceData._fields_}},
++            "resource_handle": {"size": ctypes.sizeof(CuptiResourceHandle),
++                "alignment": ctypes.alignment(CuptiResourceHandle), "offsets": {
++                    name: getattr(CuptiResourceHandle, name).offset for name, _ in CuptiResourceHandle._fields_}}}
+ 
+ 
+ def checked(result):
+@@ -186,7 +205,10 @@
+         try:
+             if domain != RESOURCE or callback_id not in (NODE_CLONED, EXEC_CREATED) or not pointer:
+                 raise ValueError("Unexpected or empty graph resource callback")
+-            native = ctypes.cast(pointer, ctypes.POINTER(CuptiGraphData)).contents
++            resource = ctypes.cast(pointer, ctypes.POINTER(CuptiResourceData)).contents
++            if not resource.resourceDescriptor:
++                raise ValueError("Graph resource callback has no descriptor")
++            native = ctypes.cast(resource.resourceDescriptor, ctypes.POINTER(CuptiGraphData)).contents
+             row = {"callback_id": callback_id}
+             if callback_id == NODE_CLONED:
+                 row.update(node=int(native.node or 0), original_node=int(native.originalNode or 0))

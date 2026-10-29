@@ -1,0 +1,44 @@
+{
+  "status": "PASS_EXECUTION_DATA_AUDIT_PENDING",
+  "job": "exp-1024-020317-012085",
+  "observed_at_utc": "2026-10-23T18:14:25.971107+00:00",
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "node": "gpu-h800-0240.host.platform.shaipower.com",
+  "gpu_uuid": "GPU-c459bcfe-2bea-e452-274c-beb947928449",
+  "torch_gpu_uuid": "c459bcfe-2bea-e452-274c-beb947928449",
+  "initial_check_failure": {
+    "check": "raw UUID string equality",
+    "error": "AssertionError",
+    "reason": "nvidia-smi prefixes GPU- while Torch returns the bare canonical UUID",
+    "corrected_check": "uuid.UUID(nvidia_smi_uuid[4:]) == uuid.UUID(torch_gpu_uuid)",
+    "corrected_result": "PASS"
+  },
+  "container_seconds": 23.0,
+  "container_exit_code": 0,
+  "restart_count": 0,
+  "sealed_inputs_unchanged": true,
+  "output_count": 5,
+  "output_bytes": 228175,
+  "reported_eager_status": "PASS",
+  "reported_graph_status": "UNKNOWN",
+  "data_acceptance": "PENDING_INDEPENDENT_AUDIT",
+  "references": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/platform_terminal.json",
+      "sha256": "a16430cac7eadbcf9744c029076dcf3338f8cc74b7e5d28416c46a90afee807b"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/download.json",
+      "sha256": "344c960701797601e7325e80d19195703bee1b6459c7b23a376080317c95cf36"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01/launcher_result.json",
+      "sha256": "a8d96a476e8b0cabdc869e6bd4fb642bb753b1313b81c2cb90fb9f9ba8e33240"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_terminal_z176kwmi/exp-1024-020317-012085-cfcd2084.log",
+      "sha256": "b15c4202280d8b2f1cd134ccd6266e518fc01d782ba63460f2a02e71b36bbb92"
+    }
+  ],
+  "qualification": "Execution and identity only; reported probe statuses have not yet been independently accepted."
+}

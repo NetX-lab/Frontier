@@ -1,0 +1,33 @@
+{
+  "status": "PASS_EXPLICIT_EXISTING_SOURCE_BINDING",
+  "source_revision": "bb50186e417f99080d71948b38f6006e954a8c41",
+  "base_revision": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+  "inherited_binding_path": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/matrix_binding.json",
+  "inherited_binding_sha256": "39e2435a25ef718dadafa0a8f0a67c4b91fe559f409aa929e5014338c901a57b",
+  "inherited_source_revision": "5f7d0950b78276a77a66b7330cf0041a9f380f12",
+  "comparison_source": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "identical_cases": 77,
+  "new_capture": false,
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "domain_git_tree_sha256": {
+    "4a1b53e6033134c59b4561306eb2d586bd3d8300": "e9be15c60dffc0083b887460ddfbad61718f40f16246be201aa22571f6d12d62",
+    "5f7d0950b78276a77a66b7330cf0041a9f380f12": "e9be15c60dffc0083b887460ddfbad61718f40f16246be201aa22571f6d12d62",
+    "44f2ddb9736f0abaaf6a52a5fb768519996b7da3": "e9be15c60dffc0083b887460ddfbad61718f40f16246be201aa22571f6d12d62"
+  },
+  "current_domains_equal_base": true,
+  "changed_files": [
+    "tests/comparison/calibration/native_full_structure.py",
+    "tests/comparison/calibration/native_serve_profile.py",
+    "tests/unit/test_native_v2_serving_inventory.py",
+    "tests/unit/test_native_serve_profile.py"
+  ],
+  "source_set_sha256": "52c2596a8705b2002ad3a2de45360de45592be5fe806fde992f5d4b735ae838a"
+}

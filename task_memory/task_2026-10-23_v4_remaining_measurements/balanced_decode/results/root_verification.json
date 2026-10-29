@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "modification_history": [{"date": "2026-10-23", "change": "Bound independent root raw/table and full-trace reruns plus final integrity checks."}],
+  "task_id": "W128-BALANCED-DECODE-ROOT-ACCEPTANCE",
+  "run_directory": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_root_audit_nss5y_ka",
+  "receipt_sha256": "a701548e83efd496e578f4f90849c294d058d979da530f34b86cfb3a658962ae",
+  "script": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_balanced_decode_data_audit.py",
+  "script_sha256": "14ca5c195f07866856ff275631fd715fc147133bde8082a4935db2cfdd3cf39a",
+  "script_archive": "command.md",
+  "raw_nonclock_receipt_equality": true,
+  "trace_nonclock_receipt_equality": true,
+  "raw": {
+    "returncode": 0,
+    "python": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "version": "3.10.6",
+    "start_utc": "2026-10-23T14:29:42.208405+00:00",
+    "end_utc": "2026-10-23T14:30:00.122147+00:00",
+    "analysis_seconds": 17.568183457944542,
+    "peak_rss_kib": 931096
+  },
+  "trace": {
+    "returncode": 0,
+    "python": "/usr/bin/python3",
+    "version": "3.10.6",
+    "start_utc": "2026-10-23T14:29:42.210081+00:00",
+    "end_utc": "2026-10-23T14:30:31.767524+00:00",
+    "analysis_seconds": 47.70049584284425,
+    "peak_rss_kib": 6060200
+  },
+  "limits_per_analysis": {"memory_max": "30G", "timeout_seconds": 60},
+  "final_check": {
+    "observed_at_utc": "2026-10-23T14:35:05.881133+00:00",
+    "raw_records": 98305,
+    "duplicate_fields": 0,
+    "output_hashes_unchanged": 8,
+    "audit_sha256": "447636011af539c2b2e773d9929ca7ea75b5558ab26ac6634aebe39ff7d52c92",
+    "run_check_sha256": "fe6122aa8ff8c31113ce5d64ea6047cff3570f54515d8804443e73b116866ec6"
+  }
+}

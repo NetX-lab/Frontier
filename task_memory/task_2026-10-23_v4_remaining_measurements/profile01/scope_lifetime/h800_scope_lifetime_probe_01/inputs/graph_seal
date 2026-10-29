@@ -1,0 +1,116 @@
+{
+  "status": "SEALED_READY_GRAPH_PAYLOAD_PROBE",
+  "sealed_at_utc": "2026-10-24T05:43:50.534353+00:00",
+  "authorization": "D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY",
+  "gpu_authority": "D-V4-H800-RJOB-AUTHORITY",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01",
+  "manifest_sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146",
+  "source_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+  "packaging_revision": "6f84a88bd17ef3cdd1626a6beb193275dab5df62",
+  "merged_revision": "4add627d7afe001cd2b809598aec38cea9c54c7b",
+  "source_writer_stopped": true,
+  "input_count": 8,
+  "independent_reviews": {
+    "source_standards": "NO_FINDINGS",
+    "source_spec": "NO_FINDINGS",
+    "package_standards": "NO_FINDINGS",
+    "package_spec": "NO_FINDINGS"
+  },
+  "checks": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/sdk/stdout.log",
+      "sha256": "cee343dd82b65c6edd15ee15d9a59d4f2b4231fcecbabf71cdcde88d2729dc81"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/sdk/stderr.log",
+      "sha256": "50439e351e3035d9c41d64cbe0bcaf5f93cbb0c93d74fba2c4df4dd845ad1e5f"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/sdk/receipt.json",
+      "sha256": "6bdbdf44d663618380ee0b787da6a4ecb6b46bc30fd47a527569d318030ae98d"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/sdk/execution.json",
+      "sha256": "f117250cbe633407796b86453f203bd10fc585c6d01d49bf48cf5f21360b45fc"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/image/input.py",
+      "sha256": "42dd39164a23577e5b600d1c573ca4263f61330634dc82a6b45bb5198d305619"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/image/stdout.log",
+      "sha256": "05bfe892372d1eac2b7ed88c0f039eb9d21ed2443578cdb922eccf52f482e462"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/image/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/image/launcher_dry_run.json",
+      "sha256": "1f9429e595208531fa2f6f52aa31d100099d9f4b91c0c0cbf55089a507d04e39"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/image/receipt.json",
+      "sha256": "da9106453b0d9b291cddb6af6fe17f004a3c6ebed4069f00df1b8b905671f32c"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/image/execution.json",
+      "sha256": "b31363893dea2b1dd9069467ab58c00c000546a9ada510b623bfe5601356388a"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/image/diagnostics/stages.jsonl",
+      "sha256": "73c6efeea176584bb28f16ffaf8db7fafadae267e584b77177de44af1214c117"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/image/diagnostics/fault.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/image/probe/probe_report.json",
+      "sha256": "00e17cb6c58b45cdfb3f93c4947de8ad750c4ae08bd5b4ec870b258f9a529528"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/prelaunch/quota_source.py",
+      "sha256": "19746066439f539ff889dd154cac6f32bffd5467a63f892e8dd87f3ca784f275"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/prelaunch/quota.json",
+      "sha256": "f6334635215bef56dce092b8cc95ad41dd599721ac06345be5e638b8e5df1095"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/prelaunch/receipt.json",
+      "sha256": "efeb36588738770b925468f9bb741f6629795cbed0f9d48b3907d522999ba68e"
+    }
+  ],
+  "source_cpu_acceptance": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/primary_acceptance.json",
+    "sha256": "2a282a4077cefb2c44166118a56982352bf8007442a604cd2ffe96a66b65560f"
+  },
+  "resources": {
+    "gpu": 1,
+    "replica": 1,
+    "cpu": 16,
+    "mem_gb": 64,
+    "preemptible": false,
+    "positive_tags": [
+      "H800"
+    ],
+    "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "mounts": [
+      "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "custom_resources": [
+      "mellanox.com/mlnx_rdma:1",
+      "rdma/mlnx_shared:8"
+    ],
+    "restart_on": null
+  },
+  "timeout_seconds": 600,
+  "cloud_run_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/graph_payload_probe/1aa1e4a5_h800_20261024_01",
+  "prelaunch_receipt": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/package_checks/prelaunch/receipt.json",
+  "prelaunch_sha256": "efeb36588738770b925468f9bb741f6629795cbed0f9d48b3907d522999ba68e",
+  "attempt_ceiling": 1,
+  "submitted": false,
+  "gpu_validated": false,
+  "qualification": "Targeted graph identity diagnostic only; no native/reference/operator/serving cost qualification."
+}

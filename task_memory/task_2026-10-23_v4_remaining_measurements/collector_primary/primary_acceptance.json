@@ -1,0 +1,59 @@
+{
+  "status": "ACCEPTED_CPU_COLLECTOR_COMPONENT",
+  "source_commit": "f8621a8258ffa445abfb51f5ea73258ad271494e",
+  "merged_commit": "64f3c9509b09279f321d237e3a95cbe904c6dd22",
+  "source_files": {
+    "tests/comparison/calibration/native_serve_profile.py": "8f67a367650b40b67f7df82e337adefdc4784a4f3c0f75adc9aa36c4ab159ee1",
+    "tests/comparison/calibration/native_pd_worker.py": "8bd540bcc3aea3f064fc0772c7ba6e3a586c8075d5f5c5bea38d30bf6769a199",
+    "tests/comparison/calibration/pd_replay.py": "673d23d1d725bc1636da066a8ac1a56966dce74aee047c7b974e15e7d9d17465",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901",
+    "tests/unit/test_native_serve_profile.py": "aa8239f0eda0ca7ab4f966e5385622f843320953f36797986be0fd72c43805a2",
+    "tests/comparison/calibration/native_full_structure.py": "e6a9025c9af92237cd0d25dd937ecd00177a36a0cddf512bb9aa5d81176378aa",
+    "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py": "67f3192302b6d12c0b8296581ee8b2788a772bce80b158ad45bc349eacb32a7b"
+  },
+  "scope": {
+    "files": 5,
+    "changed_lines": 880,
+    "limit": 987,
+    "core_files": 0
+  },
+  "original_review_findings_closed": 5,
+  "independent_reviews": {
+    "spec": "No findings; original issues closed",
+    "standards": "No findings; original issues closed"
+  },
+  "merged_suite_counts": {
+    "test_native_serve_profile": 28,
+    "test_native_serving_inventory": 28,
+    "test_native_v2_serving_inventory": 45,
+    "test_native_reader_binding": 135,
+    "test_native_pd_worker": 16,
+    "test_dp_placement_harness": 75,
+    "test_calibration_pd_harness": 68,
+    "test_native_pd_manifest": 14
+  },
+  "joint_isolated_input_scopes": 94,
+  "default_matrix_identical": 77,
+  "new_matrix_capture": false,
+  "driver_implemented": false,
+  "new_gpu_runs": 0,
+  "gpu_qualification": false,
+  "serving_admission": false,
+  "profile_artifact_status": "UNVERIFIED",
+  "unknowns": [
+    "GPU stream handle-to-trace ID mapping",
+    "actual per-kernel GPU PDL",
+    "compile/breakable annotation and event survival",
+    "captured-segment per-replay ownership",
+    "GPU CUPTI restart"
+  ],
+  "evidence": {
+    "/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/receipt.json": "de8b1fd596d7ee6b951c872fc790fba5eb16f979f56f53c6bc2330cca8a49d08",
+    "/data/ycfeng/tmp/glm53_dsv4/root_input_collector_64f3c950.json": "09db5595a8702537cfa6e6a061fc1d4a1eddcea95741b7d62569e8b69a3a563f",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/collector_primary/source_verification.json": "44d83394f0ea74325a344fcfb57c8ee6d9295103b9ff70cb8d67d9bd45729b37",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md": "b4a1e97f3c6a2a7adf684b497bf766d8e3113ad787f43491f6a500ea4a253e46",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json": "d9d64138e70bce155404cb1cb7274bb099dd5ee26c39fbe0a7e69cae22e91dd8",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/collector/repair_receipt.json": "efa0113d861651fcce326bbb7f77ac4e243a61767aa026e1b151f442d0d90b73",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/primary_acceptance.json": "521c0d8762d9eee4c2c5e686253990cd392389ab3e9ad9643043cda524d0861a"
+  }
+}

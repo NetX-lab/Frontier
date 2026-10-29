@@ -1,0 +1,227 @@
+{
+  "task_id": "W128-P0-AUDIT-CPU-LOOP",
+  "allocation": "D-V4-P0-AUDIT-CPU-LOOP (2026-10-24)",
+  "purpose": "Locate the slow stage of the frozen full-trace auditor on one retained P0 rank0 input before any correction is selected.",
+  "scope": {
+    "algorithm_changes": false,
+    "auditor_or_reader_edits": false,
+    "raw_or_package_edits": false,
+    "timeout_or_memory_raise": false,
+    "gpu_platform_network_ssh_auth_docker_git_actions": false,
+    "full_input_p0_executions": 1,
+    "full_input_p0_retries": 0
+  },
+  "environment": {
+    "python": "/usr/bin/python3 3.10.6",
+    "cpus": 64,
+    "stdlib_only": true,
+    "scratch_root": "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024"
+  },
+  "input": {
+    "root": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04",
+    "trace_relative": "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz",
+    "trace_sha256": "53af6964786dc3c2d53d797e6d2ce1ada6c3151138f01333235690e523124e12",
+    "trace_gz_bytes": 142288791,
+    "trace_plain_bytes": 2221133654,
+    "node": "gpu-h800-0030.host.platform.shaipower.com",
+    "role_lane_rank": ["prefill", 0, 0],
+    "profile_bytes": 39194409,
+    "retained_steps": 512
+  },
+  "frozen": {
+    "auditor": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+      "sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8"
+    },
+    "reader": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py",
+      "sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52"
+    },
+    "unchanged_asserted_in_process": true
+  },
+  "instrument": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+    "sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4",
+    "new_lines": 128,
+    "line_limit": 180,
+    "boundary_observations": 19,
+    "observation_points_total": 21,
+    "statement_boundaries": [
+      "enter", "metadata_loaded", "header_start", "header_done", "load_start", "load_done",
+      "events_ready", "annotations_named", "event_pass_done", "correlation_done",
+      "kernel_pass_start", "kernel_pass_done", "per_stream_done", "sync_done",
+      "steps_start", "steps_done", "result_built", "output_written", "done", "process_end"
+    ],
+    "loop_samplers": ["event pass every 500000 event indices", "kernel/JSONL loop every 25000 trace indices"],
+    "stage_observations_include_process_end": true,
+    "extra_profiling": "sparse faulthandler.dump_traceback_later(5s, repeat) into a separate file"
+  },
+  "control_green": {
+    "input_relative": "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842735368033988.pt.trace.json.gz",
+    "input_sha256": "f74ee4b7d9ed36e91c26bd9042fc04152fc4fda5293cc8f8c1cca535b90b2f1e",
+    "command": "timeout 120s /usr/bin/env PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 stage_audit.py run <trace> control_decode_dp1_rank0.json control_decode_dp1.obs.jsonl control_decode_dp1.hb.log",
+    "exit": 0,
+    "seconds": 6.69,
+    "retained_reference": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.json",
+    "retained_reference_sha256": "fd5f94dc2aa14ded6e9694237b966148163bb79a84e52d2778a90b316ddb380d",
+    "payload_equal_excluding_timings_and_paths": true,
+    "kernel_rows_equal": true,
+    "rows": [142567, 142567],
+    "kernel_total_equal": true,
+    "useful_steps": [61, 61]
+  },
+  "observed_run": {
+    "command": "sudo -n systemd-run --scope -p MemoryMax=30G timeout 60s /usr/bin/env PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 /data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py run torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz /data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/p0_prefill_dp0_rank0.json /data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/p0_prefill_dp0_rank0.obs.jsonl /data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/p0_prefill_dp0_rank0.hb.log",
+    "memory_limit_argument_bytes": 32212254720,
+    "timeout_seconds": 60,
+    "exit": 124,
+    "wall_seconds": 60.46,
+    "user_seconds": 54.77,
+    "sys_seconds": 5.67,
+    "last_observed_rss_mb": 6260.7,
+    "stages_seconds": {
+      "enter": 0.02,
+      "metadata_loaded": 0.445,
+      "header_done": 0.449,
+      "load_start": 0.449,
+      "load_done": 45.457,
+      "events_ready": 45.457,
+      "annotations_named": 46.061,
+      "event_pass_done": 53.922,
+      "correlation_done": 55.851,
+      "kernel_pass_start": 55.851,
+      "kernel_loop_last_sample": 56.335
+    },
+    "stage_costs_seconds": {
+      "metadata_and_header": 0.43,
+      "trace_load": 45.008,
+      "annotation_name_count": 0.604,
+      "event_categorization": 7.861,
+      "correlation": 1.929,
+      "kernel_jsonl_observed": 4.61
+    },
+    "counts": {
+      "events": 5062740,
+      "kernels": 1215919,
+      "runtime_driver_calls": 512220,
+      "annotation_ranges": 63944,
+      "annotation_names": 63944
+    },
+    "rates": {
+      "load_MB_per_s": 49.3,
+      "event_pass_us_per_event": 1.55,
+      "correlation_us_per_call": 3.8,
+      "kernel_loop_trace_indices_per_s": 337812
+    },
+    "last_completed_stage": "correlation",
+    "kill_site": "for idx, kernel in kernels: (audit.py kernel/JSONL loop)",
+    "kernel_loop_last_reached_trace_index": 1550000,
+    "stall_seconds_after_last_kernel_sample": 4.12,
+    "event_pass_outlier": {"window": [3500000, 4000000], "seconds": 3.586, "typical_seconds": [0.194, 0.707]},
+    "partial_index": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/p0_prefill_dp0_rank0.kernels.jsonl.gz",
+      "sha256": "acf7078d118d5b5e21e18baf52ff14f4868e585359723e9dabe9c6d09472b314",
+      "rows_recovered": 56857,
+      "first_trace_index": 1386499,
+      "last_trace_index": 1541086,
+      "complete": false,
+      "note": "truncated by the kill; not a kernel count and not evidence of missing annotations"
+    },
+    "full_output_written": false
+  },
+  "derived": {
+    "pre_kernel_seconds": 55.851,
+    "kernel_remaining_trace_indices": 3512740,
+    "kernel_remaining_seconds_at_observed_rate": 10.4,
+    "rollup_and_emit_seconds_control": 4.0,
+    "projected_total_seconds": 70.2,
+    "conclusion": "Pre-kernel stages use55.851seconds, leaving4.149seconds; the70.2second projection is an inference, not a measured lower bound. GC cause and the possibility of faster output-equivalent processing are unverified.",
+    "labelled_inference": [
+      "gzip/JSON split inside the load stage is extrapolated from completed decode controls",
+      "projection assumes the early uniform kernel rate and control rollup cost"
+    ]
+  },
+  "baseline_preserved": {
+    "status_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp0_rank0.status.json",
+    "status_sha256": "2c3b19cbef7fccdc9511abb26e597a622b23c3e4d93a82d593b8a9e0349afad5",
+    "exit": 124,
+    "elapsed_seconds": 60.40387320192531,
+    "partial_rows": 71638,
+    "first_trace_index": 1386499,
+    "command_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp0_rank0.command.txt",
+    "unchanged": true
+  },
+  "read_only_controls": {
+    "gzip_only_decode": [
+      {"bytes": 209168680, "seconds": 0.53, "MB_per_s": 392.4},
+      {"bytes": 375706178, "seconds": 0.88, "MB_per_s": 424.7}
+    ],
+    "completed_ranks_from_retained_outputs": [
+      {"key": ["decode", 0, 0], "seconds": 12.7, "kernels": 256303, "maxrss_gb": 1.23},
+      {"key": ["decode", 1, 0], "seconds": 6.7, "kernels": 142567, "maxrss_gb": 0.70},
+      {"key": ["prefill", 1, 0], "seconds": 33.4, "kernels": 570964, "maxrss_gb": 3.09}
+    ],
+    "heavy_reparse_of_completed_ranks": false
+  },
+  "hypotheses": [
+    {
+      "rank": 1,
+      "claim": "Gen-2 cyclic-GC pauses over the 5.06M-event / ~6 GB live object graph cause both multi-second stalls (event pass 3.586 s; kernel loop >=4.12 s with zero progress).",
+      "expected_evidence": "gc.callbacks start/stop with generation 2 at t~51.7-53.9 and t~56.3-60.4; gc.freeze() after load removes the stalls and shortens the load stage",
+      "falsifier": "no gen-2 callback events at those timestamps, or stalls persist with GC frozen"
+    },
+    {
+      "rank": 2,
+      "claim": "A single kernel near trace index 1.55M has a large candidate/owner set, making the nested innermost any() test (audit.py:99-108) quadratic.",
+      "expected_evidence": "owner or candidate count spike at that index; a count-only pass reports it without a fix",
+      "falsifier": "candidate counts stay 1 (fragment shows 1 up to 1.541M) and that index completes quickly under GC freeze"
+    },
+    {
+      "rank": 3,
+      "claim": "The 60 s ceiling is unreachable for this input without reducing the load/scan cost: pre-kernel stages already take 55.85 s, of which the load is 45.0 s at 49.3 MB/s.",
+      "expected_evidence": "any run of the frozen load path on this trace stays near 45 s",
+      "falsifier": "a load-equivalent measurement well below ~40 s"
+    },
+    {
+      "rank": 4,
+      "claim": "P0 dp0's lane is structurally heavier, not merely larger: 2.75x events, 3.88x calls, 5.24x annotation ranges for 2.13x kernels versus the completed prefill dp1 rank.",
+      "expected_evidence": "per-unit costs at or above control values, linear extrapolation of prefill dp1's 33.4 s to ~80-95 s",
+      "falsifier": "per-unit costs equal to the controls (already observed for the event pass and early kernel pass), which would leave the stalls and load as the explanation"
+    },
+    {
+      "rank": 5,
+      "claim": "The 21 boundary observations did not create the failure.",
+      "expected_evidence": "identical first kernel index 1386499 in baseline and diagnostic; same row/index ratio; <=~2% inferred wall overhead",
+      "falsifier": "a recovered baseline pre-kernel time materially below 55.85 s (unrecoverable from the retained fragment)"
+    }
+  ],
+  "proposed_next_experiment": {
+    "status": "NOT EXECUTED - requires a separate allocation",
+    "run": "one 60 s / 30 G run of this exact instrumented copy on the same input with gc.callbacks start/stop+generation records and gc.freeze() after load, plus the decode-dp1 equivalence control",
+    "discriminates": "H1 (uniform progress, shorter load) versus H2 (identical stall at the same index) and H3 (unchanged load cost)"
+  },
+  "limits": [
+    "One P0 rank only; the other seven P0 ranks are inferred from near-identical trace sizes, not measured.",
+    "No full kernel/loss count and no acceptance of the P0 traces follows from the truncated partial index.",
+    "The gzip/JSON split inside the load stage is extrapolated from decode controls.",
+    "GC and page-cache state were not instrumented; the diagnostic ran alone while the baseline ran two ranks at a time.",
+    "The in-scope cgroup limit file was not captured for this run; the literal MemoryMax=30G argument is recorded and the last observed RSS was 6.26 GB.",
+    "No algorithm correction, timeout change, GPU retry, platform operation or GPU admission is part of this record."
+  ],
+  "artifacts": {
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/p0_prefill_dp0_rank0.obs.jsonl": "cb3956ece422be462cc05568e7831cb1576adfee961d535655a1c266f4bdc17d",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/p0_prefill_dp0_rank0.hb.log": "c759e8d198c05bb8511e3378d12628310076e1acdb048ff3602cbd93859cb574",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/p0_prefill_dp0_rank0.kernels.jsonl.gz": "acf7078d118d5b5e21e18baf52ff14f4868e585359723e9dabe9c6d09472b314",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/control_decode_dp1_rank0.json": "4c8d21b7be33dec771d52a9f918841d0c8bdfd05a26df98f52c9a33e437dab4f",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/control_decode_dp1_rank0.kernels.jsonl.gz": "71acd6f88dc225dc088611f0a6f29534c2bc7a6a4780672db3c2b4f046a0c503",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/control_decode_dp1.obs.jsonl": "59db4d546cb170b1d2dfbe90d29da083f800482c3e618370f3741ef85bb06160"
+  },
+  "budgets": {
+    "scratch_source_lines": 128,
+    "scratch_source_limit": 180,
+    "markdown_lines_total": 71,
+    "markdown_limit": 80,
+    "markdown_files": ["diagnosis.md", "command.md"]
+  }
+}

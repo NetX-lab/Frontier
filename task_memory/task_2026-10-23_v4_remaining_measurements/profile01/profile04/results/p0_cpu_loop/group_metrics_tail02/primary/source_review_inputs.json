@@ -1,0 +1,46 @@
+{
+  "fixed_point": "947da5ee9ebb279f7978e2cf5e1883622734b654",
+  "current_head": "b3db1e0efd9d870dfa9e797b740907191b1b256b",
+  "commit_diff_command": "git diff 947da5ee...HEAD",
+  "new_source_diff_commands": [
+    [
+      "git",
+      "diff",
+      "--no-index",
+      "--",
+      "/dev/null",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--no-index",
+      "--",
+      "/dev/null",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--no-index",
+      "--",
+      "/dev/null",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_inputs.json"
+    ]
+  ],
+  "files": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+      "sha256": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py",
+      "sha256": "e1f0450a6aebe1ba84944571a40f2a3e5a64d2b4fb92f26d0ddd9ff24031ddf5"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_inputs.json",
+      "sha256": "8a2e90c821cc3286f7533077fb6a52797e8a2ba0e36fadb103bd910c56fd4edc"
+    }
+  ],
+  "full_new_source_diff_sha256": "8684e668e22458b09e2d834b9ff96a116277de93e832134a3d1c029649c11af4"
+}

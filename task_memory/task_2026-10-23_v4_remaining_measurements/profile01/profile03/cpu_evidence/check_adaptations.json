@@ -1,0 +1,23 @@
+{
+  "entry_controls.py": {
+    "original_script": "/data/ycfeng/tmp/glm53_dsv4/profile02_owner_entry_nUFzTw/entry_controls.py",
+    "original_sha256": "4b34a18186a677019ddac8c6316ac85fcb5cc0e8c00cbc6278804ab38954a8e0",
+    "executed_script": "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/entry_controls.py",
+    "executed_sha256": "35fb09e01e417b6ef30fd0f782e3750fd495a5edc100b3947418717bb21da4d6",
+    "adaptation": "Only new paths/source identities, role512/64, cap600000; old launcher RED not rerun; no runtime/entry assistance."
+  },
+  "package_controls.py": {
+    "original_script": "/data/ycfeng/tmp/glm53_dsv4/profile02_owner_entry_nUFzTw/package_controls.py",
+    "original_sha256": "d53235745cf180e1cd4964ffd8afd5db4260dd5c1cb955774cc4c5374a03dc23",
+    "executed_script": "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/package_controls.py",
+    "executed_sha256": "f0d84e3eb5e05efa64a9d6bd081b2dbcfdf8bc8c269608292ded065b8f6b0648",
+    "adaptation": "Only new paths/source identities, role512/64, cap600000; old launcher RED not rerun; no runtime/entry assistance."
+  },
+  "native_profiler_controls.py": {
+    "original_script": "/data/ycfeng/tmp/glm53_dsv4/profile02_owner_entry_nUFzTw/native_profiler_controls.py",
+    "original_sha256": "5526340115fe9b48eaf8a340ed8cabd6c8c484091c23d5bb1dbb4f6b53357a44",
+    "executed_script": "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/native_profiler_controls.py",
+    "executed_sha256": "026145686dbd25e879605fd5f44bcd5ca0ef030c3025bb7472f7c62b13bd0e9c",
+    "adaptation": "Only new paths/source identities, role512/64, cap600000; old launcher RED not rerun; no runtime/entry assistance."
+  }
+}

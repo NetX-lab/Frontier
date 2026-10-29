@@ -1,0 +1,52 @@
+{
+  "task_id": "W128-V4-KERNEL-COVERAGE",
+  "native_commit_declared": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "Modification History": [{"date": "2026-10-23", "change": "Native source/trace-field evidence for retained kernel audit."}],
+  "hash_receipt": "kernel_coverage_receipt_r2.json",
+  "source_roots": {
+    "native": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced",
+    "snapshot_relative": "source/39b2bf8088dff40dc8b695b6927d6e6322c337e9"
+  },
+  "evidence": [
+    {"root": "snapshot", "path": "frontier/profiling/attention/dsa_kernel_trace.py", "lines": [63, 131], "fact": "Host-thread annotation containment plus launch correlation supplies ownership. Unannotated launches are skipped, not classified."},
+    {"root": "snapshot", "path": "frontier/profiling/attention/dsa_vllm_runner.py", "lines": [149, 177], "fact": "Two matching warmup steps are skipped before recording; next_step_index increases only for measured steps. Raw requests omit request IDs."},
+    {"root": "snapshot", "path": "frontier/profiling/attention/dsa_vllm_runner.py", "lines": [215, 267], "fact": "Outer annotate=False executes without a KERNEL_ONLY annotation. Profiler priming is one zero fill plus four adds outside annotations; profiler spans warmup too."},
+    {"root": "snapshot", "path": "frontier/profiling/attention/dsa_vllm_runner.py", "lines": [525, 584], "fact": "Five prefill requests are submitted sequentially and drained; repeat/request IDs exist in source but are not serialized in raw step records."},
+    {"root": "snapshot", "path": "frontier/profiling/attention/dsv4_attention_runner.py", "lines": [155, 164], "fact": "DeepseekV4Attention.forward is timed with annotate=False. No outer attention ownership boundary exists in this trace."},
+    {"root": "snapshot", "path": "frontier/profiling/attention/dsv4_attention_runner.py", "lines": [299, 307], "fact": "Hooks own input projections, q/kv RMSNorm, query projection, fused preparation, compressor, index preparation/scores, sparse attention, and output projection. FFN/mHC/model tails are not hooked."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/attention.py", "lines": [361, 403], "fact": "Forward allocates output, runs hooked projections and RMSNorm, prepare/attention, slice view, then hooked output projection. Direct outer allocation/view have no observed extra kernel within the component envelope."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/attention.py", "lines": [453, 506], "fact": "CSA runs query/cache on current stream and indexer/compressor on aux0/aux1; HCA runs query/cache and compressor in parallel; joins precede sparse indexer/attention."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/attention.py", "lines": [515, 573], "fact": "Input GEMM multi-stream branch requires token count <= threshold. Actual raw input6144 > threshold1024; all observed input projection kernels use stream7, not aux streams."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/attention.py", "lines": [932, 958], "fact": "CSA index query/quantization on its current aux stream and index compressor on internal aux stream join before indexer_op."},
+    {"root": "native", "path": "vllm/utils/multi_stream_utils.py", "lines": [51, 62], "fact": "maybe_execute_in_parallel records event0 on current stream, aux waits for event0, records event1 after fn1, then current waits for event1. This is source semantics, not an observed handle mapping."},
+    {"root": "native", "path": "vllm/utils/multi_stream_utils.py", "lines": [105, 132], "fact": "execute_in_parallel records one fan-out start event and per-aux done events; current stream waits for each done event. Disabled branch executes serially."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/compressor.py", "lines": [368, 385], "fact": "Compressor PDL is explicitly disabled to preserve state-write dependencies; save_partial_states precedes compression."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/nvidia/flashmla.py", "lines": [318, 384], "fact": "Sparse prefill gathers compressed KV when present, gathers SWA KV, combines indices, then calls flash_mla_sparse_fwd. These remain inside the sparse_attention hook."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/nvidia/ops/o_proj.py", "lines": [48, 73], "fact": "Output projection inverse-RoPE/FP8 output feeds fp8_einsum and wo_b. Python order does not imply completion-serialized execution under PDL."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py", "lines": [60, 62], "fact": "Conditional GDC launch_dependents and wait primitives exist."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py", "lines": [259, 283], "fact": "launch_pdl follows platform PDL capability."},
+    {"root": "native", "path": "vllm/models/common/ops/fused_qk_rmsnorm.py", "lines": [46, 48], "fact": "Query/KV norm has conditional GDC wait and launch_dependents primitives."},
+    {"root": "native", "path": "vllm/models/common/ops/fused_qk_rmsnorm.py", "lines": [86, 101], "fact": "Norm launcher enables PDL on supported architectures."},
+    {"root": "native", "path": "vllm/utils/deep_gemm.py", "lines": [206, 219], "fact": "DeepGEMM PDL setup may be absent/fail; actual accepted log confirms enabled, rather than this audit assuming setup succeeded."},
+    {"root": "native", "path": "vllm/utils/deep_gemm.py", "lines": [271, 273], "fact": "DeepGEMM enables PDL on supported architectures."},
+    {"root": "native", "path": "vllm/platforms/cuda.py", "lines": [711, 718], "fact": "PDL capability is SM90+; actual H800 trace computeMajor9 satisfies it."},
+    {"root": "accepted", "path": "PREFILL_WARM_6144_C0_BALANCED/logs/accepted_c26_prefill.log", "lines": [23, 23], "fact": "DeepGEMM PDL enabled on vllm.third_party.deep_gemm."},
+    {"root": "package", "path": "overlay_model.py", "lines": [909, 990], "fact": "Decoder attention-norm mHC, attention-to-FFN mHC and FFN calls have no annotations. mHC is separate from DeepseekV4Attention and FFN; layer/side ownership cannot be inferred from identical mHC kernel names."},
+    {"root": "package", "path": "overlay_model.py", "lines": [1130, 1214], "fact": "Embedding, layer loop, final mHC post, hc_head and final RMSNorm are outside attention hooks. Conditional aux reconstruction is source-reachable but not claimed active without witness."},
+    {"root": "package", "path": "overlay_model.py", "lines": [1521, 1549], "fact": "LM forward/logits are outside attention hooks; accepted C26 leaf adds only dummy mHC weight finalization."},
+    {"root": "native", "path": "vllm/model_executor/kernels/mhc/tilelang.py", "lines": [584, 654], "fact": "Large-token mHC path invokes post, prenorm GEMM, then pre/norm fusion; these calls are unannotated in current capture."},
+    {"root": "native", "path": "vllm/models/deepseek_v4/sparse_mla.py", "lines": [331, 347], "fact": "C128 top-k metadata construction launches a kernel before attention forward; its retained unowned kernel name is not a measured scope."},
+    {"root": "native", "path": "vllm/v1/attention/backends/mla/compressor_utils.py", "lines": [65, 94], "fact": "Compressed slot mapping is attention metadata preparation outside the attention hooks."},
+    {"root": "native", "path": "vllm/v1/attention/backends/mla/sparse_swa.py", "lines": [584, 625], "fact": "SWA index/length metadata has GPU kernels outside the attention-forward hooks."}
+  ],
+  "proven": ["1815 unique launch correlations;132 measured annotations;366 unique scoped kernels;exact raw replay.", "All18 component envelopes contain zero unowned correlated kernel launches.", "Enqueue order matches chronological device start order on each observed stream.", "Source fan-out/join semantics and actual record/wait call presence;not exact event-handle edges."],
+  "unknown": ["Complete attention denominator and ownership outside component envelopes.", "Exact warmup-only kernel census and per-request outer boundaries.", "Actual record-instance/event-handle/stream-handle mapping and kernel-level PDL release/visibility.", "TP8/DP2/EP16/graph serving cost and CPU overhead."],
+  "minimum_capture_addition": [
+    "Nested outer forward, decoder-layer and attention ownership ranges with request/repeat/phase/warmup identity;exclude those outer ranges from disjoint component aggregation.",
+    "Separate annotation ranges for GPU metadata preparation, mHC pre/post/head, FFN, embedding, final norm and logits so unowned evidence is classified without kernel-name guessing.",
+    "At native event record/wait sites serialize event handle, record generation, source/destination stream handles and step/layer/scope;map handles to trace stream IDs.",
+    "Record actual PDL launch attributes and source primitive mapping for overlapping kernels;do not inject full-completion FIFO edges.",
+    "Retain original correlations and every unowned kernel;strict completeness must fail if any activity lacks a unique outer family/phase parent. GPU execution remains separately approved."
+  ]
+}

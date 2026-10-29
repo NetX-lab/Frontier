@@ -1,0 +1,14 @@
+{
+  "status": "PASS_STATIC_TRANSPORT_REPAIR",
+  "old_control_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control.py",
+  "old_control_sha256": "d867c9e15a05ae581cb592a24ea0e309d2f26d04f610de094c00f97f6f1a2c14",
+  "new_control_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/control.py",
+  "new_control_sha256": "b0cccc84c3a185b472ddbf41a4f9b3db3cc39874d44199a31a065cb05eff6c3e",
+  "lines": 121,
+  "cap": 140,
+  "metadata_ast_equal": true,
+  "synthetic_source_expression_ast_equal": true,
+  "gdb_source_unchanged": "4d0b05a1c1aa4125d5e8faf93da0dbd0f8955e83a75446f88aff6eb0707217b3",
+  "new_control_used": 0,
+  "full_diagnostic_used": 0
+}

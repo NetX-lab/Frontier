@@ -260,7 +260,7 @@ def test_structured_attention_legacy_coverage_uses_family_execution_time_attrs(
     monkeypatch.setattr(
         time_components,
         "iter_execution_enabled_families",
-        lambda: (custom_family,),
+        lambda **_: (custom_family,),
         raising=False,
     )
     attention_time = time_components.AttentionTime(
@@ -521,8 +521,12 @@ def test_trace_mapper_rejects_negative_timings() -> None:
         )
 
 
-def test_trace_mapper_rejects_frozen_dsa_execution() -> None:
-    execution_time = _build_execution_time()
-
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        get_attention_trace_op_times(execution_time, DSA_ATTENTION_FAMILY)
+def test_trace_mapper_uses_measured_dsa_scopes() -> None:
+    execution_time = _build_execution_time(num_layers=1, family=DSA_ATTENTION_FAMILY,
+                                         dense_kernel_times=(0.0, 0.0, 0.0), mla_times=(0.0,) * 6,
+                                         operator_times=AttentionOperatorTimes({
+        "attn_dsa_indexer": 0.2, "attn_dsa_mla": 0.3,
+    }))
+    times = {operator.name: value for operator, value in get_attention_trace_op_times(execution_time, DSA_ATTENTION_FAMILY)}
+    assert times["attn_dsa_indexer"] == 0.2
+    assert times["attn_dsa_mla"] == 0.3

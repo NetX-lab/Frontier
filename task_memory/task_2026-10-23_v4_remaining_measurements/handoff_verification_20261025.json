@@ -1,0 +1,3132 @@
+{
+  "status": "PASS_FINAL_HANDOFF_SCOPE_LINKS_AND_PACKAGE_CHECKS",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "code_merge_commit": "08b389052e6249776a16f152163da81ff90d4229",
+  "markdown_files": 14,
+  "verified_links": 773,
+  "explicit_anchor": true,
+  "manifest_sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+  "inputs": 18,
+  "gpu_submissions_used": 0,
+  "sealed": false,
+  "links": [
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "progress.md#profile04-submission-milestone--2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "progress.md#routing-milestone--current-2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/10-h800-predictive-e2e.md#p0_h800_32-per-model-highest-priority"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/10-h800-predictive-e2e.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/10-h800-predictive-e2e.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/19-comparison-and-acceptance.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/11-h200-regression-delivery.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/11-h200-regression-delivery.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/11-h200-regression-delivery.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/19-comparison-and-acceptance.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "review_report_2026-10-20_mainline_and_tickets.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "g0b_reconciliation_20261020/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "v4_full_structure_20261019/actual_review/test_report_2026-10-19_v4_full_structure_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c36_glm_observer_20261019/paired_actual_review/test_report_2026-10-19_paired_observer.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c38_native_boundaries_20261019/actual_review/test_report_2026-10-19_native_boundaries.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/01-runtime-lock-native-qualification.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/02-observer-instrumentation-gate-adaptation.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/07-nixl-pd-integration.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/02-observer-instrumentation-gate-adaptation.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/07-nixl-pd-integration.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/08-workflow-delta-pd-placement.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c39_glm_full_pd_20261019/functional_c40_review/test_report_2026-10-19_functional_c40_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c39_glm_full_pd_20261019/final_input_review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c39_glm_full_pd_20261019/freeze_receipt_01.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c39_glm_full_pd_20261019/functional_actual_review/test_report_2026-10-19_glm_full_pd_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c39_glm_full_pd_20261019/pressure_actual_review/test_report_2026-10-19_pressure_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/07-nixl-pd-integration.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/12-decision-d-pd.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c39_glm_full_pd_20261019/pressure_actual_review/verification_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "pr_preparation_20261020/publication_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "test_report_2026-10-19_native_queue_v4_g0a.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "test_report_2026-10-19_native_inputs_dummy_init.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "test_report_2026-10-19_dsv4_cache_zero_dp8.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c23_cache_zero_execution_20261019/combined_candidate_manifest_r2.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c23_cache_zero_execution_20261019/acceptance_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c23_cache_zero_execution_20261019/collector_readiness/verification_report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "test_report_2026-10-19_recorder_lifecycle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "test_report_2026-10-19_v4_cache_lifecycle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c21_c22_continuation_20261019/cpu_input_readiness.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "test_report_2026-10-19_glm_structural_pd.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c16_glm_structural_pd_20261019/c16_final_review_r3_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c16_glm_structural_pd_20261019/r3_final_candidate/commit_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "test_report_2026-10-19_dsv4_structural_execution.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c17_v4_structural_execution_20261019/final_acceptance/"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c17_v4_structural_execution_20261019/independent_review/final_r3/review_report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c18_scope_withdrawal_20261019/withdrawal_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "post_structural_native_readiness_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "post_structural_native_readiness_20261019/manifest.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "glm_native_remaining_evidence_map_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "test_report_2026-10-19_native_harness.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c19_native_harness_20261019/commit_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "test_report_2026-10-19_dsv4_boundaries.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c20_boundary_execution_20261019/commit_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "scope_readback_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "scope_readback_20261019/remediation_final/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "three_model_readiness_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "three_model_readiness_20261019/manifest.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "three_model_readiness_20261019/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "c16_glm_structural_pd_20261019/ownership_handover/op_trace_handover.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "spec.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "requirements.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "source_spec_v2/"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/00-baseline-audit.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/01-runtime-lock-native-qualification.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/02-observer-instrumentation-gate-adaptation.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/03-layer-cache-routing-inventory.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/04-glm53-dsa-family.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/05-dsv4-flash-family.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/06-communication-measurement.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/07-nixl-pd-integration.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/08-workflow-delta-pd-placement.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/09-predictor-bundle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/10-h800-predictive-e2e.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/11-h200-regression-delivery.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/12-decision-d-pd.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/13-decision-d-async.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/14-decision-d-routing.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/15-decision-d-dp-pd.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/16-glm-canonical-case.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/17-dsv4-canonical-case.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/18-native-ground-truth-h200.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "target": "tickets/19-comparison-and-acceptance.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/root_archive_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_observation/"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/groundtruth_fixture/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/native_capture_scope_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/terminal_platform.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/platform_group_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/download_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/root_cpu_replay_01.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/root_cpu_replay_02_metadata_p2.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/test_report_2026-10-24_trace.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/diagnosis.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile04_stage_docs_W128_ses_e92a7f5c5ffe8QOCEgHUMOaLuF/test_report_2026-10-24_profile04_stage_docs.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence_cpu/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/test_report_2026-10-24_integration.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence/baseline_diagnosis.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../../../v4-native-profile03-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/delivery.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/requirements.md#callback-payload-correction-and-similar-diagnostic-authority"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/results/archive_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "#profile02-and-local-moe-acceptance--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "#balanced-q1-isolated-data-acceptance--current-2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_input_source.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/requirements.md#h-launch-integration-allocation"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe/local_measurement_plan.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/queue_selection.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "canonical_case_20261021/p0_binding/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/review_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/requirements.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/proposal.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/test_report_2026-10-23_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-21_h200_g0b.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "review_report_2026-10-20_mainline_and_tickets.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "g0b_reconciliation_20261020/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "pr_preparation_20261020/publication_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-20_github_publication.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_public_branch_documentation.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c39_glm_full_pd_20261019/functional_c40_review/test_report_2026-10-19_functional_c40_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c39_glm_full_pd_20261019/handle_serialization_repair/independent_review/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c39_glm_full_pd_20261019/pressure_frozen_02/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c39_glm_full_pd_20261019/pressure_actual_review/test_report_2026-10-19_pressure_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c39_glm_full_pd_20261019/pressure_actual_review/verification_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c36_glm_observer_20261019/paired_root_result.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c36_glm_observer_20261019/paired_actual_review/test_report_2026-10-19_paired_observer.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c38_native_boundaries_20261019/actual_review/test_report_2026-10-19_native_boundaries.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "v4_full_structure_20261019/actual_review/test_report_2026-10-19_v4_full_structure_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "v4_full_structure_20261019/export_platform_03.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c36_glm_observer_20261019/perturbation_diagnosis/test_report_2026-10-19_c36_perturbation_diagnosis.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_c39_c40_glm_pd.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c39_glm_full_pd_20261019/c40_frontend_review/test_report_2026-10-19_c40_frontend_acceptance.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c39_glm_full_pd_20261019/pressure_harness/independent_review/test_report_2026-10-19_pressure_harness.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c39_glm_full_pd_20261019/final_input_review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c39_glm_full_pd_20261019/freeze_receipt_01.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_native_queue_v4_g0a.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "plan.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_native_inputs_dummy_init.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "plan.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c25_native_progress_20261019/submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c25_native_progress_20261019/root/terminal_container_status.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c25_native_progress_20261019/root/replica_terminal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_dsv4_cache_zero_dp8.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c23_cache_zero_execution_20261019/combined_candidate_manifest_r2.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c23_cache_zero_execution_20261019/acceptance_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c23_cache_zero_execution_20261019/collector_readiness/verification_report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_recorder_lifecycle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_v4_cache_lifecycle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c21_c22_continuation_20261019/cpu_input_readiness.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_glm_structural_pd.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c16_glm_structural_pd_20261019/c16_final_review_r3_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c16_glm_structural_pd_20261019/r3_final_candidate/commit_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_dsv4_structural_execution.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c17_v4_structural_execution_20261019/final_acceptance/"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c17_v4_structural_execution_20261019/independent_review/final_r3/review_report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c18_scope_withdrawal_20261019/withdrawal_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "post_structural_native_readiness_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "post_structural_native_readiness_20261019/manifest.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "glm_native_remaining_evidence_map_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_native_harness.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c19_native_harness_20261019/commit_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-19_dsv4_boundaries.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c20_boundary_execution_20261019/commit_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "scope_readback_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "scope_readback_20261019/remediation_final/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "three_model_readiness_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "three_model_readiness_20261019/manifest.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "three_model_readiness_20261019/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "c16_glm_structural_pd_20261019/ownership_handover/op_trace_handover.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "review.md#11-documentation-only-resume-audit--2026-10-18"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "plan.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "target": "test_report_2026-10-18_documentation_review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/results/archive_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "progress.md#profile02-and-local-moe-acceptance--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "progress.md#balanced-q1-and-queued-profile02--2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/queue_selection.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/review_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/requirements.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/proposal.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "progress.md#g2-profile-driver-closure--current-2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/test_report_2026-10-23_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "progress.md#cpu-collector-closure--current-2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_input_source.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/requirements.md#h-launch-integration-allocation"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "v4_marlin_control_20261019/test_report_2026-10-19_v4_marlin_control.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c33_dp_policy_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c34_native_queue_20261019/actual_native_review_02/test_report_2026-10-19_glm_native_queue.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_queue_admission_full_v4.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_c36_c38_full_v4.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/pressure_actual_review/test_report_2026-10-19_pressure_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/pressure_actual_review/verification_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/handle_serialization_repair/independent_review/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/pressure_frozen_02/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/pressure_payload_02.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/pressure_platform_01.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/pressure_platform_02.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/pressure_launcher_started.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/functional_c40_review/test_report_2026-10-19_functional_c40_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/functional_actual_review/test_report_2026-10-19_glm_full_pd_actual.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/handle_serialization_repair/test_report_2026-10-19_nixl_handle_serialization.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c39_glm_full_pd_20261019/pressure_02_capacity.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "pr_preparation_20261020/publication_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-20_github_publication.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_native_queue_v4_g0a.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "plan.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "progress.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_native_inputs_dummy_init.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "plan.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "progress.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_dsv4_cache_zero_dp8.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c23_cache_zero_execution_20261019/combined_candidate_manifest_r2.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c23_cache_zero_execution_20261019/acceptance_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c23_cache_zero_execution_20261019/collector_readiness/verification_report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_recorder_lifecycle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_v4_cache_lifecycle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c21_c22_continuation_20261019/cpu_input_readiness.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_glm_structural_pd.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c16_glm_structural_pd_20261019/c16_final_review_r3_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c16_glm_structural_pd_20261019/r3_final_candidate/commit_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_dsv4_structural_execution.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c17_v4_structural_execution_20261019/final_acceptance/"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c17_v4_structural_execution_20261019/independent_review/final_r3/review_report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c18_scope_withdrawal_20261019/withdrawal_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "post_structural_native_readiness_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "post_structural_native_readiness_20261019/manifest.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "glm_native_remaining_evidence_map_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_native_harness.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c19_native_harness_20261019/commit_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "test_report_2026-10-19_dsv4_boundaries.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "c20_boundary_execution_20261019/commit_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "scope_readback_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "scope_readback_20261019/remediation_final/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "three_model_readiness_20261019/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "three_model_readiness_20261019/manifest.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "three_model_readiness_20261019/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "target": "plan.md#current-continuation-after-c32c34"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../progress.md#profile04-submission-milestone--2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../progress.md#profile02-and-local-moe-acceptance--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/queue_selection.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../progress.md#balanced-q1-and-queued-profile02--2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver/review_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/requirements.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/proposal.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../progress.md#g2-profile-driver-closure--current-2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../progress.md#cpu-collector-closure--current-2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../test_report_2026-10-21_h200_dsv4_g0a.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../w6_dsv4_producers_20261020/summary.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../test_report_2026-10-20_dsv4_profiling_producers.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../test_report_2026-10-19_c36_c38_full_v4.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../c32_c34_native_20261019/v4_native_run/result.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../c32_v4_inventory_20261019/test_report_2026-10-19_v4_inventory.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../v4_marlin_control_20261019/test_report_2026-10-19_v4_marlin_control.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../test_report_2026-10-19_native_queue_v4_g0a.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../test_report_2026-10-19_native_inputs_dummy_init.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../c25_native_progress_20261019/c27_audit/report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../plan.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../test_report_2026-10-19_dsv4_cache_zero_dp8.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../test_report_2026-10-19_v4_cache_lifecycle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../test_report_2026-10-19_dsv4_structural_execution.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../c17_v4_structural_execution_20261019/final_acceptance/"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../c17_v4_structural_execution_20261019/independent_review/final_r3/review_report.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "target": "../test_report_2026-10-19_dsv4_boundaries.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../progress.md#profile04-submission-milestone--2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../progress.md#profile02-and-local-moe-acceptance--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/queue_selection.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../progress.md#balanced-q1-and-queued-profile02--2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver/review_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/requirements.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/proposal.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../progress.md#g2-profile-driver-closure--current-2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/driver_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../progress.md#cpu-collector-closure--current-2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-22_v4_balanced_routing/progress.md#current-root-state"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../nixl_accounting_20261021/context/test_report_2026-10-21_nixl_context.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../dsa_full_dummy_admission_20261021/measurement_proposal.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../test_report_2026-10-19_dsv4_cache_zero_dp8.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../test_report_2026-10-19_recorder_lifecycle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "target": "../test_report_2026-10-19_v4_cache_lifecycle.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/progress.md#current-session-handoff-2026-10-25"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/requirements.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "progress.md#profile04-submission-milestone--2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/timeline.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/rpc_loop_command.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/integration_cpu/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/requirements.md#callback-payload-correction-and-similar-diagnostic-authority"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "progress.md#gpu-stream-acceptance-and-active-dp-slice--current-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/progress.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/moe_grid_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/balanced_decode/platform_launch_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/queue_selection.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/review_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/final_checks.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/requirements.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/delivery.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-23_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_readiness.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile02_platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/profile01/profile02_root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/proposal.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/review_2026-10-23_final.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/collector_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/driver_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/handoff_prompt.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/test_report_2026-10-23_primary.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "target": "../task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md",
+      "target": "profile01/scope_lifetime/scope_lifetime_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "profile01/scope_lifetime/package_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "progress.md#current-session-handoff-2026-10-25"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "profile01/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "moe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "progress.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "profile01/native_capture_scope_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "profile01/scope_lifetime/scope_lifetime_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "profile01/scope_lifetime/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "target": "profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/scope_lifetime/package_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/stream_identity/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/stream_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/dp_sequence_cpu.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/dp_sequence_cpu/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/dp_sequence/test_report_2026-10-24_root_verification.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/integration_cpu/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/integration_cpu/test_report_2026-10-24_integration.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/graph_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile03/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile03/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile03/failure/timeline.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile03/failure/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/terminal_platform.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/platform_group_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/host_package_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/download_input_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/download_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/first_input_check_failure.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/stage_docs/acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/stage_docs/test_report_2026-10-24_stage_docs.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/groundtruth_fixture/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/groundtruth_fixture/test_report_2026-10-24_root_acceptance.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/native_capture_scope_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/test_report_2026-10-24_native_capture_prerequisite.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile03/root_checks/placement/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile03/root_checks/affinity_cpu/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/results/archive_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "moe/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "moe/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "moe/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "moe/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "moe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "moe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/collection_gaps.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "balanced_decode/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "balanced_decode/results/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "balanced_decode/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "balanced_decode/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "balanced_decode/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "moe_grid_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "moe/local_measurement_plan.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/review_2026-10-24_run_metadata.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/root_cpu_replay_02_metadata_p2.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/scope_lifetime/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "target": "profile01/profile04/results/p0_cpu_loop/load_gc/test_report_2026-10-24_loading_gc.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/scope_lifetime/package_primary/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "progress.md#current-session-handoff-2026-10-25"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/groundtruth_fixture/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/native_capture_scope_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/terminal_platform.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/platform_group_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/download_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/root_cpu_replay_01.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/run_metadata_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/review_2026-10-24_run_metadata.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/root_cpu_replay_02_metadata_p2.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/test_report_2026-10-24_trace.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/scope_lifetime/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/scope_lifetime/source_binding.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/results/p0_cpu_loop/load_gc/test_report_2026-10-24_loading_gc.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "plan.md#profile04-cpu-audit-follow-up-2026-10-24"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "progress.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "requirements.md#d-v4-p0-audit-gc-observation"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "requirements.md#d-v4-p0-audit-gc-freeze"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "requirements.md#d-v4-scope-lifetime-review-repair"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/test_report_2026-10-24_profile04_root.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile04/root_archive_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/groundtruth_fixture/test_report_2026-10-24_root_acceptance.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/native_capture_scope_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_image_g8m3pvpv/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/failure/statistics_control.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/failure/test_report_2026-10-24_profiler_rpc_failure.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "requirements.md#d-v4-profile04-package--minimum-configuration-correction"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/failure/timeline.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/failure/timeline.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_results_7dsz5a22/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/failure/rpc_loop.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/failure/rpc_loop_command.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/failure/metadata_audit.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/failure/metadata_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/graph_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/graph_probe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/graph_probe/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/profile03/platform_launch.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/stream_probe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/stream_probe/results/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/stream_probe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/dp_sequence_cpu.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/dp_sequence_cpu/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/integration_cpu/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/integration_cpu/test_report_2026-10-24_integration.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/graph_probe/root_checks/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/graph_probe/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/graph_probe/root_submission.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "../../../v4-native-profile03-run/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/delivery.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "requirements.md#callback-payload-correction-and-similar-diagnostic-authority"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/stream_identity/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/stream_identity/test_report_2026-10-24_stream_loader.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/collection_gaps.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "profile01/results/archive_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "moe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "moe/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "moe/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "moe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "progress.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "balanced_decode/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "balanced_decode/results/review.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "balanced_decode/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "balanced_decode/results/data_audit.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "balanced_decode/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "moe_grid_design.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "progress.md#balanced-q1-and-queued-profile02--2026-10-23"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "requirements.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "target": "proposal.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "progress.md#current-session-handoff-2026-10-25"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "requirements.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "plan.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "progress.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "proposal.md"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "profile01/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "profile01/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "profile01/results/archive_receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "moe/results/primary_acceptance.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "moe/results/root_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "moe/root_seal.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md",
+      "target": "moe/root_run_check.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/review_2026-10-25_package.md",
+      "target": "root_archive_verification.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md",
+      "target": "image/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md",
+      "target": "image/phase_stdin.txt"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md",
+      "target": "image/stdout"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md",
+      "target": "image/stderr"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md",
+      "target": "sdk/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md",
+      "target": "image_without_stdin/receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md",
+      "target": "p0_metrics_01.receipt.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md",
+      "target": "observer_source.txt"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md",
+      "target": "metrics_control_compare.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md",
+      "target": "metrics_timing_summary.json"
+    },
+    {
+      "file": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md",
+      "target": "p0_metrics_01.obs.jsonl"
+    }
+  ],
+  "owned_markdown_sha256": {
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md": "ff0e56b2ca3591ee7beb3afb8f87259c4b748a1bd0f9eaa352808952a3be6e99",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md": "4414b045a244ec52312f80de213c14c014dfe3f1509162aae6a368e0e3144348",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md": "b56f05fcfbcb9fad9c298062f69dcc9439c704add6e1f3c5ff105a89c99b310b",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md": "d9c47b52c33e50beaea5cc18a076223a3902a89f9259e75a26bebb82e7c1e865",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md": "c48fc4a58cea0c66b342b6dde1b2be04bddb9406a436782c1f961336e6a84ce4",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md": "3213c7267a0123290746d3b6c47b30a558d5cf7fcdba508354c904c14b8160b9",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md": "77eb0fe16f51b2084fb33f069a8ef5b1cb2670e45bf23673135510cd86cd3305",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/plan.md": "a04cb48a7e3e421eb3a52f045af3e34dfa0864451b7d787a0d09b584220b2136",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/progress.md": "8af9fbbf2b13d88650235e6e3a9376f2b02157df0046cb21f3d9f4d2a4a9a513",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md": "36ff2dc5d559b4decc4ab864637437964f29f6ecf8f72e7ceb23efd98cc5c0d7",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/handoff_prompt.md": "e508803fc684af185541003aea150d387292d4392544a15a9973c6bdb55730d4",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/review_2026-10-25_package.md": "1b7ac37b9eee4aec189d4c09b7b7fbb68250c78604fe98ecb49d4d33e76b6c2a",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_primary/test_report_2026-10-25_package_primary.md": "ff382332d5973a7bc07df7a2f8b54963c0094f5f582887d259e930ba4bf7122a",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_observation/test_report_2026-10-25_metrics_timing.md": "c1da3cfdac7d121d9025f0a72437564d390796c0f157bc55d8b7bd130b8ca49b"
+  },
+  "initial_timeout_raw_hashes": {
+    "profile01/scope_lifetime/package_primary/image_initial_deadline/stdout": "054295f25135b0520746cb3b4fba447d1fb591f118280c11d5be4a6ee6545c90",
+    "profile01/scope_lifetime/package_primary/image_initial_deadline/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "unrelated_paths_preserved": [
+    ".pi/",
+    ".cortexkit/",
+    "remaining_measurements/"
+  ],
+  "limits": "Static docs/archive/package verification only; no new experiment,platform/GPU execution,sealing,pushing or publication. Final commit identity is verified after commit."
+}

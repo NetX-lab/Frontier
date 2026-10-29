@@ -1,0 +1,115 @@
+== profiler_traces/profiler_trace_36cbf7bd.json scopes {'vidur_share_expert_act': 20, 'vidur_mlp_act': 20, 'vidur_mlp_up_proj': 20, 'vidur_share_expert_up_proj': 20, 'vidur_mlp_down_proj': 20, 'vidur_share_expert_down_proj': 20}
+   <unowned>                        x21.00 grid=[32, 1, 1] med=    3.81 void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at:
+   <unowned>                        x20.00 grid=[64, 1, 1] med=    1.63 void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float
+   <unowned>                        x20.00 grid=[32, 1, 1] med=    2.75 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::
+   <unowned>                        x20.00 grid=[1, 1, 1] med=    3.46 void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, fl
+   <unowned>                        x40.00 grid=[32, 1, 1] med=    2.99 void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+   <unowned>                        x20.00 grid=[16, 1, 1] med=    0.99 void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::pow_tensor_scalar_kernel_
+   <unowned>                        x24.00 grid=[1, 1, 1] med=    1.15 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   <unowned>                        x20.00 grid=[16, 1, 1] med=    1.09 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul> >
+   <unowned>                        x20.00 grid=[1, 1, 1] med=    1.25 void at::native::vectorized_elementwise_kernel<4, at::native::rsqrt_kernel_cuda(at::TensorIteratorBase&)::{lam
+   <unowned>                        x20.00 grid=[16, 1, 1] med=    1.22 void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char*
+   <unowned>                        x 1.00 grid=[16, 1, 1] med=    0.80 void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1u
+   <unowned>                        x40.00 grid=[16, 1, 1] med=    1.02 void at::native::vectorized_elementwise_kernel<8, at::native::bfloat16_copy_kernel_cuda(at::TensorIteratorBase
+   vidur_mlp_act                    x 1.00 grid=[4, 1, 1] med=    1.63 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_mlp_down_proj              x 1.00 grid=[132, 1, 1] med=    5.06 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_mlp_down_proj              x 1.00 grid=[1056, 1, 1] med=    1.60 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_mlp_up_proj                x 1.00 grid=[132, 1, 1] med=    7.42 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_mlp_up_proj                x 1.00 grid=[1056, 1, 1] med=    1.66 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_share_expert_act           x 1.00 grid=[4, 1, 1] med=    1.63 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_share_expert_down_proj     x 1.00 grid=[132, 1, 1] med=    5.02 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_share_expert_down_proj     x 1.00 grid=[1056, 1, 1] med=    1.63 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_share_expert_up_proj       x 1.00 grid=[132, 1, 1] med=    7.55 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_share_expert_up_proj       x 1.00 grid=[1056, 1, 1] med=    1.60 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+== profiler_traces/profiler_trace_51f64510.json scopes {'vidur_share_expert_act': 20, 'vidur_mlp_act': 20, 'vidur_mlp_up_proj': 20, 'vidur_share_expert_up_proj': 20, 'vidur_mlp_down_proj': 20, 'vidur_share_expert_down_proj': 20}
+   <unowned>                        x21.00 grid=[32, 1, 1] med=    3.17 void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at:
+   <unowned>                        x20.00 grid=[48, 1, 1] med=    1.63 void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float
+   <unowned>                        x20.00 grid=[24, 1, 1] med=    3.04 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::
+   <unowned>                        x20.00 grid=[2, 1, 1] med=    2.85 void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, fl
+   <unowned>                        x40.00 grid=[24, 1, 1] med=    2.94 void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+   <unowned>                        x20.00 grid=[12, 1, 1] med=    0.96 void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::pow_tensor_scalar_kernel_
+   <unowned>                        x24.00 grid=[1, 1, 1] med=    1.15 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   <unowned>                        x20.00 grid=[12, 1, 1] med=    1.09 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul> >
+   <unowned>                        x20.00 grid=[1, 1, 1] med=    1.25 void at::native::vectorized_elementwise_kernel<4, at::native::rsqrt_kernel_cuda(at::TensorIteratorBase&)::{lam
+   <unowned>                        x20.00 grid=[12, 1, 1] med=    1.06 void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char*
+   <unowned>                        x 1.00 grid=[12, 1, 1] med=    0.77 void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1u
+   <unowned>                        x40.00 grid=[12, 1, 1] med=    1.02 void at::native::vectorized_elementwise_kernel<8, at::native::bfloat16_copy_kernel_cuda(at::TensorIteratorBase
+   vidur_mlp_act                    x 1.00 grid=[3, 1, 1] med=    1.63 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_mlp_down_proj              x 1.00 grid=[132, 1, 1] med=    5.02 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_mlp_down_proj              x 1.00 grid=[1056, 1, 1] med=    1.60 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_mlp_up_proj                x 1.00 grid=[132, 1, 1] med=    7.34 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_mlp_up_proj                x 1.00 grid=[1056, 1, 1] med=    1.65 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_share_expert_act           x 1.00 grid=[3, 1, 1] med=    1.65 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_share_expert_down_proj     x 1.00 grid=[132, 1, 1] med=    4.99 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_share_expert_down_proj     x 1.00 grid=[1056, 1, 1] med=    1.63 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_share_expert_up_proj       x 1.00 grid=[132, 1, 1] med=    7.50 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_share_expert_up_proj       x 1.00 grid=[1056, 1, 1] med=    1.57 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+== profiler_traces/profiler_trace_654ae826.json scopes {'vidur_share_expert_act': 20, 'vidur_mlp_act': 20, 'vidur_mlp_up_proj': 20, 'vidur_share_expert_up_proj': 20, 'vidur_mlp_down_proj': 20, 'vidur_share_expert_down_proj': 20}
+   <unowned>                        x21.00 grid=[32, 1, 1] med=    1.92 void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at:
+   <unowned>                        x20.00 grid=[16, 1, 1] med=    1.62 void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float
+   <unowned>                        x20.00 grid=[1, 1, 1] med=    2.24 void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, fl
+   <unowned>                        x40.00 grid=[8, 1, 1] med=    2.85 void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+   <unowned>                        x20.00 grid=[4, 1, 1] med=    0.99 void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::pow_tensor_scalar_kernel_
+   <unowned>                        x24.00 grid=[1, 1, 1] med=    1.15 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   <unowned>                        x20.00 grid=[4, 1, 1] med=    1.09 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul> >
+   <unowned>                        x20.00 grid=[1, 1, 1] med=    1.25 void at::native::vectorized_elementwise_kernel<4, at::native::rsqrt_kernel_cuda(at::TensorIteratorBase&)::{lam
+   <unowned>                        x20.00 grid=[4, 1, 1] med=    1.18 void at::native::vectorized_elementwise_kernel<8, at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10:
+   <unowned>                        x20.00 grid=[4, 1, 1] med=    0.99 void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char*
+   <unowned>                        x 1.00 grid=[4, 1, 1] med=    0.86 void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1u
+   <unowned>                        x40.00 grid=[4, 1, 1] med=    1.02 void at::native::vectorized_elementwise_kernel<8, at::native::bfloat16_copy_kernel_cuda(at::TensorIteratorBase
+   vidur_mlp_act                    x 1.00 grid=[1, 1, 1] med=    1.50 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_mlp_down_proj              x 1.00 grid=[132, 1, 1] med=    4.99 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_mlp_down_proj              x 1.00 grid=[1056, 1, 1] med=    1.34 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_mlp_up_proj                x 1.00 grid=[132, 1, 1] med=    7.28 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_mlp_up_proj                x 1.00 grid=[1056, 1, 1] med=    1.63 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_share_expert_act           x 1.00 grid=[1, 1, 1] med=    1.54 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_share_expert_down_proj     x 1.00 grid=[132, 1, 1] med=    4.96 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_share_expert_down_proj     x 1.00 grid=[1056, 1, 1] med=    1.34 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_share_expert_up_proj       x 1.00 grid=[132, 1, 1] med=    7.30 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_share_expert_up_proj       x 1.00 grid=[1056, 1, 1] med=    1.50 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+== profiler_traces/profiler_trace_d9f593d4.json scopes {'vidur_share_expert_act': 20, 'vidur_mlp_act': 20, 'vidur_mlp_up_proj': 20, 'vidur_share_expert_up_proj': 20, 'vidur_mlp_down_proj': 20, 'vidur_share_expert_down_proj': 20}
+   <unowned>                        x21.00 grid=[32, 1, 1] med=    2.59 void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at:
+   <unowned>                        x20.00 grid=[32, 1, 1] med=    1.63 void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float
+   <unowned>                        x20.00 grid=[16, 1, 1] med=    2.82 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::
+   <unowned>                        x20.00 grid=[1, 1, 1] med=    2.64 void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, fl
+   <unowned>                        x40.00 grid=[16, 1, 1] med=    2.75 void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+   <unowned>                        x20.00 grid=[8, 1, 1] med=    0.96 void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::pow_tensor_scalar_kernel_
+   <unowned>                        x24.00 grid=[1, 1, 1] med=    1.15 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   <unowned>                        x20.00 grid=[8, 1, 1] med=    1.09 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul> >
+   <unowned>                        x20.00 grid=[1, 1, 1] med=    1.25 void at::native::vectorized_elementwise_kernel<4, at::native::rsqrt_kernel_cuda(at::TensorIteratorBase&)::{lam
+   <unowned>                        x20.00 grid=[8, 1, 1] med=    1.06 void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char*
+   <unowned>                        x 1.00 grid=[8, 1, 1] med=    0.80 void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1u
+   <unowned>                        x40.00 grid=[8, 1, 1] med=    1.04 void at::native::vectorized_elementwise_kernel<8, at::native::bfloat16_copy_kernel_cuda(at::TensorIteratorBase
+   vidur_mlp_act                    x 1.00 grid=[2, 1, 1] med=    1.54 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_mlp_down_proj              x 1.00 grid=[132, 1, 1] med=    5.06 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_mlp_down_proj              x 1.00 grid=[1056, 1, 1] med=    1.47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_mlp_up_proj                x 1.00 grid=[132, 1, 1] med=    7.31 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_mlp_up_proj                x 1.00 grid=[1056, 1, 1] med=    1.66 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_share_expert_act           x 1.00 grid=[2, 1, 1] med=    1.57 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_share_expert_down_proj     x 1.00 grid=[132, 1, 1] med=    5.01 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_share_expert_down_proj     x 1.00 grid=[1056, 1, 1] med=    1.47 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+   vidur_share_expert_up_proj       x 1.00 grid=[132, 1, 1] med=    7.38 void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::Norma
+   vidur_share_expert_up_proj       x 1.00 grid=[1056, 1, 1] med=    1.50 void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_
+== profiler_traces/profiler_trace_dae83644.json scopes {'vidur_share_expert_down_proj': 20, 'vidur_share_expert_act': 20, 'vidur_share_expert_up_proj': 20, 'vidur_mlp_down_proj': 20, 'vidur_mlp_act': 20, 'vidur_mlp_up_proj': 20}
+   <unowned>                        x20.00 grid=[12288, 1, 1] med=    9.22 void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float
+   <unowned>                        x20.00 grid=[6144, 1, 1] med=    8.86 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::
+   <unowned>                        x20.00 grid=[48, 1, 1] med=    9.38 void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, fl
+   <unowned>                        x40.00 grid=[6144, 1, 1] med=    8.99 void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+   <unowned>                        x20.00 grid=[3072, 1, 1] med=    5.01 void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::pow_tensor_scalar_kernel_
+   <unowned>                        x24.00 grid=[1, 1, 1] med=    1.02 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   <unowned>                        x20.00 grid=[3072, 1, 1] med=    7.23 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, std::array<char*, 3ul> >
+   <unowned>                        x20.00 grid=[1, 1, 1] med=    1.15 void at::native::vectorized_elementwise_kernel<4, at::native::rsqrt_kernel_cuda(at::TensorIteratorBase&)::{lam
+   <unowned>                        x20.00 grid=[3072, 1, 1] med=    4.82 void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char*
+   <unowned>                        x 1.00 grid=[3072, 1, 1] med=    2.82 void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1u
+   <unowned>                        x40.00 grid=[3072, 1, 1] med=    3.97 void at::native::vectorized_elementwise_kernel<8, at::native::bfloat16_copy_kernel_cuda(at::TensorIteratorBase
+   <unowned>                        x21.00 grid=[768, 2, 1] med=    4.86 void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long, bool)
+   vidur_mlp_act                    x 1.00 grid=[768, 1, 1] med=    3.81 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_mlp_down_proj              x 1.00 grid=[132, 1, 1] med=   12.85 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u, 128u, 12
+   vidur_mlp_down_proj              x 1.00 grid=[768, 1, 1] med=    5.66 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BFloat16 con
+   vidur_mlp_up_proj                x 1.00 grid=[132, 1, 1] med=   20.08 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u, 128u, 12
+   vidur_mlp_up_proj                x 1.00 grid=[1536, 1, 1] med=    9.18 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BFloat16 con
+   vidur_share_expert_act           x 1.00 grid=[768, 1, 1] med=    3.94 void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(
+   vidur_share_expert_down_proj     x 1.00 grid=[132, 1, 1] med=   12.61 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u, 128u, 12
+   vidur_share_expert_down_proj     x 1.00 grid=[768, 1, 1] med=    5.66 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BFloat16 con
+   vidur_share_expert_up_proj       x 1.00 grid=[132, 1, 1] med=   19.95 void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u, 128u, 12
+   vidur_share_expert_up_proj       x 1.00 grid=[1536, 1, 1] med=    9.54 void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BFloat16 con

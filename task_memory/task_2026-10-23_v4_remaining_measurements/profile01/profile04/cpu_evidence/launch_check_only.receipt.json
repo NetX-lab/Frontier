@@ -1,0 +1,11 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-I",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/new_launcher_green/launch.py",
+    "--check-only"
+  ],
+  "returncode": 0,
+  "cpu_only": true
+}

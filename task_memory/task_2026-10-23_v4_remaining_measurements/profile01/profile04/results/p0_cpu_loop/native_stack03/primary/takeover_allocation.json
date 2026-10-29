@@ -1,0 +1,16 @@
+{
+  "decision": "D-V4-P0-NATIVE-STACK-PRIMARY-TAKEOVER",
+  "recorded_utc": "2026-10-24T21:56:37.405913+00:00",
+  "original_allocation_sha256": "e42bc2053b559a990521dd1bbf03b5c14c4a98d1da8196c307bf9358701323ce",
+  "reason": "Worker closed after two critical-path waits without any file deliverable; no invocation was executed. Primary now owns the original GDB/control/notes write scope as well as the launcher.",
+  "old_worker": "01a16fe2-1be4-7e21-8f3e-278520731c65",
+  "worker_status": "CLOSED_NO_FILES",
+  "gdb_cap": 90,
+  "control_cap": 140,
+  "notes_cap": 70,
+  "new_control_ceiling": 1,
+  "new_full_diagnostic_ceiling": 1,
+  "control_used_before": 0,
+  "diagnostic_used_before": 0,
+  "expanded_scope_or_invocations": false
+}

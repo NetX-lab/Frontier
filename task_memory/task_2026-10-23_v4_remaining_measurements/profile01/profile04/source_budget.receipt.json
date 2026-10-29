@@ -1,0 +1,57 @@
+{
+  "task_id": "W128-PROFILE04-PACKAGE",
+  "base": "53398d06",
+  "comparison": "INDEX_BEFORE_SOURCE_COMMIT",
+  "commands": {
+    "source_changes.diff": [
+      "git",
+      "diff",
+      "--cached",
+      "53398d06",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/profile_plan.json",
+      "tests/unit/test_native_pd_worker.py"
+    ],
+    "source_changes.numstat": [
+      "git",
+      "diff",
+      "--cached",
+      "--numstat",
+      "53398d06",
+      "--",
+      "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+      "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/profile_plan.json",
+      "tests/unit/test_native_pd_worker.py"
+    ]
+  },
+  "sha256": {
+    "source_changes.diff": "2873889d4c3ecebba3ef8f8801c45968749bbaf6847e8d0ee5afb3415e069043",
+    "source_changes.numstat": "72e477986af16406c43053e92d74bbe77b81186076e3d9d5e2721ce7d980bf6b"
+  },
+  "rows": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+      "added": 1,
+      "deleted": 1,
+      "gross": 2
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/profile_plan.json",
+      "added": 50,
+      "deleted": 0,
+      "gross": 50
+    },
+    {
+      "path": "tests/unit/test_native_pd_worker.py",
+      "added": 17,
+      "deleted": 4,
+      "gross": 21
+    }
+  ],
+  "source_and_plan_gross": 52,
+  "test_gross": 21,
+  "total_gross": 73,
+  "generated_artifacts_excluded": true,
+  "status": "PASS"
+}

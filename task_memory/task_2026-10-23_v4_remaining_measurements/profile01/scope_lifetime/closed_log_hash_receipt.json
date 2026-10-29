@@ -1,0 +1,400 @@
+{
+  "task_id": "W128-SCOPE-LIFETIME-SOURCE",
+  "status": "PASS_POST_PROCESS_RAW_HASH_CLOSURE",
+  "before_commit": "272db0bdf9f8268dd21359ac32c2193354aca910",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "verification_source": "import copy,hashlib,json,os,subprocess,sys\nfrom pathlib import Path\nROOT=Path.cwd(); FOLDER=ROOT/'task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime'\nBEFORE='272db0bdf9f8268dd21359ac32c2193354aca910'\ndef sha(data): return hashlib.sha256(data).hexdigest()\ndef git(*args): return subprocess.check_output(['git',*args],cwd=ROOT,text=True).strip()\ndef snapshot(path):\n    first=path.stat(); data=path.read_bytes(); second=path.stat()\n    fields=('st_dev','st_ino','st_size','st_mtime_ns','st_ctime_ns')\n    assert all(getattr(first,key)==getattr(second,key) for key in fields), path\n    return dict(sha256=sha(data),bytes=len(data),stat={key:getattr(second,key) for key in fields})\ndef open_handles(targets):\n    found=[]\n    for proc in Path('/proc').iterdir():\n        if not proc.name.isdecimal(): continue\n        try: fds=list((proc/'fd').iterdir())\n        except FileNotFoundError: continue\n        for fd in fds:\n            try: target=os.readlink(fd)\n            except FileNotFoundError: continue\n            if target in targets: found.append(dict(pid=proc.name,fd=fd.name,target=target))\n    return found\nrecords={}\nfor name in ('hash_receipt.json','commands.json'):\n    path=FOLDER/name; data=path.read_bytes(); relative=str(path.relative_to(ROOT))\n    baseline=subprocess.check_output(['git','show',BEFORE+':'+relative],cwd=ROOT)\n    assert data==baseline\n    records[name]=dict(sha256=sha(data),git_blob=git('rev-parse',BEFORE+':'+relative),content=data.decode())\nreceipt=json.loads(records['hash_receipt.json']['content']); command=json.loads(records['commands.json']['content'])\nretained=command['retained_raw_artifacts']; paths={name:Path(row['path']) for name,row in retained.items()}\nassert not open_handles({str(path.resolve()) for path in paths.values()})\nfirst={name:snapshot(path) for name,path in paths.items()}\ncomparisons=[]\nfor name,row in retained.items():\n    actual=first[name]['sha256']; embedded=sha(row['content'].encode())\n    assert embedded==actual\n    comparisons.append(dict(record='commands.json',name=name,recorded=row['sha256'],closed=actual))\nfor name,expected in receipt['raw_evidence'].items():\n    comparisons.append(dict(record='hash_receipt.json',name=name,recorded=expected,closed=first[name]['sha256']))\nbad=[row for row in comparisons if row['recorded']!=row['closed']]\nassert len(comparisons)==26 and len(bad)==1 and bad[0]['name']=='validate_final.log'\nheaders={name:sha(paths[name].read_bytes().splitlines(keepends=True)[0]) for name in ('validate.log','validate_final.log')}\nassert headers['validate_final.log']==bad[0]['recorded']\narchive=dict(task_id='W128-SCOPE-LIFETIME-SOURCE',before_commit=BEFORE,original_records=records,all_before_bindings=comparisons,\n             mismatch=bad[0],process_header_sha256=headers,diagnostic_limit='fuser unavailable; replaced by direct read-only /proc descriptor inspection; no environment edit')\nwith (FOLDER/'closed_log_binding_before.json').open('x') as handle: json.dump(archive,handle,indent=2); handle.write('\\n')\nsource={}\nfor relative,expected in receipt['source_test_sha256'].items():\n    path=ROOT/relative; assert sha(path.read_bytes())==expected\n    source[relative]=dict(sha256=expected,gross_lines=len(path.read_text().splitlines()))\nassert [row['gross_lines'] for row in source.values()]==[250,160]\nassert len(receipt['seven_inputs'])==7 and len(receipt['runtime_modules_13'])==13\nfor row in receipt['seven_inputs']:\n    path=ROOT/row['path']; assert sha(path.read_bytes())==row['sha256'] and path.stat().st_size==row['bytes']\nfor relative,row in receipt['runtime_modules_13'].items(): assert sha((ROOT/relative).read_bytes())==row['sha256']\nfor relative,expected in receipt['record_bindings'].items(): assert sha((ROOT/relative).read_bytes())==expected\ninventory=json.loads((FOLDER.parent/'profile04/hash_inventory.json').read_text())\nassert inventory['files']==receipt['sealed_package_45_binding_only'] and len(inventory['files'])==45\nmatrix=json.loads((ROOT/receipt['existing_matrix_binding']).read_text()); assert matrix==receipt['matrix']\nassert matrix['identical_cases']==77 and matrix['mismatched_cases']==0 and not matrix['new_capture']\nfor domain,tree in matrix['unchanged_domain_trees'].items(): assert git('rev-parse','HEAD:'+domain)==tree\nfor name,path in paths.items(): assert snapshot(path)==first[name]\nassert not open_handles({str(path.resolve()) for path in paths.values()})\ncorrected=copy.deepcopy(receipt); corrected['raw_evidence']={name:first[name]['sha256'] for name in receipt['raw_evidence']}\nwith (FOLDER/'hash_receipt.json').open('w') as handle: json.dump(corrected,handle,indent=2); handle.write('\\n')\ncode=FOLDER/'closed_log_hash_receipt.json'\nrecord=dict(task_id='W128-SCOPE-LIFETIME-SOURCE',status='PASS_POST_PROCESS_RAW_HASH_CLOSURE',before_commit=BEFORE,python=sys.version,\n            verification_source=SOURCE,verification_source_sha256=sha(SOURCE.encode()),\n            verification_command=\"sudo -n systemd-run --scope -p MemoryMax=30G timeout 60s /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY'\\nSOURCE = r\\x27\\x27\\x27\"+SOURCE+\"\\x27\\x27\\x27\\nexec(compile(SOURCE, '<closed-log-postprocess-audit>', 'exec'))\\nPY\",\n            writer_check='Direct /proc/*/fd inspected before/after; no retained artifact descriptors; stable dev/ino/size/mtime/ctime and two equal byte hashes',\n            retained_raw_artifacts=first,all_before_bindings=comparisons,corrected_binding=bad[0],\n            initial_validator_same_self_hash_pattern=True,initial_validator_current_bindings_match_closed_file=True,\n            observed_prefix_hash=headers['validate_final.log'],authoritative_log_sha256={name:first[name]['sha256'] for name in receipt['raw_evidence']},\n            source_test=source,immutable_input_count=7,unchanged_local_runtime_count=13,unchanged_package_binding_count=45,matrix_cases=77,\n            immutable_record_bindings=receipt['record_bindings'],archive_sha256=sha((FOLDER/'closed_log_binding_before.json').read_bytes()),\n            unchanged_commands_sha256=sha((FOLDER/'commands.json').read_bytes()),\n            limits='Only derived records repaired; original logs/validator/collectors/source/tests/fixture snapshots unchanged. No tests or package/GPU/platform/network/auth operations. Source tuple repair and root acceptance remain pending.')\nwith code.open('x') as handle: json.dump(record,handle,indent=2); handle.write('\\n')\nprint(json.dumps(dict(status=record['status'],bindings_checked=len(comparisons),mismatches=bad,closed_logs=record['authoritative_log_sha256'],source_test=source),indent=2))",
+  "verification_source_sha256": "68c92b59a3efa28fd0e8fa4ed4cb721af6363dd792c148885b176eb0db044cfc",
+  "verification_command": "sudo -n systemd-run --scope -p MemoryMax=30G timeout 60s /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY'\nSOURCE = r'''import copy,hashlib,json,os,subprocess,sys\nfrom pathlib import Path\nROOT=Path.cwd(); FOLDER=ROOT/'task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime'\nBEFORE='272db0bdf9f8268dd21359ac32c2193354aca910'\ndef sha(data): return hashlib.sha256(data).hexdigest()\ndef git(*args): return subprocess.check_output(['git',*args],cwd=ROOT,text=True).strip()\ndef snapshot(path):\n    first=path.stat(); data=path.read_bytes(); second=path.stat()\n    fields=('st_dev','st_ino','st_size','st_mtime_ns','st_ctime_ns')\n    assert all(getattr(first,key)==getattr(second,key) for key in fields), path\n    return dict(sha256=sha(data),bytes=len(data),stat={key:getattr(second,key) for key in fields})\ndef open_handles(targets):\n    found=[]\n    for proc in Path('/proc').iterdir():\n        if not proc.name.isdecimal(): continue\n        try: fds=list((proc/'fd').iterdir())\n        except FileNotFoundError: continue\n        for fd in fds:\n            try: target=os.readlink(fd)\n            except FileNotFoundError: continue\n            if target in targets: found.append(dict(pid=proc.name,fd=fd.name,target=target))\n    return found\nrecords={}\nfor name in ('hash_receipt.json','commands.json'):\n    path=FOLDER/name; data=path.read_bytes(); relative=str(path.relative_to(ROOT))\n    baseline=subprocess.check_output(['git','show',BEFORE+':'+relative],cwd=ROOT)\n    assert data==baseline\n    records[name]=dict(sha256=sha(data),git_blob=git('rev-parse',BEFORE+':'+relative),content=data.decode())\nreceipt=json.loads(records['hash_receipt.json']['content']); command=json.loads(records['commands.json']['content'])\nretained=command['retained_raw_artifacts']; paths={name:Path(row['path']) for name,row in retained.items()}\nassert not open_handles({str(path.resolve()) for path in paths.values()})\nfirst={name:snapshot(path) for name,path in paths.items()}\ncomparisons=[]\nfor name,row in retained.items():\n    actual=first[name]['sha256']; embedded=sha(row['content'].encode())\n    assert embedded==actual\n    comparisons.append(dict(record='commands.json',name=name,recorded=row['sha256'],closed=actual))\nfor name,expected in receipt['raw_evidence'].items():\n    comparisons.append(dict(record='hash_receipt.json',name=name,recorded=expected,closed=first[name]['sha256']))\nbad=[row for row in comparisons if row['recorded']!=row['closed']]\nassert len(comparisons)==26 and len(bad)==1 and bad[0]['name']=='validate_final.log'\nheaders={name:sha(paths[name].read_bytes().splitlines(keepends=True)[0]) for name in ('validate.log','validate_final.log')}\nassert headers['validate_final.log']==bad[0]['recorded']\narchive=dict(task_id='W128-SCOPE-LIFETIME-SOURCE',before_commit=BEFORE,original_records=records,all_before_bindings=comparisons,\n             mismatch=bad[0],process_header_sha256=headers,diagnostic_limit='fuser unavailable; replaced by direct read-only /proc descriptor inspection; no environment edit')\nwith (FOLDER/'closed_log_binding_before.json').open('x') as handle: json.dump(archive,handle,indent=2); handle.write('\\n')\nsource={}\nfor relative,expected in receipt['source_test_sha256'].items():\n    path=ROOT/relative; assert sha(path.read_bytes())==expected\n    source[relative]=dict(sha256=expected,gross_lines=len(path.read_text().splitlines()))\nassert [row['gross_lines'] for row in source.values()]==[250,160]\nassert len(receipt['seven_inputs'])==7 and len(receipt['runtime_modules_13'])==13\nfor row in receipt['seven_inputs']:\n    path=ROOT/row['path']; assert sha(path.read_bytes())==row['sha256'] and path.stat().st_size==row['bytes']\nfor relative,row in receipt['runtime_modules_13'].items(): assert sha((ROOT/relative).read_bytes())==row['sha256']\nfor relative,expected in receipt['record_bindings'].items(): assert sha((ROOT/relative).read_bytes())==expected\ninventory=json.loads((FOLDER.parent/'profile04/hash_inventory.json').read_text())\nassert inventory['files']==receipt['sealed_package_45_binding_only'] and len(inventory['files'])==45\nmatrix=json.loads((ROOT/receipt['existing_matrix_binding']).read_text()); assert matrix==receipt['matrix']\nassert matrix['identical_cases']==77 and matrix['mismatched_cases']==0 and not matrix['new_capture']\nfor domain,tree in matrix['unchanged_domain_trees'].items(): assert git('rev-parse','HEAD:'+domain)==tree\nfor name,path in paths.items(): assert snapshot(path)==first[name]\nassert not open_handles({str(path.resolve()) for path in paths.values()})\ncorrected=copy.deepcopy(receipt); corrected['raw_evidence']={name:first[name]['sha256'] for name in receipt['raw_evidence']}\nwith (FOLDER/'hash_receipt.json').open('w') as handle: json.dump(corrected,handle,indent=2); handle.write('\\n')\ncode=FOLDER/'closed_log_hash_receipt.json'\nrecord=dict(task_id='W128-SCOPE-LIFETIME-SOURCE',status='PASS_POST_PROCESS_RAW_HASH_CLOSURE',before_commit=BEFORE,python=sys.version,\n            verification_source=SOURCE,verification_source_sha256=sha(SOURCE.encode()),\n            verification_command=\"sudo -n systemd-run --scope -p MemoryMax=30G timeout 60s /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY'\\nSOURCE = r\\x27\\x27\\x27\"+SOURCE+\"\\x27\\x27\\x27\\nexec(compile(SOURCE, '<closed-log-postprocess-audit>', 'exec'))\\nPY\",\n            writer_check='Direct /proc/*/fd inspected before/after; no retained artifact descriptors; stable dev/ino/size/mtime/ctime and two equal byte hashes',\n            retained_raw_artifacts=first,all_before_bindings=comparisons,corrected_binding=bad[0],\n            initial_validator_same_self_hash_pattern=True,initial_validator_current_bindings_match_closed_file=True,\n            observed_prefix_hash=headers['validate_final.log'],authoritative_log_sha256={name:first[name]['sha256'] for name in receipt['raw_evidence']},\n            source_test=source,immutable_input_count=7,unchanged_local_runtime_count=13,unchanged_package_binding_count=45,matrix_cases=77,\n            immutable_record_bindings=receipt['record_bindings'],archive_sha256=sha((FOLDER/'closed_log_binding_before.json').read_bytes()),\n            unchanged_commands_sha256=sha((FOLDER/'commands.json').read_bytes()),\n            limits='Only derived records repaired; original logs/validator/collectors/source/tests/fixture snapshots unchanged. No tests or package/GPU/platform/network/auth operations. Source tuple repair and root acceptance remain pending.')\nwith code.open('x') as handle: json.dump(record,handle,indent=2); handle.write('\\n')\nprint(json.dumps(dict(status=record['status'],bindings_checked=len(comparisons),mismatches=bad,closed_logs=record['authoritative_log_sha256'],source_test=source),indent=2))'''\nexec(compile(SOURCE, '<closed-log-postprocess-audit>', 'exec'))\nPY",
+  "writer_check": "Direct /proc/*/fd inspected before/after; no retained artifact descriptors; stable dev/ino/size/mtime/ctime and two equal byte hashes",
+  "retained_raw_artifacts": {
+    "evidence.log": {
+      "sha256": "12a13be656ca6db3be7f0b283d54e717f77a320beef2d0aa5ef67c4dfe1a48f5",
+      "bytes": 4430,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251480,
+        "st_size": 4430,
+        "st_mtime_ns": 1792848273898281320,
+        "st_ctime_ns": 1792848273898281320
+      }
+    },
+    "evidence.xml": {
+      "sha256": "f1f1993443a265f524ae8e93347e9bc7a21490187009c0b02d7d4e500ee2da89",
+      "bytes": 7322,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251504,
+        "st_size": 7322,
+        "st_mtime_ns": 1792848273658281260,
+        "st_ctime_ns": 1792848273658281260
+      }
+    },
+    "evidence_corrected.log": {
+      "sha256": "ef349fe71aeb4742108afe6fea4cca03b0e739770e9c3077d8930fef6642a7f4",
+      "bytes": 166,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251506,
+        "st_size": 166,
+        "st_mtime_ns": 1792848339014303794,
+        "st_ctime_ns": 1792848339014303794
+      }
+    },
+    "evidence_corrected.xml": {
+      "sha256": "59c07ebb141d9dfe4d5349b2052fa839032915785bc972bc4aa658ef1c1bd85e",
+      "bytes": 7322,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251507,
+        "st_size": 7322,
+        "st_mtime_ns": 1792848338766303733,
+        "st_ctime_ns": 1792848338766303733
+      }
+    },
+    "final.log": {
+      "sha256": "e34255a6a75d46b0bca5c2419d33a366c44882624dcb20649336066e16b4354b",
+      "bytes": 166,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251477,
+        "st_size": 166,
+        "st_mtime_ns": 1792848200630254578,
+        "st_ctime_ns": 1792848200630254578
+      }
+    },
+    "final.xml": {
+      "sha256": "54ad43bb15a7468ae7887d72ab6ae2f721b3a87391823d0d72bd6b9d6bc465f1",
+      "bytes": 7322,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251478,
+        "st_size": 7322,
+        "st_mtime_ns": 1792848200386254468,
+        "st_ctime_ns": 1792848200386254468
+      }
+    },
+    "green1.log": {
+      "sha256": "c77928e261dab1239bc9e1e185968609d3d96d172a04be0150e7fd41ca3977af",
+      "bytes": 165,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251474,
+        "st_size": 165,
+        "st_mtime_ns": 1792847613654064803,
+        "st_ctime_ns": 1792847613654064803
+      }
+    },
+    "green2.log": {
+      "sha256": "302c400446a6c661e940420cff79a08bdd18a0fef822314bdd5c0baac37c7b97",
+      "bytes": 166,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251475,
+        "st_size": 166,
+        "st_mtime_ns": 1792847867574106860,
+        "st_ctime_ns": 1792847867574106860
+      }
+    },
+    "green3.log": {
+      "sha256": "c381549f02d532d0bb727478e95977f066bb022022b4abacf512654dd2b3404e",
+      "bytes": 166,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251476,
+        "st_size": 166,
+        "st_mtime_ns": 1792848114774220473,
+        "st_ctime_ns": 1792848114774220473
+      }
+    },
+    "receipt_plugin.py": {
+      "sha256": "ee15d5da592cc06b6a1ea95acd99b55e34f67ecd8abefa4c999dfa7ecc467038",
+      "bytes": 1156,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251479,
+        "st_size": 1156,
+        "st_mtime_ns": 1792848261926276891,
+        "st_ctime_ns": 1792848261926276891
+      }
+    },
+    "receipt_plugin_corrected.py": {
+      "sha256": "4b9297bad91adb96e6186d113c18f29086b324b1a0b9e535f26e81778cb7a9d2",
+      "bytes": 1493,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251505,
+        "st_size": 1493,
+        "st_mtime_ns": 1792848327230299870,
+        "st_ctime_ns": 1792848327230299870
+      }
+    },
+    "red.log": {
+      "sha256": "a920f89e381cd5cf17f2d0c5e8293ed4ed018e00b17f37924196ae96f84855ec",
+      "bytes": 1628,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251471,
+        "st_size": 1628,
+        "st_mtime_ns": 1792847527534201174,
+        "st_ctime_ns": 1792847527534201174
+      }
+    },
+    "red_source.txt": {
+      "sha256": "d7f36faa8e989d5ec299689623c18c3bfb4d4b54fc06e3d1ad15d03459cda75d",
+      "bytes": 715,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251472,
+        "st_size": 715,
+        "st_mtime_ns": 1792847540850109908,
+        "st_ctime_ns": 1792847540850109908
+      }
+    },
+    "red_test.txt": {
+      "sha256": "6da0b43051e87d63779641e55b3354be76984005b6fc0bba429f97c848dcbeb6",
+      "bytes": 1304,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251473,
+        "st_size": 1304,
+        "st_mtime_ns": 1792847540850109908,
+        "st_ctime_ns": 1792847540850109908
+      }
+    },
+    "validate.log": {
+      "sha256": "a84d08f2f8c87e9d369712df008962d7535f58bbbeccac945f7846e8506d1d90",
+      "bytes": 650,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251510,
+        "st_size": 650,
+        "st_mtime_ns": 1792848542202367801,
+        "st_ctime_ns": 1792848542202367801
+      }
+    },
+    "validate.py": {
+      "sha256": "8d290f5d845e162a3d192ab9cbcf00ccfd6b7e2e02b93728bfe2c7f42a34ad6f",
+      "bytes": 6163,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251508,
+        "st_size": 6163,
+        "st_mtime_ns": 1792848751014426152,
+        "st_ctime_ns": 1792848751014426152
+      }
+    },
+    "validate_final.log": {
+      "sha256": "8b3b315f82c3c0cf72dc621c527fff046a0167781f048931fa95067f8ff1abbf",
+      "bytes": 650,
+      "stat": {
+        "st_dev": 64784,
+        "st_ino": 1178251511,
+        "st_size": 650,
+        "st_mtime_ns": 1792848836322448369,
+        "st_ctime_ns": 1792848836322448369
+      }
+    }
+  },
+  "all_before_bindings": [
+    {
+      "record": "commands.json",
+      "name": "evidence.log",
+      "recorded": "12a13be656ca6db3be7f0b283d54e717f77a320beef2d0aa5ef67c4dfe1a48f5",
+      "closed": "12a13be656ca6db3be7f0b283d54e717f77a320beef2d0aa5ef67c4dfe1a48f5"
+    },
+    {
+      "record": "commands.json",
+      "name": "evidence.xml",
+      "recorded": "f1f1993443a265f524ae8e93347e9bc7a21490187009c0b02d7d4e500ee2da89",
+      "closed": "f1f1993443a265f524ae8e93347e9bc7a21490187009c0b02d7d4e500ee2da89"
+    },
+    {
+      "record": "commands.json",
+      "name": "evidence_corrected.log",
+      "recorded": "ef349fe71aeb4742108afe6fea4cca03b0e739770e9c3077d8930fef6642a7f4",
+      "closed": "ef349fe71aeb4742108afe6fea4cca03b0e739770e9c3077d8930fef6642a7f4"
+    },
+    {
+      "record": "commands.json",
+      "name": "evidence_corrected.xml",
+      "recorded": "59c07ebb141d9dfe4d5349b2052fa839032915785bc972bc4aa658ef1c1bd85e",
+      "closed": "59c07ebb141d9dfe4d5349b2052fa839032915785bc972bc4aa658ef1c1bd85e"
+    },
+    {
+      "record": "commands.json",
+      "name": "final.log",
+      "recorded": "e34255a6a75d46b0bca5c2419d33a366c44882624dcb20649336066e16b4354b",
+      "closed": "e34255a6a75d46b0bca5c2419d33a366c44882624dcb20649336066e16b4354b"
+    },
+    {
+      "record": "commands.json",
+      "name": "final.xml",
+      "recorded": "54ad43bb15a7468ae7887d72ab6ae2f721b3a87391823d0d72bd6b9d6bc465f1",
+      "closed": "54ad43bb15a7468ae7887d72ab6ae2f721b3a87391823d0d72bd6b9d6bc465f1"
+    },
+    {
+      "record": "commands.json",
+      "name": "green1.log",
+      "recorded": "c77928e261dab1239bc9e1e185968609d3d96d172a04be0150e7fd41ca3977af",
+      "closed": "c77928e261dab1239bc9e1e185968609d3d96d172a04be0150e7fd41ca3977af"
+    },
+    {
+      "record": "commands.json",
+      "name": "green2.log",
+      "recorded": "302c400446a6c661e940420cff79a08bdd18a0fef822314bdd5c0baac37c7b97",
+      "closed": "302c400446a6c661e940420cff79a08bdd18a0fef822314bdd5c0baac37c7b97"
+    },
+    {
+      "record": "commands.json",
+      "name": "green3.log",
+      "recorded": "c381549f02d532d0bb727478e95977f066bb022022b4abacf512654dd2b3404e",
+      "closed": "c381549f02d532d0bb727478e95977f066bb022022b4abacf512654dd2b3404e"
+    },
+    {
+      "record": "commands.json",
+      "name": "receipt_plugin.py",
+      "recorded": "ee15d5da592cc06b6a1ea95acd99b55e34f67ecd8abefa4c999dfa7ecc467038",
+      "closed": "ee15d5da592cc06b6a1ea95acd99b55e34f67ecd8abefa4c999dfa7ecc467038"
+    },
+    {
+      "record": "commands.json",
+      "name": "receipt_plugin_corrected.py",
+      "recorded": "4b9297bad91adb96e6186d113c18f29086b324b1a0b9e535f26e81778cb7a9d2",
+      "closed": "4b9297bad91adb96e6186d113c18f29086b324b1a0b9e535f26e81778cb7a9d2"
+    },
+    {
+      "record": "commands.json",
+      "name": "red.log",
+      "recorded": "a920f89e381cd5cf17f2d0c5e8293ed4ed018e00b17f37924196ae96f84855ec",
+      "closed": "a920f89e381cd5cf17f2d0c5e8293ed4ed018e00b17f37924196ae96f84855ec"
+    },
+    {
+      "record": "commands.json",
+      "name": "red_source.txt",
+      "recorded": "d7f36faa8e989d5ec299689623c18c3bfb4d4b54fc06e3d1ad15d03459cda75d",
+      "closed": "d7f36faa8e989d5ec299689623c18c3bfb4d4b54fc06e3d1ad15d03459cda75d"
+    },
+    {
+      "record": "commands.json",
+      "name": "red_test.txt",
+      "recorded": "6da0b43051e87d63779641e55b3354be76984005b6fc0bba429f97c848dcbeb6",
+      "closed": "6da0b43051e87d63779641e55b3354be76984005b6fc0bba429f97c848dcbeb6"
+    },
+    {
+      "record": "commands.json",
+      "name": "validate.log",
+      "recorded": "a84d08f2f8c87e9d369712df008962d7535f58bbbeccac945f7846e8506d1d90",
+      "closed": "a84d08f2f8c87e9d369712df008962d7535f58bbbeccac945f7846e8506d1d90"
+    },
+    {
+      "record": "commands.json",
+      "name": "validate.py",
+      "recorded": "8d290f5d845e162a3d192ab9cbcf00ccfd6b7e2e02b93728bfe2c7f42a34ad6f",
+      "closed": "8d290f5d845e162a3d192ab9cbcf00ccfd6b7e2e02b93728bfe2c7f42a34ad6f"
+    },
+    {
+      "record": "commands.json",
+      "name": "validate_final.log",
+      "recorded": "8b3b315f82c3c0cf72dc621c527fff046a0167781f048931fa95067f8ff1abbf",
+      "closed": "8b3b315f82c3c0cf72dc621c527fff046a0167781f048931fa95067f8ff1abbf"
+    },
+    {
+      "record": "hash_receipt.json",
+      "name": "red.log",
+      "recorded": "a920f89e381cd5cf17f2d0c5e8293ed4ed018e00b17f37924196ae96f84855ec",
+      "closed": "a920f89e381cd5cf17f2d0c5e8293ed4ed018e00b17f37924196ae96f84855ec"
+    },
+    {
+      "record": "hash_receipt.json",
+      "name": "green1.log",
+      "recorded": "c77928e261dab1239bc9e1e185968609d3d96d172a04be0150e7fd41ca3977af",
+      "closed": "c77928e261dab1239bc9e1e185968609d3d96d172a04be0150e7fd41ca3977af"
+    },
+    {
+      "record": "hash_receipt.json",
+      "name": "green2.log",
+      "recorded": "302c400446a6c661e940420cff79a08bdd18a0fef822314bdd5c0baac37c7b97",
+      "closed": "302c400446a6c661e940420cff79a08bdd18a0fef822314bdd5c0baac37c7b97"
+    },
+    {
+      "record": "hash_receipt.json",
+      "name": "green3.log",
+      "recorded": "c381549f02d532d0bb727478e95977f066bb022022b4abacf512654dd2b3404e",
+      "closed": "c381549f02d532d0bb727478e95977f066bb022022b4abacf512654dd2b3404e"
+    },
+    {
+      "record": "hash_receipt.json",
+      "name": "final.log",
+      "recorded": "e34255a6a75d46b0bca5c2419d33a366c44882624dcb20649336066e16b4354b",
+      "closed": "e34255a6a75d46b0bca5c2419d33a366c44882624dcb20649336066e16b4354b"
+    },
+    {
+      "record": "hash_receipt.json",
+      "name": "evidence.log",
+      "recorded": "12a13be656ca6db3be7f0b283d54e717f77a320beef2d0aa5ef67c4dfe1a48f5",
+      "closed": "12a13be656ca6db3be7f0b283d54e717f77a320beef2d0aa5ef67c4dfe1a48f5"
+    },
+    {
+      "record": "hash_receipt.json",
+      "name": "evidence_corrected.log",
+      "recorded": "ef349fe71aeb4742108afe6fea4cca03b0e739770e9c3077d8930fef6642a7f4",
+      "closed": "ef349fe71aeb4742108afe6fea4cca03b0e739770e9c3077d8930fef6642a7f4"
+    },
+    {
+      "record": "hash_receipt.json",
+      "name": "validate.log",
+      "recorded": "a84d08f2f8c87e9d369712df008962d7535f58bbbeccac945f7846e8506d1d90",
+      "closed": "a84d08f2f8c87e9d369712df008962d7535f58bbbeccac945f7846e8506d1d90"
+    },
+    {
+      "record": "hash_receipt.json",
+      "name": "validate_final.log",
+      "recorded": "05dbabadd22ac790a09c26b0bc0a924f11f114f0b5d606955814ed0bf559af1e",
+      "closed": "8b3b315f82c3c0cf72dc621c527fff046a0167781f048931fa95067f8ff1abbf"
+    }
+  ],
+  "corrected_binding": {
+    "record": "hash_receipt.json",
+    "name": "validate_final.log",
+    "recorded": "05dbabadd22ac790a09c26b0bc0a924f11f114f0b5d606955814ed0bf559af1e",
+    "closed": "8b3b315f82c3c0cf72dc621c527fff046a0167781f048931fa95067f8ff1abbf"
+  },
+  "initial_validator_same_self_hash_pattern": true,
+  "initial_validator_current_bindings_match_closed_file": true,
+  "observed_prefix_hash": "05dbabadd22ac790a09c26b0bc0a924f11f114f0b5d606955814ed0bf559af1e",
+  "authoritative_log_sha256": {
+    "red.log": "a920f89e381cd5cf17f2d0c5e8293ed4ed018e00b17f37924196ae96f84855ec",
+    "green1.log": "c77928e261dab1239bc9e1e185968609d3d96d172a04be0150e7fd41ca3977af",
+    "green2.log": "302c400446a6c661e940420cff79a08bdd18a0fef822314bdd5c0baac37c7b97",
+    "green3.log": "c381549f02d532d0bb727478e95977f066bb022022b4abacf512654dd2b3404e",
+    "final.log": "e34255a6a75d46b0bca5c2419d33a366c44882624dcb20649336066e16b4354b",
+    "evidence.log": "12a13be656ca6db3be7f0b283d54e717f77a320beef2d0aa5ef67c4dfe1a48f5",
+    "evidence_corrected.log": "ef349fe71aeb4742108afe6fea4cca03b0e739770e9c3077d8930fef6642a7f4",
+    "validate.log": "a84d08f2f8c87e9d369712df008962d7535f58bbbeccac945f7846e8506d1d90",
+    "validate_final.log": "8b3b315f82c3c0cf72dc621c527fff046a0167781f048931fa95067f8ff1abbf"
+  },
+  "source_test": {
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": {
+      "sha256": "84ad08d30b8deac30a8bd64f3e1afa035e757ec8839251ab6f74ca312d54db63",
+      "gross_lines": 250
+    },
+    "tests/unit/test_cupti_scope_lifetime.py": {
+      "sha256": "e2317c546093998f98b0aa55ea54bd9add020328ecf9a2249e39421135c9a3c6",
+      "gross_lines": 160
+    }
+  },
+  "immutable_input_count": 7,
+  "unchanged_local_runtime_count": 13,
+  "unchanged_package_binding_count": 45,
+  "matrix_cases": 77,
+  "immutable_record_bindings": {
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/hash_inventory.json": "2688fe057ccd830853f9fd18ddbfe4dbbbe9770295f67c92715de8d6cfb30726",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json": "de66faae79b94d749214412d46c6f8b9f06d71ae3d3481bdf34306979bd79259",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/matrix_binding.json": "e90c4709ecfdbf5acbdd7f248e2e5de020dc46b8ad706cef40729456003fed2e",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json": "89232a9e1ee60e5d57859dd707796a85b3d99ba89ad309d98aab3c93b2ed6b0b"
+  },
+  "archive_sha256": "a622f71283ce52c4994a0d4eb51cffe6d8e44f15cf7c1ac37536f178e3fee0bb",
+  "unchanged_commands_sha256": "389f1bec77b057bc40670a034c6be41d61af5a64f64d009a2bd4d45493a59cae",
+  "limits": "Only derived records repaired; original logs/validator/collectors/source/tests/fixture snapshots unchanged. No tests or package/GPU/platform/network/auth operations. Source tuple repair and root acceptance remain pending."
+}

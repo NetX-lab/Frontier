@@ -1,0 +1,18 @@
+{
+  "signal": "SIGINT",
+  "returncode": 0,
+  "shutdown_order": {
+    "drained_before_stop": true,
+    "all_nodes_drained_before_head_stop": [
+      "gpu-h200-0040.lgcm.sh.istep.fun",
+      "gpu-h200-0645.lgcm.sh.istep.fun",
+      "gpu-h200-0705.lgcm.sh.istep.fun",
+      "gpu-h200-0710.lgcm.sh.istep.fun",
+      "gpu-h200-0714.lgcm.sh.istep.fun",
+      "gpu-h200-0716.lgcm.sh.istep.fun",
+      "gpu-h200-0828.lgcm.sh.istep.fun",
+      "gpu-h200-1087.lgcm.sh.istep.fun"
+    ],
+    "native_returned_before_requested_stop": false
+  }
+}

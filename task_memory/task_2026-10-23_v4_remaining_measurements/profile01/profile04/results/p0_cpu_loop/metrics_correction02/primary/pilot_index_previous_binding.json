@@ -1,0 +1,14 @@
+{
+  "status": "PASS_CLOSED_INDEX_HASH_BINDING_ONLY",
+  "observed_utc": "2026-10-24T20:51:54.750107+00:00",
+  "new_failure_sha256": "5a440544e13faa8a2ffd4d8c30ae3b789be1368525b8ab24027a6258384dc019",
+  "previous_failure_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/primary/pilot_failure.json",
+  "previous_failure_sha256": "6395357c66801fe037fb293c03f1b7ab17e39a34ba882a68b8c8c56202d68362",
+  "exact_decompressed_index_sha256": "678fb91782cc85a5068cf6bccbd51749562449abdfc90c628c0a084dddf68667",
+  "new_index_rows": 1215919,
+  "previous_index_rows": 1215919,
+  "new_trace_or_index_read_invocations": 0,
+  "final_json_missing": true,
+  "R5_complete_ranks": 24,
+  "useful_steps": null
+}

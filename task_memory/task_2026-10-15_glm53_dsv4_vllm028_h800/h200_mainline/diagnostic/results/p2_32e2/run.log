@@ -1,0 +1,40 @@
+WARNING 08:10:18 model_architectures.py:1301] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported; measured execution is limited to a diagnostic whole-step table (dsv4_step_cost.json) for PREFILL and unified DECODE lanes of its measured topology
+WARNING 08:10:18 cluster_config.py:1575] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+======================================================================
+
+WARNING 08:10:19 measured_cc_backend.py:171] Non-monotone measured collective ('all_gatherv', 'ep', 32): bytes=(98816, 197632), us=(316.38479828834534, 316.103994846344)
+WARNING 08:10:19 measured_cc_backend.py:171] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(24576, 49152), us=(12.561599910259247, 11.432000063359737)
+WARNING 08:10:19 measured_cc_backend.py:171] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(196608, 393216), us=(18.622399866580963, 18.25440004467964)
+WARNING 08:10:19 measured_cc_backend.py:171] Non-monotone measured collective ('all_gatherv', 'ep', 32): bytes=(98816, 197632), us=(316.38479828834534, 316.103994846344)
+WARNING 08:10:19 measured_cc_backend.py:171] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(24576, 49152), us=(12.561599910259247, 11.432000063359737)
+WARNING 08:10:19 measured_cc_backend.py:171] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(196608, 393216), us=(18.622399866580963, 18.25440004467964)
+EXIT 0

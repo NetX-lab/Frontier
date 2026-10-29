@@ -1,0 +1,24 @@
+{
+  "observed_utc": "2026-10-24T21:33:34.212804+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/usr/bin/python3",
+  "executable_sha256": "dbb04ace02303fa5cb3a6d1aa0e7a180d8dd23d3257cc6a0b155d0ee219432a2",
+  "parent_core_limit": [
+    0,
+    -1
+  ],
+  "kernel_core_pattern": "core",
+  "kernel_core_uses_pid": "1",
+  "core_files_in_repo_root": [],
+  "selected_environment": {
+    "PYTHONPATH": null,
+    "PYTHONHOME": null,
+    "PYTHONMALLOC": null,
+    "PYTHONFAULTHANDLER": null,
+    "LD_PRELOAD": null,
+    "LD_LIBRARY_PATH": "/usr/local/nvidia/lib64",
+    "MALLOC_CHECK_": null,
+    "GLIBC_TUNABLES": null
+  },
+  "limits": "This is parent metadata after the child ended, not an observed child module list/core limit. No core file was found in this exact repository root."
+}

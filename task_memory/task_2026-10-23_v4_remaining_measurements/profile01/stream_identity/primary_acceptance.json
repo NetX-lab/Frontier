@@ -1,0 +1,73 @@
+{
+  "status": "ACCEPTED_CPU_STREAM_LOADER_REPAIR",
+  "created_at_utc": "2026-10-23T17:19:32.202650+00:00",
+  "source_commit": "0d745706d899b5e005d364d28ecdcbd355a4f1c4",
+  "source_files": {
+    "tests/comparison/calibration/native_serve_profile.py": "17d6dea11d35a2dc9849a11986fe5df46b45adb84d2d2bdeb958642a851b26ef",
+    "tests/unit/test_native_serve_profile.py": "a43f82d524e08250f1aa1b4b3bc3d9f4d9ba01935b6e1b9326c0a62ecf190c84"
+  },
+  "gross_lines": 34,
+  "line_cap": 80,
+  "review": {
+    "session": "ses_e963f099dffeoPCo7YCv82W14r",
+    "task": "W128-CUPTI-SONAME-REVIEW",
+    "result": "NO_FINDINGS",
+    "reviewer_reran_checks": false
+  },
+  "receipts": {
+    "red": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_identity/red.json",
+      "sha256": "1cced45b9da2b53c250be9ac2b487a9b8c0b7059c438a54239716be8399309a6"
+    },
+    "green": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_identity/green.json",
+      "sha256": "c52d42aa08fdfbe0993dca3fed5ee2438dc546d1a90eb57493efe5f006bd2dc7"
+    },
+    "image": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_identity/image.json",
+      "sha256": "20c46fe5f9523e917f8e4c3a4fcc373309361765ea5b97e956e753a2e729e127"
+    },
+    "library_inventory": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_identity/library_inventory.json",
+      "sha256": "fefc1124d6993cb8ca4dd3eb805cf17befbbb92ad5294e2126454f7fd84997ab"
+    },
+    "torch_loaded_library": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_identity/torch_loaded_library.json",
+      "sha256": "7121eff7c7e709144cf379740496f834c3175c959830c062db9435ab334c59ae"
+    }
+  },
+  "matrix": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_identity/matrix_binding.json",
+    "sha256": "91f77a7d171a4f9ee309765321673d08f979ad33f77c84b1029445e605c9ee94"
+  },
+  "tests": {
+    "test_native_serve_profile": {
+      "tests": 33,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "test_native_pd_worker": {
+      "tests": 19,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "test_native_serving_inventory": {
+      "tests": 28,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "test_native_v2_serving_inventory": {
+      "tests": 45,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    }
+  },
+  "gpu_stream_mapping_validated": false,
+  "native_reference_admission": false,
+  "operator_cost_admission": false,
+  "next": "Fresh-package single-H800 test of actual imported collector stream IDs and native profiler restart/capture behavior."
+}

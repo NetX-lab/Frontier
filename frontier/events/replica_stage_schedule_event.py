@@ -9,7 +9,11 @@ from frontier.logger import init_logger
 from frontier.metrics import MetricsStore
 from frontier.scheduler import BaseClusterScheduler
 from frontier.scheduler.replica_stage_scheduler import ReplicaStageScheduler
-from frontier.scheduler.utils.dp_dummy_forward import start_dummy_forward
+from frontier.scheduler.utils.dp_dummy_forward import (
+    defer_first_layer,
+    runs_dp_rendezvous,
+    start_dummy_forward,
+)
 from frontier.scheduler.utils.forward_sync_state import source_forward_mode
 from frontier.types import EventType, ClusterType
 
@@ -163,6 +167,13 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
             return []
 
+        if self._cluster_type == ClusterType.DECODE:
+            # The engine step starts: its KV connector checks and posts the
+            # lane's NIXL READs.
+            lane = cluster_scheduler.get_replica_scheduler(self._replica_id, self._replica_local_id)
+            if hasattr(lane, "on_engine_step_start"):
+                lane.on_engine_step_start(self.time, batch)
+
         if isinstance(batch, DummyForwardBatch):
             return start_dummy_forward(
                 cluster_scheduler, self.time, self._replica_id, self._stage_id, batch
@@ -236,6 +247,15 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             num_layers,
                         )
                     )
+                    if runs_dp_rendezvous(cluster_scheduler):
+                        batch._prefill_model_execution_components_ms_by_stage = {
+                            self._stage_id: []
+                        }
+                        return defer_first_layer(
+                            cluster_scheduler, self.time, self._replica_id,
+                            self._stage_id, batch, self._replica_local_id,
+                            prefill=True,
+                        )
 
                     # Predict first-layer timing directly (avoid using aggregated stage prediction).
                     execution_time = stage_scheduler._execution_time_predictor.predict_stage_execution_time(
@@ -524,6 +544,13 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             num_layers,
                         )
                     )
+                    if runs_dp_rendezvous(cluster_scheduler):
+                        batch._decode_stage_start_time = self.time
+                        return defer_first_layer(
+                            cluster_scheduler, self.time, self._replica_id,
+                            self._stage_id, batch, self._replica_local_id,
+                            prefill=False,
+                        )
 
                     # Predict the first layer owned by this pipeline stage.
                     execution_time = stage_scheduler._execution_time_predictor.predict_stage_execution_time(

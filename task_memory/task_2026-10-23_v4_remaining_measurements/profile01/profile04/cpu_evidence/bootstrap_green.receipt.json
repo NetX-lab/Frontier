@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-I",
+    "-B",
+    "-c",
+    "import importlib.util,json,pathlib,subprocess,sys\nstage=pathlib.Path(sys.argv[1]); package=pathlib.Path(sys.argv[2]); receipt=pathlib.Path(sys.argv[3])\ns=importlib.util.spec_from_file_location('generated_bootstrap',stage/'native_dummy_bootstrap.py'); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)\nclass InstalledSourceVerificationStandIn:\n    @staticmethod\n    def find_spec(name,paths):\n        assert name=='vllm'; return type('Spec',(),{'origin':str(package/'__init__.py')})()\nm.PathFinder=InstalledSourceVerificationStandIn\ndef launch(executable,args,env):\n    assert 'pd_replay' not in sys.modules and 'native_pd_worker' not in sys.modules\n    assert env['PYTHONPATH']==str(stage)+':'+str(stage/'tests/comparison/dp_placement_pp')\n    assert args==[sys.executable,'-B',str(stage/'native_pd_worker.py'),'--config',str(stage/'config.json')]\n    child_code=\"import json,pathlib,sys; import native_pd_worker; assert 'pd_replay' not in sys.modules; assert pathlib.Path(sys.modules['vllm_replay'].__file__)==pathlib.Path('tests/comparison/dp_placement_pp/vllm_replay.py').resolve(); print('BOOTSTRAP_CHILD_IMPORT_GREEN'); print(json.dumps(dict(worker=native_pd_worker.__file__,dependency=sys.modules['vllm_replay'].__file__,sys_path=sys.path,pd_replay_preloaded=False)))\"\n    child=subprocess.run([executable,'-B','-c',child_code],env=env,text=True,capture_output=True)\n    receipt.write_text(json.dumps(dict(status='GREEN' if child.returncode==0 else 'FAIL',standins='installed source/binary/PathFinder only; generated bootstrap and13runtime bytes unchanged',generated_argv=args,generated_pythonpath=env['PYTHONPATH'],child_command=[executable,'-B','-c',child_code],returncode=child.returncode,stdout=child.stdout,stderr=child.stderr,submitted=False),indent=2)+'\\n')\n    assert child.returncode==0,child.stderr\n    print(child.stdout,end='')\nm.bootstrap(stage/'config.json',package=package,launch=launch)\n",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/bootstrap_standins/stage",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/bootstrap_standins/installed/vllm",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/bootstrap_environment.json"
+  ],
+  "returncode": 0,
+  "cpu_only": true
+}

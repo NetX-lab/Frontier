@@ -1,0 +1,53 @@
+WARNING 06:09:43 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported
+WARNING 06:09:43 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+======================================================================
+
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/glm53_dsv4/h4a1/probe_v4_pd.py", line 51, in <module>
+    runpy.run_module("frontier.main", run_name="__main__")
+  File "/usr/lib/python3.10/runpy.py", line 227, in run_module
+    return _run_code(code, {}, init_globals, run_name, mod_spec)
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/main.py", line 97, in <module>
+    main()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/main.py", line 77, in main
+    simulator = Simulator(config)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/simulator.py", line 157, in __init__
+    ExecutionTimePredictionModelManager(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/shared_prediction_model_manager.py", line 107, in __init__
+    self._trained_models = self._train_all_required_models()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/shared_prediction_model_manager.py", line 434, in _train_all_required_models
+    attention_models = self._train_attn_models_for_cluster(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/prediction_family_trainers.py", line 666, in _train_attn_models_for_cluster
+    raise FileNotFoundError(f"Linear ops input file {linear_ops_file} not found")
+FileNotFoundError: Linear ops input file ./data/profiling/compute/h800/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv not found

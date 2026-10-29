@@ -1,0 +1,4740 @@
+{
+  "FULL_AND_PIECEWISE": {
+    "decode-b1-p256": {
+      "measured_steps": 8,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.6477541371158393,
+          "kernel_ms_per_step": 0.7459961547851554,
+          "kernels_per_step": 211.5
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0023919677734375,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008932067871093751,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00167596435546875,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0066120605468750005,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00173992919921875,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005592102050781251,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00543994140625,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.042328613281250003,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0029678955078125003,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0087117919921875,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017518920898437502,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006875854492187501,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00182025146484375,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00551171875,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005579956054687498,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.04230438232421875,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00660791015625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01031231689453125,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00193218994140625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00264373779296875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.013731811523437502,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00156402587890625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006887878417968751,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.004216125488281251,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0095123291015625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00218402099609375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0027598876953125006,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007119812011718749,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00366827392578125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028838500976562506,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008996032714843751,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017438354492187503,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00567205810546875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0097716064453125,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.05042077636718752,
+          "kernels_per_step": 4.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00310833740234375,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0071719970703125,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00230010986328125,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00290386962890625,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00988812255859375,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0018442382812499998,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007015930175781251,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00184014892578125,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005687744140624999,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006075927734374999,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.04829650878906248,
+          "kernels_per_step": 3.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006715820312500001,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010348083496093747,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00211627197265625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0025278930664062497,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.013944580078125001,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00185589599609375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006967956542968751,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0043480224609375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009772033691406248,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.002212158203125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.002648193359375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006823730468750001,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00358416748046875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00266778564453125,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00915673828125,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.001864013671875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0059000244140625,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01002789306640625,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.05004022216796874,
+          "kernels_per_step": 4.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0029282226562500004,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007223999023437502,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0023436279296874998,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028322143554687495,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010216125488281252,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0018201904296875002,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006919982910156251,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00172784423828125,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005467895507812499,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006256042480468751,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.04848815917968749,
+          "kernels_per_step": 3.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-decode-b1-p256",
+          "FULL"
+        ]
+      ]
+    },
+    "decode-b4-p2048": {
+      "measured_steps": 8,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.6462264150943396,
+          "kernel_ms_per_step": 1.292699096679689,
+          "kernels_per_step": 212.0
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.003035888671875,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0088519287109375,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00168798828125,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0067718505859375,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017119140625,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005599853515624999,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0055482788085937495,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.042412536621093753,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0031641235351562505,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0087960205078125,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017319946289062501,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006927612304687501,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017960815429687502,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00581597900390625,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005704101562499999,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.042496337890625006,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010776123046874999,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010115966796875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0020318603515625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0027119140624999997,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.014779602050781254,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016361083984375003,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006900024414062501,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00518798828125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009532043457031252,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00229595947265625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0026876831054687502,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00685223388671875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0041319580078125005,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00781597900390625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009151855468749998,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00183587646484375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005704101562499999,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010064147949218751,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.052124633789062506,
+          "kernels_per_step": 4.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00297174072265625,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00764813232421875,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00235992431640625,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00299993896484375,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010531982421875,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017396240234375001,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00692791748046875,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00173187255859375,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0057681884765625,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00632745361328125,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.047784240722656246,
+          "kernels_per_step": 3.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01079608154296875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0102681884765625,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00198394775390625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00267620849609375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0145439453125,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015759887695312499,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007028015136718751,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005751953125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009796081542968751,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00229608154296875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0026558227539062503,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006903869628906251,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0041358642578125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0076121826171875,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00951983642578125,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.001783935546875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00589215087890625,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009408142089843748,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.052116271972656246,
+          "kernels_per_step": 4.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00306011962890625,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00740789794921875,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0022958984375,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00277593994140625,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0107481689453125,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017680664062500002,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006836059570312501,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017319946289062504,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005651611328125,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0062435302734375,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.04789624023437499,
+          "kernels_per_step": 3.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-decode-b4-p2048",
+          "FULL"
+        ]
+      ]
+    },
+    "decode-b8-p2052": {
+      "measured_steps": 8,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.6477541371158393,
+          "kernel_ms_per_step": 2.0120528564453086,
+          "kernels_per_step": 211.5
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028038330078125,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00921173095703125,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00163616943359375,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00670391845703125,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017080078125,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00562799072265625,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00561993408203125,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.04309582519531249,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0030880126953125005,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0087640380859375,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00167987060546875,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006859985351562501,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016920166015625,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005927856445312499,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005712219238281252,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.04296832275390626,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0062040405273437495,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0101881103515625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00206005859375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00263604736328125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.014748046875000002,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.001696044921875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00690386962890625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0042520751953125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00964813232421875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0022718505859375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028759765625000003,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0070841064453125,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00407220458984375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007508544921875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00904815673828125,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0018239135742187504,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0058560791015625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00953216552734375,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.053280090332031266,
+          "kernels_per_step": 4.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.003327880859375,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007635803222656251,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0022760620117187502,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0029759521484374997,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01059991455078125,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016718139648437501,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006940063476562501,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017320556640625,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005764160156249999,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006311889648437499,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.04850384521484375,
+          "kernels_per_step": 3.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006128173828125001,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0100479736328125,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00190008544921875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0026640624999999998,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01504486083984375,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016400756835937501,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00684429931640625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00446429443359375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00945257568359375,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0023680419921874997,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00282403564453125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007088012695312499,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0040758056640624995,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00759259033203125,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009172058105468749,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017720947265625002,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0057680664062499986,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0099117431640625,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.05344427490234375,
+          "kernels_per_step": 4.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0030198974609375,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007367919921875001,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00235186767578125,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0029835205078125,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010615661621093751,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017160034179687501,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006936035156250001,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00175592041015625,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00581585693359375,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00634368896484375,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.04879205322265624,
+          "kernels_per_step": 3.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-decode-b8-p2052",
+          "FULL"
+        ]
+      ]
+    },
+    "prefill-p4095": {
+      "measured_steps": 24,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.6595289079229122,
+          "kernel_ms_per_step": 9.15966217041016,
+          "kernels_per_step": 233.5
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.016237345377604167,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01695615641276041,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.002222635904947917,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008369344075520833,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005484069824218749,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00987469482421875,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009690734863281253,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.03824121093750001,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.016245442708333332,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.016665222167968747,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021426391601562507,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008050801595052084,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005461324055989582,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009801371256510419,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009594868977864584,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.03840932210286456,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.03252685546875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.018152303059895836,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.004315958658854168,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.018634765625000004,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.02597218831380208,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0022092895507812506,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008533548990885417,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005291951497395832,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0162440185546875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.003178833007812501,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009517415364583332,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.020772237141927087,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.011493367513020832,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05513639322916666,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.011334879557291669,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00547601318359375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010073730468749998,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010833435058593749,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.08801395670572916,
+          "kernels_per_step": 5.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.011228169759114587,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.015526753743489585,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0036307169596354175,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01587345377604167,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.02938539632161459,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00219464111328125,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0080322265625,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005481343587239582,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009898579915364579,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00976806640625,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05745361328125004,
+          "kernels_per_step": 5.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.03229081217447916,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.017978698730468753,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.004354634602864584,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.018500203450520836,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.026266479492187494,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.002143961588541667,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00857073974609375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005205444335937498,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0168267822265625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0031960856119791665,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009297424316406249,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.02035337320963541,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.011621459960937502,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.055341796874999995,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.011341552734375003,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005495930989583332,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010105326334635414,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010885375976562493,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.08823374430338547,
+          "kernels_per_step": 5.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.011246887207031252,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.014717366536458332,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0037106730143229173,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.015801310221354167,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.028589599609375006,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021972656250000004,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00828277587890625,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005457295735677083,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009881327311197915,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009737284342447921,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05727235921223959,
+          "kernels_per_step": 5.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-prefill-p4095",
+          "PIECEWISE"
+        ]
+      ]
+    }
+  },
+  "NONE": {
+    "decode-b1-p256": {
+      "measured_steps": 8,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.6797172851562473,
+          "kernels_per_step": 211.5
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.002364013671875,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008635986328125001,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00166387939453125,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006835876464843751,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0016197509765625,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005292114257812499,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0054799804687499995,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04201611328125,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.002796142578125,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008664245605468749,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0016358642578125,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0068961181640625,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00164776611328125,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0053680419921875,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0056240234374999995,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04233612060546875,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0033160400390625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008880432128906249,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00178790283203125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0027236328125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0084881591796875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0016280517578125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0068918457031250015,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.002112060546875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006115966796875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0019524536132812503,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_short_context_fill": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0008280639648437499,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005724060058593749,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0016519165039062499,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005324096679687499,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005580261230468749,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0498284912109375,
+          "kernels_per_step": 4.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023800048828124996,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0066199951171875,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00210821533203125,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0028240356445312495,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00852020263671875,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0016279296875,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006912048339843751,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0016800537109374998,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005436523437499999,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005660034179687499,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.048075927734374996,
+          "kernels_per_step": 3.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0032677001953125002,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.009019958496093751,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0018880615234375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00276409912109375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008716064453124998,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015718994140624999,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006955993652343751,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0022080078125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006072509765625,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00200823974609375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_short_context_fill": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0008043212890625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005752014160156249,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00164410400390625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0053441162109374996,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005520141601562499,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.050032836914062497,
+          "kernels_per_step": 4.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023756713867187497,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006583801269531251,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0019439697265625,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00287188720703125,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0084722900390625,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00161578369140625,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0068480224609375005,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0017960815429687498,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00542034912109375,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005728088378906249,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0479246826171875,
+          "kernels_per_step": 3.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-decode-b1-p256",
+          "NONE"
+        ]
+      ]
+    },
+    "decode-b4-p2048": {
+      "measured_steps": 8,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 1.2294993896484347,
+          "kernels_per_step": 212.0
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0028559570312499997,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0086197509765625,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00156011962890625,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00689215087890625,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0017879638671875002,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0055240478515625,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00552410888671875,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04210388183593751,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0028802490234375,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00869195556640625,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015720214843749996,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0070479736328125,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0017718505859374996,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0056363525390625,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0056121826171874984,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.043195922851562506,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005411987304687499,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00936395263671875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0018399658203125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.002612060546875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0087442626953125,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015999755859375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0069560546875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0033001708984375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0061163330078125,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00179595947265625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0020478515624999995,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0064366455078125,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0040479736328125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00759185791015625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005788330078124999,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0017879028320312502,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00554803466796875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0055878906249999995,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05280065917968751,
+          "kernels_per_step": 4.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023037109375000004,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0070758056640625,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0021798095703125004,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0029921264648437498,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008587890624999999,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015442504882812501,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00715606689453125,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.001696044921875,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005660095214843749,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0056361083984375,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04865606689453125,
+          "kernels_per_step": 3.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0052518310546874995,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.009323791503906251,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0018558349609375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0025838623046874998,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008695739746093752,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00142431640625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.007064208984375001,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00327587890625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00620404052734375,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0018679809570312498,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00195611572265625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0066162109375,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.004096435546875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00747186279296875,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005660095214843749,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.001723876953125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0056556396484375,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00547613525390625,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05239227294921875,
+          "kernels_per_step": 4.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023079833984375,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006896118164062499,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00213970947265625,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0029560546875,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00864813232421875,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015678710937500001,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.007012084960937501,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0016678466796875,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00570391845703125,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005600097656249999,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04888409423828125,
+          "kernels_per_step": 3.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-decode-b4-p2048",
+          "NONE"
+        ]
+      ]
+    },
+    "decode-b8-p2052": {
+      "measured_steps": 8,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 1.9567265014648465,
+          "kernels_per_step": 211.5
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0028638916015625,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00877178955078125,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015439453125,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006831970214843751,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015961914062500003,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005499755859375001,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0055722656249999995,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.042964294433593765,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0030799560546875,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0087918701171875,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0014839477539062497,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006904235839843751,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.001595947265625,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0056158447265624994,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00569586181640625,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.043504333496093735,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0032358398437499995,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.009419677734375001,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0018158569335937499,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0026278686523437504,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00860791015625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015560913085937498,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0068322143554687504,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00219586181640625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006096130371093749,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0018761596679687503,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.002079833984375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00659234619140625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00417181396484375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0075443115234375005,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00575634765625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.001656005859375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005727905273437499,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005668151855468749,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05309643554687499,
+          "kernels_per_step": 4.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023916625976562497,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0069397583007812505,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0021079711914062504,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00289990234375,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00873211669921875,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015159912109375,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00697625732421875,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00183209228515625,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00567230224609375,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00564019775390625,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04876416015625,
+          "kernels_per_step": 3.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0032801513671875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00926397705078125,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00188775634765625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00253594970703125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008775939941406252,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0015280151367187502,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006847900390625001,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0022681884765625004,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006076660156249999,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0018201293945312503,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00197589111328125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006223815917968749,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.004152038574218749,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0074077148437500006,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005712219238281249,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0016478271484374999,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005787780761718749,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0056320190429687495,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05329626464843751,
+          "kernels_per_step": 4.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023759765625000003,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00693194580078125,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0021919555664062502,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0029320678710937505,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008692321777343751,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.001604248046875,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.006864074707031252,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0017882690429687502,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00569610595703125,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00560009765625,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04882476806640625,
+          "kernels_per_step": 3.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-decode-b8-p2052",
+          "NONE"
+        ]
+      ]
+    },
+    "prefill-p4095": {
+      "measured_steps": 24,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 9.198284505208298,
+          "kernels_per_step": 234.875
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.016036092122395835,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.017171997070312497,
+          "kernels_per_step": 2.125
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023135375976562505,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008344095865885418,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005908182779947917,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010176188151041663,
+          "kernels_per_step": 2.125
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.009993367513020835,
+          "kernels_per_step": 2.125
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.038529622395833345,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.016049458821614584,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.018732177734374994,
+          "kernels_per_step": 2.125
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0022439371744791673,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008450785319010416,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005928019205729167,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010237487792968748,
+          "kernels_per_step": 2.125
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010492350260416667,
+          "kernels_per_step": 2.125
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.038850769042968754,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008866739908854166,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.02304679361979167,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.003408101399739584,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.016069458007812502,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0288759765625,
+          "kernels_per_step": 2.125
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0022866821289062498,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008369242350260419,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005124226888020832,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.01742677815755208,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.002781351725260417,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.002384114583333333,
+          "kernels_per_step": 0.5
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.007221252441406249,
+          "kernels_per_step": 1.125
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.007113199869791666,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_short_context_fill": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0006533203125,
+          "kernels_per_step": 0.5
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.053445556640624996,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.014249471028645835,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005904256184895835,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010321289062499997,
+          "kernels_per_step": 2.125
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010221476236979164,
+          "kernels_per_step": 2.125
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.08666314697265626,
+          "kernels_per_step": 5.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.011034810384114586,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.015164245605468746,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0037199503580729178,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.015962809244791664,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.027982808430989586,
+          "kernels_per_step": 2.125
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023439127604166668,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008346781412760419,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005905537923177083,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010065165201822915,
+          "kernels_per_step": 2.125
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010333394368489584,
+          "kernels_per_step": 2.125
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05742985026041666,
+          "kernels_per_step": 5.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008883992513020834,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.022644185384114585,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0034294026692708343,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.016105448404947917,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.028769470214843756,
+          "kernels_per_step": 2.125
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.002249247233072917,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008351969401041668,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005120035807291666,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.016261474609374996,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.002905415852864583,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023973185221354168,
+          "kernels_per_step": 0.5
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00711749267578125,
+          "kernels_per_step": 1.125
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.007141255696614585,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_short_context_fill": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0006478068033854165,
+          "kernels_per_step": 0.5
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05361761474609375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.01361871337890625,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.005893310546875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010302754720052081,
+          "kernels_per_step": 2.125
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010136128743489582,
+          "kernels_per_step": 2.125
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.08666428629557295,
+          "kernels_per_step": 5.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.011165283203125001,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.015605448404947916,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.003852050781250001,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.015964029947916666,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.02983050537109375,
+          "kernels_per_step": 2.125
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0023240356445312503,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.008355936686197918,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0058748779296874986,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.010099955240885418,
+          "kernels_per_step": 2.125
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.01071461995442708,
+          "kernels_per_step": 2.125
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05724444580078127,
+          "kernels_per_step": 5.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-prefill-p4095",
+          "NONE"
+        ]
+      ]
+    }
+  },
+  "PIECEWISE": {
+    "decode-b1-p256": {
+      "measured_steps": 8,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.6477541371158393,
+          "kernel_ms_per_step": 0.7456040649414063,
+          "kernels_per_step": 211.5
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0027441406249999996,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008611999511718751,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017117919921875,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006884033203125001,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015681762695312503,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005511962890625001,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0054921875000000005,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0420279541015625,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0033523559570312503,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008531799316406252,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0017882080078125001,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006700012207031251,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.001528076171875,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00553204345703125,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00562396240234375,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.042252258300781255,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00733203125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0100081787109375,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0023804931640625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0026840209960937497,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.014335693359374999,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016439819335937501,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006844238281250001,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0022241210937499994,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00918359375,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00181597900390625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.001956298828125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0069719238281250005,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0034320068359375002,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00257525634765625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0091160888671875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0014841308593750002,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0057321166992187495,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007311584472656251,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.050116210937499996,
+          "kernels_per_step": 4.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028241577148437505,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007379760742187501,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021763916015624996,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028841552734375,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01042431640625,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016600341796875002,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006756225585937499,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015919799804687501,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00549993896484375,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0054596557617187505,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.048323791503906234,
+          "kernels_per_step": 3.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007195678710937501,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010239685058593748,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.002380126953125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00272796630859375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.013960388183593752,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016162109374999998,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00688800048828125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0022840576171875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00956036376953125,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00187591552734375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0019601440429687497,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0072836303710937505,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0034799194335937496,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0026320800781249997,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009196289062500002,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015520629882812501,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005572570800781249,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007392028808593749,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04981634521484375,
+          "kernels_per_step": 4.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0027360839843749997,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0072041015625000015,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00213995361328125,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0027960205078124997,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009964111328125,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016639404296874998,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00738812255859375,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015362548828125,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005679870605468751,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0054520263671875,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0486641845703125,
+          "kernels_per_step": 3.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-decode-b1-p256",
+          "PIECEWISE"
+        ]
+      ]
+    },
+    "decode-b4-p2048": {
+      "measured_steps": 8,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.6462264150943396,
+          "kernel_ms_per_step": 1.2983660888671866,
+          "kernels_per_step": 212.0
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0030200805664062497,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008779602050781252,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00166387939453125,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00697576904296875,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00163201904296875,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005583801269531251,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00556402587890625,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04236035156250001,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00337200927734375,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0085919189453125,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016920166015624999,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006784057617187501,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015679321289062496,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005748046874999999,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0055642700195312495,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04290362548828127,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01061602783203125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01001580810546875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00232794189453125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0029240112304687502,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.014331542968750001,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016802368164062502,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00674005126953125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00347607421875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00929644775390625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0018599243164062502,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00211981201171875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007187988281249999,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00405596923828125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00770794677734375,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00895611572265625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00159600830078125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005635925292968749,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00832391357421875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0525689697265625,
+          "kernels_per_step": 4.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0027962036132812493,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007299926757812501,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.002207763671875,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00319183349609375,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00943621826171875,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016639404296875,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006847961425781251,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016119384765624998,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005687866210937499,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0057479248046875,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04780419921875001,
+          "kernels_per_step": 3.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01150384521484375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009984436035156249,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0025037841796875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028961181640624997,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.014564270019531252,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016357421874999998,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00692010498046875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0033678588867187497,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009448181152343747,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0018959350585937501,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021317749023437504,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0073441162109375005,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0039277954101562505,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0077003173828124995,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0095604248046875,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016239624023437502,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005715637207031252,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007548095703125,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.052648193359375,
+          "kernels_per_step": 4.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0027322998046875008,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007316040039062502,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0020597534179687496,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.002955810546875,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01044012451171875,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00169610595703125,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00669610595703125,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.001583984375,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005775695800781249,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005624267578125,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04803594970703125,
+          "kernels_per_step": 3.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-decode-b4-p2048",
+          "PIECEWISE"
+        ]
+      ]
+    },
+    "decode-b8-p2052": {
+      "measured_steps": 8,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.6477541371158393,
+          "kernel_ms_per_step": 2.0139385375976584,
+          "kernels_per_step": 211.5
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.003011962890625,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008723815917968752,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00154388427734375,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00697607421875,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0014801025390625,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0058157958984375,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0054801025390625,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04295623779296874,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00340008544921875,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00876007080078125,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015877685546874997,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006716064453125,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015042114257812502,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005743957519531249,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0056162109374999995,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04362042236328126,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0063081665039062505,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010367919921875,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.002404052734375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028320312500000003,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.014812072753906254,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00153594970703125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0069802856445312506,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00227972412109375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009752136230468746,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0018199462890625,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00210003662109375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0070280151367187495,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.003968017578125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00793609619140625,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009776000976562501,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00151593017578125,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00563995361328125,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0077079467773437495,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.052952636718749994,
+          "kernels_per_step": 4.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00270001220703125,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00742401123046875,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00214404296875,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028679809570312503,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010532348632812502,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015758056640624999,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0067482910156250004,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00159185791015625,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0058321533203125,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005608093261718751,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.04843597412109376,
+          "kernels_per_step": 3.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006975952148437499,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010228271484374997,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00262396240234375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028521728515625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.014564392089843755,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00162408447265625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.006976013183593751,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00229180908203125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00958795166015625,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00184783935546875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00214404296875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007000366210937499,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.004052001953125,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.00764764404296875,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009715942382812502,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0015319213867187498,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005755615234374999,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007343872070312498,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05291674804687499,
+          "kernels_per_step": 4.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0028319091796874998,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.007527770996093751,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00222003173828125,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0029520263671875,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01097216796875,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00164410400390625,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0068079833984375,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0016160278320312502,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005851989746093749,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005624450683593749,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.048388366699218754,
+          "kernels_per_step": 3.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-decode-b8-p2052",
+          "PIECEWISE"
+        ]
+      ]
+    },
+    "prefill-p4095": {
+      "measured_steps": 24,
+      "scopes": {
+        "<outside>": {
+          "graph_share": 0.6595289079229122,
+          "kernel_ms_per_step": 9.184435465494722,
+          "kernels_per_step": 233.5
+        },
+        "L0:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.016134806315104163,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.017028015136718744,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021893310546875007,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008341410319010418,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005503987630208332,
+          "kernels_per_step": 1.0
+        },
+        "L0:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009797220865885414,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00956781005859375,
+          "kernels_per_step": 2.0
+        },
+        "L0:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.03848124186197919,
+          "kernels_per_step": 3.0
+        },
+        "L1:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01642413330078125,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.016774739583333326,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021918538411458337,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008132202148437498,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005482625325520833,
+          "kernels_per_step": 1.0
+        },
+        "L1:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009838643391927082,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009757263183593752,
+          "kernels_per_step": 2.0
+        },
+        "L1:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.038432088216145834,
+          "kernels_per_step": 3.0
+        },
+        "L2:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.03249749755859375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.018156066894531253,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.004400065104166667,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01861482747395833,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.025758809407552086,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021548055013020837,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008613301595052084,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005402506510416666,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.017562683105468747,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.003170654296875,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00940130615234375,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.020570902506510415,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.01171726481119792,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.055205729166666655,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.011518636067708332,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005469604492187499,
+          "kernels_per_step": 1.0
+        },
+        "L2:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009996032714843747,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.011033467610677082,
+          "kernels_per_step": 2.0
+        },
+        "L2:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.08851005045572917,
+          "kernels_per_step": 5.0
+        },
+        "L3:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.011240295410156254,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.015208109537760417,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0036333821614583342,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01574544270833334,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.02918817138671874,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021986287434895835,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008026774088541667,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005500061035156249,
+          "kernels_per_step": 1.0
+        },
+        "L3:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009838643391927084,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009801106770833335,
+          "kernels_per_step": 2.0
+        },
+        "L3:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0574496866861979,
+          "kernels_per_step": 5.0
+        },
+        "L4:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.03241471354166667,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01808807373046875,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.004320068359375001,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.01838942464192708,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.02610286458333333,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021720987955729174,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00869342041015625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005229349772135415,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0166041259765625,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0031907958984375,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_fused_query_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.00960947672526042,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_index_query_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.020248148600260415,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_scores": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.011556131998697919,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_topk": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.05545613606770833,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_index_weights_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.011432047526041664,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005492085774739583,
+          "kernels_per_step": 1.0
+        },
+        "L4:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010017211914062499,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.010856119791666665,
+          "kernels_per_step": 2.0
+        },
+        "L4:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.08796177164713546,
+          "kernels_per_step": 5.0
+        },
+        "L5:dsv4_compressor_fused_compress_store": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.011414774576822918,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_compressor_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.014737447102864584,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_compressor_save_partial_states": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0036986490885416675,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_q_kv_prepare": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.015784098307291668,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_fused_qkv_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.028544209798177084,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_fused_qkv_rmsnorm": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.0021973266601562503,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_grouped_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.008324076334635418,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_inv_rope_quant": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.005468058268229165,
+          "kernels_per_step": 1.0
+        },
+        "L5:dsv4_output_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009940287272135416,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_q_projection": {
+          "graph_share": 1.0,
+          "kernel_ms_per_step": 0.009772298177083333,
+          "kernels_per_step": 2.0
+        },
+        "L5:dsv4_sparse_attention": {
+          "graph_share": 0.0,
+          "kernel_ms_per_step": 0.0572125447591146,
+          "kernels_per_step": 5.0
+        }
+      },
+      "step_modes": [
+        [
+          "e0-prefill-p4095",
+          "PIECEWISE"
+        ]
+      ]
+    }
+  }
+}

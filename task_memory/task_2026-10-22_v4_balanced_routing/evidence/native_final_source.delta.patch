@@ -1,0 +1,298 @@
+diff --git a/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py b/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
+index 13107f2..4037053 100644
+--- a/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
++++ b/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
+@@ -18,0 +19,58 @@ DISPATCH_HOOKS.add('vllm.v1.worker.gpu.dp_utils.dist.all_reduce')
++BALANCED_MODULE = 'frontier/profiling/moe/balanced_routing.py'
++BALANCED_SHA256 = '6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea'
++ROUTING_PINS = ('vllm/envs.py', 'vllm/model_executor/layers/fused_moe/router/router_factory.py',
++    'vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py',
++    'vllm/model_executor/layers/fused_moe/runner/moe_runner.py')
++
++
++def verify_balanced_frontier(config, engine, manifest=None):
++    if engine.get('moe_gating_routing_runtime_path') is None:
++        return
++    import json
++    path = Path(config['script']).parent / 'case/inputs/frontier.json'
++    digest = sha(path)
++    if (config['retained_files']['case/inputs/frontier.json'] != digest
++            or config['tool_hashes'][str(path)] != digest
++            or (manifest is not None and manifest['inputs_sha256'][str(path)] != digest)):
++        raise ValueError('Actual Frontier input is not hash-bound to the native execution')
++    flat = json.loads(path.read_text())
++    from dataclasses import fields
++    from frontier.config import SimulationConfig
++    from frontier.config.flat_dataclass import create_flat_dataclass
++    if set(flat) != {field.name for field in fields(create_flat_dataclass(SimulationConfig))}:
++        raise ValueError('Actual Frontier input is not the complete flat SimulationConfig format')
++    required = dict(sys_arch='pd-disaggregation', simulation_mode='online', enable_parallel_clusters=False,
++        replica_config_model_name=engine['model_name'], replica_config_moe_routing_distribution_type='balanced',
++        replica_config_moe_gating_routing_runtime_path='balanced_topk')
++    for role in ('prefill', 'decode'):
++        required['cluster_config_' + role + '_cluster_num_replicas'] = 1
++        required.update({'cluster_config_' + role + '_replica_config_' + key: value for key, value in
++            dict(attn_tensor_parallel_size=engine['tensor_parallel_size'], device=config['gpu_type'].lower(),
++                moe_tensor_parallel_size=1, moe_expert_parallel_size=engine['tensor_parallel_size'] * engine['data_parallel_size'],
++                num_pipeline_stages=engine['pipeline_parallel_size']).items()})
++    if any(key not in flat or type(flat[key]) is not type(value) or flat[key] != value for key, value in required.items()):
++        raise ValueError('Actual Frontier P/D/model/routing configuration differs from the native case')
++
++
++def verify_balanced_runtime(inventory, env, engine, config, manifest):
++    selected = engine.get('moe_gating_routing_runtime_path')
++    actual = inventory.get('moe_routing')
++    variable = 'VLLM_MOE_ROUTING_SIMULATION_STRATEGY'
++    if selected is None and actual is None and variable not in env:
++        return
++    origin = Path(config['script']).parent / config['harness_files'][BALANCED_MODULE]
++    expected = dict(environment='balanced_topk', runtime_path='balanced_topk',
++        strategy='balanced_routing.BalancedTopKRouting', origin=str(origin), sha256=BALANCED_SHA256)
++    sources = {name: dict(origin=str(Path(config['installed_package']).parent / name),
++        sha256=config['expected_source_hashes'][name]) for name in ROUTING_PINS}
++    routers = {name.removesuffix('.routed_experts') for name in inventory['moe_backends']}
++    if (selected != 'balanced_topk' or env.get(variable) != selected or not actual or not routers
++            or actual != expected | {'routers': {name: 'vllm.model_executor.layers.fused_moe.router.'
++                'routing_simulator_router.RoutingSimulatorRouter' for name in routers},
++                'runners': {name: 'vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner'
++                    for name in routers}, 'native_sources': sources}
++            or manifest['harness_sha256'][BALANCED_MODULE] != BALANCED_SHA256
++            or any(row['sha256'] != sha(Path(manifest['groundtruth_checkout_path']) / name)
++                for name, row in sources.items())
++            or sha(origin) != BALANCED_SHA256):
++        raise ValueError('Actual balanced routing strategy/source/environment identity mismatch')
+@@ -119,0 +178,12 @@ def successor_source(path=R2_PATH):
++        ('                            else stage / name)\n',
++         '                            else stage / ("tests/comparison/calibration/balanced_routing.py"\n'
++         '                                if name == BALANCED_MODULE else name))\n'),
++        ('            for search, path in imports:\n',
++         '            if engine.get("moe_gating_routing_runtime_path") == "balanced_topk":\n'
++         '                imports += [(server_path, staged_harness / "balanced_routing.py")]\n'
++         '            for search, path in imports:\n'),
++        ('                inventory, counters = payload["inventory"], payload["counters"]\n',
++         '                inventory, counters = payload["inventory"], payload["counters"]\n'
++          '                verify_balanced_runtime(inventory, env, engine, config, manifest)\n'),
++        ('        harness = manifest["harness_worktree"]\n',
++         '        verify_balanced_frontier(config, engine, manifest)\n        harness = manifest["harness_worktree"]\n'),
+diff --git a/tests/comparison/calibration/native_full_structure.py b/tests/comparison/calibration/native_full_structure.py
+index bf8789d..fdf971f 100644
+--- a/tests/comparison/calibration/native_full_structure.py
++++ b/tests/comparison/calibration/native_full_structure.py
+@@ -4,0 +5 @@ import dataclasses
++import hashlib
+@@ -19,0 +21,35 @@ def identity(value):
++def balanced_routing_inventory(model):
++    """Observe the loaded strategy and every router without device reads."""
++    selected = os.environ.get('VLLM_MOE_ROUTING_SIMULATION_STRATEGY')
++    if selected != 'balanced_topk':
++        return None
++    import vllm.envs as envs
++    from vllm.model_executor.layers.fused_moe.router.routing_simulator_router import RoutingSimulator
++    import inspect
++    factory = sys.modules['vllm.model_executor.layers.fused_moe.layer'].create_fused_moe_router
++    simulator = sys.modules[RoutingSimulator.__module__]
++    routers = {name: module for name, module in model.named_modules() if hasattr(module, 'router')}
++    if factory.__globals__['envs'] is not envs or simulator.envs is not envs:
++        raise ValueError('Native routing factory/simulator use different environment modules')
++    native_sources = {}
++    calls = [envs.__getattr__, envs.environment_variables['VLLM_MOE_ROUTING_SIMULATION_STRATEGY'],
++        factory, RoutingSimulator.simulate_routing]
++    calls += [call for module in routers.values() for call in
++        (type(module.router)._compute_routing, type(module)._forward_impl)]
++    for call in calls:
++        call = inspect.unwrap(call)
++        path = Path(sys.modules[call.__module__].__file__)
++        if str(path) != call.__code__.co_filename:
++            raise ValueError('Actual native routing callable differs from its module origin')
++        relative = call.__module__.replace('.', '/') + '.py'
++        native_sources[relative] = dict(origin=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest())
++    strategy = RoutingSimulator._routing_strategies[selected]
++    origin = Path(sys.modules[type(strategy).__module__].__file__)
++    if str(origin) != strategy.route_tokens.__func__.__code__.co_filename:
++        raise ValueError('Loaded routing strategy code origin differs from its module')
++    return dict(environment=selected, runtime_path=envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY,
++        strategy=identity(strategy), origin=str(origin), sha256=hashlib.sha256(origin.read_bytes()).hexdigest(),
++        routers={name: identity(module.router) for name, module in routers.items()},
++        runners={name: identity(module) for name, module in routers.items()}, native_sources=native_sources)
++
++
+@@ -242,0 +279 @@ class FullModelInventory:
++        result["moe_routing"] = balanced_routing_inventory(self.get_model())
+@@ -585,0 +623,2 @@ class NativeServingInventory:
++        elif self.inventory is not None and self.inventory.get('moe_routing') is not None:
++            self.inventory['moe_routing'] = self.observe('routing_inventory', balanced_routing_inventory, worker.get_model())
+@@ -819,0 +859,4 @@ def _install_native_serving_inventory():
++if os.environ.get('VLLM_MOE_ROUTING_SIMULATION_STRATEGY') == 'balanced_topk':
++    from balanced_routing import register_balanced_topk
++    register_balanced_topk()
++
+diff --git a/tests/comparison/dp_placement_pp/vllm_replay.py b/tests/comparison/dp_placement_pp/vllm_replay.py
+index fa63e39..ecc75f5 100755
+--- a/tests/comparison/dp_placement_pp/vllm_replay.py
++++ b/tests/comparison/dp_placement_pp/vllm_replay.py
+@@ -236 +236 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
+-                        "VLLM_MOE_UNIFORM_ROUTING")
++                         "VLLM_MOE_UNIFORM_ROUTING", "VLLM_MOE_ROUTING_SIMULATION_STRATEGY")
+@@ -243,0 +244,5 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
++        if engine.get("moe_gating_routing_runtime_path") is not None:
++            if (engine["moe_gating_routing_runtime_path"] != "balanced_topk"
++                    or engine.get("worker_extension_cls") != "native_full_structure.FullModelInventory"):
++                raise ValueError("Native balanced routing requires the registered worker extension")
++            mode_env["VLLM_MOE_ROUTING_SIMULATION_STRATEGY"] = "balanced_topk"
+diff --git a/tests/unit/test_native_reader_binding.py b/tests/unit/test_native_reader_binding.py
+index afc396f..fc2f5d1 100644
+--- a/tests/unit/test_native_reader_binding.py
++++ b/tests/unit/test_native_reader_binding.py
+@@ -423,0 +424,99 @@ def test_v4_collector_dependency_cannot_be_omitted_from_checkout_binding(v4_pack
++
++
++@pytest.mark.parametrize('shadow', [None, 'module', 'package', 'native_origin', 'native_bytes', 'callable_origin', 'missing_env'])
++def test_balanced_strategy_actual_import_and_missing_identity(tmp_path, monkeypatch, shadow):
++    from types import SimpleNamespace, ModuleType
++    from tests.comparison.calibration.native_full_structure import balanced_routing_inventory
++    from tests.comparison.dp_placement_pp.vllm_replay import server_env
++    checker = load(REPO / 'task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py')
++    path = tmp_path / 'balanced_routing.py'
++    shutil.copyfile(REPO / checker.BALANCED_MODULE, path)
++    module = load(path)
++    native = Path('/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69')
++    sources = {}
++    bodies = ('def __getattr__(name): return "balanced_topk"\nenvironment_variables = {"VLLM_MOE_ROUTING_SIMULATION_STRATEGY": __getattr__}',
++        'def create_fused_moe_router(): pass',
++        'class RoutingSimulator:\n _routing_strategies = {}\n register_strategy = classmethod(lambda cls, n, s: cls._routing_strategies.update({n: s}))\n simulate_routing = staticmethod(lambda: None)\nclass RoutingSimulatorRouter:\n def _compute_routing(self): pass',
++        'class MoERunner:\n def _forward_impl(self): pass')
++    for name, body in zip(checker.ROUTING_PINS, bodies):
++        key = name[:-3].replace('/', '.')
++        stub = ModuleType(key)
++        stub.__file__ = str(native / name)
++        exec(compile(body, stub.__file__, 'exec'), stub.__dict__)
++        monkeypatch.setitem(sys.modules, key, stub)
++        sources[name] = digest(native / name)
++    simulator = sys.modules[checker.ROUTING_PINS[2][:-3].replace('/', '.')]
++    registry = simulator.RoutingSimulator
++    monkeypatch.setitem(sys.modules, 'vllm.distributed', SimpleNamespace(get_ep_group=lambda: None))
++    monkeypatch.setitem(sys.modules, 'vllm.forward_context', SimpleNamespace(get_forward_context=lambda: None))
++    simulator.RoutingStrategy = object
++    module.__name__ = 'balanced_routing'
++    monkeypatch.setitem(sys.modules, 'balanced_routing', module)
++    module.register_balanced_topk()
++    envs = sys.modules['vllm.envs']
++    factory = sys.modules[checker.ROUTING_PINS[1][:-3].replace('/', '.')]
++    factory.envs = simulator.envs = envs
++    monkeypatch.setitem(sys.modules, 'vllm.model_executor.layers.fused_moe.layer', factory)
++    monkeypatch.setitem(sys.modules, 'vllm', SimpleNamespace(envs=envs))
++    monkeypatch.setitem(sys.modules, 'vllm.envs', envs)
++    monkeypatch.setenv('VLLM_MOE_ROUTING_SIMULATION_STRATEGY', 'balanced_topk')
++    runner = sys.modules[checker.ROUTING_PINS[3][:-3].replace('/', '.')].MoERunner()
++    runner.router = simulator.RoutingSimulatorRouter()
++    model = SimpleNamespace(named_modules=lambda: [('experts', runner)])
++    row = balanced_routing_inventory(model)
++    inventory = dict(moe_routing=row, moe_backends={'experts.routed_experts': {}})
++    config = dict(script=str(tmp_path / 'worker.py'), harness_files={checker.BALANCED_MODULE: path.name},
++        installed_package=str(native / 'vllm'), expected_source_hashes=sources)
++    manifest = dict(harness_sha256={checker.BALANCED_MODULE: checker.BALANCED_SHA256}, groundtruth_checkout_path=str(native))
++    engine, env = dict(moe_gating_routing_runtime_path='balanced_topk'), {'VLLM_MOE_ROUTING_SIMULATION_STRATEGY': 'balanced_topk'}
++    monkeypatch.setattr(sys.modules[server_env.__module__], 'runtime_version', lambda engine: '0.28.0')
++    assert server_env('clean', engine | {'worker_extension_cls': 'native_full_structure.FullModelInventory'}, tmp_path, {})[1] == env
++    assert server_env('clean', {}, tmp_path, env)[0] == {}
++    checker.verify_balanced_runtime(inventory, env, engine, config, manifest)
++    if shadow in ('module', 'package'):
++        target = tmp_path / ('balanced_routing.py' if shadow == 'module' else 'balanced_routing/__init__.py')
++        target.parent.mkdir(exist_ok=True)
++        target.write_text('# Same-name unapproved strategy.\n')
++        inventory['moe_routing'] = row | {'origin': importlib.machinery.PathFinder.find_spec('balanced_routing', [str(tmp_path)]).origin, 'sha256': digest(target)}
++    elif shadow in ('native_origin', 'native_bytes'):
++        row['native_sources']['vllm/envs.py']['origin' if shadow == 'native_origin' else 'sha256'] = 'unverified'
++    elif shadow == 'callable_origin':
++        factory.create_fused_moe_router.__code__ = factory.create_fused_moe_router.__code__.replace(co_filename=str(tmp_path / 'shadow.py'))
++        with pytest.raises(ValueError, match='callable'):
++            balanced_routing_inventory(model)
++        return
++    elif shadow == 'missing_env':
++        env.clear()
++    else:
++        inventory.pop('moe_routing')
++    with pytest.raises((ValueError, KeyError)):
++        checker.verify_balanced_runtime(inventory, env, engine, config, manifest)
++
++
++@pytest.mark.parametrize('fault', [None, 'missing_hash', 'mismatch', 'selector', 'model', 'role', 'format'])
++def test_balanced_real_frontier_input_binding(tmp_path, fault):
++    checker = load(REPO / 'task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py')
++    path = tmp_path / 'case/inputs/frontier.json'
++    path.parent.mkdir(parents=True)
++    shutil.copyfile(R2.parent.parent / 'task_2026-10-22_v4_balanced_routing/balanced_frontier_input/frontier.json', path)
++    config = dict(script=str(tmp_path / 'worker.py'), gpu_type='H800', retained_files={'case/inputs/frontier.json': digest(path)},
++        tool_hashes={str(path): digest(path)})
++    engine = dict(model_name='deepseek-ai/DeepSeek-V4-Flash', tensor_parallel_size=8, data_parallel_size=2,
++        pipeline_parallel_size=1, moe_gating_routing_runtime_path='balanced_topk')
++    manifest = dict(inputs_sha256={str(path): digest(path)})
++    if fault in ('selector', 'model', 'role', 'format'):
++        flat = json.loads(path.read_text())
++        key = {'selector': 'replica_config_moe_gating_routing_runtime_path', 'model': 'replica_config_model_name',
++            'role': 'cluster_config_decode_replica_config_moe_expert_parallel_size', 'format': 'trace_request_generator_config_trace_file'}[fault]
++        flat.pop(key)
++        write(path, flat)
++        config['retained_files']['case/inputs/frontier.json'] = config['tool_hashes'][str(path)] = manifest['inputs_sha256'][str(path)] = digest(path)
++    elif fault:
++        manifest['inputs_sha256'][str(path)] = '0' * 64
++        if fault == 'missing_hash':
++            manifest['inputs_sha256'].clear()
++    if fault:
++        with pytest.raises((KeyError, ValueError)):
++            checker.verify_balanced_frontier(config, engine, manifest)
++    else:
++        checker.verify_balanced_frontier(config, engine, manifest)
+diff --git a/tests/unit/test_native_v2_serving_inventory.py b/tests/unit/test_native_v2_serving_inventory.py
+index 9001438..0b9aad5 100644
+--- a/tests/unit/test_native_v2_serving_inventory.py
++++ b/tests/unit/test_native_v2_serving_inventory.py
+@@ -498 +498,4 @@ def test_frozen_r2_non_graph_predicates_and_reader_guards_remain_identical():
+-    assert {n for n in before if before[n] != after[n]} == {'native_rank_graph_evidence'}
++    assert {n for n in before if before[n] != after[n]} == {'native_rank_graph_evidence', 'check_native_canonical'}
++    predicates = lambda tree: {n.name: ast.dump(n) for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
++        and n.name in ('provenance', 'inputs', 'replay', 'workers', 'lifecycle', 'terminal')}
++    assert predicates(old) == predicates(new)
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py
+@@ -17 +17 @@
+-PACKAGE = HERE / 'candidate_h800_p0_02'
++PACKAGE = HERE / 'candidate_h800_p0_06'
+@@ -19 +19,2 @@
+-CHECKER = Path('/data/ycfeng/Frontier/.worktrees/native-cold-start/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py')
++CHECKER = REPO / 'task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py'
++FRONTIER = PRIMARY / 'task_memory/task_2026-10-22_v4_balanced_routing/balanced_frontier_input/frontier.json'
+@@ -26,0 +28 @@
++MODULES += ['frontier/profiling/moe/balanced_routing.py']
+@@ -42 +44 @@
+-def main(generation='02'):
++def main(generation='06'):
+@@ -44,0 +47 @@
++    assert generation == '06', 'Only the root-selected fresh native06 generation is authorized'
+@@ -81 +84 @@
+-        worker_extension_cls='native_full_structure.FullModelInventory')
++        worker_extension_cls='native_full_structure.FullModelInventory', moe_gating_routing_runtime_path='balanced_topk')
+@@ -95,0 +99,11 @@
++    for name in ('vllm/v1/worker/gpu/dp_utils.py', 'vllm/v1/worker/gpu/states.py',
++                 'vllm/distributed/kv_transfer/kv_connector/v1/nixl/pull_scheduler.py'):
++        config['expected_source_hashes'][name] = sha((NATIVE / name).read_bytes())
++    from importlib.util import spec_from_file_location, module_from_spec
++    spec = spec_from_file_location('native_checker', CHECKER)
++    checker = module_from_spec(spec)
++    spec.loader.exec_module(checker)
++    assert len(config['expected_source_hashes']) == 70, 'Dispatch source binding must have70 pins'
++    for name in checker.ROUTING_PINS:
++        config['expected_source_hashes'][name] = sha((NATIVE / name).read_bytes())
++    assert len(config['expected_source_hashes']) == 74, 'Routing source binding must have74 pins'
+@@ -97,0 +112,2 @@
++        if name == checker.BALANCED_MODULE:
++            target = 'tests/comparison/calibration/balanced_routing.py'
+@@ -102,0 +119,8 @@
++    content = FRONTIER.read_bytes()
++    stage('case/inputs/frontier.json', content)
++    config['retained_files']['case/inputs/frontier.json'] = sha(content)
++    config['tool_hashes'][str(PACKAGE / 'case/inputs/frontier.json')] = sha(content)
++    checker.verify_balanced_frontier(config, engine)
++    lock['retained_files']['case/inputs/frontier.json'] = dict(source=str(FRONTIER), sha256=sha(content))
++    for path in (CHECKER, checker.R2_PATH):
++        config['tool_hashes'][str(path)] = sha(path.read_bytes())

@@ -1,0 +1,64 @@
+WARNING 06:09:02 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported
+WARNING 06:09:02 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Applying dummy mode (time=0.01ms) to all clusters
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+======================================================================
+
+WARNING 06:09:03 base_execution_time_predictor.py:72] DUMMY mode active - predictions are not realistic!
+WARNING 06:09:03 base_execution_time_predictor.py:72] DUMMY mode active - predictions are not realistic!
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/glm53_dsv4/h4a1/probe_v4_pd.py", line 51, in <module>
+    runpy.run_module("frontier.main", run_name="__main__")
+  File "/usr/lib/python3.10/runpy.py", line 227, in run_module
+    return _run_code(code, {}, init_globals, run_name, mod_spec)
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/main.py", line 97, in <module>
+    main()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/main.py", line 78, in main
+    simulator.run()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/simulator.py", line 428, in run
+    self._run_sequential()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/simulator.py", line 633, in _run_sequential
+    new_events = event.handle_event(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/events/replica_stage_schedule_event.py", line 114, in handle_event
+    return self._schedule_popped_batch(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/events/replica_stage_schedule_event.py", line 256, in _schedule_popped_batch
+    execution_time.get_single_layer_attention_scope_time()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/stage_execution_time.py", line 393, in get_single_layer_attention_scope_time
+    return self._first_layer().get_single_layer_attention_scope_time()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/execution_time.py", line 916, in get_single_layer_attention_scope_time
+    return self._get_attention_layer_execution_time()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/execution_time.py", line 1125, in _get_attention_layer_execution_time
+    return sum(value for _, _, value in timing_operator_times(self, "attention"))
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/deepseek_v4.py", line 63, in timing_operator_times
+    raise ValueError(f"V4 physical timing scopes have no phase owner: {sorted(unsupported)}")
+ValueError: V4 physical timing scopes have no phase owner: ['sp_moe_attention_reduce_scatter']

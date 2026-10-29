@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "counts": {
+    "tests": 18,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "xml_path": "/data/ycfeng/tmp/glm53_dsv4/g2_cold_start_repaired.xml",
+  "xml_sha256": "334f3ee12c6b9bf8645e17bf64f3e0e660c51dba8fde1f0ef2f0f60914891147",
+  "log_path": "/data/ycfeng/tmp/glm53_dsv4/g2_cold_start_repaired.log"
+}

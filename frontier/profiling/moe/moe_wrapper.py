@@ -12,7 +12,6 @@ from typing import List, Optional
 import torch
 import torch.nn.functional as F
 
-from frontier.profiling.common.cuda_timer import CudaTimer
 from frontier.config import PrecisionType
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
@@ -20,6 +19,12 @@ from frontier.profiling.common.utils import (
     configure_quantization_manager_for_model_name,
     get_operation_precision,
 )
+from frontier.moe_ep_workload import (
+    materialize_balanced_ep_workload,
+    materialize_balanced_rank_classes,
+)
+from frontier.profiling.moe.moe_profile_identity import balanced_routing_columns
+from frontier.profiling.moe.moe_rank_plan import CLASS_COLUMNS
 from frontier.model_architectures import LayerKind, ResolvedLayerContract
 from frontier.operators.families import MOE_FAMILY
 from frontier.profiling.moe.moe_impl import (
@@ -27,6 +32,7 @@ from frontier.profiling.moe.moe_impl import (
     MoETokenShuffler,
     MoEGroupedGEMM,
     get_routing_runtime_metadata,
+    get_routing_id_dtype,
 )
 from frontier.profiling.moe.moe_vllm_kernel import (
     check_fp8_available,
@@ -47,16 +53,30 @@ WARMUP_STEPS = 2
 ACTIVE_STEPS = 20
 
 
-def resolve_grouped_gemm_backend(*, use_vllm_kernel: bool, use_mxfp4: bool) -> str:
-    """Resolve the explicit standard grouped-GEMM implementation label."""
+# The weight source decides which vLLM MXFP4 engine runs the experts, and
+# ``validate_mxfp4_runtime`` admits each source only on its platform: AITER on
+# ROCm for online quantization, MARLIN on CUDA for checkpoint-stored experts.
+MXFP4_ENGINE = {"online": "aiter", "checkpoint": "marlin"}
 
-    if use_mxfp4 and not use_vllm_kernel:
-        raise ValueError(
-            "MXFP4 moe_grouped_gemm requires vLLM/AITER kernel profiling."
-        )
+
+def resolve_grouped_gemm_backend(
+    *, use_vllm_kernel: bool, mxfp4_weight_source: Optional[str]
+) -> str:
+    """Resolve the explicit standard grouped-GEMM implementation label.
+
+    ``mxfp4_weight_source`` is ``None`` unless the experts are MXFP4, and then
+    says where the packed weights come from, because that decides the engine:
+    checkpoints ship MXFP4 routed experts (vLLM selects MARLIN on Hopper), while
+    online quantization of dense checkpoints selects AITER on ROCm.
+    """
+
+    if mxfp4_weight_source is not None and not use_vllm_kernel:
+        raise ValueError("MXFP4 moe_grouped_gemm requires vLLM kernel profiling.")
     if not use_vllm_kernel:
         return "frontier_loop"
-    return "vllm_aiter_mxfp4" if use_mxfp4 else "vllm_fused"
+    if mxfp4_weight_source is None:
+        return "vllm_fused"
+    return f"vllm_{MXFP4_ENGINE[mxfp4_weight_source]}_mxfp4"
 
 
 class MoEWrapper:
@@ -85,6 +105,8 @@ class MoEWrapper:
         gating_runtime_context: str = DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
     ):
         super().__init__()
+        if expert_parallel_size <= 0 or not 0 <= rank < expert_parallel_size:
+            raise ValueError("EP rank must satisfy 0 <= rank < expert_parallel_size")
 
         # Validate that this is a MoE model
         if not model_config.is_moe:
@@ -107,10 +129,15 @@ class MoEWrapper:
         self.use_fp8 = use_fp8  # Flag for FP8 W8A8 quantization
         self.per_channel_quant = per_channel_quant  # Per-channel quantization flag
         self.block_shape = block_shape  # Block-wise quantization shape
-        self.routing_runtime_path = routing_runtime_path
-        self.routing_runtime_metadata = get_routing_runtime_metadata(
-            routing_runtime_path
+        self.routing_runtime_path = (
+            model_config.get_model_architecture_profile().moe_gating_routing_runtime_path
+            or routing_runtime_path
         )
+        self.routing_runtime_metadata = get_routing_runtime_metadata(
+            self.routing_runtime_path
+        )
+        if self.routing_runtime_path == "balanced_topk":
+            self.routing_runtime_metadata.update(balanced_routing_columns())
         self.gating_runtime_context_metadata = get_moe_gating_runtime_context_metadata(
             gating_runtime_context
         )
@@ -149,8 +176,20 @@ class MoEWrapper:
                 raise ImportError(
                     "vLLM FP8 quantization utilities are unavailable for moe_grouped_gemm profiling."
                 )
+        # A checkpoint that stores MXFP4 experts loads vLLM's quantization method
+        # and its backend; a dense checkpoint is quantized to MXFP4 at load time.
+        self.mxfp4_weight_source = (
+            None
+            if not use_mxfp4_from_manager
+            else "checkpoint"
+            if model_config.expert_dtype == "fp4"
+            else "online"
+        )
         if use_mxfp4_from_manager:
-            validate_mxfp4_runtime(model_type=model_config.model_type)
+            validate_mxfp4_runtime(
+                model_type=model_config.model_type,
+                mxfp4_weight_source=self.mxfp4_weight_source,
+            )
         self.use_fp8 = use_fp8_from_manager
         self.use_mxfp4 = use_mxfp4_from_manager
         self.quantization_mode = quantization_mode
@@ -167,7 +206,7 @@ class MoEWrapper:
 
         os.makedirs(f"{self.output_dir}/profiler_traces/", exist_ok=True)
 
-        # Initialize MoE components (convert to float16 for profiling)
+        # Initialize gate parameters and inputs in the model dtype.
         self.gating = MoEGatingNetwork(
             hidden_dim=self.hidden_dim,
             num_experts=self.num_experts,
@@ -175,11 +214,15 @@ class MoEWrapper:
             tensor_parallel_size=num_tensor_parallel_workers,
             use_vllm_fused_topk=self.use_vllm_kernel,
             routing_runtime_path=self.routing_runtime_path,
+            router_config=model_config,
         ).to(dtype=self._dtype).cuda().eval()
+        if self.routing_runtime_path == "grouped_topk_sigmoid":
+            self.gating.e_score_correction_bias = self.gating.e_score_correction_bias.float()
 
         self.shuffler = MoETokenShuffler(
             num_experts=self.num_experts,
             num_local_experts=self.num_experts_per_device,
+            routing_runtime_path=self.routing_runtime_path,
             router_topk=self.router_topk,
             hidden_dim=self.hidden_dim,
             expert_hidden_dim=self.expert_hidden_dim,
@@ -259,10 +302,6 @@ class MoEWrapper:
             )
         return prefix_hidden_states
 
-    def _get_profiling_ep_rank(self) -> int:
-        """Use a fixed representative EP rank for deterministic profiling rows."""
-        return 0
-
     def _build_local_expert_map(self, device: torch.device) -> torch.Tensor:
         if self.expert_parallel_size <= 1:
             raise ValueError("Local expert map is only valid when expert_parallel_size > 1")
@@ -272,7 +311,7 @@ class MoEWrapper:
             )
 
         local_num_experts = self.num_experts_per_device
-        ep_rank = self._get_profiling_ep_rank()
+        ep_rank = self.rank
         start_idx = ep_rank * local_num_experts
         expert_map = torch.full(
             (self.num_experts,),
@@ -314,6 +353,10 @@ class MoEWrapper:
             generate_expert_routing,
         )
 
+        if self.routing_runtime_path == "balanced_topk":
+            if load_distribution != "balanced":
+                raise ValueError("balanced_topk routed samples require balanced load_distribution")
+
         profiling_global_num_experts: Optional[int] = None
         profiling_expert_map: Optional[torch.Tensor] = None
 
@@ -324,6 +367,7 @@ class MoEWrapper:
                 top_k=self.router_topk,
                 load_distribution=load_distribution,
                 seed=seed,
+                dtype=torch.float32 if self.routing_runtime_path == "balanced_topk" else torch.float16,
             )
             generated_expert_token_counts = self._compute_local_expert_token_counts(
                 topk_ids
@@ -337,11 +381,27 @@ class MoEWrapper:
                 top_k=self.router_topk,
                 load_distribution=load_distribution,
                 seed=seed,
+                dtype=torch.float32 if self.routing_runtime_path == "balanced_topk" else torch.float16,
             )
             generated_expert_token_counts = compute_expert_token_counts(
                 topk_ids,
                 self.num_experts_per_device,
             )
+
+        topk_ids = topk_ids.to(dtype=get_routing_id_dtype(self.routing_runtime_path))
+
+        if load_distribution == "balanced":
+            workload = materialize_balanced_ep_workload(
+                routing_token_count=num_tokens, router_topk=self.router_topk,
+                total_expert_num=self.num_experts,
+                moe_expert_parallel_size=self.expert_parallel_size,
+            )
+            expected = list(workload.per_ep_per_expert_tokens[self.rank].values())
+            if generated_expert_token_counts != expected:
+                raise ValueError(
+                    f"Balanced routing counts disagree with EP algebra at rank {self.rank}: "
+                    f"generated={generated_expert_token_counts}, expected={expected}"
+                )
 
         if expert_token_counts is None:
             expert_token_counts = generated_expert_token_counts
@@ -618,7 +678,7 @@ class MoEWrapper:
             )
             grouped_gemm_backend = resolve_grouped_gemm_backend(
                 use_vllm_kernel=self.use_vllm_kernel,
-                use_mxfp4=self.use_mxfp4,
+                mxfp4_weight_source=self.mxfp4_weight_source,
             )
         else:
             time_stats = self._profile_with_loop(
@@ -626,7 +686,7 @@ class MoEWrapper:
             )
             grouped_gemm_backend = resolve_grouped_gemm_backend(
                 use_vllm_kernel=self.use_vllm_kernel,
-                use_mxfp4=self.use_mxfp4,
+                mxfp4_weight_source=self.mxfp4_weight_source,
             )
 
         load_input = MoELoadImbalanceInput(
@@ -679,6 +739,8 @@ class MoEWrapper:
             active_steps=ACTIVE_STEPS,
             use_fp8=self.use_fp8,
             use_mxfp4=self.use_mxfp4,
+            mxfp4_weight_source=self.mxfp4_weight_source,
+            swiglu_limit=self.model_config.swiglu_limit,
             per_channel_quant=self.per_channel_quant,
             block_shape=self.block_shape,
             profile_method=self.profile_method,
@@ -686,8 +748,10 @@ class MoEWrapper:
             global_num_experts=global_num_experts,
             expert_map=expert_map,
             model_type=self.model_config.model_type,
+            routing_runtime_path=self.routing_runtime_path,
         )
-        native_backend = stats.pop("native_backend") if self.use_mxfp4 else None
+        # The kernel reports the native backend whenever vLLM selected one.
+        native_backend = stats.pop("native_backend", None)
         return {"moe_grouped_gemm": stats}, native_backend
     
     def _profile_with_loop(
@@ -762,6 +826,8 @@ class MoEWrapper:
         time_stats: Mapping[str, object],
         *,
         num_tokens: int,
+        gating_num_tokens: Optional[int] = None,
+        load_distribution: str = "uniform",
     ) -> dict:
         """Build one MoE row and attach metadata for measured routed operators."""
 
@@ -784,6 +850,16 @@ class MoEWrapper:
             "use_gated": self.use_gated,
             "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
         }
+
+        if load_distribution == "balanced":
+            rank_class = materialize_balanced_rank_classes(
+                routing_token_count=num_tokens, router_topk=self.router_topk,
+                total_expert_num=self.num_experts,
+                moe_expert_parallel_size=self.expert_parallel_size,
+            )[self.rank]
+            stats.update(zip(CLASS_COLUMNS, rank_class))
+            stats["ep_rank"] = self.rank
+            stats["gating_num_tokens"] = num_tokens if gating_num_tokens is None else gating_num_tokens
 
         measured_names = set(time_stats)
         moe_operator_names = tuple(
@@ -822,6 +898,7 @@ class MoEWrapper:
         num_tokens: int,
         load_distribution: str = "uniform",
         seed: Optional[int] = None,
+        gating_num_tokens: Optional[int] = None,
     ):
         """
         Main profiling entry point that profiles all MoE operations.
@@ -843,7 +920,8 @@ class MoEWrapper:
             load_distribution=load_distribution,
             seed=seed,
         )
-        gating_stats = self.profile_gating(num_tokens)
+        gate_rows = num_tokens if gating_num_tokens is None else gating_num_tokens
+        gating_stats = self.profile_gating(gate_rows)
         shuffling_stats = self.profile_shuffling(
             num_tokens,
             load_distribution=load_distribution,
@@ -865,7 +943,13 @@ class MoEWrapper:
         combined_time_stats.update(grouped_gemm_stats["time_stats"])
 
         # Combine all stats (including load imbalance features from grouped_gemm_stats)
-        stats = self._build_profile_result(combined_time_stats, num_tokens=num_tokens)
+        stats = self._build_profile_result(
+            combined_time_stats, num_tokens=num_tokens, gating_num_tokens=gate_rows,
+            load_distribution=load_distribution,
+        )
+        for key, value in gating_stats.items():
+            if key not in stats and key != "time_stats":
+                stats[key] = value
         
         # Add load imbalance features from grouped_gemm_stats (if present)
         # These are added by profile_grouped_gemm when load imbalance is enabled

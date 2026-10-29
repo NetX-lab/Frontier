@@ -148,7 +148,7 @@ def test_dsa_frozen_fails_fast_in_dummy_mode(monkeypatch: pytest.MonkeyPatch) ->
         "_log_architecture_attention_shape",
         lambda batch: None,
     )
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
+    with pytest.raises(ValueError, match="full/shared index bindings"):
         predictor.predict_attention_layer_time(
             batch=_build_batch(num_prefill_tokens=1, num_decode_tokens=0),
             layer_id=0,
@@ -160,6 +160,7 @@ def test_kernel_only_attention_trains_true_mixed_decode_when_real_rows_exist(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     predictor = object.__new__(_ConcreteSklearnExecutionTimePredictor)
+    predictor._model_config = _ConcreteSklearnExecutionTimePredictor()._model_config
     predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
     predictor._attention_input_file = "unused.csv"
 
@@ -231,6 +232,7 @@ def test_kernel_only_attention_registers_true_mixed_decode_prediction(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     predictor = object.__new__(_ConcreteSklearnExecutionTimePredictor)
+    predictor._model_config = _ConcreteSklearnExecutionTimePredictor()._model_config
     predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._config = SimpleNamespace(

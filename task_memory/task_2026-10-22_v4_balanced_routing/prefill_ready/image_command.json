@@ -1,0 +1,36 @@
+{
+  "argv": [
+    "docker",
+    "run",
+    "--rm",
+    "--pull=never",
+    "--network=none",
+    "--cap-drop=ALL",
+    "--cap-add=DAC_OVERRIDE",
+    "--memory=4g",
+    "--cpus=2",
+    "--pids-limit=128",
+    "-i",
+    "-v",
+    "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced:/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced:ro",
+    "--entrypoint",
+    "python3",
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "-I",
+    "-B",
+    "-",
+    "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced"
+  ],
+  "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+  "verifier_template": "/data/ycfeng/tmp/glm53_dsv4/verify_v4_prefill_image.py",
+  "verifier_sha256": "b32c0f4f14357ff9d2d3bc14f0c4669d2ebb86e4fdf1844c097e86a5e44ad5d7",
+  "expected_source_tool_binary_counts": [
+    60,
+    519,
+    20
+  ],
+  "source_count_basis": "51 retained native source files plus9 pinned routing modules",
+  "tool_count_basis": "6 explicit inputs plus511 regular Git snapshot files plus2 model files",
+  "previous_attempt": "/data/ycfeng/tmp/glm53_dsv4/balanced_prefill_image_39b2bf8_pxh8hgn_",
+  "correction": "Use the sealed producer launcher python3 executable"
+}

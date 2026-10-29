@@ -21,13 +21,20 @@ import json
 import math
 
 import torch
-import triton
 import triton.language as tl
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Tuple
 
 from frontier.profiling.common.accelerator import accelerator_platform
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
+from frontier.profiling.moe.fp8_block_experts import (
+    expert_parallel_layout,
+    get_fp8_block_routed_experts,
+)
+from frontier.profiling.moe.moe_impl import get_routing_id_dtype
+from frontier.profiling.moe.mxfp4_marlin_experts import (
+    get_mxfp4_marlin_routed_experts,
+)
 from frontier.profiling.utils import (
     normalize_profile_method,
     validate_profile_method_platform,
@@ -123,7 +130,6 @@ try:
     try:
         # vLLM 0.10.x low-level API.
         from vllm.model_executor.layers.fused_moe.fused_moe import (
-            fused_moe_kernel,
             invoke_fused_moe_kernel,
             moe_align_block_size,
             try_get_optimal_moe_config,
@@ -493,11 +499,44 @@ def _run_functional_fused_experts_iteration(
     )
 
 
-def validate_mxfp4_runtime(*, model_type: Optional[str]) -> None:
-    """Admit only the model/platform implemented by the online MXFP4 adapter."""
+MXFP4_WEIGHT_SOURCES = ("checkpoint", "online")
+
+
+def validate_mxfp4_quantization(*, use_mxfp4: bool, mxfp4_weight_source: Optional[str]) -> None:
+    """Require a weight source exactly when the experts are MXFP4."""
+
+    if use_mxfp4 != (mxfp4_weight_source is not None):
+        raise ValueError(
+            "mxfp4_weight_source must be given exactly when use_mxfp4 is set; "
+            f"got use_mxfp4={use_mxfp4}, mxfp4_weight_source={mxfp4_weight_source!r}"
+        )
+    if mxfp4_weight_source is not None and mxfp4_weight_source not in MXFP4_WEIGHT_SOURCES:
+        raise ValueError(
+            f"mxfp4_weight_source must be one of {MXFP4_WEIGHT_SOURCES}, "
+            f"got {mxfp4_weight_source!r}"
+        )
+
+
+def validate_mxfp4_runtime(
+    *, model_type: Optional[str], mxfp4_weight_source: Optional[str] = "online"
+) -> None:
+    """Admit only the model/platform each MXFP4 weight source implements.
+
+    Checkpoints that store MXFP4 experts (DeepSeek-V4) are loaded through vLLM's
+    ``Mxfp4MoEMethod``, which selects MARLIN on Hopper from the weights alone;
+    the online adapter quantizes a dense checkpoint and selects AITER on ROCm.
+    """
     # Resolve this dependency after the architecture/config bootstrap cycle.
     from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
 
+    if mxfp4_weight_source == "checkpoint":
+        if accelerator_platform(torch) != "cuda":
+            raise ValueError("Checkpoint-MXFP4/MARLIN profiling requires CUDA")
+        if VLLM_API_VERSION != "functional_fused_experts":
+            raise NotImplementedError(
+                "MXFP4 profiling requires current vLLM's modular fused MoE API."
+            )
+        return
     if not MODEL_ARCHITECTURE_REGISTRY.supports_mxfp4_moe(model_type):
         raise ValueError("MXFP4 profiling requires model_type='qwen3_5_moe_text'")
     if accelerator_platform(torch) != "rocm":
@@ -738,6 +777,8 @@ def profile_fused_moe_kernel(
     active_steps: int = 20,
     use_fp8: bool = False,
     use_mxfp4: bool = False,
+    mxfp4_weight_source: Optional[str] = None,
+    swiglu_limit: Optional[float] = None,
     per_channel_quant: bool = False,
     block_shape: Optional[List[int]] = None,
     profile_method: str = "cuda_event",
@@ -745,6 +786,7 @@ def profile_fused_moe_kernel(
     global_num_experts: Optional[int] = None,
     expert_map: Optional[torch.Tensor] = None,
     model_type: Optional[str] = None,
+    routing_runtime_path: str = "standard_fused_topk",
 ) -> Dict:
     """
     Profile vLLM's fused MoE kernel with given routing decisions.
@@ -766,7 +808,12 @@ def profile_fused_moe_kernel(
         warmup_steps: Number of warmup iterations.
         active_steps: Number of active profiling iterations.
         use_fp8: Whether to use FP8 W8A8 quantization.
-        use_mxfp4: Whether to use current vLLM's online MXFP4 AITER path.
+        use_mxfp4: Whether the routed experts are stored in MXFP4.
+        mxfp4_weight_source: ``'checkpoint'`` when the checkpoint itself holds
+            MXFP4 experts (vLLM selects MARLIN on Hopper) or ``'online'`` when a
+            dense checkpoint is quantized to MXFP4 at load time (AITER on ROCm).
+            Required exactly when ``use_mxfp4`` is set.
+        swiglu_limit: SwiGLU clamp limit the model applies after the first GEMM.
         per_channel_quant: Whether to use per-channel quantization (only for FP8).
         block_shape: Block dimensions for block-wise quantization.
         profile_method: Profiling method (``cuda_event``, ``device_event``, or
@@ -775,6 +822,8 @@ def profile_fused_moe_kernel(
         global_num_experts: Global expert count for alignment when profiling EP-local workloads.
         expert_map: Optional mapping from global expert ids to local expert ids.
         model_type: Actual model identity required by the pinned MXFP4 adapter.
+        routing_runtime_path: Selects the native routed-id dtype; balanced_topk
+            uses int64 and the other profiling paths retain int32.
 
     Returns:
         Dictionary containing timing statistics. On the vLLM 0.10.x path it also
@@ -808,14 +857,31 @@ def profile_fused_moe_kernel(
             "Please install vLLM or disable --enable_load_imbalance."
         )
 
+    validate_mxfp4_quantization(
+        use_mxfp4=use_mxfp4, mxfp4_weight_source=mxfp4_weight_source
+    )
     if use_mxfp4:
-        validate_mxfp4_runtime(model_type=model_type)
-    if use_fp8 and VLLM_API_VERSION == "functional_fused_experts":
-        raise NotImplementedError(
-            "FP8 profiling with current vLLM requires its quantization "
-            "descriptor API; use BF16 or the vLLM 0.10 profiling "
-            "environment until that adapter is configured."
+        validate_mxfp4_runtime(
+            model_type=model_type, mxfp4_weight_source=mxfp4_weight_source
         )
+    fp8_block_experts = use_fp8 and VLLM_API_VERSION == "functional_fused_experts"
+    # Both adapters shard experts by expert parallelism only: block-FP8 keeps the
+    # kernel's GEMM shapes whole, and a checkpoint's packed MXFP4 weights are
+    # loaded for the expert-parallel domain vLLM selected.
+    shards_by_expert_parallelism = fp8_block_experts or mxfp4_weight_source == "checkpoint"
+    if shards_by_expert_parallelism and tensor_parallel_size != 1:
+        raise ValueError(
+            "Block-FP8 and checkpoint-MXFP4 expert profiling with current vLLM "
+            "shards experts by expert parallelism only; got "
+            f"tensor_parallel_size={tensor_parallel_size}."
+        )
+    if fp8_block_experts:
+        if per_channel_quant or block_shape is None:
+            raise NotImplementedError(
+                "FP8 profiling with current vLLM supports block-scaled weights "
+                "only; per-tensor and per-channel FP8 experts have no adapter."
+            )
+        _validate_block_shape(block_shape)
 
     align_num_experts = int(global_num_experts) if global_num_experts is not None else int(num_experts)
     if align_num_experts <= 0:
@@ -841,6 +907,11 @@ def profile_fused_moe_kernel(
             f"tensor_parallel_size ({tensor_parallel_size})"
         )
     if use_mxfp4:
+        if swiglu_limit is not None and mxfp4_weight_source != "checkpoint":
+            raise ValueError(
+                "swiglu_limit is only wired for checkpoint-MXFP4 experts; "
+                "the online MXFP4 adapter does not carry a clamp limit."
+            )
         plan_mxfp4_weight_layout(
             num_experts=num_experts, hidden_dim=hidden_dim,
             expert_hidden_dim=expert_hidden_dim_per_partition, use_gated=True,
@@ -851,7 +922,7 @@ def profile_fused_moe_kernel(
 
     w1 = None
     w2 = None
-    if not use_mxfp4:
+    if not (use_mxfp4 or fp8_block_experts):
         w1 = torch.randn(
             num_experts,
             2 * expert_hidden_dim_per_partition,
@@ -877,10 +948,41 @@ def profile_fused_moe_kernel(
         ).contiguous()
         functional_topk_ids = topk_ids.to(
             device=device,
-            dtype=torch.int32,
+            dtype=get_routing_id_dtype(routing_runtime_path),
         ).contiguous()
 
-        if use_mxfp4:
+        if mxfp4_weight_source == "checkpoint":
+            ep_size, ep_rank = expert_parallel_layout(
+                expert_map,
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+            )
+            routed_experts = get_mxfp4_marlin_routed_experts(
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+                hidden_dim=hidden_dim,
+                intermediate_dim=expert_hidden_dim_per_partition,
+                top_k=top_k,
+                swiglu_limit=swiglu_limit,
+                expert_parallel_size=ep_size,
+                expert_parallel_rank=ep_rank,
+                expert_map=expert_map,
+                dtype=base_dtype,
+                model_type=model_type,
+            )
+            routed_output = torch.empty_like(A)
+            workspace13, workspace2 = routed_experts.workspaces(A, functional_topk_ids)
+
+            def _step() -> None:
+                routed_experts.apply(
+                    routed_output,
+                    A,
+                    functional_topk_weights,
+                    functional_topk_ids,
+                    workspace13,
+                    workspace2,
+                )
+        elif use_mxfp4:
             mxfp4_state = _get_functional_mxfp4_state(
                 num_experts=num_experts,
                 hidden_dim=hidden_dim,
@@ -905,6 +1007,33 @@ def profile_fused_moe_kernel(
                     apply_router_weight_on_input=False,
                     shared_experts=None,
                     shared_experts_input=None,
+                )
+        elif fp8_block_experts:
+            ep_size, ep_rank = expert_parallel_layout(
+                expert_map,
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+            )
+            routed_experts = get_fp8_block_routed_experts(
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+                hidden_dim=hidden_dim,
+                intermediate_dim=expert_hidden_dim_per_partition,
+                top_k=top_k,
+                block_shape=block_shape,
+                expert_parallel_size=ep_size,
+                expert_parallel_rank=ep_rank,
+                dtype=base_dtype,
+                model_type=model_type,
+            )
+            routed_output = torch.empty_like(A)
+
+            def _step() -> None:
+                routed_experts.apply(
+                    routed_output,
+                    A,
+                    functional_topk_weights,
+                    functional_topk_ids,
                 )
         else:
             assert w1 is not None and w2 is not None
@@ -939,7 +1068,9 @@ def profile_fused_moe_kernel(
                     step_fn=_step,
                     active_steps=active_steps,
                 )
-            if use_mxfp4:
+            if mxfp4_weight_source == "checkpoint" or fp8_block_experts:
+                stats["native_backend"] = routed_experts.backend
+            elif use_mxfp4:
                 stats["native_backend"] = mxfp4_state["backend"]
             return stats
 

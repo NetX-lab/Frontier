@@ -1,0 +1,295 @@
+{
+  "status": "ACCEPTED_DIAGNOSTIC_CPU_CONTROLS_WITH_FAILED_RUN_LIMITS",
+  "accepted_at_utc": "2026-10-24T08:55:15.682388+00:00",
+  "run_status": "FAILED",
+  "run_name": "exp-1024-141341-669621",
+  "root_receipts": {
+    "root_metadata": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile03_metadata_root_final_ipb_iyt3/receipt.json",
+      "sha256": "2f2cf5866cf56479f774f7dca6b183fcdd576e8eeb7402b2f68541b4b231c497",
+      "status": "PASS",
+      "receipt": {
+        "status": "PASS",
+        "command": [
+          "/usr/bin/python3",
+          "-B",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_metadata_census_fix_20261024/candidate/audit.py",
+          "run",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_metadata_root_final_ipb_iyt3/metadata_audit.json"
+        ],
+        "returncode": 0,
+        "script_sha256": "ff614c992e291f9282fb1fd4450c7d27de8c7505ca6a6de8292fec7f122fd77d",
+        "byte_equal": true,
+        "audit_sha256": "ab476ca22619818e50b7b142f7d2f7dedd6141740ffa979b9081cea52c1c4376",
+        "artifact_census": {
+          "before_profile_json": 32,
+          "formal_window_published_json": 16,
+          "interrupted_tmp": [
+            {
+              "bytes": 0,
+              "path": "nodes/gpu-h800-0618.host.platform.shaipower.com/serving_profile/rank6.json.1735.tmp",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "bytes": 450676,
+              "path": "nodes/gpu-h800-0618.host.platform.shaipower.com/serving_profile/rank7.json.1736.tmp",
+              "sha256": "a5537bf60b6a0698fbfd55a1db2b013b364d355af7cc1acb6b706e9a2ab50bc3"
+            }
+          ],
+          "linked_inventories": 32,
+          "profile_stop_json": 0,
+          "profiler_table_files": 32,
+          "published_collector_json": 32,
+          "raw_trace_files": 32
+        },
+        "source_bindings": "ff614c992e291f9282fb1fd4450c7d27de8c7505ca6a6de8292fec7f122fd77d",
+        "per_rank_limits": {
+          "timeout_seconds": 60,
+          "memory_max": "30G",
+          "concurrency": 2
+        },
+        "first_coordinator_failure": {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile03_metadata_root_final_p_xckr_e",
+          "error": "TimeoutExpired at aggregate120-second wrapper; no final result",
+          "correction": "Keep existing per-rank60s/30G limits; do not impose a single-rank budget on the32-rank coordinator"
+        },
+        "scope": "Root independent complete190-file and32-rank metadata audit; no trace decompression or GPU/serving admission.",
+        "output": "/data/ycfeng/tmp/glm53_dsv4/profile03_metadata_root_final_ipb_iyt3"
+      }
+    },
+    "root_statistics": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_root_final_4sfx78oy/receipt.json",
+      "sha256": "90450f1f5837df11c3d2392a473ea494409beb1e24b30b704189c23e94840cda",
+      "status": "PASS",
+      "receipt": {
+        "status": "PASS",
+        "command": [
+          "/data/ycfeng/toolchain/bin/uv",
+          "run",
+          "--offline",
+          "--no-project",
+          "--python",
+          "/data/ycfeng/envs/frontier-py310/bin/python",
+          "--",
+          "python",
+          "-B",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/adapter.py",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_control_native_20261024/root_final_profile03_statistics_root_final_4sfx78oy"
+        ],
+        "returncode": 0,
+        "script_sha256": "ed17c13990d1058d514f58358f52d09d1fb3ccaf58d0843cfd3977dfca0d9c1a",
+        "result": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_root_final_4sfx78oy/stdout.log",
+        "non_clock_native_cases_equal": true,
+        "expected_metadata_record_hash_changes": {
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.json": {
+            "previous": "02e1d2df3a779a4902800094e098def776fcefc1dff35e7a60ea3b907ffc77b0",
+            "current": "ab476ca22619818e50b7b142f7d2f7dedd6141740ffa979b9081cea52c1c4376"
+          },
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_audit.md": {
+            "previous": "84de6593f5c902f2f8218de585927ae2629ad880771ec32c29fc4b461de456c3",
+            "current": "02a6e944e6e35d6b6e65b9c209272e1ece7260e7455d3dc94712bbd2447b53d9"
+          },
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/metadata_command.md": {
+            "previous": "c15044b21528c93fef099d3c95622e9d5bea707d1379c1403ca7c1fd84a5d248",
+            "current": "ef6cfeb548f5fa284b2aa0e312823550cc7d6864f06f8ceac4319e466478b510"
+          }
+        },
+        "remaining_old_bindings_equal": true,
+        "first_wrapper_failure": {
+          "error": "KeyError: 'adapter' in receipt-schema lookup, before native execution",
+          "scratch": [
+            "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_root_final_n8vquo1a"
+          ]
+        },
+        "scope": "Root independent final native branch/timeout controls only; virtual durations, no GPU timing or raw-trace identity.",
+        "output": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_root_final_4sfx78oy"
+      }
+    },
+    "actual_image_native_branch": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_image_g8m3pvpv/receipt.json",
+      "sha256": "d898e65290ddd2ec2aed6cedbd15b38dfaf00bb47a1a6ec8188df4fcccbd49c4",
+      "status": "PASS",
+      "receipt": {
+        "status": "PASS",
+        "returncode": 0,
+        "started_at_utc": "2026-10-24T08:02:22.870303+00:00",
+        "finished_at_utc": "2026-10-24T08:02:59.409421+00:00",
+        "argv": [
+          "docker",
+          "run",
+          "-i",
+          "--rm",
+          "--pull=never",
+          "--network=none",
+          "--cap-drop=ALL",
+          "--cap-add=DAC_OVERRIDE",
+          "--memory=6g",
+          "--cpus=2",
+          "--pids-limit=128",
+          "-v",
+          "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69:/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69:ro",
+          "-e",
+          "PYTHONDONTWRITEBYTECODE=1",
+          "-e",
+          "LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat",
+          "--entrypoint",
+          "python3",
+          "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "-I",
+          "-B",
+          "-",
+          "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69"
+        ],
+        "script_sha256": "522bd2b3da6912347ac32e3580053b860a323ac8a57ab9545dc665927f4c3137",
+        "witness": {
+          "status": "PASS_CPU_NATIVE_STOP_BRANCHES",
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "torch": "2.13.0+cu130",
+          "cuda": "13.0",
+          "native_wrapper_sha256": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+          "torch_sources": {
+            "/usr/local/lib/python3.12/dist-packages/torch/profiler/profiler.py": "2e7e248cba6f46787aeb693cd3fb82a1328936dc37e41be86a8e490ea1051eb9",
+            "/usr/local/lib/python3.12/dist-packages/torch/autograd/profiler.py": "e3c2bf21247a2b51cd47afa0804c9617cf6552517c74440465a248bc0d972357",
+            "/usr/local/lib/python3.12/dist-packages/torch/autograd/profiler_util.py": "f2d7f67f1df1821402d98120461de97e72eab349b0168c95be68ed858000ce31"
+          },
+          "cuda_initialized": false,
+          "results": [
+            {
+              "dump_cuda_time_total": true,
+              "actual_activities": [
+                "ProfilerActivity.CPU",
+                "ProfilerActivity.CUDA"
+              ],
+              "export_calls": 1,
+              "statistics_calls": 1,
+              "lazy_events_calls": 1,
+              "payload_annotations": 8,
+              "text_table_present": true,
+              "native_stdout_bytes": 1040
+            },
+            {
+              "dump_cuda_time_total": false,
+              "actual_activities": [
+                "ProfilerActivity.CPU",
+                "ProfilerActivity.CUDA"
+              ],
+              "export_calls": 1,
+              "statistics_calls": 0,
+              "lazy_events_calls": 0,
+              "payload_annotations": 8,
+              "text_table_present": false,
+              "native_stdout_bytes": 0
+            }
+          ],
+          "scope": "Actual native constructor/autostop and CPU trace export; no GPU cost, CUDA kernels, RPC timing or original failure reproduction."
+        },
+        "output": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_image_g8m3pvpv"
+      }
+    }
+  },
+  "artifact_hashes": {
+    "command.md": {
+      "bytes": 4506,
+      "sha256": "fdf63d41e188aefb22a0b3476743b2e5eba4da8bddcd85e25e8e8f4a67f9a4c0"
+    },
+    "metadata_audit.json": {
+      "bytes": 3761419,
+      "sha256": "ab476ca22619818e50b7b142f7d2f7dedd6141740ffa979b9081cea52c1c4376"
+    },
+    "metadata_audit.md": {
+      "bytes": 7150,
+      "sha256": "02a6e944e6e35d6b6e65b9c209272e1ece7260e7455d3dc94712bbd2447b53d9"
+    },
+    "metadata_command.md": {
+      "bytes": 5820,
+      "sha256": "ef6cfeb548f5fa284b2aa0e312823550cc7d6864f06f8ceac4319e466478b510"
+    },
+    "review.md": {
+      "bytes": 4344,
+      "sha256": "d105875e581f65d8ca9607bfe663652921c0845fc3ea14d13d22f988fe768eb4"
+    },
+    "rpc_loop.json": {
+      "bytes": 23912,
+      "sha256": "c06abc548549a35ad7e3411585870fc629aee8677deffda1aaeb3953058270b4"
+    },
+    "rpc_loop.md": {
+      "bytes": 5399,
+      "sha256": "642bb310b814ee23cec39887283a951cd78e9e4993ed657554ff420057b85a05"
+    },
+    "rpc_loop_command.md": {
+      "bytes": 2373,
+      "sha256": "159ffb474980d29d5d8cc4e61627f2823009dec5fc4ee83a4ea043af11a85021"
+    },
+    "statistics_control.json": {
+      "bytes": 35685,
+      "sha256": "e56d760e6e2655f2bac70489a4a580834618d7ac28fe8c5c4625d07d10cd9397"
+    },
+    "statistics_control.md": {
+      "bytes": 5083,
+      "sha256": "8aa87547d30a6301e24eaa4b67a05a5fc29d514fa948d6ba1b555ec8914ef938"
+    },
+    "statistics_control_command.md": {
+      "bytes": 3475,
+      "sha256": "138ee5040d44175f9952f34ba35ff0974cee29803d9bdef818d6a67a9f358620"
+    },
+    "test_report_2026-10-24_profiler_rpc_failure.md": {
+      "bytes": 8981,
+      "sha256": "aebe80a89bfd69bef0537f026d23a44f53ca8468c268b9c1835e8642c89de2b9"
+    },
+    "timeline.json": {
+      "bytes": 246474,
+      "sha256": "82406421d9c21ccda4b0b1191aef7c68d4bc058230a5519b2c23918ee14f1b5c"
+    },
+    "timeline.md": {
+      "bytes": 6756,
+      "sha256": "58b1901d38b258a96df876b9f6d4807983122dea7a569fcb0cb083e6bebe01e6"
+    }
+  },
+  "artifact_census": {
+    "before_profile_json": 32,
+    "formal_window_published_json": 16,
+    "interrupted_tmp": [
+      {
+        "bytes": 0,
+        "path": "nodes/gpu-h800-0618.host.platform.shaipower.com/serving_profile/rank6.json.1735.tmp",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "bytes": 450676,
+        "path": "nodes/gpu-h800-0618.host.platform.shaipower.com/serving_profile/rank7.json.1736.tmp",
+        "sha256": "a5537bf60b6a0698fbfd55a1db2b013b364d355af7cc1acb6b706e9a2ab50bc3"
+      }
+    ],
+    "linked_inventories": 32,
+    "profile_stop_json": 0,
+    "profiler_table_files": 32,
+    "published_collector_json": 32,
+    "raw_trace_files": 32
+  },
+  "independent_review": "W128-PROFILE03-STATISTICS-REVIEW: No findings; initial D0-label P2 and later directory-only raw-census defect corrected with originals retained.",
+  "selected_correction": {
+    "existing_native_field": "torch_profiler_dump_cuda_time_total",
+    "value": false,
+    "fresh_plan": "profile01/profile04/profile_plan.json",
+    "raw_trace_export_preserved": true,
+    "rpc_timeout_seconds": 300,
+    "role_max_iterations": {
+      "prefill": 512,
+      "decode": 64
+    }
+  },
+  "admissions": {
+    "successful_run": false,
+    "serving": false,
+    "operator_cost": false,
+    "captured_operator_ownership": false,
+    "gpu_dependencies": false,
+    "original_pending_reply_schedule": false
+  },
+  "limits": [
+    "Native virtual durations are controlled inputs, not measured original phases.",
+    "Actual-image CPU export/branch proof does not establish CUDA trace identity or future export fitting300s.",
+    "Profile03 missing formal metadata and raw cross-DP pairing remain diagnostic gaps.",
+    "Profile04 requires its separate source/package/image/SDK/seal/run and data acceptance."
+  ]
+}

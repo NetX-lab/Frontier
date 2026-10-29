@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "-I",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/native_profiler_controls.py"
+  ],
+  "cwd": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128",
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/brainpp",
+    "LANG": "C.UTF-8",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "started_utc": "2026-10-24T08:12:14.886153+00:00",
+  "returncode": 0,
+  "script_sha256": "755d0d4bfce8f6d03aa54c6d14907592698d079e8e1852d997ac37c376b95079",
+  "python_driver": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "cpu_only": true,
+  "submitted": false
+}

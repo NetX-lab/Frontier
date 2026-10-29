@@ -1,0 +1,162 @@
+/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/torch_traces
+Native durations include peer waits; minima are the closest estimate of kernel time.
+accepted_pairs are anchor-to-peer edges in complete lane tuples; differences are absolute host times.
+PAIRING decode accepted_tuples=64 accepted_pairs=64 left_out={'0': 56, '1': 0} start_difference_us={'median': 934.91455078125, 'max': 3392.56591796875}
+PAIRING prefill accepted_tuples=96 accepted_pairs=96 left_out={'0': 0, '1': 32} start_difference_us={'median': 369.0050048828125, 'max': 2575.94482421875}
+
+group 0 decode FULL real=False own_rows=1 lanes=(1, 1) requests=None forwards=63 distinct_multisets=1
+  multiset 0, forwards=63
+    dispatch   43 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(4, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=(2, 1, 1) block=(512, 1, 1)
+    dispatch    1 custom_all_reduce void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=(1, 1, 1) block=(512, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(4, 1, 1) block=(128, 1, 1)
+    dispatch    1 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(16, 1, 1) block=(128, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=(16, 1, 1) block=(256, 1, 1)
+  duration_us dispatch ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[4, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 63}] {'min': 114.4, 'median': 143.84, 'max': 3842.837, 'p10': 133.185, 'p90': 158.081}
+  duration_us dispatch ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=[2, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 63}] {'min': 33.536, 'median': 38.752, 'max': 152.192, 'p10': 36.224, 'p90': 42.752}
+  duration_us dispatch void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=[1, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 63}] {'min': 5.088, 'median': 51.841, 'max': 4345.401, 'p10': 26.784, 'p90': 68.864}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[4, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 63}] {'min': 4.064, 'median': 6.208, 'max': 22.272, 'p10': 4.384, 'p90': 9.44}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[16, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 63}] {'min': 4.096, 'median': 7.456, 'max': 12.192, 'p10': 4.448, 'p90': 10.432}
+  duration_us dispatch void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=[16, 1, 1] block=[256, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 63}] {'min': 4.385, 'median': 5.44, 'max': 11.36, 'p10': 4.576, 'p90': 7.393}
+
+group 1 decode FULL real=True own_rows=1 lanes=(1, 1) requests=1 forwards=61 distinct_multisets=1
+  multiset 0, forwards=61
+    dispatch   43 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(4, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=(2, 1, 1) block=(512, 1, 1)
+    dispatch    1 custom_all_reduce void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=(1, 1, 1) block=(512, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(4, 1, 1) block=(128, 1, 1)
+    dispatch    1 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(16, 1, 1) block=(128, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=(16, 1, 1) block=(256, 1, 1)
+    post        1 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(7, 1, 1) block=(512, 1, 1)
+  duration_us dispatch ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[4, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 61}] {'min': 110.72, 'median': 119.584, 'max': 1935.581, 'p10': 115.168, 'p90': 126.816}
+  duration_us dispatch ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=[2, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 61}] {'min': 34.657, 'median': 136.8, 'max': 222.496, 'p10': 128.607, 'p90': 144.576}
+  duration_us dispatch void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=[1, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 61}] {'min': 5.056, 'median': 39.328, 'max': 7996.876, 'p10': 21.376, 'p90': 52.896}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[4, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 61}] {'min': 4.16, 'median': 8.321, 'max': 27.489, 'p10': 4.417, 'p90': 16.416}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[16, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 61}] {'min': 4.224, 'median': 10.784, 'max': 19.553, 'p10': 4.32, 'p90': 18.56}
+  duration_us dispatch void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=[16, 1, 1] block=[256, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 61}] {'min': 4.417, 'median': 5.376, 'max': 17.504, 'p10': 4.608, 'p90': 8.256}
+  duration_us post ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[7, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 61}] {'min': 15.744, 'median': 17.088, 'max': 22.944, 'p10': 15.904, 'p90': 20.256}
+
+group 2 decode PIECEWISE real=False own_rows=1 lanes=(1, 1) requests=None forwards=1 distinct_multisets=1
+  multiset 0, forwards=1
+    dispatch   43 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(4, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=(2, 1, 1) block=(512, 1, 1)
+    dispatch    1 custom_all_reduce void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=(1, 1, 1) block=(512, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(4, 1, 1) block=(128, 1, 1)
+    dispatch    1 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(16, 1, 1) block=(128, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=(16, 1, 1) block=(256, 1, 1)
+  duration_us dispatch ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[4, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 151.713, 'median': 173.505, 'max': 282.017, 'p10': 163.617, 'p90': 185.665}
+  duration_us dispatch ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=[2, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 35.808, 'median': 39.553, 'max': 77.409, 'p10': 37.184, 'p90': 42.752}
+  duration_us dispatch void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=[1, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 1}] {'min': 80.001, 'median': 80.001, 'max': 80.001, 'p10': 80.001, 'p90': 80.001}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[4, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 4.128, 'median': 7.072, 'max': 12.608, 'p10': 4.512, 'p90': 9.697}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[16, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 1}] {'min': 11.168, 'median': 11.168, 'max': 11.168, 'p10': 11.168, 'p90': 11.168}
+  duration_us dispatch void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=[16, 1, 1] block=[256, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 4.672, 'median': 8.352, 'max': 14.496, 'p10': 5.536, 'p90': 11.808}
+
+group 3 decode PIECEWISE real=True own_rows=1 lanes=(1, 1) requests=1 forwards=3 distinct_multisets=1
+  multiset 0, forwards=3
+    dispatch   43 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(4, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=(2, 1, 1) block=(512, 1, 1)
+    dispatch    1 custom_all_reduce void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=(1, 1, 1) block=(512, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(4, 1, 1) block=(128, 1, 1)
+    dispatch    1 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(16, 1, 1) block=(128, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=(16, 1, 1) block=(256, 1, 1)
+    post        1 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(7, 1, 1) block=(512, 1, 1)
+  duration_us dispatch ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[4, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 3}] {'min': 119.552, 'median': 139.232, 'max': 2283.997, 'p10': 125.792, 'p90': 256.8}
+  duration_us dispatch ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=[2, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 3}] {'min': 36.256, 'median': 128.8, 'max': 169.536, 'p10': 38.465, 'p90': 142.464}
+  duration_us dispatch void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=[1, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 3}] {'min': 5.12, 'median': 27.392, 'max': 51.2, 'p10': 5.12, 'p90': 51.2}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[4, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 3}] {'min': 4.16, 'median': 9.601, 'max': 23.008, 'p10': 4.448, 'p90': 17.984}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[16, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 3}] {'min': 10.496, 'median': 17.12, 'max': 17.728, 'p10': 10.496, 'p90': 17.728}
+  duration_us dispatch void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=[16, 1, 1] block=[256, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 3}] {'min': 4.577, 'median': 7.904, 'max': 2710.223, 'p10': 4.672, 'p90': 387.615}
+  duration_us post ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[7, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 3}] {'min': 15.904, 'median': 16.032, 'max': 1123.942, 'p10': 15.904, 'p90': 1123.942}
+
+group 4 prefill FULL real=False own_rows=1 lanes=(1, 1) requests=None forwards=186 distinct_multisets=1
+  multiset 0, forwards=186
+    dispatch   43 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(4, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=(2, 1, 1) block=(512, 1, 1)
+    dispatch    1 custom_all_reduce void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=(1, 1, 1) block=(512, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(4, 1, 1) block=(128, 1, 1)
+    dispatch    1 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(16, 1, 1) block=(128, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=(16, 1, 1) block=(256, 1, 1)
+  duration_us dispatch ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[4, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 186}] {'min': 113.152, 'median': 149.632, 'max': 805.154, 'p10': 131.232, 'p90': 173.216}
+  duration_us dispatch ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=[2, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 186}] {'min': 33.376, 'median': 114.928, 'max': 225.472, 'p10': 38.496, 'p90': 143.936}
+  duration_us dispatch void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=[1, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 186}] {'min': 5.056, 'median': 12.3035, 'max': 723.234, 'p10': 5.12, 'p90': 52.192}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[4, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 186}] {'min': 4.064, 'median': 9.088, 'max': 121.505, 'p10': 4.448, 'p90': 31.808}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[16, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 186}] {'min': 4.096, 'median': 10.224, 'max': 38.176, 'p10': 4.256, 'p90': 30.913}
+  duration_us dispatch void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=[16, 1, 1] block=[256, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 186}] {'min': 4.448, 'median': 5.76, 'max': 13.344, 'p10': 4.64, 'p90': 8.384}
+
+group 5 prefill NONE real=False own_rows=1 lanes=(1, 6144) requests=None forwards=1 distinct_multisets=1
+  multiset 0, forwards=1
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(4, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(9, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(16, 1, 1) block=(544, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStora grid=(16, 1, 1) block=(544, 1, 1)
+    dispatch    1 custom_all_reduce void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=(1, 1, 1) block=(512, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(4, 1, 1) block=(128, 1, 1)
+    dispatch    1 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(16, 1, 1) block=(128, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=(16, 1, 1) block=(256, 1, 1)
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[4, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 85.505, 'median': 109.312, 'max': 190.945, 'p10': 91.551, 'p90': 186.529}
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[9, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 61.089, 'median': 72.289, 'max': 82.017, 'p10': 67.104, 'p90': 75.329}
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[16, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 1727.363, 'median': 4477.416, 'max': 7783.63, 'p10': 2307.876, 'p90': 6752.237}
+  duration_us dispatch ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStora grid=[16, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 538.465, 'median': 547.777, 'max': 568.737, 'p10': 541.537, 'p90': 558.177}
+  duration_us dispatch void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=[1, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 1}] {'min': 839.169, 'median': 839.169, 'max': 839.169, 'p10': 839.169, 'p90': 839.169}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[4, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 135.681, 'median': 139.744, 'max': 911.649, 'p10': 136.8, 'p90': 835.01}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[16, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 1}] {'min': 135.36, 'median': 135.36, 'max': 135.36, 'p10': 135.36, 'p90': 135.36}
+  duration_us dispatch void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=[16, 1, 1] block=[256, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 6.112, 'median': 782.273, 'max': 5616.906, 'p10': 7.232, 'p90': 5578.281}
+
+group 6 prefill NONE real=False own_rows=1 lanes=(6144, 1) requests=None forwards=2 distinct_multisets=1
+  multiset 0, forwards=2
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(4, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(9, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(16, 1, 1) block=(544, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStora grid=(16, 1, 1) block=(544, 1, 1)
+    dispatch    1 custom_all_reduce void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=(1, 1, 1) block=(512, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(4, 1, 1) block=(128, 1, 1)
+    dispatch    1 mnnvl             void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=(16, 1, 1) block=(128, 1, 1)
+    dispatch   43 mnnvl             void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=(16, 1, 1) block=(256, 1, 1)
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[4, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 78.912, 'median': 102.624, 'max': 309.441, 'p10': 89.505, 'p90': 114.048}
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[9, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 44.481, 'median': 55.84, 'max': 63.712, 'p10': 53.312, 'p90': 59.296}
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[16, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 1795.558, 'median': 3281.148, 'max': 10285.541, 'p10': 1862.599, 'p90': 6434.967}
+  duration_us dispatch ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStora grid=[16, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 527.81, 'median': 539.202, 'max': 866.275, 'p10': 530.498, 'p90': 554.53}
+  duration_us dispatch void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm grid=[1, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 2}] {'min': 139.04, 'median': 271.7125, 'max': 404.385, 'p10': 139.04, 'p90': 404.385}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[4, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 4.128, 'median': 140.5285, 'max': 652.61, 'p10': 136.417, 'p90': 587.202}
+  duration_us dispatch void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm:: grid=[16, 1, 1] block=[128, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 2}] {'min': 136.896, 'median': 238.91249999999997, 'max': 340.929, 'p10': 136.896, 'p90': 340.929}
+  duration_us dispatch void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 grid=[16, 1, 1] block=[256, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 4.768, 'median': 1125.38, 'max': 4866.513, 'p10': 6.368, 'p90': 4186.799}
+
+group 7 prefill NONE real=True own_rows=6144 lanes=(1, 6144) requests=1 forwards=1 distinct_multisets=1
+  multiset 0, forwards=1
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(4, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(9, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(16, 1, 1) block=(544, 1, 1)
+    dispatch   44 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(24, 1, 1) block=(544, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=(24, 1, 1) block=(544, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStora grid=(16, 1, 1) block=(544, 1, 1)
+    dispatch    1 symm_mem          void (anonymous namespace)::multimem_all_reduce_kernel<c10:: grid=(8, 1, 1) block=(1024, 1, 1)
+    post        1 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(7, 1, 1) block=(512, 1, 1)
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[4, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 37.024, 'median': 43.296, 'max': 53.056, 'p10': 38.72, 'p90': 48.64}
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[9, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 51.296, 'median': 58.08, 'max': 87.136, 'p10': 53.697, 'p90': 77.12}
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[16, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 629.442, 'median': 2026.12, 'max': 5293.107, 'p10': 682.051, 'p90': 5084.914}
+  duration_us dispatch ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[24, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 44, 'forwards': 1}] {'min': 152.961, 'median': 155.84, 'max': 1025.316, 'p10': 153.633, 'p90': 158.241}
+  duration_us dispatch ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=[24, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 150.049, 'median': 1742.342, 'max': 3634.7, 'p10': 152.288, 'p90': 2628.617}
+  duration_us dispatch ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStora grid=[16, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 1}] {'min': 731.17, 'median': 747.778, 'max': 771.779, 'p10': 737.57, 'p90': 761.283}
+  duration_us dispatch void (anonymous namespace)::multimem_all_reduce_kernel<c10:: grid=[8, 1, 1] block=[1024, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 1}] {'min': 2035.783, 'median': 2035.783, 'max': 2035.783, 'p10': 2035.783, 'p90': 2035.783}
+  duration_us post ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[7, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 1}] {'min': 126.4, 'median': 126.4, 'max': 126.4, 'p10': 126.4, 'p90': 126.4}
+
+group 8 prefill NONE real=True own_rows=6144 lanes=(6144, 1) requests=1 forwards=2 distinct_multisets=1
+  multiset 0, forwards=2
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(4, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(9, 1, 1) block=(512, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=(16, 1, 1) block=(544, 1, 1)
+    dispatch   44 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(24, 1, 1) block=(544, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=(24, 1, 1) block=(544, 1, 1)
+    dispatch   43 nccl              ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStora grid=(16, 1, 1) block=(544, 1, 1)
+    dispatch    1 symm_mem          void (anonymous namespace)::multimem_all_reduce_kernel<c10:: grid=(8, 1, 1) block=(1024, 1, 1)
+    post        1 nccl              ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=(7, 1, 1) block=(512, 1, 1)
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[4, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 45.92, 'median': 59.728, 'max': 224.768, 'p10': 49.536, 'p90': 194.848}
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[9, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 51.84, 'median': 66.52799999999999, 'max': 81.44, 'p10': 55.808, 'p90': 74.016}
+  duration_us dispatch ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<40 grid=[16, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 251.137, 'median': 833.2495, 'max': 3898.824, 'p10': 467.52, 'p90': 2124.324}
+  duration_us dispatch ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[24, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 44, 'forwards': 2}] {'min': 153.248, 'median': 155.98450000000003, 'max': 1285.218, 'p10': 154.432, 'p90': 158.944}
+  duration_us dispatch ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelAr grid=[24, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 149.44, 'median': 1455.4105, 'max': 3263.462, 'p10': 175.712, 'p90': 2380.196}
+  duration_us dispatch ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStora grid=[16, 1, 1] block=[544, 1, 1] counts_per_forward=[{'count': 43, 'forwards': 2}] {'min': 698.689, 'median': 718.8340000000001, 'max': 1027.938, 'p10': 703.425, 'p90': 733.281}
+  duration_us dispatch void (anonymous namespace)::multimem_all_reduce_kernel<c10:: grid=[8, 1, 1] block=[1024, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 2}] {'min': 191.872, 'median': 1884.7555, 'max': 3577.639, 'p10': 191.872, 'p90': 3577.639}
+  duration_us post ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<409 grid=[7, 1, 1] block=[512, 1, 1] counts_per_forward=[{'count': 1, 'forwards': 2}] {'min': 17.856, 'median': 250.7525, 'max': 483.649, 'p10': 17.856, 'p90': 483.649}
+
+Native review list: empty

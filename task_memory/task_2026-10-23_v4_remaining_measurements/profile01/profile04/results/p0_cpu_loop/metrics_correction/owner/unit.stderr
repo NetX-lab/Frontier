@@ -1,0 +1,13 @@
+test_composition_preserves_observer_and_runner (__main__.MetricsTest) ... ok
+test_empty_groups (__main__.MetricsTest) ... ok
+test_exact_groups_and_repeated_memberships (__main__.MetricsTest) ... ok
+test_full_frozen_ast_and_predicate_negative_control (__main__.MetricsTest) ... ok
+test_one_stable_sort (__main__.MetricsTest) ... ok
+test_original_fractional_sum_negative_control (__main__.MetricsTest) ... ok
+test_pipeline_ast_and_original_file_binding (__main__.MetricsTest) ... ok
+test_source_pins (__main__.MetricsTest) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.823s
+
+OK

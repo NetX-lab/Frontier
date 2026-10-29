@@ -1,0 +1,384 @@
+from __future__ import annotations
+
+import importlib
+import sys
+from dataclasses import asdict, dataclass
+from functools import lru_cache
+from pathlib import Path
+from typing import Sequence
+
+from frontier.operators.spec import TensorParallelMode
+from frontier.types import ClusterType
+
+
+@dataclass(frozen=True)
+class FrontierParallelismMapping:
+    cluster_num_replicas: int
+    attn_tensor_parallel_size: int
+    attn_dp: int
+    moe_tensor_parallel_size: int
+    moe_expert_parallel_size: int
+
+    @property
+    def attention_parallel_size(self) -> int:
+        return self.attn_tensor_parallel_size * self.attn_dp
+
+    @property
+    def moe_parallel_size(self) -> int:
+        return self.moe_tensor_parallel_size * self.moe_expert_parallel_size
+
+    def to_dict(self) -> dict[str, int]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class CollectiveSimParallelLayout:
+    tp: int
+    cp: int
+    dp: int
+    ep: int
+
+    @property
+    def world_size(self) -> int:
+        return self.tp * self.cp * self.dp * self.ep
+
+    def to_dict(self) -> dict[str, int]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class CollectiveSimPhysicalTopology:
+    servers: int
+    gpus_per_server: int
+
+    @property
+    def world_size(self) -> int:
+        return self.servers * self.gpus_per_server
+
+    def to_dict(self) -> dict[str, int]:
+        return asdict(self)
+
+
+def _validate_positive(name: str, value: int) -> int:
+    resolved_value = int(value)
+    if resolved_value <= 0:
+        raise ValueError(f"{name} must be positive, got {value!r}")
+    return resolved_value
+
+
+@dataclass(frozen=True)
+class SequenceParallelMoETokenWidths:
+    """Per-DP-lane SP rows and the EP all-gather's physical input rows."""
+
+    local_tokens: tuple[int, ...]
+    valid_tokens: tuple[int, ...]
+    gathered_tokens: int
+
+
+def sequence_parallel_moe_token_widths(
+    lane_token_counts: Sequence[int],
+    attention_tp_size: int,
+    tp_rank: int = 0,
+) -> SequenceParallelMoETokenWidths:
+    """Split already DP/graph-padded widths, retaining SP padding in M.
+
+    ``local_tokens[d]`` is S_d = ceil(T_pad_d / TP), including padding.
+    ``valid_tokens[d]`` excludes this TP rank's SP padding only. All rows,
+    including padding, pass through the router and EP dispatch.
+    """
+
+    if type(attention_tp_size) is not int or attention_tp_size <= 0:
+        raise ValueError("attention_tp_size must be a positive int")
+    if type(tp_rank) is not int or not 0 <= tp_rank < attention_tp_size:
+        raise ValueError("tp_rank must be in the attention TP domain")
+    if not lane_token_counts or any(
+        type(tokens) is not int or tokens < 0 for tokens in lane_token_counts
+    ):
+        raise ValueError("lane_token_counts must contain non-negative ints")
+    local = tuple(
+        (tokens + attention_tp_size - 1) // attention_tp_size
+        for tokens in lane_token_counts
+    )
+    valid = tuple(
+        max(0, min(rows, tokens - tp_rank * rows))
+        for tokens, rows in zip(lane_token_counts, local)
+    )
+    return SequenceParallelMoETokenWidths(
+        local_tokens=local,
+        valid_tokens=valid,
+        gathered_tokens=attention_tp_size * sum(local),
+    )
+
+
+def validate_frontier_shared_parallel_domains(
+    mapping: FrontierParallelismMapping,
+) -> None:
+    if mapping.attention_parallel_size != mapping.moe_parallel_size:
+        raise ValueError(
+            "Frontier shared attention/MoE parallel domain requires "
+            "attn_tp*attn_dp == moe_tp*moe_ep"
+        )
+
+
+def resolve_shared_expert_tensor_parallel_mode(
+    *,
+    model_config: object,
+) -> TensorParallelMode:
+    """Return the profile-owned semantic TP mode for shared-expert work."""
+
+    profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+    if not callable(profile_getter):
+        raise ValueError(
+            "Shared-expert TP requires model_config.get_model_architecture_profile()"
+        )
+
+    from frontier.model_architectures import LayerKind
+
+    mode = profile_getter().get_layer_contract(
+        LayerKind.SHARED
+    ).tensor_parallel_mode
+    if not isinstance(mode, TensorParallelMode):
+        raise ValueError(
+            "Shared-expert layer contract must declare a TensorParallelMode, "
+            f"got {mode!r}"
+        )
+    return mode
+
+
+def resolve_shared_expert_tensor_parallel_size(
+    *,
+    cluster_type: ClusterType,
+    replica_config: object,
+    model_config: object | None = None,
+) -> int:
+    """Resolve shared-expert TP through the model architecture profile."""
+
+    if cluster_type not in {
+        ClusterType.MONOLITHIC,
+        ClusterType.PREFILL,
+        ClusterType.DECODE,
+        ClusterType.DECODE_FFN,
+    }:
+        raise ValueError(
+            f"Shared-expert TP is unavailable for cluster type {cluster_type!r}"
+        )
+
+    if model_config is None:
+        model_config = getattr(replica_config, "model_config", None)
+    if model_config is None:
+        raise ValueError("Shared-expert TP requires replica_config.model_config")
+    mode = resolve_shared_expert_tensor_parallel_mode(model_config=model_config)
+    profile = model_config.get_model_architecture_profile()
+    if cluster_type is not ClusterType.DECODE_FFN and profile.uses_sequence_parallel_moe(
+        getattr(replica_config, "attn_tensor_parallel_size", None),
+        getattr(replica_config, "attn_dp", None),
+        getattr(replica_config, "num_pipeline_stages", None),
+        getattr(replica_config, "moe_expert_parallel_size", None),
+    ):
+        return 1
+    if cluster_type is ClusterType.DECODE_FFN or mode in {
+        TensorParallelMode.FFN_TP,
+        TensorParallelMode.MOE_TP,
+    }:
+        field_name = "moe_tensor_parallel_size"
+    elif mode is TensorParallelMode.ATTENTION_TP:
+        field_name = "attn_tensor_parallel_size"
+    elif mode is TensorParallelMode.REPLICATED:
+        return 1
+    else:
+        raise ValueError(f"Unsupported shared-expert TP mode: {mode!r}")
+
+    value = getattr(replica_config, field_name, None)
+    if type(value) is not int or value <= 0:
+        raise ValueError(
+            f"{field_name} must be a positive int for shared-expert TP, got {value!r}"
+        )
+    return value
+
+
+def resolve_frontier_parallelism_mapping(
+    *,
+    model_profile: str,
+    tensor_parallel_size: int,
+    num_replicas: int,
+    enable_expert_parallel: bool,
+    attn_dp: int = 1,
+) -> FrontierParallelismMapping:
+    normalized_model_profile = str(model_profile).strip().lower()
+    if normalized_model_profile not in {"dense", "moe"}:
+        raise ValueError(
+            f"Unsupported model_profile={model_profile!r}; expected 'dense' or 'moe'"
+        )
+
+    resolved_tp = _validate_positive("tensor_parallel_size", tensor_parallel_size)
+    resolved_num_replicas = _validate_positive("num_replicas", num_replicas)
+    resolved_attn_dp = _validate_positive("attn_dp", attn_dp)
+
+    if normalized_model_profile == "dense":
+        if enable_expert_parallel:
+            raise ValueError("Dense models do not support expert parallel")
+        return FrontierParallelismMapping(
+            cluster_num_replicas=resolved_num_replicas,
+            attn_tensor_parallel_size=resolved_tp,
+            attn_dp=resolved_attn_dp,
+            moe_tensor_parallel_size=1,
+            moe_expert_parallel_size=1,
+        )
+
+    # ``num_replicas`` is the outer serving-capacity dimension. Attention-DP
+    # lanes and MoE EP ranks are local to one complete Replica pod.
+    if enable_expert_parallel:
+        moe_tensor_parallel_size = 1
+        moe_expert_parallel_size = resolved_tp * resolved_attn_dp
+    else:
+        moe_tensor_parallel_size = resolved_tp * resolved_attn_dp
+        moe_expert_parallel_size = 1
+    mapping = FrontierParallelismMapping(
+        cluster_num_replicas=resolved_num_replicas,
+        attn_tensor_parallel_size=resolved_tp,
+        attn_dp=resolved_attn_dp,
+        moe_tensor_parallel_size=moe_tensor_parallel_size,
+        moe_expert_parallel_size=moe_expert_parallel_size,
+    )
+
+    validate_frontier_shared_parallel_domains(mapping)
+    return mapping
+
+
+def build_collective_sim_layout(
+    *,
+    mapping: FrontierParallelismMapping,
+    num_pipeline_stages: int,
+    domain: str,
+) -> CollectiveSimParallelLayout:
+    resolved_pp = _validate_positive("num_pipeline_stages", num_pipeline_stages)
+    normalized_domain = str(domain).strip().lower()
+
+    if normalized_domain == "attention":
+        return CollectiveSimParallelLayout(
+            tp=_validate_positive(
+                "attn_tensor_parallel_size", mapping.attn_tensor_parallel_size
+            ),
+            cp=resolved_pp,
+            dp=_validate_positive(
+                "attention_dp",
+                mapping.attn_dp,
+            ),
+            ep=1,
+        )
+
+    if normalized_domain == "moe":
+        return CollectiveSimParallelLayout(
+            tp=_validate_positive(
+                "moe_tensor_parallel_size", mapping.moe_tensor_parallel_size
+            ),
+            cp=resolved_pp,
+            # The backend models one complete Replica pod. Outer cluster
+            # replicas are scheduler capacity and never MoE collective ranks.
+            dp=1,
+            ep=_validate_positive(
+                "moe_expert_parallel_size", mapping.moe_expert_parallel_size
+            ),
+        )
+
+    raise ValueError(
+        f"Unsupported domain={domain!r}; expected 'attention' or 'moe'"
+    )
+
+
+def build_collective_sim_physical_topology(
+    *,
+    cluster_total_devices: int,
+    num_devices_per_node: int,
+) -> CollectiveSimPhysicalTopology:
+    resolved_cluster_total_devices = _validate_positive(
+        "cluster_total_devices",
+        cluster_total_devices,
+    )
+    resolved_num_devices_per_node = _validate_positive(
+        "num_devices_per_node",
+        num_devices_per_node,
+    )
+    if resolved_cluster_total_devices <= resolved_num_devices_per_node:
+        return CollectiveSimPhysicalTopology(
+            servers=1,
+            gpus_per_server=resolved_cluster_total_devices,
+        )
+    if resolved_cluster_total_devices % resolved_num_devices_per_node != 0:
+        raise ValueError(
+            "collective-sim physical topology requires cluster_total_devices "
+            f"{resolved_cluster_total_devices} to be divisible by node size "
+            f"{resolved_num_devices_per_node}"
+        )
+    return CollectiveSimPhysicalTopology(
+        servers=resolved_cluster_total_devices // resolved_num_devices_per_node,
+        gpus_per_server=resolved_num_devices_per_node,
+    )
+
+
+@lru_cache(maxsize=None)
+def _get_collective_sim_profile_gpus_per_server(scenario_profile: str) -> int:
+    normalized_profile = str(scenario_profile).strip()
+    if not normalized_profile:
+        raise ValueError("scenario_profile must be non-empty")
+
+    python_root = (
+        Path(__file__).resolve().parents[1]
+        / "cc_backend"
+        / "backends"
+        / "collective-sim"
+        / "python"
+    )
+    python_root_str = str(python_root)
+    if python_root_str not in sys.path:
+        sys.path.insert(0, python_root_str)
+
+    scenario_profiles = importlib.import_module("collective_sim_core.scenario_profiles")
+    schema_module = importlib.import_module("collective_sim_core.schema")
+    builder = scenario_profiles.get_scenario_profile_builder(normalized_profile)
+    prototype = builder(
+        servers=1,
+        collective=schema_module.CollectiveConfig(),
+        parallelism=schema_module.ParallelismConfig(),
+    )
+    return _validate_positive(
+        "profile_gpus_per_server",
+        int(prototype.cluster.gpus_per_server),
+    )
+
+
+def resolve_collective_sim_physical_topology(
+    *,
+    cluster_total_devices: int,
+    num_devices_per_node: int,
+    scenario_profile: str | None = None,
+) -> CollectiveSimPhysicalTopology:
+    resolved_cluster_total_devices = _validate_positive(
+        "cluster_total_devices",
+        cluster_total_devices,
+    )
+    normalized_profile = str(scenario_profile).strip() if scenario_profile else ""
+    if not normalized_profile:
+        return build_collective_sim_physical_topology(
+            cluster_total_devices=resolved_cluster_total_devices,
+            num_devices_per_node=num_devices_per_node,
+        )
+
+    profile_gpus_per_server = _get_collective_sim_profile_gpus_per_server(
+        normalized_profile
+    )
+    if resolved_cluster_total_devices <= profile_gpus_per_server:
+        return CollectiveSimPhysicalTopology(
+            servers=1,
+            gpus_per_server=resolved_cluster_total_devices,
+        )
+    if resolved_cluster_total_devices % profile_gpus_per_server != 0:
+        raise ValueError(
+            "collective-sim scenario profile requires cluster_total_devices "
+            f"{resolved_cluster_total_devices} to be divisible by profile node size "
+            f"{profile_gpus_per_server}"
+        )
+    return CollectiveSimPhysicalTopology(
+        servers=resolved_cluster_total_devices // profile_gpus_per_server,
+        gpus_per_server=profile_gpus_per_server,
+    )

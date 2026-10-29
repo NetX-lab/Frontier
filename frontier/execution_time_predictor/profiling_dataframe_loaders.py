@@ -9,7 +9,8 @@ import os
 import pandas as pd
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
-from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.model_binding import resolve_runtime_attention_family
+from frontier.attention.ops import AttentionMemoryLayout, AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_median_column_by_role,
     get_enabled_predictor_metric_name_by_role,
@@ -311,6 +312,17 @@ class ProfilingDataFrameLoaders:
             FileNotFoundError: If the input file does not exist
             ValueError: If no data matches filtering criteria
         """
+        resolve_runtime_attention_family(
+            replica_config.model_config
+        ).require_enabled_for_execution()
+        if resolve_runtime_attention_family(replica_config.model_config).memory_layout is AttentionMemoryLayout.DSA:
+            from frontier.execution_time_predictor.dsa_predictor import load_dsa_dataframe
+
+            return load_dsa_dataframe(
+                file_path, replica_config.model_config, replica_config.attn_tensor_parallel_size,
+                replica_scheduler_config.block_size, self._active_measurement_type,
+                replica_config=replica_config, scheduler_config=replica_scheduler_config,
+            )
         # Check file existence
         if not os.path.exists(file_path):
             raise FileNotFoundError(
@@ -614,6 +626,7 @@ class ProfilingDataFrameLoaders:
         expert_parallel_size: Optional[int] = None,
         layer_contract: Optional[ResolvedLayerContract] = None,
         operator_name: Optional[str] = None,
+        float_precision: Optional[str] = None,
     ) -> pd.DataFrame:
         """
         Load MoE dataframe with cluster-specific configuration filtering.
@@ -670,7 +683,7 @@ class ProfilingDataFrameLoaders:
                 f"Suggested command: bash frontier/profiling/example/test_profiling_moe.sh"
             )
 
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(file_path, float_precision=float_precision)
         logger.info(f"Original MoE data: {len(df)} rows, {len(df.columns)} columns")
         expected_profile = (
             layer_contract.profile_id

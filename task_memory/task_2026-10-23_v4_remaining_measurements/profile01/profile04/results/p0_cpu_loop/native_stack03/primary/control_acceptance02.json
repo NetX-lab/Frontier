@@ -1,0 +1,375 @@
+{
+  "status": "ACCEPTED_NATIVE_SYNTHETIC_CONTROL02_WITH_LIMITS",
+  "observed_utc": "2026-10-25T04:05:30.465881+00:00",
+  "checks": {
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/control_repair_allocation.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/takeover_allocation.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/source_inspection.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/control_inputs02.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/control.py": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.gdb": true,
+    "hash:/usr/bin/python3.10": true,
+    "hash:/usr/bin/gdb": true,
+    "hash:/lib/x86_64-linux-gnu/libc.so.6": true,
+    "hash:/usr/lib/debug/.build-id/69/389d485a9793dbe873f0ea2c93e02efaa9aa3d.debug": true,
+    "hash:/lib/x86_64-linux-gnu/libz.so.1": true,
+    "hash:/usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so": true,
+    "environment:PYTHONPATH": true,
+    "environment:PYTHONHOME": true,
+    "environment:PYTHONMALLOC": true,
+    "environment:PYTHONMALLOCSTATS": true,
+    "environment:PYTHONFAULTHANDLER": true,
+    "environment:LD_PRELOAD": true,
+    "environment:LD_LIBRARY_PATH": true,
+    "environment:MALLOC_CHECK_": true,
+    "environment:GLIBC_TUNABLES": true,
+    "environment:MALLOC_PERTURB_": true,
+    "environment:MALLOC_ARENA_MAX": true,
+    "outer_allocation": true,
+    "outer_command": true,
+    "outer_exit_attempt_time": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch02.stdout": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch02.stdout": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch02.stderr": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch02.stderr": true,
+    "controller_argv": true,
+    "controller_input_hash": true,
+    "controller_source_pins": true,
+    "parent_30GiB_python": true,
+    "gc_original": true,
+    "allocator_original": true,
+    "two_cases": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/exit0.inferior.py": true,
+    "exit0:metadata_ast": true,
+    "exit0:body_ast": true,
+    "exit0:argv": true,
+    "exit0:source_pins": true,
+    "exit0:native_marker": true,
+    "exit0:metadata_marker": true,
+    "exit0:serialized_case": true,
+    "exit0:inherited_cgroup": true,
+    "exit0:inherited_memory_mount_root": true,
+    "exit0:inherited_group": true,
+    "exit0:inherited_memory_limit_bytes": true,
+    "exit0:inherited_python_executable": true,
+    "exit0:inherited_python_version": true,
+    "exit0:inherited_allocator": true,
+    "exit0:inherited_gc_enabled": true,
+    "exit0:inherited_gc_thresholds": true,
+    "exit0:PID": true,
+    "exit0:capture_errors": true,
+    "exit0:natural_exit": true,
+    "exit0:no_stop": true,
+    "exit0:no_capture": true,
+    "exit0:stderr_empty": true,
+    "exit0:raw_verdict": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/sigabrt.inferior.py": true,
+    "sigabrt:metadata_ast": true,
+    "sigabrt:body_ast": true,
+    "sigabrt:argv": true,
+    "sigabrt:source_pins": true,
+    "sigabrt:native_marker": true,
+    "sigabrt:metadata_marker": true,
+    "sigabrt:serialized_case": true,
+    "sigabrt:inherited_cgroup": true,
+    "sigabrt:inherited_memory_mount_root": true,
+    "sigabrt:inherited_group": true,
+    "sigabrt:inherited_memory_limit_bytes": true,
+    "sigabrt:inherited_python_executable": true,
+    "sigabrt:inherited_python_version": true,
+    "sigabrt:inherited_allocator": true,
+    "sigabrt:inherited_gc_enabled": true,
+    "sigabrt:inherited_gc_thresholds": true,
+    "sigabrt:PID": true,
+    "sigabrt:capture_errors": true,
+    "sigabrt:stopped_SIGABRT": true,
+    "sigabrt:quit_kills_stop": true,
+    "sigabrt:all_capture_commands": true,
+    "sigabrt:linux_cgroup": true,
+    "sigabrt:core_limit_zero": true,
+    "sigabrt:stack_library_map": true,
+    "sigabrt:source_warning_only": true,
+    "sigabrt:raw_verdict": true,
+    "raw_aggregate_verdict": true,
+    "outer_result_matches": true,
+    "repair_AST_proof": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control.py": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control.py": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control_command.json": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control_command.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control_result.json": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control_result.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.command.json": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.command.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.result.json": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.result.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.stderr": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.stderr": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.stdout": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.stdout": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.command.json": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.command.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.result.json": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.result.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.stderr": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.stderr": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.stdout": true,
+    "size:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.stdout": true,
+    "hash:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch.receipt.json": true,
+    "size:/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch.receipt.json": true,
+    "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.py": true,
+    "stale_receipt_conflict_retained": true,
+    "current_launcher:syntax_and_cap": true,
+    "current_launcher:one_subprocess": true,
+    "current_launcher:no_task_import": true,
+    "current_launcher:no_environment_mutation": true,
+    "current_launcher:exclusive_outputs": true,
+    "current_launcher:all_evidence_pins": true,
+    "current_launcher:full_input_hashes": true,
+    "current_launcher:command_identity": true,
+    "current_launcher:inferior_exit_required": true,
+    "current_launcher:no_retry": true
+  },
+  "checks_passed": 127,
+  "bindings": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/control_execution_allocation02.json",
+      "bytes": 4044,
+      "sha256": "c04e4271fff6b97e993078bad6ace5586d539ec197d5344a84a70e1611782e28"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/control_repair_allocation.json",
+      "bytes": 1511,
+      "sha256": "7dc815d83155f00c744573171618a1d08f8dd4f671eef14378afb7c5f2696d6f"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/takeover_allocation.json",
+      "bytes": 731,
+      "sha256": "d75821811a5bac38a5f8536a87a641c42bae9d849644efc40184a37310910e7e"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/source_inspection.json",
+      "bytes": 3859,
+      "sha256": "3a4f87e8dd1e4d26000bbd2cd6c84bee4db854aa4d212ccd752591080cc8d664"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/control_inputs02.json",
+      "bytes": 781,
+      "sha256": "3869591774c988e6c72fd9eb69a3090e94a38076b782b4b46891fbe6cefc422b"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/control.py",
+      "bytes": 6596,
+      "sha256": "b0cccc84c3a185b472ddbf41a4f9b3db3cc39874d44199a31a065cb05eff6c3e"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.gdb",
+      "bytes": 2602,
+      "sha256": "4d0b05a1c1aa4125d5e8faf93da0dbd0f8955e83a75446f88aff6eb0707217b3"
+    },
+    {
+      "path": "/usr/bin/python3.10",
+      "bytes": 5921160,
+      "sha256": "dbb04ace02303fa5cb3a6d1aa0e7a180d8dd23d3257cc6a0b155d0ee219432a2"
+    },
+    {
+      "path": "/usr/bin/gdb",
+      "bytes": 10280680,
+      "sha256": "2a2f167b5f9c9053732f79a0f4418ed75c211e00275da6090ab64a05b81a12e0"
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libc.so.6",
+      "bytes": 2216304,
+      "sha256": "568740b06a8afa26db4874f8cf61985ecbc6dd127f4229416fe95da8f9ec13fb"
+    },
+    {
+      "path": "/usr/lib/debug/.build-id/69/389d485a9793dbe873f0ea2c93e02efaa9aa3d.debug",
+      "bytes": 4415848,
+      "sha256": "0e50c8edfdc06a29bdce9f787686db39e245a622fdabd1a1b9a430f30d5cf618"
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libz.so.1",
+      "bytes": 108936,
+      "sha256": "64c206f0146cc58bbddc4f22054436f4ff278f5a554aa3ce6921ddf7e9133370"
+    },
+    {
+      "path": "/usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so",
+      "bytes": 49160,
+      "sha256": "c97effb6e762e78af6eb451950283ebce4f6da82968ed53d51b8f5c252e77faf"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch02.receipt.json",
+      "bytes": 1142,
+      "sha256": "9219869ab77bbb3ce1587797a4209fe2ea1870195e759bac2cb8b4ec06f48f67"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch02.stdout",
+      "bytes": 10521,
+      "sha256": "a7a96634c45e7dc96a490ca59607bbcdf8c76368d344dc441732d314d3b9d752"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch02.stderr",
+      "bytes": 67,
+      "sha256": "f26b9820fc7b6e0295f1cd78aa7af051486320cdf20b9603c453a8ebcb2af20d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/control_result.json",
+      "bytes": 11391,
+      "sha256": "fbe8e092069b67801a4c232f806c26b8af5f0f1b760b5d33c46d102f2b49beeb"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/control_command.json",
+      "bytes": 1003,
+      "sha256": "3b5e062e2268c29016bae7e51967d34a6f61185f6fceb3f2f63118242c949d77"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/exit0.result.json",
+      "bytes": 2757,
+      "sha256": "e2349646ddf5a4faac0fa4ba0575282337d3cd249903c7488c3e06255a644bb1"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/exit0.command.json",
+      "bytes": 1293,
+      "sha256": "d63d99c97bf0f39d7c4a363b7b64fd9720b2fd6289545668be8d8989b9659535"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/exit0.inferior.py",
+      "bytes": 1184,
+      "sha256": "9db3e39822cd69667b101ca1c1a947cbf5e0773066eb53b39a75179cbe0f3c07"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/exit0.stdout",
+      "bytes": 2703,
+      "sha256": "7de3a0d6690c7d57b3c8f63be167eaa2b0e8efe0c67619277c2a76ceaa15be77"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/exit0.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/sigabrt.result.json",
+      "bytes": 5838,
+      "sha256": "239c11cce62b84e0f769064be9548d49dd2c35dfb9e5615d999412b8a3ead2c5"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/sigabrt.command.json",
+      "bytes": 1297,
+      "sha256": "a86efbd68bf1de08cf7f3381e8cfcb97c8ecb7901f1d13ab2b46a8f676771b3c"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/sigabrt.inferior.py",
+      "bytes": 1209,
+      "sha256": "e20d6d4439831714ef280f792020db627147a1eac434ff86ebd10804b56ee458"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/sigabrt.stdout",
+      "bytes": 12569,
+      "sha256": "384f309828823ab75735e8fd2af5c555f02be30783f05fa2711aa841b37c89ae"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/sigabrt.stderr",
+      "bytes": 67,
+      "sha256": "a02e6c9ccc384efa72e9bc6a47a931f5ebc202c3619f512db7916ed4c2752516"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/control_repair_source_inspection.json",
+      "bytes": 896,
+      "sha256": "be4074d13a098142c2471eeb0afd2344c040ea374057424b2ef1bf690cd2872c"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/control_failure.json",
+      "bytes": 4391,
+      "sha256": "b32289c68cd0f0da0cf7bf5f841016c6e7c023a9ce7f3867771b5280ad3ba00b"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control.py",
+      "bytes": 6430,
+      "sha256": "d867c9e15a05ae581cb592a24ea0e309d2f26d04f610de094c00f97f6f1a2c14"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control_command.json",
+      "bytes": 997,
+      "sha256": "91fba8a7c7a465dbce2e26fe7e437598febc4be9869ebc1dd6710f788715d520"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control_result.json",
+      "bytes": 2689,
+      "sha256": "71712c94def2e34f8c0e33bf91a830be8f0b7098e577c10faf28298238e8412d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.command.json",
+      "bytes": 2099,
+      "sha256": "d6c1aa170829067da6f28787b58ca6716c4bf0d2d8e1f50e632108a696a8e4e9"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.result.json",
+      "bytes": 103,
+      "sha256": "28f70efea96d3a500f357401dbe221fa338a16e837c2025243c8e981cafa2b27"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.stderr",
+      "bytes": 93,
+      "sha256": "dbbd1474800c85d0985c3938df990e03c416351273fa4317a6fc12e3dd1764d4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.stdout",
+      "bytes": 434,
+      "sha256": "0e08fec851e7f7f97dc6574970c768f7c55c686a7fbeb81e1d5246cdf0f33972"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.command.json",
+      "bytes": 2124,
+      "sha256": "cf99dba6180035c99ffc7b85f72c5714255ec1bb3d202f3547a9f8bf4465230a"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.result.json",
+      "bytes": 103,
+      "sha256": "28f70efea96d3a500f357401dbe221fa338a16e837c2025243c8e981cafa2b27"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.stderr",
+      "bytes": 93,
+      "sha256": "dbbd1474800c85d0985c3938df990e03c416351273fa4317a6fc12e3dd1764d4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.stdout",
+      "bytes": 434,
+      "sha256": "9cf983e74379cf5a646a2b4198205a5726826d12032656f4f86294eb0ccaa03b"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch.receipt.json",
+      "bytes": 1135,
+      "sha256": "d750c2a6fc4fc2e327ad170e7007a47f663b33ad1aadde1299c3f600530c5c72"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.py",
+      "bytes": 3888,
+      "sha256": "7289592b767038234b989f4b854a4e771b54ae980649235db9769439e0603cd2"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/launcher_static_inspection.json",
+      "bytes": 841,
+      "sha256": "749a08b4abbbf498f2d64fb693feb64c99aac5d59ca40c5fd83409fabf7674d9"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/launcher_current_inspection.json",
+      "bytes": 1601,
+      "sha256": "49fdc79580bcc281c31663515954c0f1a571beb4c5c2b6c32bcbbf583a2ba94f"
+    }
+  ],
+  "enclosing_seconds": 0.7063260679133236,
+  "controller_pid": 2755664,
+  "case_pids": [
+    2755755,
+    2755824
+  ],
+  "memory_limit_bytes": 32212254720,
+  "original_control_used": 1,
+  "repair_control_used": 1,
+  "repair_control_ceiling": 1,
+  "full_diagnostic_used": 0,
+  "full_diagnostic_ceiling": 1,
+  "stderr_note": "Matching glibc symbols produced the bounded stack; missing syscall-template.S source warning remains retained, with no capture errors.",
+  "limits": "Synthetic exit/stop/cgroup/argv proof only. No corruption reproduction/cure/timing equivalence or affected-rank/R5/native ownership/cost admission. No task source/control was imported or rerun during primary inspection."
+}

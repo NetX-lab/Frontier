@@ -11,7 +11,8 @@ from frontier.types import ClusterType
 
 
 def materialize_layer_workload(
-    *, scheduler: Any, batch: Any, target_replica_id: int, global_layer_id: int
+    *, scheduler: Any, batch: Any, target_replica_id: int, global_layer_id: int,
+    routing_token_count: int | None = None,
 ) -> Any:
     """Validate scheduler inputs and build a canonical per-layer EP workload."""
 
@@ -50,7 +51,8 @@ def materialize_layer_workload(
         raise ValueError("router_topk must be an exact positive int")
     # A decode CUDA-graph step routes its padding tokens too, so routing uses
     # the same compute width as every other operator of the step.
-    routing_token_count = batch.get_effective_total_tokens_for_compute(scheduler._cluster_type)
+    if routing_token_count is None:
+        routing_token_count = batch.get_effective_total_tokens_for_compute(scheduler._cluster_type)
     return materialize_layer_ep_workload(
         routing_ratios=resolve_routing_details(
             routing_details, target_replica_id, global_layer_id

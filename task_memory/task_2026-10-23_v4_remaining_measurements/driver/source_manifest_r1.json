@@ -1,0 +1,25 @@
+{
+  "status": "REPAIRED_REVIEW_PENDING",
+  "baseline": "313c8167",
+  "source_files": {
+    "tests/comparison/calibration/native_pd_worker.py": "9ec701ec12f7a5da0f442f994a353f98c5ae1d2880b9feca38106ea536fd5cab",
+    "tests/comparison/calibration/native_serve_profile.py": "ea810b91665ca9a804e1b0309ad03f0d50772a96585c66602945a7125cfc1ea5",
+    "tests/comparison/calibration/pd_replay.py": "65ec81721ebe1d02a4028388521bc25d57888bb39a721bc59c21dc6f0a3ed0ae",
+    "tests/unit/test_native_cold_start.py": "f4112a16ae089bf63b4a5bd28588743e74e95152ad57556a424f26c48df8ad06",
+    "tests/unit/test_native_pd_worker.py": "ed20f690b6d5515ac21bd1a238b14fbcf94a00f8f1d3c91ea21ef52d433161dc",
+    "tests/unit/test_native_serve_profile.py": "559dcf7bb63c48344cbffc542e580d29ff33196813f58e49786155cb923a9037",
+    "tests/unit/test_native_streaming_replay.py": "f4b552eafe50deb84def6cabb077f7f1a696306c22aed42fcfbd505a2455961e"
+  },
+  "changed_lines": {
+    "tests/comparison/calibration/native_pd_worker.py": 7,
+    "tests/comparison/calibration/native_serve_profile.py": 51,
+    "tests/comparison/calibration/pd_replay.py": 98,
+    "tests/unit/test_native_cold_start.py": 16,
+    "tests/unit/test_native_pd_worker.py": 26,
+    "tests/unit/test_native_serve_profile.py": 111,
+    "tests/unit/test_native_streaming_replay.py": 124
+  },
+  "total_changed_lines": 433,
+  "diff_sha256": "5b3adaa3aecd99684e913af521e7d1207b809fe0f5543aa79905b551df363af0",
+  "initial_source_manifest_sha256": "c48d89ef3a585980a94a0f694c2d78bb9f417ffeb48d24d678a69d617fbb6563"
+}
