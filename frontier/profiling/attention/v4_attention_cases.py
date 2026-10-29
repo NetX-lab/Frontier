@@ -152,12 +152,15 @@ def _place(window: AttentionWindow, contexts: tuple[int, ...], engine: DsaEngine
     raise ValueError("FCFS placement did not converge within the native context profile and write phases")
 
 
-def build_attention_cases(limits: DsaMeasurementLimits) -> tuple[dict[str, Any], dict[str, Any]]:
+def build_attention_cases(limits: DsaMeasurementLimits, *,
+                          windows: Iterable[AttentionWindow] | None = None,
+                          case_prefix: str = "g1") -> tuple[dict[str, Any], dict[str, Any]]:
     """Return admitted pilot cases and the complete amended C1 target manifest.
 
     One measured step per window avoids advancing away from its requested mix.
     Prediction must assign the measured step back to the requested window.
     """
+    windows = tuple(required_windows() if windows is None else windows)
     base_budget, = limits.chunk_budgets
     q = C1["prefill_query"] - 1
     multi_budget = max(tails for _, tails in C1["multi_tail"]) * C1["prefill_query"]
@@ -165,14 +168,15 @@ def build_attention_cases(limits: DsaMeasurementLimits) -> tuple[dict[str, Any],
                              limits.block_size, query)
                for i, budget, query in ((0, base_budget, 0), (1, base_budget, q),
                                        (2, max(base_budget, multi_budget), q))]
+    engines = engines[:max(2 if w.tails > 1 else 1 if w.tails else 0 for w in windows) + 1]
     pilot_engines = [{"engine_index": e.engine_index, "prefill_query_len": e.prefill_query_len,
                      **({"chunk_budget": e.chunk_budget} if e.chunk_budget != base_budget else {})}
                     for e in engines]
     cases, targets = [], []
     submissions = {}
-    for index, window in enumerate(required_windows()):
+    for index, window in enumerate(windows):
         engine = engines[2 if window.tails > 1 else 1 if window.tails else 0]
-        case_id = f"g1-e{engine.engine_index}-{index:04d}-{window.category.lower()}"
+        case_id = f"{case_prefix}-e{engine.engine_index}-{index:04d}-{window.category.lower()}"
         entry = window.to_json()
         try:
             if window.category == PHASE_DUMMY:

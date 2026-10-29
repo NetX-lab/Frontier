@@ -1,0 +1,2273 @@
+[
+  {
+    "case_id": "g1hs-e0-0000-full",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6147,
+        6147,
+        6147,
+        6147,
+        6147
+      ],
+      "category": "FULL",
+      "first_tails": [],
+      "mix": [
+        5,
+        0
+      ],
+      "mode": "FULL",
+      "own": 5,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "padding_cached_tokens": [
+        0,
+        0,
+        0
+      ],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 8,
+      "width": 8,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6145
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6146
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      }
+    ],
+    "window": {
+      "category": "FULL",
+      "mix": [
+        5,
+        0
+      ],
+      "mode": "FULL",
+      "own": 5,
+      "profile": "low",
+      "requests": 8,
+      "tails": 0,
+      "width": 8
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0024-full",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6147,
+        6147,
+        6147,
+        6147,
+        6147
+      ],
+      "category": "FULL",
+      "first_tails": [],
+      "mix": [
+        5,
+        0
+      ],
+      "mode": "FULL",
+      "own": 5,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "padding_cached_tokens": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 16,
+      "width": 16,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6145
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6146
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      }
+    ],
+    "window": {
+      "category": "FULL",
+      "mix": [
+        5,
+        0
+      ],
+      "mode": "FULL",
+      "own": 5,
+      "profile": "low",
+      "requests": 16,
+      "tails": 0,
+      "width": 16
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0096-full",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 0,
+          "padding": true,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147
+      ],
+      "category": "FULL",
+      "first_tails": [],
+      "mix": [
+        17,
+        0
+      ],
+      "mode": "FULL",
+      "own": 17,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "padding_cached_tokens": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 24,
+      "width": 24,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6135
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6136
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6137
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6137
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6138
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6139
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6140
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6140
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6141
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6142
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6143
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6143
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6145
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6146
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      }
+    ],
+    "window": {
+      "category": "FULL",
+      "mix": [
+        17,
+        0
+      ],
+      "mode": "FULL",
+      "own": 17,
+      "profile": "low",
+      "requests": 24,
+      "tails": 0,
+      "width": 24
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0144-piecewise",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6147,
+        6147,
+        6147,
+        6147,
+        6147
+      ],
+      "category": "PIECEWISE",
+      "first_tails": [],
+      "mix": [
+        5,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 5,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 5,
+      "width": 8,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6145
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6146
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      }
+    ],
+    "window": {
+      "category": "PIECEWISE",
+      "mix": [
+        5,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 5,
+      "profile": "low",
+      "requests": 5,
+      "tails": 0,
+      "width": 8
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0168-piecewise",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6147,
+        6147,
+        6147,
+        6147,
+        6147
+      ],
+      "category": "PIECEWISE",
+      "first_tails": [],
+      "mix": [
+        5,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 5,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 5,
+      "width": 16,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6145
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6146
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      }
+    ],
+    "window": {
+      "category": "PIECEWISE",
+      "mix": [
+        5,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 5,
+      "profile": "low",
+      "requests": 5,
+      "tails": 0,
+      "width": 16
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0240-piecewise",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147
+      ],
+      "category": "PIECEWISE",
+      "first_tails": [],
+      "mix": [
+        17,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 17,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 17,
+      "width": 24,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6135
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6136
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6137
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6137
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6138
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6139
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6140
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6140
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6141
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6142
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6143
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6143
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6145
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6146
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6147
+      }
+    ],
+    "window": {
+      "category": "PIECEWISE",
+      "mix": [
+        17,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 17,
+      "profile": "low",
+      "requests": 17,
+      "tails": 0,
+      "width": 24
+    }
+  },
+  {
+    "case_id": "g1hs-e1-0288-first_tail",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6143,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6147,
+        6147,
+        6147,
+        6147,
+        6143
+      ],
+      "category": "first_tail",
+      "first_tails": [
+        4
+      ],
+      "mix": [
+        5,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 5,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 5,
+      "width": 8,
+      "writers": {
+        "128": [
+          4
+        ],
+        "4": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6145
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6146
+      },
+      {
+        "num_computed_tokens": 6143,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      }
+    ],
+    "window": {
+      "category": "first_tail",
+      "mix": [
+        5,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 5,
+      "profile": "low",
+      "requests": 5,
+      "tails": 1,
+      "width": 8
+    }
+  },
+  {
+    "case_id": "g1hs-e1-0312-first_tail",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6143,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6147,
+        6147,
+        6147,
+        6147,
+        6143
+      ],
+      "category": "first_tail",
+      "first_tails": [
+        4
+      ],
+      "mix": [
+        5,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 5,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 5,
+      "width": 16,
+      "writers": {
+        "128": [
+          4
+        ],
+        "4": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6145
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6146
+      },
+      {
+        "num_computed_tokens": 6143,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      }
+    ],
+    "window": {
+      "category": "first_tail",
+      "mix": [
+        5,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 5,
+      "profile": "low",
+      "requests": 5,
+      "tails": 1,
+      "width": 16
+    }
+  },
+  {
+    "case_id": "g1hs-e1-0384-first_tail",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6147,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6143,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6147,
+        6143
+      ],
+      "category": "first_tail",
+      "first_tails": [
+        16
+      ],
+      "mix": [
+        17,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 17,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 17,
+      "width": 24,
+      "writers": {
+        "128": [
+          16
+        ],
+        "4": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6134
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6135
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6136
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6136
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6137
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6138
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6139
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6139
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6140
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6141
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6142
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6142
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6143
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6145
+      },
+      {
+        "num_computed_tokens": 6147,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6146
+      },
+      {
+        "num_computed_tokens": 6143,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      }
+    ],
+    "window": {
+      "category": "first_tail",
+      "mix": [
+        17,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 17,
+      "profile": "low",
+      "requests": 17,
+      "tails": 1,
+      "width": 24
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0432-full",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        7163
+      ],
+      "category": "FULL",
+      "first_tails": [],
+      "mix": [
+        1,
+        0
+      ],
+      "mode": "FULL",
+      "own": 1,
+      "own_requests": [
+        0
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1
+      ],
+      "requests": 1,
+      "width": 1,
+      "writers": {
+        "128": [],
+        "4": [
+          0
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7163
+      }
+    ],
+    "window": {
+      "category": "FULL",
+      "mix": [
+        1,
+        0
+      ],
+      "mode": "FULL",
+      "own": 1,
+      "profile": "high",
+      "requests": 1,
+      "tails": 0,
+      "width": 1
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0433-full",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        7163,
+        7163
+      ],
+      "category": "FULL",
+      "first_tails": [],
+      "mix": [
+        2,
+        0
+      ],
+      "mode": "FULL",
+      "own": 2,
+      "own_requests": [
+        0,
+        1
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1
+      ],
+      "requests": 2,
+      "width": 2,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7162
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7163
+      }
+    ],
+    "window": {
+      "category": "FULL",
+      "mix": [
+        2,
+        0
+      ],
+      "mode": "FULL",
+      "own": 2,
+      "profile": "high",
+      "requests": 2,
+      "tails": 0,
+      "width": 2
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0434-full",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        7163,
+        7163,
+        7163,
+        7163
+      ],
+      "category": "FULL",
+      "first_tails": [],
+      "mix": [
+        4,
+        0
+      ],
+      "mode": "FULL",
+      "own": 4,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 4,
+      "width": 4,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7160
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7161
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7162
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7163
+      }
+    ],
+    "window": {
+      "category": "FULL",
+      "mix": [
+        4,
+        0
+      ],
+      "mode": "FULL",
+      "own": 4,
+      "profile": "high",
+      "requests": 4,
+      "tails": 0,
+      "width": 4
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0438-piecewise",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        7163
+      ],
+      "category": "PIECEWISE",
+      "first_tails": [],
+      "mix": [
+        1,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 1,
+      "own_requests": [
+        0
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1
+      ],
+      "requests": 1,
+      "width": 1,
+      "writers": {
+        "128": [],
+        "4": [
+          0
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7163
+      }
+    ],
+    "window": {
+      "category": "PIECEWISE",
+      "mix": [
+        1,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 1,
+      "profile": "high",
+      "requests": 1,
+      "tails": 0,
+      "width": 1
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0439-piecewise",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        7163,
+        7163
+      ],
+      "category": "PIECEWISE",
+      "first_tails": [],
+      "mix": [
+        2,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 2,
+      "own_requests": [
+        0,
+        1
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1
+      ],
+      "requests": 2,
+      "width": 2,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7162
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7163
+      }
+    ],
+    "window": {
+      "category": "PIECEWISE",
+      "mix": [
+        2,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 2,
+      "profile": "high",
+      "requests": 2,
+      "tails": 0,
+      "width": 2
+    }
+  },
+  {
+    "case_id": "g1hs-e0-0440-piecewise",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        7163,
+        7163,
+        7163,
+        7163
+      ],
+      "category": "PIECEWISE",
+      "first_tails": [],
+      "mix": [
+        4,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 4,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 4,
+      "width": 4,
+      "writers": {
+        "128": [],
+        "4": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7160
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7161
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7162
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7163
+      }
+    ],
+    "window": {
+      "category": "PIECEWISE",
+      "mix": [
+        4,
+        0
+      ],
+      "mode": "PIECEWISE",
+      "own": 4,
+      "profile": "high",
+      "requests": 4,
+      "tails": 0,
+      "width": 4
+    }
+  },
+  {
+    "case_id": "g1hs-e1-0444-first_tail",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 6143,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        6143
+      ],
+      "category": "first_tail",
+      "first_tails": [
+        0
+      ],
+      "mix": [
+        1,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 1,
+      "own_requests": [
+        0
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1
+      ],
+      "requests": 1,
+      "width": 1,
+      "writers": {
+        "128": [
+          0
+        ],
+        "4": [
+          0
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 6143,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      }
+    ],
+    "window": {
+      "category": "first_tail",
+      "mix": [
+        1,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 1,
+      "profile": "high",
+      "requests": 1,
+      "tails": 1,
+      "width": 1
+    }
+  },
+  {
+    "case_id": "g1hs-e1-0445-first_tail",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6143,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        7163,
+        6143
+      ],
+      "category": "first_tail",
+      "first_tails": [
+        1
+      ],
+      "mix": [
+        2,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 2,
+      "own_requests": [
+        0,
+        1
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1
+      ],
+      "requests": 2,
+      "width": 2,
+      "writers": {
+        "128": [
+          1
+        ],
+        "4": [
+          0,
+          1
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7162
+      },
+      {
+        "num_computed_tokens": 6143,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      }
+    ],
+    "window": {
+      "category": "first_tail",
+      "mix": [
+        2,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 2,
+      "profile": "high",
+      "requests": 2,
+      "tails": 1,
+      "width": 2
+    }
+  },
+  {
+    "case_id": "g1hs-e1-0446-first_tail",
+    "prediction": {
+      "attention_request_states": [
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 7163,
+          "query_tokens": 1
+        },
+        {
+          "cached_tokens": 6143,
+          "query_tokens": 1
+        }
+      ],
+      "cached_tokens": [
+        7163,
+        7163,
+        7163,
+        6143
+      ],
+      "category": "first_tail",
+      "first_tails": [
+        3
+      ],
+      "mix": [
+        4,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 4,
+      "own_requests": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "padding_cached_tokens": [],
+      "query_tokens": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "requests": 4,
+      "width": 4,
+      "writers": {
+        "128": [
+          3
+        ],
+        "4": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "requests": [
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7161
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7161
+      },
+      {
+        "num_computed_tokens": 7163,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 7162
+      },
+      {
+        "num_computed_tokens": 6143,
+        "num_scheduled_tokens": 1,
+        "prompt_len": 6144
+      }
+    ],
+    "window": {
+      "category": "first_tail",
+      "mix": [
+        4,
+        1
+      ],
+      "mode": "PIECEWISE",
+      "own": 4,
+      "profile": "high",
+      "requests": 4,
+      "tails": 1,
+      "width": 4
+    }
+  }
+]

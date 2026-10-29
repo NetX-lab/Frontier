@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter, defaultdict
+from itertools import chain
 import json
 from pathlib import Path
 from typing import Any, Iterable
@@ -80,12 +81,17 @@ def native_coverage(paths: Iterable[Path]) -> dict[str, Any]:
 def check_steps(plan, records: Iterable[tuple[str, int, dict[str, Any]]], *,
                 predicted: bool = False,
                 c1_paths: Iterable[Path] = ()) -> dict[str, Any]:
-    expected = {case.case_id: predict_case(case, plan.engine(case.engine_index), plan.limits)
-                for case in plan.cases}
-    cases = {case.case_id: case for case in plan.cases}
+    plans = [plan] if hasattr(plan, "cases") else list(plan)
+    cases, expected = {}, {}
+    for item in plans:
+        for case in item.cases:
+            if case.case_id in cases:
+                raise ValueError(f"Duplicate case id across plans: {case.case_id}")
+            cases[case.case_id] = case
+            expected[case.case_id] = predict_case(case, item.engine(case.engine_index), item.limits)
     counts: Counter = Counter()
     per_case: Counter = Counter()
-    windows = set()
+    windows, observed_windows = set(), set()
     outside, mismatches = [], []
     categories: Counter = Counter()
     for path, line, step in records:
@@ -113,6 +119,8 @@ def check_steps(plan, records: Iterable[tuple[str, int, dict[str, Any]]], *,
             outside.append({**location, "point": point,
                             "reason": "class, context profile or compression mix outside C1 targets"})
         windows.update(assigned)
+        if not predicted and not path.startswith("prediction:"):
+            observed_windows.update(assigned)
     missing_steps = []
     for case_id, steps in expected.items():
         streams = [(key, n) for key, n in counts.items() if key[1] == case_id]
@@ -122,20 +130,23 @@ def check_steps(plan, records: Iterable[tuple[str, int, dict[str, Any]]], *,
             if count < len(steps):
                 missing_steps.append({"case_id": case_id, "measurement": key[2],
                                       "expected": len(steps), "observed": count})
-    status = "predicted" if predicted else "covered"
-    target_windows = [{**w.to_json(), "status": status if w in windows else "missing"}
+    target_windows = [{**w.to_json(), "status": "covered" if w in observed_windows
+                      else "predicted" if w in windows else "missing"}
                       for w in required_windows()]
     native = native_coverage(c1_paths)
     class_status = defaultdict(list)
     for w in required_windows():
-        class_status[(w.category, w.mode, w.width, w.own, w.tails)].append(w in windows)
+        class_status[(w.category, w.mode, w.width, w.own, w.tails)].append(
+            (w in windows, w in observed_windows))
     return {"schema_version": "v4_attention_coverage.v1", "context_tolerance": C1["context_tolerance"],
             "measured_steps": sum(counts.values()), "cases_seen": len(per_case),
             "steps_by_category": dict(categories), "steps_by_case": dict(per_case),
             "windows": target_windows, "window_counts": dict(Counter(w["status"] for w in target_windows)),
             "classes": [{"category": key[0], "mode": key[1], "width": key[2], "own": key[3],
-                         "tails": key[4], "covered_windows": sum(values), "required_windows": len(values),
-                         "status": status if all(values) else "missing"}
+                         "tails": key[4], "covered_windows": sum(value[0] for value in values),
+                         "required_windows": len(values),
+                         "status": "covered" if all(value[1] for value in values) else
+                         "predicted" if all(value[0] for value in values) else "missing"}
                         for key, values in class_status.items()],
             "outside_steps": outside, "mismatches": mismatches, "missing_steps": missing_steps,
             "native": native,
@@ -148,25 +159,32 @@ def main(argv: list[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     for name in ("cases", "check"):
         command = commands.add_parser(name)
-        command.add_argument("--package-plan", type=Path, required=True)
+        command.add_argument("--package-plan", type=Path, action="append", required=True)
         command.add_argument("--output", type=Path, required=True)
         if name == "check":
             command.add_argument("--raw", type=Path, nargs="+", required=True)
+            command.add_argument("--predict-plan", type=Path, action="append", default=[],
+                                 help="Include CPU predicted steps and expected cases from another plan")
             command.add_argument("--c1-json", type=Path, nargs="*", default=[])
             command.add_argument("--predicted", action="store_true")
             command.add_argument("--require-complete-grid", action="store_true")
     args = parser.parse_args(argv)
-    plan = plan_from_spec(args.package_plan)
+    plans = [plan_from_spec(path) for path in args.package_plan]
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.command == "cases":
         count = 0
         with args.output.open("w") as output:
-            for step in prediction_steps(plan):
+            for step in chain.from_iterable(prediction_steps(plan) for plan in plans):
                 output.write(json.dumps(step, sort_keys=True) + "\n")
                 count += 1
-        print(json.dumps({"output": str(args.output), "cases": len(plan.cases), "predicted_steps": count}))
+        print(json.dumps({"output": str(args.output), "cases": sum(len(plan.cases) for plan in plans), "predicted_steps": count}))
         return 0
-    report = check_steps(plan, read_steps(args.raw), predicted=args.predicted, c1_paths=args.c1_json)
+    predicted_plans = [plan_from_spec(path) for path in args.predict_plan]
+    predicted_records = chain.from_iterable(
+        ((f"prediction:{path}", i, step) for i, step in enumerate(prediction_steps(plan), 1))
+        for path, plan in zip(args.predict_plan, predicted_plans))
+    report = check_steps([*plans, *predicted_plans], chain(read_steps(args.raw), predicted_records),
+                         predicted=args.predicted, c1_paths=args.c1_json)
     args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     print(json.dumps({"output": str(args.output), "measured_steps": report["measured_steps"],
                       "windows": report["window_counts"], "mismatches": len(report["mismatches"]),
