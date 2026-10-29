@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Set the working tree and the base worktree: both start from the B18 commit `b6c28858`; the lead creates the base worktree. |
 | 2026-10-29 | Created after the lead's cProfile probes of P2-32 on the operator path. Covers caching of four repeated pure computations, the identity check against the base commit, and the speed measurement. |
 
 ## Goal
@@ -63,7 +64,7 @@ Measured hot spots at the base (first probe, 295 s profiled):
    - The attention memo: a second call with the same features does not call `model.predict` (counted by a wrapper on the model) and returns the same float. A call with different features does call it. Out-of-coverage features still raise on the first and on every later call.
    - The layer facts: two predictors with different replica configurations each get their own values, and the values equal the uncached computation for every layer of the V4 model config.
 2. **Identity against the base.**
-   - Base: the commit you start from, run from a separate detached worktree under `.worktrees/` that you create for this check (and list in the report).
+   - Base: the commit you start from, `b6c28858`. The lead has created the detached worktree `/data/ycfeng/Frontier/.worktrees/b20-base` at that commit for this check. Run the base from it and do not edit it.
    - Scenario: the P2-32 config of `a10_driver.py` with one change, a trace file of 8 requests arriving at 0.00, 0.05, ..., 0.35 s, each with 6,144 prompt tokens and 48 output tokens. Write the trace into the output root and record its SHA-256. If `a10_driver.py` has no way to set one more field, use `h4a4_driver.build_config` with the same fields and say so.
    - Run it cold on the base and on your change.
    - Pass: every artifact identical after parsing (`compare_artifact_directories` with `substitutions_for` for paths), and `classify_cache_differences` reports no predictor cache name difference.
@@ -81,6 +82,9 @@ Measured hot spots at the base (first probe, 295 s profiled):
 6. **Records.** `h3o_operator_costs/b20/` holds the trace generator, the run and comparison scripts, the comparison JSON and a `report.md` with the exact commands, Python version, environment, expected and actual values and PASS/FAIL per item. Touched modules stay at or below 2,000 lines.
 
 ## Writable paths
+
+Your working tree is `/data/ycfeng/Frontier/.worktrees/b20-v4-speed` (branch `b20-v4-speed`, started at `b6c28858`, which includes B18). All paths below are relative to it. B19 runs at the same time in `.worktrees/b19-v4-heldout`; its changes are not part of your base.
+
 
 - `frontier/moe_ep_workload.py`, `frontier/execution_time_predictor/dsv4_operator_predictor.py`, `frontier/execution_time_predictor/deepseek_v4.py`, `frontier/execution_time_predictor/dsv4_predictor.py`.
 - The V4 predictor construction site, only if Decision 2 places the facts there.
