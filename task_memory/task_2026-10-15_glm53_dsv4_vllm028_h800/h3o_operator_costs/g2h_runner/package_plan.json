@@ -1094,7 +1094,7 @@
     }
   ],
   "seed": 1234,
-  "source_revision": "812b436221454742a5867cdd7aab6e41cdcd40e1",
+  "source_revision": "412237db911d50f11d83bd2a52c422a4e0bcf9a3",
   "task_id": "H3O-STAGE2-B13R-G2H-RUNNER",
   "timeout_seconds": 7200,
   "worker_output_root": "/tmp/glm_producers/out",
