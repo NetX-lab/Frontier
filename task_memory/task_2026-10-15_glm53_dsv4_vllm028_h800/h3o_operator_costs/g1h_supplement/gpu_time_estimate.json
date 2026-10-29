@@ -1,0 +1,67 @@
+{
+  "basis": {
+    "engine0_case_seconds": 90.0,
+    "engine0_estimated_steps": 280,
+    "engine0_measured_steps": 163,
+    "engine0_startup_compile_autotune_seconds": 431.78,
+    "engine0_total_seconds": 576.1036419617012,
+    "engine1_startup_compile_autotune_seconds": 25.23,
+    "engine1_total_seconds": 90.29085552506149,
+    "measured_hold_seconds": 0.2
+  },
+  "c1_g1h_share_gpu_hours": 1.5,
+  "engine_start_policy": "charge the observed cold process/start/recapture time to every engine",
+  "engines": [
+    {
+      "cases": 300,
+      "chunk_budget": 8192,
+      "engine_index": 0,
+      "estimated_steps": 3628,
+      "gpu_hours": 0.358289900544917,
+      "measured_steps": 300,
+      "startup_seconds": 486.1036419617012,
+      "step_seconds": 803.74,
+      "total_seconds": 1289.8436419617012
+    },
+    {
+      "cases": 150,
+      "chunk_budget": 8192,
+      "engine_index": 1,
+      "estimated_steps": 1875,
+      "gpu_hours": 0.25013295610047254,
+      "measured_steps": 150,
+      "startup_seconds": 486.1036419617012,
+      "step_seconds": 414.375,
+      "total_seconds": 900.4786419617012
+    }
+  ],
+  "full_grid_envelope": [
+    {
+      "engine_index": 0,
+      "estimated_steps_envelope": 4208,
+      "gpu_hours_envelope": 0.39131767832269476,
+      "startup_seconds": 486.1036419617012,
+      "windows": 300
+    },
+    {
+      "engine_index": 1,
+      "estimated_steps_envelope": 2115,
+      "gpu_hours_envelope": 0.26379962276713925,
+      "startup_seconds": 486.1036419617012,
+      "windows": 150
+    }
+  ],
+  "full_grid_gpu_hours_envelope": 0.655117301089834,
+  "g1h_g4h_cap_gpu_hours": 7,
+  "g1h_g4h_remaining_gpu_hours": 3.07,
+  "g1h_g4h_used_gpu_hours": 3.93,
+  "gpu_hours": 0.6084228566453895,
+  "limitations": [
+    "Full-grid envelope charges one case per requested window; the admitted run shares identical cases.",
+    "One-step cases provide no repeated-window variance; source warm-up/capture still occurs.",
+    "Profiler per-case overhead and larger-budget autotuning have not been GPU-qualified."
+  ],
+  "reduction_required": false,
+  "seconds_per_measured_step_including_hold": 0.405,
+  "unheld_seconds_per_estimated_step": 0.205
+}

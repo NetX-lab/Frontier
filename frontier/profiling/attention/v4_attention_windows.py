@@ -2,7 +2,8 @@
 
 The seven multi-tail coordinates are single observed windows, not a Cartesian
 extension of the 39-class serving grid. FULL W1 dummy is shared by the two roles.
-The context allowance and tail mixes follow decision D-G1H-GRID-AMENDMENT.
+The context allowance and tail floor follow D-G1H-GRID-AMENDMENT; writer
+extremes follow D-G1H-WRITER-EXTREMES.
 """
 from __future__ import annotations
 
@@ -17,7 +18,7 @@ from frontier.profiling.attention.dsa_plan import (
 CATEGORY_MULTI_TAIL = "multi_tail"
 
 C1 = {
-    "decision": "D-G1H-GRID-AMENDMENT",
+    "decision": "D-G1H-WRITER-EXTREMES",
     "widths": (1, 2, 4, 8, 16, 24),
     "margin_min_own": 17,
     "cached_low": 6144,
@@ -77,7 +78,7 @@ def required_windows() -> tuple[AttentionWindow, ...]:
         for width, own in serving_classes():
             k4, k128 = max_writes(own)
             for profile in C1["profiles"]:
-                for mix in ((0, 0), (k4, 0), (k128, k128)):
+                for mix in ((0, 0), (k4, 0), (k128, k128), (own, 0), (own, own)):
                     mix = tuple(max(count, tails) for count in mix)
                     windows.append(AttentionWindow(category, mode, width, own, tails, profile, mix))
     windows.extend(AttentionWindow(CATEGORY_MULTI_TAIL, DP_PIECEWISE, natural_width(own), own,
@@ -88,6 +89,17 @@ def required_windows() -> tuple[AttentionWindow, ...]:
     windows.append(AttentionWindow(PHASE_DUMMY, DP_NONE, 1, 0, 0, None, None))
     windows.append(AttentionWindow(PHASE_PREFILL, DP_NONE, C1["prefill_query"], 1, 0, None, (1, 1)))
     return tuple(dict.fromkeys(windows))
+
+
+@cache
+def repeat_windows() -> tuple[AttentionWindow, ...]:
+    """Fixed G1h package comparison points, excluded from table promotion."""
+    return tuple(window for category in (DP_FULL, DP_PIECEWISE, PHASE_FIRST_TAIL)
+                 for width in C1["widths"] for window in required_windows()
+                 if window.category == category and window.width == width
+                 and window.own == max(own for w, own in serving_classes() if w == width)
+                 and window.profile == "high"
+                 and window.mix == (max(max_writes(window.own)[0], window.tails), window.tails))
 
 
 def profile_targets(profile: str, count: int) -> tuple[int, ...]:

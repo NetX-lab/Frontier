@@ -211,7 +211,7 @@ def test_all_native_classes_and_multi_tails_in_grid():
 
 def test_grid_and_compression_table_are_c1_union():
     assert len(serving_classes()) == 39
-    assert len(required_windows()) == 1041
+    assert len(required_windows()) == 1473
     assert max_writes(4) == (4, 4)
     assert max_writes(8) == (7, 4)
     assert max_writes(13) == (6, 1)
@@ -222,10 +222,10 @@ def test_grid_and_compression_table_are_c1_union():
 def test_generated_targets_complete_amended_grid(limits):
     payload, report = build_attention_cases(limits)
     engines, cases = build_pilot_cases(limits, payload)
-    assert len(report["windows"]) == 1041
+    assert len(report["windows"]) == 1473
     assert report["complete"]
     assert report["context_tolerance"] == max(C1["ratios"]) - 1
-    assert report["grid_decision"] == "D-G1H-GRID-AMENDMENT"
+    assert report["grid_decision"] == "D-G1H-WRITER-EXTREMES"
     assert "context_tolerance_status" not in report
     assert all(w["mix"][0] >= w["tails"] and w["mix"][1] >= w["tails"]
                for w in report["windows"] if w["tails"])
@@ -243,8 +243,8 @@ def test_g1h_check_predictions_has_no_outside_step():
     report = check_steps(plan, records, predicted=True)
     assert report["prediction_matches"]
     assert not report["outside_steps"]
-    assert report["grid_complete"]
-    assert report["window_counts"] == {"predicted": 1041}
+    assert not report["grid_complete"]
+    assert report["window_counts"] == {"predicted": 1041, "missing": 432}
     assert report["measured_steps"] == len(plan.cases)
 
 
@@ -381,7 +381,7 @@ def test_tail_mix_amendment_deduplicates_in_grid_order(width, own):
     for profile in C1["profiles"]:
         windows = [w for w in required_windows() if (w.category, w.width, w.own, w.profile)
                    == ("first_tail", width, own, profile)]
-        expected = list(dict.fromkeys(((1, 1), (k4, 1), (k128, k128))))
+        expected = list(dict.fromkeys(((1, 1), (k4, 1), (k128, k128), (own, 1), (own, own))))
         assert [w.mix for w in windows] == expected
     # Multi-tail singleton windows already carry their mandatory writes.
     assert all(w.mix == (w.tails, w.tails) for w in required_windows() if w.tails > 1)
@@ -389,9 +389,9 @@ def test_tail_mix_amendment_deduplicates_in_grid_order(width, own):
 
 def test_amendment_removed_only_duplicate_first_tail_windows():
     assert len(required_windows()) == len(set(required_windows()))
-    original_count = len(serving_classes()) * len(C1["profiles"]) * 3 * 3
+    original_count = len(serving_classes()) * len(C1["profiles"]) * 5 * 3
     original_count += len(C1["multi_tail"]) + len(C1["widths"]) * 2 + 2
-    assert original_count - len(required_windows()) == 33
+    assert original_count - len(required_windows()) == 303
 
 
 def continuing_rows(contexts):

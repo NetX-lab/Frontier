@@ -9,6 +9,7 @@ import json
 import shutil
 from pathlib import Path
 
+from frontier.profiling.attention.v4_attention_windows import assign_windows, repeat_windows
 from frontier.profiling.attention.dsv4_attention_main import main as aggregate_attention
 from frontier.profiling.common.runtime_identity import file_sha256
 from frontier.profiling.kernel_gap.dsv4_replay_gaps import main as aggregate_gaps
@@ -53,11 +54,35 @@ def row_count(path: Path) -> int:
         return sum(1 for _ in csv.DictReader(handle))
 
 
+def copy_supplement_raw(raw_dir: Path, output: Path) -> tuple[list[Path], list[str]]:
+    """Exclude repeat cases using their native steps and the shared repeat grid."""
+    files = sorted(raw_dir.glob("dsv4_raw_e*.jsonl"))
+    if not files:
+        raise ValueError(f"No supplement dsv4_raw_e*.jsonl files under {raw_dir}")
+    repeats, excluded = set(repeat_windows()), set()
+    for path in files:
+        with path.open() as handle:
+            for line in handle:
+                row = json.loads(line)
+                if row.get("kind") == "step" and repeats.intersection(assign_windows(row)):
+                    excluded.add(row["case_id"])
+    output.mkdir(parents=True, exist_ok=True)
+    for path in files:
+        with path.open() as source, (output / path.name).open("w") as target:
+            for line in source:
+                if json.loads(line).get("case_id") not in excluded:
+                    target.write(line)
+    return files, sorted(excluded)
+
+
 def promote_tables(*, scratch_dir: Path, raw_dir: Path = RAW_DIRECTORY,
+                   package_dir: Path | None = None,
+                   supplement_raw_dir: Path | None = None,
+                   supplement_plan_path: Path = HERE.parent / "g1h_supplement/package_plan.json",
                    output_root: Path = ROOT / "data/profiling",
                    manifest_path: Path = HERE / "manifest.json") -> dict:
     plan_path = HERE.parent / "g1h/package_plan.json"
-    package = HERE.parent / "g1h/package_02"
+    package = package_dir if package_dir is not None else HERE.parent / "g1h/package_02"
     package_manifest = package / "manifest.json"
     plan = json.loads(plan_path.read_text())
     snapshot = json.loads(package_manifest.read_text())
@@ -85,6 +110,28 @@ def promote_tables(*, scratch_dir: Path, raw_dir: Path = RAW_DIRECTORY,
         "--device", "h200", "--source_revision", plan["source_revision"],
         "--model_config_revision", model_revision,
     ])
+    supplement_inputs, excluded_repeats = [], []
+    if supplement_raw_dir is not None:
+        supplement = json.loads(supplement_plan_path.read_text())
+        supplement_pilot = supplement_plan_path.parent / supplement["pilot_cases"]
+        supplement_files, excluded_repeats = copy_supplement_raw(
+            supplement_raw_dir, scratch_dir / "supplement_raw")
+        supplement_root = scratch_dir / "supplement_profiling"
+        aggregate_attention([
+            "aggregate", *supplement["plan_args"], "--model_config_path", str(config),
+            "--pilot_cases", str(supplement_pilot), "--engine_policy", "graph_replay",
+            "--cudagraph_mode", supplement["runs"][0]["mode"],
+            "--cudagraph_capture_sizes", *map(str, supplement["cudagraph_capture_sizes"]),
+            "--raw_dir", str(scratch_dir / "supplement_raw"), "--output_root", str(supplement_root),
+            "--device", "h200", "--source_revision", supplement["source_revision"],
+            "--model_config_revision", model_revision,
+        ])
+        filename = "attention_graph_replay_kernel_only.csv"
+        merged = scratch_dir / "merged" / filename
+        union_csv([generated_root / MODEL_DIRECTORY / filename,
+                   supplement_root / MODEL_DIRECTORY / filename], merged)
+        shutil.copyfile(merged, generated_root / MODEL_DIRECTORY / filename)
+        supplement_inputs = [supplement_plan_path, supplement_pilot, *supplement_files]
     result = aggregate_gaps([
         "--raw_files", *map(str, (copied_raw / path.name for path in raw_files)),
         "--output_dir", str(generated_root), "--device", "h200", "--model", MODEL_NAME,
@@ -110,8 +157,10 @@ def promote_tables(*, scratch_dir: Path, raw_dir: Path = RAW_DIRECTORY,
         union_csv(paths, target)
         outputs.append(target)
     inputs = [plan_path, package_manifest, config, pilot, launcher,
-              *raw_files, *linear_inputs, *moe_inputs]
+              *raw_files, *linear_inputs, *moe_inputs, *supplement_inputs]
     revisions = {"attention": plan["source_revision"]}
+    if supplement_raw_dir is not None:
+        revisions["attention_supplement"] = supplement["source_revision"]
     for path in (*linear_inputs, *moe_inputs):
         with path.open(newline="") as handle:
             revisions[str(path)] = sorted({row["source_revision"] for row in csv.DictReader(handle)})
@@ -122,6 +171,8 @@ def promote_tables(*, scratch_dir: Path, raw_dir: Path = RAW_DIRECTORY,
         "source_revisions": revisions, "model_config_revision": model_revision,
         "native_revision": snapshot["native_revision"],
     }
+    if supplement_raw_dir is not None:
+        manifest["supplement_excluded_repeat_cases"] = excluded_repeats
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     return manifest
@@ -131,8 +182,19 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scratch-dir", type=Path, required=True,
                         help="Writable scratch directory for the copied raw records and reducer outputs")
+    parser.add_argument("--raw-dir", type=Path, default=RAW_DIRECTORY)
+    parser.add_argument("--package-dir", type=Path,
+                        help="Accepted G1h-02 package when stored outside this worktree")
+    parser.add_argument("--supplement-raw-dir", type=Path)
+    parser.add_argument("--supplement-plan", type=Path, default=HERE.parent / "g1h_supplement/package_plan.json")
+    parser.add_argument("--output-root", type=Path, default=ROOT / "data/profiling")
+    parser.add_argument("--manifest-path", type=Path, default=HERE / "manifest.json")
     args = parser.parse_args()
-    print(json.dumps(promote_tables(scratch_dir=args.scratch_dir)["outputs"], indent=2))
+    print(json.dumps(promote_tables(scratch_dir=args.scratch_dir, raw_dir=args.raw_dir,
+                                   package_dir=args.package_dir,
+                                   supplement_raw_dir=args.supplement_raw_dir,
+                                   supplement_plan_path=args.supplement_plan,
+                                   output_root=args.output_root, manifest_path=args.manifest_path)["outputs"], indent=2))
 
 
 if __name__ == "__main__":
