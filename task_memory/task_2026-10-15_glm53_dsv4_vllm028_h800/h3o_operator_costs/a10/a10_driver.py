@@ -3,6 +3,7 @@
 Usage: a10_driver.py <case> <output root>   # p2_32 or p2_64
 """
 
+import argparse
 import json
 import subprocess
 import sys
@@ -10,7 +11,7 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-from a10_common import REPO, TASK, cache_inventory, load_module, table_record
+from a10_common import REPO, TASK, cache_inventory, load_module, table_record, sha256
 
 h4a4 = load_module("h4a4_driver", TASK / "h4a_p0_diagnostic/h4a4_driver.py")
 CASES = {name: h4a4.CASES[name] for name in ("p2_32", "p2_64")}
@@ -32,10 +33,10 @@ def operator_fields(name, root):
     return fields
 
 
-def build_config(name, root):
+def build_config(name, root, fields=None):
     case = {key: value for key, value in CASES[name].items() if key not in ("table", "overrides")}
     case["overrides"] = {}
-    return h4a4.build_config(name, case, root, operator_fields(name, root))
+    return h4a4.build_config(name, case, root, {**operator_fields(name, root), **(fields or {})})
 
 
 def resolved_inputs(config):
@@ -111,10 +112,10 @@ def failure_batch(error):
     return found
 
 
-def main(name, root):
+def main(name, root, *, observe=True, fields=None):
     root = root.resolve()
     root.mkdir(parents=True, exist_ok=True)  # A warm run may have a pre-seeded cache.
-    config, changes = build_config(name, root)
+    config, changes = build_config(name, root, fields)
     receipt = dict(
         status="STARTED", label="A10", case=name, run_root=str(root),
         source_commit=git_output("rev-parse", "HEAD").strip(),
@@ -129,6 +130,10 @@ def main(name, root):
         (root / "receipt.json").write_text(json.dumps(receipt, indent=1, default=str) + "\n")
 
     write()
+    observer = None
+    receipt["observer_enabled"] = observe
+    trace = Path(config.__flat_config__.trace_request_generator_config_trace_file)
+    receipt["trace"] = {"path": str(trace), "sha256": sha256(trace)}
     phase = "initialization"
     started = time.monotonic()
     try:
@@ -155,20 +160,36 @@ def main(name, root):
             raise ValueError("A10 predictor bound a diagnostic step-cost table")
         phase = "run"
         started = time.monotonic()
-        simulator.run()
-        receipt.update(status="FINISHED", run_wall_s=time.monotonic() - started)
+        if observe:
+            from a10_observer import ForwardObserver
+            observer = ForwardObserver(root)
+            with observer:
+                started = time.monotonic()
+                simulator.run()
+                run_wall_s = time.monotonic() - started
+        else:
+            simulator.run()
+            run_wall_s = time.monotonic() - started
+        receipt.update(status="FINISHED", run_wall_s=run_wall_s)
     except Exception as error:
         receipt.update(status="FAILED", error={"type": type(error).__name__, "message": str(error),
                                                 "phase": phase, "batch": failure_batch(error)})
         receipt["init_wall_s" if phase == "initialization" else "run_wall_s"] = time.monotonic() - started
         raise
     finally:
+        if observer is not None and (root / "collectives.json").exists():
+            receipt["a11"] = observer.receipt()
         receipt["cache_files"] = cache_inventory(config.metrics_config.cache_dir)
         write()
     return receipt
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] not in CASES:
-        raise SystemExit(__doc__)
-    main(sys.argv[1], Path(sys.argv[2]))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("case", choices=CASES)
+    parser.add_argument("root", type=Path)
+    parser.add_argument("--without-observer", action="store_true")
+    parser.add_argument("--trace", type=Path)
+    args = parser.parse_args()
+    fields = {"trace_request_generator_config_trace_file": str(args.trace.resolve())} if args.trace else None
+    main(args.case, args.root, observe=not args.without_observer, fields=fields)
