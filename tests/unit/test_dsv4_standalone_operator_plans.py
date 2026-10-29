@@ -43,7 +43,7 @@ def test_axis_table_matches_registry_and_is_immutable():
     assert names == {name for name in DEEPSEEK_V4_OPERATOR_AXES if name.startswith("dsv4_")}
     assert len(names) == 8
     assert all(op.profiling_target for op in DEEPSEEK_V4_MHC_FAMILY.operators)
-    assert DEEPSEEK_V4_MHC_FAMILY.execution_enabled is False
+    assert DEEPSEEK_V4_MHC_FAMILY.execution_enabled is True
     assert {DEEPSEEK_V4_OPERATOR_AXES[n] for n in names} == {
         "sp_local_rows", "descriptor_rows", "logits_rows"}
     with pytest.raises(TypeError):
@@ -203,8 +203,7 @@ def test_new_modules_import_without_worker_packages():
         assert module is not None
 
 
-def test_canonical_admission_is_blocked_by_disabled_family(model):
+def test_canonical_admission_validates_producer_non_layer_contracts(model):
     plan = build_operator_plans(model, load_operator_grid(PACKAGE / "operator_grid.json"))[0]
     contracts = row_contracts(model, plan["typed_operator_contracts"], 1)
-    with pytest.raises(NotImplementedError, match="not enabled for execution"):
-        validate_typed_operator_contracts(contracts)
+    assert validate_typed_operator_contracts(contracts)

@@ -10,7 +10,6 @@ from frontier.attention.memory import (
     AttentionKVCacheSelection,
     get_attention_kv_cache_capacity,
 )
-from frontier.attention.ops import AttentionFamilySpec
 from frontier.config import (
     MetricsConfig,
     RandomForrestExecutionTimePredictorConfig,
@@ -137,9 +136,6 @@ def test_missing_or_unsupported_selectors_reject_at_both_capacity_callers(
     replica_config, tmp_path, monkeypatch, field, value,
 ):
     setattr(replica_config, field, value)
-    # Isolate the capacity consumer behind V4's intentionally closed execution
-    # gate. This unit-only bypass does not establish runtime admission.
-    monkeypatch.setattr(AttentionFamilySpec, "require_enabled_for_execution", lambda *args, **kwargs: None)
     with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
         _planner(replica_config)._get_component_kv_cache_capacity(256)
     with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
@@ -147,7 +143,7 @@ def test_missing_or_unsupported_selectors_reject_at_both_capacity_callers(
     assert not (tmp_path / "cache").exists()
 
 
-def test_predictor_and_planner_use_the_same_resolved_selection(replica_config, tmp_path, monkeypatch):
+def test_dummy_predictor_and_planner_use_the_same_resolved_selection(replica_config, tmp_path, monkeypatch):
     import frontier.execution_time_predictor.base_execution_time_predictor as predictor_module
     import frontier.scheduler.utils.memory_planner as planner_module
 
@@ -165,10 +161,9 @@ def test_predictor_and_planner_use_the_same_resolved_selection(replica_config, t
     assert predictor._enable_dummy_mode is True
     assert len(calls) == 2
     assert calls[0] == calls[1]
-    with pytest.raises(NotImplementedError, match="compressed cache, compressor"):
-        _predictor(replica_config, tmp_path, dummy_mode=False)
-    assert len(calls) == 2  # Measured execution is rejected before capacity resolution.
-    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is False
+    # Non-dummy admission and capacity resolution use committed H200 rows in
+    # test_dsv4_operator_consumer; this fixture covers the dummy capacity path.
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is True
     assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
     assert not (tmp_path / "cache").exists()
 
@@ -180,7 +175,7 @@ def test_alias_normalizes_once_without_changing_capacity(replica_config):
 
 
 @pytest.mark.parametrize("role", [ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE])
-def test_h200_tp8_dp4_capacity_matches_h800_without_enabling_execution(
+def test_h200_tp8_dp4_capacity_matches_h800_with_enabled_family(
     replica_config, role, tmp_path,
 ):
     h800 = _capacity(replica_config)
@@ -201,8 +196,7 @@ def test_h200_tp8_dp4_capacity_matches_h800_without_enabling_execution(
     budget = int(h200.device_config.total_memory_gb * 1024**3 * 0.85)
     expected_blocks = (budget - 7_794_659_804) // 1_002_240
     assert planner.get_num_blocks(block_size=256, gpu_memory_utilization=0.85) == expected_blocks
-    with pytest.raises(NotImplementedError, match="compressed cache, compressor"):
-        _predictor(h200, tmp_path, dummy_mode=False)
+    DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution()
     assert not (tmp_path / "cache").exists()
 
 

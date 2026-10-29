@@ -75,13 +75,18 @@ def load_attention_dataframe(file_path, model, tp, block_size, measurement_type,
     return _select_rows(rows, expected, "attention schema/model/TP")
 
 
-def validate_balanced_routing(rows):
+def validate_balanced_routing(rows, *, require_descriptor=True):
     """Select the measured balanced routing identity when the replica requests it."""
-    for name in ("routing_runtime_path", "routing_strategy_sha256", "moe_routing"):
+    columns = ("routing_runtime_path", "routing_strategy_sha256")
+    if require_descriptor:
+        columns += ("moe_routing",)
+    for name in columns:
         if name not in rows or rows[name].isna().any() or len(rows[name].unique()) != 1:
             raise DeepSeekV4CoverageError(f"V4 balanced replay attention missing/ambiguous {name}")
     rows = _select_rows(rows, {"routing_runtime_path": "balanced_topk",
         "routing_strategy_sha256": BALANCED_ROUTING_SHA256}, "balanced replay attention")
+    if not require_descriptor:
+        return rows
     try:
         routing_columns(json.loads(rows.moe_routing.iloc[0]))
     except (ValueError, TypeError, AttributeError, KeyError) as exc:

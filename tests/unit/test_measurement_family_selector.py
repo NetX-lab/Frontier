@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from frontier.config import global_vars
+from frontier.config.model_config import BaseModelConfig
 from frontier.config.device_sku_config import H800DeviceSKUConfig
 from frontier.entities import EPBatchGroup
 from frontier.execution_time_predictor.measurement_input_paths import (
@@ -34,6 +35,7 @@ def _make_predictor(
     class DummyPredictor(SklearnExecutionTimePredictor):
         def __init__(self):
             self._cluster_type = cluster_type
+            self._model_config = BaseModelConfig.create_from_name("meta-llama/Llama-2-7b-hf")
             self._replica_config = SimpleNamespace(device_config=H800DeviceSKUConfig())
             self._two_stream_eager_pricing = two_stream_eager_pricing
             if runtime_mode is not None:
@@ -388,6 +390,9 @@ def test_monolithic_spec_batch_uses_kernel_only_under_piecewise_with_diagnostic_
 
 
 class _DummyModelConfig:
+    num_q_heads = 8
+    num_kv_heads = 8
+
     def get_name(self) -> str:
         return "meta-llama/Llama-2-7b-hf"
 

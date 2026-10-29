@@ -90,9 +90,9 @@ def test_inventory_uses_canonical_v4_scopes_without_generic_duplicate_owners(
         assert row["precision_source"] == "model_config_and_vllm_source"
         assert row["approximation_factor"] is None
         assert row["source_scope"].startswith("vllm/")
-    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is False
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is True
     assert not DEEPSEEK_V4_ATTENTION_FAMILY.profiling_ops()
-    assert DEEPSEEK_V4_MHC_FAMILY.execution_enabled is False
+    assert DEEPSEEK_V4_MHC_FAMILY.execution_enabled is True
 
 
 def test_compressor_projection_and_index_weight_projection_have_distinct_outputs(

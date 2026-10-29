@@ -315,8 +315,7 @@ DEEPSEEK_V4_MHC_FAMILY = OperatorFamilySpec(
     family_id="deepseek_v4_mhc",
     display_name="DeepSeek-V4 mHC and Model Endpoints",
     supported_variants=("first", "middle", "last", "first_last"),
-    execution_enabled=False,
-    disabled_reason="DeepSeek-V4 mHC and endpoint scopes are source inventory only",
+    execution_enabled=True,
     # Fused pre/post scopes own the layer norms and residual mixing. Generic
     # MEMORY_FAMILY norm/add scopes would count that work a second time.
     operators=tuple(

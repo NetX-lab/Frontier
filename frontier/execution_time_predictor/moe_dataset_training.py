@@ -476,6 +476,8 @@ class MoeDatasetTraining:
         """Override to include MoE model training for independent training mode."""
         models = super()._train_models()
 
+        if self._get_attention_family().family_id == "deepseek_v4_attention":
+            return models
         if self._model_manager is None:
             moe_models = self._train_moe_models()
             models.update(moe_models)

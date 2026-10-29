@@ -649,12 +649,8 @@ DEEPSEEK_V4_ATTENTION_FAMILY = AttentionFamilySpec(
     dense_compatible=False,
     requires_runtime_kv_helpers=True,
     structural_execution_enabled=True,
-    execution_enabled=False,
+    execution_enabled=True,
     kv_cache_capacity_resolver=_deepseek_v4_kv_cache_capacity,
-    disabled_reason=(
-        "DeepSeek-V4 execution requires compressed cache, compressor, indexer, "
-        "mHC and mixed-precision operator coverage."
-    ),
 )
 
 

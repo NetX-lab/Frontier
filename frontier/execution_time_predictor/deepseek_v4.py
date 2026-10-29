@@ -53,7 +53,7 @@ def timing_operator_times(execution_time, phase):
         "dispatch": (
             "dsv4_ep_dispatch_allgather",
         ),
-        "routed_compute": ("moe_shuffling", "moe_grouped_gemm"),
+        "routed_compute": ("moe_grouped_gemm",),
         "combine": ("dsv4_ep_output_reduce_scatter",),
         "post_combine": (
             "dsv4_mhc_final_post", "dsv4_sp_final_mhc_allgather",
@@ -66,7 +66,8 @@ def timing_operator_times(execution_time, phase):
         raise ValueError(f"V4 physical timing scopes have no phase owner: {sorted(unsupported)}")
     comm_names = {op.name for op in COMM_FAMILY.operators}
     return tuple(
-        ("COMM" if name in comm_names else "COMPUTE", name, execution_time.op_times[name])
+        ("COMM" if name in comm_names else "COMPUTE", name,
+         execution_time.op_times[name] + getattr(execution_time, "_dsv4_operator_gap_ms", {}).get(name, 0.0))
         for name in names_by_phase[phase] if name in execution_time.op_times
     )
 
@@ -173,7 +174,7 @@ def predict_source_execution(
     widths = sequence_parallel_moe_token_widths([tokens], tp, rank)
     local = widths.local_tokens[0]
     valid = max(0, min(local, actual_tokens - rank * local))
-    base = predictor._dummy_execution_time
+    base = predictor._dummy_execution_time if predictor._enable_dummy_mode else 0.0
     hidden = _integer(model.embedding_dim, "hidden width")
     streams = _integer(model.hc_mult, "mHC streams")
     intermediate = _integer(model.share_expert_dim, "shared intermediate width")
@@ -188,24 +189,30 @@ def predict_source_execution(
     if shared_tp != 1:
         raise ValueError("V4 SP shared expert weights must be replicated")
     shared_names = ("share_expert_up_proj", "share_expert_act", "share_expert_down_proj")
-    shared_values = {name: base for name in shared_names}
-    shared = MoETime(operator_times=MoEOperatorTimes(shared_values))
     first_pre = "dsv4_mhc_first_pre" if layer_id == 0 else "dsv4_mhc_ffn_post_attn_pre"
     component_times = {}
     order = []
     workloads = {}
+    kernel_counts = {}
 
     def local_scope(name, input_shape, output_shape, **features):
-        if not predictor._enable_dummy_mode:
-            raise DeepSeekV4CoverageError(
-                f"V4 serving scope {name} lacks phase/TP-qualified measurements; "
-                "isolated eager rows do not admit a native serving forward"
+        if predictor._enable_dummy_mode:
+            value = base
+        else:
+            from frontier.execution_time_predictor.dsv4_operator_predictor import (
+                operator_rows, operator_tensor_parallel_size,
             )
-        component_times[name] = base
+            rows = operator_rows(name, sp_local_rows=local, descriptor_rows=tokens,
+                                 logits_rows=selected_logits_rows)
+            selected_tp = operator_tensor_parallel_size(model, replica, name)
+            prediction = predictor._predictions["dsv4_operators"].operator(name, rows, selected_tp)
+            value = prediction.time_ms
+            kernel_counts[name] = prediction.kernel_count
+        component_times[name] = value
         workloads[name] = {
             "input_shape": input_shape, "output_shape": output_shape, **features,
         }
-        order.append({"scope": name, "time_ms": base})
+        order.append({"scope": name, "time_ms": value})
 
     def communication(name):
         value = predictor._predict_comm_operator(get_comm_operator(name), batch)
@@ -261,6 +268,9 @@ def predict_source_execution(
                 logical_unpartitioned_output_shape=(selected_logits_rows, model.vocab_size),
                 weight_tp=tp,
             )
+    shared = MoETime(operator_times=MoEOperatorTimes(
+        {name: component_times[name] for name in shared_names if name in component_times}
+    ))
     comm_names = {
         "dsv4_sp_attention_allgather", "dsv4_sp_attention_reduce_scatter",
         "dsv4_sp_final_mhc_allgather",
@@ -275,6 +285,7 @@ def predict_source_execution(
         # The score fast path need not consume the mask; geometry is not routing.
         "routed_assignments": None,
         "shared_ffn_time": shared, "attention_time": attention,
+        "kernel_counts": kernel_counts,
         "component_times": component_times, "workloads": workloads,
         "source_order": tuple(order),
         "selected_component_time_ms": sum(component_times.values()),
@@ -329,9 +340,12 @@ def predict_structural_execution(
 
     times = dict(source["component_times"])
     workloads = dict(source["workloads"])
-    base = predictor._dummy_execution_time
+    base = predictor._dummy_execution_time if predictor._enable_dummy_mode else 0.0
+    kernel_counts = dict(source["kernel_counts"])
     zeroing = batch.cache_block_zeroing
     if include_attention and layer_id == 0 and zeroing is not None:
+        if not predictor._enable_dummy_mode:
+            raise DeepSeekV4CoverageError("V4 kv_cache_block_zero has no measured runner coordinate")
         times["kv_cache_block_zero"] = base
         workloads["kv_cache_block_zero"] = {
             "block_ids": zeroing.block_ids,
@@ -354,6 +368,15 @@ def predict_structural_execution(
             "moe_grouped_gemm": base if lane_workload.routed_token_count else 0.0,
         })
         local = source["physical_local_rows"]
+        if not predictor._enable_dummy_mode:
+            operator_predictor = predictor._predictions["dsv4_operators"]
+            for name in ("moe_gating_linear", "moe_gating_routing_topk"):
+                prediction = operator_predictor.gate(name, local)
+                times[name] = prediction.time_ms
+                kernel_counts[name] = prediction.kernel_count
+            prediction = operator_predictor.grouped_gemm(lane_workload)
+            times["moe_grouped_gemm"] = prediction.time_ms
+            kernel_counts["moe_grouped_gemm"] = prediction.kernel_count
         hidden = predictor._model_config.embedding_dim
         workloads.update({
             "moe_gating_linear": {
@@ -404,7 +427,7 @@ def predict_structural_execution(
             "cost_scope": "communication backend device-time prediction",
         })
     spec = predictor._model_config.get_layer_attention_spec(layer_id)
-    cpu = base if include_stage_owned else 0.0
+    cpu = base if predictor._enable_dummy_mode and include_stage_owned else 0.0
     timing = ExecutionTime(
         num_layers_per_pipeline_stage=1,
         attention_rope_execution_time=0.0,
@@ -451,10 +474,21 @@ def predict_structural_execution(
         "synthetic_destination_assignments": lane_workload.routed_token_count if include_ffn else None,
     })
     timing._dsv4_workloads = MappingProxyType(workloads)
-    # Synthetic durations carry no stream program inputs: no threshold, kernel counts or gaps.
-    timing._dsv4_attention_schedule = serial_attention_phase(
-        (name, value) for _, name, value in timing_operator_times(timing, "attention")
-    )
+    if predictor._enable_dummy_mode:
+        timing._dsv4_attention_schedule = serial_attention_phase(
+            (name, value) for _, name, value in timing_operator_times(timing, "attention")
+        )
+    else:
+        from frontier.execution_time_predictor.dsv4_runtime import compose_trained_attention
+
+        timing._dsv4_kernel_counts = MappingProxyType(kernel_counts)
+        attention = source["attention_time"]
+        timing._dsv4_scope_gap_ms = attention._dsv4_scope_gap_ms if include_attention else {}
+        if include_attention:
+            timing._dsv4_composition_inputs = attention._dsv4_composition_inputs
+            compose_trained_attention(predictor, timing, batch)
+        else:
+            timing._dsv4_attention_schedule = serial_attention_phase(())
     return timing
 
 
@@ -609,171 +643,6 @@ def _select_rows(rows, expected, scope):
     if rows.empty:
         raise DeepSeekV4CoverageError(f"V4 {scope} has no exact measured rows: {expected}")
     return rows
-
-
-def _read_isolated_component(reader, scope, *args, **kwargs):
-    """Translate the existing readers' known data-admission errors, not bugs."""
-    import pandas as pd
-    from frontier.operators.typed_contracts import TYPED_OPERATOR_CONTRACTS_COLUMN
-
-    try:
-        rows = reader(*args, **kwargs)
-    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as exc:
-        raise DeepSeekV4CoverageError(f"V4 {scope} measured table cannot be read: {exc}") from exc
-    except KeyError as exc:
-        if exc.args[0] not in {
-            "num_experts", "router_topk", "hidden_dim", "num_tensor_parallel_workers",
-            "expert_hidden_dim", "expert_parallel_size",
-        }:
-            raise
-        raise DeepSeekV4CoverageError(f"V4 {scope} measured table missing {exc}") from exc
-    except ValueError as exc:
-        # These legacy readers use ValueError for their explicit coverage
-        # checks. Unrelated ValueErrors retain their original type/traceback.
-        if not str(exc).startswith((
-            "Column 'num_tensor_parallel_workers' not found ",
-            "No data matches the filtering criteria in ",
-            "No linear-op rows match the selected typed layer contract ",
-            "Legacy linear-op profiling data is missing ",
-            "Required attention linear op columns are missing or all-NaN in ",
-            "MoE profiling data is missing 'expert_parallel_size' ",
-            "Missing load imbalance features", "typed_operator_contracts ",
-            "typed metadata ", "typed contract ", "model_architecture_profile ",
-            "Multiple model_architecture_profile values found ",
-            "Unknown typed operator ",
-        )):
-            raise
-        raise DeepSeekV4CoverageError(f"V4 {scope} measured coverage unavailable: {exc}") from exc
-    if TYPED_OPERATOR_CONTRACTS_COLUMN not in rows:
-        raise DeepSeekV4CoverageError(f"V4 {scope} missing {TYPED_OPERATOR_CONTRACTS_COLUMN}")
-    return rows
-
-
-def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None):
-    """Consume one isolated eager linear/MoE scope without serving admission.
-
-    Physical TP1 with target per-rank TP8 dimensions is retained as such.
-    Selection uses the existing typed readers and feature classifier.
-    """
-    import json
-    import math
-    import pandas as pd
-    from frontier.execution_time_predictor.profiling_dataframe_loaders import ProfilingDataFrameLoaders
-    from frontier.types import ClusterType, MeasurementType
-
-    _validate_source_batch(batch)
-    if predictor._cluster_type is not ClusterType.MONOLITHIC:
-        raise DeepSeekV4CoverageError("V4 isolated measured scopes do not qualify PD batches")
-    if batch.get_decode_cuda_graph_runtime_mode() != "NONE":
-        raise DeepSeekV4CoverageError("V4 native graph/compiled scope requires qualified replay measurements")
-    if any(batch.request_is_decoding) or any(q == 1 for q in batch.num_tokens):
-        raise DeepSeekV4CoverageError("V4 isolated non-attention scopes require prefill, not first-tail or mixed phases")
-    model, replica = predictor._model_config, predictor._replica_config
-    if model.get_model_architecture_profile().profile_id != "deepseek_v4":
-        raise ValueError("V4 measured scopes require the DeepSeek-V4 profile")
-    measurement = predictor._active_measurement_type
-    if measurement not in (MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY):
-        raise DeepSeekV4CoverageError(f"V4 measurement type is unsupported: {measurement}")
-    loaders = ProfilingDataFrameLoaders()
-    loaders._model_config = model
-    loaders._replica_config = replica
-    tp = replica.attn_tensor_parallel_size
-    contract = model.get_model_architecture_profile().resolve_layer_contract(
-        model, layer_id=layer_id, operator_name=scope,
-        attention_tp_size=tp, attention_dp_size=replica.attn_dp,
-        num_pipeline_stages=replica.num_pipeline_stages,
-        moe_tp_size=replica.moe_tensor_parallel_size,
-        expert_parallel_size=replica.moe_expert_parallel_size,
-    ) if scope in ("share_expert_up_proj", "share_expert_act", "share_expert_down_proj", "moe_grouped_gemm") else None
-    if contract is None:
-        raise DeepSeekV4CoverageError(f"V4 {scope} has no qualified native measurement; generic routing columns do not qualify")
-    if scope == "moe_grouped_gemm":
-        from frontier.execution_time_predictor.moe_dataset_training import select_moe_operator_features
-        from frontier.moe_ep_workload import EPLaneWorkload
-        from frontier.moe_load_imbalance import MOE_LOAD_IMBALANCE_FEATURES, MoELoadImbalanceInput
-
-        if not isinstance(lane_workload, EPLaneWorkload):
-            raise DeepSeekV4CoverageError("V4 grouped GEMM requires an explicit expert lane, not inferred routing")
-        if (lane_workload.moe_expert_parallel_size != contract.expert_parallel_size
-                or lane_workload.total_expert_num != model.num_experts
-                or lane_workload.router_topk != model.num_experts_per_tok):
-            raise DeepSeekV4CoverageError("V4 grouped GEMM lane does not match the typed model/EP contract")
-        path = predictor._moe_input_file
-        rows = _read_isolated_component(loaders._load_moe_df, scope, path, replica,
-            tensor_parallel_size=contract.tensor_parallel_size,
-            expert_parallel_size=contract.expert_parallel_size,
-            layer_contract=contract, operator_name=scope,
-            # Preserve serialized float features for exact (not fitted)
-            # lookup. The default parser rounds the accepted entropy row.
-            float_precision="round_trip")
-        rows = _select_rows(rows, {"moe_grouped_gemm_backend": "vllm_marlin_mxfp4",
-            "moe_quantization_mode": "mxfp4", "moe_native_backend": "MARLIN"}, scope)
-        rows, columns = select_moe_operator_features(scope, rows)
-        if tuple(columns) != MOE_LOAD_IMBALANCE_FEATURES:
-            raise DeepSeekV4CoverageError("V4 MARLIN isolated scope requires exact expert-load feature coverage")
-        features = MoELoadImbalanceInput(
-            num_tokens=sum(lane_workload.global_token_counts) // lane_workload.router_topk,
-            num_experts_per_device=lane_workload.local_expert_width,
-            hidden_dim=model.embedding_dim, expert_hidden_dim=contract.effective_ffn_width,
-            router_topk=lane_workload.router_topk,
-            expert_token_counts=list(lane_workload.local_token_counts),
-        ).to_features_dict()
-        rows = _select_rows(rows, {
-            "num_tokens": sum(lane_workload.global_token_counts) // lane_workload.router_topk,
-            **{name: features[name] for name in columns},
-        }, scope)
-    else:
-        path = predictor._compute_input_file
-        rows = _read_isolated_component(loaders._load_linear_op_df, scope,
-            path, contract.tensor_parallel_size,
-            required_columns=[f"time_stats.{scope}.median"],
-            layer_contract=contract, operator_name=scope)
-        local = (compute_rows(batch) + tp - 1) // tp
-        rows = _select_rows(rows, {"num_tokens": local}, scope)
-        if scope != "share_expert_act" and "linear_backends" not in rows:
-            raise DeepSeekV4CoverageError(f"V4 {scope} missing projection backend identity")
-        if scope != "share_expert_act" and any(
-            not all(name == "FlashInferFp8DeepGEMMDynamicBlockScaledKernel"
-                    for name in json.loads(value).get(scope, []))
-            or not json.loads(value).get(scope) for value in rows.linear_backends
-        ):
-            raise DeepSeekV4CoverageError(f"V4 {scope} requires the qualified FP8 DeepGEMM projection backend")
-    validate_measured_identity(rows, model, replica, measurement)
-    rows = _select_rows(rows, {"graph_mode": "eager"}, "isolated identity")
-    target = f"time_stats.{scope}.median"
-    if target not in rows or any(not math.isfinite(float(v)) or float(v) <= 0 for v in rows[target]):
-        raise DeepSeekV4CoverageError(f"V4 {scope} requires finite positive measured {target}")
-    kernel_column = f"time_stats.{scope}.kernel_count"
-    if measurement is MeasurementType.KERNEL_ONLY and (
-        kernel_column not in rows or any(
-            not math.isfinite(float(v)) or float(v) <= 0 or int(v) != v
-            for v in rows[kernel_column]
-        )
-    ):
-        raise DeepSeekV4CoverageError(f"V4 {scope} requires measured kernel counts, not relabelled CUDA_EVENT rows")
-    row = rows.iloc[0]
-    return {
-        "scope": scope, "time_ms": float(rows[target].median()),
-        "measurement_type": measurement.value, "graph_mode": "eager",
-        "physical_tensor_parallel_size": 1, "target_tensor_parallel_size": tp,
-        "serving_admission": False,
-        "qualification": "isolated eager scope only",
-        "source_revision": rows.source_revision.iloc[0], "input_file": str(path),
-        "runtime_fingerprint": rows.runtime_fingerprint.iloc[0],
-        "model_config_sha256": rows.model_config_sha256.iloc[0],
-        "parallel_groups": json.loads(row.parallel_groups),
-        "row_metadata": {name: value.item() if hasattr(value, "item") else value
-                         for name, value in row.items()
-                         if (name.endswith(".block_size") or name in (
-                              "phase", "padded_heads", "attention_variant", "plans_tile_schedule",
-                              "attention_kv_cache_dtype", "max_model_len",
-                              "max_num_batched_tokens", "max_num_seqs",
-                              "global_layer_ids", "num_layers_sampled", "num_steps_sampled",
-                              "prefill_seq_lens", "prefill_kv_cache_sizes", "decode_kv_cache_sizes",
-                              "weight_source",
-                              "routing_runtime_path", "routing_strategy_sha256", "moe_routing",
-                         )) and not pd.isna(value)},
-    }
 
 
 def validate_measured_identity(rows, model_config, replica_config, measurement):

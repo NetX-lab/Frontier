@@ -177,14 +177,13 @@ def test_dsv4_rejects_unsupported_backbone_compression_ratios(
         replace(model, compress_ratios=tuple(ratios)).get_layer_attention_specs()
 
 
-def test_dsv4_representation_keeps_execution_explicitly_disabled(
+def test_dsv4_representation_admits_enabled_execution(
     model: BaseModelConfig,
 ) -> None:
     family = get_attention_family(bind_layer_attention(model, 42).family_id)
     assert family.family_id == "deepseek_v4_attention"
-    assert family.execution_enabled is False
-    with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
-        family.require_enabled_for_execution()
+    assert family.execution_enabled is True
+    family.require_enabled_for_execution()
 
 
 def test_dsv4_whole_model_manifest_cannot_hide_compressed_layers(

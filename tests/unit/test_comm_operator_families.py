@@ -377,9 +377,8 @@ def test_dsv4_sp_structured_timings_preserve_measured_and_profiling_guards() -> 
     with pytest.raises(ValueError, match="Unsupported"):
         CommunicationOperatorTimes({"unregistered_dsv4_collective": 1.0})
     DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution(structural=True)
-    with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
-        DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution()
-    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is False
+    DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution()
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is True
     assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
 
 

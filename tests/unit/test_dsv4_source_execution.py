@@ -299,9 +299,12 @@ def test_dimensions_follow_config_and_weights_remain_replicated(predictor):
     assert predictor._cc_backend.calls[1][1]["data_size_bytes"] == 69632
 
 
-def test_structural_admission_keeps_normal_execution_and_training_closed(predictor):
+def test_execution_admission_requires_measured_operator_models(predictor):
     batch = source_batch()
+    from frontier.execution_time_predictor.dsv4_operator_predictor import DeepSeekV4OperatorPredictor
+
     predictor._enable_dummy_mode = False
+    predictor._predictions = {"dsv4_operators": DeepSeekV4OperatorPredictor({})}
     with pytest.raises(DeepSeekV4CoverageError, match="dsv4_embedding"):
         component(predictor, batch)
     predictor._enable_dummy_mode = True
@@ -309,7 +312,7 @@ def test_structural_admission_keeps_normal_execution_and_training_closed(predict
     assert "dsv4_sparse_attention" in result.operator_times.op_times
     assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
     for family in (DEEPSEEK_V4_ATTENTION_FAMILY, DEEPSEEK_V4_MHC_FAMILY):
-        assert family.execution_enabled is False
+        assert family.execution_enabled is True
         assert all(not op.predictor_target and not op.e2e_trace_target
                    for op in family.operators)
         assert all(op.profiling_target == (family is DEEPSEEK_V4_MHC_FAMILY)

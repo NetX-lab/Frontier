@@ -7,6 +7,7 @@ from pathlib import Path
 
 from frontier.operators.deepseek_v4_axes import (
     DEEPSEEK_V4_OPERATOR_AXES, DEEPSEEK_V4_STANDALONE_AXES,
+    select_deepseek_v4_operator_tp,
 )
 from frontier.operators.families import DEEPSEEK_V4_MHC_FAMILY
 from frontier.operators.spec import TensorParallelMode
@@ -99,7 +100,7 @@ def build_operator_plans(model, grid):
                      if DEEPSEEK_V4_OPERATOR_AXES[op.name] == axis]
         contracts = {}
         for op in operators:
-            selected = tp if op.tp_mode is TensorParallelMode.ATTENTION_TP else 1
+            selected = select_deepseek_v4_operator_tp(op.tp_mode, tp)
             contracts[op.name] = {
                 **_non_layer_contract(
                     profile_id=profile.profile_id, family_id=DEEPSEEK_V4_MHC_FAMILY.family_id,

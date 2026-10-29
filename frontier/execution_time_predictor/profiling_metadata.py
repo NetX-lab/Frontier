@@ -19,6 +19,15 @@ MOE_QUANTIZATION_PRECISIONS = {
     "mxfp4": PrecisionType.FP4,
 }
 
+# Qualified checkpoint-expert identities emitted by the MoE profiling producer.
+# Kept torch-free beside the linear backend registry for CPU consumer admission.
+CHECKPOINT_MXFP4_BACKEND_IDENTITIES = {
+    "vllm_marlin_mxfp4": {
+        "moe_quantization_mode": "mxfp4",
+        "moe_native_backend": "MARLIN",
+    },
+}
+
 
 def operation_profiling_precisions(frame: pd.DataFrame) -> dict[str, PrecisionType]:
     """Read operation precision from the producer's existing backend metadata."""

@@ -16,6 +16,7 @@ from frontier.attention.memory import (
     get_attention_kv_cache_capacity,
 )
 from frontier.execution_time_predictor.dsv4_step_cost_input import load_step_cost_table
+from frontier.execution_time_predictor.dsv4_measurement import validate_dsv4_host_time
 
 if TYPE_CHECKING:
     from frontier.entities.time_components import AttentionTime, MLPTime, MoETime
@@ -36,6 +37,7 @@ class BaseExecutionTimePredictor(ABC):
         self._config = predictor_config
         self._replica_config = replica_config
         self._model_config = replica_config.model_config
+        validate_dsv4_host_time(predictor_config, self._model_config)
         self._dsv4_step_costs = load_step_cost_table(predictor_config, replica_config)
 
         family_ids = {

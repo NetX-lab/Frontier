@@ -2,13 +2,10 @@
 
 from types import SimpleNamespace
 
-import pandas as pd
 import pytest
 
-from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
 from frontier.entities.batch import DecodeCudaGraphMetadata
-from frontier.execution_time_predictor.deepseek_v4 import read_isolated_scope, serving_context
-from frontier.types import MeasurementType
+from frontier.execution_time_predictor.deepseek_v4 import serving_context
 from tests.unit.test_dsv4_attention_workload import model, replica, source_batch, workload
 from tests.unit.test_dsv4_source_execution import predictor, component
 
@@ -131,85 +128,3 @@ def test_h800_tp8_dp2_ep16_reuses_source_geometry_not_h200_capacity(predictor):
         assert batch.requests[0].num_decode_tokens == 16
     assert source_sp_token_widths(predictor, {0: prefill, 1: decode}).gathered_tokens == 40
     assert prefill.num_context_tokens == [0] and decode.num_context_tokens == [16]
-
-
-@pytest.mark.parametrize("scope", ["share_expert_up_proj", "moe_grouped_gemm"])
-def test_isolated_component_missing_table_is_typed_with_original_cause(measured, tmp_path, scope):
-    from frontier.moe_ep_workload import split_global_expert_tokens_into_lanes
-
-    p = measured
-    p._compute_input_file = str(tmp_path / "missing_linear.csv")
-    p._moe_input_file = str(tmp_path / "missing_moe.csv")
-    lane = split_global_expert_tokens_into_lanes(
-        {i: int(i < 96) for i in range(256)}, total_expert_num=256,
-        moe_expert_parallel_size=64, router_topk=6)[0]
-    with pytest.raises(DeepSeekV4CoverageError) as error:
-        read_isolated_scope(p, source_batch([16], [0]), 0, scope, lane_workload=lane)
-    assert isinstance(error.value.__cause__, FileNotFoundError)
-
-
-@pytest.mark.parametrize("scope,change,cause", [
-    ("share_expert_up_proj", "missing_tp", ValueError),
-    ("share_expert_up_proj", "invalid_contract", ValueError),
-    ("share_expert_up_proj", "unmatched_tp", ValueError),
-    ("moe_grouped_gemm", "missing_ep", ValueError),
-    ("moe_grouped_gemm", "missing_tp", KeyError),
-    ("moe_grouped_gemm", "invalid_contract", ValueError),
-])
-def test_known_component_coverage_errors_preserve_cause(measured, tmp_path, scope, change, cause):
-    from frontier.moe_ep_workload import split_global_expert_tokens_into_lanes
-
-    p = measured
-    row = {"num_tensor_parallel_workers": 1, "num_tokens": 16,
-           "n_expanded_embd": 2048, "num_experts": 256, "router_topk": 6,
-           "hidden_dim": 4096, "expert_hidden_dim": 2048, "expert_parallel_size": 64}
-    if change == "missing_tp":
-        del row["num_tensor_parallel_workers"]
-    elif change == "missing_ep":
-        del row["expert_parallel_size"]
-    elif change == "unmatched_tp":
-        row["num_tensor_parallel_workers"] = 2
-    else:
-        row["typed_operator_contracts"] = "{}"
-    p._compute_input_file = p._moe_input_file = str(tmp_path / "incomplete.csv")
-    pd.DataFrame([row]).to_csv(p._compute_input_file, index=False)
-    lane = split_global_expert_tokens_into_lanes(
-        {i: int(i < 96) for i in range(256)}, total_expert_num=256,
-        moe_expert_parallel_size=64, router_topk=6)[0]
-    with pytest.raises(DeepSeekV4CoverageError) as error:
-        read_isolated_scope(p, source_batch([16], [0]), 0, scope, lane_workload=lane)
-    assert isinstance(error.value.__cause__, cause)
-
-
-def test_unexpected_reader_failure_is_not_relabelled_as_coverage(measured, monkeypatch):
-    from frontier.execution_time_predictor.profiling_dataframe_loaders import ProfilingDataFrameLoaders
-
-    p = measured
-    p._compute_input_file = "unused.csv"
-
-    def fail(*args, **kwargs):
-        raise ValueError("unexpected reader implementation failure")
-
-    monkeypatch.setattr(ProfilingDataFrameLoaders, "_load_linear_op_df", fail)
-    with pytest.raises(ValueError) as error:
-        read_isolated_scope(p, source_batch([16], [0]), 0, "share_expert_up_proj")
-    assert type(error.value) is ValueError
-    assert error.value.__cause__ is None
-
-
-@pytest.fixture
-def measured(predictor):
-    predictor._enable_dummy_mode = False
-    predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
-    predictor._block_size = 256
-    predictor._replica_config.device = "h200"
-    predictor._replica_config.model_config = predictor._model_config
-    return predictor
-
-
-@pytest.mark.parametrize("queries,contexts,decoding", [
-    ([1], [15], [False]), ([1], [16], [True]), ([2, 1], [0, 16], [False, True]),
-])
-def test_isolated_non_attention_requires_prefill(measured, queries, contexts, decoding):
-    with pytest.raises(DeepSeekV4CoverageError, match="require prefill"):
-        read_isolated_scope(measured, source_batch(queries, contexts, decoding), 0, "share_expert_up_proj")

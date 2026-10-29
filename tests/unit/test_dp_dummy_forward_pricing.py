@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from frontier.config import global_vars
+from frontier.config.model_config import BaseModelConfig
 from frontier.entities import Batch, DummyForwardBatch, Request
 from frontier.entities.batch import DecodeCudaGraphMetadata
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
@@ -51,6 +52,7 @@ def replica_config(profile_id="glm_moe_dsa"):
 def predictor(role=ClusterType.MONOLITHIC):
     owner = object.__new__(PricingPredictor)
     owner._cluster_type = role
+    owner._model_config = BaseModelConfig.create_from_name("zai-org/GLM-5.3")
     owner._event_measurement_type_for_replica = lambda: MeasurementType.CUDA_EVENT
     return owner
 

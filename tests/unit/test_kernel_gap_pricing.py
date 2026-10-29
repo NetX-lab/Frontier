@@ -42,7 +42,8 @@ def _write_gap_table(path, rows, tensor_parallel_size=1):
 
 def _replica(gdn_layers=0, spec_decode=False, tensor_parallel_size=1):
     return SimpleNamespace(
-        model_config=SimpleNamespace(get_num_gdn_layers=lambda: gdn_layers),
+        model_config=SimpleNamespace(num_q_heads=8, num_kv_heads=8,
+                                     get_num_gdn_layers=lambda: gdn_layers),
         speculative_decoding_config=SimpleNamespace(enabled=spec_decode),
         attn_tensor_parallel_size=tensor_parallel_size,
     )

@@ -75,6 +75,8 @@ from frontier.entities.time_components import (
 from frontier.execution_time_predictor.base_execution_time_predictor import (
     BaseExecutionTimePredictor,
 )
+from frontier.execution_time_predictor.dsv4_measurement import dsv4_measurement_type
+from frontier.execution_time_predictor.dsv4_training import train_dsv4_for_predictor, dsv4_predictions
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
@@ -878,6 +880,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         )
 
     def _is_kernel_only_measurement_enabled_for_cluster(self) -> bool:
+        if dsv4_measurement_type(self._model_config) is not None:
+            return True
         decode_cuda_graph_mode = str(global_vars.get_decode_cuda_graph_mode()).lower()
         use_cuda_graph = bool(global_vars.get_use_cuda_graph())
 
@@ -892,6 +896,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         raise ValueError(f"Unsupported cluster_type={self._cluster_type!r}")
 
     def _get_default_measurement_type_for_cluster(self) -> MeasurementType:
+        if dsv4_measurement_type(self._model_config) is not None:
+            return dsv4_measurement_type(self._model_config)
         event_measurement_type = self._event_measurement_type_for_replica()
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if self._cluster_type in (
@@ -913,6 +919,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
     def _should_enable_measurement_family(
         self, measurement_type: MeasurementType
     ) -> bool:
+        if dsv4_measurement_type(self._model_config) is not None:
+            return measurement_type is dsv4_measurement_type(self._model_config)
         event_measurement_type = self._event_measurement_type_for_replica()
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if self._cluster_type == ClusterType.DECODE_ATTN:
@@ -949,6 +957,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
     def _select_measurement_type_for_batch(self, batch: Batch) -> MeasurementType:
+        if dsv4_measurement_type(self._model_config) is not None:
+            return dsv4_measurement_type(self._model_config)
         event_measurement_type = self._event_measurement_type_for_replica()
         from frontier.entities import DummyForwardBatch
 
@@ -3832,6 +3842,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         return models
 
     def _train_models(self) -> Dict[str, BaseEstimator]:
+        if dsv4_measurement_type(self._model_config) is not None:
+            return train_dsv4_for_predictor(self)
         models = self._train_compute_models()
         models.update(self._train_cpu_overhead_models())
         models.update(self._train_attention_layer_models())
@@ -4272,6 +4284,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         return max_tokens
 
     def _predict_from_models(self) -> Dict[str, Any]:
+        if dsv4_measurement_type(self._model_config) is not None:
+            return dsv4_predictions(self._models)
         predictions = {}
 
         # Always predict compute models (cluster-specific filtering happens inside)

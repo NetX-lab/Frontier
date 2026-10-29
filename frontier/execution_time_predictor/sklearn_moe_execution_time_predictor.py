@@ -102,13 +102,6 @@ class SklearnMoEExecutionTimePredictor(
             return predict_step_cost_execution(
                 self, batch, layer_id, tp_rank, **source_context,
             )
-        if not self._enable_dummy_mode:
-            from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
-
-            raise DeepSeekV4CoverageError(
-                "V4 serving requires measured mHC, routing, phase and TP equivalence; "
-                "isolated shared/MARLIN/attention rows do not qualify a complete forward"
-            )
         from frontier.execution_time_predictor.deepseek_v4 import predict_structural_execution
 
         return predict_structural_execution(

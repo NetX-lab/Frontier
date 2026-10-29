@@ -17,3 +17,14 @@ DEEPSEEK_V4_OPERATOR_AXES = MappingProxyType({
 })
 
 DEEPSEEK_V4_STANDALONE_AXES = ("sp_local_rows", "descriptor_rows", "logits_rows")
+
+
+def select_deepseek_v4_operator_tp(tp_mode, attention_tp_size):
+    """Native standalone scopes use attention TP or replicated weights."""
+    from frontier.operators.spec import TensorParallelMode
+
+    if tp_mode is TensorParallelMode.ATTENTION_TP:
+        return attention_tp_size
+    if tp_mode is TensorParallelMode.REPLICATED:
+        return 1
+    raise ValueError(f"V4 standalone operator has unsupported TP mode: {tp_mode}")

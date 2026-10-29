@@ -17,6 +17,7 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
 from frontier.types import ClusterType, MeasurementType
+from frontier.config.model_config import BaseModelConfig
 
 
 def _reset_timer_store() -> None:
@@ -150,7 +151,10 @@ def test_rocm_replica_selects_device_event_without_host_detection() -> None:
         ExecutionTimePredictionModelManager
     )
     manager._two_stream_eager_clusters = frozenset()
-    replica = SimpleNamespace(device="mi355x")
+    replica = SimpleNamespace(
+        device="mi355x",
+        model_config=BaseModelConfig.create_from_name("meta-llama/Llama-2-7b-hf"),
+    )
 
     assert manager._get_measurement_types_for_cluster(
         ClusterType.PREFILL, replica

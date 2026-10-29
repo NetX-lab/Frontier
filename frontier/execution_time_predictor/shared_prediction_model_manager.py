@@ -15,6 +15,8 @@ from frontier.execution_time_predictor.measurement_input_paths import (
     uses_two_stream_eager_pricing,
 )
 from frontier.execution_time_predictor.kernel_gap import load_kernel_gap_ms
+from frontier.execution_time_predictor.dsv4_measurement import dsv4_measurement_type
+from frontier.execution_time_predictor.dsv4_training import train_dsv4_for_manager
 from frontier.execution_time_predictor.dsv4_step_cost_input import load_step_cost_table
 from frontier.logger import init_logger
 
@@ -246,6 +248,8 @@ class ExecutionTimePredictionModelManager(
     def _get_measurement_types_for_cluster(
         self, cluster_type: ClusterType, replica_config
     ) -> List[MeasurementType]:
+        if dsv4_measurement_type(replica_config.model_config) is not None:
+            return [dsv4_measurement_type(replica_config.model_config)]
         event_measurement = self._event_measurement_type_for_replica(replica_config)
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if cluster_type == ClusterType.PREFILL:
@@ -423,6 +427,14 @@ class ExecutionTimePredictionModelManager(
                 logger.info(f"  - All-Reduce: {all_reduce_file} {'OK' if os.path.exists(all_reduce_file) else 'MISSING'}")
                 logger.info(f"  - Send-Recv: {send_recv_file} {'OK' if os.path.exists(send_recv_file) else 'MISSING'}")
                 logger.info(f"  - CPU Overhead: {cpu_overhead_file} {'OK' if os.path.exists(cpu_overhead_file) else 'MISSING'}")
+
+                if dsv4_measurement_type(model_config) is not None:
+                    family_models = train_dsv4_for_manager(
+                        self, cluster_type, cluster_config, linear_ops_file, attn_file, moe_file,
+                    )
+                    for model_name, model in family_models.items():
+                        combined_models[f"{family_name}:{model_name}"] = model
+                    continue
 
                 family_models: Dict[str, BaseEstimator] = {}
 

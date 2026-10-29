@@ -226,11 +226,11 @@ def test_package_check_writes_no_destination():
     assert result["path_a_cases_per_engine"] == {"0": 686, "1": 296, "2": 7}
     assert result["path_b_total_rows"] == 394 and result["package_built"] is False
     assert result["phases"] == ["G2H_RUNNER_REPLAY", "G2H_BLOCK_OPERATORS"]
-    assert plan["destination"] == "package_03"
+    assert plan["destination"] == "package_04"
     jobs = result["jobs"]
     assert [job["name"] for job in jobs] == ["G2H_V4_RUNNER_REPLAY", "G2H_V4_BLOCK_OPERATORS"]
-    assert [job["job_tag"] for job in jobs] == ["v4-h200-g2h-runner-20261029-03-replay",
-                                              "v4-h200-g2h-runner-20261029-03-block"]
+    assert [job["job_tag"] for job in jobs] == ["v4-h200-g2h-runner-20261029-04-replay",
+                                              "v4-h200-g2h-runner-20261029-04-block"]
     assert [job["bootstrap_calls"] for job in jobs] == [1, 1]
     assert len({job["output_dir"] for job in jobs}) == 2
     assert all(len(job["phases"]) == 1 for job in jobs)

@@ -109,9 +109,8 @@ def test_mixed_v4_inventory_does_not_call_homogeneous_family_api(monkeypatch):
     monkeypatch.setattr(replica.model_config, "get_attention_family", forbidden)
     counter = ParamCounter(replica)
     assert counter.get_parameter_memory_per_device_bytes() == 12_393_714_140
-    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is False
-    with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
-        DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution()
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is True
+    DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution()
 
 
 def test_sp_shared_weights_are_replicated_and_all_resident_experts_are_counted():

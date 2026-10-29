@@ -308,10 +308,10 @@ def test_synthetic_consumer_prices_only_selected_component_calls(
     assert result.total_time() == total
 
 
-def test_component_keeps_structural_family_admission_closed(model, replica):
+def test_component_supports_enabled_family_and_structural_execution(model, replica):
     result = component_cost(component_predictor(model, replica), source_batch([1], [127], [True]), 3)
     assert "dsv4_sparse_attention" in result.op_times
-    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is False
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is True
     assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
     assert all(not op.predictor_target and not op.profiling_target
                and not op.e2e_trace_target for op in DEEPSEEK_V4_ATTENTION_FAMILY.operators)

@@ -28,30 +28,6 @@ MODEL_NAME = "zai-org/GLM-5.3"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-@pytest.mark.parametrize(("model_name", "dummy_mode"), [
-    ("deepseek-ai/DeepSeek-V4-Flash", False),
-])
-def test_predictor_initialization_rejects_frozen_model_before_mode_dispatch(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, model_name: str, dummy_mode: bool,
-) -> None:
-    monkeypatch.chdir(REPO_ROOT)
-    model = BaseModelConfig.create_from_name(model_name)
-    with pytest.raises(NotImplementedError, match="(DSA|DeepSeek-V4)"):
-        RandomForrestExecutionTimePredictor(
-            # No V4 step-cost table sits next to this attention input path.
-            predictor_config=SimpleNamespace(
-                enable_dummy_mode=dummy_mode, atten_input_file=str(tmp_path / "attention.csv"),
-            ),
-            replica_config=SimpleNamespace(
-                model_config=model, router_topk=model.num_experts_per_tok,
-                moe_tensor_parallel_size=1, moe_expert_parallel_size=16,
-                device="h800", network_device="h800_dgx",
-            ),
-            replica_scheduler_config=SimpleNamespace(),
-            metrics_config=SimpleNamespace(),
-        )
-
-
 def test_v4_dummy_constructor_requires_resolved_cache_selection(tmp_path) -> None:
     from frontier.config import (
         MetricsConfig, RandomForrestExecutionTimePredictorConfig, ReplicaConfig,
@@ -73,10 +49,9 @@ def test_v4_dummy_constructor_requires_resolved_cache_selection(tmp_path) -> Non
     assert predictor._enable_dummy_mode is True
     family = get_attention_family("deepseek_v4_attention")
     assert family.structural_execution_enabled is True
-    assert family.execution_enabled is False
+    assert family.execution_enabled is True
     family.require_enabled_for_execution(structural=True)
-    with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
-        family.require_enabled_for_execution()
+    family.require_enabled_for_execution()
     replica.attention_backend = "FLASHMLA_SPARSE"
     with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
         RandomForrestExecutionTimePredictor(

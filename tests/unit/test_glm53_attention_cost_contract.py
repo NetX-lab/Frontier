@@ -301,7 +301,7 @@ def test_inclusive_projection_ownership_requires_disjoint_declaration():
 @pytest.mark.parametrize("model_name", [
     "deepseek-ai/DeepSeek-V4-Flash",
 ])
-def test_unmeasured_family_rejects_csv_loading_and_standalone_training(
+def test_v4_admitted_loader_keeps_missing_file_error_and_trainer_constructs(
     model_name, monkeypatch, tmp_path,
 ):
     from frontier.execution_time_predictor.profiling_dataframe_loaders import (
@@ -313,18 +313,16 @@ def test_unmeasured_family_rejects_csv_loading_and_standalone_training(
     model = BaseModelConfig.create_from_name(model_name)
     loader = ProfilingDataFrameLoaders()
     loader._active_measurement_type = MeasurementType.KERNEL_ONLY
-    # The shared model manager loads V4 attention only after final admission.
-    with pytest.raises(NotImplementedError, match="deepseek_v4_attention is not enabled for execution"):
+    # Execution admission passes; the absent profiling file is still an error.
+    with pytest.raises(FileNotFoundError):
         loader._load_attention_df(
             str(tmp_path / "missing.csv"), SimpleNamespace(model_config=model, attn_tensor_parallel_size=8),
             SimpleNamespace(block_size=64),
         )
-    with pytest.raises(NotImplementedError, match="DSA|DeepSeek-V4"):
-        AttentionTrainer(
-            str(tmp_path / "missing.csv"), str(tmp_path / "trained"),
-            model_name, "h800",
-        )
-    assert not (tmp_path / "trained").exists()
+    trainer = AttentionTrainer(
+        str(tmp_path / "missing.csv"), str(tmp_path / "trained"), model_name, "h800",
+    )
+    assert trainer is not None
 
 
 def test_measured_dsa_needs_isolated_input_and_shared_training(tmp_path, monkeypatch):

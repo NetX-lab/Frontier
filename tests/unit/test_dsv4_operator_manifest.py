@@ -97,21 +97,20 @@ def test_43_layer_inventory_counts_mhc_and_endpoints_once(model):
     assert routes == {"hash": 3, "score": 40}
 
 
-def test_scope_inventory_stays_disabled_with_standalone_mhc_profiling_targets():
+def test_scope_inventory_admits_execution_with_standalone_mhc_profiling_targets():
     attention = get_attention_family("deepseek_v4_attention")
     assert get_operator_family("deepseek_v4_attention") is attention
     mhc = get_operator_family("deepseek_v4_mhc")
     for family in (attention, mhc):
         assert family.operators
-        assert family.execution_enabled is False
+        assert family.execution_enabled is True
         assert bool(family.profiling_ops()) == (family is mhc)
         for operator in family.operators:
             assert operator.predictor_target is False
             assert operator.profiling_target == (family is mhc)
             assert operator.e2e_trace_target is False
             assert operator.execution_time_attr is None
-            with pytest.raises(NotImplementedError, match="not enabled"):
-                bind_operator_query(operator.name)
+            assert bind_operator_query(operator.name).family_id == family.family_id
 
 
 def test_variant_views_reuse_registered_scope_objects(model):

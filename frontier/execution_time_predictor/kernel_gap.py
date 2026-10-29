@@ -72,7 +72,19 @@ def load_kernel_gap_ms(
     config: Any, kernel_gap_input_file: str, replica_config: Any, *, sys_arch: str,
 ) -> dict[str, float] | None:
     """The kernel gap that prices kernel-only steps, or None when kernel_gap.csv is absent."""
-    if config.enable_dummy_mode or not os.path.exists(kernel_gap_input_file):
+    if config.enable_dummy_mode:
+        return None
+    from frontier.execution_time_predictor.dsv4_measurement import dsv4_measurement_type
+    from frontier.execution_time_predictor.dsv4_step_cost_input import load_step_cost_table
+    from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
+
+    if dsv4_measurement_type(replica_config.model_config) is not None:
+        if load_step_cost_table(config, replica_config) is not None:
+            return None
+        if not os.path.exists(kernel_gap_input_file):
+            raise DeepSeekV4CoverageError(f"V4 requires kernel_gap.csv: {kernel_gap_input_file}")
+        return read_dsv4_kernel_gap_ms(kernel_gap_input_file, replica_config.attn_tensor_parallel_size)
+    if not os.path.exists(kernel_gap_input_file):
         return None
     # These paths price layers outside the per-layer kernel counting.
     if sys_arch == "pd-af-disaggregation":
@@ -200,6 +212,11 @@ class KernelGapPricing:
             return predict_layer(*args, **kwargs)
         with self._counting_kernels() as counts:
             layer = predict_layer(*args, **kwargs)
+        if layer.attention_family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.dsv4_runtime import add_dsv4_operator_gaps
+
+            add_dsv4_operator_gaps(self, layer, args[0])
+            return layer
         if self._active_measurement_type is MeasurementType.KERNEL_ONLY:
             # An eager step's device stream runs eager launches; a graph step replays a CUDA graph.
             execution_mode = (
