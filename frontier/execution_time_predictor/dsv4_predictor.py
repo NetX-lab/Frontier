@@ -306,6 +306,7 @@ class DeepSeekV4AttentionPredictor:
         if None in thresholds or len(thresholds) != 1:
             raise ValueError("Measured V4 replay models require exactly one multi-stream GEMM token threshold")
         self.multi_stream_gemm_token_threshold = thresholds.pop()
+        self._prediction_memo: dict[tuple[str, tuple[float, ...]], float] = {}
 
     def scope_times(
         self, features: DeepSeekV4BatchFeatures, *, variant: str, graph_runtime_mode: str,
@@ -329,8 +330,14 @@ class DeepSeekV4AttentionPredictor:
                                                      f"outside [{lower}, {upper}]")
                 feature_tuple = tuple(float(features.values[column]) for column in columns)
                 exact = model._frontier_exact_lookup
-                value = (float(exact[feature_tuple]) if feature_tuple in exact else
-                         float(model.predict(pd.DataFrame([feature_tuple], columns=list(columns)))[0]))
+                if feature_tuple in exact:
+                    value = float(exact[feature_tuple])
+                else:
+                    memo_key = (name, feature_tuple)
+                    if memo_key not in self._prediction_memo:
+                        self._prediction_memo[memo_key] = float(
+                            model.predict(pd.DataFrame([feature_tuple], columns=list(columns)))[0])
+                    value = self._prediction_memo[memo_key]
                 if not np.isfinite(value) or (target == TARGET_TIME and value < 0):
                     raise ValueError(f"Invalid V4 {target} prediction for {name}: {value}")
                 predictions[target][scope] = value

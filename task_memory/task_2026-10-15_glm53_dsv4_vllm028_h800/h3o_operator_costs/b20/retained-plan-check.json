@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p1h_bridge/package_03/plans/FULL_AND_PIECEWISE.json",
+  "sha256": "8bb82d07eedaea7382bb39d25e3356417fee30ce7121bbd480beff711f406011",
+  "bytes": 11881,
+  "checks": "same JSON equality and exact serialized bytes assertions as the missing-fixture test"
+}

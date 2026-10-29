@@ -1,0 +1,92 @@
+{
+  "status": "PARTIAL",
+  "environment_file": "environment.json",
+  "checks": [
+    {
+      "name": "Final new memo tests",
+      "command": "bash \"$R/run_checks.sh\" \"$W/tests/unit/test_v4_prediction_memo.py\" > \"$S/fitted-memo.log\" 2>&1",
+      "log": "fitted-memo.log",
+      "status": "PASS",
+      "observed": "350 passed in 2.17 s",
+      "log_path": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/fitted-memo.log",
+      "log_sha256": "bc1626325ff78cc8171963102bb2083e430f565e0d5f911b7af9e6e334e35a20"
+    },
+    {
+      "name": "Required regression plus B18 graph/A10 tests",
+      "command": "bash \"$R/run_checks.sh\" > \"$S/regression.log\" 2>&1",
+      "log": "regression.log",
+      "status": "FAIL",
+      "observed": "851 passed, 2 skipped, 3 failed in 471.85 s",
+      "resolution": "Two scratch-cwd output failures passed on targeted reruns below. Missing retained fixture remains.",
+      "log_path": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/regression.log",
+      "log_sha256": "6fdb4e260975c9469af9cc1ba81fe564295fc625ca922a72695e11271a8f86d5"
+    },
+    {
+      "name": "Final memo/source/structural rerun",
+      "command": "bash \"$R/run_checks.sh\" \"$W/tests/unit/test_v4_prediction_memo.py\" \"$W/tests/unit/test_dsv4_source_execution.py\" \"$W/tests/unit/test_dsv4_structural_execution.py\" \"$W/tests/unit/test_dsv4_structural_pd.py\" > \"$S/final-check.log\" 2>&1",
+      "log": "final-check.log",
+      "status": "PASS",
+      "observed": "460 passed in 18.15 s",
+      "log_path": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/final-check.log",
+      "log_sha256": "ad35d734ec1b359ccea287c3791aefee07731fa46d1eae71db1c899ee27a2e37"
+    },
+    {
+      "name": "Operator training/cache parity rerun",
+      "command": "bash \"$R/run_checks.sh\" \"$W/tests/unit/test_dsv4_operator_consumer.py::test_both_training_paths_and_warm_cache_exact_identity\" > \"$S/operator-rerun.log\" 2>&1",
+      "log": "operator-rerun.log",
+      "status": "PASS",
+      "observed": "1 passed, 3 pandas mixed-type warnings in 191.00 s",
+      "log_path": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/operator-rerun.log",
+      "log_sha256": "8284c749f043266ce5b1c866fcc726fe78471aa75fc10374cf688489d992c291"
+    },
+    {
+      "name": "Dummy smoke matrix",
+      "command": "bash \"$R/run_smoke.sh\" > \"$S/smoke.log\" 2>&1",
+      "log": "smoke.log",
+      "status": "PASS",
+      "observed": "12 of 12, exit 0",
+      "log_path": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/smoke.log",
+      "log_sha256": "ee20880f7c7b099f0277fdc17515f4a63c42e8ed32894ecbbb14382a4a1e08a1"
+    },
+    {
+      "name": "Untouched base prerequisite/documentation audit",
+      "command": "B20_REPO=\"$BASE\" B20_TEST_TMP=\"$S/base-audit-tmp\" bash \"$R/run_checks.sh\" \"$BASE/tests/unit/test_v4_attention_coverage.py::test_package03_plan_json_frozen\" \"$BASE/tests/unit/test_pdd_public_surface_docs.py\" > \"$S/base-audit.log\" 2>&1",
+      "log": "base-audit.log",
+      "status": "FAIL",
+      "observed": "Missing fixture and same three README assertions fail; 2 other documentation tests pass",
+      "log_path": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/base-audit.log",
+      "log_sha256": "435daafac9b4ed0b984092bbb7d7a207b75da9626bb9ad12f0ef3b511411a656"
+    },
+    {
+      "name": "Supplementary retained source assertions",
+      "command": "PYTHONPATH=\"$W:$W/tests/unit\" PYTHONDONTWRITEBYTECODE=1 \"$PY\" \"$R/verify_retained_plan.py\" \"$RETAINED\" \"$R/retained-plan-check.json\" > \"$S/retained-plan-audit.log\" 2>&1",
+      "log": "retained-plan-audit.log",
+      "status": "PASS",
+      "observed": "Same JSON equality and exact 11,881 serialized bytes match SHA-256 8bb82d07eedaea7382bb39d25e3356417fee30ce7121bbd480beff711f406011; required fixture test is still failed",
+      "log_path": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/retained-plan-audit.log",
+      "log_sha256": "d97e202b7041deca94d1fbd0a8e499e1118c9a8243df738d62d79eed9a19804e"
+    },
+    {
+      "name": "Additional exploratory release/graph/dummy/DP checks",
+      "command": null,
+      "log": "additional-check.log",
+      "status": "FAIL",
+      "observed": "99 passed, 4 failed in 80.59 s: three README assertions and the assignment-known DP late-join failure",
+      "limitation": "Historical suite-selection command was not retained; this exploratory run is not counted as a required green acceptance check.",
+      "log_path": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/additional-check.log",
+      "log_sha256": "0a796223373a9d9906cb3809f1d9c49781d8da2449c4e6a0975cd14e1093d5c6"
+    }
+  ],
+  "skipped_checks": [
+    "Pinned native balanced-routing registry check requires VLLM_BS_SOURCE_ROOT.",
+    "Retained P1h package 03 GPU evidence is absent on this CPU host."
+  ],
+  "remaining_required_failure": "tests/unit/test_v4_attention_coverage.py::test_package03_plan_json_frozen",
+  "required_suite_selection_file": "run_checks.sh",
+  "rerun_caveat": "Counts are separate executions with overlap, not summed to an aggregate.",
+  "simulations": {
+    "identity_comparison": "comparison.json",
+    "final_dp_proof": "final-dp-dispatch.json",
+    "window_profile": "profile.json"
+  }
+}
