@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Recorded YC's instruction to submit the next Codex implementation with effort ultra (D-CODEX-EFFORT-ULTRA) and the lead's source-revision rule for the G1h supplement package (D-G1H-SUPPLEMENT-IDENTITY). |
 | 2026-10-29 | Recorded the lead's writer-count rule for the G1h grid after the P2-32 coverage failure (D-G1H-WRITER-EXTREMES). |
 | 2026-10-29 | Recorded the lead's held-out unit for the uniform measured collective curves after B19 (D-A6-COLLECTIVE-UNIT). |
 | 2026-10-28 | Recorded the lead's G1h grid amendment after the B11 blockers (D-G1H-GRID-AMENDMENT). |
@@ -375,6 +376,13 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - **Writer counts.** For each serving class (W, own) of each category, the compression mixes are (0, 0), the observed mixes (k4, 0) and (k128, k128) of C1 §3.4, and the reachable extremes (own, 0) and (own, own), each raised to (max(n4, t), max(n128, t)) for t first tails, with duplicates removed. Reason: with one query token per row, any subset of rows can complete a compression group in the same step, so the reachable writer counts are t..own at each ratio. The C1 maxima describe one native trajectory; Frontier's own placement and step times give other context alignments (batch 1544413: 8 ratio-4 writers at own 11 against the native maximum 7). B19's joint admission is unchanged: the fix is measured coverage, not a wider admission.
     - **Supplement package.** A second H200 G1h package measures only the windows of the amended grid that G1h-02 did not measure, plus a fixed set of G1h-02 windows measured again to report the difference between the two packages. The repeated windows are left out of the promoted table. The attention table is the union of the G1h-02 and the supplement rows; the V4 kernel gaps (G4h) stay those of G1h-02.
     - **Census.** The diagnostic census (`h3o_operator_costs/a10/coverage_census.py`) lists the other attention requests of the P2-32 and P2-64 replays that fall outside the measured groups. Misses it finds before the package is built are added to the supplement under the same rule: a coordinate enters the grid only when a native run can produce it.
+
+[Original Request] Follow-up, 2026-10-29, during B22:
+
+> [补充更新]下一次调用codex implement时，请指定effort为ultra
+
+38. **D-CODEX-EFFORT-ULTRA.** The next `/codex-implement` submission passes `--effort ultra`.
+39. **D-G1H-SUPPLEMENT-IDENTITY.** Lead's working decision under D-NO-INTERRUPT after the B22 review (merge `59838675`): the supplement package is built from the G1h-02 source revision `a689ed05` in its own working tree (`.worktrees/g1h-supplement-build`, branch `g1h-supplement-build`), with only the supplement planning files added. Reason: `validate_measured_identity` accepts one runtime fingerprint per table, and the fingerprint includes the source revision; the union of the two packages loads only when both share it. The loader rule is unchanged.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
