@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Added check 11, the 77-case fidelity matrix at `b6c28858`. |
 | 2026-10-29 | Created: B18 (Codex `d06b0795`, stopped by the lead before Acceptance 4-5) review, one lead correction and lead checks. |
 
 ## Scope
@@ -44,6 +45,7 @@ Environment: Python `/data/ycfeng/envs/frontier-py310/bin/python` 3.10.6 (no tor
 | 8 | A9 tool controls (Codex, `a9_equal.log`, `a9_difference.log`) | Equal pair reports EQUAL; injected TTFT change and extra cache file are named | EQUAL with exit 0; exit 1 naming `metrics/request_metrics.csv` and `extra_model_123456abcdef.pkl` | PASS |
 | 9 | `git diff --check` and module sizes | Clean; touched modules at or below 2,000 lines | Clean; 714, 515, 109, 218 and the four tools below 200 | PASS |
 | 10 | A10 replay start (Codex, `timeout 14400s a10_driver.py p2_32 <scratch>/p2_32`) | Not an acceptance item here; facts recorded | Status INITIALIZED, initialization 497.4 s. A1: both roles non-dummy, no step-cost file beside the inputs, no step-cost table bound. Seven tables, each used by PREFILL and DECODE: attention replay 4,945 rows, kernel gap 4, linear 41, runner block 197, runner replay 2,941, MoE 33, H200 collective summary 384. KV admission per DECODE lane 109,934 blocks / 2,940 = 37.39 against native 37.34 (2,944 blocks): DIFFERS, unchanged from the diagnostic run. Stopped by the lead at about 3 s of simulated time | Recorded |
+| 11 | 77-case fidelity matrix (A12) on the committed `b6c28858`: `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/run_fidelity.sh`, which runs `tests/e2e/refactor_fidelity/run_matrix.py run --repo-root /data/ycfeng/Frontier/.worktrees/fidelity-candidate-b6c28858 --label candidate_b6c28858 --jobs 8 --clean-cache --continue-on-failure`, then `compare` against `/data/ycfeng/tmp/glm53_dsv4/h3o_b/entry2/fidelity/candidate_7003cf1d` | 77 of 77 identical, no failure | `run.log`: source and harness `b6c288588ae2`, `dirty=False`, 77 of 77 cases rc 0 with artifacts. `compare.log`: 77 compared, 77 identical, 0 mismatched, 0 failures on either side, 0 missing, 0 differing definitions, 0 predictor cache name differences (`comparison.json` in `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/fidelity/`) | PASS |
 
 ## Limits
 
