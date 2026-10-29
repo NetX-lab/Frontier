@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Added decision 1b, the record of the measured collective requests of a run (exact point or interpolation, and its bracketing points), after the B19 held-out result for the uniform collective curves. |
 | 2026-10-29 | Created. Covers the Frontier per-forward record attached by the A10 driver, the comparison with the native serving counters and the native runtime census, and the identity check of the record. |
 
 ## Goal
@@ -39,6 +40,11 @@ Entry 18 of the design's file table plans this as the A11 part of `tests/analysi
    - `a10_driver.py` attaches the observer in its own process and writes `forwards.jsonl.gz` in the run root. The receipt records its path, row count and SHA-256.
    - Do not edit files under `frontier/`. If no observation point outside `frontier/` sees every real and dummy forward with its final descriptor, wrap the narrowest existing method in the driver process only, and name it in the report.
    - The observer reads state and never changes it. B20 runs at the same time in another worktree and edits `frontier/moe_ep_workload.py`, `dsv4_operator_predictor.py`, `deepseek_v4.py`, `dsv4_predictor.py` and `dsv4_training.py`. Do not hook inside those modules, so the two merge without conflict.
+1b. **Collective requests.** The B19 held-out result ([a6/](a6/), the leave-one-out errors of `_Curve.describe`) shows that most uniform measured collective curves have few payload points. Whether that matters depends on which payloads a run actually requests. The observer also records each call of `MeasuredCCBackend.predict_operator_collective` on both roles, wrapped in the driver process only:
+   - Aggregate by (role, curve key, requested bytes, unequal rows or none): the call count, whether the bytes are a measured point or interpolated, the two bracketing measured points and their log-distance ratio `log(bytes / lower) / log(upper / lower)`, and the predicted time.
+   - Write it as `collectives.json` in the run root and record its path and SHA-256 in the receipt.
+   - The comparison reports, per curve key, the share of calls and of predicted collective time that is exact, and the share that is interpolated.
+   - A failing call still raises as today; the wrapper records nothing for it and re-raises the same exception.
 2. **The comparison** is a new `tests/analysis/v4_replay_census.py`.
    - It reuses `v4_runtime_census.py` for the native per-forward records (import it; do not copy its functions). It reads the counters of every node of each role, not only the first node.
    - It counts native forwards from `serving` and `dummy` rows of the serving phase. Warmup, capture and profile rows are reported separately and excluded from the comparison; state how the phase field separates them.
@@ -61,6 +67,7 @@ Entry 18 of the design's file table plans this as the A11 part of `tests/analysi
    - Rows for both PREFILL lanes and both DECODE lanes.
    - At least one PIECEWISE first tail, one FULL decode forward with more than one request, one DP dummy forward, and one NONE prefill.
    - Every forward of the run appears once; show the count against the number of stage-end events of the run.
+   - `collectives.json` holds both roles; its call count per role equals the number of `predict_operator_collective` calls counted independently in the same run.
 4. **Comparison run** on the small run against the P2-32 native inputs: the JSON and text summaries exist and every native count equals the sum of `successful_forwards` of its counter rows. The values are observations of a small scenario, not a reading of A11.
 5. **Regression.** `tests/unit/test_dsv4_a10_tools.py`, `test_dsv4_graph_dispatch.py`, `test_dsv4_dp_sync.py`, and the new test. The dummy smoke matrix (`PYTHON_BIN` set) 12 of 12.
 6. **Records.** `h3o_operator_costs/b21/` holds the trace generator, the run and comparison scripts, the identity JSON and a `report.md` with the exact commands, Python version, environment, expected and actual values and PASS/FAIL per item. Touched modules stay at or below 2,000 lines.
@@ -81,3 +88,4 @@ Do not edit `frontier/`, the profiling tables, the native inputs or the lead's s
 - The results of Acceptance 1-6, with the commands, the expected and actual values and the counts.
 - The observation point chosen, and any method wrapped in the driver process.
 - The scope-to-segment mapping of the composed time.
+- For the small run: per curve key, the exact and interpolated call shares.

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Recorded the lead's held-out unit for the uniform measured collective curves after B19 (D-A6-COLLECTIVE-UNIT). |
 | 2026-10-28 | Recorded the lead's G1h grid amendment after the B11 blockers (D-G1H-GRID-AMENDMENT). |
 | 2026-10-27 | Recorded the lead's working decisions for H3o-(a) revision 2d after review round 3 (D-H3O-REVISION-2D). |
 | 2026-10-27 | Recorded YC's adoption of the revision 2c recommendations and the approval of review round 3 (D-H3O-REVISION-2C-DECISIONS). |
@@ -365,6 +366,10 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - **"Near" in the context profiles.** A continuing request counts as near a profile target when its cached tokens are within 127 tokens of the target (one ratio-128 group): low 6,144-6,271, high 7,039-7,166. Continuing requests stay inside the native range 6,144-7,166; cached 6,143 belongs only to first tails. Reason: 127 is the smallest allowance that reaches a ratio-128 write (cached 6,271 for low, 7,039 for high) inside the native range, and the placement keeps every request that does not need to write at its exact target.
     - Each case keeps 0 warm-up steps and 1 measured step (B11's choice, accepted): further steps would advance the contexts and change the mix.
     - Lead probe on CPU (`/data/ycfeng/tmp/b11_review/probe_amended.py`): with both amendments, 1,036 of 1,041 windows get a case; the 5 others fail in the FCFS placement (first tail, W8 and W16 own 6 low (5, 1); W24 own 18 high (1, 1), (7, 1), (4, 4)). B11b resolves them or reports the native evidence.
+36. **D-A6-COLLECTIVE-UNIT.** Lead's working decision under D-NO-INTERRUPT after B19 (`70321f85`) stopped the uniform collective part of A6 because the B19 unit (request geometry, K folds, the PD sklearn trainer) does not exist for that family:
+    - The held-out unit of a uniform measured collective curve (`MeasuredCCBackend`, key `(op, group, group_size)`) is one measured payload point with all its samples, pooled over modes and repetitions as the runtime pools them. Leaving one interior point out and interpolating it from its two neighbours is the existing `_Curve.describe` leave-one-out; no second evaluator is written. The end points cannot be held out because the runtime never extrapolates.
+    - The A6 thresholds apply per curve key. A held-out point is interpolated across two measured intervals where the runtime uses one, so the result is conservative; which payloads a run actually interpolates comes from the B21 collective record of the A10 runs.
+    - Unequal EP combine rows and the standalone operator, MoE, runner and gap families are exact lookups; A5 covers them and A6 does not apply.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
