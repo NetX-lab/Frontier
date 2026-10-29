@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Recorded the lead's writer-count rule for the G1h grid after the P2-32 coverage failure (D-G1H-WRITER-EXTREMES). |
 | 2026-10-29 | Recorded the lead's held-out unit for the uniform measured collective curves after B19 (D-A6-COLLECTIVE-UNIT). |
 | 2026-10-28 | Recorded the lead's G1h grid amendment after the B11 blockers (D-G1H-GRID-AMENDMENT). |
 | 2026-10-27 | Recorded the lead's working decisions for H3o-(a) revision 2d after review round 3 (D-H3O-REVISION-2D). |
@@ -370,6 +371,10 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - The held-out unit of a uniform measured collective curve (`MeasuredCCBackend`, key `(op, group, group_size)`) is one measured payload point with all its samples, pooled over modes and repetitions as the runtime pools them. Leaving one interior point out and interpolating it from its two neighbours is the existing `_Curve.describe` leave-one-out; no second evaluator is written. The end points cannot be held out because the runtime never extrapolates.
     - The A6 thresholds apply per curve key. A held-out point is interpolated across two measured intervals where the runtime uses one, so the result is conservative; which payloads a run actually interpolates comes from the B21 collective record of the A10 runs.
     - Unequal EP combine rows and the standalone operator, MoE, runner and gap families are exact lookups; A5 covers them and A6 does not apply.
+37. **D-G1H-WRITER-EXTREMES.** Lead's working decisions under D-NO-INTERRUPT after lead probe c (P2-32, main `5561d762`) failed with `DeepSeekV4CoverageError` (`dsv4_compressor_fused_compress_store`, csa, PIECEWISE, first tail, padded rows 16: `num_compressed_writes=8 outside [1.0, 7.0]`):
+    - **Writer counts.** For each serving class (W, own) of each category, the compression mixes are (0, 0), the observed mixes (k4, 0) and (k128, k128) of C1 §3.4, and the reachable extremes (own, 0) and (own, own), each raised to (max(n4, t), max(n128, t)) for t first tails, with duplicates removed. Reason: with one query token per row, any subset of rows can complete a compression group in the same step, so the reachable writer counts are t..own at each ratio. The C1 maxima describe one native trajectory; Frontier's own placement and step times give other context alignments (batch 1544413: 8 ratio-4 writers at own 11 against the native maximum 7). B19's joint admission is unchanged: the fix is measured coverage, not a wider admission.
+    - **Supplement package.** A second H200 G1h package measures only the windows of the amended grid that G1h-02 did not measure, plus a fixed set of G1h-02 windows measured again to report the difference between the two packages. The repeated windows are left out of the promoted table. The attention table is the union of the G1h-02 and the supplement rows; the V4 kernel gaps (G4h) stay those of G1h-02.
+    - **Census.** The diagnostic census (`h3o_operator_costs/a10/coverage_census.py`) lists the other attention requests of the P2-32 and P2-64 replays that fall outside the measured groups. Misses it finds before the package is built are added to the supplement under the same rule: a coordinate enters the grid only when a native run can produce it.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
