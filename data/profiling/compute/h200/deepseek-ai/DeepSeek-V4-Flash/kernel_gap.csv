@@ -1,0 +1,5 @@
+execution_mode,num_tensor_parallel_workers,kernel_gap_us,num_gaps,chain,gpu_name,driver_version,torch_version,cuda_version
+cuda_graph,8,0.49773414267747085,169232,dsv4_graph_replay:deepseek-ai/DeepSeek-V4-Flash:tp8,NVIDIA H200,570.124.06,2.13.0+cu130,13.0
+cuda_graph_piecewise,8,0.6249537992538311,289730,dsv4_graph_replay:deepseek-ai/DeepSeek-V4-Flash:tp8,NVIDIA H200,570.124.06,2.13.0+cu130,13.0
+eager,8,0.5446049595929223,30243,dsv4_graph_replay:deepseek-ai/DeepSeek-V4-Flash:tp8,NVIDIA H200,570.124.06,2.13.0+cu130,13.0
+eager_preparation,8,1.2208671118771937,91170,dsv4_graph_replay:deepseek-ai/DeepSeek-V4-Flash:tp8,NVIDIA H200,570.124.06,2.13.0+cu130,13.0

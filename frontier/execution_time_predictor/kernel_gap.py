@@ -46,11 +46,13 @@ def read_kernel_gap_ms(path: str, tensor_parallel_size: int) -> dict[str, float]
 
 def read_dsv4_kernel_gap_ms(path: str, tensor_parallel_size: int) -> dict[str, float]:
     """Read all four V4 segment gaps at the target deployment's TP size."""
-    return _read_gap_rows_ms(path, tensor_parallel_size, DSV4_EXECUTION_MODES)
+    return _read_gap_rows_ms(path, tensor_parallel_size, DSV4_EXECUTION_MODES, float_precision="round_trip")
 
 
-def _read_gap_rows_ms(path: str, tensor_parallel_size: int, modes: Sequence[str]) -> dict[str, float]:
-    table = pd.read_csv(path)
+def _read_gap_rows_ms(
+    path: str, tensor_parallel_size: int, modes: Sequence[str], *, float_precision: str | None = None,
+) -> dict[str, float]:
+    table = pd.read_csv(path, float_precision=float_precision)
     if TENSOR_PARALLEL_COLUMN not in table.columns:
         raise ValueError(f"{path} has no {TENSOR_PARALLEL_COLUMN} column, the TP size each row was measured at")
     table = table[table[TENSOR_PARALLEL_COLUMN] == tensor_parallel_size]
