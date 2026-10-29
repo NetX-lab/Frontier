@@ -43,7 +43,7 @@
     248,
     256
   ],
-  "destination": "package_01",
+  "destination": "package_02",
   "expected_attention_backend": "FLASHMLA_SPARSE_DSV4",
   "gpu": 1,
   "gpu_memory_utilization": 0.85,
@@ -55,12 +55,12 @@
     "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py"
   ],
   "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
-  "job_tag": "v4-h200-g2h-runner-20261028-01",
+  "job_tag": "v4-h200-g2h-runner-20261029-02-replay",
   "mem_gb": 128,
-  "name": "G2H_V4_RUNNER_OPERATORS",
+  "name": "G2H_V4_RUNNER_REPLAY",
   "native_repo": "/data/ycfeng/tmp/opencode/vllm-v0.28.0",
   "native_revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
-  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_01",
+  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/replay",
   "pilot_cases": "../g1h/pilot_cases.json",
   "plan_args": [
     "--model_name",
@@ -1094,7 +1094,7 @@
     }
   ],
   "seed": 1234,
-  "source_revision": "763d85f003bf829ac74f2b8bb9dfaf50db3b9b9d",
+  "source_revision": "5896339ebc2daeb5f7ba8614b90cc1d7cb9a8d8d",
   "task_id": "H3O-STAGE2-B13R-G2H-RUNNER",
   "timeout_seconds": 7200,
   "worker_output_root": "/tmp/glm_producers/out",
@@ -1105,11 +1105,15 @@
     "G2H_BLOCK_OPERATORS"
   ],
   "gpu_time_estimate": {
-    "replay_reference_engine_seconds": 2711,
-    "replay_reference_job_seconds": 3055,
+    "replay_reference_job_seconds": 3089,
+    "replay_reference_gpu_hours": 0.8580555555555556,
     "replay_scope_overhead_allowance_seconds": [
       120,
       360
+    ],
+    "replay_gpu_hours": [
+      0.8913888888888889,
+      0.9580555555555555
     ],
     "direct_startup_allowance_seconds": [
       180,
@@ -1120,22 +1124,35 @@
       60,
       180
     ],
+    "direct_gpu_hours": [
+      0.11701111111111111,
+      0.2336777777777778
+    ],
     "total_gpu_hours": [
-      1.0,
-      1.19
+      1.0084,
+      1.1917333333333333
     ],
-    "prior_g1h_g4h_used_gpu_hours": 0.92,
-    "b13_estimate_gpu_hours": [
-      0.23,
-      0.6
-    ],
+    "prior_used_gpu_hours": 1.89,
     "g1h_g4h_cap_gpu_hours": 7,
-    "b13_observed_job_seconds": 407,
-    "b13_observed_gpu_hours": 0.11305555555555556,
-    "b13_observed_source": "../../test_report_2026-10-28_b13_v4_standalone_operators.md:62",
     "cap_used_after_this_plan_gpu_hours": [
-      2.033,
-      2.223
+      2.8983999999999996,
+      3.081733333333333
     ]
-  }
+  },
+  "jobs": [
+    {
+      "name": "G2H_V4_RUNNER_REPLAY",
+      "phase": "G2H_RUNNER_REPLAY",
+      "job_tag": "v4-h200-g2h-runner-20261029-02-replay",
+      "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/replay",
+      "config": "bridge_config.json"
+    },
+    {
+      "name": "G2H_V4_BLOCK_OPERATORS",
+      "phase": "G2H_BLOCK_OPERATORS",
+      "job_tag": "v4-h200-g2h-runner-20261029-02-block",
+      "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/block",
+      "config": "block_config.json"
+    }
+  ]
 }

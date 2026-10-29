@@ -313,6 +313,10 @@ class _WorkerState:
         if self.step_range is not None:
             self.step_range.__exit__(None, None, None)
             self.step_range = None
+            # V4 graph replay keeps its step active through sampling or the
+            # native dummy batch, so the step ends with its range.
+            active, self.active = self.active, None
+            self.end_step(active)
 
     def start_profiler(self) -> None:
         torch = self.torch
@@ -419,10 +423,13 @@ def _wrap_execute_model(runner: Any) -> None:
                 return original(scheduler_output, *args, **kwargs)
             state.active = active
             output = original(scheduler_output, *args, **kwargs)
-            state.end_step(active)
+            # V4 graph replay ends the step when its step range closes; the
+            # other runners open no range and end it here.
+            if state.step_range is None:
+                state.end_step(active)
             return output
         finally:
-            if active is not None:
+            if state.step_range is None:
                 state.active = None
             state.matched_dp_peer = None
 

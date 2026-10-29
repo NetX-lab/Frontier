@@ -1,4 +1,4 @@
-"""Plan-check on CPU; reuse P1h snapshot construction and add the direct phase.
+"""Plan-check two isolated jobs on CPU; reuse P1h snapshot construction.
 
 Default invocation constructs a fresh package after the lead commits and pins
 source_revision. --check-plan/--dry_run never creates the package directory.
@@ -15,6 +15,35 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+REPLAY_PHASE = "G2H_RUNNER_REPLAY"
+BLOCK_PHASE = "G2H_BLOCK_OPERATORS"
+JOB_FIELDS = (
+    "image", "cuda_compat_path", "cloud_mount", "gpu_type", "charged_group",
+    "gpu", "cpu", "mem_gb", "preemptible", "timeout_seconds",
+    "planning_gpu_hours_cap", "source_revision",
+)
+
+
+def job_definitions(spec, package):
+    """Use the same job commands for CPU validation and package generation."""
+    jobs = []
+    for entry in spec["jobs"]:
+        commands = [{"name": "bridge_run" if entry["phase"] == REPLAY_PHASE else "block_operators",
+                     "argv": ["{python}", "-I", str(package / "native_dummy_bootstrap.py"),
+                              "--config", str(package / entry["config"])]}]
+        steps = [{"commands": commands}]
+        if entry["phase"] == REPLAY_PHASE:
+            steps.append({"commands": [{"name": "bridge_report", "argv": [
+                "{python}", str(package / "dsv4_graph_bridge_check.py"),
+                "--config", str(package / entry["config"]), "--report",
+            ]}]})
+        job = {key: spec[key] for key in JOB_FIELDS}
+        job.update({key: entry[key] for key in ("name", "job_tag", "output_dir")})
+        job.update(source_snapshot=str(package), worker=str(package / "launch/glm_producer_worker.py"),
+                   wheelhouse=str(package / "launch/wheelhouse"),
+                   phases=[{"name": entry["phase"], "steps": steps}])
+        jobs.append(job)
+    return jobs
 
 
 def load_builder():
@@ -36,7 +65,9 @@ def check_plan(spec):
     hf_path = ROOT / "data/config/models/deepseek-ai__DeepSeek-V4-Flash.json"
     grid = load_grid(HERE / spec["block_operator_grid"], json.loads(hf_path.read_text()))
     expected = json.loads((HERE / "expected_rows.json").read_text())
-    if {(row["operator"], row.get("n"), row.get("w_c"), row.get("r"), row["profile_method"]) for row in grid.rows()} != {(row["operator"], row.get("n"), row.get("w_c"), row.get("r"), row["profile_method"]) for row in expected["path_b_rows"]} or len(grid.rows()) != len(expected["path_b_rows"]):
+    if sorted(json.dumps(row, sort_keys=True) for row in grid.rows()) != sorted(
+        json.dumps(row, sort_keys=True) for row in expected["path_b_rows"]
+    ):
         raise ValueError("Path B planned rows differ from expected_rows.json")
     observed_cases = {}
     for run in spec["runs"]:
@@ -77,7 +108,24 @@ print('worker import probe PASS')
                             capture_output=True, text=True, timeout=60)
     if result.returncode:
         raise RuntimeError("Worker import probe failed: " + result.stderr)
+    jobs = job_definitions(spec, HERE / spec["destination"])
+    if [job["phases"][0]["name"] for job in jobs] != [REPLAY_PHASE, BLOCK_PHASE]:
+        raise ValueError("G2h requires one replay job and one block-operator job")
+    for key in ("name", "job_tag", "output_dir"):
+        if spec[key] != jobs[0][key]:
+            raise ValueError(f"P1h {key} must select the replay job")
+        if len({job[key] for job in jobs}) != len(jobs):
+            raise ValueError(f"G2h jobs require distinct {key} values")
+    job_reports = []
+    for job in jobs:
+        count = sum(Path(command["argv"][2]).name == "native_dummy_bootstrap.py"
+                    for step in job["phases"][0]["steps"] for command in step["commands"])
+        if count != 1:
+            raise ValueError(f"{job['name']} must bootstrap exactly once")
+        job_reports.append(dict(job, file=str(HERE / spec["destination"] / "jobs" / f"{job['name']}.json"),
+                                bootstrap_calls=count))
     return {"package_built": False, "source_revision": spec["source_revision"], "phases": spec["phases"],
+            "jobs": job_reports,
             "path_a_cases_per_engine": {key: len(values) for key, values in observed_cases.items()},
             "path_b_rows_per_method": expected["row_counts_per_method"], "path_b_total_rows": len(grid.rows()),
             "expected_layout": grid.layout, "import_probe": result.stdout.strip(),
@@ -112,17 +160,12 @@ def build_package(spec):
         config["tool_hashes"] = dict(config["tool_hashes"], **extra_hashes)
     builder.write(bridge_path, bridge)
     builder.write(package / "block_config.json", bootstrap)
-    job_path = package / f"jobs/{spec['name']}.json"
-    job = json.loads(job_path.read_text())
-    job["phases"][0]["name"] = "G2H_RUNNER_REPLAY"
-    job["phases"].append({"name": "G2H_BLOCK_OPERATORS", "steps": [{"commands": [{"name": "block_operators", "argv": [
-        "{python}", "-I", str(package / "native_dummy_bootstrap.py"), "--config", str(package / "block_config.json"),
-    ]}]}]})
-    builder.write(job_path, job)
+    for job in job_definitions(spec, package):
+        builder.write(package / f"jobs/{job['name']}.json", job)
     manifest_path = package / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
     manifest.update(builder_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-                    phases=spec["phases"], expected_rows=json.loads((package / "expected_rows.json").read_text()))
+                    phases=spec["phases"], jobs=spec["jobs"], expected_rows=json.loads((package / "expected_rows.json").read_text()))
     manifest["files"] = {str(path.relative_to(package)): builder.sha(path) for path in sorted(package.rglob("*"))
                          if path.is_file() and path != manifest_path and not path.name.endswith(".pyc")}
     builder.write(manifest_path, manifest)

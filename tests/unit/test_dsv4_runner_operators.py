@@ -226,6 +226,16 @@ def test_package_check_writes_no_destination():
     assert result["path_a_cases_per_engine"] == {"0": 686, "1": 296, "2": 7}
     assert result["path_b_total_rows"] == 394 and result["package_built"] is False
     assert result["phases"] == ["G2H_RUNNER_REPLAY", "G2H_BLOCK_OPERATORS"]
+    assert plan["destination"] == "package_02"
+    jobs = result["jobs"]
+    assert [job["name"] for job in jobs] == ["G2H_V4_RUNNER_REPLAY", "G2H_V4_BLOCK_OPERATORS"]
+    assert [job["job_tag"] for job in jobs] == ["v4-h200-g2h-runner-20261029-02-replay",
+                                              "v4-h200-g2h-runner-20261029-02-block"]
+    assert [job["bootstrap_calls"] for job in jobs] == [1, 1]
+    assert len({job["output_dir"] for job in jobs}) == 2
+    assert all(len(job["phases"]) == 1 for job in jobs)
+    configs = [Path(job["phases"][0]["steps"][0]["commands"][0]["argv"][-1]).name for job in jobs]
+    assert configs == ["bridge_config.json", "block_config.json"]
     assert (PACKAGE / plan["destination"]).exists() == before
 
 
@@ -332,3 +342,131 @@ def test_trace_reader_gives_nested_logits_kernels_to_the_logits_scope():
     assert [item.owner for item in attributed.intervals] == [sampling, logits, sampling]
     assert attributed.scope_times[ScopeKey(0, *sampling)].kernel_count == 2
     assert attributed.scope_times[ScopeKey(0, *logits)].kernel_count == 1
+
+
+@pytest.fixture
+def native_order_runner(monkeypatch):
+    """Real recorder/timer with a native V2 execute-then-sample stand-in."""
+    events = []
+
+    @contextmanager
+    def annotation(name):
+        events.append(("enter", name))
+        try:
+            yield
+        finally:
+            events.append(("exit", name))
+
+    torch = SimpleNamespace(
+        profiler=SimpleNamespace(record_function=annotation),
+        cuda=SimpleNamespace(_sleep=lambda cycles: events.append(("hold", cycles))),
+    )
+    state = cases._WorkerState(0, torch, ())
+    state.next_step_index = 7
+    state.hold_cycles = 123
+    monkeypatch.setattr(cases, "_STATE", state)
+    monkeypatch.setattr(replay, "_RECORDER", GraphCaptureRecorder(None, lambda owner, fn: fn()))
+    noop = lambda *args, **kwargs: None
+    runner = SimpleNamespace(
+        kv_block_zeroer=SimpleNamespace(zero_block_ids=noop),
+        block_tables=SimpleNamespace(apply_staged_writes=noop),
+        model_state=SimpleNamespace(preprocess_state=noop, prepare_attn=noop, prepare_inputs=noop),
+        model=SimpleNamespace(compute_logits=noop, forward=noop),
+        prepare_inputs=noop, prepare_attn=noop, postprocess_sampled=noop,
+        execute_model_state=None,
+    )
+
+    def execute_model(scheduler_output, dummy_run=False):
+        if not dummy_run:
+            runner.kv_block_zeroer.zero_block_ids([1])
+            runner.block_tables.apply_staged_writes()
+            runner.prepare_inputs()
+            runner.prepare_attn()
+            runner.model_state.preprocess_state()
+        runner.model_state.prepare_attn()
+        runner.model_state.prepare_inputs()
+        runner.execute_model_state = SimpleNamespace(attn_metadata={})
+        return None
+
+    def sample():
+        runner.model.compute_logits("hidden")
+        return "tokens"
+
+    def sample_tokens():
+        assert runner.execute_model_state is not None
+        runner.execute_model_state = None
+        result = runner.sample()
+        runner.postprocess_sampled()
+        return result
+
+    runner.execute_model = execute_model
+    runner.sample = sample
+    runner.sample_tokens = sample_tokens
+    replay._wrap_step(runner, SimpleNamespace(modules={}))
+    replay._wrap_sample_tokens(runner)
+    replay._wrap_runner_step_scopes(runner)
+    # Same installation order as install_graph_replay_hooks: classifier outside step.
+    cases._wrap_execute_model(runner)
+    return runner, state, events
+
+
+def _native_schedule(state, kind):
+    phase = "first_tail" if kind in ("first_tail", "multi_tail") else "prefill" if kind == "prefill" else "decode"
+    batch_size = 2 if kind == "multi_tail" else 1
+    state.case = cases._CaseRecorder(kind, phase, batch_size, 0, 1, "KERNEL_ONLY",
+                                    prompt_len=8, tail_count=batch_size)
+    computed = 7 if phase == "first_tail" else 0 if phase == "prefill" else 8
+    return SimpleNamespace(
+        finished_req_ids=set(),
+        num_scheduled_tokens={str(i): 1 for i in range(batch_size)},
+        scheduled_new_reqs=[SimpleNamespace(req_id=str(i), prompt_token_ids=list(range(8)),
+                                           num_computed_tokens=computed) for i in range(batch_size)],
+        scheduled_cached_reqs=SimpleNamespace(req_ids=[], num_computed_tokens=[]),
+    )
+
+
+@pytest.mark.parametrize("kind", ["FULL", "PIECEWISE", "first_tail", "multi_tail", "prefill"])
+def test_native_order_records_sampling_after_execute_returns(native_order_runner, kind):
+    runner, state, events = native_order_runner
+    schedule = _native_schedule(state, kind)
+    assert runner.execute_model(schedule) is None
+    assert runner.sample_tokens() == "tokens"
+    step = "frontier_dsa_step|7"
+    hold = "frontier_dsa_hold|7"
+    names = ["kv_cache_block_zero", "dsv4_block_table_write"] + ["dsv4_input_preparation"] * 5
+    expected = [("enter", step), ("enter", hold), ("hold", 123), ("exit", hold)]
+    for scope in names:
+        name = f"frontier_dsa|7|-1|{scope}"
+        expected += [("enter", name), ("exit", name)]
+    sampling, logits = "frontier_dsa|7|-1|dsv4_sampling", "frontier_dsa|7|-1|dsv4_compute_logits"
+    expected += [("enter", sampling), ("enter", logits), ("exit", logits), ("exit", sampling),
+                 ("enter", sampling), ("exit", sampling), ("exit", step)]
+    assert events == expected
+    assert state.active is None and state.step_range is None
+    assert state.case.recorded == 1 and state.case.steps[0]["step_index"] == 7
+    state.close_step_range()
+    assert events == expected and state.case.recorded == 1
+    # A later call outside the recorded window must create no range or scopes.
+    assert runner.execute_model(schedule) is None
+    assert runner.sample_tokens() == "tokens"
+    assert events == expected and state.case.recorded == 1
+
+
+def test_native_dummy_closes_once_without_sampling(native_order_runner):
+    runner, state, events = native_order_runner
+    state.case = cases._CaseRecorder("dummy", "dummy", 1, 0, 1, "KERNEL_ONLY")
+
+    def dummy_batch():
+        assert runner.execute_model(None, dummy_run=True) is None
+        # Native _dummy_run consumes execute_model_state and gathers hidden rows,
+        # then returns; it never calls sample_tokens or sample.
+        assert state.active is not None and state.case.recorded == 0
+        runner.execute_model_state = None
+
+    cases.run_dummy_step(SimpleNamespace(execute_dummy_batch=dummy_batch))
+    assert events.count(("enter", "frontier_dsa_step|7")) == 1
+    assert events.count(("exit", "frontier_dsa_step|7")) == 1
+    assert not any("sampling" in str(name) or "compute_logits" in str(name) for _, name in events)
+    assert state.active is None and state.step_range is None and state.case.recorded == 1
+    state.close_step_range()
+    assert events.count(("exit", "frontier_dsa_step|7")) == 1

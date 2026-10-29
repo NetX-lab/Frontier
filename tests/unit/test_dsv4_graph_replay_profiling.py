@@ -26,7 +26,7 @@ from frontier.profiling.attention.dsa_rows import KERNEL_ONLY, MEASUREMENT_TYPES
 from frontier.profiling.attention.dsv4_attention_plan import LAYER_SCOPE
 from frontier.profiling.attention.dsv4_attention_rows import build_dsv4_rows
 from frontier.profiling.attention.graph_capture import (
-    CaptureRecord, EagerBreak, GraphCapture, GraphCaptureRecorder, GraphNode, NodeClone, ScopeEntry,
+    CaptureRecord, EagerBreak, GraphCapture, GraphCaptureRecorder, NodeClone, ScopeEntry,
 )
 from frontier.profiling.attention.graph_replay_trace import step_annotation_name
 from test_dsv4_attention_profiling import (
@@ -448,6 +448,9 @@ def test_case_wrapper_is_outermost_and_metadata_precedes_end_step(native_tree, m
     monkeypatch.setattr(state, "end_step", lambda finished: ended.append(dict(finished.record)))
     state.active = None
     native_tree.worker.model_runner.execute_model("schedule")
+    assert state.active is active and ended == []
+    assert active.record[replay.CUDAGRAPH_DISPATCH_KEY]["cg_mode"] == "FULL"
+    native_tree.worker.model_runner.sample_tokens()
     assert state.active is None and ended[0][replay.CUDAGRAPH_DISPATCH_KEY]["cg_mode"] == "FULL"
 
 
@@ -876,6 +879,7 @@ def test_step_range_hold_sampling_and_unexpected_return(monkeypatch):
         entries.append(('enter',name));yield;entries.append(('exit',name))
     torch=SimpleNamespace(profiler=SimpleNamespace(record_function=annotation),cuda=SimpleNamespace(_sleep=lambda cycles:entries.append(('sleep',cycles))))
     state=case_runner._WorkerState(0,torch,())
+    state.case=case_runner._CaseRecorder('range','decode',1,0,1,KERNEL_ONLY)
     state.active=case_runner._ActiveStep(9,{})
     state.hold_cycles=123
     monkeypatch.setattr(case_runner,'_STATE',state)
@@ -890,6 +894,7 @@ def test_step_range_hold_sampling_and_unexpected_return(monkeypatch):
     assert entries[-2:]==[('sample',None),('exit','frontier_dsa_step|9')]
     assert state.step_range is None
     state.close_step_range()
+    state.active=case_runner._ActiveStep(10,{})
     bad=SimpleNamespace(execute_model=lambda:'unexpected')
     replay._wrap_step(bad,SimpleNamespace(modules={}))
     with pytest.raises(RuntimeError,match='must return None'):bad.execute_model()
@@ -916,10 +921,13 @@ def test_hold_calibration_and_inventory_fields(native_tree):
 
 def test_dummy_worker_closes_range(monkeypatch):
     state=case_runner._WorkerState(0,SimpleNamespace(profiler=SimpleNamespace(record_function=lambda name:nullcontext())),())
+    # _wrap_step opens a range only for an active step; the step ends with it.
+    state.case=case_runner._CaseRecorder('dummy','dummy',1,0,1,KERNEL_ONLY)
+    state.active=case_runner._ActiveStep(0,{})
     monkeypatch.setattr(case_runner,'_STATE',state)
     def dummy():state.open_step_range('dummy')
     case_runner.run_dummy_step(SimpleNamespace(execute_dummy_batch=dummy))
-    assert state.step_range is None
+    assert state.step_range is None and state.active is None and state.case.recorded==1
 
 
 @pytest.mark.parametrize('phase,batch',[('first_tail',3),('first_tail',1),('dummy',1)])

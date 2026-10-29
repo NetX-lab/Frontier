@@ -1,6 +1,6 @@
 # G2h V4 runner operators
 
-CPU plan and builder for B13r, paired with the unchanged G1h-02 replay grid. Claude commits/reviews these files, replaces `source_revision` with the committed revision, builds a fresh `package_01`, then submits it. Implementation did not build a package, install anything or run GPU/platform commands.
+CPU plan and builder for B13s, correcting the missing sampling annotations and the second-bootstrap failure observed in G2h-01 (`exp-1029-113750-923871`). The G1h-02 replay grid and the B13r direct grid remain unchanged. Claude reviews/commits these files, replaces `source_revision` with that commit, builds a fresh `package_02`, then submits its two jobs. Keep `package_01` intact. CPU implementation does not build or submit a package.
 
 ## Plan check (CPU only)
 
@@ -13,7 +13,7 @@ export PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1
 timeout 120s /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g2h_runner/prepare_package.py --check-plan
 ```
 
-`--dry_run` is an alias. This checks the exact planned coordinates/case IDs against `expected_rows.json`, plans the native-layer engine using the existing attention builder, and cold imports both worker entry paths with fasteners, sklearn, torch, vLLM and cuda blocked. It creates no package. Direct grid-only check:
+`--dry_run` is an alias. This checks the exact planned coordinates/case IDs against `expected_rows.json`, plans the native-layer engine using the existing attention builder, and cold imports both worker entry paths with fasteners, sklearn, torch, vLLM and cuda blocked. It lists both jobs, their tags, output directories and one bootstrap command per job, and creates no package. Direct grid-only check:
 
 ```bash
 timeout 120s /data/ycfeng/envs/frontier-py310/bin/python -m frontier.profiling.model_runner.dsv4_block_operators --grid task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g2h_runner/block_operator_grid.json --model_config_path data/config/models/deepseek-ai__DeepSeek-V4-Flash.json --dry_run
@@ -21,27 +21,43 @@ timeout 120s /data/ycfeng/envs/frontier-py310/bin/python -m frontier.profiling.m
 
 The builder reuses `p1h_bridge/prepare_package.py`'s committed source snapshot, accepted bootstrap, base-package verification, model assets, image, CUDA compatibility path and mount. No separate engine builder or vLLM method implementation is introduced. G1h `plan_args`, pilot/coverage files and the three case lists are reused verbatim.
 
-## Worker phases and outputs
+## Separate worker jobs and outputs
 
-Job `G2H_V4_RUNNER_OPERATORS`, tag `v4-h200-g2h-runner-20261028-01`, uses one H200, step_main, non-preemptible. Output destination is `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_01`. The accepted worker uses `/tmp/glm_producers/out` locally; the job worker collects that tree.
+Each job runs in its own container on one H200, charged to step_main, non-preemptible. The accepted bootstrap checks the installed base before applying its overlay; running it a second time in one container caused path B's G2h-01 base-hash mismatch. The bootstrap and base package are unchanged. Both jobs collect their local `/tmp/glm_producers/out` tree into distinct destinations:
 
-| Phase | Work | Local output |
+| Job / phase | Tag | Output directory |
 | --- | --- | --- |
-| `G2H_RUNNER_REPLAY` | Same G1h-02 engines and 989 IDs: e0 686, e1 296, e2 7. New scopes, unchanged attention rows. | `/tmp/glm_producers/out/G2H_RUNNER_REPLAY/bridge/FULL_AND_PIECEWISE/{raw,traces}` |
-| `G2H_BLOCK_OPERATORS` | Native 43-layer allocation, grid-specified 8 experts. 33 zero and 164 write coordinates per method, 394 rows total. | `/tmp/glm_producers/out/G2H_BLOCK_OPERATORS/` |
+| `G2H_V4_RUNNER_REPLAY` / `G2H_RUNNER_REPLAY` | `v4-h200-g2h-runner-20261029-02-replay` | `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/replay` |
+| `G2H_V4_BLOCK_OPERATORS` / `G2H_BLOCK_OPERATORS` | `v4-h200-g2h-runner-20261029-02-block` | `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_runner_operators/g2h_runner_02/block` |
 
-Built-package worker commands (lead/GPU run only; not executed in implementation):
+Replay uses the same 989 IDs (e0 686, e1 296, e2 7). Direct calls use the native 43-layer allocation and grid-specified eight experts: 33 zero and 164 write coordinates per method, 394 rows total. Local outputs are `G2H_RUNNER_REPLAY/bridge/FULL_AND_PIECEWISE/{raw,traces}` and `G2H_BLOCK_OPERATORS/` respectively.
+
+After committing and pinning the revision, the lead builds and runs these commands from this directory (not executed during CPU implementation):
 
 ```bash
-python -I package_01/native_dummy_bootstrap.py --config package_01/bridge_config.json
-python -I package_01/native_dummy_bootstrap.py --config package_01/block_config.json
+timeout 600s /data/ycfeng/envs/frontier-py310/bin/python prepare_package.py
+timeout 7200s bash package_02/launch/launch_glm_producers.sh package_02/jobs/G2H_V4_RUNNER_REPLAY.json
+timeout 7200s bash package_02/launch/launch_glm_producers.sh package_02/jobs/G2H_V4_BLOCK_OPERATORS.json
+```
+
+The generated jobs run the following worker commands in **separate containers**:
+
+```bash
+python -I package_02/native_dummy_bootstrap.py --config package_02/bridge_config.json
+python package_02/dsv4_graph_bridge_check.py --config package_02/bridge_config.json --report
+```
+
+```bash
+python -I package_02/native_dummy_bootstrap.py --config package_02/block_config.json
 ```
 
 Replay produces its existing raw JSONL, captures, traces and attention CSVs plus adjacent `dsv4_raw_eN.ownership.json` and `dsv4_raw_eN.runner.csv`. The ownership file classifies **every recorded-step kernel, memcpy and memset** as attention scope, step scope, model forward or unowned. Hold kernels are calibration and excluded from the census. Each step has counts and each observed kind (FULL, PIECEWISE, first tail, multi-tail, dummy, prefill) has unowned names, grids and counts. There is no name-based ownership inference. Model-forward boundaries use CPU launch correlations within `frontier_v4_model_forward|<step>` ranges; graph nodes without attention ownership are model-forward work.
 
 Step owners use reserved integer layer **-1** and a top-level scope; physical attention layers remain >=0. `dsv4_step_scopes.is_step_scope` validates both fields. `dsv4_attention_rows.build_dsv4_rows` filters these call rows; `dsv4_replay_rows` continues to read existing attention layer calls through the gap reducer; the bridge reads capture owners/interval kinds without layer pairing assumptions. The gap reducer excludes step owners from attention dependency chains and preserves their previous outside-work/graph classes and hold diagnostics. Thus new ownership does not reclassify preparation as attention eager work.
 
-`sample()` has the `dsv4_sampling` owner, and `model.compute_logits` inside it is the child scope `dsv4_compute_logits` (diagnostic). Graph-replay ranges may nest: the trace reader gives each kernel to the innermost range, so the row gather and sampler stay with sampling and the LM head goes to the logits scope. A logits call outside `sample()` fails the parent check. Ordinary nested step scope calls fail the same parent check as attention scopes. The execute range still opens before `execute_model` and closes after `sample_tokens`, including AsyncOutput's unpriced output copy.
+`sample()` has the `dsv4_sampling` owner, and `model.compute_logits` inside it is the child scope `dsv4_compute_logits` (diagnostic). Graph-replay ranges may nest: the trace reader gives each kernel to the innermost range, so the row gather and sampler stay with sampling and the LM head goes to the logits scope. A logits call outside `sample()` fails the parent check. Ordinary nested step scope calls fail the same parent check as attention scopes. The execute range opens before `execute_model` and closes after `sample_tokens`, including AsyncOutput's unpriced output copy. `_wrap_execute_model` retains `state.active` while that existing range is open, and `close_step_range` calls the existing `end_step` once before clearing it. GLM DSA and eager V4 open no range and retain their execute-return lifetime. A failed execute or sample call ends the engine run, so no failure path continues recording.
+
+Graph replay selects only `KERNEL_ONLY` (`frontier/profiling/attention/dsa_vllm_runner.py`, `_TIMING_MEASUREMENTS`); CUDA_EVENT sampling handling is unnecessary. FULL, PIECEWISE, first-tail, multi-tail and prefill all return `None` at pinned `vllm/v1/worker/gpu/model_runner.py:1703`, then the engine samples at `vllm/v1/engine/core.py:602-603`. **Dummy steps do not sample**: `gpu_worker.py:1210-1212` calls `_dummy_run`, which executes at `gpu/model_runner.py:695`, consumes its state at 709-715, gathers hidden rows at 767 and returns at 768. The existing profiler `run_dummy_step` closes that range after the native call. No synthetic sampling call is added to dummy steps.
 
 Direct output includes `layout.json`, `block_operators.csv`, all Chrome traces and adjacent `.trace.intervals.json` files with kernel and memcpy intervals kept separately. Rows use **`dsv4_model_runner.v1`**, constructed in `frontier/profiling/model_runner/dsv4_runner_rows.py`: existing DSA `time_stats.<operator>` statistics in ms, separate `kernel_stats`/`memcpy_stats`, coordinates, method, repeat count and engine layout JSON. `cuda_event`'s headline sample spans the native call; `record_function`'s headline sample sums owned kernel durations. The future operator loader reads these producer CSVs; no current consumer, training path or execution flag is activated here. Column `row_role` states each row's use: path A input preparation and sampling rows and all path B rows are `cost`; path A write rows are `validation` (kernels and shapes against path B); path A zeroing and full TP1 compute_logits rows are `diagnostic`.
 
@@ -53,7 +69,7 @@ Each measured call has the replay's calibrated host-ahead device hold, both even
 
 ## Lead check after the GPU run: four gaps against G1h-02
 
-Set `G2H_RESULTS` to the downloaded local output tree containing the two phases and `G2H_GAPS` to a writable report directory. Run the existing reducer:
+Set `G2H_RESULTS` to the downloaded replay job output tree containing `G2H_RUNNER_REPLAY`, and `G2H_GAPS` to a writable report directory. The block job has its own download tree. Run the existing reducer:
 
 ```bash
 timeout 600s python -m frontier.profiling.kernel_gap.dsv4_replay_gaps --raw_files "$G2H_RESULTS/G2H_RUNNER_REPLAY/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl" "$G2H_RESULTS/G2H_RUNNER_REPLAY/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl" "$G2H_RESULTS/G2H_RUNNER_REPLAY/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e2.jsonl" --output_dir "$G2H_GAPS" --device h200 --model deepseek-ai/DeepSeek-V4-Flash --diagnostics_path "$G2H_GAPS/diagnostics.json"
@@ -61,26 +77,52 @@ timeout 60s python - <<'PY_COMPARE'
 import json, os
 from pathlib import Path
 reference = {
-    "cuda_graph": (0.49773414267747085, 169232),
-    "cuda_graph_piecewise": (0.6249537992538311, 289730),
-    "eager": (0.5446049595929223, 30243),
-    "eager_preparation": (1.2208671118771937, 91170),
+    "cuda_graph": (0.49773414267747085, 0.4801221185543367, 169232),
+    "cuda_graph_piecewise": (0.6249537992538311, 0.6106290602187813, 289730),
+    "eager": (0.5446049595929223, 0.5065229453923222, 30243),
+    "eager_preparation": (1.2208671118771937, 1.2117857340253784, 91170),
 }
 diag = json.loads((Path(os.environ["G2H_GAPS"]) / "diagnostics.json").read_text())
-for name, (before, count) in reference.items():
+for name, (before, g2h01, count) in reference.items():
     row = diag["classes"][name]
     after = row["mean"]
-    print(name, "G1h02_us", before, "G2h_us", after, "delta_us", after-before,
+    print(name, "G1h02_us", before, "G2h01_us", g2h01, "G2h02_us", after, "delta_us", after-before,
           "delta_pct", 100*(after-before)/before, "G1h02_count", count,
           "G2h_count", row["host_ahead_count"], "host_bound", row["host_bound_excluded_count"])
 PY_COMPARE
 ```
 
-Inspect `kernel_gap.csv` and report all four new values, counts, deltas and host/hold diagnostics against the references. This is a comparison, not an equality assertion between separate GPU runs. Compare the attention rows for the same 989 cases and inspect unowned summaries and direct layout/kernel grids. During CPU implementation, old raw-record gap diagnostics and all 4945 attention rows were reproduced byte-for-byte; bridge equivalence was checked on the two permitted selected traces, not all 989 trace files.
+Inspect `kernel_gap.csv` and report the four new values, sample counts, deltas and host/hold diagnostics against both references. Compare the 4,945 attention rows for the same 989 cases: identity fields and kernel counts must match, while timings are compared between GPU runs. CPU before/after reduction of both saved runs preserves their replay rows, runner rows, ownership summaries and gap diagnostics byte for byte.
+
+Inspect every engine's `dsv4_raw_eN.ownership.json` and `.runner.csv`. Expect `dsv4_sampling` and nested diagnostic `dsv4_compute_logits` for all 976 real steps, with the same step index and boundaries as preparation. The 13 dummy steps have no sampling rows. Expected row counts across engines: preparation 989, write 976, zero 499, sampling 976, logits 976 (4,416 total); verify from the new records rather than fabricating missing costs. The sampling kernels and LM-head GEMM must leave the unowned list; LM-head kernels must belong to the logits child. Check direct `layout.json`, grids and all 394 rows separately; path B has not run successfully on a GPU yet.
+
+## G2h-01 unowned review (CPU evidence)
+
+Read the three ownership summaries and only `g1-e0-0000-full.json` and `g1-e0-1040-prefill.json`. Group (a) is work inside the existing sampling/logits hooks, (b) is runner work outside every wrapped call, and (c) is intentional output-copy work. Counts include kernels, memcpy and memset:
+
+| Case kind | (a) newly owned | (b) stays outside hooks | (c) output copies | Total |
+| --- | ---: | ---: | ---: | ---: |
+| FULL | 3,624 | 0 | 672 | 4,296 |
+| PIECEWISE | 3,624 | 0 | 672 | 4,296 |
+| first tail | 3,184 | 0 | 592 | 3,776 |
+| multi-tail | 77 | 0 | 14 | 91 |
+| dummy | 0 | 273 | 0 | 273 |
+| prefill | 11 | 6 | 2 | 19 |
+
+Group (a) includes the logits-row gather, LM-head `nvjet_sm90_tst_*` grid `[2,66,1]` and its memset, temperature/position indexing, `_gumbel_sample_kernel` `[b,127,1]`, argmax and gather, `new_ones` Fill, `_get_num_sampled_and_rejected_kernel` and `_post_update_kernel` `[b,1,1]`. The two selected traces confirm the memset is under `aten::linear -> aten::matmul -> aten::mm`; it belongs to logits, not output copies. Group (c) comprises the two `Memcpy DtoH (Device -> Pinned)` activities per real step, from `AsyncOutput` (`gpu/async_utils.py:140,149,253-254`).
+
+Group (b) is left for the lead's scope decision; this change adds no wrappers for it:
+
+- Prefill: three `_apply_write_kernel` `[1,1,1]` and three HtoD copies. `execute_model` calls `add_requests` at `gpu/model_runner.py:1422`; `add_requests` calls `req_states.apply_staged_writes` at 1008. `gpu/states.py:122-124` writes `total_len`, `all_token_ids` and `num_computed_tokens`; each uses `gpu/buffer_utils.py:183-196` (contents HtoD at 184-186 and kernel at 189). These are distinct from the hooked fused block-table writer.
+- Dummy: 26 arange kernels `[1,1,1]` at `gpu/input_batch.py:128,169`; 13 scalar-add kernels `[1,1,1]` for `logits_indices` at 168; 26 CUB scan kernels `[1,1,1]` plus 13 conversion-copy kernels `[1,1,1]` for `torch.cumsum` at 155-157. `InputBatch.make_dummy` is called outside the preparation hooks at `gpu/model_runner.py:1503-1508`.
+- Dummy: 182 Fill kernels in total (169 vectorized, 13 unrolled). Fill<int> grids have first dimensions `1,2,3,4,7,14,21,28,42`; Fill<long> uses `[1,1,1]` and `[40,1,1]`, and Fill<bool> uses `[1,1,1]`. Sites are `gpu/input_batch.py:130,145-146,148,154,159,162-163,165`, dummy table zeroing at `gpu/block_table.py:174-175` (called by `gpu/model_runner.py:1327`), and full slot-buffer fill at `gpu/block_table.py:213` (via `gpu/model_runner.py:1328-1330` and `gpu/pcp_manager.py:635-637`). The summaries aggregate identical Fill names across these sites; individual per-site counts require a dummy trace, which was outside the two-trace allowance.
+- Dummy: 13 hidden-row gathers after `execute_model`, consisting of eight `index_elementwise_kernel` `[8,1,1]` and five `vectorized_gather_kernel` grids `[2,2,1]`, `[4,2,1]`, `[8,2,1]`, `[16,2,1]`, `[24,2,1]`. Site: `_dummy_run`, `gpu/model_runner.py:767`, outside `sample` and `sample_tokens`.
 
 ## GPU time and remaining admission
 
-G1h-02 engines took 2711 s; its job took 3055 s (0.849 GPU h). Allow 120-360 s for new replay scope/report overhead. Direct startup is estimated at 180-480 s; planned holds total `394 * (3+20) * 0.020 = 181.24 s` as a conservative allowance (warm-up does not actually hold), with 60-180 s for other work/tracing. Total estimate is **1.00-1.19 GPU h**. Actual startup/trace size remain uncertain until the run. Prior G1h/G4h usage 0.92 plus B13 0.23-0.60 plus this plan gives **2.15-2.71 of the 7 GPU h cap**, leaving 4.29-4.85. The lead's newly available B13 report (`../../test_report_2026-10-28_b13_v4_standalone_operators.md:62`, recorded at HEAD `4ed287fc`) now reports 407 s / 0.113 GPU h for that job. Using this observed B13 usage gives **2.03-2.22 of 7 GPU h** after this runner plan, leaving about 4.78-4.97. The older 2.15-2.71 envelope above is retained as the original planning comparison. New B13r GPU timing/native matching remain unmeasured.
+Observed G2h-01 path A took **3,089 s / 0.858 GPU h (about 0.86)**. Retaining a conservative 120-360 s allowance for the new annotations gives replay **0.891-0.958 GPU h**. The separate block job needs its own startup (180-480 s), planned holds `394 * (3+20) * 0.020 = 181.24 s` as a conservative allowance (warm-up does not hold), and 60-180 s for other work/tracing: **0.117-0.234 GPU h**. Total estimated additional time is **1.008-1.192 GPU h**; direct startup and GPU/native matching remain unmeasured.
+
+The G1h-G4h cap is **7 GPU h**, with about **1.89 used**. After these jobs, estimated usage is **2.898-3.082 GPU h**, leaving **3.918-4.102 GPU h**. These are planning estimates, not measured path-B results.
 
 ## Registry impact audit
 
