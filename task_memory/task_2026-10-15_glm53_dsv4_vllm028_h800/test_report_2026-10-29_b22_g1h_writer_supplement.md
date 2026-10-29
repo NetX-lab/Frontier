@@ -1,9 +1,10 @@
-# Test report: B22, the G1h writer-count amendment and the supplement package
+# Test report: B22, the G1h writer-count amendment, the supplement package, its measurement and promotion
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Added the supplement measurement, the post-job CPU checks, the package difference and the routing-origin loader failure (B23). |
 | 2026-10-29 | Created: B22 (Codex `7c19fa56`) review, the lead changes, the merge, the census closure checks, the supplement package build and its submission. |
 
 ## Scope
@@ -56,6 +57,41 @@ The official P2-32 cold and warm runs (B21, started 15:41 on main `d53bab0b`) fa
 ## GPU measurement
 
 Supplement job: 1 H200, non-preemptible, `step_main`, timeout 10,800 s; tag `v4-h200-g1h-supplement-20261029-01`; cloud output `/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_attention/g1h_s01`. Estimate 0.608 GPU-hours (e0 0.358, e1 0.250), envelope 0.655, against about 3.07 GPU-hours left of the 7-hour G1h-G4h cap. Submitted through `/ds4-exec` (Pi run `g1h-supplement-submit-1029a`); results go to `/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01`.
+
+## Supplement measurement
+
+Job `exp-1030-021110-248027` (tag `v4-h200-g1h-supplement-20261029-01`), 1 H200, `step_main`, non-preemptible: Succeeded. Pi run `g1h-supplement-submit-1029a` (exit 0) downloaded the cloud output to `/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/` (10,569,782,264 bytes, of which `traces/` 10,293,872,888).
+
+| # | Check | Expected | Actual | Verdict |
+| --- | --- | --- | --- | --- |
+| 12 | Bridge report | PASS, no artifact errors | PASS; e0 FULL 150 + PIECEWISE 150, e1 PIECEWISE 150; all traces `error: null` | PASS |
+| 13 | Measured steps against the plan | e0 300, e1 150 | e0 300 step rows (300 distinct cases), e1 150 (150) | PASS |
+| 14 | Runtime and device | as G1h-02 | vLLM 0.28.0, torch 2.13.0+cu130, FlashInfer 0.6.16.post3, Triton 3.7.1, CUDA 13.0, NVIDIA H200 sm90, driver 570.124.06 | PASS |
+| 15 | GPU time | estimate 0.608 h, envelope 0.655 h | measured phases e0 1,538.1 s + e1 403.4 s = 0.539 h; G1h-G4h cap usage about 4.52 of 7 h | PASS |
+
+Pi observed two cases with 14,056 unattributed kernel launches against a typical 673-734: `g1hs-e0-0437-full` and `g1hs-e0-0443-piecewise`. Both are repeat windows (W24, own 24, mix (7, 0)), so promotion excludes them; their summed window times differ from G1h-02 by -1.11% and -0.56% (check 19), so the launches do not show in the attributed scope times. One run-log traceback per engine is the caught vLLM warning `Chat template warmup failed` (`skip_tokenizer_init=True`); the engines continued.
+
+## Post-job CPU checks
+
+Script `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/g1h_s01_post.sh census_snapshots/1930` on main `8b9e2016`; log `g1h_s01_post.log` beside it; outputs in `g1h_s01_post/`. The census copies at 19:30 hold P2-32 17,000 and P2-64 16,000 distinct requests.
+
+| # | Check | Expected | Actual | Verdict |
+| --- | --- | --- | --- | --- |
+| 16 | Engine identity, 21 fields of each engine record against G1h-02 engine 0 | SAME | SAME (`identity.json`) | PASS |
+| 17 | Measured coverage of both packages against the amended grid and the C1 native classes | 1,473 windows, 0 missing | 1,473 covered, 0 missing, 0 mismatches | PASS |
+| 18 | Supplement reduction with repeats | 450 cases reduced | 2,250 rows in `supplement_full/` | PASS |
+| 19 | Package difference on the 18 repeats | report | 2,448 rows compared, 0 missing. Scope time: abs(relative) p50 2.78%, p90 11.2%, max 42.8%; abs(absolute) max 0.0087 ms. Summed time per window: supplement lower by 0.25% to 3.04% (median 1.11%). Only `dsv4_compressor_fused_compress_store` csa PIECEWISE has a scope median beyond 10%: -32.8% over 24 rows, abs at most 0.0087 ms. Gap rows: abs(relative) p50 10.4% on medians near 0.0001 ms | REPORTED |
+| 20 | Scratch promotion | attention union, other tables unchanged | 7,105 attention rows (4,945 + 2,160; 90 repeat rows excluded); `kernel_gap.csv`, `linear_op_kernel_only.csv`, `moe_kernel_only.csv` byte-identical to the repository | PASS |
+| 21 | Loader check of the merged table | loads, 1 fingerprint | `DeepSeekV4CoverageError: V4 balanced replay attention missing/ambiguous moe_routing` | FAIL |
+| 22 | Measured replay closure | 0 misses | not run (needs check 21) | BLOCKED |
+
+Every sample in check 19 is one measured step per package, so the difference mixes run-to-run spread with any package effect. The supplement is lower in all 18 windows, by at most 3.04%.
+
+### Check 21: cause
+
+`validate_balanced_routing` (`frontier/execution_time_predictor/dsv4_predictor.py:78-94`) requires one `moe_routing` value. The two packages record different host paths of their `balanced_routing.py` copy in the descriptor's top-level `origin`; every other identity column and descriptor field is equal, including `sha256`, routers, runners, native-source digests and the runtime fingerprint `5237f2bd076fe132`. The B22 synthetic merge (check 6) renamed G1h-02 cases, so both halves carried one path and the case did not arise.
+
+Lead diagnostic (scratch monkeypatch, `g1h_s01_post/replay_measured_diag.json`) that compares the descriptors without the top-level `origin`: the merged table loads with 7,105 rows, 1 fingerprint, revision `a689ed05`, 554 trained models; measured replay closure gives 0 misses for P2-32 (480 against the committed table) and P2-64. Decision 40 (D-ROUTING-ORIGIN-PROVENANCE) adopts this rule; Codex implements it as B23 ([assignment](h3o_operator_costs/codex_assignment_B23_routing_origin.md), request `ce6d9226`, effort ultra).
 
 ## Limits
 

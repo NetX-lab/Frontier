@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Recorded the lead's routing-descriptor rule for tables merged from two packages (D-ROUTING-ORIGIN-PROVENANCE). |
 | 2026-10-29 | Recorded YC's instruction to submit the next Codex implementation with effort ultra (D-CODEX-EFFORT-ULTRA) and the lead's source-revision rule for the G1h supplement package (D-G1H-SUPPLEMENT-IDENTITY). |
 | 2026-10-29 | Recorded the lead's writer-count rule for the G1h grid after the P2-32 coverage failure (D-G1H-WRITER-EXTREMES). |
 | 2026-10-29 | Recorded the lead's held-out unit for the uniform measured collective curves after B19 (D-A6-COLLECTIVE-UNIT). |
@@ -383,6 +384,7 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 
 38. **D-CODEX-EFFORT-ULTRA.** The next `/codex-implement` submission passes `--effort ultra`.
 39. **D-G1H-SUPPLEMENT-IDENTITY.** Lead's working decision under D-NO-INTERRUPT after the B22 review (merge `59838675`): the supplement package is built from the G1h-02 source revision `a689ed05` in its own working tree (`.worktrees/g1h-supplement-build`, branch `g1h-supplement-build`), with only the supplement planning files added. Reason: `validate_measured_identity` accepts one runtime fingerprint per table, and the fingerprint includes the source revision; the union of the two packages loads only when both share it. The loader rule is unchanged.
+40. **D-ROUTING-ORIGIN-PROVENANCE.** Lead's working decision under D-NO-INTERRUPT after the post-job steps of the G1h supplement (`exp-1030-021110-248027`): the merged G1h-02 plus supplement attention table failed `validate_balanced_routing` with `missing/ambiguous moe_routing`, because the two packages record different host paths in the top-level `origin` of the routing descriptor. Every other identity column and descriptor field is equal. The top-level `origin` is provenance, not routing identity: the loader accepts several `moe_routing` values when each passes `routing_columns` and all are equal once the top-level `origin` is removed. `sha256`, routers, runners and native sources (with their own `origin` fields) stay part of the identity; the table keeps each row's recorded descriptor. Implemented by Codex as B23 ([assignment](h3o_operator_costs/codex_assignment_B23_routing_origin.md)). Rejected: rewriting the supplement's provenance during promotion (records a path the rows were not measured with) and dropping `origin` in the reducers (changes the committed table bytes and loses provenance).
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
