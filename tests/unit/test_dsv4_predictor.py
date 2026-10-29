@@ -18,7 +18,10 @@ from frontier.execution_time_predictor.dsv4_predictor import (
     dsv4_model_key, dsv4_model_name,
 )
 from frontier.profiling.attention import dsv4_attention_main as main
+from frontier.profiling.attention.dsv4_attention_rows import BALANCED_ROUTING_SHA256, routing_columns
+from frontier.profiling.attention.dsv4_attention_runner import ROUTING_NATIVE_MODULES
 from frontier.profiling.attention.dsv4_replay_rows import build_dsv4_replay_rows
+from frontier.profiling.common.runtime_identity import canonical_json
 from frontier.types import MeasurementType
 from test_dsa_predictor import _fit
 from test_dsv4_attention_profiling import PLAN_ARGS
@@ -61,12 +64,14 @@ def predict(predictor, row, model, **overrides):
     return predictor.scope_times(batch_features(row, model), **args)
 
 
-def aggregate(tmp_path, plan, specs=None):
+def aggregate(tmp_path, plan, specs=None, *, routing=None):
     plan = replace(plan, kv_cache_dtype="fp8_ds_mla")
     scopes = dict.fromkeys((layer.global_layer_id for layer in plan.shape.layers), (Q, TILE_PLANNER_SCOPE, OUT))
     specs = [dict(spec, scopes=scopes) for spec in (specs or [{}])]
     record = saved_records(plan, specs)
     record = replace(record, engine=dict(record.engine, device_name="NVIDIA H200", kv_cache_dtype="fp8_ds_mla"))
+    if routing is not None:
+        record = replace(record, engine=dict(record.engine, moe_routing=routing))
     expected = build_dsv4_replay_rows(plan, [record])
     raw = tmp_path / "raw"
     raw.mkdir()
@@ -325,3 +330,94 @@ def test_predictor_requires_one_threshold_on_all_its_models(table, model, replic
 def test_loader_resolves_main_cache_fp8_alias(table, model, replica):
     alias = SimpleNamespace(**{**vars(replica), "kv_cache_dtype": "fp8"})
     pd.testing.assert_frame_equal(load(table, model, alias), load(table, model, replica))
+
+
+@pytest.fixture
+def balanced_routing():
+    router = "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter"
+    runner = "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner"
+    identity = dict(environment="balanced_topk", runtime_path="balanced_topk",
+                    strategy="balanced_routing.BalancedTopKRouting", sha256=BALANCED_ROUTING_SHA256,
+                    origin="/base/package/balanced_routing.py", routers={"model.layers.0.mlp": router},
+                    runners={"model.layers.0.mlp": runner}, native_sources={
+                        name.replace(".", "/") + ".py": dict(
+                            origin="/native/" + name.replace(".", "/") + ".py", sha256="0" * 64)
+                        for name in ROUTING_NATIVE_MODULES})
+    routing_columns(identity)
+    return identity
+
+
+def write_routing(table, identity):
+    rows = pd.read_csv(table, float_precision="round_trip")
+    for column, value in routing_columns(identity).items():
+        rows[column] = value
+    return rows
+
+
+@pytest.mark.parametrize("package_count", [1, 2])
+def test_balanced_loader_accepts_package_origins_and_preserves_descriptors(
+        table, model, replica, balanced_routing, package_count):
+    expected = load(table, model, replica)
+    rows = write_routing(table, balanced_routing)
+    if package_count == 2:
+        supplement = dict(balanced_routing, origin="/supplement/package/balanced_routing.py")
+        rows.loc[rows.index[0], "moe_routing"] = canonical_json(supplement)
+    rows.to_csv(table, index=False)
+    replica.moe_gating_routing_runtime_path = "balanced_topk"
+    loaded = load(table, model, replica)
+    assert loaded.moe_routing.nunique() == package_count
+    pd.testing.assert_series_equal(loaded.moe_routing, rows.moe_routing)
+    pd.testing.assert_frame_equal(loaded[expected.columns], expected)
+
+
+@pytest.mark.parametrize("change", ["native_digest", "native_origin", "routers"])
+def test_balanced_loader_rejects_different_routing_identities(
+        table, model, replica, balanced_routing, change):
+    rows = write_routing(table, balanced_routing)
+    different = json.loads(canonical_json(balanced_routing))
+    source = next(iter(different["native_sources"].values()))
+    if change == "native_digest":
+        source["sha256"] = "1" * len(source["sha256"])
+    elif change == "native_origin":
+        source["origin"] = "/other" + source["origin"]
+    else:
+        different["routers"]["model.layers.1.mlp"] = next(iter(different["routers"].values()))
+        different["runners"]["model.layers.1.mlp"] = next(iter(different["runners"].values()))
+    routing_columns(different)
+    rows.loc[rows.index[0], "moe_routing"] = canonical_json(different)
+    rows.to_csv(table, index=False)
+    replica.moe_gating_routing_runtime_path = "balanced_topk"
+    with pytest.raises(DeepSeekV4CoverageError, match="missing/ambiguous moe_routing") as error:
+        load(table, model, replica)
+    assert str(table) in str(error.value)
+
+
+@pytest.mark.parametrize("missing", ["column", "value"])
+def test_balanced_loader_rejects_missing_descriptor(table, model, replica, balanced_routing, missing):
+    rows = write_routing(table, balanced_routing)
+    if missing == "column":
+        rows = rows.drop(columns="moe_routing")
+    else:
+        rows.loc[rows.index[0], "moe_routing"] = None
+    rows.to_csv(table, index=False)
+    replica.moe_gating_routing_runtime_path = "balanced_topk"
+    with pytest.raises(DeepSeekV4CoverageError, match="missing/ambiguous moe_routing"):
+        load(table, model, replica)
+
+
+@pytest.mark.parametrize("invalid", ["json", "missing_origin", "origin_suffix", "sha256"])
+def test_balanced_loader_validates_each_package_descriptor(
+        table, model, replica, balanced_routing, invalid):
+    rows = write_routing(table, balanced_routing)
+    different = dict(balanced_routing)
+    if invalid == "missing_origin":
+        different.pop("origin")
+    elif invalid == "origin_suffix":
+        different["origin"] = "/supplement/package/other.py"
+    elif invalid == "sha256":
+        different["sha256"] = "1" * len(BALANCED_ROUTING_SHA256)
+    rows.loc[rows.index[0], "moe_routing"] = "invalid JSON" if invalid == "json" else canonical_json(different)
+    rows.to_csv(table, index=False)
+    replica.moe_gating_routing_runtime_path = "balanced_topk"
+    with pytest.raises(DeepSeekV4CoverageError, match=r"routing identity mismatch \(moe_routing\)"):
+        load(table, model, replica)

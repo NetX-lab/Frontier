@@ -31,6 +31,7 @@ from frontier.profiling.attention.dsv4_attention_rows import BALANCED_ROUTING_SH
 from frontier.profiling.attention.dsv4_replay_rows import (
     DSV4_REPLAY_OP_NAME, DSV4_REPLAY_ROW_SCHEMA_VERSION, GAP_STATS_PREFIX,
 )
+from frontier.profiling.common.runtime_identity import canonical_json
 from frontier.types import MeasurementType
 
 TIME_STATS_PREFIX = "time_stats"
@@ -76,21 +77,27 @@ def load_attention_dataframe(file_path, model, tp, block_size, measurement_type,
 
 
 def validate_balanced_routing(rows, *, require_descriptor=True):
-    """Select the measured balanced routing identity when the replica requests it."""
-    columns = ("routing_runtime_path", "routing_strategy_sha256")
-    if require_descriptor:
-        columns += ("moe_routing",)
-    for name in columns:
+    """Select the measured balanced routing rows; descriptors may differ only in the package origin."""
+    for name in ("routing_runtime_path", "routing_strategy_sha256"):
         if name not in rows or rows[name].isna().any() or len(rows[name].unique()) != 1:
             raise DeepSeekV4CoverageError(f"V4 balanced replay attention missing/ambiguous {name}")
+    if require_descriptor and ("moe_routing" not in rows or rows.moe_routing.isna().any()):
+        raise DeepSeekV4CoverageError("V4 balanced replay attention missing/ambiguous moe_routing")
     rows = _select_rows(rows, {"routing_runtime_path": "balanced_topk",
         "routing_strategy_sha256": BALANCED_ROUTING_SHA256}, "balanced replay attention")
     if not require_descriptor:
         return rows
+    identities = set()
     try:
-        routing_columns(json.loads(rows.moe_routing.iloc[0]))
+        for value in rows.moe_routing.unique():
+            descriptor = json.loads(value)
+            routing_columns(descriptor)
+            descriptor.pop("origin")
+            identities.add(canonical_json(descriptor))
     except (ValueError, TypeError, AttributeError, KeyError) as exc:
         raise DeepSeekV4CoverageError("V4 balanced replay attention routing identity mismatch (moe_routing)") from exc
+    if len(identities) != 1:
+        raise DeepSeekV4CoverageError("V4 balanced replay attention missing/ambiguous moe_routing")
     return rows
 
 
