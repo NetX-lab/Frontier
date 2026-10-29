@@ -1,0 +1,39 @@
+{
+ "table": "summary.csv",
+ "rows": 384,
+ "columns": 21,
+ "sha256": "f4d52911770cc39939dddc0fa98ce30b530b1cd60ea2bd94070d293e200ca559",
+ "rule": "byte copy: the G5h-16 _02 file, then the G5h-32 _01 file without its header; G5h-16 _02 gives the TP calls and EP16, G5h-32 _01 gives EP32",
+ "workspace_head_at_submission": "eaee355046ea809b716f2e9abf8b00d18fa72cea",
+ "acceptance_report": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_g5h_collective_kernel_comparison.md",
+ "sources": [
+  {
+   "run": "G5h-16 _02",
+   "stage": "g5h16_tp8_dp2_ep16",
+   "rjob": "exp-1028-231342-951824",
+   "local": "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_02/download/summary.csv",
+   "cloud": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/g5h16_tp8_dp2_ep16_02/summary.csv",
+   "topology": "TP8 DP2 EP16",
+   "calls": "all V4 forward calls",
+   "sha256": "c142ac9a876f18f8c3af7386a33dd822a2b48b7c2be30b9df7aefbae71f42673",
+   "output_rows": [
+    0,
+    246
+   ]
+  },
+  {
+   "run": "G5h-32 _01",
+   "stage": "g5h32_tp8_dp4_ep32",
+   "rjob": "exp-1028-231408-632060",
+   "local": "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/download/summary.csv",
+   "cloud": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/g5h32_tp8_dp4_ep32_01/summary.csv",
+   "topology": "TP8 DP4 EP32",
+   "calls": "EP dispatch and combine only",
+   "sha256": "0ca76121531180eb69199a084821feaccd8d65d430d5ecabf04edcd2551990ca",
+   "output_rows": [
+    246,
+    384
+   ]
+  }
+ ]
+}
