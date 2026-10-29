@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-29 | Created: B17b (Codex `66e252e1`) review and lead checks. |
+| 2026-10-29 | Added check 10, the 77-case fidelity matrix at `ffcd85e7`. |
 
 ## Scope
 
@@ -43,6 +44,7 @@ Environment: Python `/data/ycfeng/envs/frontier-py310/bin/python` 3.10.6 (no tor
 | 7 | Dummy smoke matrix (`run_dummy_smoke_matrix.sh`, output `/data/ycfeng/tmp/lead_b17b/smoke`) | 12 of 12 | 12 of 12, rc 0. A first attempt used the host `python3` because my script did not set `PYTHON_BIN`, and stopped at `No module named 'plotly'` (kept as `logs/smoke_wrong_python.log`); the rerun set `PYTHON_BIN` | PASS |
 | 8 | Non-V4 outputs against the B17 lead smoke (`/data/ycfeng/tmp/lead_b17/compare_non_v4.py /data/ycfeng/tmp/lead_b17/smoke /data/ycfeng/tmp/lead_b17b/smoke`) | Every CSV and `system_metrics.json` equal after parsing | 36 of 36 equal | PASS |
 | 9 | `git diff --check` and module sizes | Clean; touched modules at or below 2,000 lines | Clean; `dsv4_runner.py` 66, `dsv4_operator_predictor.py` 386, `dsv4_runtime.py` 101, `dsv4_runner_tables.py` 169, `model_architectures.py` 1,343 | PASS |
+| 10 | 77-case fidelity matrix (A12) on the committed `ffcd85e7`: `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage3/run_fidelity.sh`, which runs `tests/e2e/refactor_fidelity/run_matrix.py run --repo-root /data/ycfeng/Frontier/.worktrees/fidelity-candidate-ffcd85e7 --label candidate_ffcd85e7 --jobs 8 --clean-cache --continue-on-failure`, then `compare` against `/data/ycfeng/tmp/glm53_dsv4/h3o_b/entry2/fidelity/candidate_7003cf1d` | 77 of 77 identical, no failure | `run.log`: source and harness `ffcd85e785e2`, `dirty=False`, 77 of 77 cases rc 0 with artifacts. `compare.log`: 77 compared, 77 identical, 0 mismatched, 0 failures on either side, 0 missing, 0 differing definitions, 0 predictor cache name differences (`comparison.json` in `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage3/fidelity/`) | PASS |
 
 Codex also ran a HEAD-overlay smoke and the same 36-file comparison (36 equal) and a standard-library hand check of all 2,941 rows against the trained exact lookups; I did not repeat those two.
 
@@ -57,4 +59,4 @@ Codex also ran a HEAD-overlay smoke and the same 36-file comparison (36 equal) a
 - Sampling covers the two measured request contracts only; other sampling parameters (penalties, bad words, non-greedy settings) are unmeasured.
 - Sampling rows come from one GPU with TP1; the TP8 path samples the same gathered full-vocabulary logits (inference from the vLLM V1 code path), with no TP8 measurement.
 - The `add_requests` staged copies stay unowned and unpriced (about 15-25 µs on steps with new requests).
-- No E2E replay, no 77-case fidelity matrix and no A11 cross-check are part of this report.
+- No E2E replay and no A11 cross-check are part of this report.
