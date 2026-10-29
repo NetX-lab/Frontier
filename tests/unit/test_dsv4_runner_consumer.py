@@ -14,7 +14,8 @@ from frontier.execution_time_predictor.deepseek_v4 import serving_context, sourc
 from frontier.execution_time_predictor.dsv4_operator_predictor import load_dsv4_runner_dataframe, runner_model_name
 from frontier.execution_time_predictor.dsv4_runner import (
     ZERO_SCOPE, WRITE_SCOPE, INPUT_SCOPE, SAMPLING_SCOPE, BLOCK_TABLE, REPLAY_TABLE,
-    PREPARATION_COLUMNS, preparation_coordinate,
+    PREPARATION_COLUMNS, preparation_coordinate, SAMPLING_COLUMNS, sampling_coordinate,
+    SAMPLING_LOGITS_PROCESSING_BY_ROLE, LOGITS_PROCESSING_OFF, LOGITS_PROCESSING_ON,
 )
 from frontier.moe_ep_workload import materialize_balanced_ep_workload
 from frontier.types import ClusterType
@@ -70,7 +71,7 @@ def test_all_runner_coordinates_exact_and_duplicate_mean(trained):
         rows = load_dsv4_runner_dataframe(directory / table)
         for name, group in rows.groupby('operator'):
             columns = (PREPARATION_COLUMNS if name == INPUT_SCOPE else
-                       ('n',) if name == ZERO_SCOPE else ('w_c', 'r') if name == WRITE_SCOPE else ('b',))
+                       ('n',) if name == ZERO_SCOPE else ('w_c', 'r') if name == WRITE_SCOPE else SAMPLING_COLUMNS)
             for key, measured in group.groupby(list(columns), dropna=False):
                 key = key if isinstance(key, tuple) else (key,)
                 coordinate = dict(zip(columns, key))
@@ -87,11 +88,14 @@ def test_runner_coverage_is_typed_and_includes_coordinate(trained, tmp_path):
     runtime = trained[0]._predictions['dsv4_operators']
     for name, coordinate in (
         (ZERO_SCOPE, {'n': 33}), (WRITE_SCOPE, {'w_c': 33, 'r': 0}),
-        (SAMPLING_SCOPE, {'b': 25}),
+        *((SAMPLING_SCOPE, dict(zip(SAMPLING_COLUMNS, (branch, 25))))
+          for branch in (LOGITS_PROCESSING_OFF, LOGITS_PROCESSING_ON)),
         (INPUT_SCOPE, preparation_coordinate(real_forward(ClusterType.PREFILL)) | {'padded_rows': 6145}),
     ):
-        with pytest.raises(DeepSeekV4CoverageError, match=name):
+        with pytest.raises(DeepSeekV4CoverageError, match=name) as error:
             runtime.runner(name, coordinate)
+        if name == SAMPLING_SCOPE:
+            assert 'needs_logits_processing' in str(error.value) and '25' in str(error.value)
     with pytest.raises(DeepSeekV4CoverageError, match='continuing pair.*2 new entries'):
         runtime.block_table_writes(KVBlockTableWrites(((1, 'compressed', 2),), ()))
     with pytest.raises(DeepSeekV4CoverageError, match='new row.*differ'):
@@ -123,23 +127,28 @@ def test_runner_cache_identity_covers_changed_table(trained):
         assert p._get_model_hash(key, rows) != p._get_model_hash(key, altered)
 
 
-@pytest.mark.parametrize('role', [ClusterType.PREFILL, ClusterType.DECODE])
+@pytest.mark.parametrize('role', [ClusterType.PREFILL, ClusterType.DECODE, ClusterType.MONOLITHIC])
 def test_pd_predictors_construct_and_price_supported_phases(trained, tmp_path, monkeypatch, role):
     monkeypatch.setattr(global_vars, 'KV_CONNECTOR', 'nixl')
     p = RandomForrestExecutionTimePredictor(
         config(), replica(), VllmV1SchedulerConfig(block_size=256),
         MetricsConfig(cache_dir=str(trained[1] / 'cache'), output_dir=str(tmp_path / 'metrics')),
         cluster_type=role, cc_backend=RecordingCCBackend())
-    b = real_forward(role, first_tail=role is ClusterType.DECODE)
+    b = real_forward(role, first_tail=role is not ClusterType.PREFILL)
     first = layer(p, b, 0, include_ffn=False)
     assert first.op_times[INPUT_SCOPE] > 0
     assert 'phase' in first._dsv4_workloads[INPUT_SCOPE]
     assert first._dsv4_workloads[INPUT_SCOPE]['phase'] == ('prefill' if role is ClusterType.PREFILL else 'first_tail')
-    if role is ClusterType.PREFILL:
-        with pytest.raises(DeepSeekV4CoverageError, match='PREFILL sampling is unmeasured'):
-            layer(p, b, 42)
-    else:
-        assert layer(p, b, 42).op_times[SAMPLING_SCOPE] > 0
+    last = layer(p, b, 42)
+    assert last.op_times[SAMPLING_SCOPE] > 0
+    assert last._dsv4_workloads[SAMPLING_SCOPE] == sampling_coordinate(b)
+    assert last._dsv4_workloads[SAMPLING_SCOPE][SAMPLING_COLUMNS[0]] == SAMPLING_LOGITS_PROCESSING_BY_ROLE[role]
+    if role is not ClusterType.PREFILL:
+        full = real_forward(role)
+        assert layer(p, full, 0).op_times[INPUT_SCOPE] > 0
+        full_last = layer(p, full, 42)
+        assert full_last.op_times[SAMPLING_SCOPE] > 0
+        assert full_last._dsv4_workloads[SAMPLING_SCOPE] == sampling_coordinate(full)
     dummy = DummyForwardBatch(0, 0, 0)
     dummy._cluster_type = role
     dummy_first = layer(p, dummy, 0)
@@ -180,22 +189,16 @@ def test_runtime_limitations_describe_operator_path():
     limitations = replica().model_config.get_model_architecture_profile().runtime_limitations
     text = ' '.join(limitations)
     assert 'trained operator execution' in text and 'PREFILL' in text and 'unified DECODE' in text
-    assert 'diagnostic' in text and 'min_tokens' in text
+    assert 'diagnostic' in text and 'min_tokens=max_tokens' in text
+    assert 'logits processing on' in text and 'logits processing off' in text
+    assert 'vLLM 0.28 PD proxy without min_tokens' in text
+    assert 'other sampling parameters are unmeasured' in text
+    assert 'PREFILL sampling without that contract is unmeasured' not in text
     assert 'CPU-overhead' in text and 'PD-AF' in text
 
 
-def test_committed_tables_only_constructor_names_missing_replay(tmp_path, monkeypatch):
-    if (TABLES / REPLAY_TABLE).exists():
-        pytest.skip("accepted replay table has been promoted")
-    monkeypatch.delenv('FRONTIER_DSV4_REPLAY_TABLE', raising=False)
-    monkeypatch.setattr(global_vars, 'KV_CONNECTOR', 'none')
-    monkeypatch.setattr(global_vars, 'DECODE_CUDA_GRAPH_MODE', 'full_and_piecewise')
-    with pytest.raises(DeepSeekV4CoverageError, match=REPLAY_TABLE):
-        construct(tmp_path)
-
-
 @pytest.mark.parametrize('kind', ['decode', 'first_tail', 'prefill', 'dummy_FULL', 'dummy_PIECEWISE', 'dummy_NONE'])
-def test_a1_pd_all_layers_use_tables_and_explicit_prefill_sampling_limit(trained, monkeypatch, kind):
+def test_a1_pd_all_layers_use_committed_tables(trained, monkeypatch, kind):
     p = trained[0]
     role = ClusterType.PREFILL if kind == 'prefill' else ClusterType.DECODE
     monkeypatch.setattr(p, '_cluster_type', role)
@@ -210,12 +213,57 @@ def test_a1_pd_all_layers_use_tables_and_explicit_prefill_sampling_limit(trained
         b = real_forward(role, first_tail=kind == 'first_tail')
     records = []
     for index in range(p._model_config.num_layers):
-        if kind == 'prefill' and index == p._model_config.num_layers - 1:
-            with pytest.raises(DeepSeekV4CoverageError, match='PREFILL sampling is unmeasured'):
-                layer(p, b, index)
-        else:
-            records.append(layer(p, b, index))
+        records.append(layer(p, b, index))
     names = [name for record in records for name in record.op_times]
     assert names.count(INPUT_SCOPE) == 1
-    assert names.count(SAMPLING_SCOPE) == (0 if kind.startswith('dummy_') or kind == 'prefill' else 1)
+    assert names.count(SAMPLING_SCOPE) == (0 if kind.startswith('dummy_') else 1)
     assert all(record._dsv4_kernel_counts for record in records)
+
+
+@pytest.mark.parametrize('branch', [LOGITS_PROCESSING_OFF, LOGITS_PROCESSING_ON])
+def test_sampling_b8_worked_example_matches_row_medians_and_gap(trained, branch):
+    p, _ = trained
+    rows = load_dsv4_runner_dataframe(TABLES / REPLAY_TABLE)
+    branch_column, batch_column = SAMPLING_COLUMNS
+    selected = rows[(rows.operator == SAMPLING_SCOPE) & (rows[branch_column] == branch)
+                    & (rows[batch_column] == 8)]
+    assert not selected.empty
+    coordinate = dict(zip(SAMPLING_COLUMNS, (branch, 8)))
+    prediction = p._predictions['dsv4_operators'].runner(SAMPLING_SCOPE, coordinate)
+    kernels = selected[f'kernel_stats.{SAMPLING_SCOPE}.median'].astype(float).mean()
+    copies = selected[f'memcpy_stats.{SAMPLING_SCOPE}.median'].astype(float).mean()
+    assert prediction.time_ms == pytest.approx(kernels + copies, rel=1e-14)
+    assert set(selected.kernel_count) == {9 if branch == LOGITS_PROCESSING_OFF else 11}
+    assert set(selected.memcpy_count) == {0} and set(selected.memset_count) == {0}
+    assert prediction.kernel_count == selected.activity_count.mean()
+    gap = prediction.kernel_count * p._kernel_gap_ms['eager_preparation']
+    record = type('Layer', (), {'op_times': {SAMPLING_SCOPE: prediction.time_ms},
+                              '_dsv4_scope_gap_ms': {},
+                              '_dsv4_kernel_counts': {SAMPLING_SCOPE: prediction.kernel_count}})()
+    from frontier.execution_time_predictor.dsv4_runtime import add_dsv4_operator_gaps
+    add_dsv4_operator_gaps(p, record, real_forward(ClusterType.MONOLITHIC))
+    assert record._dsv4_operator_gap_ms[SAMPLING_SCOPE] == gap
+
+
+def test_sampling_activity_counts_are_constant_per_branch_and_b(tmp_path):
+    rows = pd.read_csv(TABLES / REPLAY_TABLE, keep_default_na=False)
+    selected = rows[rows.operator == SAMPLING_SCOPE].iloc[[0]].copy()
+    selected['kernel_count'] = selected['kernel_count'].astype(int) + 1
+    selected['activity_count'] = selected['activity_count'].astype(int) + 1
+    path = tmp_path / REPLAY_TABLE
+    pd.concat([rows, selected]).to_csv(path, index=False)
+    with pytest.raises(DeepSeekV4CoverageError, match='activity count varies.*dsv4_sampling'):
+        load_dsv4_runner_dataframe(path)
+
+
+@pytest.mark.parametrize('column,value', [('needs_logits_processing', ''),
+                                         ('needs_logits_processing', 2),
+                                         ('b', 0)])
+def test_sampling_coordinate_loader_rejects_invalid_branch_or_b(tmp_path, column, value):
+    rows = pd.read_csv(TABLES / REPLAY_TABLE, keep_default_na=False)
+    index = rows.index[rows.operator == SAMPLING_SCOPE][0]
+    rows.loc[index, column] = value
+    path = tmp_path / REPLAY_TABLE
+    rows.to_csv(path, index=False)
+    with pytest.raises(DeepSeekV4CoverageError, match=f'dsv4_sampling.*{column}'):
+        load_dsv4_runner_dataframe(path)

@@ -1,5 +1,8 @@
 """Runner coordinates shared by CPU promotion, training and V4 runtime pricing."""
 
+from types import MappingProxyType
+
+from frontier.types import ClusterType
 from frontier.entities.batch import DummyForwardBatch
 from frontier.attention.deepseek_v4 import compute_rows
 from frontier.attention.dsv4_features import (
@@ -17,6 +20,25 @@ PREPARATION_COLUMNS = (
 )
 ACTIVITY_COLUMNS = ("kernel_count", "memcpy_count", "memset_count")
 NEW_ROW_ENTRIES = "new_row_entries"
+SAMPLING_COLUMNS = ("needs_logits_processing", "b")
+LOGITS_PROCESSING_OFF, LOGITS_PROCESSING_ON = 0, 1
+SAMPLING_BRANCH_KERNEL = "_bias_kernel"
+# vLLM 0.28 sampler.py:75-87,192-199 selects a batch-level processing branch.
+# Frontier's fixed output lengths use native min_tokens=max_tokens (EOS bias)
+# for MONOLITHIC and unified DECODE; the 0.28 PD proxy removes min_tokens on
+# PREFILL (pd_proxy.py:103-108). Native P/D traces and G2h-02/04 confirm these
+# branches. This is the simulated request contract, not a tuning parameter.
+SAMPLING_LOGITS_PROCESSING_BY_ROLE = MappingProxyType({
+    ClusterType.MONOLITHIC: LOGITS_PROCESSING_ON,
+    ClusterType.DECODE: LOGITS_PROCESSING_ON,
+    ClusterType.PREFILL: LOGITS_PROCESSING_OFF,
+})
+
+
+def sampling_coordinate(batch):
+    return dict(zip(SAMPLING_COLUMNS, (
+        SAMPLING_LOGITS_PROCESSING_BY_ROLE[batch._cluster_type], len(batch.requests),
+    )))
 
 
 def preparation_coordinate(batch):

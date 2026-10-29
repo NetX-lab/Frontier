@@ -61,10 +61,8 @@ def add_dsv4_operator_gaps(predictor, layer, batch):
 def add_runner_scopes(predictor, batch, layer_id, *, include_attention, include_ffn,
                       selected_logits_rows, times, counts, workloads):
     """Price each runner invocation at its owning boundary, without host time."""
-    from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
     from frontier.entities.batch import DummyForwardBatch
-    from frontier.execution_time_predictor.dsv4_runner import preparation_coordinate
-    from frontier.types import ClusterType
+    from frontier.execution_time_predictor.dsv4_runner import preparation_coordinate, sampling_coordinate
 
     dummy = isinstance(batch, DummyForwardBatch)
 
@@ -100,10 +98,4 @@ def add_runner_scopes(predictor, batch, layer_id, *, include_attention, include_
         price(INPUT_SCOPE, preparation_coordinate(batch))
     if (include_ffn and layer_id == predictor._model_config.num_layers - 1
             and not dummy and selected_logits_rows):
-        if not predictor._enable_dummy_mode and predictor._cluster_type is ClusterType.PREFILL:
-            raise DeepSeekV4CoverageError(
-                "V4 dsv4_sampling: PREFILL sampling is unmeasured; the native P2 proxy "
-                "sets max_tokens=1 and removes min_tokens, while sampling rows require "
-                "min_tokens=max_tokens and the generation-config EOS stop-token bias"
-            )
-        price(SAMPLING_SCOPE, {"b": len(batch.requests)})
+        price(SAMPLING_SCOPE, sampling_coordinate(batch))

@@ -12,7 +12,8 @@ from pathlib import Path
 
 from frontier.execution_time_predictor.dsv4_runner import (
     ZERO_SCOPE, WRITE_SCOPE, INPUT_SCOPE, SAMPLING_SCOPE, PREPARATION_COLUMNS,
-    ACTIVITY_COLUMNS, NEW_ROW_ENTRIES,
+    ACTIVITY_COLUMNS, NEW_ROW_ENTRIES, SAMPLING_COLUMNS, SAMPLING_BRANCH_KERNEL,
+    LOGITS_PROCESSING_OFF, LOGITS_PROCESSING_ON, PHASE_DUMMY,
 )
 from frontier.profiling.model_runner.dsv4_block_operators import BlockGrid
 from frontier.profiling.model_runner.dsv4_runner_rows import COST
@@ -92,6 +93,7 @@ def descriptor_index(attention_path):
 
 def _replay_records(path):
     counts, steps, writes = defaultdict(Counter), {}, defaultdict(list)
+    processing_steps = set()
     with Path(path).open() as handle:
         for line in handle:
             row = json.loads(line)
@@ -101,25 +103,44 @@ def _replay_records(path):
             elif kind == "interval" and row.get("scope") in (INPUT_SCOPE, SAMPLING_SCOPE, WRITE_SCOPE):
                 if row["activity"] != "hold":
                     counts[(row["case_id"], row["scope"], row["step_index"])][row["activity"]] += 1
+                    if (row["scope"] == SAMPLING_SCOPE and row["activity"] == "kernel"
+                            and SAMPLING_BRANCH_KERNEL in row["name"]):
+                        processing_steps.add((row["case_id"], row["step_index"]))
                     if row["scope"] == WRITE_SCOPE:
                         writes[(row["case_id"], row["step_index"])].append(row)
-    return counts, steps, writes
+    return counts, steps, writes, processing_steps
 
 
-def reduce_replay_rows(raw_dir, attention_path, run_tag):
+def reduce_replay_rows(raw_dir, attention_path, run_tag, needs_logits_processing, *,
+                       include_preparation=True):
+    """Verify the declared native sampling branch on every real step before promotion."""
+    if needs_logits_processing not in (LOGITS_PROCESSING_OFF, LOGITS_PROCESSING_ON):
+        raise ValueError(f"Run {run_tag}: invalid {SAMPLING_COLUMNS[0]}={needs_logits_processing}")
     descriptors = descriptor_index(attention_path)
     result, seen, comparisons, inputs = [], {}, [], [Path(attention_path)]
     for raw in sorted(Path(raw_dir).glob("dsv4_raw_e*.jsonl")):
         table = raw.with_suffix(".runner.csv")
         inputs.extend((raw, table))
-        counts, steps, writes = _replay_records(raw)
+        counts, steps, writes, processing_steps = _replay_records(raw)
+        for (case, index), step in steps.items():
+            if step["phase"] == PHASE_DUMMY:
+                continue
+            if (case, SAMPLING_SCOPE, index) not in counts:
+                raise ValueError(f"Run {run_tag}, case {case}, step {index}: missing sampling activity")
+            observed = LOGITS_PROCESSING_ON if (case, index) in processing_steps else LOGITS_PROCESSING_OFF
+            if observed != needs_logits_processing:
+                raise ValueError(
+                    f"Run {run_tag}, case {case}, step {index}: declared "
+                    f"{SAMPLING_COLUMNS[0]}={needs_logits_processing}, observed {observed} "
+                    f"from {SAMPLING_BRANCH_KERNEL}"
+                )
         for row in read_rows(table):
             case, name = row["case_id"], row["operator"]
             if name == WRITE_SCOPE:
                 comparisons.append({"case_id": case, "engine_index": row["engine_index"],
                                     "kernel_median_ms": float(row[f"kernel_stats.{name}.median"]),
                                     "memcpy_median_ms": float(row[f"memcpy_stats.{name}.median"])})
-            if row["row_role"] != COST:
+            if row["row_role"] != COST or (name == INPUT_SCOPE and not include_preparation):
                 continue
             if case not in descriptors:
                 raise ValueError(f"Runner case {case} has no attention descriptor")
@@ -127,11 +148,12 @@ def reduce_replay_rows(raw_dir, attention_path, run_tag):
             if name == INPUT_SCOPE:
                 coordinate = {c: descriptor[c] for c in PREPARATION_COLUMNS}
             elif name == SAMPLING_SCOPE:
-                coordinate = {"b": int(descriptor["batch_size"])}
+                batch_size = int(descriptor["batch_size"])
+                coordinate = dict(zip(SAMPLING_COLUMNS, (needs_logits_processing, batch_size)))
                 # Native sample() uses one logits index per real request,
                 # never graph request padding (model_runner.py:1122-1130,1339-1353).
                 for (step_case, _), step in steps.items():
-                    if step_case == case and len(step["requests"]) != coordinate["b"]:
+                    if step_case == case and len(step["requests"]) != batch_size:
                         raise ValueError(f"Sampling b disagrees with real requests for {case}")
             else:
                 raise ValueError(f"Unexpected cost runner scope {name}")

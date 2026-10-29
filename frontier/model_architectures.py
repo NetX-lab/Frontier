@@ -705,8 +705,9 @@ class ModelArchitectureProfile:
                 "trained operator execution supports MONOLITHIC, PREFILL and unified DECODE "
                 "on measured H200 coordinates; dsv4_step_cost.json is diagnostic only",
                 "PD-AF, prefix caching, speculative decoding / MTP and CPU-overhead modeling are unsupported",
-                "sampling is measured under the native min_tokens=max_tokens contract with "
-                "generation-config EOS stop-token bias only; PREFILL sampling without that contract is unmeasured",
+                "sampling measures MONOLITHIC and unified DECODE requests with min_tokens=max_tokens "
+                "(logits processing on) and PREFILL requests from the vLLM 0.28 PD proxy without min_tokens "
+                "(logits processing off); other sampling parameters are unmeasured",
             ),
             match=lambda config: (
                 _normalized_attr(config, "model_type") == "deepseek_v4"

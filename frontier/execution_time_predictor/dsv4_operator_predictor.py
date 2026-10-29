@@ -28,7 +28,8 @@ from frontier.profiling.moe.moe_rank_plan import CLASS_COLUMNS
 from frontier.types import MeasurementType
 from frontier.execution_time_predictor.dsv4_runner import (
     ZERO_SCOPE, WRITE_SCOPE, INPUT_SCOPE, SAMPLING_SCOPE, BLOCK_TABLE, REPLAY_TABLE,
-    PREPARATION_COLUMNS, ACTIVITY_COLUMNS, NEW_ROW_ENTRIES,
+    PREPARATION_COLUMNS, ACTIVITY_COLUMNS, NEW_ROW_ENTRIES, SAMPLING_COLUMNS,
+    LOGITS_PROCESSING_OFF, LOGITS_PROCESSING_ON,
 )
 
 OPERATOR_MODEL_PREFIX = "dsv4_operator__"
@@ -224,7 +225,22 @@ def load_dsv4_runner_dataframe(path):
         elif name == INPUT_SCOPE:
             columns = PREPARATION_COLUMNS
         elif name == SAMPLING_SCOPE:
-            columns = ("b",)
+            columns = SAMPLING_COLUMNS
+            for column in columns:
+                if column not in row or row[column] == "":
+                    _reject(name, f"missing {column}")
+                # Preparation leaves these columns blank; CSV union columns
+                # consequently arrive as strings even for measured integers.
+                try:
+                    row[column] = pd.to_numeric(row[column], errors="raise")
+                except (ValueError, TypeError) as exc:
+                    raise DeepSeekV4CoverageError(f"V4 {name}: invalid {column}={row[column]!r}") from exc
+                rows.loc[index, column] = row[column]
+            branch_column, batch_column = SAMPLING_COLUMNS
+            branch = _positive_integer(row[branch_column], name, branch_column, allow_zero=True)
+            if branch not in (LOGITS_PROCESSING_OFF, LOGITS_PROCESSING_ON):
+                _reject(name, f"{branch_column} requires {LOGITS_PROCESSING_OFF} or {LOGITS_PROCESSING_ON}")
+            _positive_integer(row[batch_column], name, batch_column)
         else:
             _reject(name, "has no runner coordinate")
         coordinate = (name, *(row[c] for c in columns))
@@ -256,7 +272,7 @@ def train_dsv4_runner_models(block, replay, model_config, train):
             for descriptor, selected in groups:
                 key = runner_model_name(name, *descriptor) if descriptor is not None else runner_model_name(name)
                 columns = (PREPARATION_COLUMNS[2:] if name == INPUT_SCOPE else
-                           ("n",) if name == ZERO_SCOPE else ("w_c", "r") if name == WRITE_SCOPE else ("b",))
+                           ("n",) if name == ZERO_SCOPE else ("w_c", "r") if name == WRITE_SCOPE else SAMPLING_COLUMNS)
                 # The attention descriptor schema leaves geometry blank for
                 # dummies and request padding blank for PIECEWISE. These are
                 # absent coordinates, never synthetic numeric sentinel values.
