@@ -1,0 +1,541 @@
+{
+  "cases": [
+    {
+      "batch_size": 1,
+      "case_id": "e0-prefill-p6144",
+      "engine_index": 0,
+      "estimated_steps": 4,
+      "max_tokens": 1,
+      "measured": 3,
+      "phase": "prefill",
+      "prompt_len": 6144,
+      "warmup": 1
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-decode-b1-p6144",
+      "engine_index": 0,
+      "estimated_steps": 12,
+      "max_tokens": 13,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 6144,
+      "warmup": 2
+    },
+    {
+      "batch_size": 2,
+      "case_id": "e0-decode-b2-p6144",
+      "engine_index": 0,
+      "estimated_steps": 13,
+      "max_tokens": 14,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 6144,
+      "warmup": 2
+    },
+    {
+      "batch_size": 4,
+      "case_id": "e0-decode-b4-p6144",
+      "engine_index": 0,
+      "estimated_steps": 15,
+      "max_tokens": 16,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 6144,
+      "warmup": 2
+    },
+    {
+      "batch_size": 8,
+      "case_id": "e0-decode-b8-p6144",
+      "engine_index": 0,
+      "estimated_steps": 18,
+      "max_tokens": 19,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 6144,
+      "warmup": 2
+    },
+    {
+      "batch_size": 16,
+      "case_id": "e0-decode-b16-p6144",
+      "engine_index": 0,
+      "estimated_steps": 24,
+      "max_tokens": 25,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 6144,
+      "warmup": 2
+    },
+    {
+      "batch_size": 24,
+      "case_id": "e0-decode-b24-p6144",
+      "engine_index": 0,
+      "estimated_steps": 30,
+      "max_tokens": 31,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 6144,
+      "warmup": 2
+    },
+    {
+      "batch_size": 8,
+      "case_id": "e0-decode-b8-p6144-full16",
+      "dp_peer": {
+        "cg_mode": "FULL",
+        "max_query_len": 1,
+        "num_tokens": 16,
+        "uniform_token_count": 1
+      },
+      "engine_index": 0,
+      "estimated_steps": 18,
+      "max_tokens": 19,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 6144,
+      "warmup": 2
+    },
+    {
+      "batch_size": 2,
+      "case_id": "e0-decode-b2-p6144-piecewise4",
+      "dp_peer": {
+        "cg_mode": "PIECEWISE",
+        "max_query_len": 1,
+        "num_tokens": 4,
+        "uniform_token_count": null
+      },
+      "engine_index": 0,
+      "estimated_steps": 13,
+      "max_tokens": 14,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 6144,
+      "warmup": 2
+    },
+    {
+      "batch_size": 8,
+      "case_id": "e0-decode-b8-p6144-piecewise9",
+      "dp_peer": {
+        "cg_mode": "PIECEWISE",
+        "max_query_len": 1,
+        "num_tokens": 9,
+        "uniform_token_count": null
+      },
+      "engine_index": 0,
+      "estimated_steps": 18,
+      "max_tokens": 19,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 6144,
+      "warmup": 2
+    },
+    {
+      "batch_size": 4,
+      "case_id": "e0-decode-b4-p7150",
+      "engine_index": 0,
+      "estimated_steps": 15,
+      "max_tokens": 16,
+      "measured": 8,
+      "phase": "decode",
+      "prompt_len": 7150,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-full1",
+      "dp_peer": {
+        "cg_mode": "FULL",
+        "max_query_len": 1,
+        "num_tokens": 1,
+        "uniform_token_count": 1
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-full2",
+      "dp_peer": {
+        "cg_mode": "FULL",
+        "max_query_len": 1,
+        "num_tokens": 2,
+        "uniform_token_count": 1
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-full4",
+      "dp_peer": {
+        "cg_mode": "FULL",
+        "max_query_len": 1,
+        "num_tokens": 4,
+        "uniform_token_count": 1
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-full8",
+      "dp_peer": {
+        "cg_mode": "FULL",
+        "max_query_len": 1,
+        "num_tokens": 8,
+        "uniform_token_count": 1
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-full16",
+      "dp_peer": {
+        "cg_mode": "FULL",
+        "max_query_len": 1,
+        "num_tokens": 16,
+        "uniform_token_count": 1
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-piecewise1",
+      "dp_peer": {
+        "cg_mode": "PIECEWISE",
+        "max_query_len": 1,
+        "num_tokens": 1,
+        "uniform_token_count": null
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-piecewise2",
+      "dp_peer": {
+        "cg_mode": "PIECEWISE",
+        "max_query_len": 1,
+        "num_tokens": 2,
+        "uniform_token_count": null
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-piecewise4",
+      "dp_peer": {
+        "cg_mode": "PIECEWISE",
+        "max_query_len": 1,
+        "num_tokens": 4,
+        "uniform_token_count": null
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-piecewise8",
+      "dp_peer": {
+        "cg_mode": "PIECEWISE",
+        "max_query_len": 1,
+        "num_tokens": 8,
+        "uniform_token_count": null
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e0-dummy-none6144",
+      "dp_peer": {
+        "cg_mode": "NONE",
+        "max_query_len": 6144,
+        "num_tokens": 6144,
+        "uniform_token_count": null
+      },
+      "engine_index": 0,
+      "estimated_steps": 10,
+      "max_tokens": 0,
+      "measured": 8,
+      "phase": "dummy",
+      "prompt_len": 0,
+      "warmup": 2
+    },
+    {
+      "batch_size": 1,
+      "case_id": "e1-first_tail-b0-p6144",
+      "engine_index": 1,
+      "estimated_steps": 8,
+      "max_tokens": 1024,
+      "measured": 3,
+      "phase": "first_tail",
+      "prompt_len": 6144,
+      "warmup": 1
+    },
+    {
+      "batch_size": 4,
+      "case_id": "e1-first_tail-b3-p6144",
+      "engine_index": 1,
+      "estimated_steps": 13,
+      "max_tokens": 1024,
+      "measured": 3,
+      "phase": "first_tail",
+      "prompt_len": 6144,
+      "warmup": 1
+    },
+    {
+      "batch_size": 8,
+      "case_id": "e1-first_tail-b7-p6144",
+      "engine_index": 1,
+      "estimated_steps": 16,
+      "max_tokens": 1024,
+      "measured": 3,
+      "phase": "first_tail",
+      "prompt_len": 6144,
+      "warmup": 1
+    },
+    {
+      "batch_size": 11,
+      "case_id": "e1-first_tail-b10-p6144",
+      "engine_index": 1,
+      "estimated_steps": 18,
+      "max_tokens": 1024,
+      "measured": 3,
+      "phase": "first_tail",
+      "prompt_len": 6144,
+      "warmup": 1
+    }
+  ],
+  "engines": [
+    {
+      "block_size": 256,
+      "chunk_budget": 8192,
+      "engine_index": 0,
+      "max_model_len": 7168,
+      "max_num_seqs": 128,
+      "prefill_query_len": 0
+    },
+    {
+      "block_size": 256,
+      "chunk_budget": 8192,
+      "engine_index": 1,
+      "max_model_len": 7168,
+      "max_num_seqs": 128,
+      "prefill_query_len": 6143
+    }
+  ],
+  "hf_overrides": {
+    "compress_ratios": [
+      0,
+      0,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4
+    ],
+    "num_attention_heads": 8,
+    "num_hidden_layers": 11,
+    "o_groups": 1
+  },
+  "kv_cache_dtype": "fp8",
+  "limits": {
+    "block_size": 256,
+    "chunk_budgets": [
+      8192
+    ],
+    "cudagraph_capture_sizes": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      24,
+      32,
+      40,
+      48,
+      56,
+      64,
+      72,
+      80,
+      88,
+      96,
+      104,
+      112,
+      120,
+      128,
+      136,
+      144,
+      152,
+      160,
+      168,
+      176,
+      184,
+      192,
+      200,
+      208,
+      216,
+      224,
+      232,
+      240,
+      248,
+      256
+    ],
+    "cudagraph_mode": "FULL_AND_PIECEWISE",
+    "decode_measured_steps": 8,
+    "decode_warmup_steps": 2,
+    "engine_policy": "graph_replay",
+    "max_context_len": 7168,
+    "max_kv_tokens_per_lane": 267665,
+    "max_num_seqs": 128,
+    "prefill_measured_repeats": 3,
+    "prefill_warmup_repeats": 1,
+    "step_hold_us": 200000.0
+  },
+  "schema_version": "dsv4_attention_plan.v1",
+  "shape": {
+    "csa_compress_ratio": 4,
+    "dtype": "bfloat16",
+    "hca_compress_ratio": 128,
+    "head_dim": 512,
+    "heads_per_rank": 8,
+    "hidden_size": 4096,
+    "index_head_dim": 128,
+    "index_n_heads": 64,
+    "index_topk": 512,
+    "layers": [
+      {
+        "attention_variant": "uncompressed",
+        "compress_ratio": 0,
+        "global_layer_id": 0,
+        "plans_tile_schedule": true
+      },
+      {
+        "attention_variant": "uncompressed",
+        "compress_ratio": 0,
+        "global_layer_id": 1,
+        "plans_tile_schedule": true
+      },
+      {
+        "attention_variant": "csa",
+        "compress_ratio": 4,
+        "global_layer_id": 2,
+        "plans_tile_schedule": true
+      },
+      {
+        "attention_variant": "hca",
+        "compress_ratio": 128,
+        "global_layer_id": 3,
+        "plans_tile_schedule": true
+      },
+      {
+        "attention_variant": "csa",
+        "compress_ratio": 4,
+        "global_layer_id": 4,
+        "plans_tile_schedule": false
+      },
+      {
+        "attention_variant": "hca",
+        "compress_ratio": 128,
+        "global_layer_id": 5,
+        "plans_tile_schedule": false
+      },
+      {
+        "attention_variant": "csa",
+        "compress_ratio": 4,
+        "global_layer_id": 6,
+        "plans_tile_schedule": false
+      },
+      {
+        "attention_variant": "hca",
+        "compress_ratio": 128,
+        "global_layer_id": 7,
+        "plans_tile_schedule": false
+      },
+      {
+        "attention_variant": "csa",
+        "compress_ratio": 4,
+        "global_layer_id": 8,
+        "plans_tile_schedule": false
+      },
+      {
+        "attention_variant": "hca",
+        "compress_ratio": 128,
+        "global_layer_id": 9,
+        "plans_tile_schedule": false
+      },
+      {
+        "attention_variant": "csa",
+        "compress_ratio": 4,
+        "global_layer_id": 10,
+        "plans_tile_schedule": false
+      }
+    ],
+    "model_arch": "generic",
+    "model_architecture_profile": "deepseek_v4",
+    "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+    "model_type": "deepseek_v4",
+    "num_attention_heads": 64,
+    "o_groups": 8,
+    "o_groups_per_rank": 1,
+    "o_lora_rank": 1024,
+    "q_lora_rank": 1024,
+    "qk_rope_head_dim": 64,
+    "short_context_max_seq_len": 2051,
+    "sliding_window": 128,
+    "target_tensor_parallel_size": 8,
+    "total_num_layers": 43
+  }
+}
