@@ -1,0 +1,29 @@
+{
+  "image_python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "image_executable": "/usr/bin/python3",
+  "image_platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.39",
+  "mounted_python": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "mounted_is_symlink": true,
+  "mounted_target": "/usr/bin/python3.10",
+  "mounted_target_exists": false,
+  "repo_exists": true,
+  "canonical": {
+    "exception": "FileNotFoundError",
+    "message": "[Errno 2] No such file or directory: '/data/ycfeng/envs/frontier-py310/bin/python'"
+  },
+  "image": {
+    "exit": 0,
+    "stdout": "{\"python\": \"3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]\", \"executable\": \"/usr/bin/python3\", \"frontier_main_import\": true}\n",
+    "stderr": ""
+  },
+  "image_packages": {
+    "numpy": "2.2.6",
+    "pandas": null,
+    "scipy": null,
+    "scikit-learn": null,
+    "plotly": null,
+    "torch": "2.13.0+cu130",
+    "vllm": "0.1.dev22912+g8224bb82f",
+    "cloudpickle": "3.1.2"
+  }
+}

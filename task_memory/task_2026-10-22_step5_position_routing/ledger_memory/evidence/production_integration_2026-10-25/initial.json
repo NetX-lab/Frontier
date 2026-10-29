@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "merge",
+    "--no-ff",
+    "--no-commit",
+    "fix/d29-ledger-stream"
+  ],
+  "start_head": "094ecce3ac654e0f425eddaf48079bf105ae58ba",
+  "candidate": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "returncode": 1,
+  "collected_utc": "2026-10-24T19:03:48.911095+00:00",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview"
+}

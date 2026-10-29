@@ -1,0 +1,9 @@
+{
+  "check": "matrix",
+  "raw_exits": [
+    0,
+    0
+  ],
+  "receipt": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-matrix/execution.json",
+  "source_unchanged": true
+}

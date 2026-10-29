@@ -1,0 +1,30 @@
+{
+  "description": "D18-COMM H200 first-prefill diagnostic only: TP8/DP4/EP32, one full 6144-token query and three one-token idle lanes. Not formal collection, decode coverage, runtime qualification or cost admission.",
+  "credential_environment": "/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh",
+  "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+  "resources": {"gpu":8,"replica":4,"cpu":32,"mem_gb":128,"positive_tags":["H200"],"charged_group":"step_main","cloud_mount":"juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp","timeout_seconds":1800},
+  "engine": {"tensor_parallel_size":8,"data_parallel_size":4,"pipeline_parallel_size":1,"enable_expert_parallel":true,"all2all_backend":"allgather_reducescatter","dtype":"bfloat16","async_scheduling":false,"disable_custom_all_reduce":false,"moe_backend":"auto"},
+  "gpus_per_node":8,
+  "rendezvous":{"master_port":29620,"probe_port":29621},
+  "warmup_calls":3,"repeats":30,"calls_per_repeat":5,"passes":3,"shuffle_seed":20261020,
+  "grid": {
+    "scenarios":[
+      {"name":"eager_first_prefill_t6144","tokens_per_dp_rank":[6144,1,1,1],"logit_rows_per_dp_rank":[1,0,0,0],"useful_tokens_per_dp_rank":[6144,0,0,0],"cuda_graph":false}
+    ]
+  },
+  "native_probe":{"layers":[3,88],"tokens_per_dp_rank":[6144,1,1,1]},
+  "canonical_workload":"data/processed_traces/canonical_fixed_6144_1024_req128_qps1",
+  "coverage": {
+    "stage":"source_cpu_prepared_native_quality_required",
+    "formal_collection_ready":false,
+    "prefill":"6144-token full query on DP owner 0 with three one-token native dummy lanes; isolated first-step diagnostic only, native owner/padding confirmation pending",
+    "decode":"UNKNOWN: capture sizes, reached physical batches and DP padding require native H200 runtime/graph/memory qualification; QPS 1 does not imply batch 1",
+    "other_eager_steps":"UNKNOWN: concurrent prefills, decode-tail recompute and mixed DP token splits need native reached-shape evidence",
+    "rails":"8 concurrent DP4 groups; no single-rail scaling or EP32 all-to-all",
+    "transport":"Fresh per-node RDMA channels plus native rank/group/rail identities required; existing logs do not attribute every channel to a DP communicator, so per-rail transport attribution remains UNVERIFIED unless native evidence resolves it",
+    "queue_quality":"Fresh all-participating-rank holds and unchanged strict <1% held-only median-shift check required; no timing repair or cost fit claimed",
+    "formal_dependency":"Qualified H200 P32/D32 TP8/DP4/EP32/PP1 runtime, memory and decode graph replay; observed required-shape coverage before formal collection",
+    "shared_manifest_sha256":"5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3"
+  },
+  "expected_wall_minutes":15,"expected_gpu_hours":8.0
+}

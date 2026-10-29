@@ -1,0 +1,468 @@
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:1: trailing whitespace.
++path	owner	kind	cap	actual	headroom
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:2: trailing whitespace.
++frontier/attention/step5.py	pricing	superproject	3	3	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:3: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/htsim_runner.py	pricing	submodule_pinned	54	54	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:4: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/python/collective_sim_core/intra_server_model.py	pricing	submodule_pinned	77	77	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:5: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/python/collective_sim_core/predictor.py	pricing	submodule_pinned	30	30	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:6: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/python/collective_sim_core/schema.py	pricing	submodule_pinned	53	53	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:7: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/tests/test_grouped_plan_input.py	pricing	submodule_pinned	119	119	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:8: trailing whitespace.
++frontier/cc_backend/backends/collective_sim_cc_backend.py	pricing	superproject	93	93	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:9: trailing whitespace.
++frontier/cc_backend/base_cc_backend.py	pricing	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:10: trailing whitespace.
++frontier/cc_backend/collective_plan.py	pricing	superproject	139	139	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:11: trailing whitespace.
++frontier/cc_backend/collective_profile.py	core_source	superproject	20	20	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:12: trailing whitespace.
++frontier/config/quantization_manager.py	pricing	superproject	19	19	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:13: trailing whitespace.
++frontier/config/replica_config.py	core_source	superproject	16	16	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:14: trailing whitespace.
++frontier/entities/execution_time.py	pricing	superproject	50	50	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:15: trailing whitespace.
++frontier/entities/time_components.py	pricing	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:16: trailing whitespace.
++frontier/execution_time_predictor/layer_contract_resolution.py	core_source	superproject	11	11	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:17: trailing whitespace.
++frontier/execution_time_predictor/moe_dataset_training.py	core_source	superproject	164	162	2
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:18: trailing whitespace.
++frontier/execution_time_predictor/moe_operator_times.py	pricing	superproject	79	79	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:19: trailing whitespace.
++frontier/execution_time_predictor/moe_routing_workload.py	core_source	superproject	196	196	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:20: trailing whitespace.
++frontier/execution_time_predictor/prediction_family_trainers.py	core_source	superproject	82	80	2
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:21: trailing whitespace.
++frontier/execution_time_predictor/prediction_model_registry.py	core_source	superproject	104	104	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:22: trailing whitespace.
++frontier/execution_time_predictor/profiling_dataframe_loaders.py	core_source	superproject	13	13	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:23: trailing whitespace.
++frontier/execution_time_predictor/shared_prediction_model_manager.py	core_source	superproject	6	6	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:24: trailing whitespace.
++frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py	core_source	superproject	32	32	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:25: trailing whitespace.
++frontier/execution_time_predictor/sklearn_execution_time_predictor.py	pricing	superproject	6	6	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:26: trailing whitespace.
++frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py	core_source	superproject	113	113	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:27: trailing whitespace.
++frontier/execution_time_predictor/step5.py	core_source	superproject	34	34	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:28: trailing whitespace.
++frontier/execution_time_predictor/step5_cost.py	pricing	superproject	39	39	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:29: trailing whitespace.
++frontier/metrics/constants.py	pricing	superproject	3	3	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:30: trailing whitespace.
++frontier/metrics/ep_wave_metrics.py	pricing	superproject	22	22	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:31: trailing whitespace.
++frontier/metrics/metrics_store.py	core_source	superproject	36	33	3
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:32: trailing whitespace.
++frontier/metrics/op_trace_utils.py	pricing	superproject	45	45	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:33: trailing whitespace.
++frontier/metrics/trace_store.py	core_source	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:34: trailing whitespace.
++frontier/moe_ep_workload.py	core_source	superproject	48	48	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:35: trailing whitespace.
++frontier/moe_load_imbalance.py	core_source	superproject	51	51	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:36: trailing whitespace.
++frontier/moe_routing_policy.py	core_source	superproject	207	207	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:37: trailing whitespace.
++frontier/moe_routing_runtime.py	core_source	superproject	103	103	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:38: trailing whitespace.
++frontier/operators/families.py	pricing	superproject	42	42	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:39: trailing whitespace.
++frontier/operators/spec.py	pricing	superproject	20	20	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:40: trailing whitespace.
++frontier/profiling/collectives/step5_dispatch_probe.py	pricing	superproject	235	235	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:41: trailing whitespace.
++frontier/profiling/collectives/vllm_collective_benchmark.py	pricing	superproject	316	316	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:42: trailing whitespace.
++frontier/profiling/collectives/vllm_forward_collectives.py	pricing	superproject	25	25	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:43: trailing whitespace.
++frontier/profiling/common/layers/layernorm.py	core_source	superproject	12	12	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:44: trailing whitespace.
++frontier/profiling/common/runtime_identity.py	core_source	superproject	133	133	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:45: trailing whitespace.
++frontier/profiling/common/step5_job.py	core_source	superproject	67	67	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:46: trailing whitespace.
++frontier/profiling/linear_op/main.py	core_source	superproject	29	29	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:47: trailing whitespace.
++frontier/profiling/moe/fp8_block_experts.py	pricing	superproject	106	106	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:48: trailing whitespace.
++frontier/profiling/moe/inputs.py	core_source	superproject	123	123	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:49: trailing whitespace.
++frontier/profiling/moe/load_distribution.py	core_source	superproject	1	1	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:50: trailing whitespace.
++frontier/profiling/moe/main.py	core_source	superproject	116	116	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:51: trailing whitespace.
++frontier/profiling/moe/moe_impl.py	core_source	superproject	56	56	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:52: trailing whitespace.
++frontier/profiling/moe/moe_vllm_kernel.py	pricing	superproject	12	12	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:53: trailing whitespace.
++frontier/profiling/moe/moe_wrapper.py	core_source	superproject	169	169	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:54: trailing whitespace.
++frontier/profiling/step5/job.py	core_source	superproject	49	49	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:55: trailing whitespace.
++frontier/profiling/step5/vllm_wrapper.py	core_source	superproject	15	15	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:56: trailing whitespace.
++frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py	core_source	superproject	11	11	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:57: trailing whitespace.
++frontier/scheduler/utils/batch_builders.py	pricing	superproject	4	4	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:58: trailing whitespace.
++frontier/scheduler/utils/ep_trace.py	core_source	superproject	13	11	2
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:59: trailing whitespace.
++frontier/scheduler/utils/ep_wave.py	core_source	superproject	7	5	2
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:60: trailing whitespace.
++frontier/scheduler/utils/expert_parallel.py	pricing	superproject	6	6	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:61: trailing whitespace.
++frontier/scheduler/utils/layer_workload.py	core_source	superproject	22	22	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:62: trailing whitespace.
++native-image/vllm/forward_context.py	native	native_image_patch	35	15	20
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:63: trailing whitespace.
++native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py	native	native_image_patch	15	3	12
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:64: trailing whitespace.
++native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py	native	native_image_patch	70	70	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:65: trailing whitespace.
++native-image/vllm/models/step5/nvidia/model.py	native	native_image_patch	30	11	19
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:66: trailing whitespace.
++tests/comparison/calibration/pd_proxy.py	native	superproject	8	4	4
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:67: trailing whitespace.
++tests/comparison/dp_placement_pp/vllm_replay.py	native	superproject	70	24	46
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:68: trailing whitespace.
++tests/integration/run_step5_measured_main.py	core_source	superproject	67	56	11
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:69: trailing whitespace.
++tests/integration/step5_comm/analyze_result.py	pricing	superproject	2	2	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:70: trailing whitespace.
++tests/integration/step5_comm/export_costs.py	pricing	superproject	297	297	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:71: trailing whitespace.
++tests/integration/step5_comm/prepare.py	pricing	superproject	70	70	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:72: trailing whitespace.
++tests/integration/step5_comm/step5_position_model_run.json	pricing	superproject	68	68	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:73: trailing whitespace.
++tests/integration/step5_comm/validate_result.py	pricing	superproject	93	93	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:74: trailing whitespace.
++tests/integration/step5_comm/worker.py	pricing	superproject	38	38	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:75: trailing whitespace.
++tests/integration/step5_environment/test_position_cyclic_graph.py	native	superproject	306	306	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:76: trailing whitespace.
++tests/integration/step5_measured_compute_fixture.py	core_source	superproject	148	148	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:77: trailing whitespace.
++tests/integration/step5_native_image/Dockerfile.position_cyclic	native	superproject	28	19	9
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:78: trailing whitespace.
++tests/integration/step5_native_image/build_image.py	native	superproject	86	69	17
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:79: trailing whitespace.
++tests/integration/step5_pd/r2_canonical.py	native	superproject	20	16	4
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:80: trailing whitespace.
++tests/integration/step5_pd/r2_replay.py	native	superproject	35	12	23
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:81: trailing whitespace.
++tests/integration/step5_pd/r2_runtime.py	native	superproject	149	149	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:82: trailing whitespace.
++tests/integration/step5_pd/r2_stage.py	native	superproject	30	12	18
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:83: trailing whitespace.
++tests/integration/step5_pd/verify_r2_stage.py	native	superproject	50	19	31
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:84: trailing whitespace.
++tests/integration/step5_profiling/run_on_worker.sh	core_source	superproject	21	21	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:85: trailing whitespace.
++tests/integration/step5_profiling/submit_profiling_job.py	core_source	superproject	3	3	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:86: trailing whitespace.
++tests/integration/step5_profiling/verify_fixed_probe.py	core_source	superproject	41	41	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:87: trailing whitespace.
++tests/integration/test_step5_measured_main.py	core_source	superproject	325	320	5
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:88: trailing whitespace.
++tests/performance/step5_actual06_iteration.py	core_source	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:89: trailing whitespace.
++tests/unit/test_collective_benchmark_helpers.py	pricing	superproject	152	152	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:90: trailing whitespace.
++tests/unit/test_collective_sim_cc_backend.py	pricing	superproject	237	237	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:91: trailing whitespace.
++tests/unit/test_comm_operator_families.py	pricing	superproject	62	62	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:92: trailing whitespace.
++tests/unit/test_dsv4_precision_metadata.py	pricing	superproject	2	2	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:93: trailing whitespace.
++tests/unit/test_ep_wave_trace_context.py	pricing	superproject	49	49	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:94: trailing whitespace.
++tests/unit/test_moe_grouped_gemm_padded_features.py	core_source	superproject	231	231	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:95: trailing whitespace.
++tests/unit/test_moe_position_routing.py	core_source	superproject	159	159	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:96: trailing whitespace.
++tests/unit/test_moe_profiling_output_metadata.py	core_source	superproject	125	125	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:97: trailing whitespace.
++tests/unit/test_moe_routing_conservation.py	core_source	superproject	63	63	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:98: trailing whitespace.
++tests/unit/test_moe_routing_runtime.py	core_source	superproject	147	147	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:99: trailing whitespace.
++tests/unit/test_moe_share_expert_operator_families.py	pricing	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:100: trailing whitespace.
++tests/unit/test_op_trace_utils.py	pricing	superproject	47	47	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:101: trailing whitespace.
++tests/unit/test_prediction_measurement_bindings.py	core_source	superproject	348	348	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:102: trailing whitespace.
++tests/unit/test_step5_attention_profiling.py	core_source	superproject	15	15	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:103: trailing whitespace.
++tests/unit/test_step5_canonical_g3.py	native	superproject	155	129	26
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:104: trailing whitespace.
++tests/unit/test_step5_comm_cost_export.py	pricing	superproject	271	271	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:105: trailing whitespace.
++tests/unit/test_step5_comm_package.py	pricing	superproject	84	84	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:106: trailing whitespace.
++tests/unit/test_step5_comm_transport.py	pricing	superproject	204	204	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:107: trailing whitespace.
++tests/unit/test_step5_contract_reuse.py	pricing	superproject	1	0	1
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:108: trailing whitespace.
++tests/unit/test_step5_dispatch_probe.py	pricing	superproject	329	329	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:109: trailing whitespace.
++tests/unit/test_step5_fixed_probe.py	core_source	superproject	150	150	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:110: trailing whitespace.
++tests/unit/test_step5_measured_ffn.py	core_source	superproject	105	105	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:111: trailing whitespace.
++tests/unit/test_step5_moe_pricing.py	pricing	superproject	311	311	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:112: trailing whitespace.
++tests/unit/test_step5_moe_profiling.py	core_source	superproject	344	344	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:113: trailing whitespace.
++tests/unit/test_step5_native_image.py	native	superproject	24	24	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:114: trailing whitespace.
++tests/unit/test_step5_native_pd_r2_observation.py	native	superproject	152	152	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:115: trailing whitespace.
++tests/unit/test_step5_native_position_cyclic.py	native	superproject	313	313	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:116: trailing whitespace.
++tests/unit/test_step5_native_reference.py	native	superproject	6	3	3
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv:117: trailing whitespace.
++tests/unit/test_step5_request_free_profiling.py	core_source	superproject	25	25	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:1: trailing whitespace.
++path	owner	kind	cap	actual	headroom
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:2: trailing whitespace.
++frontier/attention/step5.py	pricing	superproject	3	3	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:3: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/htsim_runner.py	pricing	submodule_pinned	54	54	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:4: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/python/collective_sim_core/intra_server_model.py	pricing	submodule_pinned	77	77	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:5: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/python/collective_sim_core/predictor.py	pricing	submodule_pinned	30	30	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:6: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/python/collective_sim_core/schema.py	pricing	submodule_pinned	53	53	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:7: trailing whitespace.
++frontier/cc_backend/backends/collective-sim/tests/test_grouped_plan_input.py	pricing	submodule_pinned	119	119	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:8: trailing whitespace.
++frontier/cc_backend/backends/collective_sim_cc_backend.py	pricing	superproject	93	93	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:9: trailing whitespace.
++frontier/cc_backend/base_cc_backend.py	pricing	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:10: trailing whitespace.
++frontier/cc_backend/collective_plan.py	pricing	superproject	139	139	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:11: trailing whitespace.
++frontier/cc_backend/collective_profile.py	core_source	superproject	20	20	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:12: trailing whitespace.
++frontier/config/quantization_manager.py	pricing	superproject	19	19	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:13: trailing whitespace.
++frontier/config/replica_config.py	core_source	superproject	16	16	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:14: trailing whitespace.
++frontier/entities/execution_time.py	pricing	superproject	50	50	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:15: trailing whitespace.
++frontier/entities/time_components.py	pricing	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:16: trailing whitespace.
++frontier/execution_time_predictor/layer_contract_resolution.py	core_source	superproject	11	11	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:17: trailing whitespace.
++frontier/execution_time_predictor/moe_dataset_training.py	core_source	superproject	164	162	2
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:18: trailing whitespace.
++frontier/execution_time_predictor/moe_operator_times.py	pricing	superproject	79	79	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:19: trailing whitespace.
++frontier/execution_time_predictor/moe_routing_workload.py	core_source	superproject	196	196	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:20: trailing whitespace.
++frontier/execution_time_predictor/prediction_family_trainers.py	core_source	superproject	82	80	2
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:21: trailing whitespace.
++frontier/execution_time_predictor/prediction_model_registry.py	core_source	superproject	104	104	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:22: trailing whitespace.
++frontier/execution_time_predictor/profiling_dataframe_loaders.py	core_source	superproject	13	13	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:23: trailing whitespace.
++frontier/execution_time_predictor/shared_prediction_model_manager.py	core_source	superproject	6	6	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:24: trailing whitespace.
++frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py	core_source	superproject	32	32	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:25: trailing whitespace.
++frontier/execution_time_predictor/sklearn_execution_time_predictor.py	pricing	superproject	6	6	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:26: trailing whitespace.
++frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py	core_source	superproject	113	113	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:27: trailing whitespace.
++frontier/execution_time_predictor/step5.py	core_source	superproject	34	34	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:28: trailing whitespace.
++frontier/execution_time_predictor/step5_cost.py	pricing	superproject	39	39	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:29: trailing whitespace.
++frontier/metrics/constants.py	pricing	superproject	3	3	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:30: trailing whitespace.
++frontier/metrics/ep_wave_metrics.py	pricing	superproject	22	22	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:31: trailing whitespace.
++frontier/metrics/metrics_store.py	core_source	superproject	36	33	3
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:32: trailing whitespace.
++frontier/metrics/op_trace_utils.py	pricing	superproject	45	45	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:33: trailing whitespace.
++frontier/metrics/trace_store.py	core_source	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:34: trailing whitespace.
++frontier/moe_ep_workload.py	core_source	superproject	48	48	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:35: trailing whitespace.
++frontier/moe_load_imbalance.py	core_source	superproject	51	51	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:36: trailing whitespace.
++frontier/moe_routing_policy.py	core_source	superproject	207	207	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:37: trailing whitespace.
++frontier/moe_routing_runtime.py	core_source	superproject	103	103	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:38: trailing whitespace.
++frontier/operators/families.py	pricing	superproject	42	42	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:39: trailing whitespace.
++frontier/operators/spec.py	pricing	superproject	20	20	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:40: trailing whitespace.
++frontier/profiling/collectives/step5_dispatch_probe.py	pricing	superproject	235	235	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:41: trailing whitespace.
++frontier/profiling/collectives/vllm_collective_benchmark.py	pricing	superproject	316	316	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:42: trailing whitespace.
++frontier/profiling/collectives/vllm_forward_collectives.py	pricing	superproject	25	25	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:43: trailing whitespace.
++frontier/profiling/common/layers/layernorm.py	core_source	superproject	12	12	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:44: trailing whitespace.
++frontier/profiling/common/runtime_identity.py	core_source	superproject	133	133	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:45: trailing whitespace.
++frontier/profiling/common/step5_job.py	core_source	superproject	67	67	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:46: trailing whitespace.
++frontier/profiling/linear_op/main.py	core_source	superproject	29	29	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:47: trailing whitespace.
++frontier/profiling/moe/fp8_block_experts.py	pricing	superproject	106	106	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:48: trailing whitespace.
++frontier/profiling/moe/inputs.py	core_source	superproject	123	123	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:49: trailing whitespace.
++frontier/profiling/moe/load_distribution.py	core_source	superproject	1	1	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:50: trailing whitespace.
++frontier/profiling/moe/main.py	core_source	superproject	116	116	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:51: trailing whitespace.
++frontier/profiling/moe/moe_impl.py	core_source	superproject	56	56	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:52: trailing whitespace.
++frontier/profiling/moe/moe_vllm_kernel.py	pricing	superproject	12	12	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:53: trailing whitespace.
++frontier/profiling/moe/moe_wrapper.py	core_source	superproject	169	169	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:54: trailing whitespace.
++frontier/profiling/step5/job.py	core_source	superproject	49	49	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:55: trailing whitespace.
++frontier/profiling/step5/vllm_wrapper.py	core_source	superproject	15	15	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:56: trailing whitespace.
++frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py	core_source	superproject	11	11	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:57: trailing whitespace.
++frontier/scheduler/utils/batch_builders.py	pricing	superproject	4	4	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:58: trailing whitespace.
++frontier/scheduler/utils/ep_trace.py	core_source	superproject	13	11	2
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:59: trailing whitespace.
++frontier/scheduler/utils/ep_wave.py	core_source	superproject	7	5	2
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:60: trailing whitespace.
++frontier/scheduler/utils/expert_parallel.py	pricing	superproject	6	6	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:61: trailing whitespace.
++frontier/scheduler/utils/layer_workload.py	core_source	superproject	22	22	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:62: trailing whitespace.
++native-image/vllm/forward_context.py	native	native_image_patch	35	15	20
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:63: trailing whitespace.
++native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py	native	native_image_patch	15	3	12
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:64: trailing whitespace.
++native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py	native	native_image_patch	70	70	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:65: trailing whitespace.
++native-image/vllm/models/step5/nvidia/model.py	native	native_image_patch	30	11	19
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:66: trailing whitespace.
++tests/comparison/calibration/pd_proxy.py	native	superproject	8	4	4
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:67: trailing whitespace.
++tests/comparison/dp_placement_pp/vllm_replay.py	native	superproject	70	24	46
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:68: trailing whitespace.
++tests/integration/run_step5_measured_main.py	core_source	superproject	67	56	11
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:69: trailing whitespace.
++tests/integration/step5_comm/analyze_result.py	pricing	superproject	2	2	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:70: trailing whitespace.
++tests/integration/step5_comm/export_costs.py	pricing	superproject	297	297	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:71: trailing whitespace.
++tests/integration/step5_comm/prepare.py	pricing	superproject	70	70	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:72: trailing whitespace.
++tests/integration/step5_comm/step5_position_model_run.json	pricing	superproject	68	68	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:73: trailing whitespace.
++tests/integration/step5_comm/validate_result.py	pricing	superproject	93	93	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:74: trailing whitespace.
++tests/integration/step5_comm/worker.py	pricing	superproject	38	38	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:75: trailing whitespace.
++tests/integration/step5_environment/test_position_cyclic_graph.py	native	superproject	306	306	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:76: trailing whitespace.
++tests/integration/step5_measured_compute_fixture.py	core_source	superproject	148	148	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:77: trailing whitespace.
++tests/integration/step5_native_image/Dockerfile.position_cyclic	native	superproject	28	19	9
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:78: trailing whitespace.
++tests/integration/step5_native_image/build_image.py	native	superproject	86	69	17
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:79: trailing whitespace.
++tests/integration/step5_pd/r2_canonical.py	native	superproject	20	16	4
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:80: trailing whitespace.
++tests/integration/step5_pd/r2_replay.py	native	superproject	35	12	23
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:81: trailing whitespace.
++tests/integration/step5_pd/r2_runtime.py	native	superproject	149	149	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:82: trailing whitespace.
++tests/integration/step5_pd/r2_stage.py	native	superproject	30	12	18
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:83: trailing whitespace.
++tests/integration/step5_pd/verify_r2_stage.py	native	superproject	50	19	31
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:84: trailing whitespace.
++tests/integration/step5_profiling/run_on_worker.sh	core_source	superproject	21	21	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:85: trailing whitespace.
++tests/integration/step5_profiling/submit_profiling_job.py	core_source	superproject	3	3	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:86: trailing whitespace.
++tests/integration/step5_profiling/verify_fixed_probe.py	core_source	superproject	41	41	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:87: trailing whitespace.
++tests/integration/test_step5_measured_main.py	core_source	superproject	325	320	5
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:88: trailing whitespace.
++tests/performance/step5_actual06_iteration.py	core_source	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:89: trailing whitespace.
++tests/unit/test_collective_benchmark_helpers.py	pricing	superproject	152	152	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:90: trailing whitespace.
++tests/unit/test_collective_sim_cc_backend.py	pricing	superproject	237	237	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:91: trailing whitespace.
++tests/unit/test_comm_operator_families.py	pricing	superproject	62	62	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:92: trailing whitespace.
++tests/unit/test_dsv4_precision_metadata.py	pricing	superproject	2	2	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:93: trailing whitespace.
++tests/unit/test_ep_wave_trace_context.py	pricing	superproject	49	49	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:94: trailing whitespace.
++tests/unit/test_moe_grouped_gemm_padded_features.py	core_source	superproject	231	231	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:95: trailing whitespace.
++tests/unit/test_moe_position_routing.py	core_source	superproject	159	159	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:96: trailing whitespace.
++tests/unit/test_moe_profiling_output_metadata.py	core_source	superproject	125	125	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:97: trailing whitespace.
++tests/unit/test_moe_routing_conservation.py	core_source	superproject	63	63	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:98: trailing whitespace.
++tests/unit/test_moe_routing_runtime.py	core_source	superproject	147	147	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:99: trailing whitespace.
++tests/unit/test_moe_share_expert_operator_families.py	pricing	superproject	14	14	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:100: trailing whitespace.
++tests/unit/test_op_trace_utils.py	pricing	superproject	47	47	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:101: trailing whitespace.
++tests/unit/test_prediction_measurement_bindings.py	core_source	superproject	348	348	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:102: trailing whitespace.
++tests/unit/test_step5_attention_profiling.py	core_source	superproject	15	15	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:103: trailing whitespace.
++tests/unit/test_step5_canonical_g3.py	native	superproject	155	129	26
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:104: trailing whitespace.
++tests/unit/test_step5_comm_cost_export.py	pricing	superproject	271	271	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:105: trailing whitespace.
++tests/unit/test_step5_comm_package.py	pricing	superproject	84	84	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:106: trailing whitespace.
++tests/unit/test_step5_comm_transport.py	pricing	superproject	204	204	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:107: trailing whitespace.
++tests/unit/test_step5_contract_reuse.py	pricing	superproject	1	0	1
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:108: trailing whitespace.
++tests/unit/test_step5_dispatch_probe.py	pricing	superproject	329	329	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:109: trailing whitespace.
++tests/unit/test_step5_fixed_probe.py	core_source	superproject	150	150	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:110: trailing whitespace.
++tests/unit/test_step5_measured_ffn.py	core_source	superproject	105	105	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:111: trailing whitespace.
++tests/unit/test_step5_moe_pricing.py	pricing	superproject	311	311	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:112: trailing whitespace.
++tests/unit/test_step5_moe_profiling.py	core_source	superproject	344	344	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:113: trailing whitespace.
++tests/unit/test_step5_native_image.py	native	superproject	24	24	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:114: trailing whitespace.
++tests/unit/test_step5_native_pd_r2_observation.py	native	superproject	152	152	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:115: trailing whitespace.
++tests/unit/test_step5_native_position_cyclic.py	native	superproject	313	313	0
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:116: trailing whitespace.
++tests/unit/test_step5_native_reference.py	native	superproject	6	3	3
+task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv:117: trailing whitespace.
++tests/unit/test_step5_request_free_profiling.py	core_source	superproject	25	25	0

@@ -1,0 +1,70 @@
+{
+  "task_id": "D20-LEGACY-TERMINAL-AUDIT",
+  "observed_at_utc": "2026-10-22T00:37:52.424363+00:00",
+  "observer_parent_pid": 94827,
+  "observer_event": "pidfd reported parent exit",
+  "acceptance": "Historical superseded metadata-free CPU fixture only; not D23 MRv2/native/accuracy acceptance",
+  "checks": {
+    "offline": {
+      "returncode": 0,
+      "wall_s": 21040.243169610854,
+      "request_shape": [
+        6144,
+        1024
+      ],
+      "useful_decode_forwards": 1024,
+      "initial_tail_tokens": 16,
+      "cached_prefix_tokens": 6128,
+      "ready_release_end_s": 67.17311383299996,
+      "finite_positive_final_metrics": true,
+      "final_metrics_ms": {
+        "client_ttft": 73131.59592466656,
+        "tpot": 172.24287040082638,
+        "request_e2e_time": 249336.05234471193
+      },
+      "original_validator_status": "PASS",
+      "native_admitted": false,
+      "artifact_sha256": {
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/offline/execution.json": "abe8b69399168ad03883a95be352a77551a9a6081110c0695a3224c6b9df0ea1",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/offline/validation.json": "6e628013560d689c641b4eb782f2ede0a0cf6f9b162f543d2d54719efd0034c6",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/request_metrics.csv": "c6d6ed6d37aec85660bb69f72d43f18f06faf775d111f616cb513f88e9e2d280",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/decode_batch_metrics.csv": "34ef7233d1fef3584b0e882e432ba3ea63c4f7e4c0fdf4f822c729f857c30386",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/frontier_transfer_ledger.jsonl": "ea67a731f11eb644c1004255ccaa42adde06ca4a0f18ec80e893c18d449c31f9",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/system_metrics.json": "427b2754e3d4777fe5117c0d57e708f1a3421d2a9f51700e718ab2f32d96a784"
+      }
+    },
+    "online": {
+      "returncode": 0,
+      "wall_s": 20634.534379222896,
+      "request_shape": [
+        6144,
+        1024
+      ],
+      "useful_decode_forwards": 1024,
+      "initial_tail_tokens": 16,
+      "cached_prefix_tokens": 6128,
+      "ready_release_end_s": 67.42311383299996,
+      "finite_positive_final_metrics": true,
+      "final_metrics_ms": {
+        "client_ttft": 73131.59592466656,
+        "tpot": 172.24287040082817,
+        "request_e2e_time": 249336.05234471377
+      },
+      "original_validator_status": "PASS",
+      "native_admitted": false,
+      "artifact_sha256": {
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/online/execution.json": "de3d556df1173e96611d31eaacf46bfbc63dd0e329664e22e904d234c888edb8",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/online/validation.json": "0f8ed7ca1fffb15d05fce7ebac2dbb7a77a8bd7d6450b380ba8fedd2ab218830",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/online/metrics/stepfun_ai_step_5_preview/online_serving/step5_measured_cpu_main_online/request_metrics.csv": "1f7a97a7ea6b2ddfe6ff1245fddf9476bb596c5f30c804aa0c793e6195be412d",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/online/metrics/stepfun_ai_step_5_preview/online_serving/step5_measured_cpu_main_online/decode_batch_metrics.csv": "08576f1bfdd8c41bf3f543cbf127937a79846aae2d03f380b923f2593b14a3f2",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/online/metrics/stepfun_ai_step_5_preview/online_serving/step5_measured_cpu_main_online/frontier_transfer_ledger.jsonl": "e49c6f0d9c0d4308f08db8f127d20b461802d168c48add1ba44c3a6e94bd3910",
+        "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/online/metrics/stepfun_ai_step_5_preview/online_serving/step5_measured_cpu_main_online/system_metrics.json": "8c9d900126ac5f01ef41e369924b1806e39a2af2de0a884d7d249d8021aba2fb"
+      }
+    }
+  },
+  "limits": [
+    "Large event_trace.json was not reloaded; readiness/release fields were cross-checked between retained validation and transfer ledger.",
+    "Original process-start source provenance was not reconstructed.",
+    "No original source, fixture, cache, process or output was modified."
+  ]
+}

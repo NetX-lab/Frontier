@@ -1,0 +1,10 @@
+{
+  "head": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "parents": [
+    "094ecce3ac654e0f425eddaf48079bf105ae58ba",
+    "1461573de388b72450189bc0c1b88b4ac32491f0"
+  ],
+  "source_equality_candidate": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "non_task_index_equal": true,
+  "returncode": 0
+}

@@ -1,0 +1,26 @@
+def flush(self):
+    """Flush buffered events to disk."""
+    if not self._enabled or not self._initialized:
+        return
+
+    with self._buffer_lock:
+        if not self._buffer:
+            return
+        events_to_write = self._buffer
+        self._buffer = []
+
+    escaped = EscapedStrings()
+    try:
+        with open(self._filepath, "a") as f:
+            for event in events_to_write:
+                row = {
+                    field.name: getattr(event, field.name)
+                    for field in fields(event)
+                    if getattr(event, field.name) is not None
+                }
+                f.write("".join(c_make_encoder({}, DEFAULT, ESCAPE_FACTORY(escaped), None, ": ", ", ", False, False, True)(row, 0)) + "\n")
+    except Exception as e:
+        logger.error(f"Failed to flush trace events: {e}")
+        with self._buffer_lock:
+            self._buffer = events_to_write + self._buffer
+        raise

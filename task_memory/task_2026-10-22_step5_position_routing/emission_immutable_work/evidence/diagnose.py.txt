@@ -1,0 +1,254 @@
+"""Frozen-source emission diagnosis; unchanged accepted body, untimed type inventory."""
+import ast
+from collections import Counter
+import copy
+import dataclasses
+import hashlib
+import json
+import os
+from pathlib import Path
+import pstats
+import subprocess
+import sys
+from unittest.mock import patch
+from contextlib import ExitStack
+
+assert sys.dont_write_bytecode and os.environ['PYTHONDONTWRITEBYTECODE'] == '1'
+ROOT = Path('/data/ycfeng/tmp/d29_emission_immutable_work')
+SOURCE = Path('/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields')
+REV = '7540414341d5b81a86b18b9562d1506c0ba74285'
+LABEL = sys.argv[1]
+assert LABEL in ('baseline', 'h1', 'h2', 'h3', 'combined')
+assert subprocess.check_output(['git', '-c', 'safe.directory=*', 'rev-parse', 'HEAD'], cwd=SOURCE, text=True).strip() == REV
+assert not subprocess.check_output(['git', '-c', 'safe.directory=*', 'diff', 'HEAD', '--', 'frontier', 'tests'], cwd=SOURCE).strip()
+setup_path = Path('/data/ycfeng/tmp/d29_cost_fields_parent01/current_setup.py')
+body_path = Path('/data/ycfeng/tmp/d29_immutable_cost_fields_repair/probe_body.py')
+assert hashlib.sha256(setup_path.read_bytes()).hexdigest() == 'b6c869b2b01bd118b02aaf0a9755ee6b87e25a7f00c9667cbd52d50a2cca2b80'
+assert hashlib.sha256(body_path.read_bytes()).hexdigest() == '1cabc04f024e6e1c8ee8d9902e74fee6e5dff4d95faeeaab0f8902e67d6d8555'
+wrapper = ast.parse(Path('/data/ycfeng/tmp/d29_immutable_cost_fields_repair/candidate_probe.py').read_text())
+SOURCE_HASHES = next(ast.literal_eval(node.value) for node in wrapper.body if isinstance(node, ast.Assign)
+                     and any(isinstance(target, ast.Name) and target.id == 'SOURCE_HASHES' for target in node.targets))
+for name, expected in SOURCE_HASHES.items():
+    assert hashlib.sha256((SOURCE / name).read_bytes()).hexdigest() == expected
+SOURCE_HASHES.update({name: hashlib.sha256((SOURCE / name).read_bytes()).hexdigest() for name in
+                     ('frontier/entities/execution_time.py', 'frontier/entities/time_components.py', 'frontier/moe_routing_policy.py')})
+sys.argv = [str(setup_path), '--output', str(ROOT / (LABEL + '-setup'))]
+setup_namespace = {'__name__': '__main__', '__file__': str(setup_path)}
+exec(compile(setup_path.read_bytes(), str(setup_path), 'exec'), setup_namespace)
+
+import frontier.entities.execution_time as execution
+import frontier.cc_backend.collective_plan as collective
+from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor, CollectivePlanCost
+from frontier.moe_routing_policy import WaveRoutingSource, SourceLaneRouting, TokenInterval
+IMMUTABLE_CLASSES = (CollectivePlan, CollectiveTensor, CollectivePlanCost, WaveRoutingSource, SourceLaneRouting, TokenInterval)
+
+
+def deeply_immutable(value):
+    if value is None or type(value) in (str, int, float, bool):
+        return True
+    if type(value) is tuple:
+        return all(deeply_immutable(item) for item in value)
+    if type(value) in IMMUTABLE_CLASSES:
+        return all(deeply_immutable(item) for item in vars(value).values())
+    return False
+
+
+def immutable_snapshot(self, memo):
+    """Keep mutable children deeply copied; only verified immutable values reuse identity."""
+    if deeply_immutable(self):
+        return self
+    result = object.__new__(type(self))
+    memo[id(self)] = result
+    vars(result).update(copy.deepcopy(vars(self), memo))
+    return result
+
+
+real_key = CollectivePlan.cache_key
+
+
+def serialized_key_once(plan):
+    """Exact cached-string control from the owner's compare.py:27-31."""
+    if '_d29_derived_key' not in plan.__dict__:
+        object.__setattr__(plan, '_d29_derived_key', real_key(plan))
+    return plan._d29_derived_key
+
+
+def plan_fields(self):
+    """Fresh public dictionaries, immutable leaves only; no proof/JSON cache."""
+    return {**{field.name: getattr(self, field.name) for field in dataclasses.fields(self)},
+            'tensors': tuple({field.name: getattr(tensor, field.name) for field in dataclasses.fields(tensor)}
+                             for tensor in self.tensors),
+            'context': json.loads(self.context_json), 'buffers': json.loads(self.buffer_json),
+            'stages': self.stages, 'native_grouping': 'outer_tensor_group/nested_root_group'}
+
+
+# Inspect, then admit only actual deeply immutable instances before a control is applied.
+source_plan_objects = {}
+for record in setup_namespace['plan'].phase_times.lane_records:
+    layer = record.execution_time.layer_execution_times[0]
+    communication = layer._communication_time.operator_times
+    assert all(deeply_immutable(value) for value in (*communication.plans.values(), *communication.costs.values()))
+    assert deeply_immutable(layer._moe_or_mlp_time.operator_times.physical_frame['routing_source'])
+    source_plan_objects.update({id(value): value for value in communication.plans.values()})
+
+if LABEL in ('h2', 'combined'):
+    # Cold key construction is explicitly outside emission timing. Copies carry only
+    # the immutable derived string. No pricing rerun, no cached numerical results.
+    for value in source_plan_objects.values():
+        assert serialized_key_once(value) == real_key(value)
+
+stack = ExitStack()
+if LABEL == 'h1':
+    for cls in (CollectivePlan, CollectivePlanCost, WaveRoutingSource):
+        stack.enter_context(patch.object(cls, '__deepcopy__', immutable_snapshot, create=True))
+if LABEL in ('h2', 'combined'):
+    stack.enter_context(patch.object(CollectivePlan, 'cache_key', serialized_key_once))
+if LABEL in ('h3', 'combined'):
+    stack.enter_context(patch.object(CollectivePlan, 'to_dict', plan_fields))
+
+# All original performance/correctness assertions execute unchanged; no counters
+# around its 15 emission-only timings. TraceStore and its encoder are untouched.
+exec(compile(body_path.read_bytes(), str(body_path), 'exec'), globals())
+
+
+classes = Counter()
+domains = {}
+frozen_mutable_paths = []
+
+
+def walk(value, path):
+    if dataclasses.is_dataclass(value):
+        cls = type(value)
+        classes[cls.__module__ + '.' + cls.__name__] += 1
+        domain = domains.setdefault(cls.__module__ + '.' + cls.__name__, {})
+        for field in dataclasses.fields(value):
+            domain.setdefault(field.name, set()).add(type(getattr(value, field.name)).__name__)
+        if cls.__dataclass_params__.frozen and not deeply_immutable(value):
+            frozen_mutable_paths.append(path)
+        for name, item in vars(value).items():
+            walk(item, path + '.' + name)
+    elif isinstance(value, dict):
+        for name, item in value.items():
+            walk(item, path + '.' + str(name))
+    elif isinstance(value, (list, tuple)):
+        for index, item in enumerate(value):
+            walk(item, path + '[' + str(index) + ']')
+
+
+for record in plan.phase_times.lane_records:
+    layer = record.execution_time.layer_execution_times[0]
+    for name in ('_moe_or_mlp_time', '_communication_time'):
+        walk(getattr(layer, name), str(record.ep_id) + '.' + name)
+
+getter_names = ('attention_time_component', 'attention_operator_times', 'moe_or_mlp_time_component',
+                'mlp_operator_times', 'moe_operator_times', 'communication_time_component', 'communication_operator_times')
+stats = pstats.Stats(str(output / 'emission.pstats')).stats
+getter_counts = {name: sum(values[1] for (path, _, symbol), values in stats.items()
+                           if path == execution.__file__ and symbol == name) for name in getter_names}
+phase_profiles = [{'path': path, 'line': line, 'symbol': name, 'calls': values[1],
+                   'self_s': values[2], 'cumulative_s': values[3]}
+                  for (path, line, name), values in stats.items()
+                  if (path == execution.__file__ and name in getter_names) or
+                     (path.endswith('/collective_plan.py') and name in ('to_dict', 'cache_key'))]
+# Separate, untimed recursive deepcopy observation; never used to measure speed.
+type_counts = Counter()
+copy_code = copy.deepcopy.__code__
+
+
+def observed_copy(frame, event, arg):
+    if event == 'call' and frame.f_code is copy_code:
+        value = frame.f_locals['x']
+        type_counts[type(value).__module__ + '.' + type(value).__qualname__] += 1
+
+
+sys.setprofile(observed_copy)
+try:
+    emit(output / 'type-inventory')
+finally:
+    sys.setprofile(None)
+
+# Extra ownership checks against the full emitted graph, outside every timed phase.
+current, _ = emit(output / 'extra-ownership')
+pending = lambda: b''.join((json.dumps({field.name: getattr(event, field.name) for field in dataclasses.fields(event)
+                                      if getattr(event, field.name) is not None}) + '\n').encode() for event in current._buffer)
+before = pending()
+first_layer = plan.phase_times.lane_records[0].execution_time.layer_execution_times[0]
+first_comm = first_layer.communication_time_component
+second_comm = first_layer.communication_time_component
+first_moe = first_layer.moe_or_mlp_time_component
+second_moe = first_layer.moe_or_mlp_time_component
+assert first_comm is not second_comm and first_comm.operator_times.plans is not second_comm.operator_times.plans
+assert first_comm.operator_times.costs is not second_comm.operator_times.costs
+first_comm.operator_times.plans.clear()
+first_comm.operator_times.costs.clear()
+assert second_comm.operator_times.plans and second_comm.operator_times.costs and pending() == before
+first_moe.operator_times.physical_frame['native_context']['activation_layout']['shape'][0] = -99
+assert second_moe.operator_times.physical_frame['native_context']['activation_layout']['shape'][0] != -99
+assert pending() == before
+public = next(iter(source_plan_objects.values())).to_dict()
+another = next(iter(source_plan_objects.values())).to_dict()
+assert public == another and public is not another and public['tensors'] is not another['tensors']
+assert public['context'] is not another['context'] and public['buffers'] is not another['buffers']
+assert all(left is not right for left, right in zip(public['tensors'], another['tensors']))
+public['tensors'][0]['name'] = 'mutation'
+public['context']['mutation'] = True
+public['buffers']['mutation'] = True
+assert next(iter(source_plan_objects.values())).to_dict() == another and pending() == before
+native_events = [event for event in current._buffer if 'native_context' in event.meta]
+within_lane_alias = native_events[0].meta['native_context'] is native_events[1].meta['native_context']
+cross_lane = next(event for event in native_events if event.meta['ep_id'] != native_events[0].meta['ep_id'])
+assert cross_lane.meta['native_context'] is not native_events[0].meta['native_context']
+alias_summary = {'original_same_lane_native_context_alias_retained': within_lane_alias,
+                 'different_lane_native_context_maps_independent': True,
+                 'different_communication_event_tensor_context_buffer_dicts_independent': True}
+comm_events = [event for event in current._buffer if 'collective_plan' in event.meta]
+assert comm_events[0].meta['collective_plan']['context'] is not comm_events[1].meta['collective_plan']['context']
+assert comm_events[0].meta['collective_plan']['buffers'] is not comm_events[1].meta['collective_plan']['buffers']
+assert comm_events[0].meta['collective_plan']['tensors'][0] is not comm_events[1].meta['collective_plan']['tensors'][0]
+
+protocol_negatives = {}
+if LABEL == 'h1':
+    sample = next(iter(source_plan_objects.values()))
+    # A bytearray receipt is accepted by the original plan constructor, so frozen
+    # alone is insufficient even before adversarial object.__setattr__ mutation.
+    reachable_mutable = dataclasses.replace(sample, buffer_json=bytearray(sample.buffer_json, 'utf-8'))
+    assert not deeply_immutable(reachable_mutable)
+    detached = copy.deepcopy(reachable_mutable)
+    assert detached is not reachable_mutable and detached.buffer_json is not reachable_mutable.buffer_json
+    assert detached == reachable_mutable
+    protocol_negatives['mutable_receipt_not_shared'] = True
+    nested_mutable = dataclasses.replace(sample, tensors=(dataclasses.replace(sample.tensors[0]),))
+    object.__setattr__(nested_mutable.tensors[0], 'extra', {'list': [1]})
+    detached = copy.deepcopy(nested_mutable)
+    detached.tensors[0].extra['list'][0] = -1
+    assert nested_mutable.tensors[0].extra['list'] == [1]
+    protocol_negatives['frozen_child_with_mutable_extra_not_shared'] = True
+
+# For key memo, replacements have no inherited stale key and wrong-key guards are
+# already checked 64 times by the unchanged body.
+key_replacement = {}
+if LABEL in ('h2', 'combined'):
+    sample = next(iter(source_plan_objects.values()))
+    changed = json.loads(sample.context_json)
+    changed['mutation'] = True
+    replacement = dataclasses.replace(sample, context_json=json.dumps(changed))
+    assert CollectivePlan.cache_key(replacement) == real_key(replacement) != CollectivePlan.cache_key(sample)
+    key_replacement['dataclasses_replace_new_exact_key'] = True
+
+inventory = {'task_id': 'D29-EMISSION-IMMUTABLE-WORK', 'label': LABEL,
+             'source_revision': REV, 'source_hashes': SOURCE_HASHES,
+             'script_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+             'setup_sha256': hashlib.sha256(setup_path.read_bytes()).hexdigest(),
+             'unchanged_probe_body_sha256': hashlib.sha256(body_path.read_bytes()).hexdigest(),
+             'getter_counts': getter_counts, 'getter_and_plan_profiles': phase_profiles,
+             'traversed_dataclass_occurrences': dict(classes),
+             'traversed_dataclass_field_types': {cls: {name: sorted(types) for name, types in domain.items()} for cls, domain in domains.items()},
+             'frozen_values_with_nonimmutable_contents': frozen_mutable_paths,
+             'untimed_recursive_deepcopy_types': dict(type_counts),
+             'prepared_source_plan_object_count': len(source_plan_objects),
+             'extra_ownership_checks': alias_summary, 'protocol_negatives': protocol_negatives,
+             'key_replacement_check': key_replacement,
+             'trace_store_and_encoder_unchanged': True}
+(output / 'inventory.json').write_text(json.dumps(inventory, indent=2) + '\n')
+print(json.dumps({key: value for key, value in inventory.items() if key not in ('source_hashes', 'traversed_dataclass_field_types')}, indent=2))
+stack.close()

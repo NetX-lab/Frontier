@@ -1,0 +1,52 @@
+--- frozen79/wave_loop.py
++++ candidate0be11762/wave_loop.py
+@@ -20,8 +20,8 @@
+ parser.add_argument('--iterations',type=int,default=2)
+ parser.add_argument('--diagnostic-variable',choices=('none','exact-json-decode','artifact-read','plan-key-decode'),default='none')
+ args=parser.parse_args();args.output.mkdir(exist_ok=False)
+-source=Path('/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06')
+-assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()=='79f1a3fd35d42b751cd1520c764ddac717b923d9'
++source=Path('/data/ycfeng/Frontier/.worktrees/step5-d29-prepared-point')
++assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()=='0be11762d0f83e9db77658a1447a672507166872'
+ sys.path.insert(0,str(source))
+ from frontier.config import SimulationConfig
+ from frontier.types import ClusterType,MeasurementType
+@@ -86,6 +86,29 @@
+ predictor._moe_routing_distribution_type='position_cyclic'
+ predictor._moe_tp_size=replica.moe_tensor_parallel_size;predictor._moe_ep_size=replica.moe_expert_parallel_size
+ predictor._kernel_gap_ms=read_kernel_gap_ms('/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_kernel_gap.csv',8)
++
++from frontier.execution_time_predictor.moe_routing_workload import MoeRoutingWorkload
++preparation_counts = dict(rows=0, keys=0, row_entries=0, artifact_entries=0)
++row_method = MoeRoutingWorkload._step5_model_points
++artifact_method = MoeRoutingWorkload._step5_collective_points
++def observe_rows(self, model):
++    previous = getattr(self, '_step5_physical_points', {}).get(model)
++    result = row_method(self, model)
++    current = self._step5_physical_points[model]
++    if current is not previous:
++        preparation_counts['rows'] += 1
++        preparation_counts['row_entries'] += len(current[0])
++    return result
++def observe_artifact(self, text):
++    previous = getattr(self, '_step5_collective_receipts', None)
++    result = artifact_method(self, text)
++    if previous is None or result[2] is not previous[2]:
++        preparation_counts['keys'] += 1
++        preparation_counts['artifact_entries'] += len(result[1]['counts'])
++    return result
++MoeRoutingWorkload._step5_model_points = observe_rows
++MoeRoutingWorkload._step5_collective_points = observe_artifact
++
+ captured=json.loads(Path('/data/ycfeng/tmp/d29_main08_residual_repro/trace_tail_last.json').read_text())
+ actual=captured['meta']['routing_source'];layer_id=captured['meta']['global_layer_ids'][0]
+ lanes=tuple(SourceLaneRouting(s['lane_id'],s['source_batch_id'],s['source_global_id'],s['forward_group_id'],s['graph_mode'],s['gating_runtime_context'],s['physical_rows'],s['live_rows'],tuple(TokenInterval(**i) for i in s['intervals'])) for s in actual['source_lanes'])
+@@ -155,7 +178,7 @@
+ if args.profile:
+     with (args.output/'profile.txt').open('w') as stream:pstats.Stats(str(args.output/'wave.pstats'),stream=stream).sort_stats('cumulative').print_stats(45)
+ calls=[{'path':p,'line':l,'name':n,'calls':v[1],'cum_s':v[3]} for (p,l,n),v in stats.items() if n in ('_step5_position_queries','_predict_step5_position_execution','decode','loads','deepcopy','compute_op_trace_meta','resolve_routed_layer_groups')]
+-result=dict(source='79f1a3fd35d42b751cd1520c764ddac717b923d9',bundle_path=str(bundle_path),loaded=loaded,actual_source=actual,layer=layer_id,participants=list(workload.participant_ep_ids),timings=timings,payload_sha256=hashes,calls=calls,profiled=args.profile,
++result=dict(source='0be11762d0f83e9db77658a1447a672507166872',bundle_path=str(bundle_path),loaded=loaded,actual_source=actual,layer=layer_id,participants=list(workload.participant_ep_ids),timings=timings,payload_sha256=hashes,calls=calls,profiled=args.profile,
+     json_parse_sites=[dict(path=p,line=l,calls=v['calls'],unique_texts=len(v['unique_texts']),bytes=v['bytes']) for (p,l),v in sorted(parse_sites.items(),key=lambda i:-i[1]['calls'])],
+     diagnostic_variable=args.diagnostic_variable,diagnostic_only='single runtime interception; unchanged source, full costs/proofs/keys compared',
+     scope='actual 16-participant DECODE layer61 at logical position6147, production wave predictor/public stage/metadata/flush; unrelated event queue, attention, scheduler and full initialization excluded',

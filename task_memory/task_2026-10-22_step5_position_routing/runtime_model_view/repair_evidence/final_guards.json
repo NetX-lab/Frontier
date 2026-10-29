@@ -1,0 +1,14 @@
+{
+  "task_id": "D29-NAMED-MODEL-QUERY",
+  "source_commit": "1737ce9c4a761d2c57ee617f5f3a78d7bcfd9a58",
+  "original_diagnostic_files_unchanged": 22,
+  "repair_archived_hashes_pass": 21,
+  "committed_source_bindings_pass": 23,
+  "submodule_clean_correct_pin": true,
+  "runtime_binary_sha256": "8818d1146c32505707dee41147cfe17de46a0c9f3cf6bb8fc7b1b3fe30e15637",
+  "evidence_script_hashes": {
+    "prepare.py": "0c689e2199f512d46d82846838ca193ededd36690a9cb9527d1c5e93fc6a44fc",
+    "verify.py": "60f49c707f87f5bb7e1009255a35e05de696ad202e44c8f8c7a5a09124174db2"
+  },
+  "verification_sha256": "d5f2c5939f6279f460469a048b32636402ff0ee1a4636c4475d6531ac1c9c6c5"
+}

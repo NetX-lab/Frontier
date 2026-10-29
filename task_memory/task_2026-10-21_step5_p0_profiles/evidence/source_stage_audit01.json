@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "source_commit": "a7551a3a26ec84c66af9a88d282019f47e5ab52b",
+  "roles": {
+    "prefill": {
+      "stage": "/data/ycfeng/tmp/step5_p0_profiles_20261021/prefill_stage01",
+      "manifest_sha256": "82dfc1146321e92a8fffdffc41e27e2572d5d5993bf95c0d5be44a4cf1c0496c",
+      "payload_hashes": 3415,
+      "committed_payloads_matched": 533,
+      "preflight_status": "PASS",
+      "events": 4,
+      "gpu_active": 4,
+      "linear_rows": 24,
+      "moe_steps_per_method": 42,
+      "gpus": 1,
+      "gpu_tag": "H800",
+      "charged_group": "codesign",
+      "preemptible": false,
+      "timeout_seconds": 3600
+    },
+    "decode": {
+      "stage": "/data/ycfeng/tmp/step5_p0_profiles_20261021/decode_stage01",
+      "manifest_sha256": "f09b6fc0436889042dabb6fb0d322b9a9d9c17b9b4860f425342b8e9a50a5ca5",
+      "payload_hashes": 3415,
+      "committed_payloads_matched": 533,
+      "preflight_status": "PASS",
+      "events": 20,
+      "gpu_active": 4,
+      "linear_rows": 28,
+      "moe_steps_per_method": 48,
+      "gpus": 1,
+      "gpu_tag": "H800",
+      "charged_group": "codesign",
+      "preemptible": false,
+      "timeout_seconds": 3600
+    }
+  },
+  "old_stages": {
+    "d18_original": {
+      "stage": "/data/ycfeng/tmp/d18_profile_20261021/h200_small_probe_stage02",
+      "manifest_sha256": "42545748def4f40947037a61ca68541d4f3736cd5e8faaa60a8ec3698be91077",
+      "payload_hashes_unchanged": 3407,
+      "receipt_verdicts_recomputed": false
+    },
+    "d22_passed": {
+      "stage": "/data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01",
+      "manifest_sha256": "a1dc28ceca71235b000e7f7448464a5ff76d27e76d2d51ee63fe0811908b5312",
+      "payload_hashes_unchanged": 3407,
+      "receipt_verdicts_recomputed": false
+    }
+  },
+  "platform_operations": 0,
+  "native_admission": false
+}

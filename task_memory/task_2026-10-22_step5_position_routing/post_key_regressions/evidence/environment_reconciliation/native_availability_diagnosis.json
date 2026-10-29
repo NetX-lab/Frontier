@@ -1,0 +1,262 @@
+{
+  "task_id": "D29-POST-KEY-FROZEN-REGRESSIONS",
+  "raw_counts": {
+    "error": 32,
+    "skipped": 267,
+    "pass": 8036,
+    "failure": 279
+  },
+  "source_native_binary_present": false,
+  "retained79_binary_skips": [
+    {
+      "id": "::tests.unit.test_collective_sim_zero_payload",
+      "old": {
+        "status": "skipped",
+        "message": "collection skipped",
+        "text": "('/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_collective_sim_zero_payload.py', 30, 'Skipped: The optional collective-sim backend must be initialized and built: git submodule update --init frontier/cc_backend/backends/collective-sim && make -C frontier/cc_backend/backends/collective-sim/sim')"
+      },
+      "new": null
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[None]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[partial]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[zero]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[nan]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[inf]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[branch_switch]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[different_policy]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[observed_point]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[stale_point]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[mismatched_point]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[point_policy]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[point_geometry]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    },
+    {
+      "id": "tests.unit.test_step5_comm_cost_export::test_finite_exporter_executes_joint_htsim_without_blessing_fixture[valid_producer]",
+      "old": {
+        "status": "skipped",
+        "message": "Real HTSIM binary unavailable",
+        "text": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit/test_step5_comm_cost_export.py:224: Real HTSIM binary unavailable"
+      },
+      "new": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      }
+    }
+  ],
+  "planned_test_replacement": [
+    {
+      "id": "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text",
+      "old": {
+        "status": "pass",
+        "message": "",
+        "text": ""
+      },
+      "new": null
+    }
+  ],
+  "governance_parent": {
+    "selection": "d29_loader_governance_parent01",
+    "prior_counts": {
+      "pass": 52
+    },
+    "prior_xml": {
+      "path": "/data/ycfeng/tmp/d29_loader_governance_parent01.xml",
+      "sha256": "9a2c72314570ef9be14644c10a809811378471db81e43e5ebcb66e833488fdd1",
+      "bytes": 8366
+    },
+    "fresh_unit_outcomes": {
+      "pass": 47,
+      "failure": 5
+    },
+    "missing_ids": [],
+    "prior_pass_unsettled_ids": [
+      "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_carries_plan_typed_operator_contracts",
+      "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts",
+      "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_initializes_runtime_with_routed_width",
+      "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_typed_result_round_trips_through_manager",
+      "tests.unit.test_profiling_governance_minimal_red::test_real_linear_producer_csv_round_trip_reaches_manager_loader"
+    ],
+    "unchanged_prior_skips": [],
+    "unsettled_ids": [
+      "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_carries_plan_typed_operator_contracts",
+      "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts",
+      "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_initializes_runtime_with_routed_width",
+      "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_typed_result_round_trips_through_manager",
+      "tests.unit.test_profiling_governance_minimal_red::test_real_linear_producer_csv_round_trip_reaches_manager_loader"
+    ]
+  },
+  "governance_failure_details": [
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_carries_plan_typed_operator_contracts",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "text": "def test_linear_wrapper_result_carries_plan_typed_operator_contracts() -> None:\n        \"\"\"The real producer row keeps profile-owned metadata beside timings.\"\"\"\n    \n        from frontier.profiling.common.model_config import ModelConfig\n>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper\n\ntests/unit/test_profiling_governance_minimal_red.py:589: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    import copy\n    import os\n    from collections.abc import Mapping\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError"
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "text": "def test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts() -> None:\n        \"\"\"A result row declares typed contracts only for measured operators.\"\"\"\n    \n        from frontier.profiling.common.model_config import ModelConfig\n>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper\n\ntests/unit/test_profiling_governance_minimal_red.py:630: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    import copy\n    import os\n    from collections.abc import Mapping\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError"
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_real_linear_producer_csv_round_trip_reaches_manager_loader",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "text": "tmp_path = PosixPath('/data/ycfeng/tmp/d29_unit_parent06/test_real_linear_producer_csv_0')\n\n    def test_real_linear_producer_csv_round_trip_reaches_manager_loader(tmp_path) -> None:\n        \"\"\"A plan-built producer row survives CSV serialization and typed admission.\"\"\"\n    \n        from frontier.profiling.common.model_config import ModelConfig\n        from frontier.profiling.linear_op import main as linear_op_main\n>       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper\n\ntests/unit/test_profiling_governance_minimal_red.py:733: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    import copy\n    import os\n    from collections.abc import Mapping\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError"
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_typed_result_round_trips_through_manager",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "text": "tmp_path = PosixPath('/data/ycfeng/tmp/d29_unit_parent06/test_moe_wrapper_typed_result_0')\n\n    def test_moe_wrapper_typed_result_round_trips_through_manager(tmp_path) -> None:\n        \"\"\"The existing MoE producer emits a routed contract that the manager admits.\"\"\"\n    \n        from frontier.operators.typed_contracts import (\n            serialize_typed_operator_contract_column,\n        )\n        from frontier.profiling.common.model_config import ModelConfig\n>       from frontier.profiling.moe.moe_wrapper import MoEWrapper\n\ntests/unit/test_profiling_governance_minimal_red.py:993: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    \"\"\"\n    MoE profiling wrapper.\n    \n    This module wraps MoE operations for profiling, following the same pattern as the linear-op wrapper.\n    \"\"\"\n    \n    import operator\n    import os\n    import math\n    import json\n    from collections.abc import Mapping\n    from typing import List, Optional\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/moe/moe_wrapper.py:14: ModuleNotFoundError"
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_initializes_runtime_with_routed_width",
+      "message": "ModuleNotFoundError: No module named 'torch'",
+      "text": "monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fc2ef2810c0>\ntmp_path = PosixPath('/data/ycfeng/tmp/d29_unit_parent06/test_moe_wrapper_initializes_r0')\n\n    def test_moe_wrapper_initializes_runtime_with_routed_width(monkeypatch, tmp_path) -> None:\n        \"\"\"The existing MoE producer uses the profile-owned routed width end to end.\"\"\"\n    \n>       moe_module = importlib.import_module(\"frontier.profiling.moe.moe_wrapper\")\n\ntests/unit/test_profiling_governance_minimal_red.py:1896: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n/usr/lib/python3.10/importlib/__init__.py:126: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n<frozen importlib._bootstrap>:1050: in _gcd_import\n    ???\n<frozen importlib._bootstrap>:1027: in _find_and_load\n    ???\n<frozen importlib._bootstrap>:1006: in _find_and_load_unlocked\n    ???\n<frozen importlib._bootstrap>:688: in _load_unlocked\n    ???\n<frozen importlib._bootstrap_external>:883: in exec_module\n    ???\n<frozen importlib._bootstrap>:241: in _call_with_frames_removed\n    ???\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    \"\"\"\n    MoE profiling wrapper.\n    \n    This module wraps MoE operations for profiling, following the same pattern as the linear-op wrapper.\n    \"\"\"\n    \n    import operator\n    import os\n    import math\n    import json\n    from collections.abc import Mapping\n    from typing import List, Optional\n    \n>   import torch\nE   ModuleNotFoundError: No module named 'torch'\n\nfrontier/profiling/moe/moe_wrapper.py:14: ModuleNotFoundError"
+    }
+  ],
+  "diagnosis": "The verification runner projected a currently available old-source binary that did not exist in the retained79 test environment. It expanded optional collection and ran13 historically skipped parameterized cases. No old skip is relabelled. Restore the original namespace without a binary projection for the canonical candidate rerun;preserve this raw execution as an environment-availability observation.",
+  "implementation_or_test_exclusion": false,
+  "diagnostic_inspector_error": "The first inspector assumed row.label and detail;the retained schema actually uses selection,prior_pass_unsettled_ids,message/text. No test or source change;first inspector exit1."
+}

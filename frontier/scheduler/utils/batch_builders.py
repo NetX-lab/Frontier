@@ -70,6 +70,10 @@ def build_ep_lane_batch(
     if effective_tokens <= 0:
         raise ValueError("Prefill EP lane requires positive pre-routing effective tokens")
     lane_batch.moe_pre_routing_effective_total_tokens = effective_tokens
+    if lane_workload.routing_source is not None:
+        source=lane_workload.routing_source.source_lanes[ep_id // (lane_workload.moe_expert_parallel_size //
+            len(lane_workload.routing_source.source_lanes))]
+        lane_batch.moe_pre_routing_effective_total_tokens = source.physical_rows
     return lane_batch
 
 

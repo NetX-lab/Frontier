@@ -1,0 +1,69 @@
+{
+  "description": "Ticket 08 run R1: one Step-5-Preview prefill role and one decode role joined by the NIXL pull connector, each TP8/DP2/EP16/PP1 over two 8-GPU nodes, on the locked image with dummy weights (task design01 section 3).",
+  "vllm_version": "step5",
+  "resources": {
+    "charged_group": "codesign",
+    "gpu_type": "H800",
+    "replica": 4,
+    "gpu": 8,
+    "cpu": 32,
+    "mem_gb": 128,
+    "timeout_seconds": 3600,
+    "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+  },
+  "image_paths": {
+    "installed_package": "/usr/local/lib/python3.12/dist-packages/vllm",
+    "cuda_compat_path": "/usr/local/cuda-13.0/compat"
+  },
+  "engine": {
+    "tensor_parallel_size": 8,
+    "data_parallel_size": 2,
+    "pipeline_parallel_size": 1,
+    "enable_expert_parallel": true,
+    "distributed_executor_backend": "mp",
+    "enable_chunked_prefill": true,
+    "enable_prefix_caching": false,
+    "enforce_eager": false,
+    "max_model_len": 8192,
+    "max_num_batched_tokens": 512,
+    "max_num_seqs": 1,
+    "block_size": 16,
+    "gpu_memory_utilization": 0.92,
+    "dtype": "auto",
+    "seed": 0,
+    "load_format": "dummy",
+    "kv_transfer": {
+      "kv_buffer_device": "cuda",
+      "prefill_side_channel_port": 5600,
+      "decode_side_channel_port": 5700
+    }
+  },
+  "data_parallel_size_local": 1,
+  "http_ports": {"prefill": 8100, "decode": 8200},
+  "dp_rpc_ports": {"prefill": 24471, "decode": 24571},
+  "proxy_port": 8000,
+  "peer_wait_seconds": 900,
+  "startup_timeout_s": 1500,
+  "replay_timeout_s": 900,
+  "drain_seconds": 3,
+  "stop_timeout_s": 90,
+  "scrape_timeout_s": 10,
+  "release_margin_s": 5,
+  "waves": [
+    {"name": "w1", "spacing_s": 0.0, "num_decode_tokens": 9, "prompt_lengths": [4105]},
+    {"name": "w2", "spacing_s": 0.01, "num_decode_tokens": 9, "prompt_lengths": [4105, 2064]}
+  ],
+  "gating_wave": "w1",
+  "cache_environment": {
+    "FLASHINFER_WORKSPACE_BASE": "flashinfer",
+    "HF_HOME": "hf",
+    "TORCHINDUCTOR_CACHE_DIR": "inductor",
+    "TRITON_CACHE_DIR": "triton",
+    "VLLM_CACHE_ROOT": "vllm"
+  },
+  "weight_suffixes": [".safetensors", ".bin", ".pt", ".pth", ".gguf", ".ckpt", ".h5", ".msgpack", ".onnx", ".npz"],
+  "probe_helpers": {
+    "probe_nixl_read.py": "22995e66121122adb3924502ec4c763a500c88e90fc6fba5b340a832098ac997",
+    "probe_runtime_inventory.py": "4bc60d138f42d9370a3743d6890c0460f18811868b9673a00d898aea0b476a6d"
+  }
+}

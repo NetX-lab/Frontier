@@ -75,6 +75,44 @@ class StageExecutionContext:
         self._next_forward_group_id = 0
         self._forward_group_id: int | None = None
         self._forward_group_sealed = False
+        self._forward_start_lanes: dict[int, StageAdmissionTicket] = {}
+        self._forward_start_woken_lanes: set[int] = set()
+        self._forward_start_resolved = False
+
+    @property
+    def forward_start_resolved(self) -> bool:
+        return self._forward_start_resolved
+
+    def arrive_forward_start(self, ticket: StageAdmissionTicket, lane_id: int) -> bool:
+        """Register an admitted lane before any forward timing is predicted."""
+        self._validate_ticket(ticket)
+        if ticket not in self._active_full_stage_tickets:
+            raise ValueError("forward start requires an active full-stage owner")
+        if type(lane_id) is not int or not 0 <= lane_id < self._full_stage_capacity:
+            raise ValueError("forward start lane must fit full-stage capacity")
+        if self._forward_start_resolved:
+            raise ValueError("forward start agreement is already resolved")
+        previous = self._forward_start_lanes.get(lane_id)
+        if previous is not None and previous != ticket:
+            raise ValueError("a forward start lane cannot hold two owner tickets")
+        self._forward_start_lanes[lane_id] = ticket
+        return len(self._forward_start_lanes) == self._full_stage_capacity
+
+    def claim_forward_start_wakeup(self, lane_id: int) -> bool:
+        if lane_id in self._forward_start_lanes or lane_id in self._forward_start_woken_lanes:
+            return False
+        self._forward_start_woken_lanes.add(lane_id)
+        return True
+
+    def resolve_forward_start(self) -> None:
+        """Seal a complete group after every lane's descriptor has been bound."""
+        if (
+            self._forward_start_resolved
+            or len(self._forward_start_lanes) != self._full_stage_capacity
+        ):
+            raise ValueError("forward start resolution requires one complete unresolved group")
+        self._forward_start_resolved = True
+        self._forward_group_sealed = True
 
     def bind_forward_group(self, ticket: StageAdmissionTicket) -> int:
         """Bind an admitted attention lane to this stage's shared forward."""
@@ -392,6 +430,9 @@ class StageExecutionContext:
         if self.is_idle:
             self._forward_group_id = None
             self._forward_group_sealed = False
+            self._forward_start_lanes.clear()
+            self._forward_start_woken_lanes.clear()
+            self._forward_start_resolved = False
 
     def replace_full_stage_owners_with_ep_wave(
         self,

@@ -1,0 +1,416 @@
+--- a/frontier/cc_backend/collective_profile.py
++++ b/frontier/cc_backend/collective_profile.py
+@@ -0,0 +1,20 @@
++"""Run-lifetime collective profiling inputs, shared by role backends."""
++
++import json
++import os
++from pathlib import Path
++
++
++class CollectiveProfileInputs:
++    """Retain the first successfully parsed bytes for each configured path."""
++
++    def __init__(self):
++        self._inputs = {}
++
++    def read(self, profiling_data_dir, device_type):
++        path = Path(os.path.abspath(Path(profiling_data_dir) / device_type / "collective_local.json"))
++        if path not in self._inputs:
++            raw = path.read_bytes()
++            json.loads(raw.decode("utf-8"))
++            self._inputs[path] = raw
++        return self._inputs[path]
+--- a/frontier/execution_time_predictor/shared_prediction_model_manager.py
++++ b/frontier/execution_time_predictor/shared_prediction_model_manager.py
+@@ -20,6 +20,7 @@
+ from frontier.execution_time_predictor.kernel_gap import load_kernel_gap_ms
+ from frontier.execution_time_predictor.cache_io import dataset_fingerprint
+ from frontier.logger import init_logger
++from frontier.cc_backend.collective_profile import CollectiveProfileInputs
+ 
+ 
+ from frontier.execution_time_predictor.layer_contract_resolution import (
+@@ -66,6 +67,7 @@
+         self._attention_tp_warning_cache: Set[str] = set()
+         self._gdn_predictors: Dict[ClusterType, Any] = {}
+         self._step5_model_bundles: Dict[ClusterType, Dict[str, Any]] = {}
++        self._collective_profile_inputs = CollectiveProfileInputs()
+ 
+         # Check if all clusters are in dummy mode
+         self._all_dummy_mode = self._check_all_dummy_mode()
+@@ -117,6 +119,10 @@
+                 self.__dict__.pop("_step5_attention_inputs", None)
+ 
+             logger.info(f"ExecutionTimePredictionModelManager initialized with capabilities: {self._required_capabilities}")
++
++    @property
++    def collective_profile_inputs(self):
++        return self._collective_profile_inputs
+ 
+     def _publish_step5_model_bundles(self) -> None:
+         """Bind the models used by each Step role to their existing cache artifacts."""
+--- a/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
++++ b/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
+@@ -598,6 +598,8 @@
+         policy = resolve_routing_count_policy(self._moe_routing_distribution_type)
+         if policy.requires_source:
+             validate_position_routing_scope(replica_config, cluster_type)
++            if model_manager is not None and cc_backend is not None:
++                cc_backend.bind_collective_profile_inputs(model_manager.collective_profile_inputs)
+         self._moe_routing_seed = getattr(replica_config, "moe_routing_seed", 42)
+         if type(self._moe_routing_seed) is not int or self._moe_routing_seed < 0:
+             raise ValueError(
+--- a/frontier/execution_time_predictor/moe_routing_workload.py
++++ b/frontier/execution_time_predictor/moe_routing_workload.py
+@@ -152,24 +152,24 @@
+         self._step5_physical_points = retained
+         return points
+ 
+-    def _step5_collective_points(self, text):
+-        """Prepare structural receipts only; every query supplies current file text."""
++    def _step5_collective_points(self):
++        """Prepare structural receipts from this run's fixed collective input."""
+         from frontier.profiling.common.runtime_identity import canonical_json
+         retained = getattr(self, "_step5_collective_receipts", None)
+-        if retained is None or retained[0] != text:
+-            artifact, shapes = json.loads(text), {}
++        if retained is None:
++            artifact, shapes = json.loads(self._cc_backend.collective_profile_bytes().decode("utf-8")), {}
+             for key in artifact["counts"]:
+                 value = json.loads(key)
+                 shape = (value["phase"], tuple(value["sizes"]), value["graph_mode"], canonical_json(value["tensors"]))
+                 shapes.setdefault(shape, []).append((key, value))
+-            retained = (text, artifact, shapes, {}, {})
++            retained = (artifact, shapes, {}, {})
+         else:
+-            retained = (*retained[:3], retained[3].copy(), retained[4].copy())
++            retained = (*retained[:2], retained[2].copy(), retained[3].copy())
+         return retained
+ 
+     def _step5_plan_candidates(self, retained, phase, sizes, mode, tensors, context):
+         from frontier.profiling.common.runtime_identity import canonical_json
+-        _, artifact, shapes, domains, plans = retained
++        artifact, shapes, domains, plans = retained
+         shape = (phase, sizes, mode, canonical_json(tensors))
+         shared = canonical_json(context["native_facts"]["shared"])
+         domain = (shape, shared)
+@@ -188,7 +188,6 @@
+         """Recover actual point facts and complete measured plans, never numerical defaults."""
+         from frontier.profiling.moe.inputs import MoESourceFrame
+         from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+-        from pathlib import Path
+         source = lane.routing_source
+         group = self._step5_routed_layer_group(self._step5_layer_metadata.attention_spec.global_layer_id)
+         family = self._measurement_family_name(self._active_measurement_type)
+@@ -210,8 +209,7 @@
+         from frontier.operators.families import get_moe_profiling_operators
+         queries = {op.name:dict(num_tokens=local.physical_rows,live_routing_token_count=local.live_rows)
+                    if op.ep_agnostic else features for op in get_moe_profiling_operators(context)}
+-        text = (Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_text()
+-        retained = self._step5_collective_points(text)
++        retained = self._step5_collective_points()
+         plans = {}
+         phases = {"step5_moe_dispatch":"dispatch","step5_moe_combine":"combine",
+             "moe_tensor_parallel_allreduce":"routed_tp"}
+--- a/frontier/cc_backend/base_cc_backend.py
++++ b/frontier/cc_backend/base_cc_backend.py
+@@ -105,6 +105,14 @@
+         """Get the number of devices."""
+         return self._num_devices
+ 
++    def bind_collective_profile_inputs(self, inputs):
++        """Bind the run's collective input before this backend is used."""
++        raise NotImplementedError(f"{type(self).__name__} does not support collective profiling inputs")
++
++    def collective_profile_bytes(self):
++        """Return this backend's immutable collective profiling input."""
++        raise NotImplementedError(f"{type(self).__name__} does not support collective profiling inputs")
++
+     def predict_collective_plan(self, plan):
+         """Price a lossless joint plan or reject this backend's capability."""
+         raise NotImplementedError(
+--- a/frontier/cc_backend/backends/collective_sim_cc_backend.py
++++ b/frontier/cc_backend/backends/collective_sim_cc_backend.py
+@@ -14,6 +14,7 @@
+ from frontier.cc_backend.base_cc_backend import BaseCCBackend
+ from frontier.cc_backend.cc_backend_config import CollectiveSimCCBackendConfig
+ from frontier.cc_backend.cc_backend_factory import CCBackendFactory
++from frontier.cc_backend.collective_profile import CollectiveProfileInputs
+ from frontier.logger import init_logger
+ from frontier.types import CCBackendType, ClusterType
+ 
+@@ -70,8 +71,9 @@
+         self._prediction_cache_hits = 0
+         self._prediction_cache_instance_hits = 0
+         self._prediction_cache_misses = 0
+-        self._collective_artifact_text = None
++        self._collective_artifact_bytes = None
+         self._collective_artifact = None
++        self._collective_profile_inputs = CollectiveProfileInputs()
+ 
+         self._repo_root = self._resolve_collective_sim_repo_root()
+         self._python_root = self._repo_root / "python"
+@@ -800,6 +802,16 @@
+             "collective-sim backend does not support broadcast prediction"
+         )
+ 
++    def bind_collective_profile_inputs(self, inputs):
++        self._collective_profile_inputs = inputs
++        self.collective_profile_bytes()
++
++    def collective_profile_bytes(self):
++        if self._collective_artifact_bytes is None:
++            self._collective_artifact_bytes = self._collective_profile_inputs.read(
++                self._config.profiling_data_dir, self._device_type)
++        return self._collective_artifact_bytes
++
+     def predict_collective_plan(self, plan):
+         """Price one qualified joint workload, never native full-duration lookup."""
+         from frontier.cc_backend.collective_plan import CollectivePlan, CollectivePlanCost, collective_model_context
+@@ -809,11 +821,8 @@
+             self._get_attention_parallel_dim_sizes(), context="Step plan")
+         if dims != {"TP":8, "CP":1, "DP":2, "EP":1} or self._placement_order != ("TP","DP"):
+             raise ValueError("Step plans require explicitly configured TP8/DP2 placement")
+-        path = Path(self._config.profiling_data_dir) / self._device_type / "collective_local.json"
+-        text = path.read_text()
+-        if text != self._collective_artifact_text:
+-            artifact = json.loads(text)
+-            self._collective_artifact_text, self._collective_artifact = text, artifact
++        if self._collective_artifact is None:
++            self._collective_artifact = json.loads(self.collective_profile_bytes().decode("utf-8"))
+         artifact = self._collective_artifact
+         context=json.loads(plan.context_json)
+         if artifact.get("evidence_kind") == "cpu_fixture" or context.get("shared",{}).get("evidence_kind") == "cpu_fixture":
+--- a/tests/unit/test_collective_sim_cc_backend.py
++++ b/tests/unit/test_collective_sim_cc_backend.py
+@@ -97,6 +97,8 @@
+     with pytest.raises(KeyError): backend.predict_collective_plan(switched)
+     artifact["counts"][switched.cache_key()]={**original,"plan_key":switched.cache_key(),"context":context}
+     path.write_text(json.dumps(artifact))
++    with pytest.raises(KeyError): backend.predict_collective_plan(switched)
++    backend=CollectiveSimCCBackend(backend.config,backend.cluster_type,"h800","cpu_fixture",16)
+     result=backend.predict_collective_plan(switched)
+     assert result.duration_ms == expected.duration_ms and result.plan_key == switched.cache_key()
+     assert json.loads(result.count_receipt_json)["context"] == context
+@@ -197,37 +199,38 @@
+     else:
+         with pytest.raises((ValueError,FileNotFoundError)): cpu_writer_source()
+ 
+-def test_collective_artifact_reuses_only_identical_current_text(tmp_path,monkeypatch):
+-    import os,frontier.cc_backend.backends.collective_sim_cc_backend as module
++def test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published(tmp_path,monkeypatch):
++    import os
+     backend,artifact,path=cpu_writer_payload(tmp_path,monkeypatch)
+     key=next(iter(artifact["counts"]));v=json.loads(key)
+     plan=CollectivePlan(v["phase"],v["sizes"],tuple(CollectiveTensor(**t) for t in v["tensors"]),v["groups"],v["graph_mode"],v["context_json"],v["buffer_json"])
+-    text=path.read_text();stat=path.stat();reads=[];decodes=[];failure=[]
+-    class ArtifactText(str): pass
+-    class CurrentPath(type(path)):
+-        def read_text(self):
+-            reads.append(self)
+-            if failure: raise failure[0]
+-            return ArtifactText(super().read_text())
+-    class Decoder:
+-        def __getattr__(self,name): return getattr(json,name)
+-        def loads(self,value):
+-            if isinstance(value,ArtifactText): decodes.append(value)
+-            return json.loads(value)
+-    monkeypatch.setattr(module,"Path",CurrentPath);monkeypatch.setattr(module,"json",Decoder())
++    text=path.read_text();stat=path.stat();reads=[];failure=[];original=Path.read_bytes
++    def read(file):
++        reads.append(file)
++        if failure: raise failure[0]
++        return original(file)
++    monkeypatch.setattr(Path,"read_bytes",read)
++    def new_backend():
++        return CollectiveSimCCBackend(backend.config,backend.cluster_type,"h800","cpu_fixture",16)
+     first=backend.predict_collective_plan(plan);assert backend.predict_collective_plan(plan)==first
+-    assert len(reads)==2 and len(decodes)==1
++    assert len(reads)==1
+     with pytest.raises(KeyError): backend.predict_collective_plan(replace(plan,buffer_json='{"evidence_kind":"cpu_fixture"}'))
+     artifact["counts"][key]["cost"].update(duration_ms=.04,network_ms=.02)
+     changed=json.dumps(artifact);assert len(changed)==len(text)
+     path.write_text(changed);os.utime(path,ns=(stat.st_atime_ns,stat.st_mtime_ns));assert path.stat().st_mtime_ns==stat.st_mtime_ns
+-    assert backend.predict_collective_plan(plan).duration_ms==.04 and len(decodes)==2
+-    path.write_text("{")
+-    for _ in range(2):
+-        with pytest.raises(json.JSONDecodeError): backend.predict_collective_plan(plan)
+-    assert len(decodes)==4
+-    path.write_text(changed);assert backend.predict_collective_plan(plan).duration_ms==.04 and len(decodes)==4
++    assert backend.predict_collective_plan(plan)==first and len(reads)==1
++    assert new_backend().predict_collective_plan(plan).duration_ms==.04
++    for raw,error in ((b"{",json.JSONDecodeError),(b"\xff",UnicodeDecodeError)):
++        path.write_bytes(raw);candidate=new_backend()
++        assert backend.predict_collective_plan(plan)==first
++        for _ in range(2):
++            with pytest.raises(error): candidate.predict_collective_plan(plan)
++        path.write_text(changed)
++        assert candidate.predict_collective_plan(plan).duration_ms==.04
+     for error in (FileNotFoundError("current artifact"),PermissionError("current artifact")):
+-        failure[:]=[error]
+-        with pytest.raises(type(error)) as caught: backend.predict_collective_plan(plan)
+-        assert caught.value is error
++        failure[:]=[error];candidate=new_backend()
++        for _ in range(2):
++            with pytest.raises(type(error)) as caught: candidate.predict_collective_plan(plan)
++            assert caught.value is error
++        failure.clear()
++        assert candidate.predict_collective_plan(plan).duration_ms==.04
+--- a/tests/unit/test_moe_routing_runtime.py
++++ b/tests/unit/test_moe_routing_runtime.py
+@@ -8,6 +8,48 @@
+     resolve_moe_gating_routing_runtime_path,
+ )
+ from tests.unit.test_prediction_measurement_bindings import bound
++
++
++def test_collective_input_binds_both_role_constructors_and_refreshes_next_run(tmp_path, monkeypatch):
++    import json
++    from pathlib import Path
++    from frontier.config import MetricsConfig, ReplicaConfig, global_vars
++    from frontier.execution_time_predictor.shared_prediction_model_manager import ExecutionTimePredictionModelManager
++    from frontier.execution_time_predictor.sklearn_execution_time_predictor import SklearnExecutionTimePredictor
++    from tests.unit.test_moe_grouped_gemm_padded_features import _ConcreteMoEPredictor
++    from tests.unit.test_collective_sim_cc_backend import cpu_writer_payload, CollectiveSimCCBackend, CollectivePlan, CollectiveTensor, ClusterType
++    template, artifact, path = cpu_writer_payload(tmp_path, monkeypatch)
++    value = json.loads(next(iter(artifact["counts"])))
++    plan = CollectivePlan(value["phase"], value["sizes"], tuple(CollectiveTensor(**t) for t in value["tensors"]), value["groups"], value["graph_mode"], value["context_json"], value["buffer_json"])
++    replica = ReplicaConfig(model_name="stepfun-ai/Step-5-Preview", device="h800", attn_tensor_parallel_size=8,
++        attn_dp=2, moe_expert_parallel_size=16, moe_routing_distribution_type="position_cyclic")
++    metrics = MetricsConfig(cache_dir=str(tmp_path / "cache"))
++    manager = ExecutionTimePredictionModelManager({}, metrics)
++    monkeypatch.setattr(global_vars, "SYS_ARCH", "pd-disaggregation")
++    monkeypatch.setattr(SklearnExecutionTimePredictor, "__init__", lambda self, *args: setattr(self, "_cluster_type", args[5]))
++    monkeypatch.setattr(_ConcreteMoEPredictor, "_init_global_routing_allocations", lambda self: {})
++    read, reads = Path.read_bytes, []
++    def observe(file):
++        if file == path: reads.append(file)
++        return read(file)
++    monkeypatch.setattr(Path, "read_bytes", observe)
++    backends = []
++    for role in (ClusterType.PREFILL, ClusterType.DECODE):
++        backend = CollectiveSimCCBackend(template.config, role, "h800", "cpu_fixture", 16)
++        _ConcreteMoEPredictor(None, replica, None, metrics, manager, role, cc_backend=backend)
++        backends.append(backend)
++        for entry in artifact["counts"].values(): entry["cost"].update(duration_ms=.04, network_ms=.02)
++        path.write_text(json.dumps(artifact))
++    assert [backend.predict_collective_plan(plan).duration_ms for backend in backends] == [.03, .03]
++    assert len(reads) == 1
++    backend = CollectiveSimCCBackend(template.config, ClusterType.DECODE, "h800", "cpu_fixture", 16)
++    _ConcreteMoEPredictor(None, replica, None, metrics, ExecutionTimePredictionModelManager({}, metrics), ClusterType.DECODE, cc_backend=backend)
++    assert backend.predict_collective_plan(plan).duration_ms == .04 and len(reads) == 2
++    replica.moe_routing_distribution_type = "balanced"
++    path.write_text("{")
++    backend = CollectiveSimCCBackend(template.config, ClusterType.PREFILL, "h800", "cpu_fixture", 16)
++    _ConcreteMoEPredictor(None, replica, None, metrics, manager, ClusterType.PREFILL, cc_backend=backend)
++    assert len(reads) == 2
+ 
+ 
+ @pytest.mark.parametrize("distribution_type", ["balanced", "skewed", "zipf"])
+@@ -54,18 +96,24 @@
+ @pytest.mark.parametrize("foreign", [None, {"quant_dtype":"float8_e4m3fn"}])
+ def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path, foreign, bound):
+     import json
+-    from types import SimpleNamespace
+     from tests.integration.step5_measured_compute_fixture import position_collective_costs
+     from tests.unit.test_step5_measured_ffn_replay import _predictor
+     from tests.unit.test_moe_position_routing import source,materialize
+     from frontier.execution_time_predictor.step5_cost import step5_layer_metadata
+     from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
++    from frontier.cc_backend.backends.collective_sim_cc_backend import CollectiveSimCCBackend
++    from frontier.cc_backend.cc_backend_config import CollectiveSimCCBackendConfig
+     manager, replica, rows, paths, _ = bound
+-    p=_predictor(replica.model_config,manager);p._replica_config=replica
+     lane=materialize(source(padding=16)).lane(0)
+     path=position_collective_costs(tmp_path,paths[1],device=replica.device)
+-    p._cc_backend=SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
+-    p._step5_layer_metadata=step5_layer_metadata(p,88)
++    config=CollectiveSimCCBackendConfig(cluster_servers=2,cluster_gpus_per_server=8,parallel_tp=8,parallel_dp=2,
++        placement_order="TP,DP",profiling_data_dir=str(path.parents[1]),runner_out_dir=str(tmp_path/"runner"))
++    def new_predictor():
++        predictor=_predictor(replica.model_config,manager);predictor._replica_config=replica
++        predictor._cc_backend=CollectiveSimCCBackend(config,predictor._cluster_type,replica.device,"cpu_fixture",16)
++        predictor._step5_layer_metadata=step5_layer_metadata(predictor,88)
++        return predictor
++    p=new_predictor()
+     group=next(g for g in resolve_routed_layer_groups(replica.model_config) if 88 in g.layer_ids)
+     retained=rows.loc[rows.moe_layer_ids.eq(group.row_metadata()["moe_layer_ids"]) & rows.moe_ep_rank.eq(0) & rows.moe_input_id.eq("cpu_fixture_q16_c6128")]
+     context=json.loads(retained.native_context.iloc[0])
+@@ -79,28 +127,22 @@
+     saved = path.read_text()
+     prepared = p._step5_collective_receipts
+     path.write_text("{")
+-    with pytest.raises(json.JSONDecodeError): p._step5_position_queries(lane)
+-    assert p._step5_collective_receipts is prepared
++    assert p._step5_position_queries(lane) == (native, features, plans)
++    assert p._step5_collective_receipts[0] is prepared[0]
++    assert all(p._cc_backend.predict_collective_plan(plan).duration_ms == .03 for plan in plans.values())
++    with pytest.raises(json.JSONDecodeError): new_predictor()._step5_position_queries(lane)
+     path.write_text(saved)
+-    assert p._step5_position_queries(lane) == (native, features, plans)
+-    prepared = p._step5_collective_receipts
+-    path.write_text(saved + " ")
+-    assert p._step5_position_queries(lane) == (native, features, plans)
+-    assert p._step5_collective_receipts[2] is not prepared[2]
+-    path.write_text(saved)
+-    p._step5_position_queries(lane); prepared = p._step5_collective_receipts
+     for case in ("buffer_receipt", "context"):
+         changed = json.loads(saved)
+         for receipt in changed["counts"].values(): receipt[case] = {"foreign": True} if case == "buffer_receipt" else {**receipt[case], "foreign": True}
+         path.write_text(json.dumps(changed))
+-        with pytest.raises(ValueError, match="buffer/count|context/count"): p._step5_position_queries(lane)
+-        assert p._step5_collective_receipts is prepared
+-        path.write_text(saved)
++        candidate=new_predictor()
++        with pytest.raises(ValueError, match="buffer/count|context/count"): candidate._step5_position_queries(lane)
++        assert not hasattr(candidate,"_step5_collective_receipts")
+         assert p._step5_position_queries(lane) == (native, features, plans)
+-        prepared = p._step5_collective_receipts
+     for key,receipt in list(counts.items()):
+         value=json.loads(key);value["buffer_json"]=json.dumps(dict(actual_buffer="foreign",compute_context=foreign));counts[json.dumps(value,sort_keys=True,separators=(",",":"))]=counts.pop(key)
+     path.write_text(json.dumps(dict(counts=counts)))
+-    with pytest.raises(ValueError,match="unique measured"):p._step5_position_queries(lane)
++    with pytest.raises(ValueError,match="unique measured"):new_predictor()._step5_position_queries(lane)
+     model._frontier_moe_physical_rows=()
+     with pytest.raises(ValueError,match="actual source/native point"):p._step5_position_queries(lane)
+--- a/tests/unit/test_prediction_measurement_bindings.py
++++ b/tests/unit/test_prediction_measurement_bindings.py
+@@ -147,7 +147,7 @@
+     predictor = _predictor(replica.model_config, manager)
+     predictor._replica_config = replica
+     path = fixture.position_collective_costs(tmp_path, paths[1], device="h800")
+-    predictor._cc_backend = SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
++    predictor._cc_backend = SimpleNamespace(collective_profile_bytes=lambda raw=path.read_bytes(): raw)
+     lane = materialize(source(padding=16)).lane(0)
+     for layer in (3, 88):
+         with predictor._step5_measured_layer(layer):
+@@ -181,7 +181,7 @@
+     snapshots = {}
+     for index, (predictor, config) in enumerate(zip(predictors, (replica, replica, separate))):
+         predictor._replica_config = config
+-        predictor._cc_backend = SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
++        predictor._cc_backend = SimpleNamespace(collective_profile_bytes=lambda raw=path.read_bytes(): raw)
+         for layer in (3, 88, 3, 88):
+             with predictor._step5_measured_layer(layer):
+                 context, queries, plans = predictor._step5_position_queries(lane)
+@@ -233,7 +233,7 @@
+     manager, replica, _, paths, _ = bound
+     path = fixture.position_collective_costs(tmp_path, paths[1], device=replica.device)
+     p = _predictor(replica.model_config, manager); p._replica_config = replica
+-    p._cc_backend = SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])))
++    p._cc_backend = SimpleNamespace(collective_profile_bytes=lambda raw=path.read_bytes(): raw)
+     lane = materialize(source(padding=16)).lane(0)
+     real_loads, reads, source_reads = json.loads, [], []
+     def observe(text, *args, **kwargs):
+--- a/tests/unit/test_step5_measured_ffn.py
++++ b/tests/unit/test_step5_measured_ffn.py
+@@ -72,7 +72,7 @@
+     p._register_additional_profiling_metadata_from_files()
+     lane=materialize(source(padding=16)).lane(0)
+     path=fixture.position_collective_costs(tmp_path,paths[1],device="h800");artifact=json.loads(path.read_text())
+-    p._cc_backend=SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(path.parents[1])),
++    p._cc_backend=SimpleNamespace(collective_profile_bytes=lambda raw=path.read_bytes():raw,
+         predict_collective_plan=lambda plan:CollectivePlanCost(**artifact["counts"][plan.cache_key()]["cost"]))
+     with p._step5_measured_layer(88):
+         result=p._predict_step5_position_execution(SimpleNamespace(),lane,layer_id=88,include_attention=False,include_stage_owned=False,pipeline_stage=0)

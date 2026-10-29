@@ -1,0 +1,105 @@
+{
+  "task_id": "D29-TRACE-SERIALIZATION-REPAIR",
+  "code_commit": "390bb5a2",
+  "records": [
+    {
+      "path": "budget.json",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/budget.json",
+      "bytes": 1782,
+      "sha256": "f6ed9805cad771d68c44cdc6f8a3c2279e9e26c3c1669f129f944a833b910f8d"
+    },
+    {
+      "path": "trace_serialization.diff",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/trace_serialization.diff",
+      "bytes": 1457,
+      "sha256": "3db6ca9bc1aad196a2cb3bbb5685e72daad03d3ca6bd93c9dbf6ae1d532aee74"
+    },
+    {
+      "path": "evidence/trace-verification.json",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/verified02/trace-verification.json",
+      "bytes": 3256,
+      "sha256": "565f133bb5bf14c09f658015377422d63e85cec6f4e581f1b3fd547d5041b0e1"
+    },
+    {
+      "path": "evidence/pytest-comparison.json",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/pytest-comparison.json",
+      "bytes": 1207,
+      "sha256": "9e2b690f4f3ee745344871ed30834b3e775ef5e58dfa4680082d20f3fe570436"
+    },
+    {
+      "path": "evidence/wave-binding.json",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-binding.json",
+      "bytes": 1915,
+      "sha256": "dfe80a4684713aa947329fd66f5fdba7c8dec415989243d5f9b7346c44901b84"
+    },
+    {
+      "path": "evidence/wave-comparison.json",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-comparison.json",
+      "bytes": 42499,
+      "sha256": "55631365e7e59ac13ea6f084954eaa3b8073450a69963afda978965211ed0f40"
+    },
+    {
+      "path": "evidence/wave-baseline-result.json",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-baseline01/result.json",
+      "bytes": 15600,
+      "sha256": "e865de40bcaadbd29c784d9d8cc677eb1008e4fa23da1f4e7842850fe4d52451"
+    },
+    {
+      "path": "evidence/wave-candidate-result.json",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-candidate02/result.json",
+      "bytes": 15610,
+      "sha256": "51bc7c8f158fa596b6c9222570b35587f99fe22ef6adb39c2bfa7d0272f8c344"
+    },
+    {
+      "path": "evidence/pytest-baseline.log",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/pytest-baseline.log",
+      "bytes": 10692,
+      "sha256": "dd2b0d7b86846192dff7eef96b5026da92166bcc7a8070ea46d75d6ab2a10175"
+    },
+    {
+      "path": "evidence/pytest-candidate.log",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/pytest-candidate.log",
+      "bytes": 10692,
+      "sha256": "e5cf6fd01f45c520209fd55bea6117c2c004974bc6864f8da0dd9562ca4abd3b"
+    },
+    {
+      "path": "evidence/pytest-baseline.xml",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/pytest-baseline.xml",
+      "bytes": 26378,
+      "sha256": "7e6d113b413eed0404d6eb012959ab6e8982a5b3039c997484e90b2bc277bfc8"
+    },
+    {
+      "path": "evidence/pytest-candidate.xml",
+      "scratch_source": "/data/ycfeng/tmp/d29_trace_serialization_repair/pytest-candidate.xml",
+      "bytes": 26378,
+      "sha256": "6984ace6d7fc8c7c5ec35ec88a3c7a2bdf272bb99aaa970e2347675bb33cca33"
+    }
+  ],
+  "scratch_scripts": [
+    {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_repair/verify_trace.py",
+      "sha256": "66619c1b8da61c572e7397fa7c2661fc83f238a8001716ade40bed9c7288c2b8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_repair/prepare_wave.py",
+      "sha256": "ba796bf9a3ab3deb1a5511ea09d94e9adb514c3b5b8e8460795ce2b9136f206a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-baseline.py",
+      "sha256": "3c03bb6f58c86d6c7525e43eaba7230fd18317f1a335e376febe5c39c1b3ec0d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-candidate.py",
+      "sha256": "874399aa073336429a488d806ed9575f71c16914f94b50e86d0dde394f3e098e"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_repair/compare_outputs.py",
+      "sha256": "2011d327601f8ad67741d19a2b0f7e686b27d00bbf6692d58cafce2864f33873"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_trace_serialization_repair/budget.py",
+      "sha256": "bc03d261686aec7aafca577c03dbd2b808d459043814a220a12bb9fa8e235ad1"
+    }
+  ],
+  "limits": "No durable test script or source path added; raw/full proof traces remain at referenced scratch paths."
+}

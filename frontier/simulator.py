@@ -783,7 +783,7 @@ class Simulator:
                 layer_id = getattr(event, "_layer_id", None)
             if layer_id is None and transfer_info is not None:
                 layer_id = getattr(transfer_info, "layer_id", None)
-            if layer_id is None:
+            if layer_id is None and getattr(batch, "requests", None):
                 layer_id = getattr(batch, "af_inflight_layer_count", None)
             if layer_id is None:
                 try:

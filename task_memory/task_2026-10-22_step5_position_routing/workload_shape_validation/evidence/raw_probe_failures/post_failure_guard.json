@@ -1,0 +1,9 @@
+{
+  "status": "PASS_POST_FAILURE_METADATA_GUARD",
+  "source": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+  "source_hashes": 23,
+  "fixture_stat_bindings": 262,
+  "new_production_invocations": 0,
+  "total_shape_invocations_used": 3,
+  "corrected_driver_sha256": "e099270ef4c8bfdf36336d4c4d494d8ddecdafbc57003efabb07762f416a1d9e"
+}

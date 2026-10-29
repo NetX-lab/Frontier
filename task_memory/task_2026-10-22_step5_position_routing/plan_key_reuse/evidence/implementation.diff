@@ -1,0 +1,38 @@
+diff --git a/frontier/cc_backend/collective_plan.py b/frontier/cc_backend/collective_plan.py
+index 57b53fa6..d4246ea9 100644
+--- a/frontier/cc_backend/collective_plan.py
++++ b/frontier/cc_backend/collective_plan.py
+@@ -89,7 +89,10 @@ class CollectivePlan:
+                 "native_grouping": "outer_tensor_group/nested_root_group"}
+ 
+     def cache_key(self):
+-        return json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"))
++        if "_cache_key_json" not in self.__dict__:
++            object.__setattr__(self, "_cache_key_json",
++                json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":")))
++        return self._cache_key_json
+ 
+     def endpoint_bytes(self, rank):
+         if type(rank) is not int or not 0 <= rank < 16:
+diff --git a/tests/unit/test_step5_moe_pricing.py b/tests/unit/test_step5_moe_pricing.py
+index 2213df1f..036bb10d 100644
+--- a/tests/unit/test_step5_moe_pricing.py
++++ b/tests/unit/test_step5_moe_pricing.py
+@@ -57,6 +57,17 @@ def plan(sizes=(16, 1), phase="dispatch"):
+ 
+ def test_lossless_plan_order_identity_and_count_separation():
+     p = plan()
++    key = p.cache_key()
++    assert key == json.dumps(p.to_dict(), sort_keys=True, separators=(",", ":"))
++    assert p.cache_key() is key
++    public = p.to_dict()
++    public["context"]["quant_dtype"] = "mutated"
++    assert p.to_dict()["context"]["quant_dtype"] is None
++    for raw in (b'{"fixture":true}', bytearray(b'{"fixture":true}')):
++        invalid = replace(p, buffer_json=raw)
++        for _ in range(2):
++            with pytest.raises(TypeError, match="not JSON serializable"):
++                invalid.cache_key()
+     assert p.stages == (("Broadcast", 0, 0), ("Broadcast", 0, 1))
+     assert p.endpoint_bytes(8) == (8192, 17 * 8192)
+     assert p.cache_key() != plan((1, 16)).cache_key()

@@ -1,0 +1,349 @@
+Running scope as unit: run-r7eab41603f3241ae8dbd5a2317789236.scope
+.........s.s......................s................sss.......FFFF....... [100%]
+=================================== FAILURES ===================================
+_ test_position_command_prices_exact_plan_through_real_cluster[offline-PREFILL] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_green_final/pytest/test_position_command_prices_e0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2b2e986bf0>
+role = 'PREFILL', mode = 'offline'
+
+    @pytest.mark.parametrize("role", ["PREFILL", "DECODE"])
+    @pytest.mark.parametrize("mode", ["offline", "online"])
+    def test_position_command_prices_exact_plan_through_real_cluster(tmp_path, monkeypatch, role, mode):
+        import sys
+        import pandas as pd
+        from frontier.config import SimulationConfig, global_vars
+        from frontier.entities import Cluster
+        from frontier.types import ClusterType
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from tests.integration.step5_measured_compute_fixture import position_collective_costs
+        for name, value in vars(global_vars).copy().items():
+            if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+        tensor = dict(name="activation",dtype="bfloat16",element_size=2,columns=4096,row_stride=4096)
+        native = dict(native_facts=dict(shared=dict(evidence_kind="cpu_fixture")),
+            collective_tensors=dict(dispatch=[tensor],output=[{**tensor,"name":"output"}]))
+        table = tmp_path/"compute.csv"
+        pd.DataFrame([dict(moe_frame_scope="dp_gathered",graph_mode="none",native_context=json.dumps(native),
+            routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])))]).to_csv(table,index=False)
+        path = position_collective_costs(tmp_path,table,device="h800")
+        fixture = dict(decode_cuda_graph_mode="full_and_piecewise",cudagraph_capture_sizes=CAPTURE_SIZES,
+            max_model_len=7168,cache_dir=str(tmp_path/"cache"),predictor_config={},
+            routing_distribution_type="position_cyclic",collective_plan_input_file=str(path))
+        monkeypatch.setattr(sys,"argv",command(mode,tmp_path,fixture,tmp_path/"read.json")[3:])
+>       config = SimulationConfig.create_from_cli_args()
+
+tests/integration/test_step5_measured_main.py:374: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/config/config.py:800: in create_from_cli_args
+    instance = flat_config.reconstruct_original_dataclass()
+frontier/config/flat_dataclass.py:149: in reconstruct_original_dataclass
+    instances[_cls] = _cls(**args)
+<string>:39: in __init__
+    ???
+frontier/config/config.py:430: in __post_init__
+    self.cluster_config.print_cluster_statistics(
+frontier/config/cluster_topology_summary.py:166: in print_cluster_statistics
+    server_count_metadata = self.get_server_count_metadata(sys_arch)
+frontier/config/cluster_topology_summary.py:100: in get_server_count_metadata
+    physical_topology = resolve_collective_sim_physical_topology(
+frontier/config/parallel_semantics.py:314: in resolve_collective_sim_physical_topology
+    profile_gpus_per_server = _get_collective_sim_profile_gpus_per_server(
+frontier/config/parallel_semantics.py:283: in _get_collective_sim_profile_gpus_per_server
+    scenario_profiles = importlib.import_module("collective_sim_core.scenario_profiles")
+/usr/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+<frozen importlib._bootstrap>:1050: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1027: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:992: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:241: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1050: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1027: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'collective_sim_core', import_ = <function _gcd_import at 0x7f2b40a7b400>
+
+>   ???
+E   ModuleNotFoundError: No module named 'collective_sim_core'
+
+<frozen importlib._bootstrap>:1004: ModuleNotFoundError
+----------------------------- Captured stdout call -----------------------------
+WARNING 23:56:33 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.config.cluster_config:cluster_config.py:1565 Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+_ test_position_command_prices_exact_plan_through_real_cluster[offline-DECODE] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_green_final/pytest/test_position_command_prices_e1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2b2dd0f790>
+role = 'DECODE', mode = 'offline'
+
+    @pytest.mark.parametrize("role", ["PREFILL", "DECODE"])
+    @pytest.mark.parametrize("mode", ["offline", "online"])
+    def test_position_command_prices_exact_plan_through_real_cluster(tmp_path, monkeypatch, role, mode):
+        import sys
+        import pandas as pd
+        from frontier.config import SimulationConfig, global_vars
+        from frontier.entities import Cluster
+        from frontier.types import ClusterType
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from tests.integration.step5_measured_compute_fixture import position_collective_costs
+        for name, value in vars(global_vars).copy().items():
+            if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+        tensor = dict(name="activation",dtype="bfloat16",element_size=2,columns=4096,row_stride=4096)
+        native = dict(native_facts=dict(shared=dict(evidence_kind="cpu_fixture")),
+            collective_tensors=dict(dispatch=[tensor],output=[{**tensor,"name":"output"}]))
+        table = tmp_path/"compute.csv"
+        pd.DataFrame([dict(moe_frame_scope="dp_gathered",graph_mode="none",native_context=json.dumps(native),
+            routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])))]).to_csv(table,index=False)
+        path = position_collective_costs(tmp_path,table,device="h800")
+        fixture = dict(decode_cuda_graph_mode="full_and_piecewise",cudagraph_capture_sizes=CAPTURE_SIZES,
+            max_model_len=7168,cache_dir=str(tmp_path/"cache"),predictor_config={},
+            routing_distribution_type="position_cyclic",collective_plan_input_file=str(path))
+        monkeypatch.setattr(sys,"argv",command(mode,tmp_path,fixture,tmp_path/"read.json")[3:])
+>       config = SimulationConfig.create_from_cli_args()
+
+tests/integration/test_step5_measured_main.py:374: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/config/config.py:800: in create_from_cli_args
+    instance = flat_config.reconstruct_original_dataclass()
+frontier/config/flat_dataclass.py:149: in reconstruct_original_dataclass
+    instances[_cls] = _cls(**args)
+<string>:39: in __init__
+    ???
+frontier/config/config.py:430: in __post_init__
+    self.cluster_config.print_cluster_statistics(
+frontier/config/cluster_topology_summary.py:166: in print_cluster_statistics
+    server_count_metadata = self.get_server_count_metadata(sys_arch)
+frontier/config/cluster_topology_summary.py:100: in get_server_count_metadata
+    physical_topology = resolve_collective_sim_physical_topology(
+frontier/config/parallel_semantics.py:314: in resolve_collective_sim_physical_topology
+    profile_gpus_per_server = _get_collective_sim_profile_gpus_per_server(
+frontier/config/parallel_semantics.py:283: in _get_collective_sim_profile_gpus_per_server
+    scenario_profiles = importlib.import_module("collective_sim_core.scenario_profiles")
+/usr/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+<frozen importlib._bootstrap>:1050: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1027: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:992: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:241: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1050: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1027: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'collective_sim_core', import_ = <function _gcd_import at 0x7f2b40a7b400>
+
+>   ???
+E   ModuleNotFoundError: No module named 'collective_sim_core'
+
+<frozen importlib._bootstrap>:1004: ModuleNotFoundError
+----------------------------- Captured stdout call -----------------------------
+WARNING 23:56:33 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.config.cluster_config:cluster_config.py:1565 Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+_ test_position_command_prices_exact_plan_through_real_cluster[online-PREFILL] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_green_final/pytest/test_position_command_prices_e2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2b2e313760>
+role = 'PREFILL', mode = 'online'
+
+    @pytest.mark.parametrize("role", ["PREFILL", "DECODE"])
+    @pytest.mark.parametrize("mode", ["offline", "online"])
+    def test_position_command_prices_exact_plan_through_real_cluster(tmp_path, monkeypatch, role, mode):
+        import sys
+        import pandas as pd
+        from frontier.config import SimulationConfig, global_vars
+        from frontier.entities import Cluster
+        from frontier.types import ClusterType
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from tests.integration.step5_measured_compute_fixture import position_collective_costs
+        for name, value in vars(global_vars).copy().items():
+            if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+        tensor = dict(name="activation",dtype="bfloat16",element_size=2,columns=4096,row_stride=4096)
+        native = dict(native_facts=dict(shared=dict(evidence_kind="cpu_fixture")),
+            collective_tensors=dict(dispatch=[tensor],output=[{**tensor,"name":"output"}]))
+        table = tmp_path/"compute.csv"
+        pd.DataFrame([dict(moe_frame_scope="dp_gathered",graph_mode="none",native_context=json.dumps(native),
+            routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])))]).to_csv(table,index=False)
+        path = position_collective_costs(tmp_path,table,device="h800")
+        fixture = dict(decode_cuda_graph_mode="full_and_piecewise",cudagraph_capture_sizes=CAPTURE_SIZES,
+            max_model_len=7168,cache_dir=str(tmp_path/"cache"),predictor_config={},
+            routing_distribution_type="position_cyclic",collective_plan_input_file=str(path))
+        monkeypatch.setattr(sys,"argv",command(mode,tmp_path,fixture,tmp_path/"read.json")[3:])
+>       config = SimulationConfig.create_from_cli_args()
+
+tests/integration/test_step5_measured_main.py:374: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/config/config.py:800: in create_from_cli_args
+    instance = flat_config.reconstruct_original_dataclass()
+frontier/config/flat_dataclass.py:149: in reconstruct_original_dataclass
+    instances[_cls] = _cls(**args)
+<string>:39: in __init__
+    ???
+frontier/config/config.py:430: in __post_init__
+    self.cluster_config.print_cluster_statistics(
+frontier/config/cluster_topology_summary.py:166: in print_cluster_statistics
+    server_count_metadata = self.get_server_count_metadata(sys_arch)
+frontier/config/cluster_topology_summary.py:100: in get_server_count_metadata
+    physical_topology = resolve_collective_sim_physical_topology(
+frontier/config/parallel_semantics.py:314: in resolve_collective_sim_physical_topology
+    profile_gpus_per_server = _get_collective_sim_profile_gpus_per_server(
+frontier/config/parallel_semantics.py:283: in _get_collective_sim_profile_gpus_per_server
+    scenario_profiles = importlib.import_module("collective_sim_core.scenario_profiles")
+/usr/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+<frozen importlib._bootstrap>:1050: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1027: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:992: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:241: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1050: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1027: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'collective_sim_core', import_ = <function _gcd_import at 0x7f2b40a7b400>
+
+>   ???
+E   ModuleNotFoundError: No module named 'collective_sim_core'
+
+<frozen importlib._bootstrap>:1004: ModuleNotFoundError
+----------------------------- Captured stdout call -----------------------------
+WARNING 23:56:33 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.config.cluster_config:cluster_config.py:1565 Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+_ test_position_command_prices_exact_plan_through_real_cluster[online-DECODE] __
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_green_final/pytest/test_position_command_prices_e3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2b2dd0dde0>
+role = 'DECODE', mode = 'online'
+
+    @pytest.mark.parametrize("role", ["PREFILL", "DECODE"])
+    @pytest.mark.parametrize("mode", ["offline", "online"])
+    def test_position_command_prices_exact_plan_through_real_cluster(tmp_path, monkeypatch, role, mode):
+        import sys
+        import pandas as pd
+        from frontier.config import SimulationConfig, global_vars
+        from frontier.entities import Cluster
+        from frontier.types import ClusterType
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from tests.integration.step5_measured_compute_fixture import position_collective_costs
+        for name, value in vars(global_vars).copy().items():
+            if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+        tensor = dict(name="activation",dtype="bfloat16",element_size=2,columns=4096,row_stride=4096)
+        native = dict(native_facts=dict(shared=dict(evidence_kind="cpu_fixture")),
+            collective_tensors=dict(dispatch=[tensor],output=[{**tensor,"name":"output"}]))
+        table = tmp_path/"compute.csv"
+        pd.DataFrame([dict(moe_frame_scope="dp_gathered",graph_mode="none",native_context=json.dumps(native),
+            routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])))]).to_csv(table,index=False)
+        path = position_collective_costs(tmp_path,table,device="h800")
+        fixture = dict(decode_cuda_graph_mode="full_and_piecewise",cudagraph_capture_sizes=CAPTURE_SIZES,
+            max_model_len=7168,cache_dir=str(tmp_path/"cache"),predictor_config={},
+            routing_distribution_type="position_cyclic",collective_plan_input_file=str(path))
+        monkeypatch.setattr(sys,"argv",command(mode,tmp_path,fixture,tmp_path/"read.json")[3:])
+>       config = SimulationConfig.create_from_cli_args()
+
+tests/integration/test_step5_measured_main.py:374: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/config/config.py:800: in create_from_cli_args
+    instance = flat_config.reconstruct_original_dataclass()
+frontier/config/flat_dataclass.py:149: in reconstruct_original_dataclass
+    instances[_cls] = _cls(**args)
+<string>:39: in __init__
+    ???
+frontier/config/config.py:430: in __post_init__
+    self.cluster_config.print_cluster_statistics(
+frontier/config/cluster_topology_summary.py:166: in print_cluster_statistics
+    server_count_metadata = self.get_server_count_metadata(sys_arch)
+frontier/config/cluster_topology_summary.py:100: in get_server_count_metadata
+    physical_topology = resolve_collective_sim_physical_topology(
+frontier/config/parallel_semantics.py:314: in resolve_collective_sim_physical_topology
+    profile_gpus_per_server = _get_collective_sim_profile_gpus_per_server(
+frontier/config/parallel_semantics.py:283: in _get_collective_sim_profile_gpus_per_server
+    scenario_profiles = importlib.import_module("collective_sim_core.scenario_profiles")
+/usr/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+<frozen importlib._bootstrap>:1050: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1027: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:992: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:241: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1050: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1027: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'collective_sim_core', import_ = <function _gcd_import at 0x7f2b40a7b400>
+
+>   ???
+E   ModuleNotFoundError: No module named 'collective_sim_core'
+
+<frozen importlib._bootstrap>:1004: ModuleNotFoundError
+----------------------------- Captured stdout call -----------------------------
+WARNING 23:56:34 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.config.cluster_config:cluster_config.py:1565 Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+=========================== short test summary info ============================
+FAILED tests/integration/test_step5_measured_main.py::test_position_command_prices_exact_plan_through_real_cluster[offline-PREFILL]
+FAILED tests/integration/test_step5_measured_main.py::test_position_command_prices_exact_plan_through_real_cluster[offline-DECODE]
+FAILED tests/integration/test_step5_measured_main.py::test_position_command_prices_exact_plan_through_real_cluster[online-PREFILL]
+FAILED tests/integration/test_step5_measured_main.py::test_position_command_prices_exact_plan_through_real_cluster[online-DECODE]
+4 failed, 62 passed, 6 skipped in 52.10s

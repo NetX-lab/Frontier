@@ -1,0 +1,87 @@
+--- /data/ycfeng/tmp/d29_main08_residual_repro/wave_loop.py
++++ /data/ycfeng/tmp/d29_post_prepared_pricing/pricing-final01/rebound_wave.py
+@@ -20,8 +20,8 @@
+ parser.add_argument('--iterations',type=int,default=2)
+ parser.add_argument('--diagnostic-variable',choices=('none','exact-json-decode','artifact-read','plan-key-decode'),default='none')
+ args=parser.parse_args();args.output.mkdir(exist_ok=False)
+-source=Path('/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06')
+-assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()=='79f1a3fd35d42b751cd1520c764ddac717b923d9'
++source=Path('/data/ycfeng/Frontier/.worktrees/step5-d29-post-prepared-pricing')
++assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()=='eece87b2378bf86c6673b74f1a769f566bc5792a'
+ sys.path.insert(0,str(source))
+ from frontier.config import SimulationConfig
+ from frontier.types import ClusterType,MeasurementType
+@@ -86,7 +86,30 @@
+ predictor._moe_routing_distribution_type='position_cyclic'
+ predictor._moe_tp_size=replica.moe_tensor_parallel_size;predictor._moe_ep_size=replica.moe_expert_parallel_size
+ predictor._kernel_gap_ms=read_kernel_gap_ms('/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_kernel_gap.csv',8)
+-captured=json.loads(Path('/data/ycfeng/tmp/d29_main08_residual_repro/trace_tail_last.json').read_text())
++
++from frontier.execution_time_predictor.moe_routing_workload import MoeRoutingWorkload
++preparation_counts = dict(rows=0, keys=0, row_entries=0, artifact_entries=0)
++row_method = MoeRoutingWorkload._step5_model_points
++artifact_method = MoeRoutingWorkload._step5_collective_points
++def observe_rows(self, model):
++    previous = getattr(self, '_step5_physical_points', {}).get(model)
++    result = row_method(self, model)
++    current = self._step5_physical_points[model]
++    if current is not previous:
++        preparation_counts['rows'] += 1
++        preparation_counts['row_entries'] += len(current[0])
++    return result
++def observe_artifact(self, text):
++    previous = getattr(self, '_step5_collective_receipts', None)
++    result = artifact_method(self, text)
++    if previous is None or result[2] is not previous[2]:
++        preparation_counts['keys'] += 1
++        preparation_counts['artifact_entries'] += len(result[1]['counts'])
++    return result
++MoeRoutingWorkload._step5_model_points = observe_rows
++MoeRoutingWorkload._step5_collective_points = observe_artifact
++
++captured=json.loads(Path('/data/ycfeng/tmp/d29_main08_residual_repro/parent-layer60-source.json').read_text())
+ actual=captured['meta']['routing_source'];layer_id=captured['meta']['global_layer_ids'][0]
+ lanes=tuple(SourceLaneRouting(s['lane_id'],s['source_batch_id'],s['source_global_id'],s['forward_group_id'],s['graph_mode'],s['gating_runtime_context'],s['physical_rows'],s['live_rows'],tuple(TokenInterval(**i) for i in s['intervals'])) for s in actual['source_lanes'])
+ routing=WaveRoutingSource(actual['policy_id'],lanes,actual['gathered_physical_rows'])
+@@ -107,7 +130,7 @@
+ parse_sites=defaultdict(lambda:{'calls':0,'unique_texts':set(),'bytes':0})
+ def counted_loads(value,*a,**kw):
+     global parse_calls
+-    if args.profile:
++    if args.profile and iteration > 0 and observe_pricing:
+         caller=sys._getframe(1);site=(caller.f_code.co_filename,caller.f_lineno)
+         parse_sites[site]['calls']+=1;parse_sites[site]['bytes']+=len(value)
+         parse_sites[site]['unique_texts'].add(hashlib.sha256(value.encode() if isinstance(value,str) else value).hexdigest())
+@@ -132,16 +155,16 @@
+ prof=cProfile.Profile();timings=[];hashes=[];trace_hashes=[]
+ for iteration in range(args.iterations):
+     parse_before=parse_calls;read_before=read_calls
+-    start=time.perf_counter()
+-    if args.profile:prof.enable()
++    start=time.perf_counter();observe_pricing=True
++    if args.profile and iteration > 0:prof.enable()
+     phases=predict_ep_wave_phase_times(layer_workload=workload,source_batch=batch,stage_id=0,layer_id=layer_id,cluster_type=role,predictor=predictor,lane_builder=lane_builder,phase_getter=get_ep_phase_times_ms,workload_logger=noop,trace_identity=None,batch_id=7052,capture_lane_timings=True)
+-    pricing_end=time.perf_counter()
++    pricing_end=time.perf_counter();observe_pricing=False;prof.disable();pricing_parses=parse_calls-parse_before;pricing_reads=read_calls-read_before
+     timing=calculate_ep_wave_timing(start_time_s=captured['meta']['wave_start_time_s'],phases=phases,barrier_logger=noop,wave_logger=noop,cluster_type=role,batch_id=7052,layer_id=layer_id,participant_ep_ids=workload.participant_ep_ids,trace_identity=None)
+     plan=EPWavePlan(None,workload,phases,timing,None)
+     record_ep_wave(store,plan,time=captured['meta']['wave_start_time_s'],replica_id=1,stage_id=0,cluster_type=role)
+     emit_end=time.perf_counter();n=len(store.trace_store._buffer)
+     store.trace_store.flush();flush_end=time.perf_counter();prof.disable()
+-    measured_parses=parse_calls-parse_before;measured_reads=read_calls-read_before
++    measured_parses=pricing_parses;measured_reads=pricing_reads
+     payload=[]
+     for rec in phases.lane_records:
+         l=rec.execution_time.layer_execution_times[0];moe=l.moe_or_mlp_time_component.operator_times;comm=l.communication_time_component.operator_times
+@@ -153,9 +176,9 @@
+ prof.dump_stats(str(args.output/'wave.pstats'))
+ stats=pstats.Stats(str(args.output/'wave.pstats')).stats if args.profile else {}
+ if args.profile:
+-    with (args.output/'profile.txt').open('w') as stream:pstats.Stats(str(args.output/'wave.pstats'),stream=stream).sort_stats('cumulative').print_stats(45)
++    with (args.output/'profile.txt').open('w') as stream:pstats.Stats(str(args.output/'wave.pstats'),stream=stream).sort_stats('cumulative').print_stats(70)
+ calls=[{'path':p,'line':l,'name':n,'calls':v[1],'cum_s':v[3]} for (p,l,n),v in stats.items() if n in ('_step5_position_queries','_predict_step5_position_execution','decode','loads','deepcopy','compute_op_trace_meta','resolve_routed_layer_groups')]
+-result=dict(source='79f1a3fd35d42b751cd1520c764ddac717b923d9',bundle_path=str(bundle_path),loaded=loaded,actual_source=actual,layer=layer_id,participants=list(workload.participant_ep_ids),timings=timings,payload_sha256=hashes,calls=calls,profiled=args.profile,
++result=dict(source='eece87b2378bf86c6673b74f1a769f566bc5792a',bundle_path=str(bundle_path),loaded=loaded,actual_source=actual,layer=layer_id,participants=list(workload.participant_ep_ids),timings=timings,payload_sha256=hashes,calls=calls,profiled=args.profile,
+     json_parse_sites=[dict(path=p,line=l,calls=v['calls'],unique_texts=len(v['unique_texts']),bytes=v['bytes']) for (p,l),v in sorted(parse_sites.items(),key=lambda i:-i[1]['calls'])],
+     diagnostic_variable=args.diagnostic_variable,diagnostic_only='single runtime interception; unchanged source, full costs/proofs/keys compared',
+     scope='actual 16-participant DECODE layer61 at logical position6147, production wave predictor/public stage/metadata/flush; unrelated event queue, attention, scheduler and full initialization excluded',

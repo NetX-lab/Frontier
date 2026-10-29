@@ -1,0 +1,14 @@
+{
+  "change_marker": "D27_STEP_SWA_LIVE_PAGES",
+  "ticket": "17",
+  "decision_id": "D27",
+  "domain": "kv_transfer_payload",
+  "code_change": "Intersect Step sliding-window transfer capacity with live retained pages.",
+  "repair_change": "Remove null export slots from wire payload; allocation bounds and semantic token counts remain separate.",
+  "changed_files": [
+    "frontier/attention/memory.py",
+    "frontier/attention/step5_memory.py",
+    "tests/unit/test_step5_structural_pd.py"
+  ],
+  "integration_status": "PENDING"
+}

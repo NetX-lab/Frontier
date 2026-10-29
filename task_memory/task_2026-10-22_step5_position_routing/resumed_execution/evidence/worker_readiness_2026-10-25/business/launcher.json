@@ -1,0 +1,84 @@
+{
+  "status": "PASS_PLATFORM_AND_WORKER_READINESS_ONLY",
+  "started_utc": "2026-10-24T21:03:32.833883+00:00",
+  "launcher_pid": 249084,
+  "source": {
+    "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "records_head": "dfe603edab128d2a4aacb1b7b64d898993d4ae09",
+    "source_paths": 25,
+    "fixture_metadata_paths": 262
+  },
+  "command": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_entry.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_plan.json",
+  "nfs_server": "100.96.128.195",
+  "nfs_source": "/data/ycfeng",
+  "nfs_target": "/data/ycfeng",
+  "resource": {
+    "cpu": 4,
+    "gpu": 0,
+    "mem_gb": 64,
+    "replica": 1,
+    "positive_tags": [
+      "H800"
+    ],
+    "custom_resources": [],
+    "extra_requirements": [],
+    "preemptible": false,
+    "command": "{COMMAND}",
+    "task_specs": {
+      "default": {
+        "is_critical": true
+      }
+    }
+  },
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "charged_group": "codesign",
+  "job_name": "exp-1025-050336-389487",
+  "creator": "i-fengyicheng",
+  "platform_status": {
+    "phase": "Succeeded",
+    "reason": "RJobSucceeded",
+    "message": "RJob succeeded",
+    "taskStatuses": {
+      "default": {
+        "succeeded": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "finishTime": "2026-10-24T21:06:08Z",
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "actual_nfs_mounts": {
+    "default": "100.96.128.195:/data/ycfeng:/data/ycfeng"
+  },
+  "actual_images": {
+    "default": [
+      "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee"
+    ]
+  },
+  "actual_resources": {
+    "default": [
+      {
+        "limits": {
+          "cpu": "4",
+          "memory": "64000Mi",
+          "nvidia.com/gpu": "0"
+        },
+        "requests": {
+          "cpu": "4",
+          "memory": "64000Mi",
+          "nvidia.com/gpu": "0"
+        }
+      }
+    ]
+  },
+  "replicas": [
+    {
+      "task": "default",
+      "process_id": "exp-1025-050336-389487-cfcd2084",
+      "state": "ReplicaState.RUNNING"
+    }
+  ],
+  "final_poll": "succeeded",
+  "finished_utc": "2026-10-24T21:06:11.708654+00:00",
+  "launcher_wall_s": 158.8727912940085
+}

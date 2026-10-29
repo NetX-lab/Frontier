@@ -1,0 +1,146 @@
+{
+  "source_for_planning": "2f2d9339 (delivered, not primary accepted)",
+  "owners": {
+    "core_source": {
+      "cap": 4404,
+      "actual": 4105
+    },
+    "native": {
+      "cap": 1582,
+      "actual": 1350
+    },
+    "pricing": {
+      "cap": 3956,
+      "actual": 3922
+    }
+  },
+  "source_actual": 9377,
+  "global_derived": 9391,
+  "selected": {
+    "frontier/cc_backend/base_cc_backend.py": {
+      "owner": "pricing",
+      "cap": 8,
+      "kind": "superproject",
+      "old_actual": 6,
+      "actual": 6,
+      "free": 2
+    },
+    "frontier/cc_backend/cc_backend_factory.py": "not allocated",
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": {
+      "owner": "pricing",
+      "cap": 91,
+      "kind": "superproject",
+      "old_actual": 84,
+      "actual": 84,
+      "free": 7
+    },
+    "frontier/execution_time_predictor/moe_routing_workload.py": {
+      "owner": "core_source",
+      "cap": 323,
+      "kind": "superproject",
+      "old_actual": 143,
+      "actual": 197,
+      "free": 126
+    },
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": {
+      "owner": "core_source",
+      "cap": 128,
+      "kind": "superproject",
+      "old_actual": 111,
+      "actual": 111,
+      "free": 17
+    },
+    "frontier/execution_time_predictor/prediction_model_registry.py": {
+      "owner": "core_source",
+      "cap": 120,
+      "kind": "superproject",
+      "old_actual": 96,
+      "actual": 96,
+      "free": 24
+    },
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py": "not allocated",
+    "frontier/entities/cluster.py": "not allocated",
+    "frontier/simulator.py": "not allocated",
+    "tests/unit/test_collective_sim_cc_backend.py": {
+      "owner": "pricing",
+      "cap": 235,
+      "kind": "superproject",
+      "old_actual": 233,
+      "actual": 235,
+      "free": 0
+    },
+    "tests/unit/test_moe_routing_runtime.py": {
+      "owner": "core_source",
+      "cap": 78,
+      "kind": "superproject",
+      "old_actual": 53,
+      "actual": 75,
+      "free": 3
+    },
+    "tests/unit/test_prediction_measurement_bindings.py": {
+      "owner": "core_source",
+      "cap": 299,
+      "kind": "superproject",
+      "old_actual": 254,
+      "actual": 299,
+      "free": 0
+    }
+  },
+  "pricing_donors": [
+    {
+      "path": "tests/unit/test_comm_operator_families.py",
+      "owner": "pricing",
+      "cap": 70,
+      "kind": "superproject",
+      "old_actual": 62,
+      "actual": 62,
+      "free": 8
+    },
+    {
+      "path": "tests/unit/test_dsv4_precision_metadata.py",
+      "owner": "pricing",
+      "cap": 10,
+      "kind": "superproject",
+      "old_actual": 2,
+      "actual": 2,
+      "free": 8
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "owner": "pricing",
+      "cap": 91,
+      "kind": "superproject",
+      "old_actual": 84,
+      "actual": 84,
+      "free": 7
+    },
+    {
+      "path": "tests/unit/test_step5_contract_reuse.py",
+      "owner": "pricing",
+      "cap": 5,
+      "kind": "unchanged",
+      "old_actual": 0,
+      "actual": 0,
+      "free": 5
+    },
+    {
+      "path": "tests/integration/step5_comm/step5_position_model_run.json",
+      "owner": "pricing",
+      "cap": 72,
+      "kind": "superproject",
+      "old_actual": 68,
+      "actual": 68,
+      "free": 4
+    },
+    {
+      "path": "frontier/cc_backend/base_cc_backend.py",
+      "owner": "pricing",
+      "cap": 8,
+      "kind": "superproject",
+      "old_actual": 6,
+      "actual": 6,
+      "free": 2
+    }
+  ],
+  "limit": "Planning only: non-superproject values inherited from accepted79 audit; no fresh native/package audit."
+}

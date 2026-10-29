@@ -1,0 +1,83 @@
+{
+  "status": "PASS_MANDATORY_SOURCE_REGRESSIONS_ONLY",
+  "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "archived_files": 64,
+  "archived_bytes": 7126759,
+  "suites": {
+    "strict77": {
+      "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "raw_exits": [
+        0,
+        0
+      ],
+      "duration_s": [
+        473.56893003731966,
+        3.0920917857438326
+      ]
+    },
+    "unit": {
+      "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "raw_exits": [
+        1
+      ],
+      "duration_s": [
+        1275.1566569446586
+      ],
+      "counts": {
+        "skipped": 281,
+        "error": 32,
+        "pass": 8028,
+        "failure": 279
+      }
+    },
+    "supplement101": {
+      "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "raw_exits": [
+        0
+      ],
+      "duration_s": [
+        11.316076025832444
+      ],
+      "counts": {
+        "pass": 101
+      }
+    },
+    "metadata196": {
+      "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "raw_exits": [
+        0
+      ],
+      "duration_s": [
+        9.419466727878898
+      ],
+      "counts": {
+        "pass": 197
+      }
+    },
+    "catalogue53": {
+      "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "raw_exits": [
+        0
+      ],
+      "duration_s": [
+        3.72547088842839
+      ],
+      "counts": {
+        "pass": 53
+      }
+    },
+    "governance52": {
+      "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "raw_exits": [
+        0
+      ],
+      "duration_s": [
+        28.749895599205047
+      ],
+      "counts": {
+        "pass": 52
+      }
+    }
+  },
+  "old_id_presence": "FAIL"
+}

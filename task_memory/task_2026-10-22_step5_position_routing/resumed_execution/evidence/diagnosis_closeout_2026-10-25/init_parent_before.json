@@ -1,0 +1,51 @@
+{
+  "status": "PASS_RECORDS_AND_SOURCE_BINDINGS",
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "current_head": "52831c6e0743039f28e63d040b052e6ed8700d15",
+  "tested_candidate": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "init_owner_commit": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+  "init_owner_parent": "886608ea574dd2107d0b30771d63d8057d23cac6",
+  "init_record_paths": [
+    "task_memory/task_2026-10-22_step5_position_routing/init_preparation_reuse/evidence.json",
+    "task_memory/task_2026-10-22_step5_position_routing/init_preparation_reuse/plan.md",
+    "task_memory/task_2026-10-22_step5_position_routing/init_preparation_reuse/progress.md",
+    "task_memory/task_2026-10-22_step5_position_routing/init_preparation_reuse/requirements.md",
+    "task_memory/task_2026-10-22_step5_position_routing/init_preparation_reuse/summary.md",
+    "task_memory/task_2026-10-22_step5_position_routing/init_preparation_reuse/test_report_2026-10-25_init_preparation.md"
+  ],
+  "init_code_bindings_verified": 13,
+  "init_retained_bindings_verified": 14,
+  "init_disposition": "ALLOC_RECOMMENDATION_ONLY",
+  "init_controls_new": 0,
+  "init_controls_recovered": 0,
+  "init_source_allocation": 0,
+  "init_modeled_removed_work_s": 126.58,
+  "init_current_startup_measured": false,
+  "copy_owner_commit": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+  "copy_record_paths": [
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/evidence.json",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/plan.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/progress.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/receipt.json",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/requirements.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/summary.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/test_report_2026-10-24_snapshot_copy.md"
+  ],
+  "copy_bindings_verified": 25,
+  "copy_disposition": "NO_ALLOC_STATIC_DIAGNOSIS",
+  "copy_controls_used": 0,
+  "copy_control_ceiling": 1,
+  "copy_launch_attempts": 0,
+  "non_task_source_equal_to_frozen_and_production": true,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "wall_s": 0.4248851421289146,
+  "verified_utc": "2026-10-24T19:19:47.495050+00:00",
+  "configured_memory_max_bytes": 32212254720,
+  "measured_cgroup_peak_bytes": null,
+  "limitations": [
+    "Metadata/source/retained-receipt verification only; no runtime controls or suites",
+    "ALLOC is a recommendation, not a source allocation or measured startup saving",
+    "Required-shape usage remains6/6; no pricing/control allowance extended"
+  ]
+}

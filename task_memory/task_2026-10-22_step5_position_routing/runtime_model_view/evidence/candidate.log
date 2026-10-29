@@ -1,0 +1,180 @@
+Running scope as unit: run-r070db248fd694b9fafa0ac21e5c73159.scope
+WARNING 06:34:16 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+WARNING 06:34:16 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+
+ERROR 06:34:22 trace_store.py:123] Failed to flush trace events: Object of type object is not JSON serializable
+⚠️ ERROR 06:34:22 trace_store.py:123] Failed to flush trace events: Object of type object is not JSON serializable
+{
+  "task_id": "D29-IMMUTABLE-COST-FIELDS",
+  "label": "candidate",
+  "source_revision_during_measurement": "d1e2fb8c0162c58e7e694fab2d3a900638f0d50a",
+  "source_root": "/data/ycfeng/Frontier/.worktrees/step5-d29-plan-key",
+  "source_hashes": {
+    "frontier/cc_backend/collective_profile.py": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+    "frontier/execution_time_predictor/moe_routing_workload.py": "d1561f20e0a0f045af8ddeabe88bd36b017cc554e9fcc44dd2d6ba4c0adb3d46",
+    "frontier/cc_backend/base_cc_backend.py": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+    "tests/unit/test_collective_sim_cc_backend.py": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+    "tests/unit/test_moe_routing_runtime.py": "e52190ec893dfc431ac96b37b9cdb7de92649ecd21bb7adb9fb273b67f739262",
+    "tests/unit/test_prediction_measurement_bindings.py": "18c1c2b6741441db5f2f98dcd3fecf92d43d22fa8659988a94102b2a47bd3f27",
+    "tests/unit/test_step5_measured_ffn.py": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+    "frontier/cc_backend/collective_plan.py": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+    "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+    "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+    "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+    "frontier/metrics/metrics_store.py": "5f223a363eb3870493dedbcc0376c65fc82785c0467525a643430f948a6e0fce",
+    "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+    "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+    "frontier/scheduler/utils/expert_parallel.py": "601f531f2cae4847fac74a2b86b3af5ae3e1f8a710d0ae909a1ec65a49f6fdb2",
+    "frontier/scheduler/utils/ep_wave.py": "c47bd606495569d3c7fe6ce5f03f95c0ba30154cd76bde81c85252dd1385890a",
+    "tests/unit/test_step5_measured_ffn_replay.py": "1c64b7554d92cac63b67a7412c3fbd7aa9470ac59d712465137c86256dabee67",
+    "data/config/models/stepfun-ai__Step-5-Preview.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+    "tests/unit/test_step5_moe_pricing.py": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21"
+  },
+  "events": 208,
+  "collective_events_and_cost_objects": 64,
+  "bytes": 2889655,
+  "sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+  "all_event_metadata_proofs_and_order_equal": true,
+  "whole_jsonl_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+  "ledger_bytes": 2309545,
+  "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+  "median_emission_s": 0.03719079680740833,
+  "emission_only_counters": {
+    "asdict": 144,
+    "deepcopy": 19632,
+    "to_dict": 128,
+    "cache_key": 64,
+    "compute_op_trace_meta": 208
+  },
+  "admitted_cost_field_types": [
+    [
+      "count_receipt_json",
+      "str"
+    ],
+    [
+      "duration_ms",
+      "float"
+    ],
+    [
+      "kernel_counts",
+      "tuple"
+    ],
+    [
+      "local_rank_ms",
+      "tuple"
+    ],
+    [
+      "model_identity",
+      "str"
+    ],
+    [
+      "network_ms",
+      "float"
+    ],
+    [
+      "plan_key",
+      "str"
+    ],
+    [
+      "remainder_ms",
+      "float"
+    ]
+  ],
+  "public_getter_and_pending_snapshot_mutations_isolated": true,
+  "pending_meta_mutation_does_not_change_source": true,
+  "fresh_trace_ledger_mappings_independent": true,
+  "wrong_plan_key_negatives": 64,
+  "wrong_plan_key_exact_error": "Trace collective plan and cost identities disagree",
+  "late_json_error_restores_buffer_and_prefix_bytes": 3902,
+  "limits": "Actual trace+prepared source; pricing/setup, ledger encoding, flush and verification excluded from emission timing. No diagnostic reuse control or unallocated source behavior.15 sequential CPU measurements, not whole CLI admission."
+}
+{
+  "task_id": "D29-RUNTIME-MODEL-VIEW",
+  "label": "candidate",
+  "binding_s": 0.07040578313171864,
+  "samples": [
+    {
+      "phase": "cold",
+      "pricing_s": 0.9841540488414466,
+      "physical_collective_reads": 0,
+      "profiled": false,
+      "actual_key_encodings": 8
+    },
+    {
+      "phase": "warm",
+      "pricing_s": 0.08944695303216577,
+      "physical_collective_reads": 0,
+      "profiled": false,
+      "actual_key_encodings": 0
+    },
+    {
+      "phase": "warm",
+      "pricing_s": 0.0887662167660892,
+      "physical_collective_reads": 0,
+      "profiled": false,
+      "actual_key_encodings": 0
+    },
+    {
+      "phase": "warm",
+      "pricing_s": 0.08997335704043508,
+      "physical_collective_reads": 0,
+      "profiled": false,
+      "actual_key_encodings": 0
+    },
+    {
+      "phase": "profile",
+      "pricing_s": 0.15761773101985455,
+      "physical_collective_reads": 0,
+      "profiled": true,
+      "actual_key_encodings": 0
+    }
+  ],
+  "operation_counts": {
+    "_get_on_demand_prediction": 288,
+    "_predict_step5_ffn_operator": 144,
+    "predict_collective_plan": 64,
+    "_step5_position_queries": 16,
+    "cache_key": 192,
+    "loads": 1136,
+    "dumps": 704,
+    "_models_view_for_family": 16,
+    "_resolve_cluster_model_contract": 0,
+    "_get_family_model": 160
+  },
+  "main_run_successful_file_reads": 1,
+  "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+  "fixture_metadata_unchanged": true
+}

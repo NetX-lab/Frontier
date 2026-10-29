@@ -1,0 +1,1486 @@
+{
+  "task_id": "D29-NAMED-MODEL-QUERY",
+  "session_id": "ses_e93af1ff7ffe0YosowRNrc24Xa",
+  "status": "COMPONENT_VERIFIED_PARENT_ACCEPTANCE_PENDING",
+  "sources": {
+    "baseline": {
+      "root": "/data/ycfeng/Frontier/.worktrees/step5-d29-plan-key",
+      "head": "d1e2fb8c0162c58e7e694fab2d3a900638f0d50a",
+      "hashes": {
+        "frontier/cc_backend/collective_profile.py": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+        "frontier/execution_time_predictor/shared_prediction_model_manager.py": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+        "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+        "frontier/execution_time_predictor/moe_routing_workload.py": "d1561f20e0a0f045af8ddeabe88bd36b017cc554e9fcc44dd2d6ba4c0adb3d46",
+        "frontier/cc_backend/base_cc_backend.py": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+        "frontier/cc_backend/backends/collective_sim_cc_backend.py": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+        "tests/unit/test_collective_sim_cc_backend.py": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+        "tests/unit/test_moe_routing_runtime.py": "e52190ec893dfc431ac96b37b9cdb7de92649ecd21bb7adb9fb273b67f739262",
+        "tests/unit/test_prediction_measurement_bindings.py": "18c1c2b6741441db5f2f98dcd3fecf92d43d22fa8659988a94102b2a47bd3f27",
+        "tests/unit/test_step5_measured_ffn.py": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+        "frontier/cc_backend/collective_plan.py": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+        "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+        "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+        "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+        "frontier/metrics/metrics_store.py": "5f223a363eb3870493dedbcc0376c65fc82785c0467525a643430f948a6e0fce",
+        "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+        "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+        "frontier/scheduler/utils/expert_parallel.py": "601f531f2cae4847fac74a2b86b3af5ae3e1f8a710d0ae909a1ec65a49f6fdb2",
+        "frontier/scheduler/utils/ep_wave.py": "c47bd606495569d3c7fe6ce5f03f95c0ba30154cd76bde81c85252dd1385890a",
+        "tests/unit/test_step5_measured_ffn_replay.py": "1c64b7554d92cac63b67a7412c3fbd7aa9470ac59d712465137c86256dabee67",
+        "data/config/models/stepfun-ai__Step-5-Preview.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+        "tests/unit/test_step5_moe_pricing.py": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21",
+        "frontier/execution_time_predictor/prediction_model_registry.py": "6689aa89aabc2c10521a62488295adb68e6e0d0d17c576cafb777003b2cfcc54"
+      },
+      "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113"
+    },
+    "candidate": {
+      "root": "/data/ycfeng/Frontier/.worktrees/step5-d29-named-query",
+      "head": "1737ce9c4a761d2c57ee617f5f3a78d7bcfd9a58",
+      "hashes": {
+        "frontier/cc_backend/collective_profile.py": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+        "frontier/execution_time_predictor/shared_prediction_model_manager.py": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+        "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+        "frontier/execution_time_predictor/moe_routing_workload.py": "0c8525f01124d43e5c21d5ec5a037a8719339e5e4301b3f44958cc90618899b4",
+        "frontier/cc_backend/base_cc_backend.py": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+        "frontier/cc_backend/backends/collective_sim_cc_backend.py": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+        "tests/unit/test_collective_sim_cc_backend.py": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+        "tests/unit/test_moe_routing_runtime.py": "5a4a5d8bbafa5dce3dbe9b0374e7ada80091fe20102cb55b1e3fa6d44a0e2dac",
+        "tests/unit/test_prediction_measurement_bindings.py": "ed8a6a164ffa36fd7ee5d32161e859d457623f317291e91f26864b4a7513d295",
+        "tests/unit/test_step5_measured_ffn.py": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+        "frontier/cc_backend/collective_plan.py": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+        "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+        "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+        "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+        "frontier/metrics/metrics_store.py": "5f223a363eb3870493dedbcc0376c65fc82785c0467525a643430f948a6e0fce",
+        "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+        "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+        "frontier/scheduler/utils/expert_parallel.py": "601f531f2cae4847fac74a2b86b3af5ae3e1f8a710d0ae909a1ec65a49f6fdb2",
+        "frontier/scheduler/utils/ep_wave.py": "c47bd606495569d3c7fe6ce5f03f95c0ba30154cd76bde81c85252dd1385890a",
+        "tests/unit/test_step5_measured_ffn_replay.py": "1c64b7554d92cac63b67a7412c3fbd7aa9470ac59d712465137c86256dabee67",
+        "data/config/models/stepfun-ai__Step-5-Preview.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+        "tests/unit/test_step5_moe_pricing.py": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21",
+        "frontier/execution_time_predictor/prediction_model_registry.py": "f1eaedb9a1d27c7f9d7505a6961f8000ff195248d0ac73305d083ea51cd4ddb0"
+      },
+      "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113"
+    }
+  },
+  "source_binding_count": 23,
+  "fixture_file_count": 262,
+  "protected_body_sha256": "1cabc04f024e6e1c8ee8d9902e74fee6e5dff4d95faeeaab0f8902e67d6d8555",
+  "byte_comparisons": [
+    {
+      "path": "pricing_payload.json",
+      "bytes": 647510,
+      "sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+    },
+    {
+      "path": "ledger.json",
+      "bytes": 2309545,
+      "sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf"
+    },
+    {
+      "path": "contexts/op_traces.jsonl",
+      "bytes": 109,
+      "sha256": "cb551e4cb844fb99df5be4c23079cb351473b945c81c5fcff0263588ceb572f7"
+    },
+    {
+      "path": "iteration-0/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-1/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-10/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-11/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-12/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-13/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-14/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-2/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-3/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-4/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-5/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-6/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-7/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-8/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-9/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "ownership/op_traces.jsonl",
+      "bytes": 109,
+      "sha256": "cb551e4cb844fb99df5be4c23079cb351473b945c81c5fcff0263588ceb572f7"
+    }
+  ],
+  "diagnostic_headers": {
+    "late-json-failure/op_traces.jsonl": {
+      "metadata_timestamps": [
+        1792819352.2429917,
+        1792819368.2830539
+      ],
+      "other_header_values_equal": true,
+      "prefix_bytes": 3902,
+      "prefix_sha256": "f5e7f5a67660096a71d14abfe690dbc432d09a480c85c9999dea0cd16979f1ec"
+    },
+    "profile/op_traces.jsonl": {
+      "metadata_timestamps": [
+        1792819352.0316036,
+        1792819368.1808999
+      ],
+      "other_header_values_equal": true,
+      "prefix_bytes": 0,
+      "prefix_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "candidate_install_removed": true,
+  "production_view_verification": {
+    "applied": false,
+    "production_method_files_verified": true,
+    "full_order": [
+      "moe_gating_linear:852eb571",
+      "moe_gating_linear:bd98f779",
+      "moe_gating_linear_kernel_count:8bb7f08c",
+      "moe_gating_linear_kernel_count:cf053735",
+      "moe_gating_routing_topk:c733e553",
+      "moe_gating_routing_topk:c847d631",
+      "moe_gating_routing_topk_kernel_count:0bbccfa6",
+      "moe_gating_routing_topk_kernel_count:49d511fe",
+      "moe_grouped_gemm:82e252d5",
+      "moe_grouped_gemm:a800d7a6",
+      "moe_grouped_gemm_kernel_count:3968c6ea",
+      "moe_grouped_gemm_kernel_count:46a6f9f8",
+      "moe_input_quantize:a6aff04c",
+      "moe_input_quantize_kernel_count:b7345a7b",
+      "final_residual",
+      "final_residual_kernel_count",
+      "input_cast",
+      "input_cast_kernel_count",
+      "input_layernorm",
+      "input_layernorm_kernel_count",
+      "mlp_act",
+      "mlp_act_kernel_count",
+      "mlp_down_proj",
+      "mlp_down_proj_kernel_count",
+      "mlp_up_proj",
+      "mlp_up_proj_kernel_count",
+      "post_attention_layernorm",
+      "post_attention_layernorm_kernel_count",
+      "share_expert_act",
+      "share_expert_act_kernel_count",
+      "share_expert_down_proj",
+      "share_expert_down_proj_kernel_count",
+      "share_expert_up_proj",
+      "share_expert_up_proj_kernel_count",
+      "step5_ffn_merge",
+      "step5_ffn_merge_kernel_count",
+      "step5_layer_e2e",
+      "step5_layer_e2e_kernel_count"
+    ],
+    "selected_order": [
+      "moe_grouped_gemm:82e252d5",
+      "moe_grouped_gemm:a800d7a6"
+    ],
+    "selected_same_objects": true
+  },
+  "operation_counts": {
+    "baseline": {
+      "_get_on_demand_prediction": 288,
+      "_predict_step5_ffn_operator": 144,
+      "predict_collective_plan": 64,
+      "_step5_position_queries": 16,
+      "cache_key": 192,
+      "loads": 1136,
+      "dumps": 800,
+      "_models_view_for_family": 16,
+      "_resolve_cluster_model_contract": 384,
+      "_get_family_model": 544
+    },
+    "candidate": {
+      "_get_on_demand_prediction": 288,
+      "_predict_step5_ffn_operator": 144,
+      "predict_collective_plan": 64,
+      "_step5_position_queries": 16,
+      "cache_key": 192,
+      "loads": 1136,
+      "dumps": 704,
+      "_models_view_for_family": 16,
+      "_resolve_cluster_model_contract": 0,
+      "_get_family_model": 160
+    }
+  },
+  "warm_median_s": {
+    "baseline": 0.12273090984672308,
+    "candidate": 0.08816663781180978
+  },
+  "warm_change_percent": -28.16264629511843,
+  "suite_comparison": {
+    "focused": {
+      "baseline": {
+        "tests.unit.test_prediction_measurement_bindings::test_actual_dual_binder_retains_fp32_gates_for_layers_3_and_88": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_same_precision_native_source_selection_ambiguity_and_json_mapping[moe_gating_linear-FP32-5]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_same_precision_native_source_selection_ambiguity_and_json_mapping[moe_grouped_gemm-BF16-4]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_all_native_bindings_survive_family_view_snapshot_and_warm_cache": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_position_queries_enumerate_group_physical_rows_before_model_selection": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_fixed_predictor_groups_reused_by_queries_and_binding_selection": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_unique_legacy_registry_default_and_precision_labels_unchanged": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_prepared_points_follow_actual_model_rows_identity_and_fresh_queries": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_mixed_native_non_native_views_keep_both_insert_orders[False-False]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_mixed_native_non_native_views_keep_both_insert_orders[False-True]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_mixed_native_non_native_views_keep_both_insert_orders[True-False]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_mixed_native_non_native_views_keep_both_insert_orders[True-True]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_collective_input_binds_both_role_constructors_and_refreshes_next_run": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_structured_distributions_use_standard_runtime_path[balanced]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_structured_distributions_use_standard_runtime_path[skewed]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_structured_distributions_use_standard_runtime_path[zipf]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_random_distribution_uses_uniform_runtime_path": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_removed_routing_mode_values_fail_fast": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_position_policy_resolves_before_parent_initialization": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_position_runtime_binds_retained_source_and_full_plan_policy[None]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_position_runtime_binds_retained_source_and_full_plan_policy[foreign1]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_position_runtime_requires_actual_empty_physical_exact_pair": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_position_real_estimator_reaches_execution_time_without_shuffle": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_native_feature_schema_keeps_exact_order_backend_and_legacy_ranges": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_selected_model_uses_real_precision_registry_not_generic_prediction": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_existing_ffn_loop_fits_dense_shared_and_both_routed_precisions": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_outside_root_norm_is_explicit_shared_cache_helper": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_warm_cache_registers_both_precisions_without_refitting": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation0-actual positive integral kernel coverage]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation1-actual positive integral kernel coverage]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation2-actual positive integral kernel coverage]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation3-exclusion metadata conflicts]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation4-exclusion metadata conflicts]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation5-do not relabel]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_input_norm_refuses_sample_count_as_launch_count": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_all_layer_source_precision_and_native_activation_exclusions": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_real_dense_layer_replay_uses_bf16_mlp_not_shared[0]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_real_dense_layer_replay_uses_bf16_mlp_not_shared[91]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_real_routed_layer_replay_prices_source_precision_and_merge_once[3-FP8-0.32]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_real_routed_layer_replay_prices_source_precision_and_merge_once[88-BF16-0.48]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_public_moe_component_matches_the_execution_component": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_public_stage_replays_typed_cache_costs_without_attention_or_cpu_costs": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_measured_ffn_refuses_outside_token_bounds_and_missing_gap": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_gpu_active_runtime_rejects_a_missing_count_model": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_attention_cache_preserves_proof_and_does_not_invent_layer_coverage": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_full_stage_never_omits_unmeasured_native_boundary_steps[0]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_full_stage_never_omits_unmeasured_native_boundary_steps[91]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_all92_source_classification_retains_precisions_and_physical_geometry": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_graph_policy_preserves_real_measurement_method[none-KERNEL_ONLY]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_graph_policy_preserves_real_measurement_method[full-CUDA_EVENT]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_graph_policy_preserves_real_measurement_method[piecewise-CUDA_EVENT]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_root_target_selects_real_candidate_not_independent_event_median[full-mean-1.25]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_root_target_selects_real_candidate_not_independent_event_median[none-median-1.5]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_derives_precision_and_context_features": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_derives_validated_features_once_per_source_row": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_accepts_native_graph_event_rows[full]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_accepts_native_graph_event_rows[piecewise]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_supports_every_source_layer_without_inventing_coverage": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_native_backend_identity_is_per_variant_but_runtime_is_not": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_rejects_backend_changes_inside_one_variant": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_eager_event_diagnostics_cannot_be_relabelled_as_root_physical_cost": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change0-measurement_type mismatch]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change1-do not relabel]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change2-profiling_precision conflicts]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change3-model_dtype conflicts]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change4-geometry disagrees|attention_variant disagrees]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change5-kernel coverage missing]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change6-kernel coverage missing]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change7-inactive scope]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change8-inactive physical scope]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change9-coverage is unavailable]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change10-coverage is unavailable]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change11-max_model_len differs]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change12-active_operators differ]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change13-finite nonnegative]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_real_fit_atomic_cache_exact_lookup_and_warm_reload": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_graph_fit_registers_event_family_and_never_generic_projections": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_full_pd_chunk_counts_use_logical_positions_not_wave_hamilton": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_source_immutable_padding_and_repeated_positions": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_actual_batches_freeze_schedule_context_not_later_request_progress": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_registry_owns_the_complete_count_call_and_strict_source": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_one_source_tensor_interface_preserves_masks_and_request_intervals": {
+          "status": "SKIP",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_actual_predictor_constructor_and_whole_source_cache": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_scheduler_materializes_actual_bound_dp_sources_and_live_trace": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_padded_count_rounds_each_expert_up_to_the_block": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_block_size_comes_from_the_kernel_config_range_of_the_step": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_padded_table_trains_grouped_gemm_on_routed_and_padded_tokens": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_tables_without_the_padded_column_keep_the_previous_features": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_padded_column_must_cover_every_row": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_a_padded_table_without_block_size_ranges_is_rejected": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_a_row_block_size_that_disagrees_with_the_ranges_is_rejected": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_runtime_pads_each_local_expert_with_the_block_size_of_the_step": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_a_step_between_profiled_rows_pads_with_the_kernel_config_block_size": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_runtime_padded_features_hit_the_profiled_row_exactly": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_each_ep_rank_pads_every_expert_of_the_domain": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_moe_loader_derives_family_once_without_skipping_unselected_rows": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[zero]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[opposite]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[typed]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[missing]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[physical]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[context]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_independent_selected_actual_fit_cache_binds_native_context": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_output_inventory_uses_declared_cells_without_structural_zero_fill": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_attachment_to_public_stage_never_reparses_fixed_identity": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_selected_estimator_marker_mutation_reparses_once_and_replaces_proof": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_registry_replacement_uses_its_marker_not_old_hash_or_model": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{invalid]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[[]]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[null]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{}]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[None]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{\"evidence_kind\":null}]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{\"evidence_kind\":NaN}]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{\"evidence_kind\":\"\"}]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_pair_conflict_and_retains_dynamic_validation": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_bundle_load_to_public_attention_reuses_identity_and_checks_mutation": {
+          "status": "PASS",
+          "message": null
+        }
+      },
+      "candidate": {
+        "tests.unit.test_prediction_measurement_bindings::test_actual_dual_binder_retains_fp32_gates_for_layers_3_and_88": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_same_precision_native_source_selection_ambiguity_and_json_mapping[moe_gating_linear-FP32-5]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_same_precision_native_source_selection_ambiguity_and_json_mapping[moe_grouped_gemm-BF16-4]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_all_native_bindings_survive_family_view_snapshot_and_warm_cache": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_position_queries_enumerate_group_physical_rows_before_model_selection": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_fixed_predictor_groups_reused_by_queries_and_binding_selection": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_unique_legacy_registry_default_and_precision_labels_unchanged": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_prepared_points_follow_actual_model_rows_identity_and_fresh_queries": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_mixed_native_non_native_views_keep_both_insert_orders[False-False]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_mixed_native_non_native_views_keep_both_insert_orders[False-True]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_mixed_native_non_native_views_keep_both_insert_orders[True-False]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_mixed_native_non_native_views_keep_both_insert_orders[True-True]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_named_native_view_keeps_selected_objects_and_unfiltered_order": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[ambiguity]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[conflict]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[missing]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[decode_attn]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_collective_input_binds_both_role_constructors_and_refreshes_next_run": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_structured_distributions_use_standard_runtime_path[balanced]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_structured_distributions_use_standard_runtime_path[skewed]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_structured_distributions_use_standard_runtime_path[zipf]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_random_distribution_uses_uniform_runtime_path": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_removed_routing_mode_values_fail_fast": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_position_policy_resolves_before_parent_initialization": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_position_runtime_binds_retained_source_and_full_plan_policy[None]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_position_runtime_binds_retained_source_and_full_plan_policy[foreign1]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_gating_linear]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_grouped_gemm]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[cache_name]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_position_runtime_requires_actual_empty_physical_exact_pair": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_position_real_estimator_reaches_execution_time_without_shuffle": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_native_feature_schema_keeps_exact_order_backend_and_legacy_ranges": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_selected_model_uses_real_precision_registry_not_generic_prediction": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_existing_ffn_loop_fits_dense_shared_and_both_routed_precisions": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_outside_root_norm_is_explicit_shared_cache_helper": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_warm_cache_registers_both_precisions_without_refitting": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation0-actual positive integral kernel coverage]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation1-actual positive integral kernel coverage]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation2-actual positive integral kernel coverage]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation3-exclusion metadata conflicts]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation4-exclusion metadata conflicts]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts[mutation5-do not relabel]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_input_norm_refuses_sample_count_as_launch_count": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn::test_step_all_layer_source_precision_and_native_activation_exclusions": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_real_dense_layer_replay_uses_bf16_mlp_not_shared[0]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_real_dense_layer_replay_uses_bf16_mlp_not_shared[91]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_real_routed_layer_replay_prices_source_precision_and_merge_once[3-FP8-0.32]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_real_routed_layer_replay_prices_source_precision_and_merge_once[88-BF16-0.48]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_public_moe_component_matches_the_execution_component": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_public_stage_replays_typed_cache_costs_without_attention_or_cpu_costs": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_measured_ffn_refuses_outside_token_bounds_and_missing_gap": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_gpu_active_runtime_rejects_a_missing_count_model": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_attention_cache_preserves_proof_and_does_not_invent_layer_coverage": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_full_stage_never_omits_unmeasured_native_boundary_steps[0]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_full_stage_never_omits_unmeasured_native_boundary_steps[91]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_ffn_replay::test_all92_source_classification_retains_precisions_and_physical_geometry": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_graph_policy_preserves_real_measurement_method[none-KERNEL_ONLY]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_graph_policy_preserves_real_measurement_method[full-CUDA_EVENT]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_graph_policy_preserves_real_measurement_method[piecewise-CUDA_EVENT]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_root_target_selects_real_candidate_not_independent_event_median[full-mean-1.25]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_root_target_selects_real_candidate_not_independent_event_median[none-median-1.5]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_derives_precision_and_context_features": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_derives_validated_features_once_per_source_row": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_accepts_native_graph_event_rows[full]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_accepts_native_graph_event_rows[piecewise]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_loader_supports_every_source_layer_without_inventing_coverage": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_native_backend_identity_is_per_variant_but_runtime_is_not": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_rejects_backend_changes_inside_one_variant": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_eager_event_diagnostics_cannot_be_relabelled_as_root_physical_cost": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change0-measurement_type mismatch]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change1-do not relabel]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change2-profiling_precision conflicts]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change3-model_dtype conflicts]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change4-geometry disagrees|attention_variant disagrees]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change5-kernel coverage missing]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change6-kernel coverage missing]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change7-inactive scope]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change8-inactive physical scope]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change9-coverage is unavailable]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change10-coverage is unavailable]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change11-max_model_len differs]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change12-active_operators differ]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_bad_coverage_is_rejected_before_fit[change13-finite nonnegative]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_real_fit_atomic_cache_exact_lookup_and_warm_reload": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_measured_training::test_step_graph_fit_registers_event_family_and_never_generic_projections": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_full_pd_chunk_counts_use_logical_positions_not_wave_hamilton": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_source_immutable_padding_and_repeated_positions": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_actual_batches_freeze_schedule_context_not_later_request_progress": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_registry_owns_the_complete_count_call_and_strict_source": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_one_source_tensor_interface_preserves_masks_and_request_intervals": {
+          "status": "SKIP",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_actual_predictor_constructor_and_whole_source_cache": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_position_routing::test_scheduler_materializes_actual_bound_dp_sources_and_live_trace": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_padded_count_rounds_each_expert_up_to_the_block": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_block_size_comes_from_the_kernel_config_range_of_the_step": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_padded_table_trains_grouped_gemm_on_routed_and_padded_tokens": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_tables_without_the_padded_column_keep_the_previous_features": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_padded_column_must_cover_every_row": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_a_padded_table_without_block_size_ranges_is_rejected": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_a_row_block_size_that_disagrees_with_the_ranges_is_rejected": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_runtime_pads_each_local_expert_with_the_block_size_of_the_step": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_a_step_between_profiled_rows_pads_with_the_kernel_config_block_size": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_runtime_padded_features_hit_the_profiled_row_exactly": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_each_ep_rank_pads_every_expert_of_the_domain": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_moe_loader_derives_family_once_without_skipping_unselected_rows": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[zero]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[opposite]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[typed]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[missing]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[physical]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_source_filter_rejects_unmeasured_or_wrong_physical_rows[context]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_independent_selected_actual_fit_cache_binds_native_context": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_output_inventory_uses_declared_cells_without_structural_zero_fill": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_attachment_to_public_stage_never_reparses_fixed_identity": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_selected_estimator_marker_mutation_reparses_once_and_replaces_proof": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_registry_replacement_uses_its_marker_not_old_hash_or_model": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{invalid]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[[]]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[null]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{}]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[None]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{\"evidence_kind\":null}]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{\"evidence_kind\":NaN}]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_malformed_changed_identity[{\"evidence_kind\":\"\"}]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_warm_public_stage_rejects_pair_conflict_and_retains_dynamic_validation": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_step5_model_identity_reuse::test_bundle_load_to_public_attention_reuses_identity_and_checks_mutation": {
+          "status": "PASS",
+          "message": null
+        }
+      },
+      "changed_existing": {},
+      "new_cases": {
+        "tests.unit.test_prediction_measurement_bindings::test_named_native_view_keeps_selected_objects_and_unfiltered_order": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[ambiguity]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[conflict]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[missing]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[decode_attn]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_gating_linear]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_grouped_gemm]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[cache_name]": {
+          "status": "PASS",
+          "message": null
+        }
+      }
+    },
+    "governance": {
+      "baseline": {
+        "tests.unit.test_profiling_governance_minimal_red::test_real_linear_producer_csv_round_trip_reaches_manager_loader": {
+          "status": "FAIL",
+          "message": "ModuleNotFoundError: No module named 'torch'"
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_linear_loader_uses_selected_dense_typed_width": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_moe_loader_uses_selected_routed_width_and_ep": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_moe_loader_keeps_ep_agnostic_typed_rows[moe_gating_linear]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_moe_loader_keeps_ep_agnostic_typed_rows[moe_gating_routing_topk]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_moe_loader_keeps_ep_agnostic_typed_rows[moe_shuffling]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_typed_loader_requires_operator_scope": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_linear_loader_allows_unscoped_typed_rows_for_attention_paths": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_unscoped_typed_loader_rejects_malformed_metadata": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_keeps_precision_and_measurement_buckets_isolated": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_cache_hash_uses_selected_semantic_contract": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_cache_marker_is_written_and_validated": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_typed_registry_is_canonical_and_requires_context_for_ambiguity": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_projection_selects_cluster_contract_and_rejects_unresolved_variants": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_keeps_eager_and_kernel_only_typed_registries_separate": {
+          "status": "PASS",
+          "message": null
+        }
+      },
+      "candidate": {
+        "tests.unit.test_profiling_governance_minimal_red::test_real_linear_producer_csv_round_trip_reaches_manager_loader": {
+          "status": "FAIL",
+          "message": "ModuleNotFoundError: No module named 'torch'"
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_linear_loader_uses_selected_dense_typed_width": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_moe_loader_uses_selected_routed_width_and_ep": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_moe_loader_keeps_ep_agnostic_typed_rows[moe_gating_linear]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_moe_loader_keeps_ep_agnostic_typed_rows[moe_gating_routing_topk]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_moe_loader_keeps_ep_agnostic_typed_rows[moe_shuffling]": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_typed_loader_requires_operator_scope": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_linear_loader_allows_unscoped_typed_rows_for_attention_paths": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_unscoped_typed_loader_rejects_malformed_metadata": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_keeps_precision_and_measurement_buckets_isolated": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_cache_hash_uses_selected_semantic_contract": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_cache_marker_is_written_and_validated": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_typed_registry_is_canonical_and_requires_context_for_ambiguity": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_projection_selects_cluster_contract_and_rejects_unresolved_variants": {
+          "status": "PASS",
+          "message": null
+        },
+        "tests.unit.test_profiling_governance_minimal_red::test_manager_keeps_eager_and_kernel_only_typed_registries_separate": {
+          "status": "PASS",
+          "message": null
+        }
+      },
+      "changed_existing": {},
+      "new_cases": {}
+    }
+  },
+  "step_numstat": {
+    "frontier/execution_time_predictor/moe_routing_workload.py": {
+      "added": 2,
+      "deleted": 1,
+      "gross": 3,
+      "net": 1
+    },
+    "frontier/execution_time_predictor/prediction_model_registry.py": {
+      "added": 9,
+      "deleted": 5,
+      "gross": 14,
+      "net": 4
+    },
+    "tests/unit/test_moe_routing_runtime.py": {
+      "added": 30,
+      "deleted": 0,
+      "gross": 30,
+      "net": 30
+    },
+    "tests/unit/test_prediction_measurement_bindings.py": {
+      "added": 49,
+      "deleted": 0,
+      "gross": 49,
+      "net": 49
+    }
+  },
+  "cumulative_numstat": {
+    "frontier/execution_time_predictor/moe_routing_workload.py": {
+      "added": 190,
+      "deleted": 6,
+      "gross": 196,
+      "net": 184
+    },
+    "frontier/execution_time_predictor/prediction_model_registry.py": {
+      "added": 91,
+      "deleted": 13,
+      "gross": 104,
+      "net": 78
+    },
+    "tests/unit/test_moe_routing_runtime.py": {
+      "added": 147,
+      "deleted": 0,
+      "gross": 147,
+      "net": 147
+    },
+    "tests/unit/test_prediction_measurement_bindings.py": {
+      "added": 348,
+      "deleted": 0,
+      "gross": 348,
+      "net": 348
+    }
+  },
+  "cumulative_delta_gross": 88,
+  "incremental_union_from_accepted_9491": {
+    "core": 4261,
+    "pricing": 3954,
+    "native": 1350,
+    "source": 9565,
+    "global": 9579,
+    "qualification": "Incremental receipt over accepted union; final composed audit belongs to primary."
+  },
+  "environment": {
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "packages": {
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "scikit-learn": "1.7.2"
+    }
+  },
+  "limits": "No full CLI, full unit, strict77, GPU/native or final acceptance run. Existing Torch-dependent failure remains unchanged."
+}

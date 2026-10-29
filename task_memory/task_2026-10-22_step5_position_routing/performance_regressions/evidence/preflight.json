@@ -1,0 +1,40 @@
+{
+  "task_id": "D29-PERFORMANCE-FINAL-REGRESSIONS",
+  "source_before": {
+    "head": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+    "tree": "8c6db078e852d3b885a6f14bdf5e8007d9ecddb7",
+    "status": "",
+    "submodule_head": "3dac53c544e546574cb6e8078cd14053d0916113",
+    "submodule_status": ""
+  },
+  "source_files": 2288,
+  "changed_paths_from_e41": [
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+    "frontier/execution_time_predictor/moe_routing_workload.py",
+    "frontier/execution_time_predictor/profiling_dataframe_loaders.py",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "tests/unit/test_collective_sim_cc_backend.py",
+    "tests/unit/test_moe_grouped_gemm_padded_features.py",
+    "tests/unit/test_prediction_measurement_bindings.py"
+  ],
+  "harness_files": [
+    {
+      "path": "tests/e2e/refactor_fidelity/cases.py",
+      "sha256": "eaf31417d56e4fb8f6223c2972471df51912eb7649c806ff8b0d458b6af94aef",
+      "same_as_original_baseline": true
+    },
+    {
+      "path": "tests/e2e/refactor_fidelity/compare.py",
+      "sha256": "2b955cc309425cbd9e6365e9f146911498c116a43da43d618ef30f6cda0fcb7d",
+      "same_as_original_baseline": true
+    },
+    {
+      "path": "tests/e2e/refactor_fidelity/run_matrix.py",
+      "sha256": "88dc98089dd775d8e582998d36def8729818fcebd6e2ced31927564aab1121b7",
+      "same_as_original_baseline": true
+    }
+  ],
+  "examples_diff": "",
+  "baseline_path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate",
+  "baseline_revision": "713e6a81708e87b86cf91fd89f3b1f954bdcbead"
+}

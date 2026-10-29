@@ -1,0 +1,44 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/native_availability_diagnosis.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/native_availability_diagnosis.json",
+    "bytes": 16225,
+    "sha256": "0c4a9844e986cb8d5dbadd862c2ad79eebf740b183965b693b31ecde18b6d039"
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/unit_final06_before_governance_comparison.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/first_unit_comparison.json",
+    "bytes": 80693,
+    "sha256": "4ce4fcaee44897982d4623e4049494c3e2a429017d42c07c484c5f4d1be8750d"
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/unit_final06_before_governance_legacy_comparison.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/first_unit_legacy_comparison.json",
+    "bytes": 172167,
+    "sha256": "d771e1db14cd938ed2cddf11b913687f35ac91d07374ecfe1ba9a75dfba9a0d4"
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/unit/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/first_unit_execution.json",
+    "bytes": 32927,
+    "sha256": "3895594cb2ed6a38eb21029e54b728106579494701f8c2e14450c85162b7d76f"
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/reconciliation_preflight.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/canonical_reconciliation_preflight.json",
+    "bytes": 5275,
+    "sha256": "07dd0c114c92c1c94d35e27d9e9c169f3ed478ed9ba46614b2e5a6dfdae861e4"
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52_receipt.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/governance52_receipt.json",
+    "bytes": 1869,
+    "sha256": "0612107ea021b6a14675667b8e12b646b34db27bd3cf7ddebe2eab83c50e13b2"
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/governance52/execution.json",
+    "bytes": 7547,
+    "sha256": "41a9f514eb32fe224dfb5329e32d3defc8e51f0a34c9eee76a41e63b51771ade"
+  }
+]

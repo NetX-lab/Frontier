@@ -1,0 +1,132 @@
+{
+  "status": "PASS_RESTORED_STATE_AND_PREPARED_EXECUTION_ONLY",
+  "collected_utc": "2026-10-24T20:21:36.725299+00:00",
+  "current_head": "e08a133d419fa27008d9ccd5261f05ef065322f1",
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "related_worktrees": [
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "git_status": "",
+      "ancestor_of_current": true
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "git_status": "",
+      "ancestor_of_current": true
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+      "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+      "git_status": "",
+      "ancestor_of_current": true
+    },
+    {
+      "worktree": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+      "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+      "git_status": "",
+      "ancestor_of_current": true
+    }
+  ],
+  "historical_worktree_census": "resumed_execution/worktrees.json:89 relevant attachments; not recomputed",
+  "non_task_diff_source": "",
+  "non_task_diff_frozen": "",
+  "selected_artifacts": [
+    {
+      "source": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static01.execution.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static01.execution.json",
+      "bytes": 992,
+      "sha256": "7186f3d671fd803b17902048ddd881f1f270f1aee85b43046c977823519b759d"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static01.stdout",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static01.stderr",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static01.stderr",
+      "bytes": 75,
+      "sha256": "1af8401d77a166acc0d55db812d7b67e1bb70e2f14e34dbba5421cb0a112cd47"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static02.execution.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static02.execution.json",
+      "bytes": 1046,
+      "sha256": "5442c4709d70058105e0002d4303eb1608a3851ce782cf95daa9274d546eb2f4"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static02.stdout",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static02.stdout",
+      "bytes": 137,
+      "sha256": "89fa52bfae51d736044f15fc65ac25fd74c1a59cbf499ad9a32af770ca5e29ac"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static02.stderr",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static02.stderr",
+      "bytes": 67,
+      "sha256": "275cc51d2d94c2d8556f382e51ef641b4a22b4ee337fb8da9570de038c13bb12"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static02/preparation.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static02.json",
+      "bytes": 2391,
+      "sha256": "47fd90ff6f47dbc70407c480147c609b6b2a44ee4d18ebef2e6522d0d33436d2"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static02/worker_dry_run.stdout",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_dry_run.stdout",
+      "bytes": 1092,
+      "sha256": "069dce06084c390a389c6769589544dff2c24cf172cd154141b892fa90344eb4"
+    },
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static03.execution.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static03.execution.json",
+      "bytes": 1198,
+      "sha256": "2518996f4b0181bd12dc63253deea2e35bde7b061d5db39139c0e49e144bb289"
+    },
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static03.stdout",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static03.stdout",
+      "bytes": 137,
+      "sha256": "89fa52bfae51d736044f15fc65ac25fd74c1a59cbf499ad9a32af770ca5e29ac"
+    },
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static03.stderr",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static03.stderr",
+      "bytes": 67,
+      "sha256": "2afca98eb0c1fc1be7683045251619b46edf2c241de7ddb772d6a805d5f150b0"
+    },
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static03.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/preparation_static03.json",
+      "bytes": 2391,
+      "sha256": "afff4acf36f95419e8e185ab304e3e1f06e6b3c56003d8e14aa03d33af08027d"
+    },
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_dry_run_final.stdout",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_dry_run_final.stdout",
+      "bytes": 1092,
+      "sha256": "069dce06084c390a389c6769589544dff2c24cf172cd154141b892fa90344eb4"
+    }
+  ],
+  "new_pricing_calls": 0,
+  "new_shape_calls": 0,
+  "new_platform_operations": 0,
+  "raw_scope_failure": "systemd-run system scope without the retained sudo/runuser prefix failed before Python started; rawexit1 preserved",
+  "additional_scope_probe": "systemd-run --user --scope --quiet -p MemoryMax=30G /usr/bin/true returnedexit1 without output; no Python or wave executed",
+  "scope_resolution": "Use the already recorded timeout60s sudo-n systemd-run scope MemoryMax30G runuserbrainpp recipe; static02exit0",
+  "pending": [
+    "finite two-call pricing decision",
+    "independent preparation reviews",
+    "actual worker/append/lifecycle",
+    "complete full CLI and full-workload RSS",
+    "final T2/native/G3/E2E"
+  ],
+  "final_static": "preparation_static03.json",
+  "final_static_exit_code": 0,
+  "final_static_wall_s": 2.199947816785425,
+  "script_eof_correction": "One blank EOF line removed; final bindings refreshed, prior static02 retained."
+}

@@ -277,6 +277,22 @@ def test_decode_cluster_uses_kernel_only_when_decode_cuda_graph_enabled() -> Non
     assert decode_predictor._select_measurement_type_for_batch(batch) == MeasurementType.KERNEL_ONLY
 
 
+def test_step5_attention_families_do_not_choose_pd_step_family() -> None:
+    global_vars.set_global_vars("online", "pd-disaggregation")
+    global_vars.set_cuda_graph_config(False, [1, 2, 4], "full_and_piecewise")
+    prefill_predictor = _make_predictor(ClusterType.PREFILL)
+    decode_predictor = _make_predictor(ClusterType.DECODE)
+    for predictor in (prefill_predictor, decode_predictor):
+        predictor.requires_forward_start_agreement = True
+    batch = SimpleNamespace(num_prefill_tokens=0, num_decode_tokens=4)
+
+    # Graph-replayed Step attention is CUDA_EVENT; the other operators of a
+    # graph decode step stay kernel-only.
+    assert decode_predictor._should_enable_measurement_family(MeasurementType.CUDA_EVENT) is True
+    assert decode_predictor._select_measurement_type_for_batch(batch) == MeasurementType.KERNEL_ONLY
+    assert prefill_predictor._select_measurement_type_for_batch(batch) == MeasurementType.CUDA_EVENT
+
+
 def test_pd_af_decode_clusters_use_kernel_only_when_cuda_graph_enabled() -> None:
     global_vars.set_cuda_graph_config(True, [1, 2, 4], "none")
     decode_attn_predictor = _make_predictor(ClusterType.DECODE_ATTN)

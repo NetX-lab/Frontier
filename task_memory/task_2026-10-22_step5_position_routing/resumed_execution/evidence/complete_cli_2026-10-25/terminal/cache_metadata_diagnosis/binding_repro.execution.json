@@ -1,0 +1,26 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "--quiet",
+    "-p",
+    "MemoryMax=30G",
+    "runuser",
+    "-u",
+    "brainpp",
+    "--",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/d29_main09_binding_repro_20261025.py"
+  ],
+  "returncode": 1,
+  "wall_s": 0.1670710169710219,
+  "finished_utc": "2026-10-25T06:05:44.917819+00:00",
+  "expected_error": "AssertionError: Fixture metadata: cache/moe_gating_routing_topk_c733e553.pkl",
+  "reproduced_original_failure": true,
+  "new_pricing_workload_shape_platform_calls": 0
+}

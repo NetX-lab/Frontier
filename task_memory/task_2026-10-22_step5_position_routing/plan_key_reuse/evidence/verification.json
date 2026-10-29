@@ -1,0 +1,74 @@
+{
+  "task_id": "D29-PLAN-KEY-REUSE",
+  "status": "PASS",
+  "tests": {
+    "red": {
+      "cases": 1,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 0
+    },
+    "green": {
+      "cases": 1,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 1
+    },
+    "affected": {
+      "cases": 125,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 1,
+      "passed": 124
+    },
+    "baseline-tests": {
+      "cases": 125,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 1,
+      "passed": 124
+    }
+  },
+  "byte_comparisons": {
+    "pricing_payload.json": {
+      "equal": true,
+      "bytes": 647510,
+      "sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+    },
+    "accepted-output/{arm}/ledger.json": {
+      "equal": true,
+      "bytes": 2309545,
+      "sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf"
+    },
+    "accepted-output/{arm}/iteration-0/op_traces.jsonl": {
+      "equal": true,
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    }
+  },
+  "source_hashes_unchanged": true,
+  "warm_pricing_medians_s": {
+    "baseline": 0.16100693587213755,
+    "candidate": 0.11974244238808751
+  },
+  "emission_medians_s": {
+    "baseline": 0.05160121200606227,
+    "candidate": 0.038155626971274614
+  },
+  "actual_key_encodings": {
+    "baseline": {
+      "cold": 200,
+      "warm": 576,
+      "profile": 192,
+      "emission_profile": 64
+    },
+    "candidate": {
+      "cold": 8,
+      "warm": 0,
+      "profile": 0,
+      "emission_profile": 0
+    }
+  }
+}

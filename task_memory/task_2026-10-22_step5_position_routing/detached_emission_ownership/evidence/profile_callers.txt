@@ -1,0 +1,112 @@
+source of profile: baseline/emission.pstats (label baseline, D29-EMISSION-IMMUTABLE-WORK)
+measured unprofiled median emission: 49.601 ms for 208 events
+
+Sat Oct 24 02:42:46 2026    emission.pstats
+
+         212789 function calls (183461 primitive calls) in 0.122 seconds
+
+   Ordered by: cumulative time
+   List reduced from 132 to 18 due to restriction <18>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.004    0.004    0.122    0.122 /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/ep_wave_metrics.py:10(record_ep_wave)
+      208    0.002    0.000    0.059    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/op_trace_utils.py:281(compute_op_trace_meta)
+      192    0.001    0.000    0.053    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/cc_backend/collective_plan.py:86(to_dict)
+21472/6256    0.024    0.000    0.045    0.000 /usr/lib/python3.10/copy.py:128(deepcopy)
+      208    0.000    0.000    0.043    0.000 /usr/lib/python3.10/dataclasses.py:1218(asdict)
+ 8400/208    0.017    0.000    0.043    0.000 /usr/lib/python3.10/dataclasses.py:1242(_asdict_inner)
+   368/32    0.002    0.000    0.034    0.001 /usr/lib/python3.10/copy.py:259(_reconstruct)
+6384/2304    0.003    0.000    0.034    0.000 /usr/lib/python3.10/dataclasses.py:1274(<genexpr>)
+   832/32    0.004    0.000    0.033    0.001 /usr/lib/python3.10/copy.py:227(_deepcopy_dict)
+       64    0.000    0.000    0.027    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/cc_backend/collective_plan.py:91(cache_key)
+       16    0.000    0.000    0.019    0.001 /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/entities/execution_time.py:778(communication_time_component)
+       80    0.000    0.000    0.019    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/ep_wave_metrics.py:121(<dictcomp>)
+      448    0.001    0.000    0.017    0.000 /usr/lib/python3.10/json/__init__.py:299(loads)
+      448    0.001    0.000    0.016    0.000 /usr/lib/python3.10/json/decoder.py:332(decode)
+       16    0.000    0.000    0.015    0.001 /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/entities/execution_time.py:731(moe_or_mlp_time_component)
+      448    0.014    0.000    0.014    0.000 /usr/lib/python3.10/json/decoder.py:343(raw_decode)
+  688/336    0.001    0.000    0.014    0.000 /usr/lib/python3.10/copy.py:210(_deepcopy_tuple)
+  688/336    0.001    0.000    0.013    0.000 /usr/lib/python3.10/copy.py:211(<listcomp>)
+
+
+======================== to_dict
+   Ordered by: cumulative time
+   List reduced from 132 to 1 due to restriction <'to_dict'>
+
+Function                                                                                                   was called by...
+                                                                                                               ncalls  tottime  cumtime
+/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/cc_backend/collective_plan.py:86(to_dict)  <-      64    0.000    0.019  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/cc_backend/collective_plan.py:91(cache_key)
+                                                                                                                   64    0.000    0.018  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/ep_wave_metrics.py:121(<dictcomp>)
+                                                                                                                   64    0.000    0.017  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/op_trace_utils.py:281(compute_op_trace_meta)
+
+
+======================== cache_key
+   Ordered by: cumulative time
+   List reduced from 132 to 1 due to restriction <'cache_key'>
+
+Function                                                                                                     was called by...
+                                                                                                                 ncalls  tottime  cumtime
+/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/cc_backend/collective_plan.py:91(cache_key)  <-      64    0.000    0.027  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/op_trace_utils.py:281(compute_op_trace_meta)
+
+
+======================== asdict
+   Ordered by: cumulative time
+   List reduced from 132 to 2 due to restriction <'asdict'>
+
+Function                                                was called by...
+                                                            ncalls  tottime  cumtime
+/usr/lib/python3.10/dataclasses.py:1218(asdict)         <-     192    0.000    0.041  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/cc_backend/collective_plan.py:86(to_dict)
+                                                                16    0.000    0.002  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/ep_wave_metrics.py:10(record_ep_wave)
+/usr/lib/python3.10/dataclasses.py:1242(_asdict_inner)  <-     208    0.002    0.043  /usr/lib/python3.10/dataclasses.py:1218(asdict)
+                                                         3392/1392    0.006    0.040  /usr/lib/python3.10/dataclasses.py:1242(_asdict_inner)
+                                                         4800/1712    0.010    0.033  /usr/lib/python3.10/dataclasses.py:1274(<genexpr>)
+
+
+======================== deepcopy
+   Ordered by: cumulative time
+   List reduced from 132 to 5 due to restriction <'deepcopy'>
+
+Function                                           was called by...
+                                                       ncalls  tottime  cumtime
+/usr/lib/python3.10/copy.py:128(deepcopy)          <-      16    0.000    0.015  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/entities/execution_time.py:731(moe_or_mlp_time_component)
+                                                           16    0.000    0.019  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/entities/execution_time.py:778(communication_time_component)
+                                                          336    0.000    0.002  /usr/lib/python3.10/copy.py:201(_deepcopy_list)
+                                                    3680/2640    0.004    0.013  /usr/lib/python3.10/copy.py:211(<listcomp>)
+                                                    10464/800    0.011    0.033  /usr/lib/python3.10/copy.py:227(_deepcopy_dict)
+                                                       368/32    0.001    0.034  /usr/lib/python3.10/copy.py:259(_reconstruct)
+                                                          368    0.000    0.001  /usr/lib/python3.10/copy.py:264(<genexpr>)
+                                                         6224    0.008    0.011  /usr/lib/python3.10/dataclasses.py:1242(_asdict_inner)
+/usr/lib/python3.10/copy.py:227(_deepcopy_dict)    <-  832/32    0.004    0.033  /usr/lib/python3.10/copy.py:128(deepcopy)
+/usr/lib/python3.10/copy.py:210(_deepcopy_tuple)   <- 688/336    0.001    0.014  /usr/lib/python3.10/copy.py:128(deepcopy)
+/usr/lib/python3.10/copy.py:201(_deepcopy_list)    <-     160    0.000    0.002  /usr/lib/python3.10/copy.py:128(deepcopy)
+/usr/lib/python3.10/copy.py:182(_deepcopy_atomic)  <-   19424    0.002    0.002  /usr/lib/python3.10/copy.py:128(deepcopy)
+
+
+======================== loads
+   Ordered by: cumulative time
+   List reduced from 132 to 1 due to restriction <'loads'>
+
+Function                                         was called by...
+                                                     ncalls  tottime  cumtime
+/usr/lib/python3.10/json/__init__.py:299(loads)  <-     384    0.001    0.011  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/cc_backend/collective_plan.py:86(to_dict)
+                                                         64    0.000    0.006  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/op_trace_utils.py:281(compute_op_trace_meta)
+
+
+======================== describe_step5_operator_tensors
+   Ordered by: cumulative time
+   List reduced from 132 to 1 due to restriction <'describe_step5_operator_tensors'>
+
+Function                                                                                                                 was called by...
+                                                                                                                             ncalls  tottime  cumtime
+/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/attention/step5.py:845(describe_step5_operator_tensors)  <-     144    0.002    0.006  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/op_trace_utils.py:281(compute_op_trace_meta)
+
+
+======================== moe_phase_operator_times
+   Ordered by: cumulative time
+   List reduced from 132 to 1 due to restriction <'moe_phase_operator_times'>
+
+Function                                                                                                                  was called by...
+                                                                                                                              ncalls  tottime  cumtime
+/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/entities/execution_time.py:942(moe_phase_operator_times)  <-      80    0.000    0.001  /data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/metrics/ep_wave_metrics.py:10(record_ep_wave)
+
+

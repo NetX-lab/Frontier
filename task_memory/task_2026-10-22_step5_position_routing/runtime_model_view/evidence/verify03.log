@@ -1,0 +1,5 @@
+Running scope as unit: run-r2ac92600fb8541abaacdc2fbb9579e85.scope
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/d29_model_view_control01/verify.py", line 109, in <module>
+    'warm_seconds': {'baseline': base['warm_seconds'], 'candidate': candidate['warm_seconds'],
+KeyError: 'warm_seconds'

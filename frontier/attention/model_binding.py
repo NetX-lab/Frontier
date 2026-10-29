@@ -18,12 +18,17 @@ _DSA_MODEL_TYPE_MARKERS = (
     "deepseek_v32",
     "deepseek_v3_2",
     "deepseek_v3.2",
+    "glm_moe_dsa",
 )
 _DSA_FIELD_MARKERS = (
     "dsa_topk",
     "dsa_top_k",
     "dsa_index_topk",
     "dsa_indexer",
+    "index_topk",
+    "index_topk_freq",
+    "index_topk_pattern",
+    "index_skip_topk_offset",
 )
 _UNKNOWN_EXOTIC_FIELD_MARKERS = (
     "sliding_window_pattern",
@@ -105,6 +110,21 @@ def _validate_mfa_fields(config: Any) -> None:
         raise ValueError(f"MFA attention binding requires fields: {missing}")
 
 
+def resolve_attention_head_partition(
+    total_heads: int, tensor_parallel_size: int, *, name: str = "KV heads",
+) -> tuple[int, int]:
+    """Return local heads and replication for the shared attention TP contract."""
+    if type(total_heads) is not int or total_heads <= 0:
+        raise ValueError(f"{name} must be a positive int, got {total_heads!r}")
+    if type(tensor_parallel_size) is not int or tensor_parallel_size <= 0:
+        raise ValueError("tensor_parallel_size must be a positive int")
+    if total_heads >= tensor_parallel_size and total_heads % tensor_parallel_size == 0:
+        return total_heads // tensor_parallel_size, 1
+    if total_heads < tensor_parallel_size and tensor_parallel_size % total_heads == 0:
+        return 1, tensor_parallel_size // total_heads
+    raise ValueError(f"{name} and tensor_parallel_size must divide one another")
+
+
 def _dense_variant_from_heads(num_q_heads: int, num_kv_heads: int) -> str:
     reason = f"num_q_heads={num_q_heads}, num_kv_heads={num_kv_heads}"
     if num_q_heads <= 0 or num_kv_heads <= 0:
@@ -139,11 +159,42 @@ def bind_attention_family(config: Any) -> AttentionFamilyBinding:
             "call bind_layer_attention(config, global_layer_id)"
         )
 
+    if _model_type(config) == "step5":
+        raise ValueError(
+            "Step attention requires an explicit global layer id; "
+            "call bind_layer_attention(config, global_layer_id)"
+        )
+
+    if _get_attr(config, "compress_ratios") is not None:
+        variants = {spec.variant_id for spec in config.get_layer_attention_specs()}
+        if len(variants) > 1:
+            raise ValueError(
+                "Mixed compression variants require an explicit global layer id; "
+                "call bind_layer_attention(config, global_layer_id)"
+            )
+
     return _bind_homogeneous_attention_family(config)
 
 
 def _bind_homogeneous_attention_family(config: Any) -> AttentionFamilyBinding:
     """Classify homogeneous topology without consulting layer resolution."""
+    if _model_type(config) == "step5":
+        from frontier.attention.step5 import validate_step5_config
+
+        validate_step5_config(config)
+        return AttentionFamilyBinding(
+            family_id="step5_attention", variant_id="sparse_gqa", frozen=True,
+            reason="Step per-layer SWA/sparse GQA shares raw KV layout; execution is unqualified",
+        )
+    if (
+        _model_type(config) == "deepseek_v4"
+        or _get_attr(config, "compress_ratios") is not None
+    ):
+        return AttentionFamilyBinding(
+            family_id="deepseek_v4_attention", variant_id="uncompressed",
+            frozen=True,
+            reason="Compressed attention requires explicit execution coverage",
+        )
     if _has_dsa_marker(config):
         return AttentionFamilyBinding(
             family_id="dsa_attention",
@@ -271,7 +322,34 @@ def resolve_attention_topology(
     num_layers = config.num_layers
     if type(num_layers) is not int or num_layers <= 0:
         raise ValueError("config must declare a positive num_layers")
+    if _model_type(config) == "step5":
+        from frontier.attention.step5 import STEP5_ATTENTION_VARIANTS, validate_step5_config
+
+        validate_step5_config(config)
+        return tuple(
+            LayerAttentionSpec(layer_id, "step5_attention", STEP5_ATTENTION_VARIANTS[layer_type])
+            for layer_id, layer_type in enumerate(config.layer_types)
+        ), None
     binding = _bind_homogeneous_attention_family(config)
+    if binding.family_id == "deepseek_v4_attention":
+        ratios = _get_attr(config, "compress_ratios")
+        if not isinstance(ratios, (tuple, list)) or len(ratios) < num_layers:
+            raise ValueError("compress_ratios must cover every backbone layer")
+        variants = {0: "uncompressed", 4: "csa", 128: "hca"}
+        if any(
+            type(ratio) is not int or ratio not in variants
+            for ratio in ratios[:num_layers]
+        ):
+            raise ValueError("compress_ratios supports only 0, 4 and 128")
+        return tuple(
+            LayerAttentionSpec(layer_id, binding.family_id, variants[ratios[layer_id]])
+            for layer_id in range(num_layers)
+        ), None
+    if (
+        binding.family_id == "dsa_attention"
+        and _get_attr(config, "index_topk") is not None
+    ):
+        return _resolve_index_attention_specs(config), None
     if not is_qwen3_5_profile_config(config):
         return tuple(
             LayerAttentionSpec(layer_id, binding.family_id, binding.variant_id)
@@ -292,6 +370,45 @@ def resolve_attention_topology(
         else LayerAttentionSpec(layer_id, binding.family_id, binding.variant_id)
         for layer_id, mixer in enumerate(schedule)
     ), gdn_config
+
+
+def _resolve_index_attention_specs(config: Any) -> tuple[LayerAttentionSpec, ...]:
+    """Resolve native backbone index reuse without claiming observed execution."""
+
+    for field_name in ("index_topk", "index_n_heads", "index_head_dim"):
+        value = _get_attr(config, field_name)
+        if type(value) is not int or value <= 0:
+            raise ValueError(f"{field_name} must be a positive int")
+    frequency = _get_attr(config, "index_topk_freq")
+    frequency = 1 if frequency is None else frequency
+    offset = _get_attr(config, "index_skip_topk_offset")
+    offset = 2 if offset is None else offset
+    if type(frequency) is not int or frequency <= 0:
+        raise ValueError("index_topk_freq must be a positive int")
+    if type(offset) is not int or offset < 0:
+        raise ValueError("index_skip_topk_offset must be a non-negative int")
+    pattern = _get_attr(config, "index_topk_pattern")
+    if pattern is not None and (
+        not isinstance(pattern, str) or any(value not in "FS" for value in pattern)
+    ):
+        raise ValueError("index_topk_pattern must contain only F and S")
+    specs = []
+    producer = None
+    for layer_id in range(config.num_layers):
+        shared = (
+            layer_id < len(pattern) and pattern[layer_id] == "S"
+            if pattern is not None
+            else max(layer_id - offset + 1, 0) % frequency != 0
+        )
+        if not shared:
+            producer = layer_id
+        if producer is None:
+            raise ValueError(f"Shared index layer {layer_id} has no index producer")
+        specs.append(LayerAttentionSpec(
+            layer_id, "dsa_attention",
+            "shared_index" if shared else "full_index", producer,
+        ))
+    return tuple(specs)
 
 
 def resolve_layer_attention_specs(config: Any) -> tuple[LayerAttentionSpec, ...]:

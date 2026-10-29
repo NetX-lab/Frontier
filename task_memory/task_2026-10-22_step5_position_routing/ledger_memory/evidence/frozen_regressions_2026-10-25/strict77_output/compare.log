@@ -1,0 +1,14 @@
+baseline /data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-matrix/candidate @ 376983d2ecc4
+candidate /data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/strict77_output/candidate @ 1461573de388
+cases compared: 77 of 77 in the case table
+identical: 77
+mismatched: 0
+baseline failures: 0
+candidate-only failures: 0
+cases missing from one side: 0
+cases with missing evidence: 0
+cases with differing definitions: 0
+cases not compared: 0
+predictor cache file names differ: 0 baseline-only, 0 candidate-only
+
+report: /data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/strict77_output/comparison.json

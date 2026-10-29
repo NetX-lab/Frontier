@@ -1,0 +1,12 @@
+{
+  "source_commit": "bd97ac520fd0ba796ecd9d1905fdff352e859680",
+  "distinct_passed": 306,
+  "unresolved": [],
+  "artifact_sha256": {
+    "contract_integration_py310.xml": "fcc5d569a2163005f291c10d87514241654d79894cb0cde84403ac26318f1603",
+    "contract_integration_timer.xml": "ebb7eafed13c053b0dee990fd197c117c2b03965016e029f935537ee5977b15b",
+    "contract_integration_tensor.xml": "8a0602e67f7d6cc38b015b5822ef97564967b148b7aecc34f1caaeb380bfe77c",
+    "contract_integration_image.xml": "a47a7f094d5bc53cb262ca7441305c113499b8c3b76a8c0fdcf68d61818d32a3",
+    "profile_test_deps.json": "ad40f5c69cf3f72782592ec12d684003895c5a3e0ec9c25d70ae42d296835b96"
+  }
+}

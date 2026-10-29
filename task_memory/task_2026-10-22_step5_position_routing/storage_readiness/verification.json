@@ -1,0 +1,16 @@
+{
+  "status": "PASS_RECORDS_AND_STORAGE_EVIDENCE",
+  "shape_archive_files": 16,
+  "storage_hash_bindings": 5,
+  "pure_checker_controls": 5,
+  "frozen_source_bindings": 23,
+  "fixture_metadata_bindings": 262,
+  "files_cleaned": 16,
+  "bytes_cleaned": 298219,
+  "cloud_control_bytes": 2406,
+  "new_production_shape_invocations": 0,
+  "new_gpu_jobs": 0,
+  "limits": "Records/artifact/metadata verification only;shape qualification and whole CLI remain unverified/failed.",
+  "committed_non_task_source_changes": [],
+  "working_non_task_source_changes": []
+}

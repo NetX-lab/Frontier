@@ -1,0 +1,366 @@
+{
+  "task_id": "D21-P0-GENERATION03",
+  "job": {
+    "name": "exp-1021-205523-285491",
+    "creator": "i-fengyicheng",
+    "preemptible": "no",
+    "queue": "codesign-default",
+    "phase": "Succeeded",
+    "conditions": [],
+    "replicas": {
+      "phase": "Succeeded",
+      "reason": "RJobSucceeded",
+      "message": "RJob succeeded",
+      "finishTime": "2026-10-21T13:09:48Z",
+      "taskStage": "stepmind-task-stage-1"
+    },
+    "taskStatuses": {
+      "default": {
+        "succeeded": 4,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    }
+  },
+  "python": "3.10.6",
+  "request_count": 24,
+  "warmup_count": 16,
+  "concurrent_count": 8,
+  "exact_lengths_and_tokens": true,
+  "idle_boundaries_verified": 2,
+  "observation_errors": [],
+  "native_runtime_replay": "PASS_FOR_BOTH_DECODE_DP_LANES",
+  "full_basic": "PARTIAL",
+  "formal_ready": false,
+  "scope": "Logged native runtime observations; not a complete per-forward/all-rank census or formal clean metrics",
+  "counts": [
+    {
+      "role": "decode",
+      "engine": 0,
+      "mode": "FULL",
+      "logged_rows": 30,
+      "observed_forwards": 2224,
+      "widths": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          8,
+          8
+        ]
+      ]
+    },
+    {
+      "role": "decode",
+      "engine": 0,
+      "mode": "PIECEWISE",
+      "logged_rows": 20,
+      "observed_forwards": 20,
+      "widths": [
+        [
+          1,
+          16
+        ],
+        [
+          2,
+          24
+        ],
+        [
+          4,
+          24
+        ],
+        [
+          5,
+          24
+        ],
+        [
+          6,
+          24
+        ],
+        [
+          7,
+          24
+        ],
+        [
+          8,
+          24
+        ],
+        [
+          16,
+          16
+        ],
+        [
+          17,
+          24
+        ],
+        [
+          18,
+          24
+        ],
+        [
+          19,
+          24
+        ],
+        [
+          20,
+          24
+        ],
+        [
+          21,
+          24
+        ],
+        [
+          22,
+          24
+        ],
+        [
+          23,
+          24
+        ]
+      ]
+    },
+    {
+      "role": "decode",
+      "engine": 1,
+      "mode": "FULL",
+      "logged_rows": 25,
+      "observed_forwards": 2152,
+      "widths": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          8,
+          8
+        ]
+      ]
+    },
+    {
+      "role": "decode",
+      "engine": 1,
+      "mode": "PIECEWISE",
+      "logged_rows": 18,
+      "observed_forwards": 18,
+      "widths": [
+        [
+          1,
+          24
+        ],
+        [
+          2,
+          24
+        ],
+        [
+          4,
+          24
+        ],
+        [
+          5,
+          24
+        ],
+        [
+          6,
+          24
+        ],
+        [
+          7,
+          24
+        ],
+        [
+          16,
+          16
+        ],
+        [
+          17,
+          24
+        ],
+        [
+          18,
+          24
+        ],
+        [
+          19,
+          24
+        ],
+        [
+          20,
+          24
+        ],
+        [
+          21,
+          24
+        ],
+        [
+          22,
+          24
+        ],
+        [
+          23,
+          24
+        ]
+      ]
+    },
+    {
+      "role": "prefill",
+      "engine": 0,
+      "mode": "NONE",
+      "logged_rows": 3,
+      "observed_forwards": 12,
+      "widths": [
+        [
+          6128,
+          6128
+        ]
+      ]
+    },
+    {
+      "role": "prefill",
+      "engine": 1,
+      "mode": "NONE",
+      "logged_rows": 3,
+      "observed_forwards": 12,
+      "widths": [
+        [
+          6128,
+          6128
+        ]
+      ]
+    }
+  ],
+  "remaining": [
+    "G3 independent content/lifetime/reference",
+    "G4 complete useful/dummy-forward and rank accounting",
+    "Admitted P0 profiles and clean full-population repetitions"
+  ],
+  "inputs": [
+    {
+      "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/parent_terminal03.json",
+      "sha256": "f383653951c187cd2b7ab1e02f0e59474cf9dea0b637e3eca682e5db1b72e69d",
+      "bytes": 444
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/parent_identity02.json",
+      "sha256": "dd981af78deeffc1b36626a3371e92943c5768dca79b66ad605e899979743df5",
+      "bytes": 777
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/config.json",
+      "sha256": "7708e7c55d2361872f5054305cb427d77cd6bd22affa457b99370f14de595579",
+      "bytes": 13523
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/evidence/replay/canonical_summary.json",
+      "sha256": "4da556254fc68414cc30de48c71fcdb7e1966c7cd76f0c05fe6cfd161b86072a",
+      "bytes": 684033
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/evidence/replay/client_requests.jsonl",
+      "sha256": "a7fdc4108b1fe86ec7356beaf6069ab64c2486b97abc88ba7eec765ba6221382",
+      "bytes": 1404814
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/evidence/nodes/gpu-h800-0071.host.platform.shaipower.com/server.log",
+      "sha256": "ab1b1e05442a3878a4197aa17bc81ac2afdfa59f01e23c17a9abdd7198e1e21e",
+      "bytes": 99462
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/evidence/nodes/gpu-h800-0201.host.platform.shaipower.com/server.log",
+      "sha256": "772d11177ecaa0afac1d9a898f5517e27faf5139857a04ae71700f573a0ca5b3",
+      "bytes": 100808
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/evidence/nodes/gpu-h800-0420.host.platform.shaipower.com/server.log",
+      "sha256": "babfd9518d0f1955e4683f7d409ffc36fe70a17cf5126d1de07077a4ec37d01b",
+      "bytes": 138427
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/evidence/nodes/gpu-h800-0566.host.platform.shaipower.com/server.log",
+      "sha256": "1edeab8f70b0921806802889664bfe8fb8fac0749452724979a460dc185e9638",
+      "bytes": 106922
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/compilation/cuda_graph.py",
+      "sha256": "6e34824d2e62cd3bbd2eaee615ebfae3db542ce2d6be9b14d1b012398087fe2e",
+      "bytes": 14197
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/worker/gpu/cudagraph_utils.py",
+      "sha256": "dfa356ffe5b88656945de785945115cc69b99578e77046101dc2611ba89f707d",
+      "bytes": 47854
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/metrics/loggers.py",
+      "sha256": "ea496be83251b8baa88ba6e28c648f737d9d22f72f151e955fe887ead6f236b3",
+      "bytes": 56835
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "task_id": "D23-ACTUAL-MAIN",
+  "tested_core": "c9e9388f117c625c6d546d1d083f8aaf3f824f51",
+  "verdict": "BLOCKED: paired core ledger KeyError; no completion",
+  "modes": {
+    "offline": {
+      "execution": {
+        "returncode": 1,
+        "timed_out": false,
+        "wall_s": 1032.6621223730035,
+        "source": {
+          "commit": "c9e9388f117c625c6d546d1d083f8aaf3f824f51",
+          "runner_sha256": "4559df06483fbb5a1135806d33fb04f23741870b736fc544b876f6847d330ff4",
+          "fixture_sha256": "ef830d689711ff8840f130623aca74251bc9fc103c7818188800cbb0fd68e1e6"
+        }
+      },
+      "validation": {
+        "mode": "offline",
+        "status": "FAIL",
+        "returncode": 1,
+        "timed_out": false,
+        "run_log": "/data/ycfeng/tmp/d23_main_actual04_offline/offline/run.log",
+        "limitations": [
+          "Synthetic CPU compute profiles and 3.5 ms READ cost; no native admission or accuracy claim.",
+          "One request per mode, not formal 128 requests, 16 warmups, or three repetitions.",
+          "CPU overhead is explicitly skipped; collective_sim uses the built-in H800 topology."
+        ]
+      },
+      "scheduler_record_count": 9,
+      "useful_batch_records": [
+        {
+          "event": "iteration_end",
+          "source": "frontier",
+          "scheduler": "vllm_v1",
+          "cluster_type": "PREFILL",
+          "iteration_id": 0,
+          "decision_result": null,
+          "request_id": null,
+          "token_budget": 2048,
+          "available_blocks": 102139,
+          "num_tokens": 6144,
+          "num_running_reqs": 1,
+          "num_waiting_reqs": 0,
+          "max_num_running_reqs": 128,
+          "max_num_scheduled_tokens": 8192,
+          "batch_request_ids": [
+            "0"
+          ],
+          "request_num_tokens": [
+            6144
+          ],
+          "batch_size": 1,
+          "batch_num_tokens": 6144,
+          "timestamp": 1792617608.2054775,
+          "timestamp_semantics": "wall_clock_epoch_seconds",
+          "simulation_time": 0.0,
+          "simulation_time_semantics": "frontier_event_time_seconds"
+        }
+      ],
+      "last_schedule": {
+        "event": "iteration_end",
+        "source": "frontier",
+        "scheduler": "vllm_v1",
+        "cluster_type": "PREFILL",
+        "iteration_id": 1,
+        "decision_result": null,
+        "request_id": null,
+        "token_budget": 8192,
+        "available_blocks": 103675,
+        "num_tokens": 0,
+        "num_running_reqs": 0,
+        "num_waiting_reqs": 0,
+        "max_num_running_reqs": 128,
+        "max_num_scheduled_tokens": 8192,
+        "batch_request_ids": [],
+        "request_num_tokens": [],
+        "batch_size": 0,
+        "batch_num_tokens": 0,
+        "timestamp": 1792617639.2953072,
+        "timestamp_semantics": "wall_clock_epoch_seconds",
+        "simulation_time": 85.20541516799993,
+        "simulation_time_semantics": "frontier_event_time_seconds"
+      },
+      "terminal_artifacts_exist": {
+        "system_metrics.json": false,
+        "request_metrics.csv": false,
+        "event_trace.json": false,
+        "frontier_transfer_ledger.jsonl": false,
+        "frontier_stage_batch_ledger.jsonl": false
+      },
+      "exception": "KeyError: 'step5_layer_e2e'",
+      "artifacts": {
+        "/data/ycfeng/tmp/d23_main_actual04_offline/offline/execution.json": {
+          "sha256": "ec5945bec96bf8e2fb0cdcf89a5491400fef628b53f6acd8f072fb12af3553a7",
+          "bytes": 331
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_offline/offline/validation.json": {
+          "sha256": "6e40e5b5d95f00b3e97a908ce4f31354b5c0865107c92fabae04bd1fb6596000",
+          "bytes": 461
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_offline/offline/run.log": {
+          "sha256": "741a5bc8da8ad14b2fa5412fb72e2fd40ffa6202e55445b066ee6dae24e0cfa5",
+          "bytes": 193402
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_offline/offline/scheduler.jsonl": {
+          "sha256": "f4b47ad7d20386c56989889af1b8ddd65831c37a7f776a4ee66cde23970c435a",
+          "bytes": 38406
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_offline/offline/command.json": {
+          "sha256": "764d90e005de5189b2548d2c42917c577f9a0ec1b544a814a8ad88f9b28e2934",
+          "bytes": 6064
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_offline/offline/command.bash": {
+          "sha256": "ded29a69798038c41f227b28bd2ba263bf4468bfdeefe36bef0d986ad6df485f",
+          "bytes": 5146
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_offline/input_hashes.json": {
+          "sha256": "4254cd5a23917ebba65dd4b59caa712588d20cf0695043c142a06d571156d2a3",
+          "bytes": 1282
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_offline/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/config.json": {
+          "sha256": "92b1f11df4dd03e2548eeb4e9a123117cc8aaf5e70d24533f75498d96fbc00ca",
+          "bytes": 373607
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_offline/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/metrics_ground_truth.jsonl": {
+          "sha256": "6eadca145edf8321245a40a0fe307470d121dcc62c10b8fe114e88f16201c314",
+          "bytes": 205
+        }
+      }
+    },
+    "online": {
+      "execution": {
+        "returncode": 1,
+        "timed_out": false,
+        "wall_s": 1032.4319722638465,
+        "source": {
+          "commit": "c9e9388f117c625c6d546d1d083f8aaf3f824f51",
+          "runner_sha256": "4559df06483fbb5a1135806d33fb04f23741870b736fc544b876f6847d330ff4",
+          "fixture_sha256": "ef830d689711ff8840f130623aca74251bc9fc103c7818188800cbb0fd68e1e6"
+        }
+      },
+      "validation": {
+        "mode": "online",
+        "status": "FAIL",
+        "returncode": 1,
+        "timed_out": false,
+        "run_log": "/data/ycfeng/tmp/d23_main_actual04_online/online/run.log",
+        "limitations": [
+          "Synthetic CPU compute profiles and 3.5 ms READ cost; no native admission or accuracy claim.",
+          "One request per mode, not formal 128 requests, 16 warmups, or three repetitions.",
+          "CPU overhead is explicitly skipped; collective_sim uses the built-in H800 topology."
+        ]
+      },
+      "scheduler_record_count": 9,
+      "useful_batch_records": [
+        {
+          "event": "iteration_end",
+          "source": "frontier",
+          "scheduler": "vllm_v1",
+          "cluster_type": "PREFILL",
+          "iteration_id": 0,
+          "decision_result": null,
+          "request_id": null,
+          "token_budget": 2048,
+          "available_blocks": 102139,
+          "num_tokens": 6144,
+          "num_running_reqs": 1,
+          "num_waiting_reqs": 0,
+          "max_num_running_reqs": 128,
+          "max_num_scheduled_tokens": 8192,
+          "batch_request_ids": [
+            "0"
+          ],
+          "request_num_tokens": [
+            6144
+          ],
+          "batch_size": 1,
+          "batch_num_tokens": 6144,
+          "timestamp": 1792617608.0264068,
+          "timestamp_semantics": "wall_clock_epoch_seconds",
+          "simulation_time": 0.25,
+          "simulation_time_semantics": "frontier_event_time_seconds"
+        }
+      ],
+      "last_schedule": {
+        "event": "iteration_end",
+        "source": "frontier",
+        "scheduler": "vllm_v1",
+        "cluster_type": "PREFILL",
+        "iteration_id": 1,
+        "decision_result": null,
+        "request_id": null,
+        "token_budget": 8192,
+        "available_blocks": 103675,
+        "num_tokens": 0,
+        "num_running_reqs": 0,
+        "num_waiting_reqs": 0,
+        "max_num_running_reqs": 128,
+        "max_num_scheduled_tokens": 8192,
+        "batch_request_ids": [],
+        "request_num_tokens": [],
+        "batch_size": 0,
+        "batch_num_tokens": 0,
+        "timestamp": 1792617639.2002404,
+        "timestamp_semantics": "wall_clock_epoch_seconds",
+        "simulation_time": 85.45541516799992,
+        "simulation_time_semantics": "frontier_event_time_seconds"
+      },
+      "terminal_artifacts_exist": {
+        "system_metrics.json": false,
+        "request_metrics.csv": false,
+        "event_trace.json": false,
+        "frontier_transfer_ledger.jsonl": false,
+        "frontier_stage_batch_ledger.jsonl": false
+      },
+      "exception": "KeyError: 'step5_layer_e2e'",
+      "artifacts": {
+        "/data/ycfeng/tmp/d23_main_actual04_online/online/execution.json": {
+          "sha256": "0f1cad136593f3a3a4bbb6067eb884871bc713f616420b072d0bc360d71e9f46",
+          "bytes": 331
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_online/online/validation.json": {
+          "sha256": "a54c500865d81b8a6ea0cd83d8f16f7a51eee6636d065fa1014eb2f5e7e74280",
+          "bytes": 458
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_online/online/run.log": {
+          "sha256": "726111ae6a3f4acf06e9fdbe87dfa4f85eac5628307172de8012a2806a650cf7",
+          "bytes": 67517
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_online/online/scheduler.jsonl": {
+          "sha256": "75c9656abd66ec5b38075f01c82786dcbebfc40c0f0c52bf24989a7d459ea419",
+          "bytes": 38413
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_online/online/command.json": {
+          "sha256": "ea37ba42c67657df09e6a2f54e7a4058a730ea3fe5730d36121becfa587426fd",
+          "bytes": 6055
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_online/online/command.bash": {
+          "sha256": "5d77f2ff102f4e806172629dc9d1d8a8ebd22fb0b4877aee335fbd614c9ddb93",
+          "bytes": 5137
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_online/input_hashes.json": {
+          "sha256": "b8f42769c7723d53594b5422e6bbd9aa8419eab15efcb39a3d871b4f8bc81d47",
+          "bytes": 1281
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_online/online/metrics/stepfun_ai_step_5_preview/online_serving/step5_measured_cpu_main_online/config.json": {
+          "sha256": "37c948a772f8e40ad14b1b25c5764a3af9074a8a9ba5addaad99d1e98396cb77",
+          "bytes": 373598
+        },
+        "/data/ycfeng/tmp/d23_main_actual04_online/online/metrics/stepfun_ai_step_5_preview/online_serving/step5_measured_cpu_main_online/metrics_ground_truth.jsonl": {
+          "sha256": "ae17a6afd19fcf214b3751c1e3bbfb376b8ea83f65cbfcd56028573e3a5fcd07",
+          "bytes": 211
+        }
+      }
+    }
+  }
+}

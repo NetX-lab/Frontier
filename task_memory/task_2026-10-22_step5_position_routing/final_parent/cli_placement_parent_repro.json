@@ -1,0 +1,152 @@
+[
+  {
+    "script": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/d29_cli_placement_repro/repro.py",
+    "returncode": 1,
+    "wall_s": 1.608589060138911,
+    "results": [
+      "RESULT RED prefill: ValueError: Step plans require explicitly configured TP8/DP2 placement",
+      "RESULT RED decode: ValueError: Step plans require explicitly configured TP8/DP2 placement"
+    ],
+    "configs": [
+      {
+        "attention_dims_seen_by_gate": {
+          "CP": 1,
+          "DP": 2,
+          "EP": 1,
+          "TP": 8
+        },
+        "backend": "CollectiveSimCCBackend",
+        "cluster_gpus_per_server": 8,
+        "cluster_servers": 2,
+        "cluster_type": "prefill",
+        "config_type": "CollectiveSimCCBackendConfig",
+        "nodes_servers_x_gpus": 16,
+        "nodes_tp_cp_dp_ep": 16,
+        "parallel_tp/cp/dp/ep": [
+          8,
+          1,
+          2,
+          1
+        ],
+        "placement_order": [
+          "TP",
+          "CP",
+          "DP",
+          "EP"
+        ],
+        "runtime_attn_dp": 2,
+        "runtime_attn_tensor_parallel_size": 8,
+        "runtime_moe_expert_parallel_size": 16,
+        "runtime_moe_tensor_parallel_size": 1,
+        "runtime_num_pipeline_stages": 1,
+        "runtime_num_replicas": 1
+      },
+      {
+        "attention_dims_seen_by_gate": {
+          "CP": 1,
+          "DP": 2,
+          "EP": 1,
+          "TP": 8
+        },
+        "backend": "CollectiveSimCCBackend",
+        "cluster_gpus_per_server": 8,
+        "cluster_servers": 2,
+        "cluster_type": "decode",
+        "config_type": "CollectiveSimCCBackendConfig",
+        "nodes_servers_x_gpus": 16,
+        "nodes_tp_cp_dp_ep": 16,
+        "parallel_tp/cp/dp/ep": [
+          8,
+          1,
+          2,
+          1
+        ],
+        "placement_order": [
+          "TP",
+          "CP",
+          "DP",
+          "EP"
+        ],
+        "runtime_attn_dp": 2,
+        "runtime_attn_tensor_parallel_size": 8,
+        "runtime_moe_expert_parallel_size": 16,
+        "runtime_moe_tensor_parallel_size": 1,
+        "runtime_num_pipeline_stages": 1,
+        "runtime_num_replicas": 1
+      }
+    ]
+  },
+  {
+    "script": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/d29_cli_placement_repro/probe_placement.py",
+    "returncode": 0,
+    "wall_s": 1.749271561857313,
+    "results": [
+      "RESULT GREEN prefill: plan priced, duration_ms=0.030000 plan_key_matches=True",
+      "RESULT GREEN decode: plan priced, duration_ms=0.030000 plan_key_matches=True"
+    ],
+    "configs": [
+      {
+        "attention_dims_seen_by_gate": {
+          "CP": 1,
+          "DP": 2,
+          "EP": 1,
+          "TP": 8
+        },
+        "backend": "CollectiveSimCCBackend",
+        "cluster_gpus_per_server": 8,
+        "cluster_servers": 2,
+        "cluster_type": "prefill",
+        "config_type": "CollectiveSimCCBackendConfig",
+        "nodes_servers_x_gpus": 16,
+        "nodes_tp_cp_dp_ep": 16,
+        "parallel_tp/cp/dp/ep": [
+          8,
+          1,
+          2,
+          1
+        ],
+        "placement_order": [
+          "TP",
+          "DP"
+        ],
+        "runtime_attn_dp": 2,
+        "runtime_attn_tensor_parallel_size": 8,
+        "runtime_moe_expert_parallel_size": 16,
+        "runtime_moe_tensor_parallel_size": 1,
+        "runtime_num_pipeline_stages": 1,
+        "runtime_num_replicas": 1
+      },
+      {
+        "attention_dims_seen_by_gate": {
+          "CP": 1,
+          "DP": 2,
+          "EP": 1,
+          "TP": 8
+        },
+        "backend": "CollectiveSimCCBackend",
+        "cluster_gpus_per_server": 8,
+        "cluster_servers": 2,
+        "cluster_type": "decode",
+        "config_type": "CollectiveSimCCBackendConfig",
+        "nodes_servers_x_gpus": 16,
+        "nodes_tp_cp_dp_ep": 16,
+        "parallel_tp/cp/dp/ep": [
+          8,
+          1,
+          2,
+          1
+        ],
+        "placement_order": [
+          "TP",
+          "DP"
+        ],
+        "runtime_attn_dp": 2,
+        "runtime_attn_tensor_parallel_size": 8,
+        "runtime_moe_expert_parallel_size": 16,
+        "runtime_moe_tensor_parallel_size": 1,
+        "runtime_num_pipeline_stages": 1,
+        "runtime_num_replicas": 1
+      }
+    ]
+  }
+]

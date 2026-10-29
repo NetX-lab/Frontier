@@ -1,0 +1,10 @@
+{
+  "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/frontier/cc_backend/backends/collective-sim",
+  "head": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "status": "clean",
+  "gitlink_changed": false,
+  "setup": "independent local clone --local --no-hardlinks --no-checkout; checkout --detach pinned commit",
+  "network_used": false,
+  "source_or_backend_edited": false,
+  "required_for_next_session": true
+}

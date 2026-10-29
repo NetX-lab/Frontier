@@ -1,0 +1,41 @@
+{
+  "status": "PASS_TWO_PATH_BASELINE_AND_ACCEPTED_TOTALS",
+  "baseline": "1aee0af11cd58691e64603b99eca0ac459a5b350",
+  "current": "b02772872d0c99ceb5ebb31a8e041926f12f7676",
+  "paths": [
+    {
+      "path": "frontier/metrics/metrics_store.py",
+      "baseline_blob": "7a1d753bfa45e6c770cc30a46a0c26bf7d8b217b",
+      "current_blob": "7a1d753bfa45e6c770cc30a46a0c26bf7d8b217b",
+      "bytes": 250545,
+      "lines": 5803,
+      "sha256": "5f223a363eb3870493dedbcc0376c65fc82785c0467525a643430f948a6e0fce",
+      "historical_gross": 0
+    },
+    {
+      "path": "tests/performance/step5_actual06_iteration.py",
+      "baseline_blob": "90afa29089327a9aa4e601ed65062e905a16e9f0",
+      "current_blob": "90afa29089327a9aa4e601ed65062e905a16e9f0",
+      "bytes": 33486,
+      "lines": 614,
+      "sha256": "599cfc2df4a35b639213db6c090723b85e4907d9468cb9d640999bf9f62178b0",
+      "historical_gross": 0
+    }
+  ],
+  "allocated_paths": 114,
+  "owner_totals": {
+    "core_source": {
+      "cap": 4404,
+      "actual": 4261
+    },
+    "native": {
+      "cap": 1582,
+      "actual": 1350
+    },
+    "pricing": {
+      "cap": 3956,
+      "actual": 3955
+    }
+  },
+  "limits": "60s and configured MemoryMax=30G; no simulator/model/trace/CSV work."
+}

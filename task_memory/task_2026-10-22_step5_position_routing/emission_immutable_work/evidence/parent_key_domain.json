@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "results": {
+    "baseline": {
+      "key_sha256": "c72f1a0a6bd3d585ad32a90b7e4d1ebe16af134ddadd6f0848939c82cf739a28",
+      "errors": [
+        [
+          "TypeError",
+          "Object of type bytes is not JSON serializable"
+        ],
+        [
+          "TypeError",
+          "Object of type bytes is not JSON serializable"
+        ],
+        [
+          "TypeError",
+          "Object of type bytearray is not JSON serializable"
+        ],
+        [
+          "TypeError",
+          "Object of type bytearray is not JSON serializable"
+        ]
+      ]
+    },
+    "retained": {
+      "key_sha256": "c72f1a0a6bd3d585ad32a90b7e4d1ebe16af134ddadd6f0848939c82cf739a28",
+      "errors": [
+        [
+          "TypeError",
+          "Object of type bytes is not JSON serializable"
+        ],
+        [
+          "TypeError",
+          "Object of type bytes is not JSON serializable"
+        ],
+        [
+          "TypeError",
+          "Object of type bytearray is not JSON serializable"
+        ],
+        [
+          "TypeError",
+          "Object of type bytearray is not JSON serializable"
+        ]
+      ]
+    }
+  }
+}

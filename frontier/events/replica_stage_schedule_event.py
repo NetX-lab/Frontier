@@ -78,7 +78,10 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 f"queue_batches={[b.id for b in queue_batches]}"
             )
 
-        batch = stage_scheduler.pop_batch_if_not_busy()
+        batch = stage_scheduler.take_forward_start_batch()
+        resuming_forward = batch is not None
+        if batch is None:
+            batch = stage_scheduler.pop_batch_if_not_busy()
         stale_drops = stage_scheduler.consume_last_stale_drops()
         stale_drop_count = len(stale_drops)
         replica_scheduler = None
@@ -110,6 +113,15 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 self._stage_id,
                 stale_drop_count,
                 replica_scheduler.num_running_batches,
+            )
+        if batch is not None and not resuming_forward and getattr(
+            stage_scheduler._execution_time_predictor, "requires_forward_start_agreement", False
+        ):
+            from frontier.scheduler.utils.forward_start_agreement import hold_forward_start
+
+            return hold_forward_start(
+                cluster_scheduler, stage_scheduler, batch, time=self.time,
+                replica_id=self._replica_id, stage_id=self._stage_id,
             )
         return self._schedule_popped_batch(
             metrics_store,
@@ -162,6 +174,13 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 f"stage {self._stage_id}, replica_local_id {self._replica_local_id}"
             )
             return []
+
+        if self._cluster_type == ClusterType.DECODE:
+            # The engine step starts: its KV connector checks and posts the
+            # lane's NIXL READs.
+            lane = cluster_scheduler.get_replica_scheduler(self._replica_id, self._replica_local_id)
+            if hasattr(lane, "on_engine_step_start"):
+                lane.on_engine_step_start(self.time + batch._forward_start_host_delay, batch)
 
         if isinstance(batch, DummyForwardBatch):
             return start_dummy_forward(
@@ -248,7 +267,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     )
                     # The host prepares the forward before its kernels launch.
                     preparation_time = execution_time.forward_preparation_time * 1e-3
-                    batch._forward_launch_start_time = self.time + preparation_time
+                    batch._forward_launch_start_time = (
+                        self.time + batch._forward_start_host_delay + preparation_time
+                    )
                     batch._forward_launch_time = execution_time.forward_launch_time * 1e-3
                     # Predictor single-layer components are in milliseconds.
                     # Event queue timestamps are in seconds.
@@ -542,7 +563,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     batch._decode_stage_start_time = self.time
                     # The host prepares the forward before its kernels launch.
                     preparation_time = execution_time.forward_preparation_time * 1e-3
-                    batch._forward_launch_start_time = self.time + preparation_time
+                    batch._forward_launch_start_time = (
+                        self.time + batch._forward_start_host_delay + preparation_time
+                    )
                     batch._forward_launch_time = execution_time.forward_launch_time * 1e-3
 
                     # Predictor single-layer attention component is in milliseconds;

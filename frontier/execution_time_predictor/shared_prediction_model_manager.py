@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Dict, Set, List, Any, Tuple
 
 import numpy as np
@@ -6,6 +7,8 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import make_scorer
 
 from frontier.config import MetricsConfig, ClusterConfig, global_vars
+from frontier.attention.model_binding import resolve_runtime_attention_family
+from frontier.attention.families import STEP5_ATTENTION_FAMILY
 from frontier.types import ClusterType, CCBackendType, MeasurementType
 from frontier.execution_time_predictor.measurement_input_paths import (
     substitute_input_path,
@@ -15,7 +18,9 @@ from frontier.execution_time_predictor.measurement_input_paths import (
     uses_two_stream_eager_pricing,
 )
 from frontier.execution_time_predictor.kernel_gap import load_kernel_gap_ms
+from frontier.execution_time_predictor.cache_io import dataset_fingerprint
 from frontier.logger import init_logger
+from frontier.cc_backend.collective_profile import CollectiveProfileInputs
 
 
 from frontier.execution_time_predictor.layer_contract_resolution import (
@@ -61,6 +66,8 @@ class ExecutionTimePredictionModelManager(
         os.makedirs(self._cache_dir, exist_ok=True)
         self._attention_tp_warning_cache: Set[str] = set()
         self._gdn_predictors: Dict[ClusterType, Any] = {}
+        self._step5_model_bundles: Dict[ClusterType, Dict[str, Any]] = {}
+        self._collective_profile_inputs = CollectiveProfileInputs()
 
         # Check if all clusters are in dummy mode
         self._all_dummy_mode = self._check_all_dummy_mode()
@@ -104,9 +111,62 @@ class ExecutionTimePredictionModelManager(
             # Train all required prediction models once based on capabilities per cluster
             self._models_by_precision = {}
             self._model_profiling_precision = {}
-            self._trained_models = self._train_all_required_models()
+            try:
+                self._trained_models = self._train_all_required_models()
+                self._publish_step5_model_bundles()
+            finally:
+                # Validated Step frames are initialization-only, including failed initialization.
+                self.__dict__.pop("_step5_attention_inputs", None)
 
             logger.info(f"ExecutionTimePredictionModelManager initialized with capabilities: {self._required_capabilities}")
+
+    @property
+    def collective_profile_inputs(self):
+        return self._collective_profile_inputs
+
+    def _publish_step5_model_bundles(self) -> None:
+        """Bind the models used by each Step role to their existing cache artifacts."""
+        for role, cluster in self._cluster_configs.items():
+            replica = cluster.replica_config
+            if resolve_runtime_attention_family(replica.model_config).family_id != STEP5_ATTENTION_FAMILY.family_id:
+                continue
+            topology = {
+                "attention_tp": replica.attn_tensor_parallel_size,
+                    "attention_dp": replica.attn_dp,
+                "moe_tp": replica.moe_tensor_parallel_size,
+                "moe_ep": replica.moe_expert_parallel_size,
+                "pipeline_parallel": replica.num_pipeline_stages,
+            }
+            identity = {
+                "model_name": replica.model_name,
+                "model_architecture_profile": replica.model_config.get_model_architecture_profile().profile_id,
+                "device": replica.device, "role": str(role), "topology": topology,
+                "graph_policy": {"decode_mode": str(global_vars.get_decode_cuda_graph_mode()).lower()},
+            }
+            bindings = {}
+            for name in ("kernel_gap_input_file", "nixl_read_profile", "kv_block_zeroing_host_profile",
+                         "dp_dummy_step_host_profile"):
+                path = getattr(cluster.execution_time_predictor_config, name, None)
+                if path:
+                    bindings[name] = {"path": os.path.abspath(path), "sha256": dataset_fingerprint(path)}
+            if bindings:
+                identity["input_bindings"] = bindings
+            for method in self._get_measurement_types_for_cluster(role, replica):
+                family = self._measurement_family_name(method)
+                models = self._models_view_for_family(family, role)
+                kinds = {
+                    json.loads(model._frontier_measurement_identity)["evidence_kind"]
+                    for model in models.values()
+                }
+                if len(kinds) != 1:
+                    raise ValueError(f"Step {role}/{family} mixes evidence kinds: {sorted(kinds)}")
+                declared = {
+                    **identity, "evidence_kind": kinds.pop(),
+                    "coverage": {"requested_global_layer_ids": list(range(replica.model_config.num_layers)),
+                                 "measurement_type": method.value},
+                }
+                receipt = self.publish_registered_model_bundle(declared, family, role)
+                self._step5_model_bundles.setdefault(role, {})[family] = receipt
 
     def _check_all_dummy_mode(self) -> bool:
         """Check if all clusters are configured for dummy mode."""
@@ -244,6 +304,19 @@ class ExecutionTimePredictionModelManager(
 
     def _get_measurement_types_for_cluster(
         self, cluster_type: ClusterType, replica_config
+    ) -> List[MeasurementType]:
+        generic = self._get_compute_measurement_types_for_cluster(cluster_type, replica_config)
+        if resolve_runtime_attention_family(replica_config.model_config).family_id != STEP5_ATTENTION_FAMILY.family_id:
+            return generic
+        from frontier.execution_time_predictor.step5_cost import step5_measurements_for_role
+
+        attention = step5_measurements_for_role(
+            cluster_type, str(global_vars.get_decode_cuda_graph_mode()).lower(),
+        )
+        return list(dict.fromkeys((*generic, *attention)))
+
+    def _get_compute_measurement_types_for_cluster(
+        self, cluster_type: ClusterType, replica_config,
     ) -> List[MeasurementType]:
         event_measurement = self._event_measurement_type_for_replica(replica_config)
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
@@ -395,6 +468,16 @@ class ExecutionTimePredictionModelManager(
                 replica_config,
                 sys_arch=global_vars.get_sys_arch(),
             )
+            generic_types = self._get_compute_measurement_types_for_cluster(cluster_type, replica_config)
+            is_step5 = resolve_runtime_attention_family(model_config).family_id == STEP5_ATTENTION_FAMILY.family_id
+            if is_step5:
+                from frontier.execution_time_predictor.step5_cost import step5_measurements_for_role
+
+                attention_types = step5_measurements_for_role(
+                    cluster_type, str(global_vars.get_decode_cuda_graph_mode()).lower(),
+                )
+            else:
+                attention_types = generic_types
 
             for measurement_type in self._get_measurement_types_for_cluster(
                 cluster_type, replica_config
@@ -421,9 +504,15 @@ class ExecutionTimePredictionModelManager(
                 logger.info(f"  - CPU Overhead: {cpu_overhead_file} {'OK' if os.path.exists(cpu_overhead_file) else 'MISSING'}")
 
                 family_models: Dict[str, BaseEstimator] = {}
+                train_generic = measurement_type in generic_types
+                if train_generic and is_step5 and cluster_type != ClusterType.DECODE_FFN:
+                    family_models.update(self._train_step5_input_layernorm_for_cluster(
+                        cluster_type, replica_config, execution_time_predictor_config,
+                        linear_ops_file, trained_model_signatures,
+                    ))
 
                 if (
-                    cluster_type
+                    measurement_type in attention_types and cluster_type
                     in [
                         ClusterType.PREFILL,
                         ClusterType.DECODE_ATTN,
@@ -442,7 +531,7 @@ class ExecutionTimePredictionModelManager(
                     )
                     family_models.update(attention_models)
 
-                if cluster_type in [ClusterType.PREFILL, ClusterType.DECODE_FFN, ClusterType.DECODE, ClusterType.MONOLITHIC]:
+                if train_generic and cluster_type in [ClusterType.PREFILL, ClusterType.DECODE_FFN, ClusterType.DECODE, ClusterType.MONOLITHIC]:
                     ffn_models = self._train_ffn_models_for_cluster(
                         cluster_type,
                         replica_config,
@@ -454,16 +543,17 @@ class ExecutionTimePredictionModelManager(
                     )
                     family_models.update(ffn_models)
 
-                residual_models = self._train_residual_models_for_cluster(
-                    cluster_type,
-                    replica_config,
-                    execution_time_predictor_config,
-                    linear_ops_file,
-                    trained_model_signatures=trained_model_signatures,
-                )
-                family_models.update(residual_models)
+                if train_generic:
+                    residual_models = self._train_residual_models_for_cluster(
+                        cluster_type,
+                        replica_config,
+                        execution_time_predictor_config,
+                        linear_ops_file,
+                        trained_model_signatures=trained_model_signatures,
+                    )
+                    family_models.update(residual_models)
 
-                should_train_comm_models = self._should_train_communication_models(cluster_config)
+                should_train_comm_models = train_generic and self._should_train_communication_models(cluster_config)
                 if should_train_comm_models:
                     if replica_config.num_pipeline_stages > 1:
                         pipeline_models = self._train_pipeline_parallel_models_for_cluster(
@@ -492,20 +582,21 @@ class ExecutionTimePredictionModelManager(
                             trained_model_signatures=trained_model_signatures,
                         )
                         family_models.update(tensor_parallel_models)
-                else:
+                elif train_generic:
                     logger.info(
                         "Skipping shared-manager communication model training for %s because cc_backend=%s provides runtime communication prediction.",
                         cluster_type,
                         cluster_config.cc_backend_config.get_name(),
                     )
 
-                cpu_overhead_models = self._train_cpu_overhead_models_for_cluster(
-                    cluster_type,
-                    replica_config,
-                    execution_time_predictor_config,
-                    trained_model_signatures=trained_model_signatures,
-                )
-                family_models.update(cpu_overhead_models)
+                if train_generic:
+                    cpu_overhead_models = self._train_cpu_overhead_models_for_cluster(
+                        cluster_type,
+                        replica_config,
+                        execution_time_predictor_config,
+                        trained_model_signatures=trained_model_signatures,
+                    )
+                    family_models.update(cpu_overhead_models)
 
                 for model_name, model in family_models.items():
                     combined_models[f"{family_name}:{model_name}"] = model
@@ -584,13 +675,16 @@ class ExecutionTimePredictionModelManager(
         if self._all_dummy_mode:
             return {"eager": {}, "kernel_only": {}}
 
+        for receipt in getattr(self, "_step5_model_bundles", {}).get(cluster_type, {}).values():
+            self._validate_bundle_input_bindings(receipt["identity"])
         replica_config = self._cluster_configs[cluster_type].replica_config
         measurement_types = self._get_measurement_types_for_cluster(cluster_type, replica_config)
         models = {}
-        for measurement_type in (
+        for measurement_type in dict.fromkeys((
             self._event_measurement_type_for_replica(replica_config),
             MeasurementType.KERNEL_ONLY,
-        ):
+            *measurement_types,
+        )):
             family_name = self._measurement_family_name(measurement_type)
             models[family_name] = (
                 self._models_view_for_family(family_name, cluster_type)

@@ -1,0 +1,32 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/preflight.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/preflight.json",
+    "sha256": "bc2db8447d279f54068beffd977ce1375d7a37679e7fb4fbfb295f476088bded",
+    "bytes": 5860
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/short_selections_comparison.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/short_selections_comparison.json",
+    "sha256": "e80883b5f7bfeeae2c6d1e9383c205a40780c8db752cb47fe4307ea5ab81724f",
+    "bytes": 4063
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/supplement101/execution.json",
+    "sha256": "6eab78d40fe677df619da35efaafb1300cab31be64463605b0cefaddaf77b8b2",
+    "bytes": 33399
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/metadata196/execution.json",
+    "sha256": "340154db12d3fc515b3731f48f120faa8eaba62d70f598a1c63f663f141403b1",
+    "bytes": 33398
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/catalogue53/execution.json",
+    "sha256": "1172f067da266098e39c38089ceb61b9c3281249318f5a57c94c9a0d1a5a1b0a",
+    "bytes": 33153
+  }
+]

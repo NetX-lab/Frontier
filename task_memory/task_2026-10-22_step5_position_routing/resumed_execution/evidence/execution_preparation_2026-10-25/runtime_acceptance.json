@@ -1,0 +1,235 @@
+{
+  "task_id": "D29-RUNTIME-ENVIRONMENT-ACCEPTANCE",
+  "status": "PASS_LOCAL_AND_PUBLISHED_IMAGE_CPU_IMPORTS_ONLY",
+  "collected_utc": "2026-10-24T19:53:03.626261+00:00",
+  "source": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "records_head": "cc3d2215504fe3ba8f9ea7a620d9f6e973102eaa",
+  "source_status": "ACCEPTED_PRODUCTION_SOURCE_ONLY",
+  "non_task_source_diff": {
+    "2ca5e57113b0bc99ab84e926e5bb492b3670072e": "",
+    "1461573de388b72450189bc0c1b88b4ac32491f0": ""
+  },
+  "source_bindings": {
+    "frontier/simulator.py": "f83ee9078afd416b5160f5ba9589112908a5bea230d3486c13e68ea3e1875af8",
+    "frontier/config/config.py": "818f6b43129f67c02229d7447148941464a49d5935767fac49ec3c46411d20a9",
+    "frontier/metrics/metrics_store.py": "f2418bb9c977ed5bb1dfe992734d04143beef5c76338980b1dcd4b3ffbbfc81d",
+    "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+    "tests/integration/run_step5_measured_main.py": "bbb3d995206ae500b3255dedc3fb4793dd6708f7330ecc8ed938ae07e40ad4b1",
+    "tests/performance/step5_actual06_iteration.py": "bbbcaf459e059bf0a02ee9afcac8d5ecc075d9cdf4dcf84d95466289cc509d24"
+  },
+  "relevant_worktrees": [
+    {
+      "name": "d29-init-preparation-finish",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+      "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "d29-ledger-final-1f6b4314",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "d29-snapshot-copy-finish",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+      "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "step5-d29-ledger-stream",
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "step5-preview",
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "head": "cc3d2215504fe3ba8f9ea7a620d9f6e973102eaa",
+      "status": "?? .cortexkit/\n?? .pi/",
+      "ancestor_of_primary": true
+    }
+  ],
+  "historical_worktree_census_reused": "resumed_execution/worktrees.json; 89 related rows, not rescanned",
+  "submodule": {
+    "head": "3dac53c544e546574cb6e8078cd14053d0916113",
+    "status": ""
+  },
+  "configuration": {
+    "task_id": "D29-MOUNTED-CPYTHON-RUNTIME",
+    "status": "PREFIX_CONFIGURED_IMPORT_VERIFICATION_PENDING",
+    "started_utc": "2026-10-24T19:50:22.618625+00:00",
+    "ended_utc": "2026-10-24T19:50:22.650776+00:00",
+    "wall_s": 0.03213512105867267,
+    "hypothesis_before_execution": "Debian site.py requires a distinct base prefix to add the existing site-packages directory; a copied binary plus a shared stdlib establishes that prefix without copying dependencies again.",
+    "prefix": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025",
+    "base_prefix": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025",
+    "base_binary_sha256": "dbb04ace02303fa5cb3a6d1aa0e7a180d8dd23d3257cc6a0b155d0ee219432a2",
+    "shared_stdlib": {
+      "path": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025/lib/python3.10",
+      "target": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10"
+    },
+    "base_probe_command": [
+      "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025/bin/python3.10",
+      "-B",
+      "-S",
+      "-c",
+      "import json,sys; print(json.dumps({'prefix':sys.prefix,'base_prefix':sys.base_prefix,'version':list(sys.version_info[:3])}))"
+    ],
+    "base_probe_state": {
+      "prefix": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025",
+      "base_prefix": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025",
+      "version": [
+        3,
+        10,
+        6
+      ]
+    },
+    "pyvenv_cfg": "home = /data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025/bin\ninclude-system-site-packages = false\nversion = 3.10.6\n",
+    "pyvenv_cfg_sha256": "16d91e196c87c1859a55ecd629ecefaaa806a1b1f2181b98ffd0f16a81d2af89",
+    "original_environment_modified": false,
+    "existing_copied_files_modified": false,
+    "dependency_installations": 0,
+    "pricing_wave_calls": 0,
+    "gpu_calls": 0,
+    "limitations": [
+      "This only configures the copied runtime; original strict local/image dependency probes must pass."
+    ]
+  },
+  "package_versions": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scipy": "1.15.3",
+    "scikit-learn": "1.7.2",
+    "plotly": "7.1.0",
+    "fasteners": "0.20",
+    "ddsketch": "3.0.1",
+    "pytest": "9.1.1"
+  },
+  "probe_results": {
+    "local": {
+      "status": "PASS_CPU_IMPORTS_ONLY",
+      "process_peak_rss_bytes": 178016256,
+      "modules": {
+        "numpy": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/numpy/__init__.py"
+        },
+        "pandas": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/pandas/__init__.py"
+        },
+        "scipy": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/scipy/__init__.py"
+        },
+        "sklearn": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/sklearn/__init__.py"
+        },
+        "plotly": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/plotly/__init__.py"
+        },
+        "fasteners": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/fasteners/__init__.py"
+        },
+        "ddsketch": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/ddsketch/__init__.py"
+        },
+        "pytest": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/pytest/__init__.py"
+        },
+        "_ssl": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_ssl.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_sqlite3": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_sqlite3.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_bz2": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_bz2.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_lzma": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_lzma.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_ctypes": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_ctypes.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_hashlib": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_hashlib.cpython-310-x86_64-linux-gnu.so"
+        },
+        "frontier.simulator": {
+          "origin": "/data/ycfeng/Frontier/.worktrees/step5-preview/frontier/simulator.py"
+        },
+        "frontier.config": {
+          "origin": "/data/ycfeng/Frontier/.worktrees/step5-preview/frontier/config/__init__.py"
+        }
+      }
+    },
+    "image": {
+      "status": "PASS_CPU_IMPORTS_ONLY",
+      "process_peak_rss_bytes": 183410688,
+      "modules": {
+        "numpy": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/numpy/__init__.py"
+        },
+        "pandas": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/pandas/__init__.py"
+        },
+        "scipy": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/scipy/__init__.py"
+        },
+        "sklearn": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/sklearn/__init__.py"
+        },
+        "plotly": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/plotly/__init__.py"
+        },
+        "fasteners": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/fasteners/__init__.py"
+        },
+        "ddsketch": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/ddsketch/__init__.py"
+        },
+        "pytest": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/pytest/__init__.py"
+        },
+        "_ssl": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_ssl.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_sqlite3": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_sqlite3.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_bz2": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_bz2.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_lzma": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_lzma.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_ctypes": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_ctypes.cpython-310-x86_64-linux-gnu.so"
+        },
+        "_hashlib": {
+          "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_hashlib.cpython-310-x86_64-linux-gnu.so"
+        },
+        "frontier.simulator": {
+          "origin": "/data/ycfeng/Frontier/.worktrees/step5-preview/frontier/simulator.py"
+        },
+        "frontier.config": {
+          "origin": "/data/ycfeng/Frontier/.worktrees/step5-preview/frontier/config/__init__.py"
+        }
+      }
+    }
+  },
+  "required_shape_invocations": {
+    "used": 6,
+    "ceiling": 6,
+    "added": 0
+  },
+  "new_pricing_wave_invocations": 0,
+  "stepmind_operations": 0,
+  "full_cli_invocations": 0,
+  "limitations": [
+    "No worker/cloud append, full-workload RSS/runtime, T2/native/G3/E2E qualification.",
+    "Recorded process RSS applies only to the import probe; configured 30 GiB is not a measured full-workload bound."
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "status": "PASS_METADATA_AND_SYNTAX_PREFLIGHT",
+  "source": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+  "source_hash_count": 23,
+  "fixture_stat_count": 262,
+  "driver_sha256": "d98924fbb6b64f0fe0f6def14e74a7d47a67d36e00275e61600e0caabda89f75",
+  "parameters_sha256": "c0f97bd410a6106502a5db4d0c38abc86325d40617cde1ef4ac1da91dbf04ef5",
+  "production_path_invocations": 0,
+  "source_or_fixture_writes": 0
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.218" timestamp="2026-10-21T19:52:49.920230+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_step5_attention_timing" name="test_independent_outer_windows_ignore_internal_boundary_event_overhead" time="0.001"><failure message="AttributeError: 'ReplayTimings' object has no attribute 'reference_window_replays'">def test_independent_outer_windows_ignore_internal_boundary_event_overhead():
+        class BoundaryCostEvent(FakeEvent):
+            def record(self):
+                self.clock.time_ms += Fraction("0.00333")
+                super().record()
+    
+        class BoundaryCostClock(FakeCudaClock):
+            def event(self, *, enable_timing):
+                event = BoundaryCostEvent(self, len(self.events))
+                self.events.append(event)
+                self.calls.append(("event", event.index))
+                return event
+    
+        clock = BoundaryCostClock(replay_ms="0.0347")
+        result = collect(clock)
+&gt;       assert result.reference_window_replays == result.window_replays
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'ReplayTimings' object has no attribute 'reference_window_replays'
+
+tests/unit/test_step5_attention_timing.py:230: AttributeError</failure></testcase></testsuite></testsuites>

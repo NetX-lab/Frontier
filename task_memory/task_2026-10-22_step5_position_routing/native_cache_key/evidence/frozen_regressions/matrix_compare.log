@@ -1,0 +1,14 @@
+baseline /data/ycfeng/tmp/d29_workflow_fidelity_20261024_final07/candidate @ dbe19f531ff6
+candidate /data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-matrix/candidate @ 376983d2ecc4
+cases compared: 77 of 77 in the case table
+identical: 77
+mismatched: 0
+baseline failures: 0
+candidate-only failures: 0
+cases missing from one side: 0
+cases with missing evidence: 0
+cases with differing definitions: 0
+cases not compared: 0
+predictor cache file names differ: 0 baseline-only, 0 candidate-only
+
+report: /data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-matrix/comparison.json

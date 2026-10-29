@@ -1,0 +1,8 @@
+Copied from the original record-update tool stderr; first-attempt exact timing was not separately recorded.
+Traceback (most recent call last):
+  File "<stdin>", line 54, in <module>
+  File "<stdin>", line 24, in maintain
+  File "<stdin>", line 20, in replace_once
+AssertionError: Expected one document match: | --- | --- |
+
+The first editor had already updated requirements.md. It stopped before plan.md because the same Markdown separator occurs in the modification history and the historical subtask table. No production, runtime or platform operation was performed.

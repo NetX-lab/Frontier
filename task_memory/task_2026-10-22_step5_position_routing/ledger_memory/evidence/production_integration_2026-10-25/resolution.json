@@ -1,0 +1,79 @@
+{
+  "status": "ALL_SIX_TASK_RECORD_CONFLICTS_RESOLVED",
+  "files": [
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/plan.md",
+      "conflict_hunks": 1,
+      "selected_hunk": "theirs",
+      "stage_sha256": {
+        "1": "c6b30ececda8c46f1d585d95afdd4839ff382c898ee4231755f8f4ce0ddaa61f",
+        "2": "5fc320c731c22ef1c57b8323455dbfcaad7205e86c1a169fb93b78132a9100df",
+        "3": "f65ebbb173f3be34e0c0bc465a8a1b16ee5ac6bc156db55ae125d7b3ff958845"
+      },
+      "resolved_sha256": "f65ebbb173f3be34e0c0bc465a8a1b16ee5ac6bc156db55ae125d7b3ff958845",
+      "reason": "Preserve candidate delegated-owner additions."
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/requirements.md",
+      "conflict_hunks": 2,
+      "selected_hunk": "theirs",
+      "stage_sha256": {
+        "1": "208edfabf296da02a9a2398fc1e6f775883678bfae6becd26b142077c72eec6e",
+        "2": "186b4c8066f333deea9044ba8b468ac93138fd86bccfba19a40a4b6a9a78bb5b",
+        "3": "19fe84ec07590d299c964a33b9b5a382401251bd0494dfb445bc805e554a74a0"
+      },
+      "resolved_sha256": "19fe84ec07590d299c964a33b9b5a382401251bd0494dfb445bc805e554a74a0",
+      "reason": "Preserve candidate delegated-owner additions."
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/plan.md",
+      "conflict_hunks": 2,
+      "selected_hunk": "ours",
+      "stage_sha256": {
+        "1": "b9d72a1b549f58a4e8ffa2a2295228e72328c2a9eafbd143f402d7eee51ff421",
+        "2": "18c97e57fb7784f3a6ee5aa202fce2cd3be94fdc1a56040e2bf446f7140da6fc",
+        "3": "44f3ed594c809288f3ddf4eb95103637e3c3fd4bc271f058c0ae35c1d4e0fbdd"
+      },
+      "resolved_sha256": "18c97e57fb7784f3a6ee5aa202fce2cd3be94fdc1a56040e2bf446f7140da6fc",
+      "reason": "Preserve latest parent review/regression/archive/current-state records; incoming headings are historical."
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/progress.md",
+      "conflict_hunks": 2,
+      "selected_hunk": "ours",
+      "stage_sha256": {
+        "1": "eddbb3e5e23cb5ad93fa1a80b25a32fe158b6e7c223522183abdcee141ed59f4",
+        "2": "affbf0b5176b623a67dc4f93b4aec4c4c6d5ee00099697dc6ac25c116799cb3f",
+        "3": "44efdc1321edb2aff0c6fcf8f74c1b9e812ab9a4f46eb3e133ddbf4ba2b8eda6"
+      },
+      "resolved_sha256": "affbf0b5176b623a67dc4f93b4aec4c4c6d5ee00099697dc6ac25c116799cb3f",
+      "reason": "Preserve latest parent review/regression/archive/current-state records; incoming headings are historical."
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/requirements.md",
+      "conflict_hunks": 1,
+      "selected_hunk": "ours",
+      "stage_sha256": {
+        "1": "5ae93c55cacab79d2d8f6f2ee9c351a7835e43a0390ba11f37efdd3750fb74a9",
+        "2": "905f510018f8fd7bb42ed3b5f5357acce03f85cd21317812b95a255f59094619",
+        "3": "1fc4254f534eb0fdb3f94048710c18bc2c07d15212ed5e9e0fa87c11043fcdc5"
+      },
+      "resolved_sha256": "905f510018f8fd7bb42ed3b5f5357acce03f85cd21317812b95a255f59094619",
+      "reason": "Preserve latest parent review/regression/archive/current-state records; incoming headings are historical."
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/summary.md",
+      "conflict_hunks": 2,
+      "selected_hunk": "ours",
+      "stage_sha256": {
+        "1": "9f08edf96e793f049868697d09d52d91b750d5a791f0726089a397d3111632f0",
+        "2": "bfd7933873107b0d4f650bf023bde0025685ddd6a6573dc9c5aec4cdca666eed",
+        "3": "7a655f2a46e186146aba543811658aeb7f9ebc6bd9d3d5b0eaed8d94aa72dd5b"
+      },
+      "resolved_sha256": "bfd7933873107b0d4f650bf023bde0025685ddd6a6573dc9c5aec4cdca666eed",
+      "reason": "Preserve latest parent review/regression/archive/current-state records; incoming headings are historical."
+    }
+  ],
+  "source_conflicts": 0,
+  "no_new_behavior": true
+}

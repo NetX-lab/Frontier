@@ -1,0 +1,80 @@
+{
+  "task_id": "D29-MOUNTED-CPYTHON-RUNTIME",
+  "status": "PASS_CPU_IMPORTS_ONLY",
+  "collected_utc": "2026-10-24T19:50:45.623923+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+  "prefix": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025",
+  "base_prefix": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025",
+  "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.39",
+  "package_versions": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scipy": "1.15.3",
+    "scikit-learn": "1.7.2",
+    "plotly": "7.1.0",
+    "fasteners": "0.20",
+    "ddsketch": "3.0.1",
+    "pytest": "9.1.1"
+  },
+  "modules": {
+    "numpy": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/numpy/__init__.py"
+    },
+    "pandas": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/pandas/__init__.py"
+    },
+    "scipy": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/scipy/__init__.py"
+    },
+    "sklearn": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/sklearn/__init__.py"
+    },
+    "plotly": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/plotly/__init__.py"
+    },
+    "fasteners": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/fasteners/__init__.py"
+    },
+    "ddsketch": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/ddsketch/__init__.py"
+    },
+    "pytest": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/site-packages/pytest/__init__.py"
+    },
+    "_ssl": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_ssl.cpython-310-x86_64-linux-gnu.so"
+    },
+    "_sqlite3": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_sqlite3.cpython-310-x86_64-linux-gnu.so"
+    },
+    "_bz2": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_bz2.cpython-310-x86_64-linux-gnu.so"
+    },
+    "_lzma": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_lzma.cpython-310-x86_64-linux-gnu.so"
+    },
+    "_ctypes": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_ctypes.cpython-310-x86_64-linux-gnu.so"
+    },
+    "_hashlib": {
+      "origin": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10/lib-dynload/_hashlib.cpython-310-x86_64-linux-gnu.so"
+    },
+    "frontier.simulator": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/step5-preview/frontier/simulator.py"
+    },
+    "frontier.config": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/step5-preview/frontier/config/__init__.py"
+    }
+  },
+  "binary_numerical_checks": "PASS",
+  "process_peak_rss_bytes": 183410688,
+  "simulator_constructed": false,
+  "pricing_wave_calls": 0,
+  "gpu_calls": 0,
+  "torch_required_for_cpu_fixture": false,
+  "limitations": [
+    "CPU imports and tiny binary operations only; no full workload memory or runtime claim.",
+    "No Simulator initialization, training, native vLLM or GPU qualification."
+  ]
+}

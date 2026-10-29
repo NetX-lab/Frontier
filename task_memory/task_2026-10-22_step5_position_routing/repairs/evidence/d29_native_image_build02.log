@@ -1,0 +1,60 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile:
+#1 transferring dockerfile: 1.37kB 0.1s done
+#1 DONE 0.5s
+
+#2 [internal] load metadata for a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20
+#2 DONE 0.1s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.1s
+
+#4 [1/8] FROM a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20
+#4 resolve a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20 0.1s done
+#4 ...
+
+#5 [internal] load build context
+#5 transferring context: 139.85kB done
+#5 DONE 0.2s
+
+#4 [1/8] FROM a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20
+#4 DONE 4.1s
+
+#6 [2/8] COPY vllm/forward_context.py /usr/local/lib/python3.12/dist-packages/vllm/forward_context.py
+#6 DONE 0.5s
+
+#7 [3/8] COPY vllm/models/step5/nvidia/model.py /usr/local/lib/python3.12/dist-packages/vllm/models/step5/nvidia/model.py
+#7 DONE 0.3s
+
+#8 [4/8] COPY vllm/model_executor/layers/fused_moe/router/router_factory.py /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/router_factory.py
+#8 DONE 0.2s
+
+#9 [5/8] COPY vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py
+#9 DONE 0.3s
+
+#10 [6/8] COPY derived_source_sha256.json /opt/step5-position/derived_source_sha256.json
+#10 DONE 0.3s
+
+#11 [7/8] COPY derivation_manifest.json /opt/step5-position/derivation_manifest.json
+#11 DONE 0.1s
+
+#12 [8/8] RUN python3 - <<'PY'
+#12 DONE 1.6s
+
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 1.7s done
+#13 exporting manifest sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee
+#13 exporting manifest sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee 0.4s done
+#13 exporting config sha256:c5b699cacd61ca801a528a070a7804e3932328bb7dd109591c21a2c4a51fdb6e
+#13 exporting config sha256:c5b699cacd61ca801a528a070a7804e3932328bb7dd109591c21a2c4a51fdb6e 0.1s done
+#13 exporting attestation manifest sha256:a331a2d6d6bd69a44056647ca53c759088a4b709a77f89a118f61b36c12a36cc 0.1s done
+#13 exporting manifest list sha256:10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d
+#13 exporting manifest list sha256:10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d 0.1s done
+#13 naming to docker.io/library/step5-position-cyclic:20261023-native-2c4cc9e-02 done
+#13 unpacking to docker.io/library/step5-position-cyclic:20261023-native-2c4cc9e-02
+#13 unpacking to docker.io/library/step5-position-cyclic:20261023-native-2c4cc9e-02 1.0s done
+#13 DONE 3.5s

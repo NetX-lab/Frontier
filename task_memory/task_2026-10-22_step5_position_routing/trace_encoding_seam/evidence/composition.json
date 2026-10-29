@@ -1,0 +1,159 @@
+{
+  "body_bytes": 2889655,
+  "body_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+  "rows": 208,
+  "parsed_rows_reencode_identical": true,
+  "counts": {
+    "object": 8768,
+    "key": 39136,
+    "str": 18112,
+    "float": 2688,
+    "int": 19632,
+    "array": 5744,
+    "bool_or_null": 672
+  },
+  "encoded_leaf_bytes": {
+    "key": 491552,
+    "str": 2149828,
+    "str_escape_added": 351360,
+    "float": 22240,
+    "int": 33235,
+    "bool_or_null": 3088
+  },
+  "structural_bytes_separators_brackets_newlines": 189712,
+  "string_values": {
+    "occurrences": 18112,
+    "distinct": 459,
+    "repeated_distinct": 451,
+    "bytes_of_occurrences_after_first": 1930322,
+    "distinct_ge_256_chars": 19,
+    "occurrences_ge_256_chars": 256,
+    "encoded_bytes_ge_256_chars": 1946896
+  },
+  "keys": {
+    "occurrences": 39136,
+    "distinct": 155
+  },
+  "top_string_value_paths_by_encoded_bytes": [
+    [
+      "meta.collective_cost.count_receipt_json",
+      1086408
+    ],
+    [
+      "meta.collective_cost.plan_key",
+      598656
+    ],
+    [
+      "meta.collective_plan.context_json",
+      156352
+    ],
+    [
+      "meta.collective_plan.buffer_json",
+      105480
+    ],
+    [
+      "meta.request_ids.[]",
+      21476
+    ],
+    [
+      "meta.routing_source.source_lanes.[].gating_runtime_context",
+      7904
+    ],
+    [
+      "meta.model_name",
+      5616
+    ],
+    [
+      "meta.evidence_kind",
+      4902
+    ],
+    [
+      "name",
+      4784
+    ],
+    [
+      "meta.attention_family_id",
+      3536
+    ],
+    [
+      "meta.collective_plan.tensors.[].dtype",
+      3410
+    ],
+    [
+      "meta.collective_plan.tensors.[].name",
+      3220
+    ]
+  ],
+  "top_repeated_values": [
+    {
+      "chars": 13728,
+      "count": 15,
+      "paths": [
+        "meta.collective_cost.count_receipt_json"
+      ]
+    },
+    {
+      "chars": 13373,
+      "count": 15,
+      "paths": [
+        "meta.collective_cost.count_receipt_json"
+      ]
+    },
+    {
+      "chars": 13359,
+      "count": 15,
+      "paths": [
+        "meta.collective_cost.count_receipt_json"
+      ]
+    },
+    {
+      "chars": 13359,
+      "count": 15,
+      "paths": [
+        "meta.collective_cost.count_receipt_json"
+      ]
+    },
+    {
+      "chars": 2141,
+      "count": 64,
+      "paths": [
+        "meta.collective_plan.context_json"
+      ]
+    },
+    {
+      "chars": 8095,
+      "count": 15,
+      "paths": [
+        "meta.collective_cost.plan_key"
+      ]
+    },
+    {
+      "chars": 7788,
+      "count": 15,
+      "paths": [
+        "meta.collective_cost.plan_key"
+      ]
+    },
+    {
+      "chars": 7774,
+      "count": 15,
+      "paths": [
+        "meta.collective_cost.plan_key"
+      ]
+    },
+    {
+      "chars": 7774,
+      "count": 15,
+      "paths": [
+        "meta.collective_cost.plan_key"
+      ]
+    },
+    {
+      "chars": 1468,
+      "count": 60,
+      "paths": [
+        "meta.collective_plan.buffer_json"
+      ]
+    }
+  ]
+}

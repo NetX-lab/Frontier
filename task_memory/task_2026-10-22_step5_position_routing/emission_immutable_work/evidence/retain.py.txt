@@ -1,0 +1,111 @@
+"""Render measured candidate artifacts; collect bounded evidence and public-value limits."""
+import ast
+import dataclasses
+import difflib
+import hashlib
+import json
+import os
+from pathlib import Path
+import pstats
+import shutil
+import statistics
+import subprocess
+import sys
+
+assert sys.dont_write_bytecode and os.environ['PYTHONDONTWRITEBYTECODE'] == '1'
+ROOT = Path('/data/ycfeng/tmp/d29_emission_immutable_work')
+SOURCE = Path('/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields')
+RECORDS = Path('/data/ycfeng/Frontier/.worktrees/d29-trace-encoding/task_memory/task_2026-10-22_step5_position_routing/emission_immutable_work/evidence')
+RECORDS.mkdir(parents=True, exist_ok=True)
+target = ROOT / 'candidate_artifacts'
+target.mkdir(exist_ok=False)
+relative = 'frontier/cc_backend/collective_plan.py'
+original = (SOURCE / relative).read_text()
+old_key = '        return json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"))'
+new_key = ('        if "_cache_key_json" not in self.__dict__:\n'
+           '            object.__setattr__(self, "_cache_key_json",\n'
+           '                json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":")))\n'
+           '        return self._cache_key_json')
+assert original.count(old_key) == 1
+h2 = original.replace(old_key, new_key)
+old_convert = '        return {**asdict(self), "context": json.loads(self.context_json),'
+new_convert = ('        return {**{f.name: getattr(self, f.name) for f in fields(self)},\n'
+               '                "tensors": tuple({f.name: getattr(t, f.name) for f in fields(t)} for t in self.tensors),\n'
+               '                "context": json.loads(self.context_json),')
+assert original.count(old_convert) == 1
+h3 = original.replace('from dataclasses import asdict, dataclass', 'from dataclasses import dataclass, fields').replace(old_convert, new_convert)
+combined = h3.replace(old_key, new_key)
+artifacts = {}
+for label, text in (('h2', h2), ('h3', h3), ('combined', combined)):
+    module = target / (label + '_collective_plan.py')
+    module.write_text(text)
+    patch = ''.join(difflib.unified_diff(original.splitlines(True), text.splitlines(True),
+                                      fromfile='a/' + relative, tofile='b/' + relative))
+    path = target / (label + '.diff')
+    path.write_text(patch)
+    numstat = subprocess.check_output(['git', '-c', 'safe.directory=*', 'apply', '--numstat', str(path)], cwd=SOURCE, text=True).strip()
+    added, removed, name = numstat.split('\t')
+    artifacts[label] = {'path': name, 'diff_sha256': hashlib.sha256(patch.encode()).hexdigest(),
+                        'module_sha256': hashlib.sha256(text.encode()).hexdigest(), 'numstat': numstat,
+                        'added': int(added), 'removed': int(removed), 'gross': int(added) + int(removed),
+                        'net': int(added) - int(removed),
+                        'status': 'Unallocated scratch artifact only; h3/combined have a public mutable-receipt alias limitation.'}
+    shutil.copyfile(path, RECORDS / path.name)
+
+# Reuse the exact H3 function, not a second control, to audit a constructor-accepted
+# mutable field outside the measured canonical-string emission domain.
+sys.path.insert(0, str(SOURCE))
+from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+tree = ast.parse((ROOT / 'diagnose.py').read_text())
+function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'plan_fields')
+namespace = {'dataclasses': dataclasses, 'json': json}
+exec(compile(ast.Module(body=[function], type_ignores=[]), '<same-h3-function>', 'exec'), namespace)
+with Path('/data/ycfeng/tmp/d29_immutable_cost_fields_repair/candidate/iteration-0/op_traces.jsonl').open('rb') as stream:
+    stream.readline()
+    rows = [json.loads(line) for line in stream]
+receipt = next(row['meta']['collective_plan'] for row in rows if 'collective_plan' in row['meta'])
+sample = CollectivePlan(**{f.name: (tuple(CollectiveTensor(**item) for item in receipt['tensors'])
+                                  if f.name == 'tensors' else receipt[f.name]) for f in dataclasses.fields(CollectivePlan)})
+mutable = dataclasses.replace(sample, buffer_json=bytearray(sample.buffer_json, 'utf-8'))
+original_public = mutable.to_dict()
+converted_public = namespace['plan_fields'](mutable)
+assert original_public['buffer_json'] is not mutable.buffer_json
+assert converted_public['buffer_json'] is mutable.buffer_json
+before = bytes(mutable.buffer_json)
+converted_public['buffer_json'][0] = ord('!')
+assert bytes(mutable.buffer_json) != before and bytes(original_public['buffer_json']) == before
+public_limit = {'constructor_accepts_bytearray_receipt': True,
+                'original_to_dict_detaches_bytearray': True,
+                'same_measured_h3_conversion_aliases_bytearray_red': True,
+                'decision': 'Do not recommend unguarded H3 or combined source edit for the general public API. Canonical real-wave gains are diagnostic only; preserving accepted mutable-value semantics needs a new parent-owned design, not another control here.'}
+
+summary = {'task_id': 'D29-EMISSION-IMMUTABLE-WORK', 'session_id': 'ses_e96a5c1c7ffeoPBK7V08CMas7v',
+           'artifacts': artifacts, 'public_to_dict_limit': public_limit, 'measurements': {}}
+for label in ('baseline', 'h1', 'h2', 'h3', 'combined'):
+    result = json.loads((ROOT / label / 'result.json').read_text())
+    inventory = json.loads((ROOT / label / 'inventory.json').read_text())
+    stats = pstats.Stats(str(ROOT / label / 'emission.pstats')).stats
+    counters = result['emission_only_counters']
+    symbol_counts = {symbol: sum(value[1] for (_, _, name), value in stats.items() if name == symbol)
+                     for symbol in ('serialized_key_once', 'plan_fields', 'immutable_snapshot')}
+    summary['measurements'][label] = {'median_ms': statistics.median(result['emission_seconds']) * 1000,
+                                      'min_ms': min(result['emission_seconds']) * 1000,
+                                      'max_ms': max(result['emission_seconds']) * 1000,
+                                      'getters': inventory['getter_counts'], 'original_named_counts': counters,
+                                      'control_named_counts': symbol_counts,
+                                      'key_reads_total': counters['cache_key'] + symbol_counts['serialized_key_once'],
+                                      'plan_conversion_calls_total': counters['to_dict'] + symbol_counts['plan_fields'],
+                                      'whole_sha256': result['whole_jsonl_sha256'], 'ledger_sha256': result['ledger_sha256'],
+                                      'snapshot_checks': result['public_getter_and_pending_snapshot_mutations_isolated'],
+                                      'wrong_key_negatives': result['wrong_plan_key_negatives'],
+                                      'late_json_prefix_bytes': result['late_json_error_restores_buffer_and_prefix_bytes'],
+                                      'python': sys.version, 'driver_sha256_at_run': inventory['script_sha256']}
+    shutil.copyfile(ROOT / label / 'result.json', RECORDS / (label + '_result.json'))
+    shutil.copyfile(ROOT / label / 'inventory.json', RECORDS / (label + '_inventory.json'))
+for filename in ('observations.json', 'diagnose.py', 'observations.py', 'retain.py'):
+    shutil.copyfile(ROOT / filename, RECORDS / (filename if filename.endswith('.json') else filename + '.txt'))
+summary['observation_script_initial_failure'] = 'Missing scratch parent in the first untimed observation run, fixed once before setup completed; no control timing rerun.'
+summary['baseline_initial_inventory_limit'] = 'Its monkeypatched copy function missed default-captured recursive entries; observations.json corrects this using sys.setprofile and reproduces 21,472 calls.'
+(ROOT / 'evidence.json').write_text(json.dumps(summary, indent=2) + '\n')
+shutil.copyfile(ROOT / 'evidence.json', RECORDS / 'evidence.json')
+print(json.dumps(summary, indent=2))

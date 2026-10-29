@@ -1,0 +1,16 @@
+{
+  "source_head": "7540414341d5b81a86b18b9562d1506c0ba74285",
+  "tracked_source_status": "",
+  "prior_root_pyc_files_same_paths_hashes_sizes_owners_mtimes": true,
+  "root_pyc_count": 284,
+  "root_directory_count": 33,
+  "no_delete_or_chown": true,
+  "python_B_and_PYTHONDONTWRITEBYTECODE": true,
+  "final_script_hashes": {
+    "diagnose.py": "8c3297ec19b2f238d28bc8a81f970ae8ef4d73f6b4442e96594eeb46c48aad39",
+    "observations.py": "d017ae3f759472d4d6e4d08fc90e34813a39f18126a89ffc409276f8152ba5d4",
+    "retain.py": "39f970b7a30d41eed48d98a089d731c7f7866d6bfe71d4ee7a36efe8671f5e05",
+    "pyc_manifest.py": "23adf136b34cd02d704c62796e8359cb651c2e7365f18fb33713af8d80f568d9"
+  },
+  "scope": "Manifest comparison of the previously inventoried root-owned bytecode; not a complete pre/post filesystem inventory."
+}

@@ -33,6 +33,11 @@ def _stub_dense_attention_markers(model_config) -> None:
         "dsa_top_k",
         "dsa_index_topk",
         "dsa_indexer",
+        "index_topk",
+        "index_topk_freq",
+        "index_topk_pattern",
+        "index_skip_topk_offset",
+        "compress_ratios",
         "sliding_window_pattern",
         "dual_chunk_attention",
         "attention_chunk_size",
@@ -48,7 +53,11 @@ def _stub_mla_attention_markers(model_config) -> None:
     model_config.model_type = "deepseek_v2"
     model_config.use_mla = True
     model_config.use_mfa = False
-    for field in ("dsa_topk", "dsa_top_k", "dsa_index_topk", "dsa_indexer"):
+    for field in (
+        "dsa_topk", "dsa_top_k", "dsa_index_topk", "dsa_indexer",
+        "index_topk", "index_topk_freq", "index_topk_pattern",
+        "index_skip_topk_offset", "compress_ratios",
+    ):
         setattr(model_config, field, None)
     model_config.kv_lora_rank = 512
     model_config.qk_nope_head_dim = 128
@@ -598,3 +607,50 @@ def test_moe_ep_allreduce_shape():
     assert meta["tensor_shape"]["data"] == [8, 8]
     assert meta["element_count"] == 64
     assert meta["base_size_bytes"] == 128
+def test_step5_physical_prepare_and_inclusive_expert_trace():
+    from types import SimpleNamespace
+    from dataclasses import replace
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.metrics.op_trace_utils import OpTraceContext, compute_op_trace_meta
+    from frontier.types import ClusterType
+    model=BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    native=dict(activation_layout=dict(shape=[17,4096],dtype="float8_e4m3fn",element_size=1),
+                scale_layout=dict(shape=[17,32],dtype="float32",element_size=4))
+    frame=dict(routing_source=SimpleNamespace(gathered_physical_rows=17,source_lanes=[
+        SimpleNamespace(physical_rows=16,live_rows=16,lane_id=0),
+        SimpleNamespace(physical_rows=1,live_rows=0,lane_id=1)]),ep_id=8,native_context=native,
+        live_local_assignments=0,operator_costs={})
+    replica=SimpleNamespace(attn_tensor_parallel_size=8,moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=16,router_topk=8)
+    ctx=OpTraceContext(ClusterType.DECODE,model,replica,0,1,1,1,False,global_layer_id=3,step5_moe_frame=frame)
+    expert=compute_op_trace_meta("moe_grouped_gemm","COMPUTE",ctx)
+    assert expert["tensor_shape"]["input"] == [17,4096]
+    assert expert["tensor_size_bytes"]["output"] == 17*4096*2
+    assert expert["physical_scope"] == "native_experts_inclusive" and "internal_tensor_shape" not in expert
+    frame={**frame,"native_context":{**native,"source_activation_layout":dict(shape=[1,4096],dtype="float8_e4m3fn",element_size=1),
+        "source_scale_layout":dict(shape=[1,32],dtype="float32",element_size=4)}}
+    prepare=compute_op_trace_meta("moe_input_quantize","COMPUTE",replace(ctx,step5_moe_frame=frame))
+    assert prepare["tensor_shape"]["input"] == prepare["tensor_shape"]["output"] == [1,4096]
+    assert prepare["tensor_dtype"]["input"] != prepare["tensor_dtype"]["output"]
+
+
+@pytest.mark.parametrize("native",[False,True])
+def test_collective_trace_source_uses_explicit_cost_provenance(tmp_path,monkeypatch,native):
+    import json
+    from dataclasses import replace
+    from frontier.cc_backend.collective_plan import CollectivePlanCost
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.metrics.op_trace_utils import compute_op_trace_meta
+    from tests.unit.test_collective_sim_cc_backend import cpu_writer_payload
+    from frontier.cc_backend.collective_plan import CollectivePlan,CollectiveTensor
+    backend,artifact,_=cpu_writer_payload(tmp_path,monkeypatch);key=next(iter(artifact["counts"]));v=json.loads(key)
+    plan=CollectivePlan(v["phase"],v["sizes"],tuple(CollectiveTensor(**t) for t in v["tensors"]),v["groups"],v["graph_mode"],v["context_json"],v["buffer_json"])
+    cost=backend.predict_collective_plan(plan)
+    if native:
+        receipt=json.loads(cost.count_receipt_json);receipt.update(evidence_kind="native_measurement",profiled_calls=1,per_rank_events=[["cpu_schema_only"]*3]*16)
+        cost=replace(cost,count_receipt_json=json.dumps(receipt))
+    ctx=replace(_build_context(True),model_config=BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview"),global_layer_id=3,
+        step5_moe_frame={"ep_id":0},collective_plans={"step5_moe_dispatch":plan},collective_costs={"step5_moe_dispatch":cost})
+    result=compute_op_trace_meta("step5_moe_dispatch","COMM",ctx)
+    assert result["numerical_source"] == ("joint_htsim+measured_local+effective_remainder_no_overlap" if native else "cpu_fixture_composition_not_native")
+    assert result["kernel_count"] == 3 and result["collective_cost"]["duration_ms"] == .03

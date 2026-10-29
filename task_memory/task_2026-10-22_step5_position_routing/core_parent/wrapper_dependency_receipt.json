@@ -1,0 +1,14 @@
+{
+  "requirements": "fasteners==0.20\nddsketch==3.0.1\nscikit-learn==1.7.2\njoblib==1.6.0\nthreadpoolctl==3.7.0\nplotly==7.1.0\nnarwhals==2.26.0\n",
+  "wheel_sha256": {
+    "fasteners-0.20-py3-none-any.whl": "9422c40d1e350e4259f509fb2e608d6bc43c0136f79a00db1b49046029d0b3b7",
+    "ddsketch-3.0.1-py3-none-any.whl": "6d047b455fe2837c43d366ff1ae6ba0c3166e15499de8688437a75cea914224e",
+    "scikit_learn-1.7.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl": "e5bf3d930aee75a65478df91ac1225ff89cd28e9ac7bd1196853a9229b6adb0b",
+    "joblib-1.6.0-py3-none-any.whl": "3dbbf9f6e4b592a2357b854608e980fe6390d131d7a82f011a377ef2ebef7aba",
+    "threadpoolctl-3.7.0-py3-none-any.whl": "cd8b60b5641b45c67bbf73c64c843235fc2d8a480c87389f52f5dbee893b86be",
+    "plotly-7.1.0-py3-none-any.whl": "dbb7fa18afce40d0a8e80d1bf162eceb3faa0ce5a77fe741ad09a74cf78f53f3",
+    "narwhals-2.26.0-py3-none-any.whl": "29326d74f107c347fd1009bd58e38d9f7c7c5b51e6de97bc93dbc325d9038b54"
+  },
+  "target_site": "/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+  "environment_modified": false
+}

@@ -1,0 +1,6 @@
+Command: git apply --numstat evidence/proposal.diff
+14	1	frontier/metrics/trace_store.py
+Gross: 15
+Net: +13
+Artifact SHA256: 856bbf7028be5efe73b2d83b1340859973380262ca84adc6c307a48d55a97400
+The former 12-gross count missed three blank additions.

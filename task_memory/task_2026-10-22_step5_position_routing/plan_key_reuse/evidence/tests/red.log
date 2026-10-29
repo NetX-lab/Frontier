@@ -1,0 +1,18 @@
+Running scope as unit: run-rc5fd43b178c047d89709b0c1ea075402.scope
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_lossless_plan_order_identity_and_count_separation ____________
+
+    def test_lossless_plan_order_identity_and_count_separation():
+        p = plan()
+        key = p.cache_key()
+        assert key == json.dumps(p.to_dict(), sort_keys=True, separators=(",", ":"))
+>       assert p.cache_key() is key
+E       assert '{"buffer_json":"{\\"supplied_output\\": true}","buffers":{"supplied_output":true},"context":{"defer_input_quant":fals...oadcast",0,1]],"tensors":[{"columns":4096,"dtype":"bfloat16","element_size":2,"name":"activation","row_stride":4096}]}' is '{"buffer_json":"{\\"supplied_output\\": true}","buffers":{"supplied_output":true},"context":{"defer_input_quant":fals...oadcast",0,1]],"tensors":[{"columns":4096,"dtype":"bfloat16","element_size":2,"name":"activation","row_stride":4096}]}'
+E        +  where '{"buffer_json":"{\\"supplied_output\\": true}","buffers":{"supplied_output":true},"context":{"defer_input_quant":fals...oadcast",0,1]],"tensors":[{"columns":4096,"dtype":"bfloat16","element_size":2,"name":"activation","row_stride":4096}]}' = cache_key()
+E        +    where cache_key = CollectivePlan(phase='dispatch', sizes=(16, 1), tensors=(CollectiveTensor(name='activation', dtype='bfloat16', element...e_path": "position_cyclic", "quant_dtype": null, "defer_input_quant": false}', buffer_json='{"supplied_output": true}').cache_key
+
+tests/unit/test_step5_moe_pricing.py:62: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_step5_moe_pricing.py::test_lossless_plan_order_identity_and_count_separation
+1 failed in 1.57s

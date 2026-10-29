@@ -1,0 +1,37 @@
+{
+  "task_id": "D29-SNAPSHOT-SCOPE-AUDIT",
+  "source_commit": "e200bb780d3b20ec6f5ff0a067ed8b9ddd505662",
+  "files": [
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/snapshot_scope/check_progress_2026-10-24_snapshot_scope.md",
+      "sha256": "a8edbed7ab7688033fc3668c3bcd97846add13eb93b08404acc27394ac5c9e31",
+      "bytes": 2896
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/snapshot_scope/recompute_snapshot.py",
+      "sha256": "4d66c245c76b6d4d75fca47bc6a080a3085370e147568c00dfa41c407f1f19d9",
+      "bytes": 31636
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/snapshot_scope/snapshot_baseline_receipt.json",
+      "sha256": "d39ab6ee4401368685dcb60ad6259814a488ac38c2e0642d5c3d66597b203f9e",
+      "bytes": 427461
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/snapshot_scope/snapshot_blob_manifest.json",
+      "sha256": "807fe446a7ec87c94b5b6e9f0b128ea6ffc41d7e90f11f80c03abfdf3ed6a4e0",
+      "bytes": 71876
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/snapshot_scope/snapshot_paths.tsv",
+      "sha256": "7636ab79fb02275629efbeebf755f9c4098d0f38d1f9484c73c58382324b000e",
+      "bytes": 10938
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/snapshot_scope/test_report_2026-10-24_snapshot_scope.md",
+      "sha256": "d9eeecbd30b692be0494a302a5bee223e79bffc6d6691f1e1905635e7a54ef77",
+      "bytes": 15610
+    }
+  ],
+  "self_hash_excluded": true
+}

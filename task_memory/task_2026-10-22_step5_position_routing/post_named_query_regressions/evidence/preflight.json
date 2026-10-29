@@ -1,0 +1,252 @@
+{
+  "task_id": "D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS",
+  "source_before": {
+    "head": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+    "tree": "6c43090097e92c6fc0c33aa7358e69c2cf092705",
+    "status": "",
+    "submodule_head": "3dac53c544e546574cb6e8078cd14053d0916113",
+    "submodule_status": ""
+  },
+  "source_file_count": 2755,
+  "source_inventory": {
+    "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/source_before.json",
+    "bytes": 533070,
+    "sha256": "effe392c515ee95c80005aec834be6132d541ef599022be6fafb2ead027526a1"
+  },
+  "input_guards": [
+    {
+      "path": "/data/ycfeng/tmp/d29_unit_parent05.xml",
+      "bytes": 2109680,
+      "sha256": "cb64bf1bfbba142b5ad7b3fbad90343d1f9134e6a627c35af5017bfc3654a4d8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_unit_baseline01.xml",
+      "bytes": 1978121,
+      "sha256": "4c1629eaf42bde40b033f43e480f77aa5c81cba8ca4dca00398f43cc9eeda25d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_unit_candidate01.xml",
+      "bytes": 1983189,
+      "sha256": "7bcfb335e7488995aafe498d6fb7c11c7280a055fa0e118fc9886eebbcff2802"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_canonical_count_green01.xml",
+      "bytes": 11260,
+      "sha256": "d54490d4f939869a618213df89ad704deed1dd34325d86b189b625ed5d7cdbda"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07/task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/d29_regression_baseline01.json",
+      "bytes": 38478,
+      "sha256": "70a15ffd158e1971aa207e5017f2cf50a84e7b4ceb853f93965312d379d042b0"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/manifest.json",
+      "bytes": 25878,
+      "sha256": "e8e6278666903b793d9f0eafe04871378b14fef3413c9fe58721677295e8a50c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/results.jsonl",
+      "bytes": 117454,
+      "sha256": "ece79d9f5ba9b3262d90e7e12388c86a9d7a12d8e6814765dad1a8a97817299a"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp",
+      "bytes": 21234672,
+      "sha256": "8818d1146c32505707dee41147cfe17de46a0c9f3cf6bb8fc7b1b3fe30e15637"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_group_reuse_parent01.xml",
+      "sha256": "a37987c7b72f64a87be43623b3136d93e12c8b103b00856cf525b8918177cb4f",
+      "bytes": 13377
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_group_reuse_trainers_parent01.xml",
+      "sha256": "6b411b2457883e46b96c136ffa5b43f420fcac465c8481bbe2ec798f3186e5d9",
+      "bytes": 594
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_artifact_parse_parent01.xml",
+      "sha256": "33ffaf6016ec49a718c099c9f23f10700a5b6007e4edb235e07cca6749cd4fe9",
+      "bytes": 19773
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_loader_family_parent01.xml",
+      "sha256": "d7db803efc54dabf9b22e56e15d59413c5d644947901142c314aae40690fdacf",
+      "bytes": 4774
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_loader_governance_parent01.xml",
+      "sha256": "9a2c72314570ef9be14644c10a809811378471db81e43e5ebcb66e833488fdd1",
+      "bytes": 8366
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_unit_parent06_baseline_environment.xml",
+      "bytes": 2115049,
+      "sha256": "9d5ab2bcd0d5e969c4281b24f7f6b0fcde84a86ea344fbeef1b3173d93511df7"
+    }
+  ],
+  "script_bindings": [
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/run_suite.py",
+      "sha256": "1733444c2b65bac2171e4c855484e602bb1c222499c92667f489b3ebe3612f0a",
+      "bytes": 8153
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/audit_strict.py",
+      "sha256": "8533ab05092c5861f6b58dedb24a1f1c2f1b2e22874c34c2f41ef39249851d89",
+      "bytes": 2753
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/compare_results.py",
+      "sha256": "2f18e3616e00f256433206452535a4c13b9f8abcff945553f68130c7ab7c2900",
+      "bytes": 5251
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/run_suite.py",
+      "sha256": "62ce1aa3e4f6229c7e782bcd98eb2048ef35d88e790e607a9e2ae493908d392a",
+      "bytes": 7118
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/compare_results.py",
+      "sha256": "aab8d53849d5ef23ac2f804a9fdb391531f4d9c39fb19bae891fa70d9371d084",
+      "bytes": 8512
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_workflow_fidelity_20261022/audit_evidence.py",
+      "sha256": "8d985f0f964c5ec6b16b4a0c3963490db38de26b9e0ec664927479ca849b4cb9",
+      "bytes": 7471
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/run_suite.py",
+      "bytes": 2339,
+      "sha256": "78478b26ca6ff319bc4230901018b1f3591dfbacb4529e5d898e37f86b8a00b4"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/audit_strict.py",
+      "bytes": 441,
+      "sha256": "c3c68341c8a64b7d5eee3402ba42940f91c5a54b9955262b009d0ca984831a9d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/scope_guard.py",
+      "bytes": 699,
+      "sha256": "462ef08c1bc162fba6928982f0baf274fb111db4ffe4f63eb437ffb881ebb129"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/compare_results.py",
+      "bytes": 3272,
+      "sha256": "03e5046bc93584040d006456c96bdce3542d6efec3fa3b605ef57c7a1c9aeb10"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions/task_memory/task_2026-10-22_step5_position_routing/runtime_model_view/parent/final_scope_guard.py",
+      "bytes": 4965,
+      "sha256": "96e8596bb9ce0e20463bfb440d1f5d8f0c760781aa6d424d763557d360f22a95"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/scripts/compare_unit.py",
+      "bytes": 6516,
+      "sha256": "b0d9dd036de52d15b6b7573f99877e8a8ad8450ebd5ee3d289c8bbfedb2744b2"
+    }
+  ],
+  "strict_definitions_examples_unchanged_since46fe": true,
+  "canonical_native_binary_present": false,
+  "namespace_argv": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "--quiet",
+    "-p",
+    "MemoryMax=30G",
+    "runuser",
+    "-u",
+    "brainpp",
+    "--",
+    "env",
+    "FRONTIER_TMP_ROOT=/data/ycfeng/tmp",
+    "MKL_NUM_THREADS=1",
+    "NUMEXPR_NUM_THREADS=1",
+    "OMP_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "PYTHONPATH=/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+    "TMPDIR=/data/ycfeng/tmp",
+    "bwrap",
+    "--die-with-parent",
+    "--ro-bind",
+    "/",
+    "/",
+    "--dev-bind",
+    "/dev",
+    "/dev",
+    "--bind",
+    "/data/ycfeng/tmp",
+    "/data/ycfeng/tmp",
+    "--bind",
+    "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/namespace_preflight",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/.git",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/.git",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/.gitignore",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/.gitignore",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/.gitmodules",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/.gitmodules",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/AGENTS.md",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/AGENTS.md",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/GLOSSARY.md",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/GLOSSARY.md",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/LICENSE",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/LICENSE",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/README.md",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/README.md",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/data",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/data",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/docs",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/docs",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/environment.yml",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/environment.yml",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/environment_profiling.yml",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/environment_profiling.yml",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/examples",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/examples",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/figs",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/figs",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/pyproject.toml",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/pyproject.toml",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/skills",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/skills",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/task_memory",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/task_memory",
+    "--ro-bind",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/tests",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/tests",
+    "--chdir",
+    "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+    "--"
+  ],
+  "new_test_stack": false,
+  "raw_presence_gates_unchanged": true,
+  "previous46fe": {
+    "path": "/data/ycfeng/tmp/d29_unit_parent06_baseline_environment.xml",
+    "bytes": 2115049,
+    "sha256": "9d5ab2bcd0d5e969c4281b24f7f6b0fcde84a86ea344fbeef1b3173d93511df7"
+  }
+}

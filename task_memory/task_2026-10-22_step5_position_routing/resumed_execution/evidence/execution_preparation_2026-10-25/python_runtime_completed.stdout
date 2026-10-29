@@ -1,0 +1,33 @@
+{"stage": "remaining_copy_complete", "new_files": 98, "partial_files_completed": 1}
+{
+  "task_id": "D29-MOUNTED-CPYTHON-RUNTIME",
+  "status": "COMPLETE_BYTE_VERIFIED_NOT_YET_IMPORT_VERIFIED",
+  "started_utc": "2026-10-24T19:44:16.637459+00:00",
+  "ended_utc": "2026-10-24T19:44:22.715680+00:00",
+  "wall_s": 6.078218323178589,
+  "destination": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025",
+  "source_python": "/usr/bin/python3.10",
+  "source_python_sha256": "dbb04ace02303fa5cb3a6d1aa0e7a180d8dd23d3257cc6a0b155d0ee219432a2",
+  "source_stdlib": "/usr/lib/python3.10",
+  "source_packages": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages",
+  "verified_copied_files": 11371,
+  "verified_copied_bytes": 386015193,
+  "inventory_sha256": "628b0758e492799670f3821bd81a5402792466cb5c3a95693c8b1c7d8c591ed8",
+  "package_versions": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scipy": "1.15.3",
+    "scikit-learn": "1.7.2",
+    "plotly": "7.1.0",
+    "fasteners": "0.20",
+    "ddsketch": "3.0.1",
+    "pytest": "9.1.1"
+  },
+  "source_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "original_environment_modified": false,
+  "dependency_installations": 0,
+  "limitations": [
+    "Original timed-out copy retained; only missing and incomplete task-owned destination files were completed.",
+    "No worker, pricing wave, full CLI or native GPU execution; image OS libraries still require import verification."
+  ]
+}

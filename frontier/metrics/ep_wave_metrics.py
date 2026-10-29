@@ -26,7 +26,13 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
     for record in phases.lane_records:
         batch = record.batch
         layer = record.execution_time.layer_execution_times[0]
-        request_ids = [str(request.id) for request in batch.requests]
+        moe=layer.moe_or_mlp_time_component.operator_times
+        step5_frame=moe.physical_frame if moe is not None and moe.physical_frame else None
+        communication=layer.communication_time_component.operator_times
+        destination_request_ids = [str(request.id) for request in batch.requests]
+        source_rows = getattr(layer, "_dsv4_source_rows", None)
+        request_ids = (source_rows["source_request_ids"] if source_rows is not None
+                       else destination_request_ids)
         expand = trace_enabled and store._should_expand_layers(
             cluster_type, request_ids, batch_ids=tuple(batch.source_batch_ids)
         )
@@ -37,8 +43,17 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
             "attention_variant_id": layer.attention_variant_id,
             "request_ids": request_ids, "source_batch_ids": list(batch.source_batch_ids),
         }
+        if source_rows is not None:
+            common.update(source_rows)
+            common["synthetic_destination_request_ids"] = destination_request_ids
+        if step5_frame is not None:
+            from dataclasses import asdict
+            common["routing_source"]=asdict(step5_frame["routing_source"])
+        layer_metadata = None
         if trace_enabled:
             total_tokens = sum(batch.num_tokens)
+            if getattr(replica.model_config, "model_type", None) == "step5":
+                layer_metadata = store._get_step5_layer_metadata(replica, layer.global_layer_id)
         ledger_phases = {} if ledger_enabled else None
         for phase, start in starts.items():
             operators = layer.moe_phase_operator_times(phase)
@@ -57,9 +72,20 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                 routed = phase == "routed_compute"
                 tokens = (batch.lane_workload.routed_token_count if routed
                           else batch.get_effective_total_tokens_for_compute(cluster_type))
+                if source_rows is not None and not routed:
+                    tokens = source_rows["physical_local_rows"]
+                if step5_frame is not None:
+                    source=step5_frame["routing_source"]
+                    source_lane=source.source_lanes[record.ep_id//replica.attn_tensor_parallel_size]
+                    tokens=source.gathered_physical_rows if routed else source_lane.physical_rows
                 context = OpTraceContext(
                     cluster_type, replica.model_config, replica,
                     total_tokens, tokens, tokens, tokens, routed,
+                    global_layer_id=layer.global_layer_id, layer_metadata=layer_metadata,
+                    pre_routing_tokens=batch.get_effective_total_tokens_for_compute(cluster_type),
+                    step5_moe_frame=step5_frame,
+                    collective_plans=communication.plans if communication is not None else None,
+                    collective_costs=communication.costs if communication is not None else None,
                 )
                 parallel_context = build_parallel_context(context)
             for kind, name, duration in operators:
@@ -68,8 +94,13 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                 if operation_enabled:
                     store._push_metric(OperationMetrics(name), batch.id, duration, cluster_type)
                 if trace_enabled:
+                    workload_meta = {}
+                    if source_rows is not None:
+                        from frontier.execution_time_predictor.deepseek_v4 import operator_workload_metadata
+
+                        workload_meta = operator_workload_metadata(layer, name)
                     meta = {
-                        **compute_op_trace_meta(name, kind, context), **common,
+                        **compute_op_trace_meta(name, kind, context), **common, **workload_meta,
                         "phase": phase, "phase_start_time_s": start,
                         "wave_start_time_s": time,
                         "wave_end_time_s": plan.timing.wave_end_time_s,
@@ -85,6 +116,15 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                         meta=meta,
                     ))
                 cursor += duration * 1e-3
+            if ledger_enabled and communication is not None:
+                from dataclasses import fields
+                collective_proofs={name:dict(plan=communication.plans[name].to_dict(),
+                    cost={field.name:getattr(communication.costs[name],field.name) for field in fields(communication.costs[name])}) for _,name,_ in operators if name in communication.plans}
+                if collective_proofs:
+                    ledger_phases[phase]["collective_proofs"] = collective_proofs
+            if ledger_enabled and step5_frame is not None:
+                ledger_phases[phase]["compute_proofs"]={name:step5_frame["operator_costs"][name]
+                    for kind,name,_ in operators if kind == "COMPUTE" and name in step5_frame["operator_costs"]}
         if ledger_enabled:
             store._frontier_ep_wave_lane_ledger_rows.append({
                 **common, "record_type": "ep_wave_lane", "cluster": cluster_type.name,

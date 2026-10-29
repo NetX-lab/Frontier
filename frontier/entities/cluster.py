@@ -97,36 +97,15 @@ class Cluster(BaseEntity):
         """
         from frontier.cc_backend import CCBackendFactory
         from frontier.cc_backend.cc_backend_config import (
-            VidurCCBackendConfig,
-            AnalyticalCCBackendConfig,
             CollectiveSimCCBackendConfig,
             AiconfiguratorCCBackendConfig,
             AstraSimAnalyticalCCBackendConfig,
         )
-        from frontier.types import CCBackendType
 
         # Get CC backend config from cluster config
         cc_config = self._config.cc_backend_config
 
-        # Determine backend type from config
-        if isinstance(cc_config, VidurCCBackendConfig):
-            backend_type = CCBackendType.VIDUR
-        elif isinstance(cc_config, AnalyticalCCBackendConfig):
-            backend_type = CCBackendType.ANALYTICAL
-        elif isinstance(cc_config, CollectiveSimCCBackendConfig):
-            backend_type = CCBackendType.COLLECTIVE_SIM
-        elif isinstance(cc_config, AiconfiguratorCCBackendConfig):
-            backend_type = CCBackendType.AICONFIGURATOR
-        elif isinstance(cc_config, AstraSimAnalyticalCCBackendConfig):
-            backend_type = CCBackendType.ASTRA_SIM_ANALYTICAL
-        else:
-            raise ValueError(
-                "Unknown CC backend config type: "
-                f"{type(cc_config).__name__}. "
-                "Supported: VidurCCBackendConfig, AnalyticalCCBackendConfig, "
-                "CollectiveSimCCBackendConfig, AiconfiguratorCCBackendConfig, "
-                "AstraSimAnalyticalCCBackendConfig"
-            )
+        backend_type = cc_config.get_type()
 
         # Get replica config for device information
         replica_config = self._config.replica_config

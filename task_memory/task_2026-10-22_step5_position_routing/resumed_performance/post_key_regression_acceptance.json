@@ -1,0 +1,525 @@
+{
+  "task_id": "D29-POST-KEY-PARENT",
+  "status": "ACCEPTED_NO_NEW_CODE_FAILURE_WITH_APPROVED_TEST_ID_REPLACEMENT",
+  "source_revision": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+  "source_tree": "bbbca98802261662e02d32a59c1a4d6ab20a12e5",
+  "checks": [
+    {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261024_final06/final06_receipt.json",
+      "sha256": "d223ffaf54a3e9ea9227697ca64add8f0518d3c9086b73c1197bd7ecec148551"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/strict77/final06_receipt.json",
+      "sha256": "d223ffaf54a3e9ea9227697ca64add8f0518d3c9086b73c1197bd7ecec148551"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261024_final06/postrun_receipt.json",
+      "sha256": "1e3a3abd8d5a7397cf6492863c788197f2b72272165799ba6e1e53a2d51a5582"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/strict77/postrun_receipt.json",
+      "sha256": "1e3a3abd8d5a7397cf6492863c788197f2b72272165799ba6e1e53a2d51a5582"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/strict77/execution.json",
+      "sha256": "76f6cbb5a7ddc0ed00efdf872739e7f9a29ddd9a43bbcec86ee8e0a1ea163749"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/strict77/execution.json",
+      "sha256": "76f6cbb5a7ddc0ed00efdf872739e7f9a29ddd9a43bbcec86ee8e0a1ea163749"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/preflight.json",
+      "sha256": "bc2db8447d279f54068beffd977ce1375d7a37679e7fb4fbfb295f476088bded"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/preflight.json",
+      "sha256": "bc2db8447d279f54068beffd977ce1375d7a37679e7fb4fbfb295f476088bded"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/short_selections_comparison.json",
+      "sha256": "e80883b5f7bfeeae2c6d1e9383c205a40780c8db752cb47fe4307ea5ab81724f"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/short_selections_comparison.json",
+      "sha256": "e80883b5f7bfeeae2c6d1e9383c205a40780c8db752cb47fe4307ea5ab81724f"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/execution.json",
+      "sha256": "6eab78d40fe677df619da35efaafb1300cab31be64463605b0cefaddaf77b8b2"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/supplement101/execution.json",
+      "sha256": "6eab78d40fe677df619da35efaafb1300cab31be64463605b0cefaddaf77b8b2"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/execution.json",
+      "sha256": "340154db12d3fc515b3731f48f120faa8eaba62d70f598a1c63f663f141403b1"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/metadata196/execution.json",
+      "sha256": "340154db12d3fc515b3731f48f120faa8eaba62d70f598a1c63f663f141403b1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/execution.json",
+      "sha256": "1172f067da266098e39c38089ceb61b9c3281249318f5a57c94c9a0d1a5a1b0a"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/catalogue53/execution.json",
+      "sha256": "1172f067da266098e39c38089ceb61b9c3281249318f5a57c94c9a0d1a5a1b0a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/manifest.json",
+      "sha256": "e8e6278666903b793d9f0eafe04871378b14fef3413c9fe58721677295e8a50c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/results.jsonl",
+      "sha256": "ece79d9f5ba9b3262d90e7e12388c86a9d7a12d8e6814765dad1a8a97817299a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261024_final06/candidate/manifest.json",
+      "sha256": "3dc9d9888fdef7d5912ef4acb5be2c820ada00c700857102101aca1eba24dc20"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261024_final06/candidate/results.jsonl",
+      "sha256": "a6d2869d43ddb5f7cc0071803430125581e1bfa887353c187d6cff606f7ac847"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261024_final06/comparison.json",
+      "sha256": "22064464739130d4a5675394559353ea716cc93d5eb966c9b6f431b13074bb28"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/supplement101/results.xml",
+      "sha256": "c737103625561322677d4f0a2348ac00027ac79dff52650aa2e24f7bcaff092d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/results.xml",
+      "sha256": "06dcbe7fca4eaa88c6201e314d278c3ef1074f01bd01bbab58198f4859014c59"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/results.xml",
+      "sha256": "9dbb37c26673bac22f0f4cae049e241e3683580fc2d46e3b33332171ed566671"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/results.xml",
+      "sha256": "beee87e21f1dd0b45e4116af7b6794208abec0d4b718b03ff88a243eb55a26ca"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/catalogue53/results.xml",
+      "sha256": "f49ad274e3f712156ab320407dea1fd02da7fe5b9682d0bf1736347c84e39f5c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/results.xml",
+      "sha256": "4ecdb970a691edbe6f490c323598dbcbc4d653af1c34a33640a8ae52ed09cb2b"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/check_progress_2026-10-24_environment.md",
+      "sha256": "684a3d96a86f3166b442f65edd8319f4bbc15a40a095adc7047edd078e0271c1"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/check_progress_2026-10-24_final.md",
+      "sha256": "b96a3949c358748f0b80d3cdb84a79aaa76cc206b3ff7e298c21e5d353e01ba4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/check_progress_2026-10-24_short.md",
+      "sha256": "e46de412aceaae607799975d8af9de7f07d9aec6a7686c577e045ac200c9dd6c"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/check_progress_2026-10-24_strict77.md",
+      "sha256": "bee7074d3b051408a2af15753f2a36befd9d3aefd684b33a93581541a0d8169d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/canonical_unit/comparison.json",
+      "sha256": "30451fa98211a682fe9f2fb537f2162402376b964dbf8d9623a1f848aab6385e"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/canonical_unit/execution.json",
+      "sha256": "07537fa168bc47880897c2c6870d23f1a032c2f1e6b0e9071f7d84bcd1051930"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/canonical_unit/legacy_comparison.json",
+      "sha256": "5486d8b7d79693020271e4aee610885ec468667e04063100b0e428d563be67f1"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/catalogue53/execution.json",
+      "sha256": "1172f067da266098e39c38089ceb61b9c3281249318f5a57c94c9a0d1a5a1b0a"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/command_bindings.json",
+      "sha256": "e54e3828a3484719953d8b016c61a5b94c2418ec4078bdeb93729496a5102f08"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/comparison_inputs_before.json",
+      "sha256": "c1c6872348c7aa2ddbfd4972fbc2f9d1d3a1ff259def52fb29a30a0e7eaa353f"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_archive_manifest.json",
+      "sha256": "f5efc47d243ccb2923ea9bf1b1b1755edff5189770e46fdf502bdd9a961ff2ad"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/canonical_reconciliation_preflight.json",
+      "sha256": "07dd0c114c92c1c94d35e27d9e9c169f3ed478ed9ba46614b2e5a6dfdae861e4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/first_unit_comparison.json",
+      "sha256": "4ce4fcaee44897982d4623e4049494c3e2a429017d42c07c484c5f4d1be8750d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/first_unit_execution.json",
+      "sha256": "3895594cb2ed6a38eb21029e54b728106579494701f8c2e14450c85162b7d76f"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/first_unit_legacy_comparison.json",
+      "sha256": "d771e1db14cd938ed2cddf11b913687f35ac91d07374ecfe1ba9a75dfba9a0d4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/environment_reconciliation/native_availability_diagnosis.json",
+      "sha256": "0c4a9844e986cb8d5dbadd862c2ad79eebf740b183965b693b31ecde18b6d039"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/final_archive_manifest.json",
+      "sha256": "792b18057613dc9bc033cd70ba50a9148c27faf23ac292498bfabeec0a06ad84"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/final_verification.json",
+      "sha256": "2b63673099f062ebe13f5fa26f69539e56bd044f269169c3bcf652e723d47ad8"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/governance52/execution.json",
+      "sha256": "41a9f514eb32fe224dfb5329e32d3defc8e51f0a34c9eee76a41e63b51771ade"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/governance52_receipt.json",
+      "sha256": "0612107ea021b6a14675667b8e12b646b34db27bd3cf7ddebe2eab83c50e13b2"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/initial_archive_manifest.json",
+      "sha256": "9d7e1678d4d076998941d18c90ce0db4ce013924357f83ee5ea85da6cb933e6c"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/metadata196/execution.json",
+      "sha256": "340154db12d3fc515b3731f48f120faa8eaba62d70f598a1c63f663f141403b1"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/preflight.json",
+      "sha256": "bc2db8447d279f54068beffd977ce1375d7a37679e7fb4fbfb295f476088bded"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/resume_reconciliation_2026-10-24.json",
+      "sha256": "cab847f63e3940ac7ba5c04be5e398180f4393638c828fc8f2be69c514e0a582"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/short_selections_comparison.json",
+      "sha256": "e80883b5f7bfeeae2c6d1e9383c205a40780c8db752cb47fe4307ea5ab81724f"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/source_final_receipt.json",
+      "sha256": "ac752f1ee2c82c3b93ae7146d6b45ed132132983856ee7fca476aae13de81577"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/strict77/execution.json",
+      "sha256": "76f6cbb5a7ddc0ed00efdf872739e7f9a29ddd9a43bbcec86ee8e0a1ea163749"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/strict77/final06_receipt.json",
+      "sha256": "d223ffaf54a3e9ea9227697ca64add8f0518d3c9086b73c1197bd7ecec148551"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/strict77/postrun_receipt.json",
+      "sha256": "1e3a3abd8d5a7397cf6492863c788197f2b72272165799ba6e1e53a2d51a5582"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/strict_archive_manifest.json",
+      "sha256": "b0fe6bce1990cb1e554fbb9bfd61f1956f7e686bce80021bc26f4619886c91db"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/supplement101/execution.json",
+      "sha256": "6eab78d40fe677df619da35efaafb1300cab31be64463605b0cefaddaf77b8b2"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/plan.md",
+      "sha256": "f0bb4b3d3aeced6497490ecdb9d568ef49f7a68c47781fc8617d938bfd302277"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/progress.md",
+      "sha256": "9ff9f913fa87d2ba2220b0dfb77221bd0caa8bb13e66427fe2ea79c16763e8d4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/requirements.md",
+      "sha256": "0921e646b8e57461d0ccca4f8463bc3801d0c568635a84f42b510b6bd7f54b19"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/summary.md",
+      "sha256": "5cf9e117d7a22644ef55131660c01296fada26ed6fda8d6f824988ad7538558d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/test_report_2026-10-24_full_unit.md",
+      "sha256": "2f872b5113e0cf611b872687f7127001b581b5d252f492f9f21ac3037e073fbf"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/test_report_2026-10-24_governance52.md",
+      "sha256": "aced0f0a7cb5ff56637743413baa18dd716c8e96c68046ee679af1f2e5adef2f"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/test_report_2026-10-24_short_selections.md",
+      "sha256": "1aa9973cd60db1a224093710c8007b6b2c8976446e8d6988f4919c7c9709e053"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/test_report_2026-10-24_strict77.md",
+      "sha256": "a3f4003bd76a99ef894b8af3f084d8d77922250d8ad234b6b42d89e2884fd230"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_unit_parent06_baseline_environment.xml",
+      "sha256": "9d5ab2bcd0d5e969c4281b24f7f6b0fcde84a86ea344fbeef1b3173d93511df7"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/unit/execution.json",
+      "sha256": "07537fa168bc47880897c2c6870d23f1a032c2f1e6b0e9071f7d84bcd1051930"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_unit_parent06_baseline_environment.log",
+      "sha256": "43b2234911b52d1057ffda7154ed662e2bfab7d9dd79bb23e6fe2239fdda8a38"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/results.xml",
+      "sha256": "06dcbe7fca4eaa88c6201e314d278c3ef1074f01bd01bbab58198f4859014c59"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/execution.json",
+      "sha256": "6eab78d40fe677df619da35efaafb1300cab31be64463605b0cefaddaf77b8b2"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/results.log",
+      "sha256": "0b18ea7d3ccae2eabd9ab1c661c1114f11d5e30d78380071ad0462fa0a2141a5"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/results.xml",
+      "sha256": "beee87e21f1dd0b45e4116af7b6794208abec0d4b718b03ff88a243eb55a26ca"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/execution.json",
+      "sha256": "340154db12d3fc515b3731f48f120faa8eaba62d70f598a1c63f663f141403b1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/results.log",
+      "sha256": "e79b1a01dde865acb9491b8b0b3b99f2d5a8cabbefaac9143f39f58f779fa91c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/results.xml",
+      "sha256": "4ecdb970a691edbe6f490c323598dbcbc4d653af1c34a33640a8ae52ed09cb2b"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/execution.json",
+      "sha256": "1172f067da266098e39c38089ceb61b9c3281249318f5a57c94c9a0d1a5a1b0a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/results.log",
+      "sha256": "ed8b4d424948e6943586192b03a04f9cfb343f230e8411a24911cd279386b572"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52/results.xml",
+      "sha256": "1fb0fb13d185781ef44b01a959e8535efa8b46073029a61237661968923f5044"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52/execution.json",
+      "sha256": "41a9f514eb32fe224dfb5329e32d3defc8e51f0a34c9eee76a41e63b51771ade"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52/results.log",
+      "sha256": "09b7b3ad4a33d234942bd9bfc9bc86f588f8ecd97cddf7ddff4208b9a9356ed0"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_unit_parent05.xml",
+      "sha256": "cb64bf1bfbba142b5ad7b3fbad90343d1f9134e6a627c35af5017bfc3654a4d8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_unit_baseline01.xml",
+      "sha256": "4c1629eaf42bde40b033f43e480f77aa5c81cba8ca4dca00398f43cc9eeda25d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_unit_candidate01.xml",
+      "sha256": "7bcfb335e7488995aafe498d6fb7c11c7280a055fa0e118fc9886eebbcff2802"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_canonical_count_green01.xml",
+      "sha256": "d54490d4f939869a618213df89ad704deed1dd34325d86b189b625ed5d7cdbda"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/manifest.json",
+      "sha256": "e8e6278666903b793d9f0eafe04871378b14fef3413c9fe58721677295e8a50c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/results.jsonl",
+      "sha256": "ece79d9f5ba9b3262d90e7e12388c86a9d7a12d8e6814765dad1a8a97817299a"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp",
+      "sha256": "8818d1146c32505707dee41147cfe17de46a0c9f3cf6bb8fc7b1b3fe30e15637"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_group_reuse_parent01.xml",
+      "sha256": "a37987c7b72f64a87be43623b3136d93e12c8b103b00856cf525b8918177cb4f"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_group_reuse_trainers_parent01.xml",
+      "sha256": "6b411b2457883e46b96c136ffa5b43f420fcac465c8481bbe2ec798f3186e5d9"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_artifact_parse_parent01.xml",
+      "sha256": "33ffaf6016ec49a718c099c9f23f10700a5b6007e4edb235e07cca6749cd4fe9"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_loader_family_parent01.xml",
+      "sha256": "d7db803efc54dabf9b22e56e15d59413c5d644947901142c314aae40690fdacf"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_loader_governance_parent01.xml",
+      "sha256": "9a2c72314570ef9be14644c10a809811378471db81e43e5ebcb66e833488fdd1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/source_final_receipt.json",
+      "sha256": "ac752f1ee2c82c3b93ae7146d6b45ed132132983856ee7fca476aae13de81577"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/unit_final06_final_comparison.json",
+      "sha256": "30451fa98211a682fe9f2fb537f2162402376b964dbf8d9623a1f848aab6385e"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/unit_final06_final_legacy_comparison.json",
+      "sha256": "5486d8b7d79693020271e4aee610885ec468667e04063100b0e428d563be67f1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_unit_parent06.xml",
+      "sha256": "c2ab63565762aca0346615900d4fec7e2a99f50d95bf534d4814f1ca00c71def"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/source_before.json",
+      "sha256": "78e1eb2d5a3aa3dcf80868f1a23fe264967e57e3e8d653aa17d86fcee63a496e"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/run_suite.py",
+      "sha256": "1733444c2b65bac2171e4c855484e602bb1c222499c92667f489b3ebe3612f0a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/audit_strict.py",
+      "sha256": "8533ab05092c5861f6b58dedb24a1f1c2f1b2e22874c34c2f41ef39249851d89"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/compare_results.py",
+      "sha256": "2f18e3616e00f256433206452535a4c13b9f8abcff945553f68130c7ab7c2900"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/run_suite.py",
+      "sha256": "62ce1aa3e4f6229c7e782bcd98eb2048ef35d88e790e607a9e2ae493908d392a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/compare_results.py",
+      "sha256": "aab8d53849d5ef23ac2f804a9fdb391531f4d9c39fb19bae891fa70d9371d084"
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_workflow_fidelity_20261022/audit_evidence.py",
+      "sha256": "8d985f0f964c5ec6b16b4a0c3963490db38de26b9e0ec664927479ca849b4cb9"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/run_suite.py",
+      "sha256": "b144d854d710657fe2d87f777ab033ef71b30c4813e47b14e6e415e60b4e924b"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/compare_results.py",
+      "sha256": "38dd5c028e92356983bff5d4ba5e25a3af553da41449899430e9efe33e6fbd4c"
+    }
+  ],
+  "hash_checks": 2736,
+  "source_files_rehashed": 2629,
+  "scripts_rehashed": 8,
+  "guarded_inputs_rehashed": 13,
+  "record_files_rehashed": 39,
+  "strict77": {
+    "identical": 77,
+    "compared": 77,
+    "comparison_counts": {
+      "baseline_failures": 0,
+      "candidate_only_failures": 0,
+      "cases_absent_from_both_sides": 0,
+      "cases_missing_from_one_side": 0,
+      "cases_not_compared": 0,
+      "cases_not_compared_without_explanation": 0,
+      "cases_with_differing_definitions": 0,
+      "cases_with_missing_evidence": 0,
+      "mismatched_cases": 0,
+      "predictor_cache_files_only_in_baseline": 0,
+      "predictor_cache_files_only_in_candidate": 0,
+      "predictor_cache_findings": 0,
+      "provenance_findings": 0
+    },
+    "owner_rehashed_artifacts_per_side": 451,
+    "owner_cache_filenames_per_side": 519,
+    "parent_scope": "Receipt/copy and manifest/results/comparison hashes checked; 451 per-side artifact rehash remains owner-auditor evidence."
+  },
+  "short_selections": [
+    {
+      "suite": "supplement101",
+      "pass": 101,
+      "missing": [],
+      "new_ids": []
+    },
+    {
+      "suite": "metadata196",
+      "pass": 197,
+      "missing": [
+        "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text"
+      ],
+      "new_ids": [
+        "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published"
+      ]
+    },
+    {
+      "suite": "catalogue53",
+      "pass": 53,
+      "missing": [],
+      "new_ids": []
+    }
+  ],
+  "counts_not_summed": true,
+  "unit": {
+    "counts": {
+      "skipped": 281,
+      "error": 32,
+      "pass": 8020,
+      "failure": 279
+    },
+    "baseline_counts": {
+      "skipped": 281,
+      "error": 32,
+      "pass": 8018,
+      "failure": 279
+    },
+    "raw_exit": 1,
+    "missing_old_ids": [
+      "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text"
+    ],
+    "new_ids_all_pass": [
+      "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published",
+      "tests.unit.test_moe_routing_runtime::test_collective_input_binds_both_role_constructors_and_refreshes_next_run",
+      "tests.unit.test_prediction_measurement_bindings::test_prepared_points_follow_actual_model_rows_identity_and_fresh_queries"
+    ],
+    "retained_status_changes": [],
+    "failure_error_skip_id_differences": []
+  },
+  "governance": {
+    "counts": {
+      "pass": 52
+    },
+    "covered_old_torch_failures": 5
+  },
+  "raw_exact_status_gate": "FAIL_RETAINED_ID_LOSS_OR_STATUS_CHANGE",
+  "raw_exact_ID_gate_waived": false,
+  "approved_replacement_admission": "D29-RUN-INPUT-SNAPSHOT requires the fixed-run input test instead of the former hot-update test; the raw old-ID presence predicate remains FAIL.",
+  "limits": [
+    "One removed/new metadata ID is the approved input lifetime replacement, not an alias.",
+    "Raw full-unit exit1 and historical279 failures/32 errors remain; this is not all-green.",
+    "Full-unit and final guards complete on46fe only; named-model-query successor is outside this receipt.",
+    "No full CLI/native qualification."
+  ],
+  "checker_correction": "Initial inline check assumed results.json; directory discovery confirmed results.jsonl. No receipt was written before correction."
+}

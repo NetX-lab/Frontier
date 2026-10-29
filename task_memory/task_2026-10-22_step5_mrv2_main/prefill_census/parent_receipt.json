@@ -1,0 +1,112 @@
+{
+  "task_id": "D23-P-CENSUS-PARENT",
+  "observed_at_utc": "2026-10-22T01:24:49.153838+00:00",
+  "native_source_pins": {
+    "vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_scheduler.py": "5d563a81071b5f51ba8417539f60551c716e24f085d1631f6a55827d790e683e",
+    "vllm/models/step5/nvidia/model.py": "6e8574c31c421b4ebeaff36a8faa3a219cd92744251c477d43df1912a8dfa6f0",
+    "vllm/v1/core/sched/scheduler.py": "1521d0efd48a79f0a8ed1bb6f16a1015e1105ca256cbbc4c864c2113bf2c508e",
+    "vllm/v1/metrics/stats.py": "6b604c680421cfecb0a36be93513b94ed72623b91d4f975ea17ec1508f56b65a"
+  },
+  "native_prefill": {
+    "path": "/data/ycfeng/tmp/step5_canonical_g3_20261021/capture01/stage/evidence/nodes/gpu-h800-0324.host.platform.shaipower.com/pd_state/prefill_pid_2199.jsonl",
+    "line": 104,
+    "record": {
+      "event": "native_forward_start",
+      "role": "prefill",
+      "host": "gpu-h800-0324.host.platform.shaipower.com",
+      "pid": 2199,
+      "monotonic_ns": 12313670256041170,
+      "wall_time_ns": 1792599157880099180,
+      "observer_fence": false,
+      "dp_rank": 0,
+      "configured_engine_id": "b81331a3-6689-4720-bd55-bbf064b1419f_dp0",
+      "tp_rank": 0,
+      "engine_id": "b81331a3-6689-4720-bd55-bbf064b1419f_dp0",
+      "forward_index": 23,
+      "dummy_run": false,
+      "is_profile": false,
+      "worker_execution_kind": "scheduled",
+      "descriptor": {
+        "cg_mode": "NONE",
+        "num_tokens": 6128,
+        "num_reqs": 1,
+        "uniform_token_count": null,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "local_num_tokens": 6128,
+      "local_num_reqs": 1,
+      "num_tokens": 6128,
+      "num_tokens_after_padding": 6128,
+      "num_reqs": 1,
+      "num_reqs_after_padding": 1,
+      "query_lengths": [
+        6128
+      ],
+      "context_lengths": [
+        0
+      ],
+      "native_request_ids": [
+        "cmpl-d21h80032g301-canonical6144-0-0-ba42c797"
+      ],
+      "has_prefill": true,
+      "full_cudagraph": false,
+      "metadata": {
+        "layer_count": 92,
+        "layers_with_metadata": 92,
+        "for_capture": false,
+        "block_table_shapes": [
+          [
+            1,
+            448
+          ],
+          [
+            1,
+            448
+          ],
+          [
+            1,
+            448
+          ],
+          [
+            1,
+            448
+          ]
+        ],
+        "slot_mapping_shape": [
+          4,
+          6128
+        ]
+      },
+      "boundary": "native_step_timing_record_batch_before_model_forward"
+    }
+  },
+  "current_cpu_prefill": {
+    "offline": {
+      "path": "/data/ycfeng/tmp/d23_main_actual06_offline/offline/scheduler.jsonl",
+      "line": 5,
+      "record": {
+        "event": "grouped_cache_batch",
+        "cluster_type": "PREFILL",
+        "iteration_id": 0,
+        "num_tokens": 6144,
+        "simulation_time": 0.0
+      }
+    },
+    "online": {
+      "path": "/data/ycfeng/tmp/d23_main_actual06_online/online/scheduler.jsonl",
+      "line": 5,
+      "record": {
+        "event": "grouped_cache_batch",
+        "cluster_type": "PREFILL",
+        "iteration_id": 0,
+        "num_tokens": 6144,
+        "simulation_time": 0.25
+      }
+    }
+  },
+  "current_cpu_source": "7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb",
+  "verdict": "P_COMPUTE_WIDTH_MISMATCH_CONFIRMED",
+  "scope": "Partial current CLI proves P6144 was scheduled; full request acceptance remains timed out. Lifecycle correction requires a recorded decision."
+}

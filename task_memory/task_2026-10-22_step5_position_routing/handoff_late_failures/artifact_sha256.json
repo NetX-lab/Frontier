@@ -1,0 +1,62 @@
+[
+  {
+    "path": "census_summary.json",
+    "bytes": 23580,
+    "sha256": "0173436b71b9bf47f7ae2a89f9c94551b0406a8a1fe4d2c096362eaea09e48b0"
+  },
+  {
+    "path": "copy_messages.json.gz",
+    "bytes": 61679,
+    "sha256": "98ac59669f4583fb835518fd9cfccd4b676deaf4f84bd501702322fe6d29b96d"
+  },
+  {
+    "path": "copy_older.json",
+    "bytes": 51,
+    "sha256": "8aeb7676a045d011090ecda3199f8901db80316c272f23bea0087b0543518284"
+  },
+  {
+    "path": "copy_text.json",
+    "bytes": 202,
+    "sha256": "392ef6734755bf32b18f38438b60947851c7c6d6199d4d8a13d12b5030a77021"
+  },
+  {
+    "path": "copy_tool_census.json",
+    "bytes": 21554,
+    "sha256": "0cd17072b64e2ab0a5e9fe8f9e482c6a77396a2a95b0899478fb71dafa656d8c"
+  },
+  {
+    "path": "init_messages.json.gz",
+    "bytes": 72598,
+    "sha256": "b159ebb129916a14f758ab898347f0e0696b4ff695f5d5ab03117998bbe72439"
+  },
+  {
+    "path": "init_older.json",
+    "bytes": 51,
+    "sha256": "8aeb7676a045d011090ecda3199f8901db80316c272f23bea0087b0543518284"
+  },
+  {
+    "path": "init_text.json",
+    "bytes": 106,
+    "sha256": "9cf743a9f9f9f7ff3079929d6855039fe87dc54f703e1831f5d47cda7297f11c"
+  },
+  {
+    "path": "init_tool_census.json",
+    "bytes": 19546,
+    "sha256": "fe8eba7d7665773dd230f6ac03400f3adb2e727794f78b4c4de51b5cf4db76ff"
+  },
+  {
+    "path": "read_receipt.json",
+    "bytes": 271,
+    "sha256": "b04da86158269649ff4b7a8d0fff60482cef3438c6e196fc4fc98a16bd8318f5"
+  },
+  {
+    "path": "receipt.json",
+    "bytes": 4862,
+    "sha256": "6a436668524557aaed95121bcd54afe4b054d4b1d07bbb96352554e4516850c4"
+  },
+  {
+    "path": "worktree_checks.json",
+    "bytes": 1601,
+    "sha256": "d950be8a2b839916b41e0c98e2dc7877f9cc149c9d097440d7cb869b50b19285"
+  }
+]

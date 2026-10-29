@@ -1,0 +1,228 @@
+{
+  "task_id": "D29-LEDGER-HANDOFF-PARENT",
+  "status": "PASS_COMMITTED_HANDOFF_BOUNDARY_UNADMITTED",
+  "timestamp_utc": "2026-10-24T16:55:25.548796+00:00",
+  "candidate_worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+  "candidate_branch": "fix/d29-ledger-stream",
+  "code_commit": "1f6b431478e2351e3ca6819f707cccbc3e4336e2",
+  "checked_candidate_records_head": "dd3b6a69a17365b994a51ea7641197e768c8a237",
+  "accepted_production_source": "b02772872d0c99ceb5ebb31a8e041926f12f7676",
+  "code_paths": [
+    {
+      "path": "frontier/metrics/metrics_store.py",
+      "step_cap": 36,
+      "cumulative_cap": 36,
+      "step": {
+        "added": 26,
+        "deleted": 7,
+        "gross": 33
+      },
+      "cumulative": {
+        "added": 26,
+        "deleted": 7,
+        "gross": 33
+      },
+      "previous": {
+        "added": 0,
+        "deleted": 0,
+        "gross": 0
+      },
+      "sha256": "f2418bb9c977ed5bb1dfe992734d04143beef5c76338980b1dcd4b3ffbbfc81d"
+    },
+    {
+      "path": "tests/integration/run_step5_measured_main.py",
+      "step_cap": 20,
+      "cumulative_cap": 67,
+      "step": {
+        "added": 12,
+        "deleted": 3,
+        "gross": 15
+      },
+      "cumulative": {
+        "added": 52,
+        "deleted": 4,
+        "gross": 56
+      },
+      "previous": {
+        "added": 43,
+        "deleted": 4,
+        "gross": 47
+      },
+      "sha256": "bbb3d995206ae500b3255dedc3fb4793dd6708f7330ecc8ed938ae07e40ad4b1"
+    },
+    {
+      "path": "tests/integration/test_step5_measured_main.py",
+      "step_cap": 65,
+      "cumulative_cap": 325,
+      "step": {
+        "added": 61,
+        "deleted": 1,
+        "gross": 62
+      },
+      "cumulative": {
+        "added": 320,
+        "deleted": 0,
+        "gross": 320
+      },
+      "previous": {
+        "added": 260,
+        "deleted": 0,
+        "gross": 260
+      },
+      "sha256": "82042b33eef76e96f0c22fec5f2aeb6a3d286694e72b38b0c9084b833b7a3910"
+    },
+    {
+      "path": "tests/performance/step5_actual06_iteration.py",
+      "step_cap": 14,
+      "cumulative_cap": 14,
+      "step": {
+        "added": 11,
+        "deleted": 3,
+        "gross": 14
+      },
+      "cumulative": {
+        "added": 11,
+        "deleted": 3,
+        "gross": 14
+      },
+      "previous": {
+        "added": 0,
+        "deleted": 0,
+        "gross": 0
+      },
+      "sha256": "bbbcaf459e059bf0a02ee9afcac8d5ecc075d9cdf4dcf84d95466289cc509d24"
+    }
+  ],
+  "step_gross": 124,
+  "step_net": 96,
+  "step_cap": 135,
+  "cumulative_budget_increment": 116,
+  "primary_cap_check": {
+    "allocated_paths": 116,
+    "owners": {
+      "core_source": {
+        "paths": 51,
+        "actual": 4377,
+        "cap": 4404
+      },
+      "pricing": {
+        "paths": 46,
+        "actual": 3955,
+        "cap": 3956
+      },
+      "native": {
+        "paths": 19,
+        "actual": 1350,
+        "cap": 1582
+      }
+    },
+    "source_actual": 9682,
+    "global_actual": 9696,
+    "source_cap": 9942,
+    "global_cap": 10000,
+    "violations": 0,
+    "independent_composed_audit": false,
+    "unchanged_non_superproject_usage_carried_from_accepted_receipt": true
+  },
+  "verified_owner_artifacts": 27,
+  "parsed_owner_suites": {
+    "integration": {
+      "pass": 66,
+      "skip": 6,
+      "exit_code": 0
+    },
+    "ep": {
+      "pass": 30,
+      "skip": 0,
+      "exit_code": 0
+    }
+  },
+  "old_focused_ids_retained": 93,
+  "new_focused_pass_ids": 9,
+  "caller_result": {
+    "observed_from_owner_receipt": true,
+    "rerun_by_primary": false,
+    "historical_counts": [
+      0,
+      3
+    ],
+    "output_bytes_per_case": 7124,
+    "old_outputs_unchanged": true
+  },
+  "primary_rerun": {
+    "command": [
+      "timeout",
+      "60s",
+      "sudo",
+      "-n",
+      "systemd-run",
+      "--scope",
+      "-p",
+      "MemoryMax=30G",
+      "runuser",
+      "-u",
+      "brainpp",
+      "--",
+      "env",
+      "PYTHONPATH=/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream:/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/tests/unit",
+      "PYTHONDONTWRITEBYTECODE=1",
+      "TMPDIR=/data/ycfeng/tmp/d29_ledger_handoff_parent_20261025",
+      "XDG_CACHE_HOME=/data/ycfeng/tmp/d29_ledger_handoff_parent_20261025/cache",
+      "MPLCONFIGDIR=/data/ycfeng/tmp/d29_ledger_handoff_parent_20261025/mpl",
+      "OPENBLAS_NUM_THREADS=1",
+      "OMP_NUM_THREADS=1",
+      "MKL_NUM_THREADS=1",
+      "NUMEXPR_NUM_THREADS=1",
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "-B",
+      "-m",
+      "pytest",
+      "tests/integration/test_step5_measured_main.py::test_real_ep_lane_ledger_releases_rows_and_preserves_bytes",
+      "tests/integration/test_step5_measured_main.py::test_completed_position_ep_ledger_stream_failures",
+      "tests/unit/test_stage_reporting_contract.py",
+      "tests/unit/test_ep_wave_trace_context.py",
+      "tests/unit/test_ep_trace.py",
+      "tests/unit/test_typed_ep_trace_contract.py",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=/data/ycfeng/tmp/d29_ledger_handoff_parent_20261025/pytest",
+      "--junitxml=/data/ycfeng/tmp/d29_ledger_handoff_parent_20261025/pytest.xml"
+    ],
+    "workdir": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+    "start_utc": "2026-10-24T16:51:54.623465+00:00",
+    "end_utc": "2026-10-24T16:51:58.022081+00:00",
+    "exit_code": 0,
+    "configured_memory_max_bytes": 32212254720,
+    "effective_cgroup_peak": "not measured",
+    "source_commit": "dd3b6a69a17365b994a51ea7641197e768c8a237",
+    "expected": "39 PASS, no FAIL/ERROR/SKIP"
+  },
+  "primary_rerun_result": {
+    "pass": 39,
+    "fail": 0,
+    "error": 0,
+    "skip": 0
+  },
+  "metadata_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "metadata_executable": "/usr/bin/python3",
+  "metadata_rlimit_as_bytes": 32212254720,
+  "remaining_gates": [
+    "independent composed audit",
+    "Standards/Spec reviews",
+    "final frozen strict77/full-unit/supplements",
+    "accepted-production integration",
+    "copy/init diagnostic closure",
+    "cohesive current-source timing",
+    "worker/cloud execution readiness",
+    "full6144/1024 CLI <=2400s/mode",
+    "final T2/source/package/native/G3/E2E"
+  ],
+  "shape_invocations": {
+    "used": 6,
+    "ceiling": 6,
+    "added_by_handoff": 0
+  },
+  "oss_quota_basis": "USER_CONFIRMED_SUFFICIENT",
+  "worker_or_fullcli_launched": false
+}

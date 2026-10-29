@@ -1,0 +1,60 @@
+{
+  "task_id": "D29-CLI-TIMEOUT-REPRO",
+  "source": "e41abc073500d61f224eda4fca1123e74e40544d",
+  "output_root": "/data/ycfeng/tmp/d29-parent-position-main07",
+  "status": "FAIL_TIMEOUT_BOTH_MODES",
+  "wrapper_exit_code": 1,
+  "per_mode_timeout_s": 2400,
+  "offline": {
+    "wall_s": 2400.103553172201,
+    "returncode": null,
+    "timed_out": true,
+    "execution_sha256": "0fc917e5fd3c17853ba0d4689c925caabde0312e15567fc03ffb1d884a962a37",
+    "validation_sha256": "08b9b7e9ef2a75a76700f2013e5aca28f6de81bc01871ff95c88fbea06ac8f22",
+    "log_sha256": "12ed9fa4a540afdb84a9f37eb4e07c38b1ded727a6da5cd449daa748af641056",
+    "command_sha256": "3ceefc2fc86790c2874257746d85aca9b41a17845fb3978b2b553db6adaf5011",
+    "scheduler_sha256": "64cebad43a5305fdc45a12ab5885220c79e5957f13168524bda84d59591b2b56"
+  },
+  "online": {
+    "wall_s": 2400.0962530649267,
+    "returncode": null,
+    "timed_out": true,
+    "execution_sha256": "fe21b85a5a26e91b63fa279b1630b8dd7a8698acfba5f15fff89879003b15a59",
+    "validation_sha256": "144c132785affa46a36f0e359cbf2c179c63ecc822ffd7227cfc0975bca920f2",
+    "log_sha256": "7df68eda8bf3510d740ba2721ac7b0446de95c6c0660a1cecd4b120cc4b48a25",
+    "command_sha256": "c52960bf67750432986ef9bb4e3f4879699112133dd7bf7bc945360bf4a72bd3",
+    "scheduler_sha256": "a426f3ef1ac6f6efb3ed409ac2e52080dff23b6cf6a1d4fb40f7ce6efbccf764"
+  },
+  "summary_sha256": "1ba228b86b50437da1c60553a4a2d3770ec897883e35484be0186cfa73753885",
+  "postrun_integrity": {
+    "status": "PASS",
+    "observed_at_utc": "2026-10-23T08:33:05.606777+00:00",
+    "source_tree": "5427b8db2c4a7a30a88c88f88a9c30d0c19a8750",
+    "source_clean": true,
+    "submodule_clean": true,
+    "input_count": 9,
+    "total_input_bytes": 9900444171,
+    "input_hash_receipt_sha256": "b70073bab974bc14f548b893f573a06b6e0175f1067044bb81036b8785ff8f6e",
+    "wall_s": 12.356093783862889,
+    "method": "Stream SHA256 of all nine inputs named by input_hashes.json in 1MiB blocks under a 60s bound;compare each with the launch receipt. Verify frozen Git HEAD, tree, clean status and independent submodule HEAD/status."
+  },
+  "observed_partial_progress": {
+    "both_modes_scheduler_events": {
+      "iteration_start": 2,
+      "grouped_cache_allocation": 1,
+      "decision": 1,
+      "iteration_end": 2,
+      "grouped_cache_batch": 1
+    },
+    "all_scheduler_clusters": "PREFILL",
+    "last_simulation_time_offline": 0.0,
+    "last_simulation_time_online": 0.25,
+    "request_metrics_files": 0,
+    "system_metrics_files": 0,
+    "stage_lane_transfer_ledger_files": 0,
+    "traceback_in_run_logs": false
+  },
+  "inference_limit": "Partial scheduling and missing final files do not locate the dominant CPU operation; real-call-path profiling is required.",
+  "next_action": "CORE owner builds a seconds-scale RED-capable performance loop before any fix or full CLI retry.",
+  "constraints": "Frozen source, old artifacts, workload and timeouts remain unchanged; no GPU operations or target T2 staging."
+}

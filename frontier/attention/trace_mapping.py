@@ -1,11 +1,20 @@
 from __future__ import annotations
 
+import math
+
+from frontier.attention.families import (
+    DENSE_ATTENTION_FAMILY,
+    LATENT_MLA_ATTENTION_FAMILY,
+)
 from frontier.attention.ops import (
     AttentionFamilySpec,
+    AttentionOperatorRole,
     AttentionOperatorSpec,
     ProjectionOwnership,
 )
 from frontier.entities.execution_time import ExecutionTime
+from frontier.entities.time_components import OperatorCost
+from frontier.types import MeasurementType
 
 
 _MODEL_PROJECTION_EXECUTION_TIME_ATTRS = (
@@ -39,6 +48,11 @@ def _get_attention_operator_time(
     ):
         return execution_time.attention_operator_times.get_required_time(operator.name)
     if require_structured:
+        if execution_time.attention_operator_times is None:
+            raise ValueError(
+                "ExecutionTime is missing structured attention operator "
+                f"timing for {operator.name}"
+            )
         return execution_time.attention_operator_times.get_required_time(operator.name)
     attr_name = operator.execution_time_attr
     if not attr_name:
@@ -92,7 +106,7 @@ def _validate_projection_ownership(
 
     overlapping_projection_ops = tuple(
         operator
-        for operator in family.projection_ops()
+        for operator in family.e2e_trace_ops()
         if (
             operator.projection_ownership
             is ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE
@@ -128,28 +142,102 @@ def _validate_projection_ownership(
     )
 
 
+def _measured_attention_roots(
+    execution_time: ExecutionTime,
+    family: AttentionFamilySpec,
+) -> tuple[AttentionOperatorSpec, ...]:
+    timings = execution_time.attention_operator_times
+    if timings is None:
+        return ()
+    roots = tuple(operator for operator in family.operators
+                  if operator.is_inclusive_root and operator.name in timings.op_times)
+    if not roots:
+        return ()
+    if len(roots) != 1 or set(timings.op_times) != {roots[0].name}:
+        raise ValueError(f"Inclusive attention root must be the only physical scope for {family.family_id}")
+    root = roots[0]
+    cost = timings.costs.get(root.name)
+    if not isinstance(cost, OperatorCost):
+        raise ValueError(f"Inclusive attention root {root.name} requires OperatorCost")
+    if (not math.isfinite(cost.duration_ms) or cost.duration_ms < 0
+            or cost.duration_ms != timings.op_times[root.name]
+            or not math.isfinite(cost.kernel_count) or cost.kernel_count < 0
+            or cost.duration_ms > 0 and cost.kernel_count == 0
+            or not isinstance(cost.measurement_type, MeasurementType)):
+        raise ValueError(f"Invalid measured attention root cost for {root.name}")
+    if set(timings.costs) != {root.name}:
+        raise ValueError(f"Inclusive attention root {root.name} has unrelated physical costs")
+    return roots
+
+
 def get_attention_trace_op_times(
     execution_time: ExecutionTime,
     family: AttentionFamilySpec,
     *,
     per_layer_count: int | None = None,
     skip_zero: bool = True,
+    allow_structural: bool = False,
 ) -> tuple[tuple[AttentionOperatorSpec, float], ...]:
-    """Return family-ordered E2E trace timings for attention physical ops."""
-    family.require_enabled_for_execution()
+    """Return physical timings in family order or explicit structural scope order."""
+    family.require_enabled_for_execution(structural=allow_structural)
     if per_layer_count is not None and per_layer_count <= 0:
         raise ValueError(f"per_layer_count must be positive: {per_layer_count}")
     _validate_projection_ownership(execution_time, family)
 
-    require_structured = (
+    measured_roots = _measured_attention_roots(execution_time, family)
+    inclusive_scopes = bool(measured_roots) or any(
+        operator.role in (AttentionOperatorRole.INDEXING, AttentionOperatorRole.ATTENTION)
+        for operator in family.e2e_trace_ops()
+    )
+    if inclusive_scopes and execution_time.attention_operator_times is not None:
+        allowed_names = {operator.name for operator in (*family.e2e_trace_ops(), *measured_roots)}
+        unknown_names = set(execution_time.attention_operator_times.op_times).difference(
+            allowed_names
+        )
+        if unknown_names:
+            raise ValueError(
+                f"Unexpected attention timing for inclusive family {family.family_id}: "
+                f"{sorted(unknown_names)}"
+            )
+    if inclusive_scopes:
+        component = execution_time.attention_time_component
+        child_attrs = {
+            operator.execution_time_attr
+            for child_family in (DENSE_ATTENTION_FAMILY, LATENT_MLA_ATTENTION_FAMILY)
+            for operator in child_family.e2e_trace_ops()
+            if operator.execution_time_attr is not None
+        }
+        if measured_roots:
+            child_attrs.update(_MODEL_PROJECTION_EXECUTION_TIME_ATTRS)
+            child_attrs.add("attention_rope_execution_time")
+        nonzero_child_attrs = sorted(
+            attr for attr in child_attrs if getattr(component, attr) != 0.0
+        )
+        if nonzero_child_attrs:
+            raise ValueError(
+                f"Inclusive attention family {family.family_id} also charges "
+                f"dense/MLA child scopes: {nonzero_child_attrs}"
+            )
+
+    require_structured = inclusive_scopes or (
         execution_time.attention_operator_times is not None
         and any(
             operator.name in execution_time.attention_operator_times.op_times
             for operator in family.e2e_trace_ops()
         )
     )
+    operators = measured_roots or family.e2e_trace_ops()
+    if family.structural_execution_enabled and execution_time.attention_operator_times is not None:
+        by_name = {operator.name: operator for operator in operators}
+        names = tuple(execution_time.attention_operator_times.op_times)
+        unknown = set(names) - by_name.keys()
+        if unknown:
+            raise ValueError(f"Unexpected attention timing for {family.family_id}: {sorted(unknown)}")
+        operators = tuple(by_name[name] for name in names) + tuple(
+            operator for operator in operators if operator.name not in names
+        )
     op_times: list[tuple[AttentionOperatorSpec, float]] = []
-    for operator in family.e2e_trace_ops():
+    for operator in operators:
         duration_ms = _get_attention_operator_time(
             execution_time,
             operator,

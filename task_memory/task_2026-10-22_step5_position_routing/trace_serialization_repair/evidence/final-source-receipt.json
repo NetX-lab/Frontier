@@ -1,0 +1,23 @@
+{
+  "task_id": "D29-TRACE-SERIALIZATION-REPAIR",
+  "code_commit": "390bb5a24166ef68bc67a79c9c0d3e99508391e9",
+  "parent_commit": "767da5437609301a6183dbfdcfd87b2402a32007",
+  "source_path": "/data/ycfeng/Frontier/.worktrees/step5-d29-trace-serialization/frontier/metrics/trace_store.py",
+  "committed_blob_sha256": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+  "changed_source_paths": [
+    "frontier/metrics/trace_store.py"
+  ],
+  "gross": 14,
+  "committed_source_matches_verified_source": true,
+  "selected_evidence_hashes_verified": 12,
+  "working_tree_clean_at_code_boundary": true,
+  "gitlink": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "whitespace_check": "PASS",
+  "pending_parent_gates": [
+    "independent review",
+    "final union freeze/accounting",
+    "strict77/full-unit",
+    "full CLI",
+    "workflow/native acceptance"
+  ]
+}

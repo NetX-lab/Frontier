@@ -1,0 +1,15 @@
+{
+  "utc": "2026-10-21T12:26:37.397751+00:00",
+  "name": "exp-1021-201658-886733",
+  "phase": "Succeeded",
+  "creator": "i-fengyicheng",
+  "preemptible": "yes",
+  "group": "step_main",
+  "gpus": 1,
+  "mounts": {
+    "default": "100.96.128.195:/data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01:/data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01"
+  },
+  "images": [
+    "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20"
+  ]
+}

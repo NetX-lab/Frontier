@@ -1,0 +1,24 @@
+{
+  "decision_id": "D29-PLAN-KEY-REUSE",
+  "authority": "D29-REPAIR-PATH-AUTHORITY within existing owner/global caps",
+  "apply_after": "run_input_snapshot_scope_amendment.json",
+  "effective_unique_paths": 114,
+  "owner_gross_ceilings": {"core_source": 4404, "pricing": 3956, "native": 1582},
+  "step_base": "db581ff6ad43e1ce57361ed00fc4be0256e85a45",
+  "repair_delta_ceiling": 17,
+  "source_delta_ceiling": 6,
+  "test_delta_ceiling": 11,
+  "retained_growth_ceiling": 15,
+  "repair_paths": ["frontier/cc_backend/collective_plan.py", "tests/unit/test_step5_moe_pricing.py"],
+  "path_step_ceilings": {"frontier/cc_backend/collective_plan.py": 6, "tests/unit/test_step5_moe_pricing.py": 11},
+  "path_ceiling_adjustments": [
+    {"path": "frontier/cc_backend/collective_plan.py", "before": 136, "delta": 4, "after": 140},
+    {"path": "tests/unit/test_step5_moe_pricing.py", "before": 300, "delta": 11, "after": 311},
+    {"path": "frontier/cc_backend/backends/collective_sim_cc_backend.py", "before": 99, "delta": -6, "after": 93},
+    {"path": "frontier/cc_backend/base_cc_backend.py", "before": 16, "delta": -2, "after": 14},
+    {"path": "tests/unit/test_collective_sim_cc_backend.py", "before": 243, "delta": -7, "after": 236}
+  ],
+  "reason": "The completed snapshot uses PRICING3940/3956 and its reviewed source is committed. Git confirms plan136/test300 and donor backend93/base14/backendtest236. Transfer15 unused PRICING allowance lines only after snapshot completion; preserve the remaining one-line allocation for the unchanged contract-reuse test. Existing preparation already retains complete plans. Retain only each plan's successfully encoded full canonical cache-key string; measured pricing and emission controls remove repeated encoding without changing values or live numerical/proof work.",
+  "acceptance": "Behavioral RED/GREEN through the existing plan interface; exact canonical key and public dictionary isolation; current caller-sequence and replacement checks; constructor-accepted bytes/bytearray key errors repeat without publishing a cached result. Rebase the actual208-event pricing/emission/JSONL/ledger/snapshot/error-prefix replay onto real run-fixed input source, with numerical288/proofs144/collective64 work unchanged. Both review axes and parent verification precede integration; final114-path union and full workflow remain separate.",
+  "limits": "Only the existing cache_key method and existing tests may change. No new import/helper/API, plan-object cache, to_dict conversion, deepcopy protocol, private encoder, numerical/proof cache, admission reduction, native backend numerical cache-key change, donor code edit or extra path. Do not compress code to meet an estimate; return for primary reconciliation if necessary. Source9942/global10000,6144/1024 workload and2400s cap remain unchanged."
+}

@@ -1,0 +1,111 @@
+{
+  "status": "PASS_ALL_THREE_CPU_SHAPES",
+  "original_invocations": 3,
+  "supplemental_invocations": 3,
+  "total_ceiling": 6,
+  "remaining": 0,
+  "cases": [
+    {
+      "case": "prefill6128",
+      "status": "PASS_CPU_FIXTURE_PRODUCTION_SHAPE",
+      "events": 208,
+      "ledger_lanes": 16,
+      "whole_jsonl": {
+        "bytes": 2904335,
+        "sha256": "a00b81e4d47f4d700853fef9c850ffa7e7a2a8ea9c75b2bd670bcddab0d673da"
+      },
+      "waves": [
+        {
+          "layer": 60,
+          "events": 208,
+          "live_calls": {
+            "_get_on_demand_prediction": 288,
+            "_predict_step5_ffn_operator": 144,
+            "_step5_position_queries": 16,
+            "predict_collective_plan": 64
+          },
+          "logical_rows": 6128,
+          "physical_rows": 6129,
+          "input_quantize_emitted": true
+        }
+      ]
+    },
+    {
+      "case": "first_decode16",
+      "status": "PASS_CPU_FIXTURE_PRODUCTION_SHAPE",
+      "events": 208,
+      "ledger_lanes": 16,
+      "whole_jsonl": {
+        "bytes": 2897050,
+        "sha256": "b6669453ff5817d361fd17cb4e90d2ef391801eebb4077de271f2fdc0da8a11e"
+      },
+      "waves": [
+        {
+          "layer": 60,
+          "events": 208,
+          "live_calls": {
+            "_get_on_demand_prediction": 288,
+            "_predict_step5_ffn_operator": 144,
+            "_step5_position_queries": 16,
+            "predict_collective_plan": 64
+          },
+          "logical_rows": 16,
+          "physical_rows": 32,
+          "input_quantize_emitted": true
+        }
+      ]
+    },
+    {
+      "case": "bf16",
+      "status": "PASS_CPU_FIXTURE_PRODUCTION_SHAPE",
+      "events": 576,
+      "ledger_lanes": 48,
+      "whole_jsonl": {
+        "bytes": 7913396,
+        "sha256": "7b0a0c65a434ac5f15ccb0c693252c0a78ec2161d655137ea7ad60a94c186c3c"
+      },
+      "waves": [
+        {
+          "layer": 88,
+          "events": 192,
+          "live_calls": {
+            "_get_on_demand_prediction": 256,
+            "_predict_step5_ffn_operator": 128,
+            "_step5_position_queries": 16,
+            "predict_collective_plan": 64
+          },
+          "logical_rows": 1,
+          "physical_rows": 2,
+          "input_quantize_emitted": false
+        },
+        {
+          "layer": 89,
+          "events": 192,
+          "live_calls": {
+            "_get_on_demand_prediction": 256,
+            "_predict_step5_ffn_operator": 128,
+            "_step5_position_queries": 16,
+            "predict_collective_plan": 64
+          },
+          "logical_rows": 1,
+          "physical_rows": 2,
+          "input_quantize_emitted": false
+        },
+        {
+          "layer": 90,
+          "events": 192,
+          "live_calls": {
+            "_get_on_demand_prediction": 256,
+            "_predict_step5_ffn_operator": 128,
+            "_step5_position_queries": 16,
+            "predict_collective_plan": 64
+          },
+          "logical_rows": 1,
+          "physical_rows": 2,
+          "input_quantize_emitted": false
+        }
+      ]
+    }
+  ],
+  "scope": "Frozen dbe19f53 cached CPU fixture,not native/fullCLI;only layer60 forP/D16,88-90 forBF16."
+}

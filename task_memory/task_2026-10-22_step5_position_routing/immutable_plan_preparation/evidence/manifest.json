@@ -1,0 +1,35 @@
+{
+  "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+  "session_id": "ses_e963098ecffebqCOtdysKGY6Xe",
+  "records_base": "276e6520d29f5fce753da6af6830347e10d9b3f6",
+  "final_verification_command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_immutable_plan_preparation/verify.py > /data/ycfeng/tmp/d29_immutable_plan_preparation/verify-final.log 2>&1",
+  "final_verification_exit": 0,
+  "progress_checkpoint": {
+    "phase": "pre-commit checkpoint",
+    "RED": "PASS",
+    "immutability_constructor_diagnosis": "PASS",
+    "paired_controls_full_output": "PASS",
+    "live_replacements": "PASS",
+    "record_report": "PASS",
+    "records_commit": "TODO",
+    "drift": "CLEAR D1-D7; no S1-S6 defect; Branch A",
+    "next": "Commit only immutable_plan_preparation report/evidence; no code allocation; rebase/verify after snapshot"
+  },
+  "sha256": {
+    "test_report_2026-10-24_immutable_plan_preparation.md": "ba6ba4ed565402d39352b8c6b475246448436b577a648fb8d0b8130966d6636f",
+    "evidence/probe.py": "22fa85a44628699f9faae53f8eefaf409db1e2a844bc54b76112bce007084b69",
+    "evidence/compare.py": "a2518a1fcc8ed907633353f6db0f0ad9f0b928b40eaba30e07465fa84ea185b7",
+    "evidence/live_checks.py": "1088d6bce295253a0549dc068181b5333087acc4ed4a5778868f5fd6762b2c38",
+    "evidence/verify.py": "fc3d9a6085c94d76fbecd506cdf6003852562ac1a0cda55c9010d62638d1c0f1",
+    "evidence/evidence.json": "b115039ec2f14af10709412fe26a8ba74879a3e7274d1591eb4609e382706070",
+    "evidence/red-executed.log": "3a22492e67d320af1838949ca25c99e9b8b6292a7899340d9fcc539a43831fdf",
+    "evidence/current-a3.log": "f986f1f1ad96065dd21f49138a34eb6a306b75488609e8b4c065e3cbd4f8d3ac",
+    "evidence/key-a.log": "69f39cdda7251ce7ff1b876036875d93aaf93b4e80864682ad6a614619d1cda0",
+    "evidence/current-b.log": "87b4bc66cfa09734c7257099524ee3199b9f3705d81a6e96c9820eb86091cd47",
+    "evidence/key-b.log": "e455f3d43504ae461d4a1cca6df4eec0e30b470dfabb2ac8bad0db1486819aff",
+    "evidence/live-current4.log": "1012898eb942a02a81e1e4deabd2d32f2fce1c9d305951c89ff1243b30ed4934",
+    "evidence/live-key.log": "b2727fda4fc0757c83405bc0ef98d9fd53be8c7839b6e492f6db31e4fb535dc4",
+    "evidence/verify-final.log": "ed6731dfc394b0768ad0a4209317156921fed24606e2369fc540b11a1cd8e923",
+    "evidence/selected_profiles.json": "b1706709d68eb3e0c81a6e7e7a6389b3500250e29d208ef22155a4bbeabe699d"
+  }
+}

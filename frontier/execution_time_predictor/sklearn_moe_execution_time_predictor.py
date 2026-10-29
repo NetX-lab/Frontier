@@ -1,9 +1,14 @@
 import math
+import json
 from collections import OrderedDict
+from contextlib import contextmanager
 from dataclasses import replace
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
-from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.families import DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY, STEP5_ATTENTION_FAMILY
+from frontier.attention.model_binding import bind_layer_attention
+from frontier.execution_time_predictor.step5_cost import step5_layer_metadata, step5_operator_binding
+from frontier.execution_time_predictor.prediction_model_registry import PredictionModelRegistry
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
@@ -13,6 +18,7 @@ from frontier.entities.time_components import (
     AttentionTime,
     CommunicationOperatorTimes,
     MLPOperatorTimes,
+    MoEOperatorTimes,
     MoETime,
 )
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
@@ -23,11 +29,13 @@ from frontier.model_architectures import ResidualAddPolicy
 from frontier.moe_routing_runtime import (
     resolve_moe_gating_routing_runtime_path,
 )
+from frontier.moe_routing_policy import resolve_routing_count_policy, validate_position_routing_scope
 from frontier.moe_ep_workload import (
     EPLaneWorkload,
 )
 from frontier.operators.families import (
     get_comm_operator,
+    get_operator_family,
 )
 
 if TYPE_CHECKING:
@@ -42,12 +50,18 @@ from frontier.config import (
 from frontier.config.parallel_semantics import (
     resolve_shared_expert_tensor_parallel_size,
 )
-from frontier.types import ClusterType
+from frontier.types import ClusterType, MeasurementType
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
 
 logger = init_logger(__name__)
+
+_STEP5_FFN_OPERATORS = frozenset(
+    operator.profiling_name()
+    for family_id in ("ffn", "share_expert", "moe", "step5_ffn")
+    for operator in get_operator_family(family_id).profiling_ops()
+) | {"input_layernorm", "post_attention_layernorm"}
 
 
 from frontier.execution_time_predictor.moe_dataset_training import (
@@ -75,6 +89,194 @@ class SklearnMoEExecutionTimePredictor(
     # replica/layer/token shape is revisited across EP waves, while a
     # long-lived predictor must not retain an unbounded request history.
     _LAYER_WORKLOAD_CACHE_CAPACITY = 256
+
+    @contextmanager
+    def _step5_measured_layer(self, layer_id):
+        previous = getattr(self, "_step5_layer_metadata", None)
+        previous_costs = getattr(self, "_step5_ffn_costs", None)
+        metadata = None
+        if not self._enable_dummy_mode and bind_layer_attention(self._model_config, layer_id).family_id == STEP5_ATTENTION_FAMILY.family_id:
+            metadata = step5_layer_metadata(self, layer_id)
+        self._step5_layer_metadata = metadata
+        self._step5_ffn_costs = {}
+        try:
+            yield metadata
+        finally:
+            self._step5_layer_metadata = previous
+            self._step5_ffn_costs = previous_costs
+
+    def _step5_ffn_model(self, model_name, *, context=None):
+        metadata = self._step5_layer_metadata
+        if metadata is None:
+            raise ValueError("Step measured FFN coverage requires an explicit physical layer context")
+        from frontier.moe_gating_runtime import get_moe_gating_base_model_name
+        base_name = get_moe_gating_base_model_name(model_name)
+        precision, identity = step5_operator_binding(self, metadata, base_name, context=context)
+        family = self._measurement_family_name(self._active_measurement_type)
+        selector = None
+        if (context is not None and context.get("model_architecture_profile") == "step5"
+                and context.get("routing_runtime_path") == "position_cyclic"):
+            selector = dict(native_context=context)
+            if "native_facts" in context:
+                from frontier.moe_load_imbalance import moe_native_binding_context
+                group = self._step5_routed_layer_group(metadata.attention_spec.global_layer_id)
+                selector.update(native_source=context["native_facts"]["shared"],
+                    selected_native_metadata=dict(moe_layer_ids=group.row_metadata()["moe_layer_ids"],
+                        native_binding=moe_native_binding_context(context)))
+        model = self._model_manager._get_family_model(
+            family, model_name, precision_key=precision.name,
+            requested_identity=identity,
+            native_binding=selector,
+        )
+        if model is None:
+            raise ValueError(f"Step measured {model_name} {precision.name} layer {metadata.attention_spec.global_layer_id} coverage is unavailable")
+        return model, precision
+
+    def _predict_step5_ffn_operator(self, model_name, features, *, context=None):
+        model, precision = self._step5_ffn_model(model_name, context=context)
+        metadata = self._step5_layer_metadata
+        from frontier.moe_gating_runtime import get_moe_gating_base_model_name
+        base_name = get_moe_gating_base_model_name(model_name)
+        names = tuple(model._frontier_feature_names)
+        exact = model._frontier_exact_lookup
+        if not exact:
+            raise ValueError(f"Step measured {model_name} has no physical feature coverage")
+        bounds = getattr(model, "_frontier_feature_bounds", None)
+        if bounds is None:
+            bounds = {name: (min(key[i] for key in exact), max(key[i] for key in exact))
+                      for i, name in enumerate(names)}
+            model._frontier_feature_bounds = bounds
+        count_model = getattr(model, "_frontier_kernel_count_model", None)
+        from frontier.operators.families import is_step5_position_context
+        position_scope = is_step5_position_context(context) or getattr(self,"_moe_gating_routing_runtime_path",None) == "position_cyclic"
+        if position_scope:
+            if context is not None:
+                from frontier.moe_load_imbalance import moe_native_binding_context
+                selected_binding = PredictionModelRegistry._native_measurement_binding(
+                    PredictionModelRegistry._measurement_identity(model))
+                if selected_binding["native_context"] != moe_native_binding_context(context):
+                    raise ValueError("Step selected model native context differs from the actual bound context")
+                if "native_facts" in context and selected_binding.get("native_source") != context["native_facts"]["shared"]:
+                    raise ValueError("Step selected model installed source differs from the actual bound context")
+            key = tuple(float(features[name]) for name in names)
+            if count_model is None or tuple(count_model._frontier_feature_names) != names or set(count_model._frontier_exact_lookup) != set(exact):
+                raise ValueError("Step physical duration/count exact feature keys differ")
+            if key not in exact:
+                raise ValueError("Step physical scope requires an exact measured duration/count key, including empty scopes")
+            if model._frontier_target_col != f"time_stats.{base_name}.median" or count_model._frontier_target_col != f"time_stats.{base_name}.kernel_count":
+                raise ValueError("Step physical duration/count targets differ from the selected scope")
+        if count_model is not None and model._frontier_measurement_identity != count_model._frontier_measurement_identity:
+            raise ValueError("Step duration and kernel-count measurement identities differ")
+        if self._active_measurement_type is MeasurementType.KERNEL_ONLY:
+            if self._kernel_gap_ms is None:
+                raise ValueError("Step GPU-active FFN requires measured kernel_gap.csv coverage")
+            if count_model is None:
+                raise ValueError(f"Step {model_name} requires actual per-operator kernel-count coverage")
+        alias = f"{model_name}:{model._frontier_model_hash}"
+        predictions = self._predictions
+        self._predictions = dict(predictions)
+        self._predictions[alias] = {
+            "_on_demand_prediction": True, "_model": model, "_feature_names": names,
+            "_feature_bounds": bounds, "_exact_lookup": exact,
+        }
+        try:
+            value = super()._get_on_demand_prediction(alias, features)
+            count = None
+            if count_model is not None:
+                count_alias = f"{alias}_kernel_count"
+                self._predictions[count_alias] = {
+                    "_on_demand_prediction": True, "_model": count_model,
+                    "_feature_names": names, "_feature_bounds": bounds,
+                    "_exact_lookup": count_model._frontier_exact_lookup,
+                }
+                count = super()._get_on_demand_prediction(count_alias, features)
+                if not math.isfinite(count) or count <= 0:
+                    raise ValueError(f"Step {model_name} has invalid measured kernel-count coverage")
+        finally:
+            self._predictions = predictions
+        if position_scope and (not math.isfinite(value) or value <= 0 or count is None or count != int(count)):
+            raise ValueError("Step physical scope requires a positive duration and integral actual kernel count")
+        self._step5_ffn_costs[model_name] = dict(
+            duration_ms=value, kernel_count=count, precision=precision.name,
+            measurement_type=self._active_measurement_type.value,
+            global_layer_id=metadata.attention_spec.global_layer_id,
+            duration_model_hash=model._frontier_model_hash,
+            kernel_count_model_hash=None if count_model is None else count_model._frontier_model_hash,
+            evidence_kind=PredictionModelRegistry._measurement_identity(model).get("evidence_kind"),
+            exact_lookup=tuple(float(features[name]) for name in names) in exact,
+        )
+        return value
+
+    def _get_prediction_for_features(self, model_name, features, *, feature_names=None, context=None):
+        if context is not None:
+            from frontier.operators.families import get_moe_profiling_operators
+            from frontier.moe_gating_runtime import get_moe_gating_base_model_name
+            if get_moe_gating_base_model_name(model_name) not in {op.profiling_name() for op in get_moe_profiling_operators(context)}:
+                raise ValueError("MoE query is not an applicable selected physical scope")
+            return self._predict_step5_ffn_operator(model_name, features, context=context)
+        if getattr(self, "_step5_layer_metadata", None) is not None and model_name in _STEP5_FFN_OPERATORS:
+            return self._predict_step5_ffn_operator(model_name, features)
+        return super()._get_prediction_for_features(model_name, features, feature_names=feature_names)
+
+    def _get_on_demand_prediction(self, model_name, features, *, context=None):
+        if context is not None:
+            return self._get_prediction_for_features(model_name, features, context=context)
+        if getattr(self, "_step5_layer_metadata", None) is not None and model_name in _STEP5_FFN_OPERATORS:
+            return self._predict_step5_ffn_operator(model_name, features)
+        return super()._get_on_demand_prediction(model_name, features)
+
+    def _predict_step5_position_execution(self, batch, lane, *, layer_id, include_attention, include_stage_owned, pipeline_stage):
+        """Price one source owner and one gathered expert cell with retained measured facts."""
+        context,features,plans = self._step5_position_queries(lane)
+        operators,communication = self._predict_step5_position_operator_times(lane,context=context,
+            operator_features=features,collective_plans=plans)
+        local = lane.routing_source.source_lanes[lane.ep_id//self._replica_config.attn_tensor_parallel_size]
+        names = ["post_attention_layernorm","step5_ffn_merge"]
+        if self._model_config.supports_share_expert(): names += ["share_expert_up_proj","share_expert_act","share_expert_down_proj"]
+        times = {name:self._get_prediction_for_features(name,{"num_tokens":local.physical_rows}) for name in names}
+        operators = MoEOperatorTimes({**operators.op_times,**times},physical_frame={**operators.physical_frame,
+            "operator_costs":{**operators.physical_frame["operator_costs"],**self._step5_ffn_costs}})
+        attention = self._predict_attention_layer_time(batch,layer_id,self._cluster_type) if include_attention else AttentionTime()
+        comm = dict(communication.op_times)
+        if include_attention:
+            comm["attn_tensor_parallel_allreduce"] = self._predict_comm_operator(get_comm_operator("attn_tensor_parallel_allreduce"),batch)
+        overhead = {name:getattr(self,"_get_"+name)(batch,pipeline_stage) for name in (
+            "schedule_time","sampler_e2e_time","prepare_inputs_e2e_time","process_model_outputs_time",
+            "ray_comm_time","forward_launch_time","forward_drain_time")} if include_stage_owned else {}
+        return ExecutionTime(num_layers_per_pipeline_stage=1,is_moe=True,
+            attention_rope_execution_time=0.,attention_kv_cache_save_execution_time=0.,attention_decode_execution_time=0.,
+            attention_prefill_execution_time=0.,attention_layer_pre_proj_execution_time=0.,attention_layer_post_proj_execution_time=0.,
+            attn_norm_time=0.,mlp_norm_time=times["post_attention_layernorm"],add_time=0.,
+            tensor_parallel_communication_time=0.,pipeline_parallel_communication_time=0.,expert_parallel_communication_time=0.,
+            moe_gating_time=0.,moe_shuffling_time=0.,**({name:0. for name in ("schedule_time","sampler_e2e_time",
+                "prepare_inputs_e2e_time","process_model_outputs_time","ray_comm_time")} if not include_stage_owned else {}),
+            attention_operator_times=attention.operator_times,moe_operator_times=operators,
+            communication_operator_times=CommunicationOperatorTimes(comm,plans=communication.plans,costs=communication.costs),
+            **overhead)
+
+    def _predict_dsv4_dummy_source_execution(
+        self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
+    ) -> dict:
+        """Query partial source-rank components without admitting V4 serving."""
+        if not self._enable_dummy_mode:
+            raise NotImplementedError("V4 source components require synthetic dummy timing")
+        from frontier.execution_time_predictor.deepseek_v4 import predict_source_execution
+
+        return predict_source_execution(
+            self, batch, layer_id, tp_rank, **source_context,
+        )
+
+    def _predict_dsv4_dummy_structural_execution(
+        self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
+    ) -> ExecutionTime:
+        """Query explicit synthetic V4 timing without enabling measured serving."""
+        if not self._enable_dummy_mode:
+            raise NotImplementedError("V4 structural execution requires synthetic dummy timing")
+        from frontier.execution_time_predictor.deepseek_v4 import predict_structural_execution
+
+        return predict_structural_execution(
+            self, batch, layer_id, tp_rank, **source_context,
+        )
 
 
     @staticmethod
@@ -133,6 +335,7 @@ class SklearnMoEExecutionTimePredictor(
         include_moe: Optional[bool] = None,
         lane_workload: Optional[EPLaneWorkload] = None,
         include_stage_owned: bool = True,
+        layer_id: int = 0,
     ) -> ExecutionTime:
         """Return fixed dummy ExecutionTime object with MoE-aware fields."""
         if type(include_attention) is not bool:
@@ -144,6 +347,13 @@ class SklearnMoEExecutionTimePredictor(
         if not include_ffn and include_moe is True:
             raise ValueError("include_moe cannot be true when include_ffn is false")
         base_time = self._dummy_execution_time
+        physical_attention = None
+        attention_family_id = bind_layer_attention(self._model_config, layer_id).family_id
+        step5_layer = attention_family_id == STEP5_ATTENTION_FAMILY.family_id
+        if include_attention and attention_family_id == DSA_ATTENTION_FAMILY.family_id:
+            physical_attention = self._predict_dsa_dummy_attention_time(layer_id)
+        elif include_attention and step5_layer:
+            physical_attention = self._predict_step5_dummy_attention_time(batch, layer_id)
         model_is_moe = bool(getattr(self._model_config, "is_moe", False))
         is_moe = include_ffn and (
             model_is_moe if include_moe is None else include_moe
@@ -219,6 +429,8 @@ class SklearnMoEExecutionTimePredictor(
             add_ffn_residual_time = base_time
             add_time = 0.0
 
+        if step5_layer and self._model_config.uses_fused_add_norm:
+            add_time = add_attn_residual_time = add_ffn_residual_time = 0.0
         share_expert_time = base_time if share_expert_enabled else 0.0
         pp_stage_boundary_handoff_time = (
             base_time
@@ -227,11 +439,20 @@ class SklearnMoEExecutionTimePredictor(
         )
 
         if is_moe:
+            moe_communication_operator_times = {
+                "expert_parallel_alltoall_dispatch": expert_parallel_phase_time,
+                "expert_parallel_alltoall_combine": expert_parallel_phase_time,
+            }
+            if step5_layer:
+                if include_attention:
+                    moe_communication_operator_times["attn_tensor_parallel_allreduce"] = (
+                        attn_tp_allreduce_time
+                    )
+                moe_communication_operator_times["moe_tensor_parallel_allreduce"] = (
+                    ffn_tp_allreduce_time
+                )
             communication_operator_times = CommunicationOperatorTimes(
-                {
-                    "expert_parallel_alltoall_dispatch": expert_parallel_phase_time,
-                    "expert_parallel_alltoall_combine": expert_parallel_phase_time,
-                }
+                moe_communication_operator_times
             )
             mlp_operator_times = None
             moe_operator_times = _build_moe_operator_times(
@@ -279,21 +500,27 @@ class SklearnMoEExecutionTimePredictor(
             mlp_operator_times = None
             moe_operator_times = None
 
+        if step5_layer and is_moe:
+            moe_operator_times = MoEOperatorTimes({
+                **moe_operator_times.op_times, "step5_ffn_merge": base_time,
+            })
         return ExecutionTime(
             num_layers_per_pipeline_stage=1,
-            attention_rope_execution_time=(base_time if include_attention else 0.0),
+            attention_rope_execution_time=(base_time if include_attention and not step5_layer else 0.0),
             attention_kv_cache_save_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and physical_attention is None else 0.0
             ),
-            attention_decode_execution_time=(base_time if include_attention else 0.0),
+            attention_decode_execution_time=(
+                base_time if include_attention and physical_attention is None else 0.0
+            ),
             attention_prefill_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and physical_attention is None else 0.0
             ),
             attention_layer_pre_proj_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and not step5_layer else 0.0
             ),
             attention_layer_post_proj_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and not step5_layer else 0.0
             ),
             attn_norm_time=base_time if include_attention else 0.0,
             mlp_norm_time=base_time if include_ffn else 0.0,
@@ -303,7 +530,7 @@ class SklearnMoEExecutionTimePredictor(
             tensor_parallel_communication_time=attn_tp_allreduce_time,
             attn_tensor_parallel_allreduce_time=attn_tp_allreduce_time,
             moe_tensor_parallel_allreduce_time=ffn_tp_allreduce_time,
-            pipeline_parallel_communication_time=base_time if include_stage_owned else 0.0,
+            pipeline_parallel_communication_time=(base_time if include_stage_owned and not step5_layer else 0.0),
             expert_parallel_communication_time=expert_parallel_comm_time,
             moe_gating_time=base_time if is_moe else 0.0,
             moe_shuffling_time=(
@@ -336,6 +563,9 @@ class SklearnMoEExecutionTimePredictor(
             communication_operator_times=communication_operator_times,
             mlp_operator_times=mlp_operator_times,
             moe_operator_times=moe_operator_times,
+            attention_operator_times=(
+                physical_attention.operator_times if physical_attention is not None else None
+            ),
         )
 
     def __init__(
@@ -365,24 +595,18 @@ class SklearnMoEExecutionTimePredictor(
         self._moe_routing_distribution_type = str(
             getattr(replica_config, "moe_routing_distribution_type", "balanced")
         ).strip().lower()
-        valid_distribution_types = {"balanced", "random", "skewed", "zipf"}
-        if self._moe_routing_distribution_type not in valid_distribution_types:
-            raise ValueError(
-                "moe_routing_distribution_type must be one of "
-                f"{sorted(valid_distribution_types)}, got "
-                f"{self._moe_routing_distribution_type!r}"
-            )
+        policy = resolve_routing_count_policy(self._moe_routing_distribution_type)
+        if policy.requires_source:
+            validate_position_routing_scope(replica_config, cluster_type)
+            if model_manager is not None and cc_backend is not None:
+                cc_backend.bind_collective_profile_inputs(model_manager.collective_profile_inputs)
         self._moe_routing_seed = getattr(replica_config, "moe_routing_seed", 42)
         if type(self._moe_routing_seed) is not int or self._moe_routing_seed < 0:
             raise ValueError(
                 "moe_routing_seed must be an exact non-negative int, "
                 f"got {self._moe_routing_seed}."
             )
-        self._moe_gating_routing_runtime_path = (
-            resolve_moe_gating_routing_runtime_path(
-                self._moe_routing_distribution_type
-            )
-        )
+        self._moe_gating_routing_runtime_path = policy.runtime_path
 
         super().__init__(
             predictor_config,
@@ -436,6 +660,8 @@ class SklearnMoEExecutionTimePredictor(
             )
         spec = self._model_config.get_layer_attention_spec(layer_id)
         key = (spec.family_id, spec.variant_id)
+        if not self._enable_dummy_mode and spec.family_id == STEP5_ATTENTION_FAMILY.family_id:
+            key = (*key, layer_id)
         cached = cache.get(key)
         if cached is not None:
             self._attention_query_cache_hits += 1
@@ -460,10 +686,26 @@ class SklearnMoEExecutionTimePredictor(
             )
         operator_times = value.operator_times
         if operator_times is not None:
-            operator_times = type(operator_times)(dict(operator_times.op_times))
+            operator_times = replace(operator_times, op_times=dict(operator_times.op_times),
+                                     costs=dict(operator_times.costs), diagnostics=dict(operator_times.diagnostics))
         return replace(value, operator_times=operator_times)
 
     def _get_execution_time_internal(
+        self, batch, pipeline_stage, moe_tokens_input=None, lane_workload=None,
+        include_moe=True, include_ffn=True, include_attention=True, layer_id=0,
+        attention_query_cache=None, include_stage_owned=True, stage_num_layers=1,
+    ):
+        with self._step5_measured_layer(layer_id) as metadata:
+            result = self._get_layer_execution_time(
+                batch, pipeline_stage, moe_tokens_input, lane_workload, include_moe,
+                include_ffn, include_attention, layer_id, attention_query_cache,
+                include_stage_owned, stage_num_layers,
+            )
+            if metadata is not None:
+                result._step5_ffn_operator_costs = dict(self._step5_ffn_costs)
+            return result
+
+    def _get_layer_execution_time(
         self,
         batch: Batch,
         pipeline_stage: int,
@@ -520,6 +762,9 @@ class SklearnMoEExecutionTimePredictor(
             lane_workload=lane_workload,
             include_moe=include_moe,
         )
+        if include_ffn and include_moe and lane_workload is not None and lane_workload.routing_source is not None:
+            return self._predict_step5_position_execution(batch,lane_workload,layer_id=layer_id,
+                include_attention=include_attention,include_stage_owned=include_stage_owned,pipeline_stage=pipeline_stage)
 
         attention_time = (
             self._predict_attention_layer_time_with_query_cache(
@@ -565,7 +810,19 @@ class SklearnMoEExecutionTimePredictor(
         # Dense-FFN (non-MoE layer) path still uses FFN TP allreduce semantics.
         # Keep it aligned with dense predictor behavior for mixed-layer models.
         moe_tp_allreduce_time = 0.0
-        if include_ffn and include_moe and self._replica_config.moe_tensor_parallel_size > 1:
+        dp_group_moe = self._replica_config.moe_all2all_backend == "allgather_reducescatter"
+        if (include_ffn and include_moe and dp_group_moe
+                and self._replica_config.attn_tensor_parallel_size > 1):
+            # vLLM reduces the routed output over TP after the combine; with
+            # one DP rank this reduction also carries the shared branch.
+            moe_tp_allreduce_time = self._predict_comm_operator(
+                get_comm_operator("mlp_tensor_parallel_allreduce"),
+                batch,
+            )
+            communication_operator_times["mlp_tensor_parallel_allreduce"] = (
+                moe_tp_allreduce_time
+            )
+        elif include_ffn and include_moe and self._replica_config.moe_tensor_parallel_size > 1:
             moe_tp_allreduce_time = self._predict_comm_operator(
                 get_comm_operator("moe_tensor_parallel_allreduce"),
                 batch,
@@ -622,7 +879,7 @@ class SklearnMoEExecutionTimePredictor(
             moe_gating_routing_topk_time = 0.0
             moe_shuffling_time = 0.0
             moe_grouped_gemm_time = 0.0
-            if self._model_config.supports_share_expert():
+            if self._model_config.supports_share_expert() and self._step5_layer_metadata is None:
                 # Step2Mini/Step3 dense layers are the shared-expert FFN.  Map
                 # those profiled operations into the dense MLP component
                 # fields so the layer remains a FULL_STAGE_WORLD operation and
@@ -666,7 +923,9 @@ class SklearnMoEExecutionTimePredictor(
                 )
                 communication_operator_times[moe_tp_allgather_op] = ffn_tp_allgather_time
             share_expert_tp_allreduce_op = (
-                architecture_profile.share_expert_tensor_parallel_allreduce_op
+                "share_expert_tensor_parallel_allreduce"
+                if dp_group_moe and self._replica_config.attn_dp > 1
+                else architecture_profile.share_expert_tensor_parallel_allreduce_op
             )
             shared_expert_compute_time = (
                 share_expert_up_proj_time
@@ -738,7 +997,22 @@ class SklearnMoEExecutionTimePredictor(
         mlp_norm_time = (
             self._get_mlp_norm_layer_act_execution_time(batch) if include_ffn else 0.0
         )
-
+        moe_operator_times = None
+        if include_ffn and include_moe:
+            moe_operator_times = _build_moe_operator_times(
+                mlp_norm_time=mlp_norm_time, moe_gating_linear_time=moe_gating_linear_time,
+                moe_gating_routing_topk_time=moe_gating_routing_topk_time,
+                moe_shuffling_time=moe_shuffling_time, moe_grouped_gemm_time=moe_grouped_gemm_time,
+                share_expert_up_proj_time=share_expert_up_proj_time,
+                share_expert_act_time=share_expert_act_time,
+                share_expert_down_proj_time=share_expert_down_proj_time,
+                include_share_expert=self._model_config.supports_share_expert(),
+            )
+            if self._step5_layer_metadata is not None:
+                merge = self._get_prediction_for_features("step5_ffn_merge", {
+                    "num_tokens": batch.get_effective_total_tokens_rounded(self._cluster_type),
+                })
+                moe_operator_times = MoEOperatorTimes({**moe_operator_times.op_times, "step5_ffn_merge": merge})
 
         return ExecutionTime(
             num_layers_per_pipeline_stage=1,
@@ -799,21 +1073,7 @@ class SklearnMoEExecutionTimePredictor(
             communication_operator_times=CommunicationOperatorTimes(
                 communication_operator_times
             ),
-            moe_operator_times=(
-                _build_moe_operator_times(
-                    mlp_norm_time=mlp_norm_time,
-                    moe_gating_linear_time=moe_gating_linear_time,
-                    moe_gating_routing_topk_time=moe_gating_routing_topk_time,
-                    moe_shuffling_time=moe_shuffling_time,
-                    moe_grouped_gemm_time=moe_grouped_gemm_time,
-                    share_expert_up_proj_time=share_expert_up_proj_time,
-                    share_expert_act_time=share_expert_act_time,
-                    share_expert_down_proj_time=share_expert_down_proj_time,
-                    include_share_expert=self._model_config.supports_share_expert(),
-                )
-                if include_ffn and include_moe
-                else None
-            ),
+            moe_operator_times=moe_operator_times,
         )
 
     def predict_moe_lane_phase_times(
@@ -896,6 +1156,22 @@ class SklearnMoEExecutionTimePredictor(
         return phase_times
 
     def predict_moe_layer_time(
+        self, batch_or_group, layer_id, cluster_type, lane_workload=None, ep_size=None, router_topk=None,
+    ):
+        with self._step5_measured_layer(layer_id) as metadata:
+            result = self._predict_moe_layer_time(
+                batch_or_group, layer_id, cluster_type, lane_workload, ep_size, router_topk,
+            )
+            if metadata is not None and not result.operator_times.physical_frame:
+                merge = self._get_prediction_for_features("step5_ffn_merge", {
+                    "num_tokens": batch_or_group.get_effective_total_tokens_rounded(self._cluster_type),
+                })
+                result.operator_times = MoEOperatorTimes({**result.operator_times.op_times, "step5_ffn_merge": merge})
+                result.step5_ffn_merge_time = merge
+                result._step5_ffn_operator_costs = dict(self._step5_ffn_costs)
+            return result
+
+    def _predict_moe_layer_time(
         self,
         batch_or_group: "Batch | EPBatchGroup",
         layer_id: int,
@@ -942,6 +1218,9 @@ class SklearnMoEExecutionTimePredictor(
             lane_workload=lane_workload,
             conservation_context="predict_moe_layer_time",
         ) or lane_workload
+        if lane_workload is not None and lane_workload.routing_source is not None:
+            return self._predict_step5_position_execution(batch_or_group,lane_workload,layer_id=layer_id,
+                include_attention=False,include_stage_owned=False,pipeline_stage=0).moe_or_mlp_time_component
 
         if self._enable_dummy_mode:
             base_time = self._dummy_execution_time
@@ -1228,6 +1507,23 @@ class SklearnMoEExecutionTimePredictor(
         """Predict layer-specific routing with a shared stage-local attention cache."""
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError("num_layers must be a positive int")
+        scopes = {}
+        if (not self._enable_dummy_mode and include_attention
+                and bind_layer_attention(self._model_config, layer_id).family_id == STEP5_ATTENTION_FAMILY.family_id):
+            if layer_id == 0 and self._model_config.fp32_residual_connection:
+                scopes["input_cast"] = 0
+            if layer_id + num_layers == self._model_config.num_layers:
+                scopes["final_residual"] = self._model_config.num_layers - 1
+            if scopes:
+                self._activate_measurement_type_for_batch(batch)
+                for name, physical_layer in scopes.items():
+                    with self._step5_measured_layer(physical_layer) as metadata:
+                        model = self._model_manager._get_family_model(
+                            self._measurement_family_name(self._active_measurement_type), name,
+                            precision_key=metadata.model_precision.name,
+                        )
+                        if model is None:
+                            raise ValueError(f"Step measured stage has unavailable source boundary coverage: {name}")
         cache: dict[tuple[str, str], AttentionTime] = {}
         layers = [
             self._predict_layer_with_kernel_gap(
@@ -1239,6 +1535,54 @@ class SklearnMoEExecutionTimePredictor(
             )
             for offset in range(num_layers)
         ]
+        if scopes:
+            proofs = {}
+
+            def predict_owner():
+                owner = layers[0].as_single_layer(
+                    global_layer_id=layer_id,
+                    attention_family_id=STEP5_ATTENTION_FAMILY.family_id,
+                    attention_variant_id=self._model_config.get_layer_attention_spec(layer_id).variant_id,
+                )
+                values = {}
+                tokens = self._step5_attention_workload(batch).physical_query_rows
+                for name, physical_layer in scopes.items():
+                    with self._step5_measured_layer(physical_layer):
+                        values[name] = self._predict_step5_ffn_operator(name, {"num_tokens": tokens})
+                        proofs[name] = dict(self._step5_ffn_costs[name])
+                owner._replace_operator_time_values(values)
+                return owner
+
+            owner = self._predict_layer_with_kernel_gap(predict_owner)
+            assembled = self._assemble_stage(layers, first_layer_id=layer_id)
+            stage = StageExecutionTime(assembled.layer_execution_times, stage_execution_time=owner)
+            stage._step5_stage_operator_costs = proofs
+            return stage
+        if (
+            self._enable_dummy_mode
+            and self._model_config.get_layer_attention_spec(layer_id).family_id
+            == STEP5_ATTENTION_FAMILY.family_id
+        ):
+            if not include_attention:
+                # EP wave work starts after the attention and model-input scopes.
+                return self._assemble_stage(layers, first_layer_id=layer_id)
+            owner = layers[0].as_single_layer(
+                global_layer_id=layer_id,
+                attention_family_id=STEP5_ATTENTION_FAMILY.family_id,
+                attention_variant_id=self._model_config.get_layer_attention_spec(layer_id).variant_id,
+            )
+            times = {}
+            if layer_id == 0:
+                times["emb"] = self._dummy_execution_time
+                if self._replica_config.attn_tensor_parallel_size > 1:
+                    times["embedding_tensor_parallel_allreduce"] = self._dummy_execution_time
+                if self._model_config.fp32_residual_connection:
+                    times["input_cast"] = self._dummy_execution_time
+            if layer_id + num_layers == self._model_config.num_layers:
+                times["final_residual"] = self._dummy_execution_time
+            owner._replace_operator_time_values(times)
+            stage = self._assemble_stage(layers, first_layer_id=layer_id)
+            return StageExecutionTime(stage.layer_execution_times, stage_execution_time=owner)
         return self._assemble_stage(layers, first_layer_id=layer_id)
 
     def _predict_moe_layer_execution_time(
@@ -1261,12 +1605,13 @@ class SklearnMoEExecutionTimePredictor(
         if type(include_attention) is not bool:
             raise ValueError("include_attention must be a bool")
         if not include_attention and (
-            cluster_type not in (ClusterType.MONOLITHIC, ClusterType.DECODE)
+            cluster_type
+            not in (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
             or not include_ffn
         ):
             raise ValueError(
-                "Post-attention-only prediction requires MONOLITHIC or unified "
-                "DECODE with FFN enabled"
+                "Post-attention-only prediction requires MONOLITHIC, PREFILL or "
+                "unified DECODE with FFN enabled"
             )
         if not include_ffn and include_moe is not None:
             raise ValueError(
@@ -1275,7 +1620,10 @@ class SklearnMoEExecutionTimePredictor(
 
         if include_moe is not None and type(include_moe) is not bool:
             raise ValueError("include_moe must be a bool or None")
-        if not include_attention and include_moe is False:
+        measured_step = (not self._enable_dummy_mode
+                         and bind_layer_attention(self._model_config, layer_id).family_id
+                         == STEP5_ATTENTION_FAMILY.family_id)
+        if not include_attention and include_moe is False and not measured_step:
             raise ValueError(
                 "Post-attention-only prediction requires a MoE layer; "
                 "include_moe=False selects a dense FFN branch"
@@ -1290,10 +1638,23 @@ class SklearnMoEExecutionTimePredictor(
             include_ffn=include_ffn,
         )
 
-        if not include_attention and not include_moe_for_layer:
+        if not include_attention and not include_moe_for_layer and not measured_step:
             raise ValueError(
                 "Post-attention-only prediction requires a MoE layer; "
                 f"layer_id={layer_id} is dense"
+            )
+
+        if bind_layer_attention(self._model_config, layer_id).family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.deepseek_v4 import serving_context
+
+            if include_ffn:
+                raise ValueError(
+                    "V4 serving FFN requires the source-qualified synthetic EP wave"
+                )
+            return self._predict_dsv4_dummy_structural_execution(
+                batch, layer_id, 0, include_attention=True, include_ffn=False,
+                include_stage_owned=include_stage_owned,
+                **serving_context(self, batch, layer_id),
             )
 
         # Every routed public call crosses the typed-lane admission boundary
@@ -1311,6 +1672,7 @@ class SklearnMoEExecutionTimePredictor(
                 include_ffn=include_ffn,
                 include_moe=include_moe_for_layer,
                 include_stage_owned=include_stage_owned,
+                layer_id=layer_id,
             )
             return dummy_execution_time
 

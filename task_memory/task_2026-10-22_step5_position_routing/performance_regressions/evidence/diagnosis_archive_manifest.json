@@ -1,0 +1,26 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/governance_failure_diagnosis.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/governance_failure_diagnosis.json",
+    "sha256": "ffc49391c151e804254ca976aa2a7cd9f3ad7094648b195c34969269899cd83b",
+    "bytes": 7177
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/unit_final05_before_governance.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/unit_final05_before_governance.json",
+    "sha256": "1c64c00e48ec5d6509cb2c76fd11b22bf67bae4c31266cdb82f58e5409822189",
+    "bytes": 166167
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/affected_coverage_plan.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/affected_coverage_plan.json",
+    "sha256": "83e2827f2859b2a2360aba1e8ee67b41aad6bd04cb777a91f6729f5e927324ca",
+    "bytes": 2922
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/new_case_expectations.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/new_case_expectations.json",
+    "sha256": "bd45d121d3fa7026f99ec9112b8d932fbe9016c10ab781f2f8f51bb287ac5561",
+    "bytes": 818
+  }
+]

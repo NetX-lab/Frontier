@@ -1,0 +1,91 @@
+{
+  "collected_utc": "2026-10-24T21:04:35.063227+00:00",
+  "job_name": "exp-1025-050336-389487",
+  "creator": "i-fengyicheng",
+  "labels": {
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-codesign",
+    "quotagroup.brainpp.cn/preemptible": "no",
+    "quotagroup.brainpp.cn/quotagroup": "codesign",
+    "rjob.brainpp.cn/group-share": "read",
+    "stepmind.com/gang-group": "true"
+  },
+  "status": {
+    "phase": "Starting",
+    "reason": "RJobStarting",
+    "message": "Tasks is starting: [default]",
+    "taskStatuses": {
+      "default": {
+        "pending": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "tasks": {
+    "default": {
+      "replicas": 1,
+      "nfs": "100.96.128.195:/data/ycfeng:/data/ycfeng",
+      "annotation_keys": [
+        "kubebrain.brainpp.cn/auto-port-num",
+        "kubebrain.brainpp.cn/filestore-volume",
+        "mount.brainpp.cn/juicefs",
+        "stepboard.stepfun.com/enabled",
+        "stepboard.stepfun.com/exp",
+        "stepboard.stepfun.com/project",
+        "stepboard.stepfun.com/steptron_commit"
+      ],
+      "containers": [
+        {
+          "name": "default",
+          "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+          "resources": {
+            "limits": {
+              "cpu": "4",
+              "memory": "64000Mi",
+              "nvidia.com/gpu": "0"
+            },
+            "requests": {
+              "cpu": "4",
+              "memory": "64000Mi",
+              "nvidia.com/gpu": "0"
+            }
+          }
+        }
+      ],
+      "node_selector": null,
+      "affinity": {
+        "nodeAffinity": {
+          "preferredDuringSchedulingIgnoredDuringExecution": [
+            {
+              "weight": 100,
+              "preference": {
+                "matchExpressions": [
+                  {
+                    "key": "MachineType",
+                    "operator": "NotIn",
+                    "values": [
+                      "GPU"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "local_launcher_alive": true,
+  "api": "original personal Python RJobClient, exact job only",
+  "replicas": [
+    {
+      "task": "default",
+      "process_id": "exp-1025-050336-389487-cfcd2084",
+      "state": "ReplicaState.STARTING"
+    }
+  ],
+  "query_wall_s": 0.39280796563252807
+}

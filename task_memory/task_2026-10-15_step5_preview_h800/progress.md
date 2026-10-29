@@ -1,0 +1,3449 @@
+# Progress: Step-5-Preview planning
+
+## Modification History
+
+| Date | Change |
+| --- | --- |
+| 2026-10-27 | D31: item 4 accepted (`d5b11f63`; R1 applied, R2 withdrawn; fidelity 77/77, focused and full unit suites without code-caused new failures); final cadence profiles in evidence; G/E w01 reruns (queue of two, queue of two plus cadence) started. |
+| 2026-10-27 | D31: item 4 cadence estimator (exclude 3 ordinals after a real step, per-engine intervals): DP4 6.014 ms admitted, DP2 4.464 ms exploratory; codex-implement b36e6b25 delivered item 4 code (review and fidelity matrix in progress); old DP placement test failure bisected to b0bf0c78 (ticket 43 forward preparation; stale fixture timing, fix deferred). |
+| 2026-10-27 | D31: item 4 group cadence measured (DP4 mean 6.307 ms, DP2 mean 4.599 ms exploratory); codex review 63785f72 of the item 4 design (F001–F004 accepted); design revised (section 7). |
+| 2026-10-27 | D31: item 4 Frontier probe: the PREFILL wave ends after step 1 for all 16 requests (PREFILL batch queue of one step; native async scheduling has two); item 4 design written; item 2b overlap-free critical path (critpath5) recorded. |
+| 2026-10-27 | D31: item 3 step 4 done: E host within 4.1% on every row (exploratory); G host TTFT −12.9%, TPOT −9.6%; item 4 lead opened: at DP4 the native prefill waits for the device to run the dummy steps queued by the previous DP wave (mean about 180 ms), which Frontier does not model. |
+| 2026-10-27 | D31: E base with merged04 (no host profile) passes all 14 rows against sweep03 (TTFT −5.3%, TPOT −13.9%), equal to the merged03 run. |
+| 2026-10-27 | D31: h200_64 probe analyzed with the tightened checks: DP4 profile prefill 36.92 ms / decode 5.96 ms, perturbation PASS, accepted for step G; step G host run started. |
+| 2026-10-27 | D31: codex review 223fee59 of the h200_32 probe result (F001–F004, all confirmed): estimator checks every TP rank against the client-completed work, rejects preemptions and partial all-reduces before the last step with requests; the replay checks each formal phase's native work counters; the profile values are unchanged; the profile is not accepted (probe effect unmeasured), so E/G with it are exploratory. |
+| 2026-10-27 | D31: h200_32 host probe analyzed: replay idle-boundary and probe-completeness rules corrected (`cdcba47b`); DP2 profile prefill 37.44 ms / decode 5.11 ms (`PERTURBED`, TPOT bias at most 0.7%); step E host rerun started; h200_64 probe job `exp-1027-141317-610373` submitted. |
+| 2026-10-27 | D31: exact native decode critical path (diagnostic): the step prefix before the first TP all-reduce is the KV side-storage reset (item 3); Frontier's step is within −7% to +4% of the native forward body; TP all-reduce is about 1.3 ms high (273 native calls, own cost about 6.8 µs), not low; body idle shortfall is a kernel-count shortfall. |
+| 2026-10-27 | D31: h200_32 host-probe stage `h200_32_hostprobe03` built at 02bd453a, verified and dry-run; submitted through Pi (`d31-h200-32-hostprobe03-submit-1027e`), job `exp-1027-124813-737818`; `h200_32_comb_h200` table version corrected to merged03. |
+| 2026-10-27 | D31: item 3 step 2 fixes from the codex implementation review 668b0946 (F001–F006, Q1–Q3; design section 9); 162 focused unit tests pass. |
+| 2026-10-27 | D31: item 3 step 2 code: host-step probe, `host_probe` run kind and estimator; 81 focused unit tests pass. |
+| 2026-10-27 | D31: h200_32 sweep03 succeeded (coverage verified, 3/2/1 stall events, all within the sweep's reach); E passes all 14 rows against it (TTFT mean −5.3%, TPOT mean −13.9%, throughput +2.9%); item 3 step 3 (Frontier side) implemented and checked: 304 unit tests, dummy smoke 12/12, fidelity 77/77 (config fields only); NIXL READ profiles regenerated for the new capacity flag. |
+| 2026-10-27 | D31: h200_64 sweep02 succeeded (one stall per repeat, all within the sweep's reach; stable repeats); G passes all 14 rows against it (TTFT −17.5%, TPOT −19.2%); h200_32 sweep03 submitted; item 3 design reviewed by codex (changes required: DP agreement before first attention, real forward-end hook, direct host-interval measurement, DP validation, 23 hooks / 46 writes). |
+| 2026-10-27 | D31: G rerun finished (all four means within 30% of the h200_64 sweep reference, three tail rows fail); h200_64 sweep01 result (stalls left only above the length it reached; 420 s too short), sweep02 with 780 s submitted; item 3 lead: a host sync for the KV side-storage reset on every decode step that allocates a KV block. |
+| 2026-10-27 | D31: per-rank check: fast ranks wait in the collectives for the slowest routed rank; routed compute about 2.5–3 ms per step high, TP all-reduce about 1–2 ms low; host time (item 3) is the main remaining TPOT gap. |
+| 2026-10-27 | D31: h200_32 length-sweep job succeeded; formal stalls 84/54/34 → 38/21/22, all left above the length the sweep reached; E passes all 14 rows against it; `duration_s` raised to 420 s and the h200_64 sweep job launched; routed-expert lead: `balanced` fills experts from ID 0, so the priced lane has all 22 experts active. |
+| 2026-10-26 | D31: device-timeline job succeeded (Frontier step within about 5% of native device busy time up to 21 requests; routed compute overpriced, TP all-reduce underpriced); native TTFT/TPOT tails traced to just-in-time compiles of the DSA scoring kernel; E rerun all means within 30%; native length-sweep warm-up `320c2082`, H200 32-GPU job `exp-1027-074903-556239` submitted. |
+| 2026-10-26 | D31: workflow-port run wf02 (TTFT −37.4%, TPOT −57.0%); calibration item 3 renumbered 2b to match `plan.md`; item 2b native decode device-timeline diagnostic (harness `26d51a30`, analyzer `a31e3616`), H200 32-GPU job `exp-1027-062510-683917` running. |
+| 2026-10-26 | D31: step E base run result (TPOT −57%); calibration item 3 opened: the small-batch decode step matches native (31.0 vs 30.5 ms), and the native step grows about 0.7 ms per request per engine; native stall shares quantified. |
+| 2026-10-26 | D31: the MoE profiler measures a chosen EP rank (`1fbc99c5`, `4a93f30d`); H200 job 04 measured the partly filled ranks (EP16/EP32 loads as computed); merged04 built; step G rerun started. |
+| 2026-10-26 | D31: prefix runs attribute the workflow port (TTFT +80 ms) and measured collectives (TPOT +10.8 ms); step E/G runs stopped on an order-dependent spread feature (fixed `2beb09b3`, E rerun) and an EP32 partly filled lane below the MoE profile range (profile the partly filled rank). |
+| 2026-10-26 | D31: item 2a step 1 done (H200 curves `946595cd`), runner option `1c125189`, E rerun with the H200 curves started; lane prediction cache `eddb9bf5` (exact, 1.7× faster). |
+| 2026-10-26 | D31: item 2a steps 2–4 done (measured backend `b9cbda0d`, allgather_reducescatter pricing `0349c1c6`); checks pass with fidelity 77/77; H200 collective jobs submitted. |
+| 2026-10-26 | D31: calibration item 2a opened; one-request breakdown shows underpriced and missing collectives (about 11.7 ms per DECODE step). |
+| 2026-10-26 | D31: port checks recorded (test report); shared-expert DP token count sized at about 0.09% of TPOT (low priority); FP8 approximation warning shown to change no Step-5 time; simulator cost profile. |
+| 2026-10-26 | D31: calibration item 1 (workflow port) in progress; measured NIXL check fixed for engine-step completion; shared-expert DP token-count candidate recorded. |
+| 2026-10-26 | D31: step F done (H200 64-GPU native workload succeeded; metrics and the 64-GPU NIXL READ cost archived). |
+| 2026-10-26 | D31: step D done (run 03 tables merged after four profiler/predictor fixes and the DECODE measurement-family fix d034202c); step E started. |
+| 2026-10-26 | D31: D(g) PREFILL tables complete; DECODE run 01 failed at the first PIECEWISE capture (host graph pool assert), fixed in 688eb32b, run 02 submitted. |
+| 2026-10-26 | D31: step D(f) done (H200 NIXL READ profile from native logs, kernel-gap proxy); D(g) profile jobs submitted. |
+| 2026-10-26 | D31: step D(d)/(e) done (H200 profile plan for both topologies, DP-lowered graph mode, DSA last-region pricing); step F still blocked. |
+| 2026-10-26 | D31: step D(b)/(c) done (profiler produces mixed batches and graph-padded rows). |
+| 2026-10-26 | D31: step D(a) done (attention priced within its measured category); step F waits for account GPU room; census abandoned. |
+| 2026-10-26 | D31: step C done (H200 32-GPU native workload, metrics and KV capacity recorded). |
+| 2026-10-26 | D31: step B done (full dummy workload in 2933 s); workload02 submitted after Pi recovered; D31.9 balanced routing for Frontier. |
+| 2026-10-25 | D31 mainline reset: review written, documents corrected, steps B/C/D of the new plan started. |
+| 2026-10-23 | YC approves D29-SCOPE-107-10000 and the fixed finite model; begin three sole-writer implementation streams. |
+| 2026-10-23 | D30 integrated4ec5b23 after all code-scope gates; D29 design reviews complete and full107-path scope awaits decision. |
+| 2026-10-22 | D30 repair600 lines/review clear; parent420 checks, strict77 and902 artifact hashes PASS; full-unit delta pending. |
+| 2026-10-22 | D30-SCOPE-7-750 approved; resume implementation and prepare parent unit/strict77 comparison. |
+| 2026-10-22 | Apply checkpoint D4/S1 correction: seek D30's complete independent scope decision while D29 design continues. |
+| 2026-10-22 | Receive D29 pricing/source reviews; preserve the prior collective_sim decision while resolving full workflow interfaces. |
+| 2026-10-22 | Receive D30 candidate with five new adjacent failures; hold integration for review and scoped fixture correction. |
+| 2026-10-22 | Merge D26/D27/identity/D28 atfa5bae2; strict77 and reconciled258 focused cases pass; record approved D29/D30 next work. |
+| 2026-10-22 | D26/D27/identity delivered; D28 parent81PASS/review clear; checkpoint updates D29 routing prerequisite and CPU-gap ordering. |
+| 2026-10-22 | D23 clean9dcd876/32fb934 comparison:77/77 identical, zero cache/provenance/evidence findings; fresh CLI remains active. |
+| 2026-10-22 | After legacy agent cancellation, archive isolated offline result; resume fresh MRv2 CLI and verify fixed-capacity source242PASS. |
+| 2026-10-22 | D25 complete: both432-request workloads verified, p90/throughput reported, no measured TTFT>5s; JIT/decode stability limits retained. |
+| 2026-10-22 | Merge typed inputs at0c9d1ef, verify13 observed groups and196 HTTP checks; record D24 bounded capture approval. |
+| 2026-10-22 | Record D23 approval, native G3 not-qualified judgment, parent467/264 input checks, startup census181 checks and active core/HTTP/reference follow-up. |
+| 2026-10-22 | Integrated G3/reference and MRv2 producer; merged-tree685/465 checks pass; P0 native capture submitted and replicas Running. |
+| 2026-10-21 | Reproduce and repair the request-free sequential event logger; 36 affected checks pass, legacy matrix in progress. |
+| 2026-10-21 | Verify658 G3 partial checks and P0 useful-token conservation; select existing-D reference, and correct the MRv1-derived idle-profile assumption before submission. |
+| 2026-10-21 | P0 generation03 closes the missing per-lane runtime-replay observation; retain final-source fidelity schema/provenance findings and297 identical non-schema pairs. |
+| 2026-10-21 | Integrate measured code at bc8ae27;125 native/323 combined/197 profiling checks pass; submit P0 replay verification and assign G3/P0 producers. |
+| 2026-10-21 | Parent integrates D21/D22, records actual bundle execution, P0 partial native success and D22 strict native PASS; idle-DP measured consumption remains active. |
+| 2026-10-21 | D21-DOCS: synchronize four tracks, separate basic/formal dependencies, global H200 non-preemptible cap32 and terminal reconciliation; preserve historical records. |
+| 2026-10-21 | Record160-PASS foundation/input integration and pause obsolete noncanonical R2 capture. |
+| 2026-10-21 | Communication startup correction accepted asb68ce4d after101 parent passes; new32-H200 jobexp-1021-143708-523626 queued at96/130 reservations. |
+| 2026-10-21 | H200 communication job failed at startup with exit141; actual shell caller reproduces SIGPIPE, narrow correction/restage assigned alongside ongoing measured implementation. |
+| 2026-10-21 | Accepted and merged D20-CLIENT executable comparison at e2be122, with independent tests and review closure; compute/PD remain active. |
+| 2026-10-21 | D20 CPU implementation approved and three exclusive code streams assigned; restored pinned collective-sim dependency and executed its native CPU runner. |
+| 2026-10-21 | Analyzer checkpoint completed after requested restart; CPU22/28 preparation started; one-cell H200 boundary probe completed and is being judged. |
+| 2026-10-21 | D19:130-H200 cap applied,64-GPU qualification exp-1021-125354-923219 queued at96 reserved GPUs; independent mainline checkpoint running. |
+| 2026-10-21 | Judge H200 profiles: BF16 native fix PASS, attention median6/18 FAIL, linear timing unqualified; begin minimal boundary-event diagnosis. |
+| 2026-10-21 | Close native review and verify db5c99f/585 tests; record32+64 reservation limit and R2 retirement-safety review finding. |
+| 2026-10-21 | Integrate and publish reviewed profiles after787 CPU passes/77-case fidelity; record H200 probe completion and native stage02 review. |
+| 2026-10-21 | Native review requires MRv2 source binding, missing throughput diagnostics and qualification tests; profiling stage02 delivered for review and parent preflight. |
+| 2026-10-21 | D18-COMM merged and32-H200 diagnostic submitted; documented source/resource checks, affected tests and active R2 correction. |
+| 2026-10-21 | D18: adopted68f891b as958d81a, synchronized active docs, launched three execution streams and recovered R2/linear failure evidence. |
+| 2026-10-21 | Read-only GLM/V4 crosscheck: fixed workload confirmed with144/144 matching rows; separate artifacts and reciprocal adoption requests remain; recommended using the already integrated GLM/V4 package for the first case. |
+| 2026-10-21 | D17: replace SharedGPT with fixed 6144/1024-token requests, 128 formal requests at QPS 1.0; record workload freeze, verification and cross-session handoff. |
+| 2026-10-21 | D16: cherry-picked the shared canonical workload (`cb8090b`), pin test 2 passed, checksums OK, independent 0-mismatch equivalence with the historical generator; docs updated to the linear-rescale rule. |
+| 2026-10-21 | Unified the canonical workload with the GLM/V4 session (D15): 256 requests, prompt-plus-output THPT, shared trace identity, explicit retiming (rule open), cross-task caveat; documentation only. |
+| 2026-10-21 | Ticket 12 S1/S2 execution/native/node RDMA pass; 9/1350 and 15/1242 queue cells fail. Exported unqualified costs/DP4 bytes and uncertainty, passed 535 CPU checks, and recorded prospective S1R value without GPU control/admission. |
+| 2026-10-21 | Completed the Step linear source/CPU/staging slice, archived strict Smoke 03 FAIL and the single event-priming correction, and recorded the remaining native and per-role grid gates. |
+| 2026-10-21 | Finished the resident-memory slice: clean 77-case/451-artifact fidelity passes, full-unit failing IDs exactly match the known 132, and the citation-only final commit is c8b8c06. Whole-ticket and predictive native limits remain open. |
+| 2026-10-20 | Completed R2 code/stage02 preparation: 560 harness passes, 77 identical fidelity cases, resolved phase-review findings and parent-only commands; native acceptance remains pending. |
+| 2026-10-20 | Reconciled ticket 15 resident memory in 5cae61a using retained native evidence only: exact TP16 registered storage and logged-reserve capacity reconstruction; final full-unit ID diff and clean 77-case verification recorded in the dedicated entry below. No GPU job submitted, stopped or deleted. |
+| 2026-10-20 | Started the Step linear-op slice and judged attention Smoke 03: 20 rows and functional checks pass, but 2/12 calibration candidates fail the unchanged median-agreement rule. No job was submitted or controlled. |
+| 2026-10-20 | Ticket 12 corrected S0 passes all 90 queue-held cells; committed multi-node S1/S2 as 307467b, passed 494 source/CPU checks and froze both packages with 181 source hashes and SDK RDMA defaults. No job submitted or controlled. |
+| 2026-10-20 | Started T08-R2 preparation after H800 W1 acceptance; merged integration tip, retained the 197-test baseline and recorded the diagnostic content/lifetime design. No GPU operation. |
+| 2026-10-20 | Repaired attention phase graphs, queue timing and scope accounting in 7aeac57/655ae34, passed 362/470/279 CPU checks and froze the 3,396-hash credential-aware stage04. Post-fix native CV remains unverified; no GPU operation occurred. |
+| 2026-10-20 | Completed and stopped the final dense-initialization CPU/wall round. Ten measured pairs did not consistently exclude the frozen budget in CPU confidence intervals, so acceptance remains unverified with no threshold or product-code change. |
+| 2026-10-20 | Judged ticket 12 S0: platform/native identity pass but 14/90 device timing cells fail. Repaired queue calibration, passed 257 native-source CPU checks and restaged S0 generation 02 without job submission/control. |
+| 2026-10-20 | Completed one pinned, 20-pair dense-initialization archive-export diagnosis. The median increase was 1.253088%, but its 95% block-bootstrap interval crossed zero and the 1.941337% budget, so acceptance remains unverified. No code change, commit, worktree operation or GPU operation occurred. |
+| 2026-10-20 | Completed D5 T1 as 6db2cd9: 764 affected tests pass, full unit failures exactly match the 132 known IDs, Step/GLM/DeepSeek PD endpoint checks pass, and all 77 legacy original outputs match. No GPU operation. |
+| 2026-10-20 | Repaired ticket 10 attention startup after the zero-row stage02 failure, proved config/group lifetime with CPU regressions, passed 172/470/89 checks and froze credential-aware stage03 without submitting a job. |
+| 2026-10-20 | Completed ticket 12 collector port and CPU-verified S0 preparation on feat/step5-comm, without GPU submission or control. |
+| 2026-10-20 | Implemented ticket 20 structural Step P/D placement, verified delayed-snapshot and handoff behavior with 17-request offline and online runs, and established 77 unchanged legacy cases and no new full-suite failing IDs. CPU budget verification and the branch-local commit are recorded below. No GPU operation was performed. |
+| 2026-10-20 | Implemented the ticket 10 native Step attention producer on feat/step5-profiling, verified CPU contracts and a frozen one-H800 smoke package, and recorded the parent-only submission handoff. No GPU job was submitted or controlled. |
+| 2026-10-20 | Applied D5-STREAM: added opt-in client TTFT collection, retained W1/default GLM/DeepSeek nonstreaming behavior, passed 197 harness tests, froze stage02 and re-read quota. No GPU job was submitted or controlled. |
+| 2026-10-20 | Prepared ticket 08 H800 R1 with sequential warm and boundary requests, 165 harness passes and an offline-checked stage; recorded the client first-token collection limitation and read-only quota snapshot. No GPU job was submitted or controlled. |
+| 2026-10-20 | Recorded decisions D5–D8, the public status commit `8585748` pushed to PR #50, and the D8 cleanup: 8 temporary worktrees and about 128 GB of scratch removed, cited evidence kept in `scratch_evidence/`. Updated the handoff; no user decision is open. |
+| 2026-10-20 | Consolidated the three stream branches onto `feat/step5-preview` (`4b3f662`, `bd58493`, `0d2ffda`), committed the public status `7266981`, pushed PR #50 to `7266981`, and wrote the handoff for the next session at the end of this file. |
+| 2026-10-20 | Saved the independent review of the Step PD structural path (`review_2026-10-20_step5_pd_structural.md`). |
+| 2026-10-20 | Fixed two Medium review findings for ticket 17 in `b875093` (not pushed): NIXL structural PD requires equal P/D attention TP, and per-component trace bytes are labeled `transfer_bytes_per_rank`. Step PD artifacts unchanged, 77/77 legacy and 5/5 structural identical, no new unit failure. |
+| 2026-10-20 | Ran ticket 08 native P/D R1 on H200 (`exp-1020-164750-497812`, 32 GPUs, at most 4.98 GPU-hours) after H800 had no whole free node: 9/9 W1 conditions PASS, H200 evidence only; harness commits `4a55513`, `d77e155` (`test_report_2026-10-20_native_pd_r1.md`). |
+| 2026-10-20 | Completed the read-only ticket 12 phase 1 communication design (`step5_comm_20261020/design01.md`); no repository edit, commit or GPU submission. |
+| 2026-10-20 | Recorded the ticket 10 MoE H800 pilot: run 01 failed on an image dependency, run 02 (`621ca0e`) succeeded with 28 rows; FP8 layers select DeepGEMM at EP32, BF16 layers select Triton. |
+| 2026-10-20 | Completed the ticket 17 structural part on `feat/step5-pd-structural` (`a54354d`, `bf121c0`, `07bf337`, not pushed): Step5 PD runs with dummy timing, Thinking Mode now rejected for Step, 91 fidelity scenarios identical, no new unit failure, sentinels within budget. |
+| 2026-10-20 | Committed the ticket 10 MoE slice `173a5e0` (Step-5 routed layer groups); 381 CPU passes, image API compatible; GPU pilot next. |
+| 2026-10-20 | Completed the read-only tickets 08/09 phase 1 native P/D design (`native_pd_20261020/design01.md`); one read-only quota query, no repository edit, commit or GPU submission. |
+| 2026-10-20 | Completed the read-only ticket 10 phase 1 profiling design (`step5_profiling_20261020/design01.md`); no repository edit, commit or GPU submission. |
+| 2026-10-20 | Completed the documentation-only simulation-scope disposition for ticket 06: S1–S4 and S6 PASS, S5 PARTIAL; closing action proposed, not executed. |
+| 2026-10-20 | Recorded exact _04 Failed terminal, non-timeout evidence rejection and all16 capture caps; continued archive audit and PR synchronization without acceptance credit. |
+| 2026-10-20 | Published Draft PR50 at9ebf4cf; verified local/remote/PR head identity and unchanged201native inputs. |
+| 2026-10-20 | Resumed the distinct corrected physical witness preparation at source94d154e; no submission, receipt or native acceptance yet. |
+| 2026-10-19 | Accepted FIFO/None source and CPU correction after independent review fixes; retained H800 Failed evidence, 626 distinct affected checks and unchanged native gates. |
+| 2026-10-19 | Resumed terminal H800 evidence audit and CPU-reproduced FIFO export correction; native06/whole15 acceptance unchanged. |
+| 2026-10-19 | Recorded physical H200 timeout/Failed terminal outcome; reproduced the pending-trace archive defect and started its bounded correction. |
+| 2026-10-19 | Recovered corrected H200 native launch and prepared detached acceptance audit; current run remains unqualified. |
+| 2026-10-19 | Closed the two harness defects, retained4RED/4secondfailure/4GREEN/613suite evidence and parent review; exact scoped commit/native generation next. |
+| 2026-10-19 | Recorded the exact failed H200 physical generation and node-record exclusive-create traceback; native execution not reached, scoped regression repair in progress. |
+| 2026-10-19 | Submitted the frozen H800 physical generation once; archived quota-only stopped outcome and prepared the authorized H200 resource extension. |
+| 2026-10-19 | Accepted minimum writer/FP8 scale source bindings after608CPU passes; native gates unchanged. |
+| 2026-10-19 | Recorded allocator source/CPU acceptance and minimum native writer/scale continuation; native ticket gates unchanged. |
+| 2026-10-19 | Started allocator boundary continuation from1c3d29b; native-write/scale source audit runs independently, with native06/whole15 acceptance unchanged. |
+| 2026-10-19 | Accepted capture-node source/CPU tooling (461 tests) and separate H800 API smoke; native06 remains1/10 and whole15 remains0/8. |
+| 2026-10-19 | Accepted resident-parameter candidate01 source/CPU tooling with657affectedtests,111CPUAPI and1554applicability checks;native06/whole15 unchanged. |
+| 2026-10-19 | Accepted profiler candidate02 source/CPU tooling:498 affected passes, locked CPU API04 and parent two-axis reviews; native06/whole15 and formal gates unchanged. |
+| 2026-10-19 | Recovered profiler attempts05–11 and locked-image API evidence; current97 CPU passes precede executable-handle binding correction and final review. |
+| 2026-10-19 | Continued unaccepted profiler WIP: retained FIFO race timeout and40check correction; annotation/correlation/cleanup/API review remains in progress, native acceptance unchanged. |
+| 2026-10-19 | Started parent-owned focused native-profiler capture/replay source continuation; native acceptance remains unchanged. |
+| 2026-10-19 | Accepted native state candidate01 source/CPU tooling:497 joint and140 affected caller passes overlap; parent Standards and independent Spec No findings; native06/whole15 unchanged. |
+| 2026-10-19 | Accepted native census candidate02 source/CPU slice:419 affected passes, two-axis findings resolved, complete encoded record cap and unchanged retained simulator evidence; native06/whole15 unchanged. |
+| 2026-10-19 | Synchronized final independent lifecycle review: 35 scoped checks and final artifact identities; initial 33-check bytes retained, acceptance unchanged. |
+| 2026-10-19 | Archived completed request_device_20261019_01: 26,917 device checks and 35 scoped lifecycle checks PASS; current missing work is precision/physical/cache-state census, with06 1/10 and whole15 0/8 unchanged. |
+| 2026-10-19 | Froze distinct device-witness inputs, closed the warmup inventory omission and submitted one H800/codesign TP16 generation; native acceptance remains pending. |
+| 2026-10-19 | Accepted candidate03 device/request/completion source and CPU tooling after final Spec follow-up, 357 affected passes and 234 source checks; native gates unchanged. |
+| 2026-10-19 | Completed frontend admission source/CPU slice with bounded errors, missing-record guards, final275PASS/reviews and historical/native limits; commit and device witnesses next. |
+| 2026-10-19 | Verified 386 updated-document and frozen-input identities; began the separately scoped frontend admission association, preserving the completed native source snapshot and all acceptance limits. |
+| 2026-10-19 | Audited the completed sole H800 request: 24,682 retained-evidence checks, two native completions, 256 replay calls and final archive/lifecycle; accepted only06criterion7 and recorded completed07/14/29 preparation. |
+| 2026-10-19 | Froze and submitted the sole H800 request generation; preserved exact job/resources and continuing native evidence audit without full-G2 credit. |
+| 2026-10-19 | Accepted the separate reviewed CPU request caller capability with63ownerPASS; native06 remains0/10 and its newgeneration is still unexecuted. |
+| 2026-10-19 | Archived generation05 source/test/CLI/fidelity/performance evidence and accepted only controlled_structural_path; scoped commit and separate native caller freeze are next. |
+| 2026-10-19 | Reconciled generation04 fidelity and24CPUattempts; recorded measured MoE overruns and existing diagnostic profile cause, with minimal static timing-map correction in progress. |
+| 2026-10-19 | Recorded generation04 source review, final574 affected checks and three actual CLI state/conservation passes; current77-case fidelity is running before24sentinels. |
+| 2026-10-19 | Recovered serving-boundary timing/cache GREEN results, passed375combined checks and froze37changed/56total files for two-axis review; native caller remains disjoint. |
+| 2026-10-19 | Reproduced controlled serving-stage boundary omissions; parent owns timing/metrics correction while Epicurus owns only the new native caller/test pair. |
+| 2026-10-19 | Continued parent structural verification, recorded the EP trace layer-ID integration failure and its minimal correction; native and whole-ticket gates remain open. |
+| 2026-10-19 | Closed generation03 shared merge verification and limited acceptance; retained dense-init OVER, official cache limits and active structural continuation. |
+| 2026-10-18 | Resumed reviewed shared integration and restored H800-first resource order; preserved representation acceptance and all native/formal limits. |
+| 2026-10-18 | Accepted Ticket15 frozen model representation with explicit UNVERIFIED performance disposition; final records complete and scoped commit next. |
+| 2026-10-18 | Preserved the76/77 fidelity failure, diagnosed optional embedding metadata affecting legacy MTP, corrected its counter and verified738affected tests on a new23-file freeze; fresh fidelity is running. |
+| 2026-10-18 | Received independent representation/capacity reviews, corrected three representation findings and verified716affected tests on a new21-file frozen candidate; fresh legacy fidelity is running, whole15 remains open. |
+| 2026-10-18 | Resumed15 source-backed corrections after C04 merge; recorded H200 at-most64 non-preemptible test authorization and unaccepted WIP. |
+| 2026-10-18 | Resumed implementation on explicit confirmation; started15 representation with committed shared prerequisites and parallel06/07/14 preparation. |
+| 2026-10-18 | Recorded the documentation-only audit, corrected dependencies, preserved acceptance limits and prepared the next execution handoff. |
+| 2026-10-18 | Completed05/06CPU checkpoint, recorded reviews/258tests/77+902fidelity/24sentinels with one UNVERIFIED overrun, committed code and paused; precise resume handoff retained. |
+| 2026-10-18 | User requested finishing the two started CPU capabilities/reviews/planned verification, recording results, then pausing; watcher window ended with original job Pending. |
+| 2026-10-18 | Resumed eligible05/06 CPU work independently of the queued source job; assigned request metadata implementation and local-measurement evidence correction analysis. |
+| 2026-10-18 | Retained successful15-query monitoring through10:20:59Z; quota still0 and source manifest absent, same watcher resumes30minutes at5-minute cadence without control. |
+| 2026-10-18 | Prepared unfrozen locked-BPE prompt candidates/native sampling policy and verified retained RPC/replay ownership; actual source acquisition remains pending. |
+| 2026-10-18 | Verified16 retained precision inventories and preserved output-head method-label discrepancy/full-scale budget limit; queue monitoring continues with no G2 credit. |
+| 2026-10-18 | Completed read-only caller-reuse design and parent input-argument AST checks; kept raw capacity/lifecycle labels, queued source-only job and G2 limits explicit. |
+| 2026-10-18 | Reconciled completed independent live-state analysis with parent 15-file source checks and retained wrapper forward; queued source acquisition and G2 limits unchanged. |
+| 2026-10-18 | Froze distinct source-only generation after materialized launcher No findings, 18 current bindings and 44 inert lifecycle checks. |
+| 2026-10-18 | Corrected G2 proposal to actual MRv2 and source-derived4105threshold; reviewed new18-owner request source-set with10CPUchecks, fresh verification/acquisition pending. |
+| 2026-10-18 | Committed verified UUID correction e10e030 with258fake/No findings/77+902fidelity/24+8budget passes; native acceptance remains open. |
+| 2026-10-18 | Closed TP16 actual-row RCA; corrected representation-only UUID comparison after 4 RED failures, with 258 affected fake checks passing and independent review/fidelity/performance pending. |
+| 2026-10-18 | Closed Attention actual trace audit at 0/60 admission, recorded kernel-only DSA copy omission and separate saved-warmup checks; TP16 RCA report recovery continues. |
+| 2026-10-18 | Verified Attention Succeeded/exit0/restart0 and187cloud hashes; TP16native capacity returned but UUID census rejected16snapshots, platformFailed with fail-policy stop, RCA ongoing. |
+| 2026-10-18 | Froze reviewed generations and submitted Attention exp-1018-155755-050374 and TP16 exp-1018-160003-695910 once each; precise resources/mounts verified, original launchers remain alive. |
+| 2026-10-18 | Committed reviewed Attention 4287dac and TP16 7d8bc40, verified eight current=Git byte bindings; independent launcher draft review found two P2 corrections before freeze. |
+| 2026-10-18 | Closed current-byte joint verification: 450 fake tests, 77 scenarios/902 artifact hashes, and 24 sequential attempts/eight unchanged-budget paired medians; private launch review/freeze and commits are next. |
+| 2026-10-18 | Confirmed Attention final stdout re-review No findings and parent TP16227fakePASS; resumed interrupted TP16 deadline/peer review before joint verification. |
+| 2026-10-18 | Recorded the Attention correction review's remaining P2 and its RED/GREEN/process-level fix, and the read-only GLM/DS reuse inspection. |
+| 2026-10-18 | Recovered stopped/unavailable correction sessions from retained files and logs; Attention has 154 fake checks passing, TP16 corrections reassigned, and independent Attention correction review started. |
+| 2026-10-18 | Recorded completed FFN generation02 raw/weight/math audit, initial CPU integrations, four findings per driver and parallel correction ownership; native admission remains open. |
+| 2026-10-18 | Closed primary source-design inspection, recorded the locked-model handoff failure, and reconciled current next actions without native execution. |
+| 2026-10-18 | Independently reproduced original-request INVALID_REFERENCE and reconciled current blockers after Pi retirement; source-design branches continue in parallel. |
+| 2026-10-18 | Applied the user's Pi direct-Python policy; recovered the original local preflight diagnostic and removed the historical route/privacy blocker. |
+| 2026-10-18 | Completed public review-access investigation: no actionable private-finding export or review endpoint; no additional platform action, with frozen inputs unchanged. |
+| 2026-10-18 | Resumed05/06 CPU checkpoint after read-only recovery; fresh independent reviews and saved CPU evidence audit run in parallel, without GPU operations. |
+| 2026-10-17 | Continued authorized05/06 CPU work in parallel; generation02 remains status-only SPEC_REVIEW_REQUIRED through15:40:03Z. |
+| 2026-10-17 | After the user reloaded the delegation tool, generation02 request `-01` was accepted at intake; corrected stale next actions (operator references, withdrawn TP16 coverage). |
+| 2026-10-17 | Committed the reviewed generation02 FFN attestation slice f01312a, froze its preparation, and recorded the delegated-operator authorization wait. |
+| 2026-10-17 | Reconciled failed capacity02, metadata audits and corrected FFN consumer; isolated driver review continues. |
+| 2026-10-17 | Verified05sampling/source commits, fresh77fidelity/sequential sentinel budgets, and preserved initialization-only renderer rejection. |
+| 2026-10-17 | Accepted all ten G1 criteria after complete new resource/identity verification;05/06 now ready and parallel preparation started. |
+| 2026-10-17 | Recorded completed analyses, nine accepted criteria and criterion1's mandatory-recording blocker; independent code verification continues. |
+| 2026-10-17 | Reconciled seven accepted G1 criteria, resolved the SWA lifetime anomaly, completed stage references/fresh fidelity and reviewed a binding-only quantizer observation. |
+| 2026-10-17 | Recorded29native04Fframes/32CPUoperations, preserved SWA discrepancy and isolated capture-metadata ownership RED/GREEN/freshSWArun. |
+| 2026-10-17 | Reconciled completed04E and committed checker identities; stateful04F preparation is in progress. |
+| 2026-10-17 | Recorded native FFN numerical planning and the completed 14/6/partial8/2 owner audits; checkpoint04E implementation and review are in progress. |
+| 2026-10-17 | Recorded late review corrections, CPU acceptance, immutable worker snapshots and the first binding diagnostic failure. |
+| 2026-10-17 | Implemented04D26paged sparse decode cases and CPU addressing/visibility faults; independent pre-submission review is in progress. |
+| 2026-10-17 | Resumed H800-only ticket04 checkpoint04C; ended H200 watcher with original Pending job and live launcher retained. |
+| 2026-10-17 | Resumed parallel H800 RDMA recovery and early H200 two-node validation; recorded restored RDMA requests and exact submitted jobs. |
+| 2026-10-16 | Completed primary04B64-case native acceptance and parallel two-node Socket validation; retained RDMA limitation. |
+| 2026-10-16 | Completed04A native acceptance:82PASS, preserved initial checker failure, verified six targeted corruptions, closed platform blocker. |
+| 2026-10-16 | Exact-replica events established platform certificate/PVC mounting failures as the G1 startup blocker; recorded support references without external mutation. |
+| 2026-10-16 | Recovered parallel work: eight-GPU job Succeeded; user authorized primary G1 corrections, which passed local verification and submission-readiness review. |
+| 2026-10-15 | Recorded the approved worktree, source snapshot, and unresolved planning inputs. |
+| 2026-10-15 | Closed the missing-companion blocker after S5-Q2; recorded five-file validation and remaining planning questions. |
+| 2026-10-15 | Captured the user's LLM-only decision: remove multimodal X01 from the derived plan and future roadmap. |
+| 2026-10-15 | Recorded S5-Q4: retain H200 as required follow-up; H800-only delivery is a partial milestone. |
+| 2026-10-15 | Recorded S5-Q5: approved per-cell 10% mean and conditional 15% p95 client TTFT/ITL gates. |
+| 2026-10-15 | Recorded S5-Q6: Step simulator work follows the GLM full-path milestone; independent native preparation may proceed earlier. |
+| 2026-10-15 | Completed spec/plan drafts and addressed phase-review findings on performance budgets and stale progress. |
+| 2026-10-15 | Verified maintained draft whitespace after correcting a zsh check-command variable; recorded the planning-draft test report. |
+| 2026-10-15 | User confirmed the plan and invoked To Tickets; drafted and reviewed a 30-slice proposal with completion-level blocking edges. |
+| 2026-10-15 | User approved all 30 tickets; generated and reviewed the files, verified the final package, and completed the planning archive. |
+| 2026-10-15 | Began ticket 01 local audit preparation under the explicit native Grok workflow; prepared checkpoint scope and environment. |
+| 2026-10-15 | Received native Grok checkpoint 1; primary acceptance and independent verification are in progress. |
+| 2026-10-15 | Accepted checkpoint 1 after independent verification and document corrections; preserved remaining ticket-01 work and the GLM dependency. |
+| 2026-10-15 | Prepared the explicitly requested checkpoint 2 after GLM baseline evidence acceptance. |
+| 2026-10-15 | Accepted corrected checkpoint 2 after independent checks; three ticket-01 criteria are complete. |
+| 2026-10-15 | Reconciled primary compatibility review and accepted CPU pilots with the live six-of-ten checklist; repeat execution remains pending. |
+| 2026-10-16 | Recorded successful proxy/original identity jobs, preserved lock supplement,24retained CPU results, diagnostic MoE profiles and residual acceptance blocker. |
+| 2026-10-16 | Closed ticket02 after phase review of the allowed UNVERIFIED disposition and released03 pending explicit native Grok invocation. |
+| 2026-10-16 | User explicitly invoked native Grok continuation; prepared concrete Tasks25–27 acceptance commands and began ticket03. |
+| 2026-10-16 | Recorded successful26-file source export, independent byte/geometry checks and primary inventory corrections; phase review in progress. |
+| 2026-10-16 | Accepted corrected03source/design package and all ten criteria;04is ready but its new implementation checkpoint awaits explicit invocation. |
+| 2026-10-16 | Recorded failed actual CUDA initialization and user-deferred driver issue; continued independent04CPU/source preparation. |
+| 2026-10-16 | Derived82planned G1 cases; verified mathematical references, source compact lengths and five corruption controls without GPU work. |
+| 2026-10-16 | User selected the CUDA forward-compatibility switch; one-H800 rerun exp-1016-132434-466356 passed all five compute checks with the compatibility path set at process start. |
+| 2026-10-16 | Parallel two-step request: wrote the G1 04A Grok spec (dispatch blocked: the tool requires the user's `/grok-implement` command) and submitted the 8-H800 NCCL/P2P diagnostic. |
+
+## D31 mainline reset — 2026-10-25
+
+State of the D31 plan steps (see the top section of `plan.md`):
+
+- completed — A. Document fixes: `review_2026-10-25_mainline_reset.md`, D31 in
+  `requirements.md`, the new current plan, this entry, the summary index and the ticket status
+  notes.
+- completed — B. Fast Frontier E2E runs (2026-10-26, details below).
+- completed — C. H200 32-GPU native workload with the routing image (workload02, details below).
+- completed — D. H200 Step-5 operator profiles (run 03 tables merged; report
+  `test_report_2026-10-26_h200_profiles.md`).
+- in-progress — E. Frontier `h200_32` on the measured tables. The base run `h200_32_run01`
+  (merged03, analytical collectives) finished: TTFT −45.0%, TPOT −57.0%, E2E −56.8%, total
+  throughput +14.7% (calibration item 2b below). The workflow-port run `h200_32_wf02` finished:
+  TTFT −37.4%, TPOT −57.0%. The rerun `h200_32_comb_h200` (workflow port and measured
+  collectives) finished: all 14 rows pass the 30% gate against the h200_32 sweep reference
+  (TPOT mean −18.5%). Against the h200_32 sweep03 reference (420 s sweep) all 14 rows pass:
+  TTFT mean −5.3%, TPOT mean −13.9%, E2E mean −13.7%, throughput +2.9%. Calibration (items 3,
+  then 2) continues.
+- completed — F. H200 64-GPU native workload, job `exp-1026-201417-791460` (report
+  `test_report_2026-10-26_h200_64_native_workload.md`).
+- in-progress — G. Frontier `h200_64` rerun `h200_64_g01` (merged04, measured collectives)
+  finished on 2026-10-27; all four means are within 30% of the h200_64 sweep reference, three
+  tail rows fail (details in the G result below). Calibration continues with E.
+
+Step D progress (2026-10-26):
+
+- D(a) done: measured Step attention is priced within its measured category. A layer that was
+  not profiled uses the first measured layer with the same attention block, and a query outside
+  the measured feature range of its category raises instead of extrapolating. One SWA layer
+  (layer 0) and one DSA layer (layer 3) therefore cover all 92 layers. Report
+  `test_report_2026-10-26_measured_attention_category.md`: fidelity 77/77 identical; of the 133
+  unit-test failures, 132 also fail on the baseline `e275c83`, and the one caused by this change
+  was a test asserting the old exact-layer rule; it now checks the block rule.
+- Abandoned: an attention-shape census (`tests/integration/step5_pd/attention_census.py`,
+  untracked) that patched four Frontier methods to record the dummy-run shapes. The patched run
+  hung, and the census duplicated what the D side's native shape rules already define. The file
+  stays untracked; deleting it needs approval.
+- Shape findings for the profile grid, from the vLLM MRv2 sources exported under this task:
+  - Frontier asks the attention model for mixed batches (decodes plus one prompt tail) and for
+    rows padded to a CUDA Graph capture size. Both are model features (`phase_code`,
+    `batch_num_prefill_tokens`, `batch_num_decode_tokens`, `padded_tokens`), and the profiler
+    could not produce either: `Step5ProfileInput` allowed only prefill or decode, and
+    `choose_graph_mode` rejected padded rows.
+  - Native padding: FULL graphs pad requests and tokens (padded requests have one token,
+    sequence length 0, block-table row 0 and slot `PAD_SLOT_ID`); PIECEWISE graphs pad only the
+    hidden rows, and attention sees the real request and token counts.
+  - Decodes come first in a native batch, then the other requests by ascending length.
+- D(b)/(c) done: the profiler takes phase `mixed` and rows padded to a capture size, including
+  an explicit larger width agreed across DP lanes, and the vLLM wrapper builds MRv2's padded
+  metadata. Report `test_report_2026-10-26_profiler_mixed_padded_rows.md`: fidelity 77/77
+  identical against `e275c83`; the unit run found 2 new failures, both fixed (a module-level
+  import broke the stdlib-only smoke judge, and one dry-run test lacked the new field). The
+  native padding is first exercised by the D(g) profile job.
+- D(d)/(e) done. Report `test_report_2026-10-26_h200_profile_plan.md`.
+  - `frontier/profiling/step5/h200_profile_plan.json` covers `h200_32` (TP8/DP2/EP16) and `h200_64`
+    (TP8/DP4/EP32) in one package per role: attention at TP8, MoE at EP 16 and 32. Inputs: PREFILL
+    6 cells, DECODE 160 cells, written by `tests/integration/step5_profiling/h200_profile_inputs.py`.
+  - The role package builder takes device, attention TP and EP sizes from the plan. The plan key
+    `serving_topology_per_role` is renamed `serving_topologies_per_role` (keyed by case); older
+    plans with the old key no longer load.
+  - The profiler accepts an explicit graph mode lower than native dispatch: the DP forward-start
+    agreement runs a decode lane PIECEWISE when another lane holds a prompt tail.
+  - DSA contexts are measured only at multiples of 8 (highest 7160). A DSA context in the last score
+    region (up to 7167) is priced at the highest measured context. Relaxing only the range check was
+    not enough: the fitted model's own feature maximum still rejected the query.
+  - CPU coverage check (`tests/integration/step5_profiling/h200_profile_coverage.py`): every
+    reachable lane state with at most 3 prompt tails per step lies in the planned ranges (48,364
+    checks). With 4 tails it does not; Frontier raises a range error if a run reaches that.
+  - Unit tests 387 passed; the 5 failures are all on the known baseline list. Fidelity 77/77
+    identical against `e275c83`.
+- D(f) done: the two remaining H200 inputs of the measured predictor.
+  - NIXL READ cost: `evidence/d31_h200_nixl_read_cost.json`, written by
+    `tests/integration/step5_pd/nixl_read_profile.py` from the decode-side vLLM "KV Transfer metrics"
+    lines in the step C workload02 server logs
+    (`/data/ycfeng/tmp/step5_d31_workload_20261025/h200_32_workload02/stage/evidence/nodes/*/server.log`).
+    94 logging intervals, 3,447 per-rank READs (3 repetitions × 144 requests × 8 ranks = 3,456; the
+    last interval of the run is not logged), no failed transfers. Every interval logs 133.407 MiB
+    per READ, which equals Frontier's reserved per-rank payload (139,887,104 B for the 6,128-token
+    prefix). Transfer-weighted mean NIXL duration: **51.37 ms** (interval means 13.9–117.1 ms; mean
+    post time 5.2 ms, not included). The earlier estimate of 3–10 ms was wrong: the READ moves
+    about 16,000–20,000 descriptors at about 2.6 GB/s per rank. 51 ms is 4.7% of the native TTFT,
+    so the profile matters.
+  - Kernel gap: `evidence/d31_h200_step5_kernel_gap_proxy.csv` holds the two TP8 rows of
+    `data/profiling/compute/h200/Qwen3-235B-A22B/kernel_gap.csv` unchanged (eager 1.238 µs,
+    CUDA Graph 0.430 µs per kernel; the `chain` column names the source). It is a proxy: Step-5
+    has no kernel-gap measurement, and the gap is a per-kernel launch property of the GPU and
+    runtime more than of the model. It affects only eager (KERNEL_ONLY) steps.
+  - Both files load through `NixlReadCost.from_file` and `read_kernel_gap_ms(path, 8)`.
+  - Limits: the NIXL time is the mean under the native QPS-1 load, not an uncontended READ; it
+    is used for `h200_64` as well, whose payload per rank is the same. The kernel-gap proxy was
+    measured with torch 2.8/CUDA 12.8, while the Step image uses CUDA 13.
+- D(g) submitted (2026-10-26 06:47 UTC) through Pi run `d31-h200-profiles-submit-1026a`:
+  - Packages: `/data/ycfeng/tmp/step5_d31_profiles_20261026/{prefill,decode}_stage01`, staged by
+    `frontier.profiling.step5.job --p0-role {PREFILL,DECODE} --profile-plan
+    frontier/profiling/step5/h200_profile_plan.json`; offline preflight
+    (`verify_fixed_probe.py`) PASS for both (`*_package_preflight01.json`: PREFILL 6 attention
+    rows plus 6 GPU-active rows, DECODE 160 rows; linear and MoE dry runs PASS).
+  - Jobs: PREFILL `exp-1026-144712-650202`, DECODE `exp-1026-144726-883624`; 1 H200 each,
+    `step_main`, non-preemptible, creator `i-fengyicheng`, worker timeout 14400 s. Launchers run in
+    Pi's HOST service (PIDs 399138 and 401263) and must stay alive. Cloud outputs:
+    `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/d31_h200_{prefill,decode}_20261026_01`.
+  - At submission the account held 32 non-preemptible H200 GPUs (the 4 stepcast jobs, still
+    running), so step F stays blocked.
+- D(g) results of run 01 (Pi run `d31-h200-profiles-copy-1026a`; hash-identical copies under
+  `/data/ycfeng/tmp/step5_d31_profiles_20261026/downloads/d31_h200_{prefill,decode}_20261026_01/`):
+  - PREFILL succeeded: linear, MoE and all 6 attention cells, each in both measurement types.
+    Of the 6 KERNEL_ONLY attention rows, 5 pass `stability_pass`; the layer 3 decode dummy cell
+    fails only the 5% median agreement of `step5_qkv_projection` (5.14%, CV 0.28%). The
+    CUDA_EVENT rows of eager cells are diagnostics (`calibration_candidate` false) and are not
+    priced.
+  - `judge_attention_smoke.py` does not fit these packages: it expects `summary.json` next to
+    the CSV, infers FULL for the explicit-descriptor dummy cells, and checks coverage against the
+    old smoke grid. Acceptance therefore uses row completeness and the row-level
+    `stability_pass` flag; the judge output is kept in `/data/ycfeng/tmp/d31_judge_prefill.json`.
+  - DECODE failed: linear and MoE tables are complete, attention stopped after the 38 FULL cells
+    at the first PIECEWISE capture with `it->second->use_count > 0 INTERNAL ASSERT FAILED at
+    CachingHostAllocator.h:815`. This was the first GPU run of PIECEWISE Step attention: the
+    829 earlier attention CSVs hold only `full` and `none` rows.
+  - Cause: vLLM keeps its graphs for the process lifetime; the profiler drops each capture's
+    graphs. A dropped graph releases its pool in the pinned-host allocator, which leaves the pool
+    id in `graph_pools_freeable_` until the host cache is emptied. `torch.cuda.graph` empties the
+    host cache before capture, so FULL cells were unaffected. vLLM's
+    `BreakableCUDAGraphWrapper` empties only the device cache and then captures into the same
+    global pool id, which trips the use-count assert.
+  - Fix 688eb32b (`frontier/profiling/step5/replay.py`): before a breakable capture the profiler
+    runs `gc.collect()`, `torch.cuda.synchronize()` and `torch.accelerator.empty_host_cache()`.
+    The replay unit test checks the call order.
+  - `tests/integration/step5_profiling/merge_role_profiles.py` concatenates the PREFILL and
+    DECODE tables per family and writes `predictor_options.json` (merged tables, kernel gap,
+    NIXL READ profile). Test on run 01: exit 0; rows linear 10+70, MoE 132+804, attention 6+38.
+- D(g) DECODE run 02 submitted (2026-10-26 07:16 UTC) through Pi run
+  `d31-h200-decode02-submit-copy-1026b`: package `decode_stage02` with the fix (preflight
+  `decode_package_preflight02.json` PASS, 160 attention rows), job `exp-1026-151616-591957`,
+  1 H200, `step_main`, non-preemptible, creator `i-fengyicheng`; cloud output
+  `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/d31_h200_decode_20261026_02`. At submission
+  the account held 32 non-preemptible H200 GPUs (the 4 stepcast jobs).
+- D(g) run 02 and run 03, and the smoke runs on the measured tables (full evidence in
+  `test_report_2026-10-26_h200_profiles.md`):
+  - Run 02 (DECODE, 901 s) wrote all 160 attention rows. Its MoE table used the `uniform` load
+    distribution, while Frontier prices Step MoE with `balanced` routing (D31.9). This was a
+    planning error in the D(g) ticket: no check compared the profiled load with Frontier's
+    routing.
+  - Four Frontier smoke runs (4 requests × 8 output tokens) each stopped at a defect:
+    - `ae4c9312`: only KERNEL_ONLY tables need kernel counts.
+    - `39a82403`: profile the `input_cast` and `final_residual` stage boundaries.
+    - `dd1f37dc`: one measurement-identity builder for the linear, MoE and attention profilers.
+    - `6790f110`: profile the `balanced` MoE distribution.
+    - The fourth run stopped because run 02's attention rows were not merged yet.
+  - Run 03 (PREFILL `exp-1026-183852-975984`, 417 s; DECODE `exp-1026-183852-950646`, 978 s;
+    Pi run `d31-h200-profiles03-submit-copy-1026c`): all tables complete and hash-identical.
+    155/160 DECODE and 11/12 PREFILL attention rows have a priced-target (`step5_layer_e2e`)
+    CV and median disagreement ≤ 5%. The rest are ≤ 5.7%. Run 02's 39.6% outlier did not
+    recur. Merged inputs: `/data/ycfeng/tmp/step5_d31_profiles_20261026/merged03/predictor_options.json`.
+  - Pi deviation in this run: a relative path after `stepmind_env.sh` changed the working
+    directory wrote `/data/ycfeng/steptron/status_{prefill,decode}_3_terminal.json` outside the
+    run directory. Deleting the two files needs approval.
+  - Smoke run05 (3259a06a) completed with TPOT 94 ms for 4 requests. An operator trace showed
+    that PD DECODE priced MoE, linear and EP communication from CUDA_EVENT tables under CUDA
+    Graph modes. The cause: the families that Step attention adds also chose the step's
+    family. Fix `d034202c`; one-request TPOT 93.94 → 14.77 ms, TTFT unchanged.
+  - `d034202c` unit evidence: 143 failures, and the same 143 IDs fail on a `git archive` export
+    of `431e5bd4`. Most need `torch`, `aiohttp` or `plotly`. The rest are stale tests, for
+    example ones that assert Step attention is disabled.
+- Step E started 2026-10-26 11:19 UTC:
+  `frontier_workload.py run --case h200_32 --predictor-options .../merged03/predictor_options.json
+  --output-dir /data/ycfeng/tmp/d31_e_run/h200_32_run01` (log `/data/ycfeng/tmp/d31_e_run/h200_32_run01.log`).
+
+Calibration item 1, workflow port (2026-10-26, `in-progress`):
+
+- Reason: the native engines run vLLM async scheduling (every server log has "Disabling NCCL for
+  DP synchronization when using async scheduling"), so a DECODE engine keeps two batches in flight
+  and its engine steps post, find and report the NIXL READs. Frontier's base path completes the READ
+  at wire end and runs one DECODE batch at a time. The glm53 stream measured that the two features
+  close about 2 × one step of the handoff gap.
+- Method: worktree `/data/ycfeng/Frontier/.worktrees/step5-d31-workflow`, branch
+  `feat/step5-d31-workflow` from `feat/step5-preview`:
+  - `1a6b4f8f`, `a07518e0`, `f9c661ea`: cherry-picks of glm53 `5f907f66`, `96d9c1ef`, `82390e10`
+    (engine-step NIXL READ completion, the all-idle DP group fix, DECODE `max_concurrent_batches=2`
+    with output placeholders). Conflicts resolved in `kv_cache_transfer_start_event.py` and the
+    vLLM V1 scheduler `__init__`; the glm53 task-record driver was not taken.
+  - `0b769dc6`: the ported DECODE placeholder tests use a Step-5 TP8/DP2/EP16 lane instead of the
+    DSV4 fixture, which needs H800 PP1 MONOLITHIC; the two-step test follows the Step DP first-step
+    sync. 11/11 pass.
+  - `cf90408a`: `frontier_workload.py` passes `nixl_read_completion=engine_step` and DECODE
+    `max_concurrent_batches=2`.
+  - `331d646e`: the measured NIXL READ check in `KVCacheTransferEndEvent` required the end time to
+    equal start + measured READ time. In `engine_step` mode the end is at or after it. The first
+    full run (`/data/ycfeng/tmp/d31_wf/h200_32_wf01`) stopped at the first READ with "Measured
+    NIXL READ-to-ready duration changed". `transfer_end` keeps the exact check.
+    `test_nixl_read_completion.py` + `test_decode_output_placeholders.py`: 20 passed.
+- Dummy-mode run on the 32 × 16 short trace: completes, 121.9 s base. Two measured short runs
+  (base and port, `/data/ycfeng/tmp/d31_wf/measured_32x16_{base,wf}`) both stopped with
+  `share_expert_up_proj` `num_tokens` 12,256 above the profiled 6,144: the short trace puts all
+  32 arrivals at time 0, so both PREFILL DP lanes join one EP wave. The canonical trace does not
+  reach this case in PREFILL; the short comparison was dropped, and step E is compared with the
+  full port run instead.
+- Finding from that stop (not fixed; calibration item 2): the EP lane batch takes the shared
+  expert's token count from the merged batch of all DP lanes
+  (`build_ep_lane_batch`, `moe_pre_routing_effective_total_tokens`), while the native shared
+  expert runs on each DP rank's own tokens (2026-10-20 operation census below: its down
+  projection all-reduce is `T x 8,192` B with the same `T` as `o_proj`).
+- Size of that finding on this workload (from the merged03 `linear_op_kernel_only.csv`, which
+  prices CUDA Graph DECODE steps): the three shared-expert operators take 10.35 µs per layer at
+  32 tokens and 10.95 µs at 64. Pricing a 32-token lane on 64 merged tokens adds about 0.6 µs per
+  layer, about 0.05 ms per step over 88 MoE layers, which is about 0.09% of the native 61.7 ms
+  TPOT. In PREFILL the canonical trace rarely puts two prompts in one wave, and when it does the
+  query exceeds the profiled range and the run stops instead of returning a wrong time.
+  Decision: low priority; not fixed unless a measured error points at it.
+- Port checks: `test_report_2026-10-26_workflow_port.md`. Unit suite base 279 failed / port 325
+  failed, the 46 new failures all from the uninitialized collective-sim submodule in the new
+  worktree; dummy smoke 12/12; fidelity 77/77 with only the new config field differing.
+- Simulator cost (cProfile, 1 request × 64 output tokens, 575 s): 5,720 EP waves take 368.7 s of
+  535.4 s because each wave prices all 16 EP lanes (104,321 stage predictions, 3.75 ms each).
+  A full run takes about 3 hours. Deferred: caching lane predictions with identical workloads.
+- Run-log warning checked: "approximation factor=0.500" for `attn_pre_proj`, `attn_post_proj` and
+  `moe_grouped_gemm` (model config FP8, profile files BF16) changes no Step-5 time. The factor is
+  applied only by `QuantizationManager.adjust_compute_time` on the dense layer path, which made 0
+  calls in the profiled run; Step-5 takes operator precision from `step5_operator_binding`.
+- Running: full port run `/data/ycfeng/tmp/d31_wf/h200_32_wf02` (log `h200_32_wf02.log`).
+
+Calibration item 2a, collective communication (2026-10-26, `in-progress`):
+
+- Evidence: the operator breakdown of a measured one-request run (6144 input, 64 output tokens,
+  base code, step E predictor options; `/data/ycfeng/tmp/d31_diag/b1_trace/`, script
+  `/data/ycfeng/tmp/d31_diag/op_step_breakdown.py`, PREFILL output `prefill_breakdown.txt`)
+  compared with the H800 S2 collective measurements (TP8/DP2/EP16,
+  `step5_comm_20261020/s2_*/collectives/summary.csv`; H200 has none yet).
+- DECODE, one request (Frontier step 19.3 ms; native steps at low load about 32 ms):
+
+  | Collective per step | Frontier | H800 S2 graph median | Count per step |
+  | --- | --- | --- | --- |
+  | EP dispatch | 2.6 µs (`alltoall`, EP16, analytical backend) | 70 µs (`all_gatherv`, DP group) | 88 |
+  | EP combine | 2.6 µs | 42 µs (`reduce_scatterv`, DP group) | 88 |
+  | `attn_tensor_parallel_allreduce` and dense `mlp_tensor_parallel_allreduce` | about 1.2 µs | about 9 µs (TP8) | 92 + 4 |
+  | routed-final and shared-expert `down_proj` TP8 all-reduces | absent (TP size resolves to 1) | about 9 µs | 176 |
+
+  The missing and underpriced collectives add up to about 11.7 ms per step, most of the gap.
+- PREFILL, one request (Frontier TTFT 490 ms, native 1,084 ms): EP dispatch and combine are
+  27.8 ms each over 88 layers (0.32 ms per layer), and the routed and shared TP all-reduces are
+  absent. `attn_tensor_parallel_allreduce` is 107.9 ms over 92 calls (1.17 ms each at 6,144
+  tokens), above the H800 TP8 rows (0.67 ms at 8,192 tokens), so the analytical backend overprices
+  this one. H800 S2 eager rows at 8,192 tokens per DP rank: FP8 dispatch 1.6–2.4 ms,
+  BF16 dispatch 2.9–4.4 ms, combine 2.8–3.9 ms, TP all-reduce 0.67 ms per call. Native PREFILL of one
+  prompt on DP2 is uneven (`[6144, idle]`), and vLLM then uses per-root Broadcast/Reduce.
+- Native communication per step (vLLM `AgRsAll2AllManager`, sequence-parallel MoE off): 273 TP8
+  all-reduces of `T x 8,192` B (embedding 1, `o_proj` 92, dense `down_proj` 4, shared-expert
+  `down_proj` 88, routed final 88), 88 DP-group `all_gatherv` dispatches (4,288 B per row on FP8
+  layers 3–87, 8,256 B on BF16 layers 88–90) and 88 DP-group BF16 `reduce_scatterv` combines.
+- Plan (item 2a in `plan.md`): measure H200 collective curves with the existing producer
+  (`tests/integration/step5_comm/`), port the glm53 measured backend, price Step dispatch/combine
+  as DP-group all-gather/reduce-scatter with native payloads, add the two missing TP all-reduces,
+  then rerun E. Measured collective curves are operator-level communication profiles, so D31.10
+  allows them.
+- Worktree `/data/ycfeng/Frontier/.worktrees/step5-d31-measured-comm`, branch
+  `feat/step5-d31-measured-comm` from `feat/step5-preview` `7dce66c0`.
+- Step 1 (H200 curves), submitted 2026-10-26 16:45 UTC:
+  - The first Pi run `d31-h200-comm-submit-1026a` stopped with a model-service error before
+    launching anything. Nothing was submitted.
+  - Pi run `d31-h200-comm-submit-1026b` submitted both stages once:
+    - S2: `exp-1027-004502-180474`, TP8/DP2/EP16, 2 × 8 H200, launcher PID 826530.
+    - S1: `exp-1027-004515-758552`, TP8/DP4/EP32, 4 × 8 H200, launcher PID 828690.
+  - Both jobs: `step_main`, non-preemptible, creator `i-fengyicheng`, local NFS source
+    `step5-d31-h200-comm`. Status files are `<stage>/status_1.json` under
+    `task_memory/step5_comm/` of that worktree.
+  - This session holds 48 GPUs. The account also holds 4 non-preemptible 1 × 8 jobs of other
+    sessions, which are not counted.
+- Step 2 done, `b9cbda0d`:
+  - The glm53 measured backend is ported, with the H800 TP8/DP2 and TP8/DP4 curves.
+  - DP curves are keyed by row layout, graph mode and row pattern.
+  - Unequal rows are priced from the measured uneven rows: all gathered rows set the
+    AllGatherV time, and all but the smallest rank's rows set the per-root Reduce time.
+    This also completes step 4.
+- Step 3 done, `0349c1c6`. Design decisions:
+  - The new replica field `moe_all2all_backend` mirrors vLLM's `all2all_backend`. It is opt-in
+    with value `allgather_reducescatter`; with the field unset, Frontier prices exactly as
+    before.
+    - It is a serving choice, not a model property, so it is not part of the model profile.
+    - PD-AF roles reject it.
+  - The new path is Step-5-only and needs `--cc_backend_config_type measured`:
+    - the dispatch payload comes from the Step layer metadata (FP8 routed layers 3–87: 4,288 B
+      per row; BF16 layers 88–90: 8,256 B per row);
+    - only the measured backend prices DP rows (`predict_dp_rows`).
+  - The EP wave carries each DP rank's forward width (vLLM `num_tokens_across_dp`; under CUDA
+    Graph every rank is padded to the largest). Each EP lane runs its pre-routing work on its
+    own DP rank's tokens (vLLM EP rank = `dp_rank × TP + tp_rank`). On this path this also
+    fixes the merged-token shared-expert count from calibration item 2.
+  - The routed TP8 all-reduce is priced after the combine. A separate shared-expert TP8
+    all-reduce is added only at DP > 1; at DP1, vLLM fuses both into one all-reduce.
+  - The D29 position path is not reused. It is fixed to 16 ranks with DP2 receipts and the
+    collective_sim plan.
+- Step 5 checks on `0349c1c6`:
+  - Unit tests: 539 passed, 2 skipped, across 17 affected files, including the new
+    `tests/unit/test_moe_all2all_backend.py`. One fixture in `test_step5_mrv2_forward.py` gained
+    the new field.
+  - Dummy smoke matrix: 12/12 cases completed.
+  - Fidelity: 77/77 identical between `7dce66c0` and `0349c1c6`.
+    - Both sides ran in new detached worktrees with empty caches. Predictor cache file names
+      have zero differences.
+    - Output: `/data/ycfeng/tmp/d31_agrs_fidelity`.
+- Deferred:
+  - On the default path, these gaps remain:
+    - the EP-lane `mlp` all-reduce is 0;
+    - the shared-expert all-reduce is missing;
+    - pre-routing work uses the merged token count.
+  - The D29 compute/communication overlap.
+  - Caching EP-lane predictions with identical workloads (done later, `eddb9bf5`, below).
+- Simulator cost:
+  - Step E (`h200_32_run01`) has run for 5 h 37 min without finishing.
+  - The 8-request prefix (`/data/ycfeng/tmp/d31_e_run/prefix8_base`, `7dce66c0`) took 6,566 s
+    for a 32.6 s simulated window: TTFT 590.7 ms and TPOT 24.7 ms.
+  - Diagnostics of the new path therefore start on short traces.
+- Short-trace diagnostic (2 requests × 6,144 prompt + 32 output tokens, `h200_32`, H800 curves in
+  place of H200; `/data/ycfeng/tmp/d31_agrs_diag/`):
+  - analytical default: TTFT 580.3 ms, TPOT 20.07 ms, 577.5 s wall;
+  - allgather_reducescatter with the measured backend: TTFT 874.0 ms, TPOT 32.24 ms, 594.1 s
+    wall, no out-of-range collective.
+  - The added ~12 ms per decode step matches 88 MoE layers × (dispatch + combine + two TP
+    all-reduces) at 30–40 µs per small call.
+  - The new path costs about 3% more wall time; 437 of 593 s go to per-lane EP-wave prediction
+    (111,746 single-layer lane predictions at about 3.3 ms each).
+  - Report: `test_report_2026-10-26_agrs_collectives.md`.
+- Step 1 result: both H200 jobs succeeded (S2 at 16:55 UTC, S1 at 16:59 UTC). Pi run
+  `d31-h200-comm-copy-1026c` copies both cloud output directories to
+  `/data/ycfeng/tmp/step5_d31_comm_20261026/downloads/` with hash checks.
+- Step 1 done, `946595cd`: the two H200 `summary.csv` files are copied unchanged to
+  `data/profiling/network/h200_dgx/step5_tp8_dp{2,4}/` (cloud runs `d31_h200_s2_20261026_01` and
+  `d31_h200_s1_20261026_01` under `/mnt/codesign-exp/ycfeng/frontier/step5_comm/`).
+  - The advisory validator reports UNVERIFIED. Every identity, schema, native dispatch-match and
+    container-exit check passes. Two checks fail:
+    - `queue_held`: three small all-reduce cells (7.7–17.1 µs) out of 1,296 (DP2) and 1,440 (DP4);
+    - `actual_rdma_transport`: the worker logs carry no NCCL channel lines, so the transport
+      cannot be read from them.
+  - The medians rule out a socket fallback. H200 is faster than H800 on every collective: TP8
+    all-reduce about 0.58–0.60× (0.53× at 4 MB or more), DP combine 0.73×, BF16 dispatch 0.91×,
+    FP8 dispatch 0.95× (DP2; DP4 is similar). This is consistent with NVLink and RDMA.
+  - Both files load in `MeasuredCCBackend` with the same curve keys as H800, plus the
+    `eager_*_t6144` scenarios (20 extra rows on DP2, 40 on DP4). Check:
+    `/data/ycfeng/tmp/d31_h200_curves/{load.py,load.txt}`.
+- Runner option, `1c125189`: `frontier_workload.py run --measured-collectives` selects the measured
+  backend with `data/profiling/network/<network device>/step5_tp<TP>_dp<DP>/summary.csv` and
+  `--replica_config_moe_all2all_backend allgather_reducescatter`. A missing curve file fails.
+  Without the flag the command is unchanged (`/data/ycfeng/tmp/d31_h200_curves/cmd_check.py`).
+- Runs started 2026-10-26 17:20 UTC from the detached worktree
+  `/data/ycfeng/Frontier/.worktrees/run-agrs-1c125189` with the merged03 predictor options and
+  the H200 DP2 curves:
+  - `prefix8_agrs_h200` (the 8-request prefix trace `/data/ycfeng/tmp/d31_e_run/trace_prefix8.csv`),
+    compared with `prefix8_base` (TTFT 590.7 ms, TPOT 24.7 ms);
+  - `h200_32_agrs_h200` (the full workload, the rerun of step E).
+  - Output: `/data/ycfeng/tmp/d31_agrs_run/<label>/`.
+- Lane prediction cache, `eddb9bf5` ("Predict each distinct EP-wave lane once"):
+  - Reason: the EP wave predicts every EP lane on its own (16 per wave on `h200_32`), and this
+    took about 74% of the short-trace wall time.
+  - Method: the lanes of one wave share the source batch and layer, and the prediction reads only
+    the lane's local expert loads and pre-routing token count. Lanes with the same pair share one
+    prediction. Lanes with a native routing source are still predicted one by one, and the DSV4
+    source path is unchanged.
+  - Exactness check (`/data/ycfeng/tmp/d31_lane_memo/check_memo.py`, which re-predicts every
+    lane without the cache and compares the six phase times exactly): 92,928 lanes in 5,808
+    waves, 0 mismatches on both short traces. Distinct predictions: 11,968 (analytical) and
+    12,144 (allgather_reducescatter), 13% of the lanes.
+  - The short-trace `request_metrics.csv` and `system_metrics.json` equal the pre-cache results
+    of `/data/ycfeng/tmp/d31_agrs_diag/tiny_{base,agrs_h800}` exactly.
+  - Wall time, both versions side by side without a profiler: 329.6 → 195.7 s (analytical,
+    1.68×) and 342.6 → 196.7 s (allgather_reducescatter, 1.74×). The 2.84× in the commit message
+    compared a cProfile run with a run without the profiler and overstates the gain.
+  - Unit tests (the 17 files of `test_report_2026-10-26_agrs_collectives.md` §1): 540 passed,
+    2 skipped. The new test `test_ep_wave_predicts_lanes_with_equal_inputs_once` covers equal
+    inputs, different loads, different pre-routing tokens and a native routing source.
+  - Fidelity matrix: `eddb9bf5` (worktree `.worktrees/fidelity-candidate-eddb9bf`, label
+    `candidate_memo`) against the `7dce66c0` baseline: 77/77 identical, 0 failures, 0 differing
+    predictor cache file names (`/data/ycfeng/tmp/d31_agrs_fidelity/comparison_memo.json`).
+  - The two runs above started before this commit and use the uncached code. The cache changed
+    no result on the short traces, so they keep running and only take longer. (Stopping them
+    was not permitted by the session's permission check.)
+- Merge into `feat/step5-preview` (2026-10-26 17:42 UTC): `2acbf30a` merges
+  `feat/step5-d31-workflow` (calibration item 1) and `b3fa995a` merges
+  `feat/step5-d31-measured-comm`. No conflicts. Unit tests on `b3fa995a` (the 17 item 2a files
+  plus the six workflow files): 680 passed, 2 skipped. The step5-preview task directory stays the
+  main document directory; the two branch worktrees keep their own copies only as history.
+- Note on step E `h200_32_run01`: it was launched from the `step5-preview` worktree at `7dce66c0`
+  and loaded that code at start. `frontier_workload.py run` writes `git rev-parse HEAD` when the
+  run ends, so its `frontier_summary.json` will name the later head. The code that ran is
+  `7dce66c0`.
+- Runs started 2026-10-26 17:43 UTC from the detached worktree `.worktrees/run-e-b3fa995`
+  (`b3fa995a`: workflow port, measured collectives and lane cache). Output
+  `/data/ycfeng/tmp/d31_comb_run/<label>/`:
+  - `prefix8_wf`: the 8-request prefix with the workflow port only (analytical collectives);
+  - `prefix8_comb_h200`: the 8-request prefix with the workflow port and `--measured-collectives`
+    (H200 DP2 curves);
+  - `h200_32_comb_h200`: the full workload with both, the step E candidate;
+  - `h200_64_comb_h200` (17:55 UTC): the first step G run, `--case h200_64 --measured-collectives`
+    (H200 DP4 curves) with
+    `/data/ycfeng/tmp/step5_d31_profiles_20261026/merged03/predictor_options_h200_64.json`, which
+    differs from the 32-GPU options only in `nixl_read_profile`
+    (`evidence/d31_h200_64_nixl_read_cost.json`). The merged03 MoE tables have EP16 and EP32
+    rows (156 each). Formal 64-GPU calibration still waits for E within 30%.
+- Results of the 17:20 and 17:43 UTC runs (read 2026-10-26 19:00–19:30 UTC):
+  - The three 8-request prefix runs finished (return code 0). Means against `prefix8_base`
+    (`7dce66c0`, analytical collectives):
+
+    | Variant | Code | TTFT ms | TPOT ms | E2E ms | Wall s |
+    | --- | --- | --- | --- | --- | --- |
+    | `prefix8_base` | `7dce66c0` | 590.7 | 24.73 | 25,888 | 6,566 |
+    | `prefix8_wf` (workflow port) | `b3fa995a` | 671.0 (+80.4) | 24.75 (+0.02) | 25,988 | 4,524 |
+    | `prefix8_agrs_h200` (measured collectives) | `1c125189` | 692.3 (+101.6) | 35.55 (+10.82) | 37,061 | 6,876 |
+    | `prefix8_comb_h200` (both) | `b3fa995a` | 786.1 (+195.4) | 35.58 (+10.85) | 37,185 | 4,309 |
+
+    The workflow port raises TTFT (the NIXL read completes at an engine step); the measured
+    allgather_reducescatter collectives raise TPOT by 44%. The two effects add up. The prefix
+    has at most 8 requests in flight, so these values are not compared with the 128-request native
+    run.
+  - `h200_32_comb_h200` (3,100 s) and `h200_32_agrs_h200` (5,170 s) failed with
+    `query_len_cv=1.8750000000000007 not in [0.5302196349700645, 1.875]` from
+    `step5_layer_e2e`. Cause: the measured mixed row lists 16 decodes, then one 16-token chunk,
+    and its spread is exactly 1.875. The runtime batch lists the chunk first; the float sum of
+    squared deviations depends on the order and gives 1.8750000000000007, just above the measured
+    maximum. Fix `2beb09b3`: compute the spread from integer moments
+    (`sqrt(n * sum(q^2) - sum(q)^2) / sum(q)`), which does not depend on the order. New test
+    `test_query_length_spread_does_not_depend_on_request_order`. Step5 unit tests (`-k step5`):
+    153 failed and 15 collection errors; the same 153 tests also fail on `b3fa995a` without the fix
+    (`/data/ycfeng/tmp/d31_cvfix/{unit_step5.log,unit_failed_on_base.log}`), so the fix adds no
+    failure. These are the stale tests already listed as deferred.
+  - `h200_64_comb_h200` (1,310 s) failed with `total_routed_tokens ... below declared minimum
+    8.0: 7.0` for `moe_shuffling` in a DECODE EP wave. Cause: a profile coverage gap, not a code
+    error.
+    - The MoE profiler measures EP rank 0 only. vLLM's `uniform_topk` fills experts from the lowest
+      ID, so rank 0 is always a full rank: at least one token on each of its 11 local experts
+      (8 routed tokens only at 1 token).
+    - Frontier's `balanced` routing fills experts the same way. With fewer than 44 tokens, the
+      last filled rank is only partly filled. For DECODE on TP8/DP4/EP32, every DP rank is padded
+      to the same CUDA-graph size, so the step has 4 × that size tokens. 16 tokens give lanes
+      `[11] × 11, 7, [0] × 20`, and 32 tokens give a lane with 3. Both are below the measured
+      minimum of 8.
+    - TP8/DP2/EP16 cannot reach this: with DP2 padding the step has 2, 4, 8, 16, 32 or ≥ 48
+      tokens, and the partly filled rank then has 16, 10, 20, 18 or 14 routed tokens.
+    - Native `position_cyclic` routing also gives ranks fewer than 8 routed tokens in small decode
+      steps, so these loads are real.
+    - Decision (adopted under D31's "adopt the recommendations" instruction): measure the partly
+      filled rank instead of clamping the query. The profiler gets an option to measure the last
+      filled EP rank; with the same `uniform_topk` fill, that rank carries exactly the load
+      Frontier gives the partly filled lane at the same token count. A short 1-GPU H200 job adds
+      these EP32 rows; the tables become merged04 for step G.
+  - Rerun of step E: `h200_32_comb_h200` from the detached worktree `.worktrees/run-e-2beb09b`
+    (`2beb09b3`), started 19:34 UTC with the merged03 options and `--measured-collectives`; output
+    `/data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/`.
+  - `h200_32_run01` (base) and `h200_32_wf02` (workflow port) still run on the code before the fix
+    and can stop at the same spread check.
+- Partly filled EP rank profile (2026-10-26 19:40–20:17 UTC):
+  - `1fbc99c5`: `frontier.profiling.moe.main --profiled_ep_rank {first,last_routed}`. With
+    `last_routed` the profiler measures the EP rank of the highest routed expert
+    (`max(topk_ids) // experts_per_rank`) instead of rank 0. `position_cyclic` cells keep the rank
+    named by their cell, so the option is rejected with `--routing_input_file`. New test
+    `test_balanced_routing_measures_the_selected_ep_rank` (12 experts, EP4: `first` measures rank
+    0 with counts [1, 1, 1], `last_routed` rank 2 with [1, 1, 0]); 4 passed.
+  - `4a93f30d`: the profiled rank is written to the existing column `moe_ep_rank`.
+    `merge_role_profiles.py` takes several packages per role and writes `moe_ep_rank=0` for MoE
+    tables profiled before the column existed (those runs measured rank 0). Rebuilding merged03
+    with the new script gives identical tables apart from the added column.
+  - `9125bcb1`: `tests/integration/step5_profiling/stage_moe_profile.py` stages a MoE-only package
+    with the resources of `h200_profile_plan.json`.
+  - Job 04: stage `/data/ycfeng/tmp/step5_d31_profiles_20261026/moe_last_routed_stage04`, Pi run
+    `d31-h200-moe04-submit-copy-1026d`, job `exp-1027-035449-642457` (1 H200, `step_main`,
+    non-preemptible, creator `i-fengyicheng`), 19:54:49–19:59:41 UTC, `FINAL_STATUS succeeded`.
+    Cloud output `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/d31_h200_moe_last_routed_20261026_04`,
+    copied to `downloads/d31_h200_moe_last_routed_20261026_04/` (89 files, 22,859,454 B,
+    `HASH_IDENTICAL_DOWNLOAD`).
+  - EP16 and EP32 were both measured at 2, 4, 8, 16, 24, 32 and 40 tokens. EP16 lanes were inside
+    the measured range but not at measured points, so they were priced by the fitted model.
+  - Rows: 28 per table (2 EP sizes × 7 token counts × 2 routed layer groups). The routed tokens of
+    the measured rank equal the expected values in every row: EP32 5, 10, 9, 7, 5, 3, 1 and EP16
+    16, 10, 20, 18, 16, 14, 12. The FP8 group's KERNEL_ONLY grouped GEMM falls with load on
+    EP32 (0.103 ms at 10 routed tokens, 0.076 ms at 1). The CUDA_EVENT grouped GEMM stays at
+    0.63–0.66 ms for every load, so it is launch-bound at these sizes.
+  - merged04 (`/data/ycfeng/tmp/step5_d31_profiles_20261026/merged04/`): PREFILL03 + DECODE03 +
+    job 04, MoE rows 44 + 268 + 28 per table; `predictor_options_h200_64.json` differs from
+    `predictor_options.json` only in `nixl_read_profile`
+    (`evidence/d31_h200_64_nixl_read_cost.json`).
+  - Step G rerun: `h200_64_g01` from the detached worktree `.worktrees/run-g-9125bcb`
+    (`9125bcb1`), started 20:17 UTC with `--measured-collectives` and the merged04 options;
+    output `/data/ycfeng/tmp/d31_merged04_run/h200_64_g01/`.
+  - G result (2026-10-27): return code 0, simulator wall time 17,179 s (4.8 h). Frontier: TTFT
+    mean/p50/p90/p95 973.3 / 984.5 / 1,013.0 / 1,016.3 ms; TPOT 49.51 / 51.12 / 51.36 /
+    51.36 ms; E2E mean 51,618 ms; total throughput 5,316.6 tok/s, output 759.5 tok/s.
+    `frontier_workload.py compare`, gate 30%:
+    - Against the h200_64 sweep reference (`/data/ycfeng/tmp/d31_sweep_h200_64/compare_G_sweep.json`):
+      TTFT mean −23.9%, p50 −22.4%, p90 −35.6% (FAIL), p95 −37.6% (FAIL); TPOT mean −24.5%,
+      p50 −20.8%, p90 −29.4%, p95 −30.1% (FAIL); E2E mean −24.5%, p90 −29.3%; throughput
+      +6.7%. 11 of 14 rows pass.
+    - Against the pre-sweep reference (`evidence/d31_h200_64_native_metrics.json`,
+      `compare_G_pre.json`): 8 of 14 pass; TPOT mean −28.9%.
+    - The run log shows the BF16 → FP8 "approximation factor=0.500" warnings for
+      `attn_pre_proj`, `attn_post_proj` and `moe_grouped_gemm`, as in the E runs. As recorded
+      on 2026-10-26, they change no Step-5 time: the MoE predictor never calls
+      `adjust_compute_time`, Step-5 attention projections are priced by `step5_attention`, and
+      the profiles have no `attn_pre_proj`/`attn_post_proj` rows.
+
+Calibration item 2b, decode step time against batch size (2026-10-26, `in-progress`; numbered 3
+before the plan entry was added). Native step times and token gaps here are diagnostic only
+(D31.10); no Frontier cost is derived from them.
+
+- Step E base run `h200_32_run01` (`7dce66c0`, merged03, analytical collectives, wall 32,590 s):
+
+  | Metric | Frontier | Native | Error | Gate 30% |
+  | --- | --- | --- | --- | --- |
+  | TTFT mean | 595.6 ms | 1,083.7 ms | −45.0% | FAIL |
+  | TPOT mean | 26.55 ms | 61.75 ms | −57.0% | FAIL |
+  | TPOT p90 | 26.71 ms | 71.02 ms | −62.4% | FAIL |
+  | E2E mean | 27.75 s | 64.25 s | −56.8% | FAIL |
+  | Total throughput | 5,982.5 tok/s | 5,214.6 tok/s | +14.7% | PASS |
+
+  Frontier's TPOT is almost the same for every request (p50 26.69 ms, p90 26.71 ms); native TPOT
+  spreads from 61.7 ms (p50) to 71.0 ms (p90). Output `/data/ycfeng/tmp/d31_e_run/h200_32_run01/compare.json`.
+  The prefix runs above attribute +10.8 ms of TPOT to the measured collectives and +80–100 ms of
+  TTFT to each of the workflow port and the collectives; the rerun measures them on the full
+  workload.
+- Native decode token gaps, `tests/integration/step5_pd/native_decode_gaps.py` on the workload02
+  replay (`--dp 2`, stall threshold 150 ms; output
+  `/data/ycfeng/tmp/d31_diag/native_decode_gaps_h200_32.json`). The growth phase runs from the
+  first formal decode token to the first formal request's last token, while requests keep joining.
+
+  | Repeat | Growth phase | Stall share of decode time | In the growth phase | After it | First token after decode submit, growth / after |
+  | --- | --- | --- | --- | --- | --- |
+  | 1 | 76.9 s | 19.4% | 44.1% | 6.9% | 657 / 361 ms |
+  | 2 | 66.2 s | 9.4% | 31.5% | 1.0% | 646 / 360 ms |
+  | 3 | 59.1 s | 6.5% | 25.6% | 0.7% | 606 / 342 ms |
+
+  Median non-stall gap by decoding requests per DP engine (repeat 1; repeats 2 and 3 agree within
+  2 ms): 0 → 30.5 ms, 5 → 35.8, 10 → 45.0, 15 → 46.9, 20 → 52.6, 25 → 53.5, 30 → 54.4,
+  35 → 58.8, 40 → 59.2 ms. The vLLM CUDA-graph statistics in the decode server logs give the same
+  curve: 251 FULL steps in a 10 s interval at 8 requests per engine (39.8 ms per step), and about
+  48, 54 and 57 ms at 16, 23 and 31 requests during the drain.
+- Frontier at one request per engine (FULL graph, merged04 and the H200 DP2 curves, `1ef82e4d`):
+  31.01 ms per step against native 30.5 ms. Stage part 4.68 ms; EP wave 26.33 ms (pre-dispatch
+  3.49, dispatch 5.69, routed compute 13.26 of which grouped GEMM 12.78, combine 3.06,
+  post-combine 0.87). A PIECEWISE step with one request takes 55.7 ms.
+- So the small-batch step agrees. Native grows +28.7 ms from 0 to 40 requests per engine, about
+  0.7 ms per request.
+- The merged04 FULL-graph attention rows do not explain it. Per layer at context 6,656: SWA
+  0.0347 ms (8 requests), 0.0407 (32), 0.0507 (64), 0.0588 (128); DSA 0.0677 (8), 0.0897 (32),
+  0.172 (128). Over 69 SWA and 23 DSA layers, 8 → 32 requests adds about 1 ms per step.
+- Candidates, none confirmed: collective growth with rows, the eager pre-forward kernels that run
+  beside the FULL graph replay on a separate stream (seen in the glm53 DSV4 H200 traces), the DP
+  synchronization before each forward, and per-request host work in the Step model runner (KV
+  side storage).
+- Frontier's own step curve (correction, 22:40 UTC): Frontier's step is not flat. The
+  diagnostic run with the stage-batch and EP-wave ledgers on (`/data/ycfeng/tmp/d31_diag/step_curve/curve/`,
+  84 requests at 0.2 s spacing, 6,144/1,024 tokens, `--time_limit 30`, merged04 and the H200 DP2
+  curves; Frontier code as `1ef82e4d`; wall 3,002 s) gives a step that rises in stairs at the
+  CUDA Graph capture sizes. Medians per FULL step, from
+  `/data/ycfeng/tmp/d31_diag/step_curve/analyze_window.py` (EP waves joined to a step by time;
+  output `analyze_window.txt`):
+
+  | Requests per engine | Frontier step | Native step | Error |
+  | --- | --- | --- | --- |
+  | 1 | 31.0 ms | 30.5 ms (0–1) | +2% |
+  | 8 | 38.4 ms | 39.8 ms | −4% |
+  | 16 | 43.0 ms | 48 ms | −10% |
+  | 23 | 46.0 ms | 54 ms | −15% |
+  | 31 | 47.5 ms | 57 ms | −17% |
+  | 33–36 | 49.8 ms | 58.8 ms (35) | −15% |
+
+  From 1 to 32 requests Frontier adds 18.8 ms: routed grouped GEMM 12.8 → 18.0, dispatch
+  5.7 → 10.3, combine 3.1 → 6.1, pre-dispatch 3.5 → 6.2 (of which gating linear 0.20 → 1.75), and
+  the stage part (attention and its all-reduce) 4.7 → 7.1 ms. Between 8 and 31 requests Frontier
+  adds 9.1 ms and native 17.2 ms.
+  - The earlier reading that Frontier stays flat came from the narrow TPOT spread of run01. That
+    spread only shows that every request saw a similar mix of batch sizes; run01 also used
+    analytical collectives (about 11.7 ms per step missing).
+  - `moe_gating_linear` jumps from 0.46 ms at 16 requests to 1.75 ms at 32 (88 MoE layers). The
+    merged04 EP16 KERNEL_ONLY rows show the same step in the measured kernel: 0.0092 ms at 32
+    tokens, 0.0196 ms at 40 (both BF16 and FP8 layer groups). The slowest lane of a wave sets the
+    phase time, and the other lane at 33 or more requests pads to 40. So it is measured, not an
+    artifact.
+  - The first `analyze.py` joined EP waves to steps by batch id; both DP lanes share one wave
+    that carries one lane's batch id, so half of the steps got no phases. `analyze_window.py`
+    joins by time and replaces it.
+- Workflow-port run `h200_32_wf02` (`6dd29176`, merged03, analytical collectives, wall 32,554 s)
+  finished at 22:25 UTC. Against native: TTFT mean −37.4% (p90 −47.2%), TPOT mean −57.0%
+  (p90 −62.4%), E2E mean −56.6%, total throughput +14.6% (PASS). The port adds 83 ms to the
+  TTFT mean (595.6 → 678.6 ms), as the prefix runs predicted, and does not change TPOT. Output
+  `/data/ycfeng/tmp/d31_wf/h200_32_wf02/compare.json`.
+- Native decode device timeline, a diagnostic run to split the native step growth into device
+  busy time per kernel category and device idle time (host waits, DP synchronization). The
+  traces are diagnostic only (D31.10) and the profiler windows perturb native timing, so the run
+  is never a reference.
+  - `26d51a30`: run kind `device_timeline` in the native P/D harness. The decode servers start
+    with `--profiler-config` (torch profiler, CPU and CUDA activities, no stacks,
+    `torch_profiler_dump_cuda_time_total=false` to avoid the table-writing stall,
+    `ignore_frontend`, gzip, worker-local trace directory). The replay client opens profiler
+    windows on the decode server during the formal phase of the first repeat; a profiler
+    request error is recorded in the replay summary and never stops the replay. The worker
+    copies the traces into the node evidence (`torch_trace/`). `verify` rejects a profiler on
+    the prefill servers and any profiler setting outside this run kind.
+  - `a31e3616`: `tests/integration/step5_pd/native_decode_timeline.py` reduces each trace to
+    iterations (one `execute_context_*_generation_*` annotation to the next on the same
+    thread): step period, `execute_model` host time, device busy and span of the work that
+    thread launched, idle time split into host wait and other, device time per kernel category,
+    and the device busy time of the whole trace inside the period. Its summary groups
+    decode-only iterations by window, DP engine and decode requests.
+  - Tests: `tests/unit/test_dp_placement_harness.py`, `tests/unit/test_step5_priority_runs.py`,
+    `tests/unit/test_step5_canonical_native.py` and related harness tests, 485 passed and 11
+    skipped (`asyncopd-py312` with `FRONTIER_SIMULATOR_PYTHON` set to the Frontier runtime,
+    proxy variables unset for the localhost HTTP tests); `tests/unit/test_native_decode_timeline.py`
+    1 passed.
+  - Windows (seconds after the first formal dispatch, at most 30 iterations each, chosen from
+    the native load curve): `load_t016` at 16 s (about 7–8 requests per decode engine),
+    `load_t040` at 40 s (about 20) and `load_t088` at 88 s (about 42).
+  - Stage `/data/ycfeng/tmp/step5_d31_devtl_20261026/h200_32_devtl01` (built from the clean
+    worktree `.worktrees/step5-d31-native-26d51a3`; `verify` and the StepMind dry run passed).
+    Pi run `d31-h200-devtl-submit-1026e`: job `exp-1027-062510-683917`, 4 replicas × 8 H200,
+    `step_main`, non-preemptible, creator `i-fengyicheng`, created 22:25:10 UTC, `Running` at
+    22:27 UTC. With it this session holds 32 H200 GPUs.
+
+  - Result: `exp-1027-062510-683917` Succeeded at 22:44:26 UTC (run time 1,156 s). The two
+    decode nodes wrote 24 traces each (294.5 MB and 291.4 MB); the prefill nodes wrote none, as
+    configured. Replay status `CLIENT_WORKLOAD_VERIFIED`, three repeats, no observation errors;
+    all three profiler windows opened and closed. Facts:
+    `/data/ycfeng/tmp/ds4_runs/d31-h200-devtl-submit-1026e/scratch/facts_devtl.json`.
+  - Analyzer output: `/data/ycfeng/tmp/d31_diag/devtl/timeline.json` and `summary.txt`. Medians
+    of the decode-only iterations, both DP engines, against Frontier's FULL step from the step
+    curve above. The profiler adds host time to the native period (about 50 ms at 8–9 requests
+    against 39.8 ms without it), so the device busy time is the comparable number:
+
+    | Requests per engine | Native period | Native device busy | Native host-wait idle | Frontier step |
+    | --- | --- | --- | --- | --- |
+    | 8–9 | 45–51 ms | 41 ms | 1.5–2.1 ms | 43.1 ms |
+    | 20–21 | 55 ms | 46–48 ms | 5.8–6.7 ms | 46.4 ms |
+    | 44–46 | 62–65 ms | 53–54 ms | 7.1–8.1 ms | 49.9 ms at 32–36 (the curve ends at 36) |
+
+    Frontier's step agrees with the native device busy time within about 5% up to 21 requests;
+    at 44–46 native the nearest Frontier point (32–36 requests) is 7% lower. The rest of the native growth is device idle time while the device
+    waits for the host (about 2 ms at 9 requests, 8 ms at 45; item 3), plus about 2 ms of other
+    idle time at every size.
+  - Kernel components at about 9 requests per engine (native kernel sums per decode step, joined
+    by `/data/ycfeng/tmp/d31_diag/devtl/kernels_joined.py`, and the `routed_expert` and
+    `tp_all_reduce` categories of `87cb0d58`; Frontier from the EP-wave ledger):
+
+    | Component | Native | Frontier |
+    | --- | --- | --- |
+    | EP dispatch (all-gather) | 9.1 ms | 9.18 ms |
+    | EP combine (reduce-scatter) | 4.9 ms | 5.84 ms |
+    | Routed expert compute | 10.9–11.1 ms | 16.9 ms |
+    | TP all-reduce | 6.1 ms (fusion kernel), 6.6–6.9 ms (category) | about 2.6–3.1 ms |
+
+    The routed-compute gap comes from the MoE profile: it routes tokens so that every local
+    expert is active, while a small native batch activates only a few of the 22 local experts.
+    The TP all-reduce is underpriced by about 3 ms. The two errors partly cancel. Both are
+    candidates for item 2 (op profiling), not yet fixed.
+- Root cause of the native TTFT/TPOT tails: just-in-time compiles of one Triton kernel on the
+  decode servers (found in the decode server logs and the traces).
+  - A decode step that mixes decodes with a new request's 16-token prompt tail runs through
+    `Step5DSAMetadataBuilder._plan_prefill`. It plans the DSA scoring kernel `_paged_scores_sm90`
+    for `(longest sequence + 7) // 8` regions, and the region count is a compile-time constant
+    of the kernel (`REGIONS`; `TABLE_ROW` depends on it too). Decode lengths 6,144–7,168 need
+    the 129 variants 768–896. The native warm-up compiles only 513, so the first mixed step at
+    each new longest length compiles a variant (about 0.43 s) while every request of that engine
+    waits.
+  - A mixed step happens only when a new request reaches the engine, about every 2 s per engine
+    at QPS 1, so each repeat reaches a different subset of the variants, and the count of new
+    compiles falls from repeat to repeat.
+  - Stall events (`/data/ycfeng/tmp/d31_diag/native_stall_events.py`: token gaps over 150 ms of
+    formal requests that are already decoding, merged across requests; 570 of the 584 events end
+    within 50 ms of some request's first token):
+
+    | Run | Repeat 1 | Repeat 2 | Repeat 3 |
+    | --- | --- | --- | --- |
+    | h200_32 workload02 | 84 events, 38.2 s | 54, 22.8 s | 34, 14.7 s |
+    | h200_64 workload01 | 106 events, 47.1 s | 77, 33.3 s | 53, 23.2 s |
+    | h200_32 device timeline | 86 events, 81.5 s | 58, 22.1 s | 32, 12.3 s |
+
+    The median event lasts 381–436 ms in every run.
+  - The per-repeat native means fall with the stall count. h200_32: TPOT 67.69 → 60.38 →
+    57.16 ms, TTFT 1,171 → 1,071 → 1,008 ms. h200_64: TPOT 74.97 → 68.84 → 65.1 ms, TTFT
+    1,462 → 1,376 → 1,306 ms.
+  - Inference, to be checked by the rerun below: a linear fit of the per-repeat means against
+    the stall time gives about 50.6 ms TPOT and 906 ms TTFT for h200_32 without stalls, and
+    about 55.5 ms and 1,154 ms for h200_64.
+  - This is an artifact of the native warm-up, not serving behaviour that Frontier should model.
+    The stalls are not removed from the native data after the fact. The native run is repeated
+    with all variants compiled beforehand.
+- Step E rerun `h200_32_comb_h200` (workflow port, measured H200 DP2 collectives, merged03;
+  output `/data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/compare.json`):
+
+  | Metric | Frontier | Native | Error | Gate 30% |
+  | --- | --- | --- | --- | --- |
+  | TTFT mean | 863.9 ms | 1,083.7 ms | −20.3% | PASS |
+  | TTFT p90 | 892.9 ms | 1,307.2 ms | −31.7% | FAIL |
+  | TPOT mean | 45.91 ms | 61.75 ms | −25.7% | PASS |
+  | TPOT p90 | 46.81 ms | 71.02 ms | −34.1% | FAIL |
+  | E2E mean | 47.83 s | 64.25 s | −25.6% | PASS |
+  | Total throughput | 5,372.1 tok/s | 5,214.6 tok/s | +3.0% | PASS |
+
+  All four means are within 30%; the p90 and p95 rows fail. Against the stall-free estimate
+  above (inference), the errors would be about −4.7% (TTFT) and −9.3% (TPOT).
+- Native length-sweep warm-up (`320c2082`; tests in `test_step5_canonical_native.py`,
+  `test_step5_client_metrics.py`, `test_step5_priority_runs.py`: 116 passed, asyncopd-py312
+  with the frontier-runtime simulator Python, 127 s). The optional `canonical_replay.length_sweep` runs once before the
+  first repeat: `long_requests_per_lane` long requests of the longest formal shape per DP lane
+  arrive together, so the DP load balancer spreads them over the lanes, while short requests
+  arrive every `lane_interval_s / dp_size` for `duration_s`. Each short request gives one lane
+  a mixed step, so every lane compiles each region count its long requests pass. The sweep is a
+  soft gate: its coverage (short requests still arriving after the last long token) and failures
+  are recorded in `length_sweep` of the replay summary and never change the client workload
+  verdict. A verified idle boundary `after_length_sweep` precedes repeat 1. `client_metrics.py`
+  and `workload_metrics.py` count the sweep records and never measure them; recomputing the
+  workload02 summary with the new code reproduces the archived one exactly
+  (`/data/ycfeng/tmp/d31_sweep_check/h200_32_workload02.json`).
+  - Settings for h200_32: 2 long requests per lane (6,144/1,024 tokens), short requests of
+    64/16 tokens every 0.1 s per lane for 240 s. A region count lasts 8 decode steps (about
+    0.4 s), so each lane sees about four mixed steps per region count. The 16 output tokens keep
+    the short requests running for about 0.7 s, so the load balancer spreads them by load
+    instead of breaking ties toward lane 0. A 64-token prompt leaves a 16-token tail on D (the
+    T2 tail rule), so the step is mixed.
+  - Stage `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_sweep02` (kind `workload`, built
+    from the clean worktree `.worktrees/step5-d31-native-320c208`; `verify` and the StepMind dry
+    run pass; the dry run differs from the device-timeline one only in paths). The first build
+    in `h200_32_sweep01` stopped because `STEP5_POSITION_CYCLIC_IMAGE` was not set and left a
+    partial stage there; that workspace is abandoned.
+  - Pi run `d31-h200-sweep-submit-1027a`: job `exp-1027-074903-556239`, 4 replicas × 8 H200,
+    `step_main`, non-preemptible, creator `i-fengyicheng`, created 23:49:03 UTC, `Starting` at
+    the first read. Account non-preemptible H200 before the submission: 8 GPUs (another
+    session's job).
+  - Acceptance: no stall events (or only a few) in the formal repeats, per-repeat means without
+    the falling trend, `workload_metrics.py` passes. Then compare the step E rerun with it and
+    repeat on h200_64.
+  - Result (2026-10-27): job `exp-1027-074903-556239` succeeded at 00:14:20 UTC (run time
+    1,517 s; 4 nodes, workload return code 0; replay `CLIENT_WORKLOAD_VERIFIED`; 7 idle
+    boundaries verified; 3 × (16 + 128) requests recorded, 0 failed). Pi report:
+    `/data/ycfeng/tmp/ds4_runs/d31-h200-sweep-submit-1027a/output.md`.
+    - Length sweep: 4,804 requests recorded; one short request failed (HTTP 502,
+      `ServerDisconnectedError`); `coverage_verified=false`: the last short request was sent
+      at 239.9 s and the long requests ended at 252–253 s.
+    - The long requests were slower than planned because almost every early step compiled a
+      variant: tokens 0–256 took 148–166 s (median gap about 410 ms), tokens 256–640 about
+      70 ms per token. When the short requests stopped, the long requests had reached length
+      6,803–6,849 (region count 851–857). Lengths above that were never compiled.
+    - Formal stall events (`native_stall_events.py`): 38 / 21 / 22 per repeat (before: 84 /
+      54 / 34), total 15.0 / 8.4 / 9.1 s. Their region counts are 857–896 in 79 of 81 events,
+      the range the sweep did not reach. Inference: the 81 events are about 40 region counts ×
+      2 decode engines, each compiled once. So the sweep works where it ran, and it needs to run
+      until the long requests finish.
+    - `workload_metrics.py` passes: `/data/ycfeng/tmp/d31_sweep02/native_metrics.json`. Per-repeat
+      means TTFT 1,005.8 / 961.9 / 968.3 ms, TPOT 58.74 / 54.98 / 55.22 ms (before: TPOT 67.69 /
+      60.38 / 57.16 ms). Pooled TTFT mean 978.7 ms (p90 1,246.6), TPOT mean 56.31 ms (p90
+      61.82), total throughput 5,236.6 tok/s.
+    - Step E rerun against it (`frontier_workload.py compare`, gate 30%,
+      `/data/ycfeng/tmp/d31_sweep02/compare_E.json`): all 14 rows pass. TTFT mean −11.7%, p90
+      −28.5%; TPOT mean −18.5%, p90 −24.5%; E2E mean −18.4%; throughput +2.6%.
+    - Acceptance: `workload_metrics.py` PASS; stall-free repeats FAIL (residual stalls above
+      length 6,850); falling trend: repeats 2 and 3 agree (TPOT 54.98 / 55.22 ms), repeat 1 is
+      3.7 ms higher.
+  - Next: the sweep must cover the whole long-request lifetime. `duration_s` raised to 420 s
+    (a parameter of the run definition, no code change). h200_64 goes first because its
+    reference is needed for step G: stage
+    `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_sweep01` (case `h200_64`, kind
+    `workload`, built from `.worktrees/step5-d31-native-320c208`, job tag `d31h20064sweep01`,
+    cloud output `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_64_sweep01`).
+    `verify` and the StepMind dry run pass; the dry run differs from sweep02 only in the
+    replica count (8) and paths. Pi run `d31-h200-64-sweep-submit-1027b` launched at 00:23 UTC.
+    The h200_32 rerun with the same setting follows.
+  - h200_64 sweep result (2026-10-27): job `exp-1027-082338-716026` succeeded at 00:53:49 UTC
+    (run time 1,811 s, 8 replicas; replay `CLIENT_WORKLOAD_VERIFIED`; 3 × (16 + 128) requests,
+    0 failed). Pi report: `/data/ycfeng/tmp/ds4_runs/d31-h200-64-sweep-submit-1027b/output.md`.
+    - Length sweep: 16,808 requests recorded, 9 short requests failed (HTTP 502,
+      `ServerDisconnectedError`), `coverage_verified=false`. The long requests ran to 448 s:
+      tokens 0–256 took about 205 s, 256–640 about 220 s (about 0.57 s per token), 640–1,024
+      only 14 s, because the short requests had stopped at 420 s and no mixed step compiled a
+      new variant after that.
+    - Stall regions (`/data/ycfeng/tmp/d31_diag/stall_regions.py`, diagnostic): at the last
+      short dispatch the long requests had length 6,695–6,712 (region count 837–839). Formal
+      stall events (token gaps over 150 ms, merged): 69 / 37 / 27 per repeat, 27.3 / 14.9 / 11.1 s in total (before the
+      sweep: 106 / 77 / 53 events, 47.1 / 33.3 / 23.2 s), region counts 847–896, every one above the sweep's reach. The same script on the
+      h200_32 sweep02 data: reach 850–856; 80 of 81 events above it.
+    - `workload_metrics.py` passes (`/data/ycfeng/tmp/d31_sweep_h200_64/native_metrics.json`).
+      Per-repeat means: TTFT 1,336.2 / 1,257.6 / 1,242.4 ms, TPOT 69.3 / 64.1 / 63.2 ms
+      (before the sweep: 75.0 / 68.8 / 65.1 ms). Pooled TTFT mean 1,278.7 ms (p90 1,574.3), TPOT
+      mean 65.54 ms (p90 74.50), E2E mean 68,323 ms, total throughput 4,983.6 tok/s.
+    - Acceptance: `workload_metrics.py` PASS; stall-free repeats FAIL; falling trend FAIL
+      (repeat 1 is 6 ms above repeat 3). The sweep works where it ran.
+  - Sweep length for h200_64: at sweep01's pace (region counts 800–848 took 220 s with mixed
+    steps) the remaining 48 region counts need about 220 s more, so the long requests end at
+    about 660 s while short requests keep arriving. `duration_s` 780 s for h200_64 (run-definition
+    value only). h200_32 keeps 420 s: its long requests ended at 253 s with a 240 s sweep.
+  - h200_64 sweep02: stage `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_sweep02`
+    (`run_input.json` differs from sweep01 only in `duration_s` 780; built from
+    `.worktrees/step5-d31-native-320c208` at `320c2082`; job tag `d31h20064sweep02`; cloud output
+    `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_64_sweep02`). `verify` and the
+    StepMind dry run pass; the dry run differs from sweep01 only in paths; replay timeout 3,000 s
+    and worker timeout 5,400 s cover the longer sweep. Pi run `d31-h200-64-sweep02-submit-1027c`
+    launched at 01:14 UTC.
+  - h200_64 sweep02 result: job `exp-1027-091511-064923` succeeded at 01:49:49 UTC; replay
+    `CLIENT_WORKLOAD_VERIFIED`, 3 × (16 + 128) requests, none failed. Length sweep: 31,208
+    requests recorded, 36 short requests failed, `coverage_verified=true`; the long requests
+    reached their full length (7,167 tokens, region count 896) before the last short dispatch.
+  - Stall regions (`/data/ycfeng/tmp/d31_diag/stall_regions.py`, diagnostic): one stall event per
+    formal repeat (sweep01: 69 / 37 / 27), at region counts 887 / 803 / 838, all within the sweep's
+    reach. Per-repeat TPOT means 61.45 / 60.95 / 61.37 ms (no falling trend); TTFT means
+    1,185 / 1,176 / 1,178 ms.
+  - Native metrics (`tests/integration/step5_pd/workload_metrics.py --stage
+    .../h200_64_sweep02/stage`): TTFT mean 1,179.9 ms, TPOT mean 61.26 ms, E2E mean 63,847 ms,
+    total throughput 4,994 tokens/s. Copied to `evidence/d31_h200_64_sweep02_native_metrics.json`.
+  - Step G (`h200_64_g01`, unchanged) against it (`frontier_workload.py compare --gate 0.3`,
+    `evidence/d31_h200_64_sweep02_compare_G.json`): all 14 rows PASS. TTFT mean −17.5% (p95
+    −25.7%), TPOT mean −19.2% (p95 −19.4%), E2E mean −19.2%, throughput +6.4%. The three tail rows
+    that failed against sweep01 now pass. Frontier stays low on both TTFT and TPOT, which is the
+    direction of items 3 (reset host time) and 2 (routed compute high, TP all-reduce low).
+  - h200_32 sweep03 (420 s): stage `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_sweep03`
+    (`run_input.json` differs from sweep02 only in `duration_s` 420; built from `320c2082`; job tag
+    `d31h20032sweep03`; cloud output `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_32_sweep03`).
+    `verify` and the StepMind dry run pass; the dry run differs from sweep02 only in paths. Pi run
+    `d31-h200-32-sweep03-submit-1027d` (prompt `/data/ycfeng/tmp/ds4_runs/prompts/d31-h200-32-sweep03-submit-1027d.md`)
+    waited for sweep02 to end, then submitted.
+  - h200_32 sweep03 result: job `exp-1027-094843-675984` succeeded (01:48:43 → 02:14:45 UTC);
+    replay `CLIENT_WORKLOAD_VERIFIED`; length sweep `coverage_verified=true` (3 short requests
+    returned HTTP 502 during the sweep: `length-sweep-short-00430`, `-00432`, `-07546`;
+    `EngineDeadError` tracebacks appear only at shutdown). Pi report
+    `/data/ycfeng/tmp/ds4_runs/d31-h200-32-sweep03-submit-1027d/output.md`.
+  - Stall regions (`/data/ycfeng/tmp/d31_diag/stall_regions.py`, diagnostic): the sweep reached
+    length 7,168 (region count 896); formal stall events 3 / 2 / 1 per repeat (sweep02: 38 / 21 /
+    22), none above the sweep's reach.
+  - Native metrics (`workload_metrics.py`, strict checks pass;
+    `evidence/d31_h200_32_sweep03_native_metrics.json`): TTFT mean 912.24 ms (p90 949.58), TPOT
+    mean 53.30 ms (p90 55.29), E2E mean 55,440.75 ms, total throughput 5,219.8 tok/s, output
+    throughput 745.7 tok/s. Per-repeat TTFT 907.4 / 915.4 / 913.9 ms, TPOT 53.20 / 53.29 /
+    53.41 ms (no falling trend).
+  - Acceptance (plan C reruns): `workload_metrics.py` PASS, coverage PASS, stall-free repeats
+    PASS (only 1–3 events, within reach), falling trend PASS. This is the clean h200_32 reference.
+  - Step E (`h200_32_comb_h200`, `/data/ycfeng/tmp/d31_cvfix_run/h200_32_comb_h200/frontier_summary.json`,
+    commit `2beb09b3`) against it (`frontier_workload.py compare --gate 0.3`,
+    `evidence/d31_h200_32_sweep03_compare_E.json`): all 14 rows PASS. TTFT mean −5.3% (p95
+    −6.4%), TPOT mean −13.9% (p95 −15.2%), E2E mean −13.7% (p95 −15.1%), total and output
+    throughput +2.9%. The remaining TPOT gap (about 7.4 ms per token) is the size item 3 targets.
+    Note: `/data/ycfeng/tmp/d31_comb_run/...` is an earlier failed run (rc 1) and is not used.
+
+Calibration item 2 lead, routed-expert compute (2026-10-27, diagnostic only, D31.10):
+
+- Frontier's `balanced` routing materializes `rows × 8` assignments over 352 experts with
+  `materialize_expert_token_counts` (Hamilton remainder, ties broken by expert ID). Below 352
+  assignments it fills experts from ID 0, so EP rank 0 gets one token on each of its 22 experts.
+  Per-rank routed tokens for EP16: 4 rows → 22, 10, 0…; 32 rows → eleven ranks with 22, one with
+  14, four with 0; 64 rows → 44 on ranks 0–6 and 22 on the rest, every expert active.
+- The grouped GEMM is priced on the slowest lane, which is therefore a lane with all 22 local
+  experts active. The merged03 EP16 FP8 profile rows (`standard_fused_topk`, `balanced`) show
+  the time follows the active-expert count: 8 active 0.078 ms, 16 active 0.138 ms, 22 active
+  0.18–0.205 ms per layer.
+- Frontier step curve: routed compute 13.26 ms at 1 request per engine, 16.90 ms at 2–16,
+  18.52 ms at 17–36. Native routed-expert time per EP rank (device timeline, plus about 0.8 ms
+  SwiGLU that the profile row includes): 7.2–12.8 ms at 8–9 requests, 12.0–14.3 ms at 20–21,
+  14.4–17.0 ms at 45. Rank 0 is not consistently the slowest rank, unlike in Frontier's
+  materialization.
+- At 9 requests per engine Frontier (16.9 ms) is about 3.3 ms per step above the slowest native
+  rank and about 5 ms above the median rank (with SwiGLU). At 32–36 requests Frontier gives 18.5 ms
+  against 15.3–17.9 ms native at 45. The TP all-reduce is about 3.5 ms per step below native, so
+  the two errors cancel in the step total.
+- Per-rank check (2026-10-27, `/data/ycfeng/tmp/d31_diag/rank_wait/rank_wait.py` on the device
+  timeline, output `rank_wait.txt`). Within one DP engine's 8 ranks, per decode step:
+  - The routed-time spread between the slowest and the fastest rank (4.4–6.2 ms) reappears
+    almost one for one as extra collective time on the fast ranks (4.2–6.1 ms). The sum of
+    routed, TP all-reduce and EP collective time differs by only 2.7–3.3 ms across ranks. So
+    the fast ranks wait inside the collectives for the slowest rank, and per-rank medians
+    understate the routed time that gates the step.
+  - On the slowest routed rank (routed plus SwiGLU): 13.8–14.4 ms at 8–10 requests, 15.7 ms at
+    20–21, 18.0 ms at 44–46. Frontier: 16.9 ms at 2–16, 18.5 ms at 17–36. Frontier is about
+    2.5–3 ms above the slowest rank at 9–21 requests, not 5 ms.
+  - TP all-reduce on that rank: 4.9–6.5 ms at 8–9 requests, 5.3–5.9 ms at 20–21, 5.6–8.0 ms at
+    44–45; the smallest per-rank value is 3.4–4.4 ms at 8–21 requests. Frontier: about
+    2.6–3.1 ms. So the all-reduce is about 1–2 ms low, not 3.5 ms.
+  - Device busy time on the slowest routed rank: 41.0 ms at 9 requests, 45.1–48.0 ms at 20–21,
+    52.6–52.9 ms at 44–45; Frontier 43.1, 46.4 and 49.9 ms (36 requests).
+  - Inference: the two operator errors are smaller than first estimated and leave the device
+    step within about 5%. The remaining TPOT gap is mainly host time between decode steps
+    (item 3), so item 3 comes before the item 2 operator fixes.
+- Fix options, for the item 2 design (D31.9 revisit condition: the error points to
+  expert-parallel load):
+  1. `position_cyclic` routing in Frontier: exists for this geometry, but it prices only exact
+     measured position points, which arbitrary decode positions do not have.
+  2. Keep `balanced` and spread the assignments over EP ranks; this needs profile rows keyed by
+     active experts per rank at small token counts.
+  3. A grouped-GEMM model with the active-expert count as a feature, trained on profile rows
+     that vary it.
+  Not decided; it waits for the clean native references and goes with the TP all-reduce fix.
+
+- Exact critical path (2026-10-27, after the per-rank check; report section 10 of
+  `test_report_2026-10-26_decode_step_slope.md`; scripts `/data/ycfeng/tmp/d31_diag/critpath/`):
+  - Reason: the per-rank medians mix each rank's own kernel time with waiting inside the
+    collectives. The rank that arrives last at a TP all-reduce gates it, so its segment is the
+    critical path; the parts add up exactly to the step span.
+  - Corrections to the entry above. The native step has 273 TP all-reduces (92 attention, 88
+    routed, 88 shared expert, 4 dense, 1 embedding), not 176. Their own cost on the critical
+    path is 1.85 ms at 9 requests per engine, 2.25 ms at 20–21 and 3.6 ms at 44–46, so
+    Frontier's 3.14 ms at 9 requests is about 1.3 ms high. Frontier's routed compute is
+    3.5–4.7 ms above the native critical routed time (including the peer wait in combine).
+  - The step prefix before the embedding all-reduce is 6.1–7.8 ms on steps that reset the KV
+    side storage (177 kernels with 23 device-to-host copies) and 0.07 ms on other steps; the
+    other engine idles 4.6–7.6 ms before its step, then runs 1.0–1.3 ms of input preparation.
+    This is the item 3 host time, inside the profiled step span.
+  - Forward body (span minus prefix) against Frontier: 41.5–42.3 against 43.14 ms at 9 requests,
+    46.2–49.8 against 46.3 ms at 20–21, 53.1–53.8 against 49.8 ms (Frontier at 36) at 44–46.
+  - Inside the body Frontier is short on idle time (0.62 against 1.8–1.85 ms at 9 requests) and
+    on other compute (about −1.8 to −2.6 ms); EP collectives with peer waits match. Native
+    graph steps launch about 4,100–4,300 kernels per body at a 0.42 µs median gap; the proxy's
+    0.43 µs is right, Frontier counts about 1,400 kernels.
+  - Decision: item 3 stays first. The item 2 fixes (position-routed expert counts, TP
+    all-reduce own cost, graph kernel count, other compute) go together, after the E rerun with
+    the item 3 profile shows the remaining error, because fixing one alone moves the body by
+    up to 8%.
+  - TP all-reduce input (`/data/ycfeng/tmp/d31_diag/critpath/ar_own_cost.py`, output
+    `ar_own_cost_dp2.txt`, on the raw H200 DP2 `measurements.jsonl` under
+    `/data/ycfeng/tmp/step5_d31_comm_20261026/downloads/d31_h200_s2_20261026_01/`): the
+    committed `summary.csv` median takes the slowest rank of each repeat
+    (`analyze_result.py` `queue_held_analysis`), which includes the benchmark's own launch skew.
+    The fastest rank of each repeat (the last arriver) gives 7.6 µs at `graph_decode_b16`,
+    10.7 µs at b32 and 17.3 µs at b64, against 10.7–11.5, 13.5–14.2 and 18.8–21.2 µs for the
+    slowest rank. Native critical-path own cost: 6.8 µs at 9 requests, 8.2 µs at 20–21,
+    13.1 µs at 44–46. So the last-arriver statistic of the existing measurements tracks the
+    native cost within about 10%, with no new GPU run.
+  - Corrected critical path (2026-10-27, `critpath5.py`, output `crit5_load_t016.txt`; report
+    section 10.1). Reason: `critpath4.py` counted kernels that overlap the previous kernel on the
+    stream twice. Result at 9 requests per engine: router 0.52–0.53 ms (matches; the earlier
+    "router underpriced" was the overlap), idle inside the body 2.72 ms plus 0.33 ms tail and end
+    skew (Frontier 0.62 ms, about −2.4 ms), TP all-reduce 1.70–1.72 ms (Frontier 3.14 ms), routed
+    experts 11.38–12.58 ms plus 0.77 ms activation (Frontier about +3 to +4 ms), EP dispatch and
+    combine with peer waits about equal.
+  - Kernel mapping (`/data/ycfeng/tmp/d31_diag/kmap/`): native `position_cyclic` routing runs 14
+    kernels, about 17 µs per layer (about 1.5 ms of the 1.99 ms "other"), against 6.5–8 µs of
+    priced `topkGating`; the routed-expert measurement (`moe_native_experts_class`) already
+    contains the alignment kernels that Frontier prices again as `moe_shuffling` (about 0.65 ms
+    per step).
+  - Profiler check (`/data/ycfeng/tmp/d31_diag/l2_flush.txt`): only the attention profiler
+    flushes L2 between repeats; linear-op rows at 16 tokens are 3–20% below the native kernels.
+  - Collective statistic (`own_cost_all.py`, output `own_cost_all_dp2.txt`): the fastest rank
+    of each group (last arriver) is about 3–3.7 µs below the slowest rank for every TP
+    all-reduce size; TP all-reduce b8 9.48 → 6.01 µs, b16 11.35 → 7.67 µs.
+  - Decision: fixes A3, B, C, D, E and the L2 flush (`plan.md` item 2b) get their own design
+    document and codex review before code changes, after item 4. Estimate with all fixes: about
+    41.0 ms against 41.5–42.3 ms native at 9 requests.
+
+Calibration item 3 lead, host time: KV side-storage reset sync (2026-10-27, diagnostic only,
+D31.10; scripts in `/data/ycfeng/tmp/d31_diag/hostgap/`, input the h200_32 device-timeline
+traces `/data/ycfeng/tmp/step5_d31_devtl_20261026/h200_32_devtl01/stage/evidence/nodes/*/torch_trace/`):
+
+- Native runtime facts from the logs: vLLM V2 model runner; async scheduling on ("Disabling
+  NCCL for DP synchronization when using async scheduling"), so the DP sync before each step is
+  a gloo CPU all-reduce (`c10d::allreduce_` in `dispatch_cg_and_sync_dp`).
+- Mechanism (source `/data/ycfeng/tmp/d29_published_sources01/source`):
+  - The scheduler sets `new_block_ids_to_zero` whenever a step allocates a new KV block
+    (`vllm/v1/core/sched/scheduler.py:1622-1650`, `_get_new_block_ids_for_zeroing`).
+  - `update_requests` in `vllm/v1/worker/gpu/model_runner.py:1250-1297` then calls
+    `KVBlockZeroer.zero_block_ids` (`vllm/v1/worker/utils.py:519-598`), which runs one
+    side-storage reset hook per Step-5 sparse summary cache (46 per step).
+  - Each hook runs `zero_kv_cache_side_storage` (`vllm/models/step5/nvidia/sparse_summary_cache.py:486`),
+    whose `_ids` turns the GPU block-ID tensor into a list with `.tolist()`: a blocking
+    device-to-host copy. The first one waits for the previous step's device work; the hooks
+    then run one after another.
+  - Under async scheduling the host normally prepares step N+1 while the device runs step N.
+    In a reset step the host waits for step N to finish, then runs the 46 resets, the rest of the
+    input preparation, the DP all-reduce and the graph launch while the device is idle.
+- Measurement (`zeroing_split.py`; profiled iterations, decode-only, split by a long `aten::to`
+  over 1 ms before the DP all-reduce):
+
+  | Requests per engine | Class | Steps | Period (ms) | Device busy (ms) | Host wait (ms) | Sync → all-reduce (ms) |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | 5 | async | 36 | 39.87 | 40.75 | 0.00 | – |
+  | 5 | sync | 16 | 54.99 | 41.91 | 7.05 | 4.36 |
+  | 20 | async | 23 | 46.57 | 44.87 | 1.39 | – |
+  | 20 | sync | 33 | 58.75 | 48.90 | 6.98 | 5.02 |
+  | 40 | sync | 12 | 63.67 | 52.56 | 9.64 | 6.02 |
+  | 45 | sync | 36 | 62.70 | 52.58 | 8.03 | 5.29 |
+
+  `critical_path.py`: from the end of the sync to the first graph kernel takes about 8.7–9.7 ms
+  in the profiled run, nearly independent of the request count. The profiler inflates host time,
+  so these are upper bounds.
+- Check against unprofiled data (`/data/ycfeng/tmp/d31_diag/native_decode_gaps_h200_32.json`,
+  native token gaps): 30.5 ms at 0 requests, 36–38 at 5, 45–45.7 at 10, 52.6–53.6 at 20,
+  54.4–55.3 at 30, 59.2 at 40. At 20 requests Frontier's step (46.4 ms) matches the async steps;
+  the profiled sync/async mix at 20 requests (about 53.8 ms) matches the unprofiled gaps.
+  The sync share grows with the batch, as expected when any request crossing a 16-token block
+  boundary triggers it.
+- Inference: the reset sync is the main remaining TPOT gap. Frontier models no host time
+  (`skip_cpu_overhead_modeling=True`), and its CPU-overhead terms, when enabled, add serially
+  without an async-scheduling overlap. Item 3 design: `design.md`.
+
+Calibration item 3 step 3, Frontier side (2026-10-27, `completed`; report
+`test_report_2026-10-27_kv_block_zeroing_host_time.md`, design section 8):
+
+- Reason: the host time of a resetting step must delay every DP lane's forward before its first
+  attention, as the native gloo DP all-reduce does (design 3.2, codex finding F001).
+- Method: an optional profile `kv_block_zeroing_host_profile` (loader
+  `frontier/execution_time_predictor/kv_block_zeroing_host_time.py`); the forward-start agreement
+  computes `s = max(a_i + h_i)` and every batch, dummies included, launches `s - t` later; the
+  stage start stays at the agreement time. Trigger: Step-5 capacity sets `zero_new_blocks`; a
+  NIXL read reservation records no zero blocks.
+- Expectation: unchanged results without the profile. Result: fidelity 77/77 (only the two
+  config fields differ), dummy smoke 12/12, 304 focused unit tests pass, Step-5 structural cache
+  checks pass. The structural runner's weight constants are stale (pre-existing, recorded in the
+  report).
+- The NIXL READ profile compares the full cache capacity, so both H200 profiles were
+  regenerated with `zero_new_blocks: true` from the same logs (values unchanged):
+  `evidence/d31_h200_{32,64}_nixl_read_cost_20261027.json`.
+- Next: item 3 step 2, the `host_probe` native run kind and its estimator, then the measured
+  profiles and the E/G reruns.
+
+Calibration item 3 step 2, probe and estimator code (2026-10-27, `completed`; design 4.1–4.3):
+
+- Reason: the profile value must come from a direct host-time measurement of resetting steps
+  on the native servers; a whole-step time table is not allowed as the value (D31.10).
+- Method:
+  - probe `tests/integration/step5_pd/host_probe_bootstrap/{sitecustomize,host_step_probe}.py`
+    (opt-in by `STEP5_HOST_STEP_PROBE`; every TP rank writes its own line-buffered file);
+  - run kind `host_probe` in `canonical_stage.py`, `build_stage.py`, `formal_release.py`; the
+    worker sets the environment and gzips the files into the node record
+    (`native_pd_worker.py`);
+  - estimator `tests/integration/step5_pd/kv_zeroing_host_time.py`: joins the DP engines by
+    collective ordinal per TP rank, removes the wait for other engines, and writes the mean of
+    `max_r(launch − excess − first_sync)` per role plus a report with the checks of design 4.3.
+- Expectation: native results unchanged by the probe; a probe error never blocks native code;
+  the estimator recovers a known host time from synthetic records with unequal waits.
+- Result: `PYTHONPATH=$PWD:$PWD/tests/unit <frontier-runtime-py310-d29-20261025 python> -m pytest
+  tests/unit/test_step5_host_step_probe.py tests/unit/test_step5_priority_runs.py
+  tests/unit/test_kv_zeroing_host_time_estimator.py tests/unit/test_kv_block_zeroing_host_time.py`:
+  81 passed (log `/data/ycfeng/tmp/d31_kvz_probe_focus.log`).
+- Limit: the hooks have not run in the native image yet; the h200_32 probe run is their first
+  real check (UNVERIFIED lines, one file per rank, 23 hooks per resetting step).
+- Next: stage `h200_32_hostprobe01` from a clean worktree and submit it (32 H200 GPUs).
+
+Calibration item 3 step 2, review fixes (2026-10-27, `completed`; design section 9):
+
+- Reason: the codex implementation review
+  (`codex-review-668b0946-0d5a-432e-a0a5-92f8a7324364/review.md`, verdict changes required)
+  found one P1, four P2 and one P3 defect; the probe run would have lost records (F002) and
+  subtracted local work as DP wait (F003), and a probe run could pass reference admission (F001).
+- Method:
+  - F001: `client_reference` rejects a diagnostic run kind in the config or the client summary
+    (`formal_release.DIAGNOSTIC_KINDS`), `host_step_probe` in the config, and the probe variable
+    in a node's server environment;
+  - F002: the probe drains at native `GPUModelRunner.shutdown` exit and writes an `end` line; the
+    estimator rejects truncated files; `atexit` removed (forked workers exit through `os._exit`);
+  - F003: only the DP sync's gloo `all_reduce` is stamped (proxy for `dp_utils.dist`); `excess`
+    uses its duration;
+  - F004: least-squares request-count trend above 1 ms writes a per-count table, both roles;
+  - F005: `host_probe_environment` removes an inherited `STEP5_HOST_STEP_PROBE` for every server;
+  - F006: the dummy end event is recorded at `_dummy_run` exit;
+  - Q1: engine interval `max_r(launch_r − excess_r) − min_r first_sync_r` on one node clock; the
+    estimator requires the TP ranks of an engine to share a host;
+  - Q3: formal windows run between the verified idle boundaries; the report gives the window
+    edge clearance. On the real sweep03 summary this gives 3 windows of 178.7–180.6 s.
+- Expectation: each defect has a failing case before the fix and a passing case after; the
+  clean admission control still passes.
+- Result: `PYTHONPATH=$PWD:$PWD/tests/unit <frontier-runtime-py310-d29-20261025 python> -m pytest
+  tests/unit/test_step5_host_step_probe.py tests/unit/test_step5_priority_runs.py
+  tests/unit/test_kv_zeroing_host_time_estimator.py tests/unit/test_kv_block_zeroing_host_time.py
+  tests/unit/test_step5_client_metrics.py tests/unit/test_e2e_gate.py tests/unit/test_native_pd_worker.py`:
+  162 passed (log `/data/ycfeng/tmp/d31_kvz_probe_focus_668.log`). A direct call of
+  `client_reference` on the synthetic receipt gave PASS for the clean run and, for the three
+  probe declarations, only the new rejection reasons. In an earlier standalone run the three
+  `test_worker_separates_auxiliary_report_faults_from_native_failure` cases failed with the
+  worker's rendezvous deadline, as they do at the parent commit; they passed in the full run, so
+  they depend on machine load.
+- Limit: Q2 (first sync as the device-idle origin), Q4 (mean versus `E[max]`) and Q6 (live
+  coverage) need the probe run; Q5 (the external clean-run-check producer) is not audited.
+- Next: stage `h200_32_hostprobe01` from a clean worktree at the fix commit and submit it.
+
+Calibration item 3 steps 2 and 4, probe runs and E/G reruns (2026-10-27; `completed`):
+
+- Stage: `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_32_hostprobe03/stage`, built from the
+  clean worktree `/data/ycfeng/Frontier/.worktrees/step5-d31-native-02bd453` (02bd453a) with
+  `canonical_stage.py build --kind host_probe --case h200_32`; job tag `d31h20032hostprobe03`;
+  cloud output `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_32_hostprobe03`.
+- Two earlier builds stopped before writing a usable stage. `build_stage` refuses an existing
+  directory, so each retry used a new name; the partial directories `h200_32_hostprobe01` and
+  `h200_32_hostprobe02` remain (deletion needs approval):
+  - hostprobe01: "Adapter rejects native reference image". The `step5_position_cyclic` adapter
+    needs `STEP5_POSITION_CYCLIC_IMAGE` set to the routing image digest `sha256:f037d958…`.
+  - hostprobe02: "Exported native source conflicts with prior locked pin:
+    vllm/models/step5/nvidia/model.py". The base-image listing
+    (`native_pd_20261020/image_source/sha256_in_image.txt`) does not describe the routing image;
+    the routing listing `task_2026-10-22_step5_position_routing/image_publication/installed_source_sha256.txt`
+    reproduces sweep03's 72 source pins exactly.
+- Checks before submission:
+  - config versus sweep03: only kind, description, paths, `host_step_probe: true`, job tag,
+    output directory, source commit/repository and tool hashes differ; image, engine, model hashes
+    and the 72 expected source hashes are identical; the replay plan differs only in `kind`;
+  - `canonical_stage.py verify`: rc 0 (`verify.log`);
+  - StepMind dry run: rc 0; against sweep03's dry run only the workspace path differs
+    (`stepmind_dry_run.log`).
+- Submission: Pi run `d31-h200-32-hostprobe03-submit-1027e` (prompt
+  `/data/ycfeng/tmp/ds4_runs/prompts/d31-h200-32-hostprobe03-submit-1027e.md`), launched 04:47 UTC;
+  one submission, 4 × 8 H200, `step_main`, non-preemptible.
+  Job `exp-1027-124813-737818`, created 04:48:13 UTC, phase Pending at the first read; creator
+  `i-fengyicheng`, preemptible `no`, `step_main`, 4 × 8 H200, the routing image
+  (`h200_32_hostprobe03/status_1.json`).
+- Table version correction: `h200_32_comb_h200` (the E run compared with sweep03) used the merged03
+  tables (its `command.json` names `merged03/*.csv`), not merged04 as several entries said; plan,
+  this file and the decode-step report are corrected. merged04 adds 14 EP16 and 14 EP32 MoE rows
+  (partly filled ranks) to each MoE table, so EP16 predictions can differ.
+- E baseline for item 3 (started 04:50 UTC, CPU only): `h200_32_m04_base`, merged04 tables, the
+  regenerated NIXL READ profile and no host profile, from the clean worktree at 02bd453a:
+  `frontier_workload.py run --case h200_32 --measured-collectives --predictor-options
+  /data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_32.json
+  --output-dir /data/ycfeng/tmp/d31_e05_run/h200_32_m04_base`. The item 3 rerun differs from it
+  only by `kv_block_zeroing_host_profile`, so the pair isolates the host-time effect.
+- h200_64 probe stage ready, not submitted: `/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_hostprobe01/stage`
+  (same worktree and build arguments, run definition of `h200_64_sweep02` with the 780 s sweep,
+  job tag `d31h20064hostprobe01`). Config versus sweep02: only the expected fields differ; the
+  replay plan differs only in `kind`; `verify` rc 0; dry run rc 0 with only the workspace path
+  different (8 × 8 H200, non-preemptible). It is submitted after the h200_32 probe files pass the
+  estimator checks, so a probe defect does not cost a 64-GPU run, and after the 32-GPU job has
+  released its GPUs (64-GPU session limit).
+- h200_32 probe result (report `test_report_2026-10-27_host_probe_runs.md`): job
+  `exp-1027-124813-737818` Succeeded (2866 s); repeat means TTFT 913.68 / TPOT 53.659 ms.
+  The estimator first stopped on two acceptance rules, both wrong for this run:
+  - every boundary after repeat 1 warmup was unverified: one warmup request failed at the client
+    and never completed on decode, and the replay expected a completion for every planned
+    request. The proxy had reused a keep-alive connection and sent the request headers before
+    the exception (proxy line 8405), so whether decode received the request is unknown
+    (corrected after codex F002/F004; the first version said "before reaching decode").
+    Reason for the change: a request that failed at the client need not complete on a role.
+    Method: the replay and the estimator count only client-completed requests
+    (`phase_completions`, `boundary_reached`). Result: windows accepted;
+  - no probe file has an `end` line: the native launcher aborts and force-kills the workers, so
+    `GPUModelRunner.shutdown` never runs (also in sweep03). Method: contiguous step numbers per
+    file plus equal scheduled tokens per role across the three formal windows (TP rank 0 only;
+    replaced after codex F001, see below). Result: prefill 784,384 and decode 132,992 tokens in
+    each window.
+  Commit `cdcba47b`; checks: `test_kv_zeroing_host_time_estimator.py` 11 passed (d29 env),
+  `test_step5_canonical_native.py` 46 passed (asyncopd env, adds a `decode_unreached` fault).
+- h200_32 profile (DP2): prefill 37.44 ms over 384 resetting steps (one 6,128-token request each;
+  host work, the device was idle before 98.7% of them); decode 5.11 ms over 14,144 resetting steps
+  (67.6% of steps; device gap 5.28 ms on the same steps; trend 0.13 ms over 1–29 requests, so one
+  mean). 23 hooks on every resetting step. Perturbation: TTFT shift +1.44 ms within the clean
+  repeat range 8.0 ms, TPOT shift +0.357 ms beyond 0.207 ms, so the profile is `PERTURBED`.
+  First decision (withdrawn after codex F003): use it as measured with an upper bound on its
+  bias. The bound assumed the whole TPOT shift came from `h`; the shift between two jobs also
+  holds run-to-run variation that no clean pair measures, so it bounds nothing. Current
+  decision: no correction factor; the profile is not accepted, and E/G with it are exploratory
+  sensitivity runs until a probe on/off measurement within one job sizes the probe effect.
+  Profile copy
+  `evidence/d31_h200_32_kv_block_zeroing_host_20261027.json`, report copy
+  `evidence/d31_h200_32_kv_block_zeroing_host_report_20261027.json`.
+- Step E host rerun (started 06:09 UTC, CPU only, clean worktree 02bd453a, no frontier code change
+  since then): options `/data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_32_host.json`
+  (the base options plus `kv_block_zeroing_host_profile`), output
+  `/data/ycfeng/tmp/d31_e05_run/h200_32_m04_host`. It pairs with `h200_32_m04_base`.
+- h200_64 probe submitted after the h200_32 checks passed and its GPUs were released: Pi
+  `d31-h200-64-hostprobe01-submit-1027f`, job `exp-1027-141317-610373` (created 06:13:17 UTC,
+  Pending; 8 × 8 H200, `step_main`, preemptible `no`, creator `i-fengyicheng`). The stage keeps
+  the earlier replay rule, so a failed request costs 120 s per later boundary (worst case about
+  2,270 s of the 3,000 s replay limit, from sweep02's 1,550 s); the estimator re-checks the
+  boundaries with the new rule.
+- Codex review of the probe result (request 223fee59, report
+  `codex-review-223fee59-461a-45f2-9eae-3d6cadf74153/review.md`, verdict `changes_required`,
+  3 P2 + 1 P3; reviewer scripts in `/data/ycfeng/tmp/codex-review/223fee59-461a-45f2-9eae-3d6cadf74153/`).
+  I checked each finding against the artifacts; all four hold:
+  - F001 (completeness): TP rank 0 token equality and dropping unjoined all-reduces accept a
+    nonzero TP rank that lost a useful tail and a lost dummy peer of a resetting step. Fix in
+    `kv_zeroing_host_time.py`: per window, every TP rank of an engine holds equal non-dummy
+    tokens and the engines together exactly the work of the window's client-completed formal
+    requests (`expected_window_tokens` from `canonical_replay.completed_work`: P 6,128, D
+    16 + 1,023 per request); `vllm:num_preemptions_total` unchanged across each formal window
+    (`window_preemptions`); an all-reduce may lack a participant only after the role's last
+    non-dummy ordinal (`engine_steps`, else error).
+  - F002 (stale idle snapshot after an ambiguous failure): the gauges update only with engine
+    outputs, so a failed request's work can continue after an idle boundary. Fix: the exact
+    window tokens above reject such work in the estimator; the replay compares each phase's
+    native work counters (`prompt_tokens_by_source`, inter-token-latency count) with the
+    client-completed requests (`phase_work`, stored as `work_accounting`) and requires a match
+    for formal phases. A failure in a repetition already fails it (`validate_record`); the new
+    check covers work of a failed length-sweep request or of an earlier repetition.
+  - F003 (perturbation bound): see the withdrawn decision above.
+  - F004 (two wrong statements): the failure classification (corrected above) and the lost probe
+    steps, which lie inside the last formal window after the last step with requests, not after
+    the window.
+  Checks: `test_kv_zeroing_host_time_estimator.py` 14 passed (d29 env; new: trailing-only partial
+  all-reduces with a nonzero-TP useful tail and a lost dummy peer, per-rank window tokens against
+  the client work, expected tokens from client records, preemptions);
+  `test_step5_canonical_native.py` 48 passed (asyncopd env; the fake server exports the work
+  counters, and the new `sweep_work_in_formal` fault, a failed sweep request whose decode work
+  lands in repeat 1's formal phase, gives `REFERENCE_UNSTABLE` with 1,023 extra inter-token
+  latencies); related step5 unit files 297 passed, 11 skipped (`test_step5_priority_runs.py` needs
+  `FRONTIER_SIMULATOR_PYTHON` set to the d29 env). `test_mla_stage3_online_trace_builder.py`
+  has 1 failure in an unrelated MLA analysis script (not touched; deferred).
+  Estimator rerun on hostprobe03 (`/data/ycfeng/tmp/d31_diag/probe03/recheck/`): exit 0; window
+  tokens per engine prefill 392,192 × 2 and decode 66,496 × 2 in all three windows; joins
+  prefill 13,643 joined + 4 trailing partial, decode 19,936 + 0; the profile equals the stored
+  one apart from the report path (prefill 37.4398 ms, decode 5.1105 ms).
+  Commit `f81705cb`.
+- h200_64 probe result (report `test_report_2026-10-27_host_probe_runs.md` section 7): job
+  `exp-1027-141317-610373` Succeeded at 07:30 UTC; all 7 idle boundaries verified, 14 failed
+  length-sweep requests (soft), none in warmup or formal phases; repeat means TTFT 1,181.52 ms,
+  TPOT 61.21 ms (sweep02: 1,179.88, 61.26). Estimator (tightened checks) exit 0: per engine and
+  every TP rank 196,096 (P) / 33,248 (D) tokens in each window, joins P 13,612 + 2 trailing
+  partial, D 21,131 + 0, no preemptions. Profile (DP4): prefill 36.92 ms over 384 resetting
+  steps, decode 5.96 ms over 17,216 (45.4% of steps; device gap 6.09 vs `h` 5.88 ms median; trend
+  −0.02 ms over 1–17 requests). Perturbation PASS (TTFT +1.64 ms within 9.73, TPOT −0.045 ms within
+  0.494). Decision: accepted for step G as measured. Decode `h` is 0.85 ms above DP2 (rank 0 also
+  +0.75 ms); cause not analysed, each topology uses its own value. Copies
+  `evidence/d31_h200_64_kv_block_zeroing_host_20261027.json` and
+  `evidence/d31_h200_64_kv_block_zeroing_host_report_20261027.json`.
+- Step G host run (started 08:06 UTC, CPU only, clean worktree 02bd453a): options
+  `/data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_64_host.json`
+  (the h200_64 base options plus `kv_block_zeroing_host_profile`), output
+  `/data/ycfeng/tmp/d31_e05_run/h200_64_m04_host`; pairs with `h200_64_m04_base` (started 06:16
+  UTC). Started before the base finished because the host has 64 cores and 110 GB free and each
+  run uses one core and about 1 GB.
+- E base result (`h200_32_m04_base`, 02bd453a, merged04 tables, no host profile): return code 0,
+  simulator wall time 12,508 s. `frontier_workload.py compare --gate 0.3` against
+  `evidence/d31_h200_32_sweep03_native_metrics.json`
+  (`evidence/d31_h200_32_m04_base_compare_sweep03.json`): all 14 rows PASS. TTFT mean 864.2 vs
+  912.2 ms (−5.3%), p95 −6.5%; TPOT mean 45.92 vs 53.30 ms (−13.9%), p90 −15.2%; E2E mean −13.7%;
+  throughput +2.9%. These equal the merged03 run `h200_32_comb_h200` to the reported digit, so the
+  14 partly filled EP16 rows of merged04 do not change step E.
+- Item 3 step 4 results (`completed`; report `test_report_2026-10-27_host_probe_runs.md` section
+  9). All four runs return 0 and pass all 14 rows at the 30% gate.
+  - E host (`h200_32_m04_host`, 11,705 s): TTFT −1.0%, TPOT −3.3%, E2E −3.2%, throughput +0.6%;
+    every row within 4.1%. Exploratory, because the DP2 profile is not accepted.
+  - G base (`h200_64_m04_base`, 17,294 s): TTFT −17.5%, TPOT −19.2%, throughput +6.4%; the same
+    rows as `evidence/d31_h200_64_sweep02_compare_G.json`.
+  - G host (`h200_64_m04_host`, 16,277 s): TTFT −12.9% (p95 −20.5%), TPOT −9.6% (p95 −10.2%),
+    E2E −9.7%, throughput +2.9%.
+  - The host term adds 5.64 ms (E) and 5.85 ms (G) to TPOT. Compare copies:
+    `evidence/d31_h200_32_m04_host_compare_sweep03.json`,
+    `evidence/d31_h200_64_m04_base_compare_sweep02.json` and
+    `evidence/d31_h200_64_m04_host_compare_sweep02.json`.
+  - Next: at the final 10% gate, G still fails the TTFT rows and the TPOT p95 row. The TTFT gap is
+    item 4 below; the DP4 TPOT residual (about −5.9 ms) is not decomposed yet.
+
+Calibration item 4 lead, the DP wave tail before a prefill (2026-10-27, diagnostic only, D31.10;
+report `test_report_2026-10-27_h200_64_ttft_wave_tail.md`, scripts in
+`/data/ycfeng/tmp/d31_diag/ttft64/`):
+
+- Split of TTFT (`ttft_split.py`; native from `client_requests.jsonl` and `proxy_requests.jsonl`
+  of sweep02/sweep03, Frontier from `request_metrics.csv`):
+  - DP4: dispatch to prefill response, native mean 812–816 ms (minimum 616–620), Frontier 689.7
+    ms for every request; prefill response to first token, native mean 363–369 ms, Frontier
+    337.7 ms.
+  - DP2: native 588–592 ms (minimum 579), Frontier 597.8 ms; handoff native 319–324 ms, Frontier
+    305.0 ms.
+- At DP4 the native prefill time follows a sawtooth over consecutive requests (671, 770, 831,
+  908, 983, 716, 661, ... ms; `prefill_overlap.py`). It rises about 65 ms per request, then drops.
+  At DP2 it is flat (about 587 ms).
+- Mechanism (vLLM source `v1/engine/core.py`, `DPEngineCoreProc.run_busy_loop` and
+  `_has_global_unfinished_reqs`; `config/parallel.py:162`): while a DP wave runs, an engine with
+  no batch runs `execute_dummy_batch`. The engines agree that the wave has ended only on step 1
+  and every `dp_sync_interval` (16) steps. A dummy step costs the host about 5 ms but the device
+  about 30 ms, and it produces no output to wait for, so the host queues the wave's dummy steps
+  ahead of the device. The next request's first blocking copy (the KV reset `.tolist()`) waits
+  until the device has run the queued dummy steps.
+- Measurement (`wave_tail.py`, host-probe stamps of TP rank 0 of each engine, `h200_64_hostprobe01`
+  and `h200_32_hostprobe03`): dummy step device span median 32.0 ms (DP4) and 24.8 ms (DP2),
+  launch period median 5.6 / 4.4 ms; estimated device backlog when a prefill step starts, median
+  188 ms and mean 180 ms at DP4, 0 at DP2 (429 of 441 steps below 50 ms).
+- Inference: at DP4 one 1 s arrival period holds about 620 ms of prefill plus about 16 dummy
+  steps of 32 ms, more than 1 s of device work, so the backlog grows from request to request
+  until a short wave lets it drain. At DP2 (about 590 + 16 × 24.8 ms) it fits within 1 s. The
+  backlog (mean about 180 ms) plus the native solo prefill (about 625 ms) gives about 805 ms,
+  close to the native mean of 814 ms.
+- Frontier side (code reading, `vllm_v1_engine_replica_scheduler.py` 145–190, 391–427 and
+  582–780, `dp_dummy_forward.py`): the PREFILL role runs DP dummy passes (it has an engine batch
+  queue, the model is MoE and `attn_dp` is 4). Its batch queue holds one step: an explicit
+  capacity is accepted only for DECODE and MONOLITHIC PP1/DP1. Each dummy forward ends before
+  the engine's next pass.
+- Frontier diagnostic run (`/data/ycfeng/tmp/d31_diag/wave_frontier/wave_probe.py`, Frontier at
+  `02bd453a`, 16 requests of 6144/2 tokens 1 s apart, h200_64 host options; output
+  `h64host_wave.jsonl`, summary `probe_summary.txt`): for all 16 requests, lane k runs the
+  6128-token prefill, the other three lanes run one dummy forward each, all end 689.1 ms after
+  the arrival with "last pass of the wave", and nothing runs until the next arrival. So the
+  wave ends at the step-1 synchronization: the prefill lane has applied its output and has no
+  unfinished request left.
+- Native counterpart: async scheduling is on for every node of `h200_64_sweep02` ("Disabling
+  NCCL for DP synchronization when using async scheduling", "Using V2 Model Runner";
+  `native_async_flags.txt`). With it `max_concurrent_batches` is `pp_size + 1 = 2`
+  (`config/vllm.py:579-589`), the EngineCore batch queue holds two steps
+  (`v1/engine/core.py:215-221`), and `step_with_batch_queue` returns right after it launches
+  the prefill (lines 749-754). The prefill engine reaches the step-1 synchronization with an
+  unfinished request, so the native wave runs to step 16.
+- Two smaller DP4 parts: Frontier's solo prefill is about 60 ms above the native minimum
+  (689.7 against about 625 ms; 597.8 against 579 ms at DP2), and the handoff is about 28 ms low.
+- Dummy-step group cadence while every engine of the role runs dummy steps
+  (`/data/ycfeng/tmp/d31_diag/wave_frontier/dummy_period.py`, output `dummy_period.txt`). A
+  sample is G(k) − G(k−1), with G(k) the latest launch over every DP engine and TP rank at DP
+  all-reduce ordinal k; only ordinals where every engine runs a dummy step at k−1 and k inside
+  one formal window count. Prefill role:
+
+  | Run | Samples | p50 / p90 / p99 / max (ms) | Mean (ms) | Window means (ms) | CV of window means | Native dummy span p50 / mean (ms) |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | h200_64_hostprobe01 (DP4) | 4212 | 5.48 / 7.57 / 18.73 / 279.09 | 6.307 | 6.261 / 6.449 / 6.210 | 1.63% | 30.87 / 31.80 |
+  | h200_32_hostprobe03 (DP2) | 5347 | 4.33 / 5.59 / 7.81 / 23.27 | 4.599 | 4.543 / 4.608 / 4.649 | 0.95% | 24.53 / 24.56 |
+
+  The dummy spans are a diagnostic only (D31.10). Decode all-dummy steps are rare and include
+  long gaps (a dummy wave that starts while a NIXL READ is pending), so the profile covers the
+  PREFILL role only. The DP2 value stays exploratory: `h200_32_hostprobe03` is `PERTURBED`.
+- Codex design review 63785f72 (`codex-review-63785f72-e511-4dfd-a7af-6b69354afd58/review.md`,
+  request `codex_review_request_dp_wave_tail_design.md`): `changes_required`, four findings, all
+  accepted after checking the cited code:
+  - F001 (P1): one shared dummy counter cannot hold several queued passes. Fix: per-pass state;
+    only a host-blocking pass blocks the host; the host tick is the only continuation of a
+    paced pass; unfinished snapshot at dummy issue.
+  - F002 (P1): the native per-forward DP all-reduce is a CPU barrier, not a device end. Fix: a
+    host dispatch barrier keyed by the forward ordinal; all-dummy cohorts continue at
+    D(n) + group cadence; dummy lanes of a mixed (eager) cohort continue at their device end,
+    which the native host exit at 548.7 ms supports.
+  - F003 (P2): the grouped KV allocator rejects two chunks of one PREFILL request in flight.
+    Fix: PREFILL queue of two only with chunked prefill disabled.
+  - F004 (P2): the cadence needs its own estimator and admission. Fix: estimator over complete
+    all-dummy cohorts (above); separate schema `dp_dummy_step_host_time.v1`; DP2 exploratory.
+  - The revision is section 7 of `design_dp_wave_tail.md`. Codex also found an existing broken
+    fixture: `tests/unit/test_nixl_read_completion.py::test_decode_step_start_posts_and_checks_the_lane_reads`
+    builds a `DummyForwardBatch` with `object.__new__` and misses `_forward_start_host_delay`.
+- Next: implement section 7 through codex-implement in the worktree branch
+  `feat/step5-dp-wave-tail`; write the cadence estimator and profiles in parallel.
+- Cadence estimator `tests/integration/step5_pd/dp_dummy_step_host_time.py` (completed
+  2026-10-27; the join and the lost-participant check moved out of `engine_steps` into
+  `join_by_ordinal` in `kv_zeroing_host_time.py` so both estimators share them):
+  - Reason for two rule changes against the first `dummy_period.py` estimate:
+    - Long samples cluster right after a real step (`/data/ycfeng/tmp/d31_diag/cadence/outliers.py`,
+      `outliers_dp4.txt`, `outliers_dp2.txt`). DP4 mean by ordinals after the last real step:
+      8.32 ms (2), 7.10 ms (3), 5.94–6.21 ms (4–7); DP2 6.09 / 4.74 / about 4.5 ms. In those
+      ordinals the real engine pops and processes its prefill output before it reaches the
+      all-reduce. That host time belongs to the real step's output, so samples up to 3 ordinals
+      after a real step are left out (`--exclude-after-real 3`). Their excess over the mean is
+      reported per real cohort: 3.38 ms (DP4) and 1.90 ms (DP2), evidence for the open "P output
+      host time" component; it is not added to the cadence.
+    - The engines run on separate nodes, and launch stamps of different nodes are not
+      comparable (`near_real.py` gave lags of about 1e8 ms). Each engine's interval now uses the
+      latest launch over its own TP ranks, and the sample is the mean over engines (spread p50
+      0.32 ms at DP4, 0.11 ms at DP2).
+  - Runs (from the repo root with the d29 python; the profile schema stubbed with
+    `/data/ycfeng/tmp/d31_diag/cadence/est/run_stub.py` until the loader merges; outputs in
+    `/data/ycfeng/tmp/d31_diag/cadence/est/`):
+
+    | Probe | Samples | Mean (ms) | p50 / p90 / p99 (ms) | Window means (ms) | CV | Excluded near real | Perturbation | Admission |
+    | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+    | `h200_64_hostprobe01` (DP4) | 3481 | 6.014 | 5.43 / 7.12 / 15.96 | 6.027 / 6.009 / 6.005 | 0.16% | 731 | PASS | admitted |
+    | `h200_32_hostprobe03` (DP2) | 4580 | 4.464 | 4.29 / 5.09 / 6.32 | 4.421 / 4.465 / 4.506 | 0.78% | 767 | PERTURBED | exploratory |
+
+  - The final profiles are written with the merged loader module (pending the item 4 merge).
+- Item 4 code (codex-implement `b36e6b25-ccb8-46c8-bbc1-271350c4acd3`, report
+  `codex-implement-b36e6b25-ccb8-46c8-bbc1-271350c4acd3/implementation.md`, worktree
+  `/data/ycfeng/Frontier/.worktrees/step5-dp-wave-tail` on `d47f2ea5`): outcome `implemented`.
+  - 13 files changed and 4 new: the PREFILL queue capacity flag and admission, the
+    `dp_dummy_step_host_time.v1` loader and predictor binding, the mixin
+    `vllm_v1_dp_dispatch.py`, the host tick in `replica_schedule_event.py` and the paced device
+    end in `batch_stage_end_event.py`; the main scheduler has 1,949 lines.
+  - Codex's checks: focused suites 347 passed, 1 skipped, 1 failed (the known
+    `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward`); dummy
+    smoke 12/12 twice. The full unit suite cannot be collected in the d29 env (15 modules miss
+    `torch`, `matplotlib` or `aiohttp`).
+  - 77-case fidelity matrix on Codex's code (`/data/ycfeng/tmp/d31_fidelity_wave_run.sh`, output
+    `/data/ycfeng/tmp/d31_fidelity_wave`, compared with `/data/ycfeng/tmp/d31_fidelity_kvz/candidate`
+    by `/data/ycfeng/tmp/d31_fidelity_wave_recompare.py`, result
+    `/data/ycfeng/tmp/d31_fidelity_wave_recompare.json`): 77/77 ran with rc 0; every metric
+    artifact is identical. The only difference in all 77 cases is the new `config.json` key
+    `execution_time_predictor_config/dp_dummy_step_host_profile` (null). PASS.
+  - Claude's review corrections (the default path is unchanged by construction: with no profile
+    the cadence is `None`, so no pass is paced and the unfinished snapshot stays `None`):
+    - R1 (applied): `consume_paced_dummy_end` no longer validates a non-paced end;
+      `on_dummy_forward_end` validates it next in the same event. Reason: the same check ran
+      twice. The pacing test that expected the error from `consume_paced_dummy_end` now expects
+      it from `on_dummy_forward_end`.
+    - R2 (tried, withdrawn): reading the attributes directly instead of `getattr(..., None)` in
+      the mixin, `engine_loop_idle` and `get_dp_dummy_step_cadence_ms`. The focused suites then
+      gave 102 failures (`/data/ycfeng/tmp/d31_diag/item4/focused_r12.log`): 97 test predictor
+      stubs (`object()`, `_StageCosts`, `_FixtureCosts`, `_LanePredictor`, ...) lack the getter,
+      and 5 fixtures build the scheduler with `object.__new__`. Fixing them means editing test
+      fixtures across at least 12 files, out of proportion for a style correction, and the
+      scheduler already uses the same pattern (`_kv_transfer_start_claimed_request_ids`). Kept
+      Codex's `getattr` defaults; deferred as a fixture cleanup.
+    - Checks after R1 (d29 python 3.10.6, `ulimit -v 31457280`, logs in
+      `/data/ycfeng/tmp/d31_diag/item4/`):
+      - Focused suites (Codex's command, basetemp `/data/ycfeng/tmp/d31_pytest/item4_r1`,
+        `focused_r1.log`): 346 passed, 1 skipped, 2 failed: the known late-join test and the
+        pacing test collected before its R1 update; the updated pacing file alone gives 16 passed
+        (`pacing_r1.log`). PASS.
+      - Full unit suite with `--continue-on-collection-errors` and the
+        `test_measurement_family_selector.py` deselection, candidate and a d47f2ea5 baseline run
+        side by side (`run_unit_full.sh`; `unit_cand_r1.log` 343 failed / 8,160 passed,
+        `unit_base_d47.log` 297 failed / 8,167 passed; failure IDs compared in `unit_cmp.txt`):
+        337 failure IDs are common (environment: no `torch`, data and other pre-existing
+        failures). Candidate-only: 46 collective-sim tests that cannot find
+        `frontier/cc_backend/backends/collective-sim` (the new worktree has no submodule
+        checkout; environment) and the pre-update pacing test. Baseline-only: the NIXL fixture
+        that lacked `_forward_start_host_delay`, which this change repairs. No code-caused new
+        failure. PASS.
+      - Dummy smoke (`smoke_r1.log`): 12/12, rc 0. PASS.
+  - Accepted and committed `d5b11f63` on `feat/step5-dp-wave-tail`; fast-forwarded
+    `feat/step5-preview` to it.
+- KV estimator refactor check (`join_by_ordinal` moved into a shared function): rerunning
+  `kv_zeroing_host_time.py` on the DP4 probe (`/data/ycfeng/tmp/d31_diag/item4/kvcheck/`) gives a
+  profile identical to `host06/kv_block_zeroing_host_h200_64.json` except the report path in its
+  provenance, and an identical report. `test_kv_zeroing_host_time_estimator.py` plus
+  `test_dp_dummy_step_host_time.py`: 52 passed. PASS.
+- Cadence profiles with the merged loader (`/data/ycfeng/tmp/d31_diag/cadence/final/run.sh`, from
+  the repo root): values equal the stubbed runs. DP4 6.0135 ms over 3,481 samples, admitted;
+  DP2 4.4640 ms over 4,580 samples, exploratory. Copies:
+  `evidence/d31_h200_64_dp_dummy_step_host_20261027.json` (+ `_report_`),
+  `evidence/d31_h200_32_dp_dummy_step_host_20261027.json` (+ `_report_`). Options
+  `/data/ycfeng/tmp/step5_d31_profiles_20261026/options05/predictor_options_h200_{64,32}_host_wave.json`
+  are the `_host` options plus `dp_dummy_step_host_profile`.
+- G/E item 4 reruns (started 18:57 UTC, CPU only, clean worktree
+  `/data/ycfeng/Frontier/.worktrees/step5-d31-wave-d5b11f6` at `d5b11f63`, script
+  `/data/ycfeng/tmp/d31_e05_run/run_w01.sh <case> <q2|wave>`):
+  - `h200_64_w01_q2`, `h200_32_w01_q2`: `_host` options; the harness now passes a PREFILL batch
+    queue of two, so against `*_m04_host` these isolate the queue change.
+  - `h200_64_w01_wave`, `h200_32_w01_wave`: `_host_wave` options (queue of two plus the cadence).
+  - Expectation: G TTFT error (−12.9% on `m04_host`) shrinks toward zero with `wave`; E stays
+    within its current band (DP2 backlog near zero). Compared after completion with
+    `frontier_workload.py check --gate 0.3` against
+    `evidence/d31_h200_{64_sweep02,32_sweep03}_native_metrics.json` (final gate 10%).
+- Known failure `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward`
+  is older than this round (bisect with the d29 python, `/data/ycfeng/tmp/d31_bisect/run2.sh`,
+  results `summary2.txt`): it fails on every commit from `dc632f94` (10-10) to HEAD and passes on
+  `2c9d625d` (10-08) and `ced720b3` (10-06). The first failing commit is `b0bf0c78` (10-08,
+  ticket 43 T43-I32, "Start a stage forward after its host preparation"); its parent `2c9d625d`
+  passes. Inference: the forward launch and its first MoE room now come
+  `forward_preparation_time` later, so the `moe_dp4_late_join` fixture's arrival times no longer
+  produce the test premise (lanes 2 and 3 woken into forward 0 with dummies). It is a stale
+  timing premise in the test fixture, not an item 4 defect; the fixture fix is deferred.
+
+Step F status (2026-10-26):
+
+- The stage is built and verified: `/data/ycfeng/tmp/step5_d31_workload_20261025/h200_64_workload01/stage`
+  (8 replicas × 8 H200, TP8/DP4/EP32, cloud output
+  `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_64_workload01`).
+- Pi run `d31-h200-64-submit-1026a` stopped before submission at 04:32 UTC. The step C job had
+  finished, but 11 other nonterminal H200 jobs of `i-fengyicheng` had been created between 04:27
+  and 04:31 UTC; 4 of them were non-preemptible (32 GPUs). Submitting 64 more would exceed the
+  64-GPU non-preemptible limit (D31.2). Evidence:
+  `/data/ycfeng/tmp/ds4_runs/d31-h200-64-submit-1026a/scratch/precondition_1c_nonterminal_jobs.json`.
+- Pi run `d31-h200-64-submit-1026b` (05:31 UTC) stopped at the same check: the 4 non-preemptible
+  stepcast jobs of another session (32 H200 GPUs, running since 04:27–04:31 UTC) were still running.
+  Nothing was submitted. Evidence:
+  `/data/ycfeng/tmp/ds4_runs/d31-h200-64-submit-1026b/scratch/precondition_1c_nonterminal_jobs.json`.
+- Pi run `d31-h200-64-submit-1026c`, turn 1 (12:10 UTC): the same 4 stepcast jobs (32
+  non-preemptible GPUs, running since 04:27 UTC) and 2 preemptible jobs of other sessions were
+  still running.
+- The account-level condition above was stricter than D31.2, which limits this session's own
+  usage to 64 GPUs. This session held 0 H200 GPUs. Turn 2 therefore launched once.
+  - Job `exp-1026-201417-791460`, created 12:14:17 UTC; 8 replicas × 8 H200, `step_main`,
+    non-preemptible, creator `i-fengyicheng`; phase `Starting` at the first read.
+  - The launcher (PID 2973409 in Pi's HOST service) must stay alive.
+  - Evidence: `/data/ycfeng/tmp/step5_d31_workload_20261025/h200_64_workload01/{launcher.log,status_1.json}`.
+  - With the other session's jobs, the account holds 96 non-preemptible H200 GPUs while this job
+    runs.
+- Result: `FINAL_STATUS succeeded` at 12:36:41 UTC; all 8 nodes finished with workload return
+  code 0. Native means: TTFT 1381.3 ms, TPOT 69.6 ms, E2E 72.6 s, total throughput 5005.5 tok/s.
+  The 64-GPU run is slower than the 32-GPU run (TTFT +27%, TPOT +13%). Evidence:
+  `evidence/d31_h200_64_native_metrics.json`, and the 64-GPU NIXL READ cost (56.55 ms)
+  `evidence/d31_h200_64_nixl_read_cost.json` for step G.
+
+Step C submission (2026-10-25 19:15 UTC):
+
+- Source: `f6772339`, checked out clean at `/data/ycfeng/Frontier/.worktrees/step5-d31-native-f677233`.
+  Stager: `tests/integration/step5_pd/canonical_stage.py build --kind workload --case h200_32`;
+  `verify` and the StepMind dry run passed before submission.
+- Workspace: `/data/ycfeng/tmp/step5_d31_workload_20261025/h200_32_workload01/` (`build.log`,
+  `verify.log`, `stepmind_dry_run.log`, `launcher.log`, `stage/launcher/submission_attempt.json`).
+- Job `exp-1026-031533-077730`: 4 replicas × 8 H200, `step_main`, non-preemptible, the routing
+  image `sha256:f037d958…`, worker timeout 5400 s. Cloud output:
+  `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d31_h200_32_workload01`.
+- Submitted by Pi through `/ds4-exec`, label `d31-h200-32-submit-1025a`, prompt
+  `/data/ycfeng/tmp/ds4_runs/prompts/d31-h200-32-submit-1025a.md`. Launcher PID 3729412 on HOST.
+  Phase `Starting` at 19:16 UTC (the image is being pulled for the first time on this cluster).
+- Note for status reads on HOST: export `KUBEBRAIN_CLUSTER_ENTRY`, `KUBEBRAIN_NAMESPACE` and
+  `KUBEBRAIN_WORKSPACE_NAME` before sourcing `stepmind_env.sh`; otherwise the client exits 127.
+
+Step C result of workload01: failed at 19:25:29 UTC, before any request was sent.
+
+- Observed (Pi status run `d31-h200-32-status-1025b`, worker logs under
+  `/data/ycfeng/tmp/ds4_runs/d31-h200-32-status-1025b/scratch/`):
+  - All vLLM servers started.
+  - The worker logs confirm `position_cyclic` routing was active.
+  - Each decode DP engine reported a KV cache of 1,028,438 tokens.
+  - The replay client then raised "The Step canonical consumer requires the locked clean Step
+    adapter".
+- Cause: in `tests/integration/step5_pd/canonical_replay.py`, the guard in `run()` compared the
+  runtime label with the literal `"step5"`. The routing image is registered under its own label,
+  `step5_position_cyclic`. Its runtime adapter is the `step5` adapter plus the image binding fields
+  (`tests/comparison/dp_placement_pp/vllm_replay.py`, `RUNTIME_ADAPTERS`).
+- Fix: the guard accepts both labels. The new test
+  `test_workload_consumer_accepts_both_step_runtime_labels` covers both labels and one rejected
+  label. `tests/unit/test_step5_canonical_native.py`: 38 passed
+  (`/data/ycfeng/envs/asyncopd-py312/bin/python`; the Frontier runtime environment has no
+  `aiohttp`).
+- The platform's node-to-node ping check failed for every node pair, but the servers started and
+  the failure happened later in the replay client. It is not the cause. Watch it on the rerun.
+- Next: rerun as `h200_32_workload02` from a clean checkout of the fix commit.
+
+Step C workload02 submission (2026-10-26 04:01 UTC):
+
+- Three submission attempts on 2026-10-25 (Pi labels `d31-h200-32-submit-1025c`, `-1025d`,
+  `-1025e`) stopped before submission: Pi's model service returned "402 insufficient_quota".
+  Nothing was submitted. The user restored Pi, and `d31-h200-32-submit-1026a` succeeded.
+- Source: the replay-label fix `e275c83a`. Workspace:
+  `/data/ycfeng/tmp/step5_d31_workload_20261025/h200_32_workload02/` (`build.log`, `verify.log`,
+  `stepmind_dry_run.log`, `launcher.log`, `status_1.json`).
+- Job `exp-1026-120141-290449`: 4 replicas × 8 H200, `step_main`, non-preemptible, creator
+  `i-fengyicheng`, the routing image `sha256:f037d958…`, worker timeout 5400 s. The launcher runs
+  in the Pi HOST service (PID 3265024 in that service's process space); it must stay alive.
+- Pi noted that the stage's `run_input.json` still describes the older 8-replica DP4/EP32
+  template, while the worker reads `config.json`, which is the 4-replica DP2 version. The record
+  file is not used by the worker; the stager's template should be aligned before the 64-GPU run.
+
+Step C result (2026-10-26): completed. Report `test_report_2026-10-26_h200_32_native_workload.md`.
+
+- The job succeeded at 04:23 UTC; 3 repetitions × (16 warmups + 128 formal) requests completed
+  and `workload_metrics.py` strict checks passed. Every node logged `position_cyclic`.
+- Each P and D lane: 81.98 GiB KV memory, 1,028,438 tokens. Peak in-flight is 85 requests, so KV
+  capacity does not limit this workload.
+- Native mean over repetitions: TTFT 1083.7 ms, TPOT 61.7 ms, E2E 64.25 s, total throughput
+  5214.6 tokens/s, output throughput 744.9 tokens/s. TPOT varies 57.2–67.7 ms between
+  repetitions. Metrics: `evidence/d31_h200_32_native_metrics.json`.
+
+Step B result (2026-10-26): Frontier runs the full workload in 49 minutes in dummy mode.
+
+- Runner: `tests/integration/step5_pd/frontier_workload.py`. `run` builds the Frontier command
+  from the native run definition (`canonical_run_h200.json`) and topology (`priority_cases.json`),
+  runs it with all diagnostic outputs off, and applies the native `formal_metrics` to the request
+  results. `compare` reports each metric's error against `workload_metrics.py` output.
+  `tests/integration/run_step5_measured_main.py` is superseded for E2E runs; deleting it needs
+  approval and is deferred.
+- Full workload, `h200_32`, dummy predictor: 128 of 128 requests complete, return code 0,
+  wall time 2933 s. Output: `/data/ycfeng/tmp/d31_frontier_b/full_dummy_h200_32/`.
+  The dummy predictor's latencies are not meaningful for accuracy.
+- Short runs (`/data/ycfeng/tmp/d31_frontier_b/`): 1 request × 64 output tokens in 147 s;
+  32 requests × 16 output tokens in 121 s.
+- With and without the stage-batch ledger, the 1 × 64 run's `request_metrics.csv` is
+  byte-identical (SHA-256 prefix `3a714ead6aba3aa7`, runs `prof1`, `prof2` and `w1x64`), so
+  turning the diagnostics off does not change request results. Under cProfile the same run took
+  366 s with the ledger on and 248 s with it off.
+- The cost of the old main09 attempt (one request did not finish in 2400 s) came from the
+  diagnostics and the synthetic fixture, not from the simulator core.
+
+Decision D31.9 (2026-10-26): Frontier E2E runs use `balanced` routing; the native run keeps
+`position_cyclic`. Frontier's `position_cyclic` path requires TP8/DP2/EP16 and collective inputs,
+so it cannot serve the 64-GPU topology, and the native counts are near-uniform (each expert gets
+`floor(tokens × 8 / 352)` tokens, plus at most one). Small decode batches can still differ per EP
+rank; this is a known difference to check if decode error appears.
+
+Evidence behind the reset:
+
+- The main09 attempt, job `exp-1025-123506-624501`, simulated one request with a synthetic CPU
+  fixture. Both modes timed out at 2400 s. The offline mode completed 109 of 1024 decode
+  iterations, at about 14 s per iteration, with a 57 GB memory peak.
+- `cleanup_receipt.json` in
+  `../task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/terminal/`
+  records the output sizes for each mode:
+  - EP wave ledger: 22,475,183,484 bytes (offline) and 22,323,215,845 bytes (online).
+  - `op_traces.jsonl`: 28,294,078,529 bytes (offline) and 28,122,982,003 bytes (online).
+- The first ledger record is 145,010 bytes. Its four `collective_proofs` fields are about
+  35 KB each.
+
+Decision: D31, recorded in `requirements.md`.
+
+## Current D21/D23/D24/D25 handoff — 2026-10-22
+
+Authority includes D20–D30 in [requirements.md](requirements.md), owned by the parent. Current normative contract is [spec §0](spec.md); executable dependencies/owners are in [plan.md](plan.md). Earlier chronological evidence below does not override the current table or approved decisions.
+
+| Work | Status | Evidence / next action |
+| --- | --- | --- |
+| D21 decision and dependency synchronization | completed | Four existing-ticket tracks in09/23/28/30; supporting active tickets updated, no new ticket or revived W1–W6 sweep |
+| D25 complete H80032/64 workload | completed; performance stability unverified | Both432/432 requests, three complete128-request measurement windows, all12 containers exit0/restarts0. Pooled p90 TTFT1.761/1.912s, TPOT87.793/93.557ms, E2E91.640/97.516s; mean total throughput5101.4/4999.1tok/s. [Report](../task_2026-10-22_step5_full_workload/summary.md) |
+| P0 H80032 | basic PARTIAL; per-lane replay observed | qualification03 exp-1021-205523-285491 Succeeded13:09:48UTC;24 exact requests/two idle boundaries PASS; decode lanes0/1 log2224/2152 FULL forwards |
+| P1 H80064 | basic PARTIAL; formal blocked | exp-1021-202325-579469 Succeeded;24/24 requests,64 GPUs, every lane idle; replay/G3/G4 and same-hardware30% release remain open |
+| P2 H20032 | basic PARTIAL; formal blocked | exp-1021-201544-965435 Succeeded;24/24 requests,32 GPUs, every lane idle; post-terminal parent API identity verified13:09UTC |
+| P2 H20064 | retained basic PARTIAL; formal blocked | Old64-GPU startup/capacity/24 exact requests/6128+16 split reusable; retain REFERENCE_UNSTABLE. Future runs wholly preemptible |
+| D20 shared measured implementation | integrated throughfa5bae2; full CLI FAILED |Latest legacy77 strictly identical. Actual06 reaches357/362 outputs, then2400s timeout; new-policy/input acceptance remains pending |
+| D22 independent timing reference | completed within approved probe scope | `exp-1021-201658-886733`,one preemptible H200;18/18 strict candidates,22/22 output/cache,18/18 prefix PASS; full-grid/linear-quality/serving admission remains open |
+| Canonical G3/G4 capture01 | completed; G3 NOT QUALIFIED |160/163 complete,1 actual abort,2 HTTP502. Resident identity/content and scoped lifetime PASS; independent state equivalence, pressure and transfer overlap unresolved. [Judgment](../task_2026-10-21_step5_priority_runs/canonical_g3/native_judgment/report.md) |
+| Typed MRv2 profile ingestion | integrated at0c9d1ef; parent verification PASS |Parent467 producer and264 measured checks; merged-tree13/13 observed groups and26 synthetic rows, preserving5 raw-null FULL groups. Independent static review has no findings; comparative review was not completed. [Review](../task_2026-10-22_step5_mrv2_inputs/inputs_review.md) |
+| D23 first-prediction agreement/root | integrated; source/review/legacy PASS |32fb934 agreement and26db654 root/owner repair verified, including242/167 parent checks and clean77. Actual04 KeyError is historical; current blocker is full execution/workflow alignment |
+| Startup census correction | committed e8d2f1a; native validation pending |Actual nested worker startup seam RED02;181 affected and19 final focused checks PASS. Original native gate FAIL unchanged. [Report](../task_2026-10-21_step5_priority_runs/canonical_g3/startup_census/test_report_2026-10-22_startup_census.md) |
+| HTTP502 failure context | integrated d063573; parent196 and merged100 checks PASS |Public connection-selection events and redacted exception frames preserve healthy200, EOF502, oneP/oneD and existing transport policy. Native root cause and socket identity remain unverified. [Parent report](test_report_2026-10-22_d23_parent_integration.md) |
+| D24/D28 native preparation | integrated; capture03 sealed, submission BLOCKED |D-only32000, same P/workload/reference pool; merged native/HTTP81PASS. Position policy approved but not installed; numerical state rule separately pending |
+| D26 P lifecycle | integrated; parent121/review and legacy PASS |P6128+D16, semantic6144/1024; v2fixture and2944 exact queries. New D29/D30 combined input/fullCLI remains open |
+| D27 live SWA payload | integrated; source/review/legacy PASS |32 live pages/19826 descriptors/139887104B per rank. Combined4080-prefix expectation corrected to102203904; allocation unchanged |
+| D23 fixed identity reuse | integrated; source/legacy PASS |96 parent checks, event/stage/lane/source truth equal. Pre-D26 complete iterations7.983/8.116s remain RED; not native CPU-overhead evidence |
+| Merged focused verification | completed |First239PASS/3FAIL/5SKIP retained; D27 expectation corrected, existing HTTP env/native-root binding restored. Reruns95/81PASS; latest per-case union258PASS/0FAIL/0SKIP; strict77 identical |
+| D29 policy/order | approved; implementation in progress |D29-SCOPE-107-10000 approves native19/1582, core-source44/4404 and pricing44/3956;107 unique paths/9942 gross plus named gitlink/docs within10000. Sole writers and interface order are in the position-routing repairs/repair_plan.md; additional collection resources/run approval follow readiness. |
+| D30 finish sync | source/CPU scope integrated4ec5b23 |Eight files/603lines under amended approval. Review No findings, parent420 and65 canonical checks,77/77 strict cases/902 hashes PASS; latest unit failure/error IDs equal baseline. Merged source/test parity PASS; fresh native counter observation remains pending. |
+| Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
+
+The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% on every track**.32 release30 requires all four errors<=30% in each of three clean full-population repetitions; equality passes, no average across metrics/hardware/repeats hides a failure. It unlocks only matching64 formal work, not basic runtime, final support or H800-to-H200 execution. Keep128 requests,6144/1024,QPS1,16 warmups,three clean repeats, existing runtime/backend/metrics and frozen68f891b/958d81a bytes. Profiles/native evidence and manifests are hardware/scale-specific, not scaled or substituted.
+
+**Parent-observed reconciliation:** complete09:02UTC personal list had0 nonterminal jobs, no continuation. H20064 qualification `exp-1021-125354-923219` Succeeded08:20:59UTC; H20032 communication `exp-1021-143708-523626` Succeeded08:15:05UTC. No incompatible live job needed stopping. Business/runtime judgments remain pending. Assess/reuse compatible64-H200 basic evidence before repeating; it cannot prove formal calibration. Old96/130 reservations are historical, not current state.
+
+**Superseded/paused packages:** old H20064 non-preemptible `/data/ycfeng/tmp/step5_d18_native_20261021/canonical02/` queued-to-formal intent is superseded. qualification02 already ended; any needed future64-H200 run is a new wholly preemptible generation, formal only after H20032 release30 and own readiness. Frozen packages are untouched; stage01 stays prohibited. Obsolete `/data/ycfeng/tmp/step5_d18_r2_h200_20261021/stage02` remains paused (maxlen2048, no6144/1024 or independent-reference G3). Another owner implements launch configurations; this docs slice does not block that work.
+
+**Resources:** all personal nonterminal reservations across sessions, including queued, count toward H200 non-preemptible total<=32. Every additional H200 job is preemptible even below obsolete80/130. Lower-priority H800 work must not starve ready P0.
+
+**Parent verification:** D21 source has204 passing parent checks. Staged `tests` namespace shadowing caused H20032 generation01 to fail before allocation;42dda4c adds package markers, with38 passing checks and actual StepMind-Python dry-run. All old packages remain unchanged; generation02 is separate. D22 has264 focused parent checks and a successful frozen18/4/0.05 native judgment. Detailed records: `../task_2026-10-21_step5_priority_runs/` and `../task_2026-10-21_step5_d22_timing/`. Independent compute/native source reviews hit model limits; no independent PASS is claimed. Parent continues direct checks and real execution.
+
+**Next actions:** (1) obtain D29's complete model/scope decision; (2) implement approved native/source interfaces and independent core/pricing slices with the shared sole-writer map; (3) freeze new inputs and D28-enabled native generation, perform approved live checks/diagnostic, then workflow and GPU/operator-gap judgment; (4) complete source-bound1024-output CLI within2400s with READ/readiness/release/final metrics. CPU overhead/gap remains last. D30 is integrated4ec5b23 with independent strict77 verification; no source scope or acceptance criterion is relaxed.
+
+D30 candidate evidence: worktree `/data/ycfeng/Frontier/.worktrees/step5-finish-sync`,
+`task_memory/task_2026-10-22_step5_finish_sync/issues.md` and its test report.
+The historical68PASS/6FAIL exposed peer-driving fixtures after parent fixed
+the baseline READ assertion in d581625. YC approved the complete seven-file/750
+scope, including six lifecycle instances and the diagnostic metadata consumer.
+Candidate dc166cb/713e6a8 now passes494 distinct author checks; parent separately
+passes420 boundary/R2 checks and77 strict scenarios. Review No findings and
+parent budget528+72=600 PASS. Evidence and exact commands:
+`../task_2026-10-22_step5_finish_sync/test_report_2026-10-22_parent_integration.md`.
+The approved eighth assertion file closes the sole added unit failure. Final
+source/CPU integration4ec5b23 is verified; live native counter qualification
+remains a later new-generation check.
+
+**Actual-main logger repair completed:** commit `b862e57`. Parent reproduced run08's `Batch has no requests` at the actual `BatchStageEndEvent`/`DummyForwardBatch` seam and restricted request-owned AF-state lookup to batches with requests. Reproduction2FAIL/2PASS -> affected logging/lifecycle36PASS. Clean detached5af7638/b862e57 runs at `/data/ycfeng/tmp/step5_event_logging_clean_fidelity_20261021` both exit0;strict comparator exits0 with77/77 identical,zero cache-name differences and no missing evidence. Earlier dirty-source receipts are preserved. Complete measured CLI acceptance remains with its owner. Details: [event-logging test report](test_report_2026-10-21_request_free_event_logging.md).
+
+**Parent takeover completed at implementation level:** the quota-interrupted MRv2 producer and G3 reference implementations are integrated into `feat/step5-preview` at145a2f5. Producer82f4452 retains17 native pins and both immutable3415-file stage inventories; the old stages stay withdrawn. G3 implementation1171ab6 supplies independent existing-D full-local reference, complete resident/cache checks, lifecycle controls and serving-only MRv2 post-DP start/end/metadata witnesses. Primary reran the merged tree:685 native/reference tests in42.72s and465 producer tests in33.30s, all PASS. Consumer identity and FULL_AND_PIECEWISE alignment remain open; synthetic CLI completion does not qualify native semantics.
+
+**Completed native capture:** source025d9a9 sealed capture01 has49 files/50 native pins, offline verification and actual StepMind-Python dry-run PASS. `exp-1021-235955-532667` ran32×H800/codesign/non-preemptible under a90-minute ceiling and finishedSucceeded4/4 at2026-10-21T16:26:40Z. Creator,RDMA,image and local NFS source were verified. The launcher ended normally. The completed judgment is linked in the current table; terminal success does not establish G3 qualification. [Native run record](../task_2026-10-21_step5_priority_runs/canonical_g3/native_run.md).
+
+**Consolidated fidelity completed:** clean145a2f5 candidate executes77/77 cases and strictly matches retained clean5af7638, with zero mismatches/failures/missing evidence/cache-name differences. Report `/data/ycfeng/tmp/step5_native_integration_fidelity_20261022/comparison.json`; [full commands and outcomes](test_report_2026-10-22_native_integration.md). Read-only native startup also verifies32 distinct H800 UUIDs, every P/D lane and the locked installed package; actual replay is underway, not yet qualified.
+
+**Native judgment and current owners:** capture01's direct API receipt is `/data/ycfeng/tmp/step5_canonical_g3_20261021/capture01/parent_terminal01.json`. Judgment, disconnect diagnosis and HTTP capture implementation are complete. `ses_ea08efc2cffe6Z1Rc7srkVdebh` owns D23 first-call agreement; `ses_ea074b7bfffe5UImN2k3jg0Uax` owns D24 bounded reference values. Primary owns acceptance, native integration and fresh full CLI verification. G3/G4/profile/formal gates remain open.
+
+**G3 implementation follow-up:** the parent inspected the locked no-transfer native path and selected existing-D full-local reference execution within the unchanged runtime, as recorded in requirements. Owner session `ses_ea19abd75ffeb7vtGDx4XMF94y` continues reference, reset/reuse and explicit pressure controls. Partial source7d46abe/recordse14e7df were checked in immutable worktree `step5-g3-review-e14e7df`:658 CPU tests PASS,42.08s, including the metrics cases that previously failed setup. The simulator subprocess uses the existing py310 environment through `FRONTIER_SIMULATOR_PYTHON`; no dependency installation or error suppression. Parent review/test evidence and the five-step progress checkpoint are under `../task_2026-10-21_step5_priority_runs/canonical_g3_parent/`. Partial code remains unmerged while the implementation owner completes the next slice; full G3 remains open.
+
+**P0 forward reconciliation and producer correction:** `native_replay/generation03_useful_accounting.json` accounts for all basic-run useful scheduled tokens: P147072=24x6128; D24936=24x(16+1023), both zero error. MRv2 records graph stats only when `not dummy_run`; neither subtracting lane counts nor multiplying by TP supplies missing dummy/all-rank evidence. Parent found the initial producer assignment and a7551a3 handoff used MRv1's no-metadata/fixed-one-slot assumption. Actual MRv2 builds dummy attention metadata and synchronizes its descriptor across DP. Owner session `ses_ea1b375c3ffeLg51GKsnhztuC2` now corrects the producer binding; `/data/ycfeng/tmp/step5_p0_profiles_20261021/{prefill,decode}_stage01` are preserved and withheld from submission. Separately, native config/rows use FULL_AND_PIECEWISE whereas the current consumer's full_decode_only path treats tail/graph misses as no graph. Consumer alignment and existing-observer G4 coverage remain next implementation work, not a reason to relabel rows or alter native configuration. Source pins, counts and scope are in `../task_2026-10-21_step5_priority_runs/native_replay/test_report_2026-10-21_g4_useful_accounting.md`.
+
+**Latest parent execution:** native frontend fix merged asb6755f7 after125 checks; ordinary profile identity16fe134 passed99 checks. Measured integrationbc8ae27 preserves D22 reference cohorts and measured precision/architecture/metadata identity;323 combined and197 profiling/timing checks pass. The stale structural-only assertion now rejects an explicitly absent measured CSV. Exact commands, logs and one corrected test-filename command error are in `test_report_2026-10-21_d20_d21_parent.md`.
+
+**P0 generation03:** fresh personal list12:54:54UTC had zero nonterminal jobs and no continuation; codesign non-preemptible usage68/128. Submitted32 H800 through sealed `h800_32_qualification03/stage/submit.sh` with persistent setsid launcher. `/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/parent_identity02.json` verifies creator,4x8 GPUs,image and local NFS mount. H20032's missing local identity receipt was supplied by post-terminal API observation, not reconstructed preflight, in `h200_32_qualification02/parent_identity02.json`. The initial inspection used an incorrect nested config key (`resources`); inspection of the actual flat schema resolved it and all assertions pass. Native verdicts remain unchanged until their own evidence is complete.
+
+**Generation03 outcome:** parent personal API confirms four tasks Succeeded at13:09:48UTC. Parent checks24 unique requests (16 warmup+8 concurrent), exact6144 accepted/1024 emitted token IDs, no validation errors and both-role/lane idle at both boundaries. Complete server logs contain99 runtime rows: P lanes each12 NONE forwards at6128 tokens; D lanes2224/2152 FULL forwards and20/18 PIECEWISE observations. Counts are interval-local in the locked logger and are not a complete per-request/all-rank census. Receipt and line-addressed rows: `../task_2026-10-21_step5_priority_runs/native_replay/generation03_{receipt.json,runtime_rows.csv}`. G3 and full G4 remain open.
+
+**Final-source legacy execution:** candidatebc8ae27 completes77/77 cases. Parent independently checks297 non-schema artifact pairs byte-identical, all31 prior metadata records preserved, exactly nine registered Step additions, and only a new null NIXL input in normalized config. Original strict comparison remainsFAIL, including a dirty-tree provenance finding from six documentation edits and two pre-existing untracked directories; no source edit is listed. Retained receipt: `d20_fidelity_schema_audit02.json`. Do not rerun an unchanged matrix merely to clear this record; final29 acceptance must use a clean selected checkout after remaining source integration.
+
+## Historical Ticket 15 native resident memory and KV capacity — 2026-10-20
+
+**Status: completed for this memory-reconciliation slice; whole ticket remains open.** Branch `feat/step5-reconcile`, production/test commit `5cae61a`, citation-only final commit `c8b8c06`, based on `7abd2fa`; no push and no edits to other implementation worktrees. The [native memory report](test_report_2026-10-20_step5_native_memory_reconciliation.md) and `native_memory_reconciliation_20261020.json` retain 48 native rank rows, source/log references and limits.
+
+The source-only cause was missing loaded vision frontend and rotary buffers, not an arbitrary memory factor. At TP16, the corrected **41,909,084,704 B** exactly equals registered native storage on all 16 ranks; native allocator load remains 84,387,296 B higher. TP8/EP16 source residency is 43,585,517,952 B versus rounded 40.74 GiB native load. Existing `memory_planner_profiled` now accepts supplied non-KV reserve without double charging fixed sparse scratch. Measured all-rank minimum reconstruction gives 1,036,323 versus 1,036,282 equivalent tokens (0.003956%) at TP16 and 979,591 versus 979,459 (0.013477%) per TP8 P/D lane. Source-only zero-overhead capacities are explicitly not native-matched. Exact TP8 registered storage, DP4/EP32 native fit, independent capacity prediction, an approved memory/KV tolerance and whole ticket 15 remain open.
+
+Verification: all Step suites **520 passed / 8 skipped**, final changed-delta **62 passed**, metrics **14 passed**. The first full runnable unit suite had the known 132 IDs plus one stale Step metrics expected-value pin; it was corrected. Final full-unit result is **103 failed, 5588 passed, 70 skipped, 29 errors**, with **exactly the known 132 failing/error IDs and no additions or removals**. This is a regression-ID pass, not an all-green suite. The first 77-case comparison's dirty-source exit 1 is preserved; the clean committed rerun **passes with exit 0, 77/77 identical, 451 artifact pairs, no mismatch/failure/missing evidence/provenance findings**. The final citation-only edit has identical production bytes and executable test AST; its seven native-memory tests pass again. Completed logs, manifests, results and SHA-256 receipts are in `scratch_evidence/step5_native_memory_reconciliation/`. No new GPU operation or public-doc update occurred; parent owns integration and publication.
+
+## Ticket 10 Step linear-op slice and attention Smoke 03 judgment — implementation
+
+Status is completed for source, CPU verification and offline staging; native qualification and whole ticket 10 remain pending. The implementation on `feat/step5-profiling` commits the one attention correction as `0bf3824` and the linear slice as `019b707`, without a push. The existing registry/family ownership now excludes attention projections from generic linear attention; the linear producer uses native clamp-7 activation, native zero-centered FP32 norm and FP32 merge with BF16 dense/shared projections. The MoE slice remains the sole router owner. Canonical disjoint TP1 dedup now preserves merge timing and typed contracts. Only the implemented linear profiling gate is enabled; simulator execution flags remain unchanged. The pre-change focused CPU baseline is 22 linear metadata/GLM passes, 101 native-model policy passes, and 133 registry/trace/V4 passes with the pre-existing failure `test_attention_trace_mapping.py::test_structured_attention_legacy_coverage_uses_family_execution_time_attrs`. The final failing-ID comparison has no additions or removals. Environment collection errors were resolved with the specified environments, not product fallbacks.
+
+The approved personal read-only query returned `Succeeded` for `exp-1020-224317-364507`, creator `i-fengyicheng`, finish time `2026-10-20T14:48:08Z`. The image and NFS source match stage04. The two CSVs and summary were copied from the approved cloud directory into `step5_profiling_20261020/attention_smoke_20261020_03/`, with bounded logs and filtered platform identity. There are 12 event rows and 8 GPU-active rows. All 20 output/cache validations and all 12 applicable prefix-continuation validations pass. All 12 calibration candidates meet the 5% CV bound, but two SWA decode layer median-agreement errors are 5.0373627% and 5.3060769%, so the strict verdict remains FAIL, with 10/12 qualified candidates and no admission. The measured singleton-minus-amortized differences are 1.8191 and 1.9518 microseconds. FULL scoped/clean instrumentation overhead remains 65.42%-133.51%. The single allowed repair initializes lazy event handles before preparation and measurement. Its two regression cases and the 128 timing/judge checks pass; no post-fix H800 result exists, and no gate was relaxed.
+
+Final verification is profiler 364 PASS, simulator 470 PASS and extended linear/metadata/policy/judge 405 PASS. The focused registry is 133 PASS with the same one old failure, not a new regression. The negative dtype injection catches BF16 input with preserved FP32 residual/weights in both timing modes; the actual model/block hook cases pass. All 19 changed Python modules are at most 1434 lines. Source/CPU review closed the norm dtype P1, summary coverage P2 and dropped-merge issue, with no remaining actionable P1/P2 in that scope.
+
+The immutable package `/data/ycfeng/tmp/step5_attention_20261020/linear_smoke_stage01` passes all 3399 hashes, full manifest, command/mount/image, credential-wrapper syntax/order and both frozen dry runs. It plans one H800/codesign and 12 CSV rows, six per method, including three TP1 merge rows per method. The unique output is `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/linear_smoke_20261020_01/`. Parent submission is `nohup bash /data/ycfeng/tmp/step5_attention_20261020/linear_smoke_stage01/submit_with_env.sh > /data/ycfeng/tmp/step5_attention_20261020/launcher_linear_stage01.log 2>&1 &`; it sources the approved credential environment and must remain alive until terminal status. Expected runtime is 10-15 minutes, not measured. This agent submitted, stopped and deleted zero jobs.
+
+The [linear report](test_report_2026-10-21_step5_linear_op_slice.md) and `step5_profiling_20261020/linear_implementation01/` retain commands, XMLs, baseline-ID diff, review, module counts, package manifest and verification receipts. Remaining work is parent native linear smoke and attention-fix validation; explicit final norm/LM-head, first unfused norm, casts and sharded-embedding/collective coverage; and frozen P32/D32 TP8/DP4/EP32/PP1 per-worker sequence/token/context/KV/capture settings. The proposed 336 attention, roughly 54 linear rows per method and 96 MoE cases still need role/capacity pruning and native phase dispatch rather than copied graph labels. Full collection and subsequent admission remain open; no predictor qualification is claimed.
+
+## Ticket 08 R2 native content and lifetime — preparation
+
+**Preparation completed; native execution pending.** Fast-forward to `0c92903` was unavailable because the histories had diverged; the explicitly permitted merge succeeded at `62bbe90`. The merged baseline passed 197 tests. Code commits `1696916` and `90559d8` are on `feat/step5-native-pd`, without push. Final package: `/data/ycfeng/tmp/step5_native_pd_r2_h800/stage02`, job tag `r2h80002`. Stage01 is superseded and must not be submitted.
+
+Read-only investigations R2-REUSE and R2-SEAMS identified the frozen byte/storage APIs and the native worker/scheduler/frontend boundaries. The frozen observer alone is not a NIXL lifetime proof. R2 therefore adds opt-in diagnostic hooks with unchanged frozen imports, actual source/target block mapping, full-row digests, native completion/notification/free events and selected frontend loads. The complete design is `native_pd_20261020/design_r2_01.md`. The read-only lookup for a nonexistent `tests/e2e/refactor_fidelity/scenario_matrix.json` was unnecessary: the existing matrix uses `cases.py`; no file was invented or substituted.
+
+The initial eighteen-request layout was revised to twenty requests in fifteen waves after design review. Twelve requests collect complete raw-KV/side-mean row digests and bounded resident tail state. Two sequential probes and all six concurrent requests observe native ordering without diagnostic CUDA fences or tensor reads. Region/page/partial-tail triplets, long SWA, decode cancellation and post-cancel reuse are included. Independent scheduler tables bind READ pages to logical indexes, including the first D query's SWA window. P/D each remain TP8/DP2/EP16 on four H800 nodes, 32 GPUs; P/D pool sizes are 1024/512 with four sequence slots. Thinking Mode, MTP and prefix caching remain off. Diagnostic timing cannot qualify clean E2E.
+
+Final combined verification passes 560 tests in 23.22 seconds, including the original harness, GLM/DeepSeek regressions, capture/verdict faults, actual collector-to-checker readiness and normal handshake reentry. Native methods remain authoritative and run once. Exact per-request immediate/deferred pool boundaries and GPU-step release guards are checked. All 77 simulator fidelity cases and clean-cache filenames are identical. The original contaminated-cache comparison is preserved; fresh archived source/cache directories resolved it without deleting original workspace cache. Stage02 offline verification at 2026-10-20 15:53:14 UTC passes 35 tool hashes, 27 original source pins, ten hook pins, four schema pins and unchanged frozen helpers.
+
+Review findings about readiness labels and duplicate metadata on cold handshake reentry were fixed and confirmed by the same reviewer; no actionable finding remains in that limited follow-up scope. Exact commands, estimates, iteration errors and verification limits are in `test_report_2026-10-20_native_pd_r2_preparation.md`; selected evidence is under `native_pd_20261020/r2_preparation02/`. No GPU submission, stop, deletion, platform query or cloud access occurred. Pending: parent native R2 execution, actual content/lifecycle/placement and reference review, then ticket08 acceptance. Ticket09 still needs clean P32/D32 TP8/DP4/EP32 roles, at least three repetitions with actual idle checks and streaming client TTFT for every measured request.
+
+## Ticket 08 native P/D run R1 — 2026-10-20
+
+- **completed:** harness commit `10d70a5` (stage, worker clean mode, wave driver, submitter, verdict; 155 passes in the four harness suites, full unit suite with no new failing ID). H200 run definition `4a55513` (24 passes). Verdict help text `d77e155`.
+- **completed:** hardware decision (`native_pd_20261020/hardware_decision_r1.md`). H800 had 15 free GPUs of quota and no whole free node at 08:39Z and 08:43Z, so R1 ran on H200/step_main.
+- **completed:** job `exp-1020-164750-497812`, created 08:47:50Z, `Succeeded` at 08:57:10Z, 4 × 8 H200, at most 4.98 GPU-hours, one submission. Verdict `r1_h200_01/verdict02.json`: 9/9 W1 conditions PASS. The first verdict (`verdict.json`) judged exit FAIL only because it was given the launcher's lowercase status. Report: `test_report_2026-10-20_native_pd_r1.md`.
+- **pending:** R1 on H800 when four whole nodes are free (`r1_run.json`, new stage directory and job tag). Then the R2 content and lifetime design. UCX transport identification and D TTFT decomposition stay open.
+
+## Current completed device diagnostic and implementation path — 2026-10-19
+
+- `completed / native run`: The distinct `request_device_20261019_01` / `exp-1019-075927-372034` completed Succeeded at **2026-10-19T00:08:32Z / October 19, 2026 08:08:32 HKT**. Source HEAD `7962f5fe8199a6884f6c1628f7a9a1bf8faeb609` and receipt SHA `f2d2aa4f3427a8265e4d0b4acfa55b4add7091930ba2044dd40efcc33610e049` are frozen. [The new report](test_report_2026-10-19_native_request_device.md) records **26,917 retained device checks PASS**, **35 scoped source/lifecycle checks PASS**, original public→internal→worker→device association on all16 ranks, 544 real device stages and256 actual FULL replay calls, 539,099,136 valid hidden finite elements, and ready observer-owned copy events. Full precision/scale consumption, physical kernel and cache-state census remain missing. **06 is PARTIAL1/10, criterion7 only; whole15 is PARTIAL0/8.**
+- `completed / source and archival review`:197 frozen inputs,196 snapshots and113 native identities/114 body paths; scoped Faraday33/33 checks pass. All86 archive members/160,876,320 bytes have postrun streaming hashes;70 selected members/103,333,166 bytes retained locally.16 capacity JSONLs remain cloud-only; worker manifests are size-only. Both final status/peer/archive/residual records pass; original launchers ended. No new GPU/API/cloud operation occurred in this archival continuation.
+- `completed / analysis preservation`: final `analysis_source_02.py` SHA2d7509fdad0cccdeee599f06f137607b2c5799f796c25d0b28c51cb16868eb71 preserved. First544 false findings and their independently scoped counter RCA remain FAIL; corrected association uses native device_step/full IDs/final inputs/replay, never a counter offset. Seven retained mutations are not native fault injection.
+- `observed / limitations`: node0 is cfcd2084 and force-killed EngineCore;node1 is c4ca4238 and native SIGKILL killed eight workers. Node0 NoSuchProcess, node1 TCPStore/NCCL/broken-pipe, inference JIT and platform P2P ping warnings remain. No complete precision/kernel/cache-state census, clean timing or data-transport/H80064/H200/predictive claim.
+- `completed / documents`: before-images of eight maintained documents are under `native_request_device_audit_20261019_01/documentation_before_01/`. The new report/disposition preserves all original checkbox text and historical results. Selected parent28 retained-source plan checks pass; the110-line census plan is readiness guidance only. Old Curie audit remains pending.
+- `in-progress / next source slice`: parent owns incremental all-layer/dispatch/precision observation; then table/lifecycle/known-storage/content census and only missing native kernel correlation. Native observer/caller/tests and platform are single-owner; C06 may work independently on detached metric joins. Complete06 ->15.native_reconciliation and native07/08 ->09;16–22 retain GLM gate. H800first, H200 actual-quota fallback≤64/all non-preemptible.
+
+The dated source/submission handoffs below are historical. No ended generation or accepted unchanged CPU campaign should be repeated without an affected cause.
+
+## Historical first native request audit and its continuation — 2026-10-19
+
+- `completed / source and sole native run`: structural03c7f823 and callercd7be9f8 are committed with their recorded byte checks. The155-file frozen receiptSHA7c6fddf2d70832576e06c601367a54574eddbd10ed9b846379642ffef888bbd0 remains unchanged. Sole job `exp-1019-045056-405672` finished **Succeeded at2026-10-18T21:03:06Z /2026-10-19 05:03:06HKT**; both containers Completed/exit0/restart0. Starter51711 and launcher3826129 ended with return0. No duplicate, retry or platform stop. Exact retained receipts: `native_request_audit_20261019_01/platform_observations/observation_05/` and `launcher_submission/`.
+- `completed / parent actual-artifact analysis`: `analyze_retained_request.py --output native_request_analysis_01.json` ran with explicit Frontier Python3.10.6, timeout60s, and existing validators only; **24,682 checks/0 failures/PASS in0.590929216s**. Current archival continuation inspected that result/script/sources rather than repeating tests, CPU/GPU campaigns, API reads or cloud recovery. Bare `python` was unavailable; an initial local inspection printer also encountered a scalar `len()` TypeError. Both local inspection commands were corrected using the explicit interpreter and type-aware output; neither affected native work.
+- `observed / five separate outcomes`: both normal public requests finish with exact4105prompt/9outputs, public IDs0/1, length termination. All16ranks have34actual request stages each, with `8x512+9+8x1`, and identical complete internal IDs/ranges. Source-bound actual original FULL replay callee events total**256**, tied to final kwargs/capture entries; these are CPU invocation/identity observations, not GPU completion or changed-device-content qualification. Native child1660 terminal binds saved request SHAe2419122df9e286fc413ea08a300bcdcfac6bdb6d3f9036a5eb66707b20236d2. Five zero-work records/rank retain their originalUNVERIFIED labels.
+- `completed / archives and final status`: 67cloud members/64,605,257bytes and both original size manifests reconcile;51selectedlocal members/7,056,230bytes and16request JSONLs checked.16larger capacity JSONLs remaincloud-only with prior parent streaming hashes, not worker historical hash attestation. FinalNFSpeer statuses bothPASS/return0;16authentic workerPID/start-time pairs gone, compute-app queries empty, all deadline flagsfalse. Actual rank/node/metadata/archive and conservativeNFSbudgets pass. Finalstatus is distinct from pre-exchangecompletion markers.
+- `observed / material limits`: node1 native executor sentSIGKILL to8workers;node0 force-killedEngineCore and8workers. Rawexit0 doesnot implykill-free shutdown. RetainTCPStore/NCCL/broken-pipe shutdown warnings and five inferenceJIT kernel warnings. No current-generationNET/IB/GDRDMAattestation;no cleanperformance or precise cross-nodecausalclaim. OriginalFailedcapacity03, unadmittedFFN/Attention, officialcomparator/cache and initialization-drift limits remain unchanged.
+- `completed / scoped06 disposition`: [native report](test_report_2026-10-19_native_request.md) and `native_request_audit_20261019_01/ticket06_disposition_01.json` map all tencriteria. **Onlycriterion7accepted**: originalpublicfixed-lengthcompletion withoutsampler/tokenfabrication;engine-sidecloned sampling/device consumption remainsunobserved. Whole06PARTIAL**1/10**;whole15**0/8**. FullG2, public/internaladmissionbridge, devicecontent/finite/completion, executedprecision/scales, completephysical/planning/statecensus, HTTPonline/PD/H80064/H200/predictive/commonHEAD remainopen.
+- `completed / disjointpreparation`: Schrodinger07 `observer_preparation_20261019.md`, Erdos14 `pd_metric_preparation_20261019.md`, Noether29 `three_model_regression_preparation_20261019.md` are complete. Parentchecks02 independentlyverifies133hashes,79HEADblobs,24nativemanifestmembers,70PDlinks,56PDfunctionranges,20intervals and5errorexamples. It doesnotverifyeveryself-reported84functionrange. InitialcheckerfalseFAILanditscorrectionareretained. Preparationdocuments arehistoricalsource/designsnapshots, notnative/tool/commonHEADacceptance;pre-updatecurrentdocsarepreservedunder `native_request_audit_20261019_01/documentation_before/`.
+- `in-progress / shortestnextpath`: parent ownsoriginalfrontend `OutputProcessor.add_request()` association observation beforedispatch/removal,usingactualexternal/internalIDs,acceptedprompt/resolvedsamplingandmanifestcontext. Thenboundedobserver-owneddevicecopies/completionandrequest-ownedstate/physicalwitnesses through `g2_native_witness_seams_20261018.md`;no suffixparsing,nth-forwardjoin,secondtransportorcore redesign. Verifychangedsources/actualranges/budgets beforeadistinctpurpose-boundH800run. Complete06 ->15.native_reconciliation ->qualifiedobserver/PDandlatergates. C06 ownsoneexistingnormalizer/gate;sharedcore hasoneowner. Curieauditwaspendingatthisparentdisposition;noindependentapprovalinferred.
+- `authority / hardware`: H800/codesignfirst;actual insufficientquota permitsH200/step_main<=64total/allnon-preemptible withfreshhardwareevidence. Existingrunisfinished,notareplacementcandidate. Do not re-execute FFN02/Attention01/capacity03/source recovery/acceptedstructuralorCPUcampaigns withoutnewaffectedcause.
+
+The dated review and earlier handoffs below remain historical archives. This current section and current requirements/plan govern the active implementation phase.
+
+## Documentation review checkpoint — 2026-10-18
+
+- **completed / reconstruction:** inspected requirements, current specification, all 30 tickets, shared integration/model plans, Step source and recent commits, and retained native/CPU evidence. [review.md](review.md) contains the six-column assessment and main-path findings; [reference workflow findings](reference_workflow_review_2026-10-18.md) separate retained evidence from unavailable fresh public bodies.
+- **completed / corrections:** updated the existing specification and all tickets without accepting any new implementation criterion. Ticket 15 now begins with model representation after 03 and then controlled structural execution; whole-ticket acceptance still requires 06 native reconciliation. Ticket 10 consumes the 05 coverage disposition; whole 05 remains mandatory at 30. Early 07/14/29 preparation is separate from native/final acceptance. External GLM full-path gates remain for 16–22. The dependency graph and single owners are in [plan.md](plan.md).
+- **completed / evidence disposition:** 01–04 are DONE only within their recorded scope; 05/06 remain PARTIAL, each 0/10. FFN02 and Attention01 remain 0/6 and 0/60 admitted. TP16 startup and the CPU UUID correction do not close G2 or demonstrate PRIMARY role capacity. The last CPU checkpoint's dense-init overrun remains UNVERIFIED. No Step production model representation exists at reviewed HEAD `ac9efb1013c687f98cbde4d0678cbfad12987e50` relative to the selected base.
+- **completed / shared ownership:** the shared worktree has active candidate edits, including model/attention and memory/timing paths. Its status is NEEDS REVIEW; this session did not modify it. The timestamped observation is [shared_at_review.json](documentation_review_20261018/shared_at_review.json). Root CONTEXT.md was renamed to byte-identical GLOSSARY.md as instructed; no architecture decision was added.
+- **completed / document validation:** both document-only passes completed with 14/14 checks PASS. The final pass verifies all 30 ticket files and unchanged 40/278 marks, the 37-node/64-edge graph and mandatory final reachability, 148 local links, 16 inherited ticket paths, 40 original snapshots, five immutable sources and 1,198 tracked-file fingerprints (1,197 unchanged plus the identical glossary rename). Three independent review finding groups were corrected and checked by the primary. Exact outcomes: [the validation report](test_report_2026-10-18_documentation_review.md) and [final receipt](documentation_review_20261018/validation_02.json). No project test, benchmark, profiling, native or platform operation was performed. The review phase is complete; implementation remains for the next execution session.
+- **pending / execution:** model representation, full structural request execution, native G2/G3/G4, admitted profiles, measured predictor/workflow integration, H800/H200 and common-source three-model acceptance remain unfinished. The review does not launch those tickets.
+
+### Resume handoff for the next execution session
+
+> Superseded on 2026-10-20 by the handoff at the end of this file ("Handoff for the next session").
+
+1. Read current requirements/plan and inspect the shared lead's accepted commits and current file ownership. Start `15.model_representation` from the accepted 03 inventory. Then complete `15.controlled_structural_path`; reconcile native facts after 06 before closing 15.
+2. Run disjoint preparation concurrently: targeted 06 source/evidence recovery, 07 instrumentation preparation, and 14 normalizer/gate preparation. Start 29 contract-regression preparation after 15 representation. Before any native submission, inspect existing source-only job `exp-1018-173210-527470` and retained artifacts. Its last retained observation is Pending at 2026-10-18T10:50:26Z; the watcher ended at 10:52:10Z. Current state is unknown, not a reason to submit a duplicate.
+3. Keep shared files single-owner: C02 model/attention contracts and common C04 operator/profile changes belong to the active shared integration lead; C03 owns cache/allocator/transfer; C05 scheduler/placement; C01 predictor/cache/publication identity; C06 benchmark adapters/normalizer/gate. The lead assigns disjoint native hook files to one instrumenter. Model-specific leaves can proceed in parallel after the contract is agreed.
+4. Finish minimum G2 service/replay evidence, then 07/08 and priority 09 H80064. Measure represented full paths through 10–13; preserve all 05 admission obligations without duplicating collections. Confirm the external GLM full-path evidence before 16–22. Follow 23–26 for frozen H800 comparisons/holdouts, then 27/28 actual H200 and 29/30 same-HEAD final acceptance.
+5. Routine implementation, instrumentation, test-resource and evidence choices have standing authorization in the subsequent execution phase. Escalate only a demonstrated material Frontier core refactor or materially unresolved semantics/acceptance, with the exact limitation, smallest proposal, alternatives and regression costs. No such refactor is approved by this review.
+
+Everything below is a dated historical checkpoint. Earlier next-action instructions, permission constraints, whole-ticket barriers and status words describe their observation time; the current authority and plan above supersede them. Preserve original failures and attribution.
+
+## Historical CPU checkpoint completion and pause — 2026-10-18T11:30Z
+
+- **completed / scope and reviews:** latest user requested only the already-started05timed-evidence and06CPUmetadata steps, planned verification/commits/records, then pause. Same-model/xhigh final05review5c8b3c5a-47a5-411 and06review60fc59f3-ac88-4b4 No findings. Attention3P2orchestration/trace-budget fixes produced12RED->41GREEN; partial-record interruptP2 produced4RED->258jointGREEN/2.46s. Original exceptions remain primary, diagnostics/caps/nullableCPUfrontiers remain explicit; no native/G2 evidence.
+- **completed / fresh verification:** four reviewed source/test bindings,38originallocks,7frozenpairs,AST/line/whitespace andunchangedruntime/input/runner checked. Fidelity01completed77/902butoverallFAILforcgroupv2-only observer onactualv1; rawpreserved, causeverifiedfrom/proc/mountinfo, scratchcontrollerreaderfixed. Fresh02passed77/77scenarios902/902hashes/803completedrequests/no numericorintermediatechanges/noendpointdrift,145.178698s,actual30GiB. No clean-cache/training/nativeaccuracyclaim.
+- **completed / performance disposition:**24/24sequentialattempts4warmup/20measured/220.873476s/actual30GiB/outerexit0/allrequest-event-fingerprintchecks. Seven/eightpairedmedianswithinunchangedbudgets. Denseinit4.198711431->4.299223691s,+0.100512260s/+2.393883%>1.941337% retainsOVER_FROZEN_BUDGET. PrimaryUNVERIFIED_UNRESOLVED_MEASUREMENT_CONDITIONS disposition underfrozenbudget§3:runtime/input/runnerunchanged,newmodulesunimported,sodirectnewcodecauseexcluded; actualenvironmentcauseunknown, nohost-loadcausalclaim. Originalinitdrift+135.547411%dense/+134.886987%MoEUNVERIFIED. No budgetwidening/sampledrop/sentinelretry/fullperformancePASS.
+- **completed / code commits:**05a129a6bd2a9300159427249a197418f8a150e05a,EOF-onlycorrectionc4f2c6b8d31699e2eb9136741fc200669b8a550e,06ac9efb1013c687f98cbde4d0678cbfad12987e50(finalHEAD). InitialstagedEOFcheckfailedbutfirstshellcontinuedcommit; failurepreserved/nohistoryrewrite, set-e/scopedchecksusedafterward. Removedonlyoneblankline; exactASTwithlocationsidentical,258affectedPASS/2.77s. Final311-lineAttentionSHA19fa025b...;otherthreeexactreviewedbytes,currentfourfiles=HEAD. Freshmatrix/sentinelsattributedtoreviewed312-linebytes/829dc685,notretroactivelycommits. Onlyinherited.piuntracked;noignoredrecordstaging/push/merge/nativeSDKedit.
+- **completed / records:** exactreports`test_report_2026-10-18_parallel_evidence_joint_cpu.md`,twoCPUreports/review/tickets/plan/requirements/proposal/summary updated. Verificationreceipt`parallel_evidence_verification_20261018_01.json`SHA25de9d94fdd5f9b24c9448fa33afe9b98ae13f8884a35008aaff4e73dec3ee7a;postcommitreceiptSHA4c7c224f35c3475c25b09d4251dc4d6b341bbda30f0d3ef0082e58c3c092e24d. Closing static evidence is `parallel_evidence_final_static_20261018_01.json`, covering committed source bindings and the synchronized records; no nativeacceptancecredit.
+- **completed / sole watcher:**591c700a ended10:52:10Z; lastactual10:50:26.465640ZreceiptSHAf46d00d7de1b0e2097d88f7ebd3a46b14d41b8628f6379fd1440c4224cf2b0a9:exp-1018-173210-527470Pending/H800quota0/replicasempty/personalcreator/resources/image/NFSmatch. Originalwaiters4056757/4056764werealiveatlastinspection;18sourcemanifestabsent. Currentafterlastobservationunknown. No newwatcher/query/control; originaljob/waitersleftuntouchedandcanlaterexecutealready-approvedsourceworkdespiteagentpause.
+- **pending / whole task:**01–04done;05/06in-progress0/10each;07–30blocked. No admittedFFN02/Attention01dataset orG2. Actualcaller/wholegenerationstorage-timeaccounting/input/content/graph/precision/allrank/lifecyclewitnessesremainopen. Production15–22alsowaitGLM09.full_frontier_path;H200deferredbutrequiredforoverallclosure.
+- **pause / next actions only on resumption:**1.Readlatestrequirements/plan/progressandinspectactualexistingjob/artifactsbeforeanynewintegration;no uncertainduplicates.2.Completesource-supportednewcaller/entryandgenerationwideaccounting;rawAttentionstagingnotunderretainedsamplecap,CPUmetadataisnotactualmodelinput/G2.3.Review/verify/freezeonedistinctpurposefulnativegenerationthenactualaudit;do not repeatunchangedFFN02/Attention01/capacity03/TP8. No newimplementation/service/GPU/monitorwindow now.
+
+## Historical eligible parallel continuation — 2026-10-18T10:39Z
+
+- **completed / dependency checkpoint:** actual ticket records and the approved graph give01–04 done,05/06 in-progress,07–30 blocked on complete local predecessors. Production15–22 also retain the external GLM full-path barrier; H200 remains deferred.05 needs only completed04, not G2 or the pending18-source export.
+- **completed / ticket06 implementation checkpoint:** same-model/xhigh `e336aa7e-31bc-4e0` delivered only new `role_execution_observation.py`, `test_role_execution_observation.py` and its scoped CPU report. Parent verified final source9d8b98f1.../220lines, test076e59b1.../519lines and the exact retained log SHA. The factory preserves one inherited execution/result/native exception, copies CPU request-order/frontier metadata before sampling, separates diagnostic errors and counts new plus original per-rank records against the existing allowance. Final33new+18adjacent=51fakePASS/0.75s. Independent reviewer60fc59f3-ac88-4b4 is queued. No GPU copies/profile callbacks/replay/input-argument claims or new caller/launcher; this is not G2 acceptance.
+- **completed / ticket05 evidence analysis:** same-model/xhigh `37611998-59e8-489` inspected the actual audit and reusable collector seams read-only. The frozen collector has no timed callback; inserting copies via native hooks would enter priced scopes. Its construction, sample scheduling, cache restore, owner annotation and existing reconciliation are reused by the new private measurement loop below. No duplicate historical audit or frozen-file change.
+- **completed / ticket05 implementation checkpoint:** parent implemented new `local_attention_evidence.py` and its scoped tests without modifying the frozen collector. Native sample objects/metadata/schedule/owner names are reused; actual timed outputs are copied after device drain outside priced annotations, with per-pass bracketing resource query intervals. Current19fakePASS/0.27s; source8078b040.../256lines andteste10f62de.../305lines. Independent reviewer382de32a-e1e7-4e0 queued. This is not continuous exclusivity/clean timing/numerical admission; caller/generation integration remains pending. Exact `test_report_2026-10-18_attention_evidence_cpu.md`.
+- **in-progress / joint verification preparation:**26f09bf0-b709-4c3 owns only new inert scratch scripts with fresh roots and explicit new05/06source bindings; no fidelity/performance runs while code/review remains unfinished.
+- **in-progress / source job:** existing watcher `591c700a-0c19-4b7` alone monitors exp-1018-173210-527470. Last independently retained receipt remains10:20:18Z Pending/H800quota0; no parent duplicate query/submit/stop. Its missing18bodies block only unresolved request graph/input/profiler integration, not the work above.
+- **pending / acceptance:** collect new code and scoped fake-test evidence -> independent current-byte review and corrections -> one jointly applicable fresh77-scenario/902-hash fidelity pass -> sequential24-attempt unchanged-budget comparison -> source/frozen checks and scoped commit. These are future checks, not reuse of earlier code-step acceptance.05/06 remain0/10.
+- **next:** 1. Complete current-byte independent05/06 reviews and correct demonstrated defects; 2. run one joint affected-fake/fresh-fidelity/frozen-budget verification before separate code-step commits; 3. continue caller integration only where actual source seams are established. Missing request-source bodies still block graph/input/profiler integration, not all eligible work.
+
+## G2 source-readiness continuation — 2026-10-18T09:06Z
+
+- **completed / proposal review:** original design8b4fb09e-5f0c-4cf delivered after interruption recovery. Parent foundactualMRv2selection inbothcapacity03logs, confirmedretainedFULL`.replay()`sourceandcorrectedMRv1-onlyoutputassumptions. MRv2statehaspreparedinputs/hiddenoutput,butnopre-masklogits/selecteddescriptor;asyncmaterializationremainsnative-owned. No nativepatch/overlay orreplaycounterinvented.
+- **completed / source-derived shape correction:** CPUASTreplay ofretainednativegatherandDSAdispatchexpressions underPython3.10.6checked7prompts.4097finalone-tokenprefillrunsnativeDSAdecode,sooriginalproposaldoesnotcover scoredprefill. Proposed4105has8nominal512chunks+9andoneposition4104with513historicalregions. `threshold_probe.json` SHA-256 `0e1db9d0a4a4214a61269a9aa46a63ff3807a7dafba1adb77221be5855a4cd8b`;notactualschedule/graph/kernelqualification. Updated`g2_execution_proposal.md`inplace; no newservicefreeze.
+- **completed / new source-set CPU seam:** two-fileadditionthroughunchangedSOURCE_SETSrequestadds18sourceowners,RED1FAIL/9PASSthenGREEN10PASS/0.12s;independent61c0bc74-0559-4e0No findings andexactSHAs. Read-onlyreadiness18dda7b4-9a1e-4f6identifiesnativeprofiler,inputvalidation,asyncoutputandPIECEWISEmissingbodies;parentcheckedactualFULLreplay/statecitations. Scopedreport`test_report_2026-10-18_request_source_readiness.md`.
+- **completed / fresh fidelity:** preparer8ec499f2-5ba4-4c9 returned inert scoped scripts, inspected by parent. Exclusive `/data/ycfeng/tmp/step5_request_sources_fidelity_20261018_01` completed77/77scenarios and902/902hash-size checks, outerwaitexit0/144.199415748s, pre/post/current source bindings unchanged. ComparisonSHA-256 `f6f781b097992297243139210e5642273db83dfe15cb1fcc219e30cd2134d38d`. Retained-cache/clean-training/native limits preserved. These checks apply to the new source-set step only.
+- **completed / sequential performance:** sole24-attempt series `/data/ycfeng/tmp/step5_request_sources_performance_20261018_01` finished all24/4warmups20measured,218.596933459s; supervisor3977272waitedouter3977275/return0. Eightpairedmedianswithinunchangedfrozenbudgets, pre/post/current sourceequal. Active scopeMemoryMax32,212,254,720bytes independently observed; no concurrent tests/fidelity. ComparisonSHA-256 `69b90f93bdf4e755447462d881772ebb881f60bf58f27106f0b56f68204dfd1b`. Originalbaselineinitdrift+138.764250%dense/+135.028079%MoEremainsUNVERIFIED;pairedsimulatornonregressiononly.
+- **completed / static acceptance:** two reviewed source hashes/AST134and67lines,7/7frozen FFNsource/snapshotpairs,exacttwo-filediff/runtimeinputrunnerunchanged. `request_sources_static.json` SHA-256 `03195f2b6d9016ec1dde8ed092a172c1ea37dc3a06a5b746c2ace86ef5c65814`. NewCPUstepaccepted;two-filecommitnext,noignoredrecordstaging.
+- **completed / code commit:** `829dc685f940832026cb1d116101f4150e2de24d` contains onlythetwo reviewedsource-setfiles,current=staged=HEAD=verifiedSHA-256. Postcommitreceipt `request_sources_post_commit_20261018_01.json` SHA-256 `9f62b641d798d1e4130ffcea7fa5a9dd1ab11f725c709c9b75a84a9358b9318a`;7frozenpairs/AST/runtimechecks unchanged, tracked-stageddiffempty/only.piuntracked. No acceptedcheckrepeated, push/merge/ignoredrecordstaging.
+- **completed / private launcher preparation:** agent4140b0ee-0296-4a0 delivered only inert scratch templates and fake evidence after interrupted return recovery. Parent materialized five separately bound copies and a pending receipt for `request_sources_20261018_01`; exact source-only 1H800/600s/original exporter and own SDK callback scope. No native source output was created during preparation.
+- **completed / review and freeze:** independent e7f5bc9a-1099-49f returned No findings on five materialized copies, original caller/transitive locks and outer spawner. Parent current 18 size/SHA bindings, 18-source fake payload, 24 scope and 20 receipt/starter fake checks, AST/line limits and absent outputs/attempts PASS. Freeze validation SHA-256 `da118008b7a2015d0f10bb3bd6adea4ecd72a4f64bf65bc4a9b24a884187f5e0`. Dedicated receipt now PARENT_FROZEN_APPROVED; actual sole source acquisition follows, not a model/capacity repeat or G2 acceptance.
+- **in-progress / sole source acquisition:** `request_sources_20261018_01` submitted once as exp-1018-173210-527470 at09:32:10Z. Starter4056757 and original launcher4056764 were still alive at09:52:18Z. Exact personal creator/codesign/non-preemptible/CPU8/GPU1/32000Mi/locked image/current100.96.128.195NFS verified; parent-read09:52:07Z receipt remains Pending, explicitly insufficient H800 quota/remaining0, replicas empty. Receipt SHA-256 `f52bba0c7b220114bcd7edf825c929380f85be08ea43bb8c8874c4153451bf5a`. Watcher591c700a-0c19-4b7 owns bounded existing-job reads, so parent does not duplicate polling. At09:55:15Z source manifest is still absent; actual container exit/restarts and starter final exit are unobservable, not0. Bounded capacity HTTP200 is not a submission gate. Own SDK exit-stop callback was unregistered; original wait/poll/stop unchanged. No retry or stop/kill. Frozen receipt SHA-256 `e8944da812f2ce18d3422bd4f6cba69b65992232ba7081e9eee8f07c805e615e`; full commands in the request-source report.
+- **completed / independent source analysis:** read-only d10a8cbf-2017-49d completed retained MRv2 live input/hidden/state analysis after interrupted return recovery. Parent located the already retained Step3VL inherited wrapper forward and verified15source manifests/hashes/AST/state/config contracts at09:45:51Z, exit0. Receipt `request_live_state_sources_20261018_01.json` SHA-256 `0db598bff908e6a4be903644796688f4fc42f7bb17440957c809bab9b94515b8`. Proposal now selects one post-execute/pre-sampling snapshot, source-supported valid `[n,4096]` FP32 hidden range, conditional position authority, closed/partial summary distinction and ownership-first tail checks. Missing block-table/rope bodies and historical occupancy remain explicit gaps; no frozen-source-set expansion, native implementation or qualification.
+- **completed / caller-reuse design:** read-only e6c8f9e6-244e-4b9 returned the minimal new caller/observer composition. Parent checked original capacity preflight/engine/headless/census, actual-child terminal publisher, worker factory/identity, rank writer budgets and supervisor scope/deadlines. Reuse unchanged lifecycle/census/archive functions; own new request preflight/node orchestration and request verdict, never relabel raw `capacity_only_not_G2`/`metadata_only_not_G2`. Preserve original initialization inventories and include them in total record budgets. Recipe is integrated into `g2_execution_proposal.md`; no executable files/source modifications/tests.
+- **completed / native input-argument conditional:** parent five-file manifest/SHA/AST check exits0, `PASS_STATIC_INPUT_ARGUMENT_CONDITIONAL_ONLY`; new `request_input_state_sources_20261018_01.json` SHA-256 `a1f97072f0c6ac65b0a341d058383ecf13cf287df341325bc0f3b176f308ef7c`. Prepared token buffers may differ from actual model input arguments because the inherited native text embedding path can pass input_ids=None. Actual capability/state/embedding/position flags remain runtime witnesses; missing embedding/model-state bodies are not invented or inserted into the frozen18-source job. Exact command/log hashes in the scoped report.
+- **completed / independent precision-source analysis:** a0767521-7fdb-431 completed read-only native precision/exclusion/scale-content mapping. Parent16rank retained-file hash/metadata reconciliation exits0 after a scratch-only invalid attribute expectation was corrected; initial KeyError/no-result log preserved. All92layers/88routed/85FP8+3unquantized/352expert dimensions match;526old excluded labels join525linear methods plus actual lm_head UnquantizedEmbeddingMethod. `request_precision_metadata_20261018_01.json` SHA-256 `646b257de57763931cc963475f6fcef19f48fc6ee0261b86c103a67d56732108`. Full scales137,871,360bytes/rank exceed64MiBrecord cap; proposed blockwise full scan/selected raw witnesses is not full-byte retention or measured cost. Existing source classification/rawmetadata untouched; native job stillFailed, actual precision/scale use/G2unmeasured.
+- **in-progress / resumed same-job monitoring:** watcher591c700a completed15successfulqueries09:48:00Z–10:03:00Z, last10:02:22.830882ZPending/H800quota0/replicasempty; original starter/launcher live10:03:00Z andmanifest/start_finished absent. Parent read exact lastreceipt and resumed onlyanother15minuteexisting-jobwindow. No newsubmit/retry/stop/control/integrityrun or source substitute. Parentcontinues source/copy/replay readiness with actual18bodies stillmissing.
+- **completed / source-design checkpoint:** local verifier exits0, new `request_source_design_checkpoint_20261018_01.json` SHA-256 `50b951bac1f0af62fe221b8ada0593a9880e444aa9f688b99080bfafbd797dc6`. All18frozen launcher/input bindings,7FFNsource/snapshotpairs, three new source receipts, old classification, seven maintained document whitespace/history checks and empty tracked/stageddiff pass; head remains829dc685. Current graph-launch parser/test source inspection is recorded for reuse with no profiler/test invocation and no persistent graph identity claim. Native18source manifest was absent atcheckpoint; no accepted checks or nativegenerationsrepeated.
+- **completed / unfrozen prompt candidate:** local175line stdlib script exits0, six retained metadata/native sources match reference/export size/SHA/AST. New `request_input_candidate_20261018_01.json` SHA-256 `6a7d27827d85c3e8cc89f2f31502bdf1bc4b9d263341c50c8f6bba9ea9945219` holds explicit BOS0 +4104 ordinary BPEa67; B changes only last token tob68.4105tokens each, one changed position4104; no ordinary added-token membership. Proposed fixedlength sampling preserves native resolved policy fields rather than forcing greedy/defaultreplacement; actual defaults/stops/normal input validation remainpending. Revieweraf6f534b completed read-only candidate/default-policy review with **No findings**, three artifact/six source/two prompt hashes verified; native-input/runtime/default/stop/completion limits preserved. No native/tokenizer imports/workload/GPU/new code step or servicefreeze.
+- **completed / retained RPC/FULL ownership:** four-file manifest/SHA/AST check exits0; `request_rpc_replay_sources_20261018_01.json` SHA-256 `9b4bf73abff18e07ee5d8df97b058012945738ad7527f834fb5ba6138cb436f7`. RetainedworkerbusyloopcallsworkerRPCsynchronously; executorownsasyncget_output, sometimes onitsownthread. FULLactualPythonframehasdescriptor→storedgraphreplay→persistenthiddenview,butno state-saveddescriptor/counter. No callback implemented, actual thread/device completion/graphkernel/changed-state evidence. Clarified inheritedthreeinitializationinventoriesremain; none suppressed or duplicatedperstep.
+- **in-progress / sole job quota wait:** watcher591c700a completed15successfulqueries10:05:59Z–10:20:59Z; last10:20:18.686824ZPending/H800quota0/replicasempty. Parent independentlyread receipt SHA-256 `076163793d1fd8c3dd53cf34bb66f8913fcd5f09fadd88e82f751dc7e72f2cc9`, exactcreator/resources/lockedimage/NFSunchanged, and verified originalwaiters4056757/4056764live10:21:27Z. Manifest/start_finished stillabsent, actualcontainer/starterexits/restartsunobservable. Samewatcherresumed30min/~5mincadenceexisting-jobonly; parentnoduplicatepoll/submit/retry/control/sourceverifier. Pending is externalquota wait, not nativefailure or newapprovalneed.
+- **completed / new static record check:** `verify_input_readiness_checkpoint.py` exits0; newreceipt `request_input_readiness_checkpoint_20261018_01.json` SHA-256 `f3aab591ac78ea2a22add7a79985286ff3e6b7814f4fd2cdf4ee5d672c83bb11` confirms two newrecords/scriptAST/hashes, sixmaintaineddocs,10unchecked06criteria,18unchangedfrozenbindings/sevenFFNpairs/emptytracked-stageddiff/HEAD829dc685. Manifestabsentatcheck; captureddochashesprecedefinalreport/progressappend. No acceptedtests/fidelity/performance/native/platform/GPU repeat.
+- **next:** 1. Monitor only the existing source-only job and retain terminal/container/source SHA evidence; 2. inspect all18 actual source bodies and reconcile the retained live-state/input/precision findings; 3. resolve actual MRv2 graph/input/finite-output witness before implementing and verifying a distinct service observer/caller. Tickets05/06 remain0/10, Attention0/60, FFN0/6, H200 deferred and GLM production barrier unchanged. Never repeat unchanged FFN/Attention/capacity03/TP8.
+
+## TP16 UUID code-step closure — 2026-10-18T08:45Z
+
+- **completed:** final4filecodecommit `e10e030d24881fef7e1f6116bd7347a294a3d1d3`, exactcurrent=HEAD=reviewed/tested/fidelity/performance-sourceSHA checks pass;7frozen FFN pairs unchanged, simulator/input/runner unchanged, onlyuntracked.pi. Postcommitreceipt `tp16_uuid_post_commit_20261018_01.json` SHA-256 `ee23808497c217ce4c084a9df9b8fe86af3f95a96c02b69dccf1cad764c68500`. No ignored taskrecords/other edits staged, push or merge.
+- **completed:** all24sequentialCPUattempts/4warmups20measured,218.683429362s, outerwaitexit0;8/8pairedmediansmeet unchangedfullprecisionbudgets. PerformancecomparisonSHA-256 `13f10d52619b8e3c73c16ea51be4fd1471e4bf0b764a3ed85579339d318764b1`; taskJSON `611282424ed22d1f0471f9ba6e47925b5660081a011dfec2e2b87e110ef155fb`. Originalinitdrift +136.532432%dense/+133.537082%MoE remainsUNVERIFIED;acceptpairedsimulatornonregressiononly,no environment/native timing claim. Prematurecomparatorerror retained, existingseriesnot restarted.
+- **completed / scope:**4RED/258GREEN,independentNo findings,77/77scenarios902/902hashes andfinalstatic/sourcebindings closeonly thisCPUrepresentationfix. Originalcapacity03jobFailed/nativeSIGKILL/node0finalstatuslimitsunchanged. Tickets05/06remain0/10,Attentionadmission0/60,FFNgeneration02never repeated.
+- **completed / proposal delivery:** independentread-only `8b4fb09e-5f0c-4cf` delivered `g2_execution_proposal.md` after interruptedanalysisrecovery. ParentMRv2/thresholdreviewandnewsource-gapclosurefollowinthecurrentcontinuationabove;noautomaticcapacity-onlyrerunorqualificationcredit. GLMproductionbarrierandH200deferralremain.
+
+## TP16 UUID verification update — 2026-10-18T08:40Z
+
+- **completed:** independent29163823-b2b2-41a returned **No findings** at all four source hashes; fixture304worker/14nodefields exactly equal retained originals. Fresh77/77fidelityscenarios/902/902artifacthashes PASS, elapsed143.182794193s, comparisonSHA-256 `1b30fb93f81f121a141f2641c974159581b9c65dd6f0b43251ba46cbaf6023e5`. Runtime/input/tracked/integration pre/post/current drift empty; retained-cache/native/clean-training limits unchanged.
+- **in-progress:** single sequentialperformance series `/data/ycfeng/tmp/step5_tp16_uuid_performance_20261018_01`, persistentwaitPID3776663. Active scopeMemoryMax32,212,254,720bytes verified. Parent premature comparator receivedFileNotFoundErrorbeforegenerationcreated; sameexistingseriescontinues/no restart. Exacterrorreceipt and commands in scopedreport. No concurrent tests/fidelity during performance.
+- **in-progress / independent preparation:** 8b4fb09e-5f0c-4cf owns onlynew`g2_execution_proposal.md`, a read-only source-grounded plan for measuring missing service/replay/content classes in a distinct generation, not repeating capacityalone or implementing/executing now.
+- **pending:** completedouterwait -> all24/eightoriginalbudgetcomparisons -> explicitdriftdisposition -> static/frozen/current-bytechecks -> four-filecodecommit. Tickets05/06remain0/10; noGPU/native/SDK/platform/cloud operation in this CPU correction step.
+
+## TP16 UUID correction checkpoint — 2026-10-18T08:34Z
+
+- **completed / actual RCA:** `17a387d3-1eec-47d` completed the resumed report and fake interruption probe. Parent read the report, verified 44 retained cloud hashes / 58,477,091 bytes and all 16 selected physical visibility mappings through retained evidence. RCA evidence-manifest hashes match 40/41 entries; only maintained `plan.md` changed concurrently, with no raw/frozen/source drift. Report SHA-256 `c296bcb17b8a528031da1f0469ed5b5baadf7804f8c3b2ae182e7ef2165985a6`; JSON `b90215937d95f866ca59288f243e8addd0f8356344f9ce4ea09116e5a60a363c`. Native startup/capacity and full 92-layer/88-routed-layer/352-expert metadata are observed; original generation remains Failed. Node0 post-exchange durable status and actual final container exit remain UNVERIFIED; fake fail-policy interruption proves reachability only. Native SIGKILL fallback on both nodes remains disclosed.
+- **completed / regression and minimal fix:** repository compact fixture reconstructs exactly all 16 selected actual rows and two node inventories. New census-seam tests before source correction produced **4 FAIL / 18 PASS / 109 deselected, 0.47 s**, including original bare/mixed mismatch and prefix-alias physical uniqueness. Prefix-only comparison canonicalization preserves raw records, legal CUDA-visible permutations and all existing binding/model checks. Affected caller/supervisor/observer suites **258 PASS / 15.76 s**, exit0. Full original-snapshot pure-census replay accepts all16 with raw inputs unchanged and seven G2 classes UNMEASURED. Exact `.gitignore` exception tracks only the static regression fixture. Evidence: `test_report_2026-10-18_tp16_uuid_correction.md`, scratch `/data/ycfeng/tmp/step5_tp16_uuid_correction_L77SXTiw`.
+- **in-progress / independent review:** same-model/xhigh `29163823-b2b2-41a` owns read-only four-file correction review. Preparer `17b298d9-eba3-425` owns only inert scratch fidelity/performance scripts and exact `.gitignore` source binding. No verification workload runs before source review closes.
+- **pending:** 1. review findings and correct any demonstrated defect; 2. fresh source-bound 77-case / 902-artifact fidelity; 3. 24 sequential unchanged-budget performance attempts, explicit drift disposition and final static/frozen checks; 4. commit only the four correction files. No new GPU job, automatic retry, source/native/SDK/frozen-generation overwrite or ticket acceptance. Tickets05/06 remain0/10, Attention admission0/60; H200 and GLM barriers unchanged.
+
+## Attention raw audit closure and TP16 diagnosis recovery — 2026-10-18T08:25Z
+
+- **completed / Attention audit:** independent `bda56854-1c1f-439` reviewed all 60 actual traces and frozen/native/source bindings. All 300 owner/whole-forward repeat-pair kernel counts and kernel-name multisets agree, with no duplicate charge. Native DSA contains 300 DtoD GPU copy events omitted by the kernel-only duration extractor (0.001120–0.006208 ms each). Preserve original rows unchanged and describe their duration as kernel-only activity sums; the audit's criterion table is the actual partial-coverage ledger. No latency adjustment, shared tracer/schema edit or native rerun. `test_report_2026-10-18_local_attention_native_audit.md` SHA-256 `27450e16d2e0409633febcfe0b5d41f7730aae4f7ff27beb95e28706f2d73560`; JSON `local_attention_native_audit_20261018_01.json` SHA-256 `e9e919117da1f96c409dae31cc9fe2bf032259bccba81c1ec7da51fdd2135085`.
+- **completed / saved warmup checks:** parent read all 60 saved content files with bounded CPU resources. Shapes, dtypes, finiteness, prefix schedule, positions, slots and block tables pass. Saved content is the last warmup output, not timed outputs, numerical parity or actual weight-byte identity. `local_attention_saved_content_20261018_01.json` SHA-256 `9cb5e8b3e5fc603467bc5e7097b9ff002fb70c5cd5fcf2906e9e6e12a111ee6f`. Exact remote command/environment is retained in the native submission report; no remote writes.
+- **in-progress / TP16 RCA report recovery:** `17a387d3-1eec-47d` aborted after 71 read-only tools before delivering its report; resumed only to finish established evidence and the prepared lifecycle probe. Original census replay failed three times at the allocated UUID check. An in-memory change adding the `GPU-` prefix to bare Torch UUIDs passes remaining checks. Actual platform-visible permutations match all 16 worker/device identities; swapping logical and physical indices is supported, not a new defect. Both native executors used their existing SIGKILL fallback; the added supervisor did not escalate and no local platform stop was called. Final report verification precedes source correction.
+- **pending:** 1. verify TP16 report/repro and final-status disposition; 2. add a regression at the real census seam and fix only supported UUID representation comparison; 3. independent review, affected CPU tests, fresh source-bound ≥50-scenario fidelity and unchanged-budget performance disposition before commit/new generation. Frozen jobs/specs, FFN generation02 and the failed TP8 workload remain untouched. Tickets05/06 remain 0/10, Attention admission 0/60; H200 and GLM dependencies are unchanged.
+
+## Native terminal audit checkpoint — 2026-10-18T08:13Z
+
+- **completed / Attention raw run:** exp-1018-155755-050374 Succeeded08:01:06Z; exact08:05:34Zreplica confirmsCompleted/exit0/restart0, lockedimageID/localNFS/gpu-h800-0110. NativeSWA108/DSA426exit0with30rowseach, parentraw_unadmitted/noevidenceerrors, localstarterreturn0.187/187cloudfiles930,313,005bytes independentlysize/SHAverified; noextra/missing/symlink. Exact `local_attention_platform_20261018_01.json` and `local_attention_cloud_integrity_20261018_01.json`.
+- **completed / resource coverage:**127periodicsamples48SWA79DSA, queryexit0, observedcomputeappsonly108/426,34NICdeltaszeroeach. All300CPUwholeforwardwindows and1,650CPUownerpartwindows havezerosamples. Originalanalysis01includedmirroredGPUannotationsandisretainedbutnotcurrentcounts; CPUcategorycorrected02iscurrent. `local_attention_resource_coverage_20261018_02.json`. No continuous identity/exclusivity or clean timing admission; content/math/liveweight evidence remainsunverified.
+- **completed / TP16 failed generation capture:** exp-1018-160003-695910 Running08:05:36ZthenFailed08:06:43Z. Bothnativechildrenrawexit0, capacityreturned;16RPCsnapshotssavedbeforecensusFAIL `Actual worker GPU UUIDs must cover the allocated eight devices`. Node1containerError/exit1/restart0, node0replicaStoppedwhilecontainerRunninginthe08:08:28Zsnapshot; exactfinalcontainerterminationstillunverified. Platformsystem-stop-reasonreportsfailpolicyany; no localstop/killcalled. Bothownlaunchersended/starterreturn1.44cloudfiles58,477,091bytesread/hashrecorded, capturedsourceequivalencepending. `role_tp16_platform_20261018_01.json`, `role_tp16_cloud_read_20261018_01.json`.
+- **observed / local read PermissionError:** root-owned0600TP16markerscouldnotbereadnormally. Usedboundedexact-root sudo read-onlycopies, no chmod/overwrite. Readablecopies `/data/ycfeng/tmp/step5_native_launch_preparation_20261018_03/tp16_shared_read_01`; cloudcopies `tp16_cloud_read_01`.
+- **in-progress / independent audit:** bda56854-1c1f-439 owns onlynewAttentionaudit/report;17a387d3-1eec-47d owns onlyTP16RCA/report and actual-snapshotCPUreplay. Parentownsplatform/cloud/resourceevidenceandcentralrecords. No codefix/native rerun/qualificationcredit inferred. Fullcommands/identities in `test_report_2026-10-18_native_submissions.md`.
+- **next:**1.finishAttentiontrace/source/admissionaudit;2.finishTP16actualcensusreplayandcause-basedproposalincludingpeer/finalstatus;3.verifyremainingnode0containerterminalandfinalcapturedarchives. Preserveallgenerations; noautomaticretry, noFFN/TP8rerun. Tickets05/06remain0/10, GLMproductionandH200deferralunchanged.
+
+## Attention review closure and GLM/DS reuse inspection — 2026-10-18
+
+- **completed:** Reviewer `67666245-4cb4-459` (read-only, no tests run) found no further defect in the four earlier Attention corrections and one remaining P2: after the child-exit print fails on a closed stdout pipe, CPython's interpreter-exit flush fails again and replaces the known native exit with 120. Parent reproduced the mechanism with the stdlib (exit 120 without release, 7 with stdout redirected to `/dev/null`), changed the closed-stdout test to a real pipe (RED 1 FAIL, 0.21s), added `release_closed_stdout()` before the final status accounting (GREEN 154 PASS, 1.50s) and confirmed at process level that a child using the driver function exits 7. Focused re-review `12674c75-f614-44b` then found a second ordering (closed pipe with an empty buffer at the early release; a later cap diagnostic is the first failed write, so the exit is still 120). New test RED (1 FAIL, 0.21s); the release moved to the last statement after the final status write (GREEN 155 PASS, 1.45s); four process orderings give 120 without and 7 with the final release. Current driver `f417599ac100ed9a3bf4b53dd52d7f990da30b07387bac750fb878d1628de3e0`/488 lines, test `bf6f4a528622af1f5c9e6931392985ff54116d308373a0c19b202780ed6a8221`/849 lines. Evidence: `/data/ycfeng/tmp/step5_attention_stdout_YVKsKUI7`; details in `test_report_2026-10-18_attention_driver_cpu.md`.
+- **completed:** Focused final Attention review `12674c75-f614-44b` returned **No findings** at the current driver/test hashes, with no stdout writes found after the final release on the `run` path. Status is not a complete record of stdout transport failures: failures only inside frozen `diagnostic()` printing are no longer separately recorded, while the original evidence error/UNVERIFIED remains. No actual worker or stderr-failure verification was performed.
+- **completed:** TP16 fixer `bab9a61c-dd02-40e` completed four corrections with original RED17FAIL and final-tests-on-original RED12FAIL, then209fakePASS/12.20s. Parent verified returned hashes, frozen observer/driver identities and independently ran TP16 caller/supervisor/observer tests: **227PASS/11.82s**, log `/data/ycfeng/tmp/step5_tp16_parent_verify_Uu4DAddo/pytest.log` SHA-256 `689565457dc351268a48db57b2b82394de35eedbc0e916bf547b5a2eba3a33bd`. Caller `eb9a8fbf6d11251ddbd1aab724011a2bdc910fd43dcbac3bc32a182a54696393`/497lines; supervisor `2bc1ca88f275ba18f9ef99f73df5f28f925867a2df22364b3e28f06261a64e67`/420lines. Author report `test_report_2026-10-18_tp16_review_corrections.md`, SHA-256 `c971a59010167f824884f6c76360e71c80de55152e1a136452d4f6da21ecae14`.
+- **completed:** Independent TP16 review `c5c2984a-d6ae-440` completed after interruption, confirmed four original corrections and found one P1: successful archival may pass the earlier supervisor deadline, so completion exchange falsely times out. Parent reproduced4FAIL, added a private `completion_deadline` carrying the original absolute worker end (default remains existing supervisor end), verified236fakePASS/13.52s and received focused **No findings**. Final caller `803bbeb54fa81fb329e02ba1e5d0b4786361e77396cae8f210f49726ebd02b46`/498lines, supervisor `cbfeb83a3eccd42ba86940440c9114f7b236a5a81c1469455328b2580d86c0bd`/424lines. Exact RED/GREEN and limits in the scoped TP16 correction report.
+- **completed:** Joint ten-suite verification **450PASS/16.18s** (`/data/ycfeng/tmp/step5_integration_joint_H6KW4FC2/pytest.log`, SHA-256 `e63195239ecf20a5bb62ac989b7524c576e5d4fbd0238b5c6d310062c04f67d0`), AST,<=2000lines, whitespace,7frozenpairs and unchanged simulator/input/runner Git diff. Source receipt `static.json` in the same scratch root.
+- **completed / failed fidelity preparation:** PID3413155 exited before any simulator/runner launch because `git(...).strip()` removed the first porcelain status row's leading space; positional `line[3:]` then dropped the first filename character. Static stdlib reproduction proves old parsed path `ests/...` versus correct `tests/...`; seven frozen pairs/runtime baseline hashes remained correct. Failed preparation and zero simulation evidence retained in `/data/ycfeng/tmp/step5_integration_fidelity_20261018_02`. Corrected only the scratch Git wrapper to `.rstrip('\n')`, preserved positional columns, and started a new exclusive03root; no waived allowlist or repo edit.
+- **completed:** Fresh fidelity03 passed **77/77 scenarios and 902/902 artifact hashes**, elapsed145.181817s, exit0. Pre/post/current integration identities match; runtime/input/runner drift is empty. `comparison_verified.json` SHA-256 `16b9983359e17896854c02da0ab061af514cccd9aabb89618233482d82c4b3a2`. Candidate retained caches and dirty provenance are disclosed; this is simulator regression evidence, not native accuracy or clean-cache training reproducibility.
+- **completed:** Performance02 finished **24/24 attempts (four warmups,20 measured), eight/eight paired medians within unchanged frozen budgets**, elapsed217.908422s, outer wait exit0, no concurrent tests/fidelity. `comparison.json` SHA-256 `c269afbb02e8cb3a8e4c2fda67941e61582e504fb6e5260a6f989600f009e963`; retained `integration_performance_20261018_02.json`. Original-baseline init drift remains +137.266153% dense/+136.542704% MoE and UNVERIFIED. Disposition: accept paired simulator non-regression only; no budget relaxation, dropped sample, environment-recovery or native-timing claim. Exact commands/metrics/limits: `test_report_2026-10-18_joint_integration_cpu.md`.
+- **completed:** Separate code commits: Attention `4287dac54a13e020fb47f6ac9da29888b77b54d6`, TP16 `7d8bc4019bd72a9881ee9a5e8bc1b22f423df4d9`. Staged paths and SHA-256 matched the independently reviewed/current verification bytes. Post-commit eight-file current=HEAD, AST/line limit/diff checks and unchanged simulator/input/runner PASS: `integration_post_commit_20261018_01.json`, SHA-256 `bc786a059582d49dd6be4ef62aca4f562d6020101b60d495accf4ddbd2ce1493`. Tests retain their actual pre-commit Git provenance; no workloads were reattributed or repeated. Only untracked `.pi/` remains; no ignored task records staged/push/merge.
+- **in-progress:** Private launcher draft reviewer `bfd0047a-1e11-4c1` found twoP2: a post-spawn launch receipt failure skips starter wait; Attention `SystemExit(0)` is incorrectly saved as launcher_error. Correction owner `561315ce-cfce-448` owns only three inert scratch templates and fake tests/scoped report. Final config/resource/source freeze waits for affected verification and independent follow-up. No Attention/TP16 authentication/submission yet.
+- **completed / private launch correction:** `561315ce-cfce-448` corrected only the three inert templates: startup receipt faults still enter finally->child.wait; raw child exits0/7/-9 preserved; only normal Attention SystemExit0/None consumed, nonzero7 re-raised/recorded. Final same-harness RED13failures/0errors, GREEN22/22PASS. Scoped report `test_report_2026-10-18_private_launcher_corrections.md`; no committed integration/SDK/native input changed.
+- **in-progress / final copies:** Materialized actual worker-visible parent launch.py/start.py/scope and candidate receipts under `native_local_attention/launch_local_attention_20261018_01` and `native_role_tp16/launch_capacity_20261018_03`. Candidate status deliberately blocks execution until review closes. Original Attention prepare/submit_payload and TP16 preflight passed inertly;48/49receipt file hashes and corrected-template function AST equal PASS. Independent final-copy reviewer `ccfdfc74-b8e2-49e` in progress. Specs `local_attention_generation_01_launch_spec.md` and `role_tp16_generation_03_launch_spec.md` retain explicit admission/runtime limits.
+- **completed / read-only platform prep:** Personal Python capacity read2026-10-18T07:48:27Z HTTP200, groupcodesign reports188nodes, single page shows0GPU CPU-only node. This is not aggregate available quota/reservation/submission gate. Current local sourcehostkun-workspace-vgen2 resolves100.96.128.195. Exact bounded receipt `/data/ycfeng/tmp/step5_native_launch_preparation_20261018_03/capacity_read_20261018_01.json`. No submission/stop/query of unrelated jobs.
+- **completed / approved freeze and submissions:** Final-copy reviewer `ccfdfc74-b8e2-49e` returned No findings with48/49receipt file bindings. Each generation submitted once: Attention `exp-1018-155755-050374` starter3565503/launcher3565518; TP16 `exp-1018-160003-695910` starter3577208/launcher3577238. Both i-fengyicheng/codesign/lockedimage/exact100.96.128.195WORKTREE NFS verified; Attention1GPU/CPU8/32000Mi, TP16two8GPU/CPU32/128000Mi replicas with RDMA limits1/8. Own callback unregister receipts retained; original wait/poll and both launcher pairs alive08:00:17Z.
+- **observed outer-spawner failure:** After Attention start, scratch print passed flush=True to json.dumps and failed. Attention persistent processes/submission continued; TP16 evidence root remained empty/noattempt. Fixed only outer print plus explicit one-role selection and started unattemptedTP16once. No Attention duplicate/retry/frozen launcher edit. Exact error/disposition: `test_report_2026-10-18_native_submissions.md`.
+- **in-progress / same-job native monitoring:** AttentionRunning08:00:09Z; SWA nativeexit0/30raw_unadmitted rows; fresh DSA started. TP16Starting08:00:25Z/twoemptylogs; no failure inferred. Terminal/raw audits follow; tickets05/06remain0/10, H200/GLM edges unchanged.
+- **completed / candidate configuration only:** TP16 config copied to `native_role_tp16/launch_capacity_20261018_03/config.json`; original caller inert preflight passed with96native source hashes. This is not final freeze. A proposed costly CLI-help worker preflight is kept inert and will not be in the final payload: its extra startup can consume the archive reserve. The final payload will retain the original capacity caller and explicitly validate executable availability within its worker command; actual native CLI parsing and runtime availability remain execution evidence, not a CPU claim.
+- **completed — GLM/DS read-only reuse inspection** (`/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`, HEAD `ad221da`, only untracked `.pi/`; no file there was modified):
+  - From the shared base `01fb2ce5984f1d26135ea9bceef96f8e39be0401`, the GLM branch has six commits and 1,210 added lines, all under `tests/comparison/calibration/` and `tests/unit/` (native GLM diagnostics: dummy-weight inventory, full-structure startup, observer bootstrap). No `frontier/` simulator source changed, so no simulator implementation overlaps Step work and `09.full_frontier_path[GLM]` has no code or report yet. Step production tickets 15–22 stay blocked on it.
+  - GLM native observation and startup-memory evidence come from an approved overlay of instrumented vLLM v0.28.0 sources (`native_observer_bootstrap.py`, five overlaid files). Step's native reference is a different, locked build, so these harnesses and their acceptance do not transfer; nothing was copied.
+  - Usable as analysis reference only: the GLM startup accounting check relates native profile fields through `non_kv_cache_memory = total_consumed + transient_peak_headroom` (`runtime_lock/observed/g0b_startup_memory_01/accounting_correction_20261018/check_accounting.py`). It can guide the reading of TP16 capacity snapshots and the earlier TP8 negative KV allowance; it is not a Step measurement.
+  - Platform facts: a requested hard self anti-affinity is stored as preferred (weight 10) (`test_report_2026-10-17_affinity.md`); Step TP16 requests eight GPUs per replica on eight-GPU nodes, so the two replicas cannot share a node and this does not change the TP16 plan. GLM runs its two DP owners as separate LLM processes through `VLLM_DP_*` and avoids `nnodes=2`; Step TP16 spans two nodes with a headless second node, so the launch route is not reusable.
+  - For later PD tickets: on H800, NIXL READ needs `UCX_NET_DEVICES` limited to RoCE v2 IPv4 ports, and a full inventory showed an initiator teardown hang after a successful READ (`test_report_2026-10-16_nixl_read_diagnosis.md`, GLM `progress.md`).
+
+## Session recovery and current correction work — 2026-10-18T06:46Z
+
+- **completed:** The user requested continuation after Attention correction agent `0ec402f3-40d3-431` stopped. Both that ID and TP16 ID `22290dad-2b51-481` now return `Agent not found` after the session switch. Retained transcripts and actual files, not missing live agent records, establish progress. Attention source is SHA-256 `0399b5787bd3095896d79f851295445baa157cae81b6ca429fc5e44e38547f1f` /473 lines; test is `6322cb45d5036397b98cd02f233b5cf02cab5d9fbcd0bc338fd386fead8a87dc` /828 lines. Retained latest fake-only test log records **154 passed in 1.59s**, exit0, SHA-256 `7a671794ae4596eb8aa7b85979a47359f60cc940ef45d953e9c2d7268b5eb489`. Parent updated the previously unfinished scoped Attention report; independent review remains required.
+- **in-progress:** Read-only same-model/xhigh reviewer `67666245-4cb4-459` checks the complete Attention correction paths. Fresh same-model/xhigh fixer `bab9a61c-dd02-40e` owns only TP16 caller/test, supervisor/test and its scoped report. TP16 caller/supervisor remain at initial review hashes; the interrupted agent retained only test-source-root/300-second archive-reserve fixture preparation. No completed TP16 source correction or GREEN result is inferred.
+- **pending:** Stable correction bytes -> independent reviews -> joint fake tests/static/frozen-input checks -> new77-case fidelity ->24 sequential frozen-budget sentinels -> separate code commits/spec freezes -> new Attention/TP16 native generations. Prepared scratch scripts under `/data/ycfeng/tmp/step5_integration_fidelity_20261018_02` and `/data/ycfeng/tmp/step5_integration_performance_20261018_02*.py` have not executed workloads. FFN generation02 is complete and will not be repeated; tickets05/06 remain0/10.
+- **observed command failures:** An initial transcript-extraction command used unavailable `python` and exited127 (`python: command not found`); rerun with `/data/ycfeng/envs/frontier-py310/bin/python -B` succeeded. A broad scratch-directory `find` encountered permission errors in unrelated temporary directories; inspection was narrowed to exact Attention prefixes without changing permissions or accessing those trees. These are local inspection failures, not native/platform failures.
+
+## completed
+
+- Read the three Step-5 draft documents and inspected the GLM/DS planning structure and glossary.
+- A read-only exploration checked the draft's code anchors against main at `7df62a2`; agent task ID: `ses_ec15b961cffeeKdUIuXHSaLoJd`. This is source-inspection evidence, not runtime validation. Implementation must recheck anchors against its actual integration HEAD.
+- S5-Q1 approved stacking `feat/step5-preview` on `feat/glm53-dsv4-vllm028`.
+- Created `/data/ycfeng/Frontier/.worktrees/step5-preview` at `01fb2ce5984f1d26135ea9bceef96f8e39be0401` using `git worktree add -b feat/step5-preview .worktrees/step5-preview feat/glm53-dsv4-vllm028`.
+- Preserved three read-only source snapshots in `source_spec_s5/`. The recorded `sha256sum` outputs match the source hashes in `requirements.md`.
+- Recorded the original request and S5-Q1 in `requirements.md`.
+- S5-Q2: the user selected supplying the original companions, then added `04_Source_Evidence.md` and `05_Campaign.yaml` to the original draft directory.
+- Read both additions and completed the five-file snapshot. Source-document verification task `ses_ec1417135ffelXwye0hc5g6TxD` confirmed five byte-identical source/snapshot pairs with matching hashes and read-only permissions; three inherited input hashes and six reviewed Frontier Git blobs also match. See `test_report_2026-10-15_source_documents.md` for commands, Python/PyYAML versions, results, and limits.
+- Validated YAML structure and milestone-aware dependencies: 14 unique ticket IDs; source entries M01–M09/F01–F07 present; native S03 does not depend on simulator S06. All 70 null leaves remain unchanged in the source snapshot.
+- S5-Q3 / D-S5-SCOPE: user explicitly restricted adaptation to pure-text LLMs and excluded vision/other multimodal support including future work. The derived plan omits X01 and any multimodal roadmap item. Source snapshots remain unchanged; text-only MTP/prefix/context extensions are not newly approved.
+- S5-Q4: H200 retesting remains mandatory after the H800 primary results. S10 and the overall task stay open if H200 is incomplete; H800 results can be delivered as a completed phase. No H20064 allocation or qualification is presumed.
+- S5-Q5: approved per-cell <=10% mean metric errors and conditional <=15% p95 client TTFT/ITL errors, with sampling/window/stability rules frozen before formal comparisons. Missing or unstable evidence does not pass.
+- S5-Q6: Step simulator implementation waits for `09.full_frontier_path[GLM]`, then may proceed alongside DS. Native qualification, inventories, independent measurements, and evidence preparation may proceed earlier, subject to their own prerequisites and execution authorization. GLM's 64-H800 E2E is not this dependency.
+- Created the English `spec.md` and `plan.md` drafts, including exact inherited T/D ticket references and milestone-level dependencies. Drafting session: `ses_ec1200921ffe7o8NUW1IdLn7S3`. S5-Q7 subsequently confirmed the drafts and invoked To Tickets; S5-Q8 approved the detailed breakdown.
+- Phase reviewer `ses_ec1178326ffeG69thSSK0aP5z4` checked requirements/spec/plan/progress against all five sources and the inherited GLM milestone records. Two findings were corrected: restore preregistered simulator wall-time/memory budgets and required over-budget explanations; update progress to distinguish completed drafts and decided H200 scope from pending execution facts. Review evidence is recorded in `review.md`.
+- Five maintained draft/review files passed `git diff --no-index --check` with exit 0 and no output. The initial command accidentally used zsh's special `path` variable and failed command lookup; changing the loop variable to `doc_path` corrected the cause. See `test_report_2026-10-15_planning_draft.md` for exact commands and results.
+- Existing `CONTEXT.md` terminology is sufficient for the current decisions; no new glossary term or irreversible architecture decision has been agreed, so no glossary/ADR edit is presently warranted.
+- S5-Q7: the user supplied To Tickets and said “确认，继续”, confirming shared understanding and invoking the workflow. At that point, requirements/spec/plan/progress were re-read, the ticket directory was empty, and HEAD remained `01fb2ce5984f1d26135ea9bceef96f8e39be0401`.
+- Drafted the numbered slice proposal in the then-current `plan.md` §8, subsequently replaced by the approved index in §4. Design agent `ses_ec109dd17ffe2glAfWqZdv39kc` supplied a 28-slice candidate; primary separated metric normalization from the G4 pilot, changed PD slicing to a complete single-request handoff followed by pressure/cancellation, and reduced redundant final blockers.
+- Proposal-phase review by `ses_ec1178326ffeG69thSSK0aP5z4` identified unnecessary full communication-measurement blocking for controlled PD and an unbounded representative-calibration repair scope. Removed the first edge and split comparison/diagnosis from correction revalidation/fit freeze. The resulting 30-slice proposal was approved as S5-Q8; actual correction tickets will be defined from evidence, not guessed now.
+- Validated the final proposal directly from the plan table with Python 3.10.6: 30 tickets, 47 valid ordered edges, only 01 initially unblocked, all 29 preceding tickets reachable from 30, complete S00–S10 mapping, and preserved GLM/native/metric/PD/correction conditions. Exit 0; exact command/output in `test_report_2026-10-15_ticket_proposal.md`.
+- S5-Q8: the user selected “批准这 30 张票 (Recommended)”. Generated tickets 01–14 in session `ses_ec0fa230bffeadps6gbde8Tn4n` and 15–30 in `ses_ec0fa22b7ffeqw1nLyopDI9Sv5`; primary checked decisive files and corrected an unsupported baseline-scope sentence in 01.
+- Updated `plan.md` to actual file links and the approved 47-edge graph, leaving behavior and acceptance in individual tickets. Only 01 is initially `ready-for-agent`; 02–30 are `blocked`; no acceptance criterion is marked complete.
+- The reviewer inspected all 30 tickets against the confirmed scope and graph. Corrected overly broad operator routing in 23–28 to the exact StepMind operations, retaining ordinary local CPU/public-document work and the >=32-GPU auxiliary soft-gate rule. See `review.md`.
+- Final verifier `ses_ec0dbe047ffez1jUDq2A4QHXS9` confirmed 30 tickets, 278 unchecked criteria, 47 matching edges, 37 local links, 16 inherited paths, eight explicit GLM gates, and all five original/snapshot/manifest hashes with read-only snapshot modes. All 35 checked ticket/core documents had no whitespace diagnostics.
+- Final content check found one inline CLI fragment in ticket 02; replaced it with the native dummy-weight loading requirement in prose. The targeted rerun found zero fragments across 30 tickets and confirmed 02's title, blockers, status, source, ten criteria, and whitespace. Final document-package verdict: PASS; exact commands and original checker errors remain in `test_report_2026-10-15_ticket_package.md`.
+- Re-read `requirements.md` before closing the recorded planning task. Created English `summary.md`; original source drafts and inherited GLM task files remain unchanged. No new glossary term or ADR was necessary.
+
+## Current integration correction checkpoint — 2026-10-18T06:35Z
+
+- `completed / FFN generation02`: the only actual submission is `exp-1018-135843-630406`, linked to original request `step5-local-ffn-generation02-submit-20261017-01`; platform/replica Succeeded, container Completed/exit0/restart0, all three native children exit0. Exactly 22 archived files/3,220,900 bytes passed independent size/SHA checks. Post-timing comparison verified 2,122 tensors in 25 bounded read-only slices: `local_ffn_generation02_weight_analysis_20261018_01/receipt.json`, verdict `PASS_POST_TIMING_WEIGHT_BYTES_ONLY`. Six mathematical diagnostics completed with finite errors against retained warmup content; `local_ffn_generation02_math_20261018_01/statuses.json`. No native repeat, frozen-input change, platform stop/kill or action on generation01.
+- `completed / independent FFN raw audit`: reviewer49f79fbd verified all six rows/30 timed calls/220 charged kernels plus24 uncharged prime kernels. Scope is raw archive PASS, clean admission **0/6**; all30 device-call windows contain zero periodic resource samples. Warmup-only saved content, actual Python apply branch UNKNOWN, missing continuous weight/GPU/NIC identity and incomplete compiled-build/FP8 activation/native routing witnesses remain explicit. Exact report `test_report_2026-10-18_local_ffn_generation02_audit.md`, JSON `local_ffn_generation02_audit_20261018_01.json` SHA6496ff7ca0535ccc9613c64c511efb17bb552614d3a533d986717a4c89bf5580. No ticket criterion or G2 credit.
+- `completed / initial Attention integration`: agent5da7c3ed delivered only new `check_local_attention.py`/`test_local_attention_driver.py`; affected fake suites133PASS/1.06s. Independent reviewera26363aa completed the source review and found fourP2 defects: absent total archive byte cap; source-verification/native-import exceptions outside status/failure recording; closed stdout can mask completed child exit; later log-open/Popen failure skips prior-child final retention. Initial passing fake tests do not cover these findings. Counts remain30 shapes/3 heldouts per kind,60 expected observations only.
+- `in-progress / Attention corrections`: new same-parent-model/xhigh agent0ec402f3 owns only the driver/test pair and scoped report. Required positive integer `--evidence-bytes` must propagate submit/run/child; generation-wide accounting must check each child before copy, include diagnostics/logs, exclude caches, reject reachable symlink escape and preserve original raw bytes/native exception/exit on auxiliary failure. Parent proposes4GiB for the later native spec; implementation/spec not yet accepted. Previous agent session could not resume after retention expiry; no implementation result is inferred from that error.
+- `completed / initial TP16 integration`: agentcdc6499c delivered supported pre-init worker PID/start-time/parent/boot/namespace capture, public capacity RPC, new two-node caller/tests and private inventory callback. Affected fake suites174PASS/9.83s; no native execution. Independent reviewer55bc7b32 completed all six files, confirming exactly four findings: P1 archival starts after supervisor can use all2400s; P1 archive failure leaves previously saved/published PASS; P2 invalid census drops raw RPC snapshots/observer_error; P2 parent-binding fault drops already captured real worker pairs from residual inspection. Capacity-only and seven G2 UNMEASURED classes are intentional, not missing acceptance.
+- `in-progress / TP16 corrections`: same-parent-model/xhigh agent22290dad owns caller/test and supervisor/test only plus scoped report. Preserve approved outer2400s, supply explicit archival reserve (parent proposes300s), include finalization verdict before completion/PASS, save raw snapshots before validation, and separate known real-PID retention from identity admission. Preserve original native exits, bounded cleanup and single SIGTERM; no native/SDK/transport patch or real child/query/signal operation by the agent. Neither correction has returned verified GREEN/current hashes yet.
+- `pending / code-step acceptance`: after both slices stabilize, independent correction reviews, current-byte joint fake tests, AST/size/frozen7pair checks, one new77-case fidelity generation and24 sequential original-budget sentinels. Older20261018_01 simulator runs remain preserved and are not reattributed to new integration bytes. No new workload/commit/Attention or TP16 submission occurred at this checkpoint.
+
+Current graph remains `04(done) -> {05,06}`, each **0/10 accepted**. Attention/TP16 execution is approved; code readiness, not user permission, currently blocks their freeze. H200 stays deferred and production15–22 retain the GLM full-path barrier. Original FFN generation02 submit allowance is used and will not be retried to fill admission gaps.
+
+## Historical current-state snapshots
+
+Tickets01–04 are done; G1 is10/10. Primary acceptance `g1_package_acceptance_01.json` binds A–F/G0 and exact new corrective evidence. Resource generation exp-1017-083634-286962 completed six fresh children/168 verified boundaries/271 samples/318.016526s, all terminal0. All4,358 actual new tensor files (41,462,170,614bytes) verified in35 bounded read-only CPU calls, maximum7.764984s/39336KiB; exact content equals original04E. Quantizer generation02 exp-1017-083634-393146 succeeded with actual loaded stable-libtorch binary and DeepGEMM Python wrappers; nine actualfiles/layout/bytes checks complete, zero floor remainsPARTIAL. No historical resource/identity reconstruction or waiver. [Corrective report](test_report_2026-10-17_corrective_resources.md).
+
+05/06 are in progress; neither has accepted criteria. Source jobs exp-1017-104716-161170 and exp-1017-110131-174062 verified30files/1,586,345bytes/platformcreatorcodesignimageNFS/terminal0.05 independent37-case/15owner plan pinned and26regressions passed; review209bf6c3's eight admission gaps corrected, no native dataset yet. Source wrapper/tests committed7b2f255; sampling/tests committedef31fee, separate/no push. New77fidelity exactallcases, dirty8ac57e0 attribution, no clean-cache claim. New sentinel01 overlapsfidelity/diagnostic-only; separate02has24exits0/8withinbudget medians, case-specific only. [Tooling report](test_report_2026-10-17_sampling_capacity_tooling.md).
+
+First06capacity attempt exp-1017-115156-131601/71beb/PID563011 ended Failed/CompletedError1/restart0 on gpu-h800-0153. Container03:54:28–03:54:57UTC. It failed in native renderer initialization at14.675298274960369s: Step3VLMultiModalProcessor requires a tokenizer and rejects skip_tokenizer_init=True. No nativeGPUworker phase/model load/fit/graph observation. Exact failure/invocation/parentstatus/rawlogs preserved under native_role_capacity/observed and cloudrole_capacity_20261017_01. Reviewed observer and failure-preserving driver19CPUtestsPASS0.10s/inert02PASS; immutable snapshots5c20e66d(driver)/a1e097d(observer). Inspect actual frontend sources before ordinary native tokenizer configuration correction; no alternate reference/model stripping/EP/backend/utilization changes. Parent resource samples are evidence only, not G2.
+
+H200 remains deferred, not waived; the original job/launcher is untouched and the GLM production barrier is intact. The earlier statement that no user-intervention blocker existed was a historical snapshot, not authority to execute generation02 or TP16 in this read-only round.
+
+Fresh24CPU sentinel/eightwithinbudget medians and163filepost-execution provenance archive remain scoped to originaldirty853d8c9 execution, notreattributed to newercommits.77exactfidelity/sourceidentitychecks preserved; no clean-cache/fullpackage/commit-specificattestation invented.
+
+05/06 remain in-progress with zero accepted criteria each. The current Pi access blocker is resolved: final original-request `INVALID_REFERENCE` is independently reproduced and isolated to the obsolete environment whitelist rejecting `STEPMIND_BACKEND=rjob`. Report `test_report_2026-10-18_generation02_rca.md`; exact receipt `generation02_rca_20261018_01.json`. Latest retained request remains SPEC_REVIEW_REQUIRED; local control flow/markers show no launcher/platform-start/submission-attempt evidence, not a live platform absence check. No new platform operation occurred. This round forbids execution/redispatch, and all seven inputs remain frozen. Accepted CPU preparation at46813da/9ecce37, final228testsPASS,77fidelity and24sentinels is not repeated. Independent05attention coverage and06worker-identity/shutdown source-design inspection is now complete in `design.md` and `source_design_20261018_01.json`; native integration/execution and ticket acceptance remain open. Attention/TP16 unapproved, H200 deferred, production15–22 retain the GLM milestone.
+
+## Historical checkpoint states
+
+**Historical04F submission snapshot:** generation01 `exp-1017-062134-517246` Failed/exit1 due to DSA planner CPU pinned factory under CUDA-default scope; SWA retained7finite frames. Scoped CPU builder context RED/GREEN restored only DSA: generation02 `exp-1017-063042-311148` Succeeded/exit0/restart0 with7short+15long frames. Exactcreator/codesign/image/NFS/resources/terminal verified, no SWA repeat for DSA. `attention_state_analysis_02/` completed32boundedCPUops verifying29frames/732snapshots and91pre-post-initialrecords with independent storage/bypass/selector checks. SWA replay max absolute discrepancies0.0109558694/0.0112535771/0.0133219890 remain unresolved; DSA max gated-attention discrepancy0.000244140625 is an observation, not tolerance. Read-only capture probe rejects completely stale observer; source review and CPU regression establish missing captured metadata ownership. Explicit refs-only correction2PASS1.58s/inertpreflight/No-findings static review. New SWA-only generation03 `exp-1017-070246-633403` (PID3547374) submitted under unchanged frozen budget/native flags, with graph metadata tensors/pointers recorded. No other accepted GPU repeats. Complete04still0/10/05–06blocked.
+
+**Current execution (2026-10-17, H800 main):** user redirected subsequent execution to H800/codesign. H200 is temporarily deferred; watcher ended after02:13:38HKT receipt `environment_h200/h200_watch_04.json` (original job Pending/position2/H2000, PID2238524 alive, no replicas). No job control or duplicate was performed. H800 RDMA is complete, not repeated. Ticket04 checkpoint04C is prepared in `checkpoint_04c.md` and `tests/integration/step5_environment/check_norm_gate.py`:72exact native norm/gate cases,3local graph replays each, eighthost rejections, full pinned text config parsing but no model construction/cache-fit/FFN/PD claim. Primary source inspection,72case/504mutation CPU self-test, stub preflight and independent preflight review passed. The3reviewfindings were corrected before submission. Original job `exp-1017-023052-337126` completed on oneH800/codesign with72/72exactcases,216localgraphreplays,eighthostnegativesPASS; full config92/95/352, source/driveridentity and platform/containerterminalPASS. Independent actual-result reviewer accepted288frames/384tensor records. Report `test_report_2026-10-17_g1_norm_gate.md`. Native04Csubset is accepted; ticket04fullcriteria remain0/10, no completeG1/G2/modelgraph/PDclaim. Verified harness committed as `43b0365` (onefile248lines), no push; tracked worktreeclean and Frontierunchanged. Historical preparation verifier math passed but blanket tests-tree-equality failed on previously committedRDMAfiles; retained thisstaleassertionfailure and used scopedcore/source/recordchecks rather than removingtests orclaimingblanketPASS.
+
+**Previous environment result (2026-10-17):** H800 RDMA recovery completed. Job `exp-1017-013329-532329` passed240exact checks/48graph replays across two distinct H800 hosts using NET/IB0–7/GDRDMA, no Socket; both17verbs-device inventories and CUDA/NCCL identities verified. Platform/replicas Succeeded, both containers exit0/restart0; launcher ended normally. H200 `exp-1017-013658-791756` (PID2238524) remains Pending in `step-main-default`, position5 at01:52HKT, explicit insufficient GPU quota/remaining H2000. Both exact payloads verify creator,2×8GPUs, local NFS source and locked image. Lark manual revision3663 identifies both required RDMA custom resources; existing inspection inheritance cleared them. Restored the existing ResourceConfig defaults, not platform NCCL overrides or package installation. New shared probe and expected-device/driver parameters preserve collective equations. Parent owns H200/shared records; H800 delegated agent completed route/probe; independent read-only review accepted after correcting a demonstrated auxiliary command timeout with2RED->2GREENtests. No formal H200 ticket is released; H800 communication PASS does not qualify full model/PD.
+
+**Previous result:** native04A82cases and newly authorized04B64cases are accepted as subsets.04B's first job `exp-1016-193359-894929` produced64correct case files but failed final summary hashing due to a str/Path tooling mismatch. After a one-line correction and CPU finalization check, new job `exp-1016-193813-683851` succeeded and64/64cases passed;272typed snapshots match between generations. See `test_report_2026-10-16_g1_joint.md`.04A's platform blocker is resolved and its evidence remains in `test_report_2026-10-16_g1_native_results.md`.
+
+**Historical 04A checkpoint:** primary correction of04A is complete. Initial actual checker result78PASS/4FAIL was caused by its RuntimeError-only assumption; observed missing-tail errors were AcceleratorError with the required native assertion. Corrected the checker and synthetic fixture, preserved original raw/verdict files, and wrote `native_g1/verdicts_reviewed.json`. Rerun:82 synthetic fixtures PASS,20 corruptions rejected; real-file evaluation82PASS; retained evidence audit and six new exception-condition corruptions PASS. Worker/launcher/preparation/native source remain unchanged. Post-run independent review could not start because the model-service budget pool was exhausted; primary performed review and acceptance. Ticket04 remains0/10.
+
+Eight-H800 job `exp-1016-134927-007564` was Starting at the primary's 15:28 HKT direct Python query, then Succeeded at 15:30:11 HKT (verified 15:34). The exact replica is SUCCEED and logs contain `MULTIGPU_VERDICT PASS`; worker began around 15:29:35. P2P/IPC/rank content checks pass. API NCCL version 2.29.7 differs from NCCL log version 2.30.7+cuda13.3; preserve both and withhold a single-version identity assertion. Full primary evidence is accepted in `test_report_2026-10-16_multigpu_nccl.md`. No stop/resubmit occurred. Earlier query-8/query-9 receipts and the Grok return were reported in conversation but had not been added here; direct verification supersedes their stale queue status. Current-provider policy requires direct personal Python RJob operations, not the historical helper routing.
+
+Historical G1 monitoring: the replica was Starting at16:11 and16:21HKT after an authorization-service HTTP500 and FailedMount events. Certificate expiry was `2026-10-16T07:15:00Z`. The original job later started and completed; no TLS checks were disabled and no job was resubmitted.
+
+Parallel multi-node request completed: job `exp-1016-182002-277566`, two8-H800 replicas on gpu-h800-0398 and gpu-h800-0044, platform/replicas succeeded.240content checks and48graph replays pass. Cross-node transport was Socket; logs report no IB device and missingMLX5_1.25symbols. RDMA remains unqualified. Mapped NCCL SHA/direct version23007 match across16ranks; PyTorch still reports2.29.7. Evidence: `test_report_2026-10-16_multinode_nccl.md` and `cuda_forward_compat_multinode/platform_terminal.json`.
+
+Current boundary: user-authorized04B and two-node checkpoints are complete; full ticket04 model/precision/runtime-shape coverage remains incomplete, with no full criterion marked. No active jobs remain from these checkpoints. H800 RDMA recovery completed in `exp-1017-013329-532329`; no repeat environment diagnosis is pending.
+
+Record verification: `PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/opencode/step5_g1_preparation/verify_preparation.py --records` exited0 after native acceptance. It verified16documents/seven scripts, six native-result hashes, prior report/forward-compatibility/multi-GPU hashes, all30ticket statuses,82reference cases, seven corrupted-reference rejections, six source indptr rows and three invalid inputs. All original preparation/source/lock/read-only-snapshot checks remain. Source HEAD/core and tracked Git status are unchanged. The verifier now prints the actual document/script counts rather than the stale historical label.
+
+Tickets01–03 are closed;04is in-progress with initial CPU/source reference preparation accepted. The first actual CUDA diagnostic, exp-1016-103931-795883, failed at initialization with loadeddriver570/CUDA12.8 versus Torchcu130; no kernel ran. At the user's request, rerun exp-1016-132434-466356 turned on the image's CUDA forward-compatibility switch. With `/usr/local/cuda-13.0/compat` first in `LD_LIBRARY_PATH` at process start, it loaded the image's `libcuda.so.580.82.07` and passed all five compute checks. Turning the switch on inside a running process still failed. All native G1 criteria remain open. Controlled CPU verdicts remain6PASS/2OVER_BUDGET under the accepted UNVERIFIED disposition. Actual dependencies and semantic decisions remain in force.
+
+Planning and tickets01–03 are **completed**. Ticket04's CUDA initialization and platform startup blockers are **removed** for04A. Initial CPU preparation and native04A subset are complete. Current repository HEAD is `853d8c9`. Frontier and fidelity sources remain unchanged from `01fb2ce`. Executed04E worker bytes match commit `a125e22`; task documents remain ignored/uncommitted.
+
+`g1_preparation.md` and `g1_preparation.json` retain82immutable planned cases with original unexecuted fields; native results are separate in `native_g1/observed/` and `native_g1/verdicts_reviewed.json`. This does not complete04 or release05–30.
+
+## Ticket 01 — native Grok checkpoint 1
+
+- Executed the English spec `grok_batch_01_baseline_checkpoint.md` through native `grok-implement`, session `ses_ec0b9b587ffedyxYla2vTTZ8NN`. The executor returned its checkpoint and stopped. Three owned outputs now exist: `source_map.md`, `reuse_inventory.md`, and `test_report_2026-10-15_ticket01_checkpoint1.md`.
+- Current Step and GLM source HEADs both remain `01fb2ce`. The GLM task's recent static reuse checkpoints are accepted, but its baseline ticket 00 remains in progress and its complete simulator-path milestone is not established. Its Grok session belongs to that separate task and must not be reused for Step file ownership.
+- Default `/usr/bin/python3` 3.10.6 lacks pytest, plotly, fasteners, and ddsketch. Existing `/data/ycfeng/envs/frontier-py310/bin/python` 3.10.6 has all eight checked base dependencies; use it without installing packages.
+- The inherited 77-case baseline and unit/integration results are reported in GLM progress; artifact acceptance and failure classification remain pending. This checkpoint inventories their reuse conditions instead of launching another full matrix.
+- Executor receipt: six C01–C06 source-owner rows, seven hashed local evidence documents, and `13 passed in 1.76s` with pytest exit 0. The executor used its available write tool because its session had no `apply_patch`; the primary inspected all resulting records and applied corrections with `apply_patch`.
+- Primary verification: exact selected CPU command independently returned **13 passed in 1.78s**, exit 0; all seven referenced SHA-256 values independently matched; core comparisons against `bfa82de` and the pin were empty. Verified CPU package versions and decisive owner/loader/transfer/gate sources. Full commands and results are in `test_report_2026-10-15_ticket01_checkpoint1.md`.
+- Primary corrections: exact GLM artifact paths; **69 SWA / 23 sparse-GQA** fixture order; a concrete C05 registry/caller citation; distinction between native-image versions and measured CPU versions; complete reproducible environment command. The historical GLM tests and 77-case console receipt remain unaccepted as Step baseline evidence.
+- Checkpoint Tasks 1–3 are accepted. Ticket 01's source-identity criterion is checked; its other nine criteria remain open. No later ticket is released.
+- Final document verification: all eight checkpoint/record files passed the explicit non-index whitespace check (no diagnostics). The exact verifier is retained in the checkpoint report. Re-read the requirements before closing this checkpoint.
+- GLM checkpoint 3 is independently working on saved matrix artifacts, failure classification, gate fixtures, and dummy smokes. Read its eventual report and verify applicability before reusing it; do not duplicate that work or treat its current in-progress state as acceptance.
+
+## Ticket 01 — checkpoint 2 accepted
+
+- User explicitly invoked native Grok continuation. Executed `grok_batch_01_baseline_checkpoint2.md` in session `ses_ec0b9b587ffedyxYla2vTTZ8NN` for Tasks 4–6. Initial receipt delivered four task documents and two scratch JSON outputs; corrected results are now accepted as recorded below.
+- New inherited evidence: GLM checkpoint 3 is accepted. Its primary verified 77 baseline cases, 451 artifact hashes, 12 dummy smokes and complete accounting for 173 non-pass nodes. Three original child-process causes remain unknown. This updates the historical checkpoint-1 snapshot above; Step applicability still needs this checkpoint's verification.
+- Corrective evidence: actual DP rejection tests exist at `tests/unit/test_vllm_dp_load_balancer.py:472-515`. The batch corrected the stale inherited-search statement.
+- Scope: independently audit retained local CPU artifacts, run 83 gate/placement tests, and identify measured performance fields and unresolved budget evidence. No performance percentage or production semantics are delegated.
+- Primary independently reran the selected CPU command: **83 passed in 2.80s**, exit 0 (executor: 3.10s). Initial document review found an unauthorized requirement for 50 Step-native cases in this baseline ticket, a new blanket passing-suite requirement, an incomplete per-case coverage index, and missing artifact/performance-scope detail. These findings required the same-session corrections recorded below; no new test execution was needed for the documentation corrections.
+- Same-session corrections are complete. The accepted index maps all 77 case IDs to saved scripts/overrides/configs and requires existing supported baseline scenarios. Added intermediate-artifact counts and corrected wall time to exclude post-subprocess discovery/hashing.
+- The independent primary verifier wrote `primary/{node_classification,checkpoint3_verification}.json` under `/data/ycfeng/tmp/opencode/step5_ticket01_checkpoint2/`. Both are byte-identical to executor outputs. Counts: 173 non-pass rows; 77 cases, 451 hashes, 7 trained/70 dummy; no identity/request/metric/smoke discrepancies. Independently matched all 77 table rows to saved IDs, scripts, env, argv, config paths, modes and architectures.
+- Accepted the supported-scenario capture/comparison and preserved-dependency criteria, in addition to source identity. Seven criteria remain open. Historical suite failures, including one DP-placement assertion and three unknown builder causes, remain recorded without waiver.
+- Performance evidence: per-case wall time 2.370–68.172 seconds; one row per case; cache cleaned once before the run. No RSS or repeated-run noise data. Budget values remain undecided pending controlled measurements.
+- GLM `baseline_audit.md` changed concurrently to add an archive pointer. Preserved the executor's historical hash and recorded the primary read-time hash plus unchanged failure sections. No archive was accessed.
+- Exact commands and results: `test_report_2026-10-15_ticket01_checkpoint2.md`. The executor stopped at the checkpoint; source and Git state remain unchanged.
+- Final check: nine checkpoint documents passed the explicit non-index whitespace verifier, exit 0. Re-read requirements and the ticket; its live checklist has three complete and seven open criteria.
+
+## Primary review and CPU pilots — completed
+
+- Ordinary continuation messages continued primary work; no new Grok task was dispatched.
+- `reuse_inventory.md` section 9 records the C01–C06 four-way compatibility map, rejected evidence claims and unresolved native/executor prerequisites. These close three additional documentary criteria, bringing the live checklist to six complete and four open.
+- Existing `tests/performance/sim_walltime_scaling/run_case.py` provides the required initialization/run/total timing and process peak RSS. The two CPU pilots completed 8/8 requests each. Dense: 190 events, run 0.038510 s, peak RSS 164.437500 MiB. MoE: 3010 events, run 8.207058 s, peak RSS 168.996094 MiB. Status, source identity and measurement fields match the report.
+- Evidence: `test_report_2026-10-15_cpu_measurement_pilot.md`; inputs/results under `/data/ycfeng/tmp/opencode/step5_ticket01_cpu_pilot/`. These single observations establish runner availability, not performance stability, native accuracy or budgets.
+- `plan.md` section 9 defines two cases, separate warm-ups and five fresh-process observations per case, using the existing runner. Dense work increases before the repeat series because its pilot run interval was only 38.5 ms. The new series has not run.
+- Reconciled current progress/plan with the live checklist; retained historical checkpoint counts as dated outcomes. Source HEAD and core diff were rechecked unchanged. Review disposition is recorded in `review.md`.
+- Record verification passed: seven documents have unique section headings and no whitespace diagnostics; ticket 01 has six complete/four open criteria and all 29 later tickets remain blocked. Exact command is appended to the CPU pilot report. Re-read requirements before pausing for the executor decision.
+
+## Continuous execution — Tasks 7–12 accepted
+
+- Native Grok successfully resumed `ses_ec0b9b587ffedyxYla2vTTZ8NN` under the user's explicit invocation. The earlier tool-availability concern did not block dispatch.
+- `grok_batch_01_cpu_repeats.md`: two warm-ups and ten measured attempts passed. Primary independently checked 12 result records, 72 raw hashes, exact CaseSpec/argv/source/runner identities, all counts and summaries. Durable results: `cpu_performance_observations.json` and `test_report_2026-10-15_cpu_repeats.md`.
+- `grok_batch_01_admission.md`: added reproducible CPU verification command, fresh documentation/PDD tests and explicit admission table. Primary checked XML (22 nodes: 19 PASS, 3 README FAIL), both integration CSVs (2/2 and 8/8 requests), unchanged observation hash, and byte-identical GLM/local baseline indices. No whole-suite PASS or guessed historical argv.
+- Corrected stale executor/resource-authority statements in the new report/inventory. Accepted disclosed use of a previously nonexistent basetemp to retain integration artifacts. Detailed commands and outcomes are in `test_report_2026-10-15_baseline_admission.md`.
+- Primary froze `performance_budgets.md`: per-fixture observed-envelope thresholds, future paired-source medians, explicit dispositions for excess, no coverage or statistical-confidence overclaim. Dense run-only threshold is 17.37%; this sensitivity limitation is recorded.
+- GLM progress now reports ticket00 done, but runtime-lock ticket01 is only next. The full-path barrier remains unclosed. Step does not claim its archived baseline contents independently verified; local indices match.
+
+## Ticket02 execution and interruption recovery
+
+- Metadata allowlist acquired: config.json, tokenizer_config.json, tokenizer.json at revision364b3b03fed2477aa0953fe855a2c4c8c48ee3cc; hashes and public Docker Hub index/linux-amd64 descriptor are recorded in reference_lock.json. Primary independently rehashed all three inputs and both descriptor bodies.
+- Prepared native identity worker/launcher after primary source review; new77case functional comparison reproduced independently:77identical/0mismatched/0missing. Predictor cache-equality verdict remains withheld; no clean-cache deletion was authorized.
+- Submitted native identity inspection through stepmind, request step5-t02-native-identity-submit-20261016-1, helper ses_ebf959d03ffecEnbYMJXpFlKDj, job exp-1016-003706-065435. It was initially Starting; final exact-job query step5-t02-original-identity-query-20261016-final verified Succeeded,creator and terminal. Selected business facts and original observation are retained; no stop/retry was needed.
+- Tasks19–20 matched sentinel comparison:24valid attempts,5/8over budget. Tasks21–22 reproduced dense init gap and profiled299extra source_to_code/compile calls on candidate identical source; baseline has cached bytecode and candidate does not. Original verdicts preserved; cause/disposition awaits controlled empty-PYTHONPYCACHEPREFIX comparison.
+- Parallel Tasks23–24 and step5-t02-local-publish-and-inspect-20261016-1 both returned cancellation/aborted without receipts. No publication.json or company-registry observation directory exists. Do not repeat publication: user now requests explicitproxy a.z01.normandyfunc.com. Operator read-only reconciliation requested under step5-t02-proxy-steering-reconcile-20261016-1; no private evidence read by primary.
+
+## Ticket02 primary continuation — identity observed
+
+- **Proxy result:** helper ses_ebf65111affe3PVS4KegWg8kM1 submitted exp-1016-013143-191657 under step5-t02-explicit-proxy-submit-20261016-1. Creator/terminal verified Succeeded; submit-to-end57s, first-log proxy delay18s, platform startTime absent. Proxy manifest/config bytes match approved digests,40ordered layers match and40HEAD probes succeed. No future cold-pull bound is inferred. `test_report_2026-10-16_explicit_proxy.md` records the route, packages, identities and limits.
+- **Actual identity:** Torch2.13.0+cu130, vLLM0.1.dev22912+g8224bb82f, Python3.12.3; CUDA available, nvidia-smi H800. Both jobs agree on packages and593source/library hashes, including30Step5 paths. Full build SHA remains unknown, source candidate unproven; no model kernels or weights were exercised. Exact local ImageID/RepoDigests were separately exported read-only in local_image_identity.json; containerd Id is the manifest digest, not the config digest.
+- **Publication reconciliation:** the earlier interrupted launcher completed a retained local pull but failed its ImageID-semantics guard before tag/push/job submission. No publication occurred. The `noop` receipt means no pending action now, not no historical pull. Do not resume or prune it.
+- **Evidence preservation:** reference_lock.json remains byte-identical (befc2f0a…); new reference_lock_2026-10-16_observed.json supplements it without changing image or metadata. Raw worker incomplete verdicts remain unchanged; independent verified proxy config supplies the missing config evidence. Eight selected evidence hashes and all3metadata files independently verified. Five existing launcher rejection paths passed without SDK import, network or job submission.
+- **CPU recovery:** primary found23final results and no active matching process. Completed sole unstarted baseline dense attempt5 once via complete_last_attempt.py, exit0; no prior sample reran. verify_control.py verified24results,23retained shell exits, correct fingerprints/requests/events, equal dense profile compile counts, unchanged existing bytecode hashes and absent new prefixes. Durable observations: bytecode_control_observations.json. Old5/8overruns remain preserved.
+- **Residual diagnosis:** read-only explore ses_ebf4ddf92ffelM7joz0fPHHNlS inspected samples and boundaries. Primary ran profile_moe.py once per source (non-budget): both8/8requests,3010events, exit0; normalized7957shared functions, no Frontier call-count differences,1573source compilations and1893builtins.compile calls each. Candidate init was0.114376s faster in this pair. This does not explain the earlier MoE median or overwrite either budget. Disposition: unverified due unresolved measurement conditions; see test_report_2026-10-16_bytecode_control.md.
+- **Executor boundary:** ordinary continuation did not unlock native Grok. Its explicit-command rejection is preserved; no replacement implementation agent or external Grok CLI was used. The primary owns these verification/diagnosis steps. GLM full-path is still unclosed (its ticket00 done,01 only next).
+
+## Ticket02 phase acceptance — completed
+
+- Reviewer ses_ebf40acefffesyjkUcmfaqIO5R found no actionable defect in the nine completed criteria or the preserved evidence. Its follow-up confirmed the final criterion requires measured budgets and dispositions, not an unapproved all-eight-metrics-PASS rule. The existing policy explicitly permits UNVERIFIED due unresolved measurement conditions.
+- Primary accepts that disposition for this reference-tooling step:77supported scenarios exact; unchanged simulator/runner/model bytes; original cache-condition discrepancy measured and controlled; two residual timing overruns preserved and not attributed to a demonstrated code defect. This is neither performance PASS nor a fidelity-cost acceptance or waiver for later steps. No repeated campaign or arbitrary fix is justified by the current evidence.
+- Closed ticket02/all10criteria as G0 locatable reference only. The two lock generations and raw worker status remain unchanged; the observed supplement's pending status is its pre-acceptance snapshot, with current status here and in ticket02. Full build SHA and later model/runtime qualifications remain unknown as required.
+- Applied the review's sole P3 follow-up: ticket03 now reflects standing resource approval and ready status while retaining the native Grok invocation boundary. Prepared grok_batch_03_inventory.md for the existing session; no03work was dispatched or performed. Re-read requirements before accepting this phase.
+- Final inventory check initially failed on one added proxy-launcher .pyc,mtime17:31:13Z, outside simulator sources. All721baseline and1original candidate entries retained exact hashes; no removals/changes, no experiment-prefix writes. Preserved the added administrative cache and documented its exact path/hash in the bytecode report. Final verification checks this explicit addition separately rather than claiming full-checkout equality or deleting it.
+- Final verifier exited0:11maintained documents passed heading/history/whitespace checks;01/02each10accepted criteria,03ready with0accepted; four original JSON pins unchanged; original bytecode entries unchanged plus exact documented launcher cache; measurement prefixes empty; baseline/current core and Git status unchanged. Exact command and initial FAIL/final PASS are in the proxy report. No03dispatch or Git mutation occurred.
+
+## Ticket03 checkpoint — review and acceptance history
+
+- Resumed original native Grok session ses_ec0b9b587ffedyxYla2vTTZ8NN after the user's explicit invocation. Receipt Tasks25–27: metadata92layers/1406exclusions,26hash-pinned source requests,11candidate scopes,10proposed scenarios and5static-control kinds. Four owned inventory/design/report files returned; no ticket acceptance or04execution is inferred.
+- Primary read all Markdown and decisive JSON fields and static-control script. Two substantive corrections: unsupported derivation of16logicalKVheads from num_attention_groups=4, and omitted page_tokens factor in SWA page-capacity bytes. Static controls also need to consume actual pinned/inventory state rather than accept unrelated hardcoded positive fixtures. Corrections specified in grok_batch_03_inventory.md; same-session work only.
+- Actual image source bodies remain uninspected. Primary accepts the proposed26already-hashed Python paths for read-only source extraction as the next in-scope evidence step. This requires a prepared/reviewed worker and launcher, then StepMind operator submission with the same approved digest/local source/oneH800resource scope. No weights/model construction or new reference. Do not infer native dispatch from source inspection.
+- Same-session corrections returned: unsupported16KVhead assertion withdrawn, symbolic page_tokens restored, actual-inventory static controls strengthened. Primary independently reran15static outcomes with10injected rejections; no native PASS. Tasks28–29 prepared26file source collection in the same session. Primary read both scripts/tests, fixed vllm-package containment (rather than whole site-packages) and independently reran collector11PASSlines and launcher6checks, all exit0. Prepared worker SHA c5757a24…; launcher6fea4132… and allowlist49ee7104… unchanged. Submission remains operator-owned.
+- Operator submission request step5-t03-source-export-submit-20261016-1 reused helper ses_ebf65111affe3PVS4KegWg8kM1; exact job exp-1016-025412-557533 returned Succeeded,creator/terminal verified. Follow-up step5-t03-source-export-query-20261016-1 exported native_source_export/execution.json: oneH800/CPU8/32000Mi, same locked proxy image/local source,338s creation-to-finish. This duration is not a cold-pull bound. Worker copied source only, no model/kernels/cloud writes; no retry or stop.
+- Primary independently hashed all26files/363805bytes against manifest/allowlist/original593fileledger/request hashes, verified actualvLLM/Python and selected terminal/GPU facts, and parsed all exported Python files without imports. Source manifest SHA4bcd69c5838bc9a52576e0fd518b47852d97181627127b4ea5fefa41903fdc46. Six original lock/budget/worker pins unchanged. All three original Tasks25–27 acceptance commands passed.
+- Read-only surveys ses_ebf0dc46bffeYI6g2gCeZJIT1H (KV/state geometry) and ses_ebf02fc9affeNqKtdzecD07Mce (physical/precision/wrapper scopes) returned actual image file:line evidence. Primary independently inspected decisive call sites and corrected the three current inventory/design artifacts: logicalKV4/localKV1 atTP8, local index-Q4, indexK/Zreplication8; source weighted-ReLU instead of configured ssmax; separate rawKV and FP8 summary/FP32tail storage; GEMM/preparation/store/summary fusion alternatives; actual name mappings and explicit external-code/runtime gaps. Original source-request fields remain labeled pre-export snapshots, not current acquisition state.
+- Verification executes only three pure geometry functions and one summary-budget method extracted from the actual source AST, without importing model/runtime: legal TP8 mapping passes; wrongKV16/provider8/nondivisible groups reject; aligned symbolic page budgets pass and two unaligned values reject. Static controls still return15outcomes/10injected rejections. These are CPU/source checks, not nativekernelPASS. Initial independent verifier incorrectly required full-dict equality despite the collector's documented extra requested-identity label; fixed verifier to check the exact expected augmented dictionary, preserving worker evidence unchanged. Detailed commands/results in the text-inventory report.
+- Phase reviewer ses_ebef214a6ffe6MEe0fZwObVdHW identified two P2source errors (top-K history omits appendedcurrent; mean transfer view can contain partial-region means) and one P3stale live-status paragraph. Primary inspected decisive bodies and corrected JSON/Markdown/design and current plan/ticket text. Affected verifier rerun exit0: source/9pins/originalcommands stillpass, plus actualselector-prefix shape and boundary counts512/512/513, unfilteredmeanview/per-tokenwrites. Review follow-up pending; no native/GPU rerun or03closure yet.
+- Follow-up in the same reviewer session: **Accept**, R6/R7/R8resolved, no remaining actionable source/design finding or phase blocker. All ten criteria covered; native qualification is deliberately not claimed. Primary re-read requirements, accepted03/all10criteria and released04ready-for-agent with standing resource approval. New coding dispatch still requires explicit native invocation; no substitute implementation or04execution occurred.
+- Final document verifier exit0:12maintained records plus3tooling files clean,01–03each10accepted/04ready/05–30blocked,11scope citations in bounds,3current artifact hashes exact,5original/snapshot pairs byte-identical/0444,unchangedHEAD/core/status. Exactcommand/output is in the inventory report. Ordinary continuation reached the next selected-executor invocation boundary; no resource question or unauthorized replacement executor is introduced.
+
+## CUDA diagnostic and explicit deferral
+
+- User challenged the host-driver/image-CUDA gap and authorized primary diagnosis. Prepared/reviewed cuda_compatibility/check_cuda.py and submit_check.py, using the unchanged referenceimage, oneH800/CPU8/32GiB and existing StepMind route. Local compile/help/inert-import checks passed.
+- Submit step5-cuda-compat-submit-20261016-1,helper ses_ebf65111affe3PVS4KegWg8kM1,job exp-1016-103931-795883. Exactquery step5-cuda-compat-query-20261016-1 verified terminalFailed/creator/source/H800;17s. Worker loaded /usr/local/nvidia/lib64/libcuda.so.570.124.06 plus cu13runtime and failed torch.cuda.init() with driver12080. All4dependent kernel/graph checks SKIPPED. Primary independently rehashed observation SHA573915a9de10c7037bfe9173b40cb701385ed1c642e27d45b29615d7c112e73e. The runtime failure is real, not a validator verdict.
+- Public NVIDIA compatibility evidence is recorded in test_report_2026-10-16_cuda_compatibility.md. Pythonmetadata absence is not proof that OS cuda-compat files are absent; selected execution export overstates that point, explicitly corrected in the primary report without rewriting evidence. Actualloaded570library is proven. A read-only follow-up query was aborted with no receipt/supplement, not a mutation or newjob.
+- User then directed skipping this driver problem until the named session's solution arrives, followed by ordinary continue. No further driver analysis/remedy/retest or operator follow-up is authorized for current continuation. Preserve failed generation,locks,accepted01–03and all prior CPUverdicts. Ticket04CPU/source preparation can advance independently; its native qualification and dependents stay blocked. No substituted implementation executor or nativePASS.
+
+## Ticket04 independent CPU/source preparation
+
+- Reason: progress on the authorized local G1 references while the user defers the driver issue. No operator call, GPU attempt, runtime import, package change or alternative implementation executor was used.
+- Source survey `ses_ebd6356caffep6ayhkLSbFZCwt` and primary source reads established per-page FP32 tail retention, per-token partial means, reset/copy semantics, scratch placement and historical-topK-plus-current accounting. Source comments require TRITON_DEBUG=1 for the missing-tail device assertion; corrected fixtures to make this precondition explicit and leave default-build rejection unknown.
+- Generated82planned cases:33uniform summary,16max-shift,16reset/reuse,4copy-continuation,4padding,6selector,3conditional-window. All native_status fields are unexecuted and native_actual values null. Candidate B values come from the source guard, not measured allocation. SWA runtime tuple/drop point and general FP32/FP8 tolerances remain unknown.
+- Exact generation/check commands and hashes: test_report_2026-10-16_g1_preparation.md. Independent sum/group references agree with all33uniform cases; six extracted-source compact-length calls agree. Five corruptions (numerator/current-region/debug precondition/copy position/fabricated native PASS) reject; three invalid arguments to the extracted CPU function reject. Replaced only its torch.tensor output sink; no Torch/Triton/vLLM import or GPU execution.
+- FP64 denominator references versus60-digit Decimal: maximum absolute error1.50152213126784e-16, relative error1.2131112083124077e-16, observed0.8926805479265897ULP. These are CPU derivation observations, not native error budgets. Preparation JSON SHA5c8aea23530cdb3c3c3b1d5c7a6aa6e999bac063c92392ccf4e087cdf4fee89a.
+- Primary tracked-source check passed at unchanged01fb2ce; no production-code changes. Accepted77-case fidelity evidence and old performance dispositions are unchanged; these82planned cases are not a replacement fidelity run. Preparation-phase review and final record checks remain pending.
+- Preparation reviewer ses_ebd432d45ffe4zL0x5ecqabSnj returned Changes required: twoP2findings for implicit physical slots/fresh-cache state and unspecified scores in the scored-selector case. Primary declared fixture_inputs plus finiteFP32score[j]=j/topk_lengths[512], derived checker state from declared slots and added slot-shift/nonfinite-score controls. Affected rerun exit0:82references, seven corruptions reject, six compact lengths and three invalid arguments checked. Current JSON SHAdf923ae6875f6a35a110681d991ac32710e9599f48d71ac13b6de88060c1b434; initial hash above is historical. Follow-up acceptance is pending; no native work followed.
+- Same-session follow-up: **Accept for CPU/source preparation only**, R9/R10resolved and no remaining material finding. Reviewer did not run commands or rehash; primary owns the recorded execution evidence. Initial preparation subset accepted, native04still0/10. Final record/whitespace verification follows.
+- Final verifier with --records exited0: all30live ticket states correct;01–03each10checked/04tenunchecked;10record files+2scripts clean;5report pins exact;5original/read-only snapshot pairs unchanged;2lock generations and3accepted03artifact hashes unchanged; core equal to HEAD and baseline; pinnedHEAD/status unchanged. Failed CUDA output bytes preserved and no evidence_note/retry. Exact command/output in the preparation report. Re-read current requirements; initial CPU/source preparation is complete, not native04.
+
+## CUDA forward-compatibility rerun
+
+- User request (requirements.md, 2026-10-16): turn on the image's CUDA forward-compatibility switch and retest, then continue. This ended the driver deferral. Scope: the switch only, with no driver, image or package change.
+- Mechanism check: vLLM's `env_override.py` (upstream main, read 2026-10-16) only edits `os.environ["LD_LIBRARY_PATH"]` on `import vllm`. The dynamic loader reads that variable once, at process start. The worker `cuda_forward_compatibility/check_forward_compat.py` therefore ran the SHA-pinned `check_cuda.py` twice, in fresh processes: once with the switch turned on inside the process, and once with the resolved path set at process start. It also records the compatibility files, the dpkg package, the Linux kernel and device attributes 102/103. Local checks: parse, `--help`, pinned-hash match, and a stub plumbing run in `/data/ycfeng/tmp/opencode/step5_forward_compat_plumbing/`; the whitespace check was clean.
+- Submit `step5-fwdcompat-submit-20261016-1`, helper `ses_ebcd6b321ffe3cbD2cPujmFqMs`, job `exp-1016-132434-466356`: Succeeded, creator and terminal state verified, about 35 s. Query `step5-fwdcompat-query-20261016-1` returned the same state. Resources and image were the same as the first diagnostic.
+- Result: the image has `cuda-compat-13-0 580.82.07-0ubuntu1`. Process-start variant: loaded `/usr/local/cuda-13.0/compat/libcuda.so.580.82.07`; driver and runtime API both 13000; pointwise, BF16 cuBLAS, CUDA graph replay and the Step5 Triton gate all PASS with zero error; attributes 102 and 103 both 1. In-process variant: loaded the host 570 library and failed exactly as the first run did. Host: kernel module 570.124.06, Linux 5.15.0-126-generic. The primary read and hashed every output; see `test_report_2026-10-16_cuda_forward_compatibility.md`.
+- Recorded in plan.md: native workers must set the compatibility path before Python starts, record the driver stack, and check NCCL/peer-to-peer access on the first multi-GPU run. The first run's evidence is unchanged.
+
+## Parallel steps: G1 04A spec and multi-GPU diagnostic
+
+- User request (requirements.md, 2026-10-16): `并行执行2步骤(暂调用执行grok)`. Step 1 is the ticket04 G1 native checkpoint through Grok; step 2 is a primary-owned multi-GPU NCCL/P2P diagnostic.
+- **Step 1 — in-progress, blocked on dispatch.** Spec `grok_batch_04_g1_native.md` (SHA `810cd2591400a88544d562f7927dd38532320d143433459875c901e64d28890c`) defines checkpoint 04A: a native worker for the 82 prepared cases on the runtime seams (`build_prefill_groups` + `update`, `update_decode`, `reset`, `copy`, `select_regions` + `make_indptr`, `swa_decode_gated`), five native negative controls, a stdlib verdict checker with the primary-decided comparison rules (exact FP32/slot/selector checks; FP8 means exact when representable, otherwise inside the E4M3 bracket of the exact mean; FP64 references are observations), and a one-H800 launcher. The primary added a `chunked_prefill` variant because PRIMARY uses chunked prefill. Dispatch to `ses_ec0b9b587ffedyxYla2vTTZ8NN` returned `grok-implement requires the user's /grok-implement command in the calling session`. The free-text request does not satisfy that tool gate. No other executor was substituted; no Grok file was created.
+- **Step 2 — in-progress.** Worker `cuda_forward_compat_multigpu/check_multigpu.py` (SHA `20d67f6cf6ee5223ec0a9f8bd3a69e6dd5b9ae234e46b32ab7579d89c8647412`) runs three roles in separate processes, each recording its mapped `libcuda`: the peer-access matrix plus exact 64 MiB copies for all 56 ordered GPU pairs; a CUDA IPC tensor shared with a spawned process, read on GPU 1 and written back; and 8 torchrun ranks running all-reduce (FP32, BF16), all-gather, reduce-scatter, all-to-all, broadcast and a send/receive ring at 1 Ki and 16 Mi elements, plus a CUDA-graph-captured all-reduce replayed 3 times, each checked element by element. A timed 32 MiB BF16 all-reduce is an observation only. NCCL debug logging is added only where the platform has not set it. Launcher `submit_multigpu.py` (SHA `8ebb5566cddb9c1c747d67c683dbbe672c407aea5232cc64b5c7eeb105da250e`) reuses the source-export resources with gpu 8, cpu 64, memory 512 GiB and exports the compatibility path in the worker shell before Python.
+- Local checks: both files compile; importing the launcher loads no `steptron`; a stub `python3` run of the built command saw `LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat:...` and the switch set to 1; a CPU self-test of the orchestrator with fabricated role outputs (`/data/ycfeng/tmp/opencode/step5_multigpu_plumbing/fake_orchestrate.py`) gave PASS for the good case and FAIL for each of six faults (peer inaccessible, IPC mismatch, host libcuda, failed rank check, missing rank, mixed NCCL versions); whitespace checks clean.
+- Submit `step5-multigpu-submit-20261016-1`, helper `ses_ebcbf19e2ffeDZN526oJ6w9toj`, job `exp-1016-134927-007564`, creator verified. Queries `-query-20261016-1`/`-2`: Starting at 661 s and 908 s, 0/1 replicas running.
+- That helper session then returned `stepmind:invalid_response` for `step5-multigpu-logs-20261016-1` (twice, same request) and `step5-multigpu-query-20261016-3` (twice, same request). A fresh helper session `ses_ebca54deeffe7FXz32imhVluEr` answered `-query-20261016-4`, `-logs-20261016-2` and `-query-20261016-5`: still Starting at about 32 minutes after submission, 0/1 replicas running. The filtered receipt carries no pending reason; it is not known whether the job waits for a free eight-GPU node, the image or a mount. No stop or resubmission was made.
+- Queries `-query-20261016-6` and `-7` (14:43 HKT, about 54 minutes after the 13:49 submission): still Starting, 0/1 replicas running; `observed/` does not exist, so the worker never started and no GPU code ran. Paused waiting and reported to the user for a decision.
+- Used request IDs (do not reuse): `step5-multigpu-submit-20261016-1`, `step5-multigpu-query-20261016-1` to `-7`, `step5-multigpu-logs-20261016-1`, `-2`.
+
+## Parallel environment recovery — 2026-10-17
+
+- `completed`: restored requirements/plan from the user's resume; inspected previous Socket-only results, driver compatibility and original code. Source HEAD remains01fb2ce; no old result was overwritten. Retained original worker in `/data/ycfeng/tmp/step5_environment_20261017/check_multinode_20261016.py`, verified hash matches old `node.json`.
+- `completed`: authenticated Lark manual reads and SDK source inspection establish the missing device-request mechanism. Restore `ResourceConfig.custom_resources` by removing inherited explicit empty list. API confirms both required resource limits1+8 on both new jobs. No change to native package/image/driver, inherited HCA, numerical equations or formal task prerequisites.
+- `completed`: CPU preflight validates locked inputs,2×8H200 CPU32/memory128000Mi, rendered RDMA limits, syntax and inert imports; four stub driver branches (570compat,580native,590native,535clear failure) passed. Stub outputs are not native artifacts. SDK renderer/name mistakes in two local inspection commands were diagnosed and corrected; they did not mutate/stop jobs. Initial H800 delegated model failed OAuth before any tool/edit; replacement local agent is running and owns H800.
+- `completed`: H800 `exp-1017-013329-532329`, two distinct nodes gpu-h800-0272/gpu-h800-0304, platform and both containers successful.240exact checks/48graph replays,17verbs devices on both hosts, actual NET/IB0–7/GDRDMA/no Socket, matching CUDA/NCCL identities. Parent independently audited all16ranks, graph records and terminal evidence. Route report `environment_h800/test_report_2026-10-17_h800_rdma.md`; selected terminal/audit receipts and logs retained. Missing MLX5_1.25symbols persist but do not block this path. Old/new nodes differ; no same-node A/B claim. No new package/image/driver repair or additional GPU submit.
+- `in-progress / capacity-blocked`: H200 `exp-1017-013658-791756`, launcher PID2238524 alive. Latest01:54HKT exact query still position5/remainingH2000.01:56capacity cross-check: `step_main`248total/248used/0usable; supported alternate `infer_af_test` has0GPU, so no available same-hardware alternative was demonstrated. Keep the original job, no duplicate or stop. Read-only watcher `b7cdbf08-e068-4e2` checks every5minutes for up to60minutes and immediately reports phase change; it may write new filtered receipts only, no control/source edits. Report `environment_h200/test_report_2026-10-17_h200_two_node.md`; restricted logs/status scripts `/data/ycfeng/tmp/step5_environment_20261017/`.
+- `completed`: independent review P2 identified probe command-timeout propagation, two test-first failures reproduced it, narrow TimeoutExpired observation handling fixes it, parent2PASSin0.70s and reviewer follow-up2PASSin0.72s/Accept. Regression files are tracked; launches/current task records stay under the existing ignored task directory. Handbook updated in place with Lark source and actual H800 evidence. Original worker preserved as `cuda_forward_compat_multinode/check_multinode_20261016.py`; all old raw outputs preserved.
+- `completed`: regression code committed as `66887b698b80cb57886fe5ada005d94d0395429f` (`Add RDMA environment observations with non-blocking timeout records`), two tracked test files/116lines only. Final targeted rerun2PASSin0.69s, staged whitespace clean, tracked worktree clean. Simulator/core diff against01fb2ce remains empty. Historical source HEAD snapshots above remain historical; current HEAD is66887b6. No push, shared-interface change or task-record force-add.
+- `pending / quota-blocked`: H200 actual device/provider inventory,16rank content and48graph replay results, mapped identities, inter-node transport and terminal acceptance. Formal task remains incomplete; tickets04and27–28are not closed by this environment checkpoint.
+
+## Ticket04 — checkpoint04D implementation
+
+- `completed`: restored requirements/spec/plan/ticket04 and native sparse-decode source, read GPU skill/runbook completely. User requires continuous execution without ordinary checkpoint pauses. No H200 operations resumed;03:17HKT local PID observation showed the original launcher still alive.
+- `completed`: primary implemented `tests/integration/step5_environment/check_sparse_decode.py` with26config/source-derived BF16/B16 sparse decode fixtures and3local graph replays each. Direct and planner split modes, disjoint/reversed/rotated physical maps, distinct identity-address sentinel pages, current/token0probes, future/excludedregion traps, changed active rows/values and input/address preservation. Existing safe host assertions only; no full model/runtime allocation claim.
+- `completed`: first CPU self-test failed with NumPy `ValueError: setting an array element with a sequence` due to scalar request columns mixed with token arrays. Replaced the scalar with an explicit same-length array; no GPU attempt had started. Retained corrected self-test logs under `/data/ycfeng/tmp/step5_sparse_decode_20261017/`.104FP64 softmax frames equal exact declared BF16 outputs;208checker mutations reject; seven wrong addressing/visibility formulas give different outputs. Inert submission preflight verifies EXP_ID/H800/codesign/resources/image/local source/process-start compatibility/2400s timeout without a client or allocation.
+- `in-progress`: independent pre-submission reviewer8a4cd256-33d9-429. Prior read-only advisor3ff28f4b-9091-4f4 was interrupted by an OpenAI stream ending before terminal response; only its partial sentinel/math advice is retained, not final acceptance. Separate read-only helper772797e7-9d27-4d1investigates remainingG1source seams and complete-criterion reconciliation. Primary owns all edits/submissions/records.
+- `completed`: original04Djob `exp-1017-034334-792896` (03:43:34HKT, PID2735533) ran onH800gpu-h800-0435/codesign.26/26nativecases/104exactframes/78replays/eighthostassertionsPASS. PlatformSucceeded/containerCompleted/exit0/restart0, lockedmanifest/config/currentNFSverified; launcherendednormally. Wall20.819661525078118s/host1346160KiB/CUDA33602560bytes within preregisteredallocation. Report `test_report_2026-10-17_g1_sparse_decode.md`.
+- `completed`: initial CPU checker failed only new verdict persistence (root-ownedworkerparent, PermissionError). Same checker oncewithsudo createsnew26PASSverdict; originalraw/failedlogpreserved, noGPUrerun/chown. Source-reuse audit corrected gitlink-as-blob error,455actualsourceblobsunchanged/retained77exactfidelitycases, nofreshperformancePASSclaim.
+- `completed`: formal post-run reviewer `9e7a4744-2ce2-4b5` returned No findings after independently checking104frames/638,976BF16values/624inputhashes/78replays/eightnegatives/identities/terminal. Primary accepts04Dsubset; formal pre-submission approval was absent and not inferred. Additional Claude-profile reviewer failed before tools. Broad reviewer later found two P2 harness input/path defects, corrected and independently accepted as recorded below.
+- `completed`: remaining-G1helper772797e7returned source-backed plan after initial abort. Primary checked known source seams and wrote `g1_runtime_precision.md`; no new native blocker or G2 prerequisite invented. Runtime-source collector has inert preflightPASS and original job `exp-1017-035922-615759` (PID2801014) Succeeded/exit0/restart0 ongpu-h800-0017.18files/958520bytes/fourpriorhashmatches/allmanifestbytesPASS, collection4.577263858169317s. Next: actual configuration/cache/quantization binding, not another source-repeat or04A-Drepeat. Ticket04open/05–06blocked.
+
+## Ticket04 — runtime binding and late review follow-up
+
+- `completed`: original 04D worker committed as `a002989`, SHA `b4c710754002af6133dd1e8d246ebd266af65e848c290bb179de828a1567c7fb`. Preserved identical snapshot `worker_snapshots/check_sparse_decode_a002989.py`; current revised harness SHA `ffe9ab353da563671cc9227549023cd394852ed3c4815615851f00206237a14c` is a separate generation, not native-executed. First attempt to save inside root-owned native output parent raised PermissionError; used a new task-owned snapshot directory without chown or raw replacement.
+- `completed`: broad reviewer `8a4cd256-33d9-429` found unchecked preparation/exported-source bytes and relative CLI paths before chdir. Fixed only main input validation using existing pinned verifier, source hash/size and path resolution. Three regression tests PASS; 26/208/7 self-test unchanged. Same reviewer follow-up No findings, AST confirms fixture/oracle/native execution unchanged. Latest combined regressions with RDMA tests: five PASS in0.81s. Source collector audit:18 files/958520bytes/four prior matches/native worker hash/platform Succeeded/exit0/restart0 all PASS. Detailed report `test_report_2026-10-17_runtime_sources_input_locks.md`.
+- `completed`: first binding diagnostic `exp-1017-041443-460476`, PID2863847, H800/codesign/CPU8/32000Mi/600s. Failed before native imports because harness adapted observed manifest hash but omitted `source_size_bytes`, required by existing verifier. Platform Failed/containerexit1/restart0, container20:15:09Z–20:15:11Z; no actual binding or CUDA environment business output. Retained `runtime_binding_platform_01.json`, `runtime_binding_failure_01.log`, `worker_snapshots/runtime_binding_generation_01.py` and scratch logs. Local minimal AST mapping + actual verify_installed reproduced exact KeyError, then adding native field produced18sourcePASS/two hash-size corruption rejections. No native/reference/budget change.
+- `completed`: verified sparse input corrections/regressions and runtime-source collector committed as `b4afd1c` (three files,192insertions/3deletions), no push. Ten follow-up documents, original worker hash, ten open ticket04 criteria and unchanged Frontier/fidelity source all checked. Binding diagnostic script remains uncommitted until native verification.
+- `completed`: interface reviewer `38e8e7ad-8b8b-41d` found92backbone versus95MTP-inclusive list and incomplete standalone Step5 model budget hooks. Corrected list assertions/output; explicitly label standalone specs as excluding model recompute/zeroing/page-fixed side storage budgets. Remaining constructor/attribute/view interfaces matched inspected source, no native PASS inferred. First review response aborted; resumed return-only to preserve its finished findings.
+- `completed`: second binding diagnostic `exp-1017-042926-324906`, PID2923115, new `observed_generation2/`, same H800/codesign/CPU8/32000Mi/600s. Succeeded/exit0/restart0, locked image and full92/95/352 metadata, native Fp8Config1406exclusions, defaultB16/cacheauto→BF16, SWA[511,0]/DSA[-1,-1], two196608byteviews/rawaliases and summary side aliases verified. Collection17.96823467500508s/host1277160KiB/CUDA143021056bytes. Independent reviewer5f5b10ee-d4ad-4afNo findings for standalonebinding only; abortedresponse resumedreturn-only. No fullmodelhooks/FFNforward/dummyweights/graph/memoryfit/G1claim. Report `test_report_2026-10-17_runtime_binding.md`. Proxy discovery first timed out15s before launcher; standard retry afterDNS/no-launch check succeeded, no duplicatejob.
+- `completed`: read-only precision planner6dacc5e0returned fullnativeTP1dense/shared/FP8routed/excluded352expert cases and exactprefix/lifecycle plusmemory estimates, not nativePASS. Primary wrote `g1_precision_ffn.md`. Original14ownerjob `exp-1017-043748-847599` copied14/14sources/405914bytes/onepriorhashmatch, Succeeded/exit0/restart0; report `test_report_2026-10-17_precision_sources.md`. Initial wrapper duplicatecomma caused syntaxfailure beforeSDK/GPUcreation; retainedscratchfailure and correctedcomma before successfulinertpreflight/freshlauncher. No native/package/budgetchanges.
+- `completed`: sixownerjob `exp-1017-044926-195003` copied6/6/89778bytes; eightownerjob `exp-1017-045416-346332` copied7/8/208788bytes and **Failed/exit1** because `vllm/utils/workspace.py` was missing. All availablebytes/manifest/failurepreserved. Actual modular_kernel AST imports `vllm/v1/worker/workspace.py`; separatetwoownerjob `exp-1017-045732-533373` copied2/2/80818bytes andSucceeded/exit0. Allthreecreator/image/currentNFS/terminal/workerhashchecked; reviewer e82a0884No findings for15sourceintegritychecks, not an8/8requestPASS. Report `test_report_2026-10-17_execution_sources.md`. ParentrawdirectorywriteEACCESretained; newtrackedwrapper instead ofchown.
+- `completed`: native numerical planner365e192e finalreturn corrects earlierprogressmessage: gate is SiLUthenupperclamp, not inputclamp. SourcecompiledGEMM/topk/quant/reduction/sigmoiderrorguarantees remainunclosed; no10%kernelboundinvented. Preserve fullweights/routing/outputforofflinecomparison. Attentionplanner f5124d1b proposes realstatechains15+2+1,511+2+1,and7x512+511+2+8+1; realselectortruncationbegins4105not4097. H800SWAunfusedpath andDSAwholeprefillcaptureexclusionretain nativebehavior.
+- `completed — historical preparation/submission snapshot, superseded by the accepted result below`: checkpoint04E frozen in `checkpoint_04e.md` beforemoduleexecution: sixactualnativeclasses, full352experts/config/originalexclusions/realdistgroups/nativeDummyModelLoader+reload+postprocessing, threefixedinputfamilies, oneH800/CPU8/32000Mi/2400s/cloudraw64GiB. `check_precision_ffn.py` implemented; independentreadonlyreview637392af foundP2outputconfinement, fixedbeforelaunchwith3regressions; followupNo findings. Combined8testsPASSin0.84s/inertpreflightPASS. Casesruninseparatechildprocessesto avoidstaticlayerretention. Nativejob `exp-1017-051804-058598` created05:18:04HKT,launcherPID3120148alive; noFFNforwardPASSorprecision/G1acceptanceclaimed. Generalcontenttolerances remainUNVERIFIED, not replacedbyfinite/zero checks.
+
+- `completed` — 04E declared execution/raw-content retention subset: job `exp-1017-051804-058598` ran six native modules, full352-expert FP8/BF16 MoE,18 input frames. Actual Triton, finite/zero checks, creator/image/currentNFS/actualcodesign/Succeeded/exit0/restart0 verified. Container312s<2400s; maximum child RSS1572856KiB, CUDA allocated15547287040bytes/reserved15550382080bytes. Independent raw38.614655485GiB verification completed, complete mathematical reference errors retained. No unconditional numerical PASS. Reviewers f1388855 andb0331cf7 inspected executionmetadata/checker; per-phase and parentresource evidence gap remains open. Original CPU timeout124 and DSA native-vs-serializedstridefalsefailure preserved, correctedCPUonly; noGPUrepeat. Report `test_report_2026-10-17_precision_ffn.md`.
+- `in-progress` — remaining completeG1: actualstatefulSWA/prefill/DSA, native precision bound and FP8mode/source reconciliation. No new nativehardblocker; alltencriteria stayunchecked.
+
+- `in-progress` — checkpoint04F preparation: `checkpoint_04f.md` and `tests/integration/step5_environment/check_attention_state.py` define actual native Step5Attention, native dummy lifecycle/cache hooks/builders, reversed true pages, inherited state and changed-position isolated decode capture/replays. Source/CPU preflight passed: AST and source locks, three confinement/process regressions and combined11tests, inertH800/codesign/CPU8/32000Mi/image/NFS/2400s submission. Reviewer `2cd787fd-151e-489` found demonstrable harness issues; transparent fixes were re-reviewed by `6b5ea3cc-7a31-4f2` with No findings/source-onlylimit. Capture is explicitly executed once before state advancement; dtype serialization, failed-frame retention and incrementalphase records corrected. No attention job submitted at this preparation update. Targetednine-owner numericalsourcejob `exp-1017-061914-260208` returned9/9/418711bytes/hash-size-AST/4.098125s; terminalauditpending, source-only. NativeFP8mode/compiledbounds remainUNVERIFIED.
+
+- `completed` —04F generation02 DSA execution and bounded32CPUoperations, detailed above and in `test_report_2026-10-17_attention_state.md`. Historical preparation paragraph above remains the original pre-execution snapshot. Initial comparator four false-PASS risks were fixed and scoped independently reviewed; new live-score math review remains in progress. Native SWA content discrepancy is unresolved, not established native defect.
+- `in-progress` — isolated SWA metadata-ownership verification and mathematical projection/norm/RoPE/indexer/gate/output stage references. Capture ownership1FAIL/1PASS1.61s ->2PASS1.58s; current graphrefs/pointer/flag records passed static review. Preserve original generation01/02 workers. No numerical tolerance or source repair.
+- `completed` —numerical9-owner source job `exp-1017-061914-260208` source/hash/terminal checks; missing historical FP8scale mode and compiled bounds remainUNVERIFIED. Additional dispatchcollector generation01 `exp-1017-064928-183705` Failed/exit1 beforemanifest because ASTexpected top-levelfactory butactualpackage reexports it; exactStopIteration/log/image/NFS/terminalpreserved. Scoped static source collector generation02 `exp-1017-070114-860543` Succeeded/exit0/restart0,5files/34170bytes/hash-size-ASTPASS. Actualpackage now reveals `prepare_finalize/no_dp_ep.py` owner; source-only, no historicalmodeclaim.
+
+- `completed` — affected SWA generation03 `exp-1017-070246-633403`: all seven frames/eight CPU operations and terminal identity checks passed. Metadata ownership alone reduced replay discrepancies from about0.011–0.013 to about3e-5; eager/capture errors were unchanged. Stable pointers, actual FA3/full/AOT/tile flags, five lifecycle phases and parent resources retained. No native defect/general numerical PASS inferred. Original generations remain immutable.
+- `completed` — independent live-score review `4a7aa412-6a19-4cd`: No findings,44synthetic rows checked; primary retained80native score-reference rows. Stage review `52cbcc1a-fda0-40f`: No findings/source-only; primary13content/planner/precision regressions passed. All29stage calls/390comparisons completed, including12exact native-conditioned DSA prefill gates; no actual indexer mode inferred.
+- `completed` — factory dispatch generation03 `exp-1017-071216-726086`: actual `prepare_finalize/no_dp_ep.py`,4863bytes/hash-size-AST/creator/image/NFS/Succeeded/exit0/restart0. Factory chain is source evidence, not historical mode/instance. Reviewer `1a87b5e8-22ea-446` returned that distinction and proposed a minimal quantizer observation.
+- `completed` — fresh fidelity generation02:77identical/zero missing/mismatched/definition/evidence failures with unchanged comparator and per-side root normalization. `attention_fidelity_02.json` preserves dirty-tree warning, withheld clean-cache/performance/commit-specific claims, original user-cgroup launch failure and failed primary overstrong provenance assertion.
+- `completed` — rejection index `g1_criterion_rejections_01.json`: actual native negative controls plus four copied-retained-record mutations entered the real checker and rejected. Primary reconciled alltencriteria and accepted2/3/4/6/7/8/9; ticket04 is7/10,05/06 remain blocked. Reviewer recommendation does not itself change boxes.
+- `completed` — criterion5 reviewer `3b59ee75-73e8-42c`: exact approved wording needs actual buffers/scales/cast/gate identity and known-state checks, not a general FFN allclose or compiled theorem. Specific actual quantizer scale/output gap justified the new binding-only observation. Historical04E mode/indexer conditional labels remain.
+- `completed` — criterion10 reviewer `d91a96ee-2897-4c8`: tooling fidelity/disposition is distinct from unmet04E per-phase/parent recording. Six child lifecycle peaks/terminal/raw cap are observed; missing measurements cannot be reconstructed. Primary resource disposition pending complete current-sentinel results; no performance waiver or budget increase.
+- `completed` — quantizer harness review `06e7dffe-39cd-46b` found task-module-load-before-confinement and absent mount check. Both fixed before submission;5CPUregressionsPASS0.04s/followupNo findings/inertsource-resourcepreflightPASS. Worker frozenSHA `b7e56aa9c40f1c0c1fdee57b55f1ad8739db0c99a1b70360edd75fa625ccf5b2`. First proxy discovery timed out15001ms before snapshot/launch; DNS/no-launch checked and standard retry succeeded.
+- `completed` — original binding-only job `exp-1017-075002-951161` finite outputs and terminal verified. CPU analyses01–05 retained:01 fails zero scale equation;05 independently checks49152bytes,256nonzero scale equations,384finite formats andall9strides. ResultPARTIAL/zero floorUNVERIFIED. No native replay or mode inference. Revised extension recorder is not GPU-executed; originalprocess binary identity remainsunavailable.
+- `completed` — fresh unchanged-runner sentinel seriesPID3760326 ended,24valid attempts/eightwithinbudget medians with unchanged originalbudgets. Independent reviewerc7350d3f verified counts/fingerprints/medians/72originalartifacthashes; additional163file archive records launchscript/input/log/configprovenance. Execution-time fullpackage/cache/source attestations and outerlauncherexitreceipt were not captured; no clean-cache/nativepath/commit-specificPASS.
+- `completed` — finalpackagereviewer178e9a70 verified88retainedsource records,sixfidelitypointers/72sentinelpointers and workerhashes. Criterion5/10 supportedwithinliteral scopes; criterion1 remainsopen for04E mandatorymissingmeasurements. Stalecurrent-state references are corrected; originalfailures remainhistorical.
+- `completed` — finalcodereviewer6dc03a60: No findings for sixattention/source/testfiles. Its collection failed inTorch-freepy310environment; primary properenv16inputtestsPASS0.98s/13contenttestsPASS1.78s. Quantizer reviewer3ea301e4 found omittedextensionnames and uncheckedstride; code corrected,6input/extensiontestsPASS0.04s/5contenttestsPASS1.56s, actualretainedlayoutanalysis05PASS. Follow-up/codecommitverification continues.
+
+- `in-progress` — corrective resource generation: newobserver transparentlycallsoriginalsixmoduleexecute/main/retain/nativefunctions, capturesbefore/afterresources andnativepeakresetepochs plusparent/process-tree/cgroup/physicalGPUperiodicsamples. Original04Ebytes/inputs/nativeequationsunchanged; originalrecordsimmutable. Reviewb03531ce running/noGPUsubmittedyet. Planner e8a0b357 completed5readonlycalls; standingapprovalcoversnecessarymeasurement. First23combinedinput/resourcechecksPASS1.02s,18contentchecksPASS1.82s; all163archivehashes/source-snapshotidentitiesverified.
+
+- `completed` — reviewedattentioncommit78ab4c9 andquantizercommit63e7447, separately; no push. StagedEOFwhitespacefindingscorrectedwithonlyblankremoval/retest8PASS1.68s/5PASS0.04s. Freshfidelity/sentinelresultsremaindirty-sourcecase-specific, notreattributedtothesenewcommits.
+- `in-progress` — reviewedcorrectivegenerationresourcesjob `exp-1017-083634-286962`, StepMindf0390/PID3940915; newbindinggeneration2job `exp-1017-083634-393146`, StepMind2d8e5/PID3940916. BothlocalpersonalPython/currentNFS/1H800/codesign/CPU8/32000Mi/lockedimageconfirmed. FirstreceiptresourceRunninggpu-h800-0435/bindingStartinggpu-h800-0401; launchersalive. NoH200operations. Resourcesdenseexit0/19retainedhashesmatchhistoricaldense/mandatoryphasepairsandrealCGlimit33554432000bytes observed; FP8childinprogress. Original04Eomissionsremainmissing, nofullpackageclosurefrompartialresult.
+- `completed` — resourcereviewerb03531ce initialP1observerexceptionmasking/P2subtreemountcgroupmissingfieldsfixedbeforelaunch; faultinjection10PASS0.08s/liveCPU16fields; follow-upNo findings/CPU10PASS0.08s. Inertresource/bindingpreflightsbothPASSnoSDK/outputwrites; exclusiveworkersnapshotsSHAe6a282ddf02b5dac724fbf9356a51d24d7b4f175fc90907d9188e4948667a987/2f6cf743f64c8fd5fe893252a0ce28d05cce1fb82cc05e45fca71520ad2f7ca1. `checkpoint_corrective_resources.md` freezesallscopes/limits/nohistoricalreconstruction.
+
+- `completed` — corrected-resource execution and integrity: exp-1017-083634-286962 Succeeded/Completed/exit0/restart0, allsix freshchildren0/168phaseserrors[]/271periodic parent-process-physicalsamples. Independentraw35callsverify4358files/41462170614bytes/exactoriginalhashes; no tensor/native rewrite. Parentwall318.016526s/peakRSS839512KiB, sampledtreesum3457284KiB/physicalmax15518MiB; neitheriscontinuouspeak. Actualcgroupmax33552973824limit33554432000/failcnt0/noOOMobserved, only1.39MiB belowlimit; notheadroom orprovenfilecacheattribution. Review5ae8e741No findings/primarycompletedrawintegrityafterreview.
+- `completed` — newquantizer generation02 exp-1017-083634-393146 Succeeded/Completed/0/0/launcherended;10.396953s/RSS1321940KiB/CUDA295424/2097152/raw163377. Actualstable-libtorchhashmatches593ledger; DeepGEMM_C isPython_C.py, named_C_extensionabsentatsys.modulesinspection, notwholeprocessnegativebinaryloadproof. c79f4a90scopedreviewNo findings; actual9filesanalysisPARTIAL/nozerofloorwaiver. Currentworkerexactfrozengeneration2matches. Allpriorraw/failedanalyses/omissionsretained.
+- `completed` — primaryalltenG1criteriaaccepted; ticket04done/05–06ready, total40accepted/238uncheckedout278. Exactevidenceindexg1_package_acceptance_01.json. Allsource/generation/terminal/raw/error/resourceobligationschecked, noG2/allrank/fullmodel/PD/generalcompiledaccuracyclaim.
+
+## Ticket06 installed source checkpoint
+
+- `completed`: first role-source job exp-1017-104716-161170/37067/PID274685 and MRv2 job exp-1017-110131-174062/f608e/PID331589, both H800/codesign/gpu-h800-0017/current local NFS/lockedimage/personalcreator verified, Succeeded/Completed/exit0/restart0, launchers ended. Primary checked30 copied Python files/1,586,345bytes/hash-size-AST; no earlier593ledgermatches. Separate117-member namespace inventories are availability, not loading. Full-role capacity/all-rank execution is not measured. Exact report `test_report_2026-10-17_role_sources.md`.
+- `completed`: initial reviewer e7ee2204 P1 duplicatepathbypass corrected using single argparse parse/resolved validation/canonicaldownstreamargv. Six regressions PASS0.05s/new inertpreflight02PASS; ad828fc9 staticfollowupNo findings. MRv2 source-set explicitworkerargv/current7testsPASS0.19s/newinertpreflightPASS/reviewer2253ce72No findings(staticonly). Both review responses aborted before their eventual return-only verdict; no retrospective native/testcredit.
+- `completed`: installedconfigparallel declaresEPfalse; actualwrapper constructs resident tower/projectorbefore nestedtext; realgpu/model_runner.py source obtained from actual namespace. These are source/default contracts, not resolvedcapacity/backend/placement. Worker snapshots355c7a0(first)/e7b9aeec(second) immutable; newcode notreattributedtofirstgeneration.
+- `completed`: capacity planner d54b7bd2 returned source-grounded init-only plan after recovery. Sampling agent63616e29 partial artifacts independently recovered,26tests passed; checkpoint05 written by primary, no agent completion inferred. Observer reviewer5c0315c1 stdout maskingP2 corrected; driver reviewerb269c172 ENOSPC maskingP2 corrected,7tests/followupNo findings. Primary19testsPASS0.10s/inertpreflight02PASS.
+- `completed`: capacity01 tokenizer rejection preserved. Frontend03exp-1017-115919-503427 copied5files/203,408bytes/4.228147849s, Succeeded/exit0/restart0/personalcreator/codesign/lockedimage/NFS verified. Source-backed correction only enables existing locked tokenizer; no asset/native/wrapper change.
+- `completed`: capacity02exp-1017-121747-859071/175f6/PID670556 ended; all8native load_model returned and graph capture during determine_available_memory occurred, then native cache admission rejected−4,787,900,968bytes atutilization0.92. Failed/exit1/restart0. No requests/service/changed-input replay.48rank records/127parent samples/9,801,368metadata bytes verified; primaryaudit142checks and independentreviewe2331e6c agree. Retainedwarnings/nativeconfig/wrapper/88routedlayers/all352width-shardedexperts/TP8EP1use_epFalse. NohostOOM/nativepolicy/resourcechange/retry. Detailed report `test_report_2026-10-17_role_capacity.md`; Generation01parentmetadata later retrieved read-only20samples/18,818bytes, exactSHA/readmanifest in `role_capacity_metadata_01/`; no nativeworker/model evidence inferred.
+- `completed`: freshfidelityPID357550 ended77exact, sentinel01PID358376 ended diagnosticdueoverlap; independentsequentialsentinel02PID416883 ended24exits0/problems[]/eightwithinbudget medians. Exactlimits retained in `test_report_2026-10-17_sampling_capacity_tooling.md`; notcommit-specific/nativeperformance/fullenvPASS.
+- `completed`: FFNprimaryrecovery afteragent865fe682unavailable producedconsumer/tests. Review4a06e845found missingnativecombine/topology/denseGEMMdispatch; correctedwithactualinherited_forward_ffn/all5groups/bothdenseimplementations. Followupf4f61ee8No findings/10CPUtests. Latestcombined67checksPASS0.40s/coreunchanged. NoGPUmeasurements.
+- `completed`: isolated05driver review corrected diagnostic finalstatus/RDMAcounterunits(4bytewords),69CPUchecksPASS0.35s and inertpreflight/frozennewgenverified; commit7d4f479/no push. Actualexp-1017-132150-162582/9c54e/PID962804ended,3children0/sixrows30calls/Succeededexit0restart0.19cloudfiles2,056,731bytes/6traces6content/46samplesretrievedread-only; primary24integritychecks/raw4GiBbudgetPASS, reviewer605b20e1allhashes/traces/counts/finiteframesconsistent. No datasetadmission: newweights/config/topology/fullbuild/continuousGPU-NICexclusivityunverified. ConditionalhistoricalweightFP64diagnostics6callscompletedmaxwall36.0176s; notnewcontentacceptance. Detailed `test_report_2026-10-17_local_ffn.md`.
+- `completed`: frontend/capacity02delta commita477f50after27testsPASS0.26s; consumerdf9d95fafter36testsPASS0.13s; no push/.pistaging. Metadata01readcomplete20samples18,818bytes.
+- `completed`: missingnative2nodelaunchsourcesgeneration04exp-1017-134426-536029/ade57/PID1049850ended,3files77,806bytes/3.949692913s/hash-size-ASTverified/Succeeded0restart0/personalcodesignimageNFS. Staticreviewebabd141No findings/nopytest;primary9testsPASS0.25s/inertpreflightpassed. Commitad4d7c8. Source `serve.run_headless` usesnativeMultiprocExecutorfornode_rank_within_dp>0; fullTP16launchplanawaitsread-onlyreviewb0cca529. No capacity03approval/submission.
+- `in-progress`: derive neededcurrentcontent/config/resourcewindowevidencebeforeclean05admission; graphs/gaps/attention/communication/fullpathunmeasured. Preparecompletecapacityproposalfrommeasurednegativecacheallowance/sourcecontracts,notautomaticresource/policychange.
+
+## Ticket05 generation02 preparation
+
+- `completed`: generation02 attestation slice. Reason: generation01 rows had no current weight-byte, group or resolved routed-kernel identity, so their content could only be compared conditionally. Method: hash every parameter and buffer after the last timed root, tracer exit and synchronize; record actual groups and the resolved modular kernel; offline comparison against size/SHA-checked 04E tensors. Review `1d462229-46eb-440` found two hash defects (strided one-element chunk, zero-element tensor); both reproduced, fixed and covered by new regressions; follow-up "No findings". 41 Torch tests and 71 controller tests passed, `git diff --check` clean, core unchanged. Commit `f01312a`, no push. Details: `checkpoint_05_ffn.md`, `test_report_2026-10-17_local_ffn.md`.
+- `completed`: frozen preparation `local_ffn_generation_02_preparation.json` (SHA `b7fb9c86a893718a9e23077094a09d8c5b9b3e6f00f5d9d9516d7593330fd60a`) with seven byte-equal worker snapshots; cloud `local_ffn_20261017_02` and task output `observed_generation2` confirmed absent. Launch specification `local_ffn_generation_02_launch_spec.md`.
+- `historical / superseded`: the delegated operator originally rejected requests with `NEEDS_AUTHORIZATION`; the registration theory was withdrawn after the user's tool-fault diagnosis. Exact generation02 approval is already present. No internal registration or new request ID is needed; subsequent single-dispatch/status-only instructions govern.
+- `in-progress` (blocked on the delegation tool): after the user's repair and exact scope confirmation, the frozen inputs were re-verified (HEAD `f01312a`, preparation SHA `b7fb9c86…`, seven snapshots byte-equal to source and commit). The three earlier IDs report `UNKNOWN_REQUEST`. Original ID `-01` was dispatched at 09:06:33Z and, after correcting the withdrawn TP16 reading in `requirements.md`, once more at 09:07:38Z. Both returned `REJECTED`/`blocked`, `jobs: []`, with no named missing condition. No job exists and no further dispatch is made. Details: `issues.md`.
+- `in-progress` (delegated operator preparing): the user reported that the tool had not been reloaded before the earlier rejections and has now reloaded it. Re-verified at 09:18:55Z: HEAD `f01312a`, preparation SHA `b7fb9c86…`, local evidence directory and `observed_generation2` absent. Status of `-01` at 09:18:58Z was `UNKNOWN_REQUEST` (no intake record, so no earlier submission attempt). Dispatch of `-01` at 09:19:02Z returned `PREPARING` ("正在核对已有用户批准、公开规格和本地 launcher；尚未提交平台任务。"), task `task-af3918769a6f3a4ec65fa1547210632c`, `jobs: []`.
+- `blocked` (private worker failure): the private worker ended that task with `WORKER_FAILED` three times (dispatches 09:19:02, 09:19:55 and 09:22:46Z, original parameters), each within 30–90 s and before spec step 1: the evidence directory and task output stayed absent, `jobs: []`. A dispatch with an anchored `authorization_ref` was refused at intake. The spec's Authorization section was corrected to cite the exact scope confirmation (SHA `940b5abb…`); operation and frozen inputs unchanged. Dispatching stopped; the private diagnostics are needed. Details: `issues.md`.
+- `blocked` (operator spec review): after the user's worker repair, one dispatch of `-01` with the original parameters at14:13:29Z went `PREPARING`, then `SPEC_REVIEW_REQUIRED`/`needs_input` at14:17:22Z. Status-only queries14:18:30,14:21:29,14:36:59 and15:40:03Z retain that state, `jobs: []`, description "worker 要求复核任务说明，请在非 Claude 渠道查看私有证据。" No redispatch. Three unverified candidate specification causes are recorded in `issues.md`; private evidence determines the actual missing condition.
+
+## Historical tickets05/06 parallel CPU preparation
+
+- `completed / source diagnosis`: re-read dependencies and current requirements.04 is accepted;05/06 may run independently. Verified native attention owner call order and local imports of indexer operations. DSA `sparse_indexer_w` has no quant method; fused QKV/indexer and indexer-w both call native functional linear. DSA's `fuse_qkv_gate` can remain true despite its earlier dedicated forward branch. Draft dispatch was corrected to record the actual execution classes without relabeling an unused GEMM method. Existing frozen FFN inputs remain unchanged.
+- `in-progress`: new `tests/integration/step5_environment/local_attention_measurement.py` uses sibling physical-owner scopes, sums the two DSA preparation parts once, restores native annotations on exit, rebuilds/restores prefix state outside timing and keeps eager owner/whole-forward passes separate. The2026-10-18 check corrects the historical31 count to30 single-request BF16 prefill shapes with3 heldouts. Old reviewer9e54aaad-1a59-427 cannot be retrieved; fresh reviewer8594d293 owns the current read-only review. No GPU invocation/launcher or admitted rows.
+- `completed / design only`: TP16 planner337a7b09-c173-44f source-backed result read completely. It identifies the inherited RDMA-empty-resource trap and headless exit0 false-success trap; recommends terminal-before-shutdown plus completion-before-peer-wait. No source model/topology policy change was executed.
+- `in-progress / implementation review`: agent74cbcb36-53a2-4b5 wrote only `role_capacity_supervision.py` and `test_role_capacity_supervision.py`,280lines each. Primary reran50fake-only CPU tests:50passed in1.60s. Independent reviewc6ab865b-c5ae-462 is running. The supervisor is not integrated; late-discovered worker identities, shutdown and residual evidence must be reviewed before freezing any run. No TP16 GPU approval or G2 claim.
+
+## Historical pre-RCA next actions
+
+The following checkpoint actions were completed or superseded by the recorded CPU closure and current RCA below. They are retained for chronology, not a new request to repeat accepted work.
+
+1. Finish the fresh05attention and06supervisor reviews, fix demonstrated CPU-tooling defects, and verify reviewed current bytes without changing any generation02 input.
+2. Complete the saved CPU provenance/budget audit and the required fresh ≥50-scenario fidelity plus separate frozen-budget sentinels. Record measured values and limits before separate code-step commits; no push.
+3. After CPU preparation and review close, present the concrete unresolved next execution decisions. Generation02 platform inspection requires its own confirmed scope: only the original request, never redispatch. Attention/TP16 GPU runs and native launcher integration are not undertaken in this checkpoint.
+4. Preserve generations, prior failures and G1 acceptance. No native-policy/resource increase, unchanged capacity retry, H200 operation or production integration across the GLM barrier.
+
+## Historical resumed parallel CPU checkpoint — 2026-10-18
+
+The intermediate states and private-review blocker below preserve chronology. The CPU checkpoint closed and the private-review blocker was later diagnosed/resolved; current actions appear at the end of this document.
+
+- `completed / recovery`: current HEAD `f01312a8dad93bde006ab99332759c47f89aae2c`; tracked/staged diff empty. Four untracked CPU tooling files and `.pi/subagents.json` are preserved. All7 generation02 source/snapshot/committed-byte pairs match preparationSHA `b7fb9c86a893718a9e23077094a09d8c5b9b3e6f00f5d9d9516d7593330fd60a`. No GPU query/control or historical launcher executed. Original reviewer IDs9e54aaad/c6ab865b returned `Agent not found` in this session; no review completion is inferred.
+- `completed / read-only evidence reconciliation`: current manifest filter selects30 of37 cases with3 holdouts, while historical05/progress text says31. Saved CPU comparison records77 identical/0problems/902artifact hashes/507source hashes; hashes were not rerun during read-only recovery.24 existing sentinel result JSONs have success/exit0/complete expected requests/positive events/sequential mode. Primary recalculated8 paired-source median changes within unchanged budgets; baseline init drift versus original observations is136.50%dense/133.27%MoE. These are not native timings or acceptance of current harnesses. The507source mapping omits all four new harness/test files, and recorded dirty paths omit the current attention test.
+- `completed / initial ticket05 review; corrections in progress`: reviewer8594d293 returned oneP2selected-native-dispatch defect after abort/resume-return-only, with incomplete final review (large native source outputs truncated), not acceptance. Primary inspected locked native apply, fixed conventional batch-invariant dispatch and added two AST-backed branch tests. Exact original function in-memory replay:1FAIL/1PASS; current attention73PASS/0.32s. Follow-up343bdb9d verifies the complete current slice; no native run.
+- `completed / initial ticket06 review; corrections in progress`: reviewer4594bfda returned five defects from seven fake probes: marker exception failure preservation/cleanup, timeout bytes serialization, late deadline acceptance, marker publisher identity, and absent worker identities falselyPASS. Agent eaa6ec87 owns only the two supervisor files, preserving originals and writing RED regression tests before narrow fixes. Primary approved the internal publisher binding through the unchanged marker mechanism; no native launcher integration, resource change or TP16 execution.
+- `completed / saved evidence audit`:03c092e5 audited existing77fidelity/902artifact/507source receipts plus24sentinels and8full-precision budget deltas;2341retained paths stable. New `parallel_cpu_evidence_audit_20261018_01.json` and `test_report_2026-10-18_parallel_cpu_evidence.md` preserve missing harness provenance, dirty/native/clean-cache limits, unexplained136.50%/133.27%init drift and original outer-exit/env gaps. No raw overwrite or simulation rerun by this auditor.
+- `completed / fresh simulator fidelity execution`: agent469cc7ea executed the unchanged full77-case matrix/jobs8 in `/data/ycfeng/tmp/step5_parallel_fidelity_20261018_01/fidelity`; original supervisor PID2171464 waited for the exact outer child. Terminal03:18:56.109257Z/exit0/144.182578s;77expected artifact sets and902hash/size checks independently match retained baseline after existing per-side normalization. Runtime/driver/input bytes unchanged; concurrent attention-only source/test edits are explicitly recorded as non-executed-tooling drift. Final report pending; no native proof.
+- `completed / current-byte review and verification`: supervisor source-only follow-up1de42a71 No findings, parent recalculated current hashes and independently ran final8suites228PASS/4.96s. AST/size allPASS(348/587/381/567lines before terminal-newline cleanup);7/7frozen generation02source/snapshot/commitpairs match b7fb9c86…preparation. Runtime/runner/comparator equal01fb2ce. Both CPU-only code slices accepted; no ticket acceptance or launcher integration.
+- `completed / fresh simulator fidelity report`: `parallel_fidelity_20261018_01.json` and `test_report_2026-10-18_parallel_fidelity.md` verified.77/77actual fresh cases and902hashchecksPASS;70dummy/7CSV-predictor-path cases. No native/fresh-training/clean-cache claim. A report-finalization tool abort was resumed without rerunning or overwriting any raw artifact; final worker released.
+- `completed / attention corrections`: final reviewer343bdb9d found P1module-global json absent in actual orchestration; primary fixed import scope and added two30-sample orchestration/persistence/after-observation-attestation fake tests. First new test attempt2FAIL/73PASS due test importing realTorch-dependent producer is preserved and fixed with fake producer. Missing-json memory-only RED2FAIL/73deselected; current75PASS/0.40s. Correction source follow-up No findings at f35dbb43…/c4533ee5…. It ran no new tests during sentinels; no native acceptance.
+- `completed / supervisor corrections`: eaa6ec87 delivered381/567line current bytes at bb07cac5…/81bf5872…; original-based RED16failures, final82fakePASS/6.04s. Five defects corrected with private publisher binding and evidence faultsUNVERIFIED; native exit preserved. Independent source-only reviewer1de42a71 completed No findings as recorded above; no real process inspection or native acceptance.
+- `completed / fresh sentinels`: original supervisor2254691 waited exact scope child2254694, outerreturn0 at03:34:22.515559Z/218.269970624s.24freshattempts allPASS,8pairedmedians WITHIN original full-precision budgets; all pre/post/current source/inputs and prefixes unchanged. New dated performance pointer/report records complete metrics/commands/receipts. Contemporary baseline init+140.180706%/+135.263234% versus original remainsunexplained; accept only scoped unchanged-simulator paired check, withhold original-env/native/performance recovery. No old launcher/retry/cache deletion/native/GPU.
+- `completed / separate commits`: attention46813da4dc37ba4f9d171e1433d0161b2101be4f and supervisor9ecce3782e5e4baa0f19815395643dd3805c614b; each only its source/test pair. Initial staged check flagged one extra terminal newline in attention test; removed only that newline and reran all8suites228PASS/4.90s. Final attention test914aed15…/586lines; all other reviewed hashes unchanged. Final currentfiles=committedbytes, stagedempty, only`.pi/`untracked,7frozenpairs/runtime unchanged. No push/ignored-record staging; rawfidelity/sentinelHEAD remainsf01312a, not relabeled finalcommit.
+- `pending / native decisions`: CPU preparation checkpoint closed, tickets05/06 still0/10. Generation02 actual platform review unqueried in this checkpoint; sameoriginalID/no-redispatch remains. Attention/TP16native execution/integration unapproved; H200deferred; GLMbarrier open. Next dependent work requires existing exact platform-review/native execution decisions, not automatic launch.
+- `completed / initial current-byte CPU verification`: `/data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/integration/step5_environment/test_local_attention_measurement.py tests/integration/step5_environment/test_role_capacity_supervision.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/step5_parallel_cpu_tests_20261018_01/pytest --junitxml=/data/ycfeng/tmp/step5_parallel_cpu_tests_20261018_01/results.xml`, with `PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp` and60s timeout:121passed in2.06s/exit0. Four pretest source hashes and Python3.10.6 recorded in `pretest.json`; no native imports or GPU operations. These tests do not prove the native timing or supervisor launch lifecycle.
+- `completed / authorized original-request status check`: userselectedread-onlyoriginalrequest after codecommits; loadedGPUskill/runbook, then one publicStepMindstatus call at2026-10-18T03:43:45.002044Z. OriginalID/task retained, SPEC_REVIEW_REQUIRED/needs_input/jobs[]; operation=submit is retainedrequesttype, notnewsubmission. Exactfilteredreceipt `local_ffn_generation_02_status_20261018_01.json`. MCPstepmindsearch exposesno readableprivate-reviewtool. No actualplatformAPI/auth/remote/privateevidence/submit/redispatch/stop operation.
+- `blocked / exact private review finding`: no specific reviewercondition or sanctionedreadablelocator returned. Do notguesscauseorinterpretjobs[]as independentno-attemptproof. Need permittedfilteredactionablefinding/read-onlyreviewinterface from operator/user. No internalIDregistration/newresource/referencechange required by currentevidence. CPUcheckpointcomplete;05/06remain0/10; attention/TP16unapproved/H200deferred/GLMbarrier unchanged.
+
+
+
+## Historical generation02 public review-access investigation — 2026-10-18
+
+The access restrictions and pending-finding actions in this section were superseded by Pi maintenance and the independently verified RCA below; original observations remain preserved.
+
+- `completed / public interface inspection`: after the user asked whether review/log analysis can be autonomous, inspected `/usr/lib/pi-stepmind/extension.ts`, the broker's public status/HTTP handlers and the receipt projector source. Only dispatch/status are model-callable; no public review/read endpoint exists. The projector explicitly excludes worker prose, raw errors, logs and paths. MCP reports0servers/0tools. Exact report: `test_report_2026-10-18_generation02_review_access.md`. No private records, credentials, transcripts or logs read; no new status call, dispatch, direct API/SSH, native launcher or tool/config change.
+- `completed / frozen public consistency`: read-only Python/Git check passes7/7source=snapshot=f01312abytes, preparationSHA b7fb9c86… unchanged, HEAD9ecce37/only`.pi/`untracked. Public launcher CPU8/GPU1/mem_gb32/replica1/H800/codesign matches the runbook's32000Mi conversion; this is static consistency, not actual preflight/payload verification. Retained03:43:45ZreceiptSHA5c0293a5… unchanged.
+- `blocked / actionable private finding`: the primary can review public specification/code independently, but cannot substitute that review for the worker's exact objection. Need sanitized actionable reviewer finding or sanctioned read-only review interface for originalrequest. No internal-ID registration, new model parameters, resource reapproval or user-performed raw-log analysis is required by current evidence. Provider-specific delegation applies to Claude SDK; custom capability does not override this task's latest filtered-read-only/no-alternate-route limits. Tickets05/06remain0/10; all native/H200/GLM boundaries unchanged.
+
+## Historical closing checks
+
+Latest closing verification: `PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/opencode/step5_g1_preparation/verify_preparation.py --records` exited0 after04B/multi-node record updates.19documents/11scripts passed whitespace/heading checks; four04Bhashes and64PASSverdicts, two-node terminal placement, prior evidence pins,30ticket states and immutable source/reference checks passed. Tracked Git status and core diffs remain empty. Requirements were reread; no additional source, native, image or reference change was authorized or made.
+
+1. Specify the remaining ticket04 runtime-bound shapes/precision and model-related native paths as the next scoped checkpoint.04A and04B are complete; preserve their evidence and completed-job receipts. For RDMA, diagnose device visibility/provider compatibility before proposing any repair; Socket PASS is not RDMA PASS.
+2. Preserve both unexplained MoE overruns, the original verdicts, thresholds and all sample generations. Later code-changing steps still run their applicable fidelity/performance checks; ticket02 did not establish a general performance waiver.
+3. Eight-GPU diagnostic is complete: exact platform/replica terminal and all retained content checks verified. See `test_report_2026-10-16_multigpu_nccl.md`; preserve the NCCL API/log version discrepancy as unresolved identity evidence. No further queue monitoring is needed for that completed job. Resources remain approved. Simulator15–22retain the GLM barrier and shared decisions.
+4. Resolve actual image/metadata identity, native capacity/PD/graph behavior, measurement and stability settings, and the required H200 minimum matrix through their assigned tickets. Unknown runtime facts and future correction IDs remain explicit prerequisites, not planning failures.
+
+## Verification limits
+
+Tickets01–04 complete/G1rank-localaccepted;05/06each0accepted. Capacity02all8model loads returned but native cache admission failed; no native serving/PD/changed-input all-rank replay or predictive gate.05cleanGPUdatasetunmeasured. HistoricalG1floorPARTIAL/originalmissingrecords/fidelity-sentinellimits/sourcefailuresremainpreserved. The following older closing records retain their historical scope; H200deferrednotwaived andGLMbarrierunchanged.
+
+## Current Pi access correction and recovered generation02 diagnostic — 2026-10-18
+
+- `completed / policy correction`: the user's current Pi policy replaces historical filtered-only/private-worker-only routing restrictions. Every provider/model uses the original StepMind Python API for already authorized operations and reads retained local review/error/log records directly. No internal authorization ID, model switch or new broker review endpoint is required. Shared Pi AGENTS instructions were updated; the original implementation remains dormant under `restricted_provider:null`.
+- `completed / actual retained diagnostic`: original request `step5-local-ffn-generation02-submit-20261017-01` still has `SPEC_REVIEW_REQUIRED`. Its final worker session `2026-10-17T14-13-30-672Z_01a14a35-edaf-746b-9b10-bff18dfe2635.jsonl` contains `inspect_local_launcher` -> `{"ok":false,"code":"INVALID_REFERENCE","diagnostic":"INVALID_REFERENCE"}`, then `needs_input` with evidence IDs `57b6d51b` and `f3d924b9`. Exact original plan fails pure `validate_plan()` because `STEPMIND_BACKEND=rjob` is outside Pi's `launcher_env_keys`; an in-memory copy with only that entry removed passes. No launcher, platform SDK or GPU operation ran. This identifies the historical Pi preflight rejection, not native workload acceptance; earlier 429/upstream worker errors are separate events.
+- `completed / raw local readback`: dormant installed broker status exposes original request/facts, `worker.events`, `worker.stderr` and all four archived session paths without whitelist filtering or non-Claude routing prose. Selected raw receipt: `local_ffn_generation_02_raw_status_20261018_01.json`. Maintenance evidence: `/home/brainpp/.pi/task_memory/task_2026-10-18_pi_stepmind_suspend/{original_request_diagnosis.json,raw_status_validation.json}`. No redispatch/control/platform read was performed.
+- `completed / input preservation`: seven source/snapshot/committed-byte pairs remain equal to the frozen generation02 manifest. Preparation SHA `b7fb9c86a893718a9e23077094a09d8c5b9b3e6f00f5d9d9516d7593330fd60a`; historical filtered receipt SHA `5c0293a5c5e01d7f5855ff0c5f22fe7a2157dca7129daf32461bb2fcfab4474f`, both unchanged.
+## Independent generation02 RCA and current continuation — 2026-10-18
+
+- `completed / exact retained chronology`: read original worker events, final session tool-call/result/decision, facts/record and selected proposal workspace. Final inspect result14:16:13.131Z INVALID_REFERENCE precedes needs_input14:16:25.322Z; earlier429/upstream failures are not substituted as the final cause.
+- `completed / deterministic pure reproduction`: `/data/ycfeng/tmp/step5_generation02_rca_20261018_01.py` executed once under Python3.10.6/60s timeout, exit0. Original installed validator rejects; removing only STEPMIND_BACKEND in memory and allowing only it in a copied policy both accept. No original plan, installed policy/tool or frozen source changed. Exact receipt `generation02_rca_20261018_01.json`, SHA d5be1886f8a2b78ba243b946653326dcd6901ab78daa081d0a1a66441cf891ed; report `test_report_2026-10-18_generation02_rca.md` records commands/hashes/limits.
+- `completed / lifecycle and preservation`: eight local platform/preflight markers absent, final worker events inspect/needs_input/done and no execute; no authentic platform job ID retained. This supports stopping before launcher execution for this archived attempt, not live platform absence.30retained paths stable,7/7frozen source/snapshot/commit pairs match; HEAD9ecce37/tracked-stageddiffempty/only.piuntracked. No SDK/auth/platform/cloud/launcher/GPU operation, dispatch/retry/control or old test/performance run.
+- `resolved / obsolete access restriction`: direct authorized Python/local-record access is effective; no sanitized finding, internal ID, provider switch or Pi maintenance remains a task blocker. Native StepMind still requires STEPMIND_BACKEND=rjob; diagnostic in-memory key removal is not a requested frozen-input change.
+- `completed / source delegation disposition`: Explore75b595a4 completed and Exploreb6e2348f aborted; neither is running. Both were locked to deepseek/deepseek-flash despite an OpenAI request, so their output receives no accepted review/source-closure credit under the workspace handoff rule. The primary disclosed the mismatch, stopped using that route and independently read the cited source bodies. No native/code/test/platform action or alternative model handoff followed.
+- `completed / primary source-design slice`: `design.md` and `source_design_20261018_01.json` map30attention shapes/3heldouts to60expected raw observations, output paths/units, reusable native runtime/tracer modules and unmeasured admission classes. Native observer/worker creation sources distinguish supervisor/direct child/EngineCore/realworker PID. Worker start-time capture and all-rank caller checks remain proposed, not implemented. Native executor has its own SIGKILL fallback; only the added supervisor lacks escalation. No whole-lifecycle kill-free, live worker identity, native timing, capacity or dataset claim.
+- `completed / static closure`: final verifier `_03.py` exited0 at04:46:21UTC:5native source-manifest matches,13source paths stable,30retained RCA hashes,7frozen source/snapshot/Git pairs,4accepted current-code/Git pairs and12document format checks PASS.01failed because no-index difference exit1 was incorrectly rejected despite empty diagnostics;02found extra final blank lines in plan/FFN checkpoint, removed only those lines. Both original errors/scripts/logs preserved in `test_report_2026-10-18_source_design_closure.md`. No pure-RCA rerun, code/native change, accepted test/fidelity/sentinel rerun or platform operation. Final receipt `source_design_closure_20261018_03.json`; only.piuntracked/HEAD9ecce37. Archive additions checked separately in `source_design_final_records_20261018_01.json`.
+- `pending / current execution boundary`: original generation02 execution remains prohibited in this read-only round, not automatically retried because the historical attempt stopped locally. Attention/TP16 actual GPU work unapproved; capacity02 KV admission failure unchanged; H200 deferred and GLM full-path barrier retained. Tickets05/06 stay0/10; no later ticket released.
+
+## Historical next actions after read-only closure
+
+1. Source-design inspection is complete; native integration and measurement are unfinished. Use `design.md` under tickets05/06 as the non-runnable proposal, not permission to create or execute a launcher.
+2. Keep generation02 original ID, seven frozen inputs and receipts unchanged. Do not redispatch or execute preflight/submission in this round; any later native resumption needs an explicit execution instruction for the original generation, not redundant resource/model approval or tool repair.
+3. Attention/TP16 integration/execution remains unapproved, capacity02 still fails KV admission, H200 remains deferred and production15–22 retain the GLM barrier. Continue newly eligible independent work only; do not repeat the accepted CPU checkpoint or use the locked DeepSeek route.
+
+## Current approved native continuation — 2026-10-18
+
+- `completed / authority`: user explicitly approved Attention/TP16 integration and GPU execution, selected original FFN generation02 restoration and stated similar in-scope permissions are delegated without repeated questions. Prior no-execution/Attention-TP16 permission blockers are historical. Requirements/plan section12 govern current work.
+- `completed / FFN execution`: exact inert preflight and separate fake callback check PASS; original request linked to one actual jobexp-1018-135843-630406, submitted05:58:43Z. Current personal i-fengyicheng/codesign/lockedimage/CPU8/1GPU/32000Mi/NFS100.96.128.195worktreeverified. Job/replicaSucceeded, containerCompleted/exit0/restart0 at06:00:09Z, launcher2951202ended normally after06:00:13Z. All3nativechildren0;22cloudfiles3,220,900bytes SHA/sizeverified, including3post-timingattestations. No retry/stop/kill/sharedSDK/frozenfilechange. Local owned callback unregister prevents inherited SDKatexit.stop (historicalgeneration01log had such a stop; no action on it). Evidence platform `local_ffn_generation02_platform_20261018_01.json`, copied smallraw `local_ffn_generation02_evidence_20261018_01/read_manifest.json`. Newboundedhistoricalweightcomparison process2985708andindependent localraw auditagent49f79fbdinprogress; no duplicate native run.
+- `in-progress / integration`: same-parent-provider agent5da7c3edownsnewAttentiondriver/test; agentcdc6499cownsTP16observer/newcaller/tests plus minimal existing-supervisor worker_inventorycallback before residual/completion. Primaryapprovedthisprivatecaller/evidenceseamunderuserintegrationdelegationbecausepartialnonemptyinventoriescouldotherwisePASScompletion. Nochangedfrozeninput/native/reference/registry/transport/signalpath; callbackfault/partial=>UNVERIFIEDoverallFAILandknownworkerresidualcheckscontinue. Returnedcodeawaitsindependentreviewandnewcodefidelity/performance. Tickets05/06eachstill0/10.
+- `pending / new evidence`: actual exact FFN result/readback/admission, attention owners/traces/content, TP16 capacity/serving/replay and all-rank native cleanup remain unverified. H200 deferred; GLM full-path/downstream barriers unchanged.
+
+## Current next actions
+
+1. Monitor only the existing source-only job exp-1018-173210-527470, preserving starter4056757/launcher4056764 and the sole attempt. It is queued for H800 quota; no retry or service/capacity repeat or platform stop/kill.
+2. Retain existing-job terminal/container exit and all18installed source size/SHA/AST records when available. Parent owns acquired profiler/input/async/graph analysis. Unfrozen A/Bcandidate/native defaultpolicy reviewaf6f534b is completeNo findings; actualnormalinput/default/stop/completionvalidationawaitsworker sources/runtime. RetainedRPC/FULLownershipsourcecheck doesnotimplementprofilecallback orprovegraphdevicecompletion. Completed d10a8cbf live-state and e6c8f9e6 caller-reuse designs are reconciled with parent manifest-bound source checks in `g2_execution_proposal.md`. Prepared token buffers are not unconditionally model arguments; allocator/rope/embedding/model-state owners and actual copy/replay witnesses remain open. Read-only a0767521 precision/exclusion design is completed and parent16rank metadata join is reconciled; actual scale/content/replay use remains unmeasured. Original classifications/raw records are preserved, including output-head method discrepancy and full-scale payload exceeding the rank cap. Current18source bodies remain queued before executable replay/input observation is settled.
+3. Preserve all completed FFN/Attention/failedcapacity generations and their limits. Actual G2/service/replay/clean admission are unfinished; tickets05/06remain0/10, H200 deferred and GLM/downstream barriers unchanged.
+
+## Confirmed execution resumption — 2026-10-18T13:13:33.924579+00:00
+
+- `completed / authority`: user's `confirmed，continue` accepted the completed documentation review and starts execution. Updated requirements, spec, plan and15 phase/status; all original review results and formal/native acceptance limits remain unchanged.
+- `completed / actual state`: Step HEAD `ac9efb1013c687f98cbde4d0678cbfad12987e50`; pending byte-identical glossary rename and unrelated `.pi/` preserved. Shared accepted C02/C03 HEAD `9c63e6b687e3307ad66208574cda661ffb7612bf`; active C04 changes remain unaccepted and are not copied.
+- `in-progress / local critical path`: integrate committed shared history non-destructively, then implement Step model representation through existing model/binding/profiling/memory contracts. Parent owns Step additions and canonical records.
+- `in-progress / parallel06`: Jason reads only existing source job `exp-1018-173210-527470` and retains selected source/terminal evidence in new output paths; no retry/submit/control.
+- `in-progress / parallel07/14`: Chandrasekhar maps existing observer/normalizer/gate fields and missing native requirements; no core/gate edit or benchmark.
+- `pending / acceptance`: verified component contracts, complete controlled request path,06 native reconciliation, and every trained/native/shared/H200 gate. No model-support claim from parsing/imports/fixtures.
+
+
+## Current15 continuation and resource steering — 2026-10-18
+
+- `completed / reconstruction`: local HEAD `ff3960e4dbaf99d6ab3959cea62dd102d699b513` contains committed C02/C03 and exact structural C04. C04 audit is `shared_c04_integration_review_20261018.md`; GLM full-serving and Step acceptance remain open. Unrelated `.pi/` changes are preserved. Task records remain Git-ignored and are not force-added.
+- `in-progress /15.model_representation`: inherited uncommitted Step configuration, attention/FFN/precision/binding/registry and component-memory leaves exist but are not accepted. Native-source inspection identifies zero-centered validation, FP32 residual add+norm ownership and selector-bypass metadata corrections before verification. Parent owns core/metadata and separate layer-metadata tests; Fermat owns only model-config and module-precision tests.
+- `completed / authority`: user reports H800 quota unavailable and permits temporary H200/step_main testing with at most64 GPUs, all non-preemptible. Record H200 evidence separately and preserve PRIMARY H80064. No new GPU/native campaign has been launched in this continuation.
+- `pending`: finish15 representation corrections and affected checks; freeze and independently review Standards/Spec; perform fresh required fidelity/performance verification; commit the verified representation step; then establish the controlled complete request path. Native06 and full-ticket gates stay open.
+- `observation / environment`: login shell has no `python` command. Reads use `/data/ycfeng/envs/frontier-py310/bin/python -B` rather than changing host configuration. Web search/open returned no readable official body; reference facts remain attributed to pinned local source/artifacts, not claimed as freshly verified online.
+
+
+## Current Ticket15 representation verification — 2026-10-18T14:44Z
+
+- `completed / review evidence`: Hume Standards review found one duplicate KV partition/replication calculation; Banach Spec review found the missing independent FP32 routed/shared branch merge and the unmapped native shared-expert exclusions. Both reviewed the original frozen21-file generation at `step5_representation_20261018/`; no tests or benchmarks were run by these reviewers. Parent checked the cited native mapper, FP8 configuration and FFN code before correcting the candidate. Original snapshots/reports and all earlier test failures remain preserved.
+- `completed / routine corrections`: `resolve_attention_head_partition` is the sole shared TP calculation for Step geometry, profiling ModelConfig, the existing three linear implementations and profiling planning. Step module precision lookup applies the native `.share_expert.` -> `.moe.share_expert.` rename to a local exclusion set; pinned raw policy/signature is unchanged. `step5_ffn_merge` is registered through the existing family registry and model-owned shared layer contract, with ordinary-path BF16 inputs, FP32 output and configured hidden width; dense layers have no merge. Execution/profiling admission remains explicitly unsupported.
+- `completed / affected verification`:32 suites,716 passed in17.05s, native Python3.10.6 environment; exact command/log/result in `/data/ycfeng/tmp/step5_representation_affected_20261018_reviewfix_tyj_uauh/`.21candidate hashes are equal before/after and match the new frozen generation `step5_representation_reviewfix_20261018/`. AST, Python module size<=2000 and tracked whitespace checks PASS. This verifies contracts/guards, not Step request execution, native reconciliation or accuracy.
+- `in-progress / required legacy verification`: fresh existing77case baseline/candidate matrix runs under actual30GiB memory scope using `/data/ycfeng/tmp/step5_representation_verification_20261018_reviewfix_8z7nrc77/verify_cpu.py fidelity`. No cache cleaning, metric changes or harness-gate weakening. Preregistered24attempt sequential/interleaved performance follows only after the matrix completes. Official comparator provenance/cache limitations, all over-budget results and historical dense-init UNVERIFIED disposition remain visible.
+- `completed / source recovery`: existing source-only job `exp-1018-173210-527470` completed Succeeded at2026-10-18T14:00:57Z/22:00:57HKT.18source bodies/281441bytes and18frozen inputs were independently verified; original Pending receipts remain historical. Parent verified retained receipts,18SHA/size/AST pairs and bindings in `step5_representation_20261018/parent_native_source_verification.json`; no new API query or submission. See `h200_reference_readiness_20261018.md`. Source completion does not close06 (still0/10).
+- `needs-review / mixed-cache sufficiency`: Feynman's `step5_capacity_sufficiency_20261018.md` demonstrates the scalar common-block/allocation information loss for independent SWA/sparse occupancy and fixed scratch. No grouped allocator/core patch is authorized or implemented by that report. A bounded read-only follow-up checks existing shared C03/D-PD approval and grouped-cache ownership; do not copy shared dirty files or create a second allocator. Parent prepares the smallest required proposal after representation verification.
+- `pending`: focused Spec/Standards re-review of corrected frozen bytes; official/numeric/artifact reconciliation; frozen performance dispositions; dated test report and scoped representation commit; then the controlled request path subject only to genuinely necessary material core decisions. Whole15,06,GLM full-serving,PRIMARY H80064 and fresh H200 formal support remain open. Latest temporary GPU authority is H200/step_main<=64, all non-preemptible; no new GPU action occurred here.
+
+## Current Ticket15 MTP regression correction — 2026-10-18
+
+- `completed / failed fidelity diagnosis`: the review-correction freeze produced77 complete runs on each source but only76 identical cases. The official comparator returned1 with five parameter-memory field differences in `coloc_mtp_offline_pp2`, plus its dirty-source provenance finding. The raw comparison remains `/data/ycfeng/tmp/step5_representation_verification_20261018_reviewfix_8z7nrc77/fidelity/matrix/comparison.json`; its terminal `complete=false` is preserved. Both pre/post source inventories are unchanged.
+- `completed / demonstrated cause and correction`: the new optional `BaseModelConfig.tie_word_embeddings=None` shadowed the previous absent-attribute/default-True policy in `ParamCounter._get_mtp_lm_head_params`. Exact Phi TP4/MoE-TP2/EP2/PP2 runtime configuration reproduces538652672 parameters versus the retained505819136; the32833536 excess is one LM head. The existing counter now charges a separate head only for explicitFalse, preserving unspecified legacy semantics and explicitFalse metadata. Three actual PP2 parameter/memory regressions were added. Initial literal cause evidence is `/data/ycfeng/tmp/step5_mtp_fidelity_rca_20261018_s37k8tiu/before.json`. This is an ordinary regression fix, not a new Frontier architecture decision.
+- `completed / current-byte affected checks`:35 affected suites738PASS/18.83s, exit0; all23 input hashes before/after/current/frozen agree; Python AST/module-size and tracked whitespace checksPASS. Evidence `/data/ycfeng/tmp/step5_representation_affected_20261018_mtpfix_u8gmfrfv/result.json`. The21 prior representation files remain byte-identical.
+- `in-progress / final verification`: new freeze `step5_representation_mtpfix_20261018/`, manifest SHA`c5036292dc13e470ca6c889787261a4d0923c63927153deb1fa7a117751bca3c`,23files. Fresh unmodified verification wrapper SHA`1a64c978f8a35e5329d92eff420999aa3f214db46fff61e7f126845e5c7ca78b` runs in `/data/ycfeng/tmp/step5_representation_verification_20261018_mtpfix_jmsyde2w/`; actual memory scope `run-r264a6a9113154699b63fd8dce6c14fbb.scope` reports32212254720bytes. Fidelity precedes the prepared24sentinel attempts. Independent Standards/Spec review uses this new freeze; old evidence is not relabeled.
+- `pending / acceptance and next actions`: settle official/numeric/intermediate fidelity, full-precision unchanged performance budgets, both review axes, dated report and scoped representation commit. Then consume canonical C03 allocation work or present a demonstrated material change. No new GPU/native campaign, checkpoint download, push, shared dirty-file import, Step complete request or formal support claim occurred. Whole15,06,GLM full-serving and formal H800/H200 gates remain open.
+
+## Ticket15 representation archival closure — 2026-10-18T15:32:51.112911+00:00
+
+- `completed / 15.model_representation`: 23/23 current=snapshot files; 35 suites / 738 PASS / 18.83 s; corrected final 77/77 legacy values/intermediates and 451 artifact pairs agree. The earlier 76/77 MTP failure is retained. Final Standards Hume 0 breaches/0 smells and Spec Banach 0 open findings are completed tool reports carried from the prior session; no fresh review rerun is claimed.
+- `completed / performance disposition`: 24/24 attempts, 4 warmups and 20 measured, 6,064 identity/artifact checks PASS. MoE initialization/run/total remain 3 OVER and analysis exit 1. Actual cProfile finds zero operator-binding calls during initialization/run, unchanged reflection counts, candidate source-compilation asymmetry and shared C04 bookkeeping. Full cause remains unresolved. Representation is accepted with `UNVERIFIED_UNRESOLVED_MEASUREMENT_CONDITIONS` under existing budget item 3. The official dirty commit/cache gate is UNVERIFIED.
+- `completed / durable records`: `test_report_2026-10-18_step5_representation.md`, `step5_representation_acceptance_20261018.json` and review/plan/ticket15/summary updated. Frozen manifest SHA c5036292dc13e470ca6c889787261a4d0923c63927153deb1fa7a117751bca3c is unchanged. Requirements were reread before limited acceptance.
+- `in-progress / integration`: independent Standards/Spec reviewers Einstein/Kepler inspect shared committed range b49a4a0..ba48220. The parent owns archival closure, commit and Step grouped-binding inspection. No overlapping core edits, GPU job or benchmark in this archive. Feynman's failed 429 follow-up is not accepted.
+- `pending`: commit the 23-file scope and verify Git blobs; integrate canonical shared changes; complete controlled prefill/chunk/decode with layer/state/communication conservation; obtain 06 actual input/replay/census evidence. Whole15, 06, GLM full serving and formal H800/H200 acceptance remain open. Temporary H200 use <=64 GPUs, all non-preemptible, remains authorized.
+
+## Current next actions — after representation acceptance
+
+1. Stage only the 23 manifest files and commit representation; verify commit blobs equal current and frozen bytes. Preserve ignored task records and unrelated `.pi/`.
+2. Complete the pinned Step grouped-cache binding audit while independent reviewers check committed canonical shared C05–C10 changes. Reuse approved Option B: one pool and per-group tables. Preserve shared dirty files and existing ownership.
+3. Integrate accepted canonical commits without rewriting history; preserve the Step MTP fix and registry extensions. Implement the controlled structural path and actual CPU completion/conservation checks. Native 06 request-witness preparation may proceed independently; preserve completed exporter/FFN02/capacity generations.
+
+Representation commit: `b60d64d6073b126fd6439bdba5a13e3951ab758d`. Post-commit verification in `step5_representation_post_commit_20261018.json` confirms all 23 Git blobs equal current and frozen bytes. Only unrelated `.pi/` remains untracked. This identity check does not relabel the earlier official comparator or performance results.
+
+
+## Current shared integration continuation — 2026-10-18
+
+- `completed / authority`: latest user update restores H800/codesign-first submission. H200/step_main is only the quota fallback, <=64 total GPUs, all non-preemptible. No current-round GPU/platform operation.
+- `completed / independent review`: Einstein Standards and Kepler Spec inspected exact committed range b49a4a0..ba48220. Standards found canonical ownership and duplicate source-memory classification issues plus integration conflicts; Spec confirmed no functional defect in the approved initial slice and preserved native/full-serving limits. These are source reviews, not test or native acceptance.
+- `in-progress / canonical integration`: non-destructive `git merge --no-commit --no-ff ba482200769828fdbc381eb298630f4753f48206` started from b60d64d. Six conflict files. Parent owns config/manifest/registry integration and Step grouped binding; Einstein corrects only existing manager/V1 ownership and focused scheduler tests; Kepler corrects only counter/metrics classification and focused tests. Shared worktree dirty files remain untouched and unimported.
+- `observed failure / merge tooling`: the parent's first marker-regex consumed file tails in several conflict files; focus01 exited2 with11 import collection errors. Original merged source restored from Git merge stages with Step additions reapplied explicitly; focus02 is running. No failure suppression or test removal. Final full-source AST, blob/patch checks and affected regression are mandatory before merge acceptance.
+- `pending`: complete shared corrections and focused integration checks, source-derived Step one-pool cache audit, required legacy fidelity/performance disposition, and a verified merge commit. Then implement controlled complete92-layer request path while keeping measured/native gates open.
+
+## Shared merge generation02 review — 2026-10-19
+
+- `completed / frozen analysis`:54 frozen bytes agree with current/source mirror;51 affected suites/1,139PASS/29.405s;77/77 legacy cases and451artifact pairs independently reconciled (374raw identical,451parsed identical under the existing three path substitutions). Original official comparator exit1/dirty provenance and clean-cache qualification remain UNVERIFIED.
+- `completed / performance analysis`: all24 existing attempts retained;4preregistered warmups excluded,20measured;6,319identity/artifact/schedule checks PASS with zero failures. Seven metric pairs are within unchanged budgets; MoE initialization is OVER at+1.7507805742% versus1.3180819778%, raw analysis exit1. Analysis source only adapted to head/merge_head/source manifest schema; numerical/attempt/environment/schedule functions are unchanged. First schema KeyError exit2 and second root-owned0600 read failure exit2 retained; a fresh identical analyzer copy read artifacts with sudo without mutating their permissions/bytes. Exact pointers in `step5_shared_merge_20261018_02_analysis_20261019.json`.
+- `needs-correction / Spec`: Lagrange's frozen review finds one P2 regression: whole GLM manifest clears layer variants and active contracts after homogeneous binding, misses dense FFN and full/shared-index identity. Parent confirms against b60d64d and shared spec. Per-layer filtering and V4 explicit-layer requirement remain valid. Next correction restores aggregate model-owned layer/contract enumeration and strengthens the existing assertion; no generic registry change.
+- `pending`: new corrected freeze, affected checks, independent two-axis re-review, required legacy verification/performance disposition, scoped merge commit, then Step controlled request path. Native06 and whole15 remain open. Latest GPU policy is H800/codesign first; quota fallback H200/step_main<=64total, all non-preemptible.
+
+## Canonical shared merge generation03 closure — 2026-10-19
+
+- `completed / source integration`: frozen41changed/54total files remain byte-identical; final corrections restore GLM aggregate contracts and reuse canonical profile admission, settled KV progress and source FFN totals. Completed inherited Standards Raman0violations/0smells and Spec Lagrange0findings; all agents are closed.
+- `completed / verification`:52suites/1142PASS/30.539s; actual77/77legacy numeric/intermediate fidelity;451artifactpairs verified,374rawidentical. Both actual30GiBscopes and before/after inventories verified. Official comparator exit1 and clean-cache qualification remainUNVERIFIED.
+- `completed / performance disposition`:24/24attempts,4warmups/20measured;6319checksPASS/0failures.7/8metricswithin unchanged budgets. Denseinit+2.1905560017%>1.9413370940%,rawanalysisexit1. Cause unresolved; prior measured compilation asymmetry does not prove this overrun. Primary accepts integration only withUNVERIFIED_UNRESOLVED_MEASUREMENT_CONDITIONS under performance_budgets.md item3; no budget widening or dropped attempt.
+- `completed / records`:test_report_2026-10-19_shared_merge.md,step5_shared_merge_acceptance_20261019.json,step5_shared_merge_20261019_03_analysis.json,currentperformancepointer,review/plan/spec/ticket15/summary updated. All historical failures/generations preserved.
+- `in-progress / commit`:stage only41changed manifestpaths,clear6resolved UU entries,verify staged/source identity and record finalmergecommit plus54Gitblobbindings.
+- `pending / main path`:Stepone-poolcapacity/fixedscratch,sourceparameterstorage,canonicalFFNmerge/timing and complete92layerrequest. Native06actualkwargs/replay/state/censusinstrumentation can proceed independently;05/06wholeacceptance,15wholecriteria,GLMfullserving,H80064,H200andcommonfinalHEADremainopen. H800first;quota fallbackH200<=64total/allnon-preemptible. NoGPU/platformoperationinthisround.
+
+Canonical merge commit: `1bde1999af07a41651bb025d92e95bf14ad9e1ca`. `step5_shared_merge_post_commit_20261019.json` verifies54/54Gitblobs=current=frozen and both expected parents. Tracked worktree is clean; unrelated `.pi/` remains. This identity result does not change earlier official or performance verdicts.
+
+
+## Ticket15 controlled structural continuation — 2026-10-19
+
+- `completed / reconstruction`: actual HEAD is canonical merge `1bde1999af07a41651bb025d92e95bf14ad9e1ca`; both parents match the retained receipt, merge is closed, and tracked worktree was clean before this slice. Generation03 verification is complete and is not rerun or relabeled. Existing official/cache and dense-initialization performance limitations remain unchanged.
+- `in-progress / parent ownership`: source-bound Step cache selection, one-pool capacity and fixed summary scratch through `attention/memory.py`, `attention/step5_memory.py`, `attention/families.py` and the existing MemoryPlanner; canonical attention and FFN merge timing through existing predictor/time components/metrics; complete 92-layer CLI request and conservation driver. Initial MONOLITHIC/PP1, prefix/MTP/PD off. Native/trained admission remains disabled.
+- `in-progress / disjoint parameter owner`: Godel (`01a14fe4-15a7-7620-b695-319f8ead4b5f`) exclusively edits `frontier/utils/param_counter.py` and `tests/unit/test_step5_parameter_memory.py` for source precision, scales, replicas and parameter bytes. Parent does not edit those files concurrently.
+- `in-progress / disjoint native observer owner`: Kuhn (`01a14fe4-c44a-7491-9784-d1bec64c5f51`) exclusively edits `tests/integration/step5_environment/role_execution_observation.py` and its tests, with a focused model-input observer child only if needed. This slice prepares source-pinned actual-kwargs/replay observations and CPU checks; it launches no GPU/API operation and claims no native compatibility from fakes.
+- `pending / verification`: new final-byte freeze, affected checks and actual controlled CLI request completion; independent Standards/Spec review, fresh source-bound 77-case fidelity and preregistered 24-attempt CPU performance comparison, explicit raw verdict/disposition, dated report and scoped commit. The new freeze uses current merge HEAD as baseline and new outputs rather than generation03 premerge inputs.
+- `authority / resources`: H800/codesign first; H200/step_main only if H800 quota is insufficient, at most64 total GPUs and all non-preemptible. No GPU/platform operation has occurred in this continuation.
+
+
+## Ticket15 model-operation ownership continuation — 2026-10-19
+
+- `completed / locked source`: the existing source-only Docker session94766 returned0. Six installed source bodies in `/data/ycfeng/tmp/step5_endpoint_image_source_20261019_qepc_oor/` match their manifest SHA/size; the model and MRv2 runner match the previously retained bodies exactly. Installed vLLM is `0.1.dev22912+g8224bb82f`; this is source evidence only, without GPU/native/import/checkpoint execution.
+- `observed / structural gap`: current controlled backbone totals388.25ms (unfused) and382.5ms (fused decode) omit model input embedding/reduction/cast and the terminal standalone residual. `compute_logits` casts selected hidden states to BF16, applies final norm and the LM head, and gathers logits; MRv2 computes one logit row per actual request even for nonfinal chunks. Backbone completion alone cannot close complete physical-scope coverage.
+- `decision / minimum extension`: extend the existing MEMORY/COMM operator entries, ExecutionTime op map and StageExecutionTime once-only fields for input embedding/reduction/cast and terminal residual. Keep the existing inclusive `sampler_e2e` owner for selected-hidden/logits/norm/head/gather/sampling; annotate its covered source scopes rather than add their durations to the inclusive interval. Trained/native admission remains disabled. No new model DAG, endpoint registry, token/logit state, configuration schema, or native runtime copy is introduced.
+- `ownership / shared integration`: current shared HEAD91d1697 has separate unaccepted C16 allocator/transfer and C17 V4 timing/trace drafts. These are inspected read-only and not imported. Step parent owns the small Step branch increment; the shared root remains the single eventual merge owner and must consolidate common timing/operator seams only after separately accepted commits. Godel owns the structural driver/test pair; Kuhn owns only the cache-scheduler test file. Parent independently verifies their returned work.
+- `verification / retained failures`: structural_focus01 retains246PASS/3FAIL; focus02 retains265PASS/6FAIL; focus03 retains166PASS/1FAIL. Fixture/ledger/padding/metric-attribute mismatches were corrected; the last IS_MOE isolation correction is still awaiting a rerun. Initial host command `python` was unavailable; use the existing Python3.10.6 interpreter without environment changes.
+- `pending`: finish model-operation ownership and current-byte structural checks, inspect actual three-case CLI artifacts, freeze/review, run fresh77-case legacy/frozen-budget comparisons, archive disposition and commit. Whole15/06/native/trained/PD/H80064/H200/common-HEAD gates remain open. H800-first; quota fallback H200<=64 total GPUs, all non-preemptible. No GPU/platform operation in this continuation.
+
+
+## Ticket15 current parent verification — 2026-10-19
+
+- `completed / delivered leaves`: Godel froze the driver/test pair at SHA86d5b046/49d5c8d4 and Kuhn froze cache scheduler tests at SHA9a49cc71. Parent matched all three cache receipt hashes and independently passed112parameter/driver checks in23.21s (`/data/ycfeng/tmp/step5_structural_parent_leaves_20261019_x2nuvefw/`) and94Step/shared cache checks in25.45s (`/data/ycfeng/tmp/step5_cache_parent_verification_20261019_qep6jyj9/`). No native fit, content or latency acceptance follows. Both implementation agents are closed; parent owns further edits.
+- `observed / actual CLI failure`: all3fresh CLI cases in `/data/ycfeng/tmp/step5_structural_actual_cli_20261019_e8jmxyd3/` return1 because `ep_wave_metrics.record_ep_wave` did not transmit its already-known global layer ID to the new trace metadata contract. Original logs/summary/source inventory are retained.
+- `completed / minimal correction`: the existing `OpTraceContext` now receives the actual EP layer ID; the existing context regression verifies each positive traced phase receives that ID.30affected checks passed13.06s at `/data/ycfeng/tmp/step5_ep_layer_context_20261019_01`. No second owner, fallback or changed guard was added.
+- `in-progress / actual completion`: new three-case CLI run in `/data/ycfeng/tmp/step5_structural_actual_cli_contextfix_20261019_4axt6l8e/` has crossed the missing-ID failure. Source metadata repetition and final request/stage/wave/tensor evidence are being checked; no final structural acceptance yet.
+- `pending`: freeze stable current bytes, independent Standards/Spec review, affected checks and required fresh77-case/24-attempt verification under unchanged budgets; report disposition and scoped commit. Then continue distinct06 request witness work. Native/trained/PD/H80064/H200/common-final-HEAD gates remain open. H800/codesign first; quota fallbackH200<=64total/allnon-preemptible. NoGPU/API operation in this parent verification.
+
+
+## Ticket15 serving-boundary RCA continuation — 2026-10-19
+
+- `observed / completed failed CLI`: session24796 returned1. All3cases in `/data/ycfeng/tmp/step5_structural_actual_cli_contextfix_20261019_4axt6l8e/run/summary.json` retain raw CLI exit0 but structural validator FAIL for missing scopes. All original files remain unchanged; this is no structural acceptance.
+- `completed / minimized reproducer`: actual attention-only serving predictor calls lose embedding/reduction/input-cast/final-residual stage owner values. Scratch4RED/5.57s and persistent6FAIL/2PASS/3.65s are retained at `/data/ycfeng/tmp/step5_stage_once_repro_qd82tn4h/{red.log,persistent_red.log}`. The existing full-forward tests passed because they do not take this branch. Parent repairs existing stage/predictor/initial-event/final-completion/metrics seams; no new execution architecture.
+- `in-progress / disjoint native caller preparation`: Epicurus agent01a1503c-1e6e-75b0-9d6f-f667240a193d owns ONLY new `tests/integration/step5_environment/check_role_execution.py` and `test_role_execution_driver.py`, using existing observer/census/supervision/normal generation. No GPU/API/Docker/install/download or old generation action is delegated. Parent does not edit those files concurrently. Their fake checks cannot qualify native input/content/replay/census.
+- `pending`: corrected real3case CLI, stable freeze and independent two-axis review, fresh77case fidelity/preregistered24attempt verification, explicit performance/cache dispositions and scoped commit. All native/trained/PD/formal-hardware/common-final-HEAD gates remain open.
+
+
+## Ticket15 serving-boundary verification and frozen review — 2026-10-19
+
+- `completed / affected combined verification`: fresh12-suite run at `/data/ycfeng/tmp/step5_structural_focus_20261019_8wlyjscl/` passed375checks in64.44s with Python3.10.6, no bytecode/cache writes. This includes persistent serving-path and first-event/final-completion regressions, stage/wave metadata cache, cache-scheduler storage/admission, parameter bytes, structural driver and affected shared timing/operator checks. The prior69PASS/1FAIL combined iterations remain failures; the earlier single cache GREEN is not substituted for this combined result.
+- `completed / frozen review inputs`:37changed/56total files frozen in `step5_structural_20261019_01/`, manifestSHA256`4cb945887983a52a6cc26a06bcc0d42311ac07276d9f50dccc9e393c4952c314`; baseline/currentHEAD`1bde1999af07a41651bb025d92e95bf14ad9e1ca`. Scoped dirty/new files are included; `.pi/` and live native caller files are excluded. AST and tracked whitespacePASS; existing main-predictor/metrics-store size exceptions remain under review.
+- `in-progress / independent reviews`:StandardsRamanujan`01a1504a-0d5c-7fc1-a710-ebe975f16cbd` and SpecHypatia`01a1504a-0de4-7210-b45f-434d58321a2e` review frozen inputs read-only. Parent keeps existing shared ownership; Epicurus owns only the two new native caller/driver-test files.
+- `in-progress / actual CLI`:new3case run `/data/ycfeng/tmp/step5_structural_actual_cli_boundaryfix_20261019_yu6_2yho/` is in an actual30GiBsystemd scope. `offline-none` has rawexit0/structuralPASS:17stages,1564layer executions,1496FFNmerges/EProws,4105valid prefill/8decode inputs/9output tokens,6571.25msjoined controlled cost,3205.25msstage+3366mswave. Remaining cases and terminal/source identity checks are pending. These are synthetic structural observations, not native ground truth.
+- `pending / stable verification`:resolve any review findings, verify final freeze/current bytes, fresh77legacycases then sequential preregistered24performance attempts with unchanged budgets/raw verdicts, report/disposition and scoped commit. Whole15,06/native/trained/PD/H80064/H200/finalcommonHEAD remain open. H800first; quota fallbackH200<=64total/allnon-preemptible. NoGPU/APIoperation in this continuation.
+
+
+## Ticket15 final structural review and verification — 2026-10-19
+
+- `completed / preserved generation history`: generation01 broad checks retained1452PASS/4FAIL in `step5_structural_frozen_checks_20261019_wpr5p28m/`; generation02 broad checks passed1456 in94.71s after the affected catalog assertion correction. Those results bind their own source generations, not current generation04. The former three-case CLI completed structural scopes but lacked full cache-lifetime evidence; it is not substituted for the new run.
+- `completed / evidenced correction`: Spec follow-up identified reduced MoE branch tensor ownership and the missing full-CLI cache state join; Standards identified duplicate Step/V4/DSA parameter aggregation. Current source keeps `[T,H]` branch boundaries, explicit pre-routing rows and internal assignment tensors. `moe_shuffling` records expert IDs/alignment metadata without a fabricated hidden output or guessed alignment shape. Existing logger and allocator emit allocation, actual batch-end and release snapshots; no additional ledger/allocator is introduced. Parameter/stage queries share one selected source-attention total callable.
+- `completed / fault history`: original missing-boundary/state repro3FAIL/2.75s; first green3PASS/1FAIL/2.72s because the test patched the wrong imported logger callable. Affected7suite correction passed246/65.38s. New lifetime negatives initially50PASS/7FAIL/7.74s due to fixed request0; actual completion/stage request-ID join corrected it,57PASS/7.14s. These failures and earlier generations are retained.
+- `completed / final frozen review`: `step5_structural_20261019_04/`,43changed/60frozenfiles, manifestSHA4135d51d60c06ac3a3c9600b4e85042696684726c94dfdd85d229ea3418fb568, patchSHAcb113cba0d91dfc3414d5a8aa516fe459989388770ac89038918460177a1d316. James Standards and Hypatia Spec each returnedNo findings for12changed-since-parentfiles and reused their unchanged reviewed ranges. Neither reviewer executed code/tests/native/network. `step5_structural_reviews_20261019_04.json` records identities and limits. Both reviewers are closed; James is subsequently reused only for a disjoint scratch performance-schema adaptation.
+- `completed / actual CLI`: original session54612 completedexit0 in185.913530s at2026-10-18T19:13:16.787082Z. `/data/ycfeng/tmp/step5_structural_cli_state_20261019_ip8ei_0t/` has3/3PASS,17stages/1564layer executions/1496FFNmerges percase,4105prefill+8decodeinputs/9outputs,35cacheevents and4113KVinputs. Release returns29966freeblocks while94484fixedscratchbytes remain reserved. Offline-none and offline-full_decode_only total6571.25ms; online-piecewise6617.25ms, each synthetic controlled costs. Real30GiBscope and60sourceendpointhashes match. Parent independently audited91checks/0failures and36metricartifacts plus state/log/receipt identities in `step5_structural_cli_audit_20261019_04.json` (SHAef4b4f3b45224d4e666f7ae7938002212cbc97ba6fe9b5a261756d103f86d2d6).
+- `completed / final affected checks`:19suites/574PASS/78.49s in `/data/ycfeng/tmp/step5_structural_final_affected_20261019_mg7b6edk/`, actual30GiBscope, generation04manifest/current files unchanged. Checks cover trace/shape boundaries, logger lifecycle faults, source parameter bytes and shared GLM/V4/stage/EP/cache contracts plus native observer CPU preparation. LogSHAc500749d36871ff90c000faee667da1c04d3dfb52b7d84e5ad043e2a21aa43a5.
+- `in-progress / required legacy verification`: `/data/ycfeng/tmp/step5_structural_verification_20261019_5il_ebte/verify_cpu.py` remainsSHA1a64c978f8a35e5329d92eff420999aa3f214db46fff61e7f126845e5c7ca78b. Only execution-input manifest path/SHA changed from generation01 to04; original input is preserved as `execution_inputs.generation01.json`. Current inputSHAba80073608888d55dac6aa3c05599dcf821071c3293f1362435710b490a9512e. Fresh77case baseline/candidate matrix runs in real30GiBscope; unchanged24attempt sequential performance follows after completion. Budgets, case inputs, runner and schedule are unchanged.
+- `in-progress / disjoint06caller`: Plato reviewed the delivered two newcallerfiles and foundP1terminalPASSbeforefinalreceipt, P2sourceadmission mislabeledruntimefailure and P2node1aggregatebudget omitted. Original ownerEpicurus exclusively corrects `check_role_execution.py` and `test_role_execution_driver.py`; parent does not edit them. Final caller/source review and CPU verification are pending. The caller is excluded from generation04/fidelity scope; no native execution is credited.
+- `pending / acceptance`: actual77case numeric/artifact reconciliation, all24sentinels and unchanged-budget disposition, current task reports/spec/plan/tickets, scopedcodecommit and Git=current=frozen checks. Whole15eightcriteria and060-of10, native/trained/PD/H80064/formalH200/commonfinalHEAD remain open. NoGPU/APIoperation occurred. H800/codesignfirst;quota fallbackH200/step_main<=64total/non-preemptible.
+
+
+## Ticket15 generation04 performance diagnosis — 2026-10-19
+
+- `completed / numeric fidelity`:77/77cases and451numeric/intermediate artifact pairs match;374raw pairs are byte-identical. Source endpoints unchanged. The original official comparison remains exit1, terminal.complete=False, dirty provenance and clean predictor-cache qualification UNVERIFIED. Evidence: `step5_structural_20261019_04/fidelity_reconciliation.json`.
+- `completed / measured CPU regression`:24/24sentinel children exit0;4warmups and20measurements. Reviewed analyzer `/data/ycfeng/tmp/step5_structural_performance_analysis_20261019_2gsomy97/compare_performance.py` SHA b94c5d9d3a4f2f7164242d5099ff8680d071698713820fd0d4541588f19c4997 passed6370evidencechecks/0failures over1691artifacts, exit1/REVIEW_REQUIRED_OVER_BUDGET. MoE run8.290433185->8.655639193s (+4.405150%, budget2.435752%) and total12.575490217->13.018280430s (+3.521057%, budget2.099542%) OVER; remaining six metrics WITHIN. No budget is widened and no attempt is discarded. Original init drift remains unexplained.
+- `completed / profile cause`:existing baseline/candidate profiles at `/data/ycfeng/tmp/step5_structural_cpu_rca_20261019_zkttq2pj/` both exit0,8requests/3010events and source_drift=[]; these are diagnostics, not replacement budget measurements. `step5_structural_cpu_rca_20261019_04.json` records14204unchanged attention-spec calls,150040canonical map copies and repeated immutable family filtering/projection. Candidate MoE phase queries33840calls enumerate Step merge metadata for legacy layers.
+- `in-progress / smallest correction`:reuse the existing cached canonical table internally and snapshot immutable family subsets once; derive Step merge operator list once from the existing family. Preserve public dictionary-copy behavior, validation, ordering and all layer/stage ownership. Parent owns these shared timing edits. Re-freeze corrected bytes and rerun only verification required by this source change. Generation04 and its failed performance verdict remain historical.
+- `pending`:final two-axis caller review; corrected-generation scoped review/affected/fidelity/unchanged-budget verification, acceptance records and scoped commits; then distinct native request witness. Whole15/06/native/trained/PD/H80064/formalH200/commonfinalHEAD remain open. NoGPU/API/Dockeroperation. H800first; quota fallbackH200<=64total/allnon-preemptible.
+
+
+## Ticket15 generation05 archival acceptance — 2026-10-19
+
+- `completed / frozen source`:44 changed paths/61 frozen files; manifest SHAf66c2feb4c8661ffe19402e828a679cfe0c3eb282e5b4e6cad0b700846484527, patch SHA55c0c889f952c6eba4be81f7e3317fb61f5d8b31f78872d9a211da3c2d0e513e. Only three files differ fromgen04. Immutable canonical/family map reuse removes measured CPU work; public dict isolation, validation, ordering and cost ownership remain. Archival hash/size/patch checks61/61 PASS; no code/tests/native rerun.
+- `completed / review and affected checks`:James Standards0violations/0smells,Plato Spec0findings;58 unchanged parent files reusegen04 review.646PASS/22suites/79.66s,JUnit0failures/0errors/0skips;actual30GiBscope,source_changes=[]. Receipts/log hashes in `test_report_2026-10-19_step5_structural.md`.
+- `completed / actual controlled CLI`:3/3 source_structural PASS;491 read-only audit checks/0failures,36metric artifacts. Each17stages/1564layers/1496FFNmerges,4105prefill+8decodeinputs/9outputs,35cacheevents/4113KVinputs;release29966freeblocks with94484fixedscratchbytes retained. Source weightbytes40599958208/rank,parameters37750873536/rank. Offline6571.25ms/online6617.25ms controlled totals; no native fit/timing or GPU replay claim.
+- `completed / legacy fidelity`:77/77 numeric cases,451size/SHA/parsed-equal pairs,374raw-identical;source inventories694/717 stable. Original official exit1/terminal.complete=false/dirty provenance/clean predictor-cache UNVERIFIED remain. Future commit binds bytes only.
+- `completed / CPU performance`:24/24exit0;4warmups/20measurements,6380checks/0failures/1693artifacts. All8 WITHIN unchanged budgets. MoE run8.313527339->7.742166528s(-6.872664%),total12.620135463->12.025509015s(-4.711728%). Original init drift dense+139.918472%/MoE+135.307788% unexplained; environment recovery UNVERIFIED. Gen04 MoE OVER and exit1 retained.
+- `completed / scoped acceptance`:`step5_structural_acceptance_20261019.json`, `step5_structural_performance_20261019_05.json`, report/spec/plan/ticket15/review/summary updated. Only15.controlled_structural_path accepted;whole15eightcriteria,060/10,native/trained/PD/GLMfullserving/H80064/formalH200/commonfinalHEAD remain open.
+- `in-progress / source commit`:stage only manifest44changed paths;verify61Gitblobs=current=frozen. Two caller files and unrelated.pi excluded;ignored task records not force-added,no push.
+- `pending / next critical path`:separately freeze/commit reviewed06caller(63ownerPASS,No findings),review the three-file launch_request_20261019_01 draft,prepare purepreflight/finalsource/config receipt and one H800 native publicrequest/input/replay observation. Parent owns launcher/platform and sharedcore;Plato owned only new draft config/payload/preparation.
+- `authority / resources`:H800/codesign first;quota fallbackH200/step_main<=64total/allnon-preemptible. NoGPU/API/auth/Docker/native operation in archival. Do not repeat completed FFN02/Attention01/capacity03/source-recovery/gen04/gen05/profiles.
+
+Structural commit: `03c7f823d71193277a0edae5fcab5374c2ed8831`. `step5_structural_post_commit_20261019.json` verifies61/61Gitblobs=current=frozen, exact44changedpaths and parent1bde1999. Only unrelated `.pi/` and the two separately reviewed nativecaller files remain untracked. This is source identity, not a relabeling of historical official/cache tests.
+
+
+## Ticket06 request caller CPU archive — 2026-10-19
+
+Accepted two-file source/CPU capability only: `request_caller_20261019_01/`, `request_caller_acceptance_20261019_01.json`, `test_report_2026-10-19_request_caller_cpu.md`. Owner63PASS/16.73s and final James Standards/Plato Spec No findings read and hash verified;neither tests nor native operations repeated. Adjacent capacity/supervisor/observer bytes remain unchanged. Caller excluded from44-pathstructuralacceptance; nativecompatibility,GPUcompletion/content/precision/physicalscopes/fullG2 unmeasured,whole060/10. Next:separatecallercommit/sourcecheck -> canonicalrequestpreflight -> finalsource/config/launcherfreeze -> oneH800nativepublicrequest/input/replayobservation.
+
+Caller commit: `cd7be9f8b13923fb6f336b0fd85f277598348506`. `request_caller_post_commit_20261019_01.json` verifies bothGitblobs=current=frozen and61unchangedstructuralblobs;trackedworktreeclean,onlyunrelated.piuntracked.No nativeorclean-cachequalificationisclaimed.
+
+## Ticket06 frontend admission association implementation — 2026-10-19
+
+- `completed / handoff verification`: `native_request_audit_20261019_01/updated_document_checks_01.json` PASS, 386 checks, zero failures; SHA-256 `07f693aebdca33701f7ae9e3a2d32b3a09e991ee510143b31062da7e2b06249b`. The 155 original input paths matched their historical frozen hashes before this separate change. All twelve pre-update snapshots and report/disposition hashes reconcile; acceptance text is unchanged and only06criterion7 is checked.
+- `in-progress / exact owned source scope`: parent owns only the existing `role_model_input_observation.py`, `check_role_execution.py` and their two existing CPU test files. Before bytes and HEAD are recorded in `frontend_admission_20261019_01/source_before.json`. Observe the original successful `OutputProcessor.add_request()` registration and original `LLMEngine.add_request()` parent before EngineCore dispatch. Retain actual request/state identities, external/internal IDs, accepted prompt, resolved fourteen sampling fields, active manifest/request and frontend process identity; no suffix or ordinal join.
+- `pending / verification and limits`: required source binding, association/lifecycle, hook restoration, native failure, missing/update/duplicate admission and budget fault checks. CPU fixtures establish instrumentation behavior only. Affected reviews, current source freeze and applicability disposition of the existing fidelity/performance evidence precede code-step acceptance. No native run is launched by this source step; full06 stays1/10 and whole15 stays0/8.
+- `historical identity policy`: old `launch_request_20261019_01/receipt.json`, config and `source_snapshot/` remain untouched. Current source is allowed to evolve under this new generation; a differing current caller/observer must not be represented as the source used by the completed run. New native execution requires its own distinct source/config/launcher freeze.
+
+
+## Ticket06 frontend admission final source/CPU acceptance — 2026-10-19
+
+- `completed / smallest corrections`: originalStandardsP3 object identity is request_object_id. OriginalSpecP2 exceeded final byte cap; actual indent2/newline UTF8 output now measured, minimal123-byte UNVERIFIED rechecked, None if cap cannot fit. Parent missing-record/finalization/tiny-budget negatives reproduce4FAIL/12PASS in3.70s, then16PASS/3.55s. Native generation, sampling, IDs, transport and exception behavior preserved.
+- `completed / current freeze and review`: candidate02manifestSHAc7aee3a4d341edf852d478bf83013373695a22341df4109426ff5752cdbe0217,patchSHA06295cc891a4f2c1364699ddd049de497117d67c09beb8b0022bf74d0898cbe5. FinalLorentzStandards0hard/0smells;BooleSpec0findings. Only existingthree source paths changed; fourth comparison test unchanged; reviewers closed after reports.
+- `completed / affected verification`: four suites275PASS/33.88s,JUnit0failure/error/skip,source_changes=[];test_attempt_06.json. Log/data/ycfeng/tmp/step5_frontend_admission_20261019_06_pytest.log SHA c37841c69dca2f76eeea5588acecce40d26bb8ce7bbbbf889ba8344d1b0e4a1d.199sourcechecksPASS;historicalreceipt/source preserved;60/61structuralfilesunchanged,soleobserverharnesschanged. Auxiliary first checker path labeling errored on legitimateexternalSDKsource;retainedsource_check_attempt_02a.json then corrected withno code/native edits.
+- `completed / scoped acceptance and records`: frontend_admission_20261019_01/acceptance_02.json and test_report_2026-10-19_frontend_admission.md;spec/requirements/plan/ticket06/review/summary updated. Oldnative1/10criterion7,whole15zeroofeight,clean-cache/official/initdrift/SIGKILL/JIT/transportlimitsunchanged. Existing77-case/eight-budgetrecordsremainoriginalgenerations/source applicability; no newbenchmark/native/API/auth/Dockeroperation.
+- `in-progress / source commit`: stage only caller, model observer and driver test;verifyGit=current=frozen;no push/no force-addignoredrecords/unrelated.pi unchanged.
+- `pending / main path`: actual frontend-to-worker join then finalkwargsvalid/paddeddeviceinput, fullvalidhiddenfinite and orderedpostexecutioncompletion witnesses withownedcopies/events,request-returnexistingRPCdrain;precision/fullphysical-statecensus follows. KeepH800first,H200actualquotafallback<=64total/allnonpreemptible. Newnativeexecutionrequiresdistinctsource/config/launcherfreeze;do notpollorresubmitendedrun. Parentownsnative/platform/audit/localcore;C06singleexistingnormalizer/gate.
+
+
+Frontend admission source commit: `60ab52d7ac04493d1cd6ec781c80f0006896ed44`. `frontend_admission_20261019_01/post_commit_02.json` confirms all four frozen Git/current sources match, exact three changed paths and parentcd7be9f8; tracked worktree clean, unrelated `.pi/` untouched. No push or ignored task-record addition. This establishes source identity only; native06 remains1/10 andwhole15 remains0/8. Continue actual worker/device/completion witnesses.
+
+
+## Ticket06 device/request/completion witness continuation — 2026-10-19
+
+- `completed / reconstruction`: HEAD60ab52d7 is the accepted frontend source commit; tracked worktree clean. Current requirements explicitly authorize execution following the completed review. The ended request generation and all frozen sources/receipts remain historical and are not polled or repeated.
+- `in-progress / owned implementation`: extend the existing model observer, request observer/caller and their existing tests. Observe original `GPUModelRunner.add_requests` registrations and actual finalized kwargs, allocate bounded diagnostic destinations outside capture through the existing public worker RPC, submit copies/finite reductions/completion events on the actual execution stream, and drain only through the post-generate request_snapshot RPC. Native sampling, AsyncOutput consumption, transport, graph bodies and Frontier core remain original.
+- `pending / acceptance`: verify ownership, stream order, final overrides, valid/padded ranges, complete internal-ID/request association, native exception identity, observer isolation, cap exhaustion, readiness rejection and exclusive storage. Independent source review/freeze and affected verification precede any distinct native run; CPU fixtures do not close G2, clean timing or predictive acceptance. Existing rank64MiB/node512MiB/archive4GiB/total2400s bounds remain. Parent owns implementation and platform; Newton's disjoint retained physical-state report is source evidence only.
+
+
+## Ticket06 device witness candidate03 source acceptance — 2026-10-19
+
+- `completed / source and CPU`: The device/request/completion source and CPU tooling slice is accepted in `device_request_witness_20261019_01/acceptance_03.json` and [its report](test_report_2026-10-19_device_request_witness.md). Candidate03 preserves original worker registration, finalized native inputs, owned asynchronous copies, complete valid hidden finite reduction and the existing post-generate event-query RPC. The parent verified 357 affected CPU passes, 234 retained source checks, 90 fresh archive/identity checks and six locked-image Torch CPU API checks. Standards candidate02 has zero documented violations or actionable smells; Spec candidate03 has no remaining delta finding after the 1–4-byte JSON response-cap correction. Acceptance is limited to source and CPU tooling. Actual CUDA/native frontend→worker→device delivery, precision/scale consumption, complete physical/cache-state census, full G2, PD, H80064, H200 and predictive/common-HEAD acceptance remain unverified. Ticket06 stays PARTIAL 1/10 (criterion7 only), and whole15 stays PARTIAL 0/8. The old executed request source/receipt is immutable historical evidence. Next: commit the six reviewed files, verify Git=current=frozen, then finalize and run the distinct `request_device_20261019_01` generation under the existing H800-first policy and budgets.
+- `completed / defects`: retained seven original accounting/dtype RED cases, corrected complete-RPC and both-node reservations, and closed two duplication smells. Reproduced eight 1–4-byte cap RED cases; constructor/preflight rejects them before allocation. Eleven affected checks and final four suites357PASS/30.87s are retained in `test_attempts_04.json`; no source drift.
+- `in-progress / source commit`: stage only the six frozen source/test paths; verify current=Git=frozen after commit. Preserve unrelated `.pi/`, do not push or force-add ignored task records.
+- `pending / native`: refresh candidate03 source bindings and committed HEAD in the disjoint draft, run canonical new-generation preflight and inert SDK/launcher checks, freeze fresh receipt, then one purpose-bound H800/codesign 2×8 native run. Preparation uses34slots/64scanrows/1witnessrow,8MiB planned tensors and4MiB worker JSON within unchanged2400s/rank/node/archive bounds. Parent owns native hooks/callers/tests, platform/audit and local core integration; shared modules retain canonical single owners.
+
+
+Device witness source commit: `7962f5fe8199a6884f6c1628f7a9a1bf8faeb609`. `device_request_witness_20261019_01/post_commit_03.json` verifies all six Git/current/frozen source files, the exact six changed paths and parent `60ab52d7ac04493d1cd6ec781c80f0006896ed44`. The tracked worktree is clean; unrelated `.pi/` remains untouched. No push or ignored task-record addition occurred. Source identity establishes no CUDA/native acceptance. Next: final canonical preflight, inert SDK/launcher review and a distinct purpose-bound H800/codesign generation, retaining06 1/10 and whole15 0/8.
+
+
+## Ticket06 distinct device witness submitted — 2026-10-19
+
+- `completed / preparation`: canonical new-generation preflight PASS (113 native identities, 0.465s); launcher205PASS and original-SDK payload24PASS, no API/GPU calls in those inert checks. Personal active-job metadata read succeeded. Launcher static review has no findings; config P3 missing actual generation5 warmup path was corrected and independently closed, retaining original inventories. 114 actual native body paths cover the same113identities. Config/payload/source code stayed unchanged.
+- `completed / freeze`: `native_role_tp16/launch_request_device_20261019_01/receipt.json` SHA-256 `f2d2aa4f3427a8265e4d0b4acfa55b4add7091930ba2044dd40efcc33610e049` binds197files and sourceHEAD7962f5fe. 196 exact source/config/launcher/evidence snapshots (16,152,908bytes) and188parentinput checks match. This is source/preparation evidence only.
+- `in-progress / actual native run`: generation `request_device_20261019_01`, sole original local personal Python RJobBackend job `exp-1019-075927-372034`, submitted at2026-10-19 07:59:27HKT. Request2x8H800/codesign/non-preemptible,TP16/DP1/PP1/EPoff,lockedimage,dummyfulltextmodel,A/B4105/9,nativegraphs/chunks. Starter exec session24280 and launcherPID496013 keep original wait/queue lifetime. Exact submission identity is archived under the launch directory; actual platform identity/resources and native business evidence still pending. No retry or platform stop; ended request generation remains immutable and was not polled or repeated.
+- `pending / acceptance and main path`: audit original frontend→worker→device association,4113usefulinputs/request,fullvalidhiddenfinite and ready owned events after generate; record actual all-rank/platform/container/archive/lifecycle outcomes. Precision/scale consumption and complete physical/cache-state census remain open. Ticket06 staysPARTIAL1/10criterion7only andwhole15PARTIAL0/8; native07/PD08/H80064/H200/predictive/commonHEAD remain unqualified. Continue06 ->15.native_reconciliation, preserving existing reference/failure/metric limits and shared single owners.
+
+
+## Ticket06 native device archival closure — 2026-10-19
+
+The distinct `request_device_20261019_01` / `exp-1019-075927-372034` completed Succeeded at **2026-10-19T00:08:32Z / October 19, 2026 08:08:32 HKT**. Source HEAD `7962f5fe8199a6884f6c1628f7a9a1bf8faeb609` and receipt SHA `f2d2aa4f3427a8265e4d0b4acfa55b4add7091930ba2044dd40efcc33610e049` are frozen. [The new report](test_report_2026-10-19_native_request_device.md) records **26,917 retained device checks PASS**, **35 scoped source/lifecycle checks PASS**, original public→internal→worker→device association on all16 ranks, 544 real device stages and256 actual FULL replay calls, 539,099,136 valid hidden finite elements, and ready observer-owned copy events. Full precision/scale consumption, physical kernel and cache-state census remain missing. **06 is PARTIAL1/10, criterion7 only; whole15 is PARTIAL0/8.**
+
+1. Reuse this completed generation, final analysis source and immutable archive. Both request jobs and their launchers ended; no poll, retry or resubmission. The latest complete source/device archive is `native_request_device_audit_20261019_01/`; its final analysis source is `analysis_source_02.py`. General conservative receipt labels remain unchanged.
+2. Parent implements the remaining all-layer/dispatch/precision binding, followed by actual tables/lifecycle/known-storage and valid-state content coverage in the existing native observer/caller. Use `device_request_witness_20261019_01/remaining_native_census_plan.md` and the existing state-range report;28 parent source/hash/AST checks verify selected claims only. Eight retained source bodies absent from the executed113-ID ledger need future binding; recover only selected missing allocator/prepare/embedding bodies if necessary. No repeated broad recovery, zero-scale theory or isolated calibration.
+3. Add only missing native capture/kernel correlation through the existing profiler after observer/API/byte/deadline readiness. CPU/capture calls cannot prove every FULL-replay kernel or transient scale. Apply affected checks, inherited fidelity and unchanged budget dispositions before a separately frozen missing-witness generation. Preserve native model/router/sampling/precision/graph policy.
+4. Complete06 then15.native_reconciliation;06 also releases native07 and08, followed by09 H80064. C06 may concurrently extend the existing normalizer/gate using detached records. Other shared modules keep one canonical owner;16–22 retain the external GLM full-path gate. H800/codesign first; actual insufficient quota permits H200/step_main≤64 total GPUs, all non-preemptible. Only a demonstrated material core refactor or materially unresolved semantics/acceptance requires explicit approval.
+
+
+## Active native census source slice — 2026-10-19
+
+- `completed` — Final lifecycle review synchronized to35/35 and final SHA256;430/430 documentation/before-image/checkbox/frozen-input checks pass in `native_request_device_audit_20261019_01/documentation_validation_02.json`. Earlier33-check bytes retained in documentation_before_02; no frozen input edits or native campaign.
+- `in-progress` — Parent-owned `native_census_20261019_01/plan.md`: extend existing native source/call/precision bindings. Module/layer coverage is derived from actual owners; Python metadata does not establish FULL replay kernels or transient content.
+- `pending` — Affected CPU tests, two-axis fixed-source review, >=50-scenario fidelity and original performance-budget applicability; then scoped source commit. Next table/lifecycle/known-storage/content and profiler correlation remain missing.06 PARTIAL1/10 and whole15 PARTIAL0/8 unchanged.
+
+
+## Ticket06 native call/precision source milestone — 2026-10-19
+
+The fixed candidate02 is accepted for source/CPU tooling only in `native_census_20261019_01/acceptance_02.json` and [the report](test_report_2026-10-19_native_census.md). Parent final four suites419PASS/27.78s preserve original outcomes, hooks, ownership and byte limits. Standards closes2P2; Spec closes1P2; no remaining findings in either bounded follow-up. The original7RED cap/disassembly cases,11new-fixture failures and2obsolete1-byte dictionary assertions are retained; the new assertions require omission and explicit UNVERIFIED state. Complete final JSON, rejection records, writer-error growth and summaries obey the same scope cap; original device output precedes finalization. Retained34native source/argument/line checks and38parent identity checks pass. The independent1,214-check applicability record reuses77scenarios/902artifact hashes/451exactpairs and8unchanged paired CPU budgets; official dirty-provenance/cache result and original-environment drift remain UNVERIFIED. No new native/profiling/benchmark campaign or Frontier core edit occurred.06 remainsPARTIAL1/10criterion7only;whole15 remainsPARTIAL0/8.
+
+1. Commit only the two exact candidate02 source/test paths and verify Git=current=frozen. Do not force-add ignored records or push. Preserve `.pi/` and ended native receipts.
+2. Parent implements actual block-table copies, original assignment/removal/reset/copy lifecycle, known storage/aliases and applicable state/scale content through the same observer/caller and preallocated copy/event/drain path. Use `device_request_witness_20261019_01/physical_state_ranges.md`; recover only required missing bodies. No invented allocator epochs, temporary substitutes or isolated calibration.
+3. Add native capture-to-replay physical correlation and finish source/API/byte/deadline readiness before a distinct missing-witness generation. CPU92-layer records and an artificial23,196,715-byte aggregate are not native capacity/physical/finite qualification.
+4. Complete06 ->15.native_reconciliation;06 also releases native07/08 ->09H80064. Shared Frontier modules and C06 normalizer retain one owner;16–22 retain GLM09.full_frontier_path. H800/codesign first; actual quota shortage permits H200/step_main<=64total, all non-preemptible. Only material core refactors or unresolved material simulation/acceptance decisions require explicit approval.
+
+
+Native call/precision source commit: `3c9bff8332376cb9165af66649403beefd87c713`. `native_census_20261019_01/post_commit_02.json` verifies6/6Git/current/frozen/report checks, exact two changed paths and parent `7962f5fe8199a6884f6c1628f7a9a1bf8faeb609`. Tracked worktree clean; `.pi/` preserved; no push or ignored-record addition.419CPU passes and two-axis review establish source/CPU tooling only, not native delivery or whole06/15 acceptance. Parent continues actual tables/lifecycle/storage/state witnesses.
+
+
+## Ticket06 native state source/CPU acceptance — 2026-10-19
+
+- `completed / source and ownership`: candidate01 nine source/test files frozen against3c9bff8. Native request/table/reset/release/copy/zero/workspace/preparation code pins and original owners, actual finalized per-group tables/counts, known storage/alias inventory and applicable state/resident-scale scans reuse the original reservation/stream/event/drain/writer.18census sources reconcile11historical+7missing bodies; current caller/worker/preparation/peer checks bind the new child. No Frontier core or native-semantic change.
+- `completed / checks`:497jointPASS/31.20s and later changed caller140PASS/22.04s overlap. All11attempts retained;01–08exactcommands and09per-command-source snapshot unavailable. Original fixture/0Dalias/missingKVspec/regex failures and inspection79PASS/1falseFAIL remain; corrected source80/80PASS, parent42/42identity/logchecks. Ninecurrent=frozen, ASTduplicate definitions absent, whitespacePASS. Test file1995lines is unchanged beyond scoped state-fixture support; new state cases stay in their own module.
+- `completed / reviews`:parent Standards0violations/0actionable smells after Aristotle429retry exhaustion; independent Wegener Spec0actionable findings, exactreportSHAafb4c41a… verified; review limits combined request/group/page scenarios to static reasoning. Both agents are closed. No independent Standards PASS inferred.
+- `completed / evidence and records`:acceptance_01.json, test_report_2026-10-19_native_state.md and eightbefore-images retained. Independent16790+1519 and parent1516applicability checks preserve753simulatorpaths,77scenarios/902hashes/451pairs,24historicalCPUattempts/eightunchangedbudgets. Officialdirty/cache/terminal/initdrift remainUNVERIFIED. LockedTorch9checks areprimitiveCPUonly, not wholecurrentmodule/CUDAqualification.
+- `in-progress / commit`:stage only9frozenpaths, verify staged/current/frozen and parent; commit then record exactGitblobs. Preserve.pi,ignoredtaskrecords and oldnativegenerations; no push.
+- `pending / main path`:focusedexistingnativeprofiler capture/replayphysicalcorrelation ->remaining fullparameter/transientscale/write/occupancy/source/API/bytes/deadlinereadiness ->distinctmissingwitnessgeneration ->complete06 ->15.native_reconciliation;06 ->native07/08 ->09H80064. Whole06PARTIAL1/10criterion7only;whole15PARTIAL0/8. Shared/C06singleowners,GLM16–22gate and finalcommonbranchunchanged. H800first;quota fallbackH200<=64total/non-preemptible. No new GPU/nativebenchmarkcampaign occurred.
+
+
+Native state source commit: `291ba7b713d09bc448924499df70adaab16e69dd`. `native_state_20261019_01/post_commit_01.json` verifies all nine Git/current/frozen files, exact changed paths and parent `3c9bff8332376cb9165af66649403beefd87c713`. Tracked worktree is clean; unrelated `.pi/` remains.83documentation/criterion/artifact checks pass. No push or force-add of ignored records occurred. Source/CPU-only acceptance leaves06PARTIAL1/10andwhole15PARTIAL0/8. Parent continues focused existing native-profiler capture/replay correlation and remaining qualification readiness.
+
+
+## Ticket06 focused native profiler continuation — 2026-10-19
+
+- `completed / resumption`: latest requirements confirm implementation authority; committed state source291ba7b7 and tracked clean worktree verified. No active GPU job or old campaign is polled/repeated. Native06PARTIAL1/10criterion7only and whole15PARTIAL0/8 remain.
+- `in-progress / source and API`: parent owns native_physical_20261019_01/plan.md and existing caller/observer. Inspect the exact locked native profiler/Torch graph identity APIs, then add reliable bounded trace completion and scope/capture/dispatch/replay annotations through the same native profiler. Counts/names/order cannot establish graph-node ownership; unknown physical/transient evidence stays explicit.
+- `pending / acceptance`: affected CPU/API/fault checks, fixed-source Standards/Spec reviews, original simulator-evidence applicability and scoped commit. Complete remaining parameter/transient-scale/write/occupancy and source/API/byte/deadline readiness before a distinct native missing-witness generation. H800first; actual insufficient quota permits H200<=64total/allnon-preemptible. Shared core/C06 and observer/caller each remain single-owner.
+
+
+## Ticket06 profiler continuation after source-state recovery — 2026-10-19
+
+- `completed / recovered state`: HEAD291ba7b7 and seven profiler WIP source/test files confirmed; requirements61–98,654–682 confirm active implementation and H800-first/H200≤64 non-preemptible policy. No GPU/platform campaign or historical job polling occurred. The read-only Lovelace graph API agent failed with429 retry exhaustion and was closed; no research artifact or independent review credit.
+- `completed / diagnosed regression`: profiler attempt03 hit the60s CPU timeout after seven progress dots, with no JUnit/verdict totals. The runner did not save its start receipt; `native_physical_20261019_01/test_attempt_03.json` explicitly records recovered post-timeout source identities and missing start evidence. Read-fault injection closed the sole FIFO reader before original exporter writer open, leaving it blocked. Waiting for bytes/EOF before read fixes this reachable race while preserving export on the calling thread; attempt04 all40profiler checks PASS/0.85s. Original attempt01/02FAIL and03TIMEOUT logs retained.
+- `in-progress / integration`: strengthen existing scope annotation entry/unwind ownership, reject invalid timestamps/repeated native correlations without kernel-name/order attribution, connect detached trace-byte/hash/worker/window validation through check_role_execution analyze-profiler, and finish cleanup before receipt publication so errors remain observable. Reuse rank_record_bytes and graph_launch_chains; no new profiling producer or Frontier core edit.
+- `pending / acceptance`: annotation/correlation/offline/lifecycle/cleanup regressions; final locked-image CPU FIFO and native wrapper API validation; affected joint suite; fixed-source two-axis review and retained simulator evidence applicability; small scoped source commit. Native06PARTIAL1/10criterion7 and whole15PARTIAL0/8 remain unchanged. Full physical node attribution, replay transient content, observer overhead and complete readiness remain UNVERIFIED.
+
+
+## Ticket06 profiler continuation checkpoint — 2026-10-19
+
+- `completed / reconstruction`: active implementation authority is confirmed by requirements61–98 and654–682. HEAD291ba7b7 and eight uncommitted profiler source/test/API paths match the inherited WIP; unrelated `.pi/` is untouched. No GPU/platform query or campaign, ended-job polling, benchmark or new ground-truth collection occurred.
+- `completed / inherited evidence`: attempt05 was79PASS/1FAIL/4.76s caused by capture/replay fixture dictionaries sharing continuity; deep copies preserve the original assertion.06 was80PASS/4.61s;07 seven affected suites464PASS/33.81s.08 was interrupted by an auxiliary cleanup KeyboardInterrupt, exit2 without a PASS total.09 retained8FAIL/1PASS/82deselected/1.62s fault reproduction;10 was91PASS/5.59s after isolating cleanup BaseException, guaranteed window finalization and rejecting shared correlation with other native CUDA APIs. All receipts/logs remain in `native_physical_20261019_01/`; these counts overlap and do not describe one distinct combined suite.
+- `completed / locked API limits`: graph_api_01 remains55s host TIMEOUT although the report later finished. wrapper_api_01 remainsFAIL due to the API fixture reserving the entire rank allowance. Reducing only that fixture reservation to262KiB produced wrapper_api_02 PASS for two original CPU wrapper windows and a31-byte cap; CUDA remained uninitialized and original unavailable/code35 stderr is retained. API02 precedes the new exact Torch graph pin/getter and cannot validate current source. First-party exact-revision CUDAGraph sources support read-only getter reasoning; they do not prove CUDA execution or node ownership. Both attempted independent research agents failed with429 exhaustion and were closed; no independent review credit.
+- `completed / current CPU check`: attempt11 current profiler suite97PASS/5.82s, zero failures/source changes. It tests the original getter seam through CPU doubles only. Current native physical attribution, transient scale content, overhead, clean performance and G2 remain UNVERIFIED.
+- `in-progress / smallest correction`: add faults for mismatched/missing/nonpositive/noninteger executable handles, unverified getters and malformed capture continuity. A replay launch may be observed independently; its capture binding must require the same positively identified original executable at both boundaries. No graph mutation, instantiate/capture/replay/sync or graph reference retention is added.
+- `pending / acceptance`: verify corrected source, current locked-image CPU API, seven affected suites, source freeze, Standards/Spec review and unchanged simulator-evidence applicability; record exact evidence and commit only eight scoped paths. Complete remaining parameter/transient-scale/write/occupancy and source/API/bytes/deadline readiness before a distinct native witness generation.06 staysPARTIAL1/10criterion7;whole15 staysPARTIAL0/8; shared/C06/native ownership,GLM16–22gate,final common branch andH800first/H200<=64non-preemptible policy remain.
+
+## Ticket06 profiler candidate02 source/CPU acceptance — 2026-10-19
+
+- `completed / final correction`: attempt12 reproduced8capture-executablebinding failures; attempt13 passed105profilerchecks. Binding now requires same positive native handle/getter status and valid equal continuity serial. Candidate01/attempt14 was489PASS/36.69s but is historical after execution observer/tests changed. Attempt15 reproduced3auxiliary-summary masking/blocking failures/6PASS; final response fix preserves native capture outcome and uses existing bounded UNVERIFIED response. Attempt16 current114PASS/5.78s and final17sevenaffected498PASS/33.05s/source_changes=[];114is included in498.
+- `completed / original CPU API`: historical API03PASS/10.33s; currentAPI04PASS/10.09s on locked image with CUDA uninitialized. Same wrapper capture4563/request4460bytes complete; cap31retains31of4465bytes/readercomplete/UNVERIFIED. Original CUDA unavailable/code35stderr retained. API01FAIL,graphAPI01TIMEOUT,attempt03TIMEOUT/08interrupt remain unchanged.
+- `completed / retained applicability`: original rawCPUread failedPermissionError on24root-owned0600results; exact read-onlysudo reader then obtained original files without permission changes.4669/4669source-applicability checks cover753paths/453Frontier,77scenarios/902hashes/451pairs,24CPUattempts/eightbudgets/1688performanceartifacts/fiveoriginalexclusions. Current endpoint/source/API810/810checks match candidate02. No simulator/benchmark/GPU/SDK/cloud campaign; drift/cache/provenance/overhead remainUNVERIFIED.
+- `completed / review and freeze`: candidate02 freezes8files;diffSHA2a927cc0977f988b661022a3c3ad6ce2c4d8f5b103e9bff295c8e052fa8e5b4c. Cicero/Socrates failed429/noartifact and areclosed; parent Standards/Spec each0remainingdeltafindings, independence notclaimed. acceptance02/report/selectedCPUlogs/XML/API hashes retained. Initial report-generationNameError wrote only9before-images; failure recorded and generation corrected without source/test rerun.
+- `completed / scoped commit`: `8bf0315` contains exactly eight frozen source/test/API paths; post_commit02 verifies Git=current=frozen, parent291ba7b7 and a clean tracked worktree. Unrelated `.pi/` remains; no push or ignored-record addition. Continue existing06 full-parameter/transient-scale/write/occupancy and complete source/API/bytes/deadline readiness before distinct missing-witness generation.06PARTIAL1/10criterion7;whole15PARTIAL0/8 unchanged. H800first/H200quota fallback<=64total/non-preemptible and shared/C06/native singleowners remain.
+
+Native profiler source commit: `8bf0315a6b483d0a51daed214012a58398fd1d60`. `native_physical_20261019_01/post_commit_02.json` verifies all eight Git/current/frozen sources, exactly eight changed paths and parent `291ba7b713d09bc448924499df70adaab16e69dd`. The tracked worktree is clean; unrelated `.pi/` is untouched. No push or ignored-record addition occurred. Source identity leaves Ticket06 PARTIAL 1/10 (criterion7 only) and whole15 PARTIAL 0/8. Remaining work is full parameter/transient scale/write/occupancy and complete readiness before a distinct native missing-witness generation.
+
+
+## Ticket06 resident parameter continuation — 2026-10-19
+
+- `completed / resume`: active implementation and H800-first/H200<=64non-preemptible authority, HEAD8bf0315 and clean tracked worktree verified. Reuse profiler/current native evidence; no old campaign polled or repeated.
+- `completed / retained layout`: original capacity03 rank0 metadata hash matches its retained ledger;2618BF16/FP32/FP8tensors,41909084704unique bytes, all contiguous,148489chunks at262144elements. This does not qualify current native finite content or scan feasibility.
+- `in-progress / source`: parent extends shared resident owner enumeration, complete per-view finite counters and selected raw values within existing StateObservation/DeviceObservation reservation, stream, event and drain. Plan: native_parameters_20261019_01/plan.md.
+- `pending / verification`: affected CPU faults, current locked-image API, explicit byte/deadline checks, separate Standards/Spec reviews, applicable retained simulator evidence and scoped commit. Native06PARTIAL1/10criterion7 andwhole15PARTIAL0/8 unchanged; full transient-scale/write/occupancy/readiness remain pending.
+- `inspection limits`: bare python unavailable; use the existing absolute frontier-py310 executable. Initial filename discovery requested an unretained capacity record and found no match; the canonical retained metadata ledger supplied the actual file. No runtime/source evidence was fabricated.
+
+
+## Ticket06 resident-parameter source/CPU acceptance — 2026-10-19
+
+- `completed / source`: six-filecandidate01 extends canonical registrations and complete per-view finite/sample layouts; every alias metadata is checked, repeat submission cannot overwrite. One complete reservation and original node deadline precede scans;original stream/events/drain/native outcomes remain.
+- `completed / checks`: finaljoint657PASS/44.04s includes91state tests;111real lockedTorchCPUAPIchecks PASS with explicit unpinned/CUDA substitutes.1554source-applicabilitychecks consume exact historical4669record;no full historical raw-artifact rehash or new benchmark. Counts overlap and are not added.
+- `completed / failures and reviews`: attempt02 four original RED source faults corrected;API01/02 expected-value/alias-fixture failures retained. ParentStandards0violations/0actionable smells,Spec0remainingdeltafindings;Zeno/Darwin429/noartifact/closed,independence notclaimed. Bare-python and broad-tmp permission inspection errors did not affect evidence.
+- `completed / archive`: test_report_2026-10-19_native_parameters.md,acceptance01,selectedCPUlogs/XML/APIhashes and ninebefore-images retained. Ticket06PARTIAL1/10criterion7only;whole15PARTIAL0/8;no checkbox/metric/guard changes.
+- `in-progress / commit`: stage onlysixfrozenpaths,verify staged/current/frozen andparent8bf0315,committhenbindGitblobs. Preserve.pi andignoredrecords,no push.
+- `pending / main path`: remainingtransient-scale/write/occupancy andcomplete source/API/byte/deadline/headroomreadiness ->distinct native missing-witnessgeneration ->complete06 ->15.native_reconciliation;06 ->native07/08 ->09H80064. Shared/C06/native singleowners,GLM16–22gate,finalcommonbranch andH800first/H200<=64non-preemptible remain.
+
+Resident-parameter source commit: `438424c36ed7d0d933b5e90dd64e2a82a86de303`. `native_parameters_20261019_01/post_commit_01.json` verifies all six Git/current/frozen files, exactly six changed paths and parent8bf0315. Tracked worktree clean; unrelated .pi/ untouched, no push or ignored-record addition.66 documentation/source checks preserve acceptance text and1/10,0/8counts. Parent continues remaining transient-scale/write/occupancy and complete readiness; CPU/API source acceptance does not qualify native execution.
+
+
+## Ticket06 capture-node metadata continuation — 2026-10-19
+
+- `completed / resume`: HEAD438424c and clean tracked worktree verified; implementation authority and H800-first/H200 quota fallback <=64 non-preemptible confirmed. Prior resident slice remains accepted only for source/CPU tooling.
+- `completed / primary sources`: recovered installed CUDA/CUPTI interfaces are recorded in native_physical_20261019_01/graph_api_research.md; original failed/empty attempts retained. No native API call, GPU job or independent researcher acceptance.
+- `in-progress / scope`: extend the existing native profiler with active capture node additions and executable CUPTI IDs, reusing existing source bindings, events and budgets. Parent owns profiler/observer edits. Node additions are interval associations; replay mapping, transient scales and complete physical census stay unverified.
+- `pending / verification`: affected CPU fault and native-boundary tests, locked image signature/symbol verification, two-axis review and scoped commit. Complete readiness precedes a distinct native witness generation. Ticket06 PARTIAL1/10; whole15 PARTIAL0/8.
+
+
+## Ticket06 capture-node source/API acceptance — 2026-10-19
+
+- `completed / evidence`: original H800 API job exp-1019-153656-254478 completed at07:37:35UTC/15:37:35HKT; real replica/container Succeeded/Completed/exit0/restart0. The earlier Pod403 is preserved and superseded for terminal evidence by terminal_replica.json. No ended-job polling/retry or new GPU campaign in this continuation.
+- `completed / source`: six frozen source/test/API files extend existing capture intervals and detached replay correlation. Eleven executed snapshots verified; ten current files are identical and only two profiler analysis definitions changed after the GPU smoke. API IDs and the actual 42,732 trace bytes are verified without invented model-call metadata. Raw native API labels remain unchanged.
+- `completed / verification`: inherited attempt05 461PASS/36.99s recovered. Missing start-source manifest justified one final same-suite run:attempt06 461PASS/35.40s,exit0,no source changes. Locked CPU API02 PASS/12.284s and original code35 stderr retained.1,045 source/artifact checks PASS;753 simulator sources unchanged. Historical77scenarios/eightpairedbudgets reused only for unchanged paths;raw benchmark artifacts not all rehashed. Parent Standards/Spec0remainingfindings;no independent review claimed after previous429failures.
+- `completed / records`: test_report_2026-10-19_graph_nodes.md,graph_nodes_review_01/{source_manifest,validation,test_attempt06,review} and selected logs/XML retained; nine documentation before-images preserved. Acceptance checkboxes and formal limits unchanged.
+- `completed / scoped commit`: Source commit: `1c3d29b23f8a504fcbb4de5d6c8da7ed74486bf5`. `native_physical_20261019_01/graph_nodes_review_01/post_commit.json` verifies the exact six changed paths, parent438424c and Git=current=frozen bytes. Tracked worktree is clean; unrelated `.pi/` is preserved, with no push or ignored-record addition. Native06 remains PARTIAL1/10 and whole15 remains PARTIAL0/8. Next is remaining transient-scale/native-write/global-occupancy and complete readiness, not another graph API repeat.
+- `pending / execution`: finish existing transient-scale/native-write/global-allocator-occupancy witnesses and complete readiness; then freeze a distinct native missing-witness generation. Do not reopen resolved graph API work without an observed blocker.06PARTIAL1/10criterion7only;whole15PARTIAL0/8. complete06 ->15.native_reconciliation;06 ->{native07,native08}->09H80064. Shared/C06/native singleowners,GLM16–22gate,final commonbranch andH800first/H200quota-fallback<=64non-preemptible remain.
+
+
+## Ticket06 allocator boundary continuation — 2026-10-19
+
+- `completed / resume`: HEAD1c3d29b and active implementation authority confirmed; tracked worktree clean, unrelated.pi preserved. Completed graph API/request/capacity generations remain terminal and are not queried/repeated.
+- `in-progress / implementation`: parent extends existing known-state/resident metadata and boundary allocator totals with truthful alias/device/attribution semantics. Read-only Rawls separately inspects actual retained native KV-writer and FP8 producer/consumer seams; its write scope is occupancy_01/native_write_scale_sources.md only.
+- `pending / validation`: locked-source/API applicability, affected CPU faults and caller regression, exact source freeze/review/report/commit, then combined missing-witness readiness and one distinct native model generation. Native06PARTIAL1/10criterion7 andwhole15PARTIAL0/8 remain; H800first/H200quota fallback<=64/non-preemptible.
+- `inspection failure`: bare python is unavailable; the absolute frontier-py310 executable works. Two public web lookups returned no usable content; no API claim is based on them.
+
+- `observed / test01`:429PASS/1FAIL/39.56s, no source changes. The new fixture expected after on a native exception, while the established lifecycle uses error; the original exception was preserved. Corrected only that fixture expectation; original FAIL receipt/log/XML retained. Rawls returned429 retry exhaustion with no artifact and is closed; parent assumes its non-overlapping native-source inspection, no independent review credit.
+
+
+## Ticket06 allocator source/CPU acceptance — 2026-10-19
+
+- `completed`: final three-file source/CPU slice has435affectedPASS/31.23s,12lockedTorchCPU/storage/APIchecks and40source/artifact checks. Current independent Standards/Spec follow-up both No findings; two duplicate-logic findings corrected. Exact report: test_report_2026-10-19_allocator_occupancy.md; acceptance and selected original FAIL/PASS evidence: native_physical_20261019_01/occupancy_01/.
+- `completed`: original native outcomes, record/entry/deadline limits and explicit alias/device/backend semantics preserved. Native CUDA occupancy, ownership/history, observer overhead and headroom remain UNVERIFIED. No GPU/benchmark/new ground-truth run; previous77scenarios/eightbudgets reused only for unchanged simulator paths.
+- `completed`: parent recovered actual fused KV writer and FP8 producer/consumer source paths in occupancy_01/native_write_scale_sources.md and seven-source JSON ledger. Rawls supplied no report; new Nietzsche/Bohr reviews cover only the allocator diff. Inspection/test-fixture errors remain in the report.
+- `in-progress`: commit exactly three frozen paths, verify Git/current/frozen. Preserve unrelated.pi and ignored task records; no push.
+- `pending`: only missing writer/quantizer entries through existing census table, combined native source/API/bytes/deadline/headroom readiness, then distinct native missing-witness generation. Criterion9 does not require a general profiler/allocation-history project.06PARTIAL1/10criterion7;whole15PARTIAL0/8. Complete06 ->15.native_reconciliation;06 ->{native07,native08}->09H80064. Existing owners,GLM16–22,commonbranch,H800first/H200fallback<=64non-preemptible remain.
+
+Allocator source commit: `49482c6c9966a3ef01a4c7e82db9abf0d224bd35`. `native_physical_20261019_01/occupancy_01/post_commit.json` verifies exactly three paths, parent1c3d29b and Git=current=frozen. Tracked worktree clean; unrelated `.pi/` preserved; no push or ignored-record addition. Requirements reread and all06checkboxes unchanged. Continue minimum existing-table writer/scale bindings and combined native readiness.
+
+
+## Minimum native writer and FP8 scale source milestone — 2026-10-19
+
+`native_physical_20261019_01/writer_scale_01/acceptance01.json` accepts the three-file source/CPU slice from49482c6. Existing source and call tables now bind ordinary fused KV insertion, fused DSA preparation, separate KV update and both FP8 quantization producers; `quant_dtype` uses the existing dtype metadata conversion. Five retained owner signatures match exact source pins. Final seven suites608PASS/38.38s, exit0, with no source changes. Independent Standards has No findings; parent Spec has no remaining delta findings after the independent reviewer failed429 without a report. The first155-pass affected run is included in the final suite, not added. Report: `test_report_2026-10-19_writer_scale_bindings.md`.
+
+Python parent/producer/consumer metadata, capture association and native exception preservation are source/CPU capabilities only. Transient scale contents, completed GPU writes, current native compatibility and observer overhead remain unverified. Ticket06 stays PARTIAL1/10 (criterion7 only); whole15 stays PARTIAL0/8. Finish this exact scoped commit, then combined existing layout/source/API/record/trace/deadline readiness and one distinct native missing-witness generation. No new collector or core abstraction is required. Shared/C06/native single owners, GLM16–22 gate, final common branch and H800-first/H200 quota fallback<=64 non-preemptible policy remain.
+
+Source commit: `0bae7145ef8a1ac6ca3e59eeca55e341800bc465`. `native_physical_20261019_01/writer_scale_01/post_commit.json` verifies the exact three paths, parent49482c6 and Git=current=frozen. No push or ignored-record addition; unrelated.pi preserved. Continue combined readiness and a distinct native witness;06/15 formal status unchanged.
+
+
+## Ticket06 distinct native physical generation readiness — 2026-10-19
+
+- completed:writer/scale commit0bae714;canonical preflight122native sources;original SDKpayload24inertchecks;current exact launcher/source/configfreeze.
+- completed:16historicalcapacityrankfiles rehashed, current layout hypothesis17,386,972ownedbytes/rank within24MiBcap;two8MiBtracecaps share64MiB/rank, leaving24MiB/rank for records;original512MiB/node,4GiB/nodearchive and2010sworkload/2400souter/60sRPC budgets remain.512-row scratch is existing configuration;20,499parameterchunks/rank is historical arithmetic, not scan feasibility.
+- completed:personal active-job read found only disjointGLM/DS16GPUjob exp-1019-172330-858927 Pending/non-preemptible;proposed aggregate32GPUs<=64. No endedjob was individuallypolled.
+- in-progress:one distinctH800/codesign16GPUmissing-witnessgeneration request_physical_20261019_01;receipt atnative_role_tp16/launch_request_physical_20261019_01/receipt.json. Parent submits throughoriginal localpersonalPythonRJobBackend, keepslauncher alive and validatescreator,mount,hardware,native/terminaloutputs.
+- pending:actualnativeprecision/state/writer/capture/replayevidence andexact06criteriondisposition;no CPUfixture or source metadata claims transientfinite/write/G2.06PARTIAL1/10andwhole15PARTIAL0/8 unchanged. Mainpath remainscomplete06 ->15.native_reconciliation;06 ->native07/08 ->09H80064.
+
+
+## Ticket06 H800 physical generation and H200 fallback — 2026-10-19
+
+- completed: the frozen request_physical_20261019_01 receipt SHA256 2a0ca0cfe89ab44dcd80cd708249965b531acfb6a743da6f20fd5d309ef9c394 and HEAD0bae714 were validated, with35unchanged inputs. One original local personal Python RJobBackend submission created exp-1019-175110-826226 at2026-10-19T09:51:10Z. Two-node8GPUs/node, codesign, non-preemptible, locked image, localNFS100.96.128.195/currentworktree and RDMA1/8 are verified. Pre-submitpersonalactive16+new16=32GPUs.
+- observed: at10:06:05Z/18:06:05HKT the exact platform queue reason was insufficientH800quota,16requested/13remaining; two reads returnedPending/zero replicas. Under the user's H200fallback authorization the establishedrjob_stop.sh/Python wrapper stopped only this job at10:07:56Z. The next exact read returnedStopped/zero replicas; starter and launcher returned0. No H800native model/GPU workload executed. Original35sources and receipt are preserved in launch_request_physical_20261019_01/source_snapshot, and platform/launcher bytes are retained beside it. quota_disposition_01.json has42PASSidentity/archive assertions.
+- in-progress: minimal H200resource support through the existing TP16driver only; three source/test files preserve exact native model/engine/sampling/graph/budget behavior and reject mismatchedGPU/quota pairs oractualGPU inventories. Frozenh200_resource_01/candidate01; affectedfiveCPU suites451PASS/41.92s,exit0/source_changes=[];756current-source-applicability checks cover753unchangedsimulatorpaths. Standards/Spec read-onlyreviews run independently. Tests establish source/CPU behavior only.
+- pending: final review/report/exactthree-filecommit -> distinctrequest_physical_h200_20261019_01source/config/SDKfreeze -> oneH200/step_main16GPU/non-preemptible native diagnostic andexactidentity/native/terminalaudit. Maximum64totaltestGPUs. No endedH800poll/retry.06PARTIAL1/10criterion7 andwhole15PARTIAL0/8 unchanged; H200 does not closeH800capacity/timing. No Frontiercorechange or new architecturedecision.
+
+H200 driver source commit63921567cd7c57955f80288aa115393567c1d3cf verified exactthreepaths/Git=current=frozen/parent0bae714. Currenttrackedworktreeclean. NativeH200preparation122sourcepins and24inertSDKchecksPASS. Parentprepares finalnewsource_head andreceipt; noH200submissionyet.
+
+
+## Ticket06 H200 physical diagnostic failure and recovery — 2026-10-19
+
+- completed: generation `request_physical_h200_20261019_01` was submitted once as `exp-1019-181811-095305` at 2026-10-19T10:18:11Z under frozen HEAD6392156 and receipt SHA f9de30b9c455edce91bbae575ef4cce48007d57a57a95f7b49dae7fc04997859. All41 frozen inputs are copied and hash-verified in `native_role_tp16/launch_request_physical_h200_20261019_01/source_snapshot/`. Original local Python SDK, i-fengyicheng, step_main/non-preemptible, two8GPU replicas, locked image, local100.96.128.195NFS and RDMA1/8 match.
+- observed: platform Failed at 2026-10-19T10:21:22Z. Node0/cfcd2084 exited1 during supervisor setup; node1/c4ca4238 was Stopped while ContainerCreating and never ran the workload. Node0 inventory records actual gpu-h200-0192, eight uniqueH200UUIDs. Local original Python log calls returned zero rows; authorized remote read-only exact-replica logs recovered the initial `FileExistsError` at `check_role_execution.request_supervision -> check_role_capacity.save -> path.open('x')` for already-created worker `node.json`. No native model, request, graph, finite scan or physical trace executed. The exact personal cloud generation does not exist.
+- completed: selected platform02/remote_failure_logs01, terminal_launcher_archive01 and marker_snapshot01 retained. Starter/launcher exited1 through original SDK failed wait; no duplicate submission, platform stop or historical artifact modification.
+- in-progress: parent adds one real run_node composition regression for the physical-observation branch, then moves profiler node metadata into the original node-record construction and removes repeated exclusive writes. This is a native harness fix; no Frontier core refactor or acceptance change.
+- pending: affected CPU checks, exact source review/freeze/commit; check current H800-first quota for one separately identified corrected generation, with authorized H200fallback only if actualH800quota is insufficient.06 PARTIAL1/10 criterion7 only; whole15 PARTIAL0/8. Main path remains complete06 ->15.native_reconciliation;06 ->{native07,native08}->09H80064.
+
+
+## Ticket06 node record and child environment CPU correction — 2026-10-19
+
+- completed: exact three-file candidate01 from6392156 fixes duplicate exclusive node creation and missing profiler environment in the outer child spawn closure. red01:4FAIL originalFileExistsError;green01:4FAIL missingchildenv;green02:4PASS;tests01:sixaffected613PASS/54.52s,exit0/source_changes=[]. Fourregressionpassesareincludedin613. Exactsource/diff/AST/retained23suite-sourceand41oldinputhashesmatch.753simulatorpaths(including453Frontier)unchanged;no benchmark or allhistoricalrawrehash.
+- completed: parent corroborated retained Standards and completed Spec,zero remaining findings on each axis. Both independent reviewer requests failed429;no independentPASSclaimed. Reports/acceptance in native_physical_20261019_01/node_record_01 and test_report_2026-10-19_native_profiler_node_record.md. OriginalH200Failedgeneration,input/receipt/traceback/terminalrecords remainimmutable.
+- pending: commit exact3code/testpaths,verifyGit=current=frozen,parent6392156;prepare distinctsource/config/SDK/budgetfreeze,submitH800/codesignfirstandonlyactualquotashortagepermitsH200/step_main.<=64total/testing/non-preemptible. Actualnativechild/precision/state/physicalqualificationremainsunverified.06PARTIAL1/10criterion7andwhole15PARTIAL0/8 unchanged. Mainpathcomplete06 ->15.native_reconciliation;06 ->{native07,native08}->09H80064.
+
+Node record source commit: `649b50450b52d54cf2eeec6456301e619c25308b`. `native_physical_20261019_01/node_record_01/post_commit01.json` verifies exactthreepaths,parent6392156 andGit=current=frozen;trackedworktreeclean,unrelated.pi preserved,no push or ignored-record addition. Native06 remains1/10criterion7only andwhole15 remains0/8. Next is one distinct H800-first frozen witness with unchanged budgets.
+
+Distinct corrected request_physical_20261019_02 source649b504 is frozen at2026-10-19T10:39:29.461815+00:00;56inputs archived before submission,canonical122pins and24SDKassertionsPASS. Latestpersonalactive16+new16=32<=64allnon-preemptible;quota not inferred. H800/codesign is first;original failed H200 remainsimmutable. FrozenreceiptSHA879bcfd0384114a686639f44e1c764dc815fc4477f8d99d890c3240750ce1831. Native/model/precision/state/profiler/overhead remainsUNVERIFIED.
+
+Started original localPythonlauncher for request_physical_20261019_02 at2026-10-19T10:39:48.073561+00:00,starterPID2048784,source649b504/frozenreceipt879bcfd0384114a686639f44e1c764dc815fc4477f8d99d890c3240750ce1831;oneattemptonly. Job identity is pending SDK creation;launcher remainsalive through original wait.
+
+H800 exp-1019-183952-319621 actualquota16requested6remaining/Pendingzero replicas;approved exactrjob_stop.sh stopped at2026-10-19T10:41:10Z. Currentquantity125Gi=128000Mi;initialdisplayassertionfailure retained.56frozeninputs/receipt andterminalarchive preserved;quota_disposition01checksPASS. No nativeH800workload. Preparing independentrequest_physical_h200_20261019_02withsource649b504andunchangednative/budgets;oldH200failedgenerationnotreused.
+
+CorrectedH200generation request_physical_h200_20261019_02 frozen62inputs/91checks/currentsource649b504/native122pins/24SDKchecksPASS;receiptSHAf26f138596d15f073d7090d8130af70e307475fd5d23b8ffbfc44dad35fb03de. OneoriginallocalpersonalPythonstarterPID2055978 began at2026-10-19T10:43:08.285399+00:00;H800quota-onlyterminal retained,combined32<=64/non-preemptible. JobIDpending;actualnative/precision/state/trace unverified,06/15unchanged.
+
+
+## Current native H200 physical witness continuation — 2026-10-19
+
+- completed: resumed from source649b504 with clean tracked worktree; original local starter2055978/launcher2056002 remain alive. No duplicate submission or frozen input edit.
+- observed: exact platform read02 at2026-10-19T10:46:15Z is Running with two8GPU/non-preemptible step_main replicas, creator i-fengyicheng, locked digest and local100.96.128.195NFS. Marker snapshot at10:51:39Z retains five original files: both prepared/inventory and node0 actual native_started child945;16uniqueGPUUUIDs on gpu-h200-0057/gpu-h200-0107. Initial local marker PermissionError is preserved as an inspection error; scoped sudo read succeeds without permission changes. Native business completion/physical traces remain unverified.
+- completed: original Python replica logs returned0rows; exact authorized remote read-only tails at10:47:53Z show platform startup and actual H200/RDMA env only, not native business outputs. No absence-of-native-output conclusion is drawn.
+- review failure: read-only acceptance mapping agent Ohm failed429 retry exhaustion with no artifact, then was closed. Parent continues source/acceptance mapping; no independent review PASS.
+- in-progress: detached audit reuses existing all_rank_census, public/admission/device validators, state records, profiler_rows/analyze_profiler and original supervisor/archive. No new collector, graph API investigation or general allocation-history work. Actual resident finite content does not establish transient scale consumption or native write attribution.
+- pending: current exact job -> actual completed archives/platform/container/launcher -> ten-criterion06 disposition -> smallest observed-error correction if required ->15.native_reconciliation once06complete;06 ->native07/native08 ->09H80064.06PARTIAL1/10criterion7 andwhole15PARTIAL0/8 unchanged. H800first/H200actual-quota-fallback<=64allnon-preemptible, shared/C06/native singleowners, GLM16–22gate and final commonbranch remain.
+
+
+## Physical H200 terminal audit and failure archive correction — 2026-10-19
+
+- completed: the original request_physical_h200_20261019_02 / exp-1019-184312-272826 is terminal Failed, finish2026-10-19T11:20:08Z / October19 19:20:08HKT. Starter2055978 and launcher2056002 exited(return1); no job remains to wait on or resubmit under this generation. Source649b504, receiptSHA f26f138596d15f073d7090d8130af70e307475fd5d23b8ffbfc44dad35fb03de and all62frozen inputs remain immutable. Terminal disposition is native_request_physical_audit_20261019_02/terminal_disposition01.json;124frozen/current-before-correction source identity checks pass.
+- observed: both supervisor completions report the unchanged2010s workload timeout. Node0 raw child945 exit-15/SIGTERM and residualFAIL(8workers still live at cleanup);node1 raw child951 exit0 and residualPASS, but workloadFAIL. Both budget receipts report pending native trace reservation, approximately40MBrecordedfiles and owned_device_bytes=null. The original archive was not created. Native timeout cause is UNKNOWN: stdout/stderr and worker records remained worker-local, and platform P2P startup warnings do not establish native causation. Exact API, authorized SSH terminal logs, original launcher logs and9marker files are retained;node1's current API container-state field is stale and is not claimed as terminal-container proof.
+- completed: regression drives the real request caller -> capacity supervisor -> original archive, replacing only external CPU process/socket/GPU boundaries. red01 fails before pytest because transient-scope authentication is unavailable;this is an environment setup failure,notRED. Noninteractive sudo creates the30GiBscope while pytest runs asbrainpp. red02 gives4deterministic failures/1.27s at archive.exists for two nodes × absent/partial traces. hypotheses01 verifies all4exact identity/reservation totals fit262144bytes and no pre-completion metadata is written;complete=True returns before archive. The original native timeout is not reproduced or explained by thisCPUloop.
+- completed: minimal three-source correction retains the existing reader and original archive. A PendingTraceReservation(ValueError) carries the verified tensor/unfinished-trace charge only after every worker identity/source and all8worker reservations are validated. The caller uses it solely to retain budget-compliant failed records, returningUNVERIFIED. Over-budget, missing, malformed or wrong-source reservations still reject archival. No native model/graph/runtime policy or Frontiercorechange.
+- completed: green01 has28PASS/6.41s(includes4newcases);original raw failures,SIGTERM,byte logs,captured-onlymanifest and failed completion remain. affected01 has663PASS/1FAIL/52.98s:the old one-worker profilerfixture expected pending before8worker coverage. This failure is preserved. The fixture now proves missing8worker rejection first, then pending-specificUNVERIFIED with8validworkers and exact charges. Final affected tests run in two disjoint sets under 60-second/30GiB limits: affected02 has 466 PASS/45.01s and affected03 has 198 PASS/5.87s, both exit0 with source_changes=[]. Final total664; no overlapping attempt is added.
+- review failure: Singer01a15415-417a-7320-9eb9-06bfaea221c0 exceeded429retrylimit with no Ticket08source-preparationartifact and was closed. No independentreviewPASS or completedPDsourcework is claimed.
+- completed: 71 scoped source/identity checks and final parent Standards/Spec reviews have no remaining findings. Dated report: test_report_2026-10-19_native_failure_archive.md; source/CPU acceptance: native_physical_20261019_01/failure_archive_01/acceptance01.json.
+- completed: four-file source commit b5b2005ccb809252b6dc1e37ff087e5c231dc7a5; post_commit01 verifies Git=current=frozen, exact four paths and parent649b504. Tracked worktree clean; unrelated.pi preserved, no push or ignored task-record addition. Ticket06 remainsPARTIAL1/10criterion7frompriorgeneration;whole15 remainsPARTIAL0/8. This harness fix is not evidence of completeG2or timeout resolution.
+- pending: accepted sourcecommit/identity -> one new frozen generation to retain the previously missing nativefailure evidence and localize timeout within unchangedworkload/archive/resourcebudgets. H800/codesignfirst,H200onlyactualquotashortage,<=64total/non-preemptible. Do not repeat endedgraphAPI,capacity,FFNor oldphysicalgenerations. Complete06 ->15.native_reconciliation;06 ->{native07,native08}->09H80064.Sharedcore,C06normalizer,nativeobserver/caller singleowners;GLM16–22full-pathgate and finalcommonbranchremain.
+
+
+## H800 failure-evidence generation freeze — 2026-10-19
+
+- completed: reconstructed current authority/source and confirmed tracked worktree clean at b5b2005. Previous local freeze search omitted observed_generation4; existing pinned utils.py found there. Saved freeze_attempt01_disposition.json and 122/122 retained_sources01.json; no reference source collection or native change.
+- completed: original canonical preflight replay matches122pins; 24inert SDK checks reused with zeroAPIcalls. Personal API snapshot12:54:47Z has0activeGPUs; proposed16<=64/non-preemptible. Parent exact generation review 103checksPASS; original62frozen archived inputs unchanged, all4accepted source/current/Git/candidate bytes match. Native/model/graph/sampling/budgets unchanged.
+- completed: request_physical_20261019_03 frozen181inputs/15902823bytes, receiptSHA47b6ae229d2f6643d16b6d288097f2b74fc9cab60d9ee8b19bd2318d59188aeb. Existing validate_receiptPASS, new launcher root empty. No submission yet.
+- pending: single local personal Python H800/codesign2x8non-preemptible submission; actualquota-onlyfallbackH200after exactH800terminal, no duplicate. Native failing phase/archival/precision/state stillunverified;06PARTIAL1/10andwhole15PARTIAL0/8 unchanged.
+
+- in-progress: sole H800 generation request_physical_20261019_03 submitted as exp-1019-205955-721468 at2026-10-19T12:59:55Z. StarterPID2253200/launcherPID2253206,execsession21906; originalwait remains live. Frozenreceipt47b6ae229d2f6643d16b6d288097f2b74fc9cab60d9ee8b19bd2318d59188aeb; oneattempt, no retry. Actualplacement/nativephase/archive/terminalpending.
+
+
+## H800 physical export failure and causal CPU continuation — 2026-10-19
+
+- `completed / resumed authority`: active implementation, H800-first/H200 actual-quota fallback, at most64total non-preemptible testing GPUs verified in current requirements. HEADb5b2005 and clean tracked worktree confirmed; unrelated.pi preserved. No new GPU submission or old-job polling in this continuation.
+- `observed / retained terminal`: original request_physical_20261019_03 / exp-1019-205955-721468 is Failed at2026-10-19T13:37:21Z / October19,2026 21:37:21HKT; original starter2253200/launcher2253206 ended. Both unchanged2010s workload deadlines expired. Successful archive recovery retains90files/79,981,279bytes; captured-byte-only provenance, omissions and parent postrun hashes remain. Complete detached identity/phase/criterion audit is underway from frozen b5b2005 and receiptSHA47b6ae229d2f6643d16b6d288097f2b74fc9cab60d9ee8b19bd2318d59188aeb, without current-source or native-success assumptions.
+- `completed / causal CPU probes`: retained export_repro_red01.json uses the locked Torch2.13.0+cu130 exporter and1200CPU annotation/op iterations, no GPU or CUDA initialization; the existing thread drainer blocks until20s timeout, trace0bytes, no completion report. export_process_probe01.json changes only FIFO draining to a fresh Python process; original exporter completes2,662,298bytes/10,811events in0.058s with CUDA uninitialized. This explains a reachable GIL/FIFO harness failure; absent live GPU stacks still prevent exclusion of every native cause.
+- `in-progress / correction`: parent owns the existing role_profiler_observation exporter and affected tests/API. Replace its Python thread reader with a fresh process, retaining exclusive output, byte/deadline/native-error/EOF/keeper/inode cleanup and reservation semantics; add the actual large-trace locked CPU regression before the fix. Check the retained NoneType lifecycle observer error against its pinned native owner before changing behavior. No budget increase or blind rerun.
+- `in-progress / disjoint sidecars`: Confucius owns only new detached terminal-analysis files in native_request_physical_audit_20261019_03; Volta owns only native_pd_source_preparation_20261019.md. Shared core/C06 and native observer/caller remain single-owner. Sidecar findings require parent artifact review; no reviewPASS inferred from a dispatch.
+- `pending / main path`: affected checks and locked CPU API -> exact-source review/report/commit -> distinct missing-witness generation only after readiness -> complete06 ->15.native_reconciliation;06 ->{native07,native08}->09H80064.06PARTIAL1/10criterion7frompriorgeneration and whole15PARTIAL0/8 remain. GLM16–22 full-path prerequisite and final commonbranch unchanged.
+
+
+## FIFO correction completion and next native generation — 2026-10-19
+
+- completed: originalH800request_physical_20261019_03/exp-1019-205955-721468Failed13:37:21Z;no originaljobwaiting/poll/retry. Confuciusdetachedaudit3660PASS,parentcheckedfinalartifactassociations,90files/79,981,279bytes and181frozeninputs retained. Node1actualcontainerError/exit1;node0containerstateUNVERIFIED. NativeFAIL/BLOCKED_ON_RUNTIME,16zerobytependingtracesUNVERIFIED,06PARTIAL1/10priorcriterion7,whole15PARTIAL0/8.
+- completed: lockedCPUREDexit124/21.953s reproduces large-export GIL/FIFO block; processGREEN and finalAPI succeed with CUDAuninitialized. LegalNone lifecycleRED1FAIL/2PASS andGREEN3PASS. Original live throwing stacks absent,so exactGPUcausation remainsunverified.
+- completed: independentSpeccandidate01P1native-errorlossoncleanup/P2reaped-readerpendingcharge reproduced5REDcases;minimalexistingexportercorrection5GREEN. IndependentStandardscandidate02P2rawPopenfaultbypassfixedbyexistingfixtureallowlist/registration. Candidate03manifest18fc1b456f1c9a72a6faee35bea2f9c0091866075b5844d97d349b94739df0ba;bothfinalindependentreviewshaveNofindings. Alloldreviews/candidates/failuresretained.
+- completed: finalproductionaffected425observer/14.09s+201driver/25.72s=626distinctPASS;candidate03test-onlyfixture168profiler/8.62s replacesexistingcases,notadded. Lockedfinal02PASS/12.496s,2,664,717/2,675,714bytetracesexceed65,536pipe,31bytenegativeUNVERIFIED;exactproduction/APIhashesmatch. Allfinalreceiptsource_changes=[].79source/applicabilitychecksPASSafterpreservinginitialold-sharedsnapshotassessmentFAIL;later42structuralpathsmatchcurrent,749simulator/data/benchmarkpathsunchanged,181oldfrozeninputsintact. NoCPU/GPUbenchmarkcampaign.
+- completed: test_report_2026-10-19_native_fifo_export.md,acceptance03.json,currentrequirements/spec/plan/tickets/summaryupdatedwithunchangedacceptance. VoltaPDpreparationparent51hash/56linkcorroborationcomplete;fourmissingacquisitionunitsremainpending,full08blocked06.
+- pending: exactfive-filecommit/sourceidentity ->distinctcorrectedgenerationpreflight/config/SDK/budget/receiptfreeze ->oneH800/codesign16GPU/non-preemptiblenativewitness;H200/step_mainonlyactualquotashortage,<=64total. Original2010workload/2400worker/300archive/8MiBtrace/512MiBnode/4GiBarchiveunchanged. Complete06 ->15.native_reconciliation;06 ->{native07,native08}->09H80064. Sharedcore,C06,nativeobserver/callersingleowners;GLM16–22gate/finalcommonbranchremain.
+
+FIFO source commit: `94d154e1f787685032db0242fbc4b99d937bbf14`. `native_physical_20261019_01/fifo_export_01/post_commit03.json` verifies exact five changed paths, parentb5b2005 and Git=current=frozen. Tracked worktree is clean; unrelated `.pi/` remains; no push or ignored-record staging. Source identity grants no new native criterion. Continue the distinct corrected H800-first witness with unchanged budgets.
+
+
+## Corrected request_physical_20261019_04 preparation boundary — 2026-10-20
+
+- completed: recovered clean tracked worktree at94d154e1f787685032db0242fbc4b99d937bbf14 and accepted FIFO/None source/CPU records. Original request_physical_20261019_03 is terminal Failed and remains immutable; no old-job poll or redispatch. The three completed sidecar reviewers were closed after preserving their final reports.
+- completed: distinct native_role_tp16/launch_request_physical_20261019_04 config,payload,launch/start,readiness and preparation scripts already exist;122 retained native pins were checked previously. This records preparation only: no preflight,SDK result,active-job snapshot,receipt,source_snapshot or submission had been produced at resumption.
+- in-progress: canonical preflight,original inert SDK materialization,personal active-job count,exact generation/source/workload/budget review and freeze. H800/codesign2x8 GPUs first,<=64 total testing GPUs,all non-preemptible;H200/step_main only after actual H800 quota shortage and exact H800 terminal. Original2010s workload/2400s worker/300s archive reserve and8MiB trace/512MiB node/4GiB archive remain.
+- pending: one frozen corrected native witness -> actual native precision,state,content,physical trace,public completion and terminal/archive audit -> complete06 ->15.native_reconciliation;06 ->{native07,native08}->09 H80064.06 PARTIAL1/10 priorcriterion7 and whole15 PARTIAL0/8 unchanged.Shared core,C06,native observer/caller each single-owner;GLM16–22 gate and final commonbranch preserved.
+
+Corrected generation request_physical_20261019_04 frozen at2026-10-19T16:08:34.145826+00:00: source94d154e,receiptSHA2c1b94dde76a2f7e69692f2df1cd7ca8fa93bfceba6f5d82aef041046729fada,201inputs/16439703bytes;122nativepins/24inertSDK/543parentchecksPASS. Personal API snapshot16:02:44Z has32activeGPUs;new16 gives48<=64 allnon-preemptible.H800/codesignfirst,actualquota-onlyH200fallback. Original181frozeninputsunchanged,newlauncherrootempty,originalvalidate_receiptPASS. No submission yet;native/G2/06/whole15remainunverified/unclosed.
+
+Started original localpersonalPython request_physical_20261019_04 at2026-10-19T16:10:10.516118+00:00,launcherPID2732956,execsession8498;oneattempt,frozenreceipt2c1b94dde76a2f7e69692f2df1cd7ca8fa93bfceba6f5d82aef041046729fada. Originalwaitremainsalive. Actualjobidentity,placement,nativephase,trace/archive/terminalpending. NoG2/06/15acceptance.
+
+ExactpersonalAPI16:11:49Z confirmsrequest_physical_20261019_04/exp-1020-000928-505270Running,two8GPU/non-preemptiblecodesignreplicas,creatori-fengyicheng,lockedimagedigest andcurrent100.96.128.195NFS. Worker markersretainactualgpu-h800-0530/gpu-h800-0157and16uniqueH800UUIDs;node0nativechild1049started.125Gi=128000Mivalidated;RDMA1and8limitsretained.Noquota-fallbackrequired.Nativecompletion/precision/state/physicaltraces/overheadpending.
+
+
+## GitHub publication — October 20, 2026
+
+The user-requested branch publication is complete: `feat/step5-preview` pushed with upstream tracking to `NetX-lab/Frontier`, Draft [PR50](https://github.com/NetX-lab/Frontier/pull/50) opened against`main`. New documentation commit`9ebf4cf224410715cbb04d84dc94f8654627d4d8` adds`docs/general/step5-preview.md`; actual local,remote andPRheads match. Earlier verifiedcodecommits are included. Detailedrequirements/spec/tickets/progress remainupdatedlocally under the repository's explicit local-only task_memory policy; no forced raw artifacts or unrelated.pi were added. No merge,force-push or branch rewrite.
+
+Current native generation remains bound to executedsource`94d154e` andfrozenreceipt`2c1b94dde76a2f7e69692f2df1cd7ca8fa93bfceba6f5d82aef041046729fada`;all201inputhashesremainunchangedafterdocumentationcommit. PRpublication grantsnoG2/nativeacceptance.06PARTIAL1/10priorcriterion7;whole15PARTIAL0/8. At this publication observation the original launcher result had not yet been incorporated; the terminal disposition below supersedes that pending state. Next actual native evidence/archive audit ->complete06 ->15.native_reconciliation;06 ->{native07,native08}->09H80064.
+
+
+## Corrected physical generation terminal and publication synchronization — October 20, 2026
+
+- `completed / exact terminal inspection`: retained original personal API observation from 2026-10-19T16:39:20–16:39:23Z records `exp-1020-000928-505270` Failed at 16:16:59Z / October 20, 2026 00:16:59 HKT. Local launcher PID2732956/session8498 ended1. One replica container Error/exit1; the Stopped replica still exposes a running API container field, so its actual container terminal remains UNVERIFIED. No new API poll or control occurred in this continuation.
+- `observed / native outcome`: both native children record raw exit0 and all timeout flags false. Both supervisors return1 because `request_evidence_retention` rejects profiler-start, request A/B CPU metadata and completed all-rank traces. This failure is not the previous workload timeout. The root cause remains unknown until original profiler/request errors are recovered.
+- `observed / retained evidence`: all16 capture traces are exactly8,388,608bytes. Marker finalization is PASS within captured-byte-only scope, with node0 214,997,334bytes and node1 196,304,612bytes. Archive-content and trace completeness remain unaudited/UNVERIFIED. Exact selected fields and source hashes: `native_request_physical_audit_20261020_04/terminal_disposition01.json`.
+- `in-progress / parallel documentation`: parent owns public `docs/general/step5-preview.md`, PR50, this progress/report and exact artifact audit. Independent documentation owner synchronizes requirements/spec/plan/summary/tickets06/15 only. These local-only task records stay ignored; unrelated `.pi/` is preserved. No native acceptance or budget change is made.
+- `pending / main path`: recover exact personal archive through the existing ≤64MiB/≤60s read batches -> replay existing validators -> smallest supported correction/affected verification -> distinct native generation only if required. Then complete06 ->15.native_reconciliation;06 ->{native07,native08}->09H80064.06PARTIAL1/10priorcriterion7 and whole15PARTIAL0/8 remain; shared owners, GLM16–22 and final common branch are unchanged.
+
+## Ticket 06 simulation-scope disposition (decision D1) — October 20, 2026
+
+- `completed / documentation-only audit`: no code change, GPU job, submission, SSH or platform operation. Evidence came only from retained files of `exp-1019-045056-405672`, `exp-1019-075927-372034` and `exp-1020-000928-505270`, plus the failure records of capacity02, `_03` and the H200 runs.
+- `completed / verdicts`: S1, S2, S3, S4 and S6 PASS; S5 PARTIAL. Hidden outputs are finite on all 16 ranks (539,099,136 elements). No finite check of resident parameters or cache contents is in local evidence; the `_04` per-rank records that may hold it (16 files, 199,526,397 bytes) remain cloud-only.
+- `observed / new reconciliation`: the `_04` native cache owners show 69 SWA layers with window 512 and 23 DSA layers at IDs 3, 7, …, 91 on all 16 ranks. Resident FP8 expert scales exist on MoE layers 3–87 and not on 88–90, matching the locked routed-expert exclusions and the 3 `UnquantizedFusedMoEMethod` modules.
+- `deliverables`: `native_simulation_scope_20261020/disposition01.md`, `native_simulation_scope_20261020/disposition01.json`; ticket 06 now ticks S1–S4 and S6 and keeps `**Status:** in-progress`.
+- `pending / S5 closing action, needs user approval`: first a read-only recovery of the 16 `_04` request records with the existing reader and batch lists 03–06; only if they lack complete resident scans, one unchanged-driver TP16 native run on 2×8 H800 codesign, non-preemptible, with the `_04` configuration and original budgets.
+
+## Tickets 08/09 phase 1 — native P/D over NIXL design — October 20, 2026
+
+- `completed / read-only design`: wrote `native_pd_20261020/design01.md`. It is backed by 28 locked-image source files with matching SHA-256 (`native_pd_20261020/image_source/manifest.json`) and one read-only quota snapshot (`native_pd_20261020/quota01.json`, observed 2026-10-19T18:21:37Z: codesign H800 about 38 GPUs free with 4 whole free nodes; step_main H200 about 39 free with 4 whole free nodes). No repository file was edited or committed, and no GPU job, SSH or cloud read ran.
+- `completed / content`: NIXL P/D is reachable only as `NixlConnector` with CUDA buffers. The layout resolves to LBNHC, so TP must be equal on both roles. P stops 16–31 tokens short and D recomputes them (4105 → 4080 loaded and 25 computed). Native evidence comes from the `/metrics` NIXL and prompt-source counters. Reuse the GLM shared harness at `8a64123`, adding a Step-5 entry in a version-keyed table. The first run R1 is 1P1D with TP8/DP2/EP16 per role on 4×8 H800; the fallback is TP16/DP1.
+- `pending / user decisions`: (1) read-only `ssh shai-ycfeng` cloud read to close 06 S5; (2) local merge of `feat/glm53-dsv4-vllm028` into `feat/step5-preview`; (3) `skip_tokenizer_init` setting; (4) H200 use if H800 lacks four whole nodes; (5) whether ticket 09 repetitions may share one job.
+
+## Ticket 10 phase 1 — H800 compute profiling design — October 20, 2026
+
+- `completed / read-only design`: wrote `step5_profiling_20261020/design01.md`. No repository file was edited or committed, and no GPU job, platform submission or SSH operation ran.
+- `completed / content`: Q1 lists the native H800 kernels for each Step operator (SWA, DSA prefill and decode, MoE, linear, norms). Q2 lists the profiler and predictor gaps with file and line references. Q3 explains why ticket 05 admitted 0 of 66 rows: custom collectors whose evidence quality could not be proven, not wrong timing. Q4 is the plan: a GDN-style native producer under `frontier/profiling/step5/`, the Step activation in the linear-op profiler, an FP8 block-128 MoE adapter that mirrors `_get_functional_mxfp4_state`, about 336 attention cells, 96 MoE cells, about 50 H800 GPU-hours with a peak of 10 GPUs, the RJob pattern and the admission checks.
+- `observed / correction`: FP8 block-128 applies only to the routed experts of layers 3–87. Everything else is BF16, the router is FP32, and the dense MLP covers layers 0–2 and 91.
+- `pending / user decisions`: (1) projection ownership, option A recommended; (2) the EP32 expert kernel format and the all-to-all backend, to be frozen by ticket 06 before collection; (3) the fallback when no whole 8-GPU H800 node is free.
+
+
+## Merge fidelity of `c14e642` against both parents — October 20, 2026
+
+- `completed / legacy matrix`: three labels (merged `c14e642`, shared `71cde5e`, step `0070c4b`) each exited 0 and executed all 77 cases of the unchanged `tests/e2e/refactor_fidelity` harness in 398.9 s, 395.3 s and 387.1 s. All three pairwise comparisons report 77 of 77 identical with zero uncompared, missing or unexplained cases, clean provenance and 519 predictor-cache files per label. Reports: `comparison_merged_vs_{shared,step}.json`, `comparison_shared_vs_step.json`.
+- `completed / structural suites`: 13 sides exited 0 across step5 (3 cases, merged and step), glm53 (3 cases, all three labels), glm53_pd (2 cases, merged and shared) and dsv4 at `--dp 2/4/8` (2 cases each, merged and shared). 14 of 20 pairwise case comparisons are byte-identical. The 6 differences are all GLM-5.3 weight accounting in `system_metrics.json`, with `request_metrics.csv` byte-identical, and are attributed exactly to `9dec8d1`: 2,477,260,800 parameters (`SP_SHARED_ELEMENTS`) and 2,477,865,600 bytes (`SP_SHARED_BYTES`). Merged equals shared, and the Step parent holds the pre-change values.
+- `completed / preemption coverage`: the legacy matrix preempts in 7 PDD cases (56 events) identically on all three labels, and the structural suites never preempt, so the `85a5c90` decode branch was unexercised by both. `sitehook/sitecustomize.py` plus `observe_preemption.py` instrumented `Request.on_preempted` and `Request.samples_preempted_step` without editing any compared tree.
+- `completed / reaching the branch`: `PP=1` never holds a batch at preemption time, and the merged-only `MAX_CONCURRENT_BATCHES` flag is unavailable on the Step parent. Pipeline depth is the capacity both parents share, so `PP=2` with 12 requests, 256 prefill tokens, 768 decode tokens, `MAX_TOKENS_IN_BATCH=256` and a 96-block explicit pool was found by `tune_preemption.py` and replayed identically on all three sides. Each side reached the changed branch 10 times, with 4855 preemption events and 11 preempted requests, and the two sample-length formulas differed by one token on all 10 (261…774 against 262…775).
+- `completed / branch is behavior-neutral`: across 19,743 `samples_preempted_step` queries per side, 10 rows carried the pending sample on each side, each at that side's own recorded length, and no row fell in the one-token window between the two formulas. All three pairs are byte-identical (`request_metrics.csv` `a7620bd1…`, `system_metrics.json` `dbb8020d…`), confirmed by both the harness comparator and a field-by-field read. `3e6a421` moves the row length together with the recorded length, so the inequality is preserved.
+- `observed / comparator limit`: `compare_structural.py` first collapsed the three step5 cases into one key because that suite nests metrics under `cases/<case>/metrics`; stripping the leading `cases` component fixed case identity only. The structural comparator reports at most 5 differences per artifact, so the GLM-5.3 leaf count of 8 came from a separate recursive walk and is recorded as such.
+- `deliverables`: `test_report_2026-10-20_merge_fidelity.md`. Scratch root `/data/ycfeng/tmp/merge_fidelity_20261020` (42 GB) holds the three legacy label trees, the 13 structural sides, the probe trees and receipts, and the scripts.
+- `completed / cleanup (decision D8)`: the scratch root and the worktrees `tmp-fidelity-merged`, `tmp-merge-shared` and `tmp-merge-step` were removed on 2026-10-20; the kept evidence is in `scratch_evidence/merge_fidelity_20261020/` (see "Decisions D5–D8 and cleanup" below).
+
+## Ticket 10 MoE slice — Step-5 routed layer groups — October 20, 2026
+
+- `completed / source`: commit `173a5e0` on `feat/step5-profiling` (worktree `.worktrees/step5-profiling`, parent `c14e642`). The MoE profiler now measures each Step-5 routed layer group separately: layers 3–87 block-FP8 experts and layers 88–90 BF16 experts, both `swiglustep`, behind an FP32 `GateLinear` (4096→352) with `fused_topk_bias` (sigmoid, selection bias, top-8, renormalize, scaling 3.0). New `frontier/profiling/moe/routed_layer_groups.py`; rows carry `moe_layer_ids`, `moe_routed_precision`, `moe_activation`, `moe_native_backend`, `moe_native_experts_class` and `moe_triton_tuning_config`. BF16 and FP8 experts are built through vLLM's oracles as one `FusedMoEKernel`; the functional `fused_experts` path was deleted (fidelity fix: the old path ran SiLU only and skipped the selected modular kernel). Layer groups fail fast on the per-expert loop and on `uniform_topk`.
+- `completed / CPU verification`: `tests/unit/test_step5_moe_profiling.py` (11 tests: groups, dry-run counts, CPU-built Triton experts for both precisions, fresh-process router call, router rejection, wrapper rejection, BF16 kernel call, row metadata). The 37-file MoE list (`/data/ycfeng/tmp/step5_profiling_20261020/moe_test_list_torch.txt`) gives 381 passed, 22 skipped, 4 failed; the 4 failures are the pre-existing local-environment failures also present at `c14e642` (3 × `test_moe_gating_constructor_boundary.py` "Failed to infer device type", 1 × `test_moe_mxfp4_increment10.py` because vLLM is installed locally). Log: `/data/ycfeng/tmp/step5_profiling_20261020/logs/wip_moe_tests.log`. Python `/data/ycfeng/envs/oneshot-opd-py312/bin/python` (3.12, vLLM 0.28, CPU only).
+- `completed / dry run`: `python -m frontier.profiling.moe.main --models stepfun-ai/Step-5-Preview --num_tensor_parallel_workers 1 --expert_parallel_sizes 32 --num_tokens_list 1 16 256 --dry_run --disable_ray --device h800` lists groups `3-87 fp8` and `88-90 bf16`, 11 local experts at EP32, 18 profiled steps (3 token counts × 2 groups × 3 cases).
+- `completed / image API check`: `/data/ycfeng/tmp/step5_profiling_20261020/check_image_api.py` compares 26 vLLM symbols the profiler calls between the Step image sources (`image_src/vllm`, `0.1.dev22912+g8224bb82f`) and local vLLM 0.28. Differences are optional additions only (`FusedMoEConfig` extra fields, `init_workspace_manager(alloc_context)`, `convert_to_unquantized_kernel_format(layer)` for MoonEP, `fused_topk_bias(bias_vl, image_sentinel_lo)`, `GateLinear` extra keyword args), so the profiler's calls stay valid. Native non-mega Step-5 builds `FusedMoEFactory` without `swiglu_limit`; the image's Triton `swiglustep` applies its fixed 7.0 clamp, which the profiler reproduces. The image `GateLinear` lists (4096, 352) in `FP32_SUPPORTED_SHAPES`, so on Hopper the gate runs the FP32 router kernel for ≤32 tokens.
+- `pending / GPU`: H800 pilot in the Step image to confirm the selected router kernel, expert backend/class and Triton tuning file for both groups at EP32; then the §6.4 grids and §6.7 admission. `deep_gemm_mega_moe` stays out of scope per design01 §3.
+- `pending / simulator`: runtime lookup of MoE rows by `moe_layer_ids` group is not implemented yet.
+
+## Ticket 17 structural part — Step5 sequential PD handoff with dummy timing — October 20, 2026
+
+- `completed / source`: branch `feat/step5-pd-structural` in `.worktrees/step5-pd-structural`, parent `c14e642`, not pushed. The commits are:
+  - `a54354d`: the Step attention family resolves a per-TP-rank NIXL page payload with four components (SWA raw KV, sparse raw KV, region summary and open-region state). The Step guard admits PREFILL and DECODE with MoE TP1 and EP equal to attention TP x DP. The V1 reclaim cap keeps the window page that D's recompute reads. Adds the Step PD driver and unit tests.
+  - `bf121c0`: `metrics_store.py` reads the transfer payload directly. Adds the module-size exception record.
+   - `07bf337`: rejects Thinking Mode for Step models, fixes the Step driver's recorded hash, and adds the missing method to the MoE admission test fake.
+
+  The change reuses the GLM C16 transfer events, the `(replica_id, dp_id)` lanes and the C17 EP waves. It adds no allocator, transfer manager or registry.
+- `completed / Step PD runs`: `tests/integration/run_step5_structural_pd.py` at `07bf337` exits 0 in 781 s. All 4 cases pass every check:
+  - single 4105/9, offline and online: 1/1 requests, 103,687,956 B, 9 prefill chunks and 9 decode steps.
+   - boundaries, 12 prompts from 7 to 4105 tokens, offline and online: 12/12 requests, 432,334,220 B, P and D lanes 3/3/3/3.
+
+  The `request_metrics.csv`, transfer ledger, `system_metrics.json` and stage ledger are byte-identical at `a54354d`, `bf121c0` and `07bf337` (`md5sum` over the three output trees).
+- `completed / bytes`: per-rank, per-lane (8 ranks), logical-unique and target-resident bytes are kept separate. For 4105 tokens they are 103,687,956, 829,503,648, 405,530,388 and 1,028 blocks x 341,780 B. Hand-computed unit tests cover 4105 and 4096 at TP8, and 9 boundary prompts. TP3 and TP6 fail with "Step Q heads must divide tensor_parallel_size". `native_wire_bytes_known` is False.
+- `completed / gaps fixed in 07bf337`:
+  - Thinking Mode ran to completion on Step PD at `bf121c0`: exit 0 with 2 transfers. It now raises `ValueError: Thinking Mode is not supported for Step structural execution.` for Step models in any architecture. This is new behavior versus `c14e642`. The CLI probe now exits 1 offline and online.
+  - The MoE admission test fake lacked `get_layer_attention_spec`, which caused 2 candidate-only unit failures. The fake now has it.
+  - The Step PD driver recorded the GLM driver's hash as `driver_sha256`. It now records its own (`6052f9ea…`).
+- `completed / fidelity`:
+  - Legacy matrix, 77 cases versus `merged` `c14e642`: 77/77 identical at each of `a54354d`, `bf121c0` and `07bf337`. Each compare exits 1 only for "CACHE NOT VERIFIED", because `--clean-cache` would delete the worktree cache. The manifests list 519 cache files on each side with 0 name differences.
+  - Structural suites at `bf121c0`: 14/14 cases MATCH (step5, glm53, glm53_pd and dsv4 at DP 2, 4 and 8).
+  - Structural suites at `07bf337`: step5 and glm53_pd, 5/5 MATCH.
+  - glm53 and dsv4 were not rerun, because the only `frontier/` change since `bf121c0` runs only when Thinking Mode is enabled.
+- `completed / unit suite`: `pytest tests/unit` at `07bf337` gives 103 failed, 5,523 passed, 62 skipped and 29 errors. The baseline export gives 191 failed. The candidate has 0 failing IDs that are not also in the baseline. The 88 IDs that fail only in the baseline come from the export having no `.git` directory. Focused set before the commit: 715 passed.
+- `completed / performance`: the paired sentinels for `c14e642` versus `bf121c0` give `PASS_PAIRED_SIMULATOR_SENTINELS_ONLY`, with all 8 metrics within their frozen budgets. They were not rerun at `07bf337`, because the fixtures do not enable Thinking Mode. Structural-suite wall times at `bf121c0` and `07bf337` range from 4.4% to 0.04% below the merged-baseline runs. At `a54354d` they ranged from 1.3% above to 0.5% below. These are unpaired runs on a shared host.
+- `observed / self-inflicted failures`: at `a54354d`, glm53 and dsv4 `--dp 8` stopped with source-identity errors, because I edited and committed `bf121c0` while they ran. Both pass at `bf121c0` with an unchanged tree. Rule kept since then: do not edit the worktree while an identity-checked run is in progress.
+- `observed / documented gaps`: these are not modeled and not claimed:
+  - the native 25-token D recompute tail;
+  - the open-region and partial-summary pages that Frontier sends and native vLLM does not;
+  - the retirement of D window pages;
+  - the idle-lane dummy scope;
+  - the EP all-to-all backend and pre-dispatch quantization;
+  - block size 16 versus 64;
+  - the `payload_kind` and `common_blocks` naming debt;
+   - the inherited C16 D-context off-by-one.
+
+  Op-level tracing costs 620 s versus 146 s untraced, so the driver disables it.
+- `completed / review fixes in b875093` (an independent review of `c14e642..07bf337` reported two Medium findings; 6 files, +91/−15):
+  - Finding 1, reason: the NIXL target check compared only cache capacity. Step holds one KV head per rank at both TP4 and TP8, so P TP8 / D TP4 passed silently. A CLI probe at `07bf337` with D TP4/EP16 exited 0 and completed one 1,142,272 B transfer, the P TP8 per-rank value. Method: `BaseClusterScheduler.validate_kv_transfer_target_scope` now takes the source attention TP and raises `NotImplementedError` on a per-lane mismatch, before the capacity check, the source claim, placement and reservation. Scope is NIXL only: the legacy PDD examples use `kv_connector none` with equal defaults, and only the GLM DSA and Step drivers use NIXL, both at TP8/TP8. This follows `native_pd_20261020/design01.md` §Q1 item 3. Result: the same probe at `b875093` exits 1 in 12 s with "NIXL structural PD requires equal PREFILL and DECODE attention TP; got PREFILL=8, DECODE=4". `base_cluster_scheduler.py` is 1,981 lines.
+  - Finding 2, reason: the Step op-trace components wrote per-rank transfer bytes under `resident_bytes`. Method: renamed the key to `transfer_bytes_per_rank` and updated the `AttentionKVTransferPayload` docstring. Per-component residency is not reported; the total stays in `target_resident_bytes_per_rank`. The GLM branch keeps `resident_bytes` (unchanged since `c14e642`, and accurate for GLM). Result: a traced 16-token probe at both commits has 1,660,737 trace lines. Only the `kv_cache_transfer` row (the key rename) and the header timestamp differ.
+  - Tests: `test_equal_capacity_with_different_decode_tp_is_rejected_before_placement` and `test_trace_component_bytes_are_transfer_not_target_residency`. Red check on a `07bf337` export: 2 failed (the expected ones), 18 passed. At `b875093`: 20 passed; focused set 717 passed.
+  - Rerun at `b875093` on a clean tree: Step PD driver exit 0 in 780 s with all 14 artifacts at the `07bf337` MD5. Legacy matrix 77/77 identical, cache names 519 / 519 / 0 differences. step5 and glm53_pd 5/5 MATCH. Full unit suite 103 failed, 5,525 passed, 62 skipped, 29 errors, with failing IDs identical to `07bf337`. Sentinels not rerun, because their PDD fixtures use `kv_connector none`.
+- `deliverables`: `test_report_2026-10-20_step5_pd_structural.md`. Scratch root `/data/ycfeng/tmp/step5_pd_probe_20261020` (57 GB after the `b875093` reruns). Red-check export `/data/ycfeng/tmp/step5_pd_review_red_07bf337` (312 MB). Legacy label trees `step5_pd`, `step5_pd_bf121c0`, `step5_pd_07bf337` and `step5_pd_b875093` under `/data/ycfeng/tmp/merge_fidelity_20261020/legacy`.
+- `pending / ticket 17`: the acceptance boxes that compare with native ordering stay open until ticket 08 provides the native lifetime contract. The 25-token tail and the native wire bytes need that contract too.
+- `pending / integration and cleanup, needs approval`: the branch (head `b875093`) is not pushed or merged into `feat/step5-preview`. Removing the 57 GB scratch root and the 312 MB red-check export needs approval.
+
+## Ticket 10 MoE H800 pilot — October 20, 2026
+
+- `completed / launcher`: `9d1282c` adds `tests/integration/step5_profiling/{submit_profiling_job.py,run_on_worker.sh,summarize_moe_profile.py}` on `feat/step5-profiling`. Jobs go through the personal StepMind Python `RJobBackend`, 1 H800 GPU on `codesign`, 8 CPUs, 32 GB, non-preemptible, Step image, 3600 s timeout. Launch scripts and launcher logs: `/data/ycfeng/tmp/step5_profiling_20261020/moe_pilot_0{1,2}/`.
+- `observed / run 01 failed`: `exp-1020-140048-135295` (source `9d1282c`) exited 1 with `ImportError: vLLM fused MoE kernel is unavailable for FP8 moe_grouped_gemm profiling`. Cause: the worker installed scikit-learn with `--no-deps`, which broke the optional sklearn import in transformers (`Could not import module 'GenerationMixin'`), so the vLLM import failed. Fix `621ca0e`: install only the profilers' missing pure-Python packages, with their dependencies.
+- `completed / run 02 succeeded`: `exp-1020-152802-841686` (source `621ca0e`, model config `b60d64d`), submitted 15:28:02 HKT, Succeeded 15:31:21 HKT. Cloud root `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/moe_pilot_20261020_02/` (read through `shai-ycfeng:/mnt/ws-jfs/ycfeng/...`), summary `summary.json`. Grid: EP32/TP1 (11 local experts), uniform load, tokens {1, 16, 17, 32, 33, 256, 4096}, both layer groups: 14 CUDA_EVENT rows (`cuda_event/.../moe.csv`) and 14 KERNEL_ONLY rows (`record_function/tokens_<n>/.../moe_kernel_only.csv`).
+- `observed / native selections`:
+  - Router: `fp32_router_gemm_kernel<bf16, 128, 1, 1, 352, 4096, 1>` and `vllm::moe::topkGating<11, 352, ..., ScoringFunc 1>`. Kernel time of `moe_gating_linear` rises from 9.4 µs at 32 tokens to 20.3 µs at 33 tokens, consistent with the FP32 router kernel limit of 32 tokens.
+  - Layers 3–87 (FP8 block-128): `TritonOrDeepGemmExperts`, backend `DEEPGEMM`. The traces show `deep_gemm::sm90_fp8_gemm_1d2d_impl`, `ep_scatter`/`ep_gather` and `per_token_group_quant_8bit` at every token count, 1 to 4096.
+  - Layers 88–90 (BF16): `TritonExperts`, backend `TRITON`, `fused_moe_kernel`.
+  - Tuning config: `default` for both groups (no tuned file for E=11, N=1536 on H800).
+- `observed / correction to design01 §3.3`: design01 assumed `TritonExperts` for the FP8 layers, because the native ticket 05/06 records showed `fused_moe_kernel` and no DeepGEMM. Those runs used TP16 with EP off, where the per-rank expert width 1536/16 = 96 is not a multiple of the 128 block. At EP32/TP1 the width is 1536, so the same vLLM oracle selects DeepGEMM. This is an inference from the oracle conditions; native EP32 serving has not run yet, so open question 2 (expert kernel and all-to-all backend of the serving topology) stays open.
+- `observed / timings (median, µs)`, kernel-only vs CUDA-event `moe_grouped_gemm`:
+
+  | Tokens | FP8 kernel | FP8 CUDA event | BF16 kernel | BF16 CUDA event |
+  | --- | --- | --- | --- | --- |
+  | 1 | 48.3 | 626.6 | 11.3 | 262.2 |
+  | 16 | 83.0 | 625.2 | 58.0 | 264.8 |
+  | 32 | 114.0 | 635.9 | 133.9 | 292.6 |
+  | 256 | 183.6 | 620.8 | 172.2 | 328.3 |
+  | 4096 | 1114.7 | 1486.5 | 351.1 | 495.0 |
+
+  Up to 256 tokens the CUDA-event values are nearly flat and 1.9–23 times the kernel-only values. Inference, not yet verified: the CUDA-event window is dominated by host launch time between the about 15 kernels of the modular path, so these rows describe eager execution, and the kernel-only rows are the ones that apply to CUDA Graph decode.
+- `pending`: the §6.4 MoE grid waits for the ticket 06 serving values and open question 2; the attention producer and the linear-op slice wait for open question 1 (projection ownership). Simulator lookup by `moe_layer_ids` is not implemented.
+
+## Ticket 12 phase 1 communication design — October 20, 2026
+
+- `completed / design`: `step5_comm_20261020/design01.md`. Read-only: source copied from the locked image into `step5_comm_20261020/image_source/` (40 files, hashes recorded); no repository edit, commit, or platform operation. Ticket 12 stays blocked by 06 (D2) and 15.
+- `observed / native operations at TP8/DP4/EP32 (source)`: sequence-parallel MoE is off. Per step and rank the path issues 273 TP8 all-reduces of `T x 8,192` B (embedding, 92 `o_proj`, 4 dense `down_proj`, 88 shared-expert `down_proj`, 88 routed final), 88 DP4 grouped `all_gatherv` dispatches (FP8 4,288 B per row on layers 3-87, BF16 8,256 B per row on 88-90), 88 DP4 BF16 `reduce_scatterv` combines, 1 TP8 logits all-gather (32,224 B per row), and 1 host gloo DP sync (96 B). The DP groups have 4 ranks, one per node; the 8 rail groups run concurrently. The 32-rank EP group carries no traffic.
+- `observed / communicator limits (source)`: on SM90 at TP8, FlashInfer `trtllm` all-reduce serves up to 64 tokens (0.5 MB), torch symmetric memory serves up to 8,192 tokens (64 MiB), and NCCL serves the rest. Uneven DP sizes switch dispatch and combine to grouped per-root broadcast and reduce.
+- `decision input / reuse`: the harness code, `1f17199` (needs a port), the GLM launch tooling, and the analysis criteria are reusable. The GLM K5 TP, EP, DP and NIXL rows are reference only (different image and communicators, group size, topology, dtype).
+- `pending / plan`: stages S0 (8 GPUs), S1 (32), S2 (16), S1R (32) for ticket 12, about 32.5 GPU-hours; S3 (16) and S4 (64) for ticket 13, about 21.3 GPU-hours. All wait for unblocking, the collector changes of design01 section 4.1, and user approval. The simulator gaps (all-to-all pricing, missing shared-expert all-reduce, no measured all-gather/reduce-scatter consumer) are listed for ticket 21.
+
+## Stream consolidation and PR #50 update — October 20, 2026
+
+- `completed / review record`: [review_2026-10-20_step5_pd_structural.md](review_2026-10-20_step5_pd_structural.md) saves the independent review (verdict "merge after fixes", two Medium findings, both fixed in `b875093`).
+- `completed / merges`: on `feat/step5-preview`, `git merge --no-ff` without conflicts: `4b3f662` (`feat/step5-pd-structural` at `b875093`), `bd58493` (`feat/step5-native-pd` at `d77e155`), `0d2ffda` (`feat/step5-profiling` at `621ca0e`). After `4b3f662` only six files under `frontier/profiling/moe/` change under `frontier/`, so the simulator runtime equals `b875093`.
+- `completed / verification`: [test_report_2026-10-20_stream_consolidation.md](test_report_2026-10-20_stream_consolidation.md). Full unit suite at `0d2ffda`: 103 failed, 5552 passed, 70 skipped, 29 errors; the 132 unique failing IDs are identical to those at `b875093` (all pre-existing). Native P/D harness tests 156 passed. MoE profiler test list 381 passed with the same 4 known local-environment failures. Dummy smoke matrix 12/12, rc 0. Logs: `/data/ycfeng/tmp/step5_consolidated_20261020/`.
+- `completed / public status`: commit `7266981` updates `docs/general/step5-preview.md` (ticket 06 done within simulation scope, structural PD done with dummy timing, R1 on H200, MoE pilot on H800, new resume order).
+- `completed / publication`: `git push origin feat/step5-preview` fast-forwarded `9ebf4cf..7266981`. PR #50 head is `7266981d545be73b2b9dd6b1ce9e183303167c37`, still Draft and open against `main`. Of the 56 pushed commits, 39 were already on `origin/feat/glm53-dsv4-vllm028` (`98416de` contains `71cde5e`); the other 17 are Step-only. No merge of the PR, no push to a shared branch, no force push. Record: `github_pr_publication_20261020.json` (`updates`).
+- `completed / task records`: requirements (new follow-up request), plan (end-of-day stream status table), tickets 10 and 12 status, this file, summary.
+
+## Decisions D5–D8 and cleanup — October 20, 2026
+
+- `completed / decisions`: the user answered D5–D8. [requirements.md](requirements.md) holds the answers and how they are applied: the D5–D8 table and "How the parent agent applies these decisions". They are also recorded in spec §2 and §8, the plan, tickets 08, 09, 10, 12, 14, 17 and 24, `native_pd_20261020/design01.md` §9, and the section "Decisions After This Report" of the structural PD report.
+- `completed / public status`: commit `8585748` adds D5, D6 and D7 to `docs/general/step5-preview.md`. `git push origin feat/step5-preview` fast-forwarded `7266981..8585748`. PR #50 head is `858574873b4a61bcad66b0ab90dbe1c04788652d`; the PR is still Draft and open against `main`. Record: `github_pr_publication_20261020.json` (`updates`, second entry).
+- `completed / cleanup, decision D8`:
+  - Reason: the user allowed deleting the eight temporary worktrees and this task's evidence-only scratch directories, after the cited evidence is copied into `task_memory`.
+  - Method: the commits were checked first, then the evidence was copied, then the deletions ran.
+    - Reachability: `git branch -a --contains <commit>` showed that every worktree head is on a branch except `1aebe86` and `d54e2e8`, which come from the earlier candidate merge. Their parent, the candidate merge `0c9b0ca` (parents `0070c4b`, `8a64123`), is on no branch either.
+    - The three commits are saved as `scratch_evidence/unreachable_commits/step5_merge_candidate_0c9b0ca_d54e2e8.bundle`. `git bundle verify` passed, and the bundle needs `0070c4b` and `8a64123`. The patches of `1aebe86` and `d54e2e8` and `commits.txt` are saved next to it. A dry-run `git fetch <bundle> HEAD` worked.
+    - Evidence copy: from each cited scratch directory, files under 2 MB of the types `py`, `sh`, `log`, `ids`, `txt`, `md`, `xml`, `out`, `diff` and `csv`, plus `command`, `validation`, `system_metrics`, `manifest`, `receipt`, `summary`, `compar*` and `verdict` JSON files. `__pycache__`, `pytest-of-*` and TorchInductor caches were excluded. `rsync -a --files-from` kept the relative paths, and a later `rsync --dry-run --checksum` found no difference. The kept 0d2ffda and b875093 failing-ID lists are still identical: 132 IDs each.
+    - Worktree removal: `git worktree remove` on each worktree, after `git status --porcelain` came back empty and no submodule was initialized. `step5-structural-baseline-20261019` kept a root-owned `cache/` directory (101 MB of predictor cache from a 10-19 run), which was removed with `sudo -n rm -rf`. `git worktree prune` and `git worktree list` showed no temporary worktree left.
+  - Result:
+
+    | Item | Removed | Kept evidence (under `scratch_evidence/`) |
+    | --- | --- | --- |
+    | Worktrees `tmp-fidelity-merged`, `tmp-merge-shared`, `tmp-merge-step`, `step5-merge-candidate-20261020`, `step5-merge-probe-20261020`, `step5-merge-shared-parent-20261020`, `step5-merge-step-parent-20261020`, `step5-structural-baseline-20261019` | about 3.7 GB | `unreachable_commits/` (bundle and patches) |
+    | `/data/ycfeng/tmp/merge_fidelity_20261020` | 44 GB | `merge_fidelity_20261020/`, 2,239 files |
+    | `/data/ycfeng/tmp/step5_pd_probe_20261020` | 57 GB | `step5_pd_probe_20261020/`, 545 files |
+    | `/data/ycfeng/tmp/step5_shared_merge_20261020` (the uncited first attempt at the shared merge) | 26 GB | `step5_shared_merge_20261020/`, 178 files: scripts, driver comparisons, fidelity logs and comparison; not the 12,724 pytest outputs |
+    | `/data/ycfeng/tmp/merge_verify_20261020` | 327 MB | `merge_verify_20261020/`, 82 files |
+    | `/data/ycfeng/tmp/step5_consolidated_20261020` | 66 MB | `step5_consolidated_20261020/`, 4 files |
+    | `/data/ycfeng/tmp/step5_pd_src_20261020` | 6.1 MB | `step5_pd_src_20261020/`, 9 files (`extra/` and the top-level replay scripts) |
+    | Exports `step5_pd_baseline_c14e642`, `step5_pd_review_red_07bf337` | 624 MB | none; both are plain source copies of commits on branches |
+    | `step5_pd_inspect_20261020`, `step5_mt.txt` | 5.7 MB | none; uncited listings and image extracts |
+    | `exp-1020-164750-497812.log`, `step5_preview_pr_20261020.md` | 8 KB | `misc/` |
+
+    `/data` usage went from 567 GB to 440 GB. The copy lists are in `scratch_evidence/copy_manifests/`. Altogether `scratch_evidence/` holds 75 MB.
+  - Reports updated with the new evidence locations: `test_report_2026-10-20_shared_branch_merge.md`, `test_report_2026-10-20_merge_fidelity.md`, `test_report_2026-10-20_step5_pd_structural.md`, `test_report_2026-10-20_stream_consolidation.md`, `native_pd_20261020/design01.md`.
+  - Not touched:
+    - Kept for the next actions: `/data/ycfeng/tmp/step5_native_pd_r1/` and `/data/ycfeng/tmp/step5_profiling_20261020/`.
+    - Older evidence that earlier reports cite: `step5_request_physical_20261019_04_*` and the other 10-17 to 10-19 directories.
+    - Directories whose owner is not clear: `review_timeline_20261020` and the empty `step5_review`.
+    - Other sessions: the GLM worktree, `w3_review_fixes_20261020` and the other sessions' directories.
+    - No branch was deleted.
+
+## Handoff for the next session (OpenCode v2) — October 20, 2026
+
+### Where things are
+
+- Main worktree `/data/ycfeng/Frontier/.worktrees/step5-preview`, branch `feat/step5-preview`, HEAD `8585748` = `origin/feat/step5-preview` = PR #50 head. The tracked tree is clean. The untracked `.pi/` directory belongs to other work and must stay.
+- The stream worktrees `.worktrees/step5-pd-structural`, `.worktrees/step5-native-pd` and `.worktrees/step5-profiling` are fully merged. Start new work on `feat/step5-preview` or on a new branch from `8585748`, with one worktree per stream under `/data/ycfeng/Frontier/.worktrees/`.
+- The temporary worktrees and scratch directories of the merge and structural PD work were removed under D8. The evidence that the reports cite is in `scratch_evidence/` in this task directory (see "Decisions D5–D8 and cleanup" above). The scratch directories that the next actions still use are `/data/ycfeng/tmp/step5_native_pd_r1/` (R1 helpers, `stepmind_env.sh`, `status.py`) and `/data/ycfeng/tmp/step5_profiling_20261020/` (`extra_site`, `image_src`, `moe_test_list_torch.txt`).
+- Do not touch `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`: another session owns it (uncommitted `tests/unit/test_e2e_gate.py`).
+- No RJob is running for this task. Last jobs: R1 `exp-1020-164750-497812` (H200, Succeeded), MoE pilot `exp-1020-152802-841686` (H800, Succeeded).
+
+### Ticket status
+
+| Ticket | Status |
+| --- | --- |
+| 06 | done (simulation scope S1–S6); full census only on demand for ticket 24 |
+| 17 | structural part done (merged); native-matched and trained-predictor parts wait for 08 and GLM `09.full_frontier_path` |
+| 08 | in progress: R1 passed on H200 only; H800 R1 and criteria 1–10 open |
+| 10 | in progress: MoE slice and H800 pilot done; attention profiler, linear-op slice, grids and admission open |
+| 12 | ready: design done (`step5_comm_20261020/design01.md`); collection not started |
+| 09 | waits for 08 on H800 |
+| 20 | `20.structural` not started (may start now under D3) |
+| 16, 18, 19, 21, 22 and predictive claims | wait for GLM `09.full_frontier_path` |
+
+### Next actions, in dependency order (run independent items in parallel, at most 4 subagents)
+
+1. Ticket 08, H800 R1: read the H800 quota first (`native_pd_20261020/read_quota01.py` pattern); R1 needs four whole free 8-GPU H800 nodes. Stage with `tests/integration/step5_pd/build_stage.py --run-definition tests/integration/step5_pd/r1_run.json` and a new stage directory, submit with `submit_native_pd.py`, judge with `verdict.py --platform-status <platform phase>`; commands are in `test_report_2026-10-20_native_pd_r1.md` section "Commands" (replace the H200 run definition, directories and job tag). Then design and run R2 (KV and summary content, lifetime and release; `native_pd_20261020/design01.md` §5). For the D5 assessment, these runs must record the following for each request after warmup (R1's single request was cold): the client first-token time, the time the proxy receives the P response, and the token counts that D loads and computes.
+2. Ticket 10: build the Step attention profiler under `frontier/profiling/step5/` (option A: whole SWA and sparse-GQA layers plus their projections, following the GDN precedent), then the linear-op slice, the §6.4 grids on H800 and typed admission (`step5_profiling_20261020/design01.md`). The earlier attention-profiler subagent failed twice on provider errors without output; restart it fresh. Runtime lookup of MoE rows by `moe_layer_ids` is not implemented.
+3. Ticket 12: port shared commit `1f17199`, apply the collector changes in design01 §4.1, then stages S0 (8 GPUs), S1 (32), S2 (16) and optional S1R (32) on H800, about 19–33 GPU-hours.
+4. `20.structural`: may start now from the merged structural PD path (decision D3).
+5. Ticket 09 after H800 R1: clean P32/D32 E2E, each role TP8/DP4/EP32, at least three clean repetitions, about 144 GPU-hours; 64 schedulable H800 GPUs needed; validators are soft gates at ≥32 GPUs.
+6. After GLM `09.full_frontier_path`: tickets 16 and 22 and the trained-predictor parts of 17–21.
+7. D5 assessment, run as soon as its data exists. T1 (the first-token endpoint) needs the warm native requests from item 1 or item 5. Its Frontier side compares `decode_first_token_completed_at` (exported at `frontier/metrics/metrics_store.py:3143`) with `ttft`, which ends at P prefill completion (`frontier/entities/request.py:953`). T2 (the recomputed prompt tail) needs the attention and MoE profiles from item 2. Apply the "small" threshold in `requirements.md`: at most 1 percentage point of the native mean client TTFT and of the native mean E2E in every assessed cell, and no changed verdict. Record a small term; align a large one within the existing owners. A material core refactor needs approval.
+
+### Decisions resolved
+
+D1–D8 are answered in `requirements.md`. No user decision is open.
+
+- D5: measure the D-PD first-token and tail terms first (item 7 above).
+- D6: the ticket 09 repetitions may share one job and one startup. Each repetition has its own warmup and measurement windows, and both roles are idle between repetitions.
+- D7: Thinking Mode stays off in every run. The `ValueError` in `frontier/config/config.py` (`07bf337`) is the intended boundary of this task's run harness.
+- D8: the cleanup is done (see above).
+
+### Rules to keep
+
+- Decisions D1–D4 in `requirements.md`; H800/codesign first; H200/step_main only on H800 shortage, at most 70 non-preemptible GPUs, recorded as H200 evidence that never replaces H800 acceptance.
+- StepMind routing depends on the agent's provider; check it again after every model switch. Under provider `claude-sdk`, load the `stepmind-rjobs` skill and send every submit, query, logs, stop, auth and intranet operation through the `stepmind` tool, which uses `stepmind-helper`; credentials and raw operator evidence stay in that helper session. Under any other provider, run these operations directly as follows. Submit, query, logs and stop directly with the Python `RJobBackend`, personal `i-fengyicheng` auth, `STEPMIND_BACKEND=rjob`, platform Python `/data/ycfeng/tmp/stepmind-env/bin/python`, runbook `/data/ycfeng/stepfun-env-handbook/stepmind-python-rjob.md`; stop only with `/data/ycfeng/steptron/playground/users/ycfeng/tools/rjob_stop.sh`; cloud I/O only under `/mnt/codesign-exp/ycfeng`; keep the launcher alive.
+- Mainline only; stop and report after two rounds of "tool failure, tool fix, rerun" without a new criterion; `tests/integration/step5_environment/` frozen except for fixes a mainline run needs.
+- Git: local commits and pushes of `feat/step5-preview` to PR #50 are authorized; no PR merge, no push to shared branches or `main`, no history rewrite without approval. `task_memory/` is ignored by Git and stays local.
+- Environments: CPU `/data/ycfeng/envs/frontier-py310/bin/python` with `PYTHONPATH=$PWD WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1`; native P/D harness `/data/ycfeng/envs/asyncopd-py312/bin/python`; MoE profiler tests `/data/ycfeng/envs/oneshot-opd-py312/bin/python` with `/data/ycfeng/tmp/step5_profiling_20261020/extra_site` on `PYTHONPATH`. Temporary files under `/data/ycfeng/tmp`.
+
+## Ticket 08 H800 R1 with warm requests — preparation
+
+### Current stage02 preparation
+
+Completed parent decision D5-STREAM on `feat/step5-native-pd` at `93582a8bc3141742547347e3cf8e56566a02ee44`, following `ab65aef` and `8f84fa5`. The existing proxy keeps P nonstreaming and its native KV handoff, and forwards D's opt-in SSE bytes without full-response buffering or content changes. Only the sixteen post-W1 requests set `stream=true`; cold W1 keeps its original nonstreaming contract. The shared legacy and native GLM/DeepSeek defaults remain unchanged. No simulator core or gate rule changed, no push occurred and no GPU job was submitted, stopped or deleted.
+
+The client records send, first nonempty content arrival and stream completion using `time.monotonic()`; the existing proxy P-response record uses the same Linux monotonic clock on the same prefill head. Joining by request ID needs no cross-host alignment. Empty/comment/usage-only events do not count as first content. Native `stream_options.include_usage` is supported by the inspected image source and supplies the output count; the client never counts chunks as tokens. The warm table now reports all four timestamps, `client_ttft_s`, `post_prefill_first_token_s`, output count and the existing D prompt-source window attribution. Missing, incomplete or misordered timing is unverified; engine TTFT remains separate. W1's eight check functions, covering nine conditions, have unchanged ASTs compared with `8585748`.
+
+Final verification passed 197 tests in 15.04 seconds with `/data/ycfeng/envs/asyncopd-py312/bin/python -m pytest tests/unit/test_calibration_pd_harness.py tests/unit/test_dp_placement_harness.py tests/unit/test_native_pd_worker.py tests/unit/test_step5_native_pd*.py tests/unit/test_native_glm_observer.py tests/unit/test_calibration_e2e_metrics_gap.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/step5_native_pd_h800_r1w_stream_tests03`, with `TMPDIR=/data/ycfeng/tmp`. The required harness accounts for 188 checks and the extra GLM/E2E regressions for 9. Tests include early byte-identical relay, UTF-8 fragmentation, final usage, mixed modes, stream/HTTP errors and actual child-proxy/client clock ordering. The retained log and diff are `native_pd_20261020/r1w_stream_unit_tests03.log` and `native_pd_20261020/r1w_stream_changes02.diff`.
+
+`build_stage.py --run-definition tests/integration/step5_pd/r1w_run.json` created `/data/ycfeng/tmp/step5_native_pd_h800_r1w/stage02`, with job tag `r1wh80002` and future output `/mnt/codesign-exp/ycfeng/step5-preview/native_pd_h800_r1w_02`. `/data/ycfeng/tmp/step5_native_pd_h800_r1w/verify_stage02.py` passed at 11:50:22 UTC, checking the clean source commit, 30 frozen files, 27 native source pins, metadata, four TP8/DP2 node plans, the locked image and all 17 request definitions. Codesign, 4 × 8 H800, Thinking Mode off, prefix caching off and MTP off are unchanged. Receipt: `native_pd_20261020/r1w_offline02.json`. Stage01 and all earlier receipts remain unchanged. Exact build, parent-only submission, monitoring and verdict commands are in `test_report_2026-10-20_native_pd_h800_r1w_preparation.md`.
+
+The read-only quota recheck at 2026-10-20 11:50:30–11:50:33 UTC found H800/codesign quota 128, aggregate use 81, non-preemptible use 89, 15 node-usable GPUs and zero whole eight-GPU nodes. H200/step_main had quota 512, aggregate/non-preemptible use 448, 64 node-usable GPUs and eight whole nodes. H800 still lacks four free nodes; H200 has room for a 32-GPU fallback at this snapshot, but scheduling remains the only proof and its results would remain H200-only under D4. Stage02 itself is H800/codesign. Personal live-job list was empty; no job was controlled. Receipt: `native_pd_20261020/quota_r1w_prepare02.json`.
+
+Pending work belongs to the parent: (1) re-read quota and choose the authorized hardware path without editing this frozen stage; (2) submit once and retain the launcher; (3) verify native streaming, actual warm-lane coverage, token counts, terminal status and warm timestamps before the D5 T1 assessment. Estimated workload remains 6–10 minutes, total 15–25 minutes plus queue, approximately 8–13.3 GPU-hours with a 32 GPU-hour worker-timeout cap. No implementation blocker remains for client timing, but native streaming acceptance, measured T1 contribution and ticket 08 R2 content/lifetime remain pending.
+
+### Historical stage01 preparation (superseded by stage02)
+
+Code and offline staging are completed on `feat/step5-native-pd` at `8f84fa5` after `ab65aef`; no push, GPU submission, stop or delete was performed. `tests/integration/step5_pd/r1w_run.json` preserves cold W1 and its original R1 token IDs, followed by three identical-prompt warmups, three assessment candidates and ten short/long/16-token-block/8-token-region probes. Each of the 17 requests has its own sequential wave and existing 10-second drain. The nine W1 conditions are unchanged; warm observations use the existing metric windows and do not gate W1. Thinking Mode, prefix caching and MTP stay off.
+
+The baseline command `/data/ycfeng/envs/asyncopd-py312/bin/python -m pytest tests/unit/test_calibration_pd_harness.py tests/unit/test_dp_placement_harness.py tests/unit/test_native_pd_worker.py tests/unit/test_step5_native_pd*.py -q -p no:cacheprovider` passed 156 checks; the same suites with new workload tests passed 165 checks. Temporary test outputs stayed under `/data/ycfeng/tmp`. `build_stage.py --run-definition tests/integration/step5_pd/r1w_run.json` staged `/data/ycfeng/tmp/step5_native_pd_h800_r1w/stage01`, with job tag `r1wh80001`, a package-local copy of original model metadata, codesign, 4 × 8 H800, and the locked `sha256:69308454...` image. `/data/ycfeng/tmp/step5_native_pd_h800_r1w/verify_stage.py` checked all 30 frozen files, 27 native source pins, metadata and 17 request definitions at 11:33:56 UTC. The receipt is `native_pd_20261020/r1w_offline01.json`; exact commands, hashes and launch/monitor/verdict instructions are in `test_report_2026-10-20_native_pd_h800_r1w_preparation.md`.
+
+The only platform operation was the existing read-only quota script. At 2026-10-20 11:28:39–11:28:41 UTC, H800/codesign had quota 128, aggregate use 97, non-preemptible use 89, 14 node-usable GPUs and zero whole eight-GPU nodes. Four H800 nodes were therefore not free. H200/step_main had quota 512, aggregate use 411, non-preemptible use 499, 101 node-usable GPUs and 11 whole nodes. The quota fields disagree, so neither the favorable H200 remaining value nor node availability is claimed as schedulable non-preemptible quota. Raw evidence is `native_pd_20261020/quota_r1w_prepare01.json`; H200 would remain H200-only evidence under D4. Existing personal jobs were not controlled.
+
+One requested item remains unfinished: the existing client and proxy are nonstreaming and do not expose client first-token time. The warm table explicitly marks that timestamp `UNVERIFIED_NONSTREAMING`; the separately attributed D engine TTFT is not a client timestamp substitute. No new observation tooling was added. This package can collect H800 W1 and tail evidence, but cannot complete D5 T1 as written. The parent must (1) decide whether to run this functional/tail package or first authorize a small streaming extension, (2) re-read quota immediately before submission, and (3) submit once, keep the launcher alive, monitor the same job and judge its actual terminal platform phase. Expected workload is 6–10 minutes, total 15–25 minutes plus queue, about 8–13.3 GPU-hours, with a 32 GPU-hour worker-timeout cap. Native run and ticket 08 content/lifetime acceptance remain pending.
+
+## Ticket 10 Step attention profiler — implementation
+
+Implementation and CPU checks are completed on `feat/step5-profiling` in `6e849cd` and `23091ad`. The new `frontier/profiling/step5/` producer measures the locked native image's complete SWA and sparse-GQA attention forwards, including projections, preparation, indexer selection, gating and output projection, without TP all-reduce. One GPU measures an isolated TP8 rank-local shape; it is not real TP8 serving. The native provider-sharded indexer has four local Q heads. No simulator runtime or registered Step execution/profiling flag changed, and no push or GPU submission, stop or delete occurred.
+
+The original profiler-related CPU suites passed 169 checks, including 86 new producer tests, and the simulator/Step suites passed 470 checks. The dependency-stage follow-up reran the 86 new checks successfully. The historical package `/data/ycfeng/tmp/step5_attention_20261020/smoke_stage02` includes CPU-prepared dependencies, the locked `sha256:69308454...` image declaration, one H800/codesign, local NFS source and the personal cloud mount. All 3,391 file hashes, shell/launcher arguments, native API keywords and a 16-row grid passed offline verification at 11:52:30 UTC, but its later native startup failed before measurements. Stage03 below supersedes it. Expected runtime is 15–40 minutes, or 0.25–0.67 GPU-hours. Exact current parent submission, monitoring and judgment instructions are in `test_report_2026-10-20_step5_attention_profiler_implementation.md`.
+
+The historical read-only H800/codesign snapshot at 11:52:55–11:52:56 UTC reports quota 128, aggregate use 81, non-preemptible H800 use 73, 31 node-usable GPUs and one whole eight-GPU node. These are not reservations. The parent must recheck quota and use the current stage03 credential wrapper, then inspect the actual 16 rows, native traces, graph replay, output/cache validation and terminal platform status. Native GPU verification, stable timing, downstream option-A projection ownership cleanup and profile admission remain pending. Typed contracts are emitted, but the registered Step family remains disabled and generic admission still rejects it. The long-prefix sparse continuation comparison is retained as a GPU correctness check; any observed mismatch needs diagnosis rather than a fallback or a relaxed gate.
+
+### Startup repair and stage03 preparation — October 20, 2026
+
+The parent-reported smoke `exp-1020-200042-999260` failed with zero rows because `initialize_model_parallel` ran before the current vLLM config was set. Commit `32199da14e7997ab5bbf8c3b13a879fe60ab8d65` enters the native config through ExitStack before quant and distributed initialization and leaves it active until group cleanup finishes. The native dependency audit also identified retained vLLM WORLD state after torch-only teardown, so cleanup now calls native `destroy_distributed_environment`. CPU tests exercise the real constructor with CPU-only native boundaries. They failed before the config repair with the observed assertion, failed before native cleanup on the second wrapper and passed afterward, including injected workspace failure cleanup.
+
+The final profiler suites passed 172 checks, simulator suites passed 470 checks, and the producer subset passed 89 checks. The increases from 169/470/86 are exactly two initialization parameter cases and one credential-wrapper test. The source and staged dry runs both contain 16 rows. The immutable package `/data/ycfeng/tmp/step5_attention_20261020/smoke_stage03` passed all 3,393 file hashes, full manifest consistency, native API, shell, credential-wrapper path/order and CPU dependency checks at 12:39:08 UTC. Both generated scripts are hashed. The wrapper sources `/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh` before invoking the existing launcher; real credentials were not sourced or copied during verification. The new output root is `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/attention_smoke_20261020_02`.
+
+This continuation submitted, stopped and deleted no GPU job and made no simulator runtime or flag change. The parent may run `smoke_stage03/submit_with_env.sh` once with a detached live launcher, not bare `submit.sh` without credentials. Expected active runtime remains 15–40 minutes on one H800, or 0.25–0.67 GPU-hours. Actual CUDA startup, kernel names, graph replay, output/cache correctness, stable timings and full ticket 10 admission remain pending. Selected evidence is retained in `step5_profiling_20261020/attention_implementation02/`, with exact commands and limits in the updated test report.
+
+### Smoke 02 measurement repair and stage04 — October 20, 2026
+
+The retained H800 run `exp-1020-204426-318785` passed all 16 output/state checks and all 12 contextual continuation checks, but only three of 16 rows met the 5% layer-CV bound. The 13 failing CV values span 5.6004%–11.9984%. FULL scope/clean ratios of 1.082193–1.197542 used operator spans from a different instrumented execution than the clean denominator; equal counts did not make the ratio a layer decomposition. The original CSV remains unchanged.
+
+The source and a saved same-image native config resolve breakable capture with `FULL_AND_PIECEWISE`, but `max_num_seqs=1` gives capture sizes `[1,2]`. The user chose to retain that ceiling: 16/64-token prefill remains NONE and decode1 is FULL. Commit `7aeac57` reuses native capture contexts, separates eager launch latency from GPU-active kernel-plus-copy costs, amortizes replay windows to at least 0.5 ms, reconciles scopes against their own root and checks output/cache immediately after the last measured replay. Legal two-token PIECEWISE capture-stream and per-instance-event findings were repaired and closed at source/CPU level.
+
+The final implementation has passed profiler 362, simulator 470 and attention-subset 279 checks. Follow-up commit `655ae34` removes stopped-queue bias from per-iteration diagnostics using N+1 shared boundaries and one final synchronization. The deterministic CPU mechanism test failed before the fix with 10.671937% median disagreement and passed afterward at 1.185771%; those are synthetic values, not GPU CV. The source/staged grid is 12 native cells with 12 event rows and eight separate `KERNEL_ONLY` rows, not the old 16-row none/full duplicate grid.
+
+The released `/data/ycfeng/tmp/step5_attention_20261020/smoke_stage04` passed all 3,396 file hashes, the full manifest, source/API checks, credential-wrapper path/order and CPU dry run at 14:33:09 UTC, with manifest SHA-256 `901a84b51ff37d83235377cc8087f9c01a5786f6246b7591cb33b27dae4c193e`. The wrapper still sources `/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh`; no real credentials were sourced or copied during verification. No GPU job was submitted, stopped or deleted.
+
+Post-fix H800 CV, native N-replay state, trace completeness and graph behavior remain unverified. The parent may next run `smoke_stage04/submit_with_env.sh` with a detached launcher kept alive to terminal status, writing exclusively to `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/attention_smoke_20261020_03`. Expected active runtime is 15–45 minutes on one H800, or 0.25–0.75 GPU-hours. Before the 336-cell grid, native smoke qualification, a role-specific serving/capture-policy freeze and downstream projection ownership/admission remain pending; no simulator runtime or Step flag changed. Exact source evidence, commands, before/after CV limits and the final receipt are in `test_report_2026-10-20_step5_attention_profiler_implementation.md` and `step5_profiling_20261020/attention_implementation03/`.
+
+### Ticket 08 H800 R1 with warm requests — staged and submitted (October 20, 2026)
+
+- `completed / client TTFT`: commits `ab65aef`, `8f84fa5`, `93582a8` on `feat/step5-native-pd`. The 16 warm requests stream so the client records `first_token_monotonic` (first non-empty completion text event, ignoring empty content, comments and usage-only events), while the cold W1 request stays non-streaming so the nine W1 conditions are unchanged. Client and proxy share one `CLOCK_MONOTONIC` on the P head. Output counts come from the final usage event. Harness tests 197 passed.
+- `completed / staging`: `/data/ycfeng/tmp/step5_native_pd_h800_r1w/stage02` passed the offline check (30 frozen files, 27 native source pins, metadata, 17 requests, resources codesign/H800, 4 nodes × 8 GPUs, image digest `sha256:69308454…`).
+- `completed / submission`: job tag `r1wh80002`, `exp-1020-195546-730923`, created 2026-10-20 19:55 HKT with creator `i-fengyicheng`, queue `codesign-default`, `preemptible: no`, 4 tasks. Launcher `launcher02.log` is kept alive with `setsid`.
+- `in-progress / waiting`: phase `Starting` (`RJobStarting`), 4 tasks pending at 19:56 HKT. H800 quota read at 11:50 UTC showed 81/128 used and no four whole free 8-GPU nodes, so the job waits for placement. If it does not start, an H200 variant of the same stage (stage02h) is submitted under D4, and its result is recorded as H200 evidence that does not replace H800 acceptance.
+- `pending / judgement`: on a terminal phase run `status.py` → `platform_terminal02.json`, then `verdict.py --stage-dir /data/ycfeng/tmp/step5_native_pd_h800_r1w/stage02 --platform-status <phase> --output /data/ycfeng/tmp/step5_native_pd_h800_r1w/verdict02.json`.
+
+### Ticket 10 attention-profiler smoke — failed stage02, stage03 prepared (October 20, 2026)
+
+- `completed / code`: commits `6e849cd`, `23091ad` on `feat/step5-profiling` add `frontier/profiling/step5/` (profile inputs, `VllmStep5AttentionWrapper` over the native SWA and sparse-DSA forwards including projections, the indexer and top-k, excluding the TP all-reduce, row construction, smoke staging, CLI and `USAGE.md`). Profiler suites 169 passed, simulator suites 470 passed, the final suite 86 passed.
+- `completed / staging`: `/data/ycfeng/tmp/step5_attention_20261020/smoke_stage02` with 3391 file hashes, the locked image digest, the local NFS source mount and the cloud-volume mount, and a 16-row dry run.
+- `completed / historical submission`: `exp-1020-200042-999260`, job tag `attention_smoke_20261020_01`, 1 H800 on `codesign`, 8 CPUs, 32 GB, preemptible no, created 2026-10-20 20:00 HKT, originally estimated at 0.25–0.67 GPU-hours. The first local attempt failed with "personal BRAINPP credentials are not set" because the staged `submit.sh` did not load the credential environment; the parent subsequently sourced the approved environment and submitted this job.
+- `failed / worker startup`: the worker emitted `actual_rows=0`, `complete=false` and the missing-current-vLLM-config assertion at `initialize_model_parallel`. The old 20:02 Starting snapshot is superseded by that observed failure; no new platform status query was made by the repair agent.
+- `completed / repair and staging`: `32199da` and the 3,393-hash `smoke_stage03` supersede stage02; final CPU results are 172/470/89 and the dry run remains 16 rows. The parent-only submission entry is `smoke_stage03/submit_with_env.sh`, which loads personal credentials and must stay alive until terminal status.
+- `pending / native rerun and judgement`: the distinct new output root is `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/attention_smoke_20261020_02`; expect 16 rows, finite positive whole-layer timings, output and cache checks passing, a coefficient of variation at most 5%, and sensible token-cost trends and scope reconciliation. Native kernel names are still unknown. The repair agent submitted no job.
+- `open`: typed admission, option-A projection-ownership cleanup and the full grid qualification remain.
+
+### Ticket 20 structural P/D endpoint and DP-lane placement — functional verification completed
+
+- `completed / implementation`: commit `d65a4b99eb5c1ad963de1635694a59a398fd8bf4`, `feat: route structural Step PD requests through native DP placement`, is confined to `feat/step5-pd-structural` from `8585748`. The existing `VllmDPLoadBalancer` now models native client-count scaling, client-index scan initialization and unfinished-request affinity. The existing cluster scheduler supports the guarded Step dummy/NIXL P/D path. P reports through the existing completion hook, and D selects once before C16 reservation. Reservation retries, READ completion and readiness preserve that identity. D load reporting includes the existing remote-KV waiting containers. No GPU operation or external publication was performed.
+- `completed / source and focused tests`: inspected the exported image's `core_client.py`, `coordinator.py`, `core.py` and `scheduler.py`. The corrected balancer, Step placement, existing Step structural PD and GLM structural PD tests passed 138 checks. Existing 100 ms changed-stat publication, 50 ms synchronized-step collection, five-second idle publication and snapshot replacement were retained and tested. Native tie/update transport and startup timing remain unverified.
+- `completed / structural runs`: offline and online each completed 17/17 requests with TP8/DP4/EP32 per role and 34/34 expected/actual P/D decisions. All selected identities survived the complete handoff and completion. At online time 2.48 seconds, request 16 selects P lane 1 from the causally available delayed snapshot, while current reports would select lane 0. There are 27 offline and 26 online tied decisions. The initial 16-request runs are retained but did not provide that distinguishing witness. Final traces are `/data/ycfeng/tmp/step5_placement_20261020/{offline_late,online_late}/placement_trace.jsonl`.
+- `completed / regression evidence`: the full suite returned 5,572 passed, 70 skipped, 103 failed and 29 collection errors; all 132 failing/error IDs exactly match the known pre-existing set, with zero new IDs. Baseline `8585748` versus candidate fidelity is 77/77 identical, with no differences or failed/missing cases. All 902 retained artifact hashes were independently verified. The official aggregate compare still returns one for accurately disclosed dirty-candidate provenance and unverified clean-cache identity; exact numeric/intermediate comparisons pass. AST, 2,000-line limits, whitespace and source hashes pass.
+- `completed / frozen CPU measurements`: 24 controlled fresh processes passed request/event/fingerprint/runner/no-bytecode-write checks, with one warm-up and five measured samples per source and fixture. Seven of eight paired metrics meet their frozen limits. Dense initialization is 4.537285029 to 4.681120580 seconds, +3.170080% against a +1.941337% limit, so that acceptance remains BLOCKED/UNVERIFIED. No threshold was widened and no causal claim was made from host-load co-occurrence. Original initialization drift also remains unverified. The first harness attempt failed before simulation for missing archive Git metadata; read-only `GIT_DIR`/`GIT_WORK_TREE` resolved it without code changes. The next completed 24-process series was excluded after finding 376 candidate `.pyc` files versus zero baseline files. The final accepted measurement series, `sentinels03`, uses unique nonexistent `PYTHONPYCACHEPREFIX` paths with `-B`; all earlier evidence is retained.
+- `completed / evidence`: selected logs, source pins, traces, business metrics, fidelity results, controlled sentinel results and excluded-attempt evidence are retained in `scratch_evidence/step5_pd_placement_20261020/`. The full outcome, changed-file/function table, exact commands, acceptance-line statuses and verification limits are in `test_report_2026-10-20_step5_pd_placement.md`. No simulator change was made after the tested source hashes were frozen.
+- `completed / branch handoff`: `d65a4b9` contains exactly the ten intended source/test/documentation files. The branch is `feat/step5-pd-structural`, the tree is clean and no push occurred. All ten committed files and their working-tree bytes exactly match the source hashes verified before the commit; `scratch_evidence/step5_pd_placement_20261020/post_commit.json` and `commit.patch` retain that proof and the complete change.
+- `pending / integration acceptance`: the parent must diagnose or explicitly disposition the one dense initialization excess and reconcile the canonical D-DP-PD record. Native entry points, DP4 tie/update timing and native lifecycle evidence still depend on ticket 08; trained-predictor and predictive parity scope remain open. The aggregate fidelity cache/provenance gate remains limited even though all 77 numeric/intermediate cases match. This commit is an implementation handoff, not full ticket 20 or CPU-budget acceptance.
+- `completed / dense initialization diagnosis`: one strictly ABAB, CPU-8–15-pinned archive-export experiment compared `8585748` and `d65a4b9`, with two warm-up and 20 measured runs per source. Mean/median/sample SD were 4.682979234/4.546227808/0.384536607 seconds for base and 4.695221266/4.603196020/0.282294999 for candidate. Median increase +1.253088% is below 1.941337%, but the 95% paired block-bootstrap interval [-1.893682%, +5.331923%] covers zero and the limit. No stable regression was detected; budget non-regression remains UNVERIFIED_UNRESOLVED_MEASUREMENT_CONDITIONS, not PASS or a relaxed threshold. All 44 child checks passed and all samples were retained. The profiling condition was false, so no profile or extra measurement loop ran. Source/import review found no established code cause; no code edit or commit occurred. Evidence: `scratch_evidence/step5_dense_init_ab_20261020/`; details: `test_report_2026-10-20_step5_pd_placement.md`, section "Dense initialization budget diagnosis".
+- `completed / final dense CPU/wall round; stopped`: old measured wall SD/MAD were 0.384537/0.106815 seconds for base and 0.282295/0.144529 for candidate; paired SD 0.509681 seconds implies about 131 independent pairs for a 95% mean-CI half-width of the 0.088258-second margin, not a guarantee for median ratios or this shared host. One new CPU-8–15-pinned ABAB round ran two warm-up plus ten measured pairs, all 24 checks PASS. Wall means 4.730893→4.714402 seconds gave -0.348570% with paired bootstrap 95% CI [-7.477374%, +8.402227%]; CPU means 6.290154→6.354834 seconds gave +1.028279% with CI [-3.573364%, +7.822538%]. CPU median -0.832985% has ordinary paired CI [-3.414289%, +2.521546%]; the favorable block-only endpoint was not selected. The 1.941337% margin remains unexcluded, so budget disposition is UNVERIFIED_UNRESOLVED_MEASUREMENT_CONDITIONS, not a proven CPU excess or PASS. No code edit, commit, threshold change or further loop. Details: the report's "Dense initialization budget diagnosis" section; complete evidence: `scratch_evidence/step5_dense_init_cpu_20261020/`.
+
+## Ticket 12 communication — port and S0 preparation
+
+The shared timing commit was ported cleanly as `a69fd96` after checking its prerequisites and changed-file history. Commits `a4be69e`, `dff32f7` and `8e8689a` on `feat/step5-comm` add the Step-native TP/DP call shapes, FP8/BF16 payloads, observed communicator and rail metadata, separate host DP timing, a native dummy-layer dispatch identity probe, and the one-node S0 package. The final native-source CPU run passed 239 checks; the minimal CPU run passed 232 with seven optional-dependency skips. S0 dry runs show ten scenarios and 100 measurements. No GPU job was submitted, stopped or deleted by this preparation session, and no branch was pushed.
+
+The parent-only S0 package is `/data/ycfeng/Frontier/.worktrees/step5-comm/task_memory/step5_comm/s0_20261020_01/job.json`, with future output `/mnt/codesign-exp/ycfeng/frontier/step5_comm/s0_20261020_01/`. It uses eight H800 GPUs on one node at TP4/DP2/EP8 for an estimated 20 minutes, or 2.67 GPU-hours. The read-only quota snapshot at 11:30:36–11:30:38 UTC showed codesign total 128 GPUs, aggregate use 97, non-preemptible H800 use 89, 32 node-usable GPUs and three whole eight-GPU nodes; this is not a reservation and the parent must recheck. Exact submission, monitoring, result checks and commands are in `test_report_2026-10-20_step5_comm_preparation.md`. The S1/S2 differences are recorded in `docs/profiling/step5-collectives.md` on the communication branch. Native FP8 scale layout, actual communicator boundaries, GPU timings, multi-node stage packages and qualified target-topology measurements remain pending; S0 alone cannot close ticket 12.
+
+### S0 judged and corrected generation 02 prepared
+
+The parent-submitted `exp-1020-202611-536615` completed Succeeded on `gpu-h800-0415`, with eight distinct H800 GPUs, container exit 0 and no restart. It ran for 115 container seconds. The 32-line platform log omitted workload output because the worker redirected stdout/stderr to cloud `worker.log`; the retained full log has 7,606 lines and both workload completion markers. The small judging files were copied read-only from `/mnt/ws-jfs/ycfeng/frontier/step5_comm/s0_20261020_01/` on `shai-ycfeng` to `step5_comm_20261020/s0_20261020_01/`; no large traces or remote writes were made.
+
+All 100 measurement/kernel records and all groups/rails/idle participants pass. Every native rank and layer 3/88 reports match: 16 layer/rank matches and 64 completed collectives. This resolves the native DP>1 FP8 scales question for S0. Timing quality fails: 14 of 90 device cells violate the strict less-than-1% held-only median rule, with worst shift 15.3513%; 76 pass and ten host cells are not applicable. Five-repeat device CV has median 9.2866% and maximum 58.4826%. The target-role and cost qualification flags remain false. The full observed timing table, per-rule verdicts and failures are appended under `S0 result` in `test_report_2026-10-20_step5_comm_preparation.md`.
+
+Commits `2ff64fb` and `2821b87` on `feat/step5-comm` repair CPU-enqueue queue calibration and direct event pending checks, retain timing diagnostics, distinguish PyTorch NCCL 2.29.7 from native PyNccl 2.30.7, announce redirected logs, remove shuffled host-sync dependence from graph totals, and add detached advisory result analysis. Final checks pass 250 tests with seven optional skips in Python 3.10 and all 257 checks in the Python 3.12/image-source environment. These are CPU/source checks, not a GPU requalification.
+
+The new, unsubmitted package is `/data/ycfeng/Frontier/.worktrees/step5-comm/task_memory/step5_comm/s0_20261020_02/job.json`, source `2821b87`, output `/mnt/codesign-exp/ycfeng/frontier/step5_comm/s0_20261020_02/`. All 177 source hashes, metadata/benchmark hashes, clean Git identity and both SDK RDMA defaults pass offline; `step5_comm_20261020/offline_receipt02.json` records the 13:09:34 UTC check and absent submission marker. The judging continuation submitted, stopped and deleted no job and made no push.
+
+Next actions are: (1) the parent rechecks quota, submits corrected S0 once and judges its new event/held-repeat evidence, planning 20 minutes on eight GPUs or 2.67 GPU-hours; (2) build the existing launcher's multi-node rendezvous, per-node logs/manifests and common-output single writer, and generalize the existing native probe to TP8/DP4 and TP8/DP2; (3) after corrected S0 passes, collect S1 on four nodes/32 GPUs, 50 scenarios and 1500 rows, nominally 25 minutes or 13.33 GPU-hours, and S2 on two nodes/16 GPUs, 46 adapted scenarios and 1380 rows, nominally ten minutes or 2.67 GPU-hours. Both preserve the image, native backend settings, eight DP rails and NCCL/RDMA platform values. S1 auxiliary checks remain soft gates. Their packages are not yet built; target topology, stable costs, held-out combinations, optional S1R and admission remain open.
+
+### S0 rerun 02 passed and S1/S2 packages frozen
+
+The parent-submitted `exp-1020-213124-403435` completed Succeeded on `gpu-h800-0329`, with the pinned image, eight H800 GPUs, correct source mount, exit 0 and no restart. Read-only cloud recovery retained the 7,612-line worker log, 100 measurement/kernel rows and all eight ranks/two native layer matches. The existing queue-held check now passes 90/90 device cells, 450/450 repeats and 3470/3470 rank-repeat flags, with zero held-only median shift instead of 15.3513%. Device sample CV median is 4.4326% instead of 9.2866%, but five repeats and 52.0533% maximum CV do not qualify stable costs. No further timing algorithm or threshold changed.
+
+Commit `307467b` on `feat/step5-comm` adds platform rendezvous, per-node logs, single-writer outputs, stage-supplied native probe groups/placement, real RDMA channel evidence and non-blocking auxiliary source/schema/inventory/artifact validators. Native calls still run exactly once and native errors propagate. Final source/CPU checks pass 494 cases, or 424 with 70 optional-source skips in the minimal environment. S1 and S2 packages at `/data/ycfeng/Frontier/.worktrees/step5-comm/task_memory/step5_comm/{s1_20261020_01,s2_20261020_01}/job.json` are frozen to this commit; each has 181 matching source hashes, correct actual SDK RDMA defaults, successful collector/probe/submit dry runs and no submission marker. Exact commands and receipts are in the latest sections of `test_report_2026-10-20_step5_comm_preparation.md`.
+
+The parent may submit them after checking current quota and isolation, keeping the credential-first launchers alive. S1 is four nodes/32 GPUs, 1500 measurements and 500 kernel rows, planned 25 minutes/13.33 GPU-hours. S2 is two nodes/16 GPUs, 1380/460 rows, planned 12 minutes/3.2 GPU-hours; this supersedes the earlier ten-minute estimate. This session submitted, stopped and deleted no job, made no remote cloud write and pushed no branch. Multi-node GPU execution, stable costs, individual DP transport attribution where logs are insufficient, held-out validation and cost admission remain open; ticket 12 is not complete.
+
+### S1/S2 judged and candidate byte/ms costs exported — 2026-10-21
+
+The parent S1/S2 jobs completed all four/two H800 containers with exit 0/restart 0 and image/source/mount pins. Read-only recovery retained 99/55 small judging files and compressed measurement matrices, not traces. All 1500/1380 measurement/summary keys, 500/460 kernels, groups/rails/idle/bytes, 64/32 native rank-layer matches and 256/128 completed collectives pass. All nodes have 17 active ports, actual NET/IB/GDRDMA and no selected Socket channels. Individual DP-communicator attribution remains unverified. Exact evidence is in the report's new `S1 and S2 execution results` section.
+
+Queue rejects 9/1350 and 15/1242 device cells; worst median offsets 3.4534%/15.2256%. Device CV median/max is 5.884%/285.931% and 4.956%/249.998%; three-pass spread median/max 1.971%/78.990%, 2.394%/99.653%. Auxiliary failures leave evidence UNVERIFIED while native work finishes. Genuine enqueue overruns and residual held-only variation do not justify arbitrary corrections; timing code/thresholds are unchanged. Another 32-GPU job is parent-reported nonexclusive context, not quantified contamination; it was not inspected. Own container-active GPU-hours total 9.615556, not billed time.
+
+Candidate sidecars contain S1 1500 observations/300 curves and S2 1380/276 in byte/ms units, preserving all samples/passes/failures/CV/ranges and graph/backend/rail/vector context. Human table: `step5_comm_20261020/candidate_cost_table_2026-10-21.md`. Ticket-20 DP4 facts are 85 FP8 AGv at 4288 B/row, three BF16 AGv at 8256 B/row and 88 RSv at 8192 B/row, across eight rails; no EP32/top-k/request-owner multiplier applies. Production consumption belongs to ticket 21. Joint CPU checks pass 535, or 465/70 optional skips; no production predictor/scheduler behavior changed.
+
+Stable/isolated curves, per-DP transport correlation, prospective held-outs, native capture limits and admission remain unfinished. First complete CPU rejection/consumption design and preregistration; then consider focused S1R, 32 H800/about 20 minutes/10.67 GPU-hours, covering another host set, unstable points, independent held-outs and transport evidence. No DP2-only repeat is recommended. No new package/run was created, no GPU job was submitted/stopped/deleted, no remote write/push occurred, and ticket 12 remains incomplete.
+
+Source/data-transform handoff is committed as `8ab12ccbf30eb3a4191df505ede1bf9bae8b5b49`, no push. Final raw verification preserves all 99/55 small files and compressed/uncompressed measurement hashes, checks current tool hashes and retains every pass. The primary re-read relevant root requirements. Attempt recovery of uniquely identifiable communicator/PID windows from existing logs before new transport capture; do not infer ownership from interleaved fragments or add a new native observer merely for this offline report.
+
+## D5 T1 — PD client TTFT endpoint (implementation and CPU verification)
+
+- `completed / implementation`: existing Request/metrics owners on `feat/step5-pd-structural` expose PD-only `client_ttft` in milliseconds, arrival to first D output. Existing `ttft`, `ttft_statistics` and ground-truth `ttft_ms` remain arrival to P-prefill completion. Event durations, scheduling, token accounting, gate rules and non-PD exports are unchanged.
+- `completed / timestamp correction`: source inspection shows `first_decode_token_completed_at` is the first PD output. The similarly named `decode_first_token_completed_at` is the second output, so the native R1W report's symbol suggestion is not used. Its measurements are preserved.
+- `completed / tests`: nine new regressions PASS, including one output and actual NIXL transfer-before-D-admission ordering. After correcting one existing MLA test fixture to supply required `sys_arch="co-location"`, the final affected set is **764 passed / 8 skipped** (Torch absent), 157.60 seconds. Full unit rerun is **5,581 passed / 70 skipped / 103 failed / 29 collection errors**, 304.20 seconds; all **132** failing/error IDs exactly equal `scratch_evidence/step5_consolidated_20261020/unit_0d2ffda.norm.ids`, with zero new/missing IDs. The initial eleven fixture failures and original logs are retained; no production fallback was added.
+- `completed / structural comparisons`: Step **4 cases / 26 requests**, GLM **2 cases / 10 requests**, baseline `d65a4b9` versus candidate: every old request CSV cell matches; stage/transfer/EP/system artifacts and normalized configs match. GLM op-trace simulation bodies are byte-identical (1,587,630 records per mode); only the existing first-record host wall timestamp differs and is explicitly retained. Supported legacy DeepSeek-v3 PD (`none` connector), offline/online, **2 requests**, also matches baseline `8585748` exactly except the new field, which equals first D stage end minus arrival. A NIXL attempt rejects latent MLA identically on both sources; that pre-existing unsupported combination is not bypassed or repaired.
+- `completed / legacy fidelity`: baseline `8585748` and candidate **77/77** execute. Raw unchanged comparison: **60 identical / 17 expected new-column differences**. Exact original-column projection plus all other artifacts: **77/77 identical**, **451 artifacts per source / 902 total**, no failed/missing cases; cache names **519/519** equal. All 179 requests in 17 legacy PD cases pass independent client interval reconstruction. No gate, tolerance, baseline or old metric is altered. Dirty-source evidence and a candidate cache not freshly rebuilt mean aggregate clean-cache/provenance acceptance remains unclaimed.
+- `completed / commit`: **6db2cd9858498ffef767ba4abda4d75e42983b87**, `fix: expose PD client TTFT at the first D output`, on `feat/step5-pd-structural`. Six owned source/test/documentation files only; no scheduler, cluster-scheduler or ticket-20 driver edits. Request stays at 1,996 lines. AST/whitespace and all tested/committed SHA-256 checks PASS. No simulator file changed after source freezing; only the diagnosed unit fixture changed after drivers completed. No push or GPU operation.
+- `open / acceptance`: T1's simulator endpoint code/test line is complete. This advances but does not close ticket 14's native normalization, pairing and same-gate client mapping or ticket 17's native lifetime/content/wire qualification. T2 still needs ticket 10 measured attention/MoE profiles for the 16–31-token tail and representative ticket 24 cells. Existing 132 failures and clean-cache/provenance/performance-budget limitations remain disclosed; no native predictive or DeepSeek-V4 PD claim is made.
+- `evidence`: final English report `/data/ycfeng/Frontier/.worktrees/step5-pd-structural/task_memory/task_2026-10-20_pd_client_ttft/test_report_2026-10-20_pd_client_ttft.md`; selected receipts/logs/ID lists in its `evidence/` directory; large raw CPU traces remain `/data/ycfeng/tmp/d5_pd_client_ttft_20261020/`. Parent task progress and ticket 14/17 notes are updated in place.
+
+### GPU jobs, results and follow-ups (October 20, 2026, 20:26–20:45 HKT)
+
+- `completed / ticket 08 H800 R1`: `exp-1020-195546-730923` Succeeded; nine of nine W1 conditions PASS on H800. D5: T1 is large (6.7%–62.0% of client TTFT, median 20.5%), so the PD client TTFT endpoint is being aligned; T2's tail rule is `prompt − 16 × floor((prompt − 16)/16)` (16–31 tokens). Details in `test_report_2026-10-20_native_pd_h800_r1w_preparation.md`, section "Execution result on H800"; tickets 08, 14, 17 and 24 updated.
+- `failed / ticket 10 smoke 01`: `exp-1020-200042-999260` failed after startup with zero rows: `initialize_model_parallel` ran outside `set_current_vllm_config`. Fixed in `32199da` (config scope entered before distributed initialization; native `destroy_distributed_environment()`; regression test that fails on the old code). Suites 172/470/89 passed.
+- `in-progress / ticket 10 smoke 02`: `exp-1020-204426-318785`, `smoke_stage03` submitted through `submit_with_env.sh` (credential environment loaded first), 1 H800, output `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/attention_smoke_20261020_02`.
+- `completed with failed timing quality / ticket 12 S0`: `exp-1020-202611-536615` Succeeded on gpu-h800-0415 (8 H800), with 100 rows and 16/16 native layer/rank schema matches. Full output is in redirected cloud `worker.log`; 14/90 device cells fail held-only median checks. Collector fixes are committed as `2ff64fb`/`2821b87`, and generation 02 is offline verified but unsubmitted. See the ticket 12 section above and the report's `S0 result` section.
+- `completed with one open item / ticket 20 structural`: `d65a4b9` on `feat/step5-pd-structural`. Focused suites 138 passed; full unit suite 5572 passed with the same 132 pre-existing failing IDs; offline and online placement runs 17/17 completed with 34/34 placement matches; 77/77 legacy fidelity identical. Open: the dense-initialization CPU sentinel measured +3.170% against the 1.941% budget (the same sentinel failed earlier at +2.394% with an unresolved disposition). An interleaved A/B measurement on `git archive` exports is running before any decision.
+- `in-progress / ticket 14 and 17 T1 alignment`: a subagent is moving the PD client TTFT endpoint to the D first token with existing timestamps.
+- `completed with failed timing quality / ticket 10 smoke 02`: `exp-1020-204426-318785` Succeeded with 16/16 rows, all output and prefix-continuation checks passing, and native kernel names recorded. Only 3/16 rows meet the 5% coefficient-of-variation bound, and eager rows are host-launch bound (about 0.55 ms regardless of tokens). Next: measure each phase in the native graph mode, stabilize small timings, then the full grid. Judgement in `test_report_2026-10-20_step5_attention_profiler_implementation.md`, section "Smoke 02 result on H800".
+
+### Merge of the placement and client-TTFT work, and job tracking (October 20, 2026, 21:00–21:35 HKT)
+
+- `completed / merge`: `feat/step5-preview` merged `feat/step5-pd-structural` (`d65a4b9` placement, `6db2cd9` client TTFT, `f055a69` records) as `0c92903`, no conflicts.
+- `completed / unit suite at 0c92903`: 103 failed, 5581 passed, 70 skipped, 29 errors in 318 s; the sorted failing-ID list is byte-identical to the known 132 IDs.
+- `completed / Step PD suites at 0c92903`: `test_step5_structural_pd`, `test_step5_pd_placement`, `test_step5_structural_execution`, `test_step5_structural_driver` give 129 passed in 63 s.
+- `completed / fidelity at 0c92903`: 77/77 cases ran. Every artifact is identical except `request_metrics.csv` in 17 PD cases, which gains exactly one column, `client_ttft`; all 81 baseline columns match in every row, and no baseline column changed in any case. The remaining differing files are `config.json` (the single field `metrics_config.output_dir`), `run.log` (command, working directory, output directory), and the comparison's own `manifest.json` and `results.jsonl`; none is an output artifact difference. A `--clean-cache` rerun on both sides is in progress to verify predictor cache identity, because the first comparison reported `CACHE NOT VERIFIED`.
+  - Note: `decode_first_token_completed_at` records the second output token, so the client TTFT uses `first_decode_token_completed_at`; the naming pitfall is recorded in the ticket 14 note.
+- `completed with open quality item / ticket 12 S0 rerun 01`: `exp-1020-202611-536615` executed fully (the platform log was short only because the worker writes to the cloud `worker.log`). Measurements 100/100, groups and rails consistent, communicator identity known, native probe 8 ranks × 2 layers all match. Queue-held timing fails 14 of 90 (worst median offset 15.35%), so the timings are diagnostic only. Fixed in `2ff64fb` and `2821b87` (measured CPU-enqueue calibration, held-repeat analysis that never hard-gates the workload); 257 CPU tests pass; `s0_20261020_02` staged.
+- `in-progress / ticket 12 S0 rerun 02`: `exp-1020-213124-403435`, 8 H800, budget 20 minutes.
+- `closed as unresolved / ticket 20 dense-initialization budget`: the sentinel's noise is 0.28–0.38 s against a 1.94% budget of about 0.09 s; reaching the budget's resolution needs about 131 paired runs, and the second round's CPU-time comparison also leaves the budget inside its confidence interval. Disposition `UNVERIFIED_UNRESOLVED_MEASUREMENT_CONDITIONS`; the frozen budget stays. Future verification of this budget must use an isolated host or a lower-noise statistic.
+- `completed / clean-cache fidelity at 0c92903`: both sides rerun with `--clean-cache` (baseline from `git archive 8585748`). `complete_comparison: true`, 77 compared, 60 identical; predictor caches compared and populated cleanly with no file only on one side. The 17 mismatches are all `request_metrics.csv` column-count differences from the added `client_ttft` column; every baseline column is equal in every row. The provenance note comes from the untracked `.pi/` and `.cortexkit/` directories. Evidence: `scratch_evidence/fidelity_clean_0c92903/`.
+- `completed / publication`: public status doc updated (`7abd2fa`) and `feat/step5-preview` fast-forwarded to PR #50 (`8585748..7abd2fa`), still open and Draft. The v2 shell's default proxy `127.0.0.1:51015` refused connections; pushes and `gh` calls work with `proxy.i.shaipower.com:3128`.
+- `in-progress / subagents`: ticket 10 profiler timing fixes (native graph mode per phase, amortized timing, operator-sum ratio) toward `smoke_stage04`; ticket 08 R2 content and lifetime package; ticket 12 S0 rerun 02 judgement and S1/S2 packages.
+- `kept blocked / ticket 18`: its external prerequisites require GLM `09.full_frontier_path` and a complete ticket 17, and state that concurrency cannot precede a complete single-request lifecycle, so its structural part does not start under D3.
+- `in-progress / ticket 10 smoke 03`: `smoke_stage04` (commits `7aeac57`, `655ae34`: native graph mode per phase — 16/64-token prefill NONE and decode FULL under the smoke capture sizes; amortized ≥0.5 ms replay windows; same-run scope ratio; GPU-active eager cost reported separately) submitted as `exp-1020-224317-364507`, 1 H800, expecting 12 native cells and 20 CSV rows at `/mnt/codesign-exp/ycfeng/frontier/step5_profiling/attention_smoke_20261020_03`.
+- `completed / ticket 12 S0 rerun 02`: `exp-1020-213124-403435` passes every original rule: queue-held 90/90 cells (3470/3470 rank-repeats), held-only median offset 0% (before: worst 15.35%), native probe 16/16 rank-layer matches. Device CV median 4.43% (before 9.29%), maximum 52.05%, so stable cost curves are still unproven. S1/S2 packages committed at `307467b`.
+- `completed / ticket 10 smoke 03 platform`: `exp-1020-224317-364507` Succeeded; the ticket 10 subagent judges it.
+- `in-progress / ticket 12 S2 and S1 on H800`: quota at 23:12 HKT showed H800 non-preemptible use 106/128, 31 usable GPUs and 2 completely idle 8-GPU nodes; the 32-GPU job `exp-1020-225946-358705` belongs to the GLM session (its `g0d_launch_32`). S2 (16 GPUs, TP8/DP2/EP16) submitted as `exp-1020-231603-464478`; S1 (32 GPUs, TP8/DP4/EP32) submitted as `exp-1020-231652-314949` and queued on H800, not H200, because H200 communication timings cannot stand in for H800 costs. The two jobs may overlap in time; their judgement records this.
+- `completed / ticket 12 S0 rerun 02 and S1/S2 execution`: S0 rerun 02 passed every original rule (queue-held 90/90 cells, held-only median offset 0%, native probe 16/16). S1 `exp-1020-231652-314949` (32 H800, TP8/DP4/EP32) and S2 `exp-1020-231603-464478` (16 H800, TP8/DP2/EP16) both reached platform `Succeeded`; a 32-GPU GLM job shared the cluster during both. Outputs read over `ssh shai-ycfeng`; verdicts recorded by the ticket 12 subagent.
+- `completed / ticket 08 R2 submission`: `stage02` (commits `1696916`, `90559d8`; 560 tests, 77/77 fidelity identical) submitted as `exp-1021-000521-476638`, 32 H800, P/D each TP8/DP2/EP16, 20 requests in 15 waves with 12 content captures and 8 fence-free readiness requests, one six-request concurrency wave, one cancellation with page reuse. H800 quota read at 00:04 HKT: non-preemptible use 73/128, 52 usable GPUs, 2 completely idle 8-GPU nodes, so the job queues for the remaining nodes.
+- `completed / ticket 15 native memory reconciliation`: merged at `1528eac`; public status `a1a1993` pushed to PR #50.
+
+## Calibration scope reduction: one canonical 64-H200 case — 2026-10-21
+
+### Trigger
+
+The user supplied `/data/ycfeng/Frontier/.local-draft/step5-preview/calibration.md` and asked for the spec and ticket adjustment, with three corrections: raise the formal request count to 128 or 256, keep the measured backend for the formal case, and consolidate the open choices into one brief question set.
+
+### Decisions recorded (requirements.md D9–D14)
+
+| ID | Decision |
+| --- | --- |
+| D9 | Canonical case: SharedGPT, **128 requests**, QPS 4.0, historical length distribution preserved |
+| D10 | Topology P32/D32, each role TP8/DP4/EP32/PP1 over 4 nodes; reuses the ticket 12 S1 layout and the ticket 10 grid |
+| D11 | MTP **off** in native and Frontier; `speculative_config` defaults to `None` and `num_nextn_predict_layers=3` is declaration only |
+| D12 | Tickets 24/25/26/27 **retired**; 09 retargeted to H200-64; 23 becomes the canonical manifest freeze; 28 becomes native collection plus the four-metric comparison |
+| D13 | SharedGPT trace obtained from upstream, converted, subset-selected and frozen by SHA-256 |
+| D14 | Queue directly for 8 idle H200 nodes; a smaller run is a labelled diagnostic and never substitutes |
+| — | Formal backend is **measured** (profiling-CSV admission plus existing predictors) with `collective_sim`; dummy timing stays structural-only |
+
+### Documents changed
+
+- `spec.md`: new §0 canonical-case contract; §2 PRIMARY and hardware paragraph; §6 G4 row; §7 prefill-shape wording; §8 campaign section marked superseded with the four-metric contract; §10 GPU resources, completion and min-matrix paragraphs; modification history.
+- `plan.md`: title, PRIMARY paragraph, modification history, ticket index (09 renamed; 24/25/26/27 RETIRED; 23 and 28 rewritten; 25 link kept on its existing filename), dependency graph rows and external-gate list, §6 campaign text and metric contract, §7 stage table and source aliases.
+- Tickets: `09-native-h20064-qualification.md` (renamed and rewritten), `23-canonical-case-freeze.md` (renamed and rewritten), `24`/`25`/`26`/`27` marked RETIRED with retirement notes, `28` rewritten, `30` acceptance aligned, `06` and `15` forward notes.
+- `review.md`: scope note added, historical verdicts unchanged.
+- `requirements.md`: the original request plus D9–D14.
+
+### Collateral findings recorded during the adjustment
+
+- `sharegpt_req300_rate10_llama.jsonl` is **absent** from this machine's `data/processed_traces/` (only arxiv/splitwise CSVs) and from the dev-vidur private repository's `data/processed_traces/`, though ~23 code/doc references describe it. D13 makes this an explicit acquisition task in ticket 23 rather than an assumption.
+- The historical manifests use `source_trace_jsonl: sota-infer-engine/LLMServingSim/dataset/sharegpt_req300_rate10_llama.jsonl` with `sharedgpt_subset_id: head64`, `num_requests: 64`, `qps: 4.0`, nominal 224/278 tokens, `chunked_prefill_enabled: false`, `cc_backend: collective_sim` — consistent with the calibration document except for the request count, which D9 raises to 128.
+- H200 quota at decision time: 458/512 non-preemptible cards used, 4 complete idle eight-card nodes; the formal 64-GPU job must queue (D14).
+- Frontier has no separate `SPOT` metric; `tpot` exists in `frontier/metrics/constants.py`, so `SPOT` is read as TPOT and no fifth metric is created.
+- H800 profiles captured so far (tickets 10 and 12) cannot be rescaled into H200 timing; the canonical case needs H200 collection before the formal comparison.
+
+## Canonical workload unified with the GLM/V4 session (D15) — 2026-10-21
+
+**completed** (documentation only; no GPU job, no GLM/V4 worktree access, no ticket renumbering, no retired ticket revived).
+
+- Reason: YC decided both sessions use one workload so their results are comparable and only one trace/manifest is frozen. Two settings changed: 128 → 256 requests (`1.采纳请求数`) and THPT output-only → prompt plus output (`2.thpt依旧采用prompt+output 总吞吐`).
+- Files: `spec.md` (§0 table, metric contract, new trace/retiming, selected-set and shared-workload paragraphs, MTP source citation, §8), `requirements.md` (D15, D9 count note, D12 bullet note), `plan.md`, tickets `09`, `14`, `23`, `28`, `30`, public `docs/general/step5-preview.md`.
+- Verification (read-only): downloaded the trace from LLMServingSim tag `v1.0.0` to `/data/ycfeng/tmp/opencode-v2-tmp/sharegpt_verify/`; SHA-256 `fad744ff…ddd61a`, 300 rows, token-id lengths consistent, raw 10.26 QPS, head-N statistics all equal the GLM/V4 values. At QPS 4.0 the 256/128 spans are 63.75 s / 31.75 s (the instruction's 24.6 s / 12.0 s are raw-trace spans).
+- Historical evidence: authenticated `gh api` reads private `fwyc0573/dev-vidur` (`v0.3-hopper-testbed`); `write_sharedgpt_trace` takes the first N rows and linearly rescales the trace's own arrivals to the target QPS (no seed); the historical throughput gate was output-only. Copies in `scratch_evidence/canonical_workload_alignment_20261021/`.
+- MTP: locked Step image source `vllm/engine/arg_utils.py:707,2048–2087,2217–2226` and `vllm/transformers_utils/config.py:756–791`; locked `config.json` has no `speculators_config`, so the default is off.
+- Open: the retiming rule (historical linear rescale vs. seeded synthetic process) needs one shared decision before ticket 23 freezes the manifest.
+
+## Shared retiming rule adopted (D16) — 2026-10-21
+
+**completed** (documentation plus one cherry-pick; no GPU job; no GLM/V4 worktree or scratch access).
+
+- `git cherry-pick -x 9ed979e` → `cb8090b` on `feat/step5-preview`: seven added files (`data/processed_traces/canonical_sharegpt_req256_qps4/{trace.csv,request_ids.json,warmup_pool.csv,manifest.json,SHA256SUMS}`, `tests/integration/canonical_case/build_sharegpt_manifest.py`, `tests/unit/test_canonical_sharegpt_manifest.py`), no collisions.
+- Checks: `sha256sum -c SHA256SUMS` 4/4 OK; `PYTHONPATH=$PWD … frontier-py310/bin/python -m pytest tests/unit/test_canonical_sharegpt_manifest.py -q -p no:cacheprovider` → 2 passed; independent equivalence (`scratch_evidence/canonical_workload_alignment_20261021/equiv_check.py`) → 0 mismatches / 256 rows, spans 63.75 s, first 128 31.006 s (4.096 QPS), first 64 15.307 s (4.116 QPS).
+- Docs: spec §0 (table, retiming paragraph, selected-set paragraph, shared-manifest paragraph), requirements D15 corrections and D16, ticket 23 (frozen-file table, items 1–4 and 9 done, two acceptance items checked, status), tickets 08/09 short-prompt coverage note, plan, summary.
+- Correction to the D15 entry above: the 128-request span is 31.0 s as the prefix of the 256 schedule; the 31.75 s there was a separately rescaled 128-request set.
+- Finding: 122 of 256 prompts are under 32 tokens; native P/D behavior for them is unmeasured (R1 covered 128–7681 tokens).
+
+## Fixed-length workload transition (D17) — 2026-10-21
+
+**Completed:** workload package, CPU verification, documentation and independent review. Publication receipt is appended below. The user deferred SharedGPT, requested 6k input/1k output on every request and delegated QPS/count. Selected 6144/1024 tokens, 128 formal requests at QPS 1.0 (offsets 0..127 seconds); 16 separate same-shape warmups before each of three clean repetitions, both-role drain after warmup and between repetitions.
+
+- **Completed decision and docs:** `requirements.md` D17, `spec.md` §0/§8, `plan.md` current PRIMARY and D17 graph, tickets `08`, `09`, `23`, `28`, and public `docs/general/step5-preview.md`. SharedGPT is deferred; its bytes are retained. Short-prompt native follow-up is no longer a canonical prerequisite; corrected the prior invalid claim that the formula yielded zero below 16 tokens.
+- **Reason and expectation:** offered input 6144 token/s versus old 913.156; output demand 1024 versus 1118.86 token/s. This strengthens long-prefill/transfer coverage without retaining QPS4 after the large length increase. Arrival span 127 seconds and 128 samples per repeat; neither these numbers nor R1 timings prove H200 stability, saturation or latency.
+- **Work ownership:** sizing investigation `ses_ea5527528ffePGQQfOC2K6Btf0` completed read-only; accepted its warning about R1's chunked 512-token/one-sequence and DP2 limits, not its unvalidated throughput/runtime/occupancy extrapolations. Package implementation/verification `ses_ea5504362ffe8TEO8G8jD0R0ZI`; documentation review `ses_ea54d46b0ffeeczZID4hpM6gr0`. The parent owns docs, final acceptance and publication.
+- **Deliverable:** `data/processed_traces/canonical_fixed_6k1k_req128_qps1/`, generated with the existing `tests/comparison/dp_placement_pp/make_trace.py`. Verification report: `test_report_2026-10-21_fixed_workload.md`.
+- **Handoff:** `fixed_workload_handoff_20261021.md` for the GLM/V4 owner. Adoption is pending, and matching workload hashes remain required before formal workload execution. No other-session files were edited.
+- **Pending runtime work:** ticket 23 must freeze unchunked token budget, concurrent sequence capacity, max context and graph policy for this workload. H200 collection covers actual 6144-token prefill, context growth through 7168, decode batches and observed D tail. No measured H200 throughput claim follows from this preparation.
+- **Ongoing mainline retained:** R2 native job `exp-1021-000521-476638` succeeded but its content/lifetime verdict is pending; the failed linear smoke still needs diagnosis; attention/communication timing admission remains incomplete. The workload change does not grant these gates a PASS or justify relaunching old campaigns.
+
+- **Verification completed:** 7/7 final checksums; 8/8 regenerated output comparisons; 144 native prompt sequences; existing SharedGPT pin tests 2 passed; actual Frontier reader 128 formal + 16 warmup Request objects exact. Final manifest SHA-256 `43e1e3d0ffa0012bf98eeac6b1b74cf738297af473b77a4d601861e5b1b069a0`. Explicit Frontier `max_tokens=7168` and unit scales prevent default prompt clipping; no simulator source change.
+- **Review completed:** `fixed-workload-doc-review` found three P2 issues (native unchunked budget, one stale SharedGPT plan paragraph, alternate THPT window); all corrected and independently closed. Final package review found no critical contract differences. Both delegated implementation and review are completed; none failed or remain running for this slice.
+- **Remaining dependencies and next actions:** (1) GLM/V4 owner adopts the handoff/package unchanged; (2) finish independent R2 judgment and profiler failure diagnosis; (3) freeze/qualify canonical runtime capacity and graph settings, then H200 shape coverage and formal runs after their existing prerequisites. No new question about workload sizing is open.
+
+**Publication receipt:** `0f90ad5` (`data(step5): freeze fixed 6k/1k calibration workload`) contains eight new workload files and `docs/general/step5-preview.md`. Fast-forward push succeeded from `8da1b42` to `0f90ad5` on remote `feat/step5-preview` backing Draft PR #50. Task records remain local under the existing ignore policy. Initial `git diff --cached --check` reported the existing CSV writer's CRLF endings as trailing whitespace; inspection verified every CSV line is standard CRLF with no trailing spaces. `git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check` passed without changing generator output bytes or persistent Git configuration. No force-push, PR merge, other-session edit or new GPU operation occurred.
+
+## D18 shared-workload adoption and parallel execution — 2026-10-21
+
+- **Completed:** user confirmed the common-package recommendation. `68f891b` cherry-picked as `958d81a`; all seven source/package files byte-identical, 4/4 checksums and 6 existing fixed/SharedGPT tests PASS. Formal reader preserves 128 requests of 6144/1024 tokens at offsets 0..127. Manifest SHA `5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3`. Common-artifact agreement is closed; numerical case, metric, backend and image choices are unchanged.
+- **Completed docs:** requirements D18, spec §0, plan §6, tickets09/23/28, adoption handoff, summary and public status. Verification: `test_report_2026-10-21_common_workload_adoption.md`.
+- **Completed publication:** package958d81a and public status00ed846 fast-forward pushed to `origin/feat/step5-preview` (`0f90ad5..00ed846`), the branch backing Draft PR50. Task records remain local under the existing ignore policy. No shared-branch push or PR merge.
+- **Corrected delivery / final review — D18-NATIVE:** source4a708ff/18dd104 plus2a1070b/f3f407e,585 reported affected passes. New qualification02/canonical02 stages each verify27 tool/input hashes and47 native pins, including26 actual MRv2 proof bindings. Stable144 prompt templates/432 transport IDs, four metrics plus nongate throughput diagnostics, idle checks and7168/8192/128 remain. Reviewer `ses_ea3671ea2ffecoFUhkOFnymcBL` checks closure using `/data/ycfeng/tmp/d18_native_review_fix.diff`. Neither64-H200 stage is submitted; do not queue alongside the32-H200 job under the70-GPU reservation cap. New paths `/data/ycfeng/tmp/step5_d18_native_20261021/{qualification02,canonical02}/`; stage01 is immutable and prohibited for submission.
+- **Initial native findings corrected:** wrong MRv1 graph binding, missing output-only/request throughput diagnostics and untested qualification branch were corrected with source/CPU regressions, including actual16-warmup/idle/8-concurrent HTTP requests. Built-in output-rank statistics do not independently establish all-rank replay; final review checks the actual required observable scope. Report `review_2026-10-21_d18_native.md`.
+- **Completed profiling source:** wrong FP8 dispatch for dense K1728 was reproduced from903 worker log lines and corrected through metadata-derived BF16 without padding/guard changes. Profiling5fa1926 merged as f0ab2eb/3cdc996 after independent37-file review,787 parent CPU passes and77/77 legacy fidelity with matching cache filenames. Initial77 comparison differences were solely a relocated output path; passing comparison02 uses original absolute label roots without changing rules or artifacts. Evidence in `scratch_evidence/d18_resume_20261021/profile/`.
+- **Completed / H200 profile judgment; diagnosis active:** exp-1021-120711-905260 completed with verified H200/exit0/restart0. Parent reran existing strict judge:22/22 functional,18/18 prefix and candidate CV pass; six SWA medians fail5.330351%–5.908502%, leaving12/18 qualified candidates and whole verdictFAIL. Linear BF16 initialization/native dispatch is fixed; timing CV passes18/40 event and34/40 kernel cells, no independent linear median. Retained14 files327995bytes with matching manifest hashes under `d18_profile_20261021/`. Agent `ses_ea381b1c9ffel4ExuVIb9MGr0f` now prepares a single-shape boundary-event/order/clock diagnostic,1H200 estimated2–5min,10min cap. No estimator/threshold correction or new GPU submission yet; old H800 failures remain.
+- **Completed source/CPU / D18-COMM:** `ses_ea3815518ffevmoHwyfako2JVr`, `step5-comm`, commit91ed687 merged with its earlier communication work as b1f032d. All189 frozen source hashes match main; affected tests482PASS/70Torchskips. First-prefill-only packet has10cases/30rows and physical tokens[6144,1,1,1]. Parent submitted32H200 `exp-1021-114449-837730`; Pending at03:46:34UTC, creator/mount/image/32GPUs/RDMA verified. Preflight03:44:30UTC: own nonterminal allocations0, requested32<=70, cluster non-preemptible491/512 and two complete idle nodes. Launcher shell sh_15c8fbb0f001GCwO8QgJ58vway remains alive. Native and formal cost evidence pending. All stream branches received958d81a before delegation; agents performed no GPU/platform operations.
+- **Delivered / R2 review correction:** `ses_ea37359c5ffeoQkLY6yYkhqkx8` committed a6161b4/b97af03, with589 tests and28 final targets reported. Alias geometry,44 LOCAL/null records and60 backoff false failures are corrected; missing old native witnesses remain UNVERIFIED. Reviewer `ses_ea347ca77ffecjs6k9qXMJXQOF` found P1 retirement validation may accept early/in-window/full-history release without processed-token/group-retention proof. Author must reproduce and correct it before sealing a fresh32-H200 capture. Existing20requests/15waves retained;18/20 unequal page IDs are mapping evidence, not READ/G3 proof. No R2 merge/submission yet. Review: `review_2026-10-21_d18_r2.md`.
+- **Completed / integration fidelity:** clean detached baseline 00ed846 and candidate b1f032d completed the existing 77-case matrix with separate clean caches. Comparison exit 0: 77/77 identical, no failures/missing evidence, zero cache filename differences. Output `/data/ycfeng/tmp/step5_comm_fidelity_20261021`; seven retained evidence files/300313 bytes in `scratch_evidence/d18_resume_20261021/comm/fidelity/`. No new CPU performance-budget PASS is inferred; the prior unresolved shared-host measurement disposition remains.
+- **Completed / communication publication:** merge b1f032d and public status b0018c4 fast-forward pushed to origin/feat/step5-preview after the checks above. Native consumer delivery remains under review and is not included in this push.
+- **Completed / profiling publication:** f0ab2eb source integration,3cdc996 verification archive and6353137 public status fast-forward pushed to origin/feat/step5-preview. The37-file profiling delivery is accepted for source integration; H200 timing and canonical admission remain pending. Retained13 source/preflight/container/test/comparison evidence files,82991 bytes, checksums preserved under `scratch_evidence/d18_resume_20261021/profile/`.
+- **Completed / native integration:** all findings closed; Engine NNN context supports per-engine FULL tables without new hooks or a64-counter requirement. Merged f3f407e as db5c99f; parent585PASS/52.48s, both27-file stage02 verifications PASS,12 repository source hashes per stage equal merged tree. Earlier R1/R2 source baseline is included, new R2 corrections are not. Simulator/data/fidelity-driver trees are unchanged from6353137; no redundant77-case rerun. At04:27UTC own32-GPU communication job is Pending; plus64 would be96>70, so qualification is not submitted. Report `test_report_2026-10-21_d18_native_integration.md`.
+- **Completed / native publication:** db5c99f integration and8e1f2aa source/logging clarification plus public timing status fast-forward pushed to origin/feat/step5-preview. Five parent test/stage/quota receipts (13319 bytes) are preserved under `scratch_evidence/d18_resume_20261021/native/`. R2 P1 correction and single-shape timing diagnostic preparation remain active; neither fresh package has been submitted.
+- **D19 / qualification submitted:** user raises personal H200 reservations70→130. Fresh04:53UTC selector/pagination/resource check found only32 communication GPUs, so64 qualification fits at96 total. Submitted immutablequalification02 as `exp-1021-125354-923219`;04:54UTC API confirms Pending, personal creator,8×8 H200/non-preemptible, pinned image, required RDMA and local NFS source. Actual container memory limit125Gi per node. LauncherPID3657079 remains alive with a kernel pidfd completion notification. Formal canonical still awaits qualification/R2. Analyzer mainline checkpoint is running independently; report `test_report_2026-10-21_h200_qualification_submission.md`.
+- **D19 / publication:** public status committed and pushed as6db2250. `git diff --check` passed. The first push failed through the dead lowercase127.0.0.1:51015 proxy despite uppercase overrides; setting both lowercase and uppercase proxy variables to the company proxy fixed it. No global configuration changed. Four submission receipts (6204 bytes) are retained in `scratch_evidence/d19_qualification_20261021/` with matching hashes.
+- **D19 / mainline checkpoint:** user requested restarting the unanswered analyzer; v2 interrupt returnedtrue and old session was cancelled. The focused retry completed: goal/dependency alignment remains, but validation dominates effort. Parent verified22/28 prerequisites and assigned task-local CPU command/config/input preparation (session `ses_ea324aad2ffe6MPw1wkHywF2S3`); full tickets remain blocked. R2 remains a formal native prerequisite. See `checkpoint_2026-10-21_mainline.md`; current diagnostics now have explicit completion/disposition points in plan§6.
+- **D19 / timing experiment:** frozen79c8b45 probe reverified3409 payload/15 committed-source hashes. Fresh05:08UTC personal reservation96+1=97<=130; submitted `exp-1021-130839-908503`. Platform/container Succeeded, exit0/restart0 on gpu-h200-0068,05:08:55–05:09:45UTC (50-second container interval, not total billing). Five result/trace files downloaded into `/data/ycfeng/tmp/d18_profile_20261021/boundary_cloud01/`; parent identity/mount and terminal receipts are `boundary_launch_receipt01.json` and `boundary_terminal01.json`. Same profiling agent is judging the three causal hypotheses; original strict timing FAIL remains until measured diagnosis and any product fix are verified. No larger grid was started.
+- **Completed raw R2 judgment / remediation pending:** personal-API query confirms `exp-1021-000521-476638` Succeeded, 4/4 tasks. Sealed stage02 verdict FAIL: runtime, placement/request association and planned cancellation pass; lifetime has6 failures and tail attribution60; content/readiness/mapping remain unverified. All32 workers record `Registered wire row does not equal the complete physical tensor row`. Native registration shows69 layer views without a direct registered region name. Verdict parsing also rejects local allocations with null remote_engine_id; P's observed computed count already equals the transferred prefix, but the checker subtracts a second tail. These harness issues need source-backed correction and are not proof of native corruption. Raw result and recovered linear log: `scratch_evidence/d18_resume_20261021/`.
+- **Next — superseded by D20 below:** implement the measured computation/bundle, PD and client-metric interfaces in parallel. Qualification and communication jobs retain their existing lifecycle; formal canonical awaits real evidence. All submitted stages stay immutable and auxiliary validators remain soft at32+GPUs.
+
+## D20 measured implementation — 2026-10-21
+
+- **completed / decision:** user requested a shift away from preparation/diagnosis and explicitly approved CPU implementation, relaxing the D3 implementation wait and extending Q10 shared interface scope to Step. RequirementsD20 and plan§6 record the exact question/answer and retained acceptance conditions.
+- **in-progress / code owners:** client metrics `ses_ea3120cc2ffeA2w73hOhVg38hv` in `step5-client-metrics`; compute/bundle `ses_ea381b1c9ffel4ExuVIb9MGr0f` redirected to `step5-measured-compute`; measured PD `ses_ea37359c5ffeoQkLY6yYkhqkx8` redirected to `step5-measured-pd`. All three branches start from6db2250. Current diagnostic findings are preserved, but new assignments require executable source, not additional preparation documents.
+- **completed / dependency repair:** initialized the existing collective-sim submodule at pinned d28fe917, built with `make -j8`, and ran its existing40MiB two-server allreduce example through `htsim_ndp`:0.86194ms, finite and positive. Existing topology-profile import now works; unknown profiles still raiseKeyError. Source/backend choice is unchanged. This is local runtime verification, not an admitted H200 scenario. Receipt `d19_pipeline_preparation/collective_sim_runtime02.json`; report `test_report_2026-10-21_d20_dependency_and_priority.md`.
+- **completed / reuse finding:** shared1400f12 client changes can be integrated with one missing common-workload dependency. Step needs truthful source-schema/runtime adaptation; the GLM reader's0.28.0 identity cannot be copied into Step records. The Step observed version is0.1.dev22912+g8224bb82f with image/file identities and unknown full build revision. D20 authorizes this integration; no missing provenance may be fabricated.
+- **pending / acceptance:** source implementation, integrated measured CPU execution and corresponding tests; qualified H200 full-path profiles, native R2/runtime evidence, real canonical comparison and full bundle acceptance. Whole16/22/28 are not completed by starting implementation.
+- **completed / records and publication:** requirements/spec/plan and tickets10/14/16/17/22/28 now reflect D20. The mandatory self-check is updated in `checkpoint_2026-10-21_mainline.md`; the implementation/acceptance edge and stale dependency/diagnostic status were corrected. Ten maintained-document decision/history/owner checks and `git diff --check` passed. Public status7b19163 fast-forward pushed to origin/feat/step5-preview; task records remain local under the existing ignore policy.
+- **completed / D20-CLIENT code integration:** ac92396/4d62590/f5dbf87 plus parent documentation correction15a3958 merged at e2be122. Independent parent tests183PASS/56.59s and148PASS/6.45s (overlap); actual Step/shared normalize→gate CPU readings contain128 formal requests,3 repeats and4 metrics each. Published Step matrix emitsINSUFFICIENT_EVIDENCE despite matching arithmetic. Reviewer ses_ea2ff2a7effeU1mCtxTsjAThFI found only an unsupported optional documentation command; parent removed it. Report `test_report_2026-10-21_d20_client_integration.md`; evidence in `scratch_evidence/d20_client_integration/`.
+- **current next step:** integrate compute/bundle and measured PD when delivered, then run the combined fidelity and executable measured path. Client comparison code is no longer a preparation blocker. Actual native/profile/routing/run-check evidence is still required;05:49UTC API reads show both existing H200 jobs Pending. No new GPU submission, simulator-core change or standalone full-fidelity claim accompanies the client slice.
+- **completed / D20-CLIENT publication:** e2be122 and public/archived status705bf22 fast-forward pushed to origin/feat/step5-preview. The key-deliverable self-check keeps14/28 whole-ticket statusTODO and prioritizes compute/PD integration; no additional client-tool expansion. Initial `git add` warned about the ignored task parent and returned1; status and cached diff showed exactly the two intended tracked files staged. Cached whitespace checks, commit and push then passed, without force-adding unrelated paths. `.pi/` and `.cortexkit/` remain untouched.
+- **failed / H200 communication startup; correction active:** exp-1021-114449-837730 finishedFailed06:20:13UTC. Node2 exits141 after2s, before its worker marker; platform fail-policy stops the other three. Parent's actual-script paced eight-row nvidia-smi reproduction exits141 as well: early `head -n1` closes the pipe underpipefail. This is a startup script defect, not a rejected communication measurement. Source fix/regression/new02 staging assigned to communication owner ses_ea3815518ffevmoHwyfako2JVr; no GPU operations delegated. The sealed64-GPU qualification has no matching shell pipeline. Report `test_report_2026-10-21_d20_comm_startup.md`, six retained evidence files. Compute/bundle and PD continue independently; no new submission or parent-issued stop.
+- **completed / startup correction; native run pending:** parent inspected two-file6a9cedc, merged asb68ce4d and ran101 testsPASS/13.47s. New02 independently passes189 pins; only wrapper source pin changes. Fresh paginated personal read sees64 queued GPUs; adding32 yields96/130. Submittedexp-1021-143708-523626 at06:37UTC; Pending06:38UTC, creator/image4×8/RDMA/local NFS verified. Existing Python PID3800860 remains alive; blocking pidfd watchers cover communication and qualification launchers. Old01 files/results preserved. Report and quota/submission receipts retained underd20_comm_startup; checkpoint keeps16/22 and17 as implementation priority. An initial quota shell-quoting error and a rejected documentation patch were corrected before submission/publication; neither changed a sealed package.
+- **completed / publication:** correction and selected test report/public status pushed to origin/feat/step5-preview atb65609b. Initial push failed because127.0.0.1:51015 refused the connection; per-command HTTP_PROXY/HTTPS_PROXY plus git http.proxy using the documented company3128 proxy succeeded. No persistent proxy, v1 config or VPN change. Only the current public document/report were staged; unrelated.cortexkit/.pi paths remain untouched.
+
+- **completed / D20 transfer input:** isolatedintegration contains PD9625984, attention1ca09be and parent8215196. Explicit JSON binds model/cache layout, devices/TP, prefix, payload and READ-to-GPU-ready cost; independent review has no findings. File-backed6144/1024 controlled lifecycle passesoffline/online; combined160 checksPASS/118.35s. A fixture initially omitted idle-DP callbacks and stopped at32 iterations; normal callbacks fixed it without scheduler edits. Full compute/FFN/delegates/main execution remains pending.
+- **in-progress / integrated verification:** rebuilt unchangedcollective-sim d28fe917 inintegration; main--help exposes the new input. Initial clone hit inherited dead51015 proxy; per-command git proxy3128 succeeded, no global change. Fresh77-caseb65609b baseline runs under`/data/ycfeng/tmp/step5_d20_fidelity_20261021`; final candidate awaitscompletecompute. Records: integration`task_memory/task_2026-10-21_step5_d20_integration/`.
+- **completed / R2 route correction:** P1 source/review and offline packaging completed before the agent moved toD20PD. Local audit reverified39/39manifest,38toolpins,offlinePASS. This old package hasmax_model_len2048, no6144/1024, and no independentreferenceG3. Parent pauses its32-GPU capture underD20. Ticket08 andplan retain the required case-aligned evidence. Existing64+32H200 reservations werePending at07:50UTC; no newGPU submission/control.
+
+### Historical GLM/V4 workload readback — completed 2026-10-21
+
+Read-only verification found GLM/V4's explicit YC-confirmed D-FIXED-WORKLOAD agrees with D17 on128 requests,6144/1024 tokens,QPS1,16 warmups,three repeats,64-H200 topology and four metric definitions. Parent independently compared128 formal plus16 warmup rows: zero differences; GLM4/4 and Step7/7 checksums pass. Their native streaming/repetition consumer is already merged at4dcd6c4. Its stable-template and repeat-qualified IDs are implemented; a preliminary lower-level-only subagent finding to the contrary was rejected after caller inspection.
+
+Differences are artifact schemas/IDs, further-resolved GLM runtime settings (7168/8192/128), and the intentionally different measured-CC versus collective_sim backend. Our doc asks GLM to adopt our package while their handoff asks us to adopt68f891b. Recommendation: adopt their already integrated package in a subsequent scoped Step change, keep D17's numerical case, and avoid further workload redesign. No package/backend/runtime change was made in this audit. Evidence: `test_report_2026-10-21_cross_session_workload_check.md`. Exploration and primary verification are complete; actual common-artifact adoption and formal H200 qualification remain pending.

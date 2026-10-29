@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="14" time="21.746" timestamp="2026-10-23T03:44:53.852680+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_moe_position_routing" name="test_one_source_tensor_interface_preserves_masks_and_request_intervals" time="0.002" /><testcase classname="tests.unit.test_step5_attention_profiling" name="test_native_metadata_preserves_request_page_ids_between_prefix_and_continuation" time="0.003" /><testcase classname="tests.unit.test_step5_moe_profiling" name="test_builder_builds_swiglustep_triton_experts_on_cpu[fp8-block_shape0-float8_e4m3fn]" time="6.034"><failure message="ModuleNotFoundError: No module named 'vllm.model_executor.layers.fused_moe.activation'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f9400948830&gt;
+cpu_vllm_platform = &lt;vllm.platforms.cpu.CpuPlatform object at 0x7f9400948f80&gt;
+quantization_mode = 'fp8', block_shape = (128, 128)
+weight_dtype_name = 'float8_e4m3fn'
+
+    @pytest.mark.parametrize(
+        ("quantization_mode", "block_shape", "weight_dtype_name"),
+        [("fp8", (128, 128), "float8_e4m3fn"), ("bf16", None, "bfloat16")],
+    )
+    def test_builder_builds_swiglustep_triton_experts_on_cpu(
+        monkeypatch, cpu_vllm_platform, quantization_mode, block_shape, weight_dtype_name
+    ):
+        torch = pytest.importorskip("torch")
+&gt;       from vllm.model_executor.layers.fused_moe.activation import MoEActivation
+E       ModuleNotFoundError: No module named 'vllm.model_executor.layers.fused_moe.activation'
+
+tests/unit/test_step5_moe_profiling.py:95: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_step5_moe_profiling" name="test_builder_builds_swiglustep_triton_experts_on_cpu[bf16-None-bfloat16]" time="0.001"><failure message="ModuleNotFoundError: No module named 'vllm.model_executor.layers.fused_moe.activation'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f92ae6ce510&gt;
+cpu_vllm_platform = &lt;vllm.platforms.cpu.CpuPlatform object at 0x7f92ae6ce600&gt;
+quantization_mode = 'bf16', block_shape = None, weight_dtype_name = 'bfloat16'
+
+    @pytest.mark.parametrize(
+        ("quantization_mode", "block_shape", "weight_dtype_name"),
+        [("fp8", (128, 128), "float8_e4m3fn"), ("bf16", None, "bfloat16")],
+    )
+    def test_builder_builds_swiglustep_triton_experts_on_cpu(
+        monkeypatch, cpu_vllm_platform, quantization_mode, block_shape, weight_dtype_name
+    ):
+        torch = pytest.importorskip("torch")
+&gt;       from vllm.model_executor.layers.fused_moe.activation import MoEActivation
+E       ModuleNotFoundError: No module named 'vllm.model_executor.layers.fused_moe.activation'
+
+tests/unit/test_step5_moe_profiling.py:95: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_step5_moe_profiling" name="test_sigmoid_bias_router_runs_fp32_gate_and_biased_topk" time="8.851"><failure message="AssertionError: Traceback (most recent call last):&#10;    File &quot;&lt;string&gt;&quot;, line 17, in &lt;module&gt;&#10;    File &quot;/data/ycfeng/Frontier/.worktrees/verify-step5-position-contracts-01/frontier/profiling/moe/moe_impl.py&quot;, line 272, in __init__&#10;      from vllm.model_executor.layers.fused_moe.router.gate_linear import GateLinear&#10;  ModuleNotFoundError: No module named 'vllm.model_executor.layers.fused_moe.router.gate_linear'&#10;  &#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['/data/ycfeng/envs/asyncopd-py312/bin/python', '-c', '\nimport contextlib\n\nimport torch\n\n# ...import GateLinear\nModuleNotFoundError: No module named \'vllm.model_executor.layers.fused_moe.router.gate_linear\'\n').returncode">def test_sigmoid_bias_router_runs_fp32_gate_and_biased_topk():
+        torch = pytest.importorskip("torch")
+        if torch.cuda.is_available():
+            pytest.skip("CPU check; GPU profiling builds the router on CUDA")
+        if importlib.util.find_spec("vllm") is None:
+            pytest.skip("requires vLLM")
+        env = {
+            **os.environ,
+            "VLLM_TARGET_DEVICE": "cpu",
+            "PYTHONPATH": os.pathsep.join(
+                filter(None, [str(REPO_ROOT), os.environ.get("PYTHONPATH")])
+            ),
+        }
+        # vLLM's parallel state is process-global, so the router runs in a fresh process.
+        result = subprocess.run(
+            [sys.executable, "-c", ROUTER_FRESH_PROCESS_SCRIPT],
+            capture_output=True, text=True, env=env, cwd=REPO_ROOT, timeout=600,
+        )
+&gt;       assert result.returncode == 0, result.stderr[-4000:]
+E       AssertionError: Traceback (most recent call last):
+E           File "&lt;string&gt;", line 17, in &lt;module&gt;
+E           File "/data/ycfeng/Frontier/.worktrees/verify-step5-position-contracts-01/frontier/profiling/moe/moe_impl.py", line 272, in __init__
+E             from vllm.model_executor.layers.fused_moe.router.gate_linear import GateLinear
+E         ModuleNotFoundError: No module named 'vllm.model_executor.layers.fused_moe.router.gate_linear'
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/data/ycfeng/envs/asyncopd-py312/bin/python', '-c', '\nimport contextlib\n\nimport torch\n\n# ...import GateLinear\nModuleNotFoundError: No module named \'vllm.model_executor.layers.fused_moe.router.gate_linear\'\n').returncode
+
+tests/unit/test_step5_moe_profiling.py:205: AssertionError</failure></testcase><testcase classname="tests.unit.test_step5_moe_profiling" name="test_sigmoid_bias_router_rejects_other_routers" time="0.064" /><testcase classname="tests.unit.test_step5_moe_profiling" name="test_wrapper_rejects_layer_groups_on_paths_that_ignore_them[updates0-use_vllm_kernel=True]" time="0.667" /><testcase classname="tests.unit.test_step5_moe_profiling" name="test_wrapper_rejects_layer_groups_on_paths_that_ignore_them[updates1-time their own router]" time="0.451" /><testcase classname="tests.unit.test_step5_moe_profiling" name="test_kernel_times_bf16_swiglustep_experts_of_the_last_layers" time="0.001" /><testcase classname="tests.unit.test_step5_moe_profiling" name="test_profile_row_records_the_measured_layer_group" time="0.457" /><testcase classname="tests.unit.test_step5_request_free_profiling" name="test_request_free_native_forward_receives_no_attention_metadata_or_slot_mapping" time="0.001" /><testcase classname="tests.unit.test_step5_request_free_profiling" name="test_native_metadata_can_preserve_full_serving_table_extent" time="0.001" /><testcase classname="tests.unit.test_step5_request_free_profiling" name="test_variable_decode_prefix_and_full_reference_respect_native_step_budget" time="1.932" /><testcase classname="tests.unit.test_step5_request_free_profiling" name="test_request_free_profile_rejects_any_cache_mutation" time="0.003" /></testsuite></testsuites>

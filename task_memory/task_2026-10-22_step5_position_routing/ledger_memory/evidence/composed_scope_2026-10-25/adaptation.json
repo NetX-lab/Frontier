@@ -1,0 +1,9 @@
+{
+  "previous_audit_script": "/data/ycfeng/tmp/d29_ledger_composed_20261024/audit03.py",
+  "previous_sha256": "c412f7f5c2886936c59322875e9e3f8a557523442ed876be494df34fb2750e26",
+  "source": {
+    "SOURCE = \"1f6b431478e2351e3ca6819f707cccbc3e4336e2\"": "SOURCE = \"1461573de388b72450189bc0c1b88b4ac32491f0\"",
+    "RECORDS = \"97ae8d9b64f4728ba3d3c9af0647832e83ee0335\"": "RECORDS = \"1461573de388b72450189bc0c1b88b4ac32491f0\""
+  },
+  "adaptation": "Only final source and clean records HEAD bindings change; audit assertions and all count/scope predicates remain unchanged."
+}

@@ -1,0 +1,51 @@
+{
+  "verdict": "PASS",
+  "source_revision": "713e6a81708e87b86cf91fd89f3b1f954bdcbead",
+  "baseline": "b8be2871f5f8e2ea762b7471599240dcfff5fa97",
+  "paths": 7,
+  "gross_lines": 600,
+  "rows": [
+    {
+      "path": "frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py",
+      "added": 17,
+      "deleted": 7,
+      "module_lines": 1811
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_observation.py",
+      "added": 39,
+      "deleted": 0,
+      "module_lines": 1258
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_verdict.py",
+      "added": 6,
+      "deleted": 1,
+      "module_lines": 1478
+    },
+    {
+      "path": "tests/unit/test_step5_finish_sync.py",
+      "added": 305,
+      "deleted": 0,
+      "module_lines": 305
+    },
+    {
+      "path": "tests/unit/test_step5_measured_pd.py",
+      "added": 42,
+      "deleted": 47,
+      "module_lines": 416
+    },
+    {
+      "path": "tests/unit/test_step5_native_pd_r2_observation.py",
+      "added": 2,
+      "deleted": 1,
+      "module_lines": 1364
+    },
+    {
+      "path": "tests/unit/test_step5_pd_placement.py",
+      "added": 117,
+      "deleted": 16,
+      "module_lines": 306
+    }
+  ]
+}

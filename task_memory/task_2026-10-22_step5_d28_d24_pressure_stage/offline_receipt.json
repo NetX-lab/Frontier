@@ -1,0 +1,57 @@
+{
+  "backend_instantiated": false,
+  "budget": {
+    "gpu_hours": 48,
+    "gpus": 32,
+    "seconds": 5400
+  },
+  "code_commit": "6e73330c2d04af382cf65a2c689c5401ca202485",
+  "config_sha256": "046b6f25c1f993790c135e6740cdf7bed247078f3b99f2713be2bfa97277854f",
+  "external_network_platform_auth_cloud_gpu_ssh_operations": 0,
+  "job_created": false,
+  "manifest": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage_manifest.json",
+  "manifest_sha256": "cdaad24ecded6da6f2eea90ed4ef4a582432db2fd75c56c29aafb22f2f56a57d",
+  "native_pins_sha256": "724d5dfefab52fe9b82624306170d0583966cb94469a97cc9610eda1e7faa2ca",
+  "native_pressure": "UNVERIFIED_WITHOUT_OBSERVED_NATIVE_ALLOCATION_PRESSURE",
+  "native_source_pins": 50,
+  "prefill_pool": "AUTOMATIC_UNCHANGED",
+  "retained_artifact_sha256": {
+    "changed_files.txt": "1012ca96e3b0464b9ef255d0d951c575d1f18bee53ed7ac080ef7197d52b00e7",
+    "code_diff.patch": "d89d70bb8e3c5bfdeabe77221db5874a7f8a3fa0d8e6d3607c55b534a3640fd5",
+    "native_routing_receipt.json": "c4ffbb60a2b435e30a172d995cd1a9b86ea48a80279b3ea557e3183b860dac63",
+    "offline_verification02.json": "eb5e48471555bcba34edb687d0ddb54c430090b176e129164d6be46a942cde03",
+    "package_static.json": "fd97c9b0f4b78f18b7a578ecd32eb4a51ee1df040c1d45970b1bfc0feeb7407d",
+    "resourceconfig_offline.json": "9bcc6ab4f94d25561f77ad6c0f28bf61777cec3b02a033674e6ac8e1e4adc8a7",
+    "stage_manifest.json": "cdaad24ecded6da6f2eea90ed4ef4a582432db2fd75c56c29aafb22f2f56a57d",
+    "staged_capabilities.json": "d07678031749545a439dc930fc6ad357c8e326d62a80c1b66f6d2e455eecb4ba",
+    "staged_imports.json": "497830b0a35e53db42651a242bbf6bcda3c4da57775f82d204a8957f3f38f643",
+    "stepmind_dryrun.json": "1bf033050aee3eea2f8224e9f88f7e80fe94bc92633fea8f74c84b03225ede36"
+  },
+  "role_num_gpu_blocks_override": {
+    "decode": 32000
+  },
+  "routing": "BLOCKED_NATIVE_BALANCED_UNSUPPORTED",
+  "scoped_tests": {
+    "failed": 0,
+    "passed": 711,
+    "seconds": 122.89,
+    "skipped": 0
+  },
+  "source": {
+    "commit": "6e73330c2d04af382cf65a2c689c5401ca202485",
+    "repository": "/data/ycfeng/Frontier/.worktrees/step5-d24-stage"
+  },
+  "source_origins_sha256": "68c745871f0bb141c4eee5296d65a030fddbcd97bf1c729ab7e7322ea56244f0",
+  "stage": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage",
+  "staged_capabilities": {
+    "http": 2,
+    "pressure": 5,
+    "startup": 2,
+    "values": 48
+  },
+  "status": "PRESSURE_OFFLINE_READY_ROUTING_BLOCKED",
+  "submission_attempt_marker": false,
+  "submitted_marker": false,
+  "task_id": "D28-D24-PRESSURE-STAGE",
+  "tool_files": 51
+}

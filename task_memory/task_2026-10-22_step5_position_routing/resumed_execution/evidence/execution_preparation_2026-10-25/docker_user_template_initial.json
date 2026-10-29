@@ -1,0 +1,15 @@
+{
+  "command": [
+    "docker",
+    "image",
+    "inspect",
+    "--format",
+    "{{json .Config.User}} {{.Id}}",
+    "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee"
+  ],
+  "exit_code": 1,
+  "stderr": "template parsing error: template: :1:14: executing \"\" at <.Config.User>: map has no entry for key \"User\"",
+  "wall_s": null,
+  "scope": "Read-only image metadata; no client or worker",
+  "note": "Timing was not independently captured; subsequent inspection reads actual process uid."
+}

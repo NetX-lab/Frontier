@@ -17,7 +17,8 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
-from frontier.entities import EPBatchGroup, Request
+from frontier.config.model_config import BaseModelConfig
+from frontier.entities import Batch, EPBatchGroup, Request
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.metrics.op_trace_utils import map_trace_op_to_precision_op
 from frontier.operators.families import COMM_FAMILY, get_comm_operator
@@ -153,6 +154,25 @@ class _SpyCCBackend:
         )
         return float(data_size_bytes) / 4000.0 + float(num_devices)
 
+    def predict_reduce_scatter(
+        self,
+        *,
+        data_size_bytes: int,
+        num_devices: int,
+        cluster_type: ClusterType,
+        comm_domain: str | None = None,
+    ) -> float:
+        self.calls.append(
+            {
+                "collective_alias": "reduce_scatter",
+                "data_size_bytes": data_size_bytes,
+                "num_devices": num_devices,
+                "cluster_type": cluster_type,
+                "comm_domain": comm_domain,
+            }
+        )
+        return float(data_size_bytes) / 5000.0 + float(num_devices)
+
 
 def _comm_context(
     *,
@@ -285,6 +305,175 @@ def test_comm_payload_builder_preserves_legacy_quantized_hidden_state_bytes() ->
     assert quantization_manager.calls == [
         ("allreduce", 80, ClusterType.MONOLITHIC),
     ]
+
+
+_DSV4_SP_SCOPES = (
+    ("dsv4_sp_attention_allgather", "allgather", (8192, 24576)),
+    ("dsv4_sp_attention_reduce_scatter", "reduce_scatter", (65536, 196608)),
+    ("dsv4_sp_final_mhc_allgather", "allgather", (32768, 98304)),
+)
+
+
+def _dsv4_sp_context(tokens: int = 17) -> CommPayloadContext:
+    return CommPayloadContext(
+        batch=Batch(
+            replica_id=0, requests=[Request(0.0, tokens, 0)],
+            num_tokens=[tokens], is_moe=True,
+        ),
+        model_config=BaseModelConfig.create_from_name("deepseek-ai/DeepSeek-V4-Flash"),
+        replica_config=SimpleNamespace(
+            num_pipeline_stages=1, attn_tensor_parallel_size=8, attn_dp=2,
+            moe_tensor_parallel_size=1, moe_expert_parallel_size=16,
+        ),
+        cluster_type=ClusterType.MONOLITHIC,
+        quantization_manager=_QuantizationManager(),
+    )
+
+
+@pytest.mark.parametrize("name,alias,payloads", _DSV4_SP_SCOPES)
+@pytest.mark.parametrize("tokens,index", ((1, 0), (17, 1)))
+def test_dsv4_sp_source_collectives_reach_cc_with_exact_uneven_payloads(
+    name: str, alias: str, payloads: tuple[int, int], tokens: int, index: int,
+) -> None:
+    ctx = _dsv4_sp_context(tokens)
+    predictor = _predictor()
+    operator = get_comm_operator(name)
+
+    result = predictor._predict_comm_operator_with_context(operator, ctx)
+
+    expected_bytes = payloads[index]
+    divisor = 5000 if alias == "reduce_scatter" else 3000
+    assert result == pytest.approx(expected_bytes / divisor + 8)
+    assert predictor._cc_backend.calls == [{
+        "collective_alias": alias, "data_size_bytes": expected_bytes,
+        "num_devices": 8, "cluster_type": ClusterType.MONOLITHIC,
+        "comm_domain": "ATTN_TP",
+    }]
+    # FP8/FP4 weight settings and the legacy quantization-size adjustment
+    # cannot change source BF16 activation bytes or the source DP batch rows.
+    assert ctx.model_config.quantization_config.quant_method == "fp8"
+    assert ctx.model_config.expert_dtype == "fp4"
+    assert ctx.quantization_manager.calls == []
+    assert ctx.batch.total_num_tokens == tokens
+    assert ctx.batch.get_effective_total_tokens_rounded(ClusterType.MONOLITHIC) == tokens
+
+
+def test_dsv4_sp_structured_timings_preserve_measured_and_profiling_guards() -> None:
+    from frontier.attention.families import DEEPSEEK_V4_ATTENTION_FAMILY
+
+    for name, _, _ in _DSV4_SP_SCOPES:
+        operator = get_comm_operator(name)
+        assert not operator.predictor_target
+        assert not operator.profiling_target
+        assert not operator.e2e_trace_target
+        assert operator.execution_time_attr is None
+        assert operator.comm_group == "attn_tp"
+        timings = CommunicationOperatorTimes({name: 1.0})
+        assert timings.get_required_time(name) == timings.total_time() == 1.0
+        assert timings.legacy_covered_time(CommunicationTime()) == 0.0
+        with pytest.raises(ValueError, match="Negative communication"):
+            CommunicationOperatorTimes({name: -1.0})
+    with pytest.raises(ValueError, match="Unsupported"):
+        CommunicationOperatorTimes({"unregistered_dsv4_collective": 1.0})
+    DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution(structural=True)
+    with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
+        DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution()
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is False
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
+
+
+def test_dsv4_sp_uses_each_dp_source_batch_without_aggregating_rows() -> None:
+    predictor = _predictor()
+    for tokens in (17, 10):
+        predictor._predict_comm_operator_with_context(
+            get_comm_operator("dsv4_sp_attention_allgather"), _dsv4_sp_context(tokens),
+        )
+    assert [call["data_size_bytes"] for call in predictor._cc_backend.calls] == [24576, 16384]
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("num_pipeline_stages", 2), ("attn_tensor_parallel_size", 1),
+        ("attn_dp", 1), ("moe_tensor_parallel_size", 8),
+        ("moe_expert_parallel_size", 1), ("moe_expert_parallel_size", 15),
+        ("attn_tensor_parallel_size", True), ("attn_dp", 2.5),
+    ],
+)
+def test_dsv4_sp_rejects_unsupported_topologies_before_cc(field: str, value: object) -> None:
+    ctx = _dsv4_sp_context()
+    setattr(ctx.replica_config, field, value)
+    predictor = _predictor()
+    with pytest.raises(ValueError, match="DeepSeek-V4 SP source payload requires"):
+        predictor._predict_comm_operator_with_context(
+            get_comm_operator("dsv4_sp_attention_allgather"), ctx,
+        )
+    assert predictor._cc_backend.calls == []
+
+
+@pytest.mark.parametrize("cluster", (
+    ClusterType.PREFILL, ClusterType.DECODE,
+    ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN,
+))
+def test_dsv4_sp_source_scope_rejects_disaggregated_roles(cluster: ClusterType) -> None:
+    ctx = replace(_dsv4_sp_context(), cluster_type=cluster)
+    with pytest.raises(ValueError, match="co-location"):
+        get_comm_operator("dsv4_sp_attention_allgather").build_payload_bytes(ctx)
+
+
+@pytest.mark.parametrize("field,value", (
+    ("torch_dtype", "float16"), ("model_architecture_profile", "glm_moe_dsa"),
+))
+def test_dsv4_sp_source_scope_rejects_other_activation_or_model_contracts(
+    field: str, value: str,
+) -> None:
+    ctx = _dsv4_sp_context()
+    ctx = replace(ctx, model_config=replace(ctx.model_config, **{field: value}))
+    with pytest.raises(ValueError, match="DeepSeek-V4.*BF16"):
+        get_comm_operator("dsv4_sp_attention_allgather").build_payload_bytes(ctx)
+
+
+def test_dsv4_sp_rejects_explicit_destination_assignments() -> None:
+    ctx = replace(_dsv4_sp_context(), lane_workload=_lane_workload({0: 101, 1: 102}))
+    with pytest.raises(ValueError, match="source DP attention batch"):
+        get_comm_operator("dsv4_sp_attention_allgather").build_payload_bytes(ctx)
+
+
+@pytest.mark.parametrize("remove_descriptor", (False, True))
+def test_dsv4_sp_rejects_ep_batch_group_even_with_aggregate_source_width(
+    remove_descriptor: bool,
+) -> None:
+    batch = _ep_batch_group({0: 101, 1: 102})
+    batch.moe_pre_routing_effective_total_tokens = 999
+    if remove_descriptor:
+        del batch._lane_workload
+    ctx = replace(_dsv4_sp_context(), batch=batch)
+    with pytest.raises(ValueError, match="source DP attention batch"):
+        get_comm_operator("dsv4_sp_attention_allgather").build_payload_bytes(ctx)
+
+
+@pytest.mark.parametrize("dummy_mode", (False, True))
+def test_reduce_scatter_preserves_explicit_dummy_or_missing_backend_error(
+    dummy_mode: bool,
+) -> None:
+    predictor = _predictor()
+    predictor._cc_backend = None
+    predictor._enable_dummy_mode = dummy_mode
+    predictor._dummy_execution_time = 7.25
+    operator = get_comm_operator("dsv4_sp_attention_reduce_scatter")
+    if dummy_mode:
+        assert predictor._predict_comm_operator_with_context(operator, _dsv4_sp_context()) == 7.25
+    else:
+        with pytest.raises(RuntimeError, match="CC Backend is required for reduce-scatter"):
+            predictor._predict_comm_operator_with_context(operator, _dsv4_sp_context())
+
+
+def test_reduce_scatter_requires_explicit_participant_count() -> None:
+    operator = replace(
+        get_comm_operator("dsv4_sp_attention_reduce_scatter"), num_devices_builder=None,
+    )
+    with pytest.raises(ValueError, match="requires num_devices for reduce_scatter"):
+        _predictor()._predict_comm_operator_with_context(operator, _dsv4_sp_context())
 
 
 def _lane_workload(per_expert_tokens: dict[int, int]) -> EPLaneWorkload:
@@ -908,3 +1097,65 @@ def test_moe_stage_preserves_attention_operator_times_for_fast_and_view_paths() 
         for layer in execution_time.layer_execution_times:
             assert layer.attention_operator_times.op_times == {"attn_prefill": pytest.approx(0.02)}
         assert "attn_prefill" in execution_time.op_times
+def test_step5_plan_registry_cost_pair_and_phase_accounting():
+    from dataclasses import replace
+    import json
+    from frontier.cc_backend.collective_plan import CollectivePlanCost
+    from tests.unit.test_step5_moe_pricing import plan
+    from tests.unit.test_stage_finalized_contract import _layer
+    dispatch=plan();combine=plan(phase="combine")
+    def cost(p):
+        return CollectivePlanCost(6.,1.,(2.,)*16,3.,(7,)*16,json.dumps(dict(
+            kernel_counts=[7]*16,per_rank_events=[["cpu_fixture"]]*16,
+            source_receipt="cpu_fixture",evidence_kind="cpu_fixture")),p.cache_key(),"cpu_fixture")
+    plans={"step5_moe_dispatch":dispatch,"step5_moe_combine":combine}
+    costs={name:cost(p) for name,p in plans.items()}
+    comm=CommunicationOperatorTimes({name:6. for name in plans},plans=plans,costs=costs)
+    with pytest.raises(ValueError,match="plan/cost"):
+        replace(comm,costs={**costs,"step5_moe_dispatch":cost(combine)})
+    layer=_layer(3,is_moe=True,communication_operator_times=comm,op_times={
+        "moe_gating_linear":1.,"moe_gating_routing_topk":2.,"moe_input_quantize":3.,
+        "moe_grouped_gemm":4.,"moe_tensor_parallel_allreduce":5.,"step5_ffn_merge":2.})
+    assert layer.get_single_layer_moe_dispatch_time() == layer.get_single_layer_moe_combine_time() == 6.
+    assert layer.moe_phase_operator_times("routed_compute") == (("COMPUTE","moe_grouped_gemm",4.),)
+    assert layer.moe_phase_operator_times("post_combine")[0] == ("COMM","moe_tensor_parallel_allreduce",5.)
+    assert layer.get_single_layer_block_time() == pytest.approx(29.)
+    layer.add_kernel_gap(.1,0,{"moe_gating_linear":1,"moe_gating_routing_topk":1,
+        "moe_input_quantize":1,"moe_grouped_gemm":1,"step5_ffn_merge":1})
+    assert layer.kernel_gap_time == pytest.approx(.6)
+
+
+@pytest.mark.parametrize("model_name,admitted", [("meta-llama/Llama-2-7b-hf", False), ("stepfun-ai/Step-5-Preview", True)])
+@pytest.mark.parametrize("quant_match", [True, False])
+def test_precision_csv_requires_actual_selected_prepare_inventory(tmp_path, request, model_name, admitted, quant_match):
+    import pandas as pd
+    from frontier.config import get_quantization_manager
+    from frontier.config.precision_type import PrecisionType
+    from frontier.metrics.metrics_store import MetricsStore
+    from frontier.operators.families import get_moe_profiling_operators
+    manager = get_quantization_manager()
+    request.addfinalizer(lambda: manager.load_config(None))
+    model = BaseModelConfig.create_from_name(model_name)
+    manager.configure_from_model_config(model)
+    if admitted:
+        context = dict(model_architecture_profile="step5", routing_runtime_path="position_cyclic", quant_dtype="float8_e4m3fn", defer_input_quant=False)
+        prepare = next(op for op in get_moe_profiling_operators(context) if op.name == "moe_input_quantize")
+        signature = model.get_quant_signature() if quant_match else "different_quant_signature"
+        manager.register_profiling_metadata([prepare.precision_name()], PrecisionType.FP8, signature, model.get_quant_signature(), "selected_moe.csv")
+        manager.register_profiling_metadata(["moe_grouped_gemm"], PrecisionType.BF16, signature, model.get_quant_signature(), "approximate_moe.csv")
+    config_hash = manager.get_config_hash()
+    speedups = dict(manager._operation_speedup_factors)
+    manager._warned_approximations.clear()
+    MetricsStore._write_op_precision_metadata(SimpleNamespace(_config=SimpleNamespace(output_dir=str(tmp_path))))
+    assert manager.get_config_hash() == config_hash
+    assert manager._operation_speedup_factors == speedups
+    frame = pd.read_csv(tmp_path / "op_precision_metadata.csv").set_index("operation")
+    assert ("moe_input_quantize" in frame.index) is admitted
+    if admitted:
+        row = frame.loc["moe_input_quantize"].to_dict()
+        if pd.isna(row["approximation_factor"]): row["approximation_factor"] = None
+        expected = dict(precision="FP8", data_source="profiling", approximation_factor=None) if quant_match else dict(precision="BF16", data_source="approximation", approximation_factor=2.)
+        assert row == expected
+        assert frame.loc["moe_grouped_gemm"].to_dict() == dict(precision="FP8", data_source="approximation", approximation_factor=0.5)
+        assert manager.get_precision("moe_input_quantize") is PrecisionType.BF16
+        assert manager.adjust_compute_time("moe_grouped_gemm", 10.) == 5.

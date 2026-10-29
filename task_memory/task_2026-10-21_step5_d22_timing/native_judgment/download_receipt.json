@@ -1,0 +1,17 @@
+{
+  "summary.json": {
+    "bytes": 615,
+    "sha256": "aa2457bd675a60e0398dd2d021dde755d129820e107da71b384905ab64394080",
+    "cloud_path": "/mnt/codesign-exp/ycfeng/frontier/step5_profiling/fixed_h200_d22_probe_20261021_01/attention/summary.json"
+  },
+  "step5_attention.csv": {
+    "bytes": 1233346,
+    "sha256": "fa63e175f512912843d9efa60ddec510deb6e7264fbb343069cb0b2092c8cb96",
+    "cloud_path": "/mnt/codesign-exp/ycfeng/frontier/step5_profiling/fixed_h200_d22_probe_20261021_01/attention/compute/h200/stepfun-ai/Step-5-Preview/step5_attention.csv"
+  },
+  "step5_attention_kernel_only.csv": {
+    "bytes": 271811,
+    "sha256": "7fcfb33b90d2fdabf4dd0fc98afb3b4027fdd4e7f0f1a9bff3a68392fff17e33",
+    "cloud_path": "/mnt/codesign-exp/ycfeng/frontier/step5_profiling/fixed_h200_d22_probe_20261021_01/attention/compute/h200/stepfun-ai/Step-5-Preview/step5_attention_kernel_only.csv"
+  }
+}

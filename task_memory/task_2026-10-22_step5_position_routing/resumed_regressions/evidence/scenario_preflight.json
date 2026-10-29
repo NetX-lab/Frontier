@@ -1,0 +1,24 @@
+{
+  "harness_files": [
+    {
+      "path": "tests/e2e/refactor_fidelity/cases.py",
+      "baseline_sha256": "eaf31417d56e4fb8f6223c2972471df51912eb7649c806ff8b0d458b6af94aef",
+      "candidate_sha256": "eaf31417d56e4fb8f6223c2972471df51912eb7649c806ff8b0d458b6af94aef",
+      "same_bytes": true
+    },
+    {
+      "path": "tests/e2e/refactor_fidelity/compare.py",
+      "baseline_sha256": "2b955cc309425cbd9e6365e9f146911498c116a43da43d618ef30f6cda0fcb7d",
+      "candidate_sha256": "2b955cc309425cbd9e6365e9f146911498c116a43da43d618ef30f6cda0fcb7d",
+      "same_bytes": true
+    },
+    {
+      "path": "tests/e2e/refactor_fidelity/run_matrix.py",
+      "baseline_sha256": "88dc98089dd775d8e582998d36def8729818fcebd6e2ced31927564aab1121b7",
+      "candidate_sha256": "88dc98089dd775d8e582998d36def8729818fcebd6e2ced31927564aab1121b7",
+      "same_bytes": true
+    }
+  ],
+  "examples_diff": "",
+  "baseline_unit_xml_sha256": "4c1629eaf42bde40b033f43e480f77aa5c81cba8ca4dca00398f43cc9eeda25d"
+}

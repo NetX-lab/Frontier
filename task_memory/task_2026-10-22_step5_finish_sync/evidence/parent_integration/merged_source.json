@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "merge_commit": "4ec5b23bb71a92e505083296912f3556cad5ba6a",
+  "accepted_candidate": "3d6744f",
+  "unchanged_runtime_and_test_scopes": [
+    "frontier",
+    "tests",
+    "examples",
+    "data",
+    "pyproject.toml",
+    ".gitmodules"
+  ],
+  "production_matches_reviewed_and_strict77_candidate": "713e6a8",
+  "test_only_amendment": "tests/unit/test_step5_canonical_g3.py",
+  "source_test_gross_lines": 603
+}

@@ -1,0 +1,26 @@
+{
+  "task_id": "D29-LEDGER-FINAL-FROZEN-REGRESSIONS",
+  "suite": "supplement101",
+  "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "baseline_source": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+  "status": "PASS_IDENTICAL_IDS_STATUSES_AND_ENVIRONMENT",
+  "counts": {
+    "pass": 101
+  },
+  "retained_ids": 101,
+  "missing": [],
+  "added": [],
+  "changed": [],
+  "raw_exit": 0,
+  "versions_identical": true,
+  "baseline": {
+    "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/supplement101/results.xml",
+    "sha256": "1463ac9747cc4af431d881c917c60748c5032688c023a5e7273e396becced384",
+    "bytes": 15812
+  },
+  "candidate": {
+    "path": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/supplement101/results.xml",
+    "sha256": "f2c47102b146651a9056137a502a2ee54ccc41865257bef69b4c7f63a6e59ec3",
+    "bytes": 15812
+  }
+}

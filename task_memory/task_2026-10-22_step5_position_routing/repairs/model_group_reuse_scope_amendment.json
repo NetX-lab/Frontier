@@ -1,0 +1,26 @@
+{
+  "decision_id": "D29-MODEL-GROUP-REUSE",
+  "authority": "D29-REPAIR-PATH-AUTHORITY",
+  "apply_after": "cli_placement_scope_amendment.json",
+  "effective_unique_paths": 111,
+  "owner": "core_source",
+  "owner_gross_ceiling": 4404,
+  "repair_delta_ceiling": 105,
+  "source_delta_ceiling": 45,
+  "test_delta_ceiling": 60,
+  "repair_paths": [
+    "frontier/execution_time_predictor/moe_routing_workload.py",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "tests/unit/test_prediction_measurement_bindings.py"
+  ],
+  "path_ceiling_adjustments": [
+    {"path": "frontier/execution_time_predictor/moe_routing_workload.py", "before": 145, "delta": 30, "after": 175},
+    {"path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", "before": 118, "delta": 10, "after": 128},
+    {"path": "tests/unit/test_prediction_measurement_bindings.py", "before": 200, "delta": 60, "after": 260},
+    {"path": "frontier/moe_ep_workload.py", "before": 87, "delta": -39, "after": 48},
+    {"path": "frontier/profiling/step5/job.py", "before": 82, "delta": -33, "after": 49},
+    {"path": "frontier/moe_routing_runtime.py", "before": 133, "delta": -28, "after": 105}
+  ],
+  "reason": "Parent reproduces1056 complete-layer descriptions across two identical actual P6128 pricing calls. Reusing the actual fixed-model groups removes these repeated descriptions while preserving identical cost/proof/plan payloads. Reuse model facts in the existing predictor lifetime; preserve all per-point admission and model selection checks.",
+  "limits": "No new paths or owner/global budget increase. No global cache, new flags, source/table changes, numerical defaults, estimator/point-proof caching, or relaxed full-workload/time gates. This allocation covers only the measured model-group hotspot."
+}

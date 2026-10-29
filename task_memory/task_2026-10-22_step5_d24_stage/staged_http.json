@@ -1,0 +1,14 @@
+{
+  "task_id": "D24-NATIVE-STAGE",
+  "status": "PASS_STAGED_HTTP_HEALTHY_AND_REUSE_EOF",
+  "origin": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/calibration/pd_proxy.py",
+  "sha256": "1720b0e8145ab0fcd1ff19c716e59490f18591188cf50308a2a43e6ce61650ce",
+  "native_hardware_executed": false,
+  "reused_existing_fixture": "tests/unit/test_step5_http_capture.py:exchange",
+  "asserted": [
+    "one fresh and one reused connection",
+    "unchanged healthy HTTP200 and failed HTTP502 semantics",
+    "decode response_headers phase and symbolic traceback",
+    "exact original request bodies and metadata"
+  ]
+}

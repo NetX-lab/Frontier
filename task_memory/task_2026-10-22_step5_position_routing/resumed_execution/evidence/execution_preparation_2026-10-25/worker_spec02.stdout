@@ -1,0 +1,32 @@
+{
+  "status": "PASS_ORIGINAL_SDK_OBJECTS_NO_CLIENT_OR_SUBMISSION",
+  "collected_utc": "2026-10-24T20:36:04.745696+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "nfs_annotation": "100.96.128.195:/data/ycfeng:/data/ycfeng",
+  "task_objects": {
+    "default": {
+      "template_image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+      "resources": {
+        "cpu": 4,
+        "gpu": 0,
+        "memoryInMB": 64000,
+        "custom_resources": []
+      },
+      "replicas": 1,
+      "is_critical": true,
+      "private_machine": "group",
+      "mount_config": [
+        "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+        "juicefs+s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant"
+      ],
+      "affinity": "<brainpp.rjob.struct.Affinity object at 0x7f6511d107f0>",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /data/ycfeng && exec /data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_entry.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_plan.json"
+      ],
+      "container_count": 1
+    }
+  },
+  "new_platform_operations": 0
+}

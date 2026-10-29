@@ -120,11 +120,13 @@ def test_moe_configuration_count_includes_load_distribution_samples() -> None:
         num_tokens_count=3,
         tensor_parallel_count=3,
         expert_parallel_count=4,
+        routed_layer_group_count=1,
         cases_per_parallel_point=cases_per_parallel_point,
     ) == 216
     assert moe_main._count_moe_configurations(
         num_tokens_count=3,
         tensor_parallel_count=1,
         expert_parallel_count=4,
+        routed_layer_group_count=1,
         cases_per_parallel_point=cases_per_parallel_point,
     ) == 72

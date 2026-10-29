@@ -1,0 +1,119 @@
+{
+ "source_commit": "2a1070be38ed6fb75dc223c46b0ea407ee908ce6",
+ "stage01_snapshot_sha256": "9c6ae1c1b4fcc9a955188f54e0bd6bc105c9634d5b4bdc0db549f512918dbc01",
+ "stage01_submission": "PROHIBITED",
+ "stage01_unchanged": true,
+ "stages": {
+  "canonical": {
+   "additional_bound_sources": 26,
+   "allocation_budget_gpu_hours": 96.0,
+   "build_receipt": "/data/ycfeng/tmp/d18_canonical_build02.json",
+   "builtin_graph_metrics_limit": "MRv2 source-wired; unlabeled output-rank tables require healthy FULL steps and explicit lane/rank attribution",
+   "cloud_output_not_accessed": "/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d18_canonical_h200_02",
+   "config_sha256": "8b5cabad51548bff837f9b641e2e6b3cdadd9701c9cf74f334fc7cf87d6bb746",
+   "job_tag": "d18canonicalh20002",
+   "manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+   "model_hashes": {
+    "config.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+    "tokenizer.json": "b564c620eb77fa11d0926011c2202347d6cfc358d79724ee04ae7007e13636f0",
+    "tokenizer_config.json": "78202af487f4d4360e8d15cb0506d60718f8599770599c6f28f7f1fa045a591f"
+   },
+   "native_source_pins": 47,
+   "reference_admission": "UNVERIFIED",
+   "resources": {
+    "command": "{COMMAND}",
+    "cpu": 32,
+    "envs": {
+     "DISTRIBUTED_JOB": "true",
+     "HF_DATASETS_OFFLINE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1"
+    },
+    "extra_requirements": [],
+    "gpu": 8,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "mem_gb": 128,
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "positive_tags": [
+     "H200"
+    ],
+    "preemptible": false,
+    "replica": 8,
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "runtime_bindings_sha256": "c8184dcefd0ed30d213f4c6f34edcb8ac771f65cf680a36a567723d68203f914",
+   "runtime_qualification": "UNVERIFIED",
+   "stage": "/data/ycfeng/tmp/step5_d18_native_20261021/canonical02/stage",
+   "timeout_seconds": 5400,
+   "tool_files_verified": 27,
+   "verify_receipt": "/data/ycfeng/tmp/d18_canonical_verify02.json"
+  },
+  "qualification": {
+   "additional_bound_sources": 26,
+   "allocation_budget_gpu_hours": 64.0,
+   "build_receipt": "/data/ycfeng/tmp/d18_qualification_build02.json",
+   "builtin_graph_metrics_limit": "MRv2 source-wired; unlabeled output-rank tables require healthy FULL steps and explicit lane/rank attribution",
+   "cloud_output_not_accessed": "/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d18_qualification_h200_02",
+   "config_sha256": "b8c6b1e500b5bc44343a59ae56bfad2c03388e39fff10c6b62d5c2c3dbf0b2af",
+   "job_tag": "d18qualh20002",
+   "manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+   "model_hashes": {
+    "config.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+    "tokenizer.json": "b564c620eb77fa11d0926011c2202347d6cfc358d79724ee04ae7007e13636f0",
+    "tokenizer_config.json": "78202af487f4d4360e8d15cb0506d60718f8599770599c6f28f7f1fa045a591f"
+   },
+   "native_source_pins": 47,
+   "reference_admission": "UNVERIFIED",
+   "resources": {
+    "command": "{COMMAND}",
+    "cpu": 32,
+    "envs": {
+     "DISTRIBUTED_JOB": "true",
+     "HF_DATASETS_OFFLINE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1"
+    },
+    "extra_requirements": [],
+    "gpu": 8,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "mem_gb": 128,
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "positive_tags": [
+     "H200"
+    ],
+    "preemptible": false,
+    "replica": 8,
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "runtime_bindings_sha256": "c8184dcefd0ed30d213f4c6f34edcb8ac771f65cf680a36a567723d68203f914",
+   "runtime_qualification": "UNVERIFIED",
+   "stage": "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage",
+   "timeout_seconds": 3600,
+   "tool_files_verified": 27,
+   "verify_receipt": "/data/ycfeng/tmp/d18_qualification_verify02.json"
+  }
+ },
+ "task_id": "D18-NATIVE"
+}

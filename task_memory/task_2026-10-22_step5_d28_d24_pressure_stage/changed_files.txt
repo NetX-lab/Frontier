@@ -1,0 +1,4 @@
+tests/integration/step5_pd/r2_canonical.py
+tests/integration/step5_pd/verify_r2_stage.py
+tests/unit/test_step5_canonical_g3.py
+tests/unit/test_step5_native_pressure_observation.py

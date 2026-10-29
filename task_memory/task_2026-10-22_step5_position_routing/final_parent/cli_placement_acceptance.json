@@ -1,0 +1,23 @@
+{
+  "status": "PASS_BOUNDED_REPAIR",
+  "source_commit": "75ad26f9dfcd2467dde8912856333592c7c600c5",
+  "code_commit": "ae1fb7211c21431a1c17d0841054e09bacccd544",
+  "suite": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "6",
+    "tests": "63",
+    "time": "63.956",
+    "timestamp": "2026-10-23T13:38:48.186759+08:00",
+    "hostname": "kun-workspace-vgen2"
+  },
+  "passed": 57,
+  "xml": "/data/ycfeng/tmp/d29_cli_placement_parent10.xml",
+  "xml_sha256": "8551e678a7603d80d5608e0c5e02ef65df3c32dc811a25f7c91663a12e4f754e",
+  "delta_gross": 40,
+  "core_gross": 3873,
+  "source_gross": 9102,
+  "global_gross": 9116,
+  "full_cli_after_repair": "NOT_RUN"
+}

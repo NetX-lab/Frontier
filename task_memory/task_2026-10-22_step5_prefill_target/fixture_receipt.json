@@ -1,0 +1,126 @@
+{
+  "status": "PASS",
+  "evidence_kind": "cpu_fixture",
+  "native_admitted": false,
+  "fixture_manifest": "/data/ycfeng/tmp/d26_main_fixture01/fixture_manifest.json",
+  "fixture_sha256": "a5e116390664d03a74e4da5a34ef06d1761eb7ea913aa06f5a90933e72a8e455",
+  "routing": "balanced",
+  "routing_seed": 42,
+  "bundles": [
+    {
+      "role": "2",
+      "family": "eager",
+      "bundle_id": "dd1433171077731e87b1c3999e08721511ac263793f19cc694b6eb3a1ee9293f",
+      "model_count": 34,
+      "query_count": 1104,
+      "bundle_path": "/data/ycfeng/tmp/d26_main_fixture01/cache/bundle_dd1433171077731e87b1c3999e08721511ac263793f19cc694b6eb3a1ee9293f.json"
+    },
+    {
+      "role": "2",
+      "family": "kernel_only",
+      "bundle_id": "68fb28039f25596c2466462c1c027801ec015197db9bbde70a0b2146c8ff47d2",
+      "model_count": 34,
+      "query_count": 368,
+      "bundle_path": "/data/ycfeng/tmp/d26_main_fixture01/cache/bundle_68fb28039f25596c2466462c1c027801ec015197db9bbde70a0b2146c8ff47d2.json"
+    },
+    {
+      "role": "5",
+      "family": "kernel_only",
+      "bundle_id": "4cbae587aff75b829a8c480f09430edec37a767b05efcad969e61fe8bf2613c3",
+      "model_count": 34,
+      "query_count": 368,
+      "bundle_path": "/data/ycfeng/tmp/d26_main_fixture01/cache/bundle_4cbae587aff75b829a8c480f09430edec37a767b05efcad969e61fe8bf2613c3.json"
+    },
+    {
+      "role": "5",
+      "family": "eager",
+      "bundle_id": "ac4e8873d1c5d1ae4051858d88520e6e7a58b0d48c7b4e6fb77f4926f8bc79e0",
+      "model_count": 34,
+      "query_count": 1104,
+      "bundle_path": "/data/ycfeng/tmp/d26_main_fixture01/cache/bundle_ac4e8873d1c5d1ae4051858d88520e6e7a58b0d48c7b4e6fb77f4926f8bc79e0.json"
+    }
+  ],
+  "query_count": 2944,
+  "limits": [
+    "No full CLI, native execution, performance or fidelity acceptance"
+  ],
+  "old_fixture_manifest_sha256": "417492f6223f83bc702b815cd8a4280323afb60600fd68fe9b9636cc0077fffd",
+  "old_fixture_rejected": "Historical full-prompt fixture cannot cover the corrected P target; generate a new fixture",
+  "inputs": {
+    "linear_op_input_file": {
+      "path": "/data/ycfeng/tmp/d26_main_fixture01/fixture_compute_cuda_event/linear_op.csv",
+      "sha256": "f3525527d3d21362b8ccf4c25079a97b168cac4a441c230d3b46041cb812e591",
+      "bytes": 2486034
+    },
+    "moe_input_file": {
+      "path": "/data/ycfeng/tmp/d26_main_fixture01/fixture_compute_cuda_event/moe.csv",
+      "sha256": "fb4f5a5fefc0cc65d3c3b19784c6abd7ae2676ce96e7396e3a61236da4e8acc4",
+      "bytes": 1682982
+    },
+    "linear_op_kernel_only_input_file": {
+      "path": "/data/ycfeng/tmp/d26_main_fixture01/fixture_compute_kernel_only/linear_op.csv",
+      "sha256": "4d3725d64b6d5d2b90669f238dbe652addceb2786c96a6b008ce3660796efadf",
+      "bytes": 2486078
+    },
+    "moe_kernel_only_input_file": {
+      "path": "/data/ycfeng/tmp/d26_main_fixture01/fixture_compute_kernel_only/moe.csv",
+      "sha256": "1fb481b2acf31705a57da7a4b4645414a30574f68cfe2bc735d2214f4b354f13",
+      "bytes": 1683012
+    },
+    "atten_input_file": {
+      "path": "/data/ycfeng/tmp/d26_main_fixture01/fixture_attention_cuda_event.csv",
+      "sha256": "dc88e0ed1d93ea7e5b631d1b8f5992166b8833a781ca094cc5b382c8f49d011c",
+      "bytes": 5633879047
+    },
+    "atten_kernel_only_input_file": {
+      "path": "/data/ycfeng/tmp/d26_main_fixture01/fixture_attention_kernel_only.csv",
+      "sha256": "8ee49fe29e5a2611c5a6c3e9b1e2a63076512e0704053b47ed8a389dda6464ef",
+      "bytes": 16432591
+    },
+    "kernel_gap_input_file": {
+      "path": "/data/ycfeng/tmp/d26_main_fixture01/fixture_kernel_gap.csv",
+      "sha256": "8a7d7ed0fe08428b52ccb350324fe6ddbd5c7181e5545844a931549060752555",
+      "bytes": 86
+    },
+    "nixl_read_profile": {
+      "path": "/data/ycfeng/tmp/d26_main_fixture01/synthetic_read_cost.json",
+      "sha256": "e6515ac5890af86ac6860d72696159f1373d15a125f83f067157f97886124f9a",
+      "bytes": 14253
+    }
+  },
+  "environment": {
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+    "packages": {
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "scikit-learn": "1.7.2",
+      "pytest": "9.1.1"
+    }
+  },
+  "read_measurements": [
+    {
+      "num_prefill_tokens": 6144,
+      "num_computed_tokens": 6128,
+      "transfer_bytes_per_rank": 140734976,
+      "time_ms": 3.5
+    },
+    {
+      "num_prefill_tokens": 6143,
+      "num_computed_tokens": 6112,
+      "transfer_bytes_per_rank": 140440576,
+      "time_ms": 3.5
+    },
+    {
+      "num_prefill_tokens": 6145,
+      "num_computed_tokens": 6128,
+      "transfer_bytes_per_rank": 140734976,
+      "time_ms": 3.5
+    }
+  ],
+  "source_base": "ebd5baf",
+  "source_commit": "e8d9c6c",
+  "fixture_commit": "d56f2dd",
+  "bound_commit": "68ab45c"
+}

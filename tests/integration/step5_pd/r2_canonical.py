@@ -1,0 +1,162 @@
+"""Prepare case-aligned R2 diagnostics and the selected independent native reference."""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import shutil
+import sys
+
+REPO = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO))
+from tests.integration.step5_pd import canonical_replay, canonical_stage  # noqa: E402
+
+
+def definition(source_root: Path, runtime_label: str = 'step5') -> dict:
+    """Reuse the frozen clean engine and R2 collector, not the obsolete short run."""
+    settings = json.loads(Path(__file__).with_name("r2_canonical.json").read_text())
+    run = canonical_stage.case_definition(json.loads(
+        Path(__file__).with_name("canonical_run_h200.json").read_text()), settings["case_id"])
+    from tests.comparison.dp_placement_pp.vllm_replay import adapter_record
+    adapter = adapter_record(runtime_label)
+    if adapter['model_metadata'] != adapter_record('step5')['model_metadata']:
+        raise ValueError('Canonical G3 requires a registered Step runtime')
+    if not isinstance(adapter['native_reference']['image'], str):
+        raise ValueError('Supply the published immutable STEP5_POSITION_CYCLIC_IMAGE before staging')
+    run['vllm_version'] = runtime_label
+    common = run.pop("canonical_replay")
+    run["description"] = (
+        "D21 P0 canonical R2 capture, not clean timing or G3 acceptance. "
+        "6144/1024 content and native no-fence requests; adjacent6145/1023 is "
+        "a boundary control only, retaining the frozen7168 context. "
+         "Independent reference executes full local prefill on existing D after idle; "
+         "no external metadata, prefix-cache reuse, clean timing or numerical waiver.")
+    run["canonical_g3"] = {
+        "workload": common["workload"],
+        "manifest_sha256": canonical_replay.MANIFEST_SHA256,
+        "sums_sha256": canonical_replay.SUMS_SHA256,
+        "independent_reference": "EXISTING_D_FULL_LOCAL_PREFILL_NO_KV_TRANSFER_PARAMS",
+        "pending_read_abort": "REQUIRE_OBSERVED_NATIVE_IN_FLIGHT_READ_ABORT_NOT_DEADLINE_ALONE",
+        "pressure": "UNVERIFIED_WITHOUT_OBSERVED_NATIVE_ALLOCATION_PRESSURE",
+    }
+    run["waves"] = [wave | {"stream": True} for wave in settings["waves"]]
+    # Offer the complete frozen template population. Only an observed native
+    # allocation failure establishes pressure; offered concurrency does not.
+    reuse = run["waves"].pop()
+    for length, output in ((6144, 1024), (6143, 1024), (6145, 1023)):
+        run["waves"].append(dict(name=f"reference{length}", spacing_s=0,
+            num_decode_tokens=output, prompt_lengths=[length], stream=True,
+            local_prefill_reference=True))
+    run["waves"].append(dict(name="capacity_pressure", spacing_s=0,
+        num_decode_tokens=1024, prompt_lengths=[6144]*run["engine"]["max_num_seqs"],
+        capture_content=False, stream=True))
+    run["waves"].append(reuse)
+    run["gating_wave"] = settings["gating_wave"]
+    run["pd_state_observation"] = {
+        "region_size": settings["region_size"], "expected_tp_ranks": run["engine"]["tensor_parallel_size"],
+        "source_root": str(source_root), **settings["capture_limits"],
+        "resident_identity": settings["resident_identity"]}
+    run["canonical_g3"].update(idle_timeout_s=common["idle_timeout_s"],
+                               idle_poll_s=common["idle_poll_s"],
+                               dp_size=run["engine"]["data_parallel_size"])
+    run["scrape_timeout_s"] = 10
+    run["release_margin_s"] = 5
+    validate_definition(run)
+    return run
+
+
+def validate_definition(run: dict) -> None:
+    """Reject short-run substitutions and accidental changes to the native case."""
+    frozen = canonical_stage.case_definition(json.loads(
+        Path(__file__).with_name("canonical_run_h200.json").read_text()), "h800_32")
+    if run["engine"] != frozen["engine"] or run["resources"] != frozen["resources"]:
+        raise ValueError("Canonical G3 capture must preserve the frozen P0 engine and resources")
+    if ("role_num_gpu_blocks_override" in run
+            and (run["role_num_gpu_blocks_override"] != {"decode": 32000}
+                 or type(run["role_num_gpu_blocks_override"]["decode"]) is not int)):
+        raise ValueError("Canonical diagnostics only accept the D28 decode-only32000 block control")
+    if "canonical_replay" in run:
+        raise ValueError("R2 diagnostic waves must not reuse clean replay")
+    waves = {wave["name"]: wave for wave in run["waves"]}
+    if len(waves) != len(run["waves"]):
+        raise ValueError("Duplicate canonical R2 wave")
+    main = waves[run["gating_wave"]]
+    if main["prompt_lengths"] != [6144] or main["num_decode_tokens"] != 1024:
+        raise ValueError("Gating content request must be6144/1024")
+    if main.get("capture_content", True) is not True:
+        raise ValueError("Canonical content request cannot be a no-content probe")
+    if (waves["concurrent8"]["prompt_lengths"] != [6144] * 8
+            or waves["concurrent8"]["num_decode_tokens"] != 1024
+            or waves["concurrent8"].get("capture_content") is not False):
+        raise ValueError("Canonical concurrent wave requires eight6144/1024 no-fence requests")
+    if not waves["cancel6144"].get("cancel_after_first_content"):
+        raise ValueError("Missing declared cancellation control")
+    references = [wave for wave in run['waves'] if wave.get('local_prefill_reference')]
+    if ({(wave['prompt_lengths'][0], wave['num_decode_tokens']) for wave in references}
+            != {(6144, 1024), (6143, 1024), (6145, 1023)}
+            or any(len(wave['prompt_lengths']) != 1 for wave in references)):
+        raise ValueError('Independent local native reference cases must match normal content inputs')
+    pressure = waves['capacity_pressure']
+    if (pressure['prompt_lengths'] != [6144]*run['engine']['max_num_seqs']
+            or pressure['num_decode_tokens'] != 1024 or pressure.get('capture_content') is not False
+            or pressure['spacing_s'] != 0):
+        raise ValueError('Explicit native pressure trigger must preserve full context and capacity')
+    abort = waves["abort_read6144"]
+    if (type(abort.get("cancel_after_decode_submit_s")) not in (int, float)
+            or not 0 < abort["cancel_after_decode_submit_s"] < float("inf")
+            or abort.get("capture_content") is not False):
+        raise ValueError("Pending READ abort requires a positive diagnostic deadline without content fences")
+    lengths = {length for wave in waves.values() for length in wave["prompt_lengths"]}
+    for size in (run["engine"]["block_size"], run["pd_state_observation"]["region_size"]):
+        if not any(n % size == 0 and {n - 1, n, n + 1} <= lengths for n in lengths):
+            raise ValueError("Missing adjacent native region/page boundary controls")
+    if any(length + wave["num_decode_tokens"] > run["engine"]["max_model_len"]
+           or wave.get("stream") is not True
+           for wave in waves.values() for length in wave["prompt_lengths"]):
+        raise ValueError("Canonical R2 trace exceeds frozen context or disables streaming")
+
+
+def prepare_traces(run: dict, stage: Path) -> None:
+    """Use original canonical prompt templates and the existing token-ID client."""
+    validate_definition(run)
+    workload = REPO / run["canonical_g3"]["workload"]
+    _, formal, warmup = canonical_replay.canonical_workload(workload)
+    shutil.copytree(workload, stage / "canonical_workload")
+    for wave in run["waves"]:
+        templates = warmup if wave.get("templates") == "warmup" else formal
+        path = stage / "trace" / wave["name"] / "request_ids.json"
+        rows = json.loads(path.read_text())["rows"]
+        if len(rows) > len(templates):
+            raise ValueError("Canonical diagnostic wave exceeds its frozen prompt template population")
+        for row, template in zip(rows, templates):
+            row.update(prompt_id=template["request_id"], template_request_id=template["request_id"],
+                        return_token_ids=True)
+            if wave.get('local_prefill_reference'):
+                row['local_prefill_reference'] = True
+        path.write_text(json.dumps({"rows": rows}, indent=1))
+
+
+def describe(source_root: Path, runtime_label: str = 'step5') -> dict:
+    run = definition(source_root, runtime_label)
+    return {"task_id": "D21-CANONICAL-G3", "definition": run,
+            "status": "IMPLEMENTED_NATIVE_DIAGNOSTICS_NOT_RUN", "sealed": False,
+            "ready_for_formal": False, "submitted": False,
+            "required_before_sealing": [
+                "Commit and verify the exact native-source-bound package before parent submission"],
+            "parent_budget": {"replica": 4, "gpu_per_replica": 8, "gpu_type": "H800",
+                              "charged_group": "codesign", "preemptible": False,
+                              "timeout_seconds": run["resources"]["timeout_seconds"]}}
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument('--runtime-label', default='step5')
+    args = parser.parse_args(argv)
+    print(json.dumps(describe(args.source_root, args.runtime_label), indent=1))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

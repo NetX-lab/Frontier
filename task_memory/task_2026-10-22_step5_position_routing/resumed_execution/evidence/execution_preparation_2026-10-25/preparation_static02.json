@@ -1,0 +1,78 @@
+{
+  "status": "PASS_PREPARATION_AND_VALIDATOR_CONTROLS_ONLY",
+  "collected_utc": "2026-10-24T20:19:40.739234+00:00",
+  "source": {
+    "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "records_head": "e08a133d419fa27008d9ccd5261f05ef065322f1",
+    "source_paths": 25,
+    "fixture_metadata_paths": 262
+  },
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "syntax_files": [
+    "joint_setup.py",
+    "joint_wave.py",
+    "joint_timing.py",
+    "worker_append.py",
+    "worker_entry.py",
+    "launch_worker.py"
+  ],
+  "wave_AST": "UNCHANGED",
+  "old_tail_excluded": true,
+  "positive": {
+    "status": "PASS_COMPLETE_OUTPUT_PARITY",
+    "ledger_rows": 16,
+    "operator_rows": 208,
+    "compute_proofs": 144,
+    "ledger_bytes": 2309646,
+    "ledger_sha256": "629ae4d6332986b3158add2a914f57dc074aa9d90b709e4a13de15bc1ad0608a",
+    "trace_bytes": 2891279,
+    "trace_sha256": "d7086698d33ad6e456206da70ead34134f3fd6faf67dd6c6e66af10aef2a148a"
+  },
+  "negative_controls": [
+    {
+      "control": "missing_ledger_row",
+      "status": "PASS_EXPECTED_REJECTION",
+      "error": "Full sorted ledger row 15 differs"
+    },
+    {
+      "control": "ledger_order",
+      "status": "PASS_EXPECTED_REJECTION",
+      "error": "Full sorted ledger row 0 differs"
+    },
+    {
+      "control": "compute_proof",
+      "status": "PASS_EXPECTED_REJECTION",
+      "error": "Full sorted ledger row 0 differs"
+    },
+    {
+      "control": "operator_duration",
+      "status": "PASS_EXPECTED_REJECTION",
+      "error": "Full operator row 0 differs"
+    },
+    {
+      "control": "extra_operator",
+      "status": "PASS_EXPECTED_REJECTION",
+      "error": "Extra operator rows"
+    },
+    {
+      "control": "stale_cold_batch_ids",
+      "status": "PASS_EXPECTED_REJECTION",
+      "error": "Full sorted ledger row 0 differs"
+    },
+    {
+      "control": "captured_source_identity",
+      "status": "PASS_EXPECTED_REJECTION",
+      "error": "Full sorted ledger row 0 differs"
+    }
+  ],
+  "worker_dry_run": "PASS",
+  "new_pricing_calls": 0,
+  "new_shape_calls": 0,
+  "new_platform_operations": 0,
+  "limitations": [
+    "Only retained-reference output controls were executed.",
+    "Simulator, cached-model setup and worker checks were not executed."
+  ]
+}

@@ -32,6 +32,8 @@ from sklearn.model_selection import GridSearchCV
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DSA_ATTENTION_FAMILY,
+    STEP5_ATTENTION_FAMILY,
     DENSE_ATTENTION_KV_CACHE_EXTRACT,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     get_attention_family,
@@ -367,6 +369,32 @@ def _get_operator_spec_by_name(family, op_name: str) -> OperatorSpec:
 
 
 class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseExecutionTimePredictor):
+    def _get_nixl_read_cost(self):
+        profile = getattr(self._config, "nixl_read_profile", None)
+        if not profile:
+            raise ValueError("Missing measured NIXL profile")
+        cost = getattr(self, "_nixl_read_cost_model", None)
+        if cost is None:
+            manager = getattr(self, "_model_manager", None)
+            role = getattr(self, "_cluster_type", None)
+            for receipt in getattr(manager, "_step5_model_bundles", {}).get(role, {}).values():
+                identity = receipt["identity"]
+                binding = identity.get("input_bindings", {}).get("nixl_read_profile")
+                if binding is None or os.path.abspath(profile) != binding["path"]:
+                    raise ValueError("NIXL profile conflicts with bound model input")
+                manager._validate_bundle_input_bindings(identity)
+            from frontier.kv_cache_transfer.nixl_read_cost import NixlReadCost
+
+            cost = NixlReadCost.from_file(profile)
+            self._nixl_read_cost_model = cost
+        return cost
+
+    def get_nixl_transfer_coverage(self, **kwargs):
+        return self._get_nixl_read_cost().get_coverage(**kwargs)
+
+    def get_nixl_transfer_time_ms(self, **kwargs):
+        return self._get_nixl_read_cost().get_time_ms(**kwargs)
+
     @staticmethod
     def _dense_attention_cache_write_op_name() -> str:
         return get_enabled_predictor_metric_name_by_role(
@@ -436,6 +464,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         training_file_paths: Dict[str, str] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
     ) -> None:
+        self._cluster_type = cluster_type
         super().__init__(
             predictor_config=predictor_config,
             replica_config=replica_config,
@@ -443,7 +472,6 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             metrics_config=metrics_config,
         )
 
-        self._cluster_type = cluster_type
         self._model_manager = model_manager
         self._gdn_predictor = (
             model_manager.get_gdn_predictor(cluster_type)
@@ -764,17 +792,28 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             )
 
         supported_ops = quant_manager.get_supported_operations()
+        source_precisions = {
+            row["operation"]: row["precision"]
+            for row in quant_manager.get_operation_precision_metadata()
+        }
+        non_floating_ops = {
+            name for name, precision in source_precisions.items()
+            if precision not in PrecisionType.__members__
+        }
         op_precision = {}
         for op_name in (
             supported_ops["compute_operations"]
             + supported_ops["communication_operations"]
         ):
-            op_precision[op_name] = quant_manager.get_precision(
-                op_name, self._cluster_type
-            ).name
+            op_precision[op_name] = (
+                source_precisions[op_name] if op_name in non_floating_ops
+                else quant_manager.get_precision(op_name, self._cluster_type).name
+            )
 
         op_speedups = {}
         for op_name in supported_ops["compute_operations"]:
+            if op_name in non_floating_ops:
+                continue
             speedup = quant_manager.get_compute_speedup_factor(
                 op_name, self._cluster_type
             )
@@ -882,8 +921,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 return MeasurementType.KERNEL_ONLY
             return event_measurement_type
 
-        if self._should_enable_measurement_family(MeasurementType.KERNEL_ONLY) and not (
-            self._should_enable_measurement_family(event_measurement_type)
+        if self._should_enable_compute_measurement_family(MeasurementType.KERNEL_ONLY) and not (
+            self._should_enable_compute_measurement_family(event_measurement_type)
         ):
             if self._is_kernel_only_measurement_enabled_for_cluster():
                 return MeasurementType.KERNEL_ONLY
@@ -893,6 +932,23 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
     def _should_enable_measurement_family(
         self, measurement_type: MeasurementType
     ) -> bool:
+        if getattr(self, "requires_forward_start_agreement", False):
+            from frontier.execution_time_predictor.step5_cost import step5_measurements_for_role
+
+            if measurement_type in step5_measurements_for_role(
+                self._cluster_type, global_vars.get_decode_cuda_graph_mode(),
+            ):
+                return True
+        return self._should_enable_compute_measurement_family(measurement_type)
+
+    def _should_enable_compute_measurement_family(
+        self, measurement_type: MeasurementType
+    ) -> bool:
+        """Families that price a step's non-attention operators.
+
+        Step attention selects its own family per graph mode, so the families it
+        adds do not choose the step family of the other operators.
+        """
         event_measurement_type = self._event_measurement_type_for_replica()
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if self._cluster_type == ClusterType.DECODE_ATTN:
@@ -2500,7 +2556,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         self._register_profiling_metadata_from_file(
             self._compute_input_file, self._get_compute_model_names()
         )
-        if self._cluster_type != ClusterType.DECODE_FFN:
+        # Step's composite root carries typed source identity, not GEMM quant metadata.
+        if (self._cluster_type != ClusterType.DECODE_FFN
+                and self._get_attention_family().family_id != STEP5_ATTENTION_FAMILY.family_id):
             self._register_profiling_metadata_from_file(
                 self._attention_input_file, self._get_attention_model_names()
             )
@@ -3990,6 +4048,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             ClusterType.MONOLITHIC,
         ]:
             return predictions
+
+        if resolve_runtime_attention_family(self._model_config).family_id == STEP5_ATTENTION_FAMILY.family_id:
+            from frontier.execution_time_predictor.step5_cost import step5_predictions
+
+            return step5_predictions(self._models, self._active_measurement_type)
 
         if self._is_mla_attention_family():
             feature_columns = get_enabled_shared_predictor_feature_columns(
@@ -6224,6 +6287,12 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
     ) -> float:
         """Predict one communication operator using the supplied runtime context."""
 
+        if operator.plan_builder is not None:
+            from frontier.cc_backend.collective_plan import CollectivePlan
+            plan=operator.plan_builder(ctx)
+            if not isinstance(plan,CollectivePlan) or operator.name != "step5_moe_"+plan.phase:
+                raise ValueError("Selected communication requires its complete matching physical plan")
+            return self._cc_backend.predict_collective_plan(plan).duration_ms
         data_size_bytes = operator.build_payload_bytes(ctx)
         if (
             data_size_bytes == 0
@@ -6267,6 +6336,18 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                     f"CommOperator {operator.name} requires num_devices for allgather"
                 )
             return self.predict_allgather_time(
+                data_size_bytes=data_size_bytes,
+                num_devices=num_devices,
+                cluster_type=ctx.cluster_type,
+                comm_domain=comm_domain,
+            )
+
+        if operator.collective_alias == "reduce_scatter":
+            if num_devices is None:
+                raise ValueError(
+                    f"CommOperator {operator.name} requires num_devices for reduce_scatter"
+                )
+            return self.predict_reduce_scatter_time(
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
                 cluster_type=ctx.cluster_type,
@@ -7471,9 +7552,115 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             return self._predict_attention_layer_time(batch, layer_id, cluster_type)
         with self._counting_kernels() as counts:
             attention_time = self._predict_attention_layer_time(batch, layer_id, cluster_type)
-        attention_time.kernel_count = math.fsum(counts.operators.values())
-        self._record_attention_kernels(attention_time.kernel_count)
+        if not attention_time.operator_costs:
+            attention_time.kernel_count = math.fsum(counts.operators.values())
+        else:
+            # Outside-root normalization retains the step family's own gap owner.
+            self._kernel_count_scopes[-1].operators.update({
+                name: count for name, count in counts.operators.items()
+                if name not in attention_time.operator_costs
+            })
+        self._record_attention_kernels(attention_time.kernel_count, attention_time.measurement_type)
         return attention_time
+
+    def _predict_dsa_dummy_attention_time(self, layer_id: int) -> AttentionTime:
+        """Represent source scopes using configured synthetic durations only."""
+        spec = bind_layer_attention(self._model_config, layer_id)
+        if spec.family_id != DSA_ATTENTION_FAMILY.family_id or spec.variant_id not in (
+            "full_index", "shared_index",
+        ):
+            raise ValueError("DSA structural timing requires full/shared index bindings")
+        base_time = self._dummy_execution_time
+        return AttentionTime(
+            # The outer preparation bundle owns Q/KV-A, Q-B and Q/KV norms.
+            attention_layer_pre_proj_execution_time=base_time,
+            attention_layer_post_proj_execution_time=base_time,
+            attention_rope_execution_time=base_time,
+            attn_norm_time=base_time,
+            operator_times=AttentionOperatorTimes({
+                "attn_dsa_indexer": (
+                    base_time if spec.index_producer_layer_id == layer_id else 0.0
+                ),
+                "attn_dsa_mla": base_time,
+            }),
+        )
+
+    def _step5_attention_workload(self, batch: Batch):
+        from frontier.execution_time_predictor.step5_cost import step5_batch_workload
+
+        return step5_batch_workload(self, batch)
+
+    def _predict_step5_dummy_attention_time(self, batch: Batch, layer_id: int) -> AttentionTime:
+        """Price exclusive source scopes with controlled durations, never native timings."""
+        from frontier.attention.step5 import describe_step5_layer
+        from frontier.entities.batch import DummyForwardBatch
+        from frontier.entities.time_components import AttentionOperatorTimes
+
+        metadata_by_layer = getattr(self, "_step5_layer_metadata", None)
+        if metadata_by_layer is None:
+            metadata_by_layer = self._step5_layer_metadata = {}
+        if layer_id not in metadata_by_layer:
+            metadata_by_layer[layer_id] = describe_step5_layer(
+                self._model_config, layer_id,
+                attention_tp_size=self._replica_config.attn_tensor_parallel_size,
+                moe_tp_size=self._replica_config.moe_tensor_parallel_size,
+                expert_parallel_size=self._replica_config.moe_expert_parallel_size,
+            )
+        metadata = metadata_by_layer[layer_id]
+        if isinstance(batch, DummyForwardBatch):
+            active_scopes = tuple(name for name, _ in metadata.request_free_attention_scopes())
+        else:
+            active_scopes = tuple(
+                name for name, _ in metadata.attention_scopes(self._step5_attention_workload(batch))
+            )
+        return AttentionTime(
+            attn_norm_time=self._dummy_execution_time,
+            operator_times=AttentionOperatorTimes({
+                **dict.fromkeys(active_scopes, self._dummy_execution_time),
+                **{
+                    operator.name: 0.0
+                    for operator in STEP5_ATTENTION_FAMILY.e2e_trace_ops()
+                    if operator.name not in active_scopes
+                },
+            }),
+        )
+
+    def _predict_dsv4_dummy_attention_time(
+        self, batch: Batch, layer_id: int, cluster_type: ClusterType, *,
+        execution_mode: str, has_attention_metadata: bool,
+        prefix_caching: bool, decode_context_parallel_size: int,
+        prefill_context_parallel_size: int,
+    ) -> AttentionOperatorTimes:
+        """Price selected eager source components without admitting V4 serving.
+
+        Each source component call receives the configured synthetic duration.
+        Their sum does not model native auxiliary-stream critical-path latency.
+        """
+        if not self._enable_dummy_mode:
+            raise NotImplementedError("V4 component costs require synthetic dummy timing")
+        from frontier.attention.deepseek_v4 import (
+            build_deepseek_v4_attention_workload,
+            build_deepseek_v4_dummy_attention_workload,
+        )
+        from frontier.entities.batch import DummyForwardBatch
+
+        builder = (build_deepseek_v4_dummy_attention_workload
+                   if isinstance(batch, DummyForwardBatch)
+                   else build_deepseek_v4_attention_workload)
+        workload = builder(
+            self._model_config, self._replica_config, batch, layer_id,
+            cluster_type=cluster_type, execution_mode=execution_mode,
+            has_attention_metadata=has_attention_metadata,
+            prefix_caching=prefix_caching,
+            decode_context_parallel_size=decode_context_parallel_size,
+            prefill_context_parallel_size=prefill_context_parallel_size,
+        )
+        timing = AttentionOperatorTimes({
+            name: self._dummy_execution_time * len(calls)
+            for name, calls in workload["operators"].items()
+        })
+        timing._dsv4_workloads = workload["operators"]
+        return timing
 
     def _predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
@@ -7495,21 +7682,25 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 f"Idle batch detected (batch_id={batch.id}), skipping attention computation"
             )
             raise ValueError("Idle batch detected, skipping attention computation")
-            # return AttentionTime(
-            #     attention_prefill_execution_time=0.0,
-            #     attention_decode_execution_time=0.0,
-            #     attention_layer_pre_proj_execution_time=0.0,
-            #     attention_layer_post_proj_execution_time=0.0,
-            #     attention_rope_execution_time=0.0,
-            #     attention_kv_cache_save_execution_time=0.0,
-            #     attn_norm_time=0.0,
-            # )
 
         self._log_architecture_attention_shape(batch)
 
         layer_spec = bind_layer_attention(self._model_config, layer_id)
         attention_family = get_attention_family(layer_spec.family_id)
-        attention_family.require_enabled_for_execution()
+        attention_family.require_enabled_for_execution(structural=self._enable_dummy_mode)
+        if attention_family.family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.deepseek_v4 import serving_context
+
+            context = serving_context(self, batch, layer_id)
+            components = self._predict_dsv4_dummy_attention_time(
+                batch, layer_id, cluster_type, **{
+                    name: context[name] for name in (
+                        "execution_mode", "has_attention_metadata", "prefix_caching",
+                        "decode_context_parallel_size", "prefill_context_parallel_size",
+                    )
+                },
+            )
+            return AttentionTime(operator_times=components)
         prices_kv_cache_extract = (
             cluster_type == ClusterType.PREFILL and global_vars.get_kv_connector() == "p2p_nccl"
         )
@@ -7536,6 +7727,10 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             )
 
         if self._enable_dummy_mode:
+            if attention_family.family_id == DSA_ATTENTION_FAMILY.family_id:
+                return self._predict_dsa_dummy_attention_time(layer_id)
+            if attention_family.family_id == STEP5_ATTENTION_FAMILY.family_id:
+                return self._predict_step5_dummy_attention_time(batch, layer_id)
             base_time = self._dummy_execution_time
             return AttentionTime(
                 attention_prefill_execution_time=base_time,
@@ -7558,6 +7753,13 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 layer_id=layer_id,
                 cluster_type=cluster_type,
             )
+
+        if attention_family.family_id == STEP5_ATTENTION_FAMILY.family_id:
+            from frontier.execution_time_predictor.step5_cost import predict_step5_attention_time
+
+            timing = predict_step5_attention_time(self, batch, layer_id)
+            timing.attn_norm_time = self._get_attn_norm_layer_act_execution_time(batch)
+            return timing
 
         logger.debug(
             f"Predicting attention layer time for layer_id={layer_id}, cluster_type={cluster_type}"
@@ -7978,6 +8180,36 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             f"  1. Configure a CC Backend (e.g., --cc_backend vidur or --cc_backend analytical)\n"
             f"  2. Enable dummy mode explicitly (--enable_dummy_mode)\n"
             f"Current state: cc_backend=None, enable_dummy_mode={self._enable_dummy_mode}"
+        )
+
+    def predict_reduce_scatter_time(
+        self,
+        data_size_bytes: int,
+        num_devices: int,
+        cluster_type: ClusterType,
+        comm_domain: Optional[str] = None,
+    ) -> float:
+        """Price reduce-scatter using each rank's full input size in bytes."""
+
+        if self._cc_backend is not None:
+            return self._cc_backend.predict_reduce_scatter(
+                data_size_bytes=data_size_bytes,
+                num_devices=num_devices,
+                cluster_type=cluster_type,
+                comm_domain=comm_domain,
+            )
+        if self._enable_dummy_mode:
+            logger.info(
+                "[CC-FALLBACK] predict_reduce_scatter_time: CC Backend not available, "
+                "falling back to dummy mode value=%s ms",
+                self._dummy_execution_time,
+            )
+            return self._dummy_execution_time
+        raise RuntimeError(
+            "CC Backend is required for reduce-scatter communication prediction "
+            "but was not provided. Configure a CC Backend or enable dummy mode "
+            f"explicitly. Current state: cc_backend=None, "
+            f"enable_dummy_mode={self._enable_dummy_mode}"
         )
 
     def predict_alltoall_time(

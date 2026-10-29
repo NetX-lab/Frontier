@@ -1,0 +1,41 @@
+{
+  "status": "FAIL_PLACEMENT",
+  "results": [
+    {
+      "mode": "offline",
+      "execution": {
+        "returncode": 1,
+        "timed_out": false,
+        "wall_s": 1580.9479549312964,
+        "source": {
+          "commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+          "runner_sha256": "6fc438ca44761b168e8c87ea629758e7c44b4082ab576424a140d1cc2e26d76f",
+          "fixture_sha256": "87752f5816cc59baa8eb63733bfe9a4be7dde9b32d890ad5a0afbf3336f0d86b"
+        }
+      },
+      "log_sha256": "115b63448c058774bb41b6ec3a8f5801edf6ee1fe4af201fa039480faabf911e",
+      "log": "/data/ycfeng/tmp/d29-parent-position-main05/offline/run.log",
+      "command_sha256": "f3be9444d87d98365262c6a5c1334e1270a37ae4a1ccfeae4501e85c43c8eec6"
+    },
+    {
+      "mode": "online",
+      "execution": {
+        "returncode": 1,
+        "timed_out": false,
+        "wall_s": 1560.1816781787202,
+        "source": {
+          "commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+          "runner_sha256": "6fc438ca44761b168e8c87ea629758e7c44b4082ab576424a140d1cc2e26d76f",
+          "fixture_sha256": "87752f5816cc59baa8eb63733bfe9a4be7dde9b32d890ad5a0afbf3336f0d86b"
+        }
+      },
+      "log_sha256": "e2570fd544341c14af401bc4dda5117c760526985f83d2816311211a9c89d01f",
+      "log": "/data/ycfeng/tmp/d29-parent-position-main05/online/run.log",
+      "command_sha256": "bd3063e4fd5b7e569b1c33ce2c0b3070c9ae28999b7b92cae309fe70c3d62a2c"
+    }
+  ],
+  "invalid_original_evidence": [
+    "/data/ycfeng/tmp/d29-parent-position-main05/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/config.json"
+  ],
+  "reason": "First scout config parse rewrote this file; no original hash captured. Excluded from original-run evidence."
+}

@@ -1,0 +1,45 @@
+{
+  "collected_utc": "2026-10-24T21:01:15.066187+00:00",
+  "authorization": "D29 Codesign OSS Test Storage timely completed-artifact cleanup; own completed local static control copies only",
+  "retained": "All original active/cited inputs, selected control reports/stdout/stderr/receipts and other-session files",
+  "files": [
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static04/frontier_ep_wave_lane_ledger.jsonl",
+      "bytes": 2309646,
+      "sha256": "629ae4d6332986b3158add2a914f57dc074aa9d90b709e4a13de15bc1ad0608a",
+      "state": "REMOVED_VERIFIED_COMPLETED_OWN_REFERENCE_COPY"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static04/op_traces.jsonl",
+      "bytes": 2891362,
+      "sha256": "c5794ea28bdab9b97cf38071e85cc145bb019ea1e55ff231ab204947c435d18b",
+      "state": "REMOVED_VERIFIED_COMPLETED_OWN_REFERENCE_COPY"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static05/frontier_ep_wave_lane_ledger.jsonl",
+      "bytes": 2309646,
+      "sha256": "629ae4d6332986b3158add2a914f57dc074aa9d90b709e4a13de15bc1ad0608a",
+      "state": "REMOVED_VERIFIED_COMPLETED_OWN_REFERENCE_COPY"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static05/op_traces.jsonl",
+      "bytes": 2891362,
+      "sha256": "c5794ea28bdab9b97cf38071e85cc145bb019ea1e55ff231ab204947c435d18b",
+      "state": "REMOVED_VERIFIED_COMPLETED_OWN_REFERENCE_COPY"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static06/frontier_ep_wave_lane_ledger.jsonl",
+      "bytes": 2309646,
+      "sha256": "629ae4d6332986b3158add2a914f57dc074aa9d90b709e4a13de15bc1ad0608a",
+      "state": "REMOVED_VERIFIED_COMPLETED_OWN_REFERENCE_COPY"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static06/op_traces.jsonl",
+      "bytes": 2891362,
+      "sha256": "c5794ea28bdab9b97cf38071e85cc145bb019ea1e55ff231ab204947c435d18b",
+      "state": "REMOVED_VERIFIED_COMPLETED_OWN_REFERENCE_COPY"
+    }
+  ],
+  "finished_utc": "2026-10-24T21:01:15.087203+00:00",
+  "status": "PASS_SCOPED_SIX_COMPLETED_COPY_CLEANUP"
+}

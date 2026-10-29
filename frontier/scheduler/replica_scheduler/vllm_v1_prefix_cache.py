@@ -42,13 +42,23 @@ def _serialize_prefix_cache_binding(
 class PrefixCacheLedger:
     """Prefix-cache admission and identity-event emission."""
 
-    def _is_prefix_caching_enabled(self) -> bool:
+    def _kv_cache_manager_owns_allocation(self) -> bool:
         return getattr(self, "_kv_cache_manager", None) is not None
+
+    def _is_grouped_kv_allocation(self) -> bool:
+        if not self._kv_cache_manager_owns_allocation():
+            return False
+        return self._kv_cache_manager.cache_capacity is not None
+
+    def _is_prefix_caching_enabled(self) -> bool:
+        return self._kv_cache_manager_owns_allocation() and bool(
+            self._kv_cache_manager.enable_caching
+        )
 
     def _sync_prefix_cache_allocation_state(
         self, request: Optional[Request] = None
     ) -> None:
-        if not self._is_prefix_caching_enabled():
+        if not self._kv_cache_manager_owns_allocation():
             return
         assert self._kv_cache_manager is not None
         self._num_allocated_blocks = int(self._kv_cache_manager.num_used_blocks)

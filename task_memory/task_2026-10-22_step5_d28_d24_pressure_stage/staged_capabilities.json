@@ -1,0 +1,34 @@
+{
+  "task_id": "D28-D24-PRESSURE-STAGE",
+  "status": "PASS_STAGED_CAPABILITIES",
+  "modules": {
+    "r2_observation": {
+      "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage/r2_observation.py",
+      "sha256": "774280921282530c3df3eb22d8f20435d8b99766ffe412f7cafac20a045e5b81"
+    },
+    "r2_reference": {
+      "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage/r2_reference.py",
+      "sha256": "30fbfd0a9eb440cc5dd42e3fc550eff2c2f1782fabdbce1bea92212bca8f7698"
+    },
+    "r2_runtime": {
+      "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage/r2_runtime.py",
+      "sha256": "b71bc59620648ea2d575d1c32906b3da7b682ba2353efd56a0614f1c2900326a"
+    },
+    "pd_proxy": {
+      "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage/tests/comparison/calibration/pd_proxy.py",
+      "sha256": "1720b0e8145ab0fcd1ff19c716e59490f18591188cf50308a2a43e6ce61650ce"
+    }
+  },
+  "reference_caller_rank_length_cases": 48,
+  "startup_cases": 2,
+  "http_cases": 2,
+  "actual_native_method_body_pressure_cases": 5,
+  "asserted": [
+    "computed/predecessor exact raw/mean only at first tail",
+    "startup exclusions preserve subsequent serving and native failure",
+    "fresh/reused HTTP traceback without request/retry changes",
+    "actual pregrant estimate/free paired after retirement; demand not granted delta",
+    "all callbacks soft and native functions unchanged"
+  ],
+  "native_hardware_executed": false
+}

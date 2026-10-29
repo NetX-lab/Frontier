@@ -6,6 +6,7 @@ needs and the model selection that decides which trained estimator answers.
 """
 
 from frontier.config import get_quantization_manager
+from frontier.config.precision_type import PrecisionType
 from frontier.entities import Batch, ExecutionTime
 from frontier.entities.time_components import MoEOperatorTimes, MoETime
 from frontier.logger import init_logger
@@ -21,6 +22,11 @@ from frontier.operators.families import (
     get_comm_operator,
     is_moe_operator_ep_agnostic,
     resolve_moe_operator_tp_key,
+)
+from frontier.profiling.collectives.vllm_forward_collectives import (
+    DTYPE_BYTES,
+    bytes_per_row,
+    step5_dispatch_row,
 )
 from frontier.types import ClusterType
 from typing import Dict, Mapping, Optional
@@ -68,6 +74,85 @@ def _build_moe_operator_times(
 
 class MoeOperatorTimes:
     """Per-operator MoE time prediction and its inputs."""
+
+    def _predict_step5_position_operator_times(
+        self, lane_workload, *, context, operator_features, collective_plans,
+    ):
+        """Price selected physical scopes using CORE's paired exact-query owner."""
+        from frontier.entities.time_components import CommunicationOperatorTimes
+        from frontier.operators.families import get_moe_profiling_operators, is_step5_position_context
+        from frontier.moe_gating_runtime import get_moe_gating_prediction_model_name
+        import math,json
+        from frontier.profiling.common.runtime_identity import canonical_json
+        lane = resolve_ep_lane_workload(lane_workload, required=True)
+        source = lane.routing_source
+        if not is_step5_position_context(context) or source is None:
+            raise ValueError("Step position pricing requires the bound native context and immutable source")
+        ni = source.source_lanes[lane.ep_id // self._replica_config.attn_tensor_parallel_size]
+        selected = get_moe_profiling_operators(context)
+        if set(operator_features) != {op.name for op in selected}:
+            raise ValueError("Physical features must cover exactly the applicable selected MoE scopes")
+        expected = {"step5_moe_dispatch": "dispatch", "step5_moe_combine": "combine",
+            "moe_tensor_parallel_allreduce": "routed_tp"}
+        if self._model_config.supports_share_expert():
+            expected["share_expert_tensor_parallel_allreduce"] = "shared_tp"
+        if set(collective_plans) != set(expected):
+            raise ValueError("Physical collective phases must exactly match the reached branches")
+        for name, phase in expected.items():
+            plan = collective_plans[name]
+            if plan.phase != phase or plan.sizes != tuple(s.physical_rows for s in source.source_lanes):
+                raise ValueError("Collective phase/physical vector differs from the immutable source")
+            measured=json.loads(plan.context_json)
+            if (canonical_json(json.loads(plan.buffer_json).get("compute_context")) != canonical_json(context) or
+                    measured["shared"] != context["native_facts"]["shared"]):
+                raise ValueError("Collective compute context differs from the current physical frame")
+            tensors=context["collective_tensors"]["dispatch" if phase == "dispatch" else "output"]
+            if [vars(t) for t in plan.tensors] != tensors:
+                raise ValueError("Collective tensor layout differs from the actual compute operands")
+        dispatch=collective_plans["step5_moe_dispatch"].tensors
+        layouts=[("activation",context["source_activation_layout"],context["activation_layout"])]
+        if context["source_scale_layout"] is not None:
+            layouts.append(("scales",context["source_scale_layout"],context["scale_layout"]))
+        for name,local,gathered in layouts:
+            tensor=next(t for t in dispatch if t.name == name)
+            if (local["shape"] != [ni.physical_rows,tensor.columns] or
+                    gathered["shape"] != [source.gathered_physical_rows,tensor.columns] or any(
+                    (layout["dtype"],layout["element_size"],layout["stride"]) !=
+                    (tensor.dtype,tensor.element_size,[tensor.row_stride,1]) for layout in (local,gathered))):
+                raise ValueError("Collective activation/scale layout differs from actual source/gathered tensors")
+        if (tuple(t.name for t in dispatch) != tuple(name for name in ("activation","weights","ids","scales")
+                if name != "scales" or context["source_scale_layout"] is not None) or
+                [(t.dtype,t.columns) for t in dispatch[1:3]] != [("float32",self._replica_config.router_topk),("int32",self._replica_config.router_topk)] or
+                dispatch[0].dtype != (context["quant_dtype"] if not context["defer_input_quant"] and context["quant_dtype"] else "bfloat16")):
+            raise ValueError("Collective dispatch layout differs from selected activation/top-k contract")
+        for name,plan in collective_plans.items():
+            if plan.phase != "dispatch" and (plan.tensors[0].name,plan.tensors[0].dtype,plan.tensors[0].columns) != (
+                    "output","bfloat16",dispatch[0].columns):
+                raise ValueError("Collective output layout differs from the native source output")
+        times,proofs = {},{}
+        for op in selected:
+            features = operator_features[op.name]
+            rows = source.gathered_physical_rows if op.name == "moe_grouped_gemm" else ni.physical_rows
+            if features["num_tokens"] != rows:
+                raise ValueError("Selected MoE query differs from its source/gathered physical width")
+            if op.name == "moe_grouped_gemm" and features["total_routed_tokens"] != lane.routed_token_count:
+                raise ValueError("Expert query live assignments differ from the canonical lane")
+            name = (get_moe_gating_prediction_model_name(op.name, requested_context=ni.gating_runtime_context)
+                    if op.precision_name() == "moe_gating" else op.name)
+            times[op.name] = self._predict_step5_ffn_operator(name, features, context=context)
+            proof = self._step5_ffn_costs[name]
+            count=proof["kernel_count"]
+            if (not proof["exact_lookup"] or count is None or not math.isfinite(count) or
+                    count < 1 or count != int(count) or not math.isfinite(times[op.name]) or times[op.name] <= 0):
+                raise ValueError("Applicable physical scope lacks paired positive exact evidence")
+            proofs[op.name]=dict(proof)
+        costs = {}
+        for name,plan in collective_plans.items():
+            costs[name] = self._cc_backend.predict_collective_plan(plan)
+        frame = dict(routing_source=source, ep_id=lane.ep_id, native_context=context,
+                      live_local_assignments=lane.routed_token_count,operator_costs=proofs)
+        return (MoEOperatorTimes(times, physical_frame=frame), CommunicationOperatorTimes(
+            {name:cost.duration_ms for name,cost in costs.items()}, plans=collective_plans, costs=costs))
 
     @staticmethod
 
@@ -254,6 +339,8 @@ class MoeOperatorTimes:
                 "expert_parallel_alltoall_dispatch": 0.0,
                 "expert_parallel_alltoall_combine": 0.0,
             }
+        if self._replica_config.moe_all2all_backend == "allgather_reducescatter":
+            return self._predict_dp_dispatch_combine_times(batch)
         if not self._use_expert_parallel_alltoall_path(batch):
             raise ValueError(
                 "Canonical MoE EP execution requires named all-to-all dispatch "
@@ -269,6 +356,47 @@ class MoeOperatorTimes:
                 "expert_parallel_alltoall_dispatch",
                 "expert_parallel_alltoall_combine",
             )
+        }
+
+    def _predict_dp_dispatch_combine_times(self, batch: Batch) -> dict[str, float]:
+        """Price vLLM's AllGatherV dispatch and ReduceScatterV combine over attention DP.
+
+        Each DP rank gathers every rank's rows (activations with top-k weights
+        and ids) and scatters back the BF16 sums of its own rows. With one DP
+        rank there is nothing to exchange.
+        """
+
+        if self._replica_config.attn_dp == 1:
+            return {
+                "expert_parallel_alltoall_dispatch": 0.0,
+                "expert_parallel_alltoall_combine": 0.0,
+            }
+        shape = getattr(batch, "dp_forward_shape", None)
+        metadata = self._step5_layer_metadata
+        if shape is None or metadata is None:
+            raise ValueError(
+                "moe_all2all_backend='allgather_reducescatter' prices Step5 EP lanes "
+                "with a DP forward shape and native layer metadata (non-dummy mode)"
+            )
+        routed = next(p for p in metadata.projections if p.operator_name == "moe_grouped_gemm")
+        group_size = (
+            self._model_config.quantization_config.weight_block_size[1]
+            if routed.weight_precision is PrecisionType.FP8 else None
+        )
+        hidden = self._model_config.embedding_dim
+        activation_dtype = self._model_config.torch_dtype
+        dispatch_row_bytes = bytes_per_row(*step5_dispatch_row(
+            hidden, self._replica_config.router_topk, activation_dtype, group_size,
+        ))
+        rows = shape.num_tokens_across_dp
+        return {
+            "expert_parallel_alltoall_dispatch": self._cc_backend.predict_dp_rows(
+                "allgather", rows, dispatch_row_bytes, shape.cuda_graph, "ATTN_DP",
+            ),
+            "expert_parallel_alltoall_combine": self._cc_backend.predict_dp_rows(
+                "reduce_scatter", rows, hidden * DTYPE_BYTES[activation_dtype],
+                shape.cuda_graph, "ATTN_DP",
+            ),
         }
 
     def _get_effective_moe_total_tokens(self, batch: Batch) -> int:

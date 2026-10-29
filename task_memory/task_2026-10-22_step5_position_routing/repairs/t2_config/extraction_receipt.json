@@ -1,0 +1,14 @@
+{
+  "frontier/profiling/collectives/step5_dispatch_probe.py": {
+    "source_commit": "3f54bc640392d2a029e371e85ab212f0e2ac20ee",
+    "function": "create_native_config",
+    "ast_equal": true,
+    "source_function_sha256": "d3530e0c95a2029b2d7890a4a9b9f06a40102a0d9c9fe6f6b6fa11613efb5fad"
+  },
+  "tests/unit/test_step5_dispatch_probe.py": {
+    "source_commit": "3f54bc640392d2a029e371e85ab212f0e2ac20ee",
+    "function": "test_native_config_binds_only_supplied_limits_before_text_submodel",
+    "ast_equal": true,
+    "source_function_sha256": "563c75e7c26571b54dfbd3123f98a7c68535dc749c4746e06d0c6e23b02efd56"
+  }
+}
