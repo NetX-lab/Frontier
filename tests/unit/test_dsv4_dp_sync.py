@@ -18,7 +18,7 @@ from frontier.config import global_vars
 from frontier.config.config import SimulationConfig
 from frontier.config.model_config import BaseModelConfig
 from frontier.entities import Batch, DummyForwardBatch, Request
-from frontier.entities.batch import DecodeCudaGraphMetadata
+from frontier.entities.batch import DecodeCudaGraphMetadata, KVBlockTableWrites
 from frontier.execution_time_predictor.deepseek_v4 import source_sp_token_widths
 from frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy import (
     IterationSchedulingPolicy,
@@ -170,13 +170,20 @@ def decode_lane(num_decodes, *, first_tails=0, context=512):
     """
     tails = [Request(0.0, context + 1, 64) for _ in range(first_tails)]
     for request in tails:
-        request._num_processed_tokens = context
+        request._is_prefill_complete = True
+        request._num_processed_tokens = request.num_prefill_tokens
     requests = tails + decode_requests(num_decodes, context)
-    return Batch(
+    batch = Batch(
         0, requests, [1] * len(requests), is_moe=True,
         num_context_tokens=[context] * len(requests),
-        request_is_decoding=[False] * first_tails + [True] * num_decodes,
+        request_is_decoding=[True] * len(requests),
     )
+    batch._cluster_type = ClusterType.DECODE
+    # Classification reads new-row IDs; group lengths have their own allocator tests.
+    batch.kv_block_table_writes = KVBlockTableWrites(
+        continuing_entries=(), new_rows=tuple((request.id, ()) for request in tails),
+    )
+    return batch
 
 
 def prefill_lane(tokens):

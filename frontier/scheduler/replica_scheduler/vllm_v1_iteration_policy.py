@@ -10,6 +10,7 @@ from collections import deque
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
+from frontier.attention.dsv4_features import dsv4_request_is_decoding
 from frontier.config import global_vars
 from frontier.entities.batch import (
     Batch,
@@ -67,10 +68,18 @@ class IterationSchedulingPolicy:
         capture_hit, capture_size = self._resolve_decode_cuda_graph_capture_size(
             batch.total_num_tokens
         )
+        # V2 classifies runner rows, including the NIXL prompt's last token,
+        # independently of the request's semantic prefill completion
+        # (gpu/model_runner.py:1077-1099; worker/utils.py:601-607).
+        decoding_rows = (
+            dsv4_request_is_decoding(batch)
+            if config_mode == "full_and_piecewise"
+            else [request.is_decoding for request in batch.requests]
+        )
         decode_query_lens = [
             int(num_tokens)
-            for request, num_tokens in zip(batch.requests, batch.num_tokens)
-            if request.is_decoding
+            for decoding, num_tokens in zip(decoding_rows, batch.num_tokens)
+            if decoding
         ]
         if isinstance(batch, DummyForwardBatch):
             # gpu_worker.execute_dummy_batch calls _dummy_run(1, uniform_decode=True).
