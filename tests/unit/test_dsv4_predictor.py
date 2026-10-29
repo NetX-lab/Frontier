@@ -134,7 +134,7 @@ def test_only_tile_planner_scope_splits_roles_and_names_separate_modes_phases(ta
     assert len(names) == 72
 
 
-def test_training_excludes_absent_scopes_and_records_feature_and_geometry_bounds(table, model, replica):
+def test_training_excludes_absent_scopes_and_records_workload_group_ranges(table, model, replica):
     df = load(table, model, replica)
     index = df.index[0]
     scopes = json.loads(df.loc[index, "operator_scopes"])
@@ -150,8 +150,8 @@ def test_training_excludes_absent_scopes_and_records_feature_and_geometry_bounds
     models = train_dsv4_attention_models(df, fit)
     assert calls and models
     qmodel = models[dsv4_model_name(dsv4_model_key(Q, "csa", "FULL", "decode", False), TARGET_TIME)]
-    assert qmodel._frontier_dsv4_bounds["padded_rows"] == (1, 1)
-    assert qmodel._frontier_dsv4_bounds["max_context_len"] == (64, 64)
+    assert set(qmodel._frontier_dsv4_workload_group_ranges) == {1}
+    assert qmodel._frontier_dsv4_workload_group_ranges[1]["max_context_len"] == (64, 64)
 
 
 @pytest.mark.parametrize("column", ["padded_rows", "max_context_len"])
@@ -177,12 +177,57 @@ def test_missing_key_and_feature_schema_mismatch(table, model, replica):
         predict(predictor, row, model)
 
 
-def test_interpolation_uses_predict_inside_bounds(tmp_path, plan, model, replica):
+def test_unmeasured_rows_between_measured_sizes_are_rejected(tmp_path, plan, model, replica):
     df = load(aggregate(tmp_path, plan, [dict(tokens=1), dict(tokens=4)]), model, replica)
     row = df.iloc[0].copy()
     row["padded_rows"] = 2
-    result = predict(trained(df), row, model)
-    assert set(result.cost_ms.values()) == set(result.gap_ms.values()) == {0.25}
+    with pytest.raises(DeepSeekV4CoverageError, match="operator.*key.*padded_rows=2.*outside"):
+        predict(trained(df), row, model)
+
+
+def test_geometry_from_another_row_group_is_rejected_and_own_group_keeps_value(table, model, replica):
+    df = load(table, model, replica)
+    larger = df.copy()
+    larger["padded_rows"] = 4
+    for column in ("min_context_len", "max_context_len", "max_key_len"):
+        larger[column] += 100
+    predictor = trained(pd.concat([df, larger], ignore_index=True))
+    row = df.iloc[0]
+    assert predict(predictor, row, model).cost_ms == predict(trained(df), row, model).cost_ms
+    features = batch_features(row, model)
+    features = replace(features, values={**features.values, "max_context_len": 164})
+    with pytest.raises(DeepSeekV4CoverageError, match="group.*max_context_len=164.*outside.*64"):
+        predictor.scope_times(features, variant=row.attention_variant, graph_runtime_mode="FULL",
+                              plans_tile_schedule=True, scopes=[Q])
+
+
+def test_interpolation_uses_predict_inside_its_measured_row_group(table, model, replica):
+    df = load(table, model, replica)
+    larger = df.copy()
+    for column in ("min_context_len", "max_context_len", "max_key_len",
+                   "sum_compressed_key_pairs", "sum_selected_key_pairs"):
+        larger[column] += 100
+    predictor = trained(pd.concat([df, larger], ignore_index=True))
+    row = df.iloc[0]
+    features = batch_features(row, model)
+    features = replace(features, values={
+        **features.values, "sum_selected_key_pairs": features.values["sum_selected_key_pairs"] + 50,
+    })
+    result = predictor.scope_times(features, variant=row.attention_variant, graph_runtime_mode="FULL",
+                                   plans_tile_schedule=True, scopes=[TILE_PLANNER_SCOPE])
+    assert dict(result.cost_ms) == dict(result.gap_ms) == {TILE_PLANNER_SCOPE: 0.25}
+
+
+def test_dummy_admission_requires_measured_rows_and_no_geometry(table, model, replica):
+    df = load(table, model, replica).copy()
+    df["phase"] = "dummy"
+    models = train_dsv4_attention_models(df, _fit)
+    assert all(fitted._frontier_dsv4_workload_group_ranges == {1: {}} for fitted in models.values())
+    predictor = DeepSeekV4AttentionPredictor(models)
+    args = dict(variant="csa", graph_runtime_mode="FULL", plans_tile_schedule=True, scopes=[Q])
+    assert predictor.scope_times(build_dsv4_dummy_features(1), **args).cost_ms[Q] == df.iloc[0][f"time_stats.{Q}.median"]
+    with pytest.raises(DeepSeekV4CoverageError, match="padded_rows=2"):
+        predictor.scope_times(build_dsv4_dummy_features(2), **args)
 
 
 @pytest.mark.parametrize("target,value,valid", [(TARGET_TIME, -0.1, False), (TARGET_TIME, 0, True),
