@@ -1,0 +1,60 @@
+{
+  "status": "PASS",
+  "checks": {
+    "ast_parse": true,
+    "modules_at_most_2000_lines": true,
+    "changed_source_set": true,
+    "added_source_whitespace": true,
+    "measured_source_hashes_match": true,
+    "shell_syntax": true,
+    "json_parse": true
+  },
+  "line_counts": {
+    "frontier/moe_ep_workload.py": 948,
+    "frontier/execution_time_predictor/deepseek_v4.py": 706,
+    "frontier/execution_time_predictor/dsv4_operator_predictor.py": 386,
+    "frontier/execution_time_predictor/dsv4_predictor.py": 345,
+    "frontier/execution_time_predictor/dsv4_training.py": 58,
+    "tests/unit/test_v4_prediction_memo.py": 174,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b20/compare_runs.py": 62,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b20/generate_trace.py": 17,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b20/profile_report.py": 88,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b20/run_replay.py": 161,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b20/verify_final_dispatch.py": 44,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b20/verify_retained_plan.py": 24,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b20/verify_static.py": 65
+  },
+  "changed_sources": [
+    "frontier/moe_ep_workload.py",
+    "frontier/execution_time_predictor/deepseek_v4.py",
+    "frontier/execution_time_predictor/dsv4_predictor.py"
+  ],
+  "whitespace_errors": [],
+  "shell_checks": {
+    "run.sh": {
+      "exit_code": 0,
+      "stderr": ""
+    },
+    "run_checks.sh": {
+      "exit_code": 0,
+      "stderr": ""
+    },
+    "run_smoke.sh": {
+      "exit_code": 0,
+      "stderr": ""
+    },
+    "run_window.sh": {
+      "exit_code": 0,
+      "stderr": ""
+    }
+  },
+  "parsed_json_files": [
+    "checks.json",
+    "comparison.json",
+    "environment.json",
+    "final-dp-dispatch.json",
+    "profile.json",
+    "retained-plan-check.json",
+    "static-checks.json"
+  ]
+}

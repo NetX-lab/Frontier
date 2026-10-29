@@ -1,0 +1,29 @@
+{
+  "python": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "version": "3.10.6",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed",
+  "base": "/data/ycfeng/Frontier/.worktrees/b20-base",
+  "base_head": "b6c288588ae2a19c0b86620d782c8a3d838cae9d",
+  "scratch": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20",
+  "ulimit_v_kib": 62914560,
+  "env": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "WANDB_DISABLED": "true",
+    "VIDUR_DISABLE_WANDB": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "TMPDIR": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/tmp",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp/codex-implement/4bcc70f2-4440-43f7-9489-12ff832c399a/b20/tmp"
+  },
+  "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+  "effective_cpus": "0-63",
+  "dependency_policy": "Existing CPU environment only; no installation, upgrade or GPU operation.",
+  "packages": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.7.2",
+    "joblib": "1.6.0",
+    "pytest": "9.1.1"
+  }
+}

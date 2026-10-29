@@ -1,0 +1,273 @@
+{
+  "status": "PASS",
+  "window_receipt": {
+    "status": "WINDOW_COMPLETE",
+    "run_wall_s": 300.0001518148929,
+    "simulated_time_s": 2.0053377476662515,
+    "peak_rss_kib": 1202688,
+    "init_wall_s": 55.903996157925576
+  },
+  "simulated_seconds_per_wall_second": 0.006684455776221046,
+  "top15": [
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/simulator.py",
+      "line": 423,
+      "function": "run",
+      "primitive_calls": 1,
+      "calls": 1,
+      "own_s": 4.994e-06,
+      "cumulative_s": 300.000045697,
+      "cause": "Top-level DES run, including the profiled sequential event loop."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/simulator.py",
+      "line": 595,
+      "function": "_run_sequential",
+      "primitive_calls": 1,
+      "calls": 1,
+      "own_s": 0.309534749,
+      "cumulative_s": 300.000040703,
+      "cause": "Processes the ordered event queue and invokes handlers."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/utils/sync_entry.py",
+      "line": 34,
+      "function": "enter_layer_sync",
+      "primitive_calls": 13378,
+      "calls": 13378,
+      "own_s": 0.24649809500000003,
+      "cumulative_s": 251.59958670900002,
+      "cause": "Collects attention-DP participants and starts each ready EP layer wave."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/utils/ep_wave_schedule.py",
+      "line": 52,
+      "function": "schedule_layer_wave",
+      "primitive_calls": 6689,
+      "calls": 6689,
+      "own_s": 0.28891806200000003,
+      "cumulative_s": 249.72173799900003,
+      "cause": "Schedules each layer's EP plan, phases and completion events."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
+      "line": 1035,
+      "function": "_prepare_moe_ep_wave_plan",
+      "primitive_calls": 6689,
+      "calls": 6689,
+      "own_s": 0.06322364800000001,
+      "cumulative_s": 247.71380926400002,
+      "cause": "Delegates immutable workload and per-rank phase planning for each layer wave."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/utils/ep_wave.py",
+      "line": 80,
+      "function": "prepare_moe_wave_from_inputs",
+      "primitive_calls": 6689,
+      "calls": 6689,
+      "own_s": 0.34528527000000003,
+      "cumulative_s": 247.65058561600003,
+      "cause": "Materializes the scheduler workload and all lane timings for each wave."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/utils/expert_parallel.py",
+      "line": 91,
+      "function": "predict_ep_wave_phase_times",
+      "primitive_calls": 6689,
+      "calls": 6689,
+      "own_s": 4.8556580480000004,
+      "cumulative_s": 212.33708149400002,
+      "cause": "Builds and prices every EP rank, including shared wrapper and communication work."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/execution_time_predictor/kernel_gap.py",
+      "line": 209,
+      "function": "_predict_layer_with_kernel_gap",
+      "primitive_calls": 125807,
+      "calls": 125807,
+      "own_s": 1.225656292,
+      "cumulative_s": 151.065062449,
+      "cause": "Prices each layer then validates/applies per-operator kernel gaps."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/events/decode_sync_event.py",
+      "line": 36,
+      "function": "handle_event",
+      "primitive_calls": 7872,
+      "calls": 7872,
+      "own_s": 0.19399528100000002,
+      "cumulative_s": 149.566845394,
+      "cause": "Runs the event-specific synchronization, admission or completion handler."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
+      "line": 1282,
+      "function": "on_decode_sync",
+      "primitive_calls": 7872,
+      "calls": 7872,
+      "own_s": 0.032080463000000004,
+      "cumulative_s": 149.287892199,
+      "cause": "Passes a DECODE lane's layer completion to the shared synchronization boundary."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/utils/sync_entry.py",
+      "line": 197,
+      "function": "enter_decode_sync",
+      "primitive_calls": 7872,
+      "calls": 7872,
+      "own_s": 0.015474157,
+      "cumulative_s": 149.255811736,
+      "cause": "Registers DECODE lane completion and starts a ready cohort's next layer wave."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
+      "line": 1109,
+      "function": "_on_decode_ep_wave_ready",
+      "primitive_calls": 3936,
+      "calls": 3936,
+      "own_s": 0.114609872,
+      "cumulative_s": 148.237168793,
+      "cause": "Schedules ready DECODE EP waves and their continuation events."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 95,
+      "function": "_predict_dsv4_structural_execution",
+      "primitive_calls": 125807,
+      "calls": 125807,
+      "own_s": 1.020174895,
+      "cumulative_s": 144.818321564,
+      "cause": "V4 prediction entry for each attention lane and every routed EP rank."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/execution_time_predictor/deepseek_v4.py",
+      "line": 342,
+      "function": "predict_structural_execution",
+      "primitive_calls": 125807,
+      "calls": 125807,
+      "own_s": 7.5425740900000005,
+      "cumulative_s": 143.798146669,
+      "cause": "Constructs complete layer timing, operator workloads, runner scopes and communication payloads."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/events/prefill_sync_event.py",
+      "line": 36,
+      "function": "handle_event",
+      "primitive_calls": 5506,
+      "calls": 5506,
+      "own_s": 0.112210111,
+      "cumulative_s": 102.543046734,
+      "cause": "Runs the event-specific synchronization, admission or completion handler."
+    }
+  ],
+  "residual_costs": [
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/entities/execution_time.py",
+      "line": 71,
+      "function": "__init__",
+      "primitive_calls": 125807,
+      "calls": 125807,
+      "own_s": 5.710938163000001,
+      "cumulative_s": 48.510529736,
+      "cause": "ExecutionTime constructs and validates a finalized layer's many fields and operator contracts."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
+      "line": 891,
+      "function": "_build_prefill_ep_lane_batch",
+      "primitive_calls": 107009,
+      "calls": 107009,
+      "own_s": 0.263615096,
+      "cumulative_s": 40.572282643,
+      "cause": "Copies source requests and constructs a lane batch for each EP participant."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/scheduler/utils/batch_builders.py",
+      "line": 37,
+      "function": "build_ep_lane_batch",
+      "primitive_calls": 107009,
+      "calls": 107009,
+      "own_s": 1.152068459,
+      "cumulative_s": 40.308667547000006,
+      "cause": "Copies source requests into one EP lane batch and binds its immutable workload."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/moe_ep_workload.py",
+      "line": 811,
+      "function": "materialize_layer_ep_workload",
+      "primitive_calls": 6689,
+      "calls": 6689,
+      "own_s": 0.397940756,
+      "cumulative_s": 32.668806441,
+      "cause": "Validates source/routing rows, lane descriptors and all expert ownership for each scheduler wave."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/operators/spec.py",
+      "line": 235,
+      "function": "build_payload_bytes",
+      "primitive_calls": 511116,
+      "calls": 511116,
+      "own_s": 0.574796709,
+      "cumulative_s": 30.297491534000002,
+      "cause": "Builds and validates each communication operator payload using runtime source/routing rows."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/operators/families.py",
+      "line": 483,
+      "function": "_dsv4_ep_payload",
+      "primitive_calls": 428036,
+      "calls": 428036,
+      "own_s": 1.2995757330000002,
+      "cumulative_s": 23.813487623,
+      "cause": "Validates the V4 EP routing and transfer tensor contract per payload request."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 6298,
+      "function": "_predict_comm_operator_with_context",
+      "primitive_calls": 255558,
+      "calls": 255558,
+      "own_s": 1.0827469010000002,
+      "cumulative_s": 23.773573308000003,
+      "cause": "Validates communication metadata/payload then looks up the measured backend latency."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/entities/request.py",
+      "line": 63,
+      "function": "__init__",
+      "primitive_calls": 1712144,
+      "calls": 1712144,
+      "own_s": 19.760231450000003,
+      "cumulative_s": 22.911280834000003,
+      "cause": "Request copies made by EP lane batching initialize full request lifecycle state."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/execution_time_predictor/dsv4_predictor.py",
+      "line": 311,
+      "function": "scope_times",
+      "primitive_calls": 18798,
+      "calls": 18798,
+      "own_s": 5.193461097,
+      "cumulative_s": 10.376768073000001,
+      "cause": "Repeats attention model selection, coverage/schema/exact/finite/sign checks; interpolation hits use the instance memo."
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/b20-v4-speed/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 6279,
+      "function": "_predict_comm_operator",
+      "primitive_calls": 40076,
+      "calls": 40076,
+      "own_s": 0.15066462,
+      "cumulative_s": 4.588881764,
+      "cause": "Resolves communication ownership and validates each runtime payload before backend lookup."
+    }
+  ],
+  "peak_rss_growth_bytes": 393216,
+  "probe_peak_rss_growth_bytes": 209604608,
+  "identity_run_speedup": 6.670570392911171,
+  "estimated_p2_32_wall_s": 21869.95690275696,
+  "estimated_p2_32_wall_h": 6.0749880285436,
+  "estimated_p2_64_wall_s": 45775.770173123165,
+  "estimated_p2_64_wall_h": 12.715491714756435,
+  "estimate_assumptions": "Linear extrapolation of the profiled initial P2-32 simulated-time rate to diagnostic durations; P2-64 assumed to cost twice as much per simulated second because it has twice the EP ranks. No full replay or P2-64 performance measurement was run; late-run behavior and cProfile overhead can change the rate."
+}

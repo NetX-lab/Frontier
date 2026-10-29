@@ -119,6 +119,52 @@ def predict_attention_operator_times(
     return timing
 
 
+class DeepSeekV4LayerFacts:
+    """Configuration-only facts owned by one fixed V4 serving predictor."""
+
+    def __init__(self, model, replica):
+        self._model = model
+        self._replica = replica
+        self._operator_names = {}
+        self._shared_contracts = {}
+        self._operator_tp_sizes = {}
+
+    def operator_names(self, layer_id):
+        self._model.get_layer_attention_spec(layer_id)
+        if layer_id not in self._operator_names:
+            manifest = build_operator_manifest(self._model, global_layer_id=layer_id)
+            self._operator_names[layer_id] = frozenset(op.name for op in manifest.operators())
+        return self._operator_names[layer_id]
+
+    def shared_expert_contract(self, layer_id):
+        self._model.get_layer_attention_spec(layer_id)
+        if layer_id not in self._shared_contracts:
+            replica = self._replica
+            self._shared_contracts[layer_id] = self._model.get_model_architecture_profile().resolve_layer_contract(
+                self._model, layer_id=layer_id, operator_name="share_expert_up_proj",
+                attention_tp_size=replica.attn_tensor_parallel_size, attention_dp_size=replica.attn_dp,
+                num_pipeline_stages=replica.num_pipeline_stages,
+                moe_tp_size=replica.moe_tensor_parallel_size,
+                expert_parallel_size=replica.moe_expert_parallel_size,
+            )
+        return self._shared_contracts[layer_id]
+
+    def operator_tensor_parallel_size(self, name):
+        if name not in self._operator_tp_sizes:
+            from frontier.execution_time_predictor.dsv4_operator_predictor import operator_tensor_parallel_size
+
+            self._operator_tp_sizes[name] = operator_tensor_parallel_size(self._model, self._replica, name)
+        return self._operator_tp_sizes[name]
+
+
+def _layer_facts(predictor):
+    facts = getattr(predictor, "_dsv4_layer_facts", None)
+    if facts is None:
+        facts = DeepSeekV4LayerFacts(predictor._model_config, predictor._replica_config)
+        predictor._dsv4_layer_facts = facts
+    return facts
+
+
 def predict_source_execution(
     predictor, batch, layer_id, tp_rank, *, execution_mode,
     prefix_caching, decode_context_parallel_size,
@@ -156,8 +202,8 @@ def predict_source_execution(
         raise ValueError("source TP rank must be less than attention TP")
     if type(skip_padding) is not bool:
         raise ValueError("skip_padding must be an explicit bool")
-    manifest = build_operator_manifest(model, global_layer_id=layer_id)
-    canonical = {operator.name for operator in manifest.operators()}
+    facts = _layer_facts(predictor)
+    canonical = facts.operator_names(layer_id)
     actual_tokens = sum(batch.num_tokens)
     tokens = compute_rows(batch)
     last = layer_id == model.num_layers - 1
@@ -180,13 +226,7 @@ def predict_source_execution(
     hidden = _integer(model.embedding_dim, "hidden width")
     streams = _integer(model.hc_mult, "mHC streams")
     intermediate = _integer(model.share_expert_dim, "shared intermediate width")
-    shared_contract = profile.resolve_layer_contract(
-        model, layer_id=layer_id, operator_name="share_expert_up_proj",
-        attention_tp_size=tp, attention_dp_size=replica.attn_dp,
-        num_pipeline_stages=replica.num_pipeline_stages,
-        moe_tp_size=replica.moe_tensor_parallel_size,
-        expert_parallel_size=replica.moe_expert_parallel_size,
-    )
+    shared_contract = facts.shared_expert_contract(layer_id)
     shared_tp = shared_contract.tensor_parallel_size
     if shared_tp != 1:
         raise ValueError("V4 SP shared expert weights must be replicated")
@@ -202,11 +242,11 @@ def predict_source_execution(
             value = base
         else:
             from frontier.execution_time_predictor.dsv4_operator_predictor import (
-                operator_rows, operator_tensor_parallel_size,
+                operator_rows,
             )
             rows = operator_rows(name, sp_local_rows=local, descriptor_rows=tokens,
                                  logits_rows=selected_logits_rows)
-            selected_tp = operator_tensor_parallel_size(model, replica, name)
+            selected_tp = facts.operator_tensor_parallel_size(name)
             prediction = predictor._predictions["dsv4_operators"].operator(name, rows, selected_tp)
             value = prediction.time_ms
             kernel_counts[name] = prediction.kernel_count

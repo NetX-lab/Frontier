@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from functools import lru_cache
 import inspect
 from math import floor, isfinite
 from numbers import Real
@@ -883,6 +884,7 @@ def materialize_layer_ep_workload(
 
 
 
+@lru_cache(maxsize=None, typed=True)
 def materialize_balanced_ep_workload(
     *, routing_token_count: int, router_topk: int, total_expert_num: int,
     moe_expert_parallel_size: int,
@@ -903,6 +905,7 @@ def materialize_balanced_ep_workload(
     )
 
 
+@lru_cache(maxsize=None, typed=True)
 def materialize_balanced_rank_classes(
     *, routing_token_count: int, router_topk: int, total_expert_num: int,
     moe_expert_parallel_size: int,
