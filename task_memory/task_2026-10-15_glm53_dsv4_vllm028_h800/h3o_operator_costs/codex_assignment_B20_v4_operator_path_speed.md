@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Temporary outputs go to the executor scratch directory (write paths must lie inside the working tree). |
 | 2026-10-29 | Set the working tree and the base worktree: both start from the B18 commit `b6c28858`; the lead creates the base worktree. |
 | 2026-10-29 | Created after the lead's cProfile probes of P2-32 on the operator path. Covers caching of four repeated pure computations, the identity check against the base commit, and the speed measurement. |
 
@@ -91,4 +92,4 @@ Your working tree is `/data/ycfeng/Frontier/.worktrees/b20-v4-speed` (branch `b2
 - `tests/unit/test_v4_prediction_memo.py` (new).
 - `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b20/` (new).
 
-Do not edit B18's or B19's files, the profiling tables, or the lead's scratch directories. Temporary outputs go under `/data/ycfeng/tmp/b20/`. Simulations run with `ulimit -v 62914560` and a timeout.
+Do not edit B18's or B19's files, the profiling tables, or the lead's scratch directories. Temporary outputs, caches and run roots go under your private scratch directory. Simulations run with `ulimit -v 62914560` and a timeout.
