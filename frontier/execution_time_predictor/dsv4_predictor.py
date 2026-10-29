@@ -274,14 +274,22 @@ def train_dsv4_attention_models(df: pd.DataFrame, train: Callable) -> dict:
             key = dsv4_model_key(scope, variant, mode, phase, planner)
             columns = dsv4_feature_columns(scope, phase)
             bounds_columns = columns if phase == PHASE_DUMMY else (*columns, *DSV4_GEOMETRY_COLUMNS)
+            # Design A5: rows select a measured workload group before geometry
+            # admission. Independent ranges across row counts admit joint
+            # coordinates that no measured workload covers.
+            group_ranges = {
+                float(padded_rows): {
+                    column: (float(group[column].min()), float(group[column].max()))
+                    for column in dict.fromkeys(bounds_columns) if column != "padded_rows"
+                }
+                for padded_rows, group in rows.groupby("padded_rows")
+            }
             for target, prefix in _TARGET_PREFIXES.items():
                 name = dsv4_model_name(key, target)
                 model = train(model_name=name, df=rows, feature_cols=list(columns),
                               target_col=f"{prefix}.{scope}.{MEDIAN_STAT}")
                 model._frontier_dsv4_multi_stream_gemm_token_threshold = threshold
-                model._frontier_dsv4_bounds = {
-                    column: (float(rows[column].min()), float(rows[column].max())) for column in bounds_columns
-                }
+                model._frontier_dsv4_workload_group_ranges = group_ranges
                 models[name] = model
     return models
 
@@ -293,7 +301,7 @@ class DeepSeekV4ScopeTimes:
 
 
 class DeepSeekV4AttentionPredictor:
-    """Exact measured lookup, then fitted interpolation within measured bounds."""
+    """Exact measured lookup, then fitted interpolation inside a measured workload group."""
 
     def __init__(self, models: Mapping):
         self._models = {name: model for name, model in models.items() if name.startswith(MODEL_PREFIX)}
@@ -322,11 +330,22 @@ class DeepSeekV4AttentionPredictor:
                 columns = dsv4_feature_columns(scope, features.phase)
                 if tuple(model._frontier_feature_names) != columns:
                     raise ValueError(f"V4 predictor feature schema mismatch for {name}")
-                for column, (lower, upper) in model._frontier_dsv4_bounds.items():
+                padded_rows = features.values["padded_rows"]
+                group = (*key, padded_rows)
+                ranges = model._frontier_dsv4_workload_group_ranges.get(padded_rows)
+                if ranges is None:
+                    raise DeepSeekV4CoverageError(
+                        f"V4 coverage missing for operator {scope}, key {key}: "
+                        f"padded_rows={padded_rows} outside measured workload groups "
+                        f"{sorted(model._frontier_dsv4_workload_group_ranges)}"
+                    )
+                for column, (lower, upper) in ranges.items():
                     value = features.values[column]
                     if not lower <= value <= upper:
-                        raise DeepSeekV4CoverageError(f"V4 coverage missing for {name}: {column}={value} "
-                                                     f"outside [{lower}, {upper}]")
+                        raise DeepSeekV4CoverageError(
+                            f"V4 coverage missing for operator {scope}, key {key}, group {group}: "
+                            f"{column}={value} outside [{lower}, {upper}]"
+                        )
                 feature_tuple = tuple(float(features.values[column]) for column in columns)
                 exact = model._frontier_exact_lookup
                 value = (float(exact[feature_tuple]) if feature_tuple in exact else
