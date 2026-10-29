@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
 
@@ -51,3 +52,18 @@ Observed after the repair:
 B8 was then committed.
 
 **Prevention.** Never export `GIT_DIR` or `GIT_WORK_TREE` around a test suite or any command that runs `git init`. A before-snapshot that needs a Git identity gets its own worktree; otherwise its Git-reading tests are accepted as failing in the comparison.
+
+## I-002: `test_balanced_routing.py` cache test fails on main since B16b (2026-10-29)
+
+Status: open, deferred (outside B23). Owner: lead.
+
+Observed during the B23 review. With CPU torch on the path (`PYTHONPATH=...:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages`, `VLLM_BS_SOURCE_ROOT=/data/ycfeng/tmp/opencode/vllm-v0.28.0`), `tests/unit/test_balanced_routing.py` gives 126 passed and 2 failed, the same on main `2da2c186` and on the B23 tree:
+
+```text
+tests/unit/test_balanced_routing.py:316: KeyError: 'moe_gating_routing_topk'
+    assert manager.get_models_for_cluster(role)["eager"][op] is cold[role]
+```
+
+Cause (from the code): B16b (`61c2f9d3`) makes `_get_measurement_types_for_cluster` return only the V4 measurement type, `KERNEL_ONLY`, for every DeepSeek-V4 role, so the `eager` view of `get_models_for_cluster` is empty for V4. The test still trains V4 gating models from `CUDA_EVENT` rows and reads them from the `eager` view. Without torch the module is skipped by `pytest.importorskip("torch")`, so suites run without torch do not report it.
+
+Next action: update the test to the B16b contract (V4 roles read `KERNEL_ONLY`), in a later assignment; no simulator behavior is involved.

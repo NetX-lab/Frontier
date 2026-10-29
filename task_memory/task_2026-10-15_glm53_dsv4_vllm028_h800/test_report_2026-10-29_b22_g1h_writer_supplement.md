@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Added the B23 review, its merge and the promotion of the merged attention table. |
 | 2026-10-29 | Added the supplement measurement, the post-job CPU checks, the package difference and the routing-origin loader failure (B23). |
 | 2026-10-29 | Created: B22 (Codex `7c19fa56`) review, the lead changes, the merge, the census closure checks, the supplement package build and its submission. |
 
@@ -82,8 +83,8 @@ Script `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/g1h_s01_post.sh census_snapshot
 | 18 | Supplement reduction with repeats | 450 cases reduced | 2,250 rows in `supplement_full/` | PASS |
 | 19 | Package difference on the 18 repeats | report | 2,448 rows compared, 0 missing. Scope time: abs(relative) p50 2.78%, p90 11.2%, max 42.8%; abs(absolute) max 0.0087 ms. Summed time per window: supplement lower by 0.25% to 3.04% (median 1.11%). Only `dsv4_compressor_fused_compress_store` csa PIECEWISE has a scope median beyond 10%: -32.8% over 24 rows, abs at most 0.0087 ms. Gap rows: abs(relative) p50 10.4% on medians near 0.0001 ms | REPORTED |
 | 20 | Scratch promotion | attention union, other tables unchanged | 7,105 attention rows (4,945 + 2,160; 90 repeat rows excluded); `kernel_gap.csv`, `linear_op_kernel_only.csv`, `moe_kernel_only.csv` byte-identical to the repository | PASS |
-| 21 | Loader check of the merged table | loads, 1 fingerprint | `DeepSeekV4CoverageError: V4 balanced replay attention missing/ambiguous moe_routing` | FAIL |
-| 22 | Measured replay closure | 0 misses | not run (needs check 21) | BLOCKED |
+| 21 | Loader check of the merged table | loads, 1 fingerprint | `DeepSeekV4CoverageError: V4 balanced replay attention missing/ambiguous moe_routing` | FAIL, resolved by B23 (check 23) |
+| 22 | Measured replay closure | 0 misses | not run (needs check 21); run after B23 as check 25 | BLOCKED, resolved by B23 |
 
 Every sample in check 19 is one measured step per package, so the difference mixes run-to-run spread with any package effect. The supplement is lower in all 18 windows, by at most 3.04%.
 
@@ -92,6 +93,35 @@ Every sample in check 19 is one measured step per package, so the difference mix
 `validate_balanced_routing` (`frontier/execution_time_predictor/dsv4_predictor.py:78-94`) requires one `moe_routing` value. The two packages record different host paths of their `balanced_routing.py` copy in the descriptor's top-level `origin`; every other identity column and descriptor field is equal, including `sha256`, routers, runners, native-source digests and the runtime fingerprint `5237f2bd076fe132`. The B22 synthetic merge (check 6) renamed G1h-02 cases, so both halves carried one path and the case did not arise.
 
 Lead diagnostic (scratch monkeypatch, `g1h_s01_post/replay_measured_diag.json`) that compares the descriptors without the top-level `origin`: the merged table loads with 7,105 rows, 1 fingerprint, revision `a689ed05`, 554 trained models; measured replay closure gives 0 misses for P2-32 (480 against the committed table) and P2-64. Decision 40 (D-ROUTING-ORIGIN-PROVENANCE) adopts this rule; Codex implements it as B23 ([assignment](h3o_operator_costs/codex_assignment_B23_routing_origin.md), request `ce6d9226`, effort ultra).
+
+## B23: routing descriptors that differ only in the package origin
+
+Codex request `ce6d9226` (effort ultra), handoff [codex-implement-ce6d9226-…/implementation.md](h3o_operator_costs/codex-implement-ce6d9226-b4d3-4e5b-84de-01a40f3c9e20/implementation.md), Codex scratch `/data/ycfeng/tmp/codex-implement/ce6d9226-b4d3-4e5b-84de-01a40f3c9e20/b23/`. Working tree `.worktrees/b23-routing-origin`, branch commit `a571f3fe`, merged as `d32cc99f`.
+
+`validate_balanced_routing` keeps the single-value rule for `routing_runtime_path` and `routing_strategy_sha256`, requires `moe_routing` present in every row, validates each distinct descriptor with `routing_columns`, and requires one `canonical_json` identity after removing the top-level `origin`. The rows keep their recorded descriptors. Lead change: `canonical_json` is imported at module level (Codex imported it inside the function; `dsv4_attention_rows` already imports it at module level, so no import cycle applies), and the docstring keeps the word "select".
+
+Lead checks use the environment of the checks above; scratch `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b23_review/`.
+
+| # | Check | Expected | Actual | Verdict |
+| --- | --- | --- | --- | --- |
+| 23 | Lead: merged scratch table loads | 7,105 rows, 1 fingerprint, revision `a689ed05` | 7,105 rows, 1 fingerprint, `a689ed05…`, 2 descriptors | PASS |
+| 24 | Lead: committed table loads as before | 4,945 rows, 1 descriptor | 4,945 rows, 1 fingerprint, 1 descriptor; Codex: dataframe hash `49bb65fc…` and all 554 model ranges equal before and after | PASS |
+| 25 | Codex: measured closure on the merged table at the 19:30 census copies (`recomputed_current`) | 0 misses | P2-32 17,000 requests, 580,307 calls, 0 missed; P2-64 16,000 requests, 642,725 calls, 0 missed. The recorded ranges miss 480 P2-32 requests | PASS (snapshot) |
+| 26 | Codex: regression sensitivity | new tests fail before the change | 2 failed before (`missing/ambiguous moe_routing`), 60 passed after in the two changed files | PASS |
+| 27 | Lead: 8 test files (predictor, promotion, supplement, held-out, attention runtime, operator consumer, prediction memo, replay rows) on the B23 tree | all pass | 493 passed in 240.0 s. Codex's single failure in `test_dsv4_operator_consumer.py` came from its read-only sandbox (`outputs/metrics`) | PASS |
+| 28 | Lead: `test_balanced_routing.py` with CPU torch | no new failure | 126 passed, 2 failed, identical on main `2da2c186`: pre-existing since B16b, recorded as I-002 in [issues.md](issues.md) | PASS (no regression) |
+| 29 | Codex: hygiene | at most 2,000 lines, no unused imports, clean diff check | 372, 423 and 80 lines; no unused imports; `git diff --check` clean | PASS |
+
+## Promotion
+
+`promote_tables.py --scratch-dir /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/promote_real/scratch --supplement-raw-dir <supplement raw>` with the default output root and manifest, on main `d32cc99f`; committed as `fdb6e032`.
+
+| # | Check | Expected | Actual | Verdict |
+| --- | --- | --- | --- | --- |
+| 30 | Promoted tables against the scratch promotion of check 20 | byte-identical | all four tables identical; attention 7,105 rows, SHA-256 `01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb` | PASS |
+| 31 | Manifest | supplement inputs and repeats recorded | inputs add the supplement plan, pilot cases and both raw files; `attention_supplement` revision `a689ed05…`; 18 excluded repeat cases `g1hs-e0-0432-full` … `g1hs-e1-0449-first_tail` | PASS |
+
+The official A10 runs on the promoted table started at 20:12 (`stage4/a10/p2_32_cold_g1hs`, `p2_64_cold_g1hs`); the warm runs start from the cold runs' caches.
 
 ## Limits
 
