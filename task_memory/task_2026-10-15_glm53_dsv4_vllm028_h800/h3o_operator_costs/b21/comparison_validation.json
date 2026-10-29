@@ -1,0 +1,18 @@
+{
+ "checks": {
+  "all_nodes_read": "PASS",
+  "every_phase_kind_count": "PASS",
+  "formal_per_lane_real_mode_counts": "PASS",
+  "unassigned_per_lane_real_mode_counts": "PASS",
+  "native_window_counts": "PASS",
+  "json_and_text_exist": "PASS"
+ },
+ "nodes": 4,
+ "all_native_observations": 67600,
+ "formal_observations": 36108,
+ "unassigned_observations": 20750,
+ "excluded_observations": 10742,
+ "native_profiler_window_forwards": 408,
+ "comparison": "/data/ycfeng/tmp/codex-implement/fcf9eca4-0142-4d72-a3ea-443401fae6fe/comparison_complete/comparison.json",
+ "notes": "Small eight-request scenario; not an A11 reading of either full A10 replay."
+}

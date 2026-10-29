@@ -172,17 +172,22 @@ def test_a9_requires_finished_runs(tools, tmp_path):
 
 
 @pytest.mark.parametrize("run_error", [False, True])
-def test_driver_writes_receipts_at_each_phase(tools, monkeypatch, tmp_path, run_error):
+@pytest.mark.parametrize("observe", [False, True])
+def test_driver_writes_receipts_at_each_phase(tools, monkeypatch, tmp_path, run_error, observe):
     import frontier.simulator
+    import a10_observer
     from frontier.types import ClusterType
 
     driver = tools.driver
     root = tmp_path / "run"
     phases = []
+    trace = tmp_path / "trace.csv"
+    trace.write_text("arrived_at\n0.0\n")
     config = SimpleNamespace(seed=0, metrics_config=SimpleNamespace(output_dir=str(root / "metrics"),
-                                                                  cache_dir=str(root / "cache")))
+                                                                  cache_dir=str(root / "cache")),
+                             __flat_config__=SimpleNamespace(trace_request_generator_config_trace_file=str(trace)))
 
-    def build(name, directory):
+    def build(name, directory, fields=None):
         Path(config.metrics_config.output_dir).mkdir(parents=True)
         Path(config.metrics_config.cache_dir).mkdir()
         return config, {"added_fields": {}, "override_diff": {}}
@@ -197,6 +202,20 @@ def test_driver_writes_receipts_at_each_phase(tools, monkeypatch, tmp_path, run_
             if run_error:
                 raise RuntimeError("missing native coordinate")
 
+    class Observer:
+        def __init__(self, root):
+            self.root = root
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            (self.root / "collectives.json").write_text("{}")
+
+        def receipt(self):
+            return {"forwards": {"rows": 0}, "collectives": {"calls": 0}}
+
+    monkeypatch.setattr(a10_observer, "ForwardObserver", Observer)
     monkeypatch.setattr(driver, "build_config", build)
     monkeypatch.setattr(driver, "resolved_inputs", lambda config: ([], {
         "enable_dummy_mode": {"DECODE": False}, "no_step_cost_file_beside_inputs": True,
@@ -206,9 +225,9 @@ def test_driver_writes_receipts_at_each_phase(tools, monkeypatch, tmp_path, run_
     monkeypatch.setattr(frontier.simulator, "Simulator", Simulator)
     if run_error:
         with pytest.raises(RuntimeError, match="missing native coordinate"):
-            driver.main("p2_32", root)
+            driver.main("p2_32", root, observe=observe)
     else:
-        driver.main("p2_32", root)
+        driver.main("p2_32", root, observe=observe)
     receipt = json.loads((root / "receipt.json").read_text())
     assert phases == ["STARTED", "INITIALIZED"]
     assert receipt["status"] == ("FAILED" if run_error else "FINISHED")
@@ -216,3 +235,9 @@ def test_driver_writes_receipts_at_each_phase(tools, monkeypatch, tmp_path, run_
     assert receipt["a1"]["step_cost_table_bound_by_predictor"] == {"DECODE": False}
     assert receipt["init_wall_s"] >= 0 and receipt["run_wall_s"] >= 0
     assert receipt["cache_files"] == []
+    assert receipt["observer_enabled"] is observe
+    assert receipt["trace"] == {"path": str(trace), "sha256": tools.driver.sha256(trace)}
+    if observe:
+        assert receipt["a11"]["forwards"]["rows"] == 0
+    else:
+        assert "a11" not in receipt

@@ -1,0 +1,180 @@
+{
+ "checks": {
+  "parsed_artifacts_identical": "PASS",
+  "trace_hashes_match": "PASS",
+  "cache_names_identical": "PASS",
+  "both_roles_both_lanes": "PASS",
+  "piecewise_first_tail": "PASS",
+  "full_multi_request_decode": "PASS",
+  "dp_dummy": "PASS",
+  "none_prefill": "PASS",
+  "every_stage_end_once": "PASS",
+  "per_role_stage_ends": "PASS",
+  "collectives_both_roles": "PASS",
+  "independent_collective_calls": "PASS",
+  "independent_plain_counts_equal": "PASS",
+  "composed_segments_reconcile": "PASS",
+  "source_attention_and_prepare_present": "PASS",
+  "pre_dp_scopes_retained": "PASS",
+  "observer_hashes_match": "PASS"
+ },
+ "run_wall_s": {
+  "plain": 1140.3086368860677,
+  "observed": 1137.052127808798,
+  "relative_change": -0.002855813743691704,
+  "within_two_percent": true
+ },
+ "artifact_differences": [],
+ "cache_differences": [],
+ "cache_file_counts": {
+  "plain": 1758,
+  "observed": 1758
+ },
+ "rows": 320,
+ "unique_rows": 320,
+ "forward_counts": {
+  "prefill": 64,
+  "decode": 256
+ },
+ "forward_census": [
+  {
+   "role": "decode",
+   "dp": 0,
+   "mode": "FULL",
+   "class": "decode",
+   "count": 82
+  },
+  {
+   "role": "decode",
+   "dp": 0,
+   "mode": "FULL",
+   "class": "dummy",
+   "count": 40
+  },
+  {
+   "role": "decode",
+   "dp": 0,
+   "mode": "PIECEWISE",
+   "class": "decode",
+   "count": 2
+  },
+  {
+   "role": "decode",
+   "dp": 0,
+   "mode": "PIECEWISE",
+   "class": "first_tail_alone",
+   "count": 1
+  },
+  {
+   "role": "decode",
+   "dp": 0,
+   "mode": "PIECEWISE",
+   "class": "first_tail_with_decodes",
+   "count": 3
+  },
+  {
+   "role": "decode",
+   "dp": 1,
+   "mode": "FULL",
+   "class": "decode",
+   "count": 81
+  },
+  {
+   "role": "decode",
+   "dp": 1,
+   "mode": "FULL",
+   "class": "dummy",
+   "count": 41
+  },
+  {
+   "role": "decode",
+   "dp": 1,
+   "mode": "PIECEWISE",
+   "class": "decode",
+   "count": 1
+  },
+  {
+   "role": "decode",
+   "dp": 1,
+   "mode": "PIECEWISE",
+   "class": "dummy",
+   "count": 1
+  },
+  {
+   "role": "decode",
+   "dp": 1,
+   "mode": "PIECEWISE",
+   "class": "first_tail_alone",
+   "count": 1
+  },
+  {
+   "role": "decode",
+   "dp": 1,
+   "mode": "PIECEWISE",
+   "class": "first_tail_with_decodes",
+   "count": 3
+  },
+  {
+   "role": "prefill",
+   "dp": 0,
+   "mode": "FULL",
+   "class": "dummy",
+   "count": 27
+  },
+  {
+   "role": "prefill",
+   "dp": 0,
+   "mode": "NONE",
+   "class": "dummy",
+   "count": 1
+  },
+  {
+   "role": "prefill",
+   "dp": 0,
+   "mode": "NONE",
+   "class": "prefill",
+   "count": 4
+  },
+  {
+   "role": "prefill",
+   "dp": 1,
+   "mode": "FULL",
+   "class": "dummy",
+   "count": 27
+  },
+  {
+   "role": "prefill",
+   "dp": 1,
+   "mode": "NONE",
+   "class": "dummy",
+   "count": 1
+  },
+  {
+   "role": "prefill",
+   "dp": 1,
+   "mode": "NONE",
+   "class": "prefill",
+   "count": 4
+  }
+ ],
+ "independent_counts": {
+  "collective_calls": {
+   "prefill": 50192,
+   "decode": 216978
+  },
+  "stage_end_events": {
+   "prefill": 64,
+   "decode": 256
+  },
+  "trace": {
+   "path": "/data/ycfeng/tmp/codex-implement/fcf9eca4-0142-4d72-a3ea-443401fae6fe/small_observed_complete/trace.csv",
+   "sha256": "5418058ebec3922a08eed2e083ff863329effc86d7432b8e658cf0477f8dfcbc"
+  }
+ },
+ "collective_call_counts": {
+  "prefill": 50192,
+  "decode": 216978
+ },
+ "plain_receipt": "/data/ycfeng/tmp/codex-implement/fcf9eca4-0142-4d72-a3ea-443401fae6fe/small_plain/receipt.json",
+ "observed_receipt": "/data/ycfeng/tmp/codex-implement/fcf9eca4-0142-4d72-a3ea-443401fae6fe/small_observed_complete/receipt.json"
+}
