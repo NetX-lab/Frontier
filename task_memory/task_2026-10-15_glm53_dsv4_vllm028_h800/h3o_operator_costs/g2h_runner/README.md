@@ -4,6 +4,12 @@ CPU plan and builder for B13s, correcting the missing sampling annotations and t
 
 `package_02` ran G2h-02. Its replay job is the path A result. Its block job (`exp-1029-135037-016686`) failed in 5.8 s: the block entry runs the prefill entry `profile_dsv4_prefill.py`, which requires `VLLM_USE_V2_MODEL_RUNNER=1` (line 20). The bridge driver sets that variable for its replay children, but nothing set it for the block job. The block job command now sets it with `env`, as the accepted base package's prefill job does. `package_03` carries this fix; only its block job is submitted, because the replay job of `package_02` already ran.
 
+`package_04` reruns only the replay job (`v4-h200-g2h-runner-20261029-04-replay`, output `g2h_runner_04/replay`), from source `994d293c`. The G2h-02 replay requests omitted `min_tokens`. Native serving sends `min_tokens == max_tokens` (`tests/comparison/dp_placement_pp/vllm_replay.py:507-520`; the PD proxy prefill copy sends 1 and 1). With the generation-config EOS in the stop-token set, `min_tokens > 0` enables vLLM V2 logits processing (`vllm/v1/worker/gpu/sample/logit_bias.py:89-107`, `sampler.py:192-199`): an FP32 logits copy and `_bias_kernel`. The G2h-02 sampling scope had neither, about 25 µs against about 53 µs per real step in the native P2-32 decode trace. The block rows of `package_03` do not depend on sampling and are kept; `package_04/jobs/G2H_V4_BLOCK_OPERATORS.json` is generated but not submitted.
+
+```bash
+timeout 7200s bash package_04/launch/launch_glm_producers.sh package_04/jobs/G2H_V4_RUNNER_REPLAY.json
+```
+
 ## Plan check (CPU only)
 
 From the repository root, with Python 3.10:
