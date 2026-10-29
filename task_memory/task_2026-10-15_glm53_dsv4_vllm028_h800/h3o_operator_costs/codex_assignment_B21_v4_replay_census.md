@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Base moved to include B19 (merge `84b26b6d`) before resubmission. |
 | 2026-10-29 | Added decision 1b, the record of the measured collective requests of a run (exact point or interpolation, and its bracketing points), after the B19 held-out result for the uniform collective curves. |
 | 2026-10-29 | Created. Covers the Frontier per-forward record attached by the A10 driver, the comparison with the native serving counters and the native runtime census, and the identity check of the record. |
 
@@ -74,7 +75,7 @@ Entry 18 of the design's file table plans this as the A11 part of `tests/analysi
 
 ## Writable paths
 
-Your working tree is `/data/ycfeng/Frontier/.worktrees/b21-v4-census` (branch `b21-v4-census`). All paths below are relative to it. B19 and B20 run in `.worktrees/b19-v4-heldout` and `.worktrees/b20-v4-speed`; their changes are not part of your base.
+Your working tree is `/data/ycfeng/Frontier/.worktrees/b21-v4-census` (branch `b21-v4-census`). All paths below are relative to it. Your base includes B19 (merge `84b26b6d`: the per-row-group attention admission and the A6 results in `h3o_operator_costs/a6/`). B20 runs in `.worktrees/b20-v4-speed`; its changes are not part of your base, so the operator path runs at the pre-B20 speed.
 
 - `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/` (the driver edit and the new observer module).
 - `tests/analysis/v4_replay_census.py` (new).
