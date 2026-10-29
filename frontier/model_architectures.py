@@ -427,6 +427,7 @@ class ModelArchitectureProfile:
     counts_share_expert_param_memory: bool = False
     replicate_shared_expert_in_sequence_parallel: bool = False
     embedding_logits_collectives: bool = False
+    gathered_topk_ids_dtype: Literal["int32", "int64"] | None = None
     dense_layers_use_shared_expert_rows: bool = True
     moe_gating_routing_runtime_path: str | None = None
     experimental: bool = False
@@ -658,6 +659,7 @@ class ModelArchitectureProfile:
 
         return cls(
             profile_id="glm_moe_dsa",
+            gathered_topk_ids_dtype="int32",
             embedding_logits_collectives=True,
             dense_layers_use_shared_expert_rows=False,
             moe_gating_routing_runtime_path="grouped_topk_sigmoid",
@@ -689,6 +691,7 @@ class ModelArchitectureProfile:
 
         return cls(
             profile_id="deepseek_v4",
+            gathered_topk_ids_dtype="int64",
             display_name="DeepSeek-V4",
             attention_linear_ops=AttentionLinearOpProfile(
                 sharded_impl=AttentionLinearOpImplementation.GENERIC,
@@ -712,6 +715,14 @@ class ModelArchitectureProfile:
             # Native SP replicates shared weights; execution remains disabled.
             layer_contracts=_default_layer_contracts(TensorParallelMode.ATTENTION_TP),
         )
+
+    def require_gathered_topk_ids_dtype(self) -> str:
+        """Require the architecture-owned ids dtype when building SP dispatch."""
+        if self.gathered_topk_ids_dtype is None:
+            raise ValueError(
+                f"SP EP dispatch requires gathered_topk_ids_dtype for profile {self.profile_id}"
+            )
+        return self.gathered_topk_ids_dtype
 
     def validate_structural_requirements(self, config: Any) -> None:
         """Validate profile-owned structural requirements against a config."""

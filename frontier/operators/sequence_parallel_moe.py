@@ -54,9 +54,15 @@ def tp_workload(name, model, tp, tokens, logits_rows=None):
     elif name == "sp_moe_final_allgather":
         # deepseek_v2.py:1498-1501 concatenates hidden and residual before gather.
         shape, collective = [rows, 2 * hidden], "all_gather"
-    elif name == "embedding_allreduce":
+    elif name == "dsv4_sp_attention_allgather":
+        shape, collective = [rows, hidden], "sp_all_gather"
+    elif name == "dsv4_sp_attention_reduce_scatter":
+        shape, collective = [tokens, hidden], "sp_reduce_scatter"
+    elif name == "dsv4_sp_final_mhc_allgather":
+        shape, collective = [rows, model.hc_mult * hidden], "sp_all_gather"
+    elif name in ("embedding_allreduce", "dsv4_embedding_allreduce"):
         shape, collective = [tokens, hidden], "all_reduce"
-    elif name == "logits_allgather":
+    elif name in ("logits_allgather", "dsv4_logits_gather"):
         if model.vocab_size % tp:
             raise ValueError("Logits all-gather requires vocabulary divisible by attention TP")
         if logits_rows is None:
@@ -103,7 +109,9 @@ def source_tp_operator_times(predictor, batch, model, replica, role, layer_id):
 
 
 def ep_widths(ctx):
-    widths = ctx.batch.moe_sequence_parallel_token_widths
+    widths = ctx.sp_token_widths
+    if widths is None:
+        widths = ctx.batch.moe_sequence_parallel_token_widths
     if widths is None:
         raise ValueError("SP EP collective requires source DP-lane token widths")
     return widths
@@ -113,15 +121,19 @@ def ep_workload(name, model, topk, widths):
     from frontier.config.precision_type import PrecisionType
 
     bf16_bytes = int(PrecisionType.BF16.bytes_per_element)
-    if name == "expert_parallel_alltoall_dispatch":
+    if name in ("expert_parallel_alltoall_dispatch", "dsv4_ep_dispatch_allgather"):
+        import numpy as np
+
+        ids_dtype = model.get_model_architecture_profile().require_gathered_topk_ids_dtype()
+        ids_bytes = np.dtype(ids_dtype).itemsize
         rows = max(widths.local_tokens)
         shapes = {"hidden": [rows, model.embedding_dim],
                   "topk_weights": [rows, topk], "topk_ids": [rows, topk]}
-        dtypes = {"hidden": "BF16", "topk_weights": "FP32", "topk_ids": "INT32"}
+        dtypes = {"hidden": "BF16", "topk_weights": "FP32", "topk_ids": ids_dtype.upper()}
         size = rows * (model.embedding_dim * bf16_bytes
-                       + topk * int(PrecisionType.FP32.bytes_per_element) + topk * 4)
+                       + topk * int(PrecisionType.FP32.bytes_per_element) + topk * ids_bytes)
         collective = "all_gatherv"
-    elif name == "expert_parallel_alltoall_combine":
+    elif name in ("expert_parallel_alltoall_combine", "dsv4_ep_output_reduce_scatter"):
         shapes = {"hidden": [widths.gathered_tokens, model.embedding_dim]}
         dtypes = {"hidden": "BF16"}
         size = widths.gathered_tokens * model.embedding_dim * bf16_bytes
@@ -136,17 +148,21 @@ def ep_workload(name, model, topk, widths):
     }
 
 
-def measured_unequal_combine_time(operator, ctx, backend, size):
-    """Return exact measured unequal-combine time, or None for scalar pricing."""
+def combine_sp_rows(ctx):
+    """Supply ordered rows for SP combine specs; ordinary all-to-all has none."""
+    if uses_sequence_parallel_moe(ctx.model_config, ctx.replica_config):
+        return ep_widths(ctx).local_tokens
+    return None
+
+
+def measured_collective_time(operator, ctx, backend, size):
+    """Price every measured communication spec through its implementation."""
     from frontier.cc_backend.backends.measured_cc_backend import MeasuredCCBackend
 
-    if (operator.name != "expert_parallel_alltoall_combine"
-            or not isinstance(backend, MeasuredCCBackend)
-            or not uses_sequence_parallel_moe(ctx.model_config, ctx.replica_config)):
-        return
-    rows = ep_widths(ctx).local_tokens
-    if max(rows) != min(rows):
-        return backend.predict_unequal_reduce_scatter(
-            size, ctx.replica_config.moe_expert_parallel_size, rows,
-            comm_domain=operator.resolve_comm_domain(ctx),
-        )
+    if not isinstance(backend, MeasuredCCBackend):
+        return None
+    rows = operator.sp_rows_builder(ctx) if operator.sp_rows_builder is not None else None
+    return backend.predict_operator_collective(
+        operator.resolve_collective_alias(ctx), operator.collective_implementation,
+        size, operator.num_devices(ctx), operator.resolve_comm_domain(ctx), rows,
+    )

@@ -18,7 +18,7 @@ from frontier.config.parallel_semantics import sequence_parallel_moe_token_width
 from frontier.entities import Batch, Request
 from frontier.moe_ep_workload import build_contiguous_expert_ownership, materialize_layer_ep_workload
 from frontier.operators.families import get_comm_operator
-from frontier.operators.sequence_parallel_moe import source_tp_operator_names, measured_unequal_combine_time
+from frontier.operators.sequence_parallel_moe import source_tp_operator_names, measured_collective_time
 from frontier.operators.spec import CommPayloadContext
 from frontier.types import ClusterType
 
@@ -66,7 +66,7 @@ def replay(role, lane_tokens, logits_rows):
             operator = get_comm_operator(name)
             size = operator.build_payload_bytes(ctx)
             try:
-                time = measured_unequal_combine_time(operator, ctx, backend, size)
+                time = measured_collective_time(operator, ctx, backend, size)
                 if time is None:
                     alias = operator.resolve_collective_alias(ctx)
                     time = backend.predict_comm_cost(

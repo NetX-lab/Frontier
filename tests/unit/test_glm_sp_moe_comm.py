@@ -89,7 +89,6 @@ def test_unequal_combine_rejected_before_measured_lookup(role):
     ctx = context(64, role, [64, 16, 1, 1])
     predictor = _predictor()
     predictor._cc_backend = measured_backend(role)
-    predictor._cc_backend.predict_reduce_scatter = lambda **_: pytest.fail("curve lookup must not run")
     with pytest.raises(MeasuredCCOutOfRangeError, match="unequal SP rows") as caught:
         predictor._predict_comm_operator_with_context(get_comm_operator("expert_parallel_alltoall_combine"), ctx)
     assert caught.value.curve_key == ("reduce_scatterv", "ep", 32)
@@ -102,7 +101,7 @@ def test_equal_sp_rows_with_unequal_raw_tokens_are_covered(role):
     ctx = context(1, role, [1, 2, 7, 8])
     predictor = _predictor()
     predictor._cc_backend = measured_backend(role)
-    predictor._cc_backend.predict_unequal_reduce_scatter = lambda *_, **__: pytest.fail("uniform SP must not use exact-pattern lookup")
+    predictor._cc_backend._predict_unequal = lambda *_, **__: pytest.fail("uniform SP must not use exact-pattern lookup")
     operator = get_comm_operator("expert_parallel_alltoall_combine")
     assert predictor._predict_comm_operator_with_context(operator, ctx) == (
         predictor._predict_comm_operator_with_context(operator, context(8, role, [8] * 4))
@@ -115,7 +114,6 @@ def test_unequal_combine_uses_exact_retained_k5_point(role, lanes):
     ctx = context(lanes[0], role, lanes)
     predictor = _predictor()
     predictor._cc_backend = measured_backend(role)
-    predictor._cc_backend.predict_reduce_scatter = lambda **_: pytest.fail("uniform curve must not run")
     operator = get_comm_operator("expert_parallel_alltoall_combine")
     assert operator.build_payload_bytes(ctx) == 3440640
     time_ms = predictor._predict_comm_operator_with_context(operator, ctx)
@@ -129,7 +127,6 @@ def test_unequal_combine_unmeasured_vectors_do_not_use_neighbor_or_permutation(l
     ctx = context(lanes[0], lanes=lanes)
     predictor = _predictor()
     predictor._cc_backend = measured_backend()
-    predictor._cc_backend.predict_reduce_scatter = lambda **_: pytest.fail("uniform fallback must not run")
     with pytest.raises(MeasuredCCOutOfRangeError, match="unequal SP rows"):
         predictor._predict_comm_operator_with_context(get_comm_operator("expert_parallel_alltoall_combine"), ctx)
 
@@ -138,7 +135,7 @@ def test_unequal_dispatch_keeps_largest_rank_uniform_curve():
     ctx = context(256, lanes=[256, 1, 1, 1])
     predictor = _predictor()
     predictor._cc_backend = measured_backend()
-    predictor._cc_backend.predict_unequal_reduce_scatter = lambda *_, **__: pytest.fail("dispatch must not use exact-pattern lookup")
+    predictor._cc_backend._predict_unequal = lambda *_, **__: pytest.fail("dispatch must not use exact-pattern lookup")
     operator = get_comm_operator("expert_parallel_alltoall_dispatch")
     assert predictor._predict_comm_operator_with_context(operator, ctx) == (
         predictor._cc_backend.predict_allgather(395264, 32, comm_domain="EP")

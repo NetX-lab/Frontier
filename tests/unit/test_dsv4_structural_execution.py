@@ -9,6 +9,7 @@ from frontier.moe_ep_workload import (
     build_contiguous_expert_ownership, materialize_layer_ep_workload,
 )
 from test_dsv4_source_execution import predictor, source_batch
+from frontier.config.parallel_semantics import sequence_parallel_moe_token_widths
 
 
 def test_structural_driver_accepts_boundary_workload_inputs(tmp_path):
@@ -172,10 +173,11 @@ def test_actual_dummy_constructor_preserves_integer_only_precision(tmp_path):
         get_quantization_manager().get_precision("dsv4_index_short_context_fill")
 
 
-def destination(layer=0):
+def destination(widths, layer=0):
+    # The wave routes every gathered SP row, as prepare_moe_wave_from_inputs does.
     workload = materialize_layer_ep_workload(
         routing_ratios={i: 1 / 256 for i in range(256)},
-        target_replica_id=0, global_layer_id=layer, routing_token_count=40,
+        target_replica_id=0, global_layer_id=layer, routing_token_count=widths.gathered_tokens,
         router_topk=6, total_expert_num=256, moe_expert_parallel_size=64,
         expert_to_ep=build_contiguous_expert_ownership(256, 64),
     )
@@ -232,22 +234,24 @@ def test_physical_scopes_conserve_attention_and_five_ep_phases():
 def test_source_and_destination_timing_use_distinct_physical_rows(predictor):
     predictor._replica_config.router_topk = 6
     predictor._replica_config.total_expert_num = 256
+    widths = sequence_parallel_moe_token_widths([17] * 8, 8)
     result = predictor._predict_dsv4_structural_execution(
-        source_batch(), 0, 0, lane_workload=destination(),
+        source_batch(), 0, 0, lane_workload=destination(widths), sp_token_widths=widths,
         execution_mode="eager",
         prefix_caching=False, decode_context_parallel_size=1,
         prefill_context_parallel_size=1, enable_expert_parallel=True,
         moe_backend="auto", all2all_backend="allgather_reducescatter",
         skip_padding=False, input_padding_mask=None, selected_logits_rows=None,
     )
-    assert result.get_single_layer_attention_scope_time() == 30.0
+    assert result.get_single_layer_attention_scope_time() == 35.0
     assert get_ep_phase_times_ms(
         result, cluster_type=ClusterType.MONOLITHIC, batch_id=0, layer_id=0, ep_id=0,
-    ) == (12.0, 9.0, 2.0, 5.0, 0.0)
-    assert result.get_single_layer_block_time() == 58.0
+    ) == (12.0, 3.0, 2.0, 5.0, 0.0)
+    assert result.get_single_layer_block_time() == 57.0
     ep_calls = [value for _, value in predictor._cc_backend.calls
                 if value["comm_domain"] == "MOE_EP"]
-    assert [value["data_size_bytes"] for value in ep_calls] == [24576, 72, 72, 327680]
+    # Dispatch gathers max(r_d) = 3 rows; combine reduces 8 TP x 8 DP x 3 rows.
+    assert [value["data_size_bytes"] for value in ep_calls] == [3 * 8264, 192 * 8192]
 
 
 def test_full_43_layer_stage_preserves_every_canonical_physical_scope(predictor):
@@ -256,8 +260,9 @@ def test_full_43_layer_stage_preserves_every_canonical_physical_scope(predictor)
 
     predictor._replica_config.router_topk = 6
     predictor._replica_config.total_expert_num = 256
+    widths = sequence_parallel_moe_token_widths([17] * 8, 8)
     layers = [predictor._predict_dsv4_structural_execution(
-        source_batch(), layer, 0, lane_workload=destination(layer),
+        source_batch(), layer, 0, lane_workload=destination(widths, layer), sp_token_widths=widths,
         include_stage_owned=layer == 0,
         execution_mode="eager",
         prefix_caching=False, decode_context_parallel_size=1,
@@ -272,7 +277,7 @@ def test_full_43_layer_stage_preserves_every_canonical_physical_scope(predictor)
     assert stage.op_times["dsv4_mhc_ffn_post_attn_pre"] == 84.0
     assert stage.op_times["dsv4_mhc_attn_post_ffn_pre"] == 86.0
     assert stage.op_times["dsv4_sparse_attention"] == 86.0
-    assert stage.op_times["dsv4_logits_gather"] == 2.0
+    assert stage.op_times["dsv4_logits_gather"] == 3.0
     assert stage.global_layer_ids == tuple(range(43))
     assert sum(component_ledger(stage).values()) == pytest.approx(stage.total_time * 1000)
 
@@ -330,13 +335,14 @@ def test_dummy_attention_uses_v2_descriptor_geometry(predictor, layer, base_coun
 
 def test_idle_geometry_has_no_request_rows_or_lm_head(predictor):
     from frontier.entities import DummyForwardBatch
-    from frontier.execution_time_predictor.deepseek_v4 import source_physical_rows
+    from frontier.execution_time_predictor.deepseek_v4 import source_sp_token_widths
 
     predictor._replica_config.router_topk = 6
     predictor._replica_config.total_expert_num = 256
     dummy = DummyForwardBatch(0, 0, 0)
+    widths = sequence_parallel_moe_token_widths([1] * 8, 8)
     result = predictor._predict_dsv4_structural_execution(
-        dummy, 42, 0, lane_workload=destination(42),
+        dummy, 42, 0, lane_workload=destination(widths, 42), sp_token_widths=widths,
         execution_mode="eager",
         prefix_caching=False, decode_context_parallel_size=1,
         prefill_context_parallel_size=1, enable_expert_parallel=True,
@@ -352,7 +358,7 @@ def test_idle_geometry_has_no_request_rows_or_lm_head(predictor):
     assert "dsv4_logits_gather" not in result.op_times
     assert "dsv4_sparse_attention" in result.op_times
     predictor._replica_config.attn_dp = 2
-    assert source_physical_rows(predictor, {0: source_batch(17), 1: dummy}) == 32
+    assert source_sp_token_widths(predictor, {0: source_batch(17), 1: dummy}).gathered_tokens == 32
 
 
 @pytest.mark.parametrize("expand", [False, True])

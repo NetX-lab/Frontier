@@ -24,6 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from itertools import product
 
+from frontier.model_architectures import ModelArchitectureProfile
 from frontier.profiling.collectives.vllm_forward_collectives import (
     CollectiveCall,
     ForwardScenario,
@@ -37,7 +38,7 @@ from frontier.profiling.collectives.vllm_forward_collectives import (
 # returns torch.long ids when indices_type is None; the naive DP/EP prepare step
 # leaves it None (prepare_finalize/naive_dp_ep.py:103-104). The native census
 # shows moe_align_block_size_kernel<long>.
-DSV4_TOPK_IDS_DTYPE = "int64"
+DSV4_TOPK_IDS_DTYPE = ModelArchitectureProfile.deepseek_v4().require_gathered_topk_ids_dtype()
 
 CALL_NAMES = (
     "embedding_all_reduce", "sp_attention_all_gather", "sp_attention_reduce_scatter",

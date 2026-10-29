@@ -32,6 +32,7 @@ def _row(size=100, time_us=10.0):
         scenario="eager_uniform_t8_r1", call="embedding_all_reduce",
         op="all_reduce", group="tp", group_size=8,
         max_input_bytes=size, median_us=time_us, cuda_graph=False,
+        tokens_per_dp_rank="8/8",
         launch_median_us=9999.0,
     )
 
@@ -45,6 +46,15 @@ def _backend(tmp_path, rows):
     return MeasuredCCBackend(
         MeasuredCCBackendConfig(summary_csv_path=str(path)),
         ClusterType.PREFILL, "h800", "h800_dgx", 32,
+    )
+
+
+def _combine(backend, size, devices, rows, comm_domain):
+    from frontier.operators.spec import CollectiveImplementation
+
+    return backend.predict_operator_collective(
+        "reduce_scatter", CollectiveImplementation.GROUP_COORDINATOR_DIM0,
+        size, devices, comm_domain, rows,
     )
 
 
@@ -132,13 +142,14 @@ def test_pool_graph_eager_calls_passes_and_ignore_host_launch_time(tmp_path):
     assert description["loo_absolute_relative_error"]["median"] is None
 
 
-def test_uneven_and_cpu_holdouts_and_logits_do_not_fit_the_curves(tmp_path):
+def test_uneven_and_cpu_holdouts_stay_out_and_logits_get_separate_curve(tmp_path):
     rows = [_row(), _row(100, 1000), _row(100, 2000), _row(100, 3000)]
     rows[1]["scenario"] = "eager_single_active_t64_r1"
     rows[2].update(group="dp", op="cpu_all_reduce", call="dp_batch_sync_all_reduce")
     rows[3].update(op="all_gather", call="logits_all_gather")
     backend = _backend(tmp_path, rows)
-    assert len(backend.describe_curves()) == 1
+    assert len(backend.describe_curves()) == 2
+    assert len(backend.describe_holdouts()) == 1
     assert backend.predict_allreduce(100, 8, comm_domain="ATTN_TP") == .01
 
 
@@ -164,9 +175,7 @@ def test_unequal_combine_exact_match_pools_samples_without_changing_uniform_curv
     rows = [uniform, *[_unequal_combine_row(t) for t in (339.0, 339.5, 340.0)]]
     rows[-1].update(scenario="eager_single_active_t256_r2")
     backend = _backend(tmp_path, rows)
-    assert backend.predict_unequal_reduce_scatter(
-        3440640, 32, (32, 1, 1, 1), comm_domain=domain,
-    ) == .3395
+    assert _combine(backend, 3440640, 32, (32, 1, 1, 1), comm_domain=domain) == .3395
     assert backend.predict_reduce_scatter(3440640, 32, comm_domain=domain) == .1338
     assert backend.describe_curves()[0]["point_count"] == 1
 
@@ -176,15 +185,21 @@ def test_unequal_combine_exact_match_pools_samples_without_changing_uniform_curv
     (3440640, (31, 2, 1, 1), 32, "EP"),
     (3440640, (1, 32, 1, 1), 32, "EP"),
     (3440640, (32, 1, 1, 1), 16, "EP"),
-    (3440640, (32, 1, 1, 1), 32, "ATTN_TP"),
     (3342336, (16, 16, 1, 1), 32, "EP"),
 ])
 def test_unequal_combine_requires_exact_ordered_rows_bytes_and_group(tmp_path, size, rows, devices, domain):
     backend = _backend(tmp_path, [_row(), _unequal_combine_row()])
     with pytest.raises(MeasuredCCOutOfRangeError, match="unequal SP rows") as caught:
-        backend.predict_unequal_reduce_scatter(size, devices, rows, comm_domain=domain)
+        _combine(backend, size, devices, rows, comm_domain=domain)
     assert caught.value.requested_bytes == size
     assert str(rows) in caught.value.reason
+
+
+def test_unequal_rows_outside_the_ep_combine_curve_use_no_exact_entry(tmp_path):
+    backend = _backend(tmp_path, [_row(), _unequal_combine_row()])
+    with pytest.raises(MeasuredCCOutOfRangeError) as caught:
+        _combine(backend, 3440640, 32, (32, 1, 1, 1), comm_domain="ATTN_TP")
+    assert caught.value.curve_key == ("reduce_scatter", "tp", 32)
 
 
 @pytest.mark.parametrize("change", [
@@ -211,8 +226,9 @@ def test_equal_sp_holdout_stays_out_of_exact_and_uniform_samples(tmp_path):
                kernels="ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(args)")
     backend = _backend(tmp_path, [_row(), row])
     assert len(backend.describe_curves()) == 1
+    assert not backend._unequal_combine_times
     with pytest.raises(MeasuredCCOutOfRangeError):
-        backend.predict_unequal_reduce_scatter(393216, 32, (1, 1, 1, 1), comm_domain="EP")
+        _combine(backend, 393216, 32, (1, 1, 1, 1), comm_domain="EP")
 
 
 def test_unequal_combine_does_not_interpolate_between_nonmonotone_points(tmp_path):
@@ -220,10 +236,10 @@ def test_unequal_combine_does_not_interpolate_between_nonmonotone_points(tmp_pat
     small.update(tokens_per_dp_rank="128/1/1/1", scenario="eager_single_active_t128_r1",
                  max_input_bytes=1867776, max_output_bytes=196608)
     backend = _backend(tmp_path, [_row(), small, _unequal_combine_row()])
-    assert backend.predict_unequal_reduce_scatter(1867776, 32, (16, 1, 1, 1), "EP") == .5253
-    assert backend.predict_unequal_reduce_scatter(3440640, 32, (32, 1, 1, 1), "EP") == .3395
+    assert _combine(backend, 1867776, 32, (16, 1, 1, 1), "EP") == .5253
+    assert _combine(backend, 3440640, 32, (32, 1, 1, 1), "EP") == .3395
     with pytest.raises(MeasuredCCOutOfRangeError):
-        backend.predict_unequal_reduce_scatter(2654208, 32, (24, 1, 1, 1), "EP")
+        _combine(backend, 2654208, 32, (24, 1, 1, 1), "EP")
 
 
 def test_logit_option_b_uses_hidden_state_curve(tmp_path):
@@ -362,9 +378,12 @@ def test_checked_in_curves_match_producer_medians_and_ranges():
         ("reduce_scatter", "tp", 8): (11, (98304, 100663296)),
         ("all_gatherv", "ep", 32): (11, (12352, 12648448)),
         ("reduce_scatterv", "ep", 32): (11, (393216, 402653184)),
+        ("logits_all_gather", "tp", 8): (10, (38720, 19824640)),
     }
     assert {c["key"]: (c["point_count"], c["byte_range"]) for c in backend.describe_curves()} == expected
-    assert all("logits_all_gather" not in c["calls"] for c in backend.describe_curves())
+    assert [c["key"] for c in backend.describe_curves() if "logits_all_gather" in c["calls"]] == [
+        ("logits_all_gather", "tp", 8),
+    ]
     from statistics import median
     times = [float(r["median_us"]) for r in rows if r["op"] == "all_gatherv"
              and "single_active" not in r["scenario"] and int(r["max_input_bytes"]) == 12352]
@@ -393,6 +412,13 @@ def test_retained_unequal_samples_preserve_all_uniform_curves_and_predictions(tm
         domain = "EP" if group == "ep" else "ATTN_TP"
         sizes = [*curve.sizes, *[(a + b) // 2 for a, b in zip(curve.sizes, curve.sizes[1:])]]
         for size in sizes:
+            if op == "logits_all_gather":
+                from frontier.operators.spec import CollectiveImplementation
+
+                args = ("allgather", CollectiveImplementation.GROUP_COORDINATOR_LAST_DIM,
+                        size, devices, domain)
+                assert backend.predict_operator_collective(*args) == baseline.predict_operator_collective(*args)
+                continue
             args = dict(data_size_bytes=size, num_devices=devices, comm_domain=domain)
             assert backend.predict_comm_cost(alias, **args) == baseline.predict_comm_cost(alias, **args)
 
@@ -423,7 +449,7 @@ def test_checked_in_unequal_combine_samples_match_producer_medians():
         (x, 1, 1, 1) for x in (4, 8, 16, 32, 64, 128, 256, 512, 1024)
     }
     for (sp_rows, size), times in samples.items():
-        assert backend.predict_unequal_reduce_scatter(size, 32, sp_rows, "EP") == median(times) / 1000
+        assert _combine(backend, size, 32, sp_rows, "EP") == median(times) / 1000
 
 
 def test_glm_run_uses_k5_nixl_values_without_changing_global_defaults(tmp_path):

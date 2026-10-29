@@ -310,7 +310,7 @@ def test_comm_payload_builder_preserves_legacy_quantized_hidden_state_bytes() ->
 
 _DSV4_SP_SCOPES = (
     ("dsv4_sp_attention_allgather", "allgather", (8192, 24576)),
-    ("dsv4_sp_attention_reduce_scatter", "reduce_scatter", (65536, 196608)),
+    ("dsv4_sp_attention_reduce_scatter", "reduce_scatter", (8192, 139264)),
     ("dsv4_sp_final_mhc_allgather", "allgather", (32768, 98304)),
 )
 
@@ -413,12 +413,11 @@ def test_dsv4_sp_rejects_unsupported_topologies_before_cc(field: str, value: obj
 
 
 @pytest.mark.parametrize("cluster", (
-    ClusterType.PREFILL, ClusterType.DECODE,
     ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN,
 ))
 def test_dsv4_sp_source_scope_rejects_disaggregated_roles(cluster: ClusterType) -> None:
     ctx = replace(_dsv4_sp_context(), cluster_type=cluster)
-    with pytest.raises(ValueError, match="co-location"):
+    with pytest.raises(ValueError, match="MONOLITHIC, PREFILL or DECODE"):
         get_comm_operator("dsv4_sp_attention_allgather").build_payload_bytes(ctx)
 
 

@@ -64,6 +64,14 @@ class TensorParallelMode(Enum):
     MOE_TP = "moe_tp"
 
 
+class CollectiveImplementation(Enum):
+    """Native implementation, independent of collective alias and domain."""
+
+    GROUP_COORDINATOR_DIM0 = "group_coordinator_dim0"
+    VLLM_SEQUENCE_PARALLEL = "vllm_sequence_parallel"
+    GROUP_COORDINATOR_LAST_DIM = "group_coordinator_last_dim"
+
+
 class ZeroPayloadPolicy(Enum):
     """How a communication operator handles an exact zero-byte payload."""
 
@@ -162,6 +170,9 @@ class CommPayloadContext:
     # Physical EP-lane workload, when the collective is evaluated for one
     # materialized lane rather than the source batch.
     lane_workload: Any | None = None
+    # V4 keeps its source batch intact; GLM carries widths on its EP lane batch.
+    sp_token_widths: Any | None = None
+    selected_logits_rows: int | None = None
 
 
 CommPayloadBuilder = Callable[[CommPayloadContext], int]
@@ -173,6 +184,8 @@ CommStringBuilder = Callable[[CommPayloadContext], str]
 class CommOperatorSpec(OperatorSpec):
     """Declarative contract for one collective communication operator."""
 
+    collective_implementation: CollectiveImplementation = CollectiveImplementation.GROUP_COORDINATOR_DIM0
+    sp_rows_builder: Callable[[CommPayloadContext], tuple[int, ...] | None] | None = None
     collective_alias: str = ""
     collective_alias_builder: CommStringBuilder | None = None
     comm_group: str = ""
@@ -193,6 +206,8 @@ class CommOperatorSpec(OperatorSpec):
 
     def __post_init__(self) -> None:
         super().__post_init__()
+        if not isinstance(self.collective_implementation, CollectiveImplementation):
+            raise ValueError(f"CommOperator {self.name} requires a CollectiveImplementation")
         if self.collective_alias not in self._valid_collectives:
             raise ValueError(
                 f"CommOperator {self.name} collective_alias must be one of "

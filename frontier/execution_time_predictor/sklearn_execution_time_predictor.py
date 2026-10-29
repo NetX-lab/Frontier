@@ -6298,11 +6298,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         num_devices = operator.num_devices(ctx)
         comm_domain = operator.resolve_comm_domain(ctx)
         collective_alias = operator.resolve_collective_alias(ctx)
-        from frontier.operators.sequence_parallel_moe import measured_unequal_combine_time
+        from frontier.operators.sequence_parallel_moe import measured_collective_time
 
-        measured_combine_ms = measured_unequal_combine_time(operator, ctx, self._cc_backend, data_size_bytes)
-        if measured_combine_ms is not None:
-            return measured_combine_ms
+        measured_ms = measured_collective_time(operator, ctx, self._cc_backend, data_size_bytes)
+        if measured_ms is not None:
+            return measured_ms
 
         if collective_alias == "allreduce":
             if num_devices is None:

@@ -104,6 +104,10 @@ class RecordingCCBackend:
     def __init__(self):
         self.calls = []
 
+    def predict_allreduce(self, **kwargs):
+        self.calls.append(("allreduce", kwargs))
+        return 7.0
+
     def predict_allgather(self, **kwargs):
         self.calls.append(("allgather", kwargs))
         return 3.0
@@ -124,7 +128,7 @@ def test_ordered_consumer_reuses_attention_and_real_cc_dispatch(predictor):
         "share_expert_act", "share_expert_down_proj",
     )
     assert [(kind, value["data_size_bytes"]) for kind, value in backend.calls] == [
-        ("allgather", 24576), ("reduce_scatter", 196608),
+        ("allgather", 24576), ("reduce_scatter", 139264),
     ]
     assert all(value["comm_domain"] == "ATTN_TP" for _, value in backend.calls)
     assert result["attention_time"].total_time() == 32.0
@@ -292,7 +296,7 @@ def test_dimensions_follow_config_and_weights_remain_replicated(predictor):
     assert result["workloads"]["share_expert_down_proj"]["input_shape"] == (3, 1024)
     assert result["workloads"]["dsv4_mhc_first_pre"]["residual_shape"] == (3, 4, 2048)
     assert predictor._cc_backend.calls[0][1]["data_size_bytes"] == 12288
-    assert predictor._cc_backend.calls[1][1]["data_size_bytes"] == 98304
+    assert predictor._cc_backend.calls[1][1]["data_size_bytes"] == 69632
 
 
 def test_structural_admission_keeps_normal_execution_and_training_closed(predictor):

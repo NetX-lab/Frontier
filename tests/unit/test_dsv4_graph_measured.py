@@ -109,7 +109,7 @@ def test_pd_guard_message_is_independent_of_dummy_mode(monkeypatch, dummy):
 
 def test_h800_tp8_dp2_ep16_reuses_source_geometry_not_h200_capacity(predictor):
     from frontier.entities import Batch, Request
-    from frontier.execution_time_predictor.deepseek_v4 import source_physical_rows
+    from frontier.execution_time_predictor.deepseek_v4 import source_sp_token_widths
 
     replica = predictor._replica_config
     replica.device = "h800"
@@ -129,7 +129,7 @@ def test_h800_tp8_dp2_ep16_reuses_source_geometry_not_h200_capacity(predictor):
         assert result["source_rows"] == batch.total_num_tokens
         assert result["physical_local_rows"] == width // 8
         assert batch.requests[0].num_decode_tokens == 16
-    assert source_physical_rows(predictor, {0: prefill, 1: decode}) == 40
+    assert source_sp_token_widths(predictor, {0: prefill, 1: decode}).gathered_tokens == 40
     assert prefill.num_context_tokens == [0] and decode.num_context_tokens == [16]
 
 

@@ -22,6 +22,8 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import Iterable
 
+from frontier.model_architectures import ModelArchitectureProfile
+
 # vLLM v0.28 config/parallel.py:188 default when the engine omits the field.
 VLLM_DEFAULT_ALL2ALL_BACKEND = "allgather_reducescatter"
 # Backends for which ParallelConfig.use_sequence_parallel_moe can be true and
@@ -29,7 +31,7 @@ VLLM_DEFAULT_ALL2ALL_BACKEND = "allgather_reducescatter"
 SEQUENCE_PARALLEL_ALL2ALL_BACKENDS = ("allgather_reducescatter",)
 # Router outputs: fused_topk_bias_router.py returns float32 weights, int32 ids.
 TOPK_WEIGHTS_DTYPE = "float32"
-TOPK_IDS_DTYPE = "int32"
+TOPK_IDS_DTYPE = ModelArchitectureProfile.glm_moe_dsa().require_gathered_topk_ids_dtype()
 # dp_utils._run_ar all-reduces an int32 tensor of shape [4, dp_size].
 DP_SYNC_ROWS = 4
 DP_SYNC_DTYPE = "int32"

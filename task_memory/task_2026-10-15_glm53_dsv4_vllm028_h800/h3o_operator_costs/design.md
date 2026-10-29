@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | §6 B15 note: the V4 combine payload is read from the shared `ep_workload` (all gathered SP rows), and the routed lane workload is not a payload source. |
 | 2026-10-29 | §6 implementation notes for the collective consumer (B15, entries 8 and 9): the collective implementation as a registry field, one measured pricing entry, the uniform-curve rule also requires equal lane tokens (the H200 unequal rows are not marked `single_active`), one grouped V4 dispatch with the ids dtype from the profile, ordered SP widths for V4, and the PDD admission limited to the communication payloads (the attention admission stays in entry 4). |
 | 2026-10-28 | §6 implementation notes for stage 2: entry 15 is split into B13 (standalone operators) and B13r (the model-runner operators: owned step scopes in the replay and direct block-operator calls on a native-layout engine), because the reduced replay engine zeroes KV blocks with 30 segments against the native 139; the C1 §4.2 axis correction (mHC head and final norm on W); G4h is produced on CPU from the G1h-02 records by the existing V4 reducer (entry 17), so no separate G4h job runs. |
 | 2026-10-27 | Entries 2, 27 and 28 implemented (`7003cf1d`); §6 implementation notes: no ledger table in entry 2 (it is the A3 test's expected table), the serial schedule of dummy mode and the step-cost path, and the short-context input that entry 3 takes from the builder. |
@@ -244,6 +245,7 @@ Total: 27 active entries (some cover several files; entry 26 is dropped), about 
   - The combine classification of entry 9 is a spec field that supplies the ordered SP rows; the exact unequal lookup applies to the EP `reduce_scatterv` curve with unequal rows. No operator name is compared.
   - Uniform curves take only rows that are not `single_active` and have equal lane tokens: in the H200 table the 96 unequal EP rows are not marked `single_active`. Unequal dispatch rows are holdouts (reported, not priced).
   - The three V4 dispatch gathers become one grouped `dsv4_ep_dispatch_allgather` (native: one `all_gatherv` of hidden, weights and int64 ids); the ids dtype has one source, a profile field read by the producers and the consumers.
+  - The V4 combine payload is the shared `ep_workload` gathered rows × hidden bytes; the wave routes every gathered SP row, so the lane workload is used only for routed compute and workload records.
   - The PDD admission of entry 8 covers the V4 communication payloads only. The attention admission (entry 4) and the PD gate of `serving_context` need the PD phase and graph evidence of entry 4, so they stay closed in B15.
 
 ## 7. GPU jobs

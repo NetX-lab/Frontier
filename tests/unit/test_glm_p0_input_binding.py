@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from frontier.cc_backend import MeasuredCCBackend, MeasuredCCBackendConfig, MeasuredCCOutOfRangeError
+from frontier.operators.spec import CollectiveImplementation
 from frontier.types import ClusterType
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -41,7 +42,10 @@ def test_ep16_dispatch_binds_but_exact_6144_idle_combine_remains_typed(role):
     dispatch = backend.predict_allgather(9_486_336, 16, comm_domain="EP")
     assert math.isfinite(dispatch) and dispatch > 0
     with pytest.raises(MeasuredCCOutOfRangeError, match="unequal SP rows \\(768, 1\\)") as caught:
-        backend.predict_unequal_reduce_scatter(75_595_776, 16, (768, 1), "EP")
+        backend.predict_operator_collective(
+            "reduce_scatter", CollectiveImplementation.GROUP_COORDINATOR_DIM0,
+            75_595_776, 16, "EP", (768, 1),
+        )
     assert caught.value.curve_key == ("reduce_scatterv", "ep", 16)
     assert caught.value.requested_bytes == 75_595_776
     assert caught.value.covered_range == (196608, 201326592)

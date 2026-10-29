@@ -133,6 +133,7 @@ def predict_ep_wave_phase_times(
             source = source_batches[ep_id // tp]
             layer = predictor._predict_dsv4_structural_execution(
                 source, layer_id, ep_id % tp, lane_workload=lane_batch.lane_workload,
+                sp_token_widths=lane_batch.moe_sequence_parallel_token_widths,
                 include_attention=False, include_ffn=True,
                 **serving_context(predictor, source, layer_id),
             )

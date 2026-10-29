@@ -106,9 +106,10 @@ def prepare_moe_wave_from_inputs(
     physical_rows = {}
     sp_token_widths = None
     if v4:
-        from frontier.execution_time_predictor.deepseek_v4 import source_physical_rows
+        from frontier.execution_time_predictor.deepseek_v4 import source_sp_token_widths
 
-        physical_rows["routing_token_count"] = source_physical_rows(predictor, wave_inputs.source_batches)
+        sp_token_widths = source_sp_token_widths(predictor, wave_inputs.source_batches)
+        physical_rows["routing_token_count"] = sp_token_widths.gathered_tokens
     elif model is not None:
         replica = predictor._get_cluster_replica_config(cluster_type)
         if model.get_model_architecture_profile().uses_sequence_parallel_moe(

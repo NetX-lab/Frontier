@@ -51,8 +51,7 @@ def timing_operator_times(execution_time, phase):
             "moe_gating_routing_topk",
         ),
         "dispatch": (
-            "dsv4_ep_activation_allgather", "dsv4_ep_weights_allgather",
-            "dsv4_ep_ids_allgather",
+            "dsv4_ep_dispatch_allgather",
         ),
         "routed_compute": ("moe_shuffling", "moe_grouped_gemm"),
         "combine": ("dsv4_ep_output_reduce_scatter",),
@@ -288,14 +287,14 @@ def predict_source_execution(
 
 
 def predict_structural_execution(
-    predictor, batch, layer_id, tp_rank, *, lane_workload=None,
+    predictor, batch, layer_id, tp_rank, *, lane_workload=None, sp_token_widths=None,
     include_attention=True, include_ffn=True, include_stage_owned=False,
     **source_context,
 ):
     """Connect one source rank and an explicitly synthetic destination lane.
 
     The ordinary modular W4A16 scenario transports BF16 activations, FP32
-    top-k weights and int32 IDs. Native auto-backend selection, padding-mask
+    top-k weights and profile-owned int64 IDs. Native auto-backend selection, padding-mask
     consumption, routing outcomes and overlap are not inferred from this test.
     """
     from frontier.entities import ExecutionTime
@@ -316,6 +315,18 @@ def predict_structural_execution(
         predictor, batch, layer_id, tp_rank, include_attention=include_attention,
         include_ffn=include_ffn, **source_context,
     )
+    from frontier.config import get_quantization_manager
+    from frontier.operators.spec import CommOperatorSpec, CommPayloadContext
+
+    payload_context = CommPayloadContext(
+        batch, predictor._model_config, replica, predictor._cluster_type,
+        get_quantization_manager(), sp_token_widths=sp_token_widths,
+        selected_logits_rows=source_context["selected_logits_rows"],
+    )
+
+    def communication(name):
+        return predictor._predict_comm_operator_with_context(get_comm_operator(name), payload_context)
+
     times = dict(source["component_times"])
     workloads = dict(source["workloads"])
     base = predictor._dummy_execution_time
@@ -335,7 +346,7 @@ def predict_structural_execution(
         }
     if include_attention and layer_id == 0:
         # The embedding scope now excludes its separately owned reduction.
-        times["dsv4_embedding_allreduce"] = base
+        times["dsv4_embedding_allreduce"] = communication("dsv4_embedding_allreduce")
     if include_ffn:
         times.update({
             "moe_gating_linear": base, "moe_gating_routing_topk": base,
@@ -353,7 +364,8 @@ def predict_structural_execution(
                 "input_shape": (local, predictor._model_config.num_experts),
                 "topk_weights_shape": (local, replica.router_topk),
                 "topk_ids_shape": (local, replica.router_topk),
-                "topk_weights_dtype": "float32", "topk_ids_dtype": "int32",
+                "topk_weights_dtype": "float32",
+                "topk_ids_dtype": predictor._model_config.get_model_architecture_profile().require_gathered_topk_ids_dtype(),
                 "routing_variant": "hash" if layer_id < predictor._model_config.num_hash_layers else "score",
             },
             "moe_grouped_gemm": {
@@ -363,45 +375,34 @@ def predict_structural_execution(
             },
         })
         for name in (
-            "dsv4_ep_activation_allgather", "dsv4_ep_weights_allgather",
-            "dsv4_ep_ids_allgather", "dsv4_ep_output_reduce_scatter",
+            "dsv4_ep_dispatch_allgather", "dsv4_ep_output_reduce_scatter",
         ):
-            times[name] = predictor._predict_comm_operator(
-                get_comm_operator(name), batch,
-                lane_workload=(lane_workload if name == "dsv4_ep_output_reduce_scatter" else None),
-            )
+            times[name] = communication(name)
         if layer_id == predictor._model_config.num_layers - 1 and source_context["selected_logits_rows"]:
-            times["dsv4_logits_gather"] = base
+            times["dsv4_logits_gather"] = communication("dsv4_logits_gather")
             workloads["dsv4_logits_gather"] = {
                 "selected_logits_rows": source_context["selected_logits_rows"],
                 "logical_vocabulary_size": predictor._model_config.vocab_size,
                 "physical_vocabulary_padding": "UNKNOWN",
             }
-    from frontier.config import get_quantization_manager
     from frontier.operators.families import COMM_FAMILY
-    from frontier.operators.spec import CommOperatorSpec, CommPayloadContext
 
     for operator in COMM_FAMILY.operators:
         if operator.name not in times or not isinstance(operator, CommOperatorSpec):
             continue
-        payload_context = CommPayloadContext(
-            batch, predictor._model_config, replica, predictor._cluster_type,
-            get_quantization_manager(),
-            lane_workload=lane_workload if operator.name == "dsv4_ep_output_reduce_scatter" else None,
-        )
-        workloads[operator.name] = {
+        workloads.setdefault(operator.name, {}).update({
             "data_size_bytes": operator.build_payload_bytes(payload_context),
             "collective": operator.collective_alias,
             "comm_domain": operator.resolve_comm_domain(payload_context),
             "num_devices": operator.num_devices(payload_context),
             "payload_scope": "CC collective input tensor; not native wire traffic",
-        }
+        })
     if "dsv4_embedding_allreduce" in times:
-        workloads["dsv4_embedding_allreduce"] = {
+        workloads["dsv4_embedding_allreduce"].update({
             "input_shape": (source["compute_rows"], predictor._model_config.embedding_dim),
             "activation_dtype": "bfloat16", "collective": "allreduce",
-            "cost_scope": "unmeasured synthetic dummy duration",
-        }
+            "cost_scope": "communication backend device-time prediction",
+        })
     spec = predictor._model_config.get_layer_attention_spec(layer_id)
     cpu = base if include_stage_owned else 0.0
     timing = ExecutionTime(
@@ -444,9 +445,9 @@ def predict_structural_execution(
         "native_routed_assignments": "UNKNOWN",
         "routing_operator_variant": "hash" if layer_id < predictor._model_config.num_hash_layers else "score",
         "execution_order": "synthetic serial; native shared/routed overlap UNKNOWN",
-        "ep_transport": "structural modular W4A16 BF16/topk FP32/int32; native backend UNKNOWN",
-        "ep_collective_cost": "uniform CC calls; ragged native latency unqualified",
-        "endpoint_collective_cost": "unmeasured synthetic dummy duration",
+        "ep_transport": "grouped BF16 hidden/FP32 weights/profile-owned int64 ids",
+        "ep_collective_cost": "communication backend; measured unequal combine requires exact ordered SP rows",
+        "endpoint_collective_cost": "communication backend device-time prediction",
         "synthetic_destination_assignments": lane_workload.routed_token_count if include_ffn else None,
     })
     timing._dsv4_workloads = MappingProxyType(workloads)
@@ -583,8 +584,9 @@ def component_ledger(execution_time):
     return components
 
 
-def source_physical_rows(predictor, source_batches):
-    """Resolve all DP source rows, including explicit one-row idle forwards."""
+def source_sp_token_widths(predictor, source_batches):
+    """Resolve ordered V2 descriptor SP widths, including idle forwards."""
+    from frontier.config.parallel_semantics import sequence_parallel_moe_token_widths
     replica = predictor._replica_config
     if tuple(sorted(source_batches)) != tuple(range(replica.attn_dp)):
         raise ValueError("V4 source cohort must contain every attention DP rank")
@@ -594,8 +596,9 @@ def source_physical_rows(predictor, source_batches):
         else:
             _validate_source_batch(batch)
     tp = replica.attn_tensor_parallel_size
-    return sum(((compute_rows(batch) + tp - 1) // tp) * tp
-               for batch in source_batches.values())
+    return sequence_parallel_moe_token_widths(
+        [compute_rows(source_batches[d]) for d in range(replica.attn_dp)], tp,
+    )
 
 
 def _select_rows(rows, expected, scope):

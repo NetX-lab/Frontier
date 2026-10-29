@@ -21,21 +21,36 @@ from frontier.cc_backend.cc_backend_config import MeasuredCCBackendConfig
 from frontier.cc_backend.cc_backend_factory import CCBackendFactory
 from frontier.config.parallel_semantics import sequence_parallel_moe_token_widths
 from frontier.config.precision_type import PrecisionType
+from frontier.operators.spec import CollectiveImplementation
 from frontier.logger import init_logger
 from frontier.types import CCBackendType, ClusterType
 
 logger = init_logger(__name__)
 CurveKey = Tuple[str, str, int]
 
-# The API domain selects the measured collective, not a model-name branch.
-_COLLECTIVES = {
-    ("allreduce", "ATTN_TP"): ("all_reduce", "tp"),
-    ("allgather", "ATTN_TP"): ("all_gather", "tp"),
-    ("reduce_scatter", "ATTN_TP"): ("reduce_scatter", "tp"),
-    ("allgather", "EP"): ("all_gatherv", "ep"),
-    ("allgather", "MOE_EP"): ("all_gatherv", "ep"),
-    ("reduce_scatter", "EP"): ("reduce_scatterv", "ep"),
-    ("reduce_scatter", "MOE_EP"): ("reduce_scatterv", "ep"),
+# Alias, domain and native implementation select the measured curve, never an operator name.
+_COLLECTIVE_CURVES = {
+    ("allreduce", "ATTN_TP", CollectiveImplementation.GROUP_COORDINATOR_DIM0): ("all_reduce", "tp"),
+    ("allgather", "ATTN_TP", CollectiveImplementation.GROUP_COORDINATOR_DIM0): ("all_gather", "tp"),
+    ("reduce_scatter", "ATTN_TP", CollectiveImplementation.GROUP_COORDINATOR_DIM0): ("reduce_scatter", "tp"),
+    **{(alias, domain, CollectiveImplementation.GROUP_COORDINATOR_DIM0): (op, "ep")
+       for domain in ("EP", "MOE_EP")
+       for alias, op in (("allgather", "all_gatherv"), ("reduce_scatter", "reduce_scatterv"))},
+    ("allgather", "ATTN_TP", CollectiveImplementation.VLLM_SEQUENCE_PARALLEL): ("sp_all_gather", "tp"),
+    ("reduce_scatter", "ATTN_TP", CollectiveImplementation.VLLM_SEQUENCE_PARALLEL): ("sp_reduce_scatter", "tp"),
+    ("allgather", "ATTN_TP", CollectiveImplementation.GROUP_COORDINATOR_LAST_DIM): ("logits_all_gather", "tp"),
+}
+_ROW_CURVES = {
+    ("all_reduce", "tp"): ("all_reduce", "tp"),
+    ("all_gather", "tp"): ("all_gather", "tp"),
+    ("reduce_scatter", "tp"): ("reduce_scatter", "tp"),
+    ("all_gatherv", "ep"): ("all_gatherv", "ep"),
+    ("reduce_scatterv", "ep"): ("reduce_scatterv", "ep"),
+    ("sp_all_gather", "tp"): ("sp_all_gather", "tp"),
+    ("sp_reduce_scatter", "tp"): ("sp_reduce_scatter", "tp"),
+    # Only this call needs an override: op cannot distinguish the dim -1
+    # all-gather plus layout copy from GroupCoordinator's dim 0 all-gather.
+    ("logits_all_gather", None): ("logits_all_gather", "tp"),
 }
 
 
@@ -113,16 +128,18 @@ class MeasuredCCBackend(BaseCCBackend):
             profiling_data_dir=config.profiling_data_dir, NETWORK_DEVICE=network_device,
         )).resolve())
         self._curves = self._load_curves()
-        logger.info("Measured collective coverage: %s", self.describe_curves())
+        logger.info("Measured collective coverage: %s; holdout rows: %s",
+                    self.describe_curves(), len(self._holdouts))
 
     def _load_curves(self):
         samples = defaultdict(lambda: defaultdict(list))
         unequal_samples = defaultdict(list)
         calls = defaultdict(set)
         meanings = {}
+        self._holdouts = []
         required = {
             "scenario", "call", "op", "group", "group_size",
-            "max_input_bytes", "median_us",
+            "max_input_bytes", "median_us", "tokens_per_dp_rank",
         }
         with open(self._source_path, newline="") as stream:
             reader = csv.DictReader(stream)
@@ -130,24 +147,27 @@ class MeasuredCCBackend(BaseCCBackend):
             if missing:
                 raise ValueError(f"{self._source_path}: missing columns {sorted(missing)}")
             for line, row in enumerate(reader, 2):
-                # Only unequal combine has an exact-pattern consumer. Other
-                # single-active calls stay holdouts of the uniform curves.
-                # Logits include a layout copy and are priced with hidden-state curves.
-                single_active = "single_active" in row["scenario"]
-                if (row["group"] == "dp"
-                        or (single_active and (row["op"], row["group"]) != ("reduce_scatterv", "ep"))
-                        or row["call"] == "logits_all_gather"):
+                if row["group"] == "dp":
                     continue
-                key = (row["op"], row["group"], int(row["group_size"]))
-                if key[:2] not in _COLLECTIVES.values():
+                single_active = "single_active" in row["scenario"]
+                measured = _ROW_CURVES.get((row["call"], None),
+                                          _ROW_CURVES.get((row["op"], row["group"])))
+                key = (*(measured or (row["op"], row["group"])), int(row["group_size"]))
+                if measured is None:
                     raise ValueError(f"{self._source_path}:{line}: unsupported curve {key}")
                 size, time_us = int(row["max_input_bytes"]), float(row["median_us"])
                 if key[2] < 2 or size <= 0 or not math.isfinite(time_us) or time_us <= 0:
                     raise ValueError(f"{self._source_path}:{line}: invalid measured row {key}")
-                if single_active:
-                    rows = self._retained_combine_rows(row, key, size, line)
-                    if rows is not None:
-                        unequal_samples[(key, rows, size)].append(time_us)
+                tokens = tuple(int(value) for value in row["tokens_per_dp_rank"].split("/")
+                               if value)
+                uniform = bool(tokens) and len(set(tokens)) == 1
+                if single_active or not uniform:
+                    if key[:2] == ("reduce_scatterv", "ep"):
+                        rows = self._retained_combine_rows(row, key, size, line)
+                        if rows is not None:
+                            unequal_samples[(key, rows, size)].append(time_us)
+                            continue
+                    self._holdouts.append((key, dict(row)))
                     continue
                 call = row["call"]
                 meaning = key[:2]
@@ -205,20 +225,50 @@ class MeasuredCCBackend(BaseCCBackend):
             for key, curve in sorted(self._curves.items())
         ]
 
-    def _predict(self, operation, data_size_bytes, num_devices, comm_domain):
-        measured = _COLLECTIVES.get((operation, comm_domain))
-        key = (*measured, num_devices) if measured else (operation, comm_domain, num_devices)
+    def describe_holdouts(self):
+        """Compare held-out device rows with uniform curves, without fitting them."""
+        result = []
+        for key, row in self._holdouts:
+            size, measured = int(row["max_input_bytes"]), float(row["median_us"])
+            curve = self._curves.get(key)
+            predicted = (curve.predict_us(size) if curve is not None
+                         and curve.sizes[0] <= size <= curve.sizes[-1] else None)
+            result.append(dict(
+                key=key, call=row["call"], group_size=key[2],
+                scenario=row["scenario"], tokens=row["tokens_per_dp_rank"],
+                bytes=size, measured_us=measured, curve_us=predicted,
+                relative_error=predicted / measured - 1 if predicted is not None else None,
+            ))
+        return result
+
+    def _curve_key(self, alias, implementation, num_devices, comm_domain):
+        measured = _COLLECTIVE_CURVES.get((alias, comm_domain, implementation))
+        if alias == "alltoall":
+            alias = "all_to_all"
+        return (*measured, num_devices) if measured else (alias, comm_domain, num_devices)
+
+    def predict_operator_collective(
+        self, alias, implementation, data_size_bytes, num_devices, comm_domain, sp_rows=None,
+    ):
+        """Resolve implementation and price uniform or exact ordered SP work."""
+        key = self._curve_key(alias, implementation, num_devices, comm_domain)
+        if key[:2] == ("reduce_scatterv", "ep") and sp_rows is not None:
+            rows = tuple(sp_rows)
+            if max(rows) != min(rows):
+                return self._predict_unequal(key, data_size_bytes, rows)
         curve = self._curves.get(key)
         coverage = (curve.sizes[0], curve.sizes[-1]) if curve else None
         if curve is None or not coverage[0] <= data_size_bytes <= coverage[1]:
             raise MeasuredCCOutOfRangeError(key, data_size_bytes, coverage)
         return curve.predict_us(data_size_bytes) / 1000.0
 
-    def predict_unequal_reduce_scatter(self, data_size_bytes, num_devices, sp_rows, comm_domain):
-        """Price only an exact ordered SP vector, byte count and collective group."""
-        measured = _COLLECTIVES.get(("reduce_scatter", comm_domain))
-        key = (*measured, num_devices) if measured else ("reduce_scatter", comm_domain, num_devices)
-        rows = tuple(sp_rows)
+    def _predict(self, operation, data_size_bytes, num_devices, comm_domain):
+        return self.predict_operator_collective(
+            operation, CollectiveImplementation.GROUP_COORDINATOR_DIM0,
+            data_size_bytes, num_devices, comm_domain,
+        )
+
+    def _predict_unequal(self, key, data_size_bytes, rows):
         time_us = self._unequal_combine_times.get((key, rows, data_size_bytes))
         if time_us is None:
             curve = self._curves.get(key)

@@ -1,6 +1,8 @@
 """Exercise full 43-layer V4 serving with explicitly synthetic dummy timing.
 
 Eager PP1 co-location includes the existing request-free idle DP forwards.
+One grouped EP dispatch owns hidden, weights and int64 ids; embedding and
+logits collectives are priced by the configured communication backend.
 Source SP geometry is derived from scheduled/dummy rows; destination expert
 ratios are synthetic balanced inputs. Native routing, latency, overlap,
 workspace capacity, CUDA graphs and PD remain unqualified.
@@ -311,9 +313,12 @@ def validate_artifacts(run_dir, dp, *, decision_path, prefill_tokens=17,
         require(abs(components["dsv4_mhc_ffn_post_attn_pre"] - 0.42) < 1e-9, "cross-layer mHC counted incorrectly")
         for name in cpu_names:
             require(abs(components[name] - 0.01) < 1e-9, "stage CPU overhead must occur once")
-        require(abs(components["dsv4_embedding"] - 0.01) < 1e-9 and
-                abs(components["dsv4_embedding_allreduce"] - 0.01) < 1e-9,
-                "local embedding and its reduction must each occur once")
+        require(abs(components["dsv4_embedding"] - 0.01) < 1e-9,
+                "local embedding must occur once")
+        # The backend prices the reduction apart from the local dummy scope;
+        # its single trace is already reconciled with the stage ledger above.
+        require(components["dsv4_embedding_allreduce"] > 0,
+                "embedding reduction must be priced by the communication backend")
         for request_id, tokens in zip(row["request_ids"], row["request_num_tokens"]):
             scheduled[request_id].append((row["stage_start_ts"], tokens))
     require(set(scheduled) == request_ids, "stage/request identity coverage differs")
@@ -354,9 +359,14 @@ def validate_artifacts(run_dir, dp, *, decision_path, prefill_tokens=17,
         for name in ("dsv4_mhc_attn_post_ffn_pre", "share_expert_up_proj", "share_expert_act",
                      "share_expert_down_proj", "moe_gating_linear", "moe_gating_routing_topk"):
             require(abs(pre[name] - 0.01) < 1e-9, "missing/duplicated source FFN physical scope")
+        dispatch = row["phases"]["dispatch"]["operators_ms"]
+        require(set(dispatch) == {"dsv4_ep_dispatch_allgather"},
+                "one grouped EP dispatch must own hidden, weights and int64 ids")
         post = row["phases"]["post_combine"]["operators_ms"]
         require(("dsv4_mhc_final_post" in post) == (layer == 42), "final mHC placement")
         require(("dsv4_lm_head" in post) == (layer == 42 and not idle), "selected LM-row ownership")
+        require(("dsv4_logits_gather" in post) == (layer == 42 and not idle),
+                "backend logits gather must follow selected LM rows only")
     require(not phase_ops, "EP trace has work without a phase-ledger owner")
     for rows in waves.values():
         require(len(rows) == dp * 8, "EP wave is missing source-rank participants")

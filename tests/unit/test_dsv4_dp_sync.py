@@ -19,7 +19,7 @@ from frontier.config.config import SimulationConfig
 from frontier.config.model_config import BaseModelConfig
 from frontier.entities import Batch, DummyForwardBatch, Request
 from frontier.entities.batch import DecodeCudaGraphMetadata
-from frontier.execution_time_predictor.deepseek_v4 import source_physical_rows
+from frontier.execution_time_predictor.deepseek_v4 import source_sp_token_widths
 from frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy import (
     IterationSchedulingPolicy,
 )
@@ -217,7 +217,7 @@ def synchronized_forward(lanes, cluster_type=ClusterType.DECODE):
         )
         assert [lane.get_effective_total_tokens_for_compute(ClusterType.MONOLITHIC)
                 for lane in lanes.values()] == row["num_tokens_across_dp"]
-    rows = source_physical_rows(
+    widths = source_sp_token_widths(
         SimpleNamespace(_replica_config=SimpleNamespace(
             attn_dp=len(lanes), attn_tensor_parallel_size=TP,
         )),
@@ -228,7 +228,7 @@ def synchronized_forward(lanes, cluster_type=ClusterType.DECODE):
         "widths": [lane.get_effective_total_tokens_for_compute(ClusterType.MONOLITHIC)
                    for lane in lanes.values()],
         "requests": [padded_num_reqs(lane) for lane in lanes.values()],
-        "routed_rows": rows,
+        "routed_rows": widths.gathered_tokens,
         "native_tuples": len(native),
     }
 
