@@ -953,6 +953,7 @@ def test_pilot_drivers_build_before_begin_and_execute_native_dummy(plan,monkeypa
                 if begun:recorded+=1
         return outputs
     def add(request_id,prompt,params):
+        assert params['min_tokens']==params['max_tokens']
         entries.append(('add',request_id,params['max_tokens']))
         requests[request_id]=dict(steps=0,**params)
     def abort(ids):

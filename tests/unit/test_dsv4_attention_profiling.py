@@ -1052,7 +1052,7 @@ def test_q1_cli_runs_native_shaped_schedule_and_metadata(
 
         def add(request_id, prompt, params):
             assert len(prompt["prompt_token_ids"]) == case.prompt_len == 6141
-            assert params["max_tokens"] == 1027
+            assert params["max_tokens"] == params["min_tokens"] == 1027
             pending[request_id] = {"prompt": prompt, "outputs": 0}
 
         def step():

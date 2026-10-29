@@ -707,8 +707,12 @@ def run_case(
     llm_engine = llm.llm_engine
     max_steps = _CASE_STEP_MULTIPLIER * case.estimated_steps + _CASE_STEP_ALLOWANCE
     label = f"{case.case_id}/{measurement}"
+    # Native serving sends min_tokens == max_tokens on every request (the PD proxy's prefill copy
+    # sends 1 and 1). With the generation-config EOS as a stop token, min_tokens > 0 enables the
+    # vLLM V2 logits processing (FP32 logits copy, min-tokens logit bias) that the sampling scope prices.
     params = None if case.phase == PHASE_DUMMY else SamplingParams(
-        max_tokens=case.max_tokens, temperature=0.0, ignore_eos=True, detokenize=False
+        max_tokens=case.max_tokens, min_tokens=case.max_tokens, temperature=0.0, ignore_eos=True,
+        detokenize=False,
     )
     if case.phase == PHASE_FIRST_TAIL:
         request_ids = [f"{label}/q{index}" for index in range(case.batch_size - case.tail_count)]
@@ -724,7 +728,7 @@ def run_case(
                     emitted.add(output.request_id)
             steps += 1
         llm.collective_rpc(begin_case, args=begin_args)
-        tail_params = SamplingParams(max_tokens=1, temperature=0.0, ignore_eos=True, detokenize=False)
+        tail_params = SamplingParams(max_tokens=1, min_tokens=1, temperature=0.0, ignore_eos=True, detokenize=False)
         for repeat in range(case.warmup + case.measured):
             tail_ids = [f"{label}/r{repeat}/q{len(request_ids) + index}"
                         for index in range(case.tail_count)]
