@@ -96,12 +96,12 @@ def test_global_graph_setting_does_not_override_batch_state(predictor, monkeypat
 
 
 @pytest.mark.parametrize("dummy", [False, True])
-def test_pd_guard_message_is_independent_of_dummy_mode(monkeypatch, dummy):
+def test_pd_context_uses_actual_graph_state(monkeypatch, dummy, predictor):
     from frontier.config import global_vars
 
     monkeypatch.setattr(global_vars, "KV_CONNECTOR", "nixl")
-    with pytest.raises(NotImplementedError, match="V4 predictor PD phase/graph equivalence remains unqualified"):
-        serving_context(SimpleNamespace(_enable_dummy_mode=dummy, _dsv4_step_costs=None), None, 0)
+    predictor._enable_dummy_mode = dummy
+    assert serving_context(predictor, source_batch([1], [6143]), 0)["execution_mode"] == "eager"
 
 
 def test_h800_tp8_dp2_ep16_reuses_source_geometry_not_h200_capacity(predictor):
@@ -117,6 +117,7 @@ def test_h800_tp8_dp2_ep16_reuses_source_geometry_not_h200_capacity(predictor):
     decode = Batch(1, [Request(0, 16, 16)], [1], is_moe=True,
                    num_context_tokens=[16], request_is_decoding=[True])
     for batch, mode, width in ((prefill, "PIECEWISE", 32), (decode, "FULL", 8)):
+        batch._cluster_type = predictor._cluster_type
         batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
             "full_and_piecewise", mode, True, False,
             batch.total_num_tokens, width, 1, width,

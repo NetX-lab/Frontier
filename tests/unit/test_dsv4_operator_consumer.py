@@ -1,6 +1,7 @@
 """B16b: committed H200 rows, trained stage pricing, gaps and cache parity on CPU."""
 
 import json
+import os
 import hashlib
 from dataclasses import replace
 from pathlib import Path
@@ -54,7 +55,11 @@ def replica():
 
 
 def config():
+    replay = os.environ.get("FRONTIER_DSV4_REPLAY_TABLE")
+    inputs = ({"atten_kernel_only_input_file": str(Path(replay).with_name("attention_graph_replay_kernel_only.csv"))}
+              if replay else {})
     return RandomForrestExecutionTimePredictorConfig(
+        **inputs,
         enable_dummy_mode=False, skip_cpu_overhead_modeling=True,
         k_fold_cv_splits=2, num_training_job_threads=1, num_estimators=[1],
         max_depth=[2], min_samples_split=[2],
@@ -72,7 +77,10 @@ def construct(root, *, manager=None, predictor_config=None):
 
 @pytest.fixture(scope='module')
 def trained(tmp_path_factory):
-    root = tmp_path_factory.mktemp('v4_models')
+    if not os.environ.get('FRONTIER_DSV4_REPLAY_TABLE') and not (TABLES / 'model_runner_replay_kernel_only.csv').exists():
+        pytest.skip('accepted replay table is pending; set FRONTIER_DSV4_REPLAY_TABLE to a scratch structure fixture')
+    existing = os.environ.get('FRONTIER_DSV4_TEST_MODEL_ROOT')
+    root = Path(existing) if existing else tmp_path_factory.mktemp('v4_models')
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(global_vars, 'KV_CONNECTOR', 'none')
         patch.setattr(global_vars, 'DECODE_CUDA_GRAPH_MODE', 'full_and_piecewise')
@@ -95,6 +103,7 @@ def batch(mode):
         b.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
             'full_and_piecewise', mode, True, False, 16, 16, 16, 16,
         )
+    b._cluster_type = ClusterType.MONOLITHIC
     return b
 
 
@@ -249,7 +258,7 @@ def test_host_and_missing_gap_errors(trained, tmp_path):
 def test_runner_zeroing_is_typed_coverage(trained):
     p, _ = trained
     b = batch('NONE')
-    b.cache_block_zeroing = SimpleNamespace(block_ids=(0,))
+    b.cache_block_zeroing = SimpleNamespace(block_ids=tuple(range(1, 34)), physical_block_size_bytes=1, physical_reservation_extent_bytes=33)
     with pytest.raises(DeepSeekV4CoverageError, match='kv_cache_block_zero'):
         p.predict_stage_execution_time(b, 0, ClusterType.MONOLITHIC, include_ffn=False)
 

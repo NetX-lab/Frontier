@@ -283,7 +283,12 @@ def test_real_metrics_initializer_limits_dsa_catalogs_to_dsa_models(
     )
     store = MetricsStore(config, {ClusterType.MONOLITHIC: cluster})
     dsa_metrics = {OperationMetrics.ATTN_DSA_INDEXER, OperationMetrics.ATTN_DSA_MLA}
-    expected_catalog = set(OperationMetrics) - {OperationMetrics.KV_CACHE_BLOCK_ZERO}
+    from frontier.operators.families import DEEPSEEK_V4_RUNNER_FAMILY, KV_CACHE_FAMILY
+
+    expected_catalog = set(OperationMetrics) - {
+        OperationMetrics(op.name) for family in (KV_CACHE_FAMILY, DEEPSEEK_V4_RUNNER_FAMILY)
+        for op in family.operators
+    }
     from frontier.operators.sequence_parallel_moe import (
         EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
     )

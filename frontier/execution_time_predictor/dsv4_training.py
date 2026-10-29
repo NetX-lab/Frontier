@@ -1,16 +1,19 @@
 """One CPU training entry for all DeepSeek-V4 operator tables."""
 
 import functools
+from pathlib import Path
 
 from frontier.execution_time_predictor.dsv4_measurement import validate_dsv4_host_time
 from frontier.execution_time_predictor.dsv4_operator_predictor import (
     DeepSeekV4OperatorPredictor, load_dsv4_operator_dataframe,
     load_dsv4_moe_dataframe, train_dsv4_operator_models,
+    load_dsv4_runner_dataframe, train_dsv4_runner_models,
 )
 from frontier.execution_time_predictor.dsv4_predictor import (
     DeepSeekV4AttentionPredictor, load_dsv4_attention_dataframe, train_dsv4_attention_models,
 )
 from frontier.types import MeasurementType
+from frontier.execution_time_predictor.dsv4_runner import BLOCK_TABLE, REPLAY_TABLE
 
 
 def train_dsv4_models(model, replica, block_size, linear_file, attention_file, moe_file, train):
@@ -19,8 +22,12 @@ def train_dsv4_models(model, replica, block_size, linear_file, attention_file, m
                                              MeasurementType.KERNEL_ONLY)
     operators = load_dsv4_operator_dataframe(linear_file, model, replica)
     moe = load_dsv4_moe_dataframe(moe_file, model, replica)
+    runner_dir = Path(attention_file).parent
+    block = load_dsv4_runner_dataframe(runner_dir / BLOCK_TABLE)
+    replay = load_dsv4_runner_dataframe(runner_dir / REPLAY_TABLE)
     models = train_dsv4_attention_models(attention, train)
     models.update(train_dsv4_operator_models(operators, moe, train))
+    models.update(train_dsv4_runner_models(block, replay, model, train))
     return models
 
 

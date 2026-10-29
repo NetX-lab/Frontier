@@ -842,7 +842,7 @@ KV_CACHE_FAMILY = OperatorFamilySpec(
     supported_variants=("block_zero",),
     resource_class=ResourceClass.MEMORY,
     execution_enabled=False,
-    disabled_reason="KV cache initialization has structural dummy timing only",
+    disabled_reason="KV runner work is priced by the V4 operator path only",
     operators=(
         OperatorSpec(
             name="kv_cache_block_zero",
@@ -869,7 +869,7 @@ DEEPSEEK_V4_RUNNER_FAMILY = OperatorFamilySpec(
     family_id="deepseek_v4_runner", display_name="DeepSeek V4 Runner",
     supported_variants=("input_preparation", "sampling"),
     resource_class=ResourceClass.COMP, execution_enabled=False,
-    disabled_reason="Runner operators are profiling targets; consumer admission is pending",
+    disabled_reason="Runner work requires the V4 measured coordinate consumer",
     operators=tuple(OperatorSpec(
         name=name, role=OperatorRole.INDEXING, phases=_ALL_PHASES,
         trace_kind=TraceKind.COMPUTE, predictor_target=False,

@@ -243,11 +243,11 @@ def test_source_and_destination_timing_use_distinct_physical_rows(predictor):
         moe_backend="auto", all2all_backend="allgather_reducescatter",
         skip_padding=False, input_padding_mask=None, selected_logits_rows=None,
     )
-    assert result.get_single_layer_attention_scope_time() == 35.0
+    assert result.get_single_layer_attention_scope_time() == 37.0
     assert get_ep_phase_times_ms(
         result, cluster_type=ClusterType.MONOLITHIC, batch_id=0, layer_id=0, ep_id=0,
     ) == (12.0, 3.0, 2.0, 5.0, 0.0)
-    assert result.get_single_layer_block_time() == 57.0
+    assert result.get_single_layer_block_time() == 59.0
     ep_calls = [value for _, value in predictor._cc_backend.calls
                 if value["comm_domain"] == "MOE_EP"]
     # Dispatch gathers max(r_d) = 3 rows; combine reduces 8 TP x 8 DP x 3 rows.
@@ -294,6 +294,7 @@ def test_dummy_attention_uses_v2_descriptor_geometry(predictor, layer, base_coun
     from frontier.entities.batch import DecodeCudaGraphMetadata, DummyForwardBatch
 
     batch = DummyForwardBatch(0, 0, 0)
+    batch._cluster_type = ClusterType.MONOLITHIC
     if mode != "NONE":
         batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
             "full_and_piecewise", mode, True, False, 1, rows, 1, rows,
@@ -340,6 +341,7 @@ def test_idle_geometry_has_no_request_rows_or_lm_head(predictor):
     predictor._replica_config.router_topk = 6
     predictor._replica_config.total_expert_num = 256
     dummy = DummyForwardBatch(0, 0, 0)
+    dummy._cluster_type = ClusterType.MONOLITHIC
     widths = sequence_parallel_moe_token_widths([1] * 8, 8)
     result = predictor._predict_dsv4_structural_execution(
         dummy, 42, 0, lane_workload=destination(widths, 42), sp_token_widths=widths,

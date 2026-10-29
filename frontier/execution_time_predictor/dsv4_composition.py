@@ -18,13 +18,14 @@ from types import MappingProxyType
 from typing import Collection, Iterable, Mapping
 
 from frontier.profiling.kernel_gap.schema import CUDA_GRAPH, CUDA_GRAPH_PIECEWISE, EAGER
+from frontier.execution_time_predictor.dsv4_runner import INPUT_SCOPE
 
 MAIN, AUX0, AUX1, AUX2 = "main", "aux0", "aux1", "aux2"
 STREAMS = (MAIN, AUX0, AUX1, AUX2)
 
 # Main-stream scopes of the phase before and after the layer's stream program.
 _PREFIX = (
-    "dsv4_embedding", "dsv4_embedding_allreduce", "dsv4_mhc_first_pre",
+    INPUT_SCOPE, "dsv4_embedding", "dsv4_embedding_allreduce", "dsv4_mhc_first_pre",
     "dsv4_mhc_ffn_post_attn_pre", "dsv4_sp_attention_allgather",
 )
 _SUFFIX = (

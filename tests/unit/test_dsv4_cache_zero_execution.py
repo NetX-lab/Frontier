@@ -57,9 +57,10 @@ def test_real_allocation_has_one_before_forward_scope_per_worker(predictor, tp_r
     assert sum("kv_cache_block_zero" in layer.op_times for layer in layers) == 1
     assert timing_operator_times(layers[0], "pre_dp") == (
         ("COMPUTE", "kv_cache_block_zero", 2.0),
+        ("COMPUTE", "dsv4_block_table_write", 2.0),
     )
-    assert timing_operator_times(layers[0], "attention")[0][1] == "dsv4_embedding"
-    assert layers[0].get_single_layer_pre_dp_time() == 2.0
+    assert timing_operator_times(layers[0], "attention")[0][1] == "dsv4_input_preparation"
+    assert layers[0].get_single_layer_pre_dp_time() == 4.0
     assert all(layer.get_single_layer_pre_dp_time() == 0.0 for layer in layers[1:])
     assert sum(component_ledger(stage).values()) == pytest.approx(stage.total_time * 1000)
     calls = layers[0]._dsv4_workloads["kv_cache_block_zero"]
@@ -67,7 +68,6 @@ def test_real_allocation_has_one_before_forward_scope_per_worker(predictor, tp_r
     assert calls["block_assignment_count"] == calls["unique_block_count"] == 79
     assert calls["physical_reservation_extent_bytes"] == 79176960
     assert calls["native_store_traffic_bytes"] == "UNKNOWN"
-    assert calls["native_h2d_cost"] == "UNKNOWN"
     repeated = predictor._predict_dsv4_structural_execution(
         batch, 0, tp_rank, include_ffn=False, include_stage_owned=True,
         **serving_context(predictor, batch, 0),
@@ -221,7 +221,7 @@ def test_real_stage_trace_places_cache_zero_before_embedding(predictor, tmp_path
     assert call["block_ids"] == (1, 2, 3, 4, 5)
     assert call["physical_reservation_extent_bytes"] == 5011200
     assert call["native_store_traffic_bytes"] == "UNKNOWN"
-    assert "synthetic" in zero.meta["cost_source"]
+    assert "dummy mode" in zero.meta["cost_source"]
     from frontier.metrics.constants import OperationMetrics
     metric = store._operation_metrics[ClusterType.MONOLITHIC][OperationMetrics.KV_CACHE_BLOCK_ZERO]
     assert metric.sum == 2.0

@@ -195,3 +195,34 @@ prediction state. The exception covers only this routing check and these two
 gates. The planned splits above are unchanged. Acceptance requires the V4 unit
 tests, the PDD step-cost probe, and unchanged GLM, co-location, PDD and PD-AF
 results.
+
+## V4 trained operator and runner dispatch, 2026-10-29
+
+Before stage 3, at `d6ea9661`, `sklearn_execution_time_predictor.py` has
+8,666 lines and `metrics_store.py` has 5,744 lines (confirmed with `git show`).
+After B15 and B16b the counts are 8,640 and 5,768 respectively. B17 adds no
+lines to the predictor and 5 lines to the metrics store, which are
+registration only: the existing non-V4 exclusion of `kv_cache_block_zero`
+now excludes every operator of the KV-cache and V4 runner families, giving
+5,773 lines.
+
+The scoped cleanup inspection found that the predictor's old V4-specific
+attention training and registration branches were superseded by the shared
+`dsv4_training.py` entry point. Workload construction, exact operator and
+runner lookups, activity-count gaps and stream composition reside in the
+existing V4 modules, rather than extending the main predictor. B15/B16b's
+metrics changes route the existing component ledger and attention trace
+offsets; they do not create a second ledger or timing owner. B17 removes the
+superseded cache-zero rejection and synthetic-only scope block from the V4
+module and uses that same operator/gap path for the runner scopes.
+
+These boundaries preserve the predictor's subclass-facing training and
+measurement state and the metrics store's ownership of stage attribution.
+Moving unrelated state during runner coverage work would couple this change
+to the pending functional split. Predictor registration and routing remain
+part of steps 1 and 2 above (CPU-overhead pricing, then measurement-family
+binding); metrics routing and trace offsets remain part of step 3 (stage batch
+ledger extraction). The split is still movement-only work, with public
+delegates retained and the 77-case artifact/cache comparison required before
+its acceptance. This record does not claim that split or fidelity matrix has
+been performed and does not authorize additional growth.

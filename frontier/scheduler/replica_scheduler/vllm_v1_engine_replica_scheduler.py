@@ -333,6 +333,7 @@ class VLLMv1EngineReplicaScheduler(
             else None
         )
         if grouped_capacity is not None:
+            self._group_block_table_lengths: Dict[int, Dict[str, int]] = {}
             if self._cluster_type != ClusterType.MONOLITHIC and not (
                 self._cluster_type in (ClusterType.PREFILL, ClusterType.DECODE)
                 and global_vars.KV_CONNECTOR == "nixl"
@@ -444,7 +445,9 @@ class VLLMv1EngineReplicaScheduler(
         batch = super()._create_batch(
             requests, num_tokens, num_context_tokens, num_output_placeholders
         )
+        batch._cluster_type = self._cluster_type
         if self._is_grouped_kv_allocation():
+            batch.kv_block_table_writes = self._record_kv_block_table_writes(requests)
             block_ids = tuple(
                 block_id for group in self._kv_cache_capacity.groups
                 for block_id in self._pending_cache_zero_block_ids.get(group.group_id, ())
@@ -723,6 +726,7 @@ class VLLMv1EngineReplicaScheduler(
             dummy_forward = DummyForwardBatch(
                 self._replica_id, stage_id, self._batch_creation_counter
             )
+            dummy_forward._cluster_type = self._cluster_type
             dummy_forward.decode_cuda_graph_metadata = (
                 self._build_decode_cuda_graph_metadata(dummy_forward)
             )

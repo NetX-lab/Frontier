@@ -11,7 +11,7 @@ from frontier.attention.deepseek_v4 import (
 from frontier.entities.batch import DummyForwardBatch
 from frontier.execution_time_predictor.dsv4_composition import serial_attention_phase
 from frontier.entities.time_components import AttentionOperatorTimes, MoEOperatorTimes, MoETime
-from frontier.attention.dsv4_features import build_dsv4_features, build_dsv4_dummy_features
+from frontier.attention.dsv4_features import build_dsv4_features, build_dsv4_dummy_features, dsv4_request_is_decoding
 from frontier.operators.binding import build_operator_manifest
 from frontier.operators.families import get_comm_operator
 
@@ -23,13 +23,14 @@ def timing_operator_times(execution_time, phase):
     launch schedule or a claim about auxiliary-stream overlap.
     """
     from frontier.operators.families import COMM_FAMILY
+    from frontier.execution_time_predictor.dsv4_runner import ZERO_SCOPE, WRITE_SCOPE, INPUT_SCOPE, SAMPLING_SCOPE
 
     names_by_phase = {
         # Work before the forward's DP rendezvous: the runner zeroes newly
         # allocated cache blocks before it synchronizes the DP descriptor.
-        "pre_dp": ("kv_cache_block_zero",),
+        "pre_dp": (ZERO_SCOPE, WRITE_SCOPE),
         "attention": (
-            "dsv4_embedding", "dsv4_embedding_allreduce",
+            INPUT_SCOPE, "dsv4_embedding", "dsv4_embedding_allreduce",
             "dsv4_mhc_first_pre", "dsv4_mhc_ffn_post_attn_pre",
             "dsv4_sp_attention_allgather",
             "dsv4_fused_qkv_projection", "dsv4_compressor_projection",
@@ -58,6 +59,7 @@ def timing_operator_times(execution_time, phase):
         "post_combine": (
             "dsv4_mhc_final_post", "dsv4_sp_final_mhc_allgather",
             "dsv4_mhc_head", "dsv4_final_norm", "dsv4_lm_head", "dsv4_logits_gather",
+            SAMPLING_SCOPE,
         ),
     }
     supported = {name for names in names_by_phase.values() for name in names}
@@ -95,7 +97,7 @@ def predict_attention_operator_times(
         variant = workload["variant"]
         features = (build_dsv4_dummy_features(rows) if isinstance(batch, DummyForwardBatch)
                     else build_dsv4_features(
-                        batch.num_tokens, batch.num_context_tokens, batch.request_is_decoding,
+                        batch.num_tokens, batch.num_context_tokens, dsv4_request_is_decoding(batch),
                         variant=variant, compress_ratio=max(1, model.compress_ratios[layer_id]),
                         sliding_window=model.sliding_window, index_topk=model.index_topk,
                         padded_rows=rows,
@@ -342,22 +344,13 @@ def predict_structural_execution(
     workloads = dict(source["workloads"])
     base = predictor._dummy_execution_time if predictor._enable_dummy_mode else 0.0
     kernel_counts = dict(source["kernel_counts"])
-    zeroing = batch.cache_block_zeroing
-    if include_attention and layer_id == 0 and zeroing is not None:
-        if not predictor._enable_dummy_mode:
-            raise DeepSeekV4CoverageError("V4 kv_cache_block_zero has no measured runner coordinate")
-        times["kv_cache_block_zero"] = base
-        workloads["kv_cache_block_zero"] = {
-            "block_ids": zeroing.block_ids,
-            "block_assignment_count": len(zeroing.block_ids),
-            "unique_block_count": len(set(zeroing.block_ids)),
-            "physical_block_size_bytes": zeroing.physical_block_size_bytes,
-            "physical_reservation_extent_bytes": zeroing.physical_reservation_extent_bytes,
-            "extent_scope": "distinct physical slab reservations; not native zeroed segments or store traffic",
-            "execution_scope": "one before-forward invocation per physical worker and scheduler step",
-            "native_store_traffic_bytes": "UNKNOWN", "native_h2d_cost": "UNKNOWN",
-            "cost_source": "one synthetic dummy duration; no byte or layer scaling",
-        }
+    from frontier.execution_time_predictor.dsv4_runtime import add_runner_scopes
+
+    add_runner_scopes(
+        predictor, batch, layer_id, include_attention=include_attention, include_ffn=include_ffn,
+        selected_logits_rows=source_context["selected_logits_rows"],
+        times=times, counts=kernel_counts, workloads=workloads,
+    )
     if include_attention and layer_id == 0:
         # The embedding scope now excludes its separately owned reduction.
         times["dsv4_embedding_allreduce"] = communication("dsv4_embedding_allreduce")
@@ -561,12 +554,13 @@ def operator_trace_metadata(op_name, op_type, context):
         }
     if op_type != "COMPUTE":
         raise ValueError(f"Unsupported V4 trace kind: {op_type}")
-    if op_name == "kv_cache_block_zero":
+    from frontier.execution_time_predictor.dsv4_runner import ZERO_SCOPE, WRITE_SCOPE, INPUT_SCOPE, SAMPLING_SCOPE
+
+    if op_name in (ZERO_SCOPE, WRITE_SCOPE, INPUT_SCOPE, SAMPLING_SCOPE):
         return {
-            "source_scope": "vllm 2cf0a6915ce544dc493a0990f2ea38d81601128a: KVBlockZeroer",
-            "execution_boundary": "before forward; structural serial ordering",
-            "cache_storage_precision": "mixed cache views; byte initialization has no compute dtype",
-            "cost_source": "one synthetic dummy duration; native segment, store and H2D costs unqualified",
+            "source_scope": "vllm 2cf0a6915ce544dc493a0990f2ea38d81601128a: V2 model runner",
+            "cost_source": "runner scope kernel and memcpy medians; dummy mode uses its configured duration",
+            "gap_scope": "eager_preparation per device activity; host time zero",
         }
     inventory = {row["operation"]: row for row in
                  get_quantization_manager().get_operation_precision_metadata()}
@@ -587,15 +581,11 @@ def operator_workload_metadata(execution_time, op_name):
 
 def serving_context(predictor, batch, layer_id):
     """Use actual graph state, not the process-wide compilation configuration."""
-    from frontier.config import global_vars
-
-    if global_vars.KV_CONNECTOR != "none" and predictor._dsv4_step_costs is None:
-        raise NotImplementedError("V4 predictor PD phase/graph equivalence remains unqualified")
     compute_rows(batch)
     return dict(
         execution_mode=("eager" if batch.get_decode_cuda_graph_runtime_mode() == "NONE"
                         else "cuda_graph"),
-        # The component cache independently rejects prefix caching/MTP/PD.
+        # The component cache independently rejects prefix caching/MTP.
         prefix_caching=False, decode_context_parallel_size=1,
         prefill_context_parallel_size=1, enable_expert_parallel=True,
         moe_backend="auto", all2all_backend="allgather_reducescatter",

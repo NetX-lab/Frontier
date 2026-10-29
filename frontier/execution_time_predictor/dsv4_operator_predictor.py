@@ -26,6 +26,10 @@ from frontier.operators.typed_contracts import (
 )
 from frontier.profiling.moe.moe_rank_plan import CLASS_COLUMNS
 from frontier.types import MeasurementType
+from frontier.execution_time_predictor.dsv4_runner import (
+    ZERO_SCOPE, WRITE_SCOPE, INPUT_SCOPE, SAMPLING_SCOPE, BLOCK_TABLE, REPLAY_TABLE,
+    PREPARATION_COLUMNS, ACTIVITY_COLUMNS, NEW_ROW_ENTRIES,
+)
 
 OPERATOR_MODEL_PREFIX = "dsv4_operator__"
 GROUPED_GEMM = "moe_grouped_gemm"
@@ -202,6 +206,80 @@ def train_dsv4_operator_models(operators, moe, train):
     return models
 
 
+def load_dsv4_runner_dataframe(path):
+    """Admit promoted scope medians and constant activity counts, including H2D."""
+    try:
+        rows = pd.read_csv(path, float_precision="round_trip", keep_default_na=False)
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as exc:
+        raise DeepSeekV4CoverageError(f"V4 measured runner table cannot be read: {path}: {exc}") from exc
+    seen = {}
+    for index, row in rows.iterrows():
+        name = row.operator
+        if row.profile_method != "record_function" or row.row_role != "cost":
+            _reject(name, "runner tables require record_function cost rows")
+        if name == ZERO_SCOPE:
+            columns = ("n",)
+        elif name == WRITE_SCOPE:
+            columns = ("w_c", "r")
+        elif name == INPUT_SCOPE:
+            columns = PREPARATION_COLUMNS
+        elif name == SAMPLING_SCOPE:
+            columns = ("b",)
+        else:
+            _reject(name, "has no runner coordinate")
+        coordinate = (name, *(row[c] for c in columns))
+        counts = tuple(_positive_integer(row[c], name, c, allow_zero=True) for c in ACTIVITY_COLUMNS)
+        if sum(counts) != _positive_integer(row.activity_count, name, "activity_count"):
+            _reject(name, f"activity count disagrees at {coordinate}")
+        if coordinate in seen and seen[coordinate] != counts:
+            _reject(name, f"activity count varies at {coordinate}")
+        seen[coordinate] = counts
+        medians = [float(row[f"{prefix}.{name}.median"]) for prefix in ("kernel_stats", "memcpy_stats")]
+        if any(not math.isfinite(value) or value < 0 for value in medians):
+            _reject(name, f"invalid scope medians at {coordinate}")
+        rows.loc[index, f"time_stats.{name}.median"] = sum(medians)
+        # Reuse the paired count model and gap path. For runner scopes this
+        # target counts all device activities, rather than kernels alone.
+        rows.loc[index, f"time_stats.{name}.kernel_count"] = sum(counts)
+    return rows
+
+
+def runner_model_name(name, phase=None, mode=None):
+    return operator_model_name(name, "runner" if phase is None else f"{phase}_{mode}", 1)
+
+
+def train_dsv4_runner_models(block, replay, model_config, train):
+    models = {}
+    for rows in (block, replay):
+        for name, group in rows.groupby("operator"):
+            groups = group.groupby(["phase", "graph_runtime_mode"]) if name == INPUT_SCOPE else [(None, group)]
+            for descriptor, selected in groups:
+                key = runner_model_name(name, *descriptor) if descriptor is not None else runner_model_name(name)
+                columns = (PREPARATION_COLUMNS[2:] if name == INPUT_SCOPE else
+                           ("n",) if name == ZERO_SCOPE else ("w_c", "r") if name == WRITE_SCOPE else ("b",))
+                # The attention descriptor schema leaves geometry blank for
+                # dummies and request padding blank for PIECEWISE. These are
+                # absent coordinates, never synthetic numeric sentinel values.
+                active = [c for c in columns if not (selected[c] == "").all()]
+                selected = selected.copy()
+                # Registry metadata identifies this V4 launch contract; it is
+                # not a claim that every preparation/ID tensor has BF16 dtype.
+                selected["profiling_precision"] = model_config.get_default_precision().name
+                selected["measurement_type"] = MeasurementType.KERNEL_ONLY.value
+                for column in active:
+                    selected[column] = pd.to_numeric(selected[column], errors="raise")
+                model = train(model_name=key, df=selected, feature_cols=active,
+                              target_col=f"time_stats.{name}.median")
+                model._frontier_dsv4_absent_coordinates = tuple(c for c in columns if c not in active)
+                if name == WRITE_SCOPE:
+                    entries = {tuple(json.loads(value)) for value in selected[NEW_ROW_ENTRIES]}
+                    if len(entries) != 1:
+                        _reject(name, "ambiguous measured new-row entries")
+                    model._frontier_dsv4_new_row_entries = entries.pop()
+                models[key] = model
+    return models
+
+
 @dataclass(frozen=True)
 class OperatorPrediction:
     time_ms: float
@@ -220,6 +298,41 @@ class DeepSeekV4OperatorPredictor:
         if coordinates not in count._frontier_exact_lookup:
             _reject(name, f"missing measured kernel count at {coordinates}")
         return OperatorPrediction(model._frontier_exact_lookup[coordinates], count._frontier_exact_lookup[coordinates])
+
+    def runner(self, name, coordinate):
+        if (name == ZERO_SCOPE and coordinate["n"] == 0) or (
+            name == WRITE_SCOPE and (coordinate["w_c"], coordinate["r"]) == (0, 0)
+        ):
+            return OperatorPrediction(0.0, 0.0)
+        key = (runner_model_name(name, coordinate["phase"], coordinate["graph_runtime_mode"])
+               if name == INPUT_SCOPE else runner_model_name(name))
+        model = self._models.get(key)
+        if model is None:
+            _reject(name, f"missing measured coordinate {coordinate}, model {key}")
+        for column in model._frontier_dsv4_absent_coordinates:
+            if coordinate[column] != "":
+                _reject(name, f"missing measured coordinate {coordinate}; {column} must be absent")
+        values = tuple(float(coordinate[c]) for c in model._frontier_feature_names)
+        try:
+            return self._exact(name, key, values)
+        except DeepSeekV4CoverageError as exc:
+            _reject(name, f"missing measured coordinate {coordinate}: {exc}")
+
+    def block_table_writes(self, writes):
+        if (writes.w_c, writes.r) == (0, 0):
+            return OperatorPrediction(0.0, 0.0)
+        model = self._models.get(runner_model_name(WRITE_SCOPE))
+        if model is None:
+            _reject(WRITE_SCOPE, f"missing measured runner table {BLOCK_TABLE}")
+        for request, group, count in writes.continuing_entries:
+            if count != 1:
+                _reject(WRITE_SCOPE, f"continuing pair {request}/{group} has {count} new entries; measured shape is 1")
+        expected = model._frontier_dsv4_new_row_entries
+        for request, groups in writes.new_rows:
+            actual = tuple(length for _, length in groups)
+            if actual != expected:
+                _reject(WRITE_SCOPE, f"new row {request} entries {actual} differ from measured {expected}")
+        return self.runner(WRITE_SCOPE, {"w_c": writes.w_c, "r": writes.r})
 
     def operator(self, name, rows, tp):
         return self._exact(name, operator_model_name(name, DEEPSEEK_V4_OPERATOR_AXES[name], tp), (float(rows),))

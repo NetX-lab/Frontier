@@ -35,6 +35,26 @@ class KVCacheBlockZeroing:
 
 
 @dataclass(frozen=True)
+class KVBlockTableWrites:
+    """Staged block-table work of one real forward on one scheduler lane.
+
+    Continuing entries are (request ID, group ID, appended entries). New rows
+    retain each group's full logical length, including released/null slots.
+    """
+
+    continuing_entries: tuple[tuple[int, str, int], ...]
+    new_rows: tuple[tuple[int, tuple[tuple[str, int], ...]], ...]
+
+    @property
+    def w_c(self) -> int:
+        return len(self.continuing_entries)
+
+    @property
+    def r(self) -> int:
+        return len(self.new_rows)
+
+
+@dataclass(frozen=True)
 class AFDStageMetadata:
     """Minimal AFD metadata for simulation.
 
@@ -572,6 +592,8 @@ class Batch(BaseEntity):
         self._is_moe = is_moe
         self.decode_cuda_graph_metadata: Optional[DecodeCudaGraphMetadata] = None
         self.cache_block_zeroing: Optional[KVCacheBlockZeroing] = None
+        self.kv_block_table_writes: Optional[KVBlockTableWrites] = None
+        self._cluster_type = None
         self._request_runtime_epochs = [
             int(getattr(request, "runtime_epoch", 0)) for request in self._requests
         ]

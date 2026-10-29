@@ -9,7 +9,7 @@ from math import ceil
 from typing import List, Optional
 
 from frontier.attention.gdn.guards import validate_gdn_runtime_support
-from frontier.entities.batch import Request
+from frontier.entities.batch import Request, KVBlockTableWrites
 from frontier.errors import FrontierMemoryOOMError
 from frontier.kv_cache.base_kv_cache_manager import KVCacheAllocationResult
 from frontier.logger import get_cluster_logger
@@ -24,6 +24,40 @@ from frontier.types import ClusterType
 
 class KvBlockAllocation:
     """Token accounting, KV block allocation and preemption."""
+
+    def _record_kv_block_table_writes(self, requests: List[Request]) -> KVBlockTableWrites:
+        """Native add writes a full row; update appends only new group entries.
+
+        V2 model_runner.py:992-994,1022-1025; block_table.py:107-121.
+        Reclamation changes block IDs to null in place and retains lengths.
+        NIXL reservations have never forwarded and therefore add a full row.
+        """
+        from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
+
+        continuing, new_rows = [], []
+        for request in requests:
+            tables = self._kv_cache_manager.get_group_block_ids(request.id)
+            lengths = {group.group_id: len(tables[group.group_id])
+                       for group in self._kv_cache_capacity.groups}
+            previous = self._group_block_table_lengths.get(request.id)
+            if previous is None:
+                new_rows.append((request.id, tuple(lengths.items())))
+            else:
+                for group, length in lengths.items():
+                    appended = length - previous[group]
+                    if appended < 0:
+                        raise DeepSeekV4CoverageError(
+                            f"V4 dsv4_block_table_write: continuing row {request.id}/{group} shrank"
+                        )
+                    if appended:
+                        continuing.append((request.id, group, appended))
+            self._group_block_table_lengths[request.id] = lengths
+        return KVBlockTableWrites(tuple(continuing), tuple(new_rows))
+
+    def _forget_kv_block_table_row(self, request_id: int) -> None:
+        # Native finish/free removes request state (model_runner.py:913-953).
+        if self._is_grouped_kv_allocation():
+            self._group_block_table_lengths.pop(request_id, None)
 
     def _get_available_kv_blocks(self) -> int:
         if self._is_grouped_kv_allocation():
@@ -294,6 +328,7 @@ class KvBlockAllocation:
         return None
 
     def _free_request_resources(self, request: Request) -> None:
+        self._forget_kv_block_table_row(request.id)
         self._get_monolithic_pp_mtp_near_full_prefill_request_ids().discard(
             request.id
         )
@@ -328,6 +363,7 @@ class KvBlockAllocation:
             gdn_slot_manager.release(request.id)
 
     def _free_request_resources_by_id(self, request_id: int) -> None:
+        self._forget_kv_block_table_row(request_id)
         request = self._find_request_by_id(request_id)
         if request is not None:
             self._free_request_resources(request)

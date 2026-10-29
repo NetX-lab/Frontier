@@ -123,6 +123,7 @@ def _scheduler(*, blocks: int = 400, watermark: int = 3):
     scheduler._num_allocated_blocks = 0
     scheduler._scheduled_num_computed_tokens_by_request = {}
     scheduler._pending_cache_zero_block_ids = {}
+    scheduler._group_block_table_lengths = {}
     scheduler._active_batch_request_counts = {}
     scheduler._gdn_state_slot_manager = None
     scheduler._current_iteration_token_budget = 64

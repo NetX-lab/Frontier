@@ -44,11 +44,14 @@ def predictor():
 
 
 def source_batch(tokens=17):
-    return Batch(
+    batch = Batch(
         replica_id=0, requests=[Request(0.0, tokens + 120, 4)],
         num_tokens=[tokens], num_context_tokens=[120],
         request_is_decoding=[False], is_moe=True,
     )
+
+    batch._cluster_type = ClusterType.MONOLITHIC
+    return batch
 
 
 def component(predictor, batch, layer=0, rank=0, **overrides):
@@ -334,7 +337,7 @@ def test_missing_cc_backend_preserves_moe_error_policy(predictor):
         component(predictor, source_batch())
 
 
-def test_pd_cluster_is_rejected_without_a_phase_or_stage_result(predictor):
-    predictor._cluster_type = ClusterType.PREFILL
-    with pytest.raises((ValueError, NotImplementedError), match="co-location"):
+def test_pdaf_cluster_is_rejected_without_a_phase_or_stage_result(predictor):
+    predictor._cluster_type = ClusterType.DECODE_ATTN
+    with pytest.raises((ValueError, NotImplementedError), match="MONOLITHIC, PREFILL or DECODE"):
         component(predictor, source_batch())

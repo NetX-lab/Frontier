@@ -331,10 +331,13 @@ def test_other_grouped_pd_connectors_remain_unsupported(monkeypatch, role, conne
 
 
 @pytest.mark.parametrize("dummy", [False, True])
-def test_grouped_transport_does_not_admit_v4_execution(dummy):
-    predictor = SimpleNamespace(_enable_dummy_mode=dummy, _dsv4_step_costs=None)
-    with pytest.raises(NotImplementedError, match="V4 predictor PD phase/graph equivalence remains unqualified"):
-        serving_context(predictor, None, 0)
+def test_grouped_transport_admits_v4_context(dummy):
+    from frontier.entities import Batch
+    predictor = SimpleNamespace(_enable_dummy_mode=dummy, _dsv4_step_costs=None,
+                                _model_config=SimpleNamespace(num_layers=43))
+    batch = Batch(0, [Request(0, 6144, 4)], [1], num_context_tokens=[6143], request_is_decoding=[False], is_moe=True)
+    batch._cluster_type = ClusterType.DECODE
+    assert serving_context(predictor, batch, 0)["execution_mode"] == "eager"
 
 
 @pytest.mark.parametrize("owner", ["source", "target"])

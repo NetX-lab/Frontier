@@ -63,6 +63,7 @@ def test_csa_scope_rule_covers_short_long_and_score_branches(
     model, replica, queries, contexts, decoding, mode, rows, short, scores,
 ):
     batch = source_batch(queries, contexts, decoding)
+    batch._cluster_type = ClusterType.MONOLITHIC
     if mode != "NONE":
         batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
             "full_and_piecewise", mode, True, False, sum(queries), rows, len(queries), rows)
@@ -81,6 +82,7 @@ def test_csa_scope_rule_covers_short_long_and_score_branches(
                                             ("PIECEWISE", 2, False), ("PIECEWISE", 4, True)])
 def test_dummy_scope_sets_use_padding_geometry(model, replica, mode, rows, scores):
     batch = DummyForwardBatch(0, 0, 0)
+    batch._cluster_type = ClusterType.MONOLITHIC
     if mode != "NONE":
         batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
             "full_and_piecewise", mode, True, False, 1, rows, 1, rows)
@@ -131,6 +133,7 @@ def row_batch(row):
         decodes = json.loads(row["decode_kv_cache_sizes"])
         batch = source_batch(queries + [1] * len(decodes), contexts + decodes,
                              [False] * len(queries) + [True] * len(decodes))
+    batch._cluster_type = ClusterType.MONOLITHIC
     if mode != "NONE":
         batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
             "full_and_piecewise", mode, True, False, batch.total_num_tokens, rows,

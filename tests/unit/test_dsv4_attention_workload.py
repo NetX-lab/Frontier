@@ -32,12 +32,15 @@ def replica():
 def source_batch(queries, contexts, decoding=None):
     if decoding is None:
         decoding = [False] * len(queries)
-    return Batch(
+    batch = Batch(
         replica_id=0,
         requests=[Request(0.0, max(1, c + q), 4) for q, c in zip(queries, contexts)],
         num_tokens=queries, num_context_tokens=contexts,
         request_is_decoding=decoding, is_moe=True,
     )
+
+    batch._cluster_type = ClusterType.MONOLITHIC
+    return batch
 
 
 def workload(model, replica, batch, layer=0, **overrides):
@@ -47,6 +50,7 @@ def workload(model, replica, batch, layer=0, **overrides):
         decode_context_parallel_size=1, prefill_context_parallel_size=1,
     )
     options.update(overrides)
+    batch._cluster_type = options["cluster_type"]
     return build_deepseek_v4_attention_workload(
         model, replica, batch, layer, **options,
     )
@@ -186,7 +190,7 @@ def test_kernel_partition_uses_query_threshold_and_preserves_unsorted_snapshot(m
     {"prefix_caching": True},
     {"prefix_caching": None}, {"decode_context_parallel_size": 2},
     {"prefill_context_parallel_size": 2},
-    {"cluster_type": ClusterType.PREFILL},
+    {"cluster_type": ClusterType.DECODE_ATTN},
 ])
 def test_unsupported_explicit_context_is_rejected(model, replica, options):
     with pytest.raises((ValueError, NotImplementedError)):

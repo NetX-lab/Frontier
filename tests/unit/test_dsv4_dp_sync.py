@@ -208,6 +208,7 @@ def native_tuples(lanes):
 def synchronized_forward(lanes, cluster_type=ClusterType.DECODE):
     owner = policy(cluster_type)
     for lane in lanes.values():
+        lane._cluster_type = cluster_type
         lane.decode_cuda_graph_metadata = owner._build_decode_cuda_graph_metadata(lane)
     native = native_tuples(lanes)
     _synchronize_dp_descriptors(lane_scheduler(owner), 0, lanes)

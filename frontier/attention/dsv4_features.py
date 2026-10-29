@@ -129,6 +129,25 @@ def build_dsv4_features(
     })
 
 
+def dsv4_request_is_decoding(batch) -> list[bool]:
+    """Native D first-tail metadata, without changing request KV accounting.
+
+    The NIXL request is already prefill-complete in Frontier. V2 adds it as a
+    new runner row and replays the prompt's last token (model_runner.py:992-994).
+    Its first-tail table phase therefore differs from the request-level flag.
+    """
+    from frontier.types import ClusterType
+
+    writes = batch.kv_block_table_writes
+    if batch._cluster_type is not ClusterType.DECODE or writes is None:
+        return batch.request_is_decoding
+    new_rows = {request for request, _ in writes.new_rows}
+    return [decoding and not (request.id in new_rows and query == 1
+                             and context == request.num_prefill_tokens - 1)
+            for request, query, context, decoding in zip(
+                batch.requests, batch.num_tokens, batch.num_context_tokens, batch.request_is_decoding)]
+
+
 def build_dsv4_dummy_features(padded_rows: int) -> DeepSeekV4BatchFeatures:
     """Native dummy calls have dispatch rows and no request geometry."""
     return DeepSeekV4BatchFeatures(PHASE_DUMMY, {"padded_rows": _integer(padded_rows, "padded_rows")})

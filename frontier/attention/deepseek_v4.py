@@ -196,8 +196,13 @@ def compute_rows(batch):
         _integer(graph.padded_total_tokens, "graph padded rows")
         if graph.padded_total_tokens < actual:
             raise ValueError("V4 graph padded rows cannot be smaller than scheduled rows")
-    return _integer(batch.get_effective_total_tokens_for_compute(ClusterType.MONOLITHIC),
-                    "effective compute rows")
+    # The generic Batch getter applies decode graph metadata only to the
+    # MONOLITHIC/DECODE roles. V2 PREFILL also consumes its synchronized
+    # descriptor; reuse the metadata's existing width selector for that role.
+    rows = (graph.get_effective_total_tokens_for_compute()
+            if batch._cluster_type is ClusterType.PREFILL and graph is not None
+            else batch.get_effective_total_tokens_for_compute(batch._cluster_type))
+    return _integer(rows, "effective compute rows")
 
 
 def _call(input_shape, output_shape, **features):
@@ -214,8 +219,8 @@ def _validate_attention_context(
 ):
     if model_config.get_model_architecture_profile().profile_id != "deepseek_v4":
         raise ValueError("V4 attention workload requires the DeepSeek-V4 profile")
-    if cluster_type is not ClusterType.MONOLITHIC:
-        raise NotImplementedError("V4 attention component requires co-location")
+    if cluster_type not in (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE):
+        raise NotImplementedError("V4 attention component requires MONOLITHIC, PREFILL or unified DECODE")
     if execution_mode not in ("eager", "cuda_graph"):
         raise NotImplementedError("V4 component requires explicit eager or cuda_graph execution")
     if prefix_caching is not False:

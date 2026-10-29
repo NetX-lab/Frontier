@@ -702,11 +702,11 @@ class ModelArchitectureProfile:
             replicate_shared_expert_in_sequence_parallel=True,
             experimental=True,
             runtime_limitations=(
-                "compressed attention, mHC and mixed precision are unsupported",
-                "shared FFN sequence-parallel token/collective execution is unsupported",
-                "measured execution is limited to a diagnostic whole-step table "
-                "(dsv4_step_cost.json), selected explicitly through the attention input path, "
-                "for PREFILL and unified DECODE lanes of its measured topology",
+                "trained operator execution supports MONOLITHIC, PREFILL and unified DECODE "
+                "on measured H200 coordinates; dsv4_step_cost.json is diagnostic only",
+                "PD-AF, prefix caching, speculative decoding / MTP and CPU-overhead modeling are unsupported",
+                "sampling is measured under the native min_tokens=max_tokens contract with "
+                "generation-config EOS stop-token bias only; PREFILL sampling without that contract is unmeasured",
             ),
             match=lambda config: (
                 _normalized_attr(config, "model_type") == "deepseek_v4"
