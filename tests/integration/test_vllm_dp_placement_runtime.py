@@ -484,6 +484,11 @@ def test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forw
             2: (0, True),
             3: (0, True),
         }
+        dummy_start = next(record["time"] for record in run["engine_loop"]
+                           if record["kind"] == "dummy_pass" and record["lane"] == 2)
+        dummy_end = next(record["time"] for record in run["engine_loop"]
+                         if record["kind"] == "dummy_end" and record["lane"] == 2)
+        assert dummy_start < run["request_arrivals"][2] < dummy_end
         lane_two_groups = [
             record["group"]
             for record in stage0
@@ -889,6 +894,7 @@ def run_case(
             engine_loop.append(
                 {
                     "kind": "dummy_pass",
+                    "time": float(time),
                     "lane": self._replica_local_id,
                     "after_empty_pass": after_empty_pass,
                     "lane_has_requests": lane_has_requests,
@@ -901,6 +907,7 @@ def run_case(
         engine_loop.append(
             {
                 "kind": "dummy_end",
+                "time": float(time),
                 "lane": self._replica_local_id,
                 "pass_ended": pass_ended,
             }
@@ -1149,6 +1156,7 @@ def run_case(
     return {
         "num_lanes": shape["attn_dp"],
         "num_requests": len(requests),
+        "request_arrivals": [request.arrived_at for request in requests],
         "completed_requests": sum(1 for request in requests if request.completed),
         "tokens_conserved": all(
             request.num_processed_tokens
@@ -1237,11 +1245,13 @@ DISCRIMINATING_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
 
 # Issue W9-04. Four MoE lanes; requests 0 and 1 start lanes 0 and 1 two
 # milliseconds apart, and request 2 arrives while lane 0 already waits in the
-# first MoE room of that forward and lane 1 has not reached it yet.
+# first MoE room of that forward and lane 1 has not reached it yet. With the
+# fixture's 1 ms dummy operator costs, host preparation moves lane 0's room
+# entry to 9 ms and lane 1's to 11 ms; the 10 ms arrival falls between them.
 LATE_JOIN_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
 0.0,8,2
 0.002,24,2
-0.008,48,2
+0.010,48,2
 """
 
 # Short prompts arriving half a millisecond apart, so a lane often schedules

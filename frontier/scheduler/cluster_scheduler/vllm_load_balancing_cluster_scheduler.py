@@ -43,12 +43,12 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
             and self._config.replica_config.num_pipeline_stages != 1
         ):
             raise ValueError(f"vllm_load_balancing supports {self._cluster_type.name} at PP1 only")
-        # The load report is keyed by the Replica's stage-0 forward group. A
-        # MoE Replica binds one group for every lane of one forward, so peer
-        # lanes share the key. A dense Replica has no per-forward collective
-        # across its attention-DP lanes and binds no group, so two lanes would
-        # order their reports only by their own admission counts. One lane is
-        # safe either way.
+        # Without run-ahead the load report is keyed by the Replica's stage-0
+        # forward group. A MoE Replica binds one group for every lane of one
+        # forward, so peer lanes share the key. A dense Replica has no
+        # per-forward collective across its attention-DP lanes and binds no
+        # group, so two lanes would order their reports only by their own
+        # admission counts. One lane is safe either way.
         if not self._config.replica_config.model_config.is_moe:
             if self._replica_dp_size != 1:
                 raise ValueError(
@@ -58,7 +58,6 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
                     f"attn_dp={self._replica_dp_size}"
                 )
         self._serving_replica_id = next(iter(self._cluster.replicas))
-        self._num_pipeline_stages = self._config.replica_config.num_pipeline_stages
         self._load_balancer = VllmDPLoadBalancer(
             self._replica_dp_size,
             policy_version=self._config.cluster_scheduler_config.policy_version,
@@ -113,7 +112,7 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         replica_local_id: int | None,
         batch: Batch,
     ) -> None:
-        """Report the lane's post-admission load while its pipeline has room.
+        """Report the lane's post-admission load while its batch queue has room.
 
         A vLLM engine whose batch queue still has room after scheduling
         publishes at once; otherwise it waits for its oldest batch and
@@ -123,10 +122,13 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         """
 
         lane_id = self._lane_index(replica_local_id)
-        key = self._next_report_key(replica_id, lane_id)
+        key = self._next_report_key(replica_id, lane_id, batch)
         self._last_admitted_key[lane_id] = key
         lane = self.get_replica_scheduler(replica_id, lane_id)
-        if lane.num_running_batches < self._num_pipeline_stages:
+        # The batch queue holds the lane's concurrent batches: the pipeline
+        # depth, or an explicit queue capacity. Run-ahead limits device
+        # forwards, not this queue.
+        if lane.num_running_batches < lane._max_concurrent_batches:
             self._load_balancer.report(time, lane_id, key, lane.get_request_load())
         else:
             self._held_key[lane_id] = key
@@ -164,8 +166,10 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         lane = self.get_replica_scheduler(replica_id, lane_id)
         self._load_balancer.report(time, lane_id, key, lane.get_request_load())
 
-    def _next_report_key(self, replica_id: int, lane_id: int) -> int:
-        """Key of the stage-0 forward that the lane's next batch joins.
+    def _next_report_key(
+        self, replica_id: int, lane_id: int, batch: Batch | None = None
+    ) -> int:
+        """Key of the host busy-loop iteration that the lane's report belongs to.
 
         vLLM keys a report by the engine's step counter. Each step launches
         one forward, real or dummy, that pairs with the peers' forward of the
@@ -175,8 +179,19 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         which the `+ 1` term provides. Only comparisons of keys are used, as the
         reference coordinator uses its `(wave, step)` pair; Frontier has no wave
         reset, so the group id collapses that pair to one scalar.
+
+        Under run-ahead the host forms forwards before stage 0 joins them.
+        Admission uses the identity assigned from the existing lane creation
+        counter; a completion with no held admission uses that counter's next
+        forward. Both include dummy forwards and remain monotonic across waves.
         """
 
+        if self._config.replica_scheduler_config.max_forwards_in_flight is not None:
+            lane = self.get_replica_scheduler(replica_id, lane_id)
+            return (
+                lane._batch_creation_counter
+                if batch is None else batch._forward_cohort_provisional_id
+            )
         context = self.get_stage_execution_context(replica_id, 0)
         return max(
             context.joinable_forward_group_id,
