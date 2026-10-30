@@ -11,7 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from frontier.config import RoundRobinClusterSchedulerConfig, VllmV1SchedulerConfig, global_vars
+from frontier.config import RoundRobinClusterSchedulerConfig, VllmLoadBalancingClusterSchedulerConfig, VllmV1SchedulerConfig, global_vars
 from frontier.entities import DummyForwardBatch, Request
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.events.replica_schedule_event import ReplicaScheduleEvent
@@ -20,6 +20,7 @@ from frontier.scheduler.utils import ep_wave_inputs
 from frontier.simulator import Simulator
 from frontier.types import ClusterType
 from tests.integration.test_vllm_dp_placement_runtime import _config
+from tests.unit.test_vllm_dp_load_balancer import _policy_scheduler, _request
 
 
 @pytest.fixture(autouse=True)
@@ -29,7 +30,8 @@ def reset_globals():
     global_vars.reset_global_vars()
 
 
-def _simulator(root, patch, depth, *, arrivals=(0.0,), pp=1, moe=True, dp=2):
+def _simulator(root, patch, depth, *, arrivals=(0.0,), pp=1, moe=True, dp=2,
+               policy=RoundRobinClusterSchedulerConfig):
     root.mkdir(parents=True, exist_ok=True)
     trace = root / "trace.csv"
     with trace.open("w", newline="") as stream:
@@ -37,7 +39,7 @@ def _simulator(root, patch, depth, *, arrivals=(0.0,), pp=1, moe=True, dp=2):
         writer.writerow(("arrived_at", "num_prefill_tokens", "num_decode_tokens"))
         writer.writerows((time, 8, 2) for time in arrivals)
     config = _config(root, patch, is_moe=moe, attn_dp=dp, moe_ep=dp if moe else 1,
-                     policy=RoundRobinClusterSchedulerConfig, trace=str(trace),
+                     policy=policy, trace=str(trace),
                      num_pipeline_stages=pp, num_layers=2 * pp,
                      analytical_backend=True)
     config.cluster_config.replica_scheduler_config.max_forwards_in_flight = depth
@@ -368,6 +370,165 @@ def test_real_forward_posts_reads_at_formation_and_not_again_at_device_start(tmp
         lane.on_engine_step_start(0.020, batch)
         assert lane._nixl_reads_posted == [(0.005, read)]
         assert lane._nixl_reads_found_by_batch == {}
+
+
+def test_run_ahead_load_reports_follow_formed_forwards_and_held_completions(tmp_path):
+    """Host steps own reports even while older forwards occupy device rooms."""
+    records = []
+    with pytest.MonkeyPatch.context() as patch:
+        sim, cluster, lanes = _simulator(
+            tmp_path, patch, 19, arrivals=(0.0, 0.12, 0.24, 0.36),
+            policy=VllmLoadBalancingClusterSchedulerConfig,
+        )
+        original_admit = cluster.on_replica_batch_scheduled
+        original_complete = cluster.on_replica_batch_end
+        original_report = cluster._load_balancer.report
+        active = []
+
+        def report(time, lane_id, key, load):
+            balancer = cluster._load_balancer
+            row = active[-1]
+            row.update(key=key, previous_step=balancer.last_report_step,
+                       changed=load != balancer.engine_counts[lane_id])
+            original_report(time, lane_id, key, load)
+            row.update(last_step=balancer.last_report_step,
+                       applied=balancer.engine_counts[lane_id] == load)
+
+        def observe(kind, original, time, replica_id, lane_id, batch):
+            lane = lanes[lane_id]
+            held = cluster._held_key[lane_id]
+            row = dict(kind=kind, time=time, lane=lane_id, held=held,
+                       ahead=len(lane._unfinished_forwards),
+                       expected=(batch._forward_cohort_provisional_id
+                                 if kind == "admission" else
+                                 held if held is not None else lane._batch_creation_counter))
+            active.append(row)
+            original(time, replica_id, lane_id, batch)
+            active.pop()
+            row["held_after"] = cluster._held_key[lane_id]
+            records.append(row)
+
+        def admit(time, replica_id, lane_id, batch):
+            observe("admission", original_admit, time, replica_id, lane_id, batch)
+
+        def complete(time, replica_id, lane_id, batch):
+            observe("completion", original_complete, time, replica_id, lane_id, batch)
+
+        patch.setattr(cluster._load_balancer, "report", report)
+        patch.setattr(cluster, "on_replica_batch_scheduled", admit)
+        patch.setattr(cluster, "on_replica_batch_end", complete)
+        sim.run()
+        assert all(request.completed for request in sim._all_requests)
+        assert cluster._held_key == [None, None]
+
+    (tmp_path / "load_reports.json").write_text(json.dumps(records, indent=1))
+    for lane_id in range(2):
+        admissions = [row for row in records
+                      if row["kind"] == "admission" and row["lane"] == lane_id]
+        assert len(admissions) >= 2
+        assert all(after["expected"] > before["expected"]
+                   for before, after in zip(admissions, admissions[1:]))
+    for row in records:
+        if row["kind"] == "admission":
+            # PP1's real batch queue fills even when K's device queue has room.
+            assert "key" not in row
+            assert row["held_after"] == row["expected"]
+        else:
+            assert row["key"] == row["expected"]
+            assert row["held_after"] is None
+    assert any(row["kind"] == "admission" and row["ahead"] > 1 for row in records)
+    assert any(row["kind"] == "completion" and row["held"] is not None for row in records)
+
+
+def test_run_ahead_decode_queue_reports_host_keys_and_keeps_stale_counts(tmp_path, caplog) -> None:
+    """Native batch_queue_size owns publication; K owns only device capacity.
+
+    coordinator.py:402-415 applies an older report's counts without moving the
+    latest step boundary. This intentionally preserves the native stale rule.
+    """
+    with pytest.MonkeyPatch.context() as patch:
+        patch.chdir(tmp_path)
+        scheduler = _policy_scheduler(
+            patch, cluster_type=ClusterType.DECODE,
+            replica_scheduler_config=VllmV1SchedulerConfig(
+                max_forwards_in_flight=19, max_concurrent_batches=2,
+                num_blocks=128, block_size=16, batch_size_cap=4,
+                max_tokens_in_batch=16, enable_chunked_prefill=True,
+            ),
+        )
+        replica_id = scheduler._serving_replica_id
+        lanes = [scheduler.get_replica_scheduler(replica_id, lane_id)
+                 for lane_id in range(2)]
+        balancer = scheduler._load_balancer
+        reports = []
+        original_report = balancer.report
+
+        def report(time, lane_id, key, load):
+            reports.append((lane_id, key))
+            original_report(time, lane_id, key, load)
+
+        patch.setattr(balancer, "report", report)
+        for lane in lanes:
+            lane._dp_wave_running = True
+        for _ in range(3):
+            for lane in lanes:
+                lane.on_schedule(0.0)
+
+        def add_decode_request(lane, time):
+            request = _request()
+            request._num_processed_tokens = request.num_prefill_tokens
+            request._is_prefill_complete = True
+            request._prefill_completed_at = 0.0
+            request.on_arrival(time, ClusterType.DECODE)
+            lane.add_request(request)
+            return request
+
+        requests = [add_decode_request(lane, 0.1) for lane in lanes]
+        first = [lane.on_schedule(0.1)[0] for lane in lanes]
+        assert [batch._forward_cohort_provisional_id for batch in first] == [3, 3]
+        # Three older dummy forwards remain queued; the first real batch still
+        # leaves an output slot, so both lanes publish its host key immediately.
+        assert all(len(lane._unfinished_forwards) == 4 for lane in lanes)
+        assert reports == [(0, 3), (1, 3)]
+        assert scheduler._held_key == [None, None]
+        second = [lane.on_schedule(0.1)[0] for lane in lanes]
+        assert [batch._forward_cohort_provisional_id for batch in second] == [4, 4]
+        assert scheduler._held_key == [4, 4]
+        assert reports == [(0, 3), (1, 3)]
+        assert all(len(lane._unfinished_forwards) == 5 for lane in lanes)
+        for time in (0.2, 0.3, 0.4):
+            for lane in lanes:
+                lane.on_dummy_forward_end(time)
+
+        def complete(lane_id, batch, time):
+            lane = lanes[lane_id]
+            lane.on_device_forward_end(batch)
+            batch.on_batch_end(time, ClusterType.DECODE)
+            lane.on_batch_end(batch)
+            scheduler.on_replica_batch_end(time, replica_id, lane_id, batch)
+
+        complete(0, first[0], 0.5)
+        assert scheduler._held_key == [None, 4]
+        assert reports[-1] == (0, 4)
+        complete(0, second[0], 0.6)
+        # Without a held admission, completion reports the next host forward,
+        # even though no device room was started by this test.
+        assert reports[-1] == (0, 5)
+        assert requests[0].completed
+        assert balancer.last_report_step == 5
+        add_decode_request(lanes[1], 0.65)
+        complete(1, first[1], 0.7)
+        assert reports[-1] == (1, 4)
+        assert scheduler._held_key == [None, None]
+        assert "out-of-order step 4" in caplog.text
+        assert balancer.last_report_step == 5
+        assert balancer.engine_counts[1] == lanes[1].get_request_load()
+        assert balancer.engine_counts[1].waiting == 1
+        complete(1, second[1], 0.8)
+        assert reports[-1] == (1, 5)
+        assert requests[1].completed
+        assert all(not lane._unfinished_forwards for lane in lanes)
+
 
 def test_unset_forward_times_match_read_only_base(tmp_path):
     base = Path("/data/ycfeng/Frontier/.worktrees/b26-base")

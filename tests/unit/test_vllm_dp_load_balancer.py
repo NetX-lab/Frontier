@@ -700,9 +700,10 @@ def test_an_unknown_lane_identity_is_rejected_at_the_report_boundary(seam) -> No
 
 
 class _ScriptedLane:
-    """The two lane readings the policy takes, set by the test."""
+    """The lane readings the policy takes, set by the test."""
 
-    def __init__(self, waiting: int):
+    def __init__(self, waiting: int, queue_capacity: int):
+        self._max_concurrent_batches = queue_capacity
         self.num_running_batches = 0
         self.waiting = waiting
         self.running = 0
@@ -714,10 +715,14 @@ class _ScriptedLane:
 class _ScriptedReplica:
     """Drive one policy scheduler as its lanes and stage 0 would."""
 
-    def __init__(self, patch, *, waiting: list[int], **shape):
+    def __init__(
+        self, patch, *, waiting: list[int], queue_capacity: int | None = None, **shape
+    ):
         self.scheduler = _policy_scheduler(patch, attn_dp=len(waiting), **shape)
         self.replica_id = self.scheduler._serving_replica_id
-        self.lanes = [_ScriptedLane(count) for count in waiting]
+        if queue_capacity is None:
+            queue_capacity = self.scheduler._config.replica_config.num_pipeline_stages
+        self.lanes = [_ScriptedLane(count, queue_capacity) for count in waiting]
         for lane_id, lane in enumerate(self.lanes):
             self.scheduler._replica_schedulers[(self.replica_id, lane_id)] = lane
         self.stage0 = self.scheduler.get_stage_execution_context(self.replica_id, 0)
@@ -787,6 +792,29 @@ def test_pp1_admissions_are_reported_only_with_the_completion_they_join() -> Non
         (1, 1, RequestLoad(1, 1)),
         (0, 2, RequestLoad(0, 1)),
         (1, 2, RequestLoad(0, 1)),
+    ]
+
+
+def test_an_explicit_pp1_queue_capacity_publishes_while_the_queue_has_room() -> None:
+    # An explicit capacity of two at PP1 is the reference's batch_queue_size
+    # of two: the first admission leaves a queue slot and publishes at once;
+    # the second fills the queue and waits for the first completion.
+    with pytest.MonkeyPatch.context() as patch:
+        replica = _ScriptedReplica(patch, waiting=[3, 3], queue_capacity=2)
+        for lane_id in (0, 1):
+            replica.admit(lane_id)
+            replica.admit(lane_id)
+        assert replica.reports == [
+            (lane_id, 0, RequestLoad(2, 1)) for lane_id in (0, 1)
+        ]
+        assert replica.run_stage0_forward(2) == 0
+        for lane_id in (0, 1):
+            replica.complete(lane_id, 0.02)
+
+    # Each held admission is published with the completion, under the key of
+    # the forward it joins.
+    assert replica.reports[2:] == [
+        (lane_id, 1, RequestLoad(1, 2)) for lane_id in (0, 1)
     ]
 
 
