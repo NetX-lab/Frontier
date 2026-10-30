@@ -105,6 +105,15 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
             "omit_if_none": True,
         },
     )
+    max_forwards_in_flight: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "Optional DP host run-ahead depth, counting batches and dummy "
+            "forwards unfinished on the device. Requires MoE attention-DP "
+            "dummy passes and one pipeline stage; None waits for each dummy pass.",
+            "omit_if_none": True,
+        },
+    )
     max_tokens_in_batch: int = field(
         default=16384,
         metadata={
@@ -336,6 +345,11 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
             or self.max_concurrent_batches != 2
         ):
             raise ValueError("max_concurrent_batches must be None or 2")
+        if self.max_forwards_in_flight is not None and (
+            type(self.max_forwards_in_flight) is not int
+            or self.max_forwards_in_flight < 1
+        ):
+            raise ValueError("max_forwards_in_flight must be None or an exact int >= 1")
         allowed_modes = {"memory_planner", "memory_planner_profiled", "explicit"}
         if self.num_blocks_mode not in allowed_modes:
             raise ValueError(

@@ -100,6 +100,18 @@ class ReplicaScheduleEvent(BaseEvent):
                 ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, lane_id)
                 for lane_id in replica_scheduler.consume_dp_sync_release()
             )
+            if hasattr(replica_scheduler, "next_dp_iteration_start"):
+                resume_at = replica_scheduler.next_dp_iteration_start(self.time)
+                if resume_at is not None:
+                    events.append(ReplicaScheduleEvent(
+                        resume_at, self._replica_id, self._cluster_type, self._replica_local_id
+                    ))
+                if replica_scheduler._runs_dp_forwards_ahead:
+                    from frontier.events.kv_cache_transfer_end_event import report_nixl_reads
+
+                    events.extend(report_nixl_reads(
+                        scheduler, metrics_store, replica_scheduler, self.time
+                    ))
             if replica_scheduler.engine_loop_idle:
                 events.extend(self._connector_step_events(scheduler, metrics_store, replica_scheduler))
         return events

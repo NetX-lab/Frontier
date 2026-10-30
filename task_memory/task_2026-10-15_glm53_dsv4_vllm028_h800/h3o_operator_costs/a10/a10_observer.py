@@ -108,6 +108,7 @@ class ForwardObserver:
         self._collectives = {}
         self._wave_stack = []
         self._pending = {}
+        self._formed = {}
         self._patches = ExitStack()
 
     def _key(self, role, batch):
@@ -136,6 +137,7 @@ class ForwardObserver:
         from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import SklearnMoEExecutionTimePredictor
         from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import BaseClusterScheduler
         from frontier.scheduler.utils import dp_dummy_forward
+        from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import VLLMv1EngineReplicaScheduler
         from frontier.cc_backend.backends.measured_cc_backend import MeasuredCCBackend
         self._stream = gzip.open(self.root / "forwards.jsonl.gz", "wt")
         observer = self
@@ -144,6 +146,26 @@ class ForwardObserver:
             original = getattr(owner, name)
             replacement = wraps(original)(wrapper(original))
             self._patches.enter_context(patch.object(owner, name, staticmethod(replacement) if static else replacement))
+
+        def schedule_wrapper(original):
+            def call(lane, time):
+                batches = original(lane, time)
+                for batch in batches:
+                    key = observer._key(lane._cluster_type, batch)
+                    if lane._runs_dp_forwards_ahead:
+                        unfinished = list(lane._unfinished_forwards)
+                        ahead = next(index for index, forward in enumerate(unfinished)
+                                     if forward.batch_id == batch.id)
+                    else:
+                        ahead = 0
+                    observer._formed[key] = {
+                        "formed_s": time,
+                        "formation_index": batch._forward_cohort_provisional_id,
+                        "queued_ahead_at_formation": ahead,
+                        "request_ids": [request.id for request in batch.requests],
+                    }
+                return batches
+            return call
 
         def sync_wrapper(original):
             def call(scheduler, replica_id, batches):
@@ -226,6 +248,7 @@ class ForwardObserver:
                     "synchronized_width": batch.get_effective_total_tokens_for_compute(role),
                     "descriptor": asdict(metadata) if metadata is not None else None,
                     "composed_ms": composed_ms, "segment_ms": parts,
+                    **observer._formed.pop(key),
                     "scope_ms": dict(observer._scope_times.pop(key, {})),
                     **observer._sync.pop(key, {}),
                 }
@@ -261,6 +284,7 @@ class ForwardObserver:
                 return predicted
             return call
 
+        install(VLLMv1EngineReplicaScheduler, "on_schedule", schedule_wrapper)
         install(dp_dummy_forward, "_synchronize_dp_descriptors", sync_wrapper)
         install(SklearnMoEExecutionTimePredictor, "predict_stage_execution_time", predict_wrapper)
         install(BaseClusterScheduler, "_prepare_moe_ep_wave_plan", wave_wrapper)
