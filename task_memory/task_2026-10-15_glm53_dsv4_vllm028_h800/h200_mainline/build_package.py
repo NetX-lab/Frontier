@@ -1,4 +1,4 @@
-"""Build package_01 of one H200 mainline case (design.md sections 4 and 5).
+"""Build a sealed H200 mainline case (design.md sections 4, 5 and 9).
 
 Copies the case's H800 source package, applies only the listed changes,
 compares every file with the source, seals the package, and runs the checks
@@ -11,6 +11,7 @@ The package directory must not exist yet.
 """
 
 import argparse
+import ast
 import difflib
 import hashlib
 import json
@@ -38,12 +39,19 @@ SOURCES = {
                       harness='v4-balanced-native-model', harness_commit='b62c155abd981a71e12e62aa0c0fe3990741d2f8'),
     'profile': dict(package='v4_p0_native_20261021/candidate_h800_p0_profile_02', built_in='v4-native-profile-run',
                     harness='v4-native-profile-run', harness_commit='a90c9dbbee53e2cabbfac73ba8490ffb958ce8eb'),
+    'wave': dict(package='h200_mainline/p2_64_lifecycle/package_01', built_in='glm53-dsv4-vllm028',
+                 harness='p2-64-wave-harness', harness_commit=None),
     # H4b-(a): native06 plus the engine-core scheduler lifecycle observer.
     'lifecycle': dict(package='h4b_lifecycle_measurement/package_01', built_in='glm53-dsv4-vllm028',
                       harness='h4b-lifecycle-harness', harness_commit='7ac25c7471fc2ae73657fc529a89bc651c3326ba'),
 }
 # h200_limit: the session's non-preemptible H200 limit, running plus queued, when the case was built.
 CASES = {
+    'p2_64_wave': dict(source='wave', dp=4, h200_limit=64, case_id='dsv4-h200-p2-64-wave-fixed128-qps1',
+                       run_tag='dsv4-h200-p2-64-wave-20261030-01',
+                       purpose='DIAGNOSTIC P2-64 native DP wave restart under D-P2-64-WAVE-DIAGNOSTIC; '
+                               'one repetition, 16 warmup and 128 formal requests; no E2E reference admission; '
+                               'never qualifies H800 cells'),
     'p2_32_reference': dict(source='reference', dp=2, h200_limit=64, case_id='dsv4-h200-p2-canonical-fixed128-qps1',
                             run_tag='dsv4-h200-p2-canonical-20261025-01',
                             purpose='P2 H200-32 native reference for DSV4 under D-H200-TEMP-MAINLINE; '
@@ -85,6 +93,7 @@ class Case:
     def __init__(self, name, package):
         case = CASES[name]
         source = SOURCES[case['source']]
+        self.wave = case['source'] == 'wave'
         self.name, self.profile, self.dp, self.h200_limit = name, case['source'] == 'profile', case['dp'], case['h200_limit']
         self.replicas = 2 * self.dp
         self.case_id, self.run_tag, self.purpose = case['case_id'], case['run_tag'], case['purpose']
@@ -99,7 +108,9 @@ class Case:
              "('H800', 'codesign', 8, 4)",
              "assert (config['gpu_type'], config['charged_group'], config['gpu'], config['replica']) == "
              f"('{HARDWARE['gpu_type']}', '{HARDWARE['charged_group']}', 8, {self.replicas})", 1)]
-        if self.dp != 2:
+        if self.wave:
+            self.launch_lines = []
+        if self.dp != 2 and not self.wave:
             self.launch_lines.append(("assert config['engine']['data_parallel_size'] == 2",
                                       f"assert config['engine']['data_parallel_size'] == {self.dp}", 1))
 
@@ -160,6 +171,8 @@ def source_files(case):
 
 def engine_update(case, engine):
     engine = dict(engine, data_parallel_size=case.dp)
+    if case.wave:
+        engine['scheduler_cls'] = 'native_dp_wave.WaveObservedScheduler'
     if case.profile:
         engine['profiler_config'] = dict(engine['profiler_config'], torch_profiler_dir=f'{case.output_dir}/torch_traces')
     return engine
@@ -188,11 +201,17 @@ def manifest_lines(case, config):
     return replacements
 
 
-def build(case):
+def copy_source(case):
     case.target.mkdir(parents=True)
     for relative, path in source_files(case).items():
         (case.target / relative).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, case.target / relative)
+
+
+def build(case):
+    if case.wave:
+        return build_wave(case)
+    copy_source(case)
     (case.target / 'launch.py').write_text(replace_lines((case.source / 'launch.py').read_text(), case.launch_lines))
 
     old_config = json.loads((case.source / 'config.json').read_text())
@@ -250,6 +269,8 @@ def build(case):
 
 def compare(case, config, changed_retained):
     """Fail unless the package differs from its source only by the listed changes."""
+    if case.wave:
+        return compare_wave(case, config)
     import yaml
     old_files, new_files = source_files(case), {
         path.relative_to(case.target).as_posix(): path for path in case.target.rglob('*') if path.is_file()}
@@ -315,6 +336,190 @@ def compare(case, config, changed_retained):
     return report
 
 
+# The approved wave package changes only these harness files. Existing drivers
+# remain the lifecycle package's bytes and must exist at the actual harness HEAD.
+WAVE_MODULES = ('native_dp_wave.py', 'native_dp_wave_worker.py')
+WAVE_RESTAGED = ('native_scheduler_lifecycle.py', 'native_full_structure.py', *WAVE_MODULES)
+TRACE_MANIFEST = 'case/inputs/trace/manifest.json'
+TRACE_SUMS = 'case/inputs/trace/SHA256SUMS'
+
+
+def wave_harness_differences(case):
+    config = json.loads((case.source / 'config.json').read_text())
+    differences = [name for name, target in config['harness_files'].items()
+        if Path(name).name not in WAVE_RESTAGED
+        and sha256(case.harness / name) != sha256(case.source / target)]
+    # The inventory may gain the worker bootstrap, but its existing executable
+    # code must remain the source package's. Ignore comments/spacing only.
+    name = 'tests/comparison/calibration/native_full_structure.py'
+    source = ast.parse((case.source / config['harness_files'][name]).read_text())
+    current = ast.parse((case.harness / name).read_text())
+    bootstraps = [node for node in current.body if isinstance(node, ast.If) and
+        any(isinstance(part, ast.ImportFrom) and part.module=='native_dp_wave_worker'
+            for part in ast.walk(node))]
+    current.body = [node for node in current.body if node not in bootstraps]
+    if len(bootstraps)!=1 or ast.dump(source)!=ast.dump(current):
+        differences.append(name)
+    return differences
+
+def build_wave(case):
+    """Copy P2-64 lifecycle bytes, changing only the approved observer bindings."""
+    copy_source(case)
+    old = json.loads((case.source / 'config.json').read_text())
+    config = relocate(case, old)
+    engine = engine_update(case, config['engine'])
+    config.update(engine=engine, run_tag=case.run_tag, job_tag=case.run_tag,
+                  output_dir=case.output_dir, harness_worktree=str(case.harness))
+    lock = relocate(case, json.loads((case.source / 'source_lock.json').read_text()))
+    lock['harness_commit'] = case.harness_commit
+    lock['qualification'] = case.purpose
+    for module_name in WAVE_RESTAGED:
+        name = f'tests/comparison/calibration/{module_name}'
+        target = config['harness_files'].setdefault(name, name)
+        content = (case.harness / name).read_bytes()
+        (case.target / target).write_bytes(content)
+        digest = sha256(case.target / target)
+        config['tool_hashes'][str(case.target / target)] = digest
+    # Rebind every staged file to one actual clean commit; never silently copy
+    # unrelated HEAD changes into the diagnostic generation.
+    for source, target in config['harness_files'].items():
+        lock['committed_files'][target] = dict(commit=case.harness_commit,
+                                               path=source, sha256=sha256(case.target / target))
+    trace = json.loads((case.source / TRACE_MANIFEST).read_text())
+    repeat_indices = [1]
+    trace['repetitions'].update(clean_repetitions=len(repeat_indices), repeat_indices=repeat_indices,
+        request_id_binding='the harness qualifies every formal and warmup template ID with repeat=1 before dispatch',
+        sequence='warmup -> both roles idle and request-owned KV released -> formal -> both roles idle and request-owned KV released; once')
+    (case.target / TRACE_MANIFEST).write_text(dumps(trace))
+    shutil.copy2(case.target / TRACE_MANIFEST, case.target / 'trace/manifest.json')
+    manifest_hash = sha256(case.target / TRACE_MANIFEST)
+    sums = (case.source / TRACE_SUMS).read_text().splitlines()
+    sums = [f'{manifest_hash}  manifest.json' if line.endswith('  manifest.json') else line for line in sums]
+    (case.target / TRACE_SUMS).write_text('\n'.join(sums)+'\n')
+    shutil.copy2(case.target / TRACE_SUMS, case.target / 'trace/SHA256SUMS')
+    overlay = relocate(case, json.loads((case.source / 'overlay.json').read_text()))
+    (case.target / 'overlay.json').write_text(dumps(overlay))
+    lock['runtime_overlay'] = overlay
+    changed = []
+    for name in config['retained_files']:
+        digest = sha256(case.target / name)
+        if digest != config['retained_files'][name]:
+            previous = config['retained_files'][name]
+            config['retained_files'][name] = digest
+            changed.append(name)
+            if name in lock['retained_files']:
+                lock['retained_files'][name].update(sha256=digest, source=str(case.source / name),
+                    source_sha256=previous, changed=True)
+                if 'staged_sha256' in lock['retained_files'][name]:
+                    lock['retained_files'][name]['staged_sha256'] = digest
+    config['tool_hashes'] = {name: sha256(name) for name in config['tool_hashes']}
+    for name in CONFIGS:
+        (case.target / name).write_text(dumps(config))
+    for name in ENGINES:
+        (case.target / name).write_text(dumps(engine))
+    (case.target / 'source_lock.json').write_text(dumps(lock))
+    import yaml
+    manifest = yaml.safe_load((case.source / 'case/manifest.yaml').read_text())
+    manifest.update(case_id=case.case_id, run_generation=f"v4-native-v028-{case.run_tag.removeprefix('dsv4-')}",
+                    purpose=case.purpose)
+    manifest['runtime_source_overlay']['sha256'] = config['retained_files']['overlay.json']
+    manifest['workload_sha256'].update({'manifest.json':manifest_hash, 'SHA256SUMS':sha256(case.target / TRACE_SUMS)})
+    (case.target / 'case/manifest.yaml').write_text(yaml.safe_dump(manifest, sort_keys=False))
+    readiness = json.loads((case.source / 'evidence_readiness.json').read_text())
+    readiness.update(purpose=case.purpose, harness_commit=case.harness_commit,
+        wave_observers={name:sha256(case.target / f'tests/comparison/calibration/{name}') for name in WAVE_RESTAGED})
+    readiness['scheduler_observer'].update(scheduler_cls=engine['scheduler_cls'],
+        module='tests/comparison/calibration/native_dp_wave.py',
+        sha256=sha256(case.target / 'tests/comparison/calibration/native_dp_wave.py'))
+    span = ((trace['arrivals']['last_arrival_s'] - trace['arrivals']['first_arrival_s']) +
+            (trace['warmup']['last_arrival_s'] - trace['warmup']['first_arrival_s'])) * len(repeat_indices)
+    readiness['cost'].update(scheduled_arrival_span_seconds=span,
+        minimum_schedule_gpu_hours=span * case.replicas * config['gpu'] / 3600)
+    readiness['native_limits'] = [text.replace('3x(16+128)', '1x(16+128)') for text in readiness['native_limits']]
+    (case.target / 'evidence_readiness.json').write_text(dumps(readiness))
+    return config, changed
+
+
+def compare_wave(case, config):
+    """Exact file and leaf comparison, with the immutable source as evidence."""
+    import yaml
+    old_files = source_files(case)
+    new_files = {p.relative_to(case.target).as_posix():p for p in case.target.rglob('*') if p.is_file()}
+    added = {f'tests/comparison/calibration/{name}' for name in WAVE_MODULES}
+    if new_files.keys() != old_files.keys() | added:
+        raise ValueError('Unexpected wave package file set')
+    changed_modules = {f'tests/comparison/calibration/{name}' for name in WAVE_RESTAGED}
+    config_allowed = {('engine','scheduler_cls'),('run_tag',),('job_tag',),('output_dir',),('harness_worktree',),
+        ('retained_files','overlay.json')}
+    if str(case.target/'overlay.json') in config['tool_hashes']:
+        config_allowed.add(('tool_hashes',str(case.target/'overlay.json')))
+    config_allowed |= {('tool_hashes',str(case.target/name)) for name in changed_modules}
+    config_allowed |= {('harness_files',name) for name in added}
+    trace_allowed = {('repetitions',name) for name in ('clean_repetitions','repeat_indices','request_id_binding','sequence')}
+    manifest_allowed = {('case_id',),('run_generation',),('purpose',),('runtime_source_overlay','sha256'),
+                        ('workload_sha256','manifest.json'),('workload_sha256','SHA256SUMS')}
+    allowed = {**{name:config_allowed for name in CONFIGS}, **{name:{('scheduler_cls',)} for name in ENGINES},
+        TRACE_MANIFEST:trace_allowed, 'trace/manifest.json':trace_allowed,
+        'case/manifest.yaml':manifest_allowed, 'overlay.json':set()}
+    report = {}
+    for relative in sorted(new_files):
+        if relative in added:
+            report[relative] = ['added observer module']
+            continue
+        original = old_files[relative].read_bytes()
+        actual = new_files[relative].read_bytes()
+        if relative in changed_modules:
+            name = relative
+            if actual != (case.harness / name).read_bytes():
+                raise ValueError(f'Observer module is not the harness bytes: {name}')
+            report[relative] = ['restaged observer module']
+        elif relative in (TRACE_SUMS,'trace/SHA256SUMS'):
+            before, after = original.decode().splitlines(), actual.decode().splitlines()
+            if len(before)!=len(after) or [line for line in before if not line.endswith('  manifest.json')] != [line for line in after if not line.endswith('  manifest.json')]:
+                raise ValueError('Only the trace manifest hash may change in SHA256SUMS')
+            report[relative] = ['manifest.json hash']
+        elif relative in allowed:
+            load = yaml.safe_load if relative.endswith('.yaml') else json.loads
+            before, after = relocate(case,load(original)), load(actual)
+            leaves = set(leaf_differences(before,after))
+            if leaves != allowed[relative]:
+                raise ValueError(f'{relative}: {sorted(leaves)} != {sorted(allowed[relative])}')
+            report[relative] = sorted('.'.join(path) for path in leaves)
+        elif relative in ('source_lock.json','evidence_readiness.json'):
+            before, after = relocate(case,json.loads(original)), json.loads(actual)
+            leaves = set(leaf_differences(before,after))
+            if relative=='source_lock.json':
+                permitted = {('harness_commit',),('qualification',),('runtime_overlay',)}
+                permitted |= {('committed_files',name) for name in added}
+                permitted |= {('committed_files',name,key) for name in before['committed_files'] for key in ('commit','sha256')}
+                permitted |= {('retained_files','overlay.json',key) for key in ('sha256','staged_sha256','source','source_sha256','changed')}
+            else:
+                permitted = {('purpose',),('harness_commit',),('wave_observers',),('native_limits',),
+                    ('scheduler_observer','scheduler_cls'),('scheduler_observer','module'),('scheduler_observer','sha256'),
+                    ('cost','scheduled_arrival_span_seconds'),('cost','minimum_schedule_gpu_hours')}
+            # runtime_overlay is a relocated nested document; validate separately.
+            if relative=='source_lock.json':
+                expected_overlay = json.loads((case.target/'overlay.json').read_text())
+                if after['runtime_overlay'] != expected_overlay:
+                    raise ValueError('Runtime overlay lock mismatch')
+                leaves = {leaf for leaf in leaves if leaf[0]!='runtime_overlay'}
+            if not leaves <= permitted:
+                raise ValueError(f'Unexpected {relative} changes: {sorted(leaves-permitted)}')
+            report[relative] = sorted('.'.join(path) for path in leaves)
+        elif original != actual:
+            raise ValueError(f'Unexpected wave byte change: {relative}')
+    # Both trace copies and the workload contract are verified by the existing consumer.
+    for name in ('manifest.json','SHA256SUMS'):
+        if (case.target/'trace'/name).read_bytes() != (case.target/'case/inputs/trace'/name).read_bytes():
+            raise ValueError('Trace copies differ')
+    sys.path[:0] = [config['harness_dir'], str(case.target), str(case.target/'tests/comparison/dp_placement_pp')]
+    from pd_replay import canonical_workload
+    canonical_workload(case.target/'trace')
+    if config['engine']['worker_extension_cls']!='native_full_structure.FullModelInventory':
+        raise ValueError('Worker extension contract changed')
+    return report
+
+
 def preflight(case, config):
     """Run the launcher's run-manifest checks against a scratch copy of the case."""
     SCRATCH.mkdir(parents=True, exist_ok=True)
@@ -368,11 +573,13 @@ def launch_path(case, config):
                    data_parallel_rpc_port=value('--data-parallel-rpc-port'),
                    profiler_config=json.loads(value('--profiler-config')) if value('--profiler-config') else None,
                    scheduler_cls=value('--scheduler-cls'),
+                   worker_extension_cls=value('--worker-extension-cls'),
                    kv_transfer_config=json.loads(value('--kv-transfer-config')))
         trace_dir = f'{case.output_dir}/torch_traces/{role}/dp{lane}' if case.profile else None
         if (row['role'] != role or row['lane'] != lane or row['headless'] != (lane != 0)
                 or (row['profiler_config'] or {}).get('torch_profiler_dir') != trace_dir
                 or row['scheduler_cls'] != config['engine'].get('scheduler_cls')
+                or row['worker_extension_cls'] != config['engine'].get('worker_extension_cls')
                 or row['data_parallel_size'] != str(case.dp)
                 or row['data_parallel_start_rank'] != (str(lane) if lane else None)
                 or row['data_parallel_address'] != peers[case.dp * (index // case.dp)]['ip']):
@@ -384,9 +591,31 @@ def launch_path(case, config):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('case', choices=sorted(CASES))
-    parser.add_argument('--package', default='package_01')
+    parser.add_argument('--package', help='New directory name; default package_02 for wave, package_01 otherwise')
+    parser.add_argument('--harness', type=Path, help='Clean harness containing the retained source files plus the observer changes')
+    parser.add_argument('--dry-check', type=Path, help='Wave only: scratch package comparison and offline launch plan; no sealing/preflight/commit required')
     arguments = parser.parse_args()
-    case = Case(arguments.case, arguments.package)
+    package = arguments.package or ('package_02' if arguments.case == 'p2_64_wave' else 'package_01')
+    case = Case(arguments.case, package)
+    if case.wave:
+        if arguments.harness:
+            case.harness = arguments.harness.resolve()
+        case.harness_commit = git(case.harness, 'rev-parse', 'HEAD').strip()
+        if arguments.dry_check:
+            case.target = arguments.dry_check.resolve()
+            config, changed = build(case)
+            report = compare(case, config, changed)
+            plans = launch_path(case, config)
+            result = dict(status='DRY_CHECK_PASS', changes=report, launch_path=plans,
+                          harness_prerequisites=wave_harness_differences(case),
+                          not_run=['seal', 'run_manifest_preflight', 'R3_reconstruction', 'launch_check_only'])
+            print(json.dumps(result, indent=2))
+            return
+        differences = wave_harness_differences(case)
+        if differences:
+            raise ValueError(f'Retained harness differs from the lifecycle package: {differences}; prepare a clean composed harness commit with the source drivers and inventory plus the worker bootstrap')
+    elif arguments.harness or arguments.dry_check:
+        raise ValueError('--harness and --dry-check apply only to p2_64_wave')
     if git(case.harness, 'status', '--short', '--untracked-files=all').strip():
         raise ValueError(f'The harness worktree {case.harness} is not clean')
     if git(case.harness, 'rev-parse', 'HEAD').strip() != case.harness_commit:
