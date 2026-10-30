@@ -8,7 +8,7 @@ not depend on waiting rooms or scheduler state.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from numbers import Real
 from typing import Any, Callable, NamedTuple, Optional
 
@@ -88,6 +88,29 @@ class EPWaveTiming(NamedTuple):
     wave_end_time_s: float
 
 
+_V4_EP_LANE_KEY_FIELDS = (
+    "moe_expert_parallel_size", "total_expert_num", "local_token_counts",
+    "global_token_counts", "routed_token_count", "router_topk",
+)
+
+
+def _v4_ep_lane_prediction_key(source_dp_index: int, lane_workload: EPLaneWorkload) -> tuple:
+    """Cover every workload input except rank and contiguous expert identities.
+
+    Source TP rank affects only reporting metadata on the V4 FFN path. The
+    balanced grouped-GEMM rank class is determined by the local/global counts.
+    Check the dataclass schema so a new prediction input requires an audit.
+    """
+    expected = set(_V4_EP_LANE_KEY_FIELDS) | {"ep_id", "owned_expert_ids"}
+    actual = {field.name for field in fields(lane_workload)}
+    if actual != expected:
+        raise ValueError(
+            "V4 EP lane prediction key does not cover the workload dataclass: "
+            f"uncovered={sorted(actual - expected)}, missing={sorted(expected - actual)}"
+        )
+    return (source_dp_index, *(getattr(lane_workload, name) for name in _V4_EP_LANE_KEY_FIELDS))
+
+
 def predict_ep_wave_phase_times(
     *,
     layer_workload: Any,
@@ -105,9 +128,14 @@ def predict_ep_wave_phase_times(
     source_batches: dict[int, Batch] | None = None,
     sp_token_widths: SequenceParallelMoETokenWidths | None = None,
 ) -> EPWavePhaseTimes:
-    """Predict each EP lane and emit workload traces in participant order."""
+    """Predict each EP lane and emit workload traces in participant order.
+
+    On the V4 operator path without lane records, lanes with the same
+    prediction key share the first lane's prediction.
+    """
     values = [[] for _ in range(6)]
     lane_records = [] if capture_lane_timings else None
+    phase_memo = {} if source_batches is not None and not capture_lane_timings else None
     for ep_id in layer_workload.participant_ep_ids:
         lane_batch = lane_builder(
             source_batch=source_batch,
@@ -121,6 +149,8 @@ def predict_ep_wave_phase_times(
             lane_batch.moe_pre_routing_effective_total_tokens = sp_token_widths.local_tokens[
                 ep_id // replica.attn_tensor_parallel_size
             ]
+        phases = None
+        key = None
         if source_batches is None:
             execution_time = predictor.predict_stage_execution_time(
                 lane_batch, stage_id, cluster_type=cluster_type, num_layers=1,
@@ -130,19 +160,27 @@ def predict_ep_wave_phase_times(
             from frontier.execution_time_predictor.deepseek_v4 import serving_context
 
             tp = predictor._replica_config.attn_tensor_parallel_size
-            source = source_batches[ep_id // tp]
-            layer = predictor._predict_layer_with_kernel_gap(
-                predictor._predict_dsv4_structural_execution,
-                source, layer_id, ep_id % tp, lane_workload=lane_batch.lane_workload,
-                sp_token_widths=lane_batch.moe_sequence_parallel_token_widths,
-                include_attention=False, include_ffn=True,
-                **serving_context(predictor, source, layer_id),
+            source_dp_index = ep_id // tp
+            if phase_memo is not None:
+                key = _v4_ep_lane_prediction_key(source_dp_index, lane_batch.lane_workload)
+                phases = phase_memo.get(key)
+            if phases is None:
+                source = source_batches[source_dp_index]
+                layer = predictor._predict_layer_with_kernel_gap(
+                    predictor._predict_dsv4_structural_execution,
+                    source, layer_id, ep_id % tp, lane_workload=lane_batch.lane_workload,
+                    sp_token_widths=lane_batch.moe_sequence_parallel_token_widths,
+                    include_attention=False, include_ffn=True,
+                    **serving_context(predictor, source, layer_id),
+                )
+                execution_time = predictor._assemble_stage([layer], first_layer_id=layer_id)
+        if phases is None:
+            phases = phase_getter(
+                execution_time, cluster_type=cluster_type, batch_id=int(batch_id),
+                layer_id=layer_id, ep_id=int(ep_id),
             )
-            execution_time = predictor._assemble_stage([layer], first_layer_id=layer_id)
-        phases = phase_getter(
-            execution_time, cluster_type=cluster_type, batch_id=int(batch_id),
-            layer_id=layer_id, ep_id=int(ep_id),
-        )
+            if phase_memo is not None:
+                phase_memo[key] = phases
         if lane_records is not None:
             if not isinstance(execution_time, StageExecutionTime) or execution_time.num_layers != 1:
                 raise ValueError("EP lane reporting requires one finalized stage layer")

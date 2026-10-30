@@ -311,8 +311,13 @@ def test_ep_wave_uses_the_segment_gap_wrapper_for_every_lane(trained, monkeypatc
         phase_getter=get_ep_phase_times_ms, workload_logger=lambda **args: None,
         trace_identity=None, batch_id=b.id, source_batches=sources, sp_token_widths=widths,
     )
-    assert [rank for rank, _ in calls] == list(range(16))
-    for rank, layer in calls:
+    # Every distinct prediction must pass through the segment-gap wrapper.
+    keys = [(rank // 8, work.lane(rank).local_token_counts) for rank in range(16)]
+    first_ranks = [rank for rank in range(16) if keys[rank] not in keys[:rank]]
+    assert [rank for rank, _ in calls] == first_ranks
+    group_layers = {keys[rank]: layer for rank, layer in calls}
+    for rank in range(16):
+        layer = group_layers[keys[rank]]
         assert layer._dsv4_operator_gap_ms[GROUPED_GEMM] == layer._dsv4_kernel_counts[GROUPED_GEMM] * p._kernel_gap_ms['cuda_graph']
         assert not layer.has_kernel_gap
         assert result.routed_compute_times_ms[rank] == layer._moe_phase_time('routed_compute')

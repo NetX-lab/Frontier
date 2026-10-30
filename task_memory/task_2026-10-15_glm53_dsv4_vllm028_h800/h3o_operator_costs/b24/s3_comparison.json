@@ -1,0 +1,566 @@
+{
+  "status": "PASS",
+  "parsed_artifacts": [
+    "config.json",
+    "frontier_transfer_ledger.jsonl",
+    "metrics_ground_truth.jsonl",
+    "op_precision_metadata.csv",
+    "request_metrics.csv",
+    "system_metrics.json"
+  ],
+  "metrics_differences": [],
+  "cache_name_differences": [],
+  "cache_files_each": [
+    1758,
+    1758
+  ],
+  "cc_differences": [],
+  "cc_cache_produced": [
+    false,
+    false
+  ],
+  "observer_equal": true,
+  "exercised": true,
+  "evidence": [
+    {
+      "root": "/data/ycfeng/tmp/codex-implement/9de7af1c-59f2-4ff4-a3ca-bfa1bf52e247/s3_base",
+      "prefill_lanes": [
+        0,
+        1
+      ],
+      "first_tails": 8,
+      "tail_modes": [
+        "PIECEWISE"
+      ],
+      "multirequest_full_forwards": 115,
+      "dummy_forwards": 138,
+      "sample_prefill": [
+        {
+          "role": "PREFILL",
+          "lane": 0,
+          "replica_id": 0,
+          "batch_id": 0,
+          "dummy": false,
+          "request_ids": [
+            0
+          ],
+          "prompt_lens": [
+            6144
+          ],
+          "computed_tokens": [
+            0
+          ],
+          "query_lens": [
+            6144
+          ],
+          "context_lens": [
+            0
+          ],
+          "new_rows": [
+            [
+              0,
+              [
+                [
+                  "compressed",
+                  24
+                ],
+                [
+                  "swa_0",
+                  96
+                ],
+                [
+                  "swa_1",
+                  96
+                ],
+                [
+                  "csa_state_0",
+                  1536
+                ],
+                [
+                  "hca_state_0",
+                  768
+                ]
+              ]
+            ]
+          ],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "NONE",
+            "capture_hit": false,
+            "is_mixed_batch": true,
+            "original_total_tokens": 6144,
+            "padded_total_tokens": 6144,
+            "original_decode_batch_size": 0,
+            "padded_decode_batch_size": 0
+          }
+        },
+        {
+          "role": "PREFILL",
+          "lane": 1,
+          "replica_id": 0,
+          "batch_id": 690,
+          "dummy": false,
+          "request_ids": [
+            1
+          ],
+          "prompt_lens": [
+            6144
+          ],
+          "computed_tokens": [
+            0
+          ],
+          "query_lens": [
+            6144
+          ],
+          "context_lens": [
+            0
+          ],
+          "new_rows": [
+            [
+              1,
+              [
+                [
+                  "compressed",
+                  24
+                ],
+                [
+                  "swa_0",
+                  96
+                ],
+                [
+                  "swa_1",
+                  96
+                ],
+                [
+                  "csa_state_0",
+                  1536
+                ],
+                [
+                  "hca_state_0",
+                  768
+                ]
+              ]
+            ]
+          ],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "NONE",
+            "capture_hit": false,
+            "is_mixed_batch": true,
+            "original_total_tokens": 6144,
+            "padded_total_tokens": 6144,
+            "original_decode_batch_size": 0,
+            "padded_decode_batch_size": 0
+          }
+        }
+      ],
+      "sample_tail": [
+        {
+          "role": "DECODE",
+          "lane": 0,
+          "replica_id": 1,
+          "batch_id": 2169,
+          "dummy": false,
+          "request_ids": [
+            0
+          ],
+          "prompt_lens": [
+            6144
+          ],
+          "computed_tokens": [
+            6144
+          ],
+          "query_lens": [
+            1
+          ],
+          "context_lens": [
+            6143
+          ],
+          "new_rows": [
+            [
+              0,
+              [
+                [
+                  "compressed",
+                  24
+                ],
+                [
+                  "swa_0",
+                  96
+                ],
+                [
+                  "swa_1",
+                  96
+                ],
+                [
+                  "csa_state_0",
+                  1536
+                ],
+                [
+                  "hca_state_0",
+                  768
+                ]
+              ]
+            ]
+          ],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "PIECEWISE",
+            "capture_hit": true,
+            "is_mixed_batch": true,
+            "original_total_tokens": 1,
+            "padded_total_tokens": 1,
+            "original_decode_batch_size": 0,
+            "padded_decode_batch_size": 0
+          }
+        }
+      ],
+      "sample_full": [
+        {
+          "role": "DECODE",
+          "lane": 0,
+          "replica_id": 1,
+          "batch_id": 13374,
+          "dummy": false,
+          "request_ids": [
+            0,
+            2
+          ],
+          "prompt_lens": [
+            6144,
+            6144
+          ],
+          "computed_tokens": [
+            6159,
+            6144
+          ],
+          "query_lens": [
+            1,
+            1
+          ],
+          "context_lens": [
+            6159,
+            6144
+          ],
+          "new_rows": [],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "FULL",
+            "capture_hit": true,
+            "is_mixed_batch": false,
+            "original_total_tokens": 2,
+            "padded_total_tokens": 2,
+            "original_decode_batch_size": 2,
+            "padded_decode_batch_size": 2
+          }
+        }
+      ],
+      "sample_dummy": [
+        {
+          "role": "PREFILL",
+          "lane": 1,
+          "replica_id": 0,
+          "batch_id": 1,
+          "dummy": true,
+          "request_ids": [],
+          "prompt_lens": [],
+          "computed_tokens": [],
+          "query_lens": [
+            1
+          ],
+          "context_lens": [],
+          "new_rows": [],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "FULL",
+            "capture_hit": true,
+            "is_mixed_batch": false,
+            "original_total_tokens": 1,
+            "padded_total_tokens": 1,
+            "original_decode_batch_size": 1,
+            "padded_decode_batch_size": 1
+          }
+        }
+      ]
+    },
+    {
+      "root": "/data/ycfeng/tmp/codex-implement/9de7af1c-59f2-4ff4-a3ca-bfa1bf52e247/s3_candidate",
+      "prefill_lanes": [
+        0,
+        1
+      ],
+      "first_tails": 8,
+      "tail_modes": [
+        "PIECEWISE"
+      ],
+      "multirequest_full_forwards": 115,
+      "dummy_forwards": 138,
+      "sample_prefill": [
+        {
+          "role": "PREFILL",
+          "lane": 0,
+          "replica_id": 0,
+          "batch_id": 0,
+          "dummy": false,
+          "request_ids": [
+            0
+          ],
+          "prompt_lens": [
+            6144
+          ],
+          "computed_tokens": [
+            0
+          ],
+          "query_lens": [
+            6144
+          ],
+          "context_lens": [
+            0
+          ],
+          "new_rows": [
+            [
+              0,
+              [
+                [
+                  "compressed",
+                  24
+                ],
+                [
+                  "swa_0",
+                  96
+                ],
+                [
+                  "swa_1",
+                  96
+                ],
+                [
+                  "csa_state_0",
+                  1536
+                ],
+                [
+                  "hca_state_0",
+                  768
+                ]
+              ]
+            ]
+          ],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "NONE",
+            "capture_hit": false,
+            "is_mixed_batch": true,
+            "original_total_tokens": 6144,
+            "padded_total_tokens": 6144,
+            "original_decode_batch_size": 0,
+            "padded_decode_batch_size": 0
+          }
+        },
+        {
+          "role": "PREFILL",
+          "lane": 1,
+          "replica_id": 0,
+          "batch_id": 690,
+          "dummy": false,
+          "request_ids": [
+            1
+          ],
+          "prompt_lens": [
+            6144
+          ],
+          "computed_tokens": [
+            0
+          ],
+          "query_lens": [
+            6144
+          ],
+          "context_lens": [
+            0
+          ],
+          "new_rows": [
+            [
+              1,
+              [
+                [
+                  "compressed",
+                  24
+                ],
+                [
+                  "swa_0",
+                  96
+                ],
+                [
+                  "swa_1",
+                  96
+                ],
+                [
+                  "csa_state_0",
+                  1536
+                ],
+                [
+                  "hca_state_0",
+                  768
+                ]
+              ]
+            ]
+          ],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "NONE",
+            "capture_hit": false,
+            "is_mixed_batch": true,
+            "original_total_tokens": 6144,
+            "padded_total_tokens": 6144,
+            "original_decode_batch_size": 0,
+            "padded_decode_batch_size": 0
+          }
+        }
+      ],
+      "sample_tail": [
+        {
+          "role": "DECODE",
+          "lane": 0,
+          "replica_id": 1,
+          "batch_id": 2169,
+          "dummy": false,
+          "request_ids": [
+            0
+          ],
+          "prompt_lens": [
+            6144
+          ],
+          "computed_tokens": [
+            6144
+          ],
+          "query_lens": [
+            1
+          ],
+          "context_lens": [
+            6143
+          ],
+          "new_rows": [
+            [
+              0,
+              [
+                [
+                  "compressed",
+                  24
+                ],
+                [
+                  "swa_0",
+                  96
+                ],
+                [
+                  "swa_1",
+                  96
+                ],
+                [
+                  "csa_state_0",
+                  1536
+                ],
+                [
+                  "hca_state_0",
+                  768
+                ]
+              ]
+            ]
+          ],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "PIECEWISE",
+            "capture_hit": true,
+            "is_mixed_batch": true,
+            "original_total_tokens": 1,
+            "padded_total_tokens": 1,
+            "original_decode_batch_size": 0,
+            "padded_decode_batch_size": 0
+          }
+        }
+      ],
+      "sample_full": [
+        {
+          "role": "DECODE",
+          "lane": 0,
+          "replica_id": 1,
+          "batch_id": 13374,
+          "dummy": false,
+          "request_ids": [
+            0,
+            2
+          ],
+          "prompt_lens": [
+            6144,
+            6144
+          ],
+          "computed_tokens": [
+            6159,
+            6144
+          ],
+          "query_lens": [
+            1,
+            1
+          ],
+          "context_lens": [
+            6159,
+            6144
+          ],
+          "new_rows": [],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "FULL",
+            "capture_hit": true,
+            "is_mixed_batch": false,
+            "original_total_tokens": 2,
+            "padded_total_tokens": 2,
+            "original_decode_batch_size": 2,
+            "padded_decode_batch_size": 2
+          }
+        }
+      ],
+      "sample_dummy": [
+        {
+          "role": "PREFILL",
+          "lane": 1,
+          "replica_id": 0,
+          "batch_id": 1,
+          "dummy": true,
+          "request_ids": [],
+          "prompt_lens": [],
+          "computed_tokens": [],
+          "query_lens": [
+            1
+          ],
+          "context_lens": [],
+          "new_rows": [],
+          "dispatch": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "FULL",
+            "capture_hit": true,
+            "is_mixed_batch": false,
+            "original_total_tokens": 1,
+            "padded_total_tokens": 1,
+            "original_decode_batch_size": 1,
+            "padded_decode_batch_size": 1
+          }
+        }
+      ]
+    }
+  ],
+  "trace_sha256": [
+    "cec2c473c51d43518ac4bb0781ae3d020e63f7a841297b4ff268d2a97d962186",
+    "cec2c473c51d43518ac4bb0781ae3d020e63f7a841297b4ff268d2a97d962186"
+  ],
+  "timing": [
+    {
+      "init_wall_s": 76.04406836116686,
+      "run_wall_s": 233.7341397521086,
+      "simulated_time_s": 2.7024988318040295,
+      "peak_rss_kib": 1368524
+    },
+    {
+      "init_wall_s": 72.51108745997772,
+      "run_wall_s": 230.50684960884973,
+      "simulated_time_s": 2.7024988318040295,
+      "peak_rss_kib": 1369096
+    }
+  ]
+}

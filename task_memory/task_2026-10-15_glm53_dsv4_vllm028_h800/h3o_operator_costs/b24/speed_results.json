@@ -1,0 +1,107 @@
+{
+  "s1": {
+    "base_wall_s": 171.64895554166287,
+    "candidate_wall_s": 99.50306118326262,
+    "speedup": 1.7250620583976153,
+    "wall_reduction_percent": 42.03107099063524,
+    "base_rss_kib": 1044868,
+    "candidate_rss_kib": 1046328
+  },
+  "s2": {
+    "base_wall_s": 232.54751180810854,
+    "candidate_wall_s": 109.89993585506454,
+    "speedup": 2.115993153215221,
+    "wall_reduction_percent": 52.74086787660374,
+    "base_rss_kib": 1348524,
+    "candidate_rss_kib": 1348812
+  },
+  "s3": {
+    "base_wall_s": 233.7341397521086,
+    "candidate_wall_s": 230.50684960884973,
+    "speedup": 1.0140008427026586,
+    "wall_reduction_percent": 1.3807525707120183,
+    "base_rss_kib": 1368524,
+    "candidate_rss_kib": 1369096
+  },
+  "window": {
+    "base_simulated_s": 8.635213637374202,
+    "candidate_simulated_s": 17.40388879308657,
+    "simulated_progress_ratio": 2.015455496985104,
+    "base_wall_s": 900.0001863590442,
+    "candidate_wall_s": 900.0001802160405,
+    "meets_1_5_target": true,
+    "profiler": false,
+    "simulated_start_s": 0
+  },
+  "warm_inventory_equal": true,
+  "cache_inventory_summary": {
+    "s2_base": {
+      "files": 1758,
+      "bytes": 324536393,
+      "inventory_sha256": "6ca1d0629afb11f23414d08fc4c8ed345f7a90f84b1dcf6a30ca6c2abfaff556"
+    },
+    "s2_candidate": {
+      "files": 1758,
+      "bytes": 324536393,
+      "inventory_sha256": "6ca1d0629afb11f23414d08fc4c8ed345f7a90f84b1dcf6a30ca6c2abfaff556"
+    },
+    "s3_base": {
+      "files": 1758,
+      "bytes": 324536393,
+      "inventory_sha256": "6ca1d0629afb11f23414d08fc4c8ed345f7a90f84b1dcf6a30ca6c2abfaff556"
+    },
+    "s3_candidate": {
+      "files": 1758,
+      "bytes": 324536393,
+      "inventory_sha256": "6ca1d0629afb11f23414d08fc4c8ed345f7a90f84b1dcf6a30ca6c2abfaff556"
+    },
+    "window_base": {
+      "files": 1758,
+      "bytes": 324536393,
+      "inventory_sha256": "6ca1d0629afb11f23414d08fc4c8ed345f7a90f84b1dcf6a30ca6c2abfaff556"
+    },
+    "window_candidate": {
+      "files": 1758,
+      "bytes": 324536393,
+      "inventory_sha256": "6ca1d0629afb11f23414d08fc4c8ed345f7a90f84b1dcf6a30ca6c2abfaff556"
+    },
+    "profile_candidate": {
+      "files": 1758,
+      "bytes": 324536393,
+      "inventory_sha256": "6ca1d0629afb11f23414d08fc4c8ed345f7a90f84b1dcf6a30ca6c2abfaff556"
+    },
+    "p2_32_rate_candidate": {
+      "files": 1758,
+      "bytes": 324536393,
+      "inventory_sha256": "6ca1d0629afb11f23414d08fc4c8ed345f7a90f84b1dcf6a30ca6c2abfaff556"
+    }
+  },
+  "full_trace_estimates": {
+    "p2_32": {
+      "historical_horizon_s": 147.4285322267707,
+      "horizon_source": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_g1hs_r2/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/system_metrics.json",
+      "horizon_source_sha256": "dbf9a6f6af21655045a8b4ca94e0f000301c190f75c83c9932f0a9a1b2b5607c",
+      "rate_source": "p2_32_rate_candidate",
+      "rate_simulated_s_per_wall_s": 0.019560847001287567,
+      "estimated_simulator_run_wall_s": 7536.9196547095535,
+      "estimated_simulator_run_wall_h": 2.093588792974876,
+      "measured_warm_init_s": 73.06403967086226,
+      "estimated_warm_total_wall_h": 2.1138843595501156,
+      "historical_full_run_wall_s": 16584.30813307315,
+      "limitation": "Extrapolates the early unprofiled rate across the full trace; does not measure changing occupancy or final metric output cost."
+    },
+    "p2_64": {
+      "historical_horizon_s": 153.26694330982852,
+      "horizon_source": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_g1hs_r2/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/system_metrics.json",
+      "horizon_source_sha256": "3c89543524b77a93db92d1c08ab4a476717add3573e888b3cc2d0cbe0d0d40d1",
+      "rate_source": "window_candidate",
+      "rate_simulated_s_per_wall_s": 0.01933765034236866,
+      "estimated_simulator_run_wall_s": 7925.830728980641,
+      "estimated_simulator_run_wall_h": 2.2016196469390668,
+      "measured_warm_init_s": 74.12454223912209,
+      "estimated_warm_total_wall_h": 2.222209797561045,
+      "historical_full_run_wall_s": 20343.940877009183,
+      "limitation": "Extrapolates the early unprofiled rate across the full trace; does not measure changing occupancy or final metric output cost."
+    }
+  }
+}
