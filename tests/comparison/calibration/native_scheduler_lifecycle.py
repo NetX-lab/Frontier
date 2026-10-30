@@ -10,6 +10,7 @@ import json
 import os
 import socket
 import sys
+import threading
 import time
 import traceback
 from pathlib import Path
@@ -32,44 +33,49 @@ class LifecycleLog:
     def __init__(self, path):
         path.parent.mkdir(parents=True, exist_ok=True)
         self.file = path.open('a')
+        self.lock = threading.RLock()
         self.lines = []
         self.flushed = time.monotonic()
         self.records = self.errors = 0
 
     def write(self, record, now):
-        self.lines.append(json.dumps(record, separators=(',', ':')) + '\n')
-        self.records += 1
-        if now - self.flushed >= FLUSH_INTERVAL_S:
-            self.flush(now)
+        with self.lock:
+            self.lines.append(json.dumps(record, separators=(',', ':')) + '\n')
+            self.records += 1
+            if now - self.flushed >= FLUSH_INTERVAL_S:
+                self.flush(now)
 
     def flush(self, now):
-        if self.lines:
-            self.file.write(''.join(self.lines))
-            self.file.flush()
-            self.lines.clear()
-        self.flushed = now
+        with self.lock:
+            if self.lines:
+                self.file.write(''.join(self.lines))
+                self.file.flush()
+                self.lines.clear()
+            self.flushed = now
 
     def error(self, where):
-        # Even a broken formatter or file must not affect native work.
-        try:
-            self.errors += 1
-            if self.errors <= MAX_ERROR_RECORDS:
-                text = traceback.format_exc()
-                self.lines.append(json.dumps(dict(event='error', where=where,
-                    count=self.errors, traceback=text)) + '\n')
-                print('NATIVE_SCHEDULER_LIFECYCLE_UNVERIFIED', where, text,
-                    file=sys.stderr, flush=True)
-        except Exception:
-            pass
+        with self.lock:
+            # Even a broken formatter or file must not affect native work.
+            try:
+                self.errors += 1
+                if self.errors <= MAX_ERROR_RECORDS:
+                    text = traceback.format_exc()
+                    self.lines.append(json.dumps(dict(event='error', where=where,
+                        count=self.errors, traceback=text)) + '\n')
+                    print('NATIVE_SCHEDULER_LIFECYCLE_UNVERIFIED', where, text,
+                        file=sys.stderr, flush=True)
+            except Exception:
+                pass
 
     def close(self):
-        if self.file.closed:
-            return
-        now = time.monotonic()
-        self.write(dict(event='stop', t=time.time(), mono=now,
-            records=self.records, errors=self.errors), now)
-        self.flush(now)
-        self.file.close()
+        with self.lock:
+            if self.file.closed:
+                return
+            now = time.monotonic()
+            self.write(dict(event='stop', t=time.time(), mono=now,
+                records=self.records, errors=self.errors), now)
+            self.flush(now)
+            self.file.close()
 
 
 class LifecycleObservedScheduler(AsyncScheduler):

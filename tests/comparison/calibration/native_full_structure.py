@@ -870,6 +870,15 @@ if os.environ.get('VLLM_MOE_ROUTING_SIMULATION_STRATEGY') == 'balanced_topk':
 
 _NATIVE_SERVING_INVENTORY = _install_native_serving_inventory()
 
+# This module is resolved by worker_extension_cls in every native worker process.
+if os.environ.get('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR') is not None:
+    try:
+        from native_dp_wave_worker import install_worker_hooks
+        install_worker_hooks()
+    except Exception:
+        print('NATIVE_SCHEDULER_LIFECYCLE_UNVERIFIED', 'worker.bootstrap',
+            traceback.format_exc(), file=sys.stderr, flush=True)
+
 
 def routing_rows(array, prompt_tokens, output_tokens, hf):
     import numpy as np
