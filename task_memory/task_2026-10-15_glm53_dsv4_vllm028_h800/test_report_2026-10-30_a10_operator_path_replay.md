@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Section 2.2: P2-32 cold finished; A9 cold against warm is EQUAL. |
 | 2026-10-30 | Section 2.2: P2-32 warm reading (PASS; TTFT −8.50%, TPOT, E2E and throughput within 0.13%). Section 3.6: observation 8 (P2-32 remainder) and the evidence for `nixl_read_completion=engine_step` in observation 5; the ingress reading now includes its P2-32 effect. |
 | 2026-10-30 | Added section 3.6: after the prefill side, the native P2-64 remainder is 165.2 ms once the first-contact NIXL handshakes are left out (Frontier 138.6 ms); without the five handshake requests the reference TTFT is 720.6 ms instead of 741.2 ms. Sections 3.1 and 3.5 point to the revised values. |
 | 2026-10-30 | Added section 3.5 from the instrumented wave run `exp-1030-144848-164721`: the native host issues DP dummy forwards ahead of the GPU, up to about 19 unfinished forwards, so a DP wave ends with about 18 dummies (about 440 ms of GPU work) still queued and the next prefill waits behind them. Section 3.3's reading is replaced. |
@@ -72,7 +73,7 @@ Results (gate outputs under `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10_gate/`
 | Run | Status | Wall time (init / run) | Gate output |
 | --- | --- | --- | --- |
 | P2-32 warm | FINISHED | 85.9 s / 16,584.3 s (4.61 h) | `p2_32_warm_r2_run/` |
-| P2-32 cold | running | | |
+| P2-32 cold | FINISHED | 680.6 s / 16,494.8 s (4.58 h); trained 1,758 cache files | same metrics as P2-32 warm (A9 below) |
 | P2-64 cold | running | | |
 | P2-64 warm | running | | |
 
@@ -86,6 +87,8 @@ Results (gate outputs under `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10_gate/`
 | Token throughput (window rate) | 6,231.415 tps | 6,223.381 tps | −8.034 tps | 0.13% | 10% | PASS |
 
 Per native repeat, the TTFT error is 7.98% / 8.68% / 8.83% (native 361.97 / 364.75 / 365.37 ms); TPOT, E2E and throughput stay within 0.30%. Overall PASS with routing MATCH. The TTFT margin is small: Frontier is 30.9 ms early, and section 3.6 observation 8 locates the shortfall.
+
+**A9, cold against warm (P2-32):** `compare_cache_runs.py stage4/a10/p2_32_cold_g1hs_r2 stage4/a10/p2_32_warm_g1hs_r2`, run from the `a10/` directory with the gate's `PYTHONPATH`, prints "EQUAL: metrics and cache identities match; warm cache file set equals cold at run end" (`h3o_operator_costs/a10/a9_p2_32_r2_stdout.txt`). The metrics of the cold run are therefore the same as those of the warm run, and the gate reading above holds for both. This also settles the deviation of this section: the warm cache from the first-attempt cold run equals the cache that the restarted cold run trains.
 
 The receipt reports `kv_admission` status DIFFERS: each Frontier decode lane admits 2,940 blocks at the maximum model length (maximum concurrency 37.39), native 2,944 (37.34). The difference is 0.14% and is not explored further here. Inference: it does not bind in this case, because QPS 1 with a 20.7 s request E2E time keeps about 21 requests in flight over the two decode lanes, far below 37 per lane.
 
