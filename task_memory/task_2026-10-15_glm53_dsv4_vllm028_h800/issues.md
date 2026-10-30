@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-004 opened and worked around: the vLLM 0.28 environment `oneshot-opd-py312` was removed at 05:22 UTC outside this task; the B25 installed-wheel check became a source-only check. |
 | 2026-10-30 | I-003 opened and resolved: `/data/ycfeng` filled at 20:58 on 2026-10-29 and every running simulation failed with ENOSPC; space was recovered by YC-approved deletions and the runs were restarted. |
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
@@ -91,3 +92,19 @@ tests/unit/test_balanced_routing.py:316: KeyError: 'moe_gating_routing_topk'
 Cause (from the code): B16b (`61c2f9d3`) makes `_get_measurement_types_for_cluster` return only the V4 measurement type, `KERNEL_ONLY`, for every DeepSeek-V4 role, so the `eager` view of `get_models_for_cluster` is empty for V4. The test still trains V4 gating models from `CUDA_EVENT` rows and reads them from the `eager` view. Without torch the module is skipped by `pytest.importorskip("torch")`, so suites run without torch do not report it.
 
 Next action: update the test to the B16b contract (V4 roles read `KERNEL_ONLY`), in a later assignment; no simulator behavior is involved.
+
+## I-004: vLLM 0.28 environment removed during the B25 implementation (2026-10-30)
+
+Status: worked around; the environment is not restored. Owner: lead.
+
+**Observed.** Codex's B25 CPU check exited 127: `/data/ycfeng/envs/oneshot-opd-py312/bin/python` no longer existed. The `df` logger (`stage4/disk_watch.log`) shows used space on `/data/ycfeng` falling from 986,494 MB at 05:18 UTC to 934,741 MB at 05:23 and 851,306 MB at 05:28, which matches the removal time. No command from this task removed the environment (inference from the session history; the deleting process is not known).
+
+**Impact.** B25 planned to check the observer hooks against the installed vLLM wheel. Without the environment, the attributes could be checked only against the NATIVE source tree (`/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69`).
+
+**Resolution.**
+- `check_native_dp_wave_source.py` checks every hooked attribute against the NATIVE source; it passed on the B25 branch and on the composed harness branch `p2-64-wave-composed` (`6488ea15`).
+- The H4b check had already found the installed wheel byte-identical to NATIVE for the engine-core, scheduler and output files, and the lead verified each hooked attribute in the NATIVE source.
+- The soft checks of the instrumented run itself serve as the installed-path check: an attribute that differs in the image appears as an error record, not as a silent gap.
+- Recorded in `h3o_operator_costs/` B25 design section 9.
+
+Next action: none for B25. A later task that needs a local vLLM 0.28 Python must rebuild the environment first.
