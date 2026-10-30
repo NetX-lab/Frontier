@@ -1,0 +1,13 @@
+/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/torch_traces/prefill/dp0 classes ['prefill'] ranks 8
+/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/torch_traces/prefill/dp1 classes ['dummy'] ranks 8
+host offsets us [0.0, 462.2] layers 43
+dispatch_critical                                median    541.8 min    530.8 max    564.2 sum ms   23.327
+dispatch_lane0_rank0_sum                         median    806.0 min    525.2 max   2168.5 sum ms   44.755
+dispatch_lane0_rank0_first_start_to_last_end     median    810.0 min    528.5 max   2172.5 sum ms   44.901
+dispatch_arrival_spread                          median   4575.2 min   3263.5 max   9914.2 sum ms  224.375
+combine_critical                                 median    717.0 min    702.0 max    729.5 sum ms   30.847
+combine_lane0_rank0                              median    726.5 min    702.0 max    737.8 sum ms   31.188
+combine_arrival_spread                           median     25.2 min     18.0 max     36.2 sum ms    1.139
+combine_end_spread                               median    186.2 min    184.0 max    198.8 sum ms    8.019
+sp_rs_lane0_rank0                                median    806.5 min    149.5 max   2191.0 sum ms   39.006
+combine_end_to_lane0_sp_rs_end_max               median  -3711.0 min  -3986.5 max  -2388.2 sum ms -135.371

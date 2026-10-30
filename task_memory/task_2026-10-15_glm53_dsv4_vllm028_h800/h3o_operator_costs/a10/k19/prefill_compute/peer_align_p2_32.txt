@@ -1,0 +1,20 @@
+classes ['prefill', 'dummy'] offsets us [0.0, 443.5] residual sd us [0.0, 43.3]
+last arriving lane per layer Counter({0: 41, 1: 2})
+lane 0 wait for the last arrival: sum ms 0.011 per layer median us 0.0
+last arrival to lane 0 end: sum ms 30.847 per layer median us 706.8
+layer 0 arrival relative to lane 0 (us) [0.0, -7.5]
+layer 1 arrival relative to lane 0 (us) [0.0, -11.2]
+layer 10 arrival relative to lane 0 (us) [0.0, -4.0]
+layer 20 arrival relative to lane 0 (us) [0.0, -0.8]
+layer 42 arrival relative to lane 0 (us) [0.0, 6.8]
+forward first kernel relative to lane 0 (us) [0.0, 2333.8] last end [0.0, -584.5]
+classes ['prefill', 'dummy'] offsets us [0.0, 462.2] residual sd us [0.0, 34.4]
+last arriving lane per layer Counter({1: 32, 0: 11})
+lane 0 wait for the last arrival: sum ms 0.19 per layer median us 4.2
+last arrival to lane 0 end: sum ms 30.998 per layer median us 720.8
+layer 0 arrival relative to lane 0 (us) [0.0, -8.5]
+layer 1 arrival relative to lane 0 (us) [0.0, 9.2]
+layer 10 arrival relative to lane 0 (us) [0.0, -1.0]
+layer 20 arrival relative to lane 0 (us) [0.0, 6.0]
+layer 42 arrival relative to lane 0 (us) [0.0, -3.0]
+forward first kernel relative to lane 0 (us) [0.0, -1024.5] last end [0.0, -807.2]

@@ -1,0 +1,178 @@
+forward 0 NONE prefill {'context_requests': 1, 'context_tokens': 6144, 'generation_requests': 0, 'generation_tokens': 0} real True
+  prepare: kernels 67 sum 0.136 ms union 0.136 ms span 3.497 ms streams Counter({23: 67})
+  dispatch: kernels 2313 sum 336.232 ms union 333.487 ms span 337.466 ms streams Counter({23: 2106, 35: 123, 43: 42, 39: 42})
+  post: kernels 11 sum 0.563 ms union 0.563 ms span 0.577 ms streams Counter({23: 11})
+        43    81.873  ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+       129    74.390  ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        43    30.857  ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        43    29.947  void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTemplate<512, true>::TmaParams<cute::tuple<int, int, int
+        21    28.602  void vllm::topKPerRowPrefill<512, false>(float const*, int const*, int const*, int*, int, int, int, int)
+        86    25.621  void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 4, 8, 4, false, 4, 2, false>(int4 const*
+        44     8.515  ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        43     6.167  void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BFloat16, 64>(c10::BFloat16 const*, c10::BFloat16*, 
+        43     5.413  _swiglu_limit_pad_aware_kernel
+       236     5.212  void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BFloat16 const*, void*, float*, int, int, int, float
+        86     3.804  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u, 128u, 128u, 128u, 3u, 128u, 256u, 2u, true, 132u
+         1     3.578  void (anonymous namespace)::multimem_all_reduce_kernel<c10::BFloat16, 16>(c10::BFloat16*, unsigned long, unsigned int**, unsigned long, unsigned long)
+        21     2.841  nvjet_sm90_tss_256x128_64x4_1x2_h_bz_coopA_TNT
+        43     2.584  _fused_inv_rope_fp8_quant_per_head
+        20     2.254  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressC128Block8Kernel_object_at__tensorptrf32gmemalign16o
+        43     2.201  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u, 128u, 128u, 128u, 4u, 128u, 256u, 2u, false, 132
+        41     2.179  nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+        43     2.045  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u, 128u, 128u, 64u, 3u, 128u, 256u, 1u, false, 132u,
+        21     1.925  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 8192u, 1024u, 1u, 256u, 128u, 128u, 128u, 128u, 128u, 3u, 128u, 256u, 2u, true, 132u
+        21     1.766  void deep_gemm::sm90_fp8_mqa_logits<64u, 128u, false, 2u, 256u, 3u, 3u, 132u, 128u, 512u, float>(unsigned int, unsigned int, unsigned int, unsigned in
+        43     1.341  void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, long const*, int const*,
+        85     1.272  void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128u>(unsigned int, CUtensorMap_st, CUtensorMap_st, C
+        62     1.259  _save_partial_states_kernel
+        86     1.235  mhc_post_tilelang_kernel
+        21     1.117  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsfused_indexer_q_cutedslIndexerQFp8Kernel_object_at__tensorptri64gmemo1_tensorptrbf16gmemalign32o64
+        85     1.054  mhc_pre_big_fuse_with_norm_tilelang_kernel
+        21     0.937  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNormRopeStoreC4Kernel_object_at__tensorptrf32gmemali
+        43     0.858  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u, 128u, 128u, 128u, 4u, 128u, 256u, 1u, false, 132
+        43     0.695  _fused_q_kv_rmsnorm_kernel
+        43     0.558  void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)
+        43     0.539  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u, 128u, 128u, 128u, 4u, 128u, 256u, 1u, false, 132
+        43     0.538  Kernel
+        21     0.490  _fused_kv_compress_norm_rope_insert_indexer_attn
+        43     0.396  nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+        21     0.373  nvjet_sm90_tst_64x64_64x13_1x4_h_bz_TNT
+        64     0.277  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKernel_object_at__tensorptrbf16gmemalign32o512i64div16i
+        20     0.223  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnNormRopeStoreKernel_object_at__tensorptrf32gmemo5125121_tens
+        43     0.219  void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char*, 3ul> >(int, at::native::CUDAFunctor_ad
+        43     0.185  void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(c10::BFloat16 const&, float)), &(__nv_bf
+         1     0.174  hc_head_fuse_tilelang_kernel
+        64     0.117  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array
+        43     0.088  void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase
+        43     0.082  void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned long, int, int, int, bool)
+        21     0.065  void vllm::cp_gather_indexer_k_quant_cache_kernel<32>(char const*, char*, char*, int const*, int const*, int, long, long, long, long, long, int, int, 
+        41     0.060  void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::native::binary_internal::div_floor_kernel_cuda(at::Tens
+         1     0.060  void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespace)::masked_fill_kernel(at::TensorIterato
+        43     0.050  void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf
+        20     0.048  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKernel_object_at__tensorptrbf16gmemalign32o512i64div16i
+        43     0.039  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::a
+        43     0.038  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&,
+         1     0.028  void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, long, long, c10::BFloat16 const*, long, 
+         1     0.018  void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long, bool)
+         1     0.012  mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+         1     0.007  void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128u>(unsigned int, CUtensorMap_st, CUtensorMap_st, CU
+         1     0.003  triton_poi_fused_add_bitwise_and_bitwise_or_ge_lt_mul_sub_0
+         1     0.003  triton_poi_fused_bitwise_and_bitwise_not_bitwise_or_ge_lt_1
+forward 32 NONE dummy None real False
+  prepare: kernels 76 sum 0.075 ms union 0.075 ms span 2.683 ms streams Counter({23: 76})
+  dispatch: kernels 2131 sum 435.349 ms union 351.875 ms span 357.133 ms streams Counter({23: 1585, 47: 215, 35: 205, 39: 84, 43: 42})
+  post: kernels 2 sum 0.005 ms union 0.005 ms span 0.006 ms streams Counter({23: 2})
+       129   192.937  ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        43    82.470  void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 const*, __nv_bfloat16*, unsigned int*, int, int, int)
+        85    82.072  mhc_fused_tilelang_kernel
+        86    25.621  void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 4, 8, 4, false, 4, 2, false>(int4 const*
+        43    23.606  ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        44    15.061  void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>(vllm::RankData*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, unsigned int*, int, int, 
+        43     5.420  _swiglu_limit_pad_aware_kernel
+        43     1.345  void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, long const*, int const*,
+         1     0.839  void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)
+        43     0.549  void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)
+        62     0.463  nvjet_sm90_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+        85     0.442  mhc_pre_big_fuse_with_norm_tilelang_kernel
+        43     0.441  void sm90::decode::sparse_fp8::flash_fwd_splitkv_mla_fp8_sparse_kernel<sm90::decode::sparse_fp8::KernelTemplate<(ModelType)1, 64>, sm90::decode::spars
+        43     0.420  void deep_gemm::fp8_gemm_kernel_swapAB<1536u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::NormalSchedulerSwapAB<1536u, 128u, 16u, 1u, 1
+        43     0.414  void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 4096u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::NormalSchedulerSwapAB<4096u, 128u, 16u, 1u, 1
+        86     0.398  void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 1024u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::NormalSchedulerSwapAB<4096u, 128u, 16u, 1u, 1
+       215     0.367  void tensorrt_llm::kernels::fp8_blockscale_gemm::scale_1x128_kernel<__nv_bfloat16, __nv_fp8_e4m3, float>(__nv_fp8_e4m3*, float*, __nv_bfloat16 const*,
+        43     0.332  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 16u, 16u, 128u, 128u, 128u, 32u, 16u, 128u, 128u, 1u, false, 132u,
+        43     0.249  void deep_gemm::fp8_gemm_kernel_swapAB<4096u, 2048u, 128u, 16u, 128u, 1u, 8u, 128u, 128u, 1u, deep_gemm::NormalSchedulerSwapAB<4096u, 128u, 16u, 1u, 1
+        21     0.187  nvjet_sm90_tst_64x8_64x16_1x1_h_bz_splitK_TNT
+        62     0.145  void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSpl
+         1     0.140  hc_head_fuse_tilelang_kernel
+        43     0.119  kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLBf16Dotprod_object_at__tensorptrbf16gmemalign16o14096i64div81_tensorptr
+        43     0.107  void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel<c10::BFloat16, 64>(c10::BFloat16 const*, c10::BFloat16*, c10::BFloat
+         4     0.102  smxx::decode::get_mla_metadata_kernel(GetDecodeSchedMetaParams)
+        43     0.101  void smxx::decode::flash_fwd_mla_combine_kernel<cutlass::bfloat16_t, 512, 8, 160, 256>(CombineParams)
+        43     0.097  _fused_inv_rope_fp8_quant_per_head
+        43     0.092  void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase
+        43     0.083  void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned long, int, int, int, bool)
+        43     0.080  void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(c10::BFloat16 const&, float)), &(__nv_bf
+        43     0.069  _fused_q_kv_rmsnorm_kernel
+        43     0.065  void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char*, 3ul> >(int, at::native::CUDAFunctor_ad
+        62     0.060  _save_partial_states_kernel
+        43     0.055  void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf
+        21     0.052  void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16, float, __nv_bfloat16, false, float, __nv_bfloat16, __nv_bfloat16, true, false, f
+        43     0.041  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::a
+        20     0.038  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressC128Block8Kernel_object_at__tensorptrf32gmemalign16o
+        44     0.038  void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1ul> >(int, at::native::FillFunctor<c10::B
+        44     0.037  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array
+        21     0.032  _compute_global_topk_indices_and_lens_kernel
+        21     0.032  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNormRopeStoreC4Kernel_object_at__tensorptrf32gmemali
+        21     0.032  _fused_kv_compress_norm_rope_insert_indexer_attn
+        43     0.031  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&,
+        20     0.025  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnNormRopeStoreKernel_object_at__tensorptrf32gmemo5125121_tens
+        21     0.020  _fill_short_context_topk_indices
+         1     0.005  mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+         1     0.003  void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 16u, 128u, 12u, 128u, 128u>(unsigned int, CUtensorMap_st, CUtensorMap_st, CU
+         1     0.003  mhc_post_tilelang_kernel
+         1     0.002  void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, long, long, c10::BFloat16 const*, long, 
+         1     0.002  void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespace)::masked_fill_kernel(at::TensorIterato
+         1     0.002  void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at::cuda::detail::TensorInfo<c10::BFloat16,
+         1     0.001  triton_poi_fused_add_bitwise_and_bitwise_or_ge_lt_mul_sub_0
+         1     0.001  triton_poi_fused_bitwise_and_bitwise_not_bitwise_or_ge_lt_1
+         1     0.001  void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<bool>, std::array<char*, 1ul> >(int, at::native::FillFunctor<bool>, std::arr
+forward 64 NONE prefill {'context_requests': 1, 'context_tokens': 6144, 'generation_requests': 0, 'generation_tokens': 0} real True
+  prepare: kernels 67 sum 0.135 ms union 0.135 ms span 1.723 ms streams Counter({23: 67})
+  dispatch: kernels 2313 sum 259.068 ms union 257.974 ms span 327.578 ms streams Counter({23: 2106, 35: 123, 43: 42, 39: 42})
+  post: kernels 11 sum 0.103 ms union 0.103 ms span 0.333 ms streams Counter({23: 11})
+       129    44.755  ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        43    39.006  ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        43    31.188  ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        43    30.012  void sm90::fwd::sparse_attn_fwd_kernel<sm90::fwd::KernelTemplate<512, true>, sm90::fwd::KernelTemplate<512, true>::TmaParams<cute::tuple<int, int, int
+        21    28.632  void vllm::topKPerRowPrefill<512, false>(float const*, int const*, int const*, int*, int, int, int, int)
+        86    25.618  void marlin_moe_wna16::Marlin<1125899906909960l, 562949953487106l, 1125899906909960l, 2814749767106568l, 128, 4, 8, 4, false, 4, 2, false>(int4 const*
+        44     8.302  ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+        43     5.907  void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKVRopeQuantInsertKernelReducedGrid<c10::BFloat16, 64>(c10::BFloat16 const*, c10::BFloat16*, 
+        43     5.415  _swiglu_limit_pad_aware_kernel
+       236     5.151  void per_token_group_quant_8bit_kernel<c10::BFloat16, c10::Float8_e4m3fn, true, true, float>(c10::BFloat16 const*, void*, float*, int, int, int, float
+        86     3.718  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 1024u, 1u, 256u, 128u, 128u, 128u, 128u, 128u, 3u, 128u, 256u, 2u, true, 132u
+        21     2.840  nvjet_sm90_tss_256x128_64x4_1x2_h_bz_coopA_TNT
+        43     2.586  _fused_inv_rope_fp8_quant_per_head
+        43     2.200  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1536u, 4096u, 1u, 128u, 192u, 128u, 128u, 128u, 128u, 4u, 128u, 256u, 2u, false, 132
+        41     2.183  nvjet_sm90_tss_128x192_64x5_2x1_v_bz_coopB_TNN
+        43     2.040  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 1024u, 4096u, 1u, 256u, 96u, 128u, 128u, 128u, 64u, 3u, 128u, 256u, 1u, false, 132u,
+        20     2.018  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressC128Block8Kernel_object_at__tensorptrf32gmemalign16o
+        21     1.797  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 8192u, 1024u, 1u, 256u, 128u, 128u, 128u, 128u, 128u, 3u, 128u, 256u, 2u, true, 132u
+        21     1.791  void deep_gemm::sm90_fp8_mqa_logits<64u, 128u, false, 2u, 256u, 3u, 3u, 132u, 128u, 512u, float>(unsigned int, unsigned int, unsigned int, unsigned in
+        43     1.343  void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*, c10::BFloat16 const*, long, int, long, long, long const*, int const*,
+        85     1.303  void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128u>(unsigned int, CUtensorMap_st, CUtensorMap_st, C
+        86     1.240  mhc_post_tilelang_kernel
+        62     1.168  _save_partial_states_kernel
+        85     1.056  mhc_pre_big_fuse_with_norm_tilelang_kernel
+        21     0.989  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsfused_indexer_q_cutedslIndexerQFp8Kernel_object_at__tensorptri64gmemo1_tensorptrbf16gmemalign32o64
+        43     0.862  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 4096u, 1u, 128u, 192u, 128u, 128u, 128u, 128u, 4u, 128u, 256u, 1u, false, 132
+        43     0.693  _fused_q_kv_rmsnorm_kernel
+        21     0.589  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnCompressNormRopeStoreC4Kernel_object_at__tensorptrf32gmemali
+        43     0.558  void vllm::moe::moe_align_block_size_kernel<long>(long const*, int*, int*, int*, int*, int, int, int, int, unsigned long, int*, int, int, bool)
+        43     0.558  Kernel
+        43     0.542  void deep_gemm::sm90_fp8_gemm_1d2d_impl<(cute::UMMA::Major)0, 0u, 4096u, 2048u, 1u, 128u, 192u, 128u, 128u, 128u, 128u, 4u, 128u, 256u, 1u, false, 132
+        43     0.399  nvjet_sm90_tss_64x32_64x16_2x4_h_bz_TNT
+        21     0.374  nvjet_sm90_tst_64x64_64x13_1x4_h_bz_TNT
+        21     0.282  _fused_kv_compress_norm_rope_insert_indexer_attn
+        64     0.280  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKernel_object_at__tensorptrbf16gmemalign32o512i64div16i
+        43     0.216  void at::native::vectorized_elementwise_kernel<8, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char*, 3ul> >(int, at::native::CUDAFunctor_ad
+         1     0.192  void (anonymous namespace)::multimem_all_reduce_kernel<c10::BFloat16, 16>(c10::BFloat16*, unsigned long, unsigned int**, unsigned long, unsigned long)
+        43     0.186  void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(c10::BFloat16 const&, float)), &(__nv_bf
+        20     0.184  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopssparse_attn_compress_cutedslSparseAttnNormRopeStoreKernel_object_at__tensorptrf32gmemo5125121_tens
+         1     0.175  hc_head_fuse_tilelang_kernel
+        64     0.117  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array
+        43     0.087  void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase
+        43     0.082  void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int*, int*, unsigned long, int, int, int, bool)
+        21     0.066  void vllm::cp_gather_indexer_k_quant_cache_kernel<32>(char const*, char*, char*, int const*, int const*, int, long, long, long, long, long, int, int, 
+        41     0.062  void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<int, int, int, at::native::binary_internal::div_floor_kernel_cuda(at::Tens
+         1     0.059  void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespace)::masked_fill_kernel(at::TensorIterato
+        43     0.050  void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf
+        20     0.048  kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_gather_k_cutedslDequantGatherKCacheKernel_object_at__tensorptrbf16gmemalign32o512i64div16i
+        43     0.038  void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, std::array<char*, 1ul> >(int, at::native::FillFunctor<float>, std::a
+        43     0.038  void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&,
+         1     0.028  void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, long, long, c10::BFloat16 const*, long, 
+         1     0.019  void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long, bool)
+         1     0.012  mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+         1     0.007  void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128u>(unsigned int, CUtensorMap_st, CUtensorMap_st, CU
+         1     0.003  triton_poi_fused_add_bitwise_and_bitwise_or_ge_lt_mul_sub_0
+         1     0.003  triton_poi_fused_bitwise_and_bitwise_not_bitwise_or_ge_lt_1

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-008 measured: the isolated G5h-32 run (`exp-1030-234535-245357`, 8.01 GPU-hours) and the native critical paths show that a single aligned call reproduces the eager EP calls on EP32 and EP16 (within 1-18 µs), while back-to-back timing fits the decode-graph and TP calls. Repair assigned as B28. |
 | 2026-10-30 | I-008 opened: the back-to-back collective timing in `data/profiling/network/h200_dgx/summary.csv` gives the period of pipelined calls, not the time of one call started on aligned ranks. At 6,144 rows the EP combine is priced 164.7 µs per layer low on EP32 and 16.6-45.6 µs high on EP16. |
 | 2026-10-30 | I-007 opened: the scheduler-lifecycle runs of 2026-10-25/26 are slower on the prefill side than the canonical runs in every repeat (13.8-34.4 ms); the 300 ms native prefill step taken from them is overstated. |
 | 2026-10-30 | I-006 resolved by B26b (`414fdd03`, merge `49e7e5fa`): a test-fixture timing problem caused by `b0bf0c78`; the fixture's third arrival moved from 8 ms to 10 ms; no simulator change. |
@@ -152,7 +153,7 @@ Status: open (cause not identified; the affected readings are corrected). Owner:
 
 ## I-008: back-to-back timing misprices the 6,144-row EP combine (2026-10-30)
 
-Status: open (cause measured; repair needs a GPU run and YC's approval). Owner: lead.
+Status: open (measured on 2026-10-30; repair assigned as B28). Owner: lead.
 
 **Observed.** The P2-64 native lane-0 prefill takes 2,176.5 µs per layer in the EP combine `ncclDevKernel_Reduce_Sum_bf16_RING_LL` on TP rank 0. Frontier prices that call at 2,011.6 µs, the back-to-back median of G5h-32 `_01` (`eager_t6144_1_1_1`), which is 7.08 ms per forward low. Evidence: A10 report section 5.6; `h3o_operator_costs/a10/k19/prefill_compute/`.
 
@@ -160,4 +161,17 @@ Status: open (cause measured; repair needs a GPU run and YC's approval). Owner: 
 
 **Impact.** P2-64 prefill step −7.08 ms; through the FIFO queue, about −10.6 ms of TTFT. P2-32 step +0.7 to +2.0 ms. Decode-width calls use the same timing mode. Whether they are also affected is not checked; the G5h report recorded decode biases of −12 to +15 µs per call.
 
-**Next.** Measure every EP collective from an aligned start (a barrier on the group's stream before each timed call; per-rank end times from the kernel trace; price = the latest end in the timed lane) on EP32 and EP16. Then compare with the native kernels of every group before the consumer changes.
+**Next (done 2026-10-30, below).** Measure every EP collective from an aligned start (a barrier on the group's stream before each timed call; per-rank end times from the kernel trace; price = the latest end in the timed lane) on EP32 and EP16. Then compare with the native kernels of every group before the consumer changes.
+
+**Measured (2026-10-30).** G5h-32 isolated `_01` (RJob `exp-1030-234535-245357`, 32 H200, 8.01 GPU-hours; G5h 25.32 of 36) repeats the G5h-32 `_01` grid with one aligned call per repeat; its kernels equal the native P2-64 kernels in 9 of 9 groups. The native side is now the critical path of each layer over all EP ranks (`ep_critical.py`), not one rank's kernel. Per layer, at 6,144 rows:
+
+| Call | Native critical path | Isolated | Back-to-back |
+| --- | --- | --- | --- |
+| EP32 combine (P2-64) | 2,171.2 µs | 2,172.0 µs | 2,011.1 µs |
+| EP32 dispatch (P2-64) | about 1,048 µs | 1,043.0 µs | 1,031.9 µs |
+| EP16 combine (P2-32) | 717.0 µs | 734.6 µs | 763.9 µs |
+| EP16 dispatch (P2-32) | 541.8 µs | 560.2 µs | 801.8 µs |
+
+The isolated mode is 43-93 µs above back-to-back for the decode-graph EP calls and 4-36 µs above for the TP calls, where back-to-back matches native. Details and the reading: [G5h report](test_report_2026-10-28_g5h_collective_kernel_comparison.md), section "I-008" and "Revised decision".
+
+**Repair (B28).** (1) `data/profiling/network/h200_dgx/summary.csv` takes the EP rows of every eager scenario with a 6,144-token lane from the isolated runs (G5h-16 isolated `_01`, G5h-32 isolated `_01`); all other rows stay back-to-back. (2) `MeasuredCCBackend` prices an uneven EP dispatch from its exact measured `AllGatherV` row, as it prices the uneven combine. Expected change per 6,144-token prefill forward: P2-64 +5.50 ms, P2-32 −11.64 ms (`evidence/collective_kernels/expected_prices.txt`). With this repair alone both cases are expected to fail the TTFT gate (about −10.5% and −11.1%) until the ingress and the host part of the step are modeled.
