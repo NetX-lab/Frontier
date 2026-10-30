@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Section 2.2: P2-32 warm reading (PASS; TTFT −8.50%, TPOT, E2E and throughput within 0.13%). Section 3.6: observation 8 (P2-32 remainder) and the evidence for `nixl_read_completion=engine_step` in observation 5; the ingress reading now includes its P2-32 effect. |
 | 2026-10-30 | Added section 3.6: after the prefill side, the native P2-64 remainder is 165.2 ms once the first-contact NIXL handshakes are left out (Frontier 138.6 ms); without the five handshake requests the reference TTFT is 720.6 ms instead of 741.2 ms. Sections 3.1 and 3.5 point to the revised values. |
 | 2026-10-30 | Added section 3.5 from the instrumented wave run `exp-1030-144848-164721`: the native host issues DP dummy forwards ahead of the GPU, up to about 19 unfinished forwards, so a DP wave ends with about 18 dummies (about 440 ms of GPU work) still queued and the next prefill waits behind them. Section 3.3's reading is replaced. |
 | 2026-10-30 | Added section 3: the P2-64 TTFT gap is on the native prefill side, where a prefill that arrives after the previous DP wave ended finishes about 450-540 ms after that wave end (mechanism not found in the code). |
@@ -14,7 +15,7 @@
 A10 replays the two H200 P2 cases on the V4 operator path (D-OPERATOR-LEVEL-ROUTE, ADR 0002: no whole-step cost table) and reads the client metrics against the persisted native vLLM reference with `tests/comparison/e2e_gate/run_gate.py`. Each case runs twice: cold (empty predictor cache, the simulator trains every model) and warm (cache from a cold run, no fitting).
 
 - Driver: `h3o_operator_costs/a10/a10_driver.py <case> <root>`, launched by `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/run_a10.sh <case> <name>` (root `stage4/a10/<name>`, `ulimit -v 62914560`, `timeout 86400`).
-- Gate: `h3o_operator_costs/a10/a10_gate.py <case> <frontier run dir> <output dir>`, run from the `a10/` directory with `PYTHONPATH=$REPO:$A10:$REPO/tests/analysis`.
+- Gate: `h3o_operator_costs/a10/a10_gate.py <case> <frontier run root> <output dir>` (the run root is the directory that contains `metrics/`; the output directory must not exist), run from the `a10/` directory with `PYTHONPATH=$REPO:$A10:$REPO/tests/analysis`.
 - Environment: `/data/ycfeng/envs/frontier-py310/bin/python` (3.10.6); `PYTHONDONTWRITEBYTECODE=1`, `WANDB_DISABLED=true`, `VIDUR_DISABLE_WANDB=1`, BLAS/OMP/MKL threads 1.
 - Gate rule: client gate, relative error limit 0.10 per metric. TTFT semantic `request_issue_to_first_output_token`. Native reference: three repeats of 128 requests (`vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01..03`). Routing status MATCH (R0 and A13 (b)).
 
@@ -66,7 +67,27 @@ Deviation: each warm cache comes from the first-attempt cold run, not from the r
 
 A mid-run cProfile window for the speed work (`stage4/run_profile3.sh p2_64 p2_64_mid2 60 1200`, cache hard-linked from `p2_64_cold_g1hs`) runs beside them; its first attempt was also lost to the full disk.
 
-Results: pending.
+Results (gate outputs under `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10_gate/`):
+
+| Run | Status | Wall time (init / run) | Gate output |
+| --- | --- | --- | --- |
+| P2-32 warm | FINISHED | 85.9 s / 16,584.3 s (4.61 h) | `p2_32_warm_r2_run/` |
+| P2-32 cold | running | | |
+| P2-64 cold | running | | |
+| P2-64 warm | running | | |
+
+**P2-32 warm** (native reference: three repeats of 128 requests, `dsv4-h200-p2-canonical-20261025-01-repeat01..03`):
+
+| Metric | Native vLLM (3 repeats) | Frontier | Absolute error | Relative error | Limit | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| TTFT mean | 364.030 ms | 333.087 ms | −30.943 ms | 8.50% | 10% | PASS |
+| TPOT mean | 19.919 ms | 19.932 ms | +0.013 ms | 0.07% | 10% | PASS |
+| Request E2E mean | 20,741.132 ms | 20,723.610 ms | −17.522 ms | 0.08% | 10% | PASS |
+| Token throughput (window rate) | 6,231.415 tps | 6,223.381 tps | −8.034 tps | 0.13% | 10% | PASS |
+
+Per native repeat, the TTFT error is 7.98% / 8.68% / 8.83% (native 361.97 / 364.75 / 365.37 ms); TPOT, E2E and throughput stay within 0.30%. Overall PASS with routing MATCH. The TTFT margin is small: Frontier is 30.9 ms early, and section 3.6 observation 8 locates the shortfall.
+
+The receipt reports `kv_admission` status DIFFERS: each Frontier decode lane admits 2,940 blocks at the maximum model length (maximum concurrency 37.39), native 2,944 (37.34). The difference is 0.14% and is not explored further here. Inference: it does not bind in this case, because QPS 1 with a 20.7 s request E2E time keeps about 21 requests in flight over the two decode lanes, far below 37 per lane.
 
 ## 3. TTFT diagnosis of P2-64: the native prefill side waits after a DP wave ends
 
@@ -229,9 +250,10 @@ On the lifecycle run, `pairs.py` writes `first_contact.json` and then stops with
    | Decode first-token update to client | 0.9 ms | 4.3 ms | 0 (not modeled) |
    | Total after the prefill side | 165.2 ms | 165.2 ms | 138.6 ms |
 
-5. **The ingress** (wave run, `pairs_stdout.txt`, `remainder_stdout.txt`). The 21.7 ms consist of the prefill response (2.3 ms), prefill response to the decode `add_enqueue` (9.1 ms, 6.3-12.8 ms: the proxy and the decode API server) and `add_enqueue` to the decode add (10.4 ms, 0.2-24.8 ms: the wait for the decode engine loop). Frontier posts its READ at a decode step start (`nixl_read_completion=engine_step`), so its 88.2 ms already contain the equivalent of the engine-loop wait. Compared like for like, native `add_enqueue` to `finished_recving` is 10.4 + 86.9 = 97.3 ms against Frontier's 88.2 ms (−9.1 ms). The parts outside the engine, 2.3 + 9.1 = 11.4 ms, are not modeled.
+5. **The ingress** (wave run, `pairs_stdout.txt`, `remainder_stdout.txt`). The 21.7 ms consist of the prefill response (2.3 ms), prefill response to the decode `add_enqueue` (9.1 ms, 6.3-12.8 ms: the proxy and the decode API server) and `add_enqueue` to the decode add (10.4 ms, 0.2-24.8 ms: the wait for the decode engine loop). Frontier posts its READ at a decode step start (`nixl_read_completion=engine_step` in `F/config.json`; the receipt records it as the `h4a4` override of the input's default `transfer_end`), so its 88.2 ms already contain the equivalent of the engine-loop wait. Compared like for like, native `add_enqueue` to `finished_recving` is 10.4 + 86.9 = 97.3 ms against Frontier's 88.2 ms (−9.1 ms). The parts outside the engine, 2.3 + 9.1 = 11.4 ms, are not modeled.
 6. **KV handles** (`nixl_detail_stdout.txt`, `lifecycle/nixl_detail_stdout.txt`). Each request reads 8 handles of 46,103,040 bytes. The slowest handle of a request has a median of 27.9 ms (wave run) and 26.2 ms (lifecycle run) and a mean of 37.0-37.1 ms. NIXL's `transfer_duration` is recorded only when the per-step poll finds the handle DONE (`base_worker.py:2224-2241`, `stats.py:45-47`). In the rows printed for the slowest requests, its values lie near multiples of the decode step (about 25, 50, 75 and 96 ms) or in a separate group at 1.6-2.6 ms. Frontier's ledger records 39,521,664 bytes per request transfer; how that figure relates to the 8 native handles is not checked here.
 7. **The first decode step after the receive** takes 53.0-55.2 ms natively against Frontier's 50.4 ms (2.6-4.8 ms longer).
+8. **P2-32 has the same shortfall after the prefill side.** Frontier's P2-32 warm run (section 2.2; `frontier_remainder.py <P2-32 warm metrics dir> frontier_remainder_p2_32_warm_r2.json`, output `frontier_remainder_p2_32_warm_r2.txt`) has a prefill side of 222.3 ms and a remainder of 110.8 ms (KV transfer 70.6 ms, transfer end to first decode token 40.2 ms). The reference P2-32r has 235.5 ms and 127.9 ms (observation 3; its handoff starts at the prefill response, so it holds the 2.3 ms of the response that Frontier's remainder does not). Frontier is 13.2 ms short on the prefill side and 17.1 ms short after it, against 26.6 ms after it on P2-64.
 
 #### Reading (inference)
 
@@ -240,4 +262,4 @@ On the lifecycle run, `pairs.py` writes `first_contact.json` and then stops with
 - **The remainder after the prefill side.** Without first contacts the native value is 165.2 ms, not about 173-189 ms as estimated in section 3.1. Frontier's 138.6 ms is 26.6 ms short: the ingress outside the engine (11.4 ms; not modeled, deferred in `h4b_d_side_model/design.md` section 6.3), the late READ handles (about 9 ms; open, section 6.2 of that design), the first decode step (3-5 ms) and the client egress (1-4 ms).
 - **Expected TTFT after B26.** With a prefill side of about 509-515 ms (section 3.5) and the remainder of 138.6 ms, Frontier TTFT would be about 648-654 ms: −11.8% to −12.6% against 741.2 ms and −9.3% to −10.1% against 720.6 ms.
 - **The prefill side after B26.** Against the reference prefill side of 552.0 ms, Frontier would be about 37-43 ms short. The known parts are the prefill compute (275.2 ms against about 290-300 ms, section 3.5), the prefill ingress (proxy arrival to prefill add 9.1-11.3 ms natively against Frontier's 3.27 ms wait) and the prefill response (2.3-4.3 ms).
-- **Ingress modeling needs approval.** Modeling the ingress outside the engine needs a new delay field with measured values per platform, which is a configuration schema change. Its effect on P2-32 has to be checked against the P2-32 reading of section 2.2 before it is proposed.
+- **Ingress modeling needs approval.** Modeling the ingress outside the engine needs a new delay field with measured values per platform, which is a configuration schema change. On P2-32 it would move Frontier toward the reference, not past it: Frontier is 17.1 ms short after the prefill side there (observation 8), and adding the 11.4 ms measured on P2-64 would give a TTFT of about 344.5 ms (−5.4% instead of −8.5%). The P2-32 ingress itself is not measured; no P2-32 run recorded `add_enqueue`, so the P2-64 value stands in for it.
