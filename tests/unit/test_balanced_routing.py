@@ -282,7 +282,7 @@ def test_selected_producer_rows_train_and_reuse_distinct_cache(tmp_path, order):
                       num_tensor_parallel_workers=1, expert_parallel_size=1)
     features = MoELoadImbalanceInput(8, model.num_experts, model.embedding_dim,
                                     model.routed_mlp_hidden_dim, model.num_experts_per_tok).to_features_dict()
-    rows = pd.DataFrame([dict(dimensions, num_tokens=8, profiling_precision="FP16", measurement_type="CUDA_EVENT",
+    rows = pd.DataFrame([dict(dimensions, num_tokens=8, profiling_precision="FP16", measurement_type="KERNEL_ONLY",
                              gating_runtime_context="standalone_legacy", gating_runtime_context_impl="none",
                              model_architecture_profile=profile.profile_id,
                              typed_operator_contracts=serialize_typed_operator_contracts(metadata),
@@ -293,12 +293,12 @@ def test_selected_producer_rows_train_and_reuse_distinct_cache(tmp_path, order):
     rows.to_csv(source, index=False)
     shared_width = profile.resolve_layer_contract(model, operator_name="share_expert_up_proj", ffn_tp_size=1).width
     pd.DataFrame([dict(num_tokens=8, num_tensor_parallel_workers=1, n_expanded_embd=shared_width,
-        profiling_precision="FP16", measurement_type="CUDA_EVENT",
+        profiling_precision="FP16", measurement_type="KERNEL_ONLY",
         **{f"time_stats.{name}.median": 1.0 for name in ["post_attention_layernorm",
             *get_family_profiling_names(SHARE_EXPERT_FAMILY)]})]).to_csv(linear, index=False)
     manager = ExecutionTimePredictionModelManager({}, SimpleNamespace(cache_dir=str(tmp_path)))
     manager._cluster_configs, manager._all_dummy_mode = configs, False
-    manager._active_measurement_type = MeasurementType.CUDA_EVENT
+    manager._active_measurement_type = MeasurementType.KERNEL_ONLY
     config, signatures = RandomForrestExecutionTimePredictorConfig(num_estimators=[1], max_depth=[1], min_samples_split=[2]), set()
     def train(role):
         return manager._train_ffn_models_for_cluster(role, configs[role].replica_config, config,
@@ -313,7 +313,8 @@ def test_selected_producer_rows_train_and_reuse_distinct_cache(tmp_path, order):
         selected = manager.get_model(op, layer_contract=contracts[role])
         assert selected.predict(pd.DataFrame({"num_tokens": [8]}))[0] == {"standard_fused_topk": 2.0, "balanced_topk": 7.0}[path]
         assert manager.get_model(op, layer_contract=contracts[role]) is cold[role]
-        assert manager.get_models_for_cluster(role)["eager"][op] is cold[role]
+        assert manager.get_models_for_cluster(role)["kernel_only"][op] is cold[role]
+        assert manager.get_models_for_cluster(role)["eager"] == {}
         assert cold[role].predict(pd.DataFrame({"num_tokens": [8]}))[0] == {"standard_fused_topk": 2.0, "balanced_topk": 7.0}[path]
     manager._create_estimator_and_params = lambda *_: pytest.fail("Warm lookup must not fit")
     signatures.clear()
@@ -321,7 +322,7 @@ def test_selected_producer_rows_train_and_reuse_distinct_cache(tmp_path, order):
     for role in configs:
         assert warm[role]._frontier_model_hash == cold[role]._frontier_model_hash
         assert manager.get_model(op, layer_contract=contracts[role]) is warm[role]
-        assert manager.get_models_for_cluster(role)["eager"][op] is warm[role]
+        assert manager.get_models_for_cluster(role)["kernel_only"][op] is warm[role]
         assert warm[role].predict(pd.DataFrame({"num_tokens": [8]}))[0] == cold[role].predict(pd.DataFrame({"num_tokens": [8]}))[0]
     for wrong in [rows.iloc[:1], rows.drop(columns="routing_runtime_path")]:
         wrong.to_csv(source, index=False)
