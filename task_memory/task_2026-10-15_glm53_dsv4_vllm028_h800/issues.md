@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-006 resolved by B26b (`414fdd03`, merge `49e7e5fa`): a test-fixture timing problem caused by `b0bf0c78`; the fixture's third arrival moved from 8 ms to 10 ms; no simulator change. |
 | 2026-10-30 | I-002 resolved by B27 (`f00859be`, merge `3834bab6`): 128 passed. I-006 assigned with B26b (request `a92368f9`). |
 | 2026-10-30 | I-006 opened: `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward` fails on main `88fbef52`; found during the B26 review. |
 | 2026-10-30 | I-002 assigned to Codex as B27 (request `7653c18e`); reproduced on main `591d7c54`: 126 passed, 2 failed. |
@@ -125,10 +126,14 @@ Status: open; fix only before a future run (no rerun is approved). Owner: lead.
 
 ## I-006: placement test of the late-joining DP lane fails on main (2026-10-30)
 
-Status: open; assigned with B26b (request `a92368f9`, [assignment](h3o_operator_costs/codex_assignment_B26b_placement_key_and_i006.md), worktree `.worktrees/b26b-placement-key` from main `5188f0e3`). Owner: lead.
+Status: resolved 2026-10-30 by B26b (request `a92368f9`, [assignment](h3o_operator_costs/codex_assignment_B26b_placement_key_and_i006.md), [report](h3o_operator_costs/b26b/report.md); commit `414fdd03`, merged into main as `49e7e5fa`). Owner: lead.
 
 **Observed.** `tests/integration/test_vllm_dp_placement_runtime.py::test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward` fails on main `88fbef52` (18 passed, 1 failed; log `/data/ycfeng/tmp/main_placement.log`) and in the same way on the B26 branch. The assertion at line 481 expects lane 2 to start forward group 0 with a dummy forward, `{2: (0, True)}`, and receives a real batch, `{2: (0, False)}`. The test file last changed in `5f907f66` (H4b-(b) item 1); 143 commits follow it on main, so the commit that broke the test is not known.
 
 **Impact.** The test checks the four-lane MoE shape of issue W9-04 under both placement policies: a lane that is idle when a peer reaches the first MoE layer joins that forward with a dummy forward, and a request that arrives during it starts the next forward. Either the simulator now places the request's batch into the dummy forward's group, or the test's setup no longer reaches that shape. A10 is not known to be affected, because its prefill requests arrive 1 s apart, but this is not verified.
 
-**Resolution (pending).** Find the first failing commit from exported trees (`git archive`, no checkout), find the cause, and fix the simulator or the test, whichever is wrong (assignment B26b).
+**Cause.** The test setup, not the simulator. Commit `b0bf0c78` (2026-10-08) added the forward preparation time (schedule time plus input preparation time) before the first Prefill/Decode sync event of a forward. With the fixture's 1 ms operator durations, the first lanes now reach the first MoE layer at 9 ms and 11 ms instead of 7 ms and 9 ms. The fixture's third request arrives at 8 ms, before the idle lanes are woken, so lane 2 correctly forms a real forward 0. Codex checked exported trees: the parent `2c9d625d` passes the test and `b0bf0c78` fails it. Main first received this test in merge `9a650fba` (2026-10-14), and that tree already fails. The earlier premise that the test passed at `5f907f66` was wrong: it already failed there.
+
+**Native check.** vLLM's busy loop (`core.py:2153`, `2169`, `2178-2182`) runs the dummy forward before the next input poll, so a request that arrives during the dummy forward starts the next forward. The test's intended assertion still matches native behavior.
+
+**Resolution.** `LATE_JOIN_TRACE`'s third arrival moved from 8 ms to 10 ms, and the test now asserts that the arrival falls inside lane 2's dummy forward (dummy start 9 ms, arrival 10 ms, dummy end 65 ms). Both placement policies keep placement `[0, 1, 2]`. No production source changed. The lead's run of the 13 affected test files passed (269 passed; log `/data/ycfeng/tmp/b26b_lead/verify.log`). A10 uses `round_robin` placement and does not run this path.
