@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-002 assigned to Codex as B27 (request `7653c18e`); reproduced on main `591d7c54`: 126 passed, 2 failed. |
 | 2026-10-30 | I-005 opened: the B25 wave observer wrote the engine identity as bytes into JSON, so the START_DP_WAVE records of the P2-64 wave run were lost (896 error records); the forward-level records were complete and carried the diagnosis. |
 | 2026-10-30 | I-004 opened and worked around: the vLLM 0.28 environment `oneshot-opd-py312` was removed at 05:22 UTC outside this task; the B25 installed-wheel check became a source-only check. |
 | 2026-10-30 | I-003 opened and resolved: `/data/ycfeng` filled at 20:58 on 2026-10-29 and every running simulation failed with ENOSPC; space was recovered by YC-approved deletions and the runs were restarted. |
@@ -81,7 +82,7 @@ The G1h-02 traces were not approved and were kept. Free space after the deletion
 
 ## I-002: `test_balanced_routing.py` cache test fails on main since B16b (2026-10-29)
 
-Status: open, deferred (outside B23). Owner: lead.
+Status: open; assigned to Codex as B27 on 2026-10-30 (request `7653c18e`, [assignment](h3o_operator_costs/codex_assignment_B27_balanced_routing_v4_test.md), worktree `.worktrees/b27-balanced-routing-v4-test` from main `b1cf3447`). Reproduced on main `591d7c54` with the command of the assignment: 126 passed, 2 failed (both parametrizations). Owner: lead.
 
 Observed during the B23 review. With CPU torch on the path (`PYTHONPATH=...:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages`, `VLLM_BS_SOURCE_ROOT=/data/ycfeng/tmp/opencode/vllm-v0.28.0`), `tests/unit/test_balanced_routing.py` gives 126 passed and 2 failed, the same on main `2da2c186` and on the B23 tree:
 
