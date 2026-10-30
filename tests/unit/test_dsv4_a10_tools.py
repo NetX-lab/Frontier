@@ -42,6 +42,11 @@ def test_operator_config_reuses_case_and_resolved_inputs(tools, tmp_path, case):
     assert flat.replica_config_network_device == "h200_dgx"
     assert flat.analytical_kv_cache_transfer_config_nixl_read_completion == "engine_step"
     assert flat.cluster_config_decode_replica_scheduler_config_max_concurrent_batches == 2
+    assert flat.vllm_v1_scheduler_config_max_forwards_in_flight == 19
+    assert {role.name: cluster.replica_scheduler_config.max_forwards_in_flight
+            for role, cluster in config.get_clusters().items()} == {"PREFILL": 19, "DECODE": 19}
+    assert changes["added_fields"]["vllm_v1_scheduler_config_max_forwards_in_flight"] is None
+    assert changes["override_diff"]["vllm_v1_scheduler_config_max_forwards_in_flight"]["h4a4"] == 19
     assert flat.cudagraph_capture_sizes == json.loads(
         (driver.REPO / "tests/fixtures/dsv4_native_dp_sync_rows.json").read_text())["capture_sizes"]
     records, facts = driver.resolved_inputs(config)

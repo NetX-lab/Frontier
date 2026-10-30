@@ -171,12 +171,14 @@ class BatchStageEndEvent(BaseEvent):
 
                 # The engine takes the dummy step's output, which reports the
                 # NIXL READs that step found.
-                next_events.extend(
-                    report_nixl_reads(scheduler, metrics_store, replica_scheduler, self.time)
-                )
+                if not replica_scheduler._runs_dp_forwards_ahead:
+                    next_events.extend(
+                        report_nixl_reads(scheduler, metrics_store, replica_scheduler, self.time)
+                    )
                 next_events.append(
                     ReplicaScheduleEvent(
-                        replica_scheduler.next_pass_start(self.time),
+                        self.time if replica_scheduler._runs_dp_forwards_ahead
+                        else replica_scheduler.next_pass_start(self.time),
                         self._replica_id,
                         self._cluster_type,
                         self._replica_local_id,
@@ -185,6 +187,14 @@ class BatchStageEndEvent(BaseEvent):
             return next_events
 
         if self._is_last_stage:
+            replica_scheduler = cluster_scheduler.get_replica_scheduler(
+                self._replica_id, self._replica_local_id
+            )
+            if (hasattr(replica_scheduler, "on_device_forward_end")
+                    and replica_scheduler.on_device_forward_end(self._batch)):
+                next_events.append(ReplicaScheduleEvent(
+                    self.time, self._replica_id, self._cluster_type, self._replica_local_id
+                ))
             return next_events + [
                 ClusterBatchEndEvent(
                     self.time,

@@ -16,6 +16,9 @@ from a10_common import REPO, TASK, cache_inventory, load_module, table_record, s
 h4a4 = load_module("h4a4_driver", TASK / "h4a_p0_diagnostic/h4a4_driver.py")
 CASES = {name: h4a4.CASES[name] for name in ("p2_32", "p2_64")}
 GIT_TIMEOUT_S = 30
+# A10 report section 3.5, observation 4: measured launch-queue depth,
+# native P2-64 wave run exp-1030-144848-164721; shared by both PDD roles.
+DP_MAX_FORWARDS_IN_FLIGHT = 19
 
 
 def operator_fields(name, root):
@@ -23,6 +26,7 @@ def operator_fields(name, root):
     fields.update(
         metrics_config_run_id=f"a10_{name}_operator_path",
         decode_cuda_graph_mode="full_and_piecewise",
+        vllm_v1_scheduler_config_max_forwards_in_flight=DP_MAX_FORWARDS_IN_FLIGHT,
         replica_config_network_device="h200_dgx",
         analytical_kv_cache_transfer_config_nixl_read_completion="engine_step",
         cluster_config_decode_replica_scheduler_config_max_concurrent_batches=2,
@@ -190,6 +194,10 @@ if __name__ == "__main__":
     parser.add_argument("root", type=Path)
     parser.add_argument("--without-observer", action="store_true")
     parser.add_argument("--trace", type=Path)
+    parser.add_argument("--without-run-ahead", action="store_true",
+                        help="Keep the legacy DP path (max_forwards_in_flight=None).")
     args = parser.parse_args()
-    fields = {"trace_request_generator_config_trace_file": str(args.trace.resolve())} if args.trace else None
+    fields = {"trace_request_generator_config_trace_file": str(args.trace.resolve())} if args.trace else {}
+    if args.without_run_ahead:
+        fields["vllm_v1_scheduler_config_max_forwards_in_flight"] = None
     main(args.case, args.root, observe=not args.without_observer, fields=fields)

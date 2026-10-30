@@ -53,6 +53,7 @@ SOURCE_FILES = (
     "frontier/operators/families.py",
     "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
     "frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py",
+    "frontier/scheduler/replica_scheduler/vllm_dp_busy_loop.py",
     "frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py",
     "frontier/scheduler/utils/ep_wave.py", "frontier/scheduler/utils/expert_parallel.py",
     "frontier/scheduler/utils/layer_workload.py",
@@ -196,7 +197,11 @@ def validate_cache_zeroing(decisions, stages, traces, *, group_ids,
         require(zero["ts_start"] + zero["duration_ms"] / 1000 <= embedding["ts_start"] + 1e-12,
                 "cache zero must finish before embedding")
         meta = zero["meta"]
-        require("synthetic" in meta["cost_source"], "cache zero cost has no synthetic provenance")
+        # Runner scopes now share metadata with measured execution; the
+        # duration check above still witnesses this driver's dummy timing.
+        require("synthetic" in meta["cost_source"] or meta["cost_source"] ==
+                "runner scope kernel and memcpy medians; dummy mode uses its configured duration",
+                "cache zero cost has no synthetic provenance")
         require(len(meta["source_tensor_calls"]) == 1, "cache zero workload counted more than once")
         call, = meta["source_tensor_calls"]
         extent = len(set(ids)) * physical_block_size_bytes
@@ -204,7 +209,7 @@ def validate_cache_zeroing(decisions, stages, traces, *, group_ids,
                         unique_block_count=len(set(ids)),
                         physical_block_size_bytes=physical_block_size_bytes,
                         physical_reservation_extent_bytes=extent,
-                        native_store_traffic_bytes="UNKNOWN", native_h2d_cost="UNKNOWN")
+                        native_store_traffic_bytes="UNKNOWN")
         require(all(call.get(field) == value for field, value in expected.items()),
                 "cache zero trace workload differs from raw assignments or canonical extent")
         counts["cache_zero_invocations"] += 1

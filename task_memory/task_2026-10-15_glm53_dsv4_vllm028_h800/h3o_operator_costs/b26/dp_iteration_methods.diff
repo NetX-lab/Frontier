@@ -1,0 +1,149 @@
+--- base DP iteration/dummy methods
++++ vllm_dp_busy_loop.py
+@@ -13,12 +13,27 @@
+             return self._issue_dummy_pass(time)
+         if self._iteration_open:
+             self._iteration_open = False
++            if self._runs_dp_forwards_ahead:
++                self._last_iteration_end = time
++                self._report_nixl_reads_of_dummy_forward()
+             if self._end_iteration():
+                 return []
++            if self._runs_dp_forwards_ahead and self._nixl_reads_reported:
++                # ReplicaScheduleEvent applies these connector outputs inline
++                # before the next host pass can schedule their ready requests.
++                self._dp_iteration_resume_at = time
++                return []
++            if self._runs_dp_forwards_ahead and self._dp_wave_running:
++                resume_at = self.next_pass_start(time)
++                if resume_at > time:
++                    self._dp_iteration_resume_at = resume_at
++                    return []
+         if not self._dp_wave_running and self.has_unfinished_requests:
+             # An engine that receives a request starts a wave on every engine.
+             for lane in self._dp_group():
+                 lane._dp_wave_running = True
++                if self._runs_dp_forwards_ahead and lane is not self:
++                    self._dp_sync_released_lane_ids.append(lane._replica_local_id)
+         batches: List[Batch] = []
+         while True:
+             formed = self._schedule_iteration(time)
+@@ -40,6 +55,9 @@
+                 elif self._dp_wave_running:
+                     return self._issue_dummy_pass(time)
+                 return batches
++            if self._runs_dp_forwards_ahead:
++                self._iteration_open = True
++                return batches
+             if self._end_iteration():
+                 self._clear_followup_polls()
+                 return batches
+@@ -50,6 +68,9 @@
+         batches = self._start_iterations(super().on_schedule(time), time)
+         self._iteration_running_limit = math.inf
+         self._claim_nixl_reads(batches)
++        if self._runs_dp_forwards_ahead:
++            for batch in batches:
++                self.on_engine_step_start(time, batch)
+         self._in_flight_batch_ids.extend(batch.id for batch in batches)
+         return batches
+ 
+@@ -70,15 +91,17 @@
+                 if not wave_continues:
+                     lane._dp_wave_running = False
+                     lane._dp_wave_steps = 0
+-            self._dp_sync_released_lane_ids = [
+-                lane._replica_local_id for lane in group if lane is not self
+-            ]
++            released = [lane._replica_local_id for lane in group if lane is not self]
++            if self._runs_dp_forwards_ahead:
++                self._dp_sync_released_lane_ids.extend(released)
++            else:
++                self._dp_sync_released_lane_ids = released
+         return self._waits_at_dp_sync
+ 
+     def consume_dp_sync_release(self) -> List[int]:
+         """Lanes whose host this engine's latest pass released from the DP sync."""
+         released, self._dp_sync_released_lane_ids = self._dp_sync_released_lane_ids, []
+-        return released
++        return list(dict.fromkeys(released))
+ 
+     def _dp_group(self) -> List["VLLMv1EngineReplicaScheduler"]:
+         return [
+@@ -97,7 +120,10 @@
+             batch.engine_idle_time = (
+                 math.inf if self._last_iteration_end is None else time - self._last_iteration_end
+             )
+-            self._last_iteration_end = time
++            if not self._runs_dp_forwards_ahead:
++                self._last_iteration_end = time
++            else:
++                self._record_device_forward(batch, time)
+         return batches
+ 
+     def _clear_followup_polls(self) -> None:
+@@ -126,10 +152,11 @@
+         )
+ 
+     def engine_loop_idle(self) -> bool:
+-        """Whether the engine waits for work: nothing in flight and no DP sync to finish."""
++        """Whether the host waits for work, excluding queued run-ahead dummies."""
+         return (
+             not self._in_flight_batch_ids
+-            and not self._dummy_forwards_in_flight
++            and not self._host_forward_wait
++            and not (self._runs_dp_forwards_ahead and self._iteration_open)
+             and not self._waits_at_dp_sync
+         )
+ 
+@@ -138,7 +165,8 @@
+ 
+         `execute_dummy_batch` is one RPC to every worker of the engine. Each
+         stage runs its part once its earlier work ends, with no PP transfer
+-        between parts, and the engine waits for every part.
++        between parts. The legacy host waits for every part; run-ahead waits
++        only for its launch depth and DP peers.
+         """
+         dummy_forwards = []
+         for stage_id in range(self._num_stages):
+@@ -152,7 +180,11 @@
+             self._assign_lane_identity(dummy_forward, self._batch_creation_counter)
+             dummy_forwards.append(dummy_forward)
+         self._batch_creation_counter += 1
+-        self._dummy_forwards_in_flight = self._num_stages
++        if self._runs_dp_forwards_ahead:
++            self._record_device_forward(dummy_forwards[0], time)
++            self.on_engine_step_start(time, dummy_forwards[0])
++        else:
++            self._dummy_forwards_in_flight = self._num_stages
+         self._dummy_pass_start = time
+         self._iteration_open = True
+         self._clear_followup_polls()
+@@ -160,6 +192,10 @@
+ 
+     def on_dummy_forward_end(self, time: float) -> bool:
+         """Record one ended dummy forward; return whether the engine iterates again."""
++        if self._runs_dp_forwards_ahead:
++            forward = self._unfinished_forwards.popleft()
++            self._last_zero_cost_dummy_end = time if time == forward.formed_at else None
++            return self._iteration_open and not self._host_forward_wait
+         self._dummy_forwards_in_flight -= 1
+         if self._dummy_forwards_in_flight:
+             return False
+@@ -180,9 +216,15 @@
+         does. An engine that receives work earlier wakes the others through
+         its forward's first room.
+         """
+-        if time > self._dummy_pass_start:
++        if self._dummy_pass_start is None or time > self._dummy_pass_start:
+             return time
+         group = self._dp_group()
++        if self._runs_dp_forwards_ahead and not all(
++            lane._last_zero_cost_dummy_end == time for lane in group
++        ):
++            # A host return at formation says nothing about GPU cost. Only
++            # device ends at that same formation time witness a zero-cost group.
++            return time
+         if not all(lane._only_posted_nixl_reads_unfinished for lane in group):
+             return time
+         return min(
