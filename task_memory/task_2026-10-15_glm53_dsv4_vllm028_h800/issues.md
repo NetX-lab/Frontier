@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-006 opened: `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward` fails on main `88fbef52`; found during the B26 review. |
 | 2026-10-30 | I-002 assigned to Codex as B27 (request `7653c18e`); reproduced on main `591d7c54`: 126 passed, 2 failed. |
 | 2026-10-30 | I-005 opened: the B25 wave observer wrote the engine identity as bytes into JSON, so the START_DP_WAVE records of the P2-64 wave run were lost (896 error records); the forward-level records were complete and carried the diagnosis. |
 | 2026-10-30 | I-004 opened and worked around: the vLLM 0.28 environment `oneshot-opd-py312` was removed at 05:22 UTC outside this task; the B25 installed-wheel check became a source-only check. |
@@ -120,3 +121,13 @@ Status: open; fix only before a future run (no rerun is approved). Owner: lead.
 **Impact.** The wave-start times of the coordinator and the engines are missing. The forward-level records (worker `dp_cpu_all_reduce` and `dp_padding_sync`, scheduler `schedule`/`update`/`add`) are complete on all eight hosts, and they carry the diagnosis (A10 report section 3.5). The run is not repeated for this.
 
 **Resolution (pending).** Encode the identity before writing it (for example as hex) in the observer, with a unit test that feeds a `bytes` identity. Apply it only when a further wave run is approved.
+
+## I-006: placement test of the late-joining DP lane fails on main (2026-10-30)
+
+Status: open; assigned with B26b. Owner: lead.
+
+**Observed.** `tests/integration/test_vllm_dp_placement_runtime.py::test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward` fails on main `88fbef52` (18 passed, 1 failed; log `/data/ycfeng/tmp/main_placement.log`) and in the same way on the B26 branch. The assertion at line 481 expects lane 2 to start forward group 0 with a dummy forward, `{2: (0, True)}`, and receives a real batch, `{2: (0, False)}`. The test file last changed in `5f907f66` (H4b-(b) item 1); 143 commits follow it on main, so the commit that broke the test is not known.
+
+**Impact.** The test checks the four-lane MoE shape of issue W9-04 under both placement policies: a lane that is idle when a peer reaches the first MoE layer joins that forward with a dummy forward, and a request that arrives during it starts the next forward. Either the simulator now places the request's batch into the dummy forward's group, or the test's setup no longer reaches that shape. A10 is not known to be affected, because its prefill requests arrive 1 s apart, but this is not verified.
+
+**Resolution (pending).** Find the first failing commit from exported trees (`git archive`, no checkout), find the cause, and fix the simulator or the test, whichever is wrong (assignment B26b).

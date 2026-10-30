@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Section 2.2: P2-64 cold and warm finished (FAIL on TTFT, 416.2 against 741.2 ms; the other metrics within 3.4%); A9 EQUAL; section 4 gains the P2-64 census. |
 | 2026-10-30 | Added section 4: A7 and A8 mechanism and the A8 census of the P2-32 runs (every collective on a measured point, no violation). |
 | 2026-10-30 | Section 2.2: P2-32 cold finished; A9 cold against warm is EQUAL. |
 | 2026-10-30 | Section 2.2: P2-32 warm reading (PASS; TTFT −8.50%, TPOT, E2E and throughput within 0.13%). Section 3.6: observation 8 (P2-32 remainder) and the evidence for `nixl_read_completion=engine_step` in observation 5; the ingress reading now includes its P2-32 effect. |
@@ -54,7 +55,7 @@ The promoted table is `data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash
 
 Started on main `b8f6f506` on 2026-10-29: the cold runs (`stage4/a10/p2_32_cold_g1hs`, `p2_64_cold_g1hs`) started at 20:12, trained 1,758 cache files and started simulating at 20:23. The warm runs (`p2_32_warm_g1hs`, `p2_64_warm_g1hs`, caches hard-linked from the cold caches) started simulating at 20:27. All four failed with `OSError: [Errno 28] No space left on device` at 20:58-21:01, when `/data/ycfeng` filled (I-003). No metrics were written. The trained cold caches are complete (the cold runs had finished initialization) and are kept.
 
-### 2.2 Restart (running)
+### 2.2 Restart
 
 Started 2026-10-30 04:39 on main `9a4f3471`; the simulator code and the promoted table are the same as in the first attempt.
 
@@ -75,8 +76,8 @@ Results (gate outputs under `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10_gate/`
 | --- | --- | --- | --- |
 | P2-32 warm | FINISHED | 85.9 s / 16,584.3 s (4.61 h) | `p2_32_warm_r2_run/` |
 | P2-32 cold | FINISHED | 680.6 s / 16,494.8 s (4.58 h); trained 1,758 cache files | same metrics as P2-32 warm (A9 below) |
-| P2-64 cold | running | | |
-| P2-64 warm | running | | |
+| P2-64 cold | FINISHED | 683.5 s / 20,295.8 s (5.64 h); trained 1,758 cache files | same metrics as P2-64 warm (A9 below) |
+| P2-64 warm | FINISHED | 82.7 s / 20,343.9 s (5.65 h) | `p2_64_warm_r2_run/` (cold: `p2_64_cold_r2_run/`) |
 
 **P2-32 warm** (native reference: three repeats of 128 requests, `dsv4-h200-p2-canonical-20261025-01-repeat01..03`):
 
@@ -91,7 +92,22 @@ Per native repeat, the TTFT error is 7.98% / 8.68% / 8.83% (native 361.97 / 364.
 
 **A9, cold against warm (P2-32):** `compare_cache_runs.py stage4/a10/p2_32_cold_g1hs_r2 stage4/a10/p2_32_warm_g1hs_r2`, run from the `a10/` directory with the gate's `PYTHONPATH`, prints "EQUAL: metrics and cache identities match; warm cache file set equals cold at run end" (`h3o_operator_costs/a10/a9_p2_32_r2_stdout.txt`). The metrics of the cold run are therefore the same as those of the warm run, and the gate reading above holds for both. This also settles the deviation of this section: the warm cache from the first-attempt cold run equals the cache that the restarted cold run trains.
 
-The receipt reports `kv_admission` status DIFFERS: each Frontier decode lane admits 2,940 blocks at the maximum model length (maximum concurrency 37.39), native 2,944 (37.34). The difference is 0.14% and is not explored further here. Inference: it does not bind in this case, because QPS 1 with a 20.7 s request E2E time keeps about 21 requests in flight over the two decode lanes, far below 37 per lane.
+**P2-64 warm** (native reference of section 1):
+
+| Metric | Native vLLM (3 repeats) | Frontier | Absolute error | Relative error | Limit | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| TTFT mean | 741.216 ms | 416.227 ms | −324.989 ms | 43.85% | 10% | FAIL |
+| TPOT mean | 25.871 ms | 25.291 ms | −0.580 ms | 2.24% | 10% | PASS |
+| Request E2E mean | 27,206.770 ms | 26,288.929 ms | −917.841 ms | 3.37% | 10% | PASS |
+| Token throughput (window rate) | 5,963.206 tps | 5,986.314 tps | +23.107 tps | 0.39% | 10% | PASS |
+
+Per native repeat, the TTFT error is 46.63% / 42.63% / 42.05%; TPOT 0.55% / 3.69% / 2.46%; E2E 1.89% / 4.70% / 3.49%; throughput 0.64% / 0.16% / 0.36%. Overall FAIL on TTFT only, with routing MATCH. The gate on the cold run prints the same values. Against the diagnostic reference without the five first-contact requests (720.6 ms, section 3.6), the TTFT error is −42.2%.
+
+The reading agrees with probe `p2_64_c` (section 1: TTFT 417.061 ms) within 0.9 ms: the promoted table changes TTFT by −0.83 ms and the other metrics by less than 0.2%. `frontier_remainder.py` on the warm run (`frontier_remainder_p2_64_warm_r2.txt`) gives a prefill side of 278.5 ms and a remainder of 137.7 ms (KV transfer 87.3 ms, transfer end to first decode token 50.4 ms), against 278.5 and 138.6 ms in the probe. This run is on main `9a4f3471`, without B26; section 3.5 explains the prefill-side gap, and B26 models it.
+
+**A9, cold against warm (P2-64):** `compare_cache_runs.py stage4/a10/p2_64_cold_g1hs_r2 stage4/a10/p2_64_warm_g1hs_r2` prints "EQUAL: metrics and cache identities match; warm cache file set equals cold at run end" (`h3o_operator_costs/a10/a9_p2_64_r2_stdout.txt`).
+
+The receipt reports `kv_admission` status DIFFERS: each Frontier decode lane admits 2,940 blocks at the maximum model length (maximum concurrency 37.39), native 2,944 (37.34). The difference is 0.14% and is not explored further here. Inference: it does not bind in this case, because QPS 1 with a 20.7 s request E2E time keeps about 21 requests in flight over the two decode lanes, far below 37 per lane. P2-64 shows the same per-lane admission (2,940 against 2,944 blocks; maximum concurrency 38.41 against native 38.35, status DIFFERS); about 27 requests are in flight there over four decode lanes, so it does not bind either.
 
 ## 3. TTFT diagnosis of P2-64: the native prefill side waits after a DP wave ends
 
@@ -282,9 +298,9 @@ A7 (EP rank admission) and A8 (collective coverage) are gate items of H3o (`h3o_
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | P2-32 warm | 43 | 19,438,100 | 19,438,100 | 0 | 88,064 (prefill) | 0 | `a8_p2_32_stdout.txt` |
 | P2-32 cold | 43 | 19,438,100 | 19,438,100 | 0 | 88,064 (prefill) | 0 | `a8_p2_32_stdout.txt` |
-| P2-64 cold | pending | | | | | | |
-| P2-64 warm | pending | | | | | | |
+| P2-64 cold | 35 | 27,711,291 | 27,711,291 | 0 | 176,128 (prefill) | 0 | `a8_p2_64_stdout.txt` |
+| P2-64 warm | 35 | 27,711,291 | 27,711,291 | 0 | 176,128 (prefill) | 0 | `a8_p2_64_stdout.txt` |
 
-The two P2-32 `collectives.json` files are byte-identical (`cmp`). Every P2-32 collective falls on a measured point: 12 curves (operation, domain, devices) in the two roles, from `sp_all_gather` and `sp_reduce_scatter` at TP 8 to `all_gatherv` and `reduce_scatterv` at EP 16.
+The two P2-32 `collectives.json` files are byte-identical (`cmp`). Every P2-32 collective falls on a measured point: 12 curves (operation, domain, devices) in the two roles, from `sp_all_gather` and `sp_reduce_scatter` at TP 8 to `all_gatherv` and `reduce_scatterv` at EP 16. The two P2-64 files are also byte-identical; P2-64 uses 12 curves as well, with the EP collectives at EP 32.
 
-Reading: A7 and A8 hold for P2-32. The census shows how A8 is met; A7 has no per-lane census, because the observer records rank-0 scopes only, so its evidence is the code path above and the fact that the runs finished.
+Reading: A7 and A8 hold for P2-32 and P2-64. The census shows how A8 is met; A7 has no per-lane census, because the observer records rank-0 scopes only, so its evidence is the code path above and the fact that the runs finished.

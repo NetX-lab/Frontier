@@ -1,0 +1,30 @@
+run p2_64_warm_g1hs_r2: 35 distinct requests, 27711291 calls
+role / operation / domain / devices              points     calls     exact    interp  unequal max_log_dist     total_ms
+decode / all_gatherv / ep / 32                        1   8366080   8366080         0        0        0.000    2142921.2
+decode / all_reduce / tp / 8                          4     48037     48037         0        0        0.000        485.3
+decode / logits_all_gather / tp / 8                   7    189736    189736         0        0        0.000       5229.3
+decode / reduce_scatterv / ep / 32                    1   8366080   8366080         0        0        0.000     971295.2
+decode / sp_all_gather / tp / 8                       2   2260151   2260151         0        0        0.000      16705.7
+decode / sp_reduce_scatter / tp / 8                   4   2065591   2065591         0        0        0.000      17547.7
+prefill / all_gatherv / ep / 32                       2   2818048   2818048         0        0        0.000     866229.6
+prefill / all_reduce / tp / 8                         2      8192      8192         0        0        0.000        111.5
+prefill / logits_all_gather / tp / 8                  1      1024      1024         0        0        0.000         19.7
+prefill / reduce_scatterv / ep / 32                   5   2818048   2818048         0   176128        0.000     666194.5
+prefill / sp_all_gather / tp / 8                      4    417920    417920         0        0        0.000       4549.2
+prefill / sp_reduce_scatter / tp / 8                  2    352384    352384         0        0        0.000       5025.4
+violations 0
+run p2_64_cold_g1hs_r2: 35 distinct requests, 27711291 calls
+role / operation / domain / devices              points     calls     exact    interp  unequal max_log_dist     total_ms
+decode / all_gatherv / ep / 32                        1   8366080   8366080         0        0        0.000    2142921.2
+decode / all_reduce / tp / 8                          4     48037     48037         0        0        0.000        485.3
+decode / logits_all_gather / tp / 8                   7    189736    189736         0        0        0.000       5229.3
+decode / reduce_scatterv / ep / 32                    1   8366080   8366080         0        0        0.000     971295.2
+decode / sp_all_gather / tp / 8                       2   2260151   2260151         0        0        0.000      16705.7
+decode / sp_reduce_scatter / tp / 8                   4   2065591   2065591         0        0        0.000      17547.7
+prefill / all_gatherv / ep / 32                       2   2818048   2818048         0        0        0.000     866229.6
+prefill / all_reduce / tp / 8                         2      8192      8192         0        0        0.000        111.5
+prefill / logits_all_gather / tp / 8                  1      1024      1024         0        0        0.000         19.7
+prefill / reduce_scatterv / ep / 32                   5   2818048   2818048         0   176128        0.000     666194.5
+prefill / sp_all_gather / tp / 8                      4    417920    417920         0        0        0.000       4549.2
+prefill / sp_reduce_scatter / tp / 8                  2    352384    352384         0        0        0.000       5025.4
+violations 0
