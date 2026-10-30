@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Recorded the lead's launch rule for DP dummy forwards after the native P2-64 wave run (D-DP-DUMMY-RUN-AHEAD, item 43). |
 | 2026-10-30 | Recorded YC's approval of the disk deletions after the full disk (item 41) and of one instrumented native P2-64 diagnostic run for the TTFT gap (D-P2-64-WAVE-DIAGNOSTIC, item 42). |
 | 2026-10-29 | Recorded the lead's routing-descriptor rule for tables merged from two packages (D-ROUTING-ORIGIN-PROVENANCE). |
 | 2026-10-29 | Recorded YC's instruction to submit the next Codex implementation with effort ultra (D-CODEX-EFFORT-ULTRA) and the lead's source-revision rule for the G1h supplement package (D-G1H-SUPPLEMENT-IDENTITY). |
@@ -400,6 +401,12 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 42. **D-P2-64-WAVE-DIAGNOSTIC.** One instrumented native P2-64 run on H200 to find why a prefill that arrives after a DP wave ended finishes only about 450-540 ms after that wave end:
     - Codex (effort ultra, item 38) builds package_02 from the lifecycle package_01 (`h200_mainline/p2_64_lifecycle/package_01`). Beyond the scheduler lifecycle records, it records for every P and D engine each busy-loop iteration (dummy steps, the 32-step DP sync, `START_DP_WAVE` receipt, wave numbers), and on TP rank 0 of each engine the forward start and the DP rendezvous.
     - 64 H200, non-preemptible, one repetition (16 warm-up and 128 formal requests), about 20-21 GPU-hours. This run is outside the H3o operator-measurement caps (item 33). Submission, monitoring and download go through `/ds4-exec`; soft gates only (64 GPUs).
+
+43. **D-DP-DUMMY-RUN-AHEAD.** Lead's working decision under D-NO-INTERRUPT after the native P2-64 wave run (`exp-1030-144848-164721`, A10 report section 3.5). The native host does not wait for a DP dummy forward to end; it issues forwards ahead of the GPU until 19 are unfinished, and the DP lanes advance in lockstep through the per-forward all-reduce. Frontier models this as an opt-in field of the vLLM V1 scheduler, `max_forwards_in_flight` (K):
+    - `None` (default) keeps the current path, where the host waits for each dummy forward to end, so existing results stay identical.
+    - An integer K >= 1 applies the native rule on lanes that run DP dummy forwards: after forming its forward n, a lane starts its next iteration once its forward n-K has ended on the device and every lane of its DP group has formed its forward n. The busy-loop counter, the 32-step DP sync and the batch-queue rules stay as they are.
+    - The A10 replays set K = 19 from the depth measurement (section 3.5, observation 4), not from a fit to TTFT. P2-32 uses the same value: same engine build, model and graph mode; its TTFT must stay flat.
+    - Implemented by Codex as B26 ([assignment](h3o_operator_costs/codex_assignment_B26_dp_dummy_run_ahead.md)). Rejected: a TTFT offset or a scaling of the dummy price (an error-hiding factor); waiting for every dummy as now (leaves the measured run-ahead out); run-ahead without the lockstep (an idle lane would queue its own dummies ahead of a request it receives, which the native all-reduce prevents).
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
