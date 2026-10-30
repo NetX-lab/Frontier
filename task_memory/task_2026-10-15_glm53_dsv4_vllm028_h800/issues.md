@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-003 opened and resolved: `/data/ycfeng` filled at 20:58 on 2026-10-29 and every running simulation failed with ENOSPC; space was recovered by YC-approved deletions and the runs were restarted. |
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
@@ -52,6 +53,29 @@ Observed after the repair:
 B8 was then committed.
 
 **Prevention.** Never export `GIT_DIR` or `GIT_WORK_TREE` around a test suite or any command that runs `git init`. A before-snapshot that needs a Git identity gets its own worktree; otherwise its Git-reading tests are accepted as failing in the comparison.
+
+## I-003: `/data/ycfeng` full; all stage 4 simulations lost (2026-10-29)
+
+Status: resolved for now; the external writer is unidentified. Owner: lead.
+
+Observed: at 20:58 on 2026-10-29, `df` showed `/dev/rbd1` (XFS with project quota, mounted at `/data`) with 1 MB free. Every simulation that was still running failed with `OSError: [Errno 28] No space left on device`:
+
+- official A10 runs on the promoted table: `stage4/a10/p2_32_cold_g1hs`, `p2_32_warm_g1hs`, `p2_64_cold_g1hs` and `p2_64_warm_g1hs` (all mid-run; the observer stream close and the receipt write failed);
+- old-table A10 runs `stage4/a10/p2_64_cold` and `p2_64_warm`;
+- the mid-run profile `stage4/probe/p2_64_mid` (it had reached 61.3 simulated s after 8,460 wall s; no `profile.pstats` was written);
+- the census runs under `stage4/census/`.
+
+Probe `stage4/probe/p2_64_c` (old table, no observer) had already ended with `EXIT 0` at 20:37; its gate output is kept.
+
+Cause (inference): the simulations were not the writer. Each run root is about 300 MB including its 1,758-file cache. `find -mmin`/`-cmin` over the readable trees showed no matching growth. Free space also moved both ways while no lead process was writing (14,256 MB, then 14,972 MB two minutes later on 2026-10-30). The likely writers are processes outside this sandbox, such as GPU workers writing as uid 65534 through NFS into directories this user cannot read.
+
+Resolution: YC approved deleting three groups (2026-10-30):
+
+- the G1h supplement traces `/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/traces/` (9.6 GB, 450 files; the raw records and the promoted table do not depend on them);
+- the temporary directories `stage4/promote_real/scratch` (830 MB) and `stage4/g1h_s01_post_dryrun` (615 MB);
+- the old-table caches under `stage4/a10/{p2_32,p2_64}_{cold,warm}/cache` and `stage4/probe/p2_32_{a,b,c,perf,perf2,prof}/cache` (1,758 files each).
+
+The G1h-02 traces were not approved and were kept. Free space after the deletions: 14,257 MB. A background `df` logger now writes `stage4/disk_watch.log` every 300 s so a repeat can be timed.
 
 ## I-002: `test_balanced_routing.py` cache test fails on main since B16b (2026-10-29)
 
