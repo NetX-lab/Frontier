@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Added section 4: A7 and A8 mechanism and the A8 census of the P2-32 runs (every collective on a measured point, no violation). |
 | 2026-10-30 | Section 2.2: P2-32 cold finished; A9 cold against warm is EQUAL. |
 | 2026-10-30 | Section 2.2: P2-32 warm reading (PASS; TTFT −8.50%, TPOT, E2E and throughput within 0.13%). Section 3.6: observation 8 (P2-32 remainder) and the evidence for `nixl_read_completion=engine_step` in observation 5; the ingress reading now includes its P2-32 effect. |
 | 2026-10-30 | Added section 3.6: after the prefill side, the native P2-64 remainder is 165.2 ms once the first-contact NIXL handshakes are left out (Frontier 138.6 ms); without the five handshake requests the reference TTFT is 720.6 ms instead of 741.2 ms. Sections 3.1 and 3.5 point to the revised values. |
@@ -266,3 +267,24 @@ On the lifecycle run, `pairs.py` writes `first_contact.json` and then stops with
 - **Expected TTFT after B26.** With a prefill side of about 509-515 ms (section 3.5) and the remainder of 138.6 ms, Frontier TTFT would be about 648-654 ms: −11.8% to −12.6% against 741.2 ms and −9.3% to −10.1% against 720.6 ms.
 - **The prefill side after B26.** Against the reference prefill side of 552.0 ms, Frontier would be about 37-43 ms short. The known parts are the prefill compute (275.2 ms against about 290-300 ms, section 3.5), the prefill ingress (proxy arrival to prefill add 9.1-11.3 ms natively against Frontier's 3.27 ms wait) and the prefill response (2.3-4.3 ms).
 - **Ingress modeling needs approval.** Modeling the ingress outside the engine needs a new delay field with measured values per platform, which is a configuration schema change. On P2-32 it would move Frontier toward the reference, not past it: Frontier is 17.1 ms short after the prefill side there (observation 8), and adding the 11.4 ms measured on P2-64 would give a TTFT of about 344.5 ms (−5.4% instead of −8.5%). The P2-32 ingress itself is not measured; no P2-32 run recorded `add_enqueue`, so the P2-64 value stands in for it.
+
+## 4. A7 and A8 on the finished runs
+
+A7 (EP rank admission) and A8 (collective coverage) are gate items of H3o (`h3o_operator_costs/design.md` section 1). On the V4 operator path the simulator enforces both while it runs, so a finished run satisfies them; this section records the mechanism and the census of the finished runs.
+
+**A7, mechanism (from the code).** Each routed-MoE layer wave predicts every participating EP lane, not only rank 0 (`frontier/scheduler/utils/expert_parallel.py:108-170`), and the wave takes the maximum over the lanes for each phase: pre-dispatch, dispatch, routed compute, combine and post-combine (`expert_parallel.py:252-272`). The grouped GEMM of a lane is looked up at the lane's balanced rank class: the lane's token counts must equal those of the measured balanced workload, and the coordinate (EP size, routed population, rank class) must be a measured point (`frontier/execution_time_predictor/dsv4_operator_predictor.py:359-374`, exact lookup at lines 309-316). A lane that is not a measured class stops the run with an error. There is no interpolation and no fallback.
+
+**A8, mechanism (from the code).** `MeasuredCCBackend.predict_operator_collective` (`frontier/cc_backend/backends/measured_cc_backend.py:250-281`) rejects a request outside the measured size range of its curve, and prices an unequal EP combine (`reduce_scatterv` with unequal SP rows) only from an exact measurement of its ordered rows and bytes; otherwise it raises `MeasuredCCOutOfRangeError`. An unequal combine therefore never uses the scalar curve.
+
+**A8, census.** `h3o_operator_costs/a10/a8_collectives.py <run root>` reads the observer's `collectives.json`, checks that its call total equals the receipt's, and checks the recorded bounds of every request: an exact point has equal lower and upper bounds, an interpolated point lies strictly inside its bracket, and every unequal combine is exact.
+
+| Run | Distinct requests | Calls | Exact | Interpolated | Unequal combines (all exact) | Violations | Output |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| P2-32 warm | 43 | 19,438,100 | 19,438,100 | 0 | 88,064 (prefill) | 0 | `a8_p2_32_stdout.txt` |
+| P2-32 cold | 43 | 19,438,100 | 19,438,100 | 0 | 88,064 (prefill) | 0 | `a8_p2_32_stdout.txt` |
+| P2-64 cold | pending | | | | | | |
+| P2-64 warm | pending | | | | | | |
+
+The two P2-32 `collectives.json` files are byte-identical (`cmp`). Every P2-32 collective falls on a measured point: 12 curves (operation, domain, devices) in the two roles, from `sp_all_gather` and `sp_reduce_scatter` at TP 8 to `all_gatherv` and `reduce_scatterv` at EP 16.
+
+Reading: A7 and A8 hold for P2-32. The census shows how A8 is met; A7 has no per-lane census, because the observer records rank-0 scopes only, so its evidence is the code path above and the fact that the runs finished.
