@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Added section 3: the P2-64 TTFT gap is on the native prefill side, where a prefill that arrives after the previous DP wave ended finishes about 450-540 ms after that wave end (mechanism not found in the code). |
 | 2026-10-30 | Created: P2-64 client reading on the pre-supplement table (probe `p2_64_c`), the loss of the promoted-table runs to the full disk (I-003), and their restart. |
 
 ## Scope
@@ -64,3 +65,57 @@ Deviation: each warm cache comes from the first-attempt cold run, not from the r
 A mid-run cProfile window for the speed work (`stage4/run_profile3.sh p2_64 p2_64_mid2 60 1200`, cache hard-linked from `p2_64_cold_g1hs`) runs beside them; its first attempt was also lost to the full disk.
 
 Results: pending.
+
+## 3. TTFT diagnosis of P2-64: the native prefill side waits after a DP wave ends
+
+Inputs:
+
+- Frontier: the attribution of probe `p2_64_c` (section 1) by `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4a_p0_diagnostic/h4a5_attribution.py`.
+- Native: the scheduler lifecycle records of the instrumented P2-64 run `exp-1026-125836-702505` (`h200_mainline/diagnostic/inputs/p2_64l/nodes/<host>/scheduler_lifecycle/dp<k>_pid*.jsonl`; report `test_report_2026-10-26_h200_p2_64_lifecycle.md`). Its client TTFT (796.15 / 740.94 / 736.07 ms) matches the three reference repeats (779.89 / 725.49 / 718.27 ms) within 2.3%, so its prefill timing stands for the reference. The P2-32 counterpart is `p2_32l`.
+- Scripts (copies of the scratch scripts in `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/ttft/`): `h3o_operator_costs/a10/ttft/p_side.py <nodes>`, `p_blackout.py <nodes> <ungated compute ms>`, `p_rows.py <nodes> <min duration ms> <index>`. Run with `/data/ycfeng/envs/frontier-py310/bin/python`, `ulimit -v 31457280`.
+
+### 3.1 Where the 324 ms go
+
+| Part (mean per formal request) | Native | Frontier | Difference |
+| --- | --- | --- | --- |
+| Arrival to the first token on the prefill side | 568.3 ms | 278.5 ms (wait 3.27 + compute 275.22) | 289.8 ms |
+| After the prefill side (KV transfer, first decode output, client), as the remainder | about 173 ms | about 139 ms | about 34 ms |
+| Client TTFT | 741.2 ms | 417.1 ms | 324.2 ms |
+
+The native prefill-side value comes from the lifecycle run and the native TTFT from the three reference repeats. The lifecycle run's own TTFT mean is 757.7 ms, so its remainder is about 189 ms; the split of the 324 ms between the two parts is accurate to about 16 ms.
+
+On the native prefill side, the request reaches the engine 6.2 ms after its client arrival, the scheduler schedules it within 1 ms (mean 0.4-0.5 ms per lane), and the whole prompt runs in one 6,144-token step. All of the excess is inside that step: its duration (schedule to first-token update) has mean 562.1 ms, minimum 296.5 ms and maximum 813.8 ms over the 384 formal requests. Requests arrive every 1,000 ms in rotation over the four prefill lanes, so the prefill side never queues and two lanes never run real prefills at the same time.
+
+P2-32 does not show this: its step has mean 244.6 ms (minimum 216.8, maximum 336.6), and arrival to first token is 249.4 ms.
+
+### 3.2 The wait depends on the time since the previous prefill ended
+
+`p_blackout.py` (P2-64, ungated compute 300 ms) groups each formal prefill by the time between the end of the previous formal prefill on any lane and its own schedule time (schedule follows arrival within about 7 ms). The effective start is the first-token update minus 300 ms, measured from the previous end.
+
+| Scheduled after the previous end | n | Step duration mean (min-max) | Effective start after the previous end |
+| --- | --- | --- | --- |
+| 196-254 ms, served at once | 43 | 300.6 ms | equal to the schedule time |
+| 188-259 ms, held | 36 | 750-790 ms | mean 699.5 ms, sd 19.3 |
+| 260-760 ms | 302 | 577.6 ms (343.8-813.8) | mean 771.0 ms, sd 24.8 |
+
+Three of the 384 formal prefills have no previous prefill within 2 s and are not grouped. Taking each step's wait as its duration minus 300 ms (zero when shorter), the mean wait is 264.2 ms. The P-side difference of 289.8 ms therefore splits into about 264 ms of native waiting and about 25 ms of compute (native ungated 300 ms against Frontier 275 ms, 8% lower).
+
+The anchor is the previous prefill end on any lane (sd 19-25 ms). The latest KV `finished_sending` report is a worse anchor (sd 108 ms).
+
+For P2-32 the same grouping (ungated compute 245 ms) finds requests scheduled about 750 ms after the previous end, with flat steps (243.2 and 246.0 ms means) and a mean wait of 5.5 ms. Its requests arrive after the window in which P2-64 requests wait, so P2-32 cannot show whether the same wait exists there.
+
+### 3.3 Reading (inference, not verified)
+
+In vLLM-BS `2cf0a691` the prefill engines run one data-parallel wave together: each engine keeps running, with dummy batches when it has no request, until the all-reduce every 32 steps (`ParallelConfig.sync_dp_state`) finds no unfinished request on any engine; then the wave ends and the engines go idle. The groups above fit this picture:
+
+- The previous prefill's KV `finished_sending` arrives about 48 ms after its end. The last request leaves the engines then, and up to 32 more dummy steps of about 5 ms run before the next sync ends the wave, about 200-250 ms after the previous end.
+- A request that arrives while the wave still runs is served at once (the 43 prefills of about 300 ms).
+- A request that arrives after the wave ended cannot finish its forward until about 450-540 ms after the wave end (the 36 held prefills and the 302 prefills of the 260-760 ms group).
+
+The wake-up path in the code looks immediate: the front end sends `FIRST_REQ` when no wave runs, the coordinator broadcasts `START_DP_WAVE`, an engine that receives a request for a finished wave sends `start_wave`, and the idle engines start dummy steps as soon as `engines_running` is set. The late part is therefore not explained by the source reading. Candidates are the inter-process messaging, the coordinator, the worker processes, or the first collective of a new wave on the GPU side. Which one it is needs a measurement.
+
+Frontier already models the wave mechanics (`frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py`: `VLLM_DP_SYNC_INTERVAL = 32`, dummy steps on idle MoE / `attn_dp > 1` lanes, the wave end at the sync step), but it has no cost for restarting a wave, so its prefill compute stays flat at 275 ms. The modeling rule (no empirical scaling factors) means the gap can be closed only after the mechanism is known.
+
+### 3.4 Warnings that do not apply
+
+The runs log approximation factors for `attn_pre_proj` and `attn_post_proj` (0.5, BF16 to FP8) and `moe_gating_routing_topk` (2.0, BF16 to FP32) from `frontier/config/quantization_manager.py`, and a missing `attention_kernel_only.csv`. The V4 path prices its attention from `attention_graph_replay_kernel_only.csv` through `dsv4_predictor.py` and does not use those three operator predictions, so these warnings do not change the A10 results.
