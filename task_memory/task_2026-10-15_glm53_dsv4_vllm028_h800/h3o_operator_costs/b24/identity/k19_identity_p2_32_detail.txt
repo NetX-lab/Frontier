@@ -1,0 +1,38 @@
+warm config.json differing keys 3
+   cluster_config.cc_backend_config.cache_dir | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19/cc_cache | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b24/cc_cache
+   metrics_config.cache_dir | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19/cache | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b24/cache
+   metrics_config.output_dir | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b24/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path
+warm collectives.json differing leaves 50 of 648
+   rows[10].call_count | 64512 | 12096
+   rows[10].predicted_total_ms | 539.9912349707415 | 101.24835655687477
+   rows[11].call_count | 2729984 | 511872
+   rows[11].predicted_total_ms | 384399.2212283864 | 72074.85397817408
+   rows[12].call_count | 2729984 | 511872
+   rows[12].predicted_total_ms | 167123.06880247558 | 31335.575402355775
+   rows[16].call_count | 1131072 | 212076
+   rows[16].predicted_total_ms | 159262.177335013 | 29861.658251061173
+   rows[17].call_count | 1131072 | 212076
+   rows[17].predicted_total_ms | 69241.51338919031 | 12982.783760284545
+   rows[18].call_count | 26304 | 4932
+   rows[18].predicted_total_ms | 220.17499759187396 | 41.28281204849863
+warm forwards.jsonl decompressed equal: True
+cold config.json differing keys 3
+   cluster_config.cc_backend_config.cache_dir | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19/cc_cache | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19b24/cc_cache
+   metrics_config.cache_dir | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19/cache | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19b24/cache
+   metrics_config.output_dir | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path | /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19b24/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path
+cold collectives.json differing leaves 50 of 648
+   rows[10].call_count | 64512 | 12096
+   rows[10].predicted_total_ms | 539.9912349707415 | 101.24835655687477
+   rows[11].call_count | 2729984 | 511872
+   rows[11].predicted_total_ms | 384399.2212283864 | 72074.85397817408
+   rows[12].call_count | 2729984 | 511872
+   rows[12].predicted_total_ms | 167123.06880247558 | 31335.575402355775
+   rows[16].call_count | 1131072 | 212076
+   rows[16].predicted_total_ms | 159262.177335013 | 29861.658251061173
+   rows[17].call_count | 1131072 | 212076
+   rows[17].predicted_total_ms | 69241.51338919031 | 12982.783760284545
+   rows[18].call_count | 26304 | 4932
+   rows[18].predicted_total_ms | 220.17499759187396 | 41.28281204849863
+cold forwards.jsonl decompressed equal: True
+warm rows 43 43 rows differing 25 keys differing ['call_count', 'predicted_total_ms'] max relative difference of the per-call mean 7.741150583552957e-11
+cold rows 43 43 rows differing 25 keys differing ['call_count', 'predicted_total_ms'] max relative difference of the per-call mean 7.741150583552957e-11
