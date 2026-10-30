@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-008 opened: the back-to-back collective timing in `data/profiling/network/h200_dgx/summary.csv` gives the period of pipelined calls, not the time of one call started on aligned ranks. At 6,144 rows the EP combine is priced 164.7 µs per layer low on EP32 and 16.6-45.6 µs high on EP16. |
 | 2026-10-30 | I-007 opened: the scheduler-lifecycle runs of 2026-10-25/26 are slower on the prefill side than the canonical runs in every repeat (13.8-34.4 ms); the 300 ms native prefill step taken from them is overstated. |
 | 2026-10-30 | I-006 resolved by B26b (`414fdd03`, merge `49e7e5fa`): a test-fixture timing problem caused by `b0bf0c78`; the fixture's third arrival moved from 8 ms to 10 ms; no simulator change. |
 | 2026-10-30 | I-002 resolved by B27 (`f00859be`, merge `3834bab6`): 128 passed. I-006 assigned with B26b (request `a92368f9`). |
@@ -148,3 +149,15 @@ Status: open (cause not identified; the affected readings are corrected). Owner:
 **Impact.** The added time sits inside the engine step: the P2-32 lifecycle step averages 244.6 ms against about 222 ms left by the canonical prefill side, and the lifecycle run's ingress is not larger. Readings that took the native prefill step from the lifecycle runs overstate it: the 300 ms compute of A10 report sections 3.2 and 3.5 and the "about 25 ms of compute" difference of section 3.2. On the wave run, a prefill served at once takes 289.6 ms (n 6). The H4b handoff measurements are not affected: the lifecycle runs' handoff is not longer than the canonical one (A10 report section 3.6).
 
 **Next.** Native step values come from the wave run or from canonical-timed runs. The lifecycle observer's code is not inspected yet; the cause matters only if another lifecycle run is planned.
+
+## I-008: back-to-back timing misprices the 6,144-row EP combine (2026-10-30)
+
+Status: open (cause measured; repair needs a GPU run and YC's approval). Owner: lead.
+
+**Observed.** The P2-64 native lane-0 prefill takes 2,176.5 µs per layer in the EP combine `ncclDevKernel_Reduce_Sum_bf16_RING_LL` on TP rank 0. Frontier prices that call at 2,011.6 µs, the back-to-back median of G5h-32 `_01` (`eager_t6144_1_1_1`), which is 7.08 ms per forward low. Evidence: A10 report section 5.6; `h3o_operator_costs/a10/k19/prefill_compute/`.
+
+**Cause.** In the forward, all ranks start the call together; lanes and TP ranks arrive within 3.5 µs and 21.4 µs (medians), and no other stream overlaps the Reduce. The root rank 0 ends last. In the benchmark's 10 back-to-back calls, ranks 1-7 start each call 450-720 µs before rank 0, because they finished the previous call earlier. Rank 0's kernel is therefore shorter, about 2,000 µs. On EP16 (G5h-16 `_02`) that head start is only 60-260 µs, and the benchmark is above native: 764.4 µs priced against 718.8 µs (lane 0) and 747.8 µs (lane 1). No single factor fits both topologies.
+
+**Impact.** P2-64 prefill step −7.08 ms; through the FIFO queue, about −10.6 ms of TTFT. P2-32 step +0.7 to +2.0 ms. Decode-width calls use the same timing mode. Whether they are also affected is not checked; the G5h report recorded decode biases of −12 to +15 µs per call.
+
+**Next.** Measure every EP collective from an aligned start (a barrier on the group's stream before each timed call; per-rank end times from the kernel trace; price = the latest end in the timed lane) on EP32 and EP16. Then compare with the native kernels of every group before the consumer changes.

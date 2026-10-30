@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Added section 5.6: Frontier's 6,144-token prefill against the native kernels of the P2-64 profiled run. Only the EP combine differs much (−7.08 ms of the about 8.2 ms device gap). Its back-to-back benchmark timing is the period of pipelined calls (rank 0 2,011 µs) and not the time of a call started on aligned ranks (2,176 µs). On EP16 the error has the opposite sign. The host part, about 7.5 ms, is not modeled for V4. |
 | 2026-10-30 | Added section 5.5: every repeat of the lifecycle runs of 2026-10-25/26 is slower on the prefill side than every canonical repeat (by 13.8-34.4 ms), so the 300 ms native prefill step of sections 3.2 and 3.5 is overstated; on the wave run, whose timing matches the canonical run, the step is 289.6 ms. FIFO parameter swaps attribute the P2-64 in-engine gap to the prefill step. |
 | 2026-10-30 | Added section 5: the K = 19 replays on main `901bc091` (B26 + B24). P2-32 PASS (TTFT −7.94%); P2-64 TTFT −11.62% (FAIL; −9.09% against 720.6 ms), prefill side 513.3 ms as predicted; A9 EQUAL for both cases. New split of the native prefill ingress; section 3.1's 6.2 ms corrected. Section 4 notes B24's lane reuse. |
 | 2026-10-30 | Section 2.2: P2-64 cold and warm finished (FAIL on TTFT, 416.2 against 741.2 ms; the other metrics within 3.4%); A9 EQUAL; section 4 gains the P2-64 census. |
@@ -424,3 +425,59 @@ Every lifecycle repeat is above every canonical repeat of its case (P2-32 by 19.
 - Frontier's dummy, priced 2.4% above native (24.38 against 23.81 ms, section 3.5 observation 3), raises the prefill side by about 16 ms in the model. It works against the short prefill step, so the in-engine gap of about 23 ms is smaller than the short step alone would give. The two errors are reported separately, not netted.
 - Next check on the prefill compute, CPU only: compare Frontier's operator prices for the 6,144-token prefill forward with the native kernels. The profiled run cannot give the step directly: its prefill forwards on DP lanes 1-3 span a median of about 338 ms on the device, because they wait for peers in each MoE collective, while lane 0's single prefill spans 279.1 ms (busy 274.5 ms; `evidence/runtime_census/p2_64.txt`).
 - The wave run's ingress (11.33 ms, section 5.4) is from the run whose timing matches the canonical runs. The lifecycle run's 9.12 ms is not larger despite that run's slowdown, which places the slowdown in the engine step, not in the ingress.
+
+### 5.6 The prefill step on the device: Frontier's operator prices against the native kernels
+
+**Data.** Native: the P2-64 profiled run `dsv4-h200-p2-64-profile-20261025-01`, prefill DP lane 0, TP rank 0, forward 64. It is the lane's only 6,144-token prefill in NONE mode, while the peer lanes run NONE dummies (`num_tokens_across_dp` 6144/1/1/1). Frontier: the first real prefill forward of `stage4/a10/p2_64_warm_k19b24/forwards.jsonl.gz`, which has the same shape and the same peers. Scripts and outputs are in `h3o_operator_costs/a10/k19/prefill_compute/`. They run with `PYTHONPATH=<repo>/tests/analysis` and `ulimit -v 31457280`, and they reuse `forward_kernel_events` of `tests/analysis/v4_runtime_census.py`.
+
+**Observation 1: segment totals** (`native_kernels.py` → `p2_64_dp0_tp0.txt`, `around.py` → `around.txt`).
+
+| Segment | Native, device | Frontier |
+| --- | --- | --- |
+| KV block zero (native: `_zero_kv_blocks_kernel` in the previous forward's post kernels) | 2.913 ms | 2.911 ms |
+| Prepare | 67 kernels, 0.37 ms span | 0.237 ms |
+| Dispatch | 2,313 kernels: sum 276.82 ms, union 274.03 ms, span 278.65 ms | 270.67 ms (scope prices 274.68 ms in total; the composition overlaps 0.74 ms of them) |
+| Post | 11 kernels, 0.11 ms | 0.10 ms |
+| From the end of the previous dispatch to the end of post | 282.1 ms | 273.94 ms (composed) |
+
+**Observation 2: dispatch by scope.**
+
+| Native kernels | Native | Frontier scope | Frontier | Frontier − native |
+| --- | --- | --- | --- | --- |
+| `ncclDevKernel_Reduce_Sum_bf16_RING_LL` (EP combine), 43 | 93.58 ms | `dsv4_ep_output_reduce_scatter` | 86.50 ms | −7.08 ms |
+| `ncclDevKernel_AllGatherV_RING_LL` (EP dispatch), 129 | 45.08 ms | `dsv4_ep_dispatch_allgather` | 46.29 ms | +1.21 ms |
+| `ncclDevKernel_AllGather_RING_LL` (SP), 44 | 7.27 ms | `dsv4_sp_attention_allgather` + `dsv4_sp_final_mhc_allgather` | 7.53 ms | +0.26 ms |
+| `ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL` (SP), 43 | 6.66 ms | `dsv4_sp_attention_reduce_scatter` | 6.76 ms | +0.10 ms |
+| All other kernels (sparse attention 29.79, index top-k 28.61, routed MoE about 20.1 ms) | 124.23 ms | All other dispatch scopes (sparse attention 30.80, index top-k 28.68, `moe_grouped_gemm` 20.44 ms) | 124.40 ms | +0.17 ms |
+| Native idle time in the span, less the multi-stream overlap | +1.83 ms | Overlap in the composition | −0.74 ms | |
+
+Only the EP combine is far from native. The other collectives and the compute differ by +1.74 ms in total.
+
+**Observation 3: why the native combine takes 2,176 µs per layer and Frontier prices 2,012 µs.**
+
+- **Peer lanes are not late** (`peer_align.py` → `peer_align_f64.txt`). The host clocks of the four lanes (TP rank 0 on four hosts) are aligned by the median end time of the EP dispatch `AllGatherV` kernels; the residual standard deviation is 16-158 µs. Lane 0 waits a median of 3.5 µs per layer (0.20 ms per forward) for the last lane to reach the combine. From that last arrival to its end, lane 0's Reduce takes 2,171.2 µs (median; 93.38 ms in total).
+- **TP ranks are not skewed** (`collective_calls.py` → `calls_*.json`, `align.py` → `align.txt`, `b2b_vs_model.py` → `b2b_vs_model.txt`). The 8 TP ranks of lane 0 share one host clock and start each Reduce within a median of 21.4 µs. Rank 0 ends last in all 43 layers, 2,176.5 µs after the last start, and ranks 1-7 end 1,435-1,652 µs after rank 0's start. The SP `AllGather` that follows waits for rank 0, so the Reduce and that `AllGather` together take about 101 ms on every rank.
+- **No contention on the GPU** (`reduce_overlap.py` → `reduce_overlap_dp0_tp0_f64.txt`). No kernel on another stream overlaps any of the 43 Reduce kernels (0.0 ms). Each Reduce starts a median of 4.4 µs after `moe_sum`.
+- **The benchmark's timing mode is the cause** (`b2b_vs_model.txt`). G5h-32 `_01` (`eager_t6144_1_1_1`, the same kernel, grid 16, 50,528,256 input bytes) times 10 back-to-back calls. From the second call on, ranks 1-7 start call k 450-720 µs before rank 0, because they finished call k−1 earlier. Rank 0's kernel then takes about 2,000 µs, and its per-call median of 2,011.1 µs is the value in `summary.csv`. In the forward, all ranks start together, and rank 0 takes 2,176.5 µs. The back-to-back value is therefore the period of a pipelined sequence of calls, not the time of one call that starts on aligned ranks. Frontier's price is 2,011.6 µs per call, 164.7 µs per layer below the native mean.
+- **On EP16 the sign is reversed** (`bench_ranks.py` → `bench_ranks_ep16.txt`; native groups 7 and 8 of `evidence/collective_kernels/p2_32_native.txt`). In G5h-16 `_02` (`eager_t6144_1`), ranks 1-7 start only 60-260 µs before rank 0, and rank 0 takes 743-795 µs per call. Frontier prices the P2-32 combine at 764.4 µs per layer. Native takes 718.8 µs on lane 0 and 747.8 µs on lane 1 (rank 0, median), so Frontier is 0.7-2.0 ms per forward high. The back-to-back time is therefore below the forward's time on EP32 and above it on EP16. A correction factor would not fit both, and correction factors are not allowed. The isolated run's single traced call cannot give the aligned-start time either: its ranks start up to 6.9 ms apart (`bench_ranks_ep16.txt`, first block).
+
+**Observation 4: the host part of the step** (`step_split.py` → `step_split.txt`; wave run). The worker's `execute_model` returns before the device finishes, so these host spans do not bound the device time. For the 32 prefill steps under 400 ms (schedule to update):
+
+- schedule to the worker's `execute_model` start: 2.14 ms;
+- `execute_model` start to the DP all-reduce: 2.08 ms;
+- DP all-reduce wait: 1.23 ms.
+
+Frontier models a 3.27 ms scheduling wait (section 3.1) and no other host time for V4. `skip_cpu_overhead_modeling` is `True`, and `data/profiling/cpu_overhead/h200_dgx/` has tables only for Qwen3-235B-A22B, Qwen3-30B-A3B-tiny and llama2_7b. The existing CPU-overhead path (`frontier.profiling.cpu_overhead.vllm_cpu_probe`) builds its table from the CPU-probe logs of Frontier's instrumented vLLM (`VLLM_FRONTIER_CPU_PROBE_LOG_PATH`). The V4 serving image does not have that probe.
+
+**Reading.**
+
+- Frontier's prefill step (273.94 ms) is about 15.7 ms shorter than the wave run's (289.6 ms). About 8.2 ms of that is on the device and about 7.5 ms on the host. This split is an inference: the wave run has no device trace, so its device time is taken from the profiled run (282.1 ms).
+- On the device, 7.08 ms comes from the EP combine price. Its back-to-back timing does not match a call that starts on aligned ranks. The native idle time less overlap adds 1.83 ms. The other prices are within +1.74 ms in total.
+- **Effect of pricing the combine at the forward's time** (arithmetic with the FIFO model of section 5.5, not a run):
+  - P2-64: P rises from 275.2 to 282.3 ms. At the FIFO slope of 1.49 ms per ms (Frontier's set: P 275.2 → 514.9 ms, P 290 → 537.0 ms), the prefill side rises about 10.6 ms. TTFT becomes about 665.7 ms, −10.2% against 741.2 ms.
+  - P2-32: there is little queueing, so P2-32 moves by the step change itself, about 1-2 ms down (−8.2% to −8.5%).
+  - Together with the ingress modeling of section 5.4 (about +22 ms on both cases), P2-64 would be about 688 ms (−7.2%) and P2-32 about 355 ms (−2.4%).
+- **Next measurement** (needs a GPU run and YC's approval): time each EP collective from an aligned start, on TP8 DP4 EP32 and TP8 DP2 EP16.
+  - Each timed call follows a barrier on the group's stream.
+  - The kernel trace gives each rank's end time, and the price is the latest end in the timed lane.
+  - Compare the result with the native kernels of every group, decode included, before the consumer changes.

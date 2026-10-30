@@ -1,0 +1,47 @@
+steps 128
+{'lane': 'dp0_pid1416.jsonl', 'step_ms': 368.44, 'sched_to_exec': 2.38, 'exec_start_to_sync': 2.42, 'sync_wait': 1.62, 'sync_end_to_exec_end': 229.77, 'exec_ms': 233.81, 'exec_end_to_update': 132.24}
+{'lane': 'dp0_pid1416.jsonl', 'step_ms': 383.44, 'sched_to_exec': 2.86, 'exec_start_to_sync': 3.15, 'sync_wait': 1.04, 'sync_end_to_exec_end': 244.68, 'exec_ms': 248.88, 'exec_end_to_update': 131.69}
+{'lane': 'dp0_pid1416.jsonl', 'step_ms': 351.45, 'sched_to_exec': 2.61, 'exec_start_to_sync': 2.39, 'sync_wait': 1.1, 'sync_end_to_exec_end': 212.9, 'exec_ms': 216.38, 'exec_end_to_update': 132.46}
+{'lane': 'dp0_pid1416.jsonl', 'step_ms': 354.8, 'sched_to_exec': 2.69, 'exec_start_to_sync': 2.48, 'sync_wait': 1.22, 'sync_end_to_exec_end': 216.35, 'exec_ms': 220.06, 'exec_end_to_update': 132.05}
+{'lane': 'dp0_pid1416.jsonl', 'step_ms': 318.52, 'sched_to_exec': 2.51, 'exec_start_to_sync': 2.69, 'sync_wait': 1.35, 'sync_end_to_exec_end': 190.25, 'exec_ms': 194.29, 'exec_end_to_update': 121.72}
+{'lane': 'dp0_pid1416.jsonl', 'step_ms': 392.5, 'sched_to_exec': 2.26, 'exec_start_to_sync': 2.15, 'sync_wait': 1.54, 'sync_end_to_exec_end': 253.35, 'exec_ms': 257.04, 'exec_end_to_update': 133.2}
+{'lane': 'dp0_pid1416.jsonl', 'step_ms': 285.6, 'sched_to_exec': 1.7, 'exec_start_to_sync': 1.98, 'sync_wait': 1.26, 'sync_end_to_exec_end': 186.71, 'exec_ms': 189.95, 'exec_end_to_update': 93.95}
+{'lane': 'dp1_pid1290.jsonl', 'step_ms': 397.12, 'sched_to_exec': 2.49, 'exec_start_to_sync': 2.45, 'sync_wait': 1.45, 'sync_end_to_exec_end': 258.18, 'exec_ms': 262.08, 'exec_end_to_update': 132.55}
+{'lane': 'dp1_pid1290.jsonl', 'step_ms': 289.57, 'sched_to_exec': 2.21, 'exec_start_to_sync': 1.91, 'sync_wait': 1.32, 'sync_end_to_exec_end': 185.33, 'exec_ms': 188.56, 'exec_end_to_update': 98.8}
+{'lane': 'dp1_pid1290.jsonl', 'step_ms': 371.22, 'sched_to_exec': 1.97, 'exec_start_to_sync': 1.98, 'sync_wait': 1.44, 'sync_end_to_exec_end': 233.13, 'exec_ms': 236.55, 'exec_end_to_update': 132.69}
+{'lane': 'dp1_pid1290.jsonl', 'step_ms': 289.22, 'sched_to_exec': 2.16, 'exec_start_to_sync': 1.9, 'sync_wait': 0.96, 'sync_end_to_exec_end': 187.0, 'exec_ms': 189.86, 'exec_end_to_update': 97.19}
+{'lane': 'dp1_pid1290.jsonl', 'step_ms': 381.88, 'sched_to_exec': 2.44, 'exec_start_to_sync': 2.77, 'sync_wait': 1.33, 'sync_end_to_exec_end': 242.63, 'exec_ms': 246.73, 'exec_end_to_update': 132.7}
+{'lane': 'dp1_pid1290.jsonl', 'step_ms': 343.95, 'sched_to_exec': 2.19, 'exec_start_to_sync': 2.0, 'sync_wait': 1.26, 'sync_end_to_exec_end': 205.7, 'exec_ms': 208.96, 'exec_end_to_update': 132.81}
+{'lane': 'dp1_pid1290.jsonl', 'step_ms': 313.05, 'sched_to_exec': 2.07, 'exec_start_to_sync': 1.8, 'sync_wait': 1.1, 'sync_end_to_exec_end': 185.88, 'exec_ms': 188.78, 'exec_end_to_update': 122.21}
+{'lane': 'dp1_pid1290.jsonl', 'step_ms': 294.58, 'sched_to_exec': 2.06, 'exec_start_to_sync': 1.9, 'sync_wait': 1.28, 'sync_end_to_exec_end': 183.11, 'exec_ms': 186.28, 'exec_end_to_update': 106.23}
+{'lane': 'dp1_pid1290.jsonl', 'step_ms': 287.16, 'sched_to_exec': 1.91, 'exec_start_to_sync': 1.98, 'sync_wait': 0.92, 'sync_end_to_exec_end': 186.59, 'exec_ms': 189.48, 'exec_end_to_update': 95.77}
+{'lane': 'dp2_pid1295.jsonl', 'step_ms': 346.82, 'sched_to_exec': 2.81, 'exec_start_to_sync': 1.98, 'sync_wait': 1.31, 'sync_end_to_exec_end': 206.19, 'exec_ms': 209.48, 'exec_end_to_update': 134.52}
+{'lane': 'dp2_pid1295.jsonl', 'step_ms': 318.08, 'sched_to_exec': 2.17, 'exec_start_to_sync': 2.04, 'sync_wait': 1.1, 'sync_end_to_exec_end': 180.53, 'exec_ms': 183.67, 'exec_end_to_update': 132.25}
+{'lane': 'dp2_pid1295.jsonl', 'step_ms': 289.24, 'sched_to_exec': 1.82, 'exec_start_to_sync': 1.81, 'sync_wait': 1.2, 'sync_end_to_exec_end': 178.93, 'exec_ms': 181.94, 'exec_end_to_update': 105.48}
+{'lane': 'dp2_pid1295.jsonl', 'step_ms': 290.5, 'sched_to_exec': 1.75, 'exec_start_to_sync': 1.85, 'sync_wait': 1.01, 'sync_end_to_exec_end': 182.63, 'exec_ms': 185.49, 'exec_end_to_update': 103.25}
+{'lane': 'dp2_pid1295.jsonl', 'step_ms': 339.72, 'sched_to_exec': 2.17, 'exec_start_to_sync': 1.89, 'sync_wait': 1.14, 'sync_end_to_exec_end': 201.74, 'exec_ms': 204.78, 'exec_end_to_update': 132.77}
+{'lane': 'dp2_pid1295.jsonl', 'step_ms': 322.75, 'sched_to_exec': 1.81, 'exec_start_to_sync': 2.14, 'sync_wait': 1.21, 'sync_end_to_exec_end': 184.83, 'exec_ms': 188.18, 'exec_end_to_update': 132.76}
+{'lane': 'dp2_pid1295.jsonl', 'step_ms': 391.35, 'sched_to_exec': 1.85, 'exec_start_to_sync': 1.97, 'sync_wait': 1.24, 'sync_end_to_exec_end': 253.46, 'exec_ms': 256.67, 'exec_end_to_update': 132.82}
+{'lane': 'dp2_pid1295.jsonl', 'step_ms': 323.7, 'sched_to_exec': 2.33, 'exec_start_to_sync': 2.02, 'sync_wait': 1.19, 'sync_end_to_exec_end': 184.94, 'exec_ms': 188.15, 'exec_end_to_update': 133.22}
+{'lane': 'dp3_pid1277.jsonl', 'step_ms': 315.63, 'sched_to_exec': 2.95, 'exec_start_to_sync': 3.1, 'sync_wait': 1.29, 'sync_end_to_exec_end': 191.39, 'exec_ms': 195.79, 'exec_end_to_update': 116.89}
+{'lane': 'dp3_pid1277.jsonl', 'step_ms': 347.91, 'sched_to_exec': 1.82, 'exec_start_to_sync': 1.65, 'sync_wait': 1.21, 'sync_end_to_exec_end': 246.09, 'exec_ms': 248.95, 'exec_end_to_update': 97.15}
+{'lane': 'dp3_pid1277.jsonl', 'step_ms': 325.19, 'sched_to_exec': 2.16, 'exec_start_to_sync': 1.81, 'sync_wait': 1.39, 'sync_end_to_exec_end': 187.4, 'exec_ms': 190.6, 'exec_end_to_update': 132.43}
+{'lane': 'dp3_pid1277.jsonl', 'step_ms': 395.97, 'sched_to_exec': 1.63, 'exec_start_to_sync': 1.73, 'sync_wait': 1.22, 'sync_end_to_exec_end': 256.74, 'exec_ms': 259.69, 'exec_end_to_update': 134.66}
+{'lane': 'dp3_pid1277.jsonl', 'step_ms': 331.3, 'sched_to_exec': 1.69, 'exec_start_to_sync': 1.72, 'sync_wait': 0.96, 'sync_end_to_exec_end': 194.33, 'exec_ms': 197.02, 'exec_end_to_update': 132.59}
+{'lane': 'dp3_pid1277.jsonl', 'step_ms': 290.25, 'sched_to_exec': 1.48, 'exec_start_to_sync': 1.59, 'sync_wait': 1.54, 'sync_end_to_exec_end': 241.64, 'exec_ms': 244.77, 'exec_end_to_update': 44.0}
+{'lane': 'dp3_pid1277.jsonl', 'step_ms': 374.57, 'sched_to_exec': 1.74, 'exec_start_to_sync': 1.74, 'sync_wait': 1.0, 'sync_end_to_exec_end': 237.51, 'exec_ms': 240.25, 'exec_end_to_update': 132.57}
+{'lane': 'dp3_pid1277.jsonl', 'step_ms': 349.97, 'sched_to_exec': 1.69, 'exec_start_to_sync': 1.69, 'sync_wait': 1.15, 'sync_end_to_exec_end': 212.63, 'exec_ms': 215.46, 'exec_end_to_update': 132.81}
+all n 128
+  step_ms                mean   536.50 median   544.98 min   285.60 max   750.80
+  sched_to_exec          mean     2.09 median     2.06 min     1.48 max     3.10
+  exec_start_to_sync     mean     2.01 median     1.91 min     1.59 max     3.26
+  sync_wait              mean     1.24 median     1.19 min     0.74 max     3.96
+  sync_end_to_exec_end   mean   401.19 median   407.66 min   178.93 max   613.49
+  exec_end_to_update     mean   129.97 median   132.68 min    44.00 max   152.70
+served at once (step < 400 ms) n 32
+  step_ms                mean   336.73 median   335.51 min   285.60 max   397.12
+  sched_to_exec          mean     2.14 median     2.16 min     1.48 max     2.95
+  exec_start_to_sync     mean     2.08 median     1.98 min     1.59 max     3.15
+  sync_wait              mean     1.23 median     1.22 min     0.92 max     1.62
+  sync_end_to_exec_end   mean   210.70 median   203.72 min   178.93 max   258.18
+  exec_end_to_update     mean   120.58 median   132.34 min    44.00 max   134.66

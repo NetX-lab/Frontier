@@ -1,0 +1,13 @@
+previous forward 63 FULL dummy
+  previous dispatch: last kernel end 2089156232130
+  previous post: last kernel end 2089156235134
+  previous post kernels 7 sum us 2940.555
+       2912.9 _zero_kv_blocks_kernel
+         23.1 _apply_write_kernel
+          3.0 void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<a
+          1.4 void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{la
+  prepare: first 2089156235137 last end 2089156235503 n 67
+  dispatch: first 2089156235505 last end 2089156514154 n 2313
+  post: first 2089156514155 last end 2089156514267 n 11
+  host bounds {'prepare': (2089155956834, 2089155960942), 'dispatch': (2089155960942, 2089156426189), 'post': (2089156426189, 2089156520074)}
+  host bounds previous {'prepare': (2089155765380, 2089155773000), 'dispatch': (2089155773000, 2089155776044), 'post': (2089155776044, 2089155955999)}

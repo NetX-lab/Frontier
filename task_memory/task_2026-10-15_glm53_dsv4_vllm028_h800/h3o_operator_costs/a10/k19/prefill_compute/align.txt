@@ -1,0 +1,9 @@
+spread_start             per layer mean     21.7 us median     21.4 min     15.5 max     31.0 sum    0.932 ms
+spread_end               per layer mean    741.1 us median    741.4 min    723.1 max    750.7 sum   31.866 ms
+last_start_to_last_end   per layer mean   2175.4 us median   2176.5 min   2143.3 max   2195.5 sum   93.542 ms
+first_start_to_last_end  per layer mean   2197.1 us median   2200.1 min   2161.3 max   2215.6 sum   94.474 ms
+tp0                      per layer mean   2176.4 us median   2176.5 min   2145.6 max   2200.5 sum   93.584 ms
+last arriving tp Counter({0: 29, 1: 13, 6: 1})
+last ending tp Counter({0: 43})
+ncclDevKernel_AllGatherV_RING_LL: calls 129, last start to last end sum 44.990 ms; tp0 sum 45.083 ms
+ncclDevKernel_AllGather_RING_LL: calls 44, last start to last end sum 7.307 ms; tp0 sum 7.273 ms
