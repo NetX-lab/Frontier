@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Added section 3.6: after the prefill side, the native P2-64 remainder is 165.2 ms once the first-contact NIXL handshakes are left out (Frontier 138.6 ms); without the five handshake requests the reference TTFT is 720.6 ms instead of 741.2 ms. Sections 3.1 and 3.5 point to the revised values. |
 | 2026-10-30 | Added section 3.5 from the instrumented wave run `exp-1030-144848-164721`: the native host issues DP dummy forwards ahead of the GPU, up to about 19 unfinished forwards, so a DP wave ends with about 18 dummies (about 440 ms of GPU work) still queued and the next prefill waits behind them. Section 3.3's reading is replaced. |
 | 2026-10-30 | Added section 3: the P2-64 TTFT gap is on the native prefill side, where a prefill that arrives after the previous DP wave ended finishes about 450-540 ms after that wave end (mechanism not found in the code). |
 | 2026-10-30 | Created: P2-64 client reading on the pre-supplement table (probe `p2_64_c`), the loss of the promoted-table runs to the full disk (I-003), and their restart. |
@@ -40,7 +41,7 @@ Per native repeat (relative error of the same Frontier value):
 | repeat02 | 725.49 ms | 42.51% | 26.26 ms | 3.64% | 27,584.86 ms | 4.67% | 5,976.59 tps | 0.15% |
 | repeat03 | 718.27 ms | 41.94% | 25.93 ms | 2.42% | 27,240.80 ms | 3.46% | 5,965.07 tps | 0.35% |
 
-Reading: overall FAIL, on TTFT only. The native TTFT spread across repeats is 718-780 ms, so the Frontier value of 417 ms lies far outside the native run-to-run variation. Frontier predicts the first token too early by about 324 ms on average; the decode-side metrics agree within 5%. The cause is not yet diagnosed.
+Reading: overall FAIL, on TTFT only. The native TTFT spread across repeats is 718-780 ms, so the Frontier value of 417 ms lies far outside the native run-to-run variation. Frontier predicts the first token too early by about 324 ms on average; the decode-side metrics agree within 5%. Section 3 diagnoses the cause.
 
 ## 2. Official runs on the promoted table
 
@@ -83,7 +84,7 @@ Inputs:
 | After the prefill side (KV transfer, first decode output, client), as the remainder | about 173 ms | about 139 ms | about 34 ms |
 | Client TTFT | 741.2 ms | 417.1 ms | 324.2 ms |
 
-The native prefill-side value comes from the lifecycle run and the native TTFT from the three reference repeats. The lifecycle run's own TTFT mean is 757.7 ms, so its remainder is about 189 ms; the split of the 324 ms between the two parts is accurate to about 16 ms.
+The native prefill-side value comes from the lifecycle run and the native TTFT from the three reference repeats. The lifecycle run's own TTFT mean is 757.7 ms, so its remainder is about 189 ms; the split of the 324 ms between the two parts is accurate to about 16 ms. Section 3.6 revises the remainder: without the requests that wait for a one-time NIXL handshake, the native remainder is 165.2 ms in both instrumented runs, and the reference TTFT is 720.6 ms.
 
 On the native prefill side, the request reaches the engine 6.2 ms after its client arrival, the scheduler schedules it within 1 ms (mean 0.4-0.5 ms per lane), and the whole prompt runs in one 6,144-token step. All of the excess is inside that step: its duration (schedule to first-token update) has mean 562.1 ms, minimum 296.5 ms and maximum 813.8 ms over the 384 formal requests. Requests arrive every 1,000 ms in rotation over the four prefill lanes, so the prefill side never queues and two lanes never run real prefills at the same time.
 
@@ -180,4 +181,63 @@ Arguments `g c K P d_sched d_post` (ms, except K). Result: the mean add-to-updat
 
 Frontier's host waits for each dummy forward to end: `on_schedule` returns no batch while `_dummy_forwards_in_flight` is non-zero (`vllm_v1_engine_replica_scheduler.py`). A wave therefore never ends with queued dummies, and a prefill starts at once. The fix models the native launch rule (assignment B26): the host does not wait for a dummy forward's end, and launches its next forward once fewer than K forwards are unfinished on the device; the lanes keep the per-forward lockstep of observation 1. The value K = 19 comes from observation 4.
 
-Expected effect on P2-64, from the model: the prefill side rises from about 300 ms to about 509-515 ms. With Frontier's current remainder of about 139 ms, TTFT would be about 650 ms, against native 741.2 ms (about -12%). Two known gaps remain: the prefill compute (275.2 ms against about 290-300 ms) and the remainder after the prefill side (about 139 ms against about 173-189 ms).
+Expected effect on P2-64, from the model: the prefill side rises from about 300 ms to about 509-515 ms. With Frontier's current remainder of about 139 ms, TTFT would be about 650 ms, against native 741.2 ms (about -12%). Two known gaps remain: the prefill compute (275.2 ms against about 290-300 ms) and the remainder after the prefill side (138.6 ms against 165.2 ms without the first-contact requests, section 3.6).
+
+### 3.6 After the prefill side: one-time NIXL handshakes and the decode-side handoff
+
+Inputs:
+
+- Native: the wave run of section 3.5 (`W`, its `artifacts/` directory) and the lifecycle run `exp-1026-125836-702505` of section 3, read from its download `/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-lifecycle-20261026-01/artifacts/` (`L`); the proxy and client records of the reference runs, `h200_mainline/diagnostic/inputs/{p2_64r,p2_32r}/run/`.
+- Frontier: probe `p2_64_c` (section 1), `metrics_ground_truth.jsonl` and `frontier_transfer_ledger.jsonl` in `stage4/probe/p2_64_c/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/` (`F`).
+
+Scripts: copies in `h3o_operator_costs/a10/remainder/`, each with its output beside it; outputs for the lifecycle run are in `lifecycle/`. Run from that directory with `/data/ycfeng/envs/frontier-py310/bin/python` under `ulimit -v 31457280`.
+
+| Step | Command | Output |
+| --- | --- | --- |
+| Native per-request join (proxy, prefill and decode lifecycle) | `remainder.py <W> remainder_out.json`; the same with `<L>` and `lifecycle/` | `remainder_stdout.txt`, `lifecycle/remainder_stdout.txt` |
+| KV receive detail per request | `nixl_detail.py <W> remainder_out.json nixl_detail_out.json`; the same with `<L>` | `nixl_detail_stdout.txt`, `lifecycle/nixl_detail_stdout.txt` |
+| Lane pairs, first-contact requests, ingress split | `pairs.py <W> remainder_out.json nixl_detail_out.json first_contact.json`; the same with `<L>` | `pairs_stdout.txt`, `lifecycle/pairs_stdout.txt` |
+| Frontier join | `frontier_remainder.py <F> frontier_remainder_p2_64_c.json` | `frontier_remainder_p2_64_c.txt` |
+| Span comparison | `remainder_compare.py frontier_remainder_p2_64_c.json remainder_out.json first_contact.json lifecycle/remainder_out.json lifecycle/first_contact.json` | `remainder_compare_stdout.txt` |
+| Slow requests per repeat | `handoff_slow.py <run>/proxy_requests.jsonl <run>/client_requests.jsonl` for P2-64r, the lifecycle run and the wave run | `handoff_slow_stdout.txt` |
+| Reference with and without first-contact requests | `reference_without_handshake.py <run> [first_contact.json]` for P2-64r, P2-32r, the wave run and the lifecycle run | `reference_without_handshake_stdout.txt` |
+| Reference split on the proxy clock | `reference_split.py <run>` for P2-64r and P2-32r | `reference_split_stdout.txt` |
+
+On the lifecycle run, `pairs.py` writes `first_contact.json` and then stops with "no add_enqueue records: ingress split not available", because that run's observer did not record `add_enqueue`. Rerunning `remainder.py` and `nixl_detail.py` on the lifecycle run from the copies reproduces both JSON outputs byte for byte (`cmp`).
+
+#### Observations
+
+1. **The first request between a prefill lane and a decode lane waits for a NIXL handshake.** A decode worker connects to a prefill engine when the first request from that engine arrives: `start_load_kv` starts a background handshake and posts the READ only after the handshake ends (`vllm/distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py:65-77`, native source `2cf0a6915`). Four prefill lanes and four decode lanes make 16 pairs. The warmup requests open 13 of them in the wave run and 11 in the lifecycle run (`pairs_stdout.txt`). The formal requests that open the remaining pairs wait 1,438.8-1,620.5 ms (wave run: r005, r017, r037) and 1,457.9-1,800.4 ms (lifecycle run: r002, r004, r006, r009, r053) from decode add to `finished_recving`, against medians of 78.0 and 74.5 ms for all formal requests. All of them are in repeat 1.
+2. **These requests are the ones with a proxy handoff above 1,000 ms.** In both instrumented runs, the formal requests whose handoff (prefill response to the first decode byte, on the proxy clock) exceeds 1,000 ms are exactly the first-contact requests ("same set as the first-contact requests: True", `reference_without_handshake_stdout.txt`). The other formal requests have handoff medians of 152.6-168.2 ms per repeat (`handoff_slow_stdout.txt`). The sawtooth tops just above 1,000 ms TTFT (r119-repeat02 in P2-64r, 1,012.7 ms, and six requests of the lifecycle run) have handoffs of 190.8-213.4 ms and long prefill sides of 796.2-824.8 ms, so they are not first contacts.
+3. **The reference without first contacts.** P2-64r has five such requests, all in repeat 1 (r006, r017, r027, r035 and r036, handoff 1,455.3-1,923.9 ms). Without them, the reference TTFT mean is 720.6 ms (n 379) instead of 741.2 ms (n 384). P2-32r has none (364.0 ms, n 384). Split on the proxy clock (`reference_split_stdout.txt`):
+
+   | Part (mean) | P2-64r without first contacts (n 379) | P2-32r (n 384) |
+   | --- | --- | --- |
+   | Client dispatch to proxy arrival | 0.6 ms | 0.5 ms |
+   | Proxy arrival to prefill response (prefill side) | 552.0 ms | 235.5 ms |
+   | Prefill response to first decode byte (handoff) | 167.8 ms | 127.9 ms |
+   | First decode byte to client | 0.2 ms | 0.2 ms |
+   | TTFT | 720.6 ms | 364.0 ms |
+
+4. **Span comparison with Frontier** (`remainder_compare_stdout.txt`). Native means leave out the first-contact requests, and native parts are merged into the spans that Frontier models. Frontier's KV transfer starts at the prefill end.
+
+   | Span (mean) | Native wave run (n 125) | Native lifecycle run (n 379) | Frontier `p2_64_c` (n 128) |
+   | --- | --- | --- | --- |
+   | Prefill first-token update to decode add (ingress) | 21.7 ms | 22.7 ms | 0 (not modeled) |
+   | Decode add to `finished_recving` | 86.9 ms | 84.8 ms | 88.2 ms (KV transfer start to end) |
+   | `finished_recving` to decode first-token update | 55.2 ms | 53.0 ms | 50.4 ms |
+   | Decode first-token update to client | 0.9 ms | 4.3 ms | 0 (not modeled) |
+   | Total after the prefill side | 165.2 ms | 165.2 ms | 138.6 ms |
+
+5. **The ingress** (wave run, `pairs_stdout.txt`, `remainder_stdout.txt`). The 21.7 ms consist of the prefill response (2.3 ms), prefill response to the decode `add_enqueue` (9.1 ms, 6.3-12.8 ms: the proxy and the decode API server) and `add_enqueue` to the decode add (10.4 ms, 0.2-24.8 ms: the wait for the decode engine loop). Frontier posts its READ at a decode step start (`nixl_read_completion=engine_step`), so its 88.2 ms already contain the equivalent of the engine-loop wait. Compared like for like, native `add_enqueue` to `finished_recving` is 10.4 + 86.9 = 97.3 ms against Frontier's 88.2 ms (−9.1 ms). The parts outside the engine, 2.3 + 9.1 = 11.4 ms, are not modeled.
+6. **KV handles** (`nixl_detail_stdout.txt`, `lifecycle/nixl_detail_stdout.txt`). Each request reads 8 handles of 46,103,040 bytes. The slowest handle of a request has a median of 27.9 ms (wave run) and 26.2 ms (lifecycle run) and a mean of 37.0-37.1 ms. NIXL's `transfer_duration` is recorded only when the per-step poll finds the handle DONE (`base_worker.py:2224-2241`, `stats.py:45-47`). In the rows printed for the slowest requests, its values lie near multiples of the decode step (about 25, 50, 75 and 96 ms) or in a separate group at 1.6-2.6 ms. Frontier's ledger records 39,521,664 bytes per request transfer; how that figure relates to the 8 native handles is not checked here.
+7. **The first decode step after the receive** takes 53.0-55.2 ms natively against Frontier's 50.4 ms (2.6-4.8 ms longer).
+
+#### Reading (inference)
+
+- **The handshake.** The first-contact wait is a one-time connection cost. How many formal requests pay it depends on how many pairs the warmup reached (13 and 11 of 16 in the instrumented runs; five first contacts in P2-64r). It adds 20.6 ms to the reference mean. Recommendation: do not model it in Frontier; keep the gate on the full reference and report a diagnostic reading against 720.6 ms beside it. A native warmup that reaches all 16 pairs would remove it from future references; that needs a GPU run and YC's approval.
+- **The handle durations.** The 1.6-2.6 ms group suggests that the transfer of one 46 MB handle takes at most about 2 ms on the wire, and that the larger values mostly count the decode steps until the poll sees the handle done. This is not verified.
+- **The remainder after the prefill side.** Without first contacts the native value is 165.2 ms, not about 173-189 ms as estimated in section 3.1. Frontier's 138.6 ms is 26.6 ms short: the ingress outside the engine (11.4 ms; not modeled, deferred in `h4b_d_side_model/design.md` section 6.3), the late READ handles (about 9 ms; open, section 6.2 of that design), the first decode step (3-5 ms) and the client egress (1-4 ms).
+- **Expected TTFT after B26.** With a prefill side of about 509-515 ms (section 3.5) and the remainder of 138.6 ms, Frontier TTFT would be about 648-654 ms: −11.8% to −12.6% against 741.2 ms and −9.3% to −10.1% against 720.6 ms.
+- **The prefill side after B26.** Against the reference prefill side of 552.0 ms, Frontier would be about 37-43 ms short. The known parts are the prefill compute (275.2 ms against about 290-300 ms, section 3.5), the prefill ingress (proxy arrival to prefill add 9.1-11.3 ms natively against Frontier's 3.27 ms wait) and the prefill response (2.3-4.3 ms).
+- **Ingress modeling needs approval.** Modeling the ingress outside the engine needs a new delay field with measured values per platform, which is a configuration schema change. Its effect on P2-32 has to be checked against the P2-32 reading of section 2.2 before it is proposed.

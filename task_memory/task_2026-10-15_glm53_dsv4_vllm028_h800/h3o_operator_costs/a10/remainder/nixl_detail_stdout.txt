@@ -1,0 +1,13 @@
+requests 128
+transfers per request [8, 16]
+bytes [46103040]
+all: n 128 wait mean 120.3 median 78.0; max transfer mean 37.0 median 27.9; all transfers mean 27.3 median 26.5 p90 29.3
+wait<400: n 125 wait mean 86.9 median 77.9; max transfer mean 37.0 median 27.8; all transfers mean 27.4 median 26.5 p90 29.2
+lane idle (all dummies): n 4 wait median 50.3 max transfer median 24.1
+lane busy (no dummies): n 124 wait median 78.0 max transfer median 28.0
+slowest {"request": "fixed-6144-1024-req128-qps1-formal-r037-repeat01", "d_lane": 2, "wait_ms": 1620.5353736877441, "transfers": 16, "transfer_ms": [25.3, 25.4, 25.7, 25.9, 25.9, 26.0, 26.1, 26.3, 26.4, 26.5, 26.8, 26.9, 26.9, 27.1, 52.4, 52.4], "forwards": 60, "dummy_forwards": 0}
+slowest {"request": "fixed-6144-1024-req128-qps1-formal-r017-repeat01", "d_lane": 3, "wait_ms": 1470.4267978668213, "transfers": 8, "transfer_ms": [20.5, 20.6, 21.0, 29.8, 38.2, 38.4, 38.6, 38.8], "forwards": 54, "dummy_forwards": 0}
+slowest {"request": "fixed-6144-1024-req128-qps1-formal-r005-repeat01", "d_lane": 1, "wait_ms": 1438.7891292572021, "transfers": 8, "transfer_ms": [1.6, 1.6, 1.7, 1.9, 2.0, 2.1, 2.1, 26.1], "forwards": 55, "dummy_forwards": 0}
+slowest {"request": "fixed-6144-1024-req128-qps1-formal-r120-repeat01", "d_lane": 1, "wait_ms": 140.1505470275879, "transfers": 8, "transfer_ms": [29.0, 29.1, 29.1, 29.3, 29.3, 29.4, 29.5, 85.2], "forwards": 4, "dummy_forwards": 0}
+slowest {"request": "fixed-6144-1024-req128-qps1-formal-r052-repeat01", "d_lane": 3, "wait_ms": 129.03738021850586, "transfers": 8, "transfer_ms": [27.5, 27.6, 27.6, 27.7, 28.1, 28.1, 28.2, 78.9], "forwards": 4, "dummy_forwards": 0}
+slowest {"request": "fixed-6144-1024-req128-qps1-formal-r012-repeat01", "d_lane": 3, "wait_ms": 128.95655632019043, "transfers": 8, "transfer_ms": [25.6, 26.3, 26.4, 26.5, 26.5, 26.6, 26.8, 79.0], "forwards": 4, "dummy_forwards": 0}

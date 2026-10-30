@@ -1,0 +1,19 @@
+pairs used 16 [(0, 0), (0, 1), (0, 2), (0, 3), (1, 0), (1, 1), (1, 2), (1, 3), (2, 0), (2, 1), (2, 2), (2, 3), (3, 0), (3, 1), (3, 2), (3, 3)]
+first request of each pair:
+   (3, 3) fixed-6144-1024-req128-qps1-warmup-r000-repeat01 wait_ms -
+   (1, 0) fixed-6144-1024-req128-qps1-warmup-r002-repeat01 wait_ms -
+   (2, 1) fixed-6144-1024-req128-qps1-warmup-r005-repeat01 wait_ms -
+   (0, 2) fixed-6144-1024-req128-qps1-warmup-r001-repeat01 wait_ms -
+   (3, 2) fixed-6144-1024-req128-qps1-warmup-r006-repeat01 wait_ms -
+   (0, 3) fixed-6144-1024-req128-qps1-warmup-r003-repeat01 wait_ms -
+   (2, 3) fixed-6144-1024-req128-qps1-warmup-r009-repeat01 wait_ms -
+   (1, 1) fixed-6144-1024-req128-qps1-warmup-r007-repeat01 wait_ms -
+   (0, 1) fixed-6144-1024-req128-qps1-warmup-r008-repeat01 wait_ms -
+   (0, 0) fixed-6144-1024-req128-qps1-warmup-r015-repeat01 wait_ms -
+   (2, 2) fixed-6144-1024-req128-qps1-warmup-r014-repeat01 wait_ms -
+   (3, 0) fixed-6144-1024-req128-qps1-formal-r002-repeat01 wait_ms 1665.8
+   (1, 3) fixed-6144-1024-req128-qps1-formal-r004-repeat01 wait_ms 1457.9
+   (3, 1) fixed-6144-1024-req128-qps1-formal-r006-repeat01 wait_ms 1724.6
+   (2, 0) fixed-6144-1024-req128-qps1-formal-r009-repeat01 wait_ms 1800.4
+   (1, 2) fixed-6144-1024-req128-qps1-formal-r053-repeat01 wait_ms 1719.1
+no add_enqueue records: ingress split not available

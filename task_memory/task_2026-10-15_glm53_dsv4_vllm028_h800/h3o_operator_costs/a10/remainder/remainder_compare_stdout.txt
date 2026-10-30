@@ -1,0 +1,15 @@
+Frontier: n 128 ttft 417.1 remainder 138.6
+    P first token -> D add (ingress)         0.0
+    D add -> finished_recving               88.2
+    finished_recving -> first token         50.4
+    first token -> client                    0.0
+remainder_out.json: n 125 ttft 714.4 remainder 165.2
+    P first token -> D add (ingress)        21.7
+    D add -> finished_recving               86.9
+    finished_recving -> first token         55.2
+    first token -> client                    0.9
+lifecycle/remainder_out.json: n 379 ttft 736.3 remainder 165.2
+    P first token -> D add (ingress)        22.7
+    D add -> finished_recving               84.8
+    finished_recving -> first token         53.0
+    first token -> client                    4.3

@@ -1,0 +1,20 @@
+pairs used 16 [(0, 0), (0, 1), (0, 2), (0, 3), (1, 0), (1, 1), (1, 2), (1, 3), (2, 0), (2, 1), (2, 2), (2, 3), (3, 0), (3, 1), (3, 2), (3, 3)]
+first request of each pair:
+   (1, 3) fixed-6144-1024-req128-qps1-warmup-r000-repeat01 wait_ms -
+   (3, 0) fixed-6144-1024-req128-qps1-warmup-r003-repeat01 wait_ms -
+   (0, 2) fixed-6144-1024-req128-qps1-warmup-r001-repeat01 wait_ms -
+   (2, 0) fixed-6144-1024-req128-qps1-warmup-r002-repeat01 wait_ms -
+   (1, 2) fixed-6144-1024-req128-qps1-warmup-r004-repeat01 wait_ms -
+   (0, 3) fixed-6144-1024-req128-qps1-warmup-r005-repeat01 wait_ms -
+   (3, 3) fixed-6144-1024-req128-qps1-warmup-r009-repeat01 wait_ms -
+   (2, 1) fixed-6144-1024-req128-qps1-warmup-r007-repeat01 wait_ms -
+   (1, 0) fixed-6144-1024-req128-qps1-warmup-r006-repeat01 wait_ms -
+   (2, 2) fixed-6144-1024-req128-qps1-warmup-r008-repeat01 wait_ms -
+   (3, 1) fixed-6144-1024-req128-qps1-warmup-r012-repeat01 wait_ms -
+   (0, 0) fixed-6144-1024-req128-qps1-warmup-r015-repeat01 wait_ms -
+   (1, 1) fixed-6144-1024-req128-qps1-warmup-r013-repeat01 wait_ms -
+   (0, 1) fixed-6144-1024-req128-qps1-formal-r005-repeat01 wait_ms 1438.8
+   (2, 3) fixed-6144-1024-req128-qps1-formal-r017-repeat01 wait_ms 1470.4
+   (3, 2) fixed-6144-1024-req128-qps1-formal-r037-repeat01 wait_ms 1620.5
+prefill_response->d_add_enqueue    n 128 mean    9.1 median    9.4 min    6.3 max   12.8
+d_add_enqueue->d_add               n 128 mean   10.4 median   10.5 min    0.2 max   24.8

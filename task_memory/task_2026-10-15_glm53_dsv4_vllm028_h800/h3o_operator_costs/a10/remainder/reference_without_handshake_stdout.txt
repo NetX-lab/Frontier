@@ -1,0 +1,10 @@
+== p2_64r
+formal 384 mean 741.2; handoff > 1000 ms: 5 ['fixed-6144-1024-req128-qps1-formal-r006-repeat01', 'fixed-6144-1024-req128-qps1-formal-r017-repeat01', 'fixed-6144-1024-req128-qps1-formal-r027-repeat01', 'fixed-6144-1024-req128-qps1-formal-r035-repeat01', 'fixed-6144-1024-req128-qps1-formal-r036-repeat01']; mean without them 720.6 (n 379)
+== p2_32r
+formal 384 mean 364.0; handoff > 1000 ms: 0 []; mean without them 364.0 (n 384)
+== wave
+formal 128 mean 746.7; handoff > 1000 ms: 3 ['fixed-6144-1024-req128-qps1-formal-r005-repeat01', 'fixed-6144-1024-req128-qps1-formal-r017-repeat01', 'fixed-6144-1024-req128-qps1-formal-r037-repeat01']; mean without them 714.4 (n 125)
+same set as the first-contact requests: True
+== lifecycle
+formal 384 mean 757.7; handoff > 1000 ms: 5 ['fixed-6144-1024-req128-qps1-formal-r002-repeat01', 'fixed-6144-1024-req128-qps1-formal-r004-repeat01', 'fixed-6144-1024-req128-qps1-formal-r006-repeat01', 'fixed-6144-1024-req128-qps1-formal-r009-repeat01', 'fixed-6144-1024-req128-qps1-formal-r053-repeat01']; mean without them 736.3 (n 379)
+same set as the first-contact requests: True

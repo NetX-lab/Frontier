@@ -1,0 +1,3680 @@
+[
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r000-repeat01",
+  "d_lane": 1,
+  "wait_ms": 32.79423713684082,
+  "transfers": 8,
+  "max_transfer_ms": 24.296000000000003,
+  "transfer_ms": [
+   8.5,
+   8.8,
+   9.6,
+   9.6,
+   9.7,
+   13.6,
+   19.3,
+   24.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 5,
+  "dummy_forwards": 5,
+  "forward_ms": [
+   5.6,
+   5.3,
+   5.2,
+   5.3,
+   5.3
+  ],
+  "remainder_ms": 202.8152048587799
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r001-repeat01",
+  "d_lane": 2,
+  "wait_ms": 50.241947174072266,
+  "transfers": 8,
+  "max_transfer_ms": 23.718,
+  "transfer_ms": [
+   22.4,
+   22.9,
+   23.4,
+   23.4,
+   23.4,
+   23.7,
+   23.7,
+   23.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 2,
+  "forward_ms": [
+   25.0,
+   24.8
+  ],
+  "remainder_ms": 178.28018218278885
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r002-repeat01",
+  "d_lane": 3,
+  "wait_ms": 50.31728744506836,
+  "transfers": 8,
+  "max_transfer_ms": 23.813000000000002,
+  "transfer_ms": [
+   23.1,
+   23.3,
+   23.6,
+   23.6,
+   23.6,
+   23.6,
+   23.7,
+   23.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 2,
+  "forward_ms": [
+   25.1,
+   25.1
+  ],
+  "remainder_ms": 176.51711404323578
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r003-repeat01",
+  "d_lane": 0,
+  "wait_ms": 102.84614562988281,
+  "transfers": 8,
+  "max_transfer_ms": 96.84700000000001,
+  "transfer_ms": [
+   24.3,
+   24.4,
+   24.4,
+   24.4,
+   24.5,
+   24.5,
+   49.7,
+   96.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 4,
+  "forward_ms": [
+   25.4,
+   47.1,
+   4.7,
+   24.0
+  ],
+  "remainder_ms": 223.73025119304657
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r004-repeat01",
+  "d_lane": 3,
+  "wait_ms": 77.00157165527344,
+  "transfers": 8,
+  "max_transfer_ms": 27.032,
+  "transfer_ms": [
+   1.6,
+   26.7,
+   26.8,
+   26.9,
+   26.9,
+   26.9,
+   26.9,
+   27.0
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.4
+  ],
+  "remainder_ms": 144.14788410067558
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r005-repeat01",
+  "d_lane": 1,
+  "wait_ms": 1438.7891292572021,
+  "transfers": 8,
+  "max_transfer_ms": 26.103,
+  "transfer_ms": [
+   1.6,
+   1.6,
+   1.7,
+   1.9,
+   2.0,
+   2.1,
+   2.1,
+   26.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 55,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.3,
+   25.6,
+   25.5,
+   25.5,
+   27.1,
+   27.4,
+   27.2,
+   25.5,
+   25.4,
+   26.7,
+   24.6,
+   25.5,
+   25.3,
+   25.4,
+   25.6,
+   25.6,
+   25.4,
+   26.3,
+   24.7,
+   25.5,
+   25.7,
+   25.4,
+   26.4,
+   24.7,
+   25.4,
+   25.4,
+   25.5,
+   25.6,
+   25.2,
+   25.4,
+   25.5,
+   25.5,
+   25.5,
+   25.4,
+   25.7,
+   25.6,
+   25.5,
+   25.6,
+   25.6,
+   25.6,
+   25.4,
+   25.9,
+   25.3,
+   26.9,
+   25.5,
+   25.4,
+   27.1,
+   25.7,
+   25.3,
+   26.5,
+   24.9,
+   26.3,
+   24.8,
+   25.4,
+   25.7
+  ],
+  "remainder_ms": 1519.846960902214
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r006-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.66325569152832,
+  "transfers": 8,
+  "max_transfer_ms": 26.568,
+  "transfer_ms": [
+   25.6,
+   25.9,
+   26.1,
+   26.1,
+   26.2,
+   26.3,
+   26.4,
+   26.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.7
+  ],
+  "remainder_ms": 151.74325928092003
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r007-repeat01",
+  "d_lane": 0,
+  "wait_ms": 75.97684860229492,
+  "transfers": 8,
+  "max_transfer_ms": 25.669999999999998,
+  "transfer_ms": [
+   25.1,
+   25.2,
+   25.3,
+   25.3,
+   25.3,
+   25.3,
+   25.7,
+   25.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   26.0
+  ],
+  "remainder_ms": 143.7290757894516
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r008-repeat01",
+  "d_lane": 0,
+  "wait_ms": 76.30109786987305,
+  "transfers": 8,
+  "max_transfer_ms": 26.471999999999998,
+  "transfer_ms": [
+   26.0,
+   26.1,
+   26.1,
+   26.1,
+   26.1,
+   26.2,
+   26.2,
+   26.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.6
+  ],
+  "remainder_ms": 163.02838921546936
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r009-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.6608715057373,
+  "transfers": 8,
+  "max_transfer_ms": 26.894000000000002,
+  "transfer_ms": [
+   26.4,
+   26.4,
+   26.5,
+   26.5,
+   26.6,
+   26.7,
+   26.9,
+   26.9
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.6,
+   25.6
+  ],
+  "remainder_ms": 149.0636020898819
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r010-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.93243026733398,
+  "transfers": 8,
+  "max_transfer_ms": 27.0,
+  "transfer_ms": [
+   26.4,
+   26.5,
+   26.5,
+   26.6,
+   26.6,
+   26.7,
+   26.8,
+   27.0
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.6,
+   25.5
+  ],
+  "remainder_ms": 152.78716012835503
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r011-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.06887817382812,
+  "transfers": 8,
+  "max_transfer_ms": 26.419999999999998,
+  "transfer_ms": [
+   25.5,
+   25.6,
+   25.7,
+   25.8,
+   25.8,
+   25.9,
+   26.0,
+   26.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.7,
+   25.6
+  ],
+  "remainder_ms": 149.35049414634705
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r012-repeat01",
+  "d_lane": 3,
+  "wait_ms": 128.95655632019043,
+  "transfers": 8,
+  "max_transfer_ms": 78.954,
+  "transfer_ms": [
+   25.6,
+   26.3,
+   26.4,
+   26.5,
+   26.5,
+   26.6,
+   26.8,
+   79.0
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   27.1,
+   25.5,
+   25.3,
+   25.5
+  ],
+  "remainder_ms": 196.6501623392105
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r013-repeat01",
+  "d_lane": 0,
+  "wait_ms": 76.59626007080078,
+  "transfers": 8,
+  "max_transfer_ms": 26.556,
+  "transfer_ms": [
+   26.2,
+   26.3,
+   26.3,
+   26.4,
+   26.4,
+   26.4,
+   26.5,
+   26.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 149.54118058085442
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r014-repeat01",
+  "d_lane": 1,
+  "wait_ms": 73.2126235961914,
+  "transfers": 8,
+  "max_transfer_ms": 25.204,
+  "transfer_ms": [
+   24.5,
+   24.7,
+   24.8,
+   24.9,
+   24.9,
+   25.2,
+   25.2,
+   25.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   23.5,
+   25.6
+  ],
+  "remainder_ms": 136.9323506951332
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r015-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.28130912780762,
+  "transfers": 8,
+  "max_transfer_ms": 27.431,
+  "transfer_ms": [
+   26.9,
+   26.9,
+   27.0,
+   27.1,
+   27.2,
+   27.4,
+   27.4,
+   27.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.7
+  ],
+  "remainder_ms": 139.58531618118286
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r016-repeat01",
+  "d_lane": 3,
+  "wait_ms": 78.0341625213623,
+  "transfers": 8,
+  "max_transfer_ms": 26.894000000000002,
+  "transfer_ms": [
+   26.3,
+   26.3,
+   26.4,
+   26.6,
+   26.7,
+   26.7,
+   26.7,
+   26.9
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.3,
+   27.3
+  ],
+  "remainder_ms": 157.4375182390213
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r017-repeat01",
+  "d_lane": 3,
+  "wait_ms": 1470.4267978668213,
+  "transfers": 8,
+  "max_transfer_ms": 38.785,
+  "transfer_ms": [
+   20.5,
+   20.6,
+   21.0,
+   29.8,
+   38.2,
+   38.4,
+   38.6,
+   38.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 54,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.5,
+   22.6,
+   25.5,
+   26.1,
+   24.8,
+   25.6,
+   25.4,
+   25.4,
+   25.5,
+   25.6,
+   25.4,
+   25.5,
+   25.5,
+   25.6,
+   25.5,
+   25.4,
+   25.6,
+   25.4,
+   25.5,
+   25.6,
+   25.5,
+   25.6,
+   31.5,
+   19.5,
+   25.6,
+   25.6,
+   25.6,
+   25.5,
+   27.6,
+   27.8,
+   27.6,
+   27.3,
+   27.6,
+   27.5,
+   27.5,
+   28.0,
+   26.9,
+   27.5,
+   27.7,
+   28.2,
+   27.5,
+   27.5,
+   31.5,
+   28.0,
+   27.9,
+   28.3,
+   27.9,
+   28.7,
+   28.1,
+   28.6,
+   28.6,
+   28.5,
+   28.6,
+   28.6
+  ],
+  "remainder_ms": 1563.5800994932652
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r018-repeat01",
+  "d_lane": 0,
+  "wait_ms": 83.21642875671387,
+  "transfers": 8,
+  "max_transfer_ms": 28.471,
+  "transfer_ms": [
+   27.9,
+   28.2,
+   28.3,
+   28.3,
+   28.3,
+   28.4,
+   28.4,
+   28.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   27.6
+  ],
+  "remainder_ms": 160.19641607999802
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r019-repeat01",
+  "d_lane": 1,
+  "wait_ms": 82.5188159942627,
+  "transfers": 8,
+  "max_transfer_ms": 28.657999999999998,
+  "transfer_ms": [
+   27.8,
+   27.8,
+   27.8,
+   27.9,
+   28.0,
+   28.0,
+   28.5,
+   28.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   27.6,
+   27.6
+  ],
+  "remainder_ms": 155.82498535513878
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r020-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.79438591003418,
+  "transfers": 8,
+  "max_transfer_ms": 26.663,
+  "transfer_ms": [
+   25.9,
+   26.0,
+   26.0,
+   26.1,
+   26.3,
+   26.5,
+   26.6,
+   26.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.8,
+   25.6
+  ],
+  "remainder_ms": 155.33551946282387
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r021-repeat01",
+  "d_lane": 3,
+  "wait_ms": 127.82049179077148,
+  "transfers": 8,
+  "max_transfer_ms": 77.57799999999999,
+  "transfer_ms": [
+   26.3,
+   26.4,
+   26.6,
+   26.7,
+   26.9,
+   27.2,
+   28.0,
+   77.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.6,
+   25.6,
+   25.5,
+   25.5
+  ],
+  "remainder_ms": 203.38036864995956
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r022-repeat01",
+  "d_lane": 2,
+  "wait_ms": 77.18253135681152,
+  "transfers": 8,
+  "max_transfer_ms": 28.703,
+  "transfer_ms": [
+   27.6,
+   27.6,
+   27.8,
+   27.8,
+   27.8,
+   27.8,
+   27.9,
+   28.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   24.8,
+   25.6
+  ],
+  "remainder_ms": 165.3328686952591
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r023-repeat01",
+  "d_lane": 0,
+  "wait_ms": 76.68471336364746,
+  "transfers": 8,
+  "max_transfer_ms": 26.419999999999998,
+  "transfer_ms": [
+   25.4,
+   25.9,
+   26.1,
+   26.2,
+   26.2,
+   26.3,
+   26.3,
+   26.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.8
+  ],
+  "remainder_ms": 159.22732278704643
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r024-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.46894454956055,
+  "transfers": 8,
+  "max_transfer_ms": 27.054000000000002,
+  "transfer_ms": [
+   26.0,
+   26.1,
+   26.1,
+   26.4,
+   26.4,
+   26.8,
+   26.9,
+   27.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.8
+  ],
+  "remainder_ms": 144.9701450765133
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r025-repeat01",
+  "d_lane": 0,
+  "wait_ms": 76.57861709594727,
+  "transfers": 8,
+  "max_transfer_ms": 26.415000000000003,
+  "transfer_ms": [
+   26.0,
+   26.0,
+   26.1,
+   26.1,
+   26.2,
+   26.2,
+   26.3,
+   26.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.7
+  ],
+  "remainder_ms": 160.52869707345963
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r026-repeat01",
+  "d_lane": 2,
+  "wait_ms": 102.19788551330566,
+  "transfers": 8,
+  "max_transfer_ms": 55.747,
+  "transfer_ms": [
+   26.0,
+   26.3,
+   26.5,
+   26.6,
+   26.7,
+   26.8,
+   27.0,
+   55.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.6,
+   24.7,
+   25.4
+  ],
+  "remainder_ms": 175.09941011667252
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r027-repeat01",
+  "d_lane": 3,
+  "wait_ms": 102.09774971008301,
+  "transfers": 8,
+  "max_transfer_ms": 51.464999999999996,
+  "transfer_ms": [
+   25.9,
+   25.9,
+   26.0,
+   26.1,
+   26.5,
+   26.6,
+   51.3,
+   51.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.7,
+   25.4
+  ],
+  "remainder_ms": 169.77985948324203
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r028-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.32303237915039,
+  "transfers": 8,
+  "max_transfer_ms": 27.051,
+  "transfer_ms": [
+   26.3,
+   26.3,
+   26.4,
+   26.5,
+   26.5,
+   26.6,
+   26.7,
+   27.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.3,
+   25.5
+  ],
+  "remainder_ms": 164.9947501718998
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r029-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.41029357910156,
+  "transfers": 8,
+  "max_transfer_ms": 26.884999999999998,
+  "transfer_ms": [
+   26.4,
+   26.4,
+   26.4,
+   26.5,
+   26.6,
+   26.7,
+   26.7,
+   26.9
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.5
+  ],
+  "remainder_ms": 159.7241275012493
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r030-repeat01",
+  "d_lane": 0,
+  "wait_ms": 101.93181037902832,
+  "transfers": 8,
+  "max_transfer_ms": 51.567,
+  "transfer_ms": [
+   24.1,
+   26.2,
+   26.2,
+   26.2,
+   26.3,
+   26.3,
+   32.0,
+   51.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   40.6,
+   10.3
+  ],
+  "remainder_ms": 183.23662504553795
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r031-repeat01",
+  "d_lane": 1,
+  "wait_ms": 127.99811363220215,
+  "transfers": 8,
+  "max_transfer_ms": 77.58500000000001,
+  "transfer_ms": [
+   26.4,
+   26.5,
+   26.6,
+   26.8,
+   26.8,
+   26.9,
+   27.1,
+   77.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6,
+   25.4,
+   25.6
+  ],
+  "remainder_ms": 207.816019654274
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r032-repeat01",
+  "d_lane": 3,
+  "wait_ms": 77.91900634765625,
+  "transfers": 8,
+  "max_transfer_ms": 26.752000000000002,
+  "transfer_ms": [
+   26.4,
+   26.5,
+   26.5,
+   26.6,
+   26.6,
+   26.7,
+   26.7,
+   26.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   26.0,
+   26.1
+  ],
+  "remainder_ms": 153.08986604213715
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r033-repeat01",
+  "d_lane": 3,
+  "wait_ms": 77.95858383178711,
+  "transfers": 8,
+  "max_transfer_ms": 27.735,
+  "transfer_ms": [
+   27.0,
+   27.0,
+   27.0,
+   27.1,
+   27.2,
+   27.2,
+   27.3,
+   27.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   26.1,
+   26.0
+  ],
+  "remainder_ms": 165.19034653902054
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r034-repeat01",
+  "d_lane": 2,
+  "wait_ms": 78.11951637268066,
+  "transfers": 8,
+  "max_transfer_ms": 22.572,
+  "transfer_ms": [
+   22.0,
+   22.1,
+   22.1,
+   22.2,
+   22.3,
+   22.3,
+   22.5,
+   22.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   26.0,
+   26.4
+  ],
+  "remainder_ms": 149.410892277956
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r035-repeat01",
+  "d_lane": 0,
+  "wait_ms": 101.81331634521484,
+  "transfers": 8,
+  "max_transfer_ms": 51.571,
+  "transfer_ms": [
+   26.2,
+   26.4,
+   26.4,
+   26.4,
+   26.5,
+   26.6,
+   26.6,
+   51.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.6,
+   25.3
+  ],
+  "remainder_ms": 178.0753992497921
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r036-repeat01",
+  "d_lane": 1,
+  "wait_ms": 127.3651123046875,
+  "transfers": 8,
+  "max_transfer_ms": 77.503,
+  "transfer_ms": [
+   25.6,
+   25.8,
+   26.2,
+   26.3,
+   26.6,
+   26.7,
+   26.8,
+   77.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.6,
+   25.1,
+   25.6
+  ],
+  "remainder_ms": 201.01362094283104
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r037-repeat01",
+  "d_lane": 2,
+  "wait_ms": 1620.5353736877441,
+  "transfers": 16,
+  "max_transfer_ms": 52.449999999999996,
+  "transfer_ms": [
+   25.3,
+   25.4,
+   25.7,
+   25.9,
+   25.9,
+   26.0,
+   26.1,
+   26.3,
+   26.4,
+   26.5,
+   26.8,
+   26.9,
+   26.9,
+   27.1,
+   52.4,
+   52.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 60,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   27.5,
+   27.5,
+   27.5,
+   27.7,
+   27.6,
+   27.6,
+   27.8,
+   27.5,
+   27.5,
+   27.2,
+   26.5,
+   26.6,
+   26.4,
+   26.4,
+   26.4,
+   26.5,
+   26.5,
+   26.4,
+   26.5,
+   26.5,
+   26.5,
+   50.5,
+   26.5,
+   26.4,
+   25.6,
+   25.7,
+   25.2,
+   26.4,
+   24.7,
+   25.5,
+   25.6,
+   26.1,
+   25.0,
+   25.3,
+   25.5,
+   25.5,
+   26.0,
+   24.9,
+   25.6,
+   25.5,
+   25.4,
+   28.8,
+   25.3,
+   25.5,
+   25.5,
+   25.8,
+   25.3,
+   26.0,
+   25.2,
+   25.4,
+   25.8,
+   25.5,
+   25.5,
+   25.4,
+   25.5,
+   25.5,
+   25.5,
+   25.4,
+   25.5,
+   27.2
+  ],
+  "remainder_ms": 1698.276337236166
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r038-repeat01",
+  "d_lane": 2,
+  "wait_ms": 75.9119987487793,
+  "transfers": 8,
+  "max_transfer_ms": 26.251,
+  "transfer_ms": [
+   25.3,
+   25.4,
+   25.7,
+   25.9,
+   25.9,
+   26.0,
+   26.1,
+   26.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.6,
+   25.5
+  ],
+  "remainder_ms": 154.5810103416443
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r039-repeat01",
+  "d_lane": 0,
+  "wait_ms": 76.52020454406738,
+  "transfers": 8,
+  "max_transfer_ms": 28.051,
+  "transfer_ms": [
+   26.2,
+   26.4,
+   26.4,
+   26.5,
+   26.5,
+   26.5,
+   27.8,
+   28.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 165.1025079190731
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r040-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.37763023376465,
+  "transfers": 8,
+  "max_transfer_ms": 26.418,
+  "transfer_ms": [
+   24.6,
+   24.7,
+   26.0,
+   26.0,
+   26.0,
+   26.2,
+   26.4,
+   26.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.6,
+   25.5
+  ],
+  "remainder_ms": 153.94819155335426
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r041-repeat01",
+  "d_lane": 2,
+  "wait_ms": 102.23817825317383,
+  "transfers": 8,
+  "max_transfer_ms": 52.206,
+  "transfer_ms": [
+   26.1,
+   26.3,
+   26.4,
+   26.7,
+   26.7,
+   26.9,
+   26.9,
+   52.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6,
+   25.5
+  ],
+  "remainder_ms": 171.76340520381927
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r042-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.3711929321289,
+  "transfers": 8,
+  "max_transfer_ms": 26.607,
+  "transfer_ms": [
+   26.1,
+   26.4,
+   26.4,
+   26.4,
+   26.5,
+   26.5,
+   26.6,
+   26.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 140.7948099076748
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r043-repeat01",
+  "d_lane": 2,
+  "wait_ms": 100.35943984985352,
+  "transfers": 8,
+  "max_transfer_ms": 48.396,
+  "transfer_ms": [
+   22.5,
+   22.6,
+   22.6,
+   22.7,
+   22.8,
+   23.0,
+   48.3,
+   48.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6,
+   27.3
+  ],
+  "remainder_ms": 168.56581717729568
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r044-repeat01",
+  "d_lane": 3,
+  "wait_ms": 77.96192169189453,
+  "transfers": 8,
+  "max_transfer_ms": 28.749,
+  "transfer_ms": [
+   26.0,
+   26.7,
+   26.8,
+   26.8,
+   27.0,
+   27.1,
+   27.1,
+   28.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   26.1,
+   26.1
+  ],
+  "remainder_ms": 148.96387606859207
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r045-repeat01",
+  "d_lane": 0,
+  "wait_ms": 78.01985740661621,
+  "transfers": 8,
+  "max_transfer_ms": 27.093,
+  "transfer_ms": [
+   26.6,
+   26.8,
+   26.8,
+   26.8,
+   26.9,
+   27.0,
+   27.0,
+   27.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.9,
+   26.1
+  ],
+  "remainder_ms": 154.24373000860214
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r046-repeat01",
+  "d_lane": 0,
+  "wait_ms": 78.16839218139648,
+  "transfers": 8,
+  "max_transfer_ms": 28.105,
+  "transfer_ms": [
+   27.0,
+   27.1,
+   27.1,
+   27.1,
+   27.2,
+   27.3,
+   27.3,
+   28.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.9,
+   26.1
+  ],
+  "remainder_ms": 162.72778064012527
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r047-repeat01",
+  "d_lane": 3,
+  "wait_ms": 77.5754451751709,
+  "transfers": 8,
+  "max_transfer_ms": 23.206,
+  "transfer_ms": [
+   22.7,
+   22.8,
+   22.9,
+   22.9,
+   23.1,
+   23.1,
+   23.2,
+   23.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.9,
+   25.9
+  ],
+  "remainder_ms": 155.34569695591927
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r048-repeat01",
+  "d_lane": 3,
+  "wait_ms": 103.99937629699707,
+  "transfers": 8,
+  "max_transfer_ms": 52.617,
+  "transfer_ms": [
+   26.8,
+   26.8,
+   26.9,
+   26.9,
+   27.0,
+   27.1,
+   27.2,
+   52.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.8,
+   26.1,
+   26.0
+  ],
+  "remainder_ms": 197.98293337225914
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r049-repeat01",
+  "d_lane": 0,
+  "wait_ms": 77.90970802307129,
+  "transfers": 8,
+  "max_transfer_ms": 29.936999999999998,
+  "transfer_ms": [
+   28.2,
+   28.3,
+   28.3,
+   28.3,
+   28.4,
+   28.4,
+   28.4,
+   29.9
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   24.2,
+   26.1
+  ],
+  "remainder_ms": 152.3256041109562
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r050-repeat01",
+  "d_lane": 1,
+  "wait_ms": 102.0972728729248,
+  "transfers": 8,
+  "max_transfer_ms": 52.068000000000005,
+  "transfer_ms": [
+   26.0,
+   26.2,
+   26.3,
+   26.3,
+   26.3,
+   26.5,
+   26.5,
+   52.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.6,
+   25.6
+  ],
+  "remainder_ms": 186.72795593738556
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r051-repeat01",
+  "d_lane": 2,
+  "wait_ms": 102.28705406188965,
+  "transfers": 8,
+  "max_transfer_ms": 51.704,
+  "transfer_ms": [
+   25.4,
+   26.2,
+   26.4,
+   26.4,
+   26.4,
+   26.7,
+   26.8,
+   51.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   26.4,
+   24.8
+  ],
+  "remainder_ms": 185.82860007882118
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r052-repeat01",
+  "d_lane": 3,
+  "wait_ms": 129.03738021850586,
+  "transfers": 8,
+  "max_transfer_ms": 78.866,
+  "transfer_ms": [
+   27.5,
+   27.6,
+   27.6,
+   27.7,
+   28.1,
+   28.1,
+   28.2,
+   78.9
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.6,
+   25.3,
+   25.6
+  ],
+  "remainder_ms": 222.71578386425972
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r053-repeat01",
+  "d_lane": 0,
+  "wait_ms": 76.48372650146484,
+  "transfers": 8,
+  "max_transfer_ms": 28.382,
+  "transfer_ms": [
+   26.2,
+   26.4,
+   26.5,
+   26.5,
+   26.5,
+   26.9,
+   27.9,
+   28.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.7
+  ],
+  "remainder_ms": 147.63912931084633
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r054-repeat01",
+  "d_lane": 1,
+  "wait_ms": 74.70989227294922,
+  "transfers": 8,
+  "max_transfer_ms": 25.049,
+  "transfer_ms": [
+   23.7,
+   24.4,
+   24.5,
+   24.7,
+   24.8,
+   24.9,
+   25.0,
+   25.0
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 138.04198056459427
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r055-repeat01",
+  "d_lane": 2,
+  "wait_ms": 77.4993896484375,
+  "transfers": 8,
+  "max_transfer_ms": 27.402,
+  "transfer_ms": [
+   1.3,
+   1.5,
+   1.6,
+   1.6,
+   1.6,
+   1.8,
+   27.3,
+   27.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   26.3,
+   24.8
+  ],
+  "remainder_ms": 156.3098579645157
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r056-repeat01",
+  "d_lane": 3,
+  "wait_ms": 102.0667552947998,
+  "transfers": 8,
+  "max_transfer_ms": 51.927,
+  "transfer_ms": [
+   26.1,
+   26.3,
+   26.3,
+   26.4,
+   26.7,
+   26.9,
+   26.9,
+   51.9
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6,
+   25.4
+  ],
+  "remainder_ms": 170.63304036855698
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r057-repeat01",
+  "d_lane": 0,
+  "wait_ms": 83.73904228210449,
+  "transfers": 8,
+  "max_transfer_ms": 29.353,
+  "transfer_ms": [
+   1.3,
+   1.4,
+   1.5,
+   1.7,
+   1.7,
+   1.7,
+   29.3,
+   29.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   27.8,
+   27.6
+  ],
+  "remainder_ms": 171.78208753466606
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r058-repeat01",
+  "d_lane": 1,
+  "wait_ms": 74.59425926208496,
+  "transfers": 8,
+  "max_transfer_ms": 24.344,
+  "transfer_ms": [
+   23.9,
+   24.0,
+   24.1,
+   24.1,
+   24.2,
+   24.2,
+   24.2,
+   24.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 141.06196910142899
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r059-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.6141414642334,
+  "transfers": 8,
+  "max_transfer_ms": 27.256,
+  "transfer_ms": [
+   26.2,
+   26.2,
+   26.3,
+   26.3,
+   26.4,
+   26.8,
+   27.3,
+   27.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.7
+  ],
+  "remainder_ms": 148.38701114058495
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r060-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.67160034179688,
+  "transfers": 8,
+  "max_transfer_ms": 26.678,
+  "transfer_ms": [
+   25.9,
+   26.0,
+   26.1,
+   26.2,
+   26.2,
+   26.5,
+   26.7,
+   26.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 146.88119292259216
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r061-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.93290710449219,
+  "transfers": 8,
+  "max_transfer_ms": 26.832,
+  "transfer_ms": [
+   26.3,
+   26.4,
+   26.4,
+   26.6,
+   26.7,
+   26.8,
+   26.8,
+   26.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.7,
+   25.6
+  ],
+  "remainder_ms": 158.4988310933113
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r062-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.61771774291992,
+  "transfers": 8,
+  "max_transfer_ms": 27.252,
+  "transfer_ms": [
+   26.7,
+   26.8,
+   26.9,
+   27.1,
+   27.1,
+   27.2,
+   27.2,
+   27.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   24.9,
+   25.7
+  ],
+  "remainder_ms": 158.91310200095177
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r063-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.61771774291992,
+  "transfers": 8,
+  "max_transfer_ms": 26.358,
+  "transfer_ms": [
+   25.7,
+   25.9,
+   26.0,
+   26.1,
+   26.2,
+   26.3,
+   26.3,
+   26.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.8,
+   25.5
+  ],
+  "remainder_ms": 161.55917942523956
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r064-repeat01",
+  "d_lane": 1,
+  "wait_ms": 103.76763343811035,
+  "transfers": 8,
+  "max_transfer_ms": 52.99100000000001,
+  "transfer_ms": [
+   26.9,
+   27.0,
+   27.0,
+   27.1,
+   27.2,
+   27.2,
+   52.7,
+   53.0
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.9,
+   26.0,
+   25.9
+  ],
+  "remainder_ms": 175.71021988987923
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r065-repeat01",
+  "d_lane": 2,
+  "wait_ms": 103.96957397460938,
+  "transfers": 8,
+  "max_transfer_ms": 52.488,
+  "transfer_ms": [
+   26.0,
+   26.0,
+   26.6,
+   26.7,
+   26.8,
+   26.8,
+   27.0,
+   52.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.9,
+   26.1,
+   25.8
+  ],
+  "remainder_ms": 191.888015717268
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r066-repeat01",
+  "d_lane": 2,
+  "wait_ms": 84.75542068481445,
+  "transfers": 8,
+  "max_transfer_ms": 29.055,
+  "transfer_ms": [
+   28.6,
+   28.7,
+   28.7,
+   28.9,
+   28.9,
+   28.9,
+   29.0,
+   29.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.3,
+   28.5
+  ],
+  "remainder_ms": 176.38462036848068
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r067-repeat01",
+  "d_lane": 0,
+  "wait_ms": 86.20357513427734,
+  "transfers": 8,
+  "max_transfer_ms": 30.666,
+  "transfer_ms": [
+   29.9,
+   30.3,
+   30.3,
+   30.4,
+   30.5,
+   30.5,
+   30.5,
+   30.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   27.8,
+   29.0
+  ],
+  "remainder_ms": 179.51567843556404
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r068-repeat01",
+  "d_lane": 0,
+  "wait_ms": 77.68940925598145,
+  "transfers": 8,
+  "max_transfer_ms": 27.098,
+  "transfer_ms": [
+   26.3,
+   26.5,
+   26.7,
+   26.7,
+   26.7,
+   26.9,
+   27.0,
+   27.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   26.0,
+   26.0
+  ],
+  "remainder_ms": 158.9820273220539
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r069-repeat01",
+  "d_lane": 0,
+  "wait_ms": 86.1964225769043,
+  "transfers": 8,
+  "max_transfer_ms": 29.657,
+  "transfer_ms": [
+   29.2,
+   29.4,
+   29.4,
+   29.5,
+   29.6,
+   29.6,
+   29.6,
+   29.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.8,
+   28.8
+  ],
+  "remainder_ms": 175.35274103283882
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r070-repeat01",
+  "d_lane": 1,
+  "wait_ms": 111.98616027832031,
+  "transfers": 8,
+  "max_transfer_ms": 55.491,
+  "transfer_ms": [
+   26.1,
+   26.3,
+   26.4,
+   26.5,
+   26.6,
+   26.7,
+   26.8,
+   55.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.9,
+   29.0,
+   28.7
+  ],
+  "remainder_ms": 178.77482995390892
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r071-repeat01",
+  "d_lane": 2,
+  "wait_ms": 114.12358283996582,
+  "transfers": 8,
+  "max_transfer_ms": 46.366,
+  "transfer_ms": [
+   17.3,
+   17.4,
+   17.4,
+   17.6,
+   17.8,
+   18.0,
+   18.1,
+   46.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   29.1,
+   28.6,
+   28.9
+  ],
+  "remainder_ms": 201.34884864091873
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r072-repeat01",
+  "d_lane": 2,
+  "wait_ms": 84.40089225769043,
+  "transfers": 8,
+  "max_transfer_ms": 30.112,
+  "transfer_ms": [
+   29.0,
+   29.1,
+   29.2,
+   29.3,
+   29.3,
+   29.6,
+   29.6,
+   30.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.0,
+   28.3
+  ],
+  "remainder_ms": 153.29070016741753
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r073-repeat01",
+  "d_lane": 2,
+  "wait_ms": 73.65560531616211,
+  "transfers": 8,
+  "max_transfer_ms": 24.061,
+  "transfer_ms": [
+   23.5,
+   23.6,
+   23.7,
+   23.7,
+   24.0,
+   24.0,
+   24.0,
+   24.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.3,
+   26.2
+  ],
+  "remainder_ms": 139.22997564077377
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r074-repeat01",
+  "d_lane": 1,
+  "wait_ms": 83.03308486938477,
+  "transfers": 8,
+  "max_transfer_ms": 26.880000000000003,
+  "transfer_ms": [
+   24.7,
+   24.9,
+   26.1,
+   26.1,
+   26.3,
+   26.3,
+   26.4,
+   26.9
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   32.3
+  ],
+  "remainder_ms": 138.92912119627
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r075-repeat01",
+  "d_lane": 1,
+  "wait_ms": 127.43067741394043,
+  "transfers": 8,
+  "max_transfer_ms": 77.404,
+  "transfer_ms": [
+   26.1,
+   26.3,
+   26.3,
+   26.6,
+   51.6,
+   51.8,
+   51.8,
+   77.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.4,
+   25.6,
+   25.4
+  ],
+  "remainder_ms": 192.30732321739197
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r076-repeat01",
+  "d_lane": 0,
+  "wait_ms": 127.47025489807129,
+  "transfers": 8,
+  "max_transfer_ms": 77.371,
+  "transfer_ms": [
+   26.3,
+   26.3,
+   26.4,
+   26.4,
+   26.6,
+   26.9,
+   77.0,
+   77.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.4,
+   25.4,
+   25.5
+  ],
+  "remainder_ms": 198.4199695289135
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r077-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.65681838989258,
+  "transfers": 8,
+  "max_transfer_ms": 32.109,
+  "transfer_ms": [
+   31.3,
+   31.3,
+   31.4,
+   31.4,
+   31.4,
+   31.6,
+   31.8,
+   32.1
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   20.4,
+   25.6
+  ],
+  "remainder_ms": 153.46194803714752
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r078-repeat01",
+  "d_lane": 0,
+  "wait_ms": 78.34959030151367,
+  "transfers": 8,
+  "max_transfer_ms": 26.316,
+  "transfer_ms": [
+   24.2,
+   24.3,
+   26.0,
+   26.1,
+   26.1,
+   26.2,
+   26.3,
+   26.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   27.5
+  ],
+  "remainder_ms": 168.94907876849174
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r079-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.69258117675781,
+  "transfers": 8,
+  "max_transfer_ms": 26.738999999999997,
+  "transfer_ms": [
+   25.6,
+   26.2,
+   26.2,
+   26.3,
+   26.3,
+   26.6,
+   26.6,
+   26.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.7
+  ],
+  "remainder_ms": 156.91537037491798
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r080-repeat01",
+  "d_lane": 1,
+  "wait_ms": 75.54125785827637,
+  "transfers": 8,
+  "max_transfer_ms": 26.871,
+  "transfer_ms": [
+   25.3,
+   25.3,
+   25.3,
+   25.4,
+   25.6,
+   25.6,
+   25.7,
+   26.9
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   26.3,
+   24.7
+  ],
+  "remainder_ms": 144.3643756210804
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r081-repeat01",
+  "d_lane": 3,
+  "wait_ms": 79.86283302307129,
+  "transfers": 8,
+  "max_transfer_ms": 27.418000000000003,
+  "transfer_ms": [
+   26.7,
+   26.8,
+   27.0,
+   27.1,
+   27.2,
+   27.3,
+   27.4,
+   27.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   26.7,
+   26.7
+  ],
+  "remainder_ms": 169.4554165005684
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r082-repeat01",
+  "d_lane": 3,
+  "wait_ms": 102.03433036804199,
+  "transfers": 8,
+  "max_transfer_ms": 51.593,
+  "transfer_ms": [
+   23.1,
+   25.8,
+   26.1,
+   26.2,
+   26.3,
+   26.4,
+   51.3,
+   51.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6,
+   25.5
+  ],
+  "remainder_ms": 172.17489704489708
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r083-repeat01",
+  "d_lane": 2,
+  "wait_ms": 52.28757858276367,
+  "transfers": 8,
+  "max_transfer_ms": 1.843,
+  "transfer_ms": [
+   1.5,
+   1.5,
+   1.6,
+   1.7,
+   1.7,
+   1.8,
+   1.8,
+   1.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 1,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5
+  ],
+  "remainder_ms": 139.05955106019974
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r084-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.44319534301758,
+  "transfers": 8,
+  "max_transfer_ms": 27.229,
+  "transfer_ms": [
+   26.8,
+   26.8,
+   27.1,
+   27.1,
+   27.2,
+   27.2,
+   27.2,
+   27.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   24.8,
+   25.5
+  ],
+  "remainder_ms": 155.3240790963173
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r085-repeat01",
+  "d_lane": 0,
+  "wait_ms": 76.48277282714844,
+  "transfers": 8,
+  "max_transfer_ms": 26.216,
+  "transfer_ms": [
+   24.9,
+   25.5,
+   25.7,
+   25.9,
+   26.1,
+   26.1,
+   26.2,
+   26.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.5
+  ],
+  "remainder_ms": 149.24343302845955
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r086-repeat01",
+  "d_lane": 3,
+  "wait_ms": 102.31447219848633,
+  "transfers": 8,
+  "max_transfer_ms": 52.167,
+  "transfer_ms": [
+   26.0,
+   26.3,
+   26.4,
+   26.4,
+   26.5,
+   26.6,
+   26.7,
+   52.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6,
+   25.4
+  ],
+  "remainder_ms": 172.62867465615273
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r087-repeat01",
+  "d_lane": 0,
+  "wait_ms": 100.25739669799805,
+  "transfers": 8,
+  "max_transfer_ms": 50.436,
+  "transfer_ms": [
+   24.6,
+   24.6,
+   24.7,
+   24.7,
+   24.7,
+   24.9,
+   50.2,
+   50.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6,
+   25.5
+  ],
+  "remainder_ms": 166.26522317528725
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r088-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.36713981628418,
+  "transfers": 8,
+  "max_transfer_ms": 27.508000000000003,
+  "transfer_ms": [
+   26.6,
+   26.8,
+   26.9,
+   26.9,
+   27.0,
+   27.0,
+   27.3,
+   27.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   24.9,
+   25.5
+  ],
+  "remainder_ms": 143.31645891070366
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r089-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.44081115722656,
+  "transfers": 8,
+  "max_transfer_ms": 26.294999999999998,
+  "transfer_ms": [
+   25.7,
+   25.9,
+   26.2,
+   26.2,
+   26.2,
+   26.2,
+   26.3,
+   26.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 147.2533605992794
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r090-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.1721134185791,
+  "transfers": 8,
+  "max_transfer_ms": 26.721999999999998,
+  "transfer_ms": [
+   25.5,
+   26.0,
+   26.1,
+   26.1,
+   26.3,
+   26.4,
+   26.7,
+   26.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.3,
+   25.6
+  ],
+  "remainder_ms": 150.52548795938492
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r091-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.5225887298584,
+  "transfers": 8,
+  "max_transfer_ms": 27.535,
+  "transfer_ms": [
+   26.3,
+   26.5,
+   26.7,
+   26.8,
+   26.8,
+   26.9,
+   27.0,
+   27.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.5
+  ],
+  "remainder_ms": 145.21373063325882
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r092-repeat01",
+  "d_lane": 3,
+  "wait_ms": 73.43578338623047,
+  "transfers": 8,
+  "max_transfer_ms": 23.528,
+  "transfer_ms": [
+   23.0,
+   23.0,
+   23.2,
+   23.2,
+   23.3,
+   23.4,
+   23.5,
+   23.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.4
+  ],
+  "remainder_ms": 139.4394189119339
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r093-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.15995407104492,
+  "transfers": 8,
+  "max_transfer_ms": 24.314,
+  "transfer_ms": [
+   23.4,
+   23.6,
+   23.8,
+   23.8,
+   23.8,
+   23.9,
+   24.0,
+   24.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.2,
+   27.8
+  ],
+  "remainder_ms": 136.92639768123627
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r094-repeat01",
+  "d_lane": 2,
+  "wait_ms": 101.99713706970215,
+  "transfers": 8,
+  "max_transfer_ms": 52.526,
+  "transfer_ms": [
+   25.8,
+   26.1,
+   26.1,
+   26.3,
+   26.4,
+   26.6,
+   52.3,
+   52.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.6,
+   26.2
+  ],
+  "remainder_ms": 182.81367421150208
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r095-repeat01",
+  "d_lane": 0,
+  "wait_ms": 127.20894813537598,
+  "transfers": 8,
+  "max_transfer_ms": 77.219,
+  "transfer_ms": [
+   25.0,
+   25.4,
+   26.0,
+   26.1,
+   26.2,
+   26.2,
+   26.2,
+   77.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.5,
+   25.4,
+   26.0
+  ],
+  "remainder_ms": 199.72671568393707
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r096-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.27701759338379,
+  "transfers": 8,
+  "max_transfer_ms": 26.415000000000003,
+  "transfer_ms": [
+   25.7,
+   25.7,
+   26.1,
+   26.1,
+   26.2,
+   26.2,
+   26.3,
+   26.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 158.5417240858078
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r097-repeat01",
+  "d_lane": 0,
+  "wait_ms": 76.26533508300781,
+  "transfers": 8,
+  "max_transfer_ms": 26.630000000000003,
+  "transfer_ms": [
+   25.8,
+   25.9,
+   26.1,
+   26.2,
+   26.2,
+   26.2,
+   26.6,
+   26.6
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.6
+  ],
+  "remainder_ms": 161.42844036221504
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r098-repeat01",
+  "d_lane": 0,
+  "wait_ms": 84.259033203125,
+  "transfers": 8,
+  "max_transfer_ms": 31.281000000000002,
+  "transfer_ms": [
+   28.6,
+   28.7,
+   28.7,
+   28.7,
+   28.7,
+   28.8,
+   29.0,
+   31.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.2
+  ],
+  "remainder_ms": 158.25490653514862
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r099-repeat01",
+  "d_lane": 2,
+  "wait_ms": 128.54933738708496,
+  "transfers": 8,
+  "max_transfer_ms": 73.249,
+  "transfer_ms": [
+   16.7,
+   16.8,
+   16.9,
+   16.9,
+   17.1,
+   17.5,
+   44.8,
+   73.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.2,
+   28.1,
+   28.2
+  ],
+  "remainder_ms": 199.9722309410572
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r100-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.30038261413574,
+  "transfers": 8,
+  "max_transfer_ms": 26.807000000000002,
+  "transfer_ms": [
+   25.8,
+   26.0,
+   26.0,
+   26.3,
+   26.3,
+   26.4,
+   26.5,
+   26.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 151.81517601013184
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r101-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.32136344909668,
+  "transfers": 8,
+  "max_transfer_ms": 26.218999999999998,
+  "transfer_ms": [
+   25.4,
+   25.6,
+   25.7,
+   25.8,
+   26.1,
+   26.2,
+   26.2,
+   26.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.5
+  ],
+  "remainder_ms": 147.16661348938942
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r102-repeat01",
+  "d_lane": 2,
+  "wait_ms": 76.4923095703125,
+  "transfers": 8,
+  "max_transfer_ms": 26.977999999999998,
+  "transfer_ms": [
+   26.3,
+   26.3,
+   26.4,
+   26.4,
+   26.6,
+   26.7,
+   26.8,
+   27.0
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.7,
+   25.4
+  ],
+  "remainder_ms": 146.02434635162354
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r103-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.48515701293945,
+  "transfers": 8,
+  "max_transfer_ms": 26.716,
+  "transfer_ms": [
+   26.0,
+   26.5,
+   26.5,
+   26.6,
+   26.7,
+   26.7,
+   26.7,
+   26.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   26.2,
+   24.9
+  ],
+  "remainder_ms": 158.6381420493126
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r104-repeat01",
+  "d_lane": 0,
+  "wait_ms": 101.83382034301758,
+  "transfers": 8,
+  "max_transfer_ms": 51.818999999999996,
+  "transfer_ms": [
+   25.9,
+   26.3,
+   26.3,
+   26.3,
+   26.5,
+   26.6,
+   26.6,
+   51.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.5,
+   25.3
+  ],
+  "remainder_ms": 175.1149259507656
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r105-repeat01",
+  "d_lane": 1,
+  "wait_ms": 127.43377685546875,
+  "transfers": 8,
+  "max_transfer_ms": 77.503,
+  "transfer_ms": [
+   26.5,
+   26.5,
+   26.7,
+   26.7,
+   26.9,
+   27.1,
+   52.2,
+   77.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.5,
+   25.4,
+   25.5
+  ],
+  "remainder_ms": 194.38324123620987
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r106-repeat01",
+  "d_lane": 1,
+  "wait_ms": 127.46143341064453,
+  "transfers": 8,
+  "max_transfer_ms": 77.264,
+  "transfer_ms": [
+   26.4,
+   26.7,
+   26.7,
+   26.8,
+   26.8,
+   27.0,
+   52.0,
+   77.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.5,
+   25.4,
+   25.5
+  ],
+  "remainder_ms": 212.86609396338463
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r107-repeat01",
+  "d_lane": 1,
+  "wait_ms": 87.26239204406738,
+  "transfers": 8,
+  "max_transfer_ms": 32.774,
+  "transfer_ms": [
+   1.6,
+   1.6,
+   1.7,
+   1.8,
+   1.9,
+   32.5,
+   32.6,
+   32.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.9
+  ],
+  "remainder_ms": 159.99476239085197
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r108-repeat01",
+  "d_lane": 0,
+  "wait_ms": 84.00869369506836,
+  "transfers": 8,
+  "max_transfer_ms": 28.662,
+  "transfer_ms": [
+   28.2,
+   28.4,
+   28.4,
+   28.5,
+   28.5,
+   28.5,
+   28.7,
+   28.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.0,
+   28.1
+  ],
+  "remainder_ms": 162.93012350797653
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r109-repeat01",
+  "d_lane": 0,
+  "wait_ms": 84.06615257263184,
+  "transfers": 8,
+  "max_transfer_ms": 29.383,
+  "transfer_ms": [
+   29.0,
+   29.0,
+   29.0,
+   29.1,
+   29.2,
+   29.2,
+   29.2,
+   29.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   27.8,
+   28.1
+  ],
+  "remainder_ms": 168.03299263119698
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r110-repeat01",
+  "d_lane": 3,
+  "wait_ms": 84.29384231567383,
+  "transfers": 8,
+  "max_transfer_ms": 29.532,
+  "transfer_ms": [
+   28.9,
+   28.9,
+   29.0,
+   29.2,
+   29.3,
+   29.3,
+   29.4,
+   29.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.2
+  ],
+  "remainder_ms": 156.729094684124
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r111-repeat01",
+  "d_lane": 1,
+  "wait_ms": 84.44404602050781,
+  "transfers": 8,
+  "max_transfer_ms": 29.337,
+  "transfer_ms": [
+   28.5,
+   28.9,
+   28.9,
+   29.0,
+   29.1,
+   29.1,
+   29.2,
+   29.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.9
+  ],
+  "remainder_ms": 174.0618646144867
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r112-repeat01",
+  "d_lane": 2,
+  "wait_ms": 128.02481651306152,
+  "transfers": 8,
+  "max_transfer_ms": 78.016,
+  "transfer_ms": [
+   25.4,
+   26.5,
+   26.7,
+   26.7,
+   26.8,
+   27.0,
+   51.9,
+   78.0
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.6,
+   25.5,
+   25.6,
+   25.6
+  ],
+  "remainder_ms": 209.40272137522697
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r113-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.74694061279297,
+  "transfers": 8,
+  "max_transfer_ms": 26.711,
+  "transfer_ms": [
+   6.2,
+   26.3,
+   26.5,
+   26.5,
+   26.6,
+   26.6,
+   26.7,
+   26.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.6,
+   25.7
+  ],
+  "remainder_ms": 151.89449861645699
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r114-repeat01",
+  "d_lane": 0,
+  "wait_ms": 77.36396789550781,
+  "transfers": 8,
+  "max_transfer_ms": 27.98,
+  "transfer_ms": [
+   26.2,
+   26.3,
+   26.4,
+   26.4,
+   26.6,
+   26.6,
+   27.1,
+   28.0
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.8,
+   25.9
+  ],
+  "remainder_ms": 150.27089416980743
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r115-repeat01",
+  "d_lane": 2,
+  "wait_ms": 77.38828659057617,
+  "transfers": 8,
+  "max_transfer_ms": 28.043,
+  "transfer_ms": [
+   25.7,
+   26.6,
+   26.9,
+   26.9,
+   27.0,
+   27.2,
+   27.3,
+   28.0
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.8,
+   25.8
+  ],
+  "remainder_ms": 167.73953288793564
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r116-repeat01",
+  "d_lane": 1,
+  "wait_ms": 98.85001182556152,
+  "transfers": 8,
+  "max_transfer_ms": 48.734,
+  "transfer_ms": [
+   22.3,
+   23.0,
+   23.1,
+   23.1,
+   23.1,
+   23.4,
+   23.5,
+   48.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6,
+   25.4
+  ],
+  "remainder_ms": 165.267426520586
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r117-repeat01",
+  "d_lane": 2,
+  "wait_ms": 84.17654037475586,
+  "transfers": 8,
+  "max_transfer_ms": 29.833,
+  "transfer_ms": [
+   28.8,
+   28.8,
+   28.9,
+   29.0,
+   29.1,
+   29.1,
+   29.2,
+   29.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.2
+  ],
+  "remainder_ms": 155.7488515973091
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r118-repeat01",
+  "d_lane": 3,
+  "wait_ms": 84.14506912231445,
+  "transfers": 8,
+  "max_transfer_ms": 29.237,
+  "transfer_ms": [
+   28.7,
+   28.8,
+   28.8,
+   28.9,
+   28.9,
+   29.0,
+   29.2,
+   29.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.2
+  ],
+  "remainder_ms": 164.4003503024578
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r119-repeat01",
+  "d_lane": 0,
+  "wait_ms": 84.43069458007812,
+  "transfers": 8,
+  "max_transfer_ms": 29.492,
+  "transfer_ms": [
+   28.7,
+   28.9,
+   28.9,
+   29.0,
+   29.1,
+   29.1,
+   29.2,
+   29.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.1
+  ],
+  "remainder_ms": 173.77788200974464
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r120-repeat01",
+  "d_lane": 1,
+  "wait_ms": 140.1505470275879,
+  "transfers": 8,
+  "max_transfer_ms": 85.216,
+  "transfer_ms": [
+   29.0,
+   29.1,
+   29.1,
+   29.3,
+   29.3,
+   29.4,
+   29.5,
+   85.2
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 4,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.1,
+   28.0,
+   28.0
+  ],
+  "remainder_ms": 216.8675847351551
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r121-repeat01",
+  "d_lane": 2,
+  "wait_ms": 83.93573760986328,
+  "transfers": 8,
+  "max_transfer_ms": 29.265,
+  "transfer_ms": [
+   27.3,
+   28.5,
+   28.5,
+   28.5,
+   28.6,
+   28.8,
+   29.1,
+   29.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.0,
+   28.1
+  ],
+  "remainder_ms": 166.18477925658226
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r122-repeat01",
+  "d_lane": 3,
+  "wait_ms": 83.45389366149902,
+  "transfers": 8,
+  "max_transfer_ms": 28.435,
+  "transfer_ms": [
+   27.8,
+   27.9,
+   28.0,
+   28.2,
+   28.2,
+   28.2,
+   28.2,
+   28.4
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   28.1,
+   28.2
+  ],
+  "remainder_ms": 164.42246735095978
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r123-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.64084434509277,
+  "transfers": 8,
+  "max_transfer_ms": 27.787,
+  "transfer_ms": [
+   26.5,
+   26.5,
+   26.6,
+   26.6,
+   26.7,
+   26.8,
+   27.6,
+   27.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.6
+  ],
+  "remainder_ms": 156.63160011172295
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r124-repeat01",
+  "d_lane": 3,
+  "wait_ms": 76.61962509155273,
+  "transfers": 8,
+  "max_transfer_ms": 26.75,
+  "transfer_ms": [
+   26.3,
+   26.5,
+   26.6,
+   26.6,
+   26.6,
+   26.6,
+   26.7,
+   26.8
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.6
+  ],
+  "remainder_ms": 152.55877003073692
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r125-repeat01",
+  "d_lane": 0,
+  "wait_ms": 76.59077644348145,
+  "transfers": 8,
+  "max_transfer_ms": 26.279,
+  "transfer_ms": [
+   25.9,
+   26.0,
+   26.0,
+   26.1,
+   26.1,
+   26.1,
+   26.3,
+   26.3
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.4,
+   25.7
+  ],
+  "remainder_ms": 143.38203892111778
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r126-repeat01",
+  "d_lane": 1,
+  "wait_ms": 76.32231712341309,
+  "transfers": 8,
+  "max_transfer_ms": 26.741999999999997,
+  "transfer_ms": [
+   26.2,
+   26.2,
+   26.2,
+   26.2,
+   26.4,
+   26.5,
+   26.6,
+   26.7
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 2,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   25.5,
+   25.5
+  ],
+  "remainder_ms": 156.17912635207176
+ },
+ {
+  "request": "fixed-6144-1024-req128-qps1-formal-r127-repeat01",
+  "d_lane": 2,
+  "wait_ms": 102.46777534484863,
+  "transfers": 8,
+  "max_transfer_ms": 51.539,
+  "transfer_ms": [
+   26.9,
+   26.9,
+   26.9,
+   27.2,
+   27.2,
+   27.2,
+   27.4,
+   51.5
+  ],
+  "bytes": [
+   46103040
+  ],
+  "forwards": 3,
+  "dummy_forwards": 0,
+  "forward_ms": [
+   24.9,
+   25.5,
+   25.8
+  ],
+  "remainder_ms": 167.3411950469017
+ }
+]

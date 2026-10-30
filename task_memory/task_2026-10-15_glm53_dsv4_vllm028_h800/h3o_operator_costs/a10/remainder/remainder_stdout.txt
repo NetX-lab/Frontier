@@ -1,0 +1,14 @@
+joined 128 of prefill 128 decode 128
+ttft_ms                                  mean    746.7 min    431.8 max   2265.5
+p_side_ms                                mean    548.0 min    292.4 max    783.2
+remainder_ms                             mean    198.7 min    136.9 max   1698.3
+proxy_arrival->p_add                     mean     11.3 min      6.3 max     32.3 median     10.1 n 128
+p_add->p_schedule                        mean      0.2 min      0.1 max      0.3 median      0.2 n 128
+p_schedule->p_update                     mean    536.5 min    285.6 max    750.8 median    545.0 n 128
+p_update->prefill_response               mean      2.3 min      0.4 max      5.2 median      3.1 n 128
+prefill_response->d_add                  mean     19.5 min      7.0 max     37.2 median     18.3 n 128
+d_add->d_recv_done                       mean    120.3 min     32.8 max   1620.5 median     78.0 n 128
+d_recv_done->d_schedule                  mean      0.9 min      0.2 max     25.0 median      0.2 n 128
+d_schedule->d_update                     mean     54.3 min     45.8 max    150.1 median     52.4 n 128
+d_update->decode_first_byte              mean      0.7 min     -1.3 max      2.8 median      0.9 n 128
+decode_first_byte->client_first          mean      0.2 min      0.1 max      0.6 median      0.1 n 128

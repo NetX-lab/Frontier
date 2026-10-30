@@ -1,0 +1,30 @@
+== p2_64r
+repeat 1: others n 123 p_side median 576.4 handoff median 156.8 mean 160.6
+  slow fixed-6144-1024-req128-qps1-formal-r006-repeat01 ttft 2224.8 p_side 514.1 handoff 1709.4 prefill lane dp1
+  slow fixed-6144-1024-req128-qps1-formal-r017-repeat01 ttft 2414.7 p_side 489.6 handoff 1923.9 prefill lane dp2
+  slow fixed-6144-1024-req128-qps1-formal-r027-repeat01 ttft 2154.2 p_side 496.8 handoff 1656.6 prefill lane dp0
+  slow fixed-6144-1024-req128-qps1-formal-r035-repeat01 ttft 2519.7 p_side 764.2 handoff 1754.7 prefill lane dp3
+  slow fixed-6144-1024-req128-qps1-formal-r036-repeat01 ttft 2191.3 p_side 735.3 handoff 1455.3 prefill lane dp0
+repeat 2: others n 127 p_side median 548.4 handoff median 166.4 mean 172.1
+  slow fixed-6144-1024-req128-qps1-formal-r119-repeat02 ttft 1012.7 p_side 806.7 handoff 205.5 prefill lane dp1
+repeat 3: others n 128 p_side median 547.1 handoff median 168.2 mean 170.2
+== lifecycle
+repeat 1: others n 121 p_side median 573.0 handoff median 152.6 mean 159.9
+  slow fixed-6144-1024-req128-qps1-formal-r002-repeat01 ttft 2217.0 p_side 428.8 handoff 1787.4 prefill lane dp3
+  slow fixed-6144-1024-req128-qps1-formal-r004-repeat01 ttft 2058.3 p_side 520.3 handoff 1537.2 prefill lane dp1
+  slow fixed-6144-1024-req128-qps1-formal-r006-repeat01 ttft 2455.3 p_side 668.2 handoff 1786.4 prefill lane dp3
+  slow fixed-6144-1024-req128-qps1-formal-r009-repeat01 ttft 2717.5 p_side 794.5 handoff 1922.0 prefill lane dp2
+  slow fixed-6144-1024-req128-qps1-formal-r045-repeat01 ttft 1008.4 p_side 800.4 handoff 207.5 prefill lane dp0
+  slow fixed-6144-1024-req128-qps1-formal-r053-repeat01 ttft 2470.0 p_side 678.1 handoff 1791.5 prefill lane dp1
+  slow fixed-6144-1024-req128-qps1-formal-r113-repeat01 ttft 1020.3 p_side 806.4 handoff 213.4 prefill lane dp2
+repeat 2: others n 126 p_side median 598.0 handoff median 153.7 mean 158.2
+  slow fixed-6144-1024-req128-qps1-formal-r032-repeat02 ttft 1024.7 p_side 824.8 handoff 199.4 prefill lane dp0
+  slow fixed-6144-1024-req128-qps1-formal-r072-repeat02 ttft 1002.5 p_side 811.1 handoff 190.8 prefill lane dp3
+repeat 3: others n 126 p_side median 569.6 handoff median 153.0 mean 160.8
+  slow fixed-6144-1024-req128-qps1-formal-r023-repeat03 ttft 1000.1 p_side 796.2 handoff 202.4 prefill lane dp0
+  slow fixed-6144-1024-req128-qps1-formal-r100-repeat03 ttft 1007.1 p_side 798.3 handoff 208.3 prefill lane dp3
+== wave
+repeat 1: others n 125 p_side median 555.1 handoff median 157.1 mean 162.2
+  slow fixed-6144-1024-req128-qps1-formal-r005-repeat01 ttft 2028.4 p_side 512.1 handoff 1515.5 prefill lane dp0
+  slow fixed-6144-1024-req128-qps1-formal-r017-repeat01 ttft 1987.8 p_side 424.8 handoff 1562.1 prefill lane dp2
+  slow fixed-6144-1024-req128-qps1-formal-r037-repeat01 ttft 2265.5 p_side 571.0 handoff 1693.8 prefill lane dp3

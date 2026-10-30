@@ -1,0 +1,13 @@
+== p2_64r
+formal 384 mean 741.2; handoff > 1000 ms: 5 ['fixed-6144-1024-req128-qps1-formal-r006-repeat01', 'fixed-6144-1024-req128-qps1-formal-r017-repeat01', 'fixed-6144-1024-req128-qps1-formal-r027-repeat01', 'fixed-6144-1024-req128-qps1-formal-r035-repeat01', 'fixed-6144-1024-req128-qps1-formal-r036-repeat01']; mean without them 720.6 (n 379)
+client dispatch -> proxy arrival   n 379 mean     0.6 median     0.5
+P side                             n 379 mean   552.0 median   555.9
+handoff                            n 379 mean   167.8 median   163.0
+first D byte -> client             n 379 mean     0.2 median     0.2
+TTFT                               n 379 mean   720.6 median   725.1
+== p2_32r
+client dispatch -> proxy arrival   n 384 mean     0.5 median     0.4
+P side                             n 384 mean   235.5 median   230.3
+handoff                            n 384 mean   127.9 median   121.7
+first D byte -> client             n 384 mean     0.2 median     0.1
+TTFT                               n 384 mean   364.0 median   355.8
