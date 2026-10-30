@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Recorded YC's approval of the disk deletions after the full disk (item 41) and of one instrumented native P2-64 diagnostic run for the TTFT gap (D-P2-64-WAVE-DIAGNOSTIC, item 42). |
 | 2026-10-29 | Recorded the lead's routing-descriptor rule for tables merged from two packages (D-ROUTING-ORIGIN-PROVENANCE). |
 | 2026-10-29 | Recorded YC's instruction to submit the next Codex implementation with effort ultra (D-CODEX-EFFORT-ULTRA) and the lead's source-revision rule for the G1h supplement package (D-G1H-SUPPLEMENT-IDENTITY). |
 | 2026-10-29 | Recorded the lead's writer-count rule for the G1h grid after the P2-32 coverage failure (D-G1H-WRITER-EXTREMES). |
@@ -385,6 +386,20 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
 38. **D-CODEX-EFFORT-ULTRA.** The next `/codex-implement` submission passes `--effort ultra`.
 39. **D-G1H-SUPPLEMENT-IDENTITY.** Lead's working decision under D-NO-INTERRUPT after the B22 review (merge `59838675`): the supplement package is built from the G1h-02 source revision `a689ed05` in its own working tree (`.worktrees/g1h-supplement-build`, branch `g1h-supplement-build`), with only the supplement planning files added. Reason: `validate_measured_identity` accepts one runtime fingerprint per table, and the fingerprint includes the source revision; the union of the two packages loads only when both share it. The loader rule is unchanged.
 40. **D-ROUTING-ORIGIN-PROVENANCE.** Lead's working decision under D-NO-INTERRUPT after the post-job steps of the G1h supplement (`exp-1030-021110-248027`): the merged G1h-02 plus supplement attention table failed `validate_balanced_routing` with `missing/ambiguous moe_routing`, because the two packages record different host paths in the top-level `origin` of the routing descriptor. Every other identity column and descriptor field is equal. The top-level `origin` is provenance, not routing identity: the loader accepts several `moe_routing` values when each passes `routing_columns` and all are equal once the top-level `origin` is removed. `sha256`, routers, runners and native sources (with their own `origin` fields) stay part of the identity; the table keeps each row's recorded descriptor. Implemented by Codex as B23 ([assignment](h3o_operator_costs/codex_assignment_B23_routing_origin.md)). Rejected: rewriting the supplement's provenance during promotion (records a path the rows were not measured with) and dropping `origin` in the reducers (changes the committed table bytes and loses provenance).
+
+[Original Request] Follow-up, 2026-10-30, after `/data/ycfeng` filled (I-003); YC selected these deletion options:
+
+> 补测 traces 10.3 GB (推荐), 临时目录 1.4 GB (推荐), 过期 cache 约 3 GB (推荐)
+
+41. **Disk deletions approved.** Delete the local `traces/` of the G1h supplement download (the cloud copy stays), the scratch directories `promote_real/scratch` and `g1h_s01_post_dryrun`, and the predictor caches of the old attention table. The G1h-02 `traces/` (about 16.7 GB) were not selected and stay.
+
+[Original Request] Follow-up, 2026-10-30, after the P2-64 TTFT diagnosis (A10 report section 3); YC selected:
+
+> 批准，1 次重复 (推荐)
+
+42. **D-P2-64-WAVE-DIAGNOSTIC.** One instrumented native P2-64 run on H200 to find why a prefill that arrives after a DP wave ended finishes only about 450-540 ms after that wave end:
+    - Codex (effort ultra, item 38) builds package_02 from the lifecycle package_01 (`h200_mainline/p2_64_lifecycle/package_01`). Beyond the scheduler lifecycle records, it records for every P and D engine each busy-loop iteration (dummy steps, the 32-step DP sync, `START_DP_WAVE` receipt, wave numbers), and on TP rank 0 of each engine the forward start and the DP rendezvous.
+    - 64 H200, non-preemptible, one repetition (16 warm-up and 128 formal requests), about 20-21 GPU-hours. This run is outside the H3o operator-measurement caps (item 33). Submission, monitoring and download go through `/ds4-exec`; soft gates only (64 GPUs).
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 
