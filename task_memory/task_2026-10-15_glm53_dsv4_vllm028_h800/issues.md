@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-007 opened: the scheduler-lifecycle runs of 2026-10-25/26 are slower on the prefill side than the canonical runs in every repeat (13.8-34.4 ms); the 300 ms native prefill step taken from them is overstated. |
 | 2026-10-30 | I-006 resolved by B26b (`414fdd03`, merge `49e7e5fa`): a test-fixture timing problem caused by `b0bf0c78`; the fixture's third arrival moved from 8 ms to 10 ms; no simulator change. |
 | 2026-10-30 | I-002 resolved by B27 (`f00859be`, merge `3834bab6`): 128 passed. I-006 assigned with B26b (request `a92368f9`). |
 | 2026-10-30 | I-006 opened: `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward` fails on main `88fbef52`; found during the B26 review. |
@@ -137,3 +138,13 @@ Status: resolved 2026-10-30 by B26b (request `a92368f9`, [assignment](h3o_operat
 **Native check.** vLLM's busy loop (`core.py:2153`, `2169`, `2178-2182`) runs the dummy forward before the next input poll, so a request that arrives during the dummy forward starts the next forward. The test's intended assertion still matches native behavior.
 
 **Resolution.** `LATE_JOIN_TRACE`'s third arrival moved from 8 ms to 10 ms, and the test now asserts that the arrival falls inside lane 2's dummy forward (dummy start 9 ms, arrival 10 ms, dummy end 65 ms). Both placement policies keep placement `[0, 1, 2]`. No production source changed. The lead's run of the 13 affected test files passed (269 passed; log `/data/ycfeng/tmp/b26b_lead/verify.log`). A10 uses `round_robin` placement and does not run this path.
+
+## I-007: the scheduler-lifecycle runs slow down the native prefill step (2026-10-30)
+
+Status: open (cause not identified; the affected readings are corrected). Owner: lead.
+
+**Observed.** On the proxy clock, without first-contact requests, every repeat of `dsv4-h200-p2-lifecycle-20261025-01` (P2-32: 260.7 / 255.4 / 256.4 ms) and of `dsv4-h200-p2-64-lifecycle-20261026-01` (P2-64: 570.3 / 581.6 / 574.0 ms) has a longer prefill side than every repeat of the canonical runs (P2-32r: 234.4 / 236.0 / 236.1 ms; P2-64r: 556.5 / 552.4 / 547.2 ms). The P2-64 wave run of 2026-10-30 (551.5 ms) falls inside the canonical range. Evidence: `h3o_operator_costs/a10/k19/p_side_per_repeat_stdout.txt`; A10 report section 5.5.
+
+**Impact.** The added time sits inside the engine step: the P2-32 lifecycle step averages 244.6 ms against about 222 ms left by the canonical prefill side, and the lifecycle run's ingress is not larger. Readings that took the native prefill step from the lifecycle runs overstate it: the 300 ms compute of A10 report sections 3.2 and 3.5 and the "about 25 ms of compute" difference of section 3.2. On the wave run, a prefill served at once takes 289.6 ms (n 6). The H4b handoff measurements are not affected: the lifecycle runs' handoff is not longer than the canonical one (A10 report section 3.6).
+
+**Next.** Native step values come from the wave run or from canonical-timed runs. The lifecycle observer's code is not inspected yet; the cause matters only if another lifecycle run is planned.

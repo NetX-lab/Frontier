@@ -1,0 +1,17 @@
+== dsv4-h200-p2-64-lifecycle-20261026-01 (compute 300)
+formal 384 duration mean 562.1 min 296.5 max 813.8
+arrival < 260 ms after previous end: n 79, duration mean 512.4 min 296.5 max 792.1, effective start after previous end mean 441.2 sd 237.0
+arrival 260-760 ms after previous end: n 302, duration mean 577.6 min 343.8 max 813.8, effective start after previous end mean 771.0 sd 24.8
+arrival < 260 ms split: served at once n 43 (arrival 196-254 ms, duration mean 300.6); held n 36 (arrival 188-259 ms, effective start after previous end mean 699.5 sd 19.3)
+mean wait over the 381 classified prefills, taking held waits as duration - compute: 264.2 ms
+== dsv4-h200-p2-64-wave-20261030-01 (compute 300)
+formal 128 duration mean 536.5 min 285.6 max 750.8
+arrival < 260 ms after previous end: n 10, duration mean 466.5 min 285.6 max 738.2, effective start after previous end mean 413.5 sd 219.9
+arrival 260-760 ms after previous end: n 117, duration mean 544.4 min 289.2 max 750.8, effective start after previous end mean 724.6 sd 62.2
+arrival < 260 ms split: served at once n 6 (arrival 227-259 ms, duration mean 289.6); held n 4 (arrival 246-257 ms, effective start after previous end mean 682.6 sd 6.1)
+mean wait over the 127 classified prefills, taking held waits as duration - compute: 238.9 ms
+== dsv4-h200-p2-lifecycle-20261025-01 (compute 245)
+formal 384 duration mean 244.6 min 216.8 max 336.6
+arrival 260-760 ms after previous end: n 205, duration mean 243.2 min 216.8 max 336.6, effective start after previous end mean 743.3 sd 20.8
+arrival >= 760 ms after previous end: n 176, duration mean 246.0 min 217.6 max 329.3, effective start after previous end mean 768.4 sd 15.8
+mean wait over the 381 classified prefills, taking held waits as duration - compute: 5.5 ms

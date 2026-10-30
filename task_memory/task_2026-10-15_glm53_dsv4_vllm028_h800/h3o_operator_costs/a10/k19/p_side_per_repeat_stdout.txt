@@ -1,0 +1,5 @@
+dsv4-h200-p2-canonical-20261025-01 repeat01: n 128 P side 234.4 repeat02: n 128 P side 236.0 repeat03: n 128 P side 236.1
+dsv4-h200-p2-lifecycle-20261025-01 repeat01: n 128 P side 260.7 repeat02: n 128 P side 255.4 repeat03: n 128 P side 256.4
+dsv4-h200-p2-64-canonical-20261025-01 repeat01: n 123 P side 556.5 repeat02: n 128 P side 552.4 repeat03: n 128 P side 547.2
+dsv4-h200-p2-64-lifecycle-20261026-01 repeat01: n 123 P side 570.3 repeat02: n 128 P side 581.6 repeat03: n 128 P side 574.0
+dsv4-h200-p2-64-wave-20261030-01 repeat01: n 125 P side 551.5

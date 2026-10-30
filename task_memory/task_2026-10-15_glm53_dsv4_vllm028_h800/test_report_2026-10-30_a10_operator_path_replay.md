@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Added section 5.5: every repeat of the lifecycle runs of 2026-10-25/26 is slower on the prefill side than every canonical repeat (by 13.8-34.4 ms), so the 300 ms native prefill step of sections 3.2 and 3.5 is overstated; on the wave run, whose timing matches the canonical run, the step is 289.6 ms. FIFO parameter swaps attribute the P2-64 in-engine gap to the prefill step. |
 | 2026-10-30 | Added section 5: the K = 19 replays on main `901bc091` (B26 + B24). P2-32 PASS (TTFT −7.94%); P2-64 TTFT −11.62% (FAIL; −9.09% against 720.6 ms), prefill side 513.3 ms as predicted; A9 EQUAL for both cases. New split of the native prefill ingress; section 3.1's 6.2 ms corrected. Section 4 notes B24's lane reuse. |
 | 2026-10-30 | Section 2.2: P2-64 cold and warm finished (FAIL on TTFT, 416.2 against 741.2 ms; the other metrics within 3.4%); A9 EQUAL; section 4 gains the P2-64 census. |
 | 2026-10-30 | Added section 4: A7 and A8 mechanism and the A8 census of the P2-32 runs (every collective on a measured point, no violation). |
@@ -382,6 +383,44 @@ The first span crosses hosts, so it includes any offset between the proxy and pr
 **Reading (inference).**
 
 - **Outside the engine, about 22 ms per request (wave-run values) are not modeled:** the prefill ingress (proxy to API server to engine, 9.1-11.3 ms), the prefill response back to the proxy (2.3 ms, section 3.6 observation 5), the decode ingress (prefill response to the decode `add_enqueue`, 9.1 ms; deferred in `h4b_d_side_model/design.md` section 6.3), the client dispatch (0.5-0.6 ms) and the egress after the decode first-token update (0.9 ms in the wave run, 4.3 ms in the lifecycle run). They explain the whole P2-32 prefill-side gap (13.2 ms) and about 9 ms of its remaining 15.3 ms.
-- **Inside the engine, P2-64 has about 25-27 ms more on the prefill side.** Candidates: the prefill compute (Frontier 275.2 ms against about 290-300 ms native, section 3.5) and the host time per dummy (native 4.68 ms, Frontier 0), which the FIFO model shows to matter little while it stays below the dummy's GPU time. Not separated yet.
+- **Inside the engine, P2-64 has about 25-27 ms more on the prefill side.** Section 5.5 attributes it: the prefill step, which the earlier 300 ms overstated because it came from a slower instrumented run.
 - **After the prefill side**, beyond the decode ingress: the late READ handles (about 9 ms; open in `h4b_d_side_model/design.md` section 6.2) and the first decode step (3-5 ms, section 3.6).
 - **Expected effect of modeling the path outside the engine** (arithmetic, not a run): about +22 ms on both cases, giving P2-64 about 677 ms (−8.7% against 741.2 ms) and P2-32 about 357 ms (−1.9%). It needs new delay fields with measured values per platform, a configuration schema change that needs YC's approval. P2-32's own ingress is not measured; no P2-32 run recorded `add_enqueue`.
+
+### 5.5 The instrumented runs and the native prefill step
+
+**Observation 1: the lifecycle runs are slower on the prefill side.** `k19/p_side_per_repeat.py` (output `k19/p_side_per_repeat_stdout.txt`) gives the prefill side (proxy arrival to prefill response, proxy clock, without first-contact requests) per repeat:
+
+| Run | Instrumentation | Prefill side per repeat |
+| --- | --- | --- |
+| P2-32r `dsv4-h200-p2-canonical-20261025-01` | none | 234.4 / 236.0 / 236.1 ms |
+| `dsv4-h200-p2-lifecycle-20261025-01` (P2-32) | scheduler lifecycle | 260.7 / 255.4 / 256.4 ms |
+| P2-64r `dsv4-h200-p2-64-canonical-20261025-01` | none | 556.5 / 552.4 / 547.2 ms |
+| `dsv4-h200-p2-64-lifecycle-20261026-01` | scheduler lifecycle | 570.3 / 581.6 / 574.0 ms |
+| `dsv4-h200-p2-64-wave-20261030-01` | scheduler lifecycle with `add_enqueue`, DP wave records | 551.5 ms (one repeat) |
+
+Every lifecycle repeat is above every canonical repeat of its case (P2-32 by 19.3-26.3 ms, P2-64 by 13.8-34.4 ms); the wave run falls inside the canonical range. On P2-32, which does not wait, the lifecycle run's step (schedule to first-token update) averages 244.6 ms, while the canonical prefill side leaves about 222 ms for the step (235.5 ms less the ingress and the response, section 5.4). The added time therefore sits inside the engine step. Its cause in the lifecycle observer is not identified. The handoff after the prefill side is not slower in the lifecycle runs (section 3.6).
+
+**Observation 2: the prefill step on the wave run.** `ttft/p_blackout.py` on the three instrumented runs (output `k19/p_blackout_instrumented_stdout.txt`): the prefills served at once (no queued dummies) take 300.6 ms on the P2-64 lifecycle run (n 43) and 289.6 ms on the wave run (n 6, minimum 285.6 ms). Frontier's time for such a prefill is 275.2 ms of compute, or 278.5 ms with the 3.27 ms scheduling wait from its arrival (section 3.1, K unset), about 11-14 ms (4-5%) shorter than the wave run. The wave-run sample is small.
+
+**Observation 3: FIFO parameter swaps** (`k19/fifo_swaps/run_swaps.sh`, outputs `k19/fifo_swaps/fifo_<name>.txt`; `a10/wave/fifo.py` on the wave run, K = 19, actual mean 536.7 ms). Starting from the native set (g 23.8, c 4.68, P 300, d_sched 6.5, d_post 3; predicted 544.9 ms), one parameter at a time is set to Frontier's value:
+
+| Swap | Predicted mean | Change |
+| --- | --- | --- |
+| none (native set) | 544.9 ms | 0 |
+| g 24.38 (Frontier's dummy price) | 561.2 ms | +16.3 ms |
+| c 0 | 545.5 ms | +0.6 ms |
+| P 275.2 | 512.1 ms | −32.8 ms |
+| d_sched 3.3 | 542.3 ms | −2.6 ms |
+| d_post 0 | 545.7 ms | +0.8 ms |
+| all (Frontier set) | 514.9 ms | −30.0 ms |
+| Frontier set with P 300 | 548.8 ms | +3.9 ms |
+| Frontier set with P 290 | 537.0 ms | −7.9 ms |
+
+**Reading (inference).**
+
+- The 300 ms native compute of sections 3.2 and 3.5, and the "about 25 ms of compute" difference of section 3.2, were measured on the slower lifecycle run. On a run with canonical timing, the step is about 286-290 ms.
+- The prefill step is the parameter that matters: in the model, each ms of P moves the P2-64 prefill side by about 1.3-1.5 ms, because a later prefill end also delays the queue behind it. With Frontier's other parameters, P = 290 ms reproduces the wave-run mean (537.0 against 536.7 ms). The host time per dummy, the scheduling delay and the post-processing delay move the mean by at most 3 ms each.
+- Frontier's dummy, priced 2.4% above native (24.38 against 23.81 ms, section 3.5 observation 3), raises the prefill side by about 16 ms in the model. It works against the short prefill step, so the in-engine gap of about 23 ms is smaller than the short step alone would give. The two errors are reported separately, not netted.
+- Next check on the prefill compute, CPU only: compare Frontier's operator prices for the 6,144-token prefill forward with the native kernels. The profiled run cannot give the step directly: its prefill forwards on DP lanes 1-3 span a median of about 338 ms on the device, because they wait for peers in each MoE collective, while lane 0's single prefill spans 279.1 ms (busy 274.5 ms; `evidence/runtime_census/p2_64.txt`).
+- The wave run's ingress (11.33 ms, section 5.4) is from the run whose timing matches the canonical runs. The lifecycle run's 9.12 ms is not larger despite that run's slowdown, which places the slowdown in the engine step, not in the ingress.
