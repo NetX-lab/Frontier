@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-002 resolved by B27 (`f00859be`, merge `3834bab6`): 128 passed. I-006 assigned with B26b (request `a92368f9`). |
 | 2026-10-30 | I-006 opened: `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward` fails on main `88fbef52`; found during the B26 review. |
 | 2026-10-30 | I-002 assigned to Codex as B27 (request `7653c18e`); reproduced on main `591d7c54`: 126 passed, 2 failed. |
 | 2026-10-30 | I-005 opened: the B25 wave observer wrote the engine identity as bytes into JSON, so the START_DP_WAVE records of the P2-64 wave run were lost (896 error records); the forward-level records were complete and carried the diagnosis. |
@@ -83,7 +84,7 @@ The G1h-02 traces were not approved and were kept. Free space after the deletion
 
 ## I-002: `test_balanced_routing.py` cache test fails on main since B16b (2026-10-29)
 
-Status: open; assigned to Codex as B27 on 2026-10-30 (request `7653c18e`, [assignment](h3o_operator_costs/codex_assignment_B27_balanced_routing_v4_test.md), worktree `.worktrees/b27-balanced-routing-v4-test` from main `b1cf3447`). Reproduced on main `591d7c54` with the command of the assignment: 126 passed, 2 failed (both parametrizations). Owner: lead.
+Status: resolved on 2026-10-30 by B27 (commit `f00859be`, merged as `3834bab6`): the test now trains and reads the V4 models under `KERNEL_ONLY` and asserts the empty `eager` view; lead rerun with CPU torch: 128 passed (log `/data/ycfeng/tmp/b27_lead.log`). Assigned as B27 (request `7653c18e`, [assignment](h3o_operator_costs/codex_assignment_B27_balanced_routing_v4_test.md), worktree `.worktrees/b27-balanced-routing-v4-test` from main `b1cf3447`). Reproduced on main `591d7c54` with the command of the assignment: 126 passed, 2 failed (both parametrizations). Owner: lead.
 
 Observed during the B23 review. With CPU torch on the path (`PYTHONPATH=...:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages`, `VLLM_BS_SOURCE_ROOT=/data/ycfeng/tmp/opencode/vllm-v0.28.0`), `tests/unit/test_balanced_routing.py` gives 126 passed and 2 failed, the same on main `2da2c186` and on the B23 tree:
 
@@ -124,7 +125,7 @@ Status: open; fix only before a future run (no rerun is approved). Owner: lead.
 
 ## I-006: placement test of the late-joining DP lane fails on main (2026-10-30)
 
-Status: open; assigned with B26b. Owner: lead.
+Status: open; assigned with B26b (request `a92368f9`, [assignment](h3o_operator_costs/codex_assignment_B26b_placement_key_and_i006.md), worktree `.worktrees/b26b-placement-key` from main `5188f0e3`). Owner: lead.
 
 **Observed.** `tests/integration/test_vllm_dp_placement_runtime.py::test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward` fails on main `88fbef52` (18 passed, 1 failed; log `/data/ycfeng/tmp/main_placement.log`) and in the same way on the B26 branch. The assertion at line 481 expects lane 2 to start forward group 0 with a dummy forward, `{2: (0, True)}`, and receives a real batch, `{2: (0, False)}`. The test file last changed in `5f907f66` (H4b-(b) item 1); 143 commits follow it on main, so the commit that broke the test is not known.
 
