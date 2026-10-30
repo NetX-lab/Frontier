@@ -1,0 +1,1 @@
+EQUAL: metrics and cache identities match; warm cache file set equals cold at run end.

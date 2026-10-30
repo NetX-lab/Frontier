@@ -1,0 +1,10 @@
+wrote /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10_gate/p2_64_warm_k19b24_run/rows
+ttft_ms                  vllm 741.2164 frontier 655.1019 rel 0.1162 FAIL
+tpot_ms                  vllm 25.8705 frontier 25.2946 rel 0.0223 PASS
+request_e2e_time_ms      vllm 27206.7695 frontier 26531.4414 rel 0.0248 PASS
+token_throughput_tps     vllm 5963.2063 frontier 5976.5855 rel 0.0022 PASS
+dsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path: FAIL (routing MATCH)
+ttft_ms: native=741.2163514151567 frontier=655.1019105436394 absolute_error=86.11444087151733 relative_error=0.11617989903636713
+tpot_ms: native=25.870530968031684 frontier=25.294564531705397 absolute_error=0.5759664363262864 relative_error=0.022263417671558823
+request_e2e_time_ms: native=27206.76953171157 frontier=26531.44142647826 absolute_error=675.3281052333077 relative_error=0.024822061452248537
+token_throughput_tps: native=5963.20631789112 frontier=5976.585474918903 absolute_error=13.37915702778264 relative_error=0.0022436179992031805

@@ -1,0 +1,4 @@
+prefill lifecycle events {'start': 4, 'add': 432, 'schedule': 20423, 'update': 20423, 'stop': 4}
+proxy_arrival->api_arrival       n  384 mean    2.96 median    2.93 min    2.31 max    5.40
+api_arrival->add                 n  384 mean    6.16 median    4.07 min    1.23 max   30.29
+proxy_arrival->add               n  384 mean    9.12 median    7.27 min    3.75 max   33.85

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Added section 5: the K = 19 replays on main `901bc091` (B26 + B24). P2-32 PASS (TTFT −7.94%); P2-64 TTFT −11.62% (FAIL; −9.09% against 720.6 ms), prefill side 513.3 ms as predicted; A9 EQUAL for both cases. New split of the native prefill ingress; section 3.1's 6.2 ms corrected. Section 4 notes B24's lane reuse. |
 | 2026-10-30 | Section 2.2: P2-64 cold and warm finished (FAIL on TTFT, 416.2 against 741.2 ms; the other metrics within 3.4%); A9 EQUAL; section 4 gains the P2-64 census. |
 | 2026-10-30 | Added section 4: A7 and A8 mechanism and the A8 census of the P2-32 runs (every collective on a measured point, no violation). |
 | 2026-10-30 | Section 2.2: P2-32 cold finished; A9 cold against warm is EQUAL. |
@@ -127,7 +128,7 @@ Inputs:
 
 The native prefill-side value comes from the lifecycle run and the native TTFT from the three reference repeats. The lifecycle run's own TTFT mean is 757.7 ms, so its remainder is about 189 ms; the split of the 324 ms between the two parts is accurate to about 16 ms. Section 3.6 revises the remainder: without the requests that wait for a one-time NIXL handshake, the native remainder is 165.2 ms in both instrumented runs, and the reference TTFT is 720.6 ms.
 
-On the native prefill side, the request reaches the engine 6.2 ms after its client arrival, the scheduler schedules it within 1 ms (mean 0.4-0.5 ms per lane), and the whole prompt runs in one 6,144-token step. All of the excess is inside that step: its duration (schedule to first-token update) has mean 562.1 ms, minimum 296.5 ms and maximum 813.8 ms over the 384 formal requests. Requests arrive every 1,000 ms in rotation over the four prefill lanes, so the prefill side never queues and two lanes never run real prefills at the same time.
+On the native prefill side, the request reaches the engine 9.1 ms after its proxy arrival (2.96 ms to the API server, then 6.16 ms to the engine add; section 5.4 corrects the 6.2 ms that this sentence first gave as the whole ingress), the scheduler schedules it within 1 ms (mean 0.4-0.5 ms per lane), and the whole prompt runs in one 6,144-token step. All of the excess is inside that step: its duration (schedule to first-token update) has mean 562.1 ms, minimum 296.5 ms and maximum 813.8 ms over the 384 formal requests. Requests arrive every 1,000 ms in rotation over the four prefill lanes, so the prefill side never queues and two lanes never run real prefills at the same time.
 
 P2-32 does not show this: its step has mean 244.6 ms (minimum 216.8, maximum 336.6), and arrival to first token is 249.4 ms.
 
@@ -303,4 +304,84 @@ A7 (EP rank admission) and A8 (collective coverage) are gate items of H3o (`h3o_
 
 The two P2-32 `collectives.json` files are byte-identical (`cmp`). Every P2-32 collective falls on a measured point: 12 curves (operation, domain, devices) in the two roles, from `sp_all_gather` and `sp_reduce_scatter` at TP 8 to `all_gatherv` and `reduce_scatterv` at EP 16. The two P2-64 files are also byte-identical; P2-64 uses 12 curves as well, with the EP collectives at EP 32.
 
+Since B24 (main `901bc091`), lanes of one wave with the same prediction key share the first lane's prediction instead of calling the predictor again ([B24 test report](test_report_2026-10-30_b24_v4_ep_lane_reuse.md)). The phase maxima over the lanes are unchanged, because the key covers every input of the prediction; the census of section 5.3 therefore counts fewer calls.
+
 Reading: A7 and A8 hold for P2-32 and P2-64. The census shows how A8 is met; A7 has no per-lane census, because the observer records rank-0 scopes only, so its evidence is the code path above and the fact that the runs finished.
+
+## 5. Run-ahead replays (B26, K = 19)
+
+Code: main `901bc091`, which holds B26 (the DP host forms forwards ahead of the GPU, up to `max_forwards_in_flight` unfinished forwards; `a10_driver.py` sets 19 from section 3.5, observation 4) and B24 (one prediction per distinct EP lane key, identity-preserving). Detached worktree `.worktrees/a10-k19-901bc091`; launcher `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/run_a10_k19_b24.sh`; roots `stage4/a10/p2_{32,64}_{cold,warm}_k19b24`. Each warm cache is a `cp -a` copy of its case's section 2.2 cold cache (`stage4/a10/p2_{32,64}_cold_g1hs_r2/cache`, 1,758 files). Post-processing: `h3o_operator_costs/a10/k19/post_k19.sh <run name>` (gate, A8 census and `frontier_remainder.py`) and `k19/per_repeat.py <reading.json>`; copies of the outputs are in `h3o_operator_costs/a10/k19/`. Before use, `post_k19.sh` was run on the section 2.2 P2-32 warm run (`stage4/a10/p2_32_warm_g1hs_r2`, output `stage4/a10_gate/p2_32_warm_g1hs_r2_post/`) and reproduced its reading (TTFT 333.087 ms, 8.50%).
+
+| Run | Status | Wall time (init / run) | Source dirty paths |
+| --- | --- | --- | --- |
+| P2-32 warm | FINISHED | 81.6 s / 9,701.1 s (2.69 h; 4.61 h before B24) | none |
+| P2-32 cold | FINISHED | 755.3 s (1,758 cache files trained) / 9,575.8 s | none |
+| P2-64 warm | FINISHED | 82.6 s / 12,035.8 s (3.34 h; 5.65 h before B24) | none |
+| P2-64 cold | FINISHED | 755.4 s (1,758 cache files trained) / 11,924.6 s | none |
+
+### 5.1 P2-32 (gate output `stage4/a10_gate/p2_32_warm_k19b24_run/`)
+
+| Metric | Native vLLM (3 repeats) | Frontier | Absolute error | Relative error | Limit | Result | K unset (section 2.2) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TTFT mean | 364.030 ms | 335.115 ms | −28.915 ms | 7.94% | 10% | PASS | 8.50% |
+| TPOT mean | 19.919 ms | 19.927 ms | +0.008 ms | 0.04% | 10% | PASS | 0.07% |
+| Request E2E mean | 20,741.132 ms | 20,720.305 ms | −20.827 ms | 0.10% | 10% | PASS | 0.08% |
+| Token throughput (window rate) | 6,231.415 tps | 6,226.140 tps | −5.276 tps | 0.08% | 10% | PASS | 0.13% |
+
+Per native repeat, the TTFT error is 7.42% / 8.12% / 8.28%; the other metrics stay within 0.32%. Overall PASS with routing MATCH. As expected, P2-32 barely moves: its prefills arrive after the previous wave has drained (section 3.5).
+
+Request 0, the first request of the trace, has a TTFT of 635.2 ms against 279.4 ms with K unset. Its KV transfer ends while the idle decode DP group runs a dummy wave, and its first decode forward queues behind the dummies that the host has formed ahead: 376.2 ms from the KV end to the first decode token, against 20.4 ms with K unset. Native shows the same run-ahead on its all-dummy decode forwards (section 3.5, observation 6), and its warmup requests take this cold start before the formal requests. Its rise of 355.8 ms raises the mean by 2.8 ms. Without request 0 in both runs, the TTFT mean is 332.75 ms with K = 19 against 333.51 ms with K unset.
+
+### 5.2 P2-64 (gate output `stage4/a10_gate/p2_64_warm_k19b24_run/`)
+
+| Metric | Native vLLM (3 repeats) | Frontier | Absolute error | Relative error | Limit | Result | K unset (section 2.2) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TTFT mean | 741.216 ms | 655.102 ms | −86.114 ms | 11.62% | 10% | FAIL | 43.85% |
+| TPOT mean | 25.871 ms | 25.295 ms | −0.576 ms | 2.23% | 10% | PASS | 2.24% |
+| Request E2E mean | 27,206.770 ms | 26,531.441 ms | −675.328 ms | 2.48% | 10% | PASS | 3.37% |
+| Token throughput (window rate) | 5,963.206 tps | 5,976.585 tps | +13.379 tps | 0.22% | 10% | PASS | 0.39% |
+
+Per native repeat, the TTFT error is 16.00% / 9.70% / 8.79% (native 779.89 / 725.49 / 718.27 ms); repeat 1 holds the five first-contact requests (section 3.6, observation 3). TPOT 0.53% / 3.66% / 2.44%; E2E 0.98% / 3.82% / 2.60%; throughput 0.48% / 0.00% / 0.19%. Overall FAIL on TTFT only, with routing MATCH. Against the diagnostic reference without the first-contact requests (720.6 ms), the TTFT error is −9.09%.
+
+The prefill side is 513.3 ms (range 273.8-748.5 ms), within the 509-515 ms that the FIFO model of section 3.5 predicted, against 278.5 ms with K unset. The remainder after it is 141.8 ms (137.7 ms with K unset, section 2.2). Request 0 again waits behind the decode dummies (489.3 ms from the KV end to the first decode token); without it, the TTFT mean is 653.9 ms, the prefill side 515.2 ms and the remainder 138.7 ms (K unset: 416.8, 278.5 and 138.2 ms).
+
+### 5.3 A9 and A8
+
+- **A9.** `compare_cache_runs.py <cold root> <warm root>`, run from the `a10/` directory with the gate's `PYTHONPATH`, prints "EQUAL: metrics and cache identities match; warm cache file set equals cold at run end" for both cases (`k19/a9_p2_32_k19b24_stdout.txt`, `k19/a9_p2_64_k19b24_stdout.txt`). The cold and warm `collectives.json` files are byte-identical in both cases (`cmp`). The readings above therefore hold for the cold runs too.
+- **A8** (`k19/a8_p2_32_warm_k19b24_stdout.txt`, `k19/a8_p2_64_warm_k19b24_stdout.txt`):
+
+| Run | Distinct requests | Calls | Exact | Interpolated | Unequal combines (all exact) | Violations |
+| --- | --- | --- | --- | --- | --- | --- |
+| P2-32 warm K19 | 43 | 6,310,644 | 6,310,644 | 0 | 16,512 (prefill) | 0 |
+| P2-64 warm K19 | 35 | 9,024,624 | 9,024,624 | 0 | 27,520 (prefill) | 0 |
+
+The distinct requests are the same as in section 4. The call count falls (19,438,100 and 27,711,291 in section 4). Inference, not yet checked: most of the fall is B24's lane reuse, which skips the backend for lanes that share a key; run-ahead can also change the number of dummy forwards. The `_k19` runs on main `50ed2061` (B26 without B24, still running) separate the two.
+
+### 5.4 Where the remaining TTFT gap is
+
+Native values leave out the first-contact requests. The native prefill side runs from the proxy arrival to the prefill response; Frontier's from the arrival to the prefill end.
+
+| Part (mean) | P2-64 native (P2-64r, n 379) | P2-64 Frontier K19 | Difference | P2-32 native (P2-32r, n 384) | P2-32 Frontier K19 | Difference |
+| --- | --- | --- | --- | --- | --- | --- |
+| Client dispatch to proxy arrival | 0.6 ms | 0 | −0.6 ms | 0.5 ms | 0 | −0.5 ms |
+| Prefill side | 552.0 ms | 513.3 ms | −38.7 ms | 235.5 ms | 222.3 ms | −13.2 ms |
+| After the prefill side, to the client | 168.0 ms | 141.8 ms | −26.2 ms | 128.1 ms | 112.8 ms | −15.3 ms |
+| TTFT | 720.6 ms | 655.1 ms | −65.5 ms | 364.0 ms | 335.1 ms | −28.9 ms |
+
+**New measurement: the native prefill ingress.** `k19/ingress_split.py <artifacts>` (outputs `k19/ingress_split_wave-20261030-01.txt`, `k19/ingress_split_lifecycle-20261026-01.txt`) splits the path from the proxy arrival (proxy host clock) through the API server's `arrival_time` and the `add_enqueue` record (prefill host clock) to the engine add:
+
+| Span (mean, median) | Wave run (n 128) | Lifecycle run (n 384) |
+| --- | --- | --- |
+| Proxy arrival to API-server arrival | 3.11 ms, 2.86 ms | 2.96 ms, 2.93 ms |
+| API-server arrival to `add_enqueue` | 6.59 ms, 6.74 ms | not recorded |
+| `add_enqueue` to engine add | 1.63 ms, 0.15 ms | not recorded |
+| Proxy arrival to engine add | 11.33 ms, 10.11 ms | 9.12 ms, 7.27 ms |
+
+The first span crosses hosts, so it includes any offset between the proxy and prefill host clocks; the two runs agree within 0.15 ms. Section 3.1's "6.2 ms after its client arrival" was the API-server arrival to the engine add (6.16 ms) and left out the proxy hop; it is corrected there.
+
+**Reading (inference).**
+
+- **Outside the engine, about 22 ms per request (wave-run values) are not modeled:** the prefill ingress (proxy to API server to engine, 9.1-11.3 ms), the prefill response back to the proxy (2.3 ms, section 3.6 observation 5), the decode ingress (prefill response to the decode `add_enqueue`, 9.1 ms; deferred in `h4b_d_side_model/design.md` section 6.3), the client dispatch (0.5-0.6 ms) and the egress after the decode first-token update (0.9 ms in the wave run, 4.3 ms in the lifecycle run). They explain the whole P2-32 prefill-side gap (13.2 ms) and about 9 ms of its remaining 15.3 ms.
+- **Inside the engine, P2-64 has about 25-27 ms more on the prefill side.** Candidates: the prefill compute (Frontier 275.2 ms against about 290-300 ms native, section 3.5) and the host time per dummy (native 4.68 ms, Frontier 0), which the FIFO model shows to matter little while it stays below the dummy's GPU time. Not separated yet.
+- **After the prefill side**, beyond the decode ingress: the late READ handles (about 9 ms; open in `h4b_d_side_model/design.md` section 6.2) and the first decode step (3-5 ms, section 3.6).
+- **Expected effect of modeling the path outside the engine** (arithmetic, not a run): about +22 ms on both cases, giving P2-64 about 677 ms (−8.7% against 741.2 ms) and P2-32 about 357 ms (−1.9%). It needs new delay fields with measured values per platform, a configuration schema change that needs YC's approval. P2-32's own ingress is not measured; no P2-32 run recorded `add_enqueue`.

@@ -1,0 +1,6 @@
+prefill lifecycle events {'start': 4, 'engine_wave_start': 4, 'handle_client_request': 204, 'error': 20, 'add_enqueue': 144, 'busy_iteration': 25177, 'add': 144, 'engine_add': 144, 'schedule': 11829, 'update': 11829, 'wave_complete': 115, 'start_dp_wave_enqueue': 24, 'busy_loop_return': 4, 'stop': 4, 'start_wave_sent': 6}
+proxy_arrival->api_arrival       n  128 mean    3.11 median    2.86 min    2.40 max    8.41
+api_arrival->add_enqueue         n  128 mean    6.59 median    6.74 min    3.68 max   15.66
+add_enqueue->add                 n  128 mean    1.63 median    0.15 min    0.09 max   19.68
+api_arrival->add                 n  128 mean    8.22 median    7.03 min    3.79 max   28.59
+proxy_arrival->add               n  128 mean   11.33 median   10.11 min    6.33 max   32.29
