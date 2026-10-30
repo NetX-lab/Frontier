@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | I-005 opened: the B25 wave observer wrote the engine identity as bytes into JSON, so the START_DP_WAVE records of the P2-64 wave run were lost (896 error records); the forward-level records were complete and carried the diagnosis. |
 | 2026-10-30 | I-004 opened and worked around: the vLLM 0.28 environment `oneshot-opd-py312` was removed at 05:22 UTC outside this task; the B25 installed-wheel check became a source-only check. |
 | 2026-10-30 | I-003 opened and resolved: `/data/ycfeng` filled at 20:58 on 2026-10-29 and every running simulation failed with ENOSPC; space was recovered by YC-approved deletions and the runs were restarted. |
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
@@ -108,3 +109,13 @@ Status: worked around; the environment is not restored. Owner: lead.
 - Recorded in `h3o_operator_costs/` B25 design section 9.
 
 Next action: none for B25. A later task that needs a local vLLM 0.28 Python must rebuild the environment first.
+
+## I-005: B25 wave observer lost the START_DP_WAVE records (2026-10-30)
+
+Status: open; fix only before a future run (no rerun is approved). Owner: lead.
+
+**Observed.** The instrumented native P2-64 run `exp-1030-144848-164721` (requirements item 42) succeeded, but its observer files hold 896 error records instead of the wave-start messages. `tests/comparison/calibration/native_dp_wave.py` (`enqueue_fields`, line 105, and `handle_begin`, line 136) copies `excluded_engine_index` into the JSON record as received. In vLLM-BS `2cf0a691` that value is the engine identity, a `bytes` value: the front end sends `("FIRST_REQ", chosen_engine)` (`vllm/v1/engine/core_client.py:1422`), and the coordinator forwards it as `exclude_engine_index` in START_DP_WAVE (`vllm/v1/engine/coordinator.py:354` and `466`). `json` cannot encode `bytes`, so every such record failed.
+
+**Impact.** The wave-start times of the coordinator and the engines are missing. The forward-level records (worker `dp_cpu_all_reduce` and `dp_padding_sync`, scheduler `schedule`/`update`/`add`) are complete on all eight hosts, and they carry the diagnosis (A10 report section 3.5). The run is not repeated for this.
+
+**Resolution (pending).** Encode the identity before writing it (for example as hex) in the observer, with a unit test that feeds a `bytes` identity. Apply it only when a further wave run is approved.

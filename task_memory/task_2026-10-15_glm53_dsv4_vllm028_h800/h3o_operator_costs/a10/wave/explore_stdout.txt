@@ -1,0 +1,7 @@
+forwards per worker {0: (1, 3872, 3872), 1: (1, 3872, 3872), 2: (1, 3872, 3872), 3: (1, 3872, 3872)}
+formal 128 decomposed 128
+step_ms                      mean    536.5 min    285.6 max    750.8
+sched_to_reduce_ms           mean      4.1 min      3.1 max      6.1
+reduce_ms                    mean      1.2 min      0.7 max      4.0
+reduce_end_to_exec_end_ms    mean    401.2 min    178.9 max    613.5
+exec_end_to_update_ms        mean    130.0 min     44.0 max    152.7

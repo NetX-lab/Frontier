@@ -1,0 +1,7 @@
+prefill exec 31123.3 ms; next forward after 3.7 ms
+    worker_sample_tokens start +0.8 dur 2.0 tokens None []
+prefill exec 284.6 ms; next forward after 1.8 ms
+    worker_sample_tokens start +0.2 dur 1.0 tokens None []
+prefill exec 272.8 ms; next forward after 1.6 ms
+    worker_sample_tokens start +0.2 dur 0.9 tokens None []
+exec end -> next forward start: median 135.4 p10 99.8 p90 136.3 n 144

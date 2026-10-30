@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-30 | Added section 3.5 from the instrumented wave run `exp-1030-144848-164721`: the native host issues DP dummy forwards ahead of the GPU, up to about 19 unfinished forwards, so a DP wave ends with about 18 dummies (about 440 ms of GPU work) still queued and the next prefill waits behind them. Section 3.3's reading is replaced. |
 | 2026-10-30 | Added section 3: the P2-64 TTFT gap is on the native prefill side, where a prefill that arrives after the previous DP wave ended finishes about 450-540 ms after that wave end (mechanism not found in the code). |
 | 2026-10-30 | Created: P2-64 client reading on the pre-supplement table (probe `p2_64_c`), the loss of the promoted-table runs to the full disk (I-003), and their restart. |
 
@@ -106,6 +107,8 @@ For P2-32 the same grouping (ungated compute 245 ms) finds requests scheduled ab
 
 ### 3.3 Reading (inference, not verified)
 
+Superseded by section 3.5: the about 5 ms dummy steps below are host time, not GPU time, and the late part is GPU work still queued from the ended wave.
+
 In vLLM-BS `2cf0a691` the prefill engines run one data-parallel wave together: each engine keeps running, with dummy batches when it has no request, until the all-reduce every 32 steps (`ParallelConfig.sync_dp_state`) finds no unfinished request on any engine; then the wave ends and the engines go idle. The groups above fit this picture:
 
 - The previous prefill's KV `finished_sending` arrives about 48 ms after its end. The last request leaves the engines then, and up to 32 more dummy steps of about 5 ms run before the next sync ends the wave, about 200-250 ms after the previous end.
@@ -119,3 +122,62 @@ Frontier already models the wave mechanics (`frontier/scheduler/replica_schedule
 ### 3.4 Warnings that do not apply
 
 The runs log approximation factors for `attn_pre_proj` and `attn_post_proj` (0.5, BF16 to FP8) and `moe_gating_routing_topk` (2.0, BF16 to FP32) from `frontier/config/quantization_manager.py`, and a missing `attention_kernel_only.csv`. The V4 path prices its attention from `attention_graph_replay_kernel_only.csv` through `dsv4_predictor.py` and does not use those three operator predictions, so these warnings do not change the A10 results.
+
+### 3.5 Measured mechanism: the native host issues DP dummy forwards ahead of the GPU
+
+Input: the instrumented native P2-64 run `exp-1030-144848-164721` (requirements item 42, D-P2-64-WAVE-DIAGNOSTIC; 64 H200, succeeded), downloaded to `/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/` (`nodes/<host>/scheduler_lifecycle/`, `nodes/<host>/worker_dp_wave/`). Prefill hosts gpu-h200-0142, 0229, 0556 and 0710; decode hosts 0828, 0882, 0938 and 1191. The START_DP_WAVE records were lost to an observer bug (I-005); the forward-level records are complete.
+
+Scripts: copies in `h3o_operator_costs/a10/wave/`, each with its output beside it. Run each with `/data/ycfeng/envs/frontier-py310/bin/python <script> <artifacts>` from that directory under `ulimit -v 31457280`; `fifo.py` reads `explore_out.json` (written by `explore.py`) from its working directory.
+
+#### Observations
+
+1. **The four prefill lanes advance in lockstep.** Every forward, real or dummy, runs a CPU all-reduce over the DP group (`dp_cpu_all_reduce`, numbered forwards; `vllm/v1/worker/gpu/model_runner.py:1408`, `dispatch_cg_and_sync_dp`). All four prefill workers record forwards 1-3,872 (`explore_stdout.txt`).
+2. **Forward modes** (`modes.py`): on each prefill lane, 3,738 serving dummies are 1-token FULL CUDA graph replays, and 97-99 run without a graph (the forwards that pair with a peer's eager prefill). Every formal prefill is one 6,144-token eager forward. The decode lanes run mostly real batches.
+3. **Dummy host and GPU times** (`depth.py`, 122 prefill waves). After a prefill, about 23 dummies return from the host at a median of 4.68 ms each. The host then becomes paced at a median of 23.81 ms per dummy, which is the dummy's GPU time; Frontier prices the V4 dummy at 24.38 ms (+2.4%).
+4. **How deep the host runs ahead** (`depth.py`, `depth_summary.py`). At the switch from fast to paced, the GPU holds a median of 18.56 issued and unfinished dummies. 117 of the 122 waves fall in 18.04-18.90; the other five (-37.8, -2.0, 14.7, 17.8, 17.8) are waves that a peer request interrupted. A depth between 18 and 19, with the oldest dummy partly executed, means the host's launch blocks while 19 forwards are unfinished.
+5. **The prefill step** (`explore.py`, 128 formal requests). From schedule to first-token update, the step takes a mean of 536.5 ms (285.6-750.8). Its parts:
+
+   | Part | Mean | Range |
+   | --- | --- | --- |
+   | Schedule to the DP all-reduce | 4.1 ms | 3.1-6.1 ms |
+   | The DP all-reduce itself | 1.2 ms | 0.7-4.0 ms |
+   | All-reduce end to the host's return from `execute_model` | 401.2 ms | 178.9-613.5 ms |
+   | Host return to the update | 130.0 ms | 44.0-152.7 ms |
+
+   The eager prefill launches its kernels behind the queued dummies, so the host returns only when its last kernels are queued. The GPU then still runs the prefill's tail: the lane's next forward starts a median of 135.4 ms after the host returns (`post2.py`, p10 99.8 ms, p90 136.3 ms, n 144).
+6. **Decode side** (`dside.py`). 6,674 of 8,192 decode forwards have a real batch on all four lanes, and only 214 are dummies on all four. Those 214 show the same pattern: about 22 dummies at about 4-5 ms each, then paced at about 24.8 ms.
+7. **No explicit wait in the dummy path.** In the native source, the dummy path (`_dummy_run`, `model_runner.py:633`) issues one FULL graph replay without `synchronize`. The runner synchronizes only for profiling and warmup (`model_runner.py:808`, `825`, `1921`), and `UvaBufferPool` (`buffer_utils.py`) cycles its buffers without waiting on an event.
+
+#### Reading (inference with quantitative support)
+
+- **The wave counter counts host steps, not GPU work.** At 4.68 ms of host time against 23.81 ms of GPU time per dummy, the host reaches the 32-step DP sync (`VLLM_DP_SYNC_INTERVAL`) long before the GPU finishes. When the sync ends the wave, about 18 dummies (about 440 ms of GPU work) are still queued. A prefill that arrives next queues behind them on the GPU. This explains the waits of section 3.2 and replaces the reading of section 3.3.
+- **The GPU cycle per request is slightly longer than the arrival interval.** One prefill plus 31 dummies is about 290 + 31 × 23.8 ≈ 1,030 ms of GPU time, against 1,000 ms between arrivals. The queue therefore grows by about 30 ms per request until a wave drains, which produces the sawtooth of TTFT from about 290 to about 745 ms.
+- **The cause of the 19-forward limit is not identified.** No call in the source sets it. Hypothesis: the capacity of the CUDA launch queue. Not verified.
+- **Why P2-32 is flat.** P2-32 requests arrive about 750 ms after the previous end (section 3.2), when the queued dummies have drained.
+
+#### Check of the mechanism: a FIFO model of the prefill side (`fifo.py`)
+
+The model replays the native prefill-side add times through one lockstep host and one GPU in order. In a wave, a forward is the prefill when a request is waiting, otherwise a dummy. A dummy is launched once forward n−K has finished (so at most K forwards are unfinished after a launch). It costs c of host time and g of GPU time. A prefill holds the host until its output. The wave ends at a 32-step sync when no request is waiting.
+
+Arguments `g c K P d_sched d_post` (ms, except K). Result: the mean add-to-update time of the 128 formal requests, against the actual 536.7 ms.
+
+| Parameters | K | Predicted mean | Output file |
+| --- | --- | --- | --- |
+| native: g 23.8, c 4.68, P 300, d_sched 6.5, d_post 3 | 1 | 318.7 ms | `fifo_1.txt` |
+| native | 18 | 528.2 ms | `fifo_18.txt` |
+| native | 19 | 544.9 ms | `fifo_19.txt` |
+| native with P 290 | 18 | 521.4 ms | `fifo_P290.txt` |
+| native with P 283 | 18 | 504.5 ms | `fifo_P283.txt` |
+| Frontier: g 24.38, c 0, P 275.2, d_sched 3.3, d_post 0 | 1 | 300.0 ms | `fifo_frontier_K1.txt` |
+| Frontier | 18 | 508.5 ms | `fifo_frontier_K18.txt` |
+| Frontier | 19 | 514.9 ms | `fifo_frontier_K19.txt` |
+
+- With run-ahead, the model reproduces the native mean within 1.6% (K 18) and 1.5% (K 19). Without it (K 1), the model falls 41% short.
+- Per request, the model does not follow the native sequence (correlation -0.33 to 0.24, mean absolute error 135-238 ms). The sawtooth has the right shape and period, but its phase drifts with small errors in g and P. The model checks the mean and the range of the TTFT, not its per-request order.
+- Frontier at K 1, at 300.0 ms, matches Frontier's own prefill side (278.5 ms, section 3.1) within about 22 ms. Because c is below g, host time matters little; the number of queued dummies at a wave end does.
+
+#### Consequence for Frontier
+
+Frontier's host waits for each dummy forward to end: `on_schedule` returns no batch while `_dummy_forwards_in_flight` is non-zero (`vllm_v1_engine_replica_scheduler.py`). A wave therefore never ends with queued dummies, and a prefill starts at once. The fix models the native launch rule (assignment B26): the host does not wait for a dummy forward's end, and launches its next forward once fewer than K forwards are unfinished on the device; the lanes keep the per-forward lockstep of observation 1. The value K = 19 comes from observation 4.
+
+Expected effect on P2-64, from the model: the prefill side rises from about 300 ms to about 509-515 ms. With Frontier's current remainder of about 139 ms, TTFT would be about 650 ms, against native 741.2 ms (about -12%). Two known gaps remain: the prefill compute (275.2 ms against about 290-300 ms) and the remainder after the prefill side (about 139 ms against about 173-189 ms).

@@ -1,0 +1,2 @@
+waves 122 in [18,19] 117 min/max in range 18.04 18.9 median 18.56
+outside [-37.77, -2.04, 14.66, 17.8, 17.83]

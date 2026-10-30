@@ -1,0 +1,13 @@
+n 128 actual add->update mean 536.7 pred mean 318.7 mean abs err 222.6 corr 0.140
+actual 315.9 pred 306.5
+actual 368.6 pred 325.3
+actual 397.3 pred 306.5
+actual 439.3 pred 325.5
+actual 464.4 pred 306.5
+actual 498.5 pred 323.6
+actual 528.1 pred 306.5
+actual 561.7 pred 322.9
+actual 594.9 pred 306.5
+actual 683.8 pred 325.4
+actual 708.9 pred 306.5
+actual 730.2 pred 341.3
