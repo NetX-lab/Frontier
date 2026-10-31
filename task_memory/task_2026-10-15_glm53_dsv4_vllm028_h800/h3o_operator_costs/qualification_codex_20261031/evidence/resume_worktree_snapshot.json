@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-10-31T15:49:08.058663+00:00",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes",
+  "head": "dbd3ff6f7e2cfdf30050945039df7b66cced7d14",
+  "branch": "b30b-ex-situ-link-probes",
+  "tracked_diff_bytes": 0,
+  "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "cached_diff_bytes": 0,
+  "cached_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "status_porcelain": "",
+  "processes_with_worktree_cwd": [
+    {
+      "pid": 3659004,
+      "cwd": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes",
+      "command": "/data/ycfeng/envs/frontier-py310/bin/python -B - "
+    }
+  ],
+  "scope": "Only this evidence capture command and its shell are expected; no independent active writer observed."
+}

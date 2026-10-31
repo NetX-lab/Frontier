@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "verified_at_utc": "2026-10-31T16:02:56.350285+00:00",
+  "python_executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp"
+  },
+  "source_hashes_pass": 160,
+  "source_excerpts_and_json_pointers_pass": 73,
+  "rank_inventory_field_pointers_pass": 384,
+  "arithmetic": "PASS",
+  "packed_registration_rows_pass": 96,
+  "graph_memory_log_rows_pass": 96,
+  "report_source_references_pass": 37,
+  "report_criterion_rows_pass": 14,
+  "native_r4_cases": 2,
+  "native_rank_rows": 96,
+  "retained_b29_metric_rows": 24,
+  "native_source_pin": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "native_source_files_pass": [
+    {
+      "source": "NIXL",
+      "git_object": "2cf0a6915ce544dc493a0990f2ea38d81601128a:vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py",
+      "matches_captured_local_bytes": true
+    },
+    {
+      "source": "NATIVE_MEMORY",
+      "git_object": "2cf0a6915ce544dc493a0990f2ea38d81601128a:vllm/v1/worker/gpu_worker.py",
+      "matches_captured_local_bytes": true
+    },
+    {
+      "source": "NATIVE_COUNTERS",
+      "git_object": "2cf0a6915ce544dc493a0990f2ea38d81601128a:vllm/utils/mem_utils.py",
+      "matches_captured_local_bytes": true
+    }
+  ],
+  "qualification_claim": false,
+  "limits": [
+    "No GPU, platform or cloud access.",
+    "No A6/A10 replay or new gate evaluation.",
+    "No independent wire trace, phase peak or promotion receipt was created."
+  ]
+}

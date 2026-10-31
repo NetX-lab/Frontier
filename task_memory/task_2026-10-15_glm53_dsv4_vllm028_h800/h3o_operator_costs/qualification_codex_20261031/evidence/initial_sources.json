@@ -1,0 +1,70 @@
+{
+  "captured_at": "2026-10-31T15:32:12.381565+00:00",
+  "main_workspace": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "main_head": "5d1754d0eb11d6cd1fe7a164f7f3161aa2f43f07",
+  "sidecar_workspace": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes",
+  "sidecar_initial_head": "dbd3ff6f7e2cfdf30050945039df7b66cced7d14",
+  "sidecar_initial_status": "clean",
+  "sources": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/AGENTS.md",
+      "sha256": "82354337fec8131194f31ad8f09d298d2ef6e3ad48282b0b4bd46e87b5a57249",
+      "bytes": 62494,
+      "role": "authority"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "sha256": "9a059412ce2e2c163045fed83d975b0fee147ae06f7d87b347d851a5754eaff8",
+      "bytes": 233255,
+      "role": "authority"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "sha256": "34a45e6f4a7116a3707cade2a02fcfc5854afab04ea6e9b1206c0baf5cfc6d0f",
+      "bytes": 215687,
+      "role": "authority"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "sha256": "93796a9476792a7dac36dac62babc532d79798136159c90293d6aae143c3d35e",
+      "bytes": 703759,
+      "role": "authority"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "sha256": "9e071752c5f16677fc125c4b18e0205d9320b05fc475dded5aab792ff3ddede6",
+      "bytes": 89884,
+      "role": "authority"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "sha256": "da1bea37237260928a26a713c341499a09f361855fd561d08c7514f92f6d14e3",
+      "bytes": 63863,
+      "role": "authority"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/11-h200-regression-delivery.md",
+      "sha256": "8415fb5f73c5967419e57cd8cd1f1beacb174abb22986064435dd7c8df96d3c1",
+      "bytes": 17468,
+      "role": "authority"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/18-native-ground-truth-h200.md",
+      "sha256": "71e437a0bce6135cc1a5e856488d6314cbf47c56c670e96a740dd6d7b0a228a3",
+      "bytes": 26037,
+      "role": "authority"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "sha256": "4d4dc4063f6065fdbb1f0d1ed420ee710d9035fc000b2f4cde0d4e5a0bd198d5",
+      "bytes": 16807,
+      "role": "authority"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/source_spec_v2/Frontier_GLM53_DeepSeekV4Flash_vLLM028_H80064_Spec_v2.md",
+      "sha256": "9f65592c6718b849603ba080f70ad2cb4005b3c514e8f4fce684133d092d5c4f",
+      "bytes": 88784,
+      "role": "authority"
+    }
+  ]
+}
