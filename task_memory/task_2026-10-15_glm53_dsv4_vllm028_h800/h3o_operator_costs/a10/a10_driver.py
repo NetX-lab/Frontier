@@ -19,12 +19,26 @@ GIT_TIMEOUT_S = 30
 # A10 report section 3.5, observation 4: measured launch-queue depth,
 # native P2-64 wave run exp-1030-144848-164721; shared by both PDD roles.
 DP_MAX_FORWARDS_IN_FLIGHT = 19
+# P2-64 measured serving path, in ms; no engine-loop wait is included.
+# a10/remainder/reference_split_stdout.txt:3: client dispatch -> proxy arrival.
+# a10/k19/ingress_split_wave-20261030-01.txt:2: proxy_arrival->api_arrival;
+# :3: api_arrival->add_enqueue (the 1.63 ms :4 engine-loop wait is excluded).
+REQUEST_INGRESS_DELAY_MS = 10.3  # 0.6 + 3.11 + 6.59 ms
+# a10/remainder/remainder_stdout.txt:8: p_update->prefill_response;
+# a10/remainder/pairs_stdout.txt:19: prefill_response->d_add_enqueue.
+# Both n=128 wave means; :20's 10.4 ms decode-loop wait is already modeled
+# by nixl_read_completion=engine_step (A10 report section 3.6 observation 5).
+REQUEST_HANDOFF_DELAY_MS = 11.4  # 2.3 + 9.1 ms
+# P2-32 shares these values: no P2-32 add_enqueue recording exists, and its
+# engine build, proxy and API server are the same (A10 report section 5.4).
 
 
 def operator_fields(name, root):
     fields = h4a4.outputs(root, name)
     fields.update(
         metrics_config_run_id=f"a10_{name}_operator_path",
+        request_ingress_delay_ms=REQUEST_INGRESS_DELAY_MS,
+        analytical_kv_cache_transfer_config_request_handoff_delay_ms=REQUEST_HANDOFF_DELAY_MS,
         decode_cuda_graph_mode="full_and_piecewise",
         vllm_v1_scheduler_config_max_forwards_in_flight=DP_MAX_FORWARDS_IN_FLIGHT,
         replica_config_network_device="h200_dgx",
@@ -52,7 +66,7 @@ def resolved_inputs(config):
         resolve_measurement_input_paths, resolve_training_file_paths,
     )
 
-    tables, inputs, dummy = {}, {}, {}
+    tables, inputs, dummy, cc_types = {}, {}, {}, {}
     for role, cluster in config.get_clusters().items():
         replica = cluster.replica_config
         predictor = cluster.execution_time_predictor_config
@@ -74,9 +88,11 @@ def resolved_inputs(config):
         consumed.update(runner_block=str(runner_root / BLOCK_TABLE),
                         runner_replay=str(runner_root / REPLAY_TABLE))
         cc = cluster.cc_backend_config
-        consumed["collectives"] = cc.summary_csv_path.format(
-            profiling_data_dir=cc.profiling_data_dir, NETWORK_DEVICE=replica.network_device,
-        )
+        cc_types[role.name] = cc.get_name()
+        if hasattr(cc, "summary_csv_path"):
+            consumed["collectives"] = cc.summary_csv_path.format(
+                profiling_data_dir=cc.profiling_data_dir, NETWORK_DEVICE=replica.network_device,
+            )
         for owner, path in consumed.items():
             resolved = str(Path(path).resolve())
             tables.setdefault(resolved, []).append(f"{role.name}/{owner}")
@@ -88,6 +104,7 @@ def resolved_inputs(config):
                           if (Path(path).parent / FILE_NAME).exists()})
     return records, {
         "enable_dummy_mode": dummy,
+        "cc_backend_types": cc_types,
         "resolved_inputs": inputs,
         "step_cost_files_beside_inputs": step_tables,
         "no_step_cost_file_beside_inputs": not step_tables,
@@ -188,7 +205,7 @@ def main(name, root, *, observe=True, fields=None):
     return receipt
 
 
-if __name__ == "__main__":
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("case", choices=CASES)
     parser.add_argument("root", type=Path)
@@ -196,8 +213,28 @@ if __name__ == "__main__":
     parser.add_argument("--trace", type=Path)
     parser.add_argument("--without-run-ahead", action="store_true",
                         help="Keep the legacy DP path (max_forwards_in_flight=None).")
-    args = parser.parse_args()
+    parser.add_argument("--without-ingress", action="store_true",
+                        help="Set ingress and handoff delays to 0 (B28 configuration).")
+    parser.add_argument("--field", action="append", default=[], metavar="NAME=VALUE",
+                        help="Override any flat config field, using JSON or a string.")
+    args = parser.parse_args(argv)
     fields = {"trace_request_generator_config_trace_file": str(args.trace.resolve())} if args.trace else {}
     if args.without_run_ahead:
         fields["vllm_v1_scheduler_config_max_forwards_in_flight"] = None
-    main(args.case, args.root, observe=not args.without_observer, fields=fields)
+    if args.without_ingress:
+        fields.update(request_ingress_delay_ms=0.0,
+                      analytical_kv_cache_transfer_config_request_handoff_delay_ms=0.0)
+    for argument in args.field:
+        if "=" not in argument or not argument.partition("=")[0]:
+            parser.error(f"--field requires NAME=VALUE, got {argument!r}")
+        name, value = h4a4.parse_field(argument)
+        if name in fields:
+            parser.error(f"field {name!r} given twice or also set through another option")
+        fields[name] = value
+    args.fields = fields
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args.case, args.root, observe=not args.without_observer, fields=args.fields)

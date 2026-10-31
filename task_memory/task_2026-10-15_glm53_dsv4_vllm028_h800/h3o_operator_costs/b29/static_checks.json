@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "python_line_counts": {
+    "frontier/config/config.py": 845,
+    "frontier/config/kv_cache_transfer_config.py": 186,
+    "frontier/simulator.py": 1486,
+    "frontier/events/cluster_batch_end_event.py": 633,
+    "tests/unit/test_serving_path_delays.py": 176,
+    "tests/unit/test_dsv4_a10_tools.py": 322,
+    "tests/unit/test_pdd_parallel_initializer.py": 110,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py": 240,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/ingress_values.py": 42,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/replay_check.py": 88,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/regression_compare.py": 98,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/run_pytest.py": 20,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/run_replays_native_env.py": 29,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/check_b28_config.py": 25,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/config_snapshot.py": 10,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/receipt_config_check.py": 47,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/final_checks.py": 42,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/run_final_regression.py": 12,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b29/check_zero_base_identity.py": 29
+  },
+  "tracked_changed_paths": [
+    "docs/cli/README.md",
+    "frontier/config/config.py",
+    "frontier/config/kv_cache_transfer_config.py",
+    "frontier/events/cluster_batch_end_event.py",
+    "frontier/simulator.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py",
+    "tests/unit/test_dsv4_a10_tools.py",
+    "tests/unit/test_pdd_parallel_initializer.py"
+  ],
+  "new_source_file": "tests/unit/test_serving_path_delays.py",
+  "diff_check": "PASS",
+  "diff_stat": " docs/cli/README.md                                 | 16 +++++\n frontier/config/config.py                          | 17 +++++\n frontier/config/kv_cache_transfer_config.py        | 17 +++++\n frontier/events/cluster_batch_end_event.py         |  2 +-\n frontier/simulator.py                              | 13 ++--\n .../h3o_operator_costs/a10/a10_driver.py           | 51 +++++++++++++--\n tests/unit/test_dsv4_a10_tools.py                  | 74 ++++++++++++++++++++++\n tests/unit/test_pdd_parallel_initializer.py        |  1 +\n 8 files changed, 179 insertions(+), 12 deletions(-)\n",
+  "git_status": " M docs/cli/README.md\n M frontier/config/config.py\n M frontier/config/kv_cache_transfer_config.py\n M frontier/events/cluster_batch_end_event.py\n M frontier/simulator.py\n M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py\n M tests/unit/test_dsv4_a10_tools.py\n M tests/unit/test_pdd_parallel_initializer.py\n?? tests/unit/test_serving_path_delays.py\n",
+  "base_commit": "6fd8bc5a04c8202dfec7581bafd67ea829ae7448"
+}

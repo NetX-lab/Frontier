@@ -1,0 +1,18 @@
+{
+  "p2_32": {
+    "status": "PASS",
+    "receipt_status": "FINISHED",
+    "config": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/p2_32_baseline_native_env/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/config.json",
+    "base_config": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/b28_config_p2_32_base/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/config.json",
+    "normalization": "run roots; remove only two new zero fields",
+    "checked": "actual nested config and complete receipt added_fields/override_diff"
+  },
+  "p2_64": {
+    "status": "PASS",
+    "receipt_status": "FINISHED",
+    "config": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/p2_64_baseline_native_env/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/config.json",
+    "base_config": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/b28_config_p2_64_base/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/config.json",
+    "normalization": "run roots; remove only two new zero fields",
+    "checked": "actual nested config and complete receipt added_fields/override_diff"
+  }
+}

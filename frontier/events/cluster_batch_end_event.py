@@ -600,7 +600,7 @@ class ClusterBatchEndEvent(BaseEvent):
                 )
                 transfer_events.append(
                     KVCacheTransferStartEvent(
-                        time,
+                        time + kv_pred._config.request_handoff_delay_ms / 1000,
                         source_replica_id=self._replica_id,
                         source_replica_local_id=self._replica_local_id,
                         target_cluster_type=target_cluster,

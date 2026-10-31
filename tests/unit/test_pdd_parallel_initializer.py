@@ -91,6 +91,7 @@ def test_init_parallel_events_routes_online_arrivals_to_prefill() -> None:
     }
     simulator._config = SimpleNamespace(
         simulation_mode="online",
+        request_ingress_delay_ms=0.0,
         is_disaggregated_mode=lambda: True,
     )
 

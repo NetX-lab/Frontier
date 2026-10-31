@@ -1,0 +1,13 @@
+client_dispatch_to_proxy = 0.6 ms; a10/remainder/reference_split_stdout.txt:3: client dispatch -> proxy arrival   n 379 mean     0.6 median     0.5
+  difference from quoted 0.6 ms: 0.0 ms
+proxy_to_api = 3.11 ms; a10/k19/ingress_split_wave-20261030-01.txt:2: proxy_arrival->api_arrival       n  128 mean    3.11 median    2.86 min    2.40 max    8.41
+  difference from quoted 3.11 ms: 0.00 ms
+api_to_add_enqueue = 6.59 ms; a10/k19/ingress_split_wave-20261030-01.txt:3: api_arrival->add_enqueue         n  128 mean    6.59 median    6.74 min    3.68 max   15.66
+  difference from quoted 6.59 ms: 0.00 ms
+prefill_update_to_response = 2.3 ms; a10/remainder/remainder_stdout.txt:8: p_update->prefill_response               mean      2.3 min      0.4 max      5.2 median      3.1 n 128
+  difference from quoted 2.3 ms: 0.0 ms
+prefill_response_to_decode_enqueue = 9.1 ms; a10/remainder/pairs_stdout.txt:19: prefill_response->d_add_enqueue    n 128 mean    9.1 median    9.4 min    6.3 max   12.8
+  difference from quoted 9.1 ms: 0.0 ms
+request_ingress_delay_ms = 10.30 ms
+request_handoff_delay_ms = 11.4 ms
+P2-32 shares P2-64 values: no add_enqueue capture, same engine build/proxy/API server (A10 section 5.4).

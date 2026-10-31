@@ -20,6 +20,7 @@ from frontier.config.flat_dataclass import create_flat_dataclass
 from frontier.config.kv_cache_transfer_config import (
     BaseKVCacheTransferConfig,
     AnalyticalKVCacheTransferConfig,
+    _require_finite_non_negative,
 )
 from frontier.config.m2n_transfer_config import (
     BaseM2NTransferConfig,
@@ -140,6 +141,14 @@ class SimulationConfig(ABC):
         metadata={
             "help": "Simulation mode, can be 'online' or 'offline'.",
             "choices": ["online", "offline"],
+        },
+    )
+    request_ingress_delay_ms: float = field(
+        default=0.0,
+        metadata={
+            "help": "Serving path delay in milliseconds from client arrival, through "
+            "the proxy and first role API server, to the engine waiting queue. "
+            "Applies to request arrival events; arrived_at stays the client arrival."
         },
     )
     offline_use_generated_request_arrivals: bool = field(
@@ -369,6 +378,14 @@ class SimulationConfig(ABC):
     )
 
     def __post_init__(self):
+        _require_finite_non_negative(self.request_ingress_delay_ms, "request_ingress_delay_ms")
+        if (self.request_ingress_delay_ms > 0 and self.simulation_mode == "offline"
+                and not self.offline_use_generated_request_arrivals):
+            raise ValueError(
+                "request_ingress_delay_ms applies to request arrival events; "
+                "offline batch mode does not create them. Enable "
+                "offline_use_generated_request_arrivals or use online mode."
+            )
         self._validate_open_source_release_architecture_guard()
         self._validate_pdaf_trace_replay_contract()
         self.performance_profiling_output_file = validate_output_filename(

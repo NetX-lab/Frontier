@@ -1,0 +1,26 @@
+[
+  {
+    "case": "p2_32",
+    "variant": "baseline",
+    "exit": 0,
+    "wall_s": 1164.5429622698575
+  },
+  {
+    "case": "p2_32",
+    "variant": "delayed",
+    "exit": 0,
+    "wall_s": 1139.2469661259092
+  },
+  {
+    "case": "p2_64",
+    "variant": "baseline",
+    "exit": 0,
+    "wall_s": 1546.1374114500359
+  },
+  {
+    "case": "p2_64",
+    "variant": "delayed",
+    "exit": 0,
+    "wall_s": 1555.98268388398
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "tests": {
+    "packages": {
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+      "numpy": "1.24.3",
+      "numpy_path": "/usr/local/lib/python3.10/dist-packages/numpy/__init__.py",
+      "pandas": "2.0.1",
+      "scipy": "1.10.1",
+      "sklearn": "1.2.2",
+      "aiohttp_available": false
+    },
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/b29-ingress-delays:/data/ycfeng/Frontier/.worktrees/b29-ingress-delays/tests/unit:/data/ycfeng/Frontier/.worktrees/b29-ingress-delays/tests/comparison/calibration:/data/ycfeng/Frontier/.worktrees/b29-ingress-delays/tests/analysis:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages"
+  },
+  "replays": {
+    "packages": {
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+      "numpy": "2.2.6",
+      "numpy_path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/numpy/__init__.py",
+      "pandas": "2.3.3",
+      "scipy": "1.15.3",
+      "sklearn": "1.7.2",
+      "aiohttp_available": false
+    },
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/b29-ingress-delays:/data/ycfeng/Frontier/.worktrees/b29-ingress-delays/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10",
+    "package_probe_PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/b29-ingress-delays"
+  },
+  "scratch": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29",
+  "base_commit": "6fd8bc5a04c8202dfec7581bafd67ea829ae7448",
+  "work_commit": "6fd8bc5a04c8202dfec7581bafd67ea829ae7448",
+  "limits_kib": {
+    "tests": 31457280,
+    "replays": 62914560
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "command": [
+    "timeout",
+    "3600",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-m",
+    "pytest",
+    "/data/ycfeng/Frontier/.worktrees/b29-base/tests/unit/predictor_cache_fixtures.py",
+    "/data/ycfeng/Frontier/.worktrees/b29-base/tests/unit/test_pdd_parallel_initializer.py",
+    "-q",
+    "--continue-on-collection-errors",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/tmp/regression_base_helper",
+    "--junitxml=/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/regression_base_helper.xml"
+  ],
+  "cwd": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29",
+  "env": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/b29-base:/data/ycfeng/Frontier/.worktrees/b29-base/tests/unit:/data/ycfeng/Frontier/.worktrees/b29-base/tests/comparison/calibration:/data/ycfeng/Frontier/.worktrees/b29-base/tests/analysis:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages",
+    "TMPDIR": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/tmp",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/tmp",
+    "VLLM_BS_SOURCE_ROOT": "/data/ycfeng/tmp/opencode/vllm-v0.28.0",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "WANDB_DISABLED": "true",
+    "VIDUR_DISABLE_WANDB": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "memory_limit_kib": 31457280
+}

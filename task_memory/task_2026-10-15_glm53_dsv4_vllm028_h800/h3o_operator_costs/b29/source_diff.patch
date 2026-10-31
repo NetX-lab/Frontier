@@ -1,0 +1,368 @@
+diff --git a/docs/cli/README.md b/docs/cli/README.md
+index 20fa13d8..5cac0936 100644
+--- a/docs/cli/README.md
++++ b/docs/cli/README.md
+@@ -4,6 +4,7 @@
+ 
+ | Date       | Summary of Changes |
+ | ---------- | ------------------ |
++| 2026-10-31 | Documented measured serving path ingress and handoff delays. |
+ | 2026-10-15 | Updated the release version to `pre-release-v0.4`. |
+ | 2026-10-14 | Documented `attn_dp`, the device fields, the cluster scheduler choice, and the kernel-only, kernel-gap and CPU-overhead inputs; updated the profiling taxonomy. |
+ | 2026-09-27 | Documented the `max_model_len` arrival check of the `vllm_v1` schedulers. |
+@@ -413,3 +414,18 @@ Common files include:
+ | Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide, keep CSVs in the taxonomy above, and check that `--replica_config_device` and `--replica_config_network_device` name the data directories. |
+ | A run stops with `ValueError: Request ... do not fit max_model_len=...`. | The `vllm_v1`, `sglang` and SJ2Q schedulers reject a request or thinking round whose prompt reaches `max_model_len`, or whose prompt plus output exceeds it, as vLLM's OpenAI server does; Frontier stops the run instead of failing one request. `max_model_len` defaults to the model's `max_position_embeddings`, not the workload's `max_tokens`. | Shorten the request or the thinking-round plan, or set `--<scheduler>_scheduler_config_max_model_len`, for example `--vllm_v1_scheduler_config_max_model_len` (vLLM `--max-model-len`). |
+ | Plot export warns about `kaleido`. | PNG export is optional. | Keep `--no-metrics_config_store_plots` for smoke runs, or install `kaleido` if PNGs are needed. |
++
++### Serving path delays
++
++`--request_ingress_delay_ms` covers client arrival through the proxy and the
++first role's API server to the engine waiting queue. It delays request arrival
++events while `Request.arrived_at` stays the client arrival, so TTFT and E2E still
++start there. Nonzero values require online mode or
++`--offline_use_generated_request_arrivals`; offline batch mode has no arrival events.
++
++`--analytical_kv_cache_transfer_config_request_handoff_delay_ms` covers prefill
++engine output through the prefill API server response, proxy and decode API
++server enqueue. It delays KV transfer start while prefill retains its KV blocks.
++It applies to every KV connector and leaves the transfer duration model intact.
++Both fields default to 0 and accept finite, non-negative milliseconds. Values
++are per deployment and must come from measurements of the serving path.
+diff --git a/frontier/config/config.py b/frontier/config/config.py
+index a1dbbc0a..10fc4a4c 100644
+--- a/frontier/config/config.py
++++ b/frontier/config/config.py
+@@ -20,6 +20,7 @@ from frontier.config.flat_dataclass import create_flat_dataclass
+ from frontier.config.kv_cache_transfer_config import (
+     BaseKVCacheTransferConfig,
+     AnalyticalKVCacheTransferConfig,
++    _require_finite_non_negative,
+ )
+ from frontier.config.m2n_transfer_config import (
+     BaseM2NTransferConfig,
+@@ -142,6 +143,14 @@ class SimulationConfig(ABC):
+             "choices": ["online", "offline"],
+         },
+     )
++    request_ingress_delay_ms: float = field(
++        default=0.0,
++        metadata={
++            "help": "Serving path delay in milliseconds from client arrival, through "
++            "the proxy and first role API server, to the engine waiting queue. "
++            "Applies to request arrival events; arrived_at stays the client arrival."
++        },
++    )
+     offline_use_generated_request_arrivals: bool = field(
+         default=False,
+         metadata={
+@@ -369,6 +378,14 @@ class SimulationConfig(ABC):
+     )
+ 
+     def __post_init__(self):
++        _require_finite_non_negative(self.request_ingress_delay_ms, "request_ingress_delay_ms")
++        if (self.request_ingress_delay_ms > 0 and self.simulation_mode == "offline"
++                and not self.offline_use_generated_request_arrivals):
++            raise ValueError(
++                "request_ingress_delay_ms applies to request arrival events; "
++                "offline batch mode does not create them. Enable "
++                "offline_use_generated_request_arrivals or use online mode."
++            )
+         self._validate_open_source_release_architecture_guard()
+         self._validate_pdaf_trace_replay_contract()
+         self.performance_profiling_output_file = validate_output_filename(
+diff --git a/frontier/config/kv_cache_transfer_config.py b/frontier/config/kv_cache_transfer_config.py
+index d662fa30..69c86b6c 100644
+--- a/frontier/config/kv_cache_transfer_config.py
++++ b/frontier/config/kv_cache_transfer_config.py
+@@ -1,4 +1,5 @@
+ from dataclasses import dataclass, field
++import math
+ from typing import Optional
+ 
+ from frontier.config.base_poly_config import BasePolyConfig
+@@ -21,6 +22,12 @@ def _require_non_negative(value: float | int, field_name: str) -> None:
+         raise ValueError(f"{field_name} must be >= 0, got {value}")
+ 
+ 
++def _require_finite_non_negative(value: float, field_name: str) -> None:
++    if not math.isfinite(value):
++        raise ValueError(f"{field_name} must be finite and >= 0, got {value}")
++    _require_non_negative(value, field_name)
++
++
+ def _require_optional_positive(value: Optional[int], field_name: str) -> None:
+     if value is not None and value <= 0:
+         raise ValueError(f"{field_name} must be > 0 when set, got {value}")
+@@ -40,6 +47,15 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
+         metadata={"help": "Network latency in milliseconds for KV cache transfer."},
+     )
+     
++    request_handoff_delay_ms: float = field(
++        default=0.0,
++        metadata={
++            "help": "Serving path delay in milliseconds from prefill engine output, "
++            "through the prefill API server response and proxy, to the decode API "
++            "server enqueue for the decode engine."
++        },
++    )
++
+     # Transfer optimization configuration
+     enable_compression: bool = field(
+         default=False,
+@@ -91,6 +107,7 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
+     )
+ 
+     def __post_init__(self) -> None:
++        _require_finite_non_negative(self.request_handoff_delay_ms, "request_handoff_delay_ms")
+         _require_positive(self.network_bandwidth_gbps, "network_bandwidth_gbps")
+         _require_non_negative(self.network_latency_ms, "network_latency_ms")
+         _require_positive(self.compression_ratio, "compression_ratio")
+diff --git a/frontier/events/cluster_batch_end_event.py b/frontier/events/cluster_batch_end_event.py
+index 9e3ef587..a749e943 100644
+--- a/frontier/events/cluster_batch_end_event.py
++++ b/frontier/events/cluster_batch_end_event.py
+@@ -600,7 +600,7 @@ class ClusterBatchEndEvent(BaseEvent):
+                 )
+                 transfer_events.append(
+                     KVCacheTransferStartEvent(
+-                        time,
++                        time + kv_pred._config.request_handoff_delay_ms / 1000,
+                         source_replica_id=self._replica_id,
+                         source_replica_local_id=self._replica_local_id,
+                         target_cluster_type=target_cluster,
+diff --git a/frontier/simulator.py b/frontier/simulator.py
+index 8b83352b..3c169591 100644
+--- a/frontier/simulator.py
++++ b/frontier/simulator.py
+@@ -409,9 +409,7 @@ class Simulator:
+                     if self._config.is_disaggregated_mode()
+                     else ClusterType.MONOLITHIC
+                 )
+-                arrival_event = RequestArrivalEvent(
+-                    request.arrived_at, request, cluster_type
+-                )
++                arrival_event = self._request_arrival_event(request, cluster_type)
+ 
+                 if cluster_type in self._cluster_simulators:
+                     self._cluster_simulators[cluster_type].add_event(arrival_event)
+@@ -420,6 +418,13 @@ class Simulator:
+                         f"Cluster {cluster_type} not found for request arrival event"
+                     )
+ 
++    def _request_arrival_event(self, request, cluster_type) -> RequestArrivalEvent:
++        """Keep client arrival intact while delaying first-role queue entry."""
++        return RequestArrivalEvent(
++            request.arrived_at + self._config.request_ingress_delay_ms / 1000,
++            request, cluster_type,
++        )
++
+     def run(self) -> None:
+         """Run the simulation in either parallel or sequential mode."""
+         if self._parallel_mode:
+@@ -1339,7 +1344,7 @@ class Simulator:
+                     else ClusterType.MONOLITHIC
+                 )
+                 self._add_event(
+-                    RequestArrivalEvent(request.arrived_at, request, cluster_type)
++                    self._request_arrival_event(request, cluster_type)
+                 )
+ 
+     def _set_time(self, time: float) -> None:
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py
+index c3fba903..be906322 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py
+@@ -19,12 +19,26 @@ GIT_TIMEOUT_S = 30
+ # A10 report section 3.5, observation 4: measured launch-queue depth,
+ # native P2-64 wave run exp-1030-144848-164721; shared by both PDD roles.
+ DP_MAX_FORWARDS_IN_FLIGHT = 19
++# P2-64 measured serving path, in ms; no engine-loop wait is included.
++# a10/remainder/reference_split_stdout.txt:3: client dispatch -> proxy arrival.
++# a10/k19/ingress_split_wave-20261030-01.txt:2: proxy_arrival->api_arrival;
++# :3: api_arrival->add_enqueue (the 1.63 ms :4 engine-loop wait is excluded).
++REQUEST_INGRESS_DELAY_MS = 10.3  # 0.6 + 3.11 + 6.59 ms
++# a10/remainder/remainder_stdout.txt:8: p_update->prefill_response;
++# a10/remainder/pairs_stdout.txt:19: prefill_response->d_add_enqueue.
++# Both n=128 wave means; :20's 10.4 ms decode-loop wait is already modeled
++# by nixl_read_completion=engine_step (A10 report section 3.6 observation 5).
++REQUEST_HANDOFF_DELAY_MS = 11.4  # 2.3 + 9.1 ms
++# P2-32 shares these values: no P2-32 add_enqueue recording exists, and its
++# engine build, proxy and API server are the same (A10 report section 5.4).
+ 
+ 
+ def operator_fields(name, root):
+     fields = h4a4.outputs(root, name)
+     fields.update(
+         metrics_config_run_id=f"a10_{name}_operator_path",
++        request_ingress_delay_ms=REQUEST_INGRESS_DELAY_MS,
++        analytical_kv_cache_transfer_config_request_handoff_delay_ms=REQUEST_HANDOFF_DELAY_MS,
+         decode_cuda_graph_mode="full_and_piecewise",
+         vllm_v1_scheduler_config_max_forwards_in_flight=DP_MAX_FORWARDS_IN_FLIGHT,
+         replica_config_network_device="h200_dgx",
+@@ -52,7 +66,7 @@ def resolved_inputs(config):
+         resolve_measurement_input_paths, resolve_training_file_paths,
+     )
+ 
+-    tables, inputs, dummy = {}, {}, {}
++    tables, inputs, dummy, cc_types = {}, {}, {}, {}
+     for role, cluster in config.get_clusters().items():
+         replica = cluster.replica_config
+         predictor = cluster.execution_time_predictor_config
+@@ -74,9 +88,11 @@ def resolved_inputs(config):
+         consumed.update(runner_block=str(runner_root / BLOCK_TABLE),
+                         runner_replay=str(runner_root / REPLAY_TABLE))
+         cc = cluster.cc_backend_config
+-        consumed["collectives"] = cc.summary_csv_path.format(
+-            profiling_data_dir=cc.profiling_data_dir, NETWORK_DEVICE=replica.network_device,
+-        )
++        cc_types[role.name] = cc.get_name()
++        if hasattr(cc, "summary_csv_path"):
++            consumed["collectives"] = cc.summary_csv_path.format(
++                profiling_data_dir=cc.profiling_data_dir, NETWORK_DEVICE=replica.network_device,
++            )
+         for owner, path in consumed.items():
+             resolved = str(Path(path).resolve())
+             tables.setdefault(resolved, []).append(f"{role.name}/{owner}")
+@@ -88,6 +104,7 @@ def resolved_inputs(config):
+                           if (Path(path).parent / FILE_NAME).exists()})
+     return records, {
+         "enable_dummy_mode": dummy,
++        "cc_backend_types": cc_types,
+         "resolved_inputs": inputs,
+         "step_cost_files_beside_inputs": step_tables,
+         "no_step_cost_file_beside_inputs": not step_tables,
+@@ -188,7 +205,7 @@ def main(name, root, *, observe=True, fields=None):
+     return receipt
+ 
+ 
+-if __name__ == "__main__":
++def parse_args(argv=None):
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("case", choices=CASES)
+     parser.add_argument("root", type=Path)
+@@ -196,8 +213,28 @@ if __name__ == "__main__":
+     parser.add_argument("--trace", type=Path)
+     parser.add_argument("--without-run-ahead", action="store_true",
+                         help="Keep the legacy DP path (max_forwards_in_flight=None).")
+-    args = parser.parse_args()
++    parser.add_argument("--without-ingress", action="store_true",
++                        help="Set ingress and handoff delays to 0 (B28 configuration).")
++    parser.add_argument("--field", action="append", default=[], metavar="NAME=VALUE",
++                        help="Override any flat config field, using JSON or a string.")
++    args = parser.parse_args(argv)
+     fields = {"trace_request_generator_config_trace_file": str(args.trace.resolve())} if args.trace else {}
+     if args.without_run_ahead:
+         fields["vllm_v1_scheduler_config_max_forwards_in_flight"] = None
+-    main(args.case, args.root, observe=not args.without_observer, fields=fields)
++    if args.without_ingress:
++        fields.update(request_ingress_delay_ms=0.0,
++                      analytical_kv_cache_transfer_config_request_handoff_delay_ms=0.0)
++    for argument in args.field:
++        if "=" not in argument or not argument.partition("=")[0]:
++            parser.error(f"--field requires NAME=VALUE, got {argument!r}")
++        name, value = h4a4.parse_field(argument)
++        if name in fields:
++            parser.error(f"field {name!r} given twice or also set through another option")
++        fields[name] = value
++    args.fields = fields
++    return args
++
++
++if __name__ == "__main__":
++    args = parse_args()
++    main(args.case, args.root, observe=not args.without_observer, fields=args.fields)
+diff --git a/tests/unit/test_dsv4_a10_tools.py b/tests/unit/test_dsv4_a10_tools.py
+index 31496df9..995967cc 100644
+--- a/tests/unit/test_dsv4_a10_tools.py
++++ b/tests/unit/test_dsv4_a10_tools.py
+@@ -246,3 +246,77 @@ def test_driver_writes_receipts_at_each_phase(tools, monkeypatch, tmp_path, run_
+         assert receipt["a11"]["forwards"]["rows"] == 0
+     else:
+         assert "a11" not in receipt
++
++
++@pytest.mark.parametrize("case", ["p2_32", "p2_64"])
++@pytest.mark.parametrize("without_ingress", [False, True])
++def test_serving_delay_options_and_receipt_diff(tools, tmp_path, case, without_ingress):
++    driver = tools.driver
++    args = driver.parse_args([case, str(tmp_path)] + (["--without-ingress"] if without_ingress else []))
++    config, changes = driver.build_config(case, tmp_path, args.fields)
++    ingress = 0.0 if without_ingress else driver.REQUEST_INGRESS_DELAY_MS
++    handoff = 0.0 if without_ingress else driver.REQUEST_HANDOFF_DELAY_MS
++    assert config.request_ingress_delay_ms == ingress
++    assert config.kv_cache_transfer_config.request_handoff_delay_ms == handoff
++    for name, value in (("request_ingress_delay_ms", ingress),
++                        ("analytical_kv_cache_transfer_config_request_handoff_delay_ms", handoff)):
++        assert changes["added_fields"][name] == 0.0
++        if without_ingress:
++            assert name not in changes["override_diff"]
++        else:
++            assert changes["override_diff"][name]["h4a4"] == value
++
++
++@pytest.mark.parametrize("options", [
++    ["--field", "seed=1", "--field", "seed=2"],
++    ["--trace", "/tmp/a.csv", "--field", "trace_request_generator_config_trace_file=b.csv"],
++    ["--without-run-ahead", "--field", "vllm_v1_scheduler_config_max_forwards_in_flight=1"],
++    ["--without-ingress", "--field", "request_ingress_delay_ms=1"],
++    ["--without-ingress", "--field", "analytical_kv_cache_transfer_config_request_handoff_delay_ms=1"],
++])
++def test_field_duplicates_and_option_conflicts_fail(tools, tmp_path, capsys, options):
++    with pytest.raises(SystemExit) as error:
++        tools.driver.parse_args(["p2_32", str(tmp_path), *options])
++    assert error.value.code == 2
++    assert "given twice or also set through another option" in capsys.readouterr().err
++
++
++def test_field_variants_record_backend_and_override_diff(tools, tmp_path):
++    driver = tools.driver
++    args = driver.parse_args(["p2_32", str(tmp_path), "--field", "cc_backend_config_type=astra_sim_analytical",
++                              "--field", "seed=7", "--field", "request_ingress_delay_ms=12.5"])
++    config, changes = driver.build_config("p2_32", tmp_path, args.fields)
++    for name, value in args.fields.items():
++        assert changes["override_diff"][name]["h4a4"] == value
++    records, facts = driver.resolved_inputs(config)
++    assert facts["cc_backend_types"] == {"PREFILL": "astra_sim_analytical", "DECODE": "astra_sim_analytical"}
++    assert len(records) == 6
++    assert "summary.csv" not in {Path(record["path"]).name for record in records}
++    assert all(not hasattr(cluster.cc_backend_config, "summary_csv_path")
++               for cluster in config.get_clusters().values())
++
++
++
++def test_field_override_is_written_in_receipt(tools, monkeypatch, tmp_path):
++    import frontier.simulator
++    from frontier.types import ClusterType
++
++    class Simulator:
++        def __init__(self, config):
++            self._predictors = {role: SimpleNamespace(_dsv4_step_costs=None)
++                                for role in (ClusterType.PREFILL, ClusterType.DECODE)}
++
++        def run(self):
++            pass
++
++    driver = tools.driver
++    monkeypatch.setattr(frontier.simulator, "Simulator", Simulator)
++    monkeypatch.setattr(driver.h4a4, "kv_admission", lambda *args: {})
++    args = driver.parse_args(["p2_32", str(tmp_path), "--field", "seed=7",
++                              "--field", "cc_backend_config_type=astra_sim_analytical"])
++    driver.main("p2_32", tmp_path, observe=False, fields=args.fields)
++    receipt = json.loads((tmp_path / "receipt.json").read_text())
++    assert receipt["status"] == "FINISHED"
++    assert receipt["override_diff"]["seed"]["h4a4"] == 7
++    assert receipt["override_diff"]["cc_backend_config_type"]["h4a4"] == "astra_sim_analytical"
++    assert receipt["a1"]["cc_backend_types"] == {"PREFILL": "astra_sim_analytical", "DECODE": "astra_sim_analytical"}
+diff --git a/tests/unit/test_pdd_parallel_initializer.py b/tests/unit/test_pdd_parallel_initializer.py
+index a3be6831..cd854e38 100644
+--- a/tests/unit/test_pdd_parallel_initializer.py
++++ b/tests/unit/test_pdd_parallel_initializer.py
+@@ -91,6 +91,7 @@ def test_init_parallel_events_routes_online_arrivals_to_prefill() -> None:
+     }
+     simulator._config = SimpleNamespace(
+         simulation_mode="online",
++        request_ingress_delay_ms=0.0,
+         is_disaggregated_mode=lambda: True,
+     )
+ 

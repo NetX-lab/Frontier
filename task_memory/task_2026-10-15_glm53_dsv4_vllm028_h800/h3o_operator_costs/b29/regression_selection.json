@@ -1,0 +1,23 @@
+{
+  "terms": [
+    "kv_cache_transfer",
+    "KVCacheTransfer",
+    "RequestArrivalEvent",
+    "request_arrival",
+    "arrived_at",
+    "simulation_mode",
+    "flat_dataclass",
+    "SimulationConfig",
+    "cluster_batch_end",
+    "a10",
+    "dsv4",
+    "pd_disaggregation",
+    "pdd"
+  ],
+  "rule": "all .py modules recursively under tests/unit, union B24; omit node selectors already covered by a selected whole module",
+  "b24_source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b24/regression_targets.json",
+  "initial_common_targets": 177,
+  "added_common_module": "tests/unit/predictor_cache_fixtures.py",
+  "new_candidate_module": "tests/unit/test_serving_path_delays.py",
+  "final_targets": 179
+}

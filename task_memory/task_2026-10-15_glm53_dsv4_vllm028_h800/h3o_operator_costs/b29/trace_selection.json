@@ -1,0 +1,16 @@
+{
+  "source_trace": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/processed_traces/canonical_fixed_6144_1024_req128_qps1/trace.csv",
+  "selection": "CSV header plus first 8 data rows in original file order; preserve timestamps and token counts",
+  "selected_trace": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/trace_first8.csv",
+  "source_header": "arrived_at,num_prefill_tokens,num_decode_tokens",
+  "selected_rows": [
+    "0.0,6144,1024",
+    "1.0,6144,1024",
+    "2.0,6144,1024",
+    "3.0,6144,1024",
+    "4.0,6144,1024",
+    "5.0,6144,1024",
+    "6.0,6144,1024",
+    "7.0,6144,1024"
+  ]
+}
