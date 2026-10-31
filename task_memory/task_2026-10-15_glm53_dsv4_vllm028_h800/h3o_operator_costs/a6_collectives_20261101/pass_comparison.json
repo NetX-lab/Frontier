@@ -1,0 +1,557 @@
+{
+  "classification": "DIAGNOSTIC_PASS_COMPARISON",
+  "curves": [
+    {
+      "key": [
+        "all_gatherv",
+        "ep",
+        16
+      ],
+      "passes": [
+        {
+          "pass_index": "0",
+          "key": [
+            "all_gatherv",
+            "ep",
+            16
+          ],
+          "point_count": 5,
+          "byte_range": [
+            8264,
+            6346752
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.10765720185877037,
+            "p90_absolute": 0.11932666630297854,
+            "max_absolute": 0.12224403241403059
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "1",
+          "key": [
+            "all_gatherv",
+            "ep",
+            16
+          ],
+          "point_count": 5,
+          "byte_range": [
+            8264,
+            6346752
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.12332720783333162,
+            "p90_absolute": 0.12958863946505755,
+            "max_absolute": 0.13115399737298905
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "2",
+          "key": [
+            "all_gatherv",
+            "ep",
+            16
+          ],
+          "point_count": 5,
+          "byte_range": [
+            8264,
+            6346752
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.11900426444167689,
+            "p90_absolute": 0.12325529768671259,
+            "max_absolute": 0.12431805599797152
+          },
+          "verdict": "FAIL"
+        }
+      ]
+    },
+    {
+      "key": [
+        "all_gatherv",
+        "ep",
+        32
+      ],
+      "passes": [
+        {
+          "pass_index": "0",
+          "key": [
+            "all_gatherv",
+            "ep",
+            32
+          ],
+          "point_count": 5,
+          "byte_range": [
+            8264,
+            6346752
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.0847959294453684,
+            "p90_absolute": 0.10825248026259829,
+            "max_absolute": 0.11411661796690575
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "1",
+          "key": [
+            "all_gatherv",
+            "ep",
+            32
+          ],
+          "point_count": 5,
+          "byte_range": [
+            8264,
+            6346752
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.08464510753637366,
+            "p90_absolute": 0.10163233574869687,
+            "max_absolute": 0.10587914280177768
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "2",
+          "key": [
+            "all_gatherv",
+            "ep",
+            32
+          ],
+          "point_count": 5,
+          "byte_range": [
+            8264,
+            6346752
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.11154667834048504,
+            "p90_absolute": 0.13016683399895473,
+            "max_absolute": 0.13482187291357217
+          },
+          "verdict": "FAIL"
+        }
+      ]
+    },
+    {
+      "key": [
+        "all_reduce",
+        "tp",
+        8
+      ],
+      "passes": [
+        {
+          "pass_index": "0",
+          "key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "point_count": 8,
+          "byte_range": [
+            8192,
+            50331648
+          ],
+          "heldout": {
+            "count": 6,
+            "median_absolute": 0.027830213933169368,
+            "p90_absolute": 0.13712974717872406,
+            "max_absolute": 0.15696945758100234
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "1",
+          "key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "point_count": 8,
+          "byte_range": [
+            8192,
+            50331648
+          ],
+          "heldout": {
+            "count": 6,
+            "median_absolute": 0.15138673729857854,
+            "p90_absolute": 0.19932606037089218,
+            "max_absolute": 0.20780152351971104
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "2",
+          "key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "point_count": 8,
+          "byte_range": [
+            8192,
+            50331648
+          ],
+          "heldout": {
+            "count": 6,
+            "median_absolute": 0.09200413889408304,
+            "p90_absolute": 0.18777617831586746,
+            "max_absolute": 0.2020523599757298
+          },
+          "verdict": "FAIL"
+        }
+      ]
+    },
+    {
+      "key": [
+        "logits_all_gather",
+        "tp",
+        8
+      ],
+      "passes": [
+        {
+          "pass_index": "0",
+          "key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "point_count": 24,
+          "byte_range": [
+            32320,
+            775680
+          ],
+          "heldout": {
+            "count": 22,
+            "median_absolute": 0.03725066928237114,
+            "p90_absolute": 0.09682690561753382,
+            "max_absolute": 0.13532198220884395
+          },
+          "verdict": "PASS"
+        },
+        {
+          "pass_index": "1",
+          "key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "point_count": 24,
+          "byte_range": [
+            32320,
+            775680
+          ],
+          "heldout": {
+            "count": 22,
+            "median_absolute": 0.05728870271895514,
+            "p90_absolute": 0.11645813257543797,
+            "max_absolute": 0.15093630801451519
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "2",
+          "key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "point_count": 24,
+          "byte_range": [
+            32320,
+            775680
+          ],
+          "heldout": {
+            "count": 22,
+            "median_absolute": 0.02911475366687455,
+            "p90_absolute": 0.0965190163496357,
+            "max_absolute": 0.12735889618649088
+          },
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "key": [
+        "reduce_scatterv",
+        "ep",
+        16
+      ],
+      "passes": [
+        {
+          "pass_index": "0",
+          "key": [
+            "reduce_scatterv",
+            "ep",
+            16
+          ],
+          "point_count": 5,
+          "byte_range": [
+            131072,
+            100663296
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.40189617397250843,
+            "p90_absolute": 0.42755052316090214,
+            "max_absolute": 0.43396411045800054
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "1",
+          "key": [
+            "reduce_scatterv",
+            "ep",
+            16
+          ],
+          "point_count": 5,
+          "byte_range": [
+            131072,
+            100663296
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.04235103645817184,
+            "p90_absolute": 0.10234331399435158,
+            "max_absolute": 0.1173413833783965
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "2",
+          "key": [
+            "reduce_scatterv",
+            "ep",
+            16
+          ],
+          "point_count": 5,
+          "byte_range": [
+            131072,
+            100663296
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.06812979839967226,
+            "p90_absolute": 0.09675480858262478,
+            "max_absolute": 0.1039110611283629
+          },
+          "verdict": "FAIL"
+        }
+      ]
+    },
+    {
+      "key": [
+        "reduce_scatterv",
+        "ep",
+        32
+      ],
+      "passes": [
+        {
+          "pass_index": "0",
+          "key": [
+            "reduce_scatterv",
+            "ep",
+            32
+          ],
+          "point_count": 5,
+          "byte_range": [
+            262144,
+            201326592
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.23453338594266349,
+            "p90_absolute": 0.3579881472988659,
+            "max_absolute": 0.38885183763791653
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "1",
+          "key": [
+            "reduce_scatterv",
+            "ep",
+            32
+          ],
+          "point_count": 5,
+          "byte_range": [
+            262144,
+            201326592
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.3342815485915587,
+            "p90_absolute": 0.41494829252752297,
+            "max_absolute": 0.43511497851151404
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "2",
+          "key": [
+            "reduce_scatterv",
+            "ep",
+            32
+          ],
+          "point_count": 5,
+          "byte_range": [
+            262144,
+            201326592
+          ],
+          "heldout": {
+            "count": 3,
+            "median_absolute": 0.29354656019645486,
+            "p90_absolute": 0.3807231459046261,
+            "max_absolute": 0.4025172923316689
+          },
+          "verdict": "FAIL"
+        }
+      ]
+    },
+    {
+      "key": [
+        "sp_all_gather",
+        "tp",
+        8
+      ],
+      "passes": [
+        {
+          "pass_index": "0",
+          "key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "point_count": 9,
+          "byte_range": [
+            8192,
+            25165824
+          ],
+          "heldout": {
+            "count": 7,
+            "median_absolute": 0.15796857094531125,
+            "p90_absolute": 0.2599406589487436,
+            "max_absolute": 0.28335591786630343
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "1",
+          "key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "point_count": 9,
+          "byte_range": [
+            8192,
+            25165824
+          ],
+          "heldout": {
+            "count": 7,
+            "median_absolute": 0.03660537919507445,
+            "p90_absolute": 0.22807144886099093,
+            "max_absolute": 0.26419644566959155
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "2",
+          "key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "point_count": 9,
+          "byte_range": [
+            8192,
+            25165824
+          ],
+          "heldout": {
+            "count": 7,
+            "median_absolute": 0.04312246404345221,
+            "p90_absolute": 0.14334070896258322,
+            "max_absolute": 0.24989112565268456
+          },
+          "verdict": "FAIL"
+        }
+      ]
+    },
+    {
+      "key": [
+        "sp_reduce_scatter",
+        "tp",
+        8
+      ],
+      "passes": [
+        {
+          "pass_index": "0",
+          "key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "point_count": 8,
+          "byte_range": [
+            8192,
+            50331648
+          ],
+          "heldout": {
+            "count": 6,
+            "median_absolute": 0.05853936164700424,
+            "p90_absolute": 0.07592674236624286,
+            "max_absolute": 0.07645859618951323
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "1",
+          "key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "point_count": 8,
+          "byte_range": [
+            8192,
+            50331648
+          ],
+          "heldout": {
+            "count": 6,
+            "median_absolute": 0.10816240042409608,
+            "p90_absolute": 0.22057399538740857,
+            "max_absolute": 0.3205547380486151
+          },
+          "verdict": "FAIL"
+        },
+        {
+          "pass_index": "2",
+          "key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "point_count": 8,
+          "byte_range": [
+            8192,
+            50331648
+          ],
+          "heldout": {
+            "count": 6,
+            "median_absolute": 0.10097285631111996,
+            "p90_absolute": 0.15736827930325004,
+            "max_absolute": 0.18365065771614475
+          },
+          "verdict": "FAIL"
+        }
+      ]
+    }
+  ]
+}

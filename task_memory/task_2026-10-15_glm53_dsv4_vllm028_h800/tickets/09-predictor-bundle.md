@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Added collective curve attribution; full qualification remains open. |
 | 2026-11-01 | Attributed all four A6 failures to exact-feature errors sufficient to fail p90; estimator tuning alone cannot close qualification. |
 | 2026-11-01 | Synchronized completed A6/F3 evidence and the active F1/F2 comparisons; acceptance criteria unchanged. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
@@ -62,6 +63,8 @@ Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-p
 H200 operator tables/runtime and full A10 replays are implemented; numerical comparison has started. No dummy mode or step-cost table is bound. Fresh A6 completed but failed qualification: four attention scopes and seven of eight uniform collective curves remain outside their thresholds. Exact-feature errors alone exceed 10% in more than 10% of all evaluable samples for each failing attention scope; inspect feature-equivalent measurements before changing the estimator. Full bundle qualification remains OPEN for those failures and the hardware/coverage requirements; see [A6 report](../test_report_2026-11-01_a6_report_recovery.md). B30b fits and F comparisons remain diagnostic.
 
 CSA follow-up (2026-11-01): raw median reconstruction passes; independent G2h rows match all workload/layer identities but do not preserve the first/reuse-layer contrasts. Keep predictor features unchanged and test freshly reconstructed one-step workloads before any measurement correction. Evidence: [A6 report](../test_report_2026-11-01_a6_report_recovery.md).
+
+Collective follow-up (2026-11-01): all eight curve summaries and source medians reproduce; six of seven failing curves also fail separately in every retained pass. Sparse payload intervals, mode/kernel changes and within-pass variability remain distinct findings, with no input or threshold change. See [collective attribution](../test_report_2026-11-01_a6_collective_curves.md).
 
 ## Historical route — DSV4 H800 mainline (2026-10-25)
 

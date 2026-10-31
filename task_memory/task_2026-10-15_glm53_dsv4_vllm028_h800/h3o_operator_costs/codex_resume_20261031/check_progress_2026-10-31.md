@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Collective逐点/逐pass重建完成，所有结果保留；等待唯一attention probe与三个CPU replay。 |
 | 2026-11-01 | 单步重建probe的128案例、546文件和真实payload检查完成，1H200已提交；三个CPU replay继续。 |
 | 2026-11-01 | CSA raw与独立G2h比较完成：不按planner拆模型，转为同geometry重新构建后的单步重复性验证。 |
 | 2026-11-01 | A6 exact-feature归因里程碑自查：四scope都不能靠改进插值过门限；下一步检查既有测量和native输入。 |
@@ -23,7 +24,7 @@
 | 03 inventory | TODO | source/cache 合同存在；native 完整验收未关闭。 |
 | 04 GLM family | SKIPPED | 用户暂停 GLM。 |
 | 05 DSV4 family | TODO | operator path已实现；A6四scope失败且exact errors已足够令p90失败。 |
-| 06 communication | TODO | 03已Succeeded，测量验证完成；F1b held-out失败，两次replay均COVERAGE_MISS。 |
+| 06 communication | TODO | F1b held-out与coverage失败；A6曲线及24个pass诊断重建完成，资格仍失败。 |
 | 07 NIXL PD | TODO | lifecycle/ingress 已实现；F3实测完整但fit失败；native packed payload资格仍未关闭。 |
 | 08 workflow | TODO | run-ahead 与 B29 已验证；完整验收未关闭。 |
 | 09 predictor bundle | TODO | non-dummy 路径运行；A6已完成但精度失败，硬件coverage仍未关闭。 |
@@ -41,16 +42,16 @@
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** A6跨运行归因提交2b4da71e至单步probe提交exp-1101-015820-503227｜**当前前沿：** 11/19三个既有CPU replay；05/09 A6测量资格
+**检测窗口：** 前次probe提交检查点8b530816至collective逐点归因完成｜**当前前沿：** 11/19三个既有CPU replay；05/09 A6测量资格
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | 复用既有builder、geometry checker和launcher，128案例CPU检查后直接提交；未扩展通用框架。 |
-| D2 细节反复重试 | CLEAR | 先冻结相同geometry重复性假设、选择和分析，再提交唯一probe；不是无假设重跑。 |
-| D3 支线问题修补 | CLEAR | 全部工作属于05/09 A6资格失败，三个11/19 replay继续。 |
+| D1 工具打磨 | CLEAR | 仅新增下一步需要的逐点归因，复用production loader/LOO；8条曲线与24条pass汇总后停止扩展。 |
+| D2 细节反复重试 | CLEAR | 未重复提交或训练；检验kernel/mode变化与pass波动假设，结果排除单一重新汇总方案。 |
+| D3 支线问题修补 | CLEAR | 逐点collective结果属于05/06/09 A6资格；没有与主线无关的修复。 |
 | D4 可并行任务停滞 | CLEAR | F1a64与F2两规模保持运行；CPU分析独立推进。 |
 | D5 超范围镀金 | CLEAR | 只增加必要分析工具；无生产代码、参数或formal输入变化。 |
-| D6 分析空转 | CLEAR | 前一里程碑否定持久layer差异假设，本次完成128案例原始step一致检查并提交单步重复性probe。 |
+| D6 分析空转 | CLEAR | 新结果确认6条失败曲线每个pass均失败，记录停止平滑/择pass的决定；唯一attention实测仍在运行。 |
 | D7 路线违背 | CLEAR | D-NO-INTERRUPT/D33预算内提交1H200；约4.52+1.5=6.02/7GPUh，完整个人non-preemptible预留0→1≤32；F诊断不得替换formal输入。 |
 
 **文档检查：** S1独立比较无错误依赖；S2测量精度已有05/09归属；S3保留原资格标准，当前失败不等于标准不可达；S4原median/p90及四指标门限明确；S5当前入口按新证据同步，未发现与决定冲突；S6原ticket切分仍可用。
@@ -70,6 +71,6 @@
 
 ## 4. 最值得关注的 3 点
 
-1. CSA的首层与后续层差异没有在独立运行中稳定重现，当前不支持加planner/layer特征；原A6仍FAIL。
+1. A6 collective的6条失败曲线在每个pass均失败，重新汇总无法全面修正；kernel/mode和离散payload也需保持对应。
 2. 唯一1H200 probe已提交；128案例CPU检查通过，等待真实采样和终态。
 3. 三个CPU replay还未结束；正式CC/K19、10.3/11.4ms与三次reference不变，P2-64 TTFT失败和其他qualification缺口仍在。

@@ -1,0 +1,56 @@
+WARNING 02:08:17 model_architectures.py:1314] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: trained operator execution supports MONOLITHIC, PREFILL and unified DECODE on measured H200 coordinates; dsv4_step_cost.json is diagnostic only; PD-AF, prefix caching, speculative decoding / MTP and CPU-overhead modeling are unsupported; sampling measures MONOLITHIC and unified DECODE requests with min_tokens=max_tokens (logits processing on) and PREFILL requests from the vLLM 0.28 PD proxy without min_tokens (logits processing off); other sampling parameters are unmeasured
+WARNING 02:08:17 cluster_config.py:1575] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+======================================================================
+
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(8192, 16384), us=(9.836000017821789, 8.99519994854927)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(65536, 131072), us=(10.291200131177902, 9.934400022029877)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(196608, 262144), us=(13.03199976682663, 12.948799878358841)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('logits_all_gather', 'tp', 8): bytes=(96960, 129280), us=(25.203199684619904, 25.1568004488945)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('logits_all_gather', 'tp', 8): bytes=(226240, 258560), us=(31.08160048723221, 30.958399176597595)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('logits_all_gather', 'tp', 8): bytes=(355520, 387840), us=(38.180799782276154, 37.52480000257492)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('logits_all_gather', 'tp', 8): bytes=(420160, 452480), us=(41.121600568294525, 39.38080072402954)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('logits_all_gather', 'tp', 8): bytes=(484800, 517120), us=(44.82239931821823, 43.95360052585602)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('logits_all_gather', 'tp', 8): bytes=(549440, 581760), us=(48.37599992752075, 40.51840007305145)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('logits_all_gather', 'tp', 8): bytes=(646400, 678720), us=(42.896001040935516, 41.50719940662384)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('sp_all_gather', 'tp', 8): bytes=(98304, 131072), us=(11.059200018644333, 10.531199723482132)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('sp_reduce_scatter', 'tp', 8): bytes=(8192, 16384), us=(11.948800086975098, 10.627200081944466)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('sp_reduce_scatter', 'tp', 8): bytes=(16384, 32768), us=(10.627200081944466, 8.894399926066399)
+WARNING 02:08:17 measured_cc_backend.py:207] Non-monotone measured collective ('sp_reduce_scatter', 'tp', 8): bytes=(32768, 65536), us=(8.894399926066399, 8.102399855852127)
+{"status": "PASS_REPRODUCED_A6", "elapsed_seconds": 0.13553147902712226}
+('all_gatherv', 'ep', 16) worst {'bytes': 33056, 'measured_us': 177.79359817504883, 'predicted_loo_us': 154.71959142493455, 'absolute_relative_error': 0.12977973890486477, 'neighbor_kernel_signatures_equal': True, 'neighbor_graph_modes_equal': False}
+('all_gatherv', 'ep', 32) worst {'bytes': 33056, 'measured_us': 339.7808074951172, 'predicted_loo_us': 300.67408880736974, 'absolute_relative_error': 0.11509396006220696, 'neighbor_kernel_signatures_equal': True, 'neighbor_graph_modes_equal': False}
+('all_reduce', 'tp', 8) worst {'bytes': 131072, 'measured_us': 9.934400022029877, 'predicted_loo_us': 11.944411047015466, 'absolute_relative_error': 0.20232837620070865, 'neighbor_kernel_signatures_equal': True, 'neighbor_graph_modes_equal': True}
+('logits_all_gather', 'tp', 8) worst {'bytes': 549440, 'measured_us': 48.37599992752075, 'predicted_loo_us': 42.15055860480922, 'absolute_relative_error': 0.12868863345540738, 'neighbor_kernel_signatures_equal': True, 'neighbor_graph_modes_equal': True}
+('reduce_scatterv', 'ep', 16) worst {'bytes': 262144, 'measured_us': 63.26559782028198, 'predicted_loo_us': 68.63699202866914, 'absolute_relative_error': 0.08490229118905396, 'neighbor_kernel_signatures_equal': True, 'neighbor_graph_modes_equal': False}
+('reduce_scatterv', 'ep', 32) worst {'bytes': 1048576, 'measured_us': 290.723192691803, 'predicted_loo_us': 168.83142703732366, 'absolute_relative_error': 0.4192708690554914, 'neighbor_kernel_signatures_equal': True, 'neighbor_graph_modes_equal': False}
+('sp_all_gather', 'tp', 8) worst {'bytes': 131072, 'measured_us': 10.531199723482132, 'predicted_loo_us': 13.313505259062696, 'absolute_relative_error': 0.2641964456695915, 'neighbor_kernel_signatures_equal': False, 'neighbor_graph_modes_equal': False}
+('sp_reduce_scatter', 'tp', 8) worst {'bytes': 262144, 'measured_us': 10.390400141477585, 'predicted_loo_us': 11.392460622601636, 'absolute_relative_error': 0.09644099047965551, 'neighbor_kernel_signatures_equal': False, 'neighbor_graph_modes_equal': False}
