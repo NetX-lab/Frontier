@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | F2 P2-32 completed with all-repeat numerical PASS and exact collective coverage; only F2 P2-64 remains active. |
 | 2026-11-01 | Resumed existing F2 runs; checked six completed readings/96 metric rows against unchanged native CSVs; stopped further expansion of the comparison verifier. |
 | 2026-11-01 | A6 repeatability accepted as diagnostic; F1a both scales complete with FAIL; only two F2 replays remain active. |
 | 2026-11-01 | Collective逐点/逐pass重建完成，所有结果保留；等待唯一attention probe与三个CPU replay。 |
@@ -39,19 +40,19 @@
 | 16 GLM case | SKIPPED | 用户暂停 GLM。 |
 | 17 DSV4 case | TODO | P0/P2 bindings 可复用；H80064 后续工作未完成。 |
 | 18 native references | TODO | P2 原 R4 PASS；全硬件 qualification 未完成。 |
-| 19 comparison | TODO | F1a complete and FAIL at both scales; F1b/F3 failures retained; two F2 replays still running. |
+| 19 comparison | TODO | F1a complete and FAIL at both scales; F1b/F3 failures retained; F2 P2-32 numericalPASS; P2-64 still running. |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** Commit0a301fcc through six-reading comparison precheck; F2 remains running. **当前前沿：** 11/19 two F2K18 replays;05/09 measurement qualification after comparison completion.
+**检测窗口：** Commit0a301fcc through six-reading comparison precheck; F2 P2-32 completed all-repeat numericalPASS; P2-64 remains running. **当前前沿：** 11/19 F2K18 P2-64 replay;05/09 measurement qualification after comparison completion.
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | Comparison verification is limited to the eight requested readings. Six existing readings/96 metrics pass; three metadata assumptions (E2E key and two pre-B29 fields) were corrected from the retained schemas. Stop adding checks after final F2 verification. |
 | D2 细节反复重试 | CLEAR | The pre-recorded fixed-geometry hypothesis returned new measurements. No repeated GPU submission, simulator restart or second gate. |
 | D3 支线问题修补 | CLEAR | A6 evidence belongs to05/09; F1a belongs to11/19. No unrelated change. |
-| D4 可并行任务停滞 | CLEAR | All three original CPU runs continued during A6 analysis. F1a finished; both independent F2 jobs still run. |
+| D4 可并行任务停滞 | CLEAR | All three original CPU runs continued during A6 analysis. F1a and F2P2-32 finished; F2P2-64 still runs. |
 | D5 超范围镀金 | CLEAR | No production feature, data schema, estimator or formal input changed. |
 | D6 分析空转 | CLEAR | No A6 analyzer or repeated probe was added. The six completed readings are consolidated; do not re-run gates or expand analysis while waiting for F2. |
 | D7 路线违背 | CLEAR | D-NO-INTERRUPT and decision46 preserved. Observed probe launcher window0.319825GPUh keeps approximate ledger4.839825/7; no larger campaign submitted. |
@@ -66,12 +67,12 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 11/19: keep F2 P2-32 and P2-64 running; consume watcher23683 outputs once → terminal receipts,128 complete requests and each reference's four metrics.
+1. 11/19: keep the existing F2 P2-64 running; consume watcher23683 outputs once → terminal receipts,128 complete requests and each reference's four metrics.
 2. 19: finish F1–F4 comparison → retain F1a latency failures, F1b held-out/COVERAGE_MISS and F3 invalid fit, alongside F2 and completed F4.
 3. 05/09: choose a uniform measurement correction from completed evidence → preserve the full1,421-case population and original data, state why the recipe addresses the observed variation, then assess resources. The index-compression control's20.50%half-median difference does not establish that16 repeats suffice; do not launch a full repetition sweep on cost estimates alone.
 
 ## 4. 最值得关注的 3 点
 
 1. A6 raw identity/geometry/count checks pass, but large original CSA contrasts do not persist. Keep features and formal tables unchanged; all qualification failures remain.
-2. F1a P2-64 now fails TTFT/TPOT/E2E in all three references; six compute hashes and three reference CSVs match B29. Both F2 replays still need terminal evidence.
+2. F1a P2-64 now fails TTFT/TPOT/E2E in all three references; six compute hashes and three reference CSVs match B29. F2 P2-32 is complete and numericalPASS; only P2-64 needs terminal evidence.
 3. Remaining approximate G1h–G4h budget is2.160175GPUh; two full reconstructions already cost2.210720GPUh before reserve. No larger campaign or diagnostic promotion is authorized by these results.

@@ -21,8 +21,21 @@
       "verdict": "FAIL"
     },
     "f2_p2_32": {
-      "status": "WAITING",
-      "run_root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_32_k18_codex_20261101"
+      "status": "READING_COMPLETE",
+      "run_root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_32_k18_codex_20261101",
+      "driver_status": "FINISHED",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_gate.py",
+        "p2_32",
+        "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_32_k18_codex_20261101",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32"
+      ],
+      "started_utc": "2026-10-31T18:57:46.707532+00:00",
+      "exit_code": 0,
+      "log": "/data/ycfeng/tmp/glm53_dsv4/f2_p2_32_gate_20261101.log",
+      "finished_utc": "2026-10-31T18:57:47.925206+00:00",
+      "verdict": "PASS"
     },
     "f2_p2_64": {
       "status": "WAITING",

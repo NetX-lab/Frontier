@@ -1,0 +1,14 @@
+{
+  "observed_utc": "2026-10-31T18:57:47.954047+00:00",
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a8_collectives.py",
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_32_k18_codex_20261101"
+  ],
+  "exit_code": 0,
+  "distinct_requests": 44,
+  "calls": 6310733,
+  "exact_calls": 6310733,
+  "violations": 0,
+  "source_evidence": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32_collectives.json"
+}

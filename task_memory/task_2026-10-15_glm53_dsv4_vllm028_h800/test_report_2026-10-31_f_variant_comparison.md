@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Verified F2 P2-32 all-repeat numerical PASS and A8 exact coverage; only F2 P2-64 remains running. |
 | 2026-11-01 | Verified six completed readings/96 metric entries for the final comparison collector while both original F2 replays continue. |
 | 2026-11-01 | Completed F1a P2-64 with all-repeat latency FAIL; retained exact references, six compute hashes and active F2 replays. |
 | 2026-10-31 | Codex update: F4/B28 five-artifact identity on both scales, B29 per-repeat results, F1a P2-32 final FAIL and fresh P2-64 replay. |
@@ -13,7 +14,7 @@
 
 F1a is complete at both scales. P2-32 has pooled TPOT28.38101% and E2E27.82468% errors (FAIL). P2-64 completed128 formal requests and917,504 tokens: TTFT/TPOT/E2E FAIL in every reference repetition; total THPT PASS. Specification-link parameters substantially underpredict the observed latencies on these two cases. The original incomplete P2-64 attempt remains retained; these results come only from the fresh completed run.
 
-B29 remains the formal measured-CC input: P2-32 numerical PASS in all three repetitions; P2-64 repeat1 TTFT12.254940665% FAIL (779.888727400ms native versus684.313826604ms Frontier). Pooled TTFT7.67691% does not override it. F4 five metric artifacts remain byte-identical to B28 at both scales; its zero ingress/handoff differs from B29. F1b's prescribed positive fit fails G5h held-out validation and both replays terminate COVERAGE_MISS; no complete four-metric F1b result exists. F3's completed NIXL data yields an invalid affine fit and no replacement/replay. Both F2K18 CPU replays are still running; watcher23683 owns their gates.
+B29 remains the formal measured-CC input: P2-32 numerical PASS in all three repetitions; P2-64 repeat1 TTFT12.254940665% FAIL (779.888727400ms native versus684.313826604ms Frontier). Pooled TTFT7.67691% does not override it. F4 five metric artifacts remain byte-identical to B28 at both scales; its zero ingress/handoff differs from B29. F1b's prescribed positive fit fails G5h held-out validation and both replays terminate COVERAGE_MISS; no complete four-metric F1b result exists. F3's completed NIXL data yields an invalid affine fit and no replacement/replay. F2K18 P2-32 is now complete and numerical PASS in all three references; F2 P2-64 remains running and watcher23683 owns its gate.
 
 F1a P2-64 uses source `9f5f8b614f1e278b02ad39015f0230de562c82ba`, clean, in `f1a-astra-diagnostic`. Both roles use ASTRA Switch links3,600/400Gbit/s and1/1µs latency, with K19 and B29 ingress10.3ms/handoff11.4ms. No dummy or step-cost table is bound. The six compute-table hashes match B29; all three normalized native reference CSVs are byte-identical to B29's retained CSVs. There are128 unique complete formal request rows, no token/request/metric gaps,53,248 forward and stage-end records, and zero stale stage ends. `collectives.calls=0` is the measured-backend census field on an ASTRA run; it is not evidence that no communication was simulated. Memory admission remains DIFFERS (2,940 modeled versus2,944 native blocks per request), as in the existing qualification record.
 
@@ -57,6 +58,35 @@ Decision under D-NO-INTERRUPT: this completes the F1a comparison requested by de
 
 The initial screen, predictions and then-pending statuses below are historical. The measured backend stays formal; no diagnostic variant or B30a default change is promoted.
 
+## F2 P2-32 completed — 2026-11-01
+
+The existing launcher86884 exited0 and the watcher ran the canonical gate once at02:57:46–02:57:47 UTC+8. The reading is numerical PASS against every reference repeat. Source662a427e is clean, initialization71.904930s and simulation7225.211242s. The128 complete requests contain917,504tokens; allthree native CSVs and six compute-table hashes equal B29. The pre-run input comparison verifies allseven profiling hashes and effective behavior differs only by K19→18. Both serving delays remain10.3/11.4ms. There are23,040 forwards and matching stage ends, zero stale ends. A8 reports6,310,733/6,310,733 exact collective calls,44 distinct requests, zero violations.
+
+The following values are read from the retained gate, without normalization or gate reruns. Pooled results are supplementary. Latencies are ms; throughput is tok/s.
+
+| Reference | Metric | Native | F2 K18 | Absolute error | Relative error | Verdict |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| pooled | ttft_ms | 364.029650 | 345.032252 | 18.997398 | 5.218640% | PASS |
+| pooled | tpot_ms | 19.918966 | 19.929652 | 0.010686 | 0.053645% | PASS |
+| pooled | request_e2e_time_ms | 20741.131945 | 20733.065841 | 8.066104 | 0.038889% | PASS |
+| pooled | token_throughput_tps | 6231.415496 | 6224.402906 | 7.012590 | 0.112536% | PASS |
+| repeat01 | ttft_ms | 361.974764 | 345.032252 | 16.942512 | 4.680578% | PASS |
+| repeat01 | tpot_ms | 19.906845 | 19.929652 | 0.022807 | 0.114569% | PASS |
+| repeat01 | request_e2e_time_ms | 20726.676790 | 20733.065841 | 6.389051 | 0.030825% | PASS |
+| repeat01 | token_throughput_tps | 6234.123762 | 6224.402906 | 9.720856 | 0.155930% | PASS |
+| repeat02 | ttft_ms | 364.748496 | 345.032252 | 19.716244 | 5.405435% | PASS |
+| repeat02 | tpot_ms | 19.888592 | 19.929652 | 0.041060 | 0.206450% | PASS |
+| repeat02 | request_e2e_time_ms | 20710.777696 | 20733.065841 | 22.288145 | 0.107616% | PASS |
+| repeat02 | token_throughput_tps | 6231.404806 | 6224.402906 | 7.001900 | 0.112365% | PASS |
+| repeat03 | ttft_ms | 365.365689 | 345.032252 | 20.333437 | 5.565229% | PASS |
+| repeat03 | tpot_ms | 19.961462 | 19.929652 | 0.031810 | 0.159359% | PASS |
+| repeat03 | request_e2e_time_ms | 20785.941348 | 20733.065841 | 52.875508 | 0.254381% | PASS |
+| repeat03 | token_throughput_tps | 6228.720263 | 6224.402906 | 4.317357 | 0.069314% | PASS |
+
+Evidence: `h3o_operator_costs/f_comparisons_20261101/f2_p2_32/reading.json`, `f2_p2_32_receipt.json`, `f2_p2_32_verification.json`, `f2_p2_32_collectives.json` and `f2_p2_32_a8.json`. The existing `a8_collectives.py RUN_ROOT` returned0 with zero violations. `v4_f_variant_comparison.verify_reading` and `verify_f2` returned successfully on these actual outputs. Its sixteen metric entries pass the collector checks. No source behavior or input was changed after launch.
+
+Decision under D-NO-INTERRUPT: retain this diagnostic result and formalK19. A close E2E match does not resolve the single-capacity AMBIGUOUS finding or establish that the synthetic one-GPU launch queue represents native concurrent streams and collectives. P2-64 remains running in its original session87208; its gate and final comparison collection remain pending. A6/memory/NIXL qualification is unchanged.
+
 ## Comparison collector verification — 2026-11-01
 
 `tests/analysis/v4_f_variant_comparison.py` reads retained canonical outputs and does not execute a normalizer, gate or simulator. It checks the eight expected B29/F1a/F2/F4 readings against the corresponding B29 reference CSV bytes, six compute-table hashes, fixed request/token population, all four metrics, every repeat and the unchanged10% threshold. Its output uses a nonnegative absolute error and retains a separate signed delta. F1b coverage failures and F3 invalid-fit results have null metrics. F4 retains its pre-B29 zero-delay configuration.
@@ -69,7 +99,7 @@ Command, current worktree, Python3.10.6 with30GiB RLIMIT_AS:
 env PYTHONDONTWRITEBYTECODE=1 timeout 60s /data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/tmp/glm53_dsv4/f_comparison_precheck_20261101.py
 ```
 
-The exact command script is retained as `precheck_command.py`. Final exit0; AST parsing and `git diff --check` PASS. The complete collector command remains pending both F2 terminal receipts and the existing watcher's once-run readings:
+The exact command script is retained as `precheck_command.py`. Final exit0; AST parsing and `git diff --check` PASS. The complete collector command now waits only for F2 P2-64 and the existing watcher's once-run reading:
 
 ```bash
 env PYTHONDONTWRITEBYTECODE=1 timeout 60s /data/ycfeng/envs/frontier-py310/bin/python tests/analysis/v4_f_variant_comparison.py --task-root task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800 --stage-root /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4 --output task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/complete

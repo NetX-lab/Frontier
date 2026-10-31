@@ -28,5 +28,7 @@
   "classification": "DIAGNOSTIC",
   "formal_K": 19,
   "diagnostic_K": 18,
-  "pid": 464385
+  "pid": 464385,
+  "exit_code": 0,
+  "end_utc": "2026-10-31T18:57:17.862006+00:00"
 }
