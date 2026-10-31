@@ -1,0 +1,94 @@
+[
+  {
+    "node": "gpu-h200-0082.lgcm.sh.istep.fun",
+    "phase": "A_intra",
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "error": "Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation"
+  },
+  {
+    "node": "gpu-h200-0082.lgcm.sh.istep.fun",
+    "phase": "B_same_rail",
+    "indices": [
+      0
+    ],
+    "error": "Physical placement [0] is unavailable in CUDA allocation"
+  },
+  {
+    "node": "gpu-h200-0082.lgcm.sh.istep.fun",
+    "phase": "B_ring_boundary",
+    "indices": [
+      7
+    ],
+    "error": "Physical placement [7] is unavailable in CUDA allocation"
+  },
+  {
+    "node": "gpu-h200-0082.lgcm.sh.istep.fun",
+    "phase": "C_nixl",
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "error": "Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation"
+  },
+  {
+    "node": "gpu-h200-1112.lgcm.sh.istep.fun",
+    "phase": "A_intra",
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "error": "Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation"
+  },
+  {
+    "node": "gpu-h200-1112.lgcm.sh.istep.fun",
+    "phase": "B_same_rail",
+    "indices": [
+      0
+    ],
+    "error": "Physical placement [0] is unavailable in CUDA allocation"
+  },
+  {
+    "node": "gpu-h200-1112.lgcm.sh.istep.fun",
+    "phase": "B_ring_boundary",
+    "indices": [
+      0
+    ],
+    "error": "Physical placement [0] is unavailable in CUDA allocation"
+  },
+  {
+    "node": "gpu-h200-1112.lgcm.sh.istep.fun",
+    "phase": "C_nixl",
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "error": "Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation"
+  }
+]

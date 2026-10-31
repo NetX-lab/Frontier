@@ -1,0 +1,176 @@
+{
+  "host": "gpu-h200-0107.lgcm.sh.istep.fun",
+  "workspace_head": "5d1754d0eb11d6cd1fe7a164f7f3161aa2f43f07",
+  "runtime_check_gate": "soft",
+  "checks": [
+    {
+      "name": "nccl",
+      "path": "/usr/local/lib/python3.12/dist-packages/nvidia/nccl/lib/libnccl.so.2",
+      "expected": "618968ee277041751512e619190132a9bdf351c3ce7129c73484f6ef441ad692",
+      "actual": "618968ee277041751512e619190132a9bdf351c3ce7129c73484f6ef441ad692",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_forward_collectives.py",
+      "expected": "c7eb38ee3e378ef79428587fc87488bdd5ab02e6c6513bf598890136949903a4",
+      "actual": "c7eb38ee3e378ef79428587fc87488bdd5ab02e6c6513bf598890136949903a4",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_dsv4_forward_collectives.py",
+      "expected": "dc7c04d117b67bae9cc81ba48b917527ae17d8a5c06529bc60e2e3b51818c81b",
+      "actual": "dc7c04d117b67bae9cc81ba48b917527ae17d8a5c06529bc60e2e3b51818c81b",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_collective_benchmark.py",
+      "expected": "e7366d58aed788fd968427d16c1d212036c6dcc83fecf8f114ba0c73e37531a4",
+      "actual": "e7366d58aed788fd968427d16c1d212036c6dcc83fecf8f114ba0c73e37531a4",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/runtime_check.py",
+      "expected": "44b1e98eaee39fb93be820791c5e8450ed22c32bed8f26f3abd4090c354ea701",
+      "actual": "44b1e98eaee39fb93be820791c5e8450ed22c32bed8f26f3abd4090c354ea701",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/node_entry.py",
+      "expected": "8bbf641498192f82e83ecc7e4a97904bf733267dfeeeacbb02de2ff1416f2fd4",
+      "actual": "8bbf641498192f82e83ecc7e4a97904bf733267dfeeeacbb02de2ff1416f2fd4",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_launch_depth.json",
+      "expected": "b0e5d2a62b2ae9d6cb20dec40549005f5392262b4183e8f53ae6555d9d6be3bb",
+      "actual": "b0e5d2a62b2ae9d6cb20dec40549005f5392262b4183e8f53ae6555d9d6be3bb",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/phase_runner.py",
+      "expected": "cfa0ae403530aefc728d177611813eaf1603412eaece6f6a9499c1dcd973fecd",
+      "actual": "cfa0ae403530aefc728d177611813eaf1603412eaece6f6a9499c1dcd973fecd",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/planner.py",
+      "expected": "11b7e5c4ec8bea832c7291169e3510efc7a38c9d85443f6f91579d070139d00c",
+      "actual": "11b7e5c4ec8bea832c7291169e3510efc7a38c9d85443f6f91579d070139d00c",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_links_kv.json",
+      "expected": "e1838e5065abd7a9b1a6f3f4b30718665602abe793dfd06c72e743c5badceef7",
+      "actual": "e1838e5065abd7a9b1a6f3f4b30718665602abe793dfd06c72e743c5badceef7",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/kv_layout_evidence.json",
+      "expected": "9672246fe6e4001c34a90f8ebf4fb88e9309090c7a178214dccc1e2f6a781ea5",
+      "actual": "9672246fe6e4001c34a90f8ebf4fb88e9309090c7a178214dccc1e2f6a781ea5",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/cuda_launch_depth.py",
+      "expected": "9495ee6da28d23e6b47cb146865a5c1f258470032ba2ac0dae223ed8ae576269",
+      "actual": "9495ee6da28d23e6b47cb146865a5c1f258470032ba2ac0dae223ed8ae576269",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/rank_placement.py",
+      "expected": "efa3a06234ea985a460fd75ff2dabc0a05217ba9ee6f71f56d3f6e412c7a5b88",
+      "actual": "efa3a06234ea985a460fd75ff2dabc0a05217ba9ee6f71f56d3f6e412c7a5b88",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/nixl_kv_read_benchmark.py",
+      "expected": "76ef39e01a39e60f18563776e62fc952f03b7480901b7e4738a0532089a3243b",
+      "actual": "76ef39e01a39e60f18563776e62fc952f03b7480901b7e4738a0532089a3243b",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/runtime_lock/probe_nixl_read.py",
+      "expected": "22995e66121122adb3924502ec4c763a500c88e90fc6fba5b340a832098ac997",
+      "actual": "22995e66121122adb3924502ec4c763a500c88e90fc6fba5b340a832098ac997",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "benchmark_source",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/runtime_lock/probe_runtime_inventory.py",
+      "expected": "929498b5ba4db72f0d2aef8abf3f73d6c625c439bbe8c4a74774719602bdafa6",
+      "actual": "929498b5ba4db72f0d2aef8abf3f73d6c625c439bbe8c4a74774719602bdafa6",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "vllm_source",
+      "path": "/usr/local/lib/python3.12/dist-packages/vllm/models/common/ops/sequence_parallel.py",
+      "expected": "699fde98360fc8d604055e2987d93108ee489e87cc5563949d2a3dcd838eb8bd",
+      "actual": "699fde98360fc8d604055e2987d93108ee489e87cc5563949d2a3dcd838eb8bd",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "vllm_source",
+      "path": "/usr/local/lib/python3.12/dist-packages/vllm/distributed/device_communicators/cuda_communicator.py",
+      "expected": "a9a0242175c3d3e0d46d586a38cb76139e6e4e92d15032d5b1e33237af2f6757",
+      "actual": "a9a0242175c3d3e0d46d586a38cb76139e6e4e92d15032d5b1e33237af2f6757",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "vllm_source",
+      "path": "/usr/local/lib/python3.12/dist-packages/vllm/distributed/device_communicators/custom_all_reduce.py",
+      "expected": "2394c50ab64fc070a7ed3b6a333e51337a89474954762d2df8ae89c1d201f9e0",
+      "actual": "2394c50ab64fc070a7ed3b6a333e51337a89474954762d2df8ae89c1d201f9e0",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "vllm_source",
+      "path": "/usr/local/lib/python3.12/dist-packages/vllm/distributed/device_communicators/all2all.py",
+      "expected": "82d520aa92d7696aee9385d58023dedba6d7eff9ea493c75f7c62da2cc2d22aa",
+      "actual": "82d520aa92d7696aee9385d58023dedba6d7eff9ea493c75f7c62da2cc2d22aa",
+      "pass": true,
+      "gate": "soft"
+    },
+    {
+      "name": "vllm_source",
+      "path": "/usr/local/lib/python3.12/dist-packages/vllm/distributed/parallel_state.py",
+      "expected": "c6d65b96a260ea0d779da1073d1799392813eee74c9ed44753dfa56f4e7a9e4c",
+      "actual": "c6d65b96a260ea0d779da1073d1799392813eee74c9ed44753dfa56f4e7a9e4c",
+      "pass": true,
+      "gate": "soft"
+    }
+  ],
+  "returncode": 0
+}

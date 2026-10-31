@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Verified UUID representation repair and prepared fresh links/KV02; F2 initial single-capacity analysis is AMBIGUOUS. |
 | 2026-10-31 | Replaced stale route entry points with direct Codex execution, active H200 operator comparisons and current milestones; preserved historical routes and gates. |
 | 2026-10-26 | Applied D-NO-STEP-COST-SHORTCUT and D-OPERATOR-LEVEL-ROUTE: H3r superseded by H3o (operator-level DSV4 costs), H4 needs H3o, dependency updated. |
 | 2026-10-25 | Applied D-H200-TEMP-MAINLINE: added the H200 temporary route (milestones P2-32r/32p/32d/64r/64p/64d, waves and dependency); wave 1 submitted. |
@@ -152,7 +153,7 @@ Mainline: branch `feat/glm53-dsv4-vllm028`, this worktree and task directory. In
 | Ingress option A / B29 | 07/08/19 | Implemented and merged a69a5213. Inputs 10.3 ms ingress + 11.4 ms handoff; default zero fidelity verified. B29 P2-32 numeric PASS; P2-64 FAIL on repeat 1 TTFT (12.25494%). |
 | F4 memory planner comparison | 09/11/19 | Both replays finished. Five metric artifacts are byte-identical to B28 at each scale; full comparison recorded in the Codex test report. Memory accounting limits remain open. |
 | F1a specification links | 06/11/19 | P2-32 finished, TPOT/E2E FAIL. Fresh P2-64 replay running in f1a-astra-diagnostic; retain its former incomplete attempt. |
-| B30b F1b/F2/F3 preparations | 06/09 | Existing probe/fit slice in progress. Finish bounded checks and fresh plans, report jobs/GPU-hours, then directly submit the two approved jobs. |
+| B30b F1b/F2/F3 preparations | 06/09 | CPU/scoped slice complete, integrated as 5d1754d0; merged 163 tests PASS, two 15-source locks computable, current estimates 8.785831 + 0.224353 = 9.010184 GPUh. Both jobs were submitted; links/KV attempt01 failed before measurement at UUID prefix verification, F2 attempt01 Succeeded with phase exit0. UUID repair now passes all 8 original node/phase placements and 166 affected tests; fresh links/KV02 retains 628 cases/16 H200/8.785831 GPUh. Commit and lock the repair, then submit only fresh links/KV02. F2 analysis of all 84 trials is AMBIGUOUS under the existing single-capacity hypotheses; no K selected or F2 resubmission. |
 | F1b/F2/F3 comparisons | 11/19 | Fit measured links, launch depth and NIXL; replay each as a diagnostic variant with fixed formal references and all four per-repeat errors. |
 | Qualified P2 formal acceptance | 05/09/11/19 | Requires qualified measured inputs and all four errors <=10% in every admitted repeat; numerical P2-32 PASS alone does not close qualification. |
 | H800 P0/P1 continuation | 10/17/18/19 | Retained subsequent hardware scope. H200 results never qualify H800. |

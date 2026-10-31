@@ -95,9 +95,10 @@ def test_layout_fails_closed(tmp_path, failure):
 
 
 @pytest.mark.parametrize('order', [list(range(8)), list(reversed(range(8))), [7, 0, 1, 2, 3, 4, 5, 6]])
-def test_physical_placement_is_independent_of_cuda_order(order):
+@pytest.mark.parametrize('uuid_prefix', ['GPU-', ''])
+def test_physical_placement_is_independent_of_cuda_order(order, uuid_prefix):
     inventory = [f'{i}, GPU-{i}, 0000:{i:02x}:00.0, NVIDIA H200' for i in range(8)]
-    allocated = [f'GPU-{i}' for i in order]
+    allocated = [f'{uuid_prefix}{i}' for i in order]
     assert select_physical_devices(allocated, [7, 0], inventory, 8) == 'GPU-7,GPU-0'
     assert select_visible_devices(','.join(allocated), [0], 8) == allocated[0]
     with pytest.raises(ValueError, match='unavailable'):

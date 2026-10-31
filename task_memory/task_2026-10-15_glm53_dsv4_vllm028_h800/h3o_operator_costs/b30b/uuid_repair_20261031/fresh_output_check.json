@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "timeout",
+    "60s",
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "shai-ycfeng",
+    "test \"$(id -un)\" = i-fengyicheng && test ! -e /mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02"
+  ],
+  "start_utc": "2026-10-31T15:51:55.540408+00:00",
+  "end_utc": "2026-10-31T15:51:55.759275+00:00",
+  "returncode": 0,
+  "operation": "read_only",
+  "output_absent": true,
+  "cloud_path": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02"
+}

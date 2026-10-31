@@ -1,0 +1,77 @@
+[
+  {
+    "name": "focused",
+    "argv": [
+      "timeout",
+      "60s",
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "-m",
+      "pytest",
+      "tests/unit/test_b30b_ex_situ_probes.py",
+      "-k",
+      "physical_placement",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp",
+      "/data/ycfeng/tmp/b30b_uuid_focused_green_20261031",
+      "--junitxml",
+      "/data/ycfeng/tmp/b30b_uuid_focused_green_20261031.xml"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "python": "Python 3.10.6",
+    "source_head": "5d1754d0eb11d6cd1fe7a164f7f3161aa2f43f07",
+    "source_dirty": true,
+    "start_utc": "2026-10-31T15:48:17.432487+00:00",
+    "end_utc": "2026-10-31T15:48:18.175381+00:00",
+    "returncode": 0,
+    "environment": {
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "address_space_limit_bytes": 32212254720
+  },
+  {
+    "name": "affected",
+    "argv": [
+      "timeout",
+      "240s",
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "-m",
+      "pytest",
+      "tests/unit/test_b30b_ex_situ_probes.py",
+      "tests/unit/test_collective_benchmark_helpers.py",
+      "tests/unit/test_vllm_dsv4_forward_collectives.py",
+      "tests/unit/test_vllm_forward_collectives.py",
+      "tests/unit/test_collective_kernel_evidence.py",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/tests",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp",
+      "/data/ycfeng/tmp/b30b_uuid_affected_green_20261031",
+      "--junitxml",
+      "/data/ycfeng/tmp/b30b_uuid_affected_green_20261031.xml"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "python": "Python 3.10.6",
+    "source_head": "5d1754d0eb11d6cd1fe7a164f7f3161aa2f43f07",
+    "source_dirty": true,
+    "start_utc": "2026-10-31T15:48:18.176034+00:00",
+    "end_utc": "2026-10-31T15:48:24.079443+00:00",
+    "returncode": 0,
+    "environment": {
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "address_space_limit_bytes": 32212254720
+  }
+]

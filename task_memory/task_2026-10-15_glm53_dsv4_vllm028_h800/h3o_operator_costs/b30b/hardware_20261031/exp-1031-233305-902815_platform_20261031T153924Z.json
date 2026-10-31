@@ -1,0 +1,105 @@
+{
+  "requested": "exp-1031-233305-902815",
+  "collected_at_utc": "2026-10-31T15:39:24.757453+00:00",
+  "uid": "d8908d84-e459-43a9-89be-35854b761cfd",
+  "creator": "i-fengyicheng",
+  "preemptible": "no",
+  "annotations": {},
+  "status": {
+    "phase": "Succeeded",
+    "reason": "RJobSucceeded",
+    "message": "RJob succeeded",
+    "taskStatuses": {
+      "default": {
+        "succeeded": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "finishTime": "2026-10-31T15:39:03Z",
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "replicas": [
+    {
+      "name": "exp-1031-233305-902815-cfcd2084",
+      "uid": "290557af-a0d7-4ee3-9b7b-48efb410dc09",
+      "owners": [
+        {
+          "apiVersion": "rjob.brainpp.cn/v1alpha1",
+          "kind": "RJob",
+          "name": "exp-1031-233305-902815",
+          "uid": "d8908d84-e459-43a9-89be-35854b761cfd",
+          "controller": true,
+          "blockOwnerDeletion": true
+        }
+      ],
+      "state": "ReplicaState.SUCCEED",
+      "status": {
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T15:33:18Z",
+            "reason": "PodCompleted"
+          },
+          {
+            "type": "Ready",
+            "status": "False",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T15:39:02Z",
+            "reason": "PodCompleted"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "False",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T15:39:02Z",
+            "reason": "PodCompleted"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T15:33:09Z"
+          }
+        ],
+        "hostIP": "10.204.14.5",
+        "podIP": "10.204.14.5",
+        "podIPs": [
+          {
+            "ip": "10.204.14.5"
+          }
+        ],
+        "startTime": "2026-10-31T15:33:18Z",
+        "containerStatuses": [
+          {
+            "name": "default",
+            "state": {
+              "terminated": {
+                "exitCode": 0,
+                "reason": "Completed",
+                "startedAt": "2026-10-31T15:37:27Z",
+                "finishedAt": "2026-10-31T15:39:01Z",
+                "containerID": "containerd://0f86d9faec5a8b0104c3499051693270d337644783a577193036bd84f413d85d"
+              }
+            },
+            "lastState": {},
+            "ready": false,
+            "restartCount": 0,
+            "image": "sha256:609a5b463503f663bedc6a8045ef2aae530bf59c6dc20371c84b1d302fb6f9ca",
+            "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "containerID": "containerd://0f86d9faec5a8b0104c3499051693270d337644783a577193036bd84f413d85d",
+            "started": false
+          }
+        ],
+        "qosClass": "Guaranteed",
+        "phase": "Succeeded",
+        "nodeName": "gpu-h200-0107.lgcm.sh.istep.fun",
+        "finishTimestamp": "2026-10-31T15:39:03Z"
+      },
+      "log_api_code": 200,
+      "log_rows": 28,
+      "log_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_codex_20261031/exp-1031-233305-902815-cfcd2084_20261031T153924Z.log"
+    }
+  ]
+}

@@ -1,0 +1,191 @@
+{
+  "collected_at_utc": "2026-10-31T15:42:46.149948+00:00",
+  "selected": [
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/A_intra_prepared.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/A_intra_prepared.json",
+      "bytes": 124
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/A_intra_result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/A_intra_result.json",
+      "bytes": 525
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/B_ring_boundary_prepared.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/B_ring_boundary_prepared.json",
+      "bytes": 103
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/B_ring_boundary_result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/B_ring_boundary_result.json",
+      "bytes": 470
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/B_same_rail_prepared.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/B_same_rail_prepared.json",
+      "bytes": 103
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/B_same_rail_result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/B_same_rail_result.json",
+      "bytes": 466
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/C_nixl_prepared.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/C_nixl_prepared.json",
+      "bytes": 124
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/C_nixl_result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/C_nixl_result.json",
+      "bytes": 523
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/node.log",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/node.log",
+      "bytes": 0
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/placement.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/placement.json",
+      "bytes": 4001
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/ready.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/ready.json",
+      "bytes": 88
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/result.json",
+      "bytes": 2299
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/A_intra_prepared.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/A_intra_prepared.json",
+      "bytes": 124
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/A_intra_result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/A_intra_result.json",
+      "bytes": 524
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/B_ring_boundary_prepared.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/B_ring_boundary_prepared.json",
+      "bytes": 103
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/B_ring_boundary_result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/B_ring_boundary_result.json",
+      "bytes": 470
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/B_same_rail_prepared.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/B_same_rail_prepared.json",
+      "bytes": 103
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/B_same_rail_result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/B_same_rail_result.json",
+      "bytes": 464
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/C_nixl_prepared.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/C_nixl_prepared.json",
+      "bytes": 124
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/C_nixl_result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/C_nixl_result.json",
+      "bytes": 524
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/node.log",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/node.log",
+      "bytes": 0
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/placement.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/placement.json",
+      "bytes": 4029
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/ready.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/ready.json",
+      "bytes": 89
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/result.json",
+      "bytes": 2297
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/runtime_checks/gpu-h200-0082.lgcm.sh.istep.fun.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/runtime_checks/gpu-h200-0082.lgcm.sh.istep.fun.json",
+      "bytes": 8409
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/runtime_checks/gpu-h200-1112.lgcm.sh.istep.fun.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/runtime_checks/gpu-h200-1112.lgcm.sh.istep.fun.json",
+      "bytes": 8409
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/F2_launch_depth/runtime.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/F2_launch_depth/runtime.json",
+      "bytes": 639
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth.log",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth.log",
+      "bytes": 2171
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth_config.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth_config.json",
+      "bytes": 460
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth_launch.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth_launch.json",
+      "bytes": 623
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth_prepared.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth_prepared.json",
+      "bytes": 17
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth_result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth_result.json",
+      "bytes": 654
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/node.log",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/node.log",
+      "bytes": 0
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/placement.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/placement.json",
+      "bytes": 1900
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/ready.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/ready.json",
+      "bytes": 88
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/result.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/result.json",
+      "bytes": 807
+    },
+    {
+      "cloud": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/runtime_checks/gpu-h200-0107.lgcm.sh.istep.fun.json",
+      "local": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/launch_depth_01/runtime_checks/gpu-h200-0107.lgcm.sh.istep.fun.json",
+      "bytes": 8409
+    }
+  ],
+  "raw_cloud_snapshot": "/data/ycfeng/tmp/glm53_dsv4/b30b_codex_20261031/cloud_snapshot_20261031_1541.json"
+}

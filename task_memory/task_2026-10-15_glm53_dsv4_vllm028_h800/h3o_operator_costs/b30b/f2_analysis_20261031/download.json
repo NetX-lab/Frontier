@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "timeout",
+    "60s",
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "shai-ycfeng",
+    "test \"$(id -un)\" = i-fengyicheng && cat /mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/F2_launch_depth/launches.jsonl"
+  ],
+  "start_utc": "2026-10-31T15:48:59.718616+00:00",
+  "end_utc": "2026-10-31T15:49:00.064963+00:00",
+  "returncode": 0,
+  "source_cloud_path": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/F2_launch_depth/launches.jsonl",
+  "local_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_f2_analysis_20261031/launches.jsonl",
+  "bytes": 3258535,
+  "sha256": "5dfd37990d9f48679f4b28dff55a725f3f8316a9b79872042c4713aa16ac2b0f"
+}

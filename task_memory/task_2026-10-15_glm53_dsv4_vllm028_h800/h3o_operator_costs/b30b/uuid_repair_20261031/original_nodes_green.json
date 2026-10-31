@@ -1,0 +1,126 @@
+[
+  {
+    "node": "gpu-h200-0082.lgcm.sh.istep.fun",
+    "phase": "A_intra",
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "expected": "GPU-6d27cfea-35fe-7aea-2ed6-5c445686d9bd,GPU-cdfb7fa7-81ac-f9d1-08c9-cac3f3c9f22c,GPU-c3fb417c-ef1c-2f89-454b-0ad84e48b400,GPU-b38ae8b4-e218-45cd-87d8-f53277bbc8a3,GPU-2b134502-8d27-37ec-e6f6-63632e7931af,GPU-e6e32100-39a6-9765-af3c-575c6a760d63,GPU-98545a32-4ac1-8503-1f1e-18873b3a35b5,GPU-54f1e115-64a2-5937-8ebf-6855938618b4",
+    "actual": "GPU-6d27cfea-35fe-7aea-2ed6-5c445686d9bd,GPU-cdfb7fa7-81ac-f9d1-08c9-cac3f3c9f22c,GPU-c3fb417c-ef1c-2f89-454b-0ad84e48b400,GPU-b38ae8b4-e218-45cd-87d8-f53277bbc8a3,GPU-2b134502-8d27-37ec-e6f6-63632e7931af,GPU-e6e32100-39a6-9765-af3c-575c6a760d63,GPU-98545a32-4ac1-8503-1f1e-18873b3a35b5,GPU-54f1e115-64a2-5937-8ebf-6855938618b4",
+    "status": "PASS",
+    "input_path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/placement.json",
+    "input_sha256": "54757db4e2c4b1f274bfbf9dd13745d469766a7a17acbca884b496d24b8bb093"
+  },
+  {
+    "node": "gpu-h200-0082.lgcm.sh.istep.fun",
+    "phase": "B_same_rail",
+    "indices": [
+      0
+    ],
+    "expected": "GPU-6d27cfea-35fe-7aea-2ed6-5c445686d9bd",
+    "actual": "GPU-6d27cfea-35fe-7aea-2ed6-5c445686d9bd",
+    "status": "PASS",
+    "input_path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/placement.json",
+    "input_sha256": "54757db4e2c4b1f274bfbf9dd13745d469766a7a17acbca884b496d24b8bb093"
+  },
+  {
+    "node": "gpu-h200-0082.lgcm.sh.istep.fun",
+    "phase": "B_ring_boundary",
+    "indices": [
+      7
+    ],
+    "expected": "GPU-54f1e115-64a2-5937-8ebf-6855938618b4",
+    "actual": "GPU-54f1e115-64a2-5937-8ebf-6855938618b4",
+    "status": "PASS",
+    "input_path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/placement.json",
+    "input_sha256": "54757db4e2c4b1f274bfbf9dd13745d469766a7a17acbca884b496d24b8bb093"
+  },
+  {
+    "node": "gpu-h200-0082.lgcm.sh.istep.fun",
+    "phase": "C_nixl",
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "expected": "GPU-6d27cfea-35fe-7aea-2ed6-5c445686d9bd,GPU-cdfb7fa7-81ac-f9d1-08c9-cac3f3c9f22c,GPU-c3fb417c-ef1c-2f89-454b-0ad84e48b400,GPU-b38ae8b4-e218-45cd-87d8-f53277bbc8a3,GPU-2b134502-8d27-37ec-e6f6-63632e7931af,GPU-e6e32100-39a6-9765-af3c-575c6a760d63,GPU-98545a32-4ac1-8503-1f1e-18873b3a35b5,GPU-54f1e115-64a2-5937-8ebf-6855938618b4",
+    "actual": "GPU-6d27cfea-35fe-7aea-2ed6-5c445686d9bd,GPU-cdfb7fa7-81ac-f9d1-08c9-cac3f3c9f22c,GPU-c3fb417c-ef1c-2f89-454b-0ad84e48b400,GPU-b38ae8b4-e218-45cd-87d8-f53277bbc8a3,GPU-2b134502-8d27-37ec-e6f6-63632e7931af,GPU-e6e32100-39a6-9765-af3c-575c6a760d63,GPU-98545a32-4ac1-8503-1f1e-18873b3a35b5,GPU-54f1e115-64a2-5937-8ebf-6855938618b4",
+    "status": "PASS",
+    "input_path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-0082.lgcm.sh.istep.fun/placement.json",
+    "input_sha256": "54757db4e2c4b1f274bfbf9dd13745d469766a7a17acbca884b496d24b8bb093"
+  },
+  {
+    "node": "gpu-h200-1112.lgcm.sh.istep.fun",
+    "phase": "A_intra",
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "expected": "GPU-a21c515a-c5dc-76d1-c8f2-2b5e61f480a4,GPU-0498ed78-1603-9680-1db9-64e033d1f92d,GPU-93cb854a-3d55-12d5-95bc-2836ffab5281,GPU-fc541d36-27ce-bd1c-7410-92ab9796a36a,GPU-58ff4453-ffc4-4039-77b5-d6b5cf0ad696,GPU-9051f16a-1dd4-55c9-f5ce-906a9a0bffb7,GPU-63d20655-6cbb-562f-550c-3f8c2273ebb2,GPU-d48729c4-a243-cc76-1780-3f8cfc53eb79",
+    "actual": "GPU-a21c515a-c5dc-76d1-c8f2-2b5e61f480a4,GPU-0498ed78-1603-9680-1db9-64e033d1f92d,GPU-93cb854a-3d55-12d5-95bc-2836ffab5281,GPU-fc541d36-27ce-bd1c-7410-92ab9796a36a,GPU-58ff4453-ffc4-4039-77b5-d6b5cf0ad696,GPU-9051f16a-1dd4-55c9-f5ce-906a9a0bffb7,GPU-63d20655-6cbb-562f-550c-3f8c2273ebb2,GPU-d48729c4-a243-cc76-1780-3f8cfc53eb79",
+    "status": "PASS",
+    "input_path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/placement.json",
+    "input_sha256": "1cd8ac4f0d5fd166dbf015073720a7e68c5334949705787ac85cbe0d49244c91"
+  },
+  {
+    "node": "gpu-h200-1112.lgcm.sh.istep.fun",
+    "phase": "B_same_rail",
+    "indices": [
+      0
+    ],
+    "expected": "GPU-a21c515a-c5dc-76d1-c8f2-2b5e61f480a4",
+    "actual": "GPU-a21c515a-c5dc-76d1-c8f2-2b5e61f480a4",
+    "status": "PASS",
+    "input_path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/placement.json",
+    "input_sha256": "1cd8ac4f0d5fd166dbf015073720a7e68c5334949705787ac85cbe0d49244c91"
+  },
+  {
+    "node": "gpu-h200-1112.lgcm.sh.istep.fun",
+    "phase": "B_ring_boundary",
+    "indices": [
+      0
+    ],
+    "expected": "GPU-a21c515a-c5dc-76d1-c8f2-2b5e61f480a4",
+    "actual": "GPU-a21c515a-c5dc-76d1-c8f2-2b5e61f480a4",
+    "status": "PASS",
+    "input_path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/placement.json",
+    "input_sha256": "1cd8ac4f0d5fd166dbf015073720a7e68c5334949705787ac85cbe0d49244c91"
+  },
+  {
+    "node": "gpu-h200-1112.lgcm.sh.istep.fun",
+    "phase": "C_nixl",
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "expected": "GPU-a21c515a-c5dc-76d1-c8f2-2b5e61f480a4,GPU-0498ed78-1603-9680-1db9-64e033d1f92d,GPU-93cb854a-3d55-12d5-95bc-2836ffab5281,GPU-fc541d36-27ce-bd1c-7410-92ab9796a36a,GPU-58ff4453-ffc4-4039-77b5-d6b5cf0ad696,GPU-9051f16a-1dd4-55c9-f5ce-906a9a0bffb7,GPU-63d20655-6cbb-562f-550c-3f8c2273ebb2,GPU-d48729c4-a243-cc76-1780-3f8cfc53eb79",
+    "actual": "GPU-a21c515a-c5dc-76d1-c8f2-2b5e61f480a4,GPU-0498ed78-1603-9680-1db9-64e033d1f92d,GPU-93cb854a-3d55-12d5-95bc-2836ffab5281,GPU-fc541d36-27ce-bd1c-7410-92ab9796a36a,GPU-58ff4453-ffc4-4039-77b5-d6b5cf0ad696,GPU-9051f16a-1dd4-55c9-f5ce-906a9a0bffb7,GPU-63d20655-6cbb-562f-550c-3f8c2273ebb2,GPU-d48729c4-a243-cc76-1780-3f8cfc53eb79",
+    "status": "PASS",
+    "input_path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/links_kv_01/nodes/gpu-h200-1112.lgcm.sh.istep.fun/placement.json",
+    "input_sha256": "1cd8ac4f0d5fd166dbf015073720a7e68c5334949705787ac85cbe0d49244c91"
+  }
+]

@@ -16,6 +16,7 @@ def select_visible_devices(visible: str | None, indices: list[int], allocated: i
 def select_physical_devices(allocated_uuids: list[str], indices: list[int],
                             inventory_lines: list[str], allocated: int) -> str:
     """Resolve NVML physical indices, verifying actual CUDA allocation UUIDs."""
+    allocated_uuids = ["GPU-" + uuid.removeprefix("GPU-") for uuid in allocated_uuids]
     if len(allocated_uuids) != allocated or len(set(allocated_uuids)) != allocated:
         raise ValueError("CUDA allocation UUID census does not match requested allocation")
     inventory = {}

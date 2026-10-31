@@ -1,0 +1,28 @@
+{
+  "phase": "F2_launch_depth",
+  "started": 1793461056.9855602,
+  "returncode": 0,
+  "command": [
+    "/usr/bin/python3",
+    "-m",
+    "torch.distributed.run",
+    "--nnodes",
+    "1",
+    "--nproc-per-node",
+    "1",
+    "--node-rank",
+    "0",
+    "--master-addr",
+    "10.204.14.5",
+    "--master-port",
+    "40131",
+    "-m",
+    "frontier.profiling.collectives.cuda_launch_depth",
+    "--config",
+    "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/nodes/gpu-h200-0107.lgcm.sh.istep.fun/F2_launch_depth_config.json"
+  ],
+  "visible_devices": "0",
+  "ucx_net_devices": null,
+  "node_rank": 0,
+  "finished": 1793461141.0682504
+}

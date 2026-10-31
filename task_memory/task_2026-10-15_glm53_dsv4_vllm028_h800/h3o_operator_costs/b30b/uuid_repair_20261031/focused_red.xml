@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="6" time="0.329" timestamp="2026-10-31T23:43:09.831833+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_b30b_ex_situ_probes" name="test_physical_placement_is_independent_of_cuda_order[GPU--order0]" time="0.001" /><testcase classname="tests.unit.test_b30b_ex_situ_probes" name="test_physical_placement_is_independent_of_cuda_order[GPU--order1]" time="0.001" /><testcase classname="tests.unit.test_b30b_ex_situ_probes" name="test_physical_placement_is_independent_of_cuda_order[GPU--order2]" time="0.001" /><testcase classname="tests.unit.test_b30b_ex_situ_probes" name="test_physical_placement_is_independent_of_cuda_order[-order0]" time="0.001"><failure message="ValueError: Physical placement [7, 0] is unavailable in CUDA allocation">order = [0, 1, 2, 3, 4, 5, ...], uuid_prefix = ''
+
+    @pytest.mark.parametrize('order', [list(range(8)), list(reversed(range(8))), [7, 0, 1, 2, 3, 4, 5, 6]])
+    @pytest.mark.parametrize('uuid_prefix', ['GPU-', ''])
+    def test_physical_placement_is_independent_of_cuda_order(order, uuid_prefix):
+        inventory = [f'{i}, GPU-{i}, 0000:{i:02x}:00.0, NVIDIA H200' for i in range(8)]
+        allocated = [f'{uuid_prefix}{i}' for i in order]
+&gt;       assert select_physical_devices(allocated, [7, 0], inventory, 8) == 'GPU-7,GPU-0'
+
+tests/unit/test_b30b_ex_situ_probes.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+allocated_uuids = ['0', '1', '2', '3', '4', '5', ...], indices = [7, 0]
+inventory_lines = ['0, GPU-0, 0000:00:00.0, NVIDIA H200', '1, GPU-1, 0000:01:00.0, NVIDIA H200', '2, GPU-2, 0000:02:00.0, NVIDIA H200', '3, GPU-3, 0000:03:00.0, NVIDIA H200', '4, GPU-4, 0000:04:00.0, NVIDIA H200', '5, GPU-5, 0000:05:00.0, NVIDIA H200', ...]
+allocated = 8
+
+    def select_physical_devices(allocated_uuids: list[str], indices: list[int],
+                                inventory_lines: list[str], allocated: int) -&gt; str:
+        """Resolve NVML physical indices, verifying actual CUDA allocation UUIDs."""
+        if len(allocated_uuids) != allocated or len(set(allocated_uuids)) != allocated:
+            raise ValueError("CUDA allocation UUID census does not match requested allocation")
+        inventory = {}
+        for line in inventory_lines:
+            fields = [v.strip() for v in line.split(",")]
+            if len(fields) &lt; 2 or not fields[1].startswith("GPU-"):
+                raise ValueError("Cannot establish physical GPU index/UUID mapping")
+            index = int(fields[0])
+            if index in inventory:
+                raise ValueError("Duplicate physical GPU index")
+            inventory[index] = fields[1]
+        if not indices or len(set(indices)) != len(indices) or any(type(i) is not int for i in indices):
+            raise ValueError("Physical placement needs distinct integer indices")
+        selected = [inventory.get(i) for i in indices]
+        if any(uuid not in allocated_uuids for uuid in selected):
+&gt;           raise ValueError(f"Physical placement {indices} is unavailable in CUDA allocation")
+E           ValueError: Physical placement [7, 0] is unavailable in CUDA allocation
+
+frontier/profiling/collectives/rank_placement.py:34: ValueError</failure></testcase><testcase classname="tests.unit.test_b30b_ex_situ_probes" name="test_physical_placement_is_independent_of_cuda_order[-order1]" time="0.001"><failure message="ValueError: Physical placement [7, 0] is unavailable in CUDA allocation">order = [7, 6, 5, 4, 3, 2, ...], uuid_prefix = ''
+
+    @pytest.mark.parametrize('order', [list(range(8)), list(reversed(range(8))), [7, 0, 1, 2, 3, 4, 5, 6]])
+    @pytest.mark.parametrize('uuid_prefix', ['GPU-', ''])
+    def test_physical_placement_is_independent_of_cuda_order(order, uuid_prefix):
+        inventory = [f'{i}, GPU-{i}, 0000:{i:02x}:00.0, NVIDIA H200' for i in range(8)]
+        allocated = [f'{uuid_prefix}{i}' for i in order]
+&gt;       assert select_physical_devices(allocated, [7, 0], inventory, 8) == 'GPU-7,GPU-0'
+
+tests/unit/test_b30b_ex_situ_probes.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+allocated_uuids = ['7', '6', '5', '4', '3', '2', ...], indices = [7, 0]
+inventory_lines = ['0, GPU-0, 0000:00:00.0, NVIDIA H200', '1, GPU-1, 0000:01:00.0, NVIDIA H200', '2, GPU-2, 0000:02:00.0, NVIDIA H200', '3, GPU-3, 0000:03:00.0, NVIDIA H200', '4, GPU-4, 0000:04:00.0, NVIDIA H200', '5, GPU-5, 0000:05:00.0, NVIDIA H200', ...]
+allocated = 8
+
+    def select_physical_devices(allocated_uuids: list[str], indices: list[int],
+                                inventory_lines: list[str], allocated: int) -&gt; str:
+        """Resolve NVML physical indices, verifying actual CUDA allocation UUIDs."""
+        if len(allocated_uuids) != allocated or len(set(allocated_uuids)) != allocated:
+            raise ValueError("CUDA allocation UUID census does not match requested allocation")
+        inventory = {}
+        for line in inventory_lines:
+            fields = [v.strip() for v in line.split(",")]
+            if len(fields) &lt; 2 or not fields[1].startswith("GPU-"):
+                raise ValueError("Cannot establish physical GPU index/UUID mapping")
+            index = int(fields[0])
+            if index in inventory:
+                raise ValueError("Duplicate physical GPU index")
+            inventory[index] = fields[1]
+        if not indices or len(set(indices)) != len(indices) or any(type(i) is not int for i in indices):
+            raise ValueError("Physical placement needs distinct integer indices")
+        selected = [inventory.get(i) for i in indices]
+        if any(uuid not in allocated_uuids for uuid in selected):
+&gt;           raise ValueError(f"Physical placement {indices} is unavailable in CUDA allocation")
+E           ValueError: Physical placement [7, 0] is unavailable in CUDA allocation
+
+frontier/profiling/collectives/rank_placement.py:34: ValueError</failure></testcase><testcase classname="tests.unit.test_b30b_ex_situ_probes" name="test_physical_placement_is_independent_of_cuda_order[-order2]" time="0.001"><failure message="ValueError: Physical placement [7, 0] is unavailable in CUDA allocation">order = [7, 0, 1, 2, 3, 4, ...], uuid_prefix = ''
+
+    @pytest.mark.parametrize('order', [list(range(8)), list(reversed(range(8))), [7, 0, 1, 2, 3, 4, 5, 6]])
+    @pytest.mark.parametrize('uuid_prefix', ['GPU-', ''])
+    def test_physical_placement_is_independent_of_cuda_order(order, uuid_prefix):
+        inventory = [f'{i}, GPU-{i}, 0000:{i:02x}:00.0, NVIDIA H200' for i in range(8)]
+        allocated = [f'{uuid_prefix}{i}' for i in order]
+&gt;       assert select_physical_devices(allocated, [7, 0], inventory, 8) == 'GPU-7,GPU-0'
+
+tests/unit/test_b30b_ex_situ_probes.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+allocated_uuids = ['7', '0', '1', '2', '3', '4', ...], indices = [7, 0]
+inventory_lines = ['0, GPU-0, 0000:00:00.0, NVIDIA H200', '1, GPU-1, 0000:01:00.0, NVIDIA H200', '2, GPU-2, 0000:02:00.0, NVIDIA H200', '3, GPU-3, 0000:03:00.0, NVIDIA H200', '4, GPU-4, 0000:04:00.0, NVIDIA H200', '5, GPU-5, 0000:05:00.0, NVIDIA H200', ...]
+allocated = 8
+
+    def select_physical_devices(allocated_uuids: list[str], indices: list[int],
+                                inventory_lines: list[str], allocated: int) -&gt; str:
+        """Resolve NVML physical indices, verifying actual CUDA allocation UUIDs."""
+        if len(allocated_uuids) != allocated or len(set(allocated_uuids)) != allocated:
+            raise ValueError("CUDA allocation UUID census does not match requested allocation")
+        inventory = {}
+        for line in inventory_lines:
+            fields = [v.strip() for v in line.split(",")]
+            if len(fields) &lt; 2 or not fields[1].startswith("GPU-"):
+                raise ValueError("Cannot establish physical GPU index/UUID mapping")
+            index = int(fields[0])
+            if index in inventory:
+                raise ValueError("Duplicate physical GPU index")
+            inventory[index] = fields[1]
+        if not indices or len(set(indices)) != len(indices) or any(type(i) is not int for i in indices):
+            raise ValueError("Physical placement needs distinct integer indices")
+        selected = [inventory.get(i) for i in indices]
+        if any(uuid not in allocated_uuids for uuid in selected):
+&gt;           raise ValueError(f"Physical placement {indices} is unavailable in CUDA allocation")
+E           ValueError: Physical placement [7, 0] is unavailable in CUDA allocation
+
+frontier/profiling/collectives/rank_placement.py:34: ValueError</failure></testcase></testsuite></testsuites>

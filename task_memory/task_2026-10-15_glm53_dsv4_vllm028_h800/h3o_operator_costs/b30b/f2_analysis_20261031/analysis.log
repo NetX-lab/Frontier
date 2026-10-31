@@ -1,0 +1,247 @@
+{
+  "status": "AMBIGUOUS",
+  "preferred_model": null,
+  "models": {
+    "graph_launches": {
+      "capacity": 255.34454684364445,
+      "log_rmse": 1.627084752228119,
+      "predicted_K": 255.34454684364445
+    },
+    "kernel_nodes": {
+      "capacity": 16342.050997993254,
+      "log_rmse": 1.255410026179375,
+      "predicted_K": 7.295558481246989
+    }
+  },
+  "native_kernels": 2240,
+  "observed_K": 19,
+  "predicted_K": null,
+  "predicted_minus_19": null,
+  "plain_depth_median": 1020.0,
+  "points": [
+    {
+      "kernels_per_graph": 1,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 2,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 4,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 8,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 16,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 32,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 64,
+      "depth": 610.0,
+      "min_depth": 610,
+      "max_depth": 610,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 128,
+      "depth": 303.0,
+      "min_depth": 303,
+      "max_depth": 303,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 256,
+      "depth": 153.0,
+      "min_depth": 153,
+      "max_depth": 153,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 512,
+      "depth": 77.0,
+      "min_depth": 77,
+      "max_depth": 77,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 1024,
+      "depth": 40.0,
+      "min_depth": 40,
+      "max_depth": 40,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 2048,
+      "depth": 20.0,
+      "min_depth": 20,
+      "max_depth": 20,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 4096,
+      "depth": 10.0,
+      "min_depth": 10,
+      "max_depth": 10,
+      "trials": 6
+    }
+  ],
+  "sleep_points": [
+    {
+      "kernels_per_graph": 1,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 1,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 2,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 2,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 4,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 4,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 8,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 8,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 16,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 16,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 32,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 32,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 64,
+      "sleep_ms": 500,
+      "depth": 610
+    },
+    {
+      "kernels_per_graph": 64,
+      "sleep_ms": 1000,
+      "depth": 610
+    },
+    {
+      "kernels_per_graph": 128,
+      "sleep_ms": 500,
+      "depth": 303
+    },
+    {
+      "kernels_per_graph": 128,
+      "sleep_ms": 1000,
+      "depth": 303
+    },
+    {
+      "kernels_per_graph": 256,
+      "sleep_ms": 500,
+      "depth": 153
+    },
+    {
+      "kernels_per_graph": 256,
+      "sleep_ms": 1000,
+      "depth": 153
+    },
+    {
+      "kernels_per_graph": 512,
+      "sleep_ms": 500,
+      "depth": 77
+    },
+    {
+      "kernels_per_graph": 512,
+      "sleep_ms": 1000,
+      "depth": 77
+    },
+    {
+      "kernels_per_graph": 1024,
+      "sleep_ms": 500,
+      "depth": 40
+    },
+    {
+      "kernels_per_graph": 1024,
+      "sleep_ms": 1000,
+      "depth": 40
+    },
+    {
+      "kernels_per_graph": 2048,
+      "sleep_ms": 500,
+      "depth": 20
+    },
+    {
+      "kernels_per_graph": 2048,
+      "sleep_ms": 1000,
+      "depth": 20
+    },
+    {
+      "kernels_per_graph": 4096,
+      "sleep_ms": 500,
+      "depth": 10
+    },
+    {
+      "kernels_per_graph": 4096,
+      "sleep_ms": 1000,
+      "depth": 10
+    }
+  ],
+  "limitation": "Synthetic single-stream graphs omit native concurrent streams, memory nodes and collectives"
+}

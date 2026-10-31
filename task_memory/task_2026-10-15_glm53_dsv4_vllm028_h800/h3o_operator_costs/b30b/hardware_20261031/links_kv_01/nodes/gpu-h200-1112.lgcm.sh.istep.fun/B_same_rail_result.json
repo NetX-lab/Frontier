@@ -1,0 +1,17 @@
+{
+  "phase": "B_same_rail",
+  "started": 1793461068.896501,
+  "returncode": null,
+  "exception": "ValueError('Physical placement [0] is unavailable in CUDA allocation')",
+  "skipped": [
+    {
+      "ok": false,
+      "error": "ValueError('Physical placement [0] is unavailable in CUDA allocation')"
+    },
+    {
+      "ok": false,
+      "error": "ValueError('Physical placement [0] is unavailable in CUDA allocation')"
+    }
+  ],
+  "finished": 1793461069.858522
+}

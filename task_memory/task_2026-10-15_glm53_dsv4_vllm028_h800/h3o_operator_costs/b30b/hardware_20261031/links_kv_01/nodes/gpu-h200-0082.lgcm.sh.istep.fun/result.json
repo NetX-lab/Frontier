@@ -1,0 +1,73 @@
+{
+  "phases": [
+    {
+      "phase": "A_intra",
+      "started": 1793461057.1698494,
+      "returncode": null,
+      "exception": "ValueError('Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation')",
+      "skipped": [
+        {
+          "ok": false,
+          "error": "ValueError('Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation')"
+        },
+        {
+          "ok": false,
+          "error": "ValueError('Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation')"
+        }
+      ],
+      "finished": 1793461067.0402176
+    },
+    {
+      "phase": "B_same_rail",
+      "started": 1793461068.3536556,
+      "returncode": null,
+      "exception": "ValueError('Physical placement [0] is unavailable in CUDA allocation')",
+      "skipped": [
+        {
+          "ok": false,
+          "error": "ValueError('Physical placement [0] is unavailable in CUDA allocation')"
+        },
+        {
+          "ok": false,
+          "error": "ValueError('Physical placement [0] is unavailable in CUDA allocation')"
+        }
+      ],
+      "finished": 1793461070.7754083
+    },
+    {
+      "phase": "B_ring_boundary",
+      "started": 1793461071.7428331,
+      "returncode": null,
+      "exception": "ValueError('Physical placement [7] is unavailable in CUDA allocation')",
+      "skipped": [
+        {
+          "ok": false,
+          "error": "ValueError('Physical placement [7] is unavailable in CUDA allocation')"
+        },
+        {
+          "ok": false,
+          "error": "ValueError('Physical placement [0] is unavailable in CUDA allocation')"
+        }
+      ],
+      "finished": 1793461073.8516636
+    },
+    {
+      "phase": "C_nixl",
+      "started": 1793461075.3712285,
+      "returncode": null,
+      "exception": "ValueError('Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation')",
+      "skipped": [
+        {
+          "ok": false,
+          "error": "ValueError('Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation')"
+        },
+        {
+          "ok": false,
+          "error": "ValueError('Physical placement [0, 1, 2, 3, 4, 5, 6, 7] is unavailable in CUDA allocation')"
+        }
+      ],
+      "finished": 1793461076.009328
+    }
+  ],
+  "failed": true
+}

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/planner.py",
+    "--config",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_links_kv_02.json",
+    "--output",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/fresh_dry_run_20261031_02"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "start_utc": "2026-10-31T15:49:49.231036+00:00",
+  "end_utc": "2026-10-31T15:49:49.557164+00:00",
+  "returncode": 0,
+  "raw_log": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv_02_dry_run_20261031.log",
+  "source_config_sha256": "bb9a607e85f730149adb0f1bbc351f749d62636f647a030a2943369d7e9ae3b7",
+  "cases_and_estimates_identical_to_attempt01": true
+}

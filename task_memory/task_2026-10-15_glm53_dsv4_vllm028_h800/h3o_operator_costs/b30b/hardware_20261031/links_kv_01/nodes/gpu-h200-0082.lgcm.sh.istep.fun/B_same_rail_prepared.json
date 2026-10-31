@@ -1,0 +1,4 @@
+{
+  "ok": false,
+  "error": "ValueError('Physical placement [0] is unavailable in CUDA allocation')"
+}
