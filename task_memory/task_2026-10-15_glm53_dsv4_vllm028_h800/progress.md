@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Continued original F2 replays and checked the six completed comparison readings; final F2 evidence remains pending. |
 | 2026-11-01 | F1a P2-64 completed with all-repeat latency FAIL; both F2K18 replays remain active. |
 | 2026-11-01 | A6 probe completed128 steps/640 rows; all identities/counts pass, repeated timings vary, no table generation promoted. |
 | 2026-11-01 | Reproduced all A6 collective curves and per-pass diagnostics; kept formal inputs and qualification failures. |
@@ -369,6 +370,8 @@
 - completed: A6 uniform-collective attribution (05/06/09): all eight production summaries and every source payload median reproduce exactly. Six of seven failed curves still fail in all three individual passes; logits passes in two, and originally pooled-PASS EP16 reduce-scatter fails in all three separate-pass diagnostics. EP32 reduce-scatter worst point1,048,576B: measured290.723193us/predicted168.831427us/error41.9271%, same kernel signature but a192x upper payload gap and graph/eager transition. Kernel partitioning alone cannot fix same-mode/same-kernel all-reduce/logits errors. Decision D-NO-INTERRUPT: no smoothing, favorable-pass selection or input change; finish active attention probe/F comparisons before selecting a measurement correction. Report `test_report_2026-11-01_a6_collective_curves.md`; exact command exit0. No extra GPU allocation.
 
 - completed: Ptolemy qualification audit integrated as2f81a48c/ac0f908a;160source hashes checked,only ongoing progress.md changed since audit. All96rank startup memory identities valid but counters overlap. Native source implies46,103,040packedB/lane atT6144 versus39,521,664componentB/lane; actual native request wirebytes unobserved. F4counts+5.55/+6.83%;spec10.4 permits case-bound measured capacity. Preserve originalR4 and no retroactive promotion. `h3o_operator_costs/qualification_codex_20261031/`.
+
+- in-progress: November1 Codex continuation keeps F2 PIDs464386/466125 and watcher615185 alive. Read-only forward observation at02:36+08 found18,821/P2-32 and26,370/P2-64 complete records, simulated times114.60s/95.14s; these are progress observations, not terminal population or metrics. `tests/analysis/v4_f_variant_comparison.py` consolidates existing readings without normalization/gate calls. Six completed readings and96 pooled/per-repeat metric entries pass; all normalized reference CSVs and six compute hashes agree with B29. Three schema assumptions were corrected from the actual metric key and pre-B29 F4 receipts/configs. `comparison_precheck.json` explicitly excludes still-running F2. Check-progress applied: stop extending the verifier after the final F2 checks.
 
 Next actions:
 1. Finish the two existing CPU runs, F2K18 P2-32 and P2-64. F1a P2-64 is complete and its gate must not be repeated. Inspect each watcher output and each retained reference repeat; do not repeat launches or gates. Both F1b runs are terminal COVERAGE_MISS; preserve those outcomes.

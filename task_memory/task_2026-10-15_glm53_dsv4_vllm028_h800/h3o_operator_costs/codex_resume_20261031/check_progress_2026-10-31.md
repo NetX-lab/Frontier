@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Resumed existing F2 runs; checked six completed readings/96 metric rows against unchanged native CSVs; stopped further expansion of the comparison verifier. |
 | 2026-11-01 | A6 repeatability accepted as diagnostic; F1a both scales complete with FAIL; only two F2 replays remain active. |
 | 2026-11-01 | Collective逐点/逐pass重建完成，所有结果保留；等待唯一attention probe与三个CPU replay。 |
 | 2026-11-01 | 单步重建probe的128案例、546文件和真实payload检查完成，1H200已提交；三个CPU replay继续。 |
@@ -43,16 +44,16 @@
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** Previous collective checkpoint8b778e09 through completed A6 repeatability/F1a evidence. **当前前沿：** 11/19 two F2K18 replays;05/09 measurement qualification after comparison completion.
+**检测窗口：** Commit0a301fcc through six-reading comparison precheck; F2 remains running. **当前前沿：** 11/19 two F2K18 replays;05/09 measurement qualification after comparison completion.
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | Production reducer and geometry checker verified the actual128-step probe. Two small evidence-verifier assumptions were corrected once each; no tool expansion after PASS. |
+| D1 工具打磨 | CLEAR | Comparison verification is limited to the eight requested readings. Six existing readings/96 metrics pass; three metadata assumptions (E2E key and two pre-B29 fields) were corrected from the retained schemas. Stop adding checks after final F2 verification. |
 | D2 细节反复重试 | CLEAR | The pre-recorded fixed-geometry hypothesis returned new measurements. No repeated GPU submission, simulator restart or second gate. |
 | D3 支线问题修补 | CLEAR | A6 evidence belongs to05/09; F1a belongs to11/19. No unrelated change. |
 | D4 可并行任务停滞 | CLEAR | All three original CPU runs continued during A6 analysis. F1a finished; both independent F2 jobs still run. |
 | D5 超范围镀金 | CLEAR | No production feature, data schema, estimator or formal input changed. |
-| D6 分析空转 | CLEAR | A6 probe is complete with128 valid steps and a decision against immediate feature/data changes. F1a gained a terminal all-repeat reading; stop expanding both analyses. |
+| D6 分析空转 | CLEAR | No A6 analyzer or repeated probe was added. The six completed readings are consolidated; do not re-run gates or expand analysis while waiting for F2. |
 | D7 路线违背 | CLEAR | D-NO-INTERRUPT and decision46 preserved. Observed probe launcher window0.319825GPUh keeps approximate ledger4.839825/7; no larger campaign submitted. |
 
 **文档检查：** S1: remaining F2 runs are independent. S2: measurement repeatability and precision have05/09 owners. S3: failed qualification is not proof that the criterion is unreachable; a larger measurement campaign needs a concrete recipe/resource decision. S4: formal median/p90 and four-metric thresholds remain explicit. S5: spec, plan, progress and tickets05/09/11/19 updated to actual terminal results. S6: existing ownership separates measurements, runtime and final acceptance; no new slice needed.

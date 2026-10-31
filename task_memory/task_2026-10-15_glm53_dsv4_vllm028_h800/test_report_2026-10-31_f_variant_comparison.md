@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Verified six completed readings/96 metric entries for the final comparison collector while both original F2 replays continue. |
 | 2026-11-01 | Completed F1a P2-64 with all-repeat latency FAIL; retained exact references, six compute hashes and active F2 replays. |
 | 2026-10-31 | Codex update: F4/B28 five-artifact identity on both scales, B29 per-repeat results, F1a P2-32 final FAIL and fresh P2-64 replay. |
 | 2026-10-31 | Created: F1 per-call screen and astra defect, F4 planner terms; F4 replays, B29, B30a and B30b pending. |
@@ -55,6 +56,24 @@ Pooled reference values are supplementary; each repeat below still decides its o
 Decision under D-NO-INTERRUPT: this completes the F1a comparison requested by decision46. Preserve the failing readings; do not tune specification links against these native values or promote B30a/the diagnostic backend. Continue the two existing F2 replays, then assemble the F1–F4 comparison. A6 repeatability is independently complete as a diagnostic with no qualification change; see [report](test_report_2026-11-01_a6_repeatability.md). Formal tables, K19, metric endpoints, thresholds and three references remain unchanged.
 
 The initial screen, predictions and then-pending statuses below are historical. The measured backend stays formal; no diagnostic variant or B30a default change is promoted.
+
+## Comparison collector verification — 2026-11-01
+
+`tests/analysis/v4_f_variant_comparison.py` reads retained canonical outputs and does not execute a normalizer, gate or simulator. It checks the eight expected B29/F1a/F2/F4 readings against the corresponding B29 reference CSV bytes, six compute-table hashes, fixed request/token population, all four metrics, every repeat and the unchanged10% threshold. Its output uses a nonnegative absolute error and retains a separate signed delta. F1b coverage failures and F3 invalid-fit results have null metrics. F4 retains its pre-B29 zero-delay configuration.
+
+Before F2 termination, the existing six readings were exercised directly through the collector: **PASS, six readings,96 pooled/per-repeat metric entries, three identical reference files per reading, six identical compute inputs**. This is a collector check on existing evidence; F2 is still running and no complete comparison result is written. Evidence: `h3o_operator_costs/f_comparisons_20261101/comparison_precheck.json` and `precheck_command.py`. Initial checks exposed three assumptions about old records: the canonical E2E name is `request_e2e_time_ms`; F4 predates the delay fields; and F4 predates the receipt's `cc_backend_types` field. The collector now reads the inspected canonical name and actual configuration. No input, old result or gate changed.
+
+Command, current worktree, Python3.10.6 with30GiB RLIMIT_AS:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 timeout 60s /data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/tmp/glm53_dsv4/f_comparison_precheck_20261101.py
+```
+
+The exact command script is retained as `precheck_command.py`. Final exit0; AST parsing and `git diff --check` PASS. The complete collector command remains pending both F2 terminal receipts and the existing watcher's once-run readings:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 timeout 60s /data/ycfeng/envs/frontier-py310/bin/python tests/analysis/v4_f_variant_comparison.py --task-root task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800 --stage-root /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4 --output task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/complete
+```
 
 ## Historical initial scope
 
