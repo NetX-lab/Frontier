@@ -1,0 +1,14 @@
+/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces/prefill/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792946231753991556.pt.trace.json.gz
+96 dummy {'ncclDevKernel_AllGatherV_RING_LL': (129, 135.6), 'ncclDevKernel_Reduce_Sum_bf16_RING_LL': (43, 1366.9)}
+97 prefill {'ncclDevKernel_AllGatherV_RING_LL': (129, 239.6), 'ncclDevKernel_AllGather_RING_LL': (44, 388.0), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (43, 151.5), 'ncclDevKernel_Reduce_Sum_bf16_RING_LL': (43, 1911.6)}
+98 prefill {'ncclDevKernel_AllGather_RING_LL': (87, 564.3), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (86, 822.0)}
+99 prefill {'ncclDevKernel_AllGather_RING_LL': (87, 628.2), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (86, 815.2)}
+100 prefill {'ncclDevKernel_AllGather_RING_LL': (87, 558.9), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (86, 819.4)}
+101 prefill {'ncclDevKernel_AllGather_RING_LL': (87, 581.1), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (86, 830.0)}
+102 prefill {'ncclDevKernel_AllGather_RING_LL': (87, 546.3), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (86, 820.9)}
+103 prefill {'ncclDevKernel_AllGather_RING_LL': (87, 544.7), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (86, 821.8)}
+104 prefill {'ncclDevKernel_AllGather_RING_LL': (87, 571.1), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (86, 810.0)}
+105 prefill {'ncclDevKernel_AllGather_RING_LL': (87, 549.4), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (86, 814.2)}
+106 prefill {'ncclDevKernel_AllGather_RING_LL': (87, 551.2), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (86, 808.5)}
+107 dummy {'ncclDevKernel_AllGatherV_RING_LL': (129, 156.6), 'ncclDevKernel_Reduce_Sum_bf16_RING_LL': (43, 1362.1)}
+64 prefill {'ncclDevKernel_AllGatherV_RING_LL': (129, 106.0), 'ncclDevKernel_AllGather_RING_LL': (44, 156.0), 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': (43, 153.8), 'ncclDevKernel_Reduce_Sum_bf16_RING_LL': (43, 2176.5)}

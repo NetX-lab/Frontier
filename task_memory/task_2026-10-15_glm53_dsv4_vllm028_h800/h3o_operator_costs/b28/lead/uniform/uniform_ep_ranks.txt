@@ -1,0 +1,4 @@
+100 ncclDevKernel_AllGather_RING_LL count 87 ranks 40-48 [1124.5, 1121.8, 1097.7, 1091.3, 558.9, 537.3, 205.6, 201.4, 196.9] count above 700 43
+100 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL count 86 ranks 40-48 [831.2, 830.4, 826.3, 820.0, 818.9, 676.5, 671.4, 627.8, 616.7] count above 700 44
+104 ncclDevKernel_AllGather_RING_LL count 87 ranks 40-48 [1108.9, 1108.2, 1101.9, 1084.8, 571.1, 520.5, 230.3, 220.5, 218.7] count above 700 43
+104 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL count 86 ranks 40-48 [816.0, 813.3, 813.2, 811.3, 808.8, 808.5, 805.4, 701.9, 573.7] count above 700 47

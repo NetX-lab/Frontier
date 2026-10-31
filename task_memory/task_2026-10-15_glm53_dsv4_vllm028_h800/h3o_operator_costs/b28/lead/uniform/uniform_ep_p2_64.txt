@@ -1,0 +1,42 @@
+== /data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces/prefill/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792946231753991556.pt.trace.json.gz
+98 ncclDevKernel_AllGather_RING_LL EP median 3895.8 EP min 1372.3 next longest 564.3 TP median 166.8
+98 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 852.4 EP min 823.8 next longest 820.2 TP median 150.8
+99 ncclDevKernel_AllGather_RING_LL EP median 3825.9 EP min 1243.4 next longest 628.2 TP median 175.0
+99 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 850.0 EP min 817.0 next longest 813.5 TP median 150.9
+100 ncclDevKernel_AllGather_RING_LL EP median 1702.7 EP min 1091.3 next longest 558.9 TP median 172.8
+100 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 849.1 EP min 820.0 next longest 818.9 TP median 154.5
+101 ncclDevKernel_AllGather_RING_LL EP median 4040.0 EP min 1120.0 next longest 581.1 TP median 169.7
+101 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 847.4 EP min 830.4 next longest 829.6 TP median 151.5
+102 ncclDevKernel_AllGather_RING_LL EP median 2323.2 EP min 1219.2 next longest 546.3 TP median 173.0
+102 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 852.4 EP min 822.9 next longest 818.8 TP median 151.3
+103 ncclDevKernel_AllGather_RING_LL EP median 1551.7 EP min 1089.5 next longest 544.7 TP median 182.3
+103 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 845.3 EP min 822.3 next longest 821.3 TP median 151.4
+104 ncclDevKernel_AllGather_RING_LL EP median 1586.1 EP min 1084.8 next longest 571.1 TP median 191.6
+104 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 839.6 EP min 811.3 next longest 808.8 TP median 152.1
+105 ncclDevKernel_AllGather_RING_LL EP median 1604.0 EP min 1158.2 next longest 549.4 TP median 172.9
+105 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 837.0 EP min 816.2 next longest 812.1 TP median 151.4
+106 ncclDevKernel_AllGather_RING_LL EP median 1572.1 EP min 1078.3 next longest 551.2 TP median 174.5
+106 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 844.6 EP min 810.5 next longest 806.5 TP median 150.9
+ALL ncclDevKernel_AllGather_RING_LL median of forward medians 1702.7 forwards 9
+ALL ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL median of forward medians 847.4 forwards 9
+== /data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces/prefill/dp3/dp3_pp0_tp0_dcp0_ep24_rank0.1792946232178326036.pt.trace.json.gz
+98 ncclDevKernel_AllGather_RING_LL EP median 3859.3 EP min 1349.4 next longest 557.5 TP median 199.2
+98 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 845.7 EP min 826.3 next longest 825.1 TP median 161.9
+99 ncclDevKernel_AllGather_RING_LL EP median 1896.2 EP min 1085.1 next longest 751.4 TP median 200.4
+99 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 1211.4 EP min 849.2 next longest 848.9 TP median 832.9
+100 ncclDevKernel_AllGather_RING_LL EP median 1688.5 EP min 1386.4 next longest 567.2 TP median 196.2
+100 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 845.2 EP min 818.1 next longest 814.1 TP median 161.6
+101 ncclDevKernel_AllGather_RING_LL EP median 4004.5 EP min 1233.5 next longest 553.5 TP median 192.7
+101 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 843.1 EP min 823.2 next longest 819.3 TP median 158.2
+102 ncclDevKernel_AllGather_RING_LL EP median 2320.4 EP min 1163.0 next longest 576.1 TP median 192.3
+102 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 842.1 EP min 814.3 next longest 814.3 TP median 163.9
+103 ncclDevKernel_AllGather_RING_LL EP median 1367.3 EP min 1052.4 next longest 595.0 TP median 201.9
+103 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 844.1 EP min 829.8 next longest 828.3 TP median 396.4
+104 ncclDevKernel_AllGather_RING_LL EP median 1565.8 EP min 1095.8 next longest 593.9 TP median 208.6
+104 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 838.9 EP min 809.3 next longest 802.6 TP median 161.3
+105 ncclDevKernel_AllGather_RING_LL EP median 1605.1 EP min 1063.1 next longest 578.3 TP median 199.9
+105 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 834.3 EP min 810.9 next longest 809.3 TP median 162.8
+106 ncclDevKernel_AllGather_RING_LL EP median 1132.5 EP min 1071.8 next longest 608.3 TP median 201.3
+106 ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL EP median 841.7 EP min 821.4 next longest 818.8 TP median 167.2
+ALL ncclDevKernel_AllGather_RING_LL median of forward medians 1688.5 forwards 9
+ALL ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL median of forward medians 843.1 forwards 9

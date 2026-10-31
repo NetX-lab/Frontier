@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | I-008: B28 merged (`ee29d548`); check of the uniform eager EP rows that B28 also replaced, against the nine uniform forwards of the native P2-64 profile. |
 | 2026-10-30 | I-008 measured: the isolated G5h-32 run (`exp-1030-234535-245357`, 8.01 GPU-hours) and the native critical paths show that a single aligned call reproduces the eager EP calls on EP32 and EP16 (within 1-18 µs), while back-to-back timing fits the decode-graph and TP calls. Repair assigned as B28. |
 | 2026-10-30 | I-008 opened: the back-to-back collective timing in `data/profiling/network/h200_dgx/summary.csv` gives the period of pipelined calls, not the time of one call started on aligned ranks. At 6,144 rows the EP combine is priced 164.7 µs per layer low on EP32 and 16.6-45.6 µs high on EP16. |
 | 2026-10-30 | I-007 opened: the scheduler-lifecycle runs of 2026-10-25/26 are slower on the prefill side than the canonical runs in every repeat (13.8-34.4 ms); the 300 ms native prefill step taken from them is overstated. |
@@ -153,7 +154,7 @@ Status: open (cause not identified; the affected readings are corrected). Owner:
 
 ## I-008: back-to-back timing misprices the 6,144-row EP combine (2026-10-30)
 
-Status: open (measured on 2026-10-30; repair assigned as B28). Owner: lead.
+Status: open (measured on 2026-10-30; repair B28 merged on 2026-10-31 as `ee29d548`; A10 replays running). Owner: lead.
 
 **Observed.** The P2-64 native lane-0 prefill takes 2,176.5 µs per layer in the EP combine `ncclDevKernel_Reduce_Sum_bf16_RING_LL` on TP rank 0. Frontier prices that call at 2,011.6 µs, the back-to-back median of G5h-32 `_01` (`eager_t6144_1_1_1`), which is 7.08 ms per forward low. Evidence: A10 report section 5.6; `h3o_operator_costs/a10/k19/prefill_compute/`.
 
@@ -175,3 +176,10 @@ Status: open (measured on 2026-10-30; repair assigned as B28). Owner: lead.
 The isolated mode is 43-93 µs above back-to-back for the decode-graph EP calls and 4-36 µs above for the TP calls, where back-to-back matches native. Details and the reading: [G5h report](test_report_2026-10-28_g5h_collective_kernel_comparison.md), section "I-008" and "Revised decision".
 
 **Repair (B28).** (1) `data/profiling/network/h200_dgx/summary.csv` takes the EP rows of every eager scenario with a 6,144-token lane from the isolated runs (G5h-16 isolated `_01`, G5h-32 isolated `_01`); all other rows stay back-to-back. (2) `MeasuredCCBackend` prices an uneven EP dispatch from its exact measured `AllGatherV` row, as it prices the uneven combine. Expected change per 6,144-token prefill forward: P2-64 +5.50 ms, P2-32 −11.64 ms (`evidence/collective_kernels/expected_prices.txt`). With this repair alone both cases are expected to fail the TTFT gate (about −10.5% and −11.1%) until the ingress and the host part of the step are modeled.
+
+**Uniform rows (2026-10-31).** B28 (merged as `ee29d548`) also replaced the rows where every lane carries 6,144 tokens. On EP16 the uniform (6,144, 6,144) prices fell: combine 768.5 → 454.3 µs, dispatch 801.7 → 567.5 µs. On EP32 the uniform (6,144 × 4) prices rose by 3.5% and 5.8%: combine 865.2 → 895.8 µs, dispatch 1,076.0 → 1,138.8 µs. The native P2-32 profile cannot test the EP16 rows: each of its three prefill forwards pairs one prefill lane with a dummy lane. The native P2-64 profile has nine uniform forwards (98-106): all four DP lanes are in prefill, and the EP kernels are the uniform `AllGather_RING_LL` and `ReduceScatter_Sum_bf16_RING_LL`, not the uneven `AllGatherV` and `Reduce`. Readings on TP rank 0 of dp1 and dp3 (the dp0 trace ends at forward 95):
+
+- Dispatch: the 43 EP calls are exactly the 43 AllGather kernels above 700 µs; the next one is 545-751 µs. Their shortest per forward is 1,052-1,386 µs, close to both prices (1,076.0 and 1,138.8 µs). Their medians (1,132-4,040 µs) include the wait for later ranks.
+- Combine: duration does not separate the 43 EP calls from the TP ReduceScatter calls (44-47 kernels above 700 µs per forward). The 43 longest have minima 809-849 µs and medians 834-852 µs (one forward 1,211 µs): 5-10% below the new price 895.8 µs and 1.5-6.5% below the old 865.2 µs.
+
+One rank's kernel durations are not critical paths, so these readings check consistency only. For EP16 the support is an inference from scaling: the EP32 uniform call moves twice the data of the EP16 one, and the isolated rows scale by 1.97 (combine) and 2.01 (dispatch), while the old back-to-back rows scale by 1.13 and 1.34. That fits the old EP16 uniform rows carrying the back-to-back queueing that I-008 describes. Evidence: `h3o_operator_costs/b28/lead/uniform/` (`uniform_ep.py` → `uniform_ep_p2_64.txt`, `uniform_ep_ranks.py` → `uniform_ep_ranks.txt`, forward lists `forwards_p2_{32,64}.txt`).
