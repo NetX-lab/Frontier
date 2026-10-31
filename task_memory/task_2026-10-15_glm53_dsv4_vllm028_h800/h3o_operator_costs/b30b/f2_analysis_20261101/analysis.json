@@ -1,0 +1,1198 @@
+{
+  "status": "AMBIGUOUS",
+  "preferred_model": null,
+  "models": {
+    "graph_launches": {
+      "capacity": 255.34454684364445,
+      "log_rmse": 1.627084752228119,
+      "predicted_K": 255.34454684364445
+    },
+    "kernel_nodes": {
+      "capacity": 16342.050997993254,
+      "log_rmse": 1.255410026179375,
+      "predicted_K": 7.295558481246989
+    }
+  },
+  "native_kernels": 2240,
+  "observed_K": 19,
+  "predicted_K": null,
+  "predicted_minus_19": null,
+  "plain_depth_median": 1020.0,
+  "points": [
+    {
+      "kernels_per_graph": 1,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 2,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 4,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 8,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 16,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 32,
+      "depth": 1020.0,
+      "min_depth": 1020,
+      "max_depth": 1020,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 64,
+      "depth": 610.0,
+      "min_depth": 610,
+      "max_depth": 610,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 128,
+      "depth": 303.0,
+      "min_depth": 303,
+      "max_depth": 303,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 256,
+      "depth": 153.0,
+      "min_depth": 153,
+      "max_depth": 153,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 512,
+      "depth": 77.0,
+      "min_depth": 77,
+      "max_depth": 77,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 1024,
+      "depth": 40.0,
+      "min_depth": 40,
+      "max_depth": 40,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 2048,
+      "depth": 20.0,
+      "min_depth": 20,
+      "max_depth": 20,
+      "trials": 6
+    },
+    {
+      "kernels_per_graph": 4096,
+      "depth": 10.0,
+      "min_depth": 10,
+      "max_depth": 10,
+      "trials": 6
+    }
+  ],
+  "sleep_points": [
+    {
+      "kernels_per_graph": 1,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 1,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 2,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 2,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 4,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 4,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 8,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 8,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 16,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 16,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 32,
+      "sleep_ms": 500,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 32,
+      "sleep_ms": 1000,
+      "depth": 1020
+    },
+    {
+      "kernels_per_graph": 64,
+      "sleep_ms": 500,
+      "depth": 610
+    },
+    {
+      "kernels_per_graph": 64,
+      "sleep_ms": 1000,
+      "depth": 610
+    },
+    {
+      "kernels_per_graph": 128,
+      "sleep_ms": 500,
+      "depth": 303
+    },
+    {
+      "kernels_per_graph": 128,
+      "sleep_ms": 1000,
+      "depth": 303
+    },
+    {
+      "kernels_per_graph": 256,
+      "sleep_ms": 500,
+      "depth": 153
+    },
+    {
+      "kernels_per_graph": 256,
+      "sleep_ms": 1000,
+      "depth": 153
+    },
+    {
+      "kernels_per_graph": 512,
+      "sleep_ms": 500,
+      "depth": 77
+    },
+    {
+      "kernels_per_graph": 512,
+      "sleep_ms": 1000,
+      "depth": 77
+    },
+    {
+      "kernels_per_graph": 1024,
+      "sleep_ms": 500,
+      "depth": 40
+    },
+    {
+      "kernels_per_graph": 1024,
+      "sleep_ms": 1000,
+      "depth": 40
+    },
+    {
+      "kernels_per_graph": 2048,
+      "sleep_ms": 500,
+      "depth": 20
+    },
+    {
+      "kernels_per_graph": 2048,
+      "sleep_ms": 1000,
+      "depth": 20
+    },
+    {
+      "kernels_per_graph": 4096,
+      "sleep_ms": 500,
+      "depth": 10
+    },
+    {
+      "kernels_per_graph": 4096,
+      "sleep_ms": 1000,
+      "depth": 10
+    }
+  ],
+  "trials": [
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118834.93041992188,
+      "blocking_launch_us": 468037.904
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118830.60455322266,
+      "blocking_launch_us": 468084.211
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118828.84979248047,
+      "blocking_launch_us": 468110.056
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237650.3143310547,
+      "blocking_launch_us": 943256.716
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237651.0009765625,
+      "blocking_launch_us": 943349.532
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237649.56665039062,
+      "blocking_launch_us": 943441.988
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118834.78546142578,
+      "blocking_launch_us": 467620.332
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118828.28521728516,
+      "blocking_launch_us": 467687.026
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118828.9794921875,
+      "blocking_launch_us": 467773.233
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237649.7802734375,
+      "blocking_launch_us": 942976.348
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237653.10668945312,
+      "blocking_launch_us": 942991.339
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237653.25927734375,
+      "blocking_launch_us": 942920.339
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118829.48303222656,
+      "blocking_launch_us": 466422.464
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118828.05633544922,
+      "blocking_launch_us": 466497.271
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118826.75170898438,
+      "blocking_launch_us": 465846.341
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237653.4881591797,
+      "blocking_launch_us": 941691.567
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237650.28381347656,
+      "blocking_launch_us": 941658.689
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237649.52087402344,
+      "blocking_launch_us": 941721.175
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 8,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118826.30157470703,
+      "blocking_launch_us": 464137.243
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 8,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118826.9271850586,
+      "blocking_launch_us": 464042.682
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 8,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118825.75988769531,
+      "blocking_launch_us": 464204.128
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 8,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237647.79663085938,
+      "blocking_launch_us": 939440.359
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 8,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237653.54919433594,
+      "blocking_launch_us": 939409.084
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 8,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237647.91870117188,
+      "blocking_launch_us": 939300.585
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 16,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118825.47760009766,
+      "blocking_launch_us": 459403.215
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 16,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118827.72064208984,
+      "blocking_launch_us": 459553.283
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 16,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118825.20294189453,
+      "blocking_launch_us": 459438.75
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 16,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237646.7742919922,
+      "blocking_launch_us": 934842.887
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 16,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237648.28491210938,
+      "blocking_launch_us": 934649.589
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 16,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237647.94921875,
+      "blocking_launch_us": 934901.263
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 32,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118835.76202392578,
+      "blocking_launch_us": 450425.614
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 32,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118829.81872558594,
+      "blocking_launch_us": 450628.12
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 32,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118829.18548583984,
+      "blocking_launch_us": 450335.799
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 32,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237649.6124267578,
+      "blocking_launch_us": 925807.189
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 32,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237648.33068847656,
+      "blocking_launch_us": 925959.168
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 32,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237650.2685546875,
+      "blocking_launch_us": 926149.565
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 64,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 610,
+      "censored": false,
+      "threshold_us": 118828.89556884766,
+      "blocking_launch_us": 450264.148
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 64,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 610,
+      "censored": false,
+      "threshold_us": 118829.36096191406,
+      "blocking_launch_us": 450555.282
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 64,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 610,
+      "censored": false,
+      "threshold_us": 118825.96588134766,
+      "blocking_launch_us": 450393.975
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 64,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 610,
+      "censored": false,
+      "threshold_us": 237647.44567871094,
+      "blocking_launch_us": 925943.338
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 64,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 610,
+      "censored": false,
+      "threshold_us": 237651.50451660156,
+      "blocking_launch_us": 925711.44
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 64,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 610,
+      "censored": false,
+      "threshold_us": 237652.67944335938,
+      "blocking_launch_us": 925957.591
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 128,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 303,
+      "censored": false,
+      "threshold_us": 118836.13586425781,
+      "blocking_launch_us": 452240.663
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 128,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 303,
+      "censored": false,
+      "threshold_us": 118828.30047607422,
+      "blocking_launch_us": 451963.814
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 128,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 303,
+      "censored": false,
+      "threshold_us": 118825.7064819336,
+      "blocking_launch_us": 451825.714
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 128,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 303,
+      "censored": false,
+      "threshold_us": 237649.06311035156,
+      "blocking_launch_us": 926784.536
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 128,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 303,
+      "censored": false,
+      "threshold_us": 237648.8037109375,
+      "blocking_launch_us": 926900.096
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 128,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 303,
+      "censored": false,
+      "threshold_us": 237649.64294433594,
+      "blocking_launch_us": 927603.441
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 256,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 153,
+      "censored": false,
+      "threshold_us": 118829.40673828125,
+      "blocking_launch_us": 453089.409
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 256,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 153,
+      "censored": false,
+      "threshold_us": 118827.880859375,
+      "blocking_launch_us": 453717.679
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 256,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 153,
+      "censored": false,
+      "threshold_us": 118827.63671875,
+      "blocking_launch_us": 453910.388
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 256,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 153,
+      "censored": false,
+      "threshold_us": 237647.7508544922,
+      "blocking_launch_us": 928910.519
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 256,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 153,
+      "censored": false,
+      "threshold_us": 237647.91870117188,
+      "blocking_launch_us": 927964.144
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 256,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 153,
+      "censored": false,
+      "threshold_us": 237648.01025390625,
+      "blocking_launch_us": 929007.315
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 512,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 77,
+      "censored": false,
+      "threshold_us": 118828.88793945312,
+      "blocking_launch_us": 453951.634
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 512,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 77,
+      "censored": false,
+      "threshold_us": 118830.32989501953,
+      "blocking_launch_us": 453712.861
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 512,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 77,
+      "censored": false,
+      "threshold_us": 118829.02526855469,
+      "blocking_launch_us": 454194.694
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 512,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 77,
+      "censored": false,
+      "threshold_us": 237655.57861328125,
+      "blocking_launch_us": 929734.227
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 512,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 77,
+      "censored": false,
+      "threshold_us": 237651.4434814453,
+      "blocking_launch_us": 929024.337
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 512,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 77,
+      "censored": false,
+      "threshold_us": 237648.77319335938,
+      "blocking_launch_us": 928532.387
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1024,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 40,
+      "censored": false,
+      "threshold_us": 118827.5375366211,
+      "blocking_launch_us": 453318.696
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1024,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 40,
+      "censored": false,
+      "threshold_us": 118827.0034790039,
+      "blocking_launch_us": 454233.073
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1024,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 40,
+      "censored": false,
+      "threshold_us": 118825.88958740234,
+      "blocking_launch_us": 453430.787
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1024,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 40,
+      "censored": false,
+      "threshold_us": 237648.25439453125,
+      "blocking_launch_us": 928631.389
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1024,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 40,
+      "censored": false,
+      "threshold_us": 237648.86474609375,
+      "blocking_launch_us": 928982.0
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 1024,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 40,
+      "censored": false,
+      "threshold_us": 237650.93994140625,
+      "blocking_launch_us": 928182.93
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2048,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 20,
+      "censored": false,
+      "threshold_us": 118827.1484375,
+      "blocking_launch_us": 453615.884
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2048,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 20,
+      "censored": false,
+      "threshold_us": 118828.08685302734,
+      "blocking_launch_us": 453690.483
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2048,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 20,
+      "censored": false,
+      "threshold_us": 118828.28521728516,
+      "blocking_launch_us": 453125.467
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2048,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 20,
+      "censored": false,
+      "threshold_us": 237648.681640625,
+      "blocking_launch_us": 929457.88
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2048,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 20,
+      "censored": false,
+      "threshold_us": 237653.83911132812,
+      "blocking_launch_us": 929287.741
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 2048,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 20,
+      "censored": false,
+      "threshold_us": 237652.8778076172,
+      "blocking_launch_us": 928791.008
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4096,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 10,
+      "censored": false,
+      "threshold_us": 118831.67266845703,
+      "blocking_launch_us": 457107.541
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4096,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 10,
+      "censored": false,
+      "threshold_us": 118829.5669555664,
+      "blocking_launch_us": 455455.171
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4096,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 10,
+      "censored": false,
+      "threshold_us": 118829.01000976562,
+      "blocking_launch_us": 456994.894
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4096,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 10,
+      "censored": false,
+      "threshold_us": 237659.3475341797,
+      "blocking_launch_us": 930435.182
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4096,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 10,
+      "censored": false,
+      "threshold_us": 237653.9764404297,
+      "blocking_launch_us": 931622.264
+    },
+    {
+      "mode": "graph",
+      "kernels_per_graph": 4096,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 10,
+      "censored": false,
+      "threshold_us": 237654.75463867188,
+      "blocking_launch_us": 930498.837
+    },
+    {
+      "mode": "plain",
+      "kernels_per_graph": 1,
+      "sleep_ms": 500,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118825.38604736328,
+      "blocking_launch_us": 465141.661
+    },
+    {
+      "mode": "plain",
+      "kernels_per_graph": 1,
+      "sleep_ms": 500,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118825.16479492188,
+      "blocking_launch_us": 465152.606
+    },
+    {
+      "mode": "plain",
+      "kernels_per_graph": 1,
+      "sleep_ms": 500,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 118824.951171875,
+      "blocking_launch_us": 465220.335
+    },
+    {
+      "mode": "plain",
+      "kernels_per_graph": 1,
+      "sleep_ms": 1000,
+      "trial": 0,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237646.33178710938,
+      "blocking_launch_us": 940519.11
+    },
+    {
+      "mode": "plain",
+      "kernels_per_graph": 1,
+      "sleep_ms": 1000,
+      "trial": 1,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237646.37756347656,
+      "blocking_launch_us": 940443.691
+    },
+    {
+      "mode": "plain",
+      "kernels_per_graph": 1,
+      "sleep_ms": 1000,
+      "trial": 2,
+      "depth": 1020,
+      "censored": false,
+      "threshold_us": 237646.0723876953,
+      "blocking_launch_us": 940788.284
+    }
+  ],
+  "local_interpolation": {
+    "method": "piecewise log-log interpolation between measured graph sizes; no extrapolation",
+    "native": {
+      "kernels_per_graph": 2240,
+      "depth": 18.285714285714285,
+      "complete_forwards": 18,
+      "bracket": [
+        {
+          "kernels_per_graph": 2048,
+          "depth": 20.0,
+          "min_depth": 20,
+          "max_depth": 20,
+          "trials": 6
+        },
+        {
+          "kernels_per_graph": 4096,
+          "depth": 10.0,
+          "min_depth": 10,
+          "max_depth": 10,
+          "trials": 6
+        }
+      ]
+    },
+    "heldout": [
+      {
+        "kernels_per_graph": 2,
+        "measured_depth": 1020.0,
+        "predicted_depth": 1020.0,
+        "relative_error": 0.0
+      },
+      {
+        "kernels_per_graph": 4,
+        "measured_depth": 1020.0,
+        "predicted_depth": 1020.0,
+        "relative_error": 0.0
+      },
+      {
+        "kernels_per_graph": 8,
+        "measured_depth": 1020.0,
+        "predicted_depth": 1020.0,
+        "relative_error": 0.0
+      },
+      {
+        "kernels_per_graph": 16,
+        "measured_depth": 1020.0,
+        "predicted_depth": 1020.0,
+        "relative_error": 0.0
+      },
+      {
+        "kernels_per_graph": 32,
+        "measured_depth": 1020.0,
+        "predicted_depth": 788.7965517166007,
+        "relative_error": 0.22667004733666596
+      },
+      {
+        "kernels_per_graph": 64,
+        "measured_depth": 610.0,
+        "predicted_depth": 555.9316504751281,
+        "relative_error": 0.08863663856536375
+      },
+      {
+        "kernels_per_graph": 128,
+        "measured_depth": 303.0,
+        "predicted_depth": 305.4995908344232,
+        "relative_error": 0.008249474701066628
+      },
+      {
+        "kernels_per_graph": 256,
+        "measured_depth": 153.0,
+        "predicted_depth": 152.7448853480862,
+        "relative_error": 0.0016674160255804038
+      },
+      {
+        "kernels_per_graph": 512,
+        "measured_depth": 77.0,
+        "predicted_depth": 78.23042886243178,
+        "relative_error": 0.015979595615997155
+      },
+      {
+        "kernels_per_graph": 1024,
+        "measured_depth": 40.0,
+        "predicted_depth": 39.242833740697165,
+        "relative_error": 0.018929156482570875
+      },
+      {
+        "kernels_per_graph": 2048,
+        "measured_depth": 20.0,
+        "predicted_depth": 20.0,
+        "relative_error": 0.0
+      }
+    ],
+    "qualification": "diagnostic synthetic graph prediction; independent of single-capacity model selection"
+  },
+  "limitation": "Synthetic single-stream graphs omit native concurrent streams, memory nodes and collectives",
+  "native_evidence": {
+    "role": "prefill",
+    "mode": "FULL",
+    "real": false,
+    "lane": 0,
+    "kernel_counts": [
+      2240
+    ],
+    "forwards_by_kernel_count": {
+      "2240": 93
+    },
+    "sources": [
+      "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792946186223519831.pt.trace.json.gz"
+    ],
+    "method": "v4_runtime_census.forward_kernel_events: every correlated dispatch kernel; all streams"
+  }
+}

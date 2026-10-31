@@ -11,6 +11,18 @@ from pathlib import Path
 from frontier.profiling.collectives.cuda_launch_depth import blocking_depth
 
 
+def interpolate_depth(points, kernels):
+    """Interpolate only between measured sizes; report the integer launch budget."""
+    for lower, upper in zip(points, points[1:]):
+        left, right = lower["kernels_per_graph"], upper["kernels_per_graph"]
+        if left <= kernels <= right:
+            weight = math.log(kernels / left) / math.log(right / left)
+            depth = lower["depth"] * (upper["depth"] / lower["depth"]) ** weight
+            return dict(kernels_per_graph=kernels, depth=depth,
+                        complete_forwards=math.floor(depth), bracket=[lower, upper])
+    return None
+
+
 def analyze(records, native_kernels):
     if type(native_kernels) is not int or native_kernels <= 0:
         raise ValueError("Native per-forward kernel count must be a positive integer")
@@ -58,12 +70,23 @@ def analyze(records, native_kernels):
     best = min(models, key=lambda k: models[k]["log_rmse"])
     other = next(k for k in models if k != best)
     decisive = models[best]["log_rmse"] < 0.2 and models[best]["log_rmse"] + 0.1 < models[other]["log_rmse"]
+    heldout = []
+    for i, point in enumerate(points[1:-1], start=1):
+        prediction = interpolate_depth(points[:i] + points[i + 1:], point["kernels_per_graph"])
+        heldout.append(dict(kernels_per_graph=point["kernels_per_graph"],
+                            measured_depth=point["depth"], predicted_depth=prediction["depth"],
+                            relative_error=abs(prediction["depth"] / point["depth"] - 1)))
     return dict(status="PREDICTED" if decisive else "AMBIGUOUS", preferred_model=best if decisive else None,
                 models=models, native_kernels=native_kernels, observed_K=19,
                 predicted_K=models[best]["predicted_K"] if decisive else None,
                 predicted_minus_19=models[best]["predicted_K"] - 19 if decisive else None,
                 plain_depth_median=statistics.median(plain) if plain else None,
                 points=points, sleep_points=sleep_points, trials=trials,
+                local_interpolation=dict(
+                    method="piecewise log-log interpolation between measured graph sizes; no extrapolation",
+                    native=interpolate_depth(points, native_kernels),
+                    heldout=heldout,
+                    qualification="diagnostic synthetic graph prediction; independent of single-capacity model selection"),
                 limitation="Synthetic single-stream graphs omit native concurrent streams, memory nodes and collectives")
 
 

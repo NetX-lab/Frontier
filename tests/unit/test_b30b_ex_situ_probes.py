@@ -378,3 +378,19 @@ def test_native_dummy_count_excludes_real_and_piecewise_forwards(monkeypatch):
     assert dict(counts) == {2240: 2}
     with pytest.raises(ValueError):
         module.count_dummies([forward('FULL', False, 0)])
+
+
+def test_launch_depth_interpolation_preserves_model_ambiguity_and_measured_bracket():
+    rows = [trial(k, depth) for k, depth in [(1, 1020), (2, 1020), (32, 1020),
+                                            (64, 610), (1024, 40), (2048, 20), (4096, 10)]]
+    result = analysis.analyze(rows, 2240)
+    assert result["status"] == "AMBIGUOUS"
+    assert result["predicted_K"] is None
+    local = result["local_interpolation"]
+    assert local["native"]["depth"] == pytest.approx(40960 / 2240)
+    assert local["native"]["complete_forwards"] == 18
+    assert [p["kernels_per_graph"] for p in local["native"]["bracket"]] == [2048, 4096]
+    heldout = next(p for p in local["heldout"] if p["kernels_per_graph"] == 2048)
+    assert heldout["relative_error"] == pytest.approx(0)
+    assert analysis.interpolate_depth(result["points"], 8192) is None
+    assert analysis.interpolate_depth(result["points"], 2048)["complete_forwards"] == 20
