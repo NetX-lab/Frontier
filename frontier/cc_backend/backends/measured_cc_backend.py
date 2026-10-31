@@ -1,8 +1,8 @@
 """Collective device-time curves from vLLM serving process groups.
 
 Payloads are the largest rank's input bytes, not wire traffic. Callers own
-payload geometry and kernel selection: unequal EP combine rows use exact
-per-root Reduce measurements, never the uniform reduce-scatter curve.
+payload geometry and kernel selection: unequal EP dispatch and combine rows
+use exact AllGatherV and per-root Reduce measurements, never uniform curves.
 """
 
 import csv
@@ -51,6 +51,22 @@ _ROW_CURVES = {
     # Only this call needs an override: op cannot distinguish the dim -1
     # all-gather plus layout copy from GroupCoordinator's dim 0 all-gather.
     ("logits_all_gather", None): ("logits_all_gather", "tp"),
+}
+
+
+@dataclass(frozen=True)
+class _ExactSPCall:
+    kernel_prefix: str
+    input_is_gathered: bool
+    row_byte_multiple: int
+
+
+# ep_workload supplies dispatch's largest-local input and combine's gathered
+# input. Their outputs use the opposite geometry; only combine is all BF16.
+_EXACT_SP_CALLS = {
+    ("reduce_scatterv", "ep"): _ExactSPCall(
+        "ncclDevKernel_Reduce_Sum_bf16_", True, int(PrecisionType.BF16.bytes_per_element)),
+    ("all_gatherv", "ep"): _ExactSPCall("ncclDevKernel_AllGatherV_", False, 1),
 }
 
 
@@ -133,7 +149,7 @@ class MeasuredCCBackend(BaseCCBackend):
 
     def _load_curves(self):
         samples = defaultdict(lambda: defaultdict(list))
-        unequal_samples = defaultdict(list)
+        exact_sp_samples = defaultdict(list)
         calls = defaultdict(set)
         meanings = {}
         self._holdouts = []
@@ -162,10 +178,10 @@ class MeasuredCCBackend(BaseCCBackend):
                                if value)
                 uniform = bool(tokens) and len(set(tokens)) == 1
                 if single_active or not uniform:
-                    if key[:2] == ("reduce_scatterv", "ep"):
-                        rows = self._retained_combine_rows(row, key, size, line)
+                    if key[:2] in _EXACT_SP_CALLS:
+                        rows = self._retained_sp_rows(row, key, size, line)
                         if rows is not None:
-                            unequal_samples[(key, rows, size)].append(time_us)
+                            exact_sp_samples[(key, rows, size)].append(time_us)
                             continue
                     self._holdouts.append((key, dict(row)))
                     continue
@@ -192,12 +208,12 @@ class MeasuredCCBackend(BaseCCBackend):
                         "Non-monotone measured collective %s: bytes=%s, us=%s",
                         key, sizes[i - 1:i + 1], times[i - 1:i + 1],
                     )
-        self._unequal_combine_times = {key: median(times) for key, times in unequal_samples.items()}
+        self._exact_sp_times = {key: median(times) for key, times in exact_sp_samples.items()}
         return curves
 
-    def _retained_combine_rows(self, row, key, size, line):
+    def _retained_sp_rows(self, row, key, size, line):
         """Recover the measured SP vector using the shared padding semantics."""
-        location = f"{self._source_path}:{line}: invalid retained SP combine"
+        location = f"{self._source_path}:{line}: invalid retained SP collective"
         required = {"tokens_per_dp_rank", "max_output_bytes", "kernels"}
         if any(not row.get(field) for field in required):
             raise ValueError(f"{location}: missing shape or kernel evidence")
@@ -208,13 +224,17 @@ class MeasuredCCBackend(BaseCCBackend):
         widths = sequence_parallel_moe_token_widths(tokens, tp)
         if max(widths.local_tokens) == min(widths.local_tokens):
             return None
-        # cuda_communicator.py selects PyNCCL's grouped per-root ncclReduce.
+        evidence = _EXACT_SP_CALLS[key[:2]]
         kernels = [name for name in row["kernels"].split(";") if name.startswith("ncclDevKernel_")]
-        if not kernels or any(not name.startswith("ncclDevKernel_Reduce_Sum_bf16_") for name in kernels):
-            raise ValueError(f"{location}: kernels do not prove per-root BF16 Reduce")
-        row_bytes, remainder = divmod(size, widths.gathered_tokens)
-        if (remainder or row_bytes % int(PrecisionType.BF16.bytes_per_element)
-                or int(row["max_output_bytes"]) != max(widths.local_tokens) * row_bytes):
+        if not kernels or any(not name.startswith(evidence.kernel_prefix) for name in kernels):
+            raise ValueError(f"{location}: kernels do not prove {evidence.kernel_prefix}")
+        local_rows = max(widths.local_tokens)
+        input_rows, output_rows = ((widths.gathered_tokens, local_rows)
+                                   if evidence.input_is_gathered
+                                   else (local_rows, widths.gathered_tokens))
+        row_bytes, remainder = divmod(size, input_rows)
+        if (remainder or row_bytes % evidence.row_byte_multiple
+                or int(row["max_output_bytes"]) != output_rows * row_bytes):
             raise ValueError(f"{location}: inconsistent SP rows and input/output bytes")
         return widths.local_tokens
 
@@ -247,15 +267,19 @@ class MeasuredCCBackend(BaseCCBackend):
             alias = "all_to_all"
         return (*measured, num_devices) if measured else (alias, comm_domain, num_devices)
 
+    @staticmethod
+    def uses_exact_sp_rows(key, sp_rows):
+        """Whether this curve and ordered SP vector require an exact measurement."""
+        return (key[:2] in _EXACT_SP_CALLS and sp_rows is not None
+                and max(sp_rows) != min(sp_rows))
+
     def predict_operator_collective(
         self, alias, implementation, data_size_bytes, num_devices, comm_domain, sp_rows=None,
     ):
         """Resolve implementation and price uniform or exact ordered SP work."""
         key = self._curve_key(alias, implementation, num_devices, comm_domain)
-        if key[:2] == ("reduce_scatterv", "ep") and sp_rows is not None:
-            rows = tuple(sp_rows)
-            if max(rows) != min(rows):
-                return self._predict_unequal(key, data_size_bytes, rows)
+        if self.uses_exact_sp_rows(key, sp_rows):
+            return self._predict_exact_sp(key, data_size_bytes, tuple(sp_rows))
         curve = self._curves.get(key)
         coverage = (curve.sizes[0], curve.sizes[-1]) if curve else None
         if curve is None or not coverage[0] <= data_size_bytes <= coverage[1]:
@@ -268,14 +292,14 @@ class MeasuredCCBackend(BaseCCBackend):
             data_size_bytes, num_devices, comm_domain,
         )
 
-    def _predict_unequal(self, key, data_size_bytes, rows):
-        time_us = self._unequal_combine_times.get((key, rows, data_size_bytes))
+    def _predict_exact_sp(self, key, data_size_bytes, rows):
+        time_us = self._exact_sp_times.get((key, rows, data_size_bytes))
         if time_us is None:
             curve = self._curves.get(key)
             coverage = (curve.sizes[0], curve.sizes[-1]) if curve else None
             raise MeasuredCCOutOfRangeError(
                 key, data_size_bytes, coverage,
-                reason=f"unequal SP rows {rows} have no exact per-root Reduce measurement",
+                reason=f"unequal SP rows {rows} have no exact collective measurement",
             )
         return time_us / 1000.0
 

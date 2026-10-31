@@ -523,10 +523,10 @@ def _ep_phase_payload(ctx: CommPayloadContext, name: str) -> int:
                        ep_widths(ctx))["data_size_bytes"]
 
 
-def _combine_sp_rows(ctx: CommPayloadContext):
-    from frontier.operators.sequence_parallel_moe import combine_sp_rows
+def _ep_sp_rows(ctx: CommPayloadContext):
+    from frontier.operators.sequence_parallel_moe import ep_sp_rows
 
-    return combine_sp_rows(ctx)
+    return ep_sp_rows(ctx)
 
 
 def _source_tp_collective_specs():
@@ -721,6 +721,7 @@ COMM_FAMILY = OperatorFamilySpec(
             comm_group="moe_ep",
             comm_domain="EP",
             payload_builder=lambda ctx: _ep_phase_payload(ctx, "expert_parallel_alltoall_dispatch"),
+            sp_rows_builder=_ep_sp_rows,
             num_devices_builder=_moe_ep_devices,
         ),
         CommOperatorSpec(
@@ -736,7 +737,7 @@ COMM_FAMILY = OperatorFamilySpec(
             comm_group="moe_ep",
             comm_domain="EP",
             payload_builder=lambda ctx: _ep_phase_payload(ctx, "expert_parallel_alltoall_combine"),
-            sp_rows_builder=_combine_sp_rows,
+            sp_rows_builder=_ep_sp_rows,
             num_devices_builder=_moe_ep_devices,
         ),
         CommOperatorSpec(
@@ -806,7 +807,7 @@ COMM_FAMILY = OperatorFamilySpec(
                 precision_op=alias, tp_mode=TensorParallelMode.MOE_TP,
                 collective_alias=alias, comm_group="moe_ep", comm_domain="MOE_EP",
                 payload_builder=lambda ctx, name=name: _dsv4_ep_payload(ctx, name),
-                sp_rows_builder=(_combine_sp_rows if alias == "reduce_scatter" else None),
+                sp_rows_builder=_ep_sp_rows,
                 num_devices_builder=_moe_ep_devices,
             )
             for name, alias in (

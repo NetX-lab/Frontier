@@ -1,0 +1,352 @@
+{
+  "base_label": "focused_base",
+  "candidate_label": "focused_final",
+  "base_counts": {
+    "passed": 305,
+    "failed": 2
+  },
+  "candidate_counts": {
+    "passed": 320,
+    "failed": 2
+  },
+  "added": [
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_equal_sp_rows_with_unequal_raw_tokens_are_covered[expert_parallel_alltoall_combine-decode]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_equal_sp_rows_with_unequal_raw_tokens_are_covered[expert_parallel_alltoall_combine-prefill]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_equal_sp_rows_with_unequal_raw_tokens_are_covered[expert_parallel_alltoall_dispatch-decode]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_equal_sp_rows_with_unequal_raw_tokens_are_covered[expert_parallel_alltoall_dispatch-prefill]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_unequal_dispatch_uses_its_exact_measured_row",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_unequal_ep_other_backends_keep_scalar_prediction[expert_parallel_alltoall_combine-reduce_scatter-3440640]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_unequal_ep_other_backends_keep_scalar_prediction[expert_parallel_alltoall_dispatch-allgather-395264]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_checked_in_unequal_ep_samples_match_producer_medians",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_equal_sp_holdout_stays_out_of_exact_and_uniform_samples[False]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_equal_sp_holdout_stays_out_of_exact_and_uniform_samples[True]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_invalid_retained_unequal_dispatch_kernel_or_shape_is_rejected[change0]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_invalid_retained_unequal_dispatch_kernel_or_shape_is_rejected[change1]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_invalid_retained_unequal_dispatch_kernel_or_shape_is_rejected[change2]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_uneven_dispatch_uses_exact_ordered_rows_and_caller_supplied_bytes",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_exact_dispatch_and_combine_vectors_have_identical_coverage[h200_dgx]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_exact_dispatch_and_combine_vectors_have_identical_coverage[h800_dgx]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_exact_ep_collective_is_spec_driven_with_renamed_operator[deepseek-ai/DeepSeek-V4-Flash-lanes0-dsv4_ep_output_reduce_scatter]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_exact_ep_collective_is_spec_driven_with_renamed_operator[deepseek-ai/DeepSeek-V4-Flash-lanes1-dsv4_ep_dispatch_allgather]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_exact_ep_collective_is_spec_driven_with_renamed_operator[zai-org/GLM-5.3-lanes2-expert_parallel_alltoall_combine]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_exact_ep_collective_is_spec_driven_with_renamed_operator[zai-org/GLM-5.3-lanes3-expert_parallel_alltoall_dispatch]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_h200_eager_ep_prices_equal_isolated_decision[lanes0-560.2-734.6]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_h200_eager_ep_prices_equal_isolated_decision[lanes1-1043.0-2172.0]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_unmeasured_dispatch_size_or_ordered_vector_is_typed[0-lanes1]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_unmeasured_dispatch_size_or_ordered_vector_is_typed[1-lanes0]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    }
+  ],
+  "removed": [
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_equal_sp_rows_with_unequal_raw_tokens_are_covered[decode]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_equal_sp_rows_with_unequal_raw_tokens_are_covered[prefill]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_unequal_combine_other_backends_keep_scalar_prediction",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_glm_sp_moe_comm.py::test_unequal_dispatch_keeps_largest_rank_uniform_curve",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_checked_in_unequal_combine_samples_match_producer_medians",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_equal_sp_holdout_stays_out_of_exact_and_uniform_samples",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_measured_cc_backend.py::test_uneven_dispatch_uses_caller_supplied_largest_rank_bytes",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_exact_combine_is_spec_driven_with_renamed_operator[deepseek-ai/DeepSeek-V4-Flash-lanes0-dsv4_ep_output_reduce_scatter]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    },
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_exact_combine_is_spec_driven_with_renamed_operator[zai-org/GLM-5.3-lanes1-expert_parallel_alltoall_combine]",
+      "outcome": {
+        "status": "passed",
+        "message": null,
+        "detail": null,
+        "normalized_message": null
+      }
+    }
+  ],
+  "outcome_changes": [],
+  "common_failure_details": [
+    {
+      "node": "tests/unit/test_v4_measured_collective_consumer.py::test_v4_wave_passes_widths_without_mutating_source_batches",
+      "base": {
+        "status": "failed",
+        "message": "AssertionError: assert 6 == 32\n +  where 6 = len([('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184), ('dsv4_ep_d...), 50397184), ('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184)])",
+        "detail": "predictor = <test_dsv4_source_execution.ComponentPredictor object at 0x7f682259e470>\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f682259e440>\n\n    def test_v4_wave_passes_widths_without_mutating_source_batches(predictor, monkeypatch):\n        ctx, _ = context((6144, 1))\n        predictor._replica_config = ctx.replica_config\n        predictor._replica_config.total_expert_num = 256\n        predictor._replica_config.attention_backend = \"FLASHMLA_SPARSE_DSV4\"\n        batches = {0: source_batch(6144), 1: DummyForwardBatch(0, 0, 0)}\n        before = {d: dict(vars(batch)) for d, batch in batches.items()}\n        aggregate = Batch(0, [Request(0, 6145, 2)], [6145], is_moe=True)\n        seen = []\n        original = predictor._predict_comm_operator_with_context\n    \n        def record(operator, payload_ctx):\n            if operator.comm_domain == \"MOE_EP\":\n                seen.append((operator.name, ep_widths(payload_ctx).local_tokens,\n                             operator.build_payload_bytes(payload_ctx)))\n            return original(operator, payload_ctx)\n    \n        monkeypatch.setattr(predictor, \"_predict_comm_operator_with_context\", record)\n        monkeypatch.setattr(predictor, \"_assemble_stage\", lambda layers, **_: StageExecutionTime(layers))\n        monkeypatch.setattr(predictor, \"_get_cluster_replica_config\", lambda _: predictor._replica_config)\n        from frontier.config import global_vars\n        monkeypatch.setattr(global_vars, \"KV_CONNECTOR\", \"none\")\n        rows = []\n    \n        def materialize(**kwargs):\n            rows.append(kwargs[\"routing_token_count\"])\n            return materialize_layer_ep_workload(\n                routing_ratios={i: 1 / 256 for i in range(256)}, target_replica_id=0,\n                global_layer_id=3, routing_token_count=kwargs[\"routing_token_count\"],\n                router_topk=6, total_expert_num=256, moe_expert_parallel_size=16,\n                expert_to_ep=build_contiguous_expert_ownership(256, 16),\n            )\n    \n        def noop(**kwargs):\n            return None\n    \n        prepare_moe_wave_from_inputs(\n            wave_inputs=SimpleNamespace(aggregate_batch=aggregate, sample_batch=batches[0],\n                                        step_id=1, source_batches=batches),\n            time=0, materialize_workload=materialize, trace_identity_builder=noop,\n            conservation_logger=noop, predictor=predictor,\n            lane_builder=lambda **kw: SimpleNamespace(lane_workload=kw[\"layer_workload\"].lane(kw[\"ep_id\"])),\n            phase_getter=get_ep_phase_times_ms, workload_logger=noop, barrier_logger=noop,\n            wave_logger=noop, cluster_type=ClusterType.MONOLITHIC, replica_id=0, stage_id=0, layer_id=3,\n        )\n        assert rows == [6152]\n>       assert len(seen) == 32\nE       AssertionError: assert 6 == 32\nE        +  where 6 = len([('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184), ('dsv4_ep_d...), 50397184), ('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184)])\n\n/data/ycfeng/Frontier/.worktrees/b28-base/tests/unit/test_v4_measured_collective_consumer.py:287: AssertionError",
+        "normalized_message": "AssertionError: assert 6 == 32\n +  where 6 = len([('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184), ('dsv4_ep_d...), 50397184), ('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184)])"
+      },
+      "candidate": {
+        "status": "failed",
+        "message": "AssertionError: assert 6 == 32\n +  where 6 = len([('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184), ('dsv4_ep_d...), 50397184), ('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184)])",
+        "detail": "predictor = <test_dsv4_source_execution.ComponentPredictor object at 0x7fd2438f7f70>\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fd2438f6da0>\n\n    def test_v4_wave_passes_widths_without_mutating_source_batches(predictor, monkeypatch):\n        ctx, _ = context((6144, 1))\n        predictor._replica_config = ctx.replica_config\n        predictor._replica_config.total_expert_num = 256\n        predictor._replica_config.attention_backend = \"FLASHMLA_SPARSE_DSV4\"\n        batches = {0: source_batch(6144), 1: DummyForwardBatch(0, 0, 0)}\n        before = {d: dict(vars(batch)) for d, batch in batches.items()}\n        aggregate = Batch(0, [Request(0, 6145, 2)], [6145], is_moe=True)\n        seen = []\n        original = predictor._predict_comm_operator_with_context\n    \n        def record(operator, payload_ctx):\n            if operator.comm_domain == \"MOE_EP\":\n                seen.append((operator.name, ep_widths(payload_ctx).local_tokens,\n                             operator.build_payload_bytes(payload_ctx)))\n            return original(operator, payload_ctx)\n    \n        monkeypatch.setattr(predictor, \"_predict_comm_operator_with_context\", record)\n        monkeypatch.setattr(predictor, \"_assemble_stage\", lambda layers, **_: StageExecutionTime(layers))\n        monkeypatch.setattr(predictor, \"_get_cluster_replica_config\", lambda _: predictor._replica_config)\n        from frontier.config import global_vars\n        monkeypatch.setattr(global_vars, \"KV_CONNECTOR\", \"none\")\n        rows = []\n    \n        def materialize(**kwargs):\n            rows.append(kwargs[\"routing_token_count\"])\n            return materialize_layer_ep_workload(\n                routing_ratios={i: 1 / 256 for i in range(256)}, target_replica_id=0,\n                global_layer_id=3, routing_token_count=kwargs[\"routing_token_count\"],\n                router_topk=6, total_expert_num=256, moe_expert_parallel_size=16,\n                expert_to_ep=build_contiguous_expert_ownership(256, 16),\n            )\n    \n        def noop(**kwargs):\n            return None\n    \n        prepare_moe_wave_from_inputs(\n            wave_inputs=SimpleNamespace(aggregate_batch=aggregate, sample_batch=batches[0],\n                                        step_id=1, source_batches=batches),\n            time=0, materialize_workload=materialize, trace_identity_builder=noop,\n            conservation_logger=noop, predictor=predictor,\n            lane_builder=lambda **kw: SimpleNamespace(lane_workload=kw[\"layer_workload\"].lane(kw[\"ep_id\"])),\n            phase_getter=get_ep_phase_times_ms, workload_logger=noop, barrier_logger=noop,\n            wave_logger=noop, cluster_type=ClusterType.MONOLITHIC, replica_id=0, stage_id=0, layer_id=3,\n        )\n        assert rows == [6152]\n>       assert len(seen) == 32\nE       AssertionError: assert 6 == 32\nE        +  where 6 = len([('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184), ('dsv4_ep_d...), 50397184), ('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184)])\n\n/data/ycfeng/Frontier/.worktrees/b28-eager-ep-exact-rows/tests/unit/test_v4_measured_collective_consumer.py:344: AssertionError",
+        "normalized_message": "AssertionError: assert 6 == 32\n +  where 6 = len([('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184), ('dsv4_ep_d...), 50397184), ('dsv4_ep_dispatch_allgather', (768, 1), 6346752), ('dsv4_ep_output_reduce_scatter', (768, 1), 50397184)])"
+      },
+      "raw_message_equal": true,
+      "normalized_message_equal": true
+    },
+    {
+      "node": "tests/unit/test_v4_replay_census.py::test_observer_snapshots_final_descriptor_and_records_end_once",
+      "base": {
+        "status": "failed",
+        "message": "KeyError: ('decode', 247, 0)",
+        "detail": "tmp_path = PosixPath('/data/ycfeng/tmp/codex-implement/d684ea95-b7ff-4a6d-8fec-63b038641a41/b28/tmp/focused_base/test_observer_snapshots_final_0')\nnative_graphs = None\n\n    def test_observer_snapshots_final_descriptor_and_records_end_once(tmp_path, native_graphs):\n        import gzip\n        from frontier.entities import BatchStage\n        from frontier.events.batch_stage_end_event import BatchStageEndEvent\n        from frontier.scheduler.utils import dp_dummy_forward\n        from unittest.mock import patch\n    \n        batch, dummy = decode_lane(3, first_tails=1), dummy_lane()\n        batch._cluster_type = dummy._cluster_type = ClusterType.DECODE\n        owner = policy()\n        for lane in (batch, dummy):\n            lane.decode_cuda_graph_metadata = owner._build_decode_cuda_graph_metadata(lane)\n        scheduler = lane_scheduler(owner)\n        scheduler._cluster_type = ClusterType.DECODE\n        # Keep the test focused on the observer; scheduler completion itself is\n        # exercised by the existing DP sync regression and the CPU identity run.\n        with patch.object(BatchStageEndEvent, \"handle_event\", return_value=[]) as original:\n            with observer.ForwardObserver(tmp_path) as record:\n                dp_dummy_forward._synchronize_dp_descriptors(scheduler, 0, {0: batch, 1: dummy})\n                stage = BatchStage(batch.id, 0, 0, .01, .01, batch.requests, batch.num_tokens,\n                                   batch.request_is_decoding, ClusterType.DECODE)\n                stage.on_schedule(1.)\n>               event = BatchStageEndEvent(1.01, 0, 0, True, batch, stage, ClusterType.DECODE, 0)\n\n/data/ycfeng/Frontier/.worktrees/b28-base/tests/unit/test_v4_replay_census.py:166: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nevent = <frontier.events.batch_stage_end_event.BatchStageEndEvent object at 0x7f6822000ca0>\nargs = (1.01, 0, 0, True, batch id = 247\ndecode_attn_original_replica_id=None, decode_attn_original_replica_local_id=None\nnum...decode_token_index=1\ncompleted_layer_count=0, <frontier.entities.batch_stage.BatchStage object at 0x7f6822000cd0>, ...)\nkwargs = {}\n\n    def call(event, *args, **kwargs):\n        original(event, *args, **kwargs)\n        batch, stage, role = event._batch, event._batch_stage, event._cluster_type\n        key = observer._key(role, batch)\n        shape = batch_shape(batch)\n        metadata = batch.decode_cuda_graph_metadata\n        composed_ms = stage.execution_time * 1000\n        parts = dict(observer._segments.pop(key, {}))\n        parts.setdefault(\"prepare\", 0.0)\n        parts.setdefault(\"dispatch\", 0.0)\n        parts.setdefault(\"post\", 0.0)\n        parts[\"coordination_and_overlap\"] = composed_ms - sum(parts.values())\n        observer._pending[id(event)] = {\n            \"role\": role.name.lower(), \"replica\": event._replica_id,\n            \"dp\": event._replica_local_id, \"stage_id\": event._stage_id,\n            \"batch_id\": batch.id, \"batch_stage_id\": stage.id,\n            \"schedule_epoch\": batch.schedule_epoch, \"phase\": \"serving\",\n            \"start_s\": stage.scheduled_at, \"end_s\": event.time, **shape,\n            \"step_class\": frontier_step_class(role.name, batch),\n            \"decode_batch_size\": shape[\"step\"][\"generation_requests\"] if not shape[\"step\"][\"context_requests\"] else None,\n            \"mode\": batch.get_decode_cuda_graph_runtime_mode(),\n            \"synchronized_width\": batch.get_effective_total_tokens_for_compute(role),\n            \"descriptor\": asdict(metadata) if metadata is not None else None,\n            \"composed_ms\": composed_ms, \"segment_ms\": parts,\n>           **observer._formed.pop(key),\n            \"scope_ms\": dict(observer._scope_times.pop(key, {})),\n            **observer._sync.pop(key, {}),\n        }\nE       KeyError: ('decode', 247, 0)\n\n/data/ycfeng/Frontier/.worktrees/b28-base/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_observer.py:251: KeyError",
+        "normalized_message": "KeyError: ('decode', <batch>, 0)"
+      },
+      "candidate": {
+        "status": "failed",
+        "message": "KeyError: ('decode', 258, 0)",
+        "detail": "tmp_path = PosixPath('/data/ycfeng/tmp/codex-implement/d684ea95-b7ff-4a6d-8fec-63b038641a41/b28/tmp/focused_final/test_observer_snapshots_final_0')\nnative_graphs = None\n\n    def test_observer_snapshots_final_descriptor_and_records_end_once(tmp_path, native_graphs):\n        import gzip\n        from frontier.entities import BatchStage\n        from frontier.events.batch_stage_end_event import BatchStageEndEvent\n        from frontier.scheduler.utils import dp_dummy_forward\n        from unittest.mock import patch\n    \n        batch, dummy = decode_lane(3, first_tails=1), dummy_lane()\n        batch._cluster_type = dummy._cluster_type = ClusterType.DECODE\n        owner = policy()\n        for lane in (batch, dummy):\n            lane.decode_cuda_graph_metadata = owner._build_decode_cuda_graph_metadata(lane)\n        scheduler = lane_scheduler(owner)\n        scheduler._cluster_type = ClusterType.DECODE\n        # Keep the test focused on the observer; scheduler completion itself is\n        # exercised by the existing DP sync regression and the CPU identity run.\n        with patch.object(BatchStageEndEvent, \"handle_event\", return_value=[]) as original:\n            with observer.ForwardObserver(tmp_path) as record:\n                dp_dummy_forward._synchronize_dp_descriptors(scheduler, 0, {0: batch, 1: dummy})\n                stage = BatchStage(batch.id, 0, 0, .01, .01, batch.requests, batch.num_tokens,\n                                   batch.request_is_decoding, ClusterType.DECODE)\n                stage.on_schedule(1.)\n>               event = BatchStageEndEvent(1.01, 0, 0, True, batch, stage, ClusterType.DECODE, 0)\n\n/data/ycfeng/Frontier/.worktrees/b28-eager-ep-exact-rows/tests/unit/test_v4_replay_census.py:171: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nevent = <frontier.events.batch_stage_end_event.BatchStageEndEvent object at 0x7fd243146710>\nargs = (1.01, 0, 0, True, batch id = 258\ndecode_attn_original_replica_id=None, decode_attn_original_replica_local_id=None\nnum...decode_token_index=1\ncompleted_layer_count=0, <frontier.entities.batch_stage.BatchStage object at 0x7fd243d47b20>, ...)\nkwargs = {}\n\n    def call(event, *args, **kwargs):\n        original(event, *args, **kwargs)\n        batch, stage, role = event._batch, event._batch_stage, event._cluster_type\n        key = observer._key(role, batch)\n        shape = batch_shape(batch)\n        metadata = batch.decode_cuda_graph_metadata\n        composed_ms = stage.execution_time * 1000\n        parts = dict(observer._segments.pop(key, {}))\n        parts.setdefault(\"prepare\", 0.0)\n        parts.setdefault(\"dispatch\", 0.0)\n        parts.setdefault(\"post\", 0.0)\n        parts[\"coordination_and_overlap\"] = composed_ms - sum(parts.values())\n        observer._pending[id(event)] = {\n            \"role\": role.name.lower(), \"replica\": event._replica_id,\n            \"dp\": event._replica_local_id, \"stage_id\": event._stage_id,\n            \"batch_id\": batch.id, \"batch_stage_id\": stage.id,\n            \"schedule_epoch\": batch.schedule_epoch, \"phase\": \"serving\",\n            \"start_s\": stage.scheduled_at, \"end_s\": event.time, **shape,\n            \"step_class\": frontier_step_class(role.name, batch),\n            \"decode_batch_size\": shape[\"step\"][\"generation_requests\"] if not shape[\"step\"][\"context_requests\"] else None,\n            \"mode\": batch.get_decode_cuda_graph_runtime_mode(),\n            \"synchronized_width\": batch.get_effective_total_tokens_for_compute(role),\n            \"descriptor\": asdict(metadata) if metadata is not None else None,\n            \"composed_ms\": composed_ms, \"segment_ms\": parts,\n>           **observer._formed.pop(key),\n            \"scope_ms\": dict(observer._scope_times.pop(key, {})),\n            **observer._sync.pop(key, {}),\n        }\nE       KeyError: ('decode', 258, 0)\n\n/data/ycfeng/Frontier/.worktrees/b28-eager-ep-exact-rows/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_observer.py:251: KeyError",
+        "normalized_message": "KeyError: ('decode', <batch>, 0)"
+      },
+      "raw_message_equal": false,
+      "normalized_message_equal": true
+    }
+  ],
+  "candidate_only_failures": [],
+  "normalization": "root and scratch paths, memory addresses and generated batch IDs only; raw messages retained"
+}

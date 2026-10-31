@@ -1,0 +1,22 @@
+[
+  "tests/unit/test_measured_cc_backend.py::test_uneven_dispatch_uses_exact_ordered_rows_and_caller_supplied_bytes",
+  "tests/unit/test_measured_cc_backend.py::test_unequal_combine_exact_match_pools_samples_without_changing_uniform_curve",
+  "tests/unit/test_measured_cc_backend.py::test_unequal_combine_requires_exact_ordered_rows_bytes_and_group",
+  "tests/unit/test_measured_cc_backend.py::test_unequal_rows_outside_the_ep_combine_curve_use_no_exact_entry",
+  "tests/unit/test_measured_cc_backend.py::test_invalid_retained_unequal_combine_kernel_or_shape_is_rejected",
+  "tests/unit/test_measured_cc_backend.py::test_invalid_retained_unequal_dispatch_kernel_or_shape_is_rejected",
+  "tests/unit/test_measured_cc_backend.py::test_equal_sp_holdout_stays_out_of_exact_and_uniform_samples",
+  "tests/unit/test_measured_cc_backend.py::test_unequal_combine_does_not_interpolate_between_nonmonotone_points",
+  "tests/unit/test_measured_cc_backend.py::test_checked_in_unequal_ep_samples_match_producer_medians",
+  "tests/unit/test_glm_sp_moe_comm.py::test_equal_sp_rows_with_unequal_raw_tokens_are_covered",
+  "tests/unit/test_glm_sp_moe_comm.py::test_unequal_dispatch_uses_its_exact_measured_row",
+  "tests/unit/test_glm_sp_moe_comm.py::test_unequal_ep_other_backends_keep_scalar_prediction",
+  "tests/unit/test_v4_measured_collective_consumer.py::test_grouped_dispatch_and_combine_match_ordered_eager_grid",
+  "tests/unit/test_v4_measured_collective_consumer.py::test_exact_ep_collective_is_spec_driven_with_renamed_operator",
+  "tests/unit/test_v4_measured_collective_consumer.py::test_unmeasured_combine_size_or_ordered_vector_is_typed",
+  "tests/unit/test_v4_measured_collective_consumer.py::test_unmeasured_dispatch_size_or_ordered_vector_is_typed",
+  "tests/unit/test_v4_measured_collective_consumer.py::test_h200_eager_ep_prices_equal_isolated_decision",
+  "tests/unit/test_v4_measured_collective_consumer.py::test_exact_dispatch_and_combine_vectors_have_identical_coverage",
+  "tests/unit/test_v4_measured_collective_consumer.py::test_h200_row_classes_are_separate",
+  "tests/unit/test_v4_replay_census.py::test_collective_brackets_exact_unequal_and_shares"
+]

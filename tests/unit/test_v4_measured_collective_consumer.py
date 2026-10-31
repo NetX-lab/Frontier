@@ -127,9 +127,16 @@ def test_grouped_dispatch_and_combine_match_ordered_eager_grid(h200, lanes):
     assert dispatch.build_payload_bytes(ctx) == max(widths.local_tokens) * 8264
     size = combine.build_payload_bytes(ctx)
     assert size == widths.gathered_tokens * 8192
-    if len(set(widths.local_tokens)) > 1:
-        key = (("reduce_scatterv", "ep", len(lanes) * 8), widths.local_tokens, size)
-        assert measured_collective_time(combine, ctx, h200, size) == h200._unequal_combine_times[key] / 1000
+    for operator, curve in [(dispatch, "all_gatherv"), (combine, "reduce_scatterv")]:
+        size = operator.build_payload_bytes(ctx)
+        key = (curve, "ep", len(lanes) * 8)
+        assert operator.sp_rows_builder(ctx) == widths.local_tokens
+        if len(set(widths.local_tokens)) > 1:
+            assert h200.uses_exact_sp_rows(key, widths.local_tokens)
+            expected = h200._exact_sp_times[(key, widths.local_tokens, size)]
+        else:
+            expected = h200._curves[key].predict_us(size)
+        assert measured_collective_time(operator, ctx, h200, size) == expected / 1000
 
 
 @pytest.mark.parametrize("b", range(1, 25))
@@ -140,19 +147,22 @@ def test_logits_selected_row_grid(b):
 
 @pytest.mark.parametrize("profile,lanes,name", [
     ("deepseek-ai/DeepSeek-V4-Flash", (1, 6144), "dsv4_ep_output_reduce_scatter"),
+    ("deepseek-ai/DeepSeek-V4-Flash", (1, 6144), "dsv4_ep_dispatch_allgather"),
     ("zai-org/GLM-5.3", (64, 1, 1, 1), "expert_parallel_alltoall_combine"),
+    ("zai-org/GLM-5.3", (64, 1, 1, 1), "expert_parallel_alltoall_dispatch"),
 ])
-def test_exact_combine_is_spec_driven_with_renamed_operator(profile, lanes, name, h200):
+def test_exact_ep_collective_is_spec_driven_with_renamed_operator(profile, lanes, name, h200):
     ctx, _ = context(lanes, model=BaseModelConfig.create_from_name(profile))
-    operator = replace(get_comm_operator(name), name="another_combine_name")
+    operator = replace(get_comm_operator(name), name="another_collective_name")
     backend = h200
-    if name == "expert_parallel_alltoall_combine":
+    if profile == "zai-org/GLM-5.3":
         ctx.batch.moe_sequence_parallel_token_widths = ctx.sp_token_widths
         ctx = replace(ctx, sp_token_widths=None)
         backend = MeasuredCCBackend(MeasuredCCBackendConfig(), ClusterType.MONOLITHIC, "h800", "h800_dgx", 32)
     size = operator.build_payload_bytes(ctx)
-    key = (("reduce_scatterv", "ep", len(lanes) * 8), operator.sp_rows_builder(ctx), size)
-    assert measured_collective_time(operator, ctx, backend, size) == backend._unequal_combine_times[key] / 1000
+    curve = "all_gatherv" if operator.resolve_collective_alias(ctx) == "allgather" else "reduce_scatterv"
+    key = ((curve, "ep", len(lanes) * 8), operator.sp_rows_builder(ctx), size)
+    assert measured_collective_time(operator, ctx, backend, size) == backend._exact_sp_times[key] / 1000
 
 
 @pytest.mark.parametrize("size_delta,rows", [(1, (1, 768)), (0, (768, 2))])
@@ -161,7 +171,81 @@ def test_unmeasured_combine_size_or_ordered_vector_is_typed(h200, size_delta, ro
         h200.predict_operator_collective("reduce_scatter", CollectiveImplementation.GROUP_COORDINATOR_DIM0,
                                         50397184 + size_delta, 16, "MOE_EP", rows)
     assert caught.value.curve_key == ("reduce_scatterv", "ep", 16)
-    assert "exact per-root Reduce" in caught.value.reason
+    assert "exact collective measurement" in caught.value.reason
+
+
+@pytest.mark.parametrize("size_delta,lanes", [(1, (6144, 1)), (0, (6144, 16))])
+def test_unmeasured_dispatch_size_or_ordered_vector_is_typed(h200, size_delta, lanes):
+    ctx, _ = context(lanes)
+    operator = get_comm_operator("dsv4_ep_dispatch_allgather")
+    with pytest.raises(MeasuredCCOutOfRangeError) as caught:
+        measured_collective_time(operator, ctx, h200, operator.build_payload_bytes(ctx) + size_delta)
+    assert caught.value.curve_key == ("all_gatherv", "ep", 16)
+    assert "exact collective measurement" in caught.value.reason
+
+
+@pytest.mark.parametrize("lanes,dispatch_us,combine_us", [
+    ((6144, 1), 560.2, 734.6), ((6144, 1, 1, 1), 1043.0, 2172.0),
+])
+def test_h200_eager_ep_prices_equal_isolated_decision(h200, lanes, dispatch_us, combine_us):
+    import csv
+    from statistics import median
+
+    ctx, _ = context(lanes)
+    ep = len(lanes) * 8
+    source = ROOT / "data/profiling/network/h200_dgx/summary.csv"
+    # build_table verifies these copied lines against the hashed isolated sources.
+    scenario = "eager_t" + "_".join(map(str, lanes))
+    with source.open(newline="") as stream:
+        rows = [row for row in csv.DictReader(stream) if row["scenario"] == scenario and int(row["group_size"]) == ep]
+    for name, call, expected_us in [
+        ("dsv4_ep_dispatch_allgather", "moe_dispatch_all_gatherv", dispatch_us),
+        ("dsv4_ep_output_reduce_scatter", "moe_combine_reduce_scatterv", combine_us),
+    ]:
+        operator = get_comm_operator(name)
+        samples = [float(row["median_us"]) for row in rows if row["call"] == call]
+        assert len(samples) == 3
+        time_ms = measured_collective_time(operator, ctx, h200, operator.build_payload_bytes(ctx))
+        assert time_ms == median(samples) / 1000
+        assert round(time_ms * 1000, 1) == expected_us
+
+
+@pytest.mark.parametrize("network", ["h200_dgx", "h800_dgx"])
+def test_exact_dispatch_and_combine_vectors_have_identical_coverage(network):
+    backend = MeasuredCCBackend(
+        MeasuredCCBackendConfig(summary_csv_path=str(ROOT / "data/profiling/network" / network / "summary.csv")),
+        ClusterType.MONOLITHIC, network.split("_")[0], network, 32,
+    )
+    dispatch = {(key[2], rows) for key, rows, size in backend._exact_sp_times if key[0] == "all_gatherv"}
+    combine = {(key[2], rows) for key, rows, size in backend._exact_sp_times if key[0] == "reduce_scatterv"}
+    assert dispatch and dispatch == combine
+    import csv
+
+    model = BaseModelConfig.create_from_name(
+        "deepseek-ai/DeepSeek-V4-Flash" if network == "h200_dgx" else "zai-org/GLM-5.3")
+    measured_rows = 0
+    with Path(backend._source_path).open(newline="") as stream:
+        for row in csv.DictReader(stream):
+            if row["group"] != "ep":
+                continue
+            tokens = tuple(int(t) for t in row["tokens_per_dp_rank"].split("/"))
+            ep = int(row["group_size"])
+            widths = sequence_parallel_moe_token_widths(tokens, ep // len(tokens))
+            size = int(row["max_input_bytes"])
+            key = ((row["op"], "ep", ep), widths.local_tokens, size)
+            if key not in backend._exact_sp_times:
+                continue
+            name = ("dsv4_ep_dispatch_allgather" if row["op"] == "all_gatherv"
+                    else "dsv4_ep_output_reduce_scatter")
+            producer = ep_workload(name, model, model.num_experts_per_tok, widths)
+            assert size == producer["data_size_bytes"]
+            input_rows, output_rows = ((max(widths.local_tokens), widths.gathered_tokens)
+                                      if row["op"] == "all_gatherv"
+                                      else (widths.gathered_tokens, max(widths.local_tokens)))
+            assert size % input_rows == 0
+            assert int(row["max_output_bytes"]) == output_rows * (size // input_rows)
+            measured_rows += 1
+    assert measured_rows == (96 if network == "h200_dgx" else 60)
 
 
 @pytest.mark.parametrize("name,key", [
@@ -298,10 +382,10 @@ def test_v4_wave_passes_widths_without_mutating_source_batches(predictor, monkey
 
 def test_h200_row_classes_are_separate(h200):
     assert len(h200.describe_curves()) == 8
-    assert len(h200._unequal_combine_times) == 16
-    assert len(h200.describe_holdouts()) == 48
-    assert {row["call"] for row in h200.describe_holdouts()} == {"moe_dispatch_all_gatherv"}
-    assert all(row["curve_us"] is not None for row in h200.describe_holdouts())
+    assert len(h200._exact_sp_times) == 32
+    assert sum(key[0] == "all_gatherv" for key, _, _ in h200._exact_sp_times) == 16
+    assert sum(key[0] == "reduce_scatterv" for key, _, _ in h200._exact_sp_times) == 16
+    assert h200.describe_holdouts() == []
 
 
 @pytest.mark.parametrize("dummy,layer", [(False, 0), (True, 0), (False, 42), (True, 42)])

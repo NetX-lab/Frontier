@@ -148,8 +148,8 @@ def ep_workload(name, model, topk, widths):
     }
 
 
-def combine_sp_rows(ctx):
-    """Supply ordered rows for SP combine specs; ordinary all-to-all has none."""
+def ep_sp_rows(ctx):
+    """Supply ordered rows for SP EP specs; ordinary all-to-all has none."""
     if uses_sequence_parallel_moe(ctx.model_config, ctx.replica_config):
         return ep_widths(ctx).local_tokens
     return None

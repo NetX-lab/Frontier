@@ -1,0 +1,12 @@
+ data/profiling/network/h200_dgx/summary.csv        | 216 ++++++++++-----------
+ .../network/h200_dgx/summary_provenance.json       | 140 ++++++++++++-
+ docs/general/measured-communication.md             |  14 +-
+ .../cc_backend/backends/measured_cc_backend.py     |  68 ++++---
+ frontier/operators/families.py                     |  11 +-
+ frontier/operators/sequence_parallel_moe.py        |   4 +-
+ .../h3o_operator_costs/a10/a10_observer.py         |   4 +-
+ tests/unit/test_glm_sp_moe_comm.py                 |  40 ++--
+ tests/unit/test_measured_cc_backend.py             | 123 ++++++++----
+ tests/unit/test_v4_measured_collective_consumer.py | 110 +++++++++--
+ tests/unit/test_v4_replay_census.py                |  15 +-
+ 11 files changed, 526 insertions(+), 219 deletions(-)

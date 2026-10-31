@@ -97,12 +97,13 @@ def test_unequal_combine_rejected_before_measured_lookup(role):
 
 
 @pytest.mark.parametrize("role", ROLES)
-def test_equal_sp_rows_with_unequal_raw_tokens_are_covered(role):
+@pytest.mark.parametrize("name", ["expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine"])
+def test_equal_sp_rows_with_unequal_raw_tokens_are_covered(role, name):
     ctx = context(1, role, [1, 2, 7, 8])
     predictor = _predictor()
     predictor._cc_backend = measured_backend(role)
-    predictor._cc_backend._predict_unequal = lambda *_, **__: pytest.fail("uniform SP must not use exact-pattern lookup")
-    operator = get_comm_operator("expert_parallel_alltoall_combine")
+    predictor._cc_backend._predict_exact_sp = lambda *_, **__: pytest.fail("uniform SP must not use exact-pattern lookup")
+    operator = get_comm_operator(name)
     assert predictor._predict_comm_operator_with_context(operator, ctx) == (
         predictor._predict_comm_operator_with_context(operator, context(8, role, [8] * 4))
     )
@@ -131,23 +132,34 @@ def test_unequal_combine_unmeasured_vectors_do_not_use_neighbor_or_permutation(l
         predictor._predict_comm_operator_with_context(get_comm_operator("expert_parallel_alltoall_combine"), ctx)
 
 
-def test_unequal_dispatch_keeps_largest_rank_uniform_curve():
+def test_unequal_dispatch_uses_its_exact_measured_row():
+    import csv
+    from statistics import median
+
     ctx = context(256, lanes=[256, 1, 1, 1])
     predictor = _predictor()
     predictor._cc_backend = measured_backend()
-    predictor._cc_backend._predict_unequal = lambda *_, **__: pytest.fail("dispatch must not use exact-pattern lookup")
     operator = get_comm_operator("expert_parallel_alltoall_dispatch")
-    assert predictor._predict_comm_operator_with_context(operator, ctx) == (
-        predictor._cc_backend.predict_allgather(395264, 32, comm_domain="EP")
-    )
+    size = operator.build_payload_bytes(ctx)
+    assert size == 395264
+    measured = [float(row["median_us"]) for row in csv.DictReader(
+        (ROOT / "data/profiling/network/h800_dgx/summary.csv").open())
+        if row["op"] == "all_gatherv" and row["tokens_per_dp_rank"] == "256/1/1/1"]
+    assert len(measured) == 6
+    exact = predictor._predict_comm_operator_with_context(operator, ctx)
+    assert exact == median(measured) / 1000
+    assert exact != predictor._cc_backend.predict_allgather(size, 32, comm_domain="EP")
 
 
-def test_unequal_combine_other_backends_keep_scalar_prediction():
+@pytest.mark.parametrize("name,alias,size", [("expert_parallel_alltoall_dispatch", "allgather", 395264),
+                                            ("expert_parallel_alltoall_combine", "reduce_scatter", 3440640)])
+def test_unequal_ep_other_backends_keep_scalar_prediction(name, alias, size):
     ctx = context(256, lanes=[256, 1, 1, 1])
     predictor = _predictor()
-    operator = get_comm_operator("expert_parallel_alltoall_combine")
-    assert predictor._predict_comm_operator_with_context(operator, ctx) == 3440640 / 5000 + 32
-    assert predictor._cc_backend.calls[-1]["collective_alias"] == "reduce_scatter"
+    operator = get_comm_operator(name)
+    divisor = 3000 if alias == "allgather" else 5000
+    assert predictor._predict_comm_operator_with_context(operator, ctx) == size / divisor + 32
+    assert predictor._cc_backend.calls[-1]["collective_alias"] == alias
 
 
 @pytest.mark.parametrize("role", ROLES)

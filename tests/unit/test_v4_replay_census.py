@@ -87,9 +87,10 @@ def test_comparison_arithmetic_and_undefined_relative_error():
 
 
 def test_collective_brackets_exact_unequal_and_shares():
-    from frontier.cc_backend.backends.measured_cc_backend import _Curve
+    from frontier.cc_backend.backends.measured_cc_backend import MeasuredCCBackend, _Curve
     backend = SimpleNamespace(cluster_type=ClusterType.DECODE,
                               _curve_key=lambda *args: ("all_reduce", "tp", 8),
+                              uses_exact_sp_rows=MeasuredCCBackend.uses_exact_sp_rows,
                               _curves={("all_reduce", "tp", 8): _Curve((16, 64), (2., 8.), ())})
     exact = observer.collective_request(backend, None, None, 16, 8, None, None, .002)
     between = observer.collective_request(backend, None, None, 32, 8, None, None, .004)
@@ -101,10 +102,14 @@ def test_collective_brackets_exact_unequal_and_shares():
     stat = replay.collective_shares(rows)[0]
     assert stat["exact"]["call_share"] == 2 / 3
     assert stat["exact"]["time_share"] == .5
-    backend._curve_key = lambda *args: ("reduce_scatterv", "ep", 16)
-    backend._unequal_combine_times = {(("reduce_scatterv", "ep", 16), (1, 2), 16): 4.}
-    row = observer.collective_request(backend, None, None, 16, 16, None, (1, 2), .004)
-    assert row["unequal_rows"] == (1, 2) and row["exact"]
+    for call in ("reduce_scatterv", "all_gatherv"):
+        key = (call, "ep", 16)
+        backend._curve_key = lambda *args: key
+        backend._exact_sp_times = {(key, (1, 2), 16): 4.}
+        row = observer.collective_request(backend, None, None, 16, 16, None, (1, 2), .004)
+        assert row["unequal_rows"] == (1, 2) and row["exact"]
+        assert row["lower_time_us"] == row["upper_time_us"] == 4.
+        assert row["lower_bytes"] == row["upper_bytes"] == 16
 
 
 def test_observer_restores_hooks_and_preserves_failure(tmp_path):
