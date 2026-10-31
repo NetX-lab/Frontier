@@ -1,0 +1,176 @@
+{
+  "classification": "DIAGNOSTIC_MODEL_REJECTED",
+  "unconstrained_fit": {
+    "rows": 120,
+    "latency_us": -46.67691984020982,
+    "bandwidth_gbps": 305.7078210958291,
+    "relative_error_min": -0.4491161553444025,
+    "relative_error_max": 0.2309218818518095,
+    "absolute_relative_error_p90": 0.2917590671773986,
+    "h800_relative_error_min": 0.46677827896162016,
+    "h800_relative_error_max": 2.2877032454502677,
+    "h800_absolute_relative_error_p90": 2.1965166176351816
+  },
+  "by_pass": {
+    "0": {
+      "rows": 40,
+      "latency_us": 15.044531459482787,
+      "bandwidth_gbps": 351.4130283373225,
+      "relative_error_min": -0.4793444974814841,
+      "relative_error_max": 0.14759089230362332,
+      "absolute_relative_error_p90": 0.19900843691941975,
+      "h800_relative_error_min": 0.46677827896162016,
+      "h800_relative_error_max": 2.279532258251247,
+      "h800_absolute_relative_error_p90": 2.196064445769918
+    },
+    "1": {
+      "rows": 40,
+      "latency_us": -33.491477767287314,
+      "bandwidth_gbps": 315.65837052164414,
+      "relative_error_min": -0.41575530727400456,
+      "relative_error_max": 0.20256226235172692,
+      "absolute_relative_error_p90": 0.2528600829905671,
+      "h800_relative_error_min": 0.5804114633502953,
+      "h800_relative_error_max": 2.2843532652651444,
+      "h800_absolute_relative_error_p90": 2.2010336000407644
+    },
+    "2": {
+      "rows": 40,
+      "latency_us": -121.58381321282413,
+      "bandwidth_gbps": 263.1817595274798,
+      "relative_error_min": -0.36038948476291144,
+      "relative_error_max": 0.36927607756620673,
+      "absolute_relative_error_p90": 0.336758754883604,
+      "h800_relative_error_min": 0.5232586930311889,
+      "h800_relative_error_max": 2.2877032454502677,
+      "h800_absolute_relative_error_p90": 2.195807551542625
+    }
+  },
+  "by_inflight": {
+    "1": {
+      "rows": 24,
+      "latency_us": 98.04722375671686,
+      "bandwidth_gbps": 395.60133253716145,
+      "relative_error_min": -0.3297865281912937,
+      "relative_error_max": 0.2323137459591842,
+      "absolute_relative_error_p90": 0.23118948437449605,
+      "h800_relative_error_min": 0.8706045074366309,
+      "h800_relative_error_max": 2.0843499607382636,
+      "h800_absolute_relative_error_p90": 2.079879517869313
+    },
+    "2": {
+      "rows": 24,
+      "latency_us": 30.96807314792655,
+      "bandwidth_gbps": 364.81075864253853,
+      "relative_error_min": -0.48620265682885344,
+      "relative_error_max": 0.12987726234379893,
+      "absolute_relative_error_p90": 0.1476486745151672,
+      "h800_relative_error_min": 0.46677827896162016,
+      "h800_relative_error_max": 2.1776208080032413,
+      "h800_absolute_relative_error_p90": 2.1431945790107734
+    },
+    "4": {
+      "rows": 24,
+      "latency_us": -156.65102200165848,
+      "bandwidth_gbps": 265.23037561524944,
+      "relative_error_min": -0.3568942819850984,
+      "relative_error_max": 0.2987270323806479,
+      "absolute_relative_error_p90": 0.29367066612726583,
+      "h800_relative_error_min": 0.5232586930311889,
+      "h800_relative_error_max": 2.2424164941048894,
+      "h800_absolute_relative_error_p90": 2.217346161932351
+    },
+    "8": {
+      "rows": 24,
+      "latency_us": 57.347374343223684,
+      "bandwidth_gbps": 373.83517038671783,
+      "relative_error_min": -0.43800763689045863,
+      "relative_error_max": 0.23272887307904067,
+      "absolute_relative_error_p90": 0.252880653950831,
+      "h800_relative_error_min": 0.5804114633502953,
+      "h800_relative_error_max": 2.265959533276417,
+      "h800_absolute_relative_error_p90": 2.1960700643765305
+    },
+    "16": {
+      "rows": 24,
+      "latency_us": -263.09624844725533,
+      "bandwidth_gbps": 215.45880132963669,
+      "relative_error_min": -0.3452701499924373,
+      "relative_error_max": 0.4678350651704448,
+      "absolute_relative_error_p90": 0.3445993318826948,
+      "h800_relative_error_min": 0.6853636847447244,
+      "h800_relative_error_max": 2.2877032454502677,
+      "h800_absolute_relative_error_p90": 2.2568838743209025
+    }
+  },
+  "repeat_spread": {
+    "median": 0.2536798841567113,
+    "max": 1.005890044533285
+  },
+  "per_prompt": [
+    {
+      "prompt_tokens": 64,
+      "bytes_per_request": 13029120.0,
+      "actual_us": 275.3951121121645,
+      "h800_predicted_us": 890.6347068145801,
+      "absolute_error_us": 615.2395947024156,
+      "relative_error": 2.2340251066323837
+    },
+    {
+      "prompt_tokens": 128,
+      "bytes_per_request": 23051520.0,
+      "actual_us": 538.1320370361209,
+      "h800_predicted_us": 1525.9690966719493,
+      "absolute_error_us": 987.8370596358284,
+      "relative_error": 1.8356778479061675
+    },
+    {
+      "prompt_tokens": 256,
+      "bytes_per_request": 23051520.0,
+      "actual_us": 486.21499445289373,
+      "h800_predicted_us": 1525.9690966719493,
+      "absolute_error_us": 1039.7541022190555,
+      "relative_error": 2.1384657282917066
+    },
+    {
+      "prompt_tokens": 512,
+      "bytes_per_request": 24053760.0,
+      "actual_us": 506.480282638222,
+      "h800_predicted_us": 1589.5025356576862,
+      "absolute_error_us": 1083.0222530194642,
+      "relative_error": 2.1383305335759046
+    },
+    {
+      "prompt_tokens": 1024,
+      "bytes_per_request": 26058240.0,
+      "actual_us": 542.0377710834146,
+      "h800_predicted_us": 1716.5694136291602,
+      "absolute_error_us": 1174.5316425457456,
+      "relative_error": 2.1668815444320693
+    },
+    {
+      "prompt_tokens": 2048,
+      "bytes_per_request": 30067200.0,
+      "actual_us": 817.199528682977,
+      "h800_predicted_us": 1970.7031695721078,
+      "absolute_error_us": 1153.5036408891308,
+      "relative_error": 1.4115324353504604
+    },
+    {
+      "prompt_tokens": 4096,
+      "bytes_per_request": 38085120.0,
+      "actual_us": 794.5672841742635,
+      "h800_predicted_us": 2478.970681458003,
+      "absolute_error_us": 1684.4033972837397,
+      "relative_error": 2.1199002662615523
+    },
+    {
+      "prompt_tokens": 8192,
+      "bytes_per_request": 54120960.0,
+      "actual_us": 1134.5110833644867,
+      "h800_predicted_us": 3495.505705229794,
+      "absolute_error_us": 2360.994621865307,
+      "relative_error": 2.081067921226104
+    }
+  ]
+}

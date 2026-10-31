@@ -1,0 +1,21 @@
+{
+  "command": [
+    "bash",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/launch_g5h.sh",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_links_03.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "start_utc": "2026-10-31T16:57:37.902703+00:00",
+  "source_commit": "ac0f908a2cab3e6475f1ad1daf0791362123edf0",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/b30b_links03_launcher_20261101.log",
+  "gpus": 16,
+  "gpu_type": "H200",
+  "charged_group": "step_main",
+  "preemptible": false,
+  "estimated_gpuh": 7.455950543424129,
+  "timeout_s": 3900,
+  "personal_non_preemptible_before": 0,
+  "personal_limit": 32,
+  "fresh_cloud_path_checked_absent": true,
+  "pid": 495129
+}

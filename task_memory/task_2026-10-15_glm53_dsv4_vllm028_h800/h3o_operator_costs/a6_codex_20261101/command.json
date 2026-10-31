@@ -1,0 +1,57 @@
+{
+  "purpose": "Fresh A6 evaluation of supplemented H200 attention generation",
+  "decision_ids": [
+    "D-NO-STEP-COST-SHORTCUT",
+    "D-OPERATOR-LEVEL-ROUTE",
+    "D-H3O-REVISION-2C-DECISIONS",
+    "D-CODEX-DIRECT-RJOB"
+  ],
+  "command": [
+    "timeout",
+    "7200",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-u",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_heldout.py",
+    "--table",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+    "--folds",
+    "5",
+    "--seed",
+    "1234",
+    "--scratch-dir",
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches",
+    "--output-dir",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101"
+  ],
+  "working_directory": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "PYTHONNOUSERSITE": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "WANDB_DISABLED": "true",
+    "VIDUR_DISABLE_WANDB": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031"
+  },
+  "python": "3.10.6",
+  "memory_limit_kib": 31457280,
+  "wall_limit_s": 7200,
+  "source_commit": "3e906fa3d4db120ca1998ffe4e98036b1d2de8f1",
+  "source_dirty_paths": [],
+  "table_sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+  "script_sha256": "3a13ad2246082aac47182fffe327777c36cdeac36387ce4f4ec460270d44637a",
+  "start_utc": "2026-10-31T16:46:05.016902+00:00",
+  "expected_outputs": [
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/result.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/summary.md"
+  ],
+  "log_path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261101.log",
+  "status": "FINISHED",
+  "cache_reuse": "Existing independently trained fold caches, resolved by the unchanged content/config hash lookup",
+  "exit_code": 0,
+  "wall_s": 308.67301832698286,
+  "end_utc": "2026-10-31T16:51:13.690360+00:00"
+}

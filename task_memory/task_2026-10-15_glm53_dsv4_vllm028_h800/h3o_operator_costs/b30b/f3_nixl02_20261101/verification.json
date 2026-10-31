@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "cases": 80,
+  "passes": 3,
+  "raw_rows": 240,
+  "summary_rows": 240,
+  "reader_trials": 32400,
+  "notifications": 214272,
+  "packed_block_bytes": 1002240,
+  "bytes_per_reader_min": 13029120,
+  "bytes_per_reader_max": 865935360,
+  "csv_matches_raw": true,
+  "download": [
+    {
+      "cloud_path": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/C_nixl/nixl_reads.jsonl",
+      "local_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_nixl02_20261101/nixl_reads.jsonl",
+      "bytes": 3299110,
+      "sha256": "ac93b4fd5e43d3b87e700104418c8d8c9bf9d2608ce2e9b467dabd2a383ed123"
+    },
+    {
+      "cloud_path": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/C_nixl/nixl_summary.csv",
+      "local_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_nixl02_20261101/nixl_summary.csv",
+      "bytes": 46172,
+      "sha256": "85e2507325479453a534a61ee2d80afc8773e86e2d4a81fce42d00a64af16dc8"
+    },
+    {
+      "cloud_path": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/C_nixl/nixl_plan.json",
+      "local_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_nixl02_20261101/nixl_plan.json",
+      "bytes": 2124,
+      "sha256": "faa19238caa8bd4e962f439a49c063c0a1b57360525a7e43e8d5e55de041fb45"
+    }
+  ],
+  "environment": {
+    "ucx_net_devices": "mlx5_bond100:1,mlx5_bond101:1,mlx5_bond102:1,mlx5_bond103:1,mlx5_bond104:1,mlx5_bond105:1,mlx5_bond106:1,mlx5_bond107:1,mlx5_bond_0:1",
+    "ucx_backend_params": {
+      "num_threads": "4"
+    }
+  },
+  "limits": "Standalone H200 NIXL diagnostic, not a native per-request wire-byte observation or formal promotion."
+}

@@ -1,0 +1,32 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-u",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py",
+    "p2_64",
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101",
+    "--field",
+    "vllm_v1_scheduler_config_max_forwards_in_flight=18"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "start_utc": "2026-10-31T16:55:41.320398+00:00",
+  "source_commit": "662a427ed32bc1bc2f29b177e7c073cbd460c0b4",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101.log",
+  "cache_source": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/cache",
+  "cache_files": 1758,
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/tmp",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/tmp",
+    "WANDB_DISABLED": "true",
+    "VIDUR_DISABLE_WANDB": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "classification": "DIAGNOSTIC",
+  "formal_K": 19,
+  "diagnostic_K": 18,
+  "pid": 466124
+}

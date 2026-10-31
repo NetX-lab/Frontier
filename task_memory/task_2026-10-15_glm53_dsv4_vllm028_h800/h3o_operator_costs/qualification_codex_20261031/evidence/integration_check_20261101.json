@@ -1,0 +1,12 @@
+{
+  "sources": 160,
+  "changed_sources": [
+    {
+      "key": "A04",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "expected": "beaa1b4f16d21f9fad16a4e2b2cce4ef8c9c3962d70f2c382f721c6b4a69007d",
+      "actual": "054ef05c0e38a3c114e5d318027eb2a5480d2f1c079ef0a0c3de3c71ed2abac0"
+    }
+  ],
+  "interpretation": "Original audit remains immutable; subsequent task-record edits are recorded as source drift."
+}
