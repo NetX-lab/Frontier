@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | CSA raw与独立G2h比较完成：不按planner拆模型，转为同geometry重新构建后的单步重复性验证。 |
 | 2026-11-01 | A6 exact-feature归因里程碑自查：四scope都不能靠改进插值过门限；下一步检查既有测量和native输入。 |
 | 2026-11-01 | 自查collectives03完成、F1b held-out失败和两次coverage终态；A6/spec/ticket当前状态已同步。 |
 | 2026-11-01 | 自查A6恢复、singleton提交、03启动和F2双规模；F3保留真实拟合失败。 |
@@ -38,39 +39,36 @@
 
 ## 2. 偏离检测
 
-**结论：** 未偏移，正常推进。F1b 的两项失败有明确结果，不把补表和重跑当成默认下一步。
-**检测窗口：** 前次03提交/F2启动自查至2026-11-01本次提交前｜**当前前沿：** 11/19 F1a64和F2双规模；06/19 F1b结果；06/07 F3 invalid-fit结果；05/09资格失败
+**结论：** 未偏移，正常推进。
+**检测窗口：** A6 exact-feature归因提交2282121e至2026-11-01本次提交前｜**当前前沿：** 11/19三个既有CPU replay；05/09 A6测量资格
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | 03数据重建校验处理跨Python浮点末位；F1b失败后仅复现两条实际coverage拒绝，未扩展harness。见F1b报告。 |
-| D2 细节反复重试 | CLEAR | 成功NIXL02/F2/03没有重跑。F1b两次终态同属缺少joint coordinates；保留失败，不改阈值/参数试配。 |
-| D3 支线问题修补 | CLEAR | 下载、fit、heldout和failure reproduction均服务06/11/19；A6状态同步服务05/09。 |
-| D4 可并行任务停滞 | CLEAR | F1b两规模同时完成；F1a64和两F2一直独立运行。F3无可用fit不阻塞其他比较。 |
-| D5 超范围镀金 | CLEAR | simulator/profiler及正式K19、CC、ingress、references未改；没有新增容量/通信framework。 |
-| D6 分析空转 | CLEAR | 03终态、62文件hash验证、274 pooled fit points、128 heldout cases和两次CPU终态已提交2fea0ac0；A6原fold重建exact errors给出不调RF的明确路线，未循环重拟合。 |
-| D7 路线违背 | CLEAR | decision46和D-CODEX-DIRECT-RJOB有效；本轮没有新GPU提交；所有F variant保留diagnostic标签。 |
+| D1 工具打磨 | CLEAR | 两个只读检查分别验证raw median和跨run差异，直接回答05/09原因；没有扩展通用框架。 |
+| D2 细节反复重试 | CLEAR | 先记录持久layer差异假设，再比较已有独立G2h；结果不支持该假设，未尝试调参。 |
+| D3 支线问题修补 | CLEAR | 全部工作属于05/09 A6资格失败，三个11/19 replay继续。 |
+| D4 可并行任务停滞 | CLEAR | F1a64与F2两规模保持运行；CPU分析独立推进。 |
+| D5 超范围镀金 | CLEAR | 只增加必要分析工具；无生产代码、参数或formal输入变化。 |
+| D6 分析空转 | CLEAR | 40raw calls/16medians重建和两个4945-row独立比较给出明确决定：不拆planner特征，测量独立单步重建的重复性。 |
+| D7 路线违背 | CLEAR | D-NO-INTERRUPT和D33预算内准备下一步；本窗口没有新GPU提交，F诊断不得替换formal输入。 |
 
-**文档检查：** S1无新增错误依赖，F3不阻塞独立比较；S2两项coverage属于05/09/19，无新owner缺口；S3固定128请求/三次reference/四指标条件可判定，当前variant失败不是改标准的理由；S4门限明确；S5曾命中：spec当前输入合同及05/09/11/19旧入口仍把已完成且失败的A6写为待完成，且F1b运行状态刚过时；现已按A6/F1b报告同步；S6既有ticket切分无新矛盾。
-**归因：** 无执行偏离；S5是证据更新后的状态滞后，已直接修正。
+**文档检查：** S1独立比较无错误依赖；S2测量精度已有05/09归属；S3保留原资格标准，当前失败不等于标准不可达；S4原median/p90及四指标门限明确；S5当前入口按新证据同步，未发现与决定冲突；S6原ticket切分仍可用。
+**归因：** 无。
 
 ## 3. 纠正建议
 
-**分支：** B：本窗口S5状态缺陷已修正，先提交已更新记录和实际证据。
-
-**文档更新（先执行）：**
-1. `spec.md`当前合同、`plan.md`当前路线、`progress.md`handoff及05/06/09/11/19当前入口：A6 completed-but-failed、03Succeeded、F1b heldout FAIL和两次COVERAGE_MISS、F3 invalid-fit均已同步（可直接执行，已完成；不改scope、decision或验收）。
+**分支：** A：spec/tickets合理，验收条件不变。
 
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 06/11/19：提交03测量、fit/heldout、F1b coverage终态、F3 variation和本次自查 → 完成标志：准确路径、命令和失败边界均在同一主分支。
-2. 并行：11/19 F1a P2-64 ‖ F2 P2-32 ‖ F2 P2-64 → 完成标志：原launcher终态、完整128请求和每个reference repeat的四项误差；只有完整运行进入gate。
-3. 19：汇总F1–F4 → 完成标志：完整运行有absolute/predicted/relative值，F1b/COVERAGE_MISS和F3/invalid-fit单独列出，不能以部分请求补值。
-4. 05/09：A6 exact errors已证明插值调参不能过门限，先检查CSA/FULL宽度8/16等相同特征下的既有实测/native输入，再处理7/8 collective曲线及硬件/payload资格缺口 → 完成标志沿用已记录的qualified-input条件；现在不关闭这些ticket。
+1. 05/09：提交raw重建、独立repeatability结果和原因限制 → 完成标志：可复现命令、全部pair值和hash在主分支。
+2. 并行：11/19 F1a P2-64 ‖ F2 P2-32 ‖ F2 P2-64 → 完成标志：原launcher终态、完整128请求、每个reference repeat四指标；不重复提交或gate。
+3. 05/09：在已批准G1h–G4h资源预算内准备少量相同geometry重新构建、每次仅测一步的重复性probe → 完成标志：预先冻结选择、run预算、原生geometry预期与测量精度判读，按证据决定后续，不改模型迎合单样本。
+4. 19：汇总F1–F4时保留F1b held-outFAIL及COVERAGE_MISS和F3 invalid-fit；完整运行逐repeat列出四指标。
 
 ## 4. 最值得关注的 3 点
 
-1. 03测量完成且数据可重建；F1b目标EP graph-forward预测为实测11.449–19.300倍，正参数并不表示模型合格。
-2. F1b完整replay没有可用四指标：P2-32缺embedding32，P2-64缺query16/padded24的attention覆盖；精确拒绝已复现。
-3. F3负截距/29.18%p90、A6四scope失败和B29 P2-64 repeat1 TTFT12.254940665%仍在；不能以数值P2-32 PASS宣告formal完成。
+1. CSA的首层与后续层差异没有在独立运行中稳定重现，当前不支持加planner/layer特征；原A6仍FAIL。
+2. 原计划每workload只采一步以保持context；测量重复性需重新构建相同geometry，不能直接增加连续steps。
+3. 三个CPU replay还未结束；正式CC/K19、10.3/11.4ms与三次reference不变，P2-64 TTFT失败和其他qualification缺口仍在。

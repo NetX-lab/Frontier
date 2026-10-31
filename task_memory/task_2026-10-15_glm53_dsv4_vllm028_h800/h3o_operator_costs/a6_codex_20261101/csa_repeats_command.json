@@ -1,0 +1,29 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_repeats.py",
+    "--reference",
+    "/data/ycfeng/tmp/b13r_accept/after/rows.json",
+    "--comparison",
+    "/data/ycfeng/tmp/g2h_accept/rows_01/rows.json",
+    "--comparison",
+    "/data/ycfeng/tmp/g2h_accept/rows_04/rows.json",
+    "--published-table",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+    "--output",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/csa_repeats.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "script_sha256": "f1d99a95305db328834aff8b35ebc0a14ba40b32c1bfde5d17a5d75d0cb1e9a9",
+  "python_version": "Python 3.10.6",
+  "start_utc": "2026-10-31T17:45:32.541980+00:00",
+  "source_commit": "2282121e7fa921663427a624722e2362b2574c18",
+  "memory_limit": "RLIMIT_AS=30GiB",
+  "exit_code": 0,
+  "wall_s": 7.204347123391926,
+  "end_utc": "2026-10-31T17:45:39.744278+00:00",
+  "stdout": "rows_01 dsv4_q_projection {'pairs': 989, 'same_sign': 512, 'reference_above_10_percent': 289, 'large_reference_same_sign': 149, 'large_reference_recur_above_10_percent_same_sign': 73}\nrows_01 dsv4_index_fused_query_prepare {'pairs': 988, 'same_sign': 506, 'reference_above_10_percent': 304, 'large_reference_same_sign': 173, 'large_reference_recur_above_10_percent_same_sign': 73}\nrows_01 dsv4_compressor_fused_compress_store {'pairs': 989, 'same_sign': 532, 'reference_above_10_percent': 244, 'large_reference_same_sign': 130, 'large_reference_recur_above_10_percent_same_sign': 51}\nrows_01 dsv4_index_compressor_fused_compress_store {'pairs': 989, 'same_sign': 510, 'reference_above_10_percent': 239, 'large_reference_same_sign': 126, 'large_reference_recur_above_10_percent_same_sign': 69}\nrows_04 dsv4_q_projection {'pairs': 989, 'same_sign': 538, 'reference_above_10_percent': 289, 'large_reference_same_sign': 165, 'large_reference_recur_above_10_percent_same_sign': 76}\nrows_04 dsv4_index_fused_query_prepare {'pairs': 988, 'same_sign': 496, 'reference_above_10_percent': 304, 'large_reference_same_sign': 161, 'large_reference_recur_above_10_percent_same_sign': 61}\nrows_04 dsv4_compressor_fused_compress_store {'pairs': 989, 'same_sign': 531, 'reference_above_10_percent': 244, 'large_reference_same_sign': 116, 'large_reference_recur_above_10_percent_same_sign': 47}\nrows_04 dsv4_index_compressor_fused_compress_store {'pairs': 989, 'same_sign': 547, 'reference_above_10_percent': 239, 'large_reference_same_sign': 152, 'large_reference_recur_above_10_percent_same_sign': 80}\nPASS identities, counts and 67244 published medians; measurement contrasts are diagnostic\n",
+  "stderr": ""
+}

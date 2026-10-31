@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Reconstructed selected CSA medians from raw calls and began independent-run persistence checks. |
 | 2026-11-01 | Replayed recorded exact-feature lookups and isolated all four attention p90 failures from interpolation accuracy. |
 | 2026-11-01 | Recorded complete recovery and four attention / seven collective curve failures. |
 | 2026-11-01 | Recorded the observed report failure, scoped source-reference correction and affected tests. |
@@ -61,3 +62,54 @@ The retained rows provide absolute values and per-mode/phase/width groups. Selec
 Every actual value is positive; no undefined relative-error denominator is replaced. `h3o_operator_costs/a6_codex_20261101/exact_errors.json` retains all exact rows and the recorded table/result hashes. For example, CSA/FULL/decode widths 8 and 16 account for 329 of the 734 q_projection errors and 380 of the 540 index-compressor errors. These strata identify where to inspect existing measurements; they are not exclusions or new fit partitions.
 
 Next action for 05/09: inspect the retained measurements and native operator inputs for the same feature tuples, beginning with those CSA groups, and distinguish unrepresented operation state from measurement variation before changing features or collecting more data. No table, model, fold, population, criterion or formal input changes in this analysis. F1a/F2 replays continue independently.
+
+
+## CSA measurement groups and raw reconstruction
+
+The unchanged table contains 1,421 CSA workload pairs. The `plans_tile_schedule=True` row pools layer 2; the `False` row pools layers 4, 6, 8 and 10. These are two measurement groups, not two individual layers. `frontier/profiling/attention/dsv4_replay_rows.py` groups the measured calls by this field and takes the median across each group. For each of the four failing scopes, every pair has equal kernel counts.
+
+The following differences describe paired measurements, not prediction errors. The denominator is the smaller positive member of each pair.
+
+| Scope (dsv4_ prefix omitted) | Available pairs | Median absolute paired difference / minimum | Pairs above 10% |
+| --- | ---: | ---: | ---: |
+| q_projection | 1,421 | 3.526190% | 455 |
+| index_fused_query_prepare | 1,420 | 6.324645% | 456 |
+| compressor_fused_compress_store | 1,421 | 5.987726% | 478 |
+| index_compressor_fused_compress_store | 1,421 | 3.683595% | 325 |
+
+Verification used `timeout 60s python3 /data/ycfeng/tmp/glm53_dsv4/inspect_csa_groups_20261101.py` from the worktree. It streamed the retained G1h-02 e0/e1 JSONL files with `resource.RLIMIT_AS=30 GiB`. The attempted `systemd-run --scope -p MemoryMax=30G` required interactive authentication and started no raw read; this failure is retained in the command receipt. The stream-based check exited 0 in 3.292388 seconds. All 40 selected raw calls reconstruct all 16 scope/group medians, with absolute reconstruction difference below 1e-12 ms: **PASS_SELECTED_RAW_MEDIANS_RECONSTRUCT**.
+
+For `g1-e0-0263-full`, compressor medians are 11.808105 us for layer 2 and 19.759766 us for the four-layer reuse pool. For `g1-e1-0729-first_tail`, they are 11.681152 and 20.304443 us. Each case has one sampled step. The difference already exists in the raw calls; aggregation is not its origin in these cases. This does not prove measurement corruption or a causal effect of tile planning. Planner status is associated with layer position and execution state, so introducing it as a cost feature requires further evidence.
+
+Evidence: `h3o_operator_costs/a6_codex_20261101/csa_measurement_groups.json`, `csa_measurement_groups_command.json`, and the exact script copy `inspect_csa_groups.py`. The JSON records input hashes and every selected actual/reconstructed value.
+
+### Next hypothesis test, recorded before execution
+
+Hypothesis: the signed first-CSA-layer versus reuse-layer difference represents persistent layer execution state rather than variation specific to G1h-02. Reuse the existing independent G2h runner attention measurements with the same workload and layer identities. Join exact non-timing identities, report missing/conflicting identities, then compare signed paired differences and per-group duration ratios. Frequent sign reversal or failure of large G1h contrasts to recur would argue against a stable planner/layer split. Agreement would support persistence but would not establish causality, because run/source/instrumentation differences remain confounders. Keep all measurements and folds unchanged. This is an input-diagnosis check for tickets 05/09, not a new A6 gate or permission to refit.
+
+
+## Independent-run CSA repeatability result
+
+`tests/analysis/v4_attention_repeats.py` compared the retained G1h-02 rows with G2h runner 01 and 04. The final identity check removes only the routing descriptor's top-level source `origin`; all nested native-source paths and hashes remain identity fields, consistent with decision 40. All 4,945 row identities and all scope sample/kernel counts match in each comparison. All 67,244 G1h scope medians match the published A6 input at tolerance 1e-12 ms. The final command exits 0 in 6.149610 seconds with Python 3.10.6 and a 30-GiB address-space limit. Its output is byte-identical to the preliminary comparison, whose broader source-path normalization was narrowed before acceptance. Both command receipts are retained.
+
+Command: `timeout 60s /data/ycfeng/envs/frontier-py310/bin/python tests/analysis/v4_attention_repeats.py --reference /data/ycfeng/tmp/b13r_accept/after/rows.json --comparison /data/ycfeng/tmp/g2h_accept/rows_01/rows.json --comparison /data/ycfeng/tmp/g2h_accept/rows_04/rows.json --published-table data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv --output <fresh-output.json>`. Working directory is the task worktree. The exact absolute command and timestamps are in `csa_repeats_strict_command.json`; `csa_repeats.json` retains all per-pair values and input hashes.
+
+| Scope (dsv4_ prefix omitted) | Matched CSA pairs | G1h differences above 10% | Same sign in G2h-01 / G2h-04 | Above-10% difference recurring with same sign, G2h-01 / G2h-04 |
+| --- | ---: | ---: | ---: | ---: |
+| q_projection | 989 | 289 | 512 / 538 | 73 / 76 |
+| index_fused_query_prepare | 988 | 304 | 506 / 496 | 73 / 61 |
+| compressor_fused_compress_store | 989 | 244 | 532 / 531 | 51 / 47 |
+| index_compressor_fused_compress_store | 989 | 239 | 510 / 547 | 69 / 80 |
+
+Only 50.2–55.3% of all matched contrasts retain their direction, and 19.3–33.5% of the large G1h contrasts recur above 10% in the same direction. The pre-recorded hypothesis of a persistent first-layer/reuse-layer contrast is not supported by these data.
+
+| Compressor case | G1h first / reuse | G2h-01 first / reuse | G2h-04 first / reuse |
+| --- | ---: | ---: | ---: |
+| g1-e0-0263-full | 11.808105 / 19.759766 us | 17.695801 / 19.055908 us | 18.305176 / 18.240479 us |
+| g1-e1-0729-first_tail | 11.681152 / 20.304443 us | 19.136230 / 20.352051 us | 20.895996 / 20.400391 us |
+
+The corresponding G1h signed differences, -7.951660 and -8.623291 us, become +0.064697 and +0.495605 us in G2h-04. For q_projection, the G2h/G1h ratio of the single first-layer sample spans 0.720–1.408 (p05–p95) in G2h-01 and 0.735–1.409 in G2h-04, despite median ratios near 1.00. Group-wide median agreement from the earlier G2h reports therefore does not establish individual-workload precision.
+
+**Decision under D-NO-INTERRUPT:** do not add a planner/layer feature or tune Random Forest to these contrasts. First measure repeatability of freshly reconstructed, identical workload geometry. Decision 35 and `dsa_vllm_runner.run_case` explain why simply increasing consecutive `measured` steps is inappropriate: contexts and compression writers advance. Independent reconstruction followed by one measured step preserves the intended case. Prepare a limited one-H200 probe through the existing frozen G1h package mechanism, within the remaining G1h–G4h budget, before changing measurement inputs. The retained budget record is approximately 4.52 of 7 GPU-hours; the exact new plan and timeout exposure must be recorded before submission.
+
+Limits: G2h source/sampling instrumentation differs from G1h, even though attention row identities and native hashes match. The comparison supports run-dependent variation and rejects the simple persistent layer-role explanation; it does not isolate GPU cache, concurrency, clock, or measurement-instrumentation causes. It covers the original 989 workloads, not the 432 supplement-only workloads. No new measurement is promoted, no A6 population is dropped, and the formal metric/qualification gates remain unchanged.

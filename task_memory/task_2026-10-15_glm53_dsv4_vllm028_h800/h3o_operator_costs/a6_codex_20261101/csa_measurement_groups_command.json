@@ -1,0 +1,19 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "python3",
+    "/data/ycfeng/tmp/glm53_dsv4/inspect_csa_groups_20261101.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "script_sha256": "ffb16885c5a80bf4bd83c2e289bbb2f1f0b983b7f7a9c1e8109f896c77a92995",
+  "memory_limit_bytes": 32212254720,
+  "memory_limit_method": "resource.RLIMIT_AS; streaming reads",
+  "start_utc": "2026-10-31T17:41:25.836097+00:00",
+  "earlier_scope_failure": "systemd-run --scope -p MemoryMax=30G: Interactive authentication required; no read was started",
+  "exit_code": 0,
+  "wall_s": 3.2923880629241467,
+  "stdout": "PASS_SELECTED_RAW_MEDIANS_RECONSTRUCT 16 scope groups 40 raw calls\n",
+  "stderr": "",
+  "end_utc": "2026-10-31T17:41:29.128523+00:00"
+}

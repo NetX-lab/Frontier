@@ -1,0 +1,702 @@
+{
+  "table_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+  "table_sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+  "paired_workloads": 1421,
+  "scope_comparisons": {
+    "dsv4_q_projection": {
+      "pairs": 1421,
+      "median_absolute_difference_over_min": 0.03526189661074957,
+      "above_10_percent": 455,
+      "unequal_kernel_counts": 0
+    },
+    "dsv4_index_fused_query_prepare": {
+      "pairs": 1420,
+      "median_absolute_difference_over_min": 0.06324644924969985,
+      "above_10_percent": 456,
+      "unequal_kernel_counts": 0
+    },
+    "dsv4_compressor_fused_compress_store": {
+      "pairs": 1421,
+      "median_absolute_difference_over_min": 0.059877259910433016,
+      "above_10_percent": 478,
+      "unequal_kernel_counts": 0
+    },
+    "dsv4_index_compressor_fused_compress_store": {
+      "pairs": 1421,
+      "median_absolute_difference_over_min": 0.03683594664170367,
+      "above_10_percent": 325,
+      "unequal_kernel_counts": 0
+    }
+  },
+  "raw_inputs": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      "sha256": "bdaed9b8544859a9c7991e00694464cbb5bbfc4584a7a72d8e39ea62c16404a6"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+      "sha256": "8f5318490c94de3776d341293be0f2f554a0864bafa4f44ac236b4b9bdb2112e"
+    }
+  ],
+  "raw_calls": [
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 2,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.01180810546875,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 2,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.007583984375,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 2,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.00294384765625,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 2,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.009919921875,
+      "kernel_count": 2
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 4,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.02,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 4,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.01251220703125,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 4,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.00256005859375,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 4,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.00815869140625,
+      "kernel_count": 2
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 6,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.0195517578125,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 6,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.01148779296875,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 6,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.00310400390625,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 6,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.00723193359375,
+      "kernel_count": 2
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 8,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.01843212890625,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 8,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.01139208984375,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 8,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.00307177734375,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 8,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.0075849609375,
+      "kernel_count": 2
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 10,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.0199677734375,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 10,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.00793603515625,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 10,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.002751953125,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 0,
+      "case_id": "g1-e0-0263-full",
+      "step_index": 248,
+      "global_layer_id": 10,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.0106240234375,
+      "kernel_count": 2
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 2,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.011681152343750001,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 2,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.0056650390625,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 2,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.0022070312500000002,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 2,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.009501953125,
+      "kernel_count": 2
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 4,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.02031982421875,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 4,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.00560009765625,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 4,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.0023681640625000003,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 4,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.0071997070312500005,
+      "kernel_count": 2
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 6,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.020288085937500002,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 6,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.0051201171875,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 6,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.00211181640625,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 6,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.00732763671875,
+      "kernel_count": 2
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 8,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.0202890625,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 8,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.0055361328125000005,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 8,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.0020478515625,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 8,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.00768212890625,
+      "kernel_count": 2
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 10,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "time_ms": 0.021919921875,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 10,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "time_ms": 0.00518408203125,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 10,
+      "scope": "dsv4_index_fused_query_prepare",
+      "time_ms": 0.00239990234375,
+      "kernel_count": 1
+    },
+    {
+      "kind": "call",
+      "measurement": "KERNEL_ONLY",
+      "engine_index": 1,
+      "case_id": "g1-e1-0729-first_tail",
+      "step_index": 15,
+      "global_layer_id": 10,
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.0077119140625,
+      "kernel_count": 2
+    }
+  ],
+  "reconstruction": [
+    {
+      "case_id": "g1-e0-0263-full",
+      "plans_tile_schedule": "True",
+      "layer_ids": [
+        2
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_q_projection",
+      "raw_call_count": 1,
+      "measured_us": 9.919921875,
+      "reconstructed_us": 9.919921875
+    },
+    {
+      "case_id": "g1-e0-0263-full",
+      "plans_tile_schedule": "True",
+      "layer_ids": [
+        2
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_index_fused_query_prepare",
+      "raw_call_count": 1,
+      "measured_us": 2.94384765625,
+      "reconstructed_us": 2.94384765625
+    },
+    {
+      "case_id": "g1-e0-0263-full",
+      "plans_tile_schedule": "True",
+      "layer_ids": [
+        2
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "raw_call_count": 1,
+      "measured_us": 11.80810546875,
+      "reconstructed_us": 11.80810546875
+    },
+    {
+      "case_id": "g1-e0-0263-full",
+      "plans_tile_schedule": "True",
+      "layer_ids": [
+        2
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "raw_call_count": 1,
+      "measured_us": 7.583984375,
+      "reconstructed_us": 7.583984375
+    },
+    {
+      "case_id": "g1-e0-0263-full",
+      "plans_tile_schedule": "False",
+      "layer_ids": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_q_projection",
+      "raw_call_count": 4,
+      "measured_us": 7.871826171875001,
+      "reconstructed_us": 7.871826171875001
+    },
+    {
+      "case_id": "g1-e0-0263-full",
+      "plans_tile_schedule": "False",
+      "layer_ids": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_index_fused_query_prepare",
+      "raw_call_count": 4,
+      "measured_us": 2.911865234375,
+      "reconstructed_us": 2.911865234375
+    },
+    {
+      "case_id": "g1-e0-0263-full",
+      "plans_tile_schedule": "False",
+      "layer_ids": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "raw_call_count": 4,
+      "measured_us": 19.759765625,
+      "reconstructed_us": 19.759765625
+    },
+    {
+      "case_id": "g1-e0-0263-full",
+      "plans_tile_schedule": "False",
+      "layer_ids": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "raw_call_count": 4,
+      "measured_us": 11.439941406250002,
+      "reconstructed_us": 11.439941406250002
+    },
+    {
+      "case_id": "g1-e1-0729-first_tail",
+      "plans_tile_schedule": "True",
+      "layer_ids": [
+        2
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_q_projection",
+      "raw_call_count": 1,
+      "measured_us": 9.501953125,
+      "reconstructed_us": 9.501953125
+    },
+    {
+      "case_id": "g1-e1-0729-first_tail",
+      "plans_tile_schedule": "True",
+      "layer_ids": [
+        2
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_index_fused_query_prepare",
+      "raw_call_count": 1,
+      "measured_us": 2.2070312500000004,
+      "reconstructed_us": 2.2070312500000004
+    },
+    {
+      "case_id": "g1-e1-0729-first_tail",
+      "plans_tile_schedule": "True",
+      "layer_ids": [
+        2
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "raw_call_count": 1,
+      "measured_us": 11.68115234375,
+      "reconstructed_us": 11.68115234375
+    },
+    {
+      "case_id": "g1-e1-0729-first_tail",
+      "plans_tile_schedule": "True",
+      "layer_ids": [
+        2
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "raw_call_count": 1,
+      "measured_us": 5.6650390625,
+      "reconstructed_us": 5.6650390625
+    },
+    {
+      "case_id": "g1-e1-0729-first_tail",
+      "plans_tile_schedule": "False",
+      "layer_ids": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_q_projection",
+      "raw_call_count": 4,
+      "measured_us": 7.504882812500001,
+      "reconstructed_us": 7.504882812500001
+    },
+    {
+      "case_id": "g1-e1-0729-first_tail",
+      "plans_tile_schedule": "False",
+      "layer_ids": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_index_fused_query_prepare",
+      "raw_call_count": 4,
+      "measured_us": 2.239990234375,
+      "reconstructed_us": 2.239990234375
+    },
+    {
+      "case_id": "g1-e1-0729-first_tail",
+      "plans_tile_schedule": "False",
+      "layer_ids": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_compressor_fused_compress_store",
+      "raw_call_count": 4,
+      "measured_us": 20.304443359375,
+      "reconstructed_us": 20.304443359375
+    },
+    {
+      "case_id": "g1-e1-0729-first_tail",
+      "plans_tile_schedule": "False",
+      "layer_ids": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "num_steps_sampled": 1,
+      "scope": "dsv4_index_compressor_fused_compress_store",
+      "raw_call_count": 4,
+      "measured_us": 5.360107421875001,
+      "reconstructed_us": 5.360107421875001
+    }
+  ],
+  "status": "PASS_SELECTED_RAW_MEDIANS_RECONSTRUCT"
+}

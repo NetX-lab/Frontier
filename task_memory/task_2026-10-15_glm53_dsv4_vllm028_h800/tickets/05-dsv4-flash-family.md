@@ -84,6 +84,8 @@ Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-p
 
 B16–B28 implement the H200 non-dummy operator path; A10 uses no whole-step table. Fresh A6 completed on November 1: four attention scopes exceed the p90 threshold, and seven of eight uniform collective curves fail. Exact-feature errors alone exceed 10% in more than 10% of all evaluable samples for each failing attention scope; inspect feature-equivalent measurements before changing the estimator. Full family qualification remains OPEN; see [A6 report](../test_report_2026-11-01_a6_report_recovery.md). This ticket and 09 own qualification; B29 numerical PASS on P2-32 does not close it.
 
+CSA follow-up (2026-11-01): raw median reconstruction passes; independent G2h rows match all workload/layer identities but do not preserve the first/reuse-layer contrasts. Keep predictor features unchanged and test freshly reconstructed one-step workloads before any measurement correction. Evidence: [A6 report](../test_report_2026-11-01_a6_report_recovery.md).
+
 ## Historical route — DSV4 H800 mainline (2026-10-25)
 
 Authority: D-DSV4-H800-MAINLINE-CORRECTION in [requirements](../requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). Route: [plan.md](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25). Handoff: [progress.md](../progress.md#current-session-handoff--2026-10-25-mainline-correction).
