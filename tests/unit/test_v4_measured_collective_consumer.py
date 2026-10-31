@@ -26,7 +26,7 @@ from frontier.profiling.collectives.vllm_forward_collectives import (
     ForwardScenario, ServingParallelism, TOPK_IDS_DTYPE, call_bytes,
 )
 from frontier.scheduler.utils.ep_wave import prepare_moe_wave_from_inputs
-from frontier.scheduler.utils.expert_parallel import get_ep_phase_times_ms
+from frontier.scheduler.utils.expert_parallel import _v4_ep_lane_prediction_key, get_ep_phase_times_ms
 from frontier.types import ClusterType
 from test_dsv4_source_execution import predictor, source_batch
 
@@ -260,16 +260,17 @@ def test_v4_wave_passes_widths_without_mutating_source_batches(predictor, monkey
     monkeypatch.setattr(predictor, "_get_cluster_replica_config", lambda _: predictor._replica_config)
     from frontier.config import global_vars
     monkeypatch.setattr(global_vars, "KV_CONNECTOR", "none")
-    rows = []
+    rows, workloads = [], []
 
     def materialize(**kwargs):
         rows.append(kwargs["routing_token_count"])
-        return materialize_layer_ep_workload(
+        workloads.append(materialize_layer_ep_workload(
             routing_ratios={i: 1 / 256 for i in range(256)}, target_replica_id=0,
             global_layer_id=3, routing_token_count=kwargs["routing_token_count"],
             router_topk=6, total_expert_num=256, moe_expert_parallel_size=16,
             expert_to_ep=build_contiguous_expert_ownership(256, 16),
-        )
+        ))
+        return workloads[-1]
 
     def noop(**kwargs):
         return None
@@ -284,7 +285,11 @@ def test_v4_wave_passes_widths_without_mutating_source_batches(predictor, monkey
         wave_logger=noop, cluster_type=ClusterType.MONOLITHIC, replica_id=0, stage_id=0, layer_id=3,
     )
     assert rows == [6152]
-    assert len(seen) == 32
+    # Lanes with the same prediction key share one priced dispatch and combine.
+    tp = ctx.replica_config.attn_tensor_parallel_size
+    lane_keys = {_v4_ep_lane_prediction_key(ep_id // tp, workloads[0].lane(ep_id))
+                 for ep_id in workloads[0].participant_ep_ids}
+    assert len(seen) == 2 * len(lane_keys)
     assert {vector for _, vector, _ in seen} == {(768, 1)}
     assert {size for name, _, size in seen if name == "dsv4_ep_dispatch_allgather"} == {6346752}
     assert {size for name, _, size in seen if name == "dsv4_ep_output_reduce_scatter"} == {50397184}

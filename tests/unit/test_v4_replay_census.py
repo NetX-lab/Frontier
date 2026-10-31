@@ -159,6 +159,10 @@ def test_observer_snapshots_final_descriptor_and_records_end_once(tmp_path, nati
     # exercised by the existing DP sync regression and the CPU identity run.
     with patch.object(BatchStageEndEvent, "handle_event", return_value=[]) as original:
         with observer.ForwardObserver(tmp_path) as record:
+            # The batch skips `on_schedule`, so seed the formation record it would write.
+            formed = {"formed_s": .5, "formation_index": 0, "queued_ahead_at_formation": 0,
+                      "request_ids": [request.id for request in batch.requests]}
+            record._formed[record._key(ClusterType.DECODE, batch)] = formed
             dp_dummy_forward._synchronize_dp_descriptors(scheduler, 0, {0: batch, 1: dummy})
             stage = BatchStage(batch.id, 0, 0, .01, .01, batch.requests, batch.num_tokens,
                                batch.request_is_decoding, ClusterType.DECODE)
@@ -176,6 +180,7 @@ def test_observer_snapshots_final_descriptor_and_records_end_once(tmp_path, nati
     assert row["classifier"]["has_prefill"] and row["classifier"]["uniform_token_count"] is None
     assert row["start_s"] == 1. and row["end_s"] == 1.01
     assert row["composed_ms"] == 10.
+    assert {name: row[name] for name in formed} == formed
 
 
 @pytest.mark.parametrize("status", ["STARTED", "INITIALIZED", "FAILED"])
